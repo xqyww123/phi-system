@@ -1,28 +1,109 @@
+(* FIX ME: I have tried the best but the sidekick won't work right. Isabelle is not quite flexible in
+  outer syntax and it is already the best hack can be given. *)
 theory NuSys
-  imports NuPrim NuSyntax
+  imports NuPrim NuSyntax NuBasicAbstractors
   keywords
     "proc" :: thy_decl_block
+  and "\<medium_left_bracket>" "as" :: quasi_command
+  and "\<medium_right_bracket>" :: thy_end
  and "xnote" :: prf_decl % "proof"
  and "block" :: prf_decl % "proof"
  and "xtheorem" "xlemma" "xcorollary" "xproposition" :: thy_goal_stmt
  and "xdbg" :: prf_decl % "proof"
   and "print_goal" :: diag
   and "xlemma" :: thy_goal_stmt
-  and "end_proc" :: qed_block % "proof"
   and "finish" :: qed_block % "proof"
   and "end_at_procedure" :: qed_block % "proof"
   and "build" :: quasi_command
   and "\<lbrace>" :: qed_block % "proof"
 begin
 
-syntax "_codeblock_exp_" :: "logic \<Rightarrow> logic \<Rightarrow> logic"  ("\<B_c>\<B_o>\<B_d>\<B_e>\<B_b>\<B_l>\<B_o>\<B_c>\<B_k> _ \<B_i>\<B_s> _" [6,6] 5)
-syntax "_codeblock_" :: "logic \<Rightarrow> logic" ("\<B_c>\<B_o>\<B_d>\<B_e>\<B_b>\<B_l>\<B_o>\<B_c>\<B_k> _" [6] 5)
+definition nop :: "'a \<Rightarrow> 'a state" where nop_def: "nop =  StatOn"
+lemma nop: "s \<in> T \<Longrightarrow> True \<and> nop s \<in> \<S_S> T" by (simp add: nop_def State_def)
 
+lemma contract_spec1: "PROP Pure.prop (PROP U \<Longrightarrow> PROP P \<Longrightarrow> PROP Q \<Longrightarrow> V)
+    \<equiv> PROP Pure.prop (PROP U \<Longrightarrow> PROP P &&& PROP Q \<Longrightarrow> V)"
+  unfolding prop_def conjunction_imp by this
+lemma contract_spec2: "PROP Pure.prop (U \<Longrightarrow> V) \<equiv> PROP Pure.prop (U \<Longrightarrow> True \<Longrightarrow> V)"
+  unfolding prop_def by simp
+lemmas contract_spec = contract_spec1 contract_spec2
+lemmas extract_spec = contract_spec[symmetric]
+
+lemma
+  assumes f: "\<And>s. PROP Pure.prop (s \<in> T \<Longrightarrow> PROP P \<Longrightarrow> f s \<in> \<S_S> U)"
+  assumes s: "s' \<in> (T with_set V)"
+  assumes P: "PROP P"
+  shows instr:"instr f s' \<in> \<S_S> (U with_set V)"
+proof (cases s')
+  case s':(WithRegisters s r)
+  then have s: "s \<in> T" and r: "r \<in> V" using s by (simp add: ContextTy_def)+
+  consider (a) y where "f s = StatOn y \<and> y \<in> U" | (b) "f s = SNeg"
+      using f[unfolded prop_def, OF s P] by (cases "f s") (auto simp add: State_def)
+    then show ?thesis using s' r s by cases (simp add: instr_def call_def State_def ContextTy_def)+
+  qed
+
+lemma impIp: "PROP Pure.prop (P \<Longrightarrow> Q) \<Longrightarrow> P \<longrightarrow> Q" by (auto simp add: prop_def)
+
+
+definition init_proc :: " 'a \<Rightarrow> ('a with void) state " where
+  init_proc_def: "init_proc s = StatOn (s with_registers Void)"
+
+lemma InitProcConstruction: "a \<in> T \<Longrightarrow> CodeBlock v a s \<Longrightarrow> p \<in> \<B_S>\<B_t>\<B_r>\<B_i>\<B_c>\<B_t>\<B_S>\<B_t>\<B_a>\<B_t>\<B_e> (T with_set VoidSet)"
+
+notepad begin
+  fix Aa :: bool
+
+  ML_val \<open>  \<close>
+ML_val \<open> Variable.variant_frees @{context} [@{term "A \<and> a \<and> C"}] [("A",()),("",())] \<close>
+end
+ML_val \<open>Term.dest_Type @{typ "('a * 'b) set"}\<close>
+ML_val \<open>Term.dest_Type @{typ "ind"}\<close>
+ML_val \<open>Term.dest_Type (Term.type_of @{term "A \<times> B"})\<close>
+ML \<open>Option.map\<close>
+ML_val \<open> ( @{term "A \<times> B"})\<close>
+
+context lcls begin
+lemmas x = conjI
+ML_val \<open>app\<close>
+ML_val \<open>Proof_Context.full_name @{context} @{binding NuPrim.x}\<close>
+end
+
+ML_file_debug NuHelp.ML
+ML_file_debug NuBasics.ML
 ML_file_debug NuSys.ML
+ML_val \<open>(fn x => fn y => x + y)\<close>
+ML_val \<open>Term.dest_Type @{typ name_tag}\<close>
+ML_val \<open>   local open NuBasics in
+  val x1 = map ((dest_named >> (Term.dest_Free #> fst #> SOME)) || pair NONE) 
+end\<close>
+
 
 attribute_setup show_proc_expression = \<open>NuSys.show_proc_expression_attr\<close>
 declare [[show_proc_expression = false]]
 
+ML \<open>
+
+local open Parse Scan in
+val bracket_begin = $$$ "\<medium_left_bracket>";
+end
+
+val _ =
+  Outer_Syntax.local_theory_to_proof \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
+    ((Parse.position Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []) --| bracket_begin >>
+        (fn ((stat,fixes),inc_bundles) =>  NuHelp.UI_top_handler_local
+            (NuSys.begin_proc_cmd (stat,fixes,inc_bundles))));
+\<close>
+
+proc "(x \<tycolon> \<nat>[32] named x) \<times> (y \<tycolon> \<nat>[32])"  for x :: nat \<medium_left_bracket>
+  then 
+term y
+  fix xxx
+  term "xxx::nat"
+  term "xxx::bool"
+  ML_val \<open>@{term "a \<in> B"}\<close>
+term "\<R>"
+typ '\<R>
+\<medium_right_bracket>
 
 
 ML \<open> 
@@ -49,11 +130,10 @@ fun sym_iden_key x =
 end
 
 
-
-val build = sym_iden_key "\<rightarrow>";
+val build = Parse.$$$ "\<medium_left_bracket>";
 val _ =
   Outer_Syntax.local_theory_to_proof \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    (((Parse.binding -- arg_list_p) >> \<^print>) |-- build >> K Proof.begin_notepad);
+    ((Parse.position Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []) --| build >> NuSys.begin_proc_cmd);
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>block\<close> "begin a procedure construction"
     ( build >> K (Toplevel.proof Proof.begin_block));
@@ -66,24 +146,28 @@ val _ =
     (Scan.succeed (Toplevel.proof Proof.end_block));
 
 val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>end_proc\<close> "end context"
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "end context"
     (Scan.succeed
       (Toplevel.exit o Toplevel.end_main_target o Toplevel.end_nested_target o
         Toplevel.end_proof (K Proof.end_notepad #> (fn x => ( x)))));
 
  \<close>
-  
-proc xxx (x: "\<nat> 32" x, y: "\<nat> 32" y) "\<rightarrow>"
-  note x = conjI
-  note x
-  note x = conjE
-    \<rbrace>
-thm x 
-  (* require "x < 100" and "y < 100"
+
+notepad begin
+end
+
+term \<open>x \<tycolon> \<nat>[32] \<close>     
+
+
+
+
+
+
+
+(*   require "x < 100" and "y < 100"
   x y + 10 + \<rightarrow> z
   z' z *
-  cast 2 () \<guillemotright> *)
-finish \<rightarrow>  name
+  cast 2 () *)
 
 value 1
 
@@ -154,7 +238,7 @@ in end\<close>
 
 ML_val \<open> fold (fold (Proof_Context.augment o fst) o snd) \<close>
 
-xlemma xxx: "A + B = B" "A = B" if "A = B" for A B :: nat 
+xlemma "A + B = B" if "A = B" for A B :: nat 
 begin
 end_proc
 

@@ -6,57 +6,33 @@ theory NuBasicAbstractors
       and "wreg" = "\<B_w>\<B_i>\<B_t>\<B_h>_\<B_r>\<B_e>\<B_g>\<B_i>\<B_s>\<B_t>\<B_e>\<B_r>\<B_s>"
 begin
 
-definition Fusion :: "('a1::llty,'b1) nu \<Rightarrow> ('a2::llty,'b2) nu \<Rightarrow> ('a1 \<times> 'a2, 'b1 \<times> 'b2) nu"
-    (infixr "\<nuFusion>" 70) where
-  Fusion_def: "Fusion N M = Nu (\<lambda>px. case px of ((p1,p2),(x1,x2)) \<Rightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2))"
-lemma Fusion_abst_ex[abst_expn]: "(p \<nuLinkL> N \<nuFusion> M \<nuLinkR> x) \<longleftrightarrow> (case p of (p1,p2) \<Rightarrow> case x of (x1,x2) \<Rightarrow>
-        (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2))"
-  by (auto simp add: abstraction_def simp add: Fusion_def)
-lemma Fusion_abst[simp]: "((p1,p2) \<nuLinkL> N \<nuFusion> M \<nuLinkR> (x1,x2)) \<longleftrightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2)"
-  by (auto simp add: abst_expn)
-lemma "Nu_SE (N \<nuFusion> M) x \<longleftrightarrow> (case x of (x1,x2) \<Rightarrow> Nu_SE N x1 \<and> Nu_SE M x2)"
-  by (auto simp add: Nu_SE_def)
+definition Fusion :: "('a1::lrep,'b1) nu \<Rightarrow> ('a2::lrep,'b2) nu \<Rightarrow> ('a1 \<times> 'a2, 'b1 \<times> 'b2) nu" (infixr "\<nuFusion>" 70) 
+  where "Fusion N M = Nu (\<lambda>px. case px of ((p1,p2),(x1,x2)) \<Rightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2))"
+lemma Fusion_abst[simp]: "(p1,p2) \<nuLinkL> N \<nuFusion> M \<nuLinkR> (x1,x2) \<longleftrightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2)"
+  unfolding Fusion_def by simp
+lemma "Inhabited ((x1,x2) \<tycolon> N1 \<nuFusion> N2) \<longleftrightarrow> Inhabited (x1 \<tycolon> N1) \<and> Inhabited (x2 \<tycolon> N2)"
+  unfolding Inhabited_def by simp
 
-lemma Fusion_sh: "Nu_Share N f1 \<Longrightarrow> Nu_Share M f2 \<Longrightarrow>
-  Nu_Share (N \<nuFusion> M) (\<lambda>x z. case x of (x1,x2) \<Rightarrow> (f1 x1 z, f2 x2 z))"
-  by (auto simp add: Nu_Share_def)
+lemma [\<nu>share]: "Nu_Share N f1 \<Longrightarrow> Nu_Share M f2 \<Longrightarrow> Nu_Share (N \<nuFusion> M) (\<lambda>x z. case x of (x1,x2) \<Rightarrow> (f1 x1 z, f2 x2 z))"
+  for N :: "('a :: sharable_lrep, 'b) nu" and M :: "('c :: sharable_lrep, 'd) nu" 
+  unfolding Nu_Share_def by auto
+lemma [\<nu>equable]: "\<nu>Equalable N p \<Longrightarrow> \<nu>Equalable M q \<Longrightarrow> \<nu>Equalable (N \<nuFusion> M) (\<lambda>x. case x of ((a1,b1),(a2,b2)) \<Rightarrow> p (a1,a2) \<and> q (b1,b2))"
+  unfolding \<nu>Equalable_def by auto
 
-(* definition NuStateLoose :: "(('a::llty),'b) nu \<Rightarrow> ('a state, 'b) nu" ("\<S> _" [27] 27) where
-  NuStateLoose_def: "NuStateLoose N px = (case px of (StatOn p, x) \<Rightarrow> N (p,x) |
-    (SNeg,_) \<Rightarrow> True | (STrap,_) \<Rightarrow> False)"
-definition NuStateStrict :: "(('a::llty),'b) nu \<Rightarrow> ('a state, 'b) nu" ("\<S_S> _" [27] 27) where
-  NuStateStrict_def: "NuStateStrict N px = (case px of (StatOn p, x) \<Rightarrow> N (p,x) | _ \<Rightarrow> False)"
-*)
-definition StateSetStrict :: "('a::llty) set \<Rightarrow> 'a state set" ("\<B_S>\<B_t>\<B_r>\<B_i>\<B_c>\<B_t>\<B_S>\<B_t>\<B_a>\<B_t>\<B_e> _" [27] 27)  where
-  StateSetStrict_def: "StateSetStrict S = {s. case s of StatOn p \<Rightarrow> p \<in> S | _ \<Rightarrow> False}"
-definition StateSetLoose :: "('a::llty) set \<Rightarrow> 'a state set" ("\<B_L>\<B_o>\<B_o>\<B_s>\<B_e>\<B_S>\<B_t>\<B_a>\<B_t>\<B_e> _" [27] 27)  where
-  StateSetLoose_def: "StateSetLoose S = {s. case s of StatOn p \<Rightarrow> p \<in> S | SNeg \<Rightarrow> True | STrap \<Rightarrow> False}"
 
-(* lemma NuStateStrict_tr_c: "p \<nuLinkL> \<S_S> N \<nuLinkR> x \<longleftrightarrow> (case p of
-  StatOn p' \<Rightarrow> p' \<nuLinkL> N \<nuLinkR> x | _ \<Rightarrow> False)"
-    by (auto simp add: NuStateStrict_def simp add: abstraction_def split: state.split)
-*)
-definition op_add :: "nat \<Rightarrow> (('a::len) word \<times> ('a::len) word \<times> 'r) state \<Rightarrow> (('a::len) word \<times> 'r) state"
-  where op_add_def: "op_add w p = (case p of StatOn (a,b,r) \<Rightarrow>
-    if LENGTH('a) = w then StatOn (a+b, r) else STrap | STrap \<Rightarrow> STrap | SNeg \<Rightarrow> SNeg)"
+text \<open>Examples for automatic property inference\<close>
+schematic_goal [simplified]: "Nu_Share N K \<Longrightarrow> Nu_Share (\<bool> \<nuFusion> \<nat>['b :: len] \<nuFusion> N) ?sh" by (rule \<nu>share)+
+schematic_goal [simplified]: "\<nu>Equalable (\<bool> \<nuFusion> \<nat>['b :: len] \<nuFusion> \<nat>['a :: len]) ?ceq" by (rule \<nu>equable)+
 
-theorem add_nat: "p \<nuLinkL> \<S_S> (NuNat b \<nuFusion> NuNat b \<nuFusion> R) \<nuLinkR> (x,y,r) \<Longrightarrow> x + y < 2^(LENGTH('b))
-  \<Longrightarrow> op_add (LENGTH('b)) p \<nuLinkL> \<S_S> (NuNat b \<nuFusion> R) \<nuLinkR> (x+y,r)" for b :: "('b::len) itself"
-  by (auto simp add: op_add_def simp add: NuStateStrict_tr_c simp add: NuNat_tr_c split: state.split)
 
-theorem add_nat_mod: "p \<nuLinkL> NuStateStrict (NuNat b \<nuFusion> NuNat b \<nuFusion> R) \<nuLinkR> (x,y,r)
-    \<Longrightarrow> op_add (LENGTH('b)) p \<nuLinkL> NuStateStrict (NuNat b \<nuFusion> R) \<nuLinkR> (x+y mod 2^(LENGTH('b)),r)"
-  for b :: "('b::len) itself"
-  by (auto simp add: op_add_def simp add: NuStateStrict_tr_c simp add: NuNat_tr_c split: state.split)
-    (metis of_nat_unat ucast_id unat_of_nat)
+definition op_add :: "nat \<Rightarrow> ('a::len) word \<times> ('a::len) word \<times> 'r \<Rightarrow> (('a::len) word \<times> 'r) state"
+  where op_add_def: "op_add w p = (case p of (a,b,r) \<Rightarrow> if LENGTH('a) = w then StatOn (a+b, r) else STrap)"
+theorem add_nat: "x + y < 2^LENGTH('b) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<llangle> x \<tycolon> \<nat>['b::len] \<bbar> y \<tycolon> \<nat>['b] \<bbar> \<RR>emain_stack \<longmapsto> x + y \<tycolon> \<nat>['b] \<bbar> \<RR>emain_stack \<rrangle>"
+  unfolding op_add_def by (auto split: state.split)
+syntax "__bar__" :: "logic \<Rightarrow> logic \<Rightarrow> logic" (infixr "┃" 13)
 
-proc "p \<in> \<B_S>\<B_t>\<B_r>\<B_i>\<B_c>\<B_t>\<B_S>\<B_t>\<B_a>\<B_t>\<B_e> (x \<B_a>\<B_s> x ⦂ \<nat> 32) \<times> (y as y ⦂ \<nat> 32) \<B_w>\<B_i>\<B_t>\<B_h>_\<B_r>\<B_e>\<B_g>\<B_i>\<B_s>\<B_t>\<B_e>\<B_r>\<B_s> " for x y :: nat begin
-  require "x < 100" and "y < 100"
-  x y + y +
-finish add2
+theorem add_nat_mod: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<llangle> x \<tycolon> \<nat>['b::len] \<bbar> y \<tycolon> \<nat>['b] \<bbar> \<RR> \<longmapsto> (x + y mod 2^(LENGTH('b))) \<tycolon> \<nat>['b] \<bbar> \<RR> \<rrangle>"
+  unfolding op_add_def by (auto split: state.split) (metis of_nat_unat ucast_id unat_of_nat)
 
-context includes show_more begin
-
-end
 
 end
