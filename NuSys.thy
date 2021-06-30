@@ -6,7 +6,7 @@ theory NuSys
     "proc" :: thy_decl_block
   and "\<medium_left_bracket>" "as" :: quasi_command
   and "\<medium_right_bracket>" :: thy_end
- and "xnote" :: prf_decl % "proof"
+ and "xnote" "\<rightarrow>" "--" :: prf_decl % "proof"
  and "block" :: prf_decl % "proof"
  and "xtheorem" "xlemma" "xcorollary" "xproposition" :: thy_goal_stmt
  and "xdbg" :: prf_decl % "proof"
@@ -16,86 +16,159 @@ theory NuSys
   and "end_at_procedure" :: qed_block % "proof"
   and "build" :: quasi_command
   and "\<lbrace>" :: qed_block % "proof"
+  and "\<nu>processor" :: thy_decl % "ML"
+  and "\<nu>processor_resolver" :: thy_decl % "ML"
+  and "\<Longrightarrow>" :: prf_goal % "proof"  
+abbrevs
+  "!!" = "!!"
 begin
 
-definition nop :: "'a \<Rightarrow> 'a state" where nop_def: "nop =  StatOn"
-lemma nop: "s \<in> T \<Longrightarrow> True \<and> nop s \<in> \<S_S> T" by (simp add: nop_def State_def)
-
-lemma contract_spec1: "PROP Pure.prop (PROP U \<Longrightarrow> PROP P \<Longrightarrow> PROP Q \<Longrightarrow> V)
-    \<equiv> PROP Pure.prop (PROP U \<Longrightarrow> PROP P &&& PROP Q \<Longrightarrow> V)"
-  unfolding prop_def conjunction_imp by this
-lemma contract_spec2: "PROP Pure.prop (U \<Longrightarrow> V) \<equiv> PROP Pure.prop (U \<Longrightarrow> True \<Longrightarrow> V)"
-  unfolding prop_def by simp
-lemmas contract_spec = contract_spec1 contract_spec2
-lemmas extract_spec = contract_spec[symmetric]
-
-lemma
-  assumes f: "\<And>s. PROP Pure.prop (s \<in> T \<Longrightarrow> PROP P \<Longrightarrow> f s \<in> \<S_S> U)"
-  assumes s: "s' \<in> (T with_set V)"
-  assumes P: "PROP P"
-  shows instr:"instr f s' \<in> \<S_S> (U with_set V)"
-proof (cases s')
-  case s':(WithRegisters s r)
-  then have s: "s \<in> T" and r: "r \<in> V" using s by (simp add: ContextTy_def)+
-  consider (a) y where "f s = StatOn y \<and> y \<in> U" | (b) "f s = SNeg"
-      using f[unfolded prop_def, OF s P] by (cases "f s") (auto simp add: State_def)
-    then show ?thesis using s' r s by cases (simp add: instr_def call_def State_def ContextTy_def)+
-  qed
-
-lemma impIp: "PROP Pure.prop (P \<Longrightarrow> Q) \<Longrightarrow> P \<longrightarrow> Q" by (auto simp add: prop_def)
-
-
-definition init_proc :: " 'a \<Rightarrow> ('a with void) state " where
-  init_proc_def: "init_proc s = StatOn (s with_registers Void)"
-
-lemma InitProcConstruction: "a \<in> T \<Longrightarrow> CodeBlock v a s \<Longrightarrow> p \<in> \<B_S>\<B_t>\<B_r>\<B_i>\<B_c>\<B_t>\<B_S>\<B_t>\<B_a>\<B_t>\<B_e> (T with_set VoidSet)"
-
-notepad begin
-  fix Aa :: bool
-
-  ML_val \<open>  \<close>
-ML_val \<open> Variable.variant_frees @{context} [@{term "A \<and> a \<and> C"}] [("A",()),("",())] \<close>
-end
-ML_val \<open>Term.dest_Type @{typ "('a * 'b) set"}\<close>
-ML_val \<open>Term.dest_Type @{typ "ind"}\<close>
-ML_val \<open>Term.dest_Type (Term.type_of @{term "A \<times> B"})\<close>
-ML \<open>Option.map\<close>
-ML_val \<open> ( @{term "A \<times> B"})\<close>
-
-context lcls begin
-lemmas x = conjI
-ML_val \<open>app\<close>
-ML_val \<open>Proof_Context.full_name @{context} @{binding NuPrim.x}\<close>
-end
-
 ML_file_debug NuHelp.ML
+ML_file "./general/binary_tree.ML"
+ML_file "./library/path.ML"
 ML_file_debug NuBasics.ML
-ML_file_debug NuSys.ML
-ML_val \<open>(fn x => fn y => x + y)\<close>
-ML_val \<open>Term.dest_Type @{typ name_tag}\<close>
-ML_val \<open>   local open NuBasics in
-  val x1 = map ((dest_named >> (Term.dest_Free #> fst #> SOME)) || pair NONE) 
-end\<close>
+ML_file "./library/general.ML"
+ML_file "./library/registers.ML"
+ML_file "./library/instructions.ML"
+ML_file "./general/parser.ML"
+ML_file "./library/processor.ML"
+ML_file NuSys.ML
+ML_file_debug NuToplevel.ML
 
 
-attribute_setup show_proc_expression = \<open>NuSys.show_proc_expression_attr\<close>
-declare [[show_proc_expression = false]]
+ML \<open>Theory.setup (Global_Theory.add_thms_dynamic (@{binding "\<nu>instr"}, NuInstructions.list_definitions #> map snd))  \<close>
+attribute_setup \<nu>instr = \<open>Scan.succeed (Thm.declaration_attribute NuInstructions.add) \<close>
+attribute_setup \<nu>process = \<open>Scan.lift (Parse.name_position -- NuParse.auto_level) #>
+    (fn ((name,auto_level),(ctx,tokens)) => (NuProcessor.get_attr ctx name auto_level, (ctx,tokens)))
+  || Scan.lift (NuParse.auto_level >> (Thm.rule_attribute [] o NuProcessor.process))\<close>
+attribute_setup show_proc_expression = \<open>NuToplevel.show_proc_expression_attr\<close>
+(* declare [[show_proc_expression = false]] *)
 
 ML \<open>
 
-local open Parse Scan in
+local open Parse Scan NuToplevel NuSys in
 val bracket_begin = $$$ "\<medium_left_bracket>";
-end
 
 val _ =
-  Outer_Syntax.local_theory_to_proof \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((Parse.position Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []) --| bracket_begin >>
-        (fn ((stat,fixes),inc_bundles) =>  NuHelp.UI_top_handler_local
-            (NuSys.begin_proc_cmd (stat,fixes,inc_bundles))));
-\<close>
+  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
+    ((Parse_Spec.thm_name ":" -- Parse.term -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
+            -- Parse_Spec.if_statement) --| bracket_begin >>
+        (fn (((((b,arg),ret),fixes),includes),preconds) =>  
+            (begin_proc_cmd b arg ret fixes includes preconds)));
 
-proc "(x \<tycolon> \<nat>[32] named x) \<times> (y \<tycolon> \<nat>[32])"  for x :: nat \<medium_left_bracket>
-  then 
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<rightarrow>\<close> "assign registers"
+    (list1 short_ident |> transition_cmd assign_reg)
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>--\<close> "assign registers"
+    (Scan.succeed (Toplevel.proof NuToplevel.prove_prem))
+
+val _ =
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor\<close> "define \<nu>processor"
+      (Parse.position Parse.short_ident -- Parse.nat -- Parse.term -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
+        >> NuProcessor.setup_cmd)
+
+val _ =
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor_resolver\<close> "define \<nu>processor"
+      (Parse.binding -- Parse.nat -- (Parse.term -- Parse.for_fixes) -- Parse.name_position -- Scan.optional Parse.text ""
+        >> (fn ((((b,precedence),pattern),facts),comment) => NuProcessor.setup_resolver b precedence pattern facts comment))
+end
+\<close>
+\<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>safe NuSys.accept_proc\<close>
+\<nu>processor_resolver resolve_disposable 100  \<open>\<nu>Disposable T \<Longrightarrow> PROP P\<close> \<nu>disposable
+
+ML \<open>val auto_method =
+  Scan.lift (Scan.option (Parse.nat -- Parse.nat)) --|
+    Method.sections clasimp_modifiers >>
+  (fn NONE => (fn ctx => SOLVED' (K (auto_tac ctx)) |> SIMPLE_METHOD')
+    | SOME (m, n) => (fn ctxt => SIMPLE_METHOD (CHANGED_PROP (mk_auto_tac ctxt m n))));
+val _ = Theory.setup (Method.setup \<^binding>\<open>myauto\<close> auto_method "myauto" #>
+Method.setup \<^binding>\<open>myrule\<close>
+      (Attrib.thms >> (fn rules => fn ctxt => METHOD (HEADGOAL o Method.some_rule_tac ctxt rules)))
+      "apply some intro/elim rule (potentially classical)")
+\<close>
+  notepad
+begin
+  fix A B C :: bool
+  assume A: A and B : "A \<Longrightarrow> C" and th2 : "D"
+  have "C  \<and> C \<and> D" apply (myrule conjI[OF B])
+    thm conjI[OF B]
+    (* using A B th2 apply myauto *)
+end
+
+(*thm conjI
+
+
+
+\<nu>\<rho>_prover_\<nu>disposable
+\<nu>processor \<nu>\<rho>_disposable_eliminator "\<nu>Disposable x \<Longrightarrow> PROP P" is
+
+ML \<open>Proof_Context.get_thms @{context} "\<nu>disposable"\<close>
+
+
+(* \<nu>processor \<nu>\<rho>_accept_proc1 "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T"  \<open>K NuSys.accept_proc\<close> *)\<nu>processor
+ML \<open>NuProcessor.list (Context.Proof @{context})\<close>
+lemmas
+translations "_codeblock_exp_ v exp ty" <= "CONST CodeBlock v arg ty exp"
+*)
+
+  notepad
+begin
+  fix P Q A :: bool
+  assume A: "A" and B: "Q" apply
+ML_val \<open>
+val th = Goal.init @{cprop "P"}
+val th2 = (ALLGOALS (Method.insert_tac @{context} @{thms A B}) THEN (auto_tac @{context} |> CHANGED_PROP)) th |> Seq.list_of
+\<close>
+end
+
+
+
+notepad
+begin
+  {
+    fix P :: bool
+    presume "P"
+    then have "P" .
+    note this
+  }
+  ML_val \<open>burrow\<close>
+end
+qed
+  note
+
+proc xxx: "(x \<tycolon> \<nat>[32] named x, y \<tycolon> \<nat>[32])" "(x + x + y \<tycolon> \<nat>[32])" for x :: nat if A:"x < 100" and B:"y < 100" \<medium_left_bracket>
+  \<rightarrow> x, x !!!  -- by (myrule \<nu>disposable)
+print_rules
+ML_val \<open>Context_Rules.print_rules @{context}\<close>
+term ?thesis
+  include show_more1
+  
+(*  \<bullet> x y + !! -- by auto  \<bullet> 
+  \<bullet>  *)
+  
+  
+(*  \<nu> x y + ! by some \<nu> ! by some 
+  ML_val \<open>Thm.prop_of  @{thm this} \<close>
+  note conjI[\<nu>\<rho>_accept_proc]*)
+\<medium_right_bracket>
+
+
+
+
+term NuPrim.CodeBlock
+ML \<open>\<^const_name>\<open>CodeBlock\<close>\<close>
+term "NuPrim.CurrentConstruction"
+ML_val \<open>HOLogic.strip_tuple @{term "(A,B,C)"}\<close>
+proc "(x \<tycolon> \<nat>[32] named x, y \<tycolon> \<nat>[32])" for x :: nat \<medium_left_bracket> 
+    x y y + + 
+\<medium_right_bracket>
+ML_val \<open>NuBasics.mk_PropBlock 0 @{thm this}\<close>
+ML_val \<open>fold\<close>
+thm protectI
+thm PropBlock_I
+  \<rightarrow> x \<rightarrow> a \<rightarrow> p
+  note
 term y
   fix xxx
   term "xxx::nat"
@@ -104,6 +177,18 @@ term y
 term "\<R>"
 typ '\<R>
 \<medium_right_bracket>
+
+  
+
+ML_val \<open>
+val ctx = Proof_Context.set_mode Proof_Context.mode_schematic @{context}
+val (Term.Var xxx) = Syntax.read_term ctx "(?a::nat)"
+val tm1 = Syntax.read_term ctx "(A \<longrightarrow> X x \<longrightarrow> X x)"
+val tm2 = Syntax.read_term ctx "\<lambda>x z. (x  \<longrightarrow> z \<longrightarrow> z)"
+val x = Pattern.unify (Context.Proof ctx) (tm1,tm2) Envir.init
+val y = Envir.lookup x xxx
+\<close>
+
 
 
 ML \<open> 
@@ -177,8 +262,6 @@ lemma "P" proof -
 end
 
 
-
-ML_val \<open> Expression.read_statement \<close>
 
 ML_val \<open>
   val s1 = "1"

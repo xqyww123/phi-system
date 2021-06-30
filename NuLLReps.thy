@@ -19,10 +19,11 @@ end
 instantiation word :: (len) naive_lrep
 begin
 definition llty_word :: "'a word itself \<Rightarrow> llty" where [simp]: "llty_word _ = la_i LENGTH('a)"
-definition share_word :: "'a word \<Rightarrow> zint \<Rightarrow> 'a word" where [simp]: "share_word x z = x"
-definition sharable_word :: "'a word \<Rightarrow> bool" where [simp]: "sharable_word x = True"
+definition share_word :: "zint \<Rightarrow> 'a word \<Rightarrow> 'a word" where [simp]: "share_word z = id"
+definition shareable_word :: "'a word set" where [simp]: "shareable_word = UNIV"
 definition revert_word :: "'a word \<times> 'a word \<Rightarrow> bool" where [simp]: "revert_word xy = True"
 definition dpriv_word :: "'a word \<Rightarrow> 'a word" where [simp]: "dpriv_word x = x"
+definition disposable_word :: "'a word set" where [simp]: "disposable_word = UNIV"
 instance by standard auto
 end
 
@@ -50,9 +51,9 @@ definition revert_prod :: "('a \<times> 'b) \<times> ('a \<times> 'b) \<Rightarr
   where "revert_prod v \<longleftrightarrow> (case v of (v1,v2) \<Rightarrow> case v1 of (a1,b1) \<Rightarrow> case v2 of (a2,b2) \<Rightarrow> revert (a1,a2) \<and> revert (b1,b2))"
 lemma [simp]: "revert (v1,v2) \<longleftrightarrow> (case v1 of (a1,b1) \<Rightarrow> case v2 of (a2,b2) \<Rightarrow> revert (a1,a2) \<and> revert (b1,b2))"
   unfolding revert_prod_def by simp
-definition sharable_prod :: "'a \<times> 'b \<Rightarrow> bool" where "sharable_prod ab \<longleftrightarrow> (case ab of (a,b) \<Rightarrow> sharable a \<and> sharable b)"
-lemma [simp]: "sharable (a,b) \<longleftrightarrow> sharable a \<and> sharable b" unfolding sharable_prod_def by simp
-definition share_prod :: "'a \<times> 'b \<Rightarrow> zint \<Rightarrow> 'a \<times> 'b" where [simp]: "share_prod x z = (case x of (a,b) \<Rightarrow> (share a z, share b z))"
+definition shareable_prod :: "('a \<times> 'b) set" where "shareable_prod = shareable \<times> shareable"
+lemma [simp]: "(a,b) \<in> shareable \<longleftrightarrow> a \<in> shareable \<and> b \<in> shareable" unfolding shareable_prod_def by simp
+definition share_prod :: "zint \<Rightarrow> 'a \<times> 'b \<Rightarrow> 'a \<times> 'b" where [simp]: "share_prod z x = (case x of (a,b) \<Rightarrow> (share z a, share z b))"
 definition dpriv_prod :: "'a \<times> 'b \<Rightarrow> 'a \<times> 'b" where [simp]: "dpriv_prod x = (case x of (a,b) \<Rightarrow> (dpriv a, dpriv b))"
 instance by standard (auto, (metis revert_sym revert_trans) +)
 end
@@ -72,9 +73,13 @@ definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) nu"
   where "NuNat _ = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (p = Word.of_nat x))"
 syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
-lemma [typing_expn]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (p = Word.of_nat x)" unfolding NuNat_def by auto
+
+lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (p = Word.of_nat x)" unfolding NuNat_def by auto
+lemma [\<nu>equable]: "\<nu>Equalable (NuNat b) (K True)" unfolding \<nu>Equalable_def NuNat_def by auto
+
 definition NuBool :: "(1 word, bool) nu" ("\<bool>")
   where "NuBool = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (p = 1) = x)"
 lemma [simp]: "p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding NuBool_def by simp
+lemma [\<nu>equable]: "\<nu>Equalable \<bool> (K True)" unfolding \<nu>Equalable_def NuBool_def by auto
 
 end
