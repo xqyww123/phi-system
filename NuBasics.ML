@@ -9,7 +9,7 @@ infix 0 MP MP_BY
 signature NU_BASICS = sig
   val void_ty : typ
   val proc_ctx_ty : typ * typ -> typ
-  val state_ty : typ -> typ
+  val mk_stateT : typ -> typ
 
   val dest_param : term -> term
   val dest_nuTy : term -> term * term
@@ -74,10 +74,13 @@ open Thm Term HOLogic NuHelp
 fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
 val void_ty = Type("NuPrim.void", [])
 fun proc_ctx_ty (a,b) = Type("NuPrim.proc_ctx", [a,b])
-fun state_ty ty = Type("NuPrim.state", [ty])
+fun mk_stateT ty = Type("NuPrim.state", [ty])
 
 val start_construction_thm = @{thm NuPrim.start_construction}
 
+fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
+fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
+                                    | TERM _ => raise TERM (msg, [prop_of th])
 
 fun dest_param (Const ("NuPrim.ParamTag", _) $ x) = x
   | dest_param tm = raise TERM ("dest_param", [tm])
@@ -132,8 +135,9 @@ fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
 val dest_Proc_CtxTy   = dest_binop "NuPrim.Proc_CtxTy"
 val dest_Proc_CtxTy_c = dest_binop_c "NuPrim.Proc_CtxTy"
-val registers_of_specthm = Thm.cprop_of #> dest_SpecTop_c #> #1 #> dest_Trueprop_c
-  #> dest_CurrentConstruction_c #> #2 #> dest_Proc_CtxTy_c #> #2
+val registers_of_specthm = catch_th 0 "registers_of_specthm: Not a CurrentConstruction"
+  (Thm.cprop_of #> dest_SpecTop_c #> #1 #> dest_Trueprop_c
+    #> dest_CurrentConstruction_c #> #2 #> dest_Proc_CtxTy_c #> #2)
 
 val state_of_specthm = Thm.prop_of #> dest_SpecTop #> #1
 val premise_of_specthm = state_of_specthm #> Logic.dest_implies #> #1
@@ -147,7 +151,7 @@ fun current_codeblock specthm =
     val blk_var = current_block_var specthm
   in
     chyps_of specthm
-  |> find_first (fn hy => (term_of hy |> dest_Trueprop |> dest_codeblock |> #1) = blk_var)
+  |> find_first (fn hy => (term_of hy |> try (dest_Trueprop #> dest_codeblock #> #1)) = SOME blk_var)
   |> Option.valOf
   end
 fun disch_current_codeblock specthm = implies_intr (current_codeblock specthm) specthm

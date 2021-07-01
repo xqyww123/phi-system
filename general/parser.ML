@@ -1,5 +1,6 @@
 signature NU_PARSE = sig
   val auto_level : int parser
+  val auto_level_force : int parser
 end
 structure NuParse = struct
 local open Parse in
@@ -9,5 +10,7 @@ fun sym_iden_key x =
         (iden_with (fn y => x = y));
 val auto_level =
   (sym_iden_key "!!" >> (K 1) || sym_iden_key "!!!" >> (K 0) || Scan.succeed 2)
+val auto_level_force =
+  (sym_iden_key "!!" >> (K 1) || sym_iden_key "!!!" >> (K 0))
 end
 end

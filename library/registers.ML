@@ -7,6 +7,7 @@ signature NU_REGISTERS = sig
   val store_reg : string (*name*) -> term (*register collection*) -> thm
   (* store to an existing register or create a new one *)
   val assign_reg : string (*name*) -> term (*register collection*) -> thm
+  val load_reg : string (*name*) -> term (*register collection*) -> thm
 end
 structure NuRegisters : NU_REGISTERS = struct
 open NuGeneral NuBasics Term Thm
@@ -24,7 +25,9 @@ fun new_reg_thm NuPath.L = new_reg_L_thm
 fun new_reg_at name [] = new_reg_0_thm |> set_name name
   | new_reg_at name (lr::path) = NuPath.mapper path RS (new_reg_thm lr) |> set_name name
 val store_reg_thm = @{thm store_reg}
+val load_reg_thm = @{thm load_reg}
 fun store_reg_at path = NuPath.mapper path RS store_reg_thm
+fun load_reg_at path = NuPath.mapper path RS load_reg_thm
 
 fun prepend_bitlst_impl (bits,n) =
   ((if Word8.andb (0wx01, n) = 0wx01 then true else false)::bits, Word8.>> (n,0wx01))
@@ -85,8 +88,31 @@ fun find_path name regs =
       (case dest_registerTys regs
          of NONE => raise NoSuchRegister name
           | SOME tree => find_path_impl name [(tree,[])])
+
+fun find_path2_impl name [] = raise NoSuchRegister name
+  | find_path2_impl name (((Const ("NuPrim.AndTy", _) $ t1 $ t2),path)::r)
+      = find_path2_impl name ((t1,NuPath.L::path)::(t2,NuPath.R::path)::r)
+  | find_path2_impl name (((Const ("NuPrim.RegisterTy",_) $ name' $ _),path)::r)
+      = if dest_name_tag name' = name then path else find_path2_impl name r
+  | find_path2_impl name ((t,_)::r) = raise TERM ("register_path",[t])
+fun find_path2 name regs =
+  if same_const Void_name regs
+  then raise NoSuchRegister name
+  else find_path2_impl name [(regs,[])]
+
+fun find_path3_impl name [] = false
+  | find_path3_impl name ((Const ("NuPrim.AndTy", _) $ t1 $ t2)::r)
+      = find_path3_impl name (t1::t2::r)
+  | find_path3_impl name ((Const ("NuPrim.RegisterTy",_) $ name' $ _)::r)
+      = if dest_name_tag name' = name then true else find_path3_impl name r
+  | find_path3_impl name (t::r) = raise TERM ("register_path",[t])
+fun find_path3 name regs =
+  if same_const Void_name regs then false else find_path3_impl name [regs]
+ 
 in
-fun store_reg name regs = store_reg_at (find_path name regs)
+fun store_reg name regs = store_reg_at (find_path2 name regs)
+fun load_reg name regs = load_reg_at (find_path2 name regs)
+fun assign_reg name regs =
+  if find_path3 name regs then store_reg name regs else new_reg name regs
 end
-fun assign_reg name regs = store_reg name regs handle NoSuchRegister _ => new_reg name regs
 end

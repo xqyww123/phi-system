@@ -288,7 +288,7 @@ type_notation "proc_ctx" ("_/ \<flower> _" [2,2] 1)
 definition Proc_CtxTy :: " ('a::lrep) set \<Rightarrow> ('b::register_collection) set \<Rightarrow> ('a \<flower> 'b) set" (infix "\<flower>" 2) \<comment> \<open>the flower operator\<close>
   where "Proc_CtxTy s t = {x. case x of Proc_Ctx a b \<Rightarrow> a \<in>s \<and> b \<in> t}"
     \<comment> \<open>The font of the flower operator is not specified, since any flower is a flower.\<close>
-notation Proc_CtxTy ("(2\<flower_L>\<medium_left_bracket> _/ \<flower_L>\<flower>\<flower_R> _ \<medium_right_bracket>\<flower_R>)" [2,2] 1000)  \<comment> \<open>Better decoration for better attention. It is the center of the construction.\<close>
+notation Proc_CtxTy ("(2\<flower_L>\<medium_left_bracket>//_//\<flower_L>\<flower>\<flower_R>//_//\<medium_right_bracket>\<flower_R>)" [2,2] 1000)  \<comment> \<open>Better decoration for better attention. It is the center of the construction.\<close>
 (* two syntax sugars, defined as constants rather than syntax objects in order to merely enable definition-jumping by `Ctrl-Click`. *)
 consts Proc_Ctx_NoRegisters :: 'a ("\<^bold>n\<^bold>o \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s")
 consts Proc_Ctx_EmptyStack :: 'a ("\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k")

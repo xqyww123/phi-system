@@ -20,11 +20,14 @@ signature NU_TOPLEVEL = sig
         -> (Attrib.binding * (string * string list) list) list (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state
   val prove_prem : Proof.state -> Proof.state
+
+  val process_cmd : Token.T list -> Proof.state -> Proof.state
   (* val have_cmd :
         Proof.state -> Proof.state *)
 
-  val transition_cmd : ('a -> thm -> thm) -> 'a list parser -> (Toplevel.transition -> Toplevel.transition) parser
-  val transition : ('a -> thm -> thm) -> int (* auto level *) -> 'a list -> Proof.state -> Proof.state
+  (* val transition_cmd : ('a -> thm -> thm) -> 'a list parser -> (Toplevel.transition -> Toplevel.transition) parser
+  val transition : ('a -> thm -> thm) -> int (* auto level *) -> 'a list -> Proof.state ->
+  Proof.state *)
   (* val end_proc : state -> state *)
 end
 
@@ -89,7 +92,7 @@ fun start_construction ctx name arg_nuTy : (thm * cterm list (* free terms inten
   let
     val argTy = (case dest_Type (typ_of_cterm arg_nuTy) of ("Set.set", [ty]) => ty
                    | _ => raise Fail "start_construction - argTy - not a set")
-    val stat_var = Free (name, state_ty (proc_ctx_ty (argTy, void_ty))) |> cterm_of ctx
+    val stat_var = Free (name, mk_stateT (proc_ctx_ty (argTy, void_ty))) |> cterm_of ctx
     val arg_var = Free (name ^ "'argument", argTy) |> cterm_of ctx
     val init_thm = Drule.instantiate'_normalize [SOME (ctyp_of ctx argTy)]
                       [SOME stat_var, SOME arg_var, SOME arg_nuTy] start_construction_thm
@@ -145,7 +148,7 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
     stat
   end *)
 
-fun fold_last_flag f [] x = x
+(* fun fold_last_flag f [] x = x
   | fold_last_flag f [v] x = f true v x
   | fold_last_flag f (v::r) x = fold_last_flag f r (f false v x)
 fun transition tr auto_level xs stat =
@@ -154,7 +157,10 @@ fun transition tr auto_level xs stat =
       |> (fn specthm => Proof.set_facts [specthm] stat)
 fun transition_cmd tr arg_parser =
       (arg_parser -- NuParse.auto_level) >> (fn (arg, auto_level) =>
-        Toplevel.proof (transition tr auto_level arg))
+        Toplevel.proof (transition tr auto_level arg)) *)
+fun process_cmd toks stat =
+  stat |> Proof.set_facts
+    [(NuSys.process 2 stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
 
 fun prove_prem stat =
   let open Proof
@@ -164,6 +170,7 @@ fun prove_prem stat =
     val goal = Thm.prop_of specthm |> Logic.dest_implies |> #1
     fun after_qed (ctx',[[th]]) stat = stat |> end_block
           |> map_context_result (close_specthm (th RS specthm))
+          |> (fn (th,stat) => (NuProcessor.process_no_input 0 (Proof.context_of stat) th, stat))
           |-> set_facts o single
   in
     stat |> begin_block
