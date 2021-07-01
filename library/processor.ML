@@ -98,33 +98,34 @@ fun disable name =
       Data.map (Name_Space.map_table_entry name (set_enabled false))
 
 exception Processed of (thm * Token.T list)
-fun process_impl auto_level ctx procs (th,toks) =
+fun process_impl auto_level ctx procs (th,toks) limit =
       let
         val focus = prop_of th |> dest_SpecTop |> #1
       in
         (List.app (fn (_, Processor {binding, pattern, enabled, proc,...}) =>
           if not enabled then ()
           else if can (Pattern.unify ctx (pattern,focus)) Envir.init
-          then (
+          then (@{print} binding;
+            if limit > 100 then error "too deep process" else ();
             raise Processed
               ((proc auto_level (Context.proof_of ctx) th
                 || (fn _ => raise Bypass)) toks)
           ) handle Bypass => ()
               | Processed th_toks => raise Processed th_toks
               | ProcessTerminated th_toks => raise ProcessTerminated th_toks
-              | ex => (@{print} th; @{print} binding; Exn.reraise ex)
+              | ex => (@{print} th; @{print} binding; Exn.reraise (@{print} ex))
             (* | ex => Exn.reraise (ProcessFail (binding,th,ex)) *)
           else ()
         ) procs 
         ; (th,toks))
-      handle Processed th_toks => process_impl auto_level ctx procs th_toks
+      handle Processed th_toks => process_impl auto_level ctx procs th_toks (limit + 1)
         | ProcessTerminated th_toks => th_toks
       end
 fun process auto_level ctx th toks =
   Runtime.exn_trace (fn _ =>
   process_impl auto_level (Context.Proof ctx)
     (Data.get (Context.Proof ctx) |> Name_Space.dest_table |> sort (proc_ord o apply2 snd))
-    (th,toks))
+    (th,toks) 0)
 val process_attr = wrap_attr o process
 fun process_no_input ctx auto_level th = process ctx auto_level th [Token.eof] |> #1
 
@@ -172,7 +173,9 @@ fun focus_rule processor auto_level ctx th toks =
   end
 fun premise_prover_raw prover auto_level ctx th =
   Scan.succeed
-    ((cprem_of th 1 |> Goal.init |> prover auto_level ctx |> Seq.hd |> Goal.conclude) RS th)
+    ((cprem_of th 1 |> Goal.init |> prover auto_level ctx |> Seq.pull |> (fn x =>
+      case x of SOME (th,_) => Goal.conclude th | _ => raise Bypass)
+    ) RS th)
 val premise_prover = focus_rule o premise_prover_raw
 
 fun setup_resolver binding precedence pattern facts comment lthy =

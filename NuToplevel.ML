@@ -19,6 +19,7 @@ signature NU_TOPLEVEL = sig
         -> (xstring * Position.T) list (*includes*)
         -> (Attrib.binding * (string * string list) list) list (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state
+  val finish_proc_cmd : Toplevel.transition -> Toplevel.transition
   val prove_prem : Proof.state -> Proof.state
 
   val process_cmd : Token.T list -> Proof.state -> Proof.state
@@ -88,44 +89,48 @@ fun parse_ret ret =
   ret |> HOLogic.strip_tuple
     |> list_mk_binop_r0 delimiter_name (mk_eof_ctx_stack stack_R)
 
-fun start_construction ctx name arg_nuTy : (thm * cterm list (* free terms intended to be fixed *)) =
-  let
-    val argTy = (case dest_Type (typ_of_cterm arg_nuTy) of ("Set.set", [ty]) => ty
-                   | _ => raise Fail "start_construction - argTy - not a set")
-    val stat_var = Free (name, mk_stateT (proc_ctx_ty (argTy, void_ty))) |> cterm_of ctx
-    val arg_var = Free (name ^ "'argument", argTy) |> cterm_of ctx
-    val init_thm = Drule.instantiate'_normalize [SOME (ctyp_of ctx argTy)]
-                      [SOME stat_var, SOME arg_var, SOME arg_nuTy] start_construction_thm
-    val init_thm = init_thm |> undisch
-  in
-    (init_thm, [arg_var])
-  end
+structure ProcConstructionData = Generic_Data
+(
+  type T = proc_conctx
+  val empty: T = {proc_const = dummy_c, binding = Binding.empty, goal = dummy_c}
+  val extend = I
+  val merge : T * T -> T = #1
+)
 
+val v_proc_const = ("\<p>\<r>\<o>\<c>", 0)
+val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
   let
     val (arg, reg_names) = arg |> Syntax.parse_term ctx |> parse_arg
     val ret = ret |> Syntax.parse_term ctx |> parse_ret
-    val goal = HOLogic.mk_Trueprop (Const ("NuPrim.Procedure", dummyT)
-          $ Var (("\<p>\<r>\<o>\<c>", 0),dummyT) $ arg $ ret)
     val includes = includes |> map (Bundle.check ctx)
     val parse_term = Syntax.parse_term ctx
     val parse_prop = Syntax.parse_prop ctx
+    val ((proc,goal,th),ctx) = begin_proc (fst binding) (arg,ret) ctx
     val elems = [Element.Fixes (fixes |> map (fn (b,ty,f) => (b, Option.map (Syntax.parse_typ ctx) ty, f))),
                  Element.Assumes (preconds
                     |> map (apsnd (map (apfst parse_prop #> apsnd (map parse_term)))))]
     val concls = Element.Shows [(binding,[(goal,[])])]
-    val stat = ctx
-      |> Specification.schematic_theorem false "" NONE (K I) Binding.empty_atts
-            includes elems concls int
-      |> Proof.using_facts [] |> Proof.enter_forward |> Proof.begin_block
-    val ctx' = Proof.context_of stat
-    val (th, to_fix) = arg |> Syntax.check_term ctx'
-      |> Thm.cterm_of ctx' |> start_construction ctx' "\<t>\<o>\<p>_\<p>\<r>\<o>\<c>"
-    val stat = stat |> Proof.set_facts [th]
-    val _ = Proof_Context.read_term_schematic ctx' "?thesis" |> @{print}
   in
-    stat
+    ctx |> Specification.schematic_theorem false "" NONE (K I) Binding.empty_atts
+              includes elems concls int
+      |> Proof.map_context (Context.proof_map (ProcConstructionData.map
+          (K {proc_const = cterm_of ctx proc, binding = fst binding, goal = cterm_of ctx goal})))
+      |> Proof.using_facts [] |> Proof.enter_forward
+      |> Proof.set_facts [th]
+      |> Proof.map_context (Proof_Context.bind_term (v_proc_const,proc))
   end
+
+val finish_proc_cmd = Toplevel.proof (fn stat =>
+  let
+    val ctx = Proof.context_of stat
+    val conctx = ProcConstructionData.get (Context.Proof ctx)
+  in
+    stat |> Proof.map_context_result (finish_proc conctx (Proof.the_fact stat))
+      |-> Proof.set_facts o single
+  end
+  )
+  (* #> Isar_Cmd.qed NONE *)
 
 (* fun begin_proc_cmd (statement, pos) fixes assumes ctx =
   let
@@ -165,7 +170,7 @@ fun process_cmd toks stat =
 fun prove_prem stat =
   let open Proof
     val specthm = the_fact stat
-    val codeblocks = hyps_of specthm |> filter (can dest_codeblock)
+    val codeblocks = codeblocks_of specthm
     val (specthm,stat) = Proof.map_context_result (open_specthm specthm) stat
     val goal = Thm.prop_of specthm |> Logic.dest_implies |> #1
     fun after_qed (ctx',[[th]]) stat = stat |> end_block

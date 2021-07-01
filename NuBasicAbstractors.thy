@@ -37,15 +37,6 @@ val th = Goal.init tm2
 val th2 = SOLVED' (Tactical.REPEAT o Tactic.ares_tac @{context} @{thms \<nu>share}) 1 th |> Seq.hd
 \<close>
 
-
-definition op_add :: "nat \<Rightarrow> ('a::len) word \<times> ('a::len) word \<times> 'r \<Rightarrow> (('a::len) word \<times> 'r) state"
-  where op_add_def: "op_add w p = (case p of (a,b,r) \<Rightarrow> if LENGTH('a) = w then StatOn (a+b, r) else STrap)"
-theorem add_nat: "x + y < 2^LENGTH('b) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> x \<tycolon> \<nat>['b::len] \<boxbar> y \<tycolon> \<nat>['b] \<boxbar> \<RR>emain_stack \<longmapsto> x + y \<tycolon> \<nat>['b] \<boxbar> \<RR>emain_stack \<brangle>"
-  unfolding op_add_def Procedure_def by auto
-
-theorem add_nat_mod: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> x \<tycolon> \<nat>['b::len] \<boxbar> y \<tycolon> \<nat>['b] \<boxbar> \<RR> \<longmapsto> (x + y mod 2^(LENGTH('b))) \<tycolon> \<nat>['b] \<boxbar> \<RR> \<brangle>"
-  unfolding op_add_def Procedure_def by auto (metis of_nat_unat ucast_id unat_of_nat)
-
 definition NuRefine :: " ('a :: lrep, 'b) nu \<Rightarrow> 'b set \<Rightarrow> ('a, 'b) nu " (infixl "\<nuRefine>" 80)
   where "N \<nuRefine> T = Nu (\<lambda>(p,x). x \<in> T \<and>(p \<nuLinkL> N \<nuLinkR> x))"
 lemma [simp]: "p \<nuLinkL> N \<nuRefine> P \<nuLinkR> x \<longleftrightarrow> x \<in> P \<and> (p \<nuLinkL> N \<nuLinkR> x)" unfolding NuRefine_def by auto

@@ -36,7 +36,7 @@ fun define name th ctx =
   in
     (Name_Space.map_table_entry name (Item_Net.update th) |> Data.map) ctx
   end
-fun check ctx name = Name_Space.check ctx (Data.get ctx) name |> #2 |> Item_Net.content |> @{print}
+fun check ctx name = Name_Space.check ctx (Data.get ctx) name |> #2 |> Item_Net.content
 
 
 end

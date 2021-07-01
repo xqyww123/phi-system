@@ -15,6 +15,7 @@ signature NU_HELP = sig
   val UI_top_handler_local : (Proof.context -> 'a) -> Proof.context -> 'a
   val UI_top_handler_global : (Context.theory -> 'a) -> Context.theory -> 'a
 
+  val dummy_c : cterm
   val same_const : string (* const name *) -> term -> bool
   (* map all free terms and free types inside to variables *)
   val free_to_var_ty : typ -> typ
@@ -43,6 +44,7 @@ signature NU_HELP = sig
   * ---------------
   *   Γ, A |- B *)
   val undisch : thm -> thm
+  val forall_intr_by_names : string list -> thm -> thm
 
   val fix_frees : Position.T -> term list (* free terms *) -> state -> state
 end
@@ -129,4 +131,15 @@ val free_to_var = map_aterms (fn tm =>
       case tm of Free (name,ty) => Var ((name,0), free_to_var_ty ty)
          | Const (name,ty) => Const (name, free_to_var_ty ty)
          | Var (name,ty) => Var (name, free_to_var_ty ty))
+
+fun forall_intr_by_names names th =
+  let
+    val frees = Thm.add_frees th []
+    val foralls = map (fn name =>
+      find_first (fn x => (term_of x |> dest_Free |> #1) = name) frees |> the) names
+  in
+    fold Thm.forall_intr foralls th
+  end
+
+val dummy_c = cterm_of @{context} dummy_prop
 end

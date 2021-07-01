@@ -39,9 +39,14 @@ signature NU_BASICS = sig
   val current_block_var : thm -> cterm
   val dest_codeblock   : term -> term * term * term * term
   val dest_codeblock_c : cterm -> cterm * cterm * cterm * cterm
+  val codeblocks_of   : thm -> term list
+  val codeblocks_of_c : thm -> term list
   val codeblock_name   : term -> term * term * term * term
   val current_codeblock : thm -> cterm
   val disch_current_codeblock : thm -> thm
+
+  val dest_procedure   : term -> term * term * term
+  val dest_procedure_c : cterm -> cterm * cterm * cterm
 
   val elim_SPEC : thm -> thm * thm
   val intro_SPEC : thm * thm -> thm
@@ -146,6 +151,8 @@ val current_block_var =
 val dest_codeblock   = perhaps dest_Trueprop #> dest_quadop "NuPrim.CodeBlock"
 val codeblock_name   = dest_codeblock #> #1 #> dest_Free #> #1
 val dest_codeblock_c = perhaps dest_Trueprop_c #> dest_quadop_c "NuPrim.CodeBlock"
+val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
+val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
 fun current_codeblock specthm =
   let
     val blk_var = current_block_var specthm
@@ -222,7 +229,7 @@ fun open_specthm' pos th ctx =
   (case elim_SPEC th of (focus,aux) =>
     ctx |> Proof_Context.put_thms false (aux_name_raw, SOME [aux])
       |> Proof_Context.add_thms_lazy "" (Binding.make(aux_name, pos),
-          Lazy.lazy (fn _ => elim_AndFacts aux))
+          Lazy.lazy (fn _ => elim_AndFacts aux @ Assumption.all_prems_of ctx))
       |> pair focus)
 val open_specthm = open_specthm' Position.none
 fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
@@ -231,4 +238,8 @@ fun close_specthm focus ctx =
   ctx |> Proof_Context.put_thms false (aux_name_raw, NONE)
     |> Proof_Context.put_thms false (aux_name, NONE)
     |> pair (intro_SPEC (focus, aux_facts_raw ctx))
+
+
+val dest_procedure   = dest_triop   "NuPrim.Procedure" o perhaps dest_Trueprop
+val dest_procedure_c = dest_triop_c "NuPrim.Procedure" o perhaps dest_Trueprop_c
 end
