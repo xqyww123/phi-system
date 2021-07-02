@@ -8,13 +8,15 @@ theory NuSys
   and "\<bullet>" "premise" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" :: thy_decl % "ML"
   and "\<nu>procedure" :: thy_decl
-  and "finish" :: qed_block % "proof"
+and "finish" :: qed_block % "proof"
+(*   and "finish" :: qed_block % "proof" *)
 abbrevs
   "!!" = "!!"
 begin
 
 ML_file_debug NuHelp.ML
 ML_file "./general/binary_tree.ML"
+ML_file "./general/auto_level.ML"
 ML_file "./library/path.ML"
 ML_file_debug NuBasics.ML
 ML_file "./library/general.ML"
@@ -30,10 +32,9 @@ ML_file_debug NuToplevel.ML
 
 ML \<open>Theory.setup (Global_Theory.add_thms_dynamic (@{binding "\<nu>instr"}, NuInstructions.list_definitions #> map snd))  \<close>
 attribute_setup \<nu>instr = \<open>Scan.succeed (Thm.declaration_attribute NuInstructions.add) \<close>
-attribute_setup \<nu>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_position -- NuParse.auto_level --| Parse.$$$ ")") #>
-    (fn ((name,auto_level),(ctx,toks)) =>
-        Scan.lift (NuProcessor.get_attr ctx (name |> @{print}) auto_level) (ctx,toks))
-  || Scan.lift (NuParse.auto_level #-> NuProcessor.process_attr)\<close>
+attribute_setup \<nu>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_position --| Parse.$$$ ")") #>
+    (fn (name,(ctx,toks)) => Scan.lift (NuProcessor.get_attr ctx name) (ctx,toks))
+  || Scan.lift NuProcessor.process_attr\<close>
 attribute_setup show_proc_expression = \<open>NuToplevel.show_proc_expression_attr\<close>
 (* declare [[show_proc_expression = false]] *)
 
@@ -85,23 +86,23 @@ attribute_setup \<nu>proc = \<open>Scan.lift (Parse.name_position) >> (fn name =
 
 (* \<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn auto_level => fn ctx => fn th => NuParse.auto_level_force #->
   (fn auto_level' => NuProcessor.process (Int.min (auto_level, auto_level')) ctx th #> (fn x => raise ProcessTerminated x)))\<close> *)
-\<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>safe (Scan.succeed oo NuSys.accept_proc)\<close>
+\<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>Scan.succeed oo NuSys.accept_proc\<close>
 \<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  (fn auto_level => fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fold (fn idt => NuSys.assign_reg ctx idt #> NuProcessor.process_no_input (Int.min (auto_level,1)) ctx) idts th))
+  (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
+    (fn idts => fold (fn idt => NuSys.assign_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
 \<nu>processor  load_register 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  safe (fn ctx => fn th => short_ident >> (fn idt => NuSys.load_reg ctx idt th
-      handle NuRegisters.NoSuchRegister _ => raise Bypass))
+  fn ctx => fn th => short_ident >> (fn idt => NuSys.load_reg ctx idt th
+      handle NuRegisters.NoSuchRegister _ => raise Bypass)
 end\<close>
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier\<close>
 \<nu>processor \<nu>autoprover 9000 \<open>P \<Longrightarrow> PROP Q\<close>
   \<open>let open Tactical Method in 
     premise_prover (not_safe (fn ctx => SOLVED' (K (ALLGOALS (insert_tac ctx (Proof_Context.get_thms ctx "that")) THEN Simpdata.auto_tac ctx)) 0))
   end\<close>
-\<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>safe (fn ctx => fn focus =>
+\<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn focus =>
   Parse.position (Parse.short_ident || Parse.keyword || Parse.sym_ident) >> (fn proc =>
-    NuSys.apply_procs ctx (NuProcedure.check (Context.Proof ctx) proc) focus))\<close>
+    NuSys.apply_procs ctx (NuProcedure.check (Context.Proof ctx) proc) focus)\<close>
 
 \<nu>processor_resolver resolve_disposable 100  \<open>\<nu>Disposable T \<Longrightarrow> PROP P\<close> \<nu>disposable
 \<nu>processor_resolver resolve_share 100  \<open>Nu_Share N sh f \<Longrightarrow> PROP P\<close> \<nu>share

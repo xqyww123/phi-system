@@ -97,7 +97,8 @@ structure ProcConstructionData = Generic_Data
   val merge : T * T -> T = #1
 )
 
-val v_proc_const = ("\<p>\<r>\<o>\<c>", 0)
+val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
+val v_goal_name = "\<nu>goalaa"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
   let
@@ -106,28 +107,39 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
     val includes = includes |> map (Bundle.check ctx)
     val parse_term = Syntax.parse_term ctx
     val parse_prop = Syntax.parse_prop ctx
-    val ((proc,goal,th),ctx) = begin_proc (fst binding) (arg,ret) ctx
+    val (goal,th) = begin_proc ctx (fst binding) (arg,ret)
     val elems = [Element.Fixes (fixes |> map (fn (b,ty,f) => (b, Option.map (Syntax.parse_typ ctx) ty, f))),
                  Element.Assumes (preconds
                     |> map (apsnd (map (apfst parse_prop #> apsnd (map parse_term)))))]
     val concls = Element.Shows [(binding,[(goal,[])])]
   in
-    ctx |> Specification.schematic_theorem false "" NONE (K I) Binding.empty_atts
+    ctx |> Specification.schematic_theorem false "\<nu>procedure" NONE (fn th => (@{print} th; I)) Binding.empty_atts
               includes elems concls int
-      |> Proof.map_context (Context.proof_map (ProcConstructionData.map
-          (K {proc_const = cterm_of ctx proc, binding = fst binding, goal = cterm_of ctx goal})))
+      (* |> Proof.map_context (Context.proof_map (ProcConstructionData.map
+          (K {proc_const = cterm_of ctx proc, binding = fst binding, goal = cterm_of ctx goal}))) *)
+      (* |> Proof.proof (SOME (Method.Basic (K (Method.SIMPLE_METHOD Tactical.all_tac)), Position.no_range))
+      |> Seq.the_result "hahahahaha" *)
+      |> Proof.refine_primitive (K @{print})
       |> Proof.using_facts [] |> Proof.enter_forward
       |> Proof.set_facts [th]
-      |> Proof.map_context (Proof_Context.bind_term (v_proc_const,proc))
   end
 
-val finish_proc_cmd = Toplevel.proof (fn stat =>
+val finish_proc_cmd = Toplevel.end_proof (fn _ => fn stat =>
   let
     val ctx = Proof.context_of stat
     val conctx = ProcConstructionData.get (Context.Proof ctx)
+    val goal = Proof_Context.read_term_schematic ctx "?thesis"
+                |> open_schematic_term
+    val th = (Proof.the_fact stat) |> finish_proc ctx (cterm_of ctx goal)
+    val (proc,_,_) = prop_of th |> dest_procedure
   in
-    stat |> Proof.map_context_result (finish_proc conctx (Proof.the_fact stat))
-      |-> Proof.set_facts o single
+    stat |> Proof.set_facts [th]
+         |> Proof.refine_primitive (K (fn t => 
+              (th RS t)
+              ))
+  |> Proof.enter_backward
+  |> @{print}
+          |> Proof.global_done_proof
   end
   )
   (* #> Isar_Cmd.qed NONE *)
@@ -165,7 +177,7 @@ fun transition_cmd tr arg_parser =
         Toplevel.proof (transition tr auto_level arg)) *)
 fun process_cmd toks stat =
   stat |> Proof.set_facts
-    [(NuSys.process 2 stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
+    [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
 
 fun prove_prem stat =
   let open Proof
@@ -175,7 +187,8 @@ fun prove_prem stat =
     val goal = Thm.prop_of specthm |> Logic.dest_implies |> #1
     fun after_qed (ctx',[[th]]) stat = stat |> end_block
           |> map_context_result (close_specthm (th RS specthm))
-          |> (fn (th,stat) => (NuProcessor.process_no_input 0 (Proof.context_of stat) th, stat))
+          |> (fn (th,stat) => (NuProcessor.process_no_input
+                (Proof.context_of stat |> AutoLevel.put 0) th, stat))
           |-> set_facts o single
   in
     stat |> begin_block

@@ -11,11 +11,10 @@ signature NU_SYS = sig
   val assign_reg : Proof.context -> string (*name*) -> thm -> thm
   val load_reg : Proof.context -> string (*name*) -> thm -> thm
 
-  val process : int (* auto level *) -> Proof.state -> thm -> thm parser
-    (* auto level: 2 - fully auto, 1 - paritally auto, 0 - fully manual *)
+  val process : Proof.state -> thm -> thm parser
 
-  val begin_proc : binding -> term * term -> Proof.context -> (term * term * thm) * Proof.context
-  val finish_proc : proc_conctx -> thm -> Proof.context -> thm * Proof.context
+  val begin_proc : Proof.context -> binding -> term * term -> term * thm
+  val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm
 
 end
 structure NuSys : NU_SYS = struct
@@ -48,12 +47,28 @@ fun conversion_goal to from =
     (from RSN (2,rule)) |> Goal.protect 1
   end
 
+fun head_tac tac th =
+  if nprems_of th = 1
+  then tac th
+  else Goal.init (cprem_of th 1) |> tac
+        |> Seq.filter (fn th => nprems_of th = 0)
+        |> Seq.map (Thm.implies_elim th o Goal.conclude)
+fun obligation_auto_tac ctx th =
+  if can (major_prem_of #> dest_obligation) th
+  then if nprems_of th = 1
+    then Simpdata.auto_tac ctx th
+    else head_tac (obligation_auto_tac ctx) th
+  else Seq.empty
 fun cast_tac ctx =
-  HEADGOAL (SOLVED' (REPEAT_DETERM_N 100 o resolve_tac ctx (Named_Theorems.get ctx "NuPrim.\<nu>cast")))
+  HEADGOAL (SOLVED' (REPEAT_DETERM_N 100 o (fn i =>
+    resolve_tac ctx (Named_Theorems.get ctx "NuPrim.\<nu>cast") i
+      ORELSE obligation_auto_tac ctx
+  )))
 fun cast_tac2 ctx =
-  HEADGOAL ((REPEAT_DETERM_N 100 o resolve_tac ctx (Named_Theorems.get ctx "NuPrim.\<nu>cast")))
+   (REPEAT (HEADGOAL (resolve_tac ctx (Named_Theorems.get ctx "NuPrim.\<nu>cast"))
+      ORELSE obligation_auto_tac ctx))
 fun cast ctx goal = cast_tac2 ctx goal |> Seq.pull |> (fn x =>
-      case x of SOME (th,_) => th
+      case x of SOME (th,other) => Goal.conclude th
               | NONE => raise TERM ("Cast fail", prems_of goal)
                   (* raise CastFail ((prems_of goal)) *)
               )
@@ -100,10 +115,11 @@ fun accept_proc ctx specthm =
     |> param_set_free_var_name ctx (current_block_var specthm |> dest_Free |> #1)
     |> undisch
 
-fun process auto_level stat = NuProcessor.process auto_level (Proof.context_of stat)
+val process = NuProcessor.process o Proof.context_of
 
 val top_blk_name = "\<t>\<o>\<p>_\<p>\<r>\<o>\<c>"
 val argument_name = "\<a>\<r>\<g>\<u>\<m>\<e>\<n>\<t>"
+val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 fun starting_construction ctx arg_nuTy =
   let
     val argTy = (case dest_Type (typ_of_cterm arg_nuTy) of ("Set.set", [ty]) => ty
@@ -117,20 +133,21 @@ fun starting_construction ctx arg_nuTy =
     init_thm
   end
 
-fun begin_proc name (arg,ret) ctx =
+fun begin_proc ctx name (arg,ret) =
   let
     val (arg,ret) = apply2 (Syntax.check_term ctx) (arg,ret)
     val (argT,retT) = apply2 (type_of #> dest_Type #> #2 #> hd) (arg,ret)
-    val (proc,ctx) = Proof_Context.background_theory_result (
-          Sign.declare_const ctx ((name, argT --> mk_stateT retT), NoSyn)) ctx
+    val procT = argT --> mk_stateT retT
+    (*val (proc,ctx) = Proof_Context.background_theory_result (
+          Sign.declare_const ctx ((name, argT --> mk_stateT retT), NoSyn)) ctx*)
     val goal = HOLogic.mk_Trueprop (
           Const ("NuPrim.Procedure",
                     (argT --> mk_stateT retT) --> mk_setT argT --> mk_setT retT --> boolT)
-          $ proc $ arg $ ret)
+          $ Var (v_proc_var, procT) $ arg $ ret)
     val th = arg |> Thm.cterm_of ctx
               |> starting_construction ctx
   in
-    ((proc,goal,th),ctx)
+    (goal,th)
   end
 
 fun meta_eq_to_hol_eq th =
@@ -144,7 +161,7 @@ fun meta_eq_to_hol_eq th =
     Thm.implies_elim rule th
   end
 
-fun finish_proc {proc_const, binding, goal} th ctx =
+fun finish_proc ctx goal th =
   let
     val (tm,L) = cprop_of th |> dest_SpecTop_c
     val (T,R) = dest_Trueprop_c tm |> dest_CurrentConstruction_c |> #2 |> dest_Proc_CtxTy_c
@@ -163,19 +180,19 @@ fun finish_proc {proc_const, binding, goal} th ctx =
            ((("f",0), typ_of_cterm f),f),
            ((("T",0), typ_of_cterm T),T),
            ((("R",0), typ_of_cterm R),R),
-           ((("L",0), typ_of_cterm L),L),
-           ((("f'",0),typ_of_cterm proc_const),proc_const)
+           ((("L",0), typ_of_cterm L),L)
           ]) @{thm NuPrim.finish_construction}
-    val th = th |> implies_intr codeblock
+    (* val def_term = prems_of th |> hd |> dest_Trueprop |> HOLogic.dest_eq |> Logic.mk_equals *)
+  in
+    th |> implies_intr codeblock
        |> forall_intr s |> forall_intr a
        |> implies_elim finish_thm
-    val def_term = prems_of th |> hd |> dest_Trueprop |> HOLogic.dest_eq |> Logic.mk_equals
-  in
-    ctx |> Proof_Context.background_theory_result
+       |> conversion_goal goal |> cast ctx
+    (* ctx |> Proof_Context.background_theory_result
             (Thm.add_def (Proof_Context.defs_context ctx) false true
                 (Binding.suffix_name "_def" binding, def_term))
         >> (Thm.implies_elim th o meta_eq_to_hol_eq o snd)
         |> (fn (th,ctx) =>
-          th |> conversion_goal goal |> cast ctx |> rpair ctx)
+          th |> conversion_goal goal |> cast ctx |> rpair ctx) *)
   end
 end

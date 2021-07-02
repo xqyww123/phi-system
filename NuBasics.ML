@@ -47,6 +47,8 @@ signature NU_BASICS = sig
 
   val dest_procedure   : term -> term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm
+  val dest_obligation  : term -> term
+  val dest_obligation_c: cterm -> cterm
 
   val elim_SPEC : thm -> thm * thm
   val intro_SPEC : thm * thm -> thm
@@ -242,4 +244,6 @@ fun close_specthm focus ctx =
 
 val dest_procedure   = dest_triop   "NuPrim.Procedure" o perhaps dest_Trueprop
 val dest_procedure_c = dest_triop_c "NuPrim.Procedure" o perhaps dest_Trueprop_c
+val dest_obligation  = dest_monop   "NuPrim.Obligation" o perhaps dest_Trueprop
+val dest_obligation_c= dest_monop_c "NuPrim.Obligation" o perhaps dest_Trueprop_c
 end

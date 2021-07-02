@@ -45,6 +45,7 @@ signature NU_HELP = sig
   *   Γ, A |- B *)
   val undisch : thm -> thm
   val forall_intr_by_names : string list -> thm -> thm
+  val open_schematic_term : term -> term
 
   val fix_frees : Position.T -> term list (* free terms *) -> state -> state
 end
@@ -142,4 +143,6 @@ fun forall_intr_by_names names th =
   end
 
 val dummy_c = cterm_of @{context} dummy_prop
+fun open_schematic_term tm = 
+  betapplys (tm, (strip_abs_vars tm |> map (fn (n,t) => Var ((n,0),t))))
 end
