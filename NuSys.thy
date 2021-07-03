@@ -1,13 +1,13 @@
 (* FIX ME: I have tried the best but the sidekick won't work right. Isabelle is not quite flexible in
   outer syntax and it is already the best hack can be given. *)
 theory NuSys
-  imports NuPrim NuSyntax NuBasicAbstractors
+  imports NuPrim NuSyntax
   keywords
     "proc" :: thy_decl_block
   and "\<medium_left_bracket>" "as" "\<rightarrow>" "\<longmapsto>" :: quasi_command
   and "\<bullet>" "premise" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" :: thy_decl % "ML"
-  and "\<nu>procedure" :: thy_decl
+  and "\<nu>overloads" :: thy_decl
 and "finish" :: qed_block % "proof"
 (*   and "finish" :: qed_block % "proof" *)
 abbrevs
@@ -68,21 +68,21 @@ val _ =
         >> NuProcessor.setup_cmd)
 
 val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor_resolver\<close> "define \<nu>processor"
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor_resolver\<close> "define \<nu>processor resolver"
       (Parse.binding -- Parse.nat -- (Parse.term -- Parse.for_fixes) -- Parse.name_position -- Scan.optional Parse.text ""
         >> (fn ((((b,precedence),pattern),facts),comment) => NuProcessor.setup_resolver b precedence pattern facts comment))
 
 val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>procedure\<close> "declare \<nu>procedure"
-    (and_list1 binding >> (Context.proof_map o fold NuProcedure.declare))
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>overloads\<close> "declare \<nu>overloads"
+    (and_list1 (binding -- Scan.optional Parse.text "") >>
+        (fold (fn (b,s) => NuProcedure.declare_overloading b s #> #2)))
 
 end
 \<close>
 
-attribute_setup \<nu>proc = \<open>Scan.lift (Parse.name_position) >> (fn name => fn (ctx,th) =>
-  if Thm.is_dummy th
-  then (NONE, SOME (foldr1 (uncurry Conjunction.intr) (NuProcedure.check ctx name)))
-  else (SOME (NuProcedure.define name th ctx), NONE))\<close>
+
+attribute_setup \<nu>overload = \<open>Scan.lift (Parse.and_list1 NuProcedure.parser) >> (fn bindings => 
+  Thm.declaration_attribute (fn th => fold (NuProcedure.overload th) bindings))\<close>
 
 (* \<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn auto_level => fn ctx => fn th => NuParse.auto_level_force #->
   (fn auto_level' => NuProcessor.process (Int.min (auto_level, auto_level')) ctx th #> (fn x => raise ProcessTerminated x)))\<close> *)
@@ -100,9 +100,8 @@ end\<close>
   \<open>let open Tactical Method in 
     premise_prover (not_safe (fn ctx => SOLVED' (K (ALLGOALS (insert_tac ctx (Proof_Context.get_thms ctx "that")) THEN Simpdata.auto_tac ctx)) 0))
   end\<close>
-\<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn focus =>
-  Parse.position (Parse.short_ident || Parse.keyword || Parse.sym_ident) >> (fn proc =>
-    NuSys.apply_procs ctx (NuProcedure.check (Context.Proof ctx) proc) focus)\<close>
+\<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn focus => NuProcedure.parser >> (fn binding =>
+    NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) focus)\<close>
 
 \<nu>processor_resolver resolve_disposable 100  \<open>\<nu>Disposable T \<Longrightarrow> PROP P\<close> \<nu>disposable
 \<nu>processor_resolver resolve_share 100  \<open>Nu_Share N sh f \<Longrightarrow> PROP P\<close> \<nu>share

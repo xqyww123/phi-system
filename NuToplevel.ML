@@ -107,19 +107,21 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
     val includes = includes |> map (Bundle.check ctx)
     val parse_term = Syntax.parse_term ctx
     val parse_prop = Syntax.parse_prop ctx
-    val (goal,th) = begin_proc ctx (fst binding) (arg,ret)
+    val (goal,th) = begin_proc ctx (arg,ret) reg_names
     val elems = [Element.Fixes (fixes |> map (fn (b,ty,f) => (b, Option.map (Syntax.parse_typ ctx) ty, f))),
                  Element.Assumes (preconds
                     |> map (apsnd (map (apfst parse_prop #> apsnd (map parse_term)))))]
-    val concls = Element.Shows [(binding,[(goal,[])])]
+    val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]
+    val binding = binding |> apsnd (map (Attrib.check_src ctx))
+    fun after_qed [[th]] lthy =
+      lthy |> NuProcedure.define binding th |> #2
   in
-    ctx |> Specification.schematic_theorem false "\<nu>procedure" NONE (fn th => (@{print} th; I)) Binding.empty_atts
+    ctx |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
               includes elems concls int
       (* |> Proof.map_context (Context.proof_map (ProcConstructionData.map
           (K {proc_const = cterm_of ctx proc, binding = fst binding, goal = cterm_of ctx goal}))) *)
       (* |> Proof.proof (SOME (Method.Basic (K (Method.SIMPLE_METHOD Tactical.all_tac)), Position.no_range))
       |> Seq.the_result "hahahahaha" *)
-      |> Proof.refine_primitive (K @{print})
       |> Proof.using_facts [] |> Proof.enter_forward
       |> Proof.set_facts [th]
   end
@@ -133,13 +135,12 @@ val finish_proc_cmd = Toplevel.end_proof (fn _ => fn stat =>
     val th = (Proof.the_fact stat) |> finish_proc ctx (cterm_of ctx goal)
     val (proc,_,_) = prop_of th |> dest_procedure
   in
-    stat |> Proof.set_facts [th]
+    stat |> Proof.set_facts [th] 
          |> Proof.refine_primitive (K (fn t => 
               (th RS t)
               ))
-  |> Proof.enter_backward
-  |> @{print}
-          |> Proof.global_done_proof
+         |> Proof.enter_backward
+         |> Proof.global_done_proof
   end
   )
   (* #> Isar_Cmd.qed NONE *)

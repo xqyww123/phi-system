@@ -13,7 +13,7 @@ signature NU_SYS = sig
 
   val process : Proof.state -> thm -> thm parser
 
-  val begin_proc : Proof.context -> binding -> term * term -> term * thm
+  val begin_proc : Proof.context -> term * term -> string list (*reg names*) -> term * thm
   val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm
 
 end
@@ -31,10 +31,10 @@ fun conversion_goal to from =
     val c = dest_ctyp0 (ctyp_of_cterm f')
     val d = dest_ctyp0 (dest_ctyp1 (ctyp_of_cterm f'))
     val rule = Thm.instantiate
-      ([((("'a",0),["HOL.type"]), a),
-        ((("'b",0),["HOL.type"]), b),
-        ((("'c",0),["HOL.type"]), c),
-        ((("'d",0),["HOL.type"]), d)
+      ([((("'a",0),["NuPrim.lrep"]), a),
+        ((("'b",0),["NuPrim.lrep"]), b),
+        ((("'c",0),["NuPrim.lrep"]), c),
+        ((("'d",0),["NuPrim.lrep"]), d)
        ],[
         ((("f",0),  typ_of_cterm f),  f),
         ((("U",0),  typ_of_cterm U),  U),
@@ -75,7 +75,7 @@ fun cast ctx goal = cast_tac2 ctx goal |> Seq.pull |> (fn x =>
 
 local open Tactical Tactic
 val apply_proc_thm = @{thm NuPrim.apply_proc} and apply_proc_conv_thm = @{thm NuPrim.apply_proc_conv}
-val vA = (("'a",0),["HOL.type"])
+val vA = (("'a",0),["NuPrim.lrep"])
 fun v_blk t = (("blk",0), mk_stateT t)
 fun vS t = (("S",0), HOLogic.mk_setT t)
 fun mk_apply_thms apply_thm focus =
@@ -133,7 +133,7 @@ fun starting_construction ctx arg_nuTy =
     init_thm
   end
 
-fun begin_proc ctx name (arg,ret) =
+fun begin_proc ctx (arg,ret) reg_names =
   let
     val (arg,ret) = apply2 (Syntax.check_term ctx) (arg,ret)
     val (argT,retT) = apply2 (type_of #> dest_Type #> #2 #> hd) (arg,ret)
@@ -146,6 +146,7 @@ fun begin_proc ctx name (arg,ret) =
           $ Var (v_proc_var, procT) $ arg $ ret)
     val th = arg |> Thm.cterm_of ctx
               |> starting_construction ctx
+              |> fold (fn reg => assign_reg ctx reg #> accept_proc ctx) reg_names
   in
     (goal,th)
   end
@@ -172,7 +173,7 @@ fun finish_proc ctx goal th =
     val bT = dest_ctyp0 (dest_ctyp0 (ctyp_of_cterm s))
     val cT = dest_ctyp1 (dest_ctyp0 (ctyp_of_cterm s))
     val finish_thm = Thm.instantiate (
-          [((("'a",0),["HOL.type"]),aT),
+          [((("'a",0),["NuPrim.lrep"]),aT),
            ((("'b",0),["NuPrim.lrep"]),bT),
            ((("'c",0),["NuPrim.register_collection"]),cT)
           ], [
@@ -182,7 +183,6 @@ fun finish_proc ctx goal th =
            ((("R",0), typ_of_cterm R),R),
            ((("L",0), typ_of_cterm L),L)
           ]) @{thm NuPrim.finish_construction}
-    (* val def_term = prems_of th |> hd |> dest_Trueprop |> HOLogic.dest_eq |> Logic.mk_equals *)
   in
     th |> implies_intr codeblock
        |> forall_intr s |> forall_intr a

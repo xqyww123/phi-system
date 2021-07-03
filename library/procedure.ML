@@ -1,42 +1,50 @@
 signature NU_PROCEDURE = sig
-  val defined : Context.generic -> string -> bool
-  val declare : binding -> Context.generic -> Context.generic
-  val define : xstring * Position.T -> thm -> Context.generic -> Context.generic
-  val check : Context.generic -> xstring * Position.T -> thm list
+  val procedure_kind : string
+  val proc_suffix : string
+  val compilation_suffix : string
+  val parser : (string * Position.T) parser
+  val declare_overloading : binding -> string (*comment*) -> local_theory -> string * local_theory
+  val overload : thm -> (string * Position.T) -> Context.generic -> Context.generic
+  val procedure_thm : Proof.context -> (string * Position.T) -> thm list
+  val compilation_thm : Proof.context -> (string * Position.T) -> thm list
+  val compilation_thm_of : Proof.context -> term -> thm list
+  val define : Attrib.binding -> thm -> local_theory -> thm * local_theory
 end
 
 structure NuProcedure : NU_PROCEDURE = struct
-structure Data = Generic_Data
-(
-  type T = thm Item_Net.T Name_Space.table
-  val empty: T = Name_Space.empty_table "\<nu>procedure"
-  val extend = I
-  val merge : T * T -> T = Name_Space.join_tables (K Item_Net.merge)
-)
+open NuBasics
 
-fun intern name f ctx = 
+local open Parse in
+val parser = position (short_ident || long_ident || sym_ident || keyword)
+end
+
+val proc_suffix = "_\<nu>proc"
+val compilation_suffix = "_\<nu>compilation"
+val procedure_kind = "\<nu>procedure"
+val declare_overloading = Named_Theorems.declare o Binding.suffix_name proc_suffix
+val suffix_namepos = apfst o suffix
+fun overload th name ctx =
+  Named_Theorems.add_thm (Named_Theorems.check (Context.proof_of ctx)
+    (suffix_namepos proc_suffix name)) th ctx
+fun namepos_to_fact_ref namepos = Facts.Named (namepos, NONE)
+fun procedure_thm ctx =
+  Proof_Context.get_fact ctx o namepos_to_fact_ref o suffix_namepos proc_suffix
+fun compilation_thm ctx =
+  Proof_Context.get_fact ctx o namepos_to_fact_ref o suffix_namepos proc_suffix
+fun compilation_thm_of ctx tm = compilation_thm ctx (term_name tm, Position.none)
+
+fun define (binding,attrs) th lthy =
   let
-    val tab = Data.get ctx
-    val name = Name_Space.intern (Name_Space.space_of_table tab) name
+    val (f,U,V) = Thm.concl_of th |> Logic.unvarify_global |> dest_procedure 
+    val def_binding = Binding.suffix_name compilation_suffix binding
+    val proc_binding = Binding.suffix_name proc_suffix binding
   in
-    f tab name ctx
+    lthy
+      |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f))
+      |-> (fn (tm,(_,def)) => 
+            Local_Theory.notes_kind procedure_kind
+              [((proc_binding,attrs), [([th RS (def RS @{thm NuPrim.rename_proc})],[])])]
+            #> apfst (fn [(_,[th])] => th)
+          )
   end
-fun defined ctx name = intern name (K oo Name_Space.defined) ctx
-
-val ops_processor = {get_data = Data.get, put_data = Data.put}
-fun declare binding = intern (Binding.name_of binding) (fn tab => fn name =>
-  if Name_Space.defined tab name
-  then error ("Duplicate declaration of \<nu>procedure "^name)
-  else Context.mapping (Entity.define_global ops_processor binding Thm.full_rules #> #2)
-      (Entity.define ops_processor binding Thm.full_rules #> #2))
-fun define name th ctx =
-  let
-    val tab = Data.get ctx
-    val name = Name_Space.check ctx tab name |> #1
-  in
-    (Name_Space.map_table_entry name (Item_Net.update th) |> Data.map) ctx
-  end
-fun check ctx name = Name_Space.check ctx (Data.get ctx) name |> #2 |> Item_Net.content
-
-
 end

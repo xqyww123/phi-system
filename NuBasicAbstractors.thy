@@ -1,5 +1,5 @@
 theory NuBasicAbstractors
-  imports NuLLReps
+  imports NuLLReps NuSys
   abbrevs "SState" = "\<B_S>\<B_t>\<B_r>\<B_i>\<B_c>\<B_t>\<B_S>\<B_t>\<B_a>\<B_t>\<B_e>"
       and "LState" = "\<B_L>\<B_o>\<B_o>\<B_s>\<B_e>\<B_S>\<B_t>\<B_a>\<B_t>\<B_e>" 
       and "with_registers" = "\<B_w>\<B_i>\<B_t>\<B_h>_\<B_r>\<B_e>\<B_g>\<B_i>\<B_s>\<B_t>\<B_e>\<B_r>\<B_s>"
@@ -41,8 +41,53 @@ definition NuRefine :: " ('a :: lrep, 'b) nu \<Rightarrow> 'b set \<Rightarrow> 
   where "N \<nuRefine> T = Nu (\<lambda>(p,x). x \<in> T \<and>(p \<nuLinkL> N \<nuLinkR> x))"
 lemma [simp]: "p \<nuLinkL> N \<nuRefine> P \<nuLinkR> x \<longleftrightarrow> x \<in> P \<and> (p \<nuLinkL> N \<nuLinkR> x)" unfolding NuRefine_def by auto
 lemma [elim]: "x \<ratio> N \<nuRefine> P \<Longrightarrow> (x \<in> P \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
-lemma [\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuRefine> P \<longmapsto> x \<tycolon> N \<^bold>a\<^bold>n\<^bold>d\<^bold>a\<^bold>l\<^bold>s\<^bold>o x \<in> P" unfolding Cast_def by auto
-schematic_goal [simplified]:"\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<boxbar>B\<boxbar>(x \<tycolon> C \<nuRefine> P)\<boxbar>D) \<longmapsto> (A\<boxbar>B\<boxbar>x \<tycolon> C\<boxbar>E) \<^bold>a\<^bold>n\<^bold>d\<^bold>a\<^bold>l\<^bold>s\<^bold>o ?P" by (rule \<nu>cast)+
-schematic_goal "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<boxbar>B) \<longmapsto> (A\<boxbar>B) \<^bold>a\<^bold>n\<^bold>d\<^bold>a\<^bold>l\<^bold>s\<^bold>o ?P" by (rule \<nu>cast)
+lemma [\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuRefine> P \<longmapsto> x \<tycolon> N \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e x \<in> P" unfolding Cast_def by auto
+
+definition stepin :: "( ('a::lrep) \<Rightarrow> ('b::lrep) state) \<Rightarrow> ( ('c::lrep) \<times> 'a \<Rightarrow> ('c \<times> 'b) state)"
+  where "stepin f x = (case x of (c,a) \<Rightarrow> bind (f a) (\<lambda>y. StatOn (c,y)))"
+lemma stepin: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> u \<tycolon> U \<longmapsto> v \<tycolon> V \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c stepin f \<blangle> (x,u) \<tycolon> (X \<nuFusion> U) \<longmapsto> (x,v) \<tycolon> (X \<nuFusion> V) \<brangle>"
+  unfolding stepin_def \<nu>def bind_def by auto
+
+definition stepinR :: "( ('a::lrep) \<times>('z::lrep) \<Rightarrow> ('z1::lrep) state) \<Rightarrow> ((('c::lrep) \<times> 'a) \<times>'z \<Rightarrow> ('c \<times> 'z1) state)"
+  where "stepinR f x = (case x of ((c,a),z) \<Rightarrow> bind (f (a,z)) (\<lambda>y. StatOn (c,y)))"
+lemma stepinR: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> (a \<tycolon> A)\<boxbar>Z \<longmapsto> Z1 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c stepinR f \<blangle> (c,a) \<tycolon> (C \<nuFusion> A)\<boxbar>Z \<longmapsto> c \<tycolon> C\<boxbar>Z1 \<brangle>"
+  unfolding stepinR_def \<nu>def bind_def by (auto 4 3)
+definition op_pairring_make :: "( ('z1::lrep) \<Rightarrow> ( ('b::lrep) \<times> ('z2::lrep) ) state) \<Rightarrow> ('a \<times> ('z1::lrep) \<Rightarrow> (( ('a::lrep) \<times> 'b) \<times> 'z2) state)"
+  where "op_pairring_make f s = (case s of (a,z1) \<Rightarrow> bind (f z1) (\<lambda>(b,z2). StatOn ((a,b),z2)))"
+lemma op_pairring_make: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> Z1 \<longmapsto> b \<tycolon> B\<boxbar>Z2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pairring_make f \<blangle> a \<tycolon> A\<boxbar>Z1 \<longmapsto> (a,b) \<tycolon> A \<nuFusion> B\<boxbar>Z2 \<brangle>"
+  unfolding op_pairring_make_def \<nu>def bind_def by (auto 4 3)
+
+lemma [\<nu>auto_destruct]:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> r \<tycolon> R\<boxbar>Z \<longmapsto> Z1 \<brangle> \<Longrightarrow>  \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> l \<tycolon> L\<boxbar>Z1 \<longmapsto> Z2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (stepinR g \<nuInstrComp> f) \<blangle> (l,r) \<tycolon> (L \<nuFusion> R)\<boxbar>Z \<longmapsto> Z2\<brangle>"
+  unfolding AutoTag_def by (blast intro: instr_comp stepinR)
+lemma [\<nu>auto_construct]:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> Z \<longmapsto> l \<tycolon> L\<boxbar>Z1 \<brangle> \<Longrightarrow>  \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> Z1 \<longmapsto> r \<tycolon> R\<boxbar>Z' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> op_pairring_make g) \<blangle> Z \<longmapsto> (l,r) \<tycolon> (L \<nuFusion> R)\<boxbar>Z'\<brangle>"
+  unfolding AutoTag_def by (blast intro: instr_comp op_pairring_make)
+
+definition op_const_int :: " ('x::len) word \<Rightarrow> (('a::lrep) \<Rightarrow> ('x word \<times>'a) state) "
+  where "op_const_int x r = StatOn (x,r)"
+lemma op_const_nat: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int (Word.of_nat x) \<blangle> Z \<longmapsto> x \<tycolon> \<nat>[('x::len)]\<boxbar>Z \<brangle>"
+  unfolding op_const_int_def \<nu>def by auto
+lemma [\<nu>auto_construct]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int (Word.of_nat (numeral x)) \<blangle> Z \<longmapsto> (numeral x) \<tycolon> \<nat>[('x::len)]\<boxbar>Z \<brangle>"
+  using op_const_nat .    \<comment> \<open>Only literal number could be constructed automatically\<close>
+
+schematic_goal "\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle> ?x \<tycolon> ((\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c A \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c B) \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c D) \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c C\<boxbar>Z \<longmapsto> (?Z1::(?'a::lrep) set) \<brangle>" by (rule \<nu>auto_destruct)+
+schematic_goal [simplified]:"\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle>(?Z1::(?'a::lrep) set) \<longmapsto> ((\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c (a::'c::lrep), 233), \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c (b::'d::lrep)) \<tycolon>  ((?N1 \<nuFusion> \<nat>[32]) \<nuFusion> ?N2)\<boxbar>Z \<brangle>" including show_more1 by (rule \<nu>auto_construct)+
+thm \<nu>auto_construct
+
+value "8::3 word"
+
+thm \<nu>auto_
+
+definition 
+
+
+
+ML \<open>@{term "29::32"}\<close>
+lemma [simplified]: "(10::3) = (0::3)"  by auto
+  thm term_def
+
+schematic_goal [simplified]:"\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<boxbar>B\<boxbar>(x \<tycolon> C \<nuRefine> P)\<boxbar>D) \<longmapsto> (A\<boxbar>B\<boxbar>x \<tycolon> C\<boxbar>D) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e ?P" by (rule \<nu>cast)+
+schematic_goal "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<boxbar>B) \<longmapsto> (A\<boxbar>B) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e ?P" by (rule \<nu>cast)
 
 end

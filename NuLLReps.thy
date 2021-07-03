@@ -11,11 +11,6 @@ definition llty_state :: "'a state itself \<Rightarrow> llty" where [simp]: "llt
 instance by standard
 end
 
-instantiation proc_ctx :: (lrep,register_collection) lrep begin
-definition llty_proc_ctx :: "('a \<flower> 'r) itself \<Rightarrow> llty" where [simp]: "llty_proc_ctx _ = llty (TYPE ('a))"
-instance by standard
-end
-
 instantiation word :: (len) naive_lrep
 begin
 definition llty_word :: "'a word itself \<Rightarrow> llty" where [simp]: "llty_word _ = la_i LENGTH('a)"
