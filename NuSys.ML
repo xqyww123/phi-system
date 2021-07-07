@@ -1,9 +1,12 @@
 signature NU_SYS = sig
   exception CastFail of term list
   type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
-  val conversion_goal : cterm (*to*) -> thm (*from*) -> thm
+  val conversion : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
+  val raw_auto : Proof.context -> tactic
+  val premise_tac : Proof.context -> tactic
   val cast_tac : Proof.context -> tactic
   val cast : Proof.context -> thm -> thm
+
 
   val apply_proc : Proof.context -> thm (*proc*) -> thm (*spec*) -> thm (*spec*)
   val apply_procs : Proof.context -> thm list -> thm -> thm
@@ -16,13 +19,54 @@ signature NU_SYS = sig
   val begin_proc : Proof.context -> term * term -> string list (*reg names*) -> term * thm
   val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm
 
+  val declare_aux : Thm.binding * thm list -> thm -> Proof.context -> thm * Proof.context
+  val declare_auxes : (Thm.binding * thm list) list -> thm -> Proof.context -> thm * Proof.context
+  (* `load_specthm (ctx,specthm)` puts auxiliary facts into the context by the name `\<nu>aux` *)
+  val load_specthm  : thm -> Proof.context -> Proof.context
+
 end
 structure NuSys : NU_SYS = struct
 open Thm NuBasics Term
 exception CastFail of term list
 type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
 
-fun conversion_goal to from =
+fun head_only tac th =
+  if nprems_of th = 1
+  then tac th
+  else Goal.init (cprem_of th 1) |> tac
+        |> Seq.filter (fn th => nprems_of th = 0)
+        |> Seq.map (Goal.conclude #> implies_elim_with_prems th)
+fun raw_auto ctx =
+  (ALLGOALS (Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.in_using"))
+    THEN Simpdata.auto_tac ctx)
+val Premise_I = @{thm NuPrim.Premise_I}
+fun mk_premise_tac withdraw ctx th =
+  if can (major_prem_of #> dest_premise_tag) th
+  then (head_only ((K (HEADGOAL (resolve0_tac [Premise_I]) THEN raw_auto ctx)) 1)
+      ORELSE withdraw
+    ) th
+  else Seq.empty
+val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch)
+val premise_tac = mk_premise_tac Seq.fail
+fun fininsh_premise_hyps th =
+  fold implies_intr (chyps_of th |> filter (can dest_premise_tag_c)) th
+
+fun mk_auto_resolve_tac thm_name ctx =
+  HEADGOAL (SOLVED' (REPEAT_DETERM_N 100 o (fn i =>
+    resolve_tac ctx (Named_Theorems.get ctx thm_name) i
+      ORELSE withdrawable_premise_tac ctx
+  ))) #> Seq.map fininsh_premise_hyps
+
+val cast_tac = mk_auto_resolve_tac "NuPrim.\<nu>cast"
+fun conclude fail x =
+  case Seq.pull x
+    of SOME (th, other) => Goal.conclude th
+     | NONE => fail ()
+fun cast ctx th = 
+  Goal.protect 1 th |> head_only (cast_tac ctx)
+        |> conclude (fn _ => raise THM ("Cast fail", 1, [th]))
+val conversion_thm = @{thm conversion}
+fun conversion ctx to from =
   let
     val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
     val (f',U',V') = dest_procedure_c to
@@ -42,36 +86,10 @@ fun conversion_goal to from =
         ((("f'",0), typ_of_cterm f'), f'),
         ((("U'",0), typ_of_cterm U'), U'),
         ((("V'",0), typ_of_cterm V'), V')])
-      @{thm conversion_goal}
+      conversion_thm
   in
-    (from RSN (2,rule)) |> Goal.protect 1
+    (from RSN (2,rule)) |> cast ctx
   end
-
-fun head_tac tac th =
-  if nprems_of th = 1
-  then tac th
-  else Goal.init (cprem_of th 1) |> tac
-        |> Seq.filter (fn th => nprems_of th = 0)
-        |> Seq.map (Thm.implies_elim th o Goal.conclude)
-fun obligation_auto_tac ctx th =
-  if can (major_prem_of #> dest_obligation) th
-  then if nprems_of th = 1
-    then Simpdata.auto_tac ctx th
-    else head_tac (obligation_auto_tac ctx) th
-  else Seq.empty
-fun cast_tac ctx =
-  HEADGOAL (SOLVED' (REPEAT_DETERM_N 100 o (fn i =>
-    resolve_tac ctx (Named_Theorems.get ctx "NuPrim.\<nu>cast") i
-      ORELSE obligation_auto_tac ctx
-  )))
-fun cast_tac2 ctx =
-   (REPEAT (HEADGOAL (resolve_tac ctx (Named_Theorems.get ctx "NuPrim.\<nu>cast"))
-      ORELSE obligation_auto_tac ctx))
-fun cast ctx goal = cast_tac2 ctx goal |> Seq.pull |> (fn x =>
-      case x of SOME (th,other) => Goal.conclude th
-              | NONE => raise TERM ("Cast fail", prems_of goal)
-                  (* raise CastFail ((prems_of goal)) *)
-              )
 
 local open Tactical Tactic
 val apply_proc_thm = @{thm NuPrim.apply_proc} and apply_proc_conv_thm = @{thm NuPrim.apply_proc_conv}
@@ -109,7 +127,6 @@ val load_reg = operate_reg NuRegisters.load_reg
 val accept_proc_thm = @{thm NuPrim.accept_proc}
 fun accept_proc ctx specthm =
   specthm |> disch_current_codeblock
-    |> forall_intr (current_block_var specthm |> cterm_of ctx)
     |> mk_PropBlock 0 
     |> (fn x => x RS accept_proc_thm)
     |> param_set_free_var_name ctx (current_block_var specthm |> dest_Free |> #1)
@@ -147,6 +164,7 @@ fun begin_proc ctx (arg,ret) reg_names =
     val th = arg |> Thm.cterm_of ctx
               |> starting_construction ctx
               |> fold (fn reg => assign_reg ctx reg #> accept_proc ctx) reg_names
+              |> Simplifier.simplify ctx
   in
     (goal,th)
   end
@@ -164,8 +182,8 @@ fun meta_eq_to_hol_eq th =
 
 fun finish_proc ctx goal th =
   let
-    val (tm,L) = cprop_of th |> dest_SpecTop_c
-    val (T,R) = dest_Trueprop_c tm |> dest_CurrentConstruction_c |> #2 |> dest_Proc_CtxTy_c
+    (* val (tm,L) = cprop_of th |> dest_SpecTop_c *)
+    val (T,R) = dest_Trueprop_c (cprop_of th) |> dest_CurrentConstruction_c |> #2 |> dest_Proc_CtxTy_c
     val codeblock = case codeblocks_of_c th of [cb] => cb
                        | _ => error "unfinished sub-block"
     val (s,a,S,f) = dest_codeblock_c codeblock
@@ -180,19 +198,57 @@ fun finish_proc ctx goal th =
            ((("S",0), typ_of_cterm S),S),
            ((("f",0), typ_of_cterm f),f),
            ((("T",0), typ_of_cterm T),T),
-           ((("R",0), typ_of_cterm R),R),
-           ((("L",0), typ_of_cterm L),L)
+           ((("R",0), typ_of_cterm R),R)
           ]) @{thm NuPrim.finish_construction}
   in
     th |> implies_intr codeblock
        |> forall_intr s |> forall_intr a
        |> implies_elim finish_thm
-       |> conversion_goal goal |> cast ctx
-    (* ctx |> Proof_Context.background_theory_result
+       |> conversion ctx goal 
+       (* ctx |> Proof_Context.background_theory_result
             (Thm.add_def (Proof_Context.defs_context ctx) false true
                 (Binding.suffix_name "_def" binding, def_term))
         >> (Thm.implies_elim th o meta_eq_to_hol_eq o snd)
         |> (fn (th,ctx) =>
-          th |> conversion_goal goal |> cast ctx |> rpair ctx) *)
+          th |> conversion goal |> cast ctx |> rpair ctx) *)
   end
+
+structure AuxAux = Generic_Data
+(
+  (* key : name of the auxiliary fact, value: the attribute to be evaluated *)
+  type T = (Position.T * attribute list) Symtab.table; 
+  val empty: T = Symtab.empty
+  val extend = I
+  val merge : T * T -> T = Symtab.join (fn _ => fn _ => raise Symtab.SAME);
+)
+fun get_aux_attrs ctx (name,auxth) =
+  case the_default (Position.none,[]) (Symtab.lookup (AuxAux.get (Context.Proof ctx)) name)
+    of (pos,attrs) =>
+      ((Binding.make (name,pos), attrs), [(Conjunction.elim_conjunctions auxth,[])])
+fun note_auxes auxes ctx =
+  Proof_Context.note_thmss "" (map (get_aux_attrs ctx) auxes) ctx
+fun fold1 f (h::r) = fold f r h
+  | fold1 f [] = raise Fail "fold1"
+fun declare_aux ((binding,attrs),auxes) th ctx =
+  let
+    val name = Binding.name_of binding
+    val _ = if name = "\<glowing_star>" then error "reserved keyword: \<glowing_star>" else ()
+  in
+  ctx |> Context.proof_map (AuxAux.map (Symtab.update_new (name, (Binding.pos_of binding, attrs))))
+    |> pair (@{thm NuPrim.declare_fact} OF [intro_param_name name, fold1 Conjunction.intr auxes, th])
+  end
+fun declare_auxes auxes th ctx =
+  fold (fn a => fn (th,ctx) => declare_aux a th ctx) auxes (th,ctx)
+
+val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
+fun load_specthm th ctx =
+  (case elim_SPEC th of (focus,aux) =>
+  let
+    val auxes = user_facts_in_collection aux
+  in
+    ctx |> note_auxes auxes
+      |-> (fn ths => Proof_Context.put_thms false (aux_name_raw, SOME (flat (map snd ths))))
+  end)
+fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
+fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
 end

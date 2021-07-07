@@ -66,10 +66,8 @@ lemma [\<nu>auto_construct]:
 
 definition op_const_int :: " ('x::len) word \<Rightarrow> (('a::lrep) \<Rightarrow> ('x word \<times>'a) state) "
   where "op_const_int x r = StatOn (x,r)"
-lemma op_const_nat: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int (Word.of_nat x) \<blangle> Z \<longmapsto> x \<tycolon> \<nat>[('x::len)]\<boxbar>Z \<brangle>"
-  unfolding op_const_int_def \<nu>def by auto
 lemma [\<nu>auto_construct]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int (Word.of_nat (numeral x)) \<blangle> Z \<longmapsto> (numeral x) \<tycolon> \<nat>[('x::len)]\<boxbar>Z \<brangle>"
-  using op_const_nat .    \<comment> \<open>Only literal number could be constructed automatically\<close>
+  unfolding op_const_int_def \<nu>def by auto  \<comment> \<open>Only literal number could be constructed automatically\<close>
 
 schematic_goal "\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle> ?x \<tycolon> ((\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c A \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c B) \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c D) \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c C\<boxbar>Z \<longmapsto> (?Z1::(?'a::lrep) set) \<brangle>" by (rule \<nu>auto_destruct)+
 schematic_goal [simplified]:"\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle>(?Z1::(?'a::lrep) set) \<longmapsto> ((\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c (a::'c::lrep), 233), \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c (b::'d::lrep)) \<tycolon>  ((?N1 \<nuFusion> \<nat>[32]) \<nuFusion> ?N2)\<boxbar>Z \<brangle>" including show_more1 by (rule \<nu>auto_construct)+

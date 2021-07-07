@@ -44,6 +44,11 @@ signature NU_HELP = sig
   * ---------------
   *   Γ, A |- B *)
   val undisch : thm -> thm
+  (*  Γ1 |- A ==> B      Γ2 |- A1 ==> A2 ==> ... A
+  *  ------------------------------------------------
+  *     Γ1 ∪ Γ2 |- A1 ==> A2 ==> ... ==> B
+  * *)
+  val implies_elim_with_prems : thm -> thm -> thm
   val forall_intr_by_names : string list -> thm -> thm
   val open_schematic_term : term -> term
 
@@ -145,4 +150,9 @@ fun forall_intr_by_names names th =
 val dummy_c = cterm_of @{context} dummy_prop
 fun open_schematic_term tm = 
   betapplys (tm, (strip_abs_vars tm |> map (fn (n,t) => Var ((n,0),t))))
+
+fun implies_elim_with_prems thAB thA =
+  fold (elim_implies o assume) (cprems_of thA) thA
+    |> implies_elim thAB
+    |> fold_rev implies_intr (cprems_of thA)
 end

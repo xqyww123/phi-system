@@ -43,12 +43,15 @@ signature NU_BASICS = sig
   val codeblocks_of_c : thm -> term list
   val codeblock_name   : term -> term * term * term * term
   val current_codeblock : thm -> cterm
+  val disch_codeblock : cterm -> thm -> thm
   val disch_current_codeblock : thm -> thm
+  val export_codeblock : cterm * cterm -> thm -> thm
+  val export_codeblocks : cterm list -> thm -> thm
 
   val dest_procedure   : term -> term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm
-  val dest_obligation  : term -> term
-  val dest_obligation_c: cterm -> cterm
+  val dest_premise_tag  : term -> term
+  val dest_premise_tag_c: cterm -> cterm
 
   val elim_SPEC : thm -> thm * thm
   val intro_SPEC : thm * thm -> thm
@@ -56,20 +59,33 @@ signature NU_BASICS = sig
 
   val dest_fact : term -> string * term
   val dest_fact_c : cterm -> string * cterm
-  val dest_Fact : thm -> string * thm
+  val elim_Fact : thm -> string * thm
+  val intro_Fact : string * thm -> thm
+  val dest_AndFact : term -> term * term
   val dest_AndFact_c : cterm -> cterm * cterm
+  val dest_AndFacts : term -> term list
   val elim_AndFact : thm -> thm * thm
+  val intro_AndFact : thm * thm -> thm
   val elim_AndFacts : thm -> thm list
+  val dest_FactCollection   : term -> term * term * term
+  val dest_FactCollection_c : cterm -> cterm * cterm * cterm
+  val elim_FactCollection : thm -> thm * thm * thm
+  val intro_FactCollection : thm * thm * thm -> thm
+  val user_facts_in_collection : thm -> (string * thm) list
+  val intro_interal_fact : thm (* thm to be added *) -> thm (* fact collection *) -> (int * thm)
+  val intro_interal_fact_spec : thm (* thm to be added *) -> thm (* specthm *) -> (int * thm)
+  val internal_fact_by_id : int -> thm (* fact collection *) -> thm
+  val clean_user_facts : thm -> thm
 
-  (* `open_specthm (ctx,specthm)` puts auxiliary facts into the context by the name `\<nu>aux`
-  *     and returns the focus proposition of the specification theorem.  *)
-  val open_specthm  : thm -> Proof.context -> thm * Proof.context
-  val open_specthm' : Position.T -> thm -> Proof.context -> thm * Proof.context
-  (* get the auxiliary facts `\<nu>aux` which is usually stored by `open_specthm` *)
-  val aux_facts : Proof.context -> thm list
-  (* reassemble the specification theorem by the given focus proposition and the stored
-  *     auxiliary facts `\<nu>aux` *)
-  val close_specthm : thm -> Proof.context -> thm * Proof.context
+  (* Transform every HOL part of the facts theorem, including star fact, every user fact, and every
+  * internal fact. *)
+  val holrule : (thm -> thm) -> thm -> thm
+
+  val dest_Cast   : term -> term * term * term
+  val dest_Cast_c : cterm -> cterm * cterm * cterm
+
+  val intro_param : term -> thm
+  val intro_param_name : string -> thm
 
   val start_construction_thm : thm
 
@@ -92,7 +108,7 @@ fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
 fun dest_param (Const ("NuPrim.ParamTag", _) $ x) = x
   | dest_param tm = raise TERM ("dest_param", [tm])
 val unit_const_name = "Product_Type.Unity"
-val name_tag_ty = Type ("NuPrim.name_tag_ty", [])
+val name_tag_ty = Type ("NuPrim.name_tag", [])
 val name_tag_const_name = "NuPrim.name_tag.NAME_TAG"
 val unit_ty = Type ("Product_Type.unit", [])
 val unit_const = Const("Product_Type.Unity", unit_ty)
@@ -104,7 +120,9 @@ fun dest_Abs (Abs x) =  x
 fun dest_name_tag tm =
   tm |> Type.strip_constraints |> dest_name_tag_raw |> dest_Abs |> #1
     handle TERM _ => raise TERM ("dest_name_tag", [tm])
+val name_tag_c = @{cterm "NAME name"}
 fun mk_name_tag name = name_tag_const $ Abs (name, unit_ty, unit_const)
+fun mk_name_tag_c name = renamed_term (mk_name_tag name) name_tag_c
 
 val named_name = "NuPrim.Named"
 fun dest_named tm =
@@ -163,7 +181,39 @@ fun current_codeblock specthm =
   |> find_first (fn hy => (term_of hy |> try (dest_Trueprop #> dest_codeblock #> #1)) = SOME blk_var)
   |> Option.valOf
   end
-fun disch_current_codeblock specthm = implies_intr (current_codeblock specthm) specthm
+fun disch_codeblock cb th =
+  implies_intr cb th |> forall_intr (dest_codeblock_c cb |> #1)
+fun undisch_codeblock cb_var = Thm.forall_elim cb_var #> undisch
+fun disch_current_codeblock specthm = disch_codeblock (current_codeblock specthm) specthm
+val thm_codeblock_export = @{thm NuPrim.codeblock_export}
+fun aconv_c (ctm1,ctm2) = aconv (term_of ctm1, term_of ctm2)
+val prop_term = @{cterm Pure.prop}
+fun export_codeblock (codeblock,destined_codeblock) th =
+  if aconv_c (codeblock,destined_codeblock) then th
+  else let
+    val (s,_,_,_) = dest_codeblock_c destined_codeblock
+    val goal = cprop_of (disch_codeblock destined_codeblock th ) |> Thm.apply prop_term |> Goal.init
+    val endth = disch_codeblock codeblock th |> Goal.protect 0
+    fun loop th = (endth RS th |> Goal.conclude)
+      handle THM _ => loop (thm_codeblock_export RS th)
+  in
+    loop goal |> Goal.conclude |> undisch_codeblock s
+  handle THM _ => raise THM ("export_codeblock", 1,
+    [th, Thm.assume codeblock, Thm.assume destined_codeblock])
+  end
+fun export_codeblocks destined_codeblocks th =
+  let
+    val codeblock_name = term_of #> dest_codeblock #> #1 #> term_name
+    val destined = fold (fn cb => Symtab.update_new (codeblock_name cb, cb))
+          destined_codeblocks Symtab.empty
+    val exports = chyps_of th |> List.mapPartial (fn cb =>
+            cb |> try codeblock_name
+               |> Option.mapPartial (Symtab.lookup destined)
+               |> Option.map (pair cb))
+  in
+    fold export_codeblock exports th
+  end
+
 
 fun th1 MP th2 = Drule.comp_no_flatten (th1, 0) 1 th2
 fun rule MP_BY args = fold (fn arg => fn rule => arg MP rule) args rule
@@ -187,63 +237,137 @@ fun intro_SPEC (focus,facts) =
 
 val dest_fact   = dest_binop   "NuPrim.Fact" #> apfst dest_name_tag
 val dest_fact_c = dest_binop_c "NuPrim.Fact" #> apfst (term_of #> dest_name_tag)
-val vP = (("P",0), HOLogic.boolT)
-fun dest_Fact th =
+val vP = (("P",0), HOLogic.boolT) and v_label = (("label",0),name_tag_ty)
+val Fact_D = @{thm NuPrim.Fact_D} and Fact_I = @{thm NuPrim.Fact_I}
+fun elim_Fact th =
   let
-    val (_,P) = th |> cprop_of |> dest_fact_c
+    val (name,P) = th |> cprop_of |> dest_fact_c
   in
-    th |> Thm.implies_elim (Thm.instantiate ([],[(vP, P)]) @{thm NuPrim.Fact_D})
+    th |> Thm.implies_elim (Thm.instantiate ([],[(vP, P)]) Fact_D)
+       |> pair name
   end
+fun intro_Fact (name,th) =
+  Thm.implies_elim
+    (Thm.instantiate ([],[(v_label, mk_name_tag_c name), (vP, cprop_of th)]) Fact_I) th
+val dest_AndFact   = dest_binop   "NuPrim.AndFact"
 val dest_AndFact_c = dest_binop_c "NuPrim.AndFact"
+fun dest_AndFacts_impl ret tm =
+  if same_const "NuPrim.NoFact" tm then rev ret
+  else (case dest_AndFact tm of (a,b) => dest_AndFacts_impl (a::ret) b)
+val dest_AndFacts = dest_AndFacts_impl []
+val vP = (("P",0),propT) and vQ = (("Q",0),propT) and vS = (("S",0),propT)
+val AndFact_D1 = @{thm AndFact_D1}
+and AndFact_D2 = @{thm AndFact_D2}
+and AndFact_I = @{thm AndFact_I}
 fun elim_AndFact th =
   let
     val (P, Q) = dest_AndFact_c (Thm.cprop_of th)
-      handle TERM (msg, _) => raise THM (msg, 0, [th]);
+      handle TERM (msg, _) => raise THM ((msg, 0, [th]));
     val inst = Thm.instantiate ([], [(vP, P), (vQ, Q)]);
   in
-   (Thm.implies_elim (inst @{thm AndFact_D1}) th,
-    Thm.implies_elim (inst @{thm AndFact_D1}) th)
+   (Thm.implies_elim (inst AndFact_D1) th,
+    Thm.implies_elim (inst AndFact_D2) th)
   end
+fun intro_AndFact (th1,th2) =
+  Drule.implies_elim_list
+    (Thm.instantiate ([],[(vP, cprop_of th1), (vQ, cprop_of th2)]) AndFact_I)
+    [th1,th2]
 fun elim_AndFacts_impl ret [] = ret
   | elim_AndFacts_impl ret (th::r) = 
       (case try elim_AndFact th of
         NONE => 
           if same_const "NuPrim.NoFact" (prop_of th)
           then elim_AndFacts_impl ret r
-          else elim_AndFacts_impl ((dest_Fact th)::ret) r
+          else elim_AndFacts_impl (th::ret) r
       | SOME (th1, th2) => elim_AndFacts_impl ret (th1::th2::r))
-val elim_AndFacts = elim_AndFacts_impl [] o single
+val elim_AndFacts = rev o elim_AndFacts_impl [] o single
+val dest_FactCollection   = dest_triop   "NuPrim.FactCollection"
+val dest_FactCollection_c = dest_triop_c "NuPrim.FactCollection"
+val th_FactCollection_D1 = @{thm NuPrim.FactCollection_D1}
+and th_FactCollection_D2 = @{thm NuPrim.FactCollection_D2}
+and th_FactCollection_D3 = @{thm NuPrim.FactCollection_D3}
+and th_FactCollection_I  = @{thm NuPrim.FactCollection_I}
+fun elim_FactCollection th =
+  let
+    val (P,Q,S) = cprop_of th |> dest_FactCollection_c
+  in
+    (Thm.implies_elim (Thm.instantiate ([],[(vP,P),(vQ,Q),(vS,S)]) th_FactCollection_D1) th,
+     Thm.implies_elim (Thm.instantiate ([],[(vP,P),(vQ,Q),(vS,S)]) th_FactCollection_D2) th,
+     Thm.implies_elim (Thm.instantiate ([],[(vP,P),(vQ,Q),(vS,S)]) th_FactCollection_D3) th)
+  end
+fun intro_FactCollection (th1,th2,th3) =
+  Drule.implies_elim_list
+    (Thm.instantiate ([],[(vP, cprop_of th1), (vQ, cprop_of th2), (vS, cprop_of th3)])
+      th_FactCollection_I) [th1,th2,th3]
+fun user_facts_in_collection th =
+  let
+    val (P,Q,S) = elim_FactCollection th
+    val ths = elim_AndFacts Q |> map elim_Fact
+  in
+    if same_const "NuPrim.NoFact" (prop_of P) then ths else ("\<glowing_star>",P)::ths
+  end
+val intro_internal_fact_thm = @{thm NuPrim.intro_internal_fact}
+val vA = (("A",0),propT) and vP = (("P",0),propT) and vQ = (("Q",0),propT) and vL = (("L",0),propT)
+fun intro_interal_fact A th =
+  let
+    val (Q,L,S) = cprop_of th |> dest_FactCollection_c
+    val intro_thm =
+      Thm.instantiate ([],[(vA, cprop_of A), (vQ,Q), (vL,L), (vS,S)]) intro_internal_fact_thm
+    val id = length (dest_AndFacts (term_of S))
+    val th = Thm.implies_elim (Thm.implies_elim intro_thm A) th
+  in (id,th) end
+fun intro_interal_fact_spec A th =
+  let
+    val (focus,facts) = elim_SPEC th
+    val (id,facts') = intro_interal_fact A facts
+  in
+    (id, intro_SPEC (focus, facts'))
+  end
+fun internal_fact_by_id id th =
+  elim_FactCollection th |> #3 |> elim_AndFacts |> (fn ths => List.nth (ths, length ths - id - 1))
+val clean_user_facts_thm = @{thm NuPrim.clean_user_facts}
+fun clean_user_facts th = th RS clean_user_facts_thm
+
+fun apply3 f (a,b,c) = (f a, f b, f c)
+val NoFact = @{thm NuPrim.NoFact}
+fun holrule f th =
+  case prop_of th
+    of (Const ("NuPrim.AndFact",_) $ _ $ _) =>
+         elim_AndFact th |> apply2 (holrule f) |> intro_AndFact
+     | (Const ("NuPrim.SpecTop",_) $ _ $ _) =>
+         elim_SPEC th |> apply2 (holrule f) |> intro_SPEC
+     | (Const ("NuPrim.FactCollection",_) $ _ $ _ $ _) =>
+         elim_FactCollection th |> apply3 (holrule f) |> intro_FactCollection
+     | (Const ("NuPrim.Fact",_) $ _ $ _) =>
+         elim_Fact th |> apsnd (holrule f) |> intro_Fact
+     | (Const ("HOL.Trueprop", _) $ _) => f th
+     | (Const ("Pure.imp", _) $ _ $ _) => f th
+     | (Const ("NuPrim.NoFact", _)) => NoFact
+     | tm => raise TERM ("holrule", [tm])
 
 val thm_PropBlock_I = @{thm NuPrim.PropBlock_I}
 fun mk_PropBlock n th = Drule.comp_no_flatten (th, n) 1 thm_PropBlock_I
 
-val thm_ParamTag_E = @{thm NuPrim.ParamTag_E}
+val thm_ParamTag = @{thm NuPrim.ParamTag}
 fun param_set_free_var_name ctx name thm =
   let
     val param_var as (_, param_ty) = prems_of thm |> hd |> dest_param |> dest_Var
   in
     instantiate ([], [(param_var, cterm_of ctx (Free (name, param_ty)))]) thm
-      |> (fn x => thm_ParamTag_E RS x)
+      |> (fn x => thm_ParamTag RS x)
   end
-
-val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
-fun open_specthm' pos th ctx =
-  (case elim_SPEC th of (focus,aux) =>
-    ctx |> Proof_Context.put_thms false (aux_name_raw, SOME [aux])
-      |> Proof_Context.add_thms_lazy "" (Binding.make(aux_name, pos),
-          Lazy.lazy (fn _ => elim_AndFacts aux @ Assumption.all_prems_of ctx))
-      |> pair focus)
-val open_specthm = open_specthm' Position.none
-fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
-fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
-fun close_specthm focus ctx =
-  ctx |> Proof_Context.put_thms false (aux_name_raw, NONE)
-    |> Proof_Context.put_thms false (aux_name, NONE)
-    |> pair (intro_SPEC (focus, aux_facts_raw ctx))
-
 
 val dest_procedure   = dest_triop   "NuPrim.Procedure" o perhaps dest_Trueprop
 val dest_procedure_c = dest_triop_c "NuPrim.Procedure" o perhaps dest_Trueprop_c
-val dest_obligation  = dest_monop   "NuPrim.Obligation" o perhaps dest_Trueprop
-val dest_obligation_c= dest_monop_c "NuPrim.Obligation" o perhaps dest_Trueprop_c
+val dest_premise_tag  = dest_monop   "NuPrim.Premise" o perhaps dest_Trueprop
+val dest_premise_tag_c= dest_monop_c "NuPrim.Premise" o perhaps dest_Trueprop_c
+
+val vx = ("x",0) and va = ("'a",0)
+fun intro_param tm =
+  Thm.instantiate ([((("'a",0), ["HOL.type"]), ctyp_of_cterm tm)],
+                   [((("x",0), typ_of (ctyp_of_cterm tm)), tm)]) @{thm ParamTag}
+val intro_param_name = intro_param o mk_name_tag_c
+
+val dest_Cast   = dest_triop   "NuPrim.Cast"
+val dest_Cast_c = dest_triop_c "NuPrim.Cast"
 end

@@ -101,7 +101,7 @@ fun process_impl ctx procs (th,toks) limit =
         (List.app (fn (_, Processor {binding, pattern, enabled, proc,...}) =>
           if not enabled then ()
           else if can (Pattern.unify ctx (pattern,focus)) Envir.init
-          then (@{print} binding;
+          then ((*@{print} binding;*)
             if limit > 100 then error "too deep process" else ();
             raise Processed
               ((proc (Context.proof_of ctx) th
@@ -159,13 +159,8 @@ fun parse_auto_level proc ctx th =
 fun apply_attr ctx th attr =
   attr (Context.Proof ctx, th) |> #2 |> the
 fun focus_rule processor ctx th toks = 
-  let
-    val (th,ctx) = open_specthm th ctx
-    val (th,toks) = processor ctx th toks
-    val (th,_) = close_specthm th ctx
-  in
-    (th,toks)
-  end
+  case elim_SPEC th of (focus,aux) =>
+    processor ctx focus toks |> apfst (fn th => intro_SPEC (th,aux))
 fun premise_prover_raw prover ctx th =
   Scan.succeed
     ((cprem_of th 1 |> Goal.init |> prover ctx |> Seq.pull |> (fn x =>

@@ -18,7 +18,7 @@ theory NuPrim \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
       and address = "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s"
       and conversion = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n"
       and auto = "\<^bold>a\<^bold>u\<^bold>t\<^bold>o"
-      and obligation = "\<^bold>a\<^bold>u\<^bold>t\<^bold>o\<^bold>p\<^bold>r\<^bold>o\<^bold>v\<^bold>e"
+      and premise = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
       and atomic = "\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c"
 begin
 
@@ -37,13 +37,14 @@ named_theorems \<nu>intro "\<nu>-type introduction rules" and \<nu>elim "\<nu>-t
     Therefore, they are not included in the standard introduction and elimination rules.
     However they are quite useful in primitive proofs for properties (e.g. cast) and instructions. \<close>
 named_theorems \<nu>share and \<nu>disposable and \<nu>equable
-named_theorems \<nu>cast "introduction rules for casting"
-named_theorems \<nu>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
+  and \<nu>cast "introduction rules for casting"
+  and \<nu>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
   and \<nu>address_def \<open>primitive definitions for unfolding in proofs for address\<close>
-named_theorems \<nu>address_getter and \<nu>address_mapper
-named_theorems \<nu>auto_construct and \<nu>auto_destruct
+  and \<nu>address_getter and \<nu>address_mapper
+  and \<nu>auto_construct and \<nu>auto_destruct
+named_theorems typing_expn "expansion theorems for abstractions"
 
-subsubsection \<open>Syntax and Notations\<close>
+subsection \<open>Syntax and Notations\<close>
 
 consts "ARBITRARY___" :: 'a ("\<cdots>") \<comment>\<open>merely a sugar for documenting\<close>
 
@@ -72,7 +73,36 @@ text \<open> `_pretty_and_` suppresses parentheses in the printing. For example,
   It is useful to represent a collection of object which has some complicated inner structure
     (e.g. a binary tree) that is not intended to be displayed to user.\<close>
 
-named_theorems typing_expn "expansion theorems for abstractions"
+subsection \<open>Preliminary data structures and Auxiliary definition\<close>
+
+definition K_def[simp]: "K a b = a"
+lemma K_intro[intro]: "(\<forall>x y. f x y = x) \<Longrightarrow> f = K" by (simp add: ext)
+
+datatype 'a tree = Leaf | Node 'a \<open>'a tree\<close> \<open>'a tree\<close>
+
+subsubsection \<open>Structures assembling propositions\<close>
+
+definition NoFact :: "prop" ("\<^bold>n\<^bold>o\<^bold>t\<^bold>h\<^bold>i\<^bold>n\<^bold>g") where "NoFact \<equiv> Trueprop True"
+lemma NoFact: "PROP NoFact" unfolding NoFact_def using TrueI .
+definition AndFact :: "prop \<Rightarrow> prop \<Rightarrow> prop" (infixr "and'_fact" 3) where "AndFact \<equiv> (&&&)"
+translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
+translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
+lemma AndFact_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP P and_fact PROP Q" unfolding AndFact_def using conjunctionI .
+lemma AndFact_D1: "PROP P and_fact PROP Q \<Longrightarrow> PROP P" unfolding AndFact_def using conjunctionD1 .
+lemma AndFact_D2: "PROP P and_fact PROP Q \<Longrightarrow> PROP Q" unfolding AndFact_def using conjunctionD2 .
+
+definition FactTree :: "prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop"
+  where "FactTree (PROP X) (PROP L) (PROP R) \<equiv> (PROP X &&& PROP L &&& PROP R)"
+lemma FactTree_imp: "(PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP C) \<equiv> (PROP X \<Longrightarrow> PROP L \<Longrightarrow> PROP R \<Longrightarrow> PROP C)"
+  unfolding FactTree_def conjunction_imp .
+lemma FactTree_X: "PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP X" unfolding FactTree_imp .
+lemma FactTree_L: "PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP L" unfolding FactTree_imp .
+lemma FactTree_R: "PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP R" unfolding FactTree_imp .
+lemma FactTree_I: "PROP X \<Longrightarrow> PROP L \<Longrightarrow> PROP R \<Longrightarrow> PROP FactTree (PROP X) (PROP L) (PROP R)"
+  unfolding FactTree_def by (intro conjunctionI)
+translations "_pretty_and_ L (_pretty_and_ X R)" <= "CONST FactTree X L R"
+
+subsubsection \<open>The type representing ownership\<close>
 
 datatype zint = Gz | Gi int
 text\<open> Type @{typ zint} is used to represent ownership. @{term "Gi i"} represents
@@ -93,9 +123,6 @@ lemma plus_zint_simps3[simp]:  "x + Gz = Gz" by (cases x,auto simp add: plus_zin
 
 instance by standard ((simp add: plus_zint_def split: zint.splits)+)
 end  
-
-definition K_def[simp]: "K a b = a"
-lemma K_intro[intro]: "(\<forall>x y. f x y = x) \<Longrightarrow> f = K" by (simp add: ext)
 
 section\<open>Low representation for semantics\<close>
 
@@ -201,10 +228,16 @@ translations "x named name" == "CONST Named (NAME name) x"
 ML_val \<open> Syntax.read_term @{context} "AAA named yy" \<close>
 
 definition ParamTag :: " 'a \<Rightarrow> prop" ("\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m _" [1000] 10) where "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<equiv> Trueprop True"
-lemma ParamTag_E: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" unfolding ParamTag_def using TrueI .
+lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" unfolding ParamTag_def using TrueI .
   \<comment>\<open>A tag used to indicate a parameter should be specified during application. It retains the order of the parameters to be specified.
   For example, "@{prop "\<And>bit_width value. \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m bit_width \<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m value \<Longrightarrow> P bit_wdith value"},
     the first parameter `?bit_width` will be specified first and then the "?value".\<close>
+
+definition Premise :: "bool \<Rightarrow> prop" ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [10] 9) where "Premise \<equiv> Trueprop"
+  \<comment> \<open>A tag to hint automatic provers to try to prove this proof obligation\<close>
+lemma [simp]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<equiv> Trueprop P"  unfolding Premise_def .
+lemma Premise_I: "P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" by simp
+lemma Premise_Irew: "(P \<Longrightarrow> PROP C) \<equiv> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP C)" by simp
 
 subsection \<open>Register and its collection\<close>
 
@@ -289,18 +322,20 @@ lemma [elim]: "Inhabited (U\<boxbar>V) \<Longrightarrow> (Inhabited U \<Longrigh
 
 subsection \<open>Procedure construction context.\<close>
 
-datatype ('a, 'r) "proc_ctx"  = Proc_Ctx "('a::lrep)" "('r::lrep)"
+datatype ('a, 'r) "proc_ctx" ("_/ \<flower> _" [2,2] 1)  = Proc_Ctx "('a::lrep)" "('r::register_collection)"
 declare proc_ctx.split[split]
-type_notation "proc_ctx" ("_/ \<flower> _" [2,2] 1)
 definition Proc_CtxTy :: " ('a::lrep) set \<Rightarrow> ('b::register_collection) set \<Rightarrow> ('a \<flower> 'b) set" (infix "\<flower>" 2) \<comment> \<open>the flower operator\<close>
   where "Proc_CtxTy s t = {x. case x of Proc_Ctx a b \<Rightarrow> a \<in>s \<and> b \<in> t}"
     \<comment> \<open>The font of the flower operator is not specified, since any flower is a flower.\<close>
 notation Proc_CtxTy ("(2\<flower_L>\<medium_left_bracket> _/ \<flower_L>\<flower>\<flower_R> _ \<medium_right_bracket>\<flower_R>)" [2,2] 1000)  \<comment> \<open>Better decoration for better attention. It is the center of the construction.\<close>
 (* two syntax sugars, defined as constants rather than syntax objects in order to merely enable definition-jumping by `Ctrl-Click`. *)
-consts Proc_Ctx_NoRegisters :: 'a ("\<^bold>n\<^bold>o \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s")
-consts Proc_Ctx_EmptyStack :: 'a ("\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k")
+consts Proc_Ctx_NoRegisters :: ind ("\<^bold>n\<^bold>o \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s")
+consts Proc_Ctx_EmptyStack :: ind ("\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k")
 translations "x \<flower> \<^bold>n\<^bold>o \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s" == "x \<flower> CONST Void"
   "\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k \<flower> x" <= "CONST End_of_Contextual_Stack s \<flower> x"
+lemma [elim]: "c \<in> (X \<flower> G) \<Longrightarrow> (\<And>x g. c = Proc_Ctx x g \<Longrightarrow> x \<in> X \<Longrightarrow> g \<in> G \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Proc_CtxTy_def by (cases c) auto
+lemma [intro]: "x \<in> X \<Longrightarrow> g \<in> G \<Longrightarrow> Proc_Ctx x g \<in> (X \<flower> G)" unfolding Proc_CtxTy_def by auto
 
 instantiation proc_ctx :: (lrep,register_collection) lrep begin
 definition llty_proc_ctx :: "('a,'b) proc_ctx itself \<Rightarrow> llty" where "llty_proc_ctx _ = la_C (llty TYPE('a)) (llty TYPE('b))"
@@ -442,7 +477,7 @@ lemma new_reg_R:"\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s
 lemma store_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name X \<^bold>@ G \<longmapsto> RegisterTy name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<nu>Disposable X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg adr \<blangle> Y\<boxbar>R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
   unfolding \<nu>address_def store_reg_def get_register_def map_register_def by auto
 lemma load_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name (x \<tycolon> X) \<^bold>@ A \<longmapsto> RegisterTy name (sh (Gi 1) x \<tycolon> X) \<^bold>@ B \<brangle>
-  \<Longrightarrow> Nu_Share X s sh \<Longrightarrow> x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg adr \<blangle> R \<flower> A \<longmapsto> sh (Gi 1) x \<tycolon>  X\<boxbar>R \<flower> B \<brangle>"
+  \<Longrightarrow> Nu_Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg adr \<blangle> R \<flower> A \<longmapsto> sh (Gi 1) x \<tycolon>  X\<boxbar>R \<flower> B \<brangle>"
   unfolding \<nu>address_def load_reg_def Nu_Share_def get_register_def map_register_def by auto
 lemma remove_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> (RegisterTy name X and_ty Z) \<^bold>@ V \<longmapsto> Z \<^bold>@ V' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c remove_reg adr \<blangle> R \<flower> V \<longmapsto> X\<boxbar>R \<flower> V' \<brangle>"
   unfolding \<nu>address_def remove_reg_def get_register_def by (auto split: prod.split simp add: fst_def)
@@ -475,7 +510,7 @@ syntax "_codeblock_" :: "idt \<Rightarrow> logic \<Rightarrow> bool" ("\<^bold>c
 syntax "_codeblock_noarg_" :: "idt \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h\<^bold>o\<^bold>u\<^bold>t \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t" [100] 3)
 translations "_codeblock_ v ty" <= "CONST CodeBlock v arg ty exp"
   "_codeblock_noarg_ v" <= "_codeblock_ v (CONST End_of_Contextual_Stack x)"
-(* translations "_codeblock_exp_ v exp ty" <= "CONST CodeBlock v arg ty exp" *)
+translations "_codeblock_exp_ v exp ty" <= "CONST CodeBlock v arg ty exp"
 
 definition Fact :: "name_tag \<Rightarrow> bool \<Rightarrow> prop" where "Fact label P \<equiv>Trueprop P"
 syntax "Fact_sugar_" :: "idt \<Rightarrow> logic \<Rightarrow> prop" ("\<^item> _ : _" [5,0] 4)
@@ -483,20 +518,19 @@ translations "Fact_sugar_ name P" == "CONST Fact (NAME name) P"
 lemma Fact_I: "P \<Longrightarrow> PROP Fact label P" unfolding Fact_def .
 lemma Fact_D: "\<^item> name : P \<Longrightarrow> P" unfolding Fact_def .
 
-definition NoFact :: "prop" ("\<^bold>n\<^bold>o\<^bold>t\<^bold>h\<^bold>i\<^bold>n\<^bold>g") where "NoFact \<equiv> Trueprop True"
-lemma NoFact: "PROP NoFact" unfolding NoFact_def using TrueI .
-definition AndFact :: "prop \<Rightarrow> prop \<Rightarrow> prop" (infixr "and'_fact" 3) where "AndFact \<equiv> (&&&)"
-translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
-translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
-lemma AndFact_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP P and_fact PROP Q" unfolding AndFact_def using conjunctionI .
-lemma AndFact_D1: "PROP P and_fact PROP Q \<Longrightarrow> PROP P" unfolding AndFact_def using conjunctionD1 .
-lemma AndFact_D2: "PROP P and_fact PROP Q \<Longrightarrow> PROP Q" unfolding AndFact_def using conjunctionD2 .
-definition Facts :: "bool \<Rightarrow> prop \<Rightarrow> prop" ("\<glowing_star> _/ \<^bold>a\<^bold>n\<^bold>d _" [4,3] 3)
-  where "\<glowing_star> P \<^bold>a\<^bold>n\<^bold>d (PROP Q) \<equiv> (P &&& PROP Q)"
-translations "Q" <= " CONST Facts (CONST True) Q"
-lemma Facts_imp: " (\<glowing_star> P \<^bold>a\<^bold>n\<^bold>d (PROP Q) \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> PROP Q \<Longrightarrow> PROP R)"
-  unfolding Facts_def conjunction_imp by rule
-lemma Facts_I: "P \<Longrightarrow> PROP Q \<Longrightarrow> \<glowing_star> P \<^bold>a\<^bold>n\<^bold>d (PROP Q)" unfolding Facts_def using conjunctionI .
+definition FactCollection :: "prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop"
+  where "FactCollection (PROP P) (PROP Q) (PROP S) \<equiv> (PROP P &&& PROP Q &&& PROP S)"
+consts FactCollection_sugar :: "prop \<Rightarrow> prop \<Rightarrow> prop"  ("\<glowing_star> _/ \<^bold>a\<^bold>n\<^bold>d _" [4,3] 3)
+translations
+  "Q" <= " CONST FactCollection (CONST NoFact) Q S"
+  "CONST FactCollection_sugar P Q" <= "CONST FactCollection P Q S"
+lemma FactCollection_imp: " (PROP FactCollection (PROP P) (PROP Q) (PROP S) \<Longrightarrow> PROP R) \<equiv> (PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP S \<Longrightarrow> PROP R)"
+  unfolding FactCollection_def conjunction_imp by rule
+lemma FactCollection_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP S \<Longrightarrow> PROP  FactCollection (PROP P) (PROP Q) (PROP S)"
+  unfolding FactCollection_def by (intro conjunctionI)
+lemma FactCollection_D1: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP P" unfolding FactCollection_imp .
+lemma FactCollection_D2: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP Q" unfolding FactCollection_imp .
+lemma FactCollection_D3: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP S" unfolding FactCollection_imp .
 
 definition SpecTop :: "prop \<Rightarrow> prop \<Rightarrow> prop" where SpecTop_def: "SpecTop \<equiv> (&&&)"
 \<comment>\<open> SpecTop focus lemmata
@@ -509,6 +543,7 @@ lemma SpecTop_facts[dest]: "(PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold
 lemma SpecTop_imp: "(PROP SpecTop (PROP P) (PROP L) \<Longrightarrow> PROP C) \<equiv> (PROP P \<Longrightarrow> PROP L \<Longrightarrow> PROP C)"
   unfolding SpecTop_def conjunction_imp .
 lemma SpecTop_I: "PROP P \<Longrightarrow> PROP L \<Longrightarrow> PROP SpecTop (PROP P) (PROP L)" unfolding SpecTop_def using conjunctionI .
+
 (* lemma Specification_rule_focus: "(P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP Q) \<Longrightarrow> (PROP Q \<Longrightarrow> P \<Longrightarrow> P') \<Longrightarrow> (P' \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP Q)"
     unfolding SpecTop_def by presburger
 lemma Specification_rule_aux: "(P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q) \<Longrightarrow> (Q \<Longrightarrow> Q') \<Longrightarrow> (P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q')"
@@ -530,18 +565,30 @@ proof (rule SpecTop_I)
   from th[THEN SpecTop_facts] show "PROP L" .
 qed
 
-theorem start_construction: "CodeBlock s a S begin_proc_ctx \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (S \<flower> Void) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: (PROP NoFact))"
-  for S :: " ('a::lrep) set" and a :: 'a and s :: "('a \<flower> void) state" including show_more1
-  unfolding begin_proc_ctx_def CodeBlock_def CurrentConstruction_def by (rule SpecTop_I; (rule NoFact)?) auto
+lemma codeblock_export: "PROP Pure.prop (\<And>s. CodeBlock s a T f \<Longrightarrow> PROP C) \<Longrightarrow> PROP Pure.prop (\<And>s. CodeBlock s a T (f \<nuInstrComp> g) \<Longrightarrow> PROP C)"
+ including show_more1   unfolding CodeBlock_def prop_def instr_comp_def proof -
+  assume A[of "f a", simplified]: "(\<And>s. a \<in> T \<and> f a = s \<and> s \<noteq> SNeg \<Longrightarrow> PROP C)"
+  fix s show "a \<in> T \<and> bind (f a) g = s \<and> s \<noteq> SNeg \<Longrightarrow> PROP C" proof -
+    assume [unfolded bind_def]: "a \<in> T \<and> NuPrim.bind (f a) g = s \<and> s \<noteq> SNeg"
+    then have "a \<in> T \<and> f a \<noteq> SNeg" by auto
+    from this[THEN A] show "PROP C" .
+  qed
+qed
 
-theorem finish_construction: "(\<And>a s. CodeBlock s a S f \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> R) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L))
+theorem start_construction:
+  "CodeBlock s a S begin_proc_ctx \<Longrightarrow>
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (S \<flower> Void) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP NoFact) (PROP NoFact) (PROP NoFact))"
+  for S :: " ('a::lrep) set" and a :: 'a and s :: "('a \<flower> void) state" including show_more1
+  unfolding begin_proc_ctx_def CodeBlock_def CurrentConstruction_def by (rule SpecTop_I; (rule FactCollection_I)?; (rule NoFact)?) auto
+
+theorem finish_construction: "(\<And>a s. CodeBlock s a S f \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> R)))
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> end_proc_ctx) \<blangle> S \<longmapsto> T \<brangle>" for S :: "('a::lrep) set" and  T :: "('b::lrep) set" and  R :: "('c::register_collection) set"
   unfolding CodeBlock_def Procedure_def
 proof
-  assume rule:"(\<And>a s. a \<in> S \<and> f a = s \<and> s \<noteq> SNeg \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> R) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L))"
+  assume rule:"(\<And>a s. a \<in> S \<and> f a = s \<and> s \<noteq> SNeg \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> R)))"
   fix a show "a \<in> S \<longrightarrow> (f \<nuInstrComp> end_proc_ctx) a \<in> \<S> T " proof
     assume a: "a \<in> S"
-    moreover note rule[of a "f a", unfolded CurrentConstruction_def, simplified, THEN SpecTop_focus] 
+    moreover note rule[of a "f a", unfolded CurrentConstruction_def, simplified] 
     ultimately show "(f \<nuInstrComp> end_proc_ctx) a \<in> \<S> T" unfolding instr_comp_def bind_def end_proc_ctx_def
       using LooseStateTy_introByStrict by (cases "f a") auto
   qed
@@ -549,13 +596,26 @@ qed
 
 lemma rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<blangle> U \<longmapsto> V \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U \<longmapsto> V \<brangle>" by fast
 
-lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> PROP R)" by rule simp+
-lemma  y: "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<and> Q \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: \<glowing_star> P \<^bold>a\<^bold>n\<^bold>d PROP L) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: \<glowing_star> Q \<^bold>a\<^bold>n\<^bold>d PROP L)"
-  unfolding SpecTop_imp conj_imp Facts_imp by (intro SpecTop_I Facts_I)
-lemma name_star_fact: "(P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: \<glowing_star> Q \<^bold>a\<^bold>n\<^bold>d PROP L) \<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m name \<Longrightarrow> (P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: \<glowing_star> True \<^bold>a\<^bold>n\<^bold>d \<^item> name : Q and_fact PROP L)"
-  unfolding SpecTop_imp Facts_imp by (intro SpecTop_I Facts_I TrueI Fact_I AndFact_I)
+lemma name_star_fact:
+  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m name \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop Q) (PROP L) (PROP S))
+    \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP NoFact) (PROP Fact name Q and_fact PROP L) (PROP S))"
+  unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
+lemma declare_fact:
+  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m name \<Longrightarrow> A \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
+    \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP Fact name A and_fact PROP L) (PROP S))"
+  unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
+lemma intro_internal_fact:
+  "PROP A \<Longrightarrow> PROP FactCollection (PROP Q) (PROP L) (PROP S)
+    \<Longrightarrow> PROP FactCollection (PROP Q) (PROP L) (PROP A and_fact PROP S)"
+  unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
+lemma clean_user_facts:
+  "(PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S)) \<Longrightarrow>
+    (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection NoFact NoFact (PROP S))"
+  unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I NoFact)
 
   section \<open>Supplementary structures for elementary functions\<close>
+
+  subsubsection \<open>Existential Nu-type\<close>
 
 definition ExTyp :: "('a \<Rightarrow> 'b set) \<Rightarrow> 'b set" (binder "\<exists>* " 10) where "ExTyp T = {x. (\<exists>z. x \<in> T z)}"
   \<comment> \<open>which represents there exists some images (or rarely abstractors) subject to the typing.
@@ -563,14 +623,29 @@ definition ExTyp :: "('a \<Rightarrow> 'b set) \<Rightarrow> 'b set" (binder "\<
 lemma [simp]: "x \<in> ExTyp T \<equiv> (\<exists>z. x \<in> T z)" unfolding ExTyp_def by auto
 lemma [simp]: "\<S_S> (ExTyp T) = (\<exists>* x. \<S_S> (T x))" unfolding ExTyp_def by auto
 lemma [simp]: "\<S> (ExTyp T) = (\<exists>* x. \<S> (T x))" unfolding ExTyp_def by auto
-lemma [simp]: "(ExTyp T \<boxbar> R) = (\<exists>*x. (T x \<boxbar> R))" and "(S \<boxbar> ExTyp T) = (\<exists>*x. (S \<boxbar> T x))" unfolding ExTyp_def by auto
+lemma [simp]: "(ExTyp T \<boxbar> R) = (\<exists>*x. (T x \<boxbar> R))" and [simp]:"(S \<boxbar> ExTyp T) = (\<exists>*x. (S \<boxbar> T x))" unfolding ExTyp_def by auto
+lemma [simp]: "(ExTyp T \<flower> R) = (\<exists>*x. (T x \<flower> R))" unfolding ExTyp_def by auto
 lemma [simp]: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExTyp T) \<longleftrightarrow> (\<exists>x. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T x)" unfolding CurrentConstruction_def by simp
+
+  subsubsection \<open>Addition Nu-type : coheres true proposition\<close>
 
 definition AddtionTy :: " 'a set \<Rightarrow> bool \<Rightarrow> 'a set " (infixl "\<addition>" 50) where " T \<addition> P = {x. x \<in> T \<and> P}"
 lemma [simp]: "T \<addition> True = T" unfolding AddtionTy_def by fast
 lemma [simp]: "\<S_S> (T \<addition> P) = (\<S_S> T \<addition> P)" unfolding AddtionTy_def by auto
-lemma [simp]: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<addition> P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P" unfolding CurrentConstruction_def AddtionTy_def by (cases s) auto
 lemma [simp]: "((((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<and> B) \<and> C) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L) \<equiv> (((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<and> (B \<and> C)) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L)" by simp
+
+lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> PROP R)" by rule simp+
+lemma t1: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<addition> P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P" unfolding CurrentConstruction_def AddtionTy_def by (cases s) auto
+lemma [simp]:
+  "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<addition> Q) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP NoFact) (PROP L) (PROP I))
+    \<equiv> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop Q) (PROP L) (PROP I))"
+  unfolding t1 SpecTop_imp conj_imp FactCollection_imp
+  by (intro equal_intr_rule SpecTop_I FactCollection_I conjI NoFact) (unfold SpecTop_imp conj_imp FactCollection_imp)
+lemma [simp]:
+  "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<addition> Q) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop P) (PROP L) (PROP I))
+    \<equiv> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection  (Trueprop (Q \<and> P)) (PROP L) (PROP I))"
+  unfolding t1 SpecTop_imp conj_imp FactCollection_imp
+  by (intro equal_intr_rule SpecTop_I FactCollection_I conjI) (unfold SpecTop_imp conj_imp FactCollection_imp)
 
 definition Cast :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool " ("(2\<^bold>c\<^bold>a\<^bold>s\<^bold>t _ \<longmapsto> _/ \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e _)" [2,2,14] 13)
   where "(\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P) \<longleftrightarrow> (\<forall>x. x \<in> A \<longrightarrow> x \<in> B \<and> P)"
@@ -584,18 +659,15 @@ lemma CastE[elim]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bo
 lemma CastI[intro]: "Inhabited A \<Longrightarrow> A \<subseteq> B \<Longrightarrow> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P"
   and [intro]: "\<not> Inhabited A \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P" unfolding Cast_def Inhabited_def by auto
 lemma [\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A" by blast
+lemma [\<nu>cast]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e N = N' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (x \<tycolon> N) \<longmapsto> (x' \<tycolon> N')" unfolding Cast_def by simp
+lemma [\<nu>cast]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x" by simp
 lemma [\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<S_S> A \<longmapsto> \<S_S> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P" by blast
 lemma [\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P2 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<boxbar>B) \<longmapsto> (A'\<boxbar>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<and> P2" by blast
 lemma LooseState_Cast[\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<S> A \<longmapsto> \<S> B" unfolding \<nu>def Cast_def by auto
 lemma [\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<boxbar>B) \<longmapsto> (A'\<boxbar>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and>Q"
   unfolding Cast_def by auto
 
-definition Obligation :: "bool \<Rightarrow> bool" ("\<^bold>a\<^bold>u\<^bold>t\<^bold>o\<^bold>p\<^bold>r\<^bold>o\<^bold>v\<^bold>e _" [10] 9) where "(\<^bold>a\<^bold>u\<^bold>t\<^bold>o\<^bold>p\<^bold>r\<^bold>o\<^bold>v\<^bold>e P) \<longleftrightarrow> P"
-  \<comment> \<open>A tag to hint automatic provers to try to prove this proof obligation\<close>
-lemma [intro]: "P \<Longrightarrow> \<^bold>a\<^bold>u\<^bold>t\<^bold>o\<^bold>p\<^bold>r\<^bold>o\<^bold>v\<^bold>e P" using Obligation_def by fast
-lemma [dest]: "\<^bold>a\<^bold>u\<^bold>t\<^bold>o\<^bold>p\<^bold>r\<^bold>o\<^bold>v\<^bold>e P \<Longrightarrow> P" using Obligation_def by fast
-lemma [\<nu>cast]: "\<^bold>a\<^bold>u\<^bold>t\<^bold>o\<^bold>p\<^bold>r\<^bold>o\<^bold>v\<^bold>e x = x' \<Longrightarrow> \<^bold>a\<^bold>u\<^bold>t\<^bold>o\<^bold>p\<^bold>r\<^bold>o\<^bold>v\<^bold>e N = N' \<Longrightarrow>  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (x \<tycolon> N) \<longmapsto> (x' \<tycolon> N')" unfolding Cast_def by fast
-lemma [\<nu>cast]: "\<^bold>a\<^bold>u\<^bold>t\<^bold>o\<^bold>p\<^bold>r\<^bold>o\<^bold>v\<^bold>e x = x" by fast
+
 
 definition AutoTag :: "bool \<Rightarrow> bool" ("\<^bold>a\<^bold>u\<^bold>t\<^bold>o _" [100] 99) where [\<nu>def]: "\<^bold>a\<^bold>u\<^bold>t\<^bold>o P \<longleftrightarrow> P"
 lemma [\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U \<longmapsto> U' \<Longrightarrow> \<^bold>a\<^bold>u\<^bold>t\<^bold>o \<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> U \<longmapsto> U' \<brangle>"
@@ -603,7 +675,7 @@ lemma [\<nu>cast]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U \<longmapsto> U' \<Lo
   
 definition Conversion :: "( ('a::lrep) \<Rightarrow> ('b::lrep) state) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> ( ('c::lrep) \<Rightarrow> ('d::lrep) state) \<Rightarrow> 'c set \<Rightarrow> 'd set \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n _/ (2\<blangle> _/ \<longmapsto> _ \<brangle>)/ \<long_dobule_mapsto> _/ (2\<blangle> _/ \<longmapsto> _ \<brangle>)" [101,2,2,101,2,2] 100)
   where [\<nu>def]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> g \<blangle> U' \<longmapsto> V' \<brangle> \<longleftrightarrow>( \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U \<longmapsto> V \<brangle> \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> U' \<longmapsto> V' \<brangle> )"
-lemma conversion_goal: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> f' \<blangle> U' \<longmapsto> V' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U \<longmapsto> V \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<blangle> U' \<longmapsto> V' \<brangle>"
+lemma conversion: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> f' \<blangle> U' \<longmapsto> V' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U \<longmapsto> V \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<blangle> U' \<longmapsto> V' \<brangle>"
   for f :: " ('a::lrep) \<Rightarrow> ('b::lrep) state" and f' :: " ('c::lrep) \<Rightarrow> ('d::lrep) state" unfolding Conversion_def by fast
 lemma [\<nu>cast]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> f \<blangle> U \<longmapsto> V \<brangle>" unfolding Conversion_def by fast
 lemma [\<nu>cast]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> g \<blangle> U' \<longmapsto> V' \<brangle> \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> call g \<blangle> U' \<flower> W \<longmapsto> V' \<flower> W\<brangle>"
