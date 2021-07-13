@@ -18,14 +18,12 @@ ML \<open>val _ =
   Outer_Syntax.command \<^command_keyword>\<open>myconsider\<close> "state cases rule"
     (Parse_Spec.obtains >> @{print} >> (Toplevel.proof' o Obtain.consider_cmd));\<close>
 
-proc add3 : "((x \<tycolon> \<nat>[32]) named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
-  includes show_more
+proc add3 : "((\<exists>*x. x \<tycolon> \<nat>[32]) named x, (\<exists>*y. y \<tycolon> \<nat>[32]))" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
   if A[in_using]:"x < 100" and [in_using]:"y < 100"
-\<nu>obtain z2 where c: "x < z2" by auto
-\<nu>obtain z3 where c2: "x < z3" by auto
+\<nu>obtain z2 z3 where c: "x < z2" and c2: "x < z3" and c3: "y < z2" by auto
   \<bullet> x x y + +
-ML_val \<open>Assumption.all_assms_of @{context}\<close>
   finish
+  obtain
 
 
 proc add2 : "(( x \<tycolon> \<nat>[32]) named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"

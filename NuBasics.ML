@@ -34,8 +34,6 @@ signature NU_BASICS = sig
   val registers_of_specthm : thm -> cterm
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
-  val state_of_specthm : thm -> term
-  val premise_of_specthm : thm -> term
   val current_block_var : thm -> cterm
   val dest_codeblock   : term -> term * term * term * term
   val dest_codeblock_c : cterm -> cterm * cterm * cterm * cterm
@@ -164,10 +162,12 @@ val registers_of_specthm = catch_th 0 "registers_of_specthm: Not a CurrentConstr
   (Thm.cprop_of #> dest_SpecTop_c #> #1 #> dest_Trueprop_c
     #> dest_CurrentConstruction_c #> #2 #> dest_Proc_CtxTy_c #> #2)
 
-val state_of_specthm = Thm.prop_of #> dest_SpecTop #> #1
-val premise_of_specthm = state_of_specthm #> Logic.dest_implies #> #1
+val state_of_specthm = dest_SpecTop #> #1
 val current_block_var =
-  state_of_specthm #> Logic.strip_assums_concl #> dest_Trueprop #> block_var_of_Constuction
+  Thm.prop_of
+    #> perhaps (dest_SpecTop #> #1 #> Logic.strip_assums_concl)
+    #> perhaps dest_Trueprop
+    #> block_var_of_Constuction
 val dest_codeblock   = perhaps dest_Trueprop #> dest_quadop "NuPrim.CodeBlock"
 val codeblock_name   = dest_codeblock #> #1 #> dest_Free #> #1
 val dest_codeblock_c = perhaps dest_Trueprop_c #> dest_quadop_c "NuPrim.CodeBlock"
@@ -192,15 +192,16 @@ fun export_codeblock (codeblock,destined_codeblock) th =
   if aconv_c (codeblock,destined_codeblock) then th
   else let
     val (s,_,_,_) = dest_codeblock_c destined_codeblock
-    val goal = cprop_of (disch_codeblock destined_codeblock th ) |> Thm.apply prop_term |> Goal.init
+    val goal = cprop_of (disch_codeblock destined_codeblock th)
+          |> Thm.apply prop_term |> Goal.init
     val endth = disch_codeblock codeblock th |> Goal.protect 0
     fun loop th = (endth RS th |> Goal.conclude)
       handle THM _ => loop (thm_codeblock_export RS th)
   in
     loop goal |> Goal.conclude |> undisch_codeblock s
-  handle THM _ => raise THM ("export_codeblock", 1,
-    [th, Thm.assume codeblock, Thm.assume destined_codeblock])
   end
+  handle THM e => (@{print} e; raise THM ("export_codeblock", 1,
+    [th, Thm.assume codeblock, Thm.assume destined_codeblock]))
 fun export_codeblocks destined_codeblocks th =
   let
     val codeblock_name = term_of #> dest_codeblock #> #1 #> term_name

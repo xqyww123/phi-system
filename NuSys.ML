@@ -150,9 +150,10 @@ fun starting_construction ctx arg_nuTy =
     init_thm
   end
 
+fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
 fun begin_proc ctx (arg,ret) reg_names =
   let
-    val (arg,ret) = apply2 (Syntax.check_term ctx) (arg,ret)
+    val (arg,ret) = mk_raw_prod (arg,ret) |> Syntax.check_term ctx |> dest_prod
     val (argT,retT) = apply2 (type_of #> dest_Type #> #2 #> hd) (arg,ret)
     val procT = argT --> mk_stateT retT
     (*val (proc,ctx) = Proof_Context.background_theory_result (

@@ -78,6 +78,9 @@ subsection \<open>Preliminary data structures and Auxiliary definition\<close>
 definition K_def[simp]: "K a b = a"
 lemma K_intro[intro]: "(\<forall>x y. f x y = x) \<Longrightarrow> f = K" by (simp add: ext)
 
+definition ProtectorI :: "'a \<Rightarrow> 'a" where "ProtectorI x = x"
+lemma [cong]: "ProtectorI X \<equiv> ProtectorI X" .
+
 datatype 'a tree = Leaf | Node 'a \<open>'a tree\<close> \<open>'a tree\<close>
 
 subsubsection \<open>Structures assembling propositions\<close>
@@ -310,7 +313,7 @@ instantiation prod :: (register_collection,register_collection) register_collect
 
 subsection \<open>Stack structure\<close>
 
-definition Stack_Delimiter :: " ('a :: lrep) set \<Rightarrow> ('b :: lrep) set \<Rightarrow> ('a \<times> 'b :: lrep) set " ( "_\<boxbar>_" [14,13] 13)
+definition Stack_Delimiter :: " ('a :: lrep) set \<Rightarrow> ('b :: lrep) set \<Rightarrow> ('a \<times> 'b :: lrep) set " ( "(2_/\<boxbar>_)" [14,13] 13)
   where "Stack_Delimiter = (\<times>)"
 definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " where "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
 translations "a" <= "a \<boxbar> CONST End_of_Contextual_Stack x" \<comment> \<open>hide the end\<close>
@@ -512,6 +515,11 @@ translations "_codeblock_ v ty" <= "CONST CodeBlock v arg ty exp"
   "_codeblock_noarg_ v" <= "_codeblock_ v (CONST End_of_Contextual_Stack x)"
 translations "_codeblock_exp_ v exp ty" <= "CONST CodeBlock v arg ty exp"
 
+lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv> ProtectorI (prog arg))"
+  unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
+lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (prog arg) \<equiv> v"
+  unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
+
 definition Fact :: "name_tag \<Rightarrow> bool \<Rightarrow> prop" where "Fact label P \<equiv>Trueprop P"
 syntax "Fact_sugar_" :: "idt \<Rightarrow> logic \<Rightarrow> prop" ("\<^item> _ : _" [5,0] 4)
 translations "Fact_sugar_ name P" == "CONST Fact (NAME name) P"
@@ -617,15 +625,48 @@ lemma clean_user_facts:
 
   subsubsection \<open>Existential Nu-type\<close>
 
-definition ExTyp :: "('a \<Rightarrow> 'b set) \<Rightarrow> 'b set" (binder "\<exists>* " 10) where "ExTyp T = {x. (\<exists>z. x \<in> T z)}"
-  \<comment> \<open>which represents there exists some images (or rarely abstractors) subject to the typing.
+datatype ('a,'b) to_be_bind_name = To_Be_Bind_Name 'b
+definition ExTyp :: "('a \<Rightarrow> 'b set) \<Rightarrow> ('a, 'b set) to_be_bind_name" (binder "\<exists>*" 10)
+  where   "ExTyp T = To_Be_Bind_Name {x. (\<exists>z. x \<in> (T z))}"
+  \<comment> \<open>which represents there exists some \<nu>-images (or rarely abstractors) subject to the typing.
     And then the image subjecting the typing could be fixed as a local variable by the \<nu>-obtain command. \<close>
-lemma [simp]: "x \<in> ExTyp T \<equiv> (\<exists>z. x \<in> T z)" unfolding ExTyp_def by auto
-lemma [simp]: "\<S_S> (ExTyp T) = (\<exists>* x. \<S_S> (T x))" unfolding ExTyp_def by auto
-lemma [simp]: "\<S> (ExTyp T) = (\<exists>* x. \<S> (T x))" unfolding ExTyp_def by auto
-lemma [simp]: "(ExTyp T \<boxbar> R) = (\<exists>*x. (T x \<boxbar> R))" and [simp]:"(S \<boxbar> ExTyp T) = (\<exists>*x. (S \<boxbar> T x))" unfolding ExTyp_def by auto
-lemma [simp]: "(ExTyp T \<flower> R) = (\<exists>*x. (T x \<flower> R))" unfolding ExTyp_def by auto
-lemma [simp]: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExTyp T) \<longleftrightarrow> (\<exists>x. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T x)" unfolding CurrentConstruction_def by simp
+definition BinderNameTag :: "'b \<Rightarrow> ('b,'a) to_be_bind_name \<Rightarrow> 'a"
+  where "BinderNameTag name x = (case x of To_Be_Bind_Name x' \<Rightarrow> x')"
+text \<open>\<^const>\<open>BinderNameTag\<close> wraps a binding to record the variable name of a \<lambda>-abstraction as an free variable
+  (e.g. \<^term>\<open>BinderNameTag var (\<exists>var. P)\<close> for \<^term>\<open>\<exists>var. P\<close>), in order to retain variable name during the transformation.
+  The name retaining is implemented by the simple procedure `BinderNameTag` defined later.\<close>
+
+simproc_setup BinderNameTag (\<open>BinderNameTag name (binder f)\<close>) = \<open>
+  fn _ => fn ctx => fn ctm => (
+    case Thm.term_of ctm of ((head1 as Const (\<^const_name>\<open>BinderNameTag\<close>, _)) $ name $ (binder $ Abs (var_name,vty,body))) =>
+      if Term.term_name name = var_name then NONE
+      else Thm.reflexive ctm
+        |> Thm.renamed_prop (Logic.mk_equals (Thm.term_of ctm,
+              (head1 $ name $ (binder $ Abs (Term.term_name name, vty, body)))))
+        |> SOME
+    | _ => NONE
+)\<close>
+
+lemma [simp]: "x \<in> BinderNameTag name (ExTyp T) \<equiv> (\<exists>z. x \<in> T z)" unfolding ExTyp_def BinderNameTag_def by auto
+lemma [simp]: "\<S_S> (BinderNameTag name (\<exists>*x. T x)) = BinderNameTag name (\<exists>*x. \<S_S> (T x))" unfolding ExTyp_def BinderNameTag_def by auto
+lemma [simp]: "(BinderNameTag name (ExTyp A) \<boxbar> R) = BinderNameTag name (\<exists>* x. (A x \<boxbar> R))" unfolding ExTyp_def BinderNameTag_def by auto
+lemma [simp]: "(S\<boxbar>BinderNameTag name (ExTyp T)) = BinderNameTag name (\<exists>* z. (S \<boxbar> T z))" unfolding ExTyp_def BinderNameTag_def by auto
+lemma [simp]: "\<S> (BinderNameTag name (ExTyp T)) = BinderNameTag name (\<exists>* x. \<S> (T x))" unfolding ExTyp_def BinderNameTag_def by auto
+lemma [simp]: "(BinderNameTag name (ExTyp T) \<flower> R) = BinderNameTag name (\<exists>* x. (T x \<flower> R))" unfolding ExTyp_def BinderNameTag_def by auto
+lemma ExTyp_strip: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (BinderNameTag name (ExTyp T))) \<equiv> (\<exists>x. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T x)"
+  unfolding BinderNameTag_def ExTyp_def CurrentConstruction_def by (rule eq_reflection) auto
+
+translations "\<exists>*x r. y" => "CONST BinderNameTag x (CONST ExTyp (\<lambda>x. (\<exists>*r. y)))"
+  "\<exists>*x. y" => "CONST BinderNameTag x (CONST ExTyp (\<lambda>x. y))"
+  "y" <= "CONST BinderNameTag x y"
+  "\<exists>*x y. z" <= "\<exists>*x. \<exists>*y. z"
+  "\<exists>x y. z" <= "\<exists>x. \<exists>y. z"
+
+(* An example to illustrate this name retaining process *)
+notepad begin
+  assume "x \<in> (A\<boxbar>(\<exists>*aaa zz. B aaa zz)\<boxbar>(\<exists>*qq. C qq))"
+  note this[simplified]
+end
 
   subsubsection \<open>Addition Nu-type : coheres true proposition\<close>
 

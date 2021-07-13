@@ -15,6 +15,7 @@ signature NU_HELP = sig
   val UI_top_handler_local : (Proof.context -> 'a) -> Proof.context -> 'a
   val UI_top_handler_global : (Context.theory -> 'a) -> Context.theory -> 'a
 
+  val int_of_string : string -> int
   val dummy_c : cterm
   val same_const : string (* const name *) -> term -> bool
   (* map all free terms and free types inside to variables *)
@@ -34,10 +35,25 @@ signature NU_HELP = sig
   val dest_quadop   : string (* const name *) -> term -> term * term * term * term
   val dest_quadop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm
   val strip_binop_r (* right associative *) : string (* const name *) -> term -> term list
+  val mk_monop : string (* const name *) -> term -> term
   val mk_binop : string (* const name *) -> term * term -> term
   val list_mk_binop_r  (* right associative *) : string (* const name *) -> term list -> term
   val list_mk_binop_r0 (* right associative *) : string (* const name *)
         -> term (* initial term *) -> term list -> term
+  val dest_binder    : string (*binder name*) -> term -> term * term
+  val dest_binder_c  : string (*binder name*) -> cterm -> cterm * cterm
+  (* one wrapped by `BinderNameTag` *)
+  val dest_named_binder    : string (*binder name*) -> term -> (term * term) * term
+  val dest_named_binder_c  : string (*binder name*) -> cterm -> ((string * ctyp) * cterm) * cterm
+  val mk_binder    : string (*binder name*) -> term -> term -> term
+  val strip_binder_n   : int (*number of binders to be destructed*) ->
+        string -> term -> term list * term
+  val strip_binder_nc : int -> string -> cterm -> cterm list * cterm
+  val strip_binder   : string -> term -> term list * term
+  val strip_binder_c : string -> cterm -> cterm list * cterm
+  val strip_named_binder   : string -> term -> (term * term) list * term
+  val strip_named_binder_c : string -> cterm -> ((string * ctyp) * cterm) list * cterm
+  val list_mk_binder   : string -> term list -> term -> term
 
   val dest_Trueprop_c : cterm -> cterm
   (*  Γ |- A ==> B
@@ -52,6 +68,8 @@ signature NU_HELP = sig
   val forall_intr_by_names : string list -> thm -> thm
   val open_schematic_term : term -> term
 
+  val map_fixes : ('a -> 'b) ->
+        (binding * 'a option * mixfix) list -> (binding * 'b option * mixfix) list
   val fix_frees : Position.T -> term list (* free terms *) -> state -> state
 end
 structure NuHelp : NU_HELP = struct
@@ -90,8 +108,9 @@ fun dest_binop const (tm as Const (const', _) $ a $ b) =
   | dest_binop const tm = raise TERM ("dest_binop "^const, [tm])
 fun dest_binop_c const tm =
       (dest_binop const (term_of tm); Thm.dest_binop tm)
-fun strip_binop_r c tm =
-  case try (dest_binop c) tm of SOME (a,b) => a::(strip_binop_r c b) | _ => [tm]
+fun strip_bin_r_assoc strip tm =
+  case try strip tm of SOME (a,b) => a :: (strip_bin_r_assoc strip b) | _ => [tm]
+val strip_binop_r = strip_bin_r_assoc o dest_binop
 fun dest_triop const (tm as Const (const', _) $ a $ b $ c) =
       if const' = const then (a,b,c) else raise TERM ("dest_triop "^const, [tm] )
   | dest_triop const tm = raise TERM ("dest_triop "^const, [tm])
@@ -115,12 +134,50 @@ fun dest_quadop_c const tm =
       in (a1,a2,a3,a4) end
 val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
+fun mk_monop name arg = Const (name, Term.dummyT) $ arg
 fun mk_binop name (lhs,rhs) = Const (name, Term.dummyT) $ lhs $ rhs
 fun list_mk_binop_r _  [] = raise Empty
   | list_mk_binop_r _  [x] = x
   | list_mk_binop_r mk (h::r) = mk_binop mk (h, list_mk_binop_r mk r)
 fun list_mk_binop_r0 _  x0 [] = x0
   | list_mk_binop_r0 mk x0 (h::r) = mk_binop mk (h, list_mk_binop_r0 mk x0 r)
+
+fun dest_binder binder (tm as (Const (const,_) $ Abs (var,vty,body))) =
+      if const = binder
+      then Term.dest_abs (var,vty,body) |> apfst (fn var' => Free (var', vty))
+      else raise TERM ("dest_binder "^binder, [tm])
+  | dest_binder binder tm = raise TERM ("dest_binder "^binder, [tm])
+fun dest_binder_c binder = dest_monop_c binder #> dest_abs NONE
+val dest_binder_name_tag   = dest_binop   "NuPrim.BinderNameTag"
+val dest_binder_name_tag_c = dest_binop_c "NuPrim.BinderNameTag"
+fun dest_named_binder binder tm =
+      case dest_binder_name_tag tm of (var,bind) =>
+        case dest_binder binder bind of (var' as Free (_,vty), body) =>
+          ((Free (term_name var, vty), var'), body)
+fun dest_named_binder_c binder tm =
+      case dest_binder_name_tag_c tm of (var,bind) =>
+        case dest_binder_c binder bind of (var', body) =>
+          (((term_name (term_of var), ctyp_of_cterm var'), var'), body)
+fun mk_binder binder (Free namty) body = mk_monop binder (absfree namty body)
+  | mk_binder _ tm _ = raise TERM ("mk_binder: should be a free variable", [tm])
+fun gen_strip_binder num dest tm =
+  if num = 0 then ([],tm)
+  else case try dest tm
+    of SOME (var,body) => gen_strip_binder (num - 1) dest body |> apfst (fn l => var :: l)
+     | NONE =>
+        if num > 0 then raise Fail "strip_binder: insufficient binders"
+        else ([],tm)
+fun strip_binder_n  n = gen_strip_binder n o dest_binder
+fun strip_binder_nc n = gen_strip_binder n o dest_binder_c
+fun strip_named_binder_n  n = gen_strip_binder n o dest_named_binder
+fun strip_named_binder_nc n = gen_strip_binder n o dest_named_binder_c
+val strip_binder   = strip_binder_n ~1
+val strip_binder_c = strip_binder_nc ~1
+val strip_named_binder   = strip_named_binder_n ~1
+val strip_named_binder_c = strip_named_binder_nc ~1
+fun list_mk_binder binder = fold (mk_binder binder)
+
+(** helpful rules **)
 
 fun undisch th = cprem_of th 1 |> assume |> implies_elim th
 
@@ -155,4 +212,9 @@ fun implies_elim_with_prems thAB thA =
   fold (elim_implies o assume) (cprems_of thA) thA
     |> implies_elim thAB
     |> fold_rev implies_intr (cprems_of thA)
+fun map_fixes f = map (fn (a,b,c) => (a,Option.map f b,c))
+
+fun int_of_string str =
+  case Int.fromString str
+    of SOME x => x | NONE => error (str ^ " is not a integer")
 end

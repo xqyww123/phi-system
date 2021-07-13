@@ -5,8 +5,8 @@ theory NuSys
   keywords
     "proc" :: thy_goal_stmt
   and "\<medium_left_bracket>" "as" "\<rightarrow>" "\<longmapsto>" :: quasi_command
-  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" :: prf_decl % "proof"
-  and "\<nu>processor" "\<nu>processor_resolver" :: thy_decl % "ML"
+  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" :: prf_decl % "proof"
+  and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
 (*   and "finish" :: qed_block % "proof" *)
@@ -16,8 +16,7 @@ begin
 
 named_theorems in_using \<open>theorems that will be inserted in ANY proof environments.\<close>
   and final_proc_rewrite \<open>rules used to rewrite the generated procedure theorem in the final stage\<close>
-declare Premise_Irew[final_proc_rewrite]
-
+lemmas [final_proc_rewrite] = Premise_Irew End_of_Contextual_Stack_def[THEN eq_reflection]
 
 ML_file_debug NuHelp.ML
 ML_file "./general/binary_tree.ML"
@@ -31,6 +30,7 @@ ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
 ML_file "./library/processors.ML"
 ML_file "./library/procedure.ML"
+ML_file "./library/exty.ML"
 ML_file NuSys.ML
 ML_file_debug NuToplevel.ML
 ML_file "./library/obtain.ML"
@@ -43,6 +43,7 @@ attribute_setup \<nu>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_po
 attribute_setup show_proc_expression = \<open>NuToplevel.show_proc_expression_attr\<close>
 (* declare [[show_proc_expression = false]] *)
 
+
 ML \<open>
 
 local open Scan NuToplevel NuSys Parse 
@@ -52,6 +53,9 @@ val structured_statement =
     >> (fn ((shows, assumes), fixes) => (fixes, assumes, shows));
 val bracket_begin = $$$ "\<medium_left_bracket>";
 in
+
+val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>exty_simproc\<close> "setup the pecific simproc for \<^const>\<open>ExTy\<close>"
+  (Parse.binding >> NuExTyp.set_simproc_cmd)
 
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
@@ -81,6 +85,11 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<nu>obtain\<close> "generalized elimination"
     (Parse.parbinding -- Scan.optional (Parse.vars --| Parse.where_) [] -- structured_statement
       >> (fn ((a, b), (c, d, e)) => Toplevel.proof' (NuObtain.obtain_cmd a b c d e)));
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<nu>choose\<close> "existential elimination"
+    ( !!! vars --| $$$ "where" -- Scan.repeat1 Parse.prop
+      >> (fn (b, c) => Toplevel.proof' (NuObtain.choose_cmd b c)));
 
 val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor\<close> "define \<nu>processor"
@@ -123,4 +132,8 @@ end\<close>
 \<nu>processor_resolver resolve_disposable 100  \<open>\<nu>Disposable T \<Longrightarrow> PROP P\<close> \<nu>disposable
 \<nu>processor_resolver resolve_share 100  \<open>Nu_Share N sh f \<Longrightarrow> PROP P\<close> \<nu>share
 ML \<open>Goal.init @{cterm "A \<Longrightarrow> B"}\<close>
+
+
+
+
 end

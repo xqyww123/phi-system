@@ -117,11 +117,12 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
     val preconds = preconds |> map (apfst (apsnd (map (Attrib.check_src ctx))))
     val (arg, reg_names) = arg |> Syntax.parse_term ctx |> parse_arg
+
     val ret = ret |> Syntax.parse_term ctx |> parse_ret
     val includes = includes |> map (Bundle.check ctx)
     val parse_term = Syntax.parse_term ctx
     val parse_prop = Syntax.parse_prop ctx
-    val (goal,th) = begin_proc ctx (arg,ret) reg_names
+    val (goal,th) = begin_proc ctx (arg,ret) [] (*reg_names*)
     val elems = [Element.Fixes (fixes |> map (fn (b,ty,f) => (b, Option.map (Syntax.parse_typ ctx) ty, f))),
                  Element.Assumes (preconds
                     |> map (apsnd (map (apfst parse_prop #> apsnd (map parse_term)))))]
@@ -157,7 +158,8 @@ val finish_proc_cmd = Toplevel.end_proof (fn int => fn stat =>
 (* Assumption.all_assms_of ctx' |> @{print}; *)
     val end_tac = basic_method (fn ctx' => fn t => 
       (finish_proc ctx (cterm_of ctx goal)
-        (singleton (Proof_Context.export ctx ctx') (elim_SPEC th |> fst))) RS t)
+        (singleton (Proof_Context.export ctx ctx') (elim_SPEC th |> fst))) RS t
+        handle e => raise @{print} e)
   in
     stat |> Proof.set_facts [th] 
       |> Proof.global_qed (SOME (end_tac, Position.no_range), false)

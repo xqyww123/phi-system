@@ -7,6 +7,10 @@ signature NU_OBTAIN = sig
     (binding * string option * mixfix) list -> (string * string list) list list ->
     ((Attrib.binding * Token.src list) * (string * string list) list) list ->
     bool -> Proof.state -> Proof.state
+  val choose: (binding * typ option * mixfix) list -> term list -> 
+    bool -> Proof.state -> Proof.state
+  val choose_cmd: (binding * string option * mixfix) list -> string list -> 
+    bool -> Proof.state -> Proof.state
 end
 structure NuObtain : NU_OBTAIN = struct
 fun eliminate_term ctxt xs tm =
@@ -42,8 +46,9 @@ fun eliminate ctxt rule xs As thm =
 fun eliminate_nusys ctx rule xs As th =
   eliminate ctx (NuBasics.export_codeblocks
     (Thm.chyps_of th |> filter (can NuBasics.dest_codeblock_c)) rule) xs As th
+  handle e => raise (@{print} e)
 fun obtain_export ctxt rule xs _ As =
-  (eliminate_nusys ctxt rule xs As, eliminate_term ctxt xs);
+  (eliminate_nusys ctxt rule xs As, eliminate_term ctxt xs)
 
 
 (* result declaration *)
@@ -177,12 +182,92 @@ fun gen_obtain prep_stmt prep_att that_binding raw_decls raw_fixes raw_prems raw
     |-> Proof.refine_insert
     |> Proof.map_context (fold Variable.bind_term result_binds)
   end;
-
 in
 
 val obtain = gen_obtain Proof_Context.cert_stmt (K I);
 val obtain_cmd = gen_obtain Proof_Context.read_stmt Attrib.attribute_cmd;
 
 end;
+
+local
+val exE = @{thm exE} and ExTy_strip = @{thm NuPrim.ExTyp_strip}
+and CodeBlock_unabbrev = @{thm NuPrim.CodeBlock_unabbrev}
+and CodeBlock_abbrev = @{thm NuPrim.CodeBlock_abbrev}
+fun expand_exE ctx th =
+  (th RS exE) |>
+    Tactic.rule_by_tactic ctx (REPEAT (Tactic.eresolve_tac ctx [exE] 1))
+fun match_vars ctx ret [] [] [] = rev ret
+  | match_vars ctx ret insts' [] (x::insts) =
+      error "unequalled length of instantiations and quantifiers"
+  | match_vars ctx ret insts' (quant::vars) [] =
+      error ("quantifier "^(Syntax.string_of_term ctx quant)^" is not been instantiated")
+  | match_vars ctx ret insts' (quant::vars) ((v,x)::insts) =
+      if v = quant
+      then match_vars ctx (x::ret) [] vars (insts' @ insts)
+      else match_vars ctx ret ((v,x)::insts') (quant::vars) insts
+fun trim_var_name name =
+  if String.isSuffix "__" name
+  then String.substring (name, 0, String.size name - 2)
+  else name
+val trim_var = dest_Free #> apfst trim_var_name #> Free
+fun gen_choose prep_stmt raw_decls raw_insts int stat =
+  let open NuBasics NuHelp HOLogic
+    val ctx = Proof.context_of stat
+    val (focus,facts) = Proof.the_fact stat |> elim_SPEC
+    val (org_vars, org_body) = prop_of focus |> dest_Trueprop |>
+      (fn x => case x of (Const ("NuPrim.CurrentConstruction", ty) $ p $ T) =>
+        case strip_named_binder "NuPrim.ExTyp" T of (vars, body) =>
+          (map snd vars, (Const ("NuPrim.CurrentConstruction", ty) $ p $ body)))
+    val t1 = ((Thm.assume (current_codeblock focus)) COMP CodeBlock_unabbrev)
+    val t2 = ((Thm.assume (current_codeblock focus)) COMP CodeBlock_abbrev)
+    val focus = Raw_Simplifier.rewrite_rule ctx [ExTy_strip] focus
+
+    (* val focus = Simplifier.asm_simplify
+          (fold Simplifier.add_simp [ExTy_strip, CodeBlock_unabbrev] ctx)
+          (disch_current_codeblock focus) |> @{print} *)
+    val ({vars=decl_vars,propss=[insts],binds=[],result_binds=[],...}, params_ctx) =
+      prep_stmt raw_decls [map (rpair []) raw_insts]  ctx
+    val insts = map (dest_eq o dest_Trueprop) insts |> match_vars params_ctx [] [] org_vars
+    val inst_body = subst_free (org_vars ~~ insts) org_body |> @{print}
+
+    val goal = inst_body |> list_mk_binder "HOL.Ex" (map (#2 o #2) decl_vars |> rev)
+          |> mk_Trueprop |> Syntax.check_term params_ctx
+    val that_vars = map dest_Free org_vars |> Variable.variant_frees params_ctx [] |> map Free
+    val that_prop = mk_Trueprop (subst_free (org_vars ~~ that_vars) org_body)
+    val cparams = map (Thm.cterm_of params_ctx o #2 o #2) decl_vars;
+
+    val focus_ex = expand_exE params_ctx focus
+    val specthm'_term = mk_Trueprop (subst_free [Logic.dest_equals (prop_of t1)] inst_body)
+    val specthm' = intro_SPEC 
+        (Thm.assume (Thm.cterm_of params_ctx specthm'_term)
+          |> Raw_Simplifier.rewrite_rule params_ctx [t2] |> @{print}
+        , facts)
+    fun after_qed (result_ctxt, results) state' =
+      let open NuBasics
+        val ctx' = Proof.context_of state'
+        val [rule] = Proof_Context.export result_ctxt ctx' (flat results)
+        val rule = rule
+              |> Drule.forall_intr_list (map (Thm.cterm_of params_ctx) that_vars)
+        val rule = (rule COMP focus_ex) |> Raw_Simplifier.rewrite_rule ctx' [t1]
+              |> expand_exE ctx' |> @{print}
+        (* val (id,specthm) = specthm |> intro_interal_fact_spec rule *)
+      in
+        state'
+        |> Proof.fix (map #1 decl_vars)
+        |> Proof.assm (obtain_export params_ctx rule cparams) [] []
+            [(Binding.empty_atts, [(specthm'_term,[])])]
+        |> Proof.set_facts [specthm']
+      end;
+  in
+    stat
+    |> NuToplevel.setup_proof false NONE after_qed
+      [] [(Binding.empty_atts, [(that_prop, [])])]
+      [[(goal, [])]] int
+    |-> Proof.refine_insert
+  end;
+in
+val choose = gen_choose Proof_Context.cert_stmt
+val choose_cmd = gen_choose Proof_Context.read_stmt
+end
 
 end
