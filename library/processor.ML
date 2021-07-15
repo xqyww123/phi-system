@@ -20,19 +20,16 @@ signature NU_PROCESSOR = sig
   (* be activated only when auto level >= 2 *)
   val not_safe : (Proof.context -> 'a) -> Proof.context -> 'a
   val apply_attr : Proof.context -> thm -> attribute -> thm
-  val focus_rule : proc -> proc
-  val premise_prover : (Proof.context -> tactic) -> proc
   val parse_auto_level : proc -> proc
 
-  val setup : binding -> int (*precedence*) -> term (*pattern*) -> proc
-        -> string (*comment*) -> local_theory -> local_theory
+  val setup : binding -> int (*precedence*) -> term (*pattern*) -> proc ->
+        string (*comment*) -> local_theory -> local_theory
+  val setup' : binding -> int (*precedence*) ->
+        (string (*pattern*) * (binding * string option * mixfix) list) -> proc ->
+        string (*comment*) -> local_theory -> local_theory
   val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string (*pattern*))
         * (binding * string option * mixfix) list)
         * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
-  val setup_resolver : binding -> int (*precedence*)
-        -> (string * (binding * string option * mixfix) list) (* pattern *)
-        -> (xstring * Position.T) (*name of facts*) -> string (*comment*)
-        -> local_theory -> local_theory
 end
 structure NuProcessor : NU_PROCESSOR = struct
 open Thm NuBasics
@@ -145,7 +142,7 @@ fun setup_cmd (((((binding,precedence),term),fixes),proc),comment) ctx =
         (ML_Lex.read
           ("Theory.local_setup (NuProcessor.setup (" ^
           ML_Syntax.make_binding binding ^ ") (" ^ ML_Syntax.print_int precedence ^ ") ("
-          ^ ML_Syntax.print_term term ^ ") (let open NuProcessor in ") @
+          ^ ML_Syntax.print_term term ^ ") (let open NuProcessor NuProcessors in ") @
           ML_Lex.read_source proc @
           ML_Lex.read (" end) " ^ ML_Syntax.print_string comment ^ ")"))
     )
@@ -158,26 +155,7 @@ fun parse_auto_level proc ctx th =
 
 fun apply_attr ctx th attr =
   attr (Context.Proof ctx, th) |> #2 |> the
-fun focus_rule processor ctx th toks = 
-  case elim_SPEC th of (focus,aux) =>
-    processor ctx focus toks |> apfst (fn th => intro_SPEC (th,aux))
-fun premise_prover_raw prover ctx th =
-  Scan.succeed
-    ((cprem_of th 1 |> Goal.init |> prover ctx |> Seq.pull |> (fn x =>
-      case x of SOME (th,_) => Goal.conclude th | _ => raise Bypass)
-    ) RS th)
-val premise_prover = focus_rule o premise_prover_raw
 
-fun setup_resolver binding precedence pattern facts comment lthy =
-  let
-    val facts = Facts.check (Context.Proof lthy) (Proof_Context.facts_of lthy) facts
-  in
-    setup' binding precedence pattern (
-      premise_prover (almost_safe (fn ctx =>
-        Tactical.SOLVED' (Tactical.REPEAT o Tactic.resolve_tac ctx
-          (Proof_Context.get_thms ctx facts)) 1))
-    ) comment lthy
-  end
 (* fun processor_parser (ctx,tokens) =
 val processor_attr = Scan.lift (Parse.named_position >> #1) --  *)
   

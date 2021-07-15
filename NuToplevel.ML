@@ -9,7 +9,6 @@ The toplevel structure of the ν-system.
 *)
 
 signature NU_TOPLEVEL = sig
-  val register_label_head : string
   val show_proc_expression_attr : attribute context_parser
 
   val begin_proc_cmd : Attrib.binding 
@@ -19,14 +18,17 @@ signature NU_TOPLEVEL = sig
         -> (xstring * Position.T) list (*includes*)
         -> (Attrib.binding * (string * string list) list) list (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state
-  val finish_proc_cmd : Toplevel.transition -> Toplevel.transition
+  val finish_proc_cmd : bool -> Proof.state -> Proof.context
+  val begin_block_cmd : Attrib.binding list -> bool -> Proof.state -> Proof.state
+  val end_block_cmd : bool -> Proof.state -> Proof.state
   
-  val setup_proof : bool -> Method.text option
+  val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
+        -> Proof_Context.mode -> bool -> string -> Method.text option
         -> (Proof.context * thm list list -> Proof.state -> Proof.state)
         -> (binding * typ option * mixfix) list (*fixes*)
         -> (Thm.binding * (term * term list) list) list (*premis*)
         -> (term * term list) list list (*no binding is allowed*)
-        -> bool -> Proof.state -> thm list * Proof.state
+        -> Proof.state -> thm list * Proof.state
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
   val have_aux : ((Thm.binding * attribute list) * (term * term list) list) list
         -> bool -> Proof.state -> thm list * Proof.state
@@ -34,13 +36,6 @@ signature NU_TOPLEVEL = sig
         -> bool -> Proof.state -> thm list * Proof.state
 
   val process_cmd : Token.T list -> Proof.state -> Proof.state
-  (* val have_cmd :
-        Proof.state -> Proof.state *)
-
-  (* val transition_cmd : ('a -> thm -> thm) -> 'a list parser -> (Toplevel.transition -> Toplevel.transition) parser
-  val transition : ('a -> thm -> thm) -> int (* auto level *) -> 'a list -> Proof.state ->
-  Proof.state *)
-  (* val end_proc : state -> state *)
 end
 
 structure NuToplevel : NU_TOPLEVEL = struct
@@ -77,7 +72,6 @@ val indTy = Type ("Nat.ind", [])
 val stack_R = Free ("\<R>", Type ("Set.set", [TFree ("'\<R>", ["NuPrim.lrep"])]))
 val arg_stat_term_name = "\<ss>"
 
-(** proc command **)
 
 val default_name = "v"
 val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst
@@ -100,18 +94,29 @@ fun parse_ret ret =
   ret |> HOLogic.strip_tuple
     |> list_mk_binop_r0 delimiter_name (mk_eof_ctx_stack stack_R)
 
-structure ProcConstructionData = Generic_Data
-(
-  type T = proc_conctx
-  val empty: T = {proc_const = dummy_c, binding = Binding.empty, goal = dummy_c}
-  val extend = I
-  val merge : T * T -> T = #1
-)
-
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 val v_goal_name = "\<nu>goalaa"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 val final_proc_rewrite_rules = @{thms final_proc_rewrite}
+fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
+
+val top_blk_name = "\<t>\<o>\<p>_\<p>\<r>\<o>\<c>"
+fun begin_proc ctx (arg,ret) =
+  let
+    val (arg,ret) = mk_raw_prod (arg,ret) |> Syntax.check_term ctx |> dest_prod
+    val (argT,retT) = apply2 (type_of #> dest_Type #> #2 #> hd) (arg,ret)
+    val procT = argT --> mk_stateT retT
+    val goal = HOLogic.mk_Trueprop (
+          Const ("NuPrim.Procedure",
+                    (argT --> mk_stateT retT) --> mk_setT argT --> mk_setT retT --> boolT)
+          $ Var (v_proc_var, procT) $ arg $ ret)
+    val th = arg |> Thm.cterm_of ctx |> start_proc ctx top_blk_name
+  in
+    (goal,th)
+  end
+
+val begin_proc_ctx_thm = @{thm NuPrim.begin_proc_ctx}
+and empty_facts_thm = @{thm NuPrim.empty_facts}
 fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
   let
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
@@ -122,7 +127,11 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
     val includes = includes |> map (Bundle.check ctx)
     val parse_term = Syntax.parse_term ctx
     val parse_prop = Syntax.parse_prop ctx
-    val (goal,th) = begin_proc ctx (arg,ret) [] (*reg_names*)
+    val (goal,th) = begin_proc ctx (arg,ret)
+    val th = th |> rpair empty_facts_thm |> intro_SPEC
+                |> apply_proc ctx begin_proc_ctx_thm |> accept_proc ctx
+                |> fold (fn reg => assign_reg ctx reg #> accept_proc ctx) reg_names
+                |> Simplifier.simplify ctx
     val elems = [Element.Fixes (fixes |> map (fn (b,ty,f) => (b, Option.map (Syntax.parse_typ ctx) ty, f))),
                  Element.Assumes (preconds
                     |> map (apsnd (map (apfst parse_prop #> apsnd (map parse_term)))))]
@@ -137,88 +146,54 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
   in
     ctx |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
               includes elems concls int
-      (* |> Proof.map_context (Context.proof_map (ProcConstructionData.map
-          (K {proc_const = cterm_of ctx proc, binding = fst binding, goal = cterm_of ctx goal}))) *)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "impossible"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
       |> Proof.set_facts [th]
+      |> Proof.map_context
+          (Proof_Context.put_thms false ("\<nu>thesis", SOME [Drule.mk_term (cterm_of ctx goal)]))
   end
 
+local
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
-val finish_proc_cmd = Toplevel.end_proof (fn int => fn stat =>
+val end_proc_ctx_thm = @{thm NuPrim.end_proc_ctx}
+fun gen_finish_proc prep_specthm qed int stat =
   let
     val ctx = Proof.context_of stat
-    val conctx = ProcConstructionData.get (Context.Proof ctx)
-    val goal = Proof_Context.read_term_schematic ctx "?thesis"
-                |> open_schematic_term
-    val th = Proof.the_fact stat
-    (* val (proc,_,_) = prop_of th |> dest_procedure *)
-(* Assumption.all_assms_of ctx' |> @{print}; *)
+    val goal = Proof_Context.get_thm ctx "\<nu>thesis" |> Drule.dest_term
+    val th = Proof.the_fact stat |> prep_specthm ctx
     val end_tac = basic_method (fn ctx' => fn t => 
-      (finish_proc ctx (cterm_of ctx goal)
+      (finish_proc ctx' goal
         (singleton (Proof_Context.export ctx ctx') (elim_SPEC th |> fst))) RS t
         handle e => raise @{print} e)
   in
     stat |> Proof.set_facts [th] 
-      |> Proof.global_qed (SOME (end_tac, Position.no_range), false)
+      |> qed (SOME (end_tac, Position.no_range), false)
   end
-  )
-  (* #> Isar_Cmd.qed NONE *)
+in
+val finish_proc_cmd = gen_finish_proc
+  (fn ctx => apply_proc ctx end_proc_ctx_thm #> accept_proc ctx) Proof.global_qed
+val end_block_cmd = gen_finish_proc (K I) Proof.local_qed
+end
 
-(* fun begin_proc_cmd (statement, pos) fixes assumes ctx =
-  let
-    val (arg, labels) = statement |> Syntax.parse_term lthy |> parse_argument lthy
-    val stat = ctx
-          |> Proof.theorem NONE TODO 
-          |> Proof.begin_block
-          |> NuHelp.fix_frees pos [stack_R]
-          |> Proof.fix_cmd fixes
-    val lthy = Proof.context_of stat
-    val (arg, labels) = statement |> Syntax.parse_term lthy |> parse_argument lthy
-    val stat = stat |> NuHelp.fix_frees pos (Variable.add_frees lthy arg [] |> map Free)
-    val lthy = Proof.context_of stat
-    val _ = statement |> Syntax.parse_term lthy (* a dirty hack to fix the displayed color *)
-    val arg = arg |> free_to_fix lthy |> Thm.cterm_of lthy
-    val (th, to_fix) = arg |> start_construction lthy "\<t>\<o>\<p>_\<p>\<r>\<o>\<c>"
-    val _ = @{print} th
-    val stat = stat |> Proof.set_facts [th]
-  in
-    stat
-  end *)
-
-(* fun fold_last_flag f [] x = x
-  | fold_last_flag f [v] x = f true v x
-  | fold_last_flag f (v::r) x = fold_last_flag f r (f false v x)
-fun transition tr auto_level xs stat =
-      Proof.the_fact stat |> fold_last_flag (fn last => fn x =>
-        tr x #> NuSys.process stat (if last then auto_level else 0)) xs
-      |> (fn specthm => Proof.set_facts [specthm] stat)
-fun transition_cmd tr arg_parser =
-      (arg_parser -- NuParse.auto_level) >> (fn (arg, auto_level) =>
-        Toplevel.proof (transition tr auto_level arg)) *)
 fun process_cmd toks stat =
   stat |> Proof.set_facts
     [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
 
-val codeblock_attrs = [] (* map (Attrib.attribute @{context}) @{attributes
-[in_using]} *)
-fun hyp_export is_goal asms = (I,I)
-fun setup_proof strict_asm before_qed after_qed' fixes assumes gl int stat =
+fun print_results int = Proof_Display.print_results int (Position.thread_data ())
+fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
   let open Proof
     val specthm = the_fact stat
-    val codeblocks = codeblocks_of specthm
     fun after_qed ctxthms stat =
       stat |> end_block 
            |> after_qed' ctxthms
   in
     stat |> begin_block
-      |> assm hyp_export [] [] (map (fn cb =>
-          ((Binding.name (codeblock_name cb),codeblock_attrs), [(cb,[])])) codeblocks)
       |> map_context (load_specthm specthm)
-      |> have strict_asm before_qed after_qed fixes assumes (map (pair Binding.empty_atts) gl) int
-      |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat) "NuSys.in_using") stat)
+      |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
+            (map (pair Binding.empty_atts) gl)
+      |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat) "NuSys.used") stat)
   end
 
 fun prove_prem int stat =
@@ -235,9 +210,11 @@ fun prove_prem int stat =
             (intro_SPEC (th RS focus, aux)))] stat
       end
   in
-    stat |> setup_proof false NONE after_qed [] [] [[(goal,[])]] int
+    stat |> setup_proof (print_results int) Proof_Context.mode_default false ""
+      NONE after_qed [] [] [[(goal,[])]]
   end
 
+local
 fun gen_have_aux prep_attr prep_prop goals int stat =
   let open Proof
     val ctx = context_of stat
@@ -258,17 +235,66 @@ fun gen_have_aux prep_attr prep_prop goals int stat =
         stat |> map_context_result (declare_auxes (binds ~~ thes) specthm)
           |-> set_facts o single
       end
-
-           
   in
-    stat |> setup_proof false NONE after_qed [] [] (map snd goals) int
+    stat |> setup_proof (print_results int) Proof_Context.mode_default false "\<nu>lemma"
+      NONE after_qed [] [] (map snd goals)
   end
-
+in
 val have_aux = gen_have_aux (K I) Syntax.check_prop
 val have_aux_cmd = gen_have_aux Attrib.attribute_cmd Syntax.read_prop
+end
 
-(* fun have_cmd stat =
-  stat |> Proof.have_cmd 
-      Proof.state -> Proof.state *)
+local
+fun block_name_of (Var ((x,_),_)) = x
+  | block_name_of _ = "block"
+val Premise_I = @{thm NuPrim.Premise_I}
+val premise_export = K (K ((fn th => th COMP Premise_I), I))
+val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
+      if can dest_premise_tag (prop_of th) then th COMP @{thm Premise_E} else th)]
+val attr_used = map (Attrib.attribute @{context}) @{attributes [used]}
+val elim_premise_tag = perhaps (mk_Trueprop o dest_premise_tag)
+in
+fun begin_block_cmd bindings int stat =
+  let open Proof
+    val ctx = context_of stat
+    val specthm = the_fact stat
+    val goal = specthm |> cprop_of |> dest_SpecTop_c |> #1 |> Thm.dest_implies |> #1
+    val (prems, goal) = (Drule.strip_imp_prems goal, Drule.strip_imp_concl goal)
+    val (proc,arg,ret) = dest_procedure_c goal 
+    val blk_name = block_name_of (term_of proc)
+    val level = current_block_depth specthm
+    val level_prefix = "L\<nu>'"^(Int.toString level)^"_"^blk_name
+    val next_specthm = start_proc ctx level_prefix arg
+                        |> rpair (elim_SPEC specthm |> #2)
+                        |> intro_SPEC |> @{print}
+    fun after_qed (ctx',[[th]]) stat =
+      stat |> set_facts[
+        specthm
+          |> elim_SPEC
+          |> apfst (fn focus =>
+            (singleton (Proof_Context.export ctx' (context_of stat)) th) COMP focus
+        ) |> intro_SPEC
+          |> perhaps (accept_proc (context_of stat))
+      ]
+    val delta = length prems - length bindings
+    val _ = if delta < 0 then error "too much premise bindings" else  ()
+    val bindings =
+      ((map (apsnd (map (Attrib.attribute ctx))) bindings)
+          @ (List.tabulate (delta, K (Binding.empty, attr_used))))
+        |> map (apsnd (fn x => elim_premise @ x))
+  in
+    stat
+      |> setup_proof (print_results int) Proof_Context.mode_schematic false "\<nu>block"
+          NONE after_qed [] (bindings ~~ (map (single o rpair [] o term_of) prems))
+          [[(term_of goal,[])]] |> #2
+      |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
+            Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
+      |> Seq.the_result "impossible"
+      |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
+      |> Proof.set_facts [next_specthm  ]
+      |> Proof.map_context
+          (Proof_Context.put_thms false ("\<nu>thesis", SOME [Drule.mk_term goal]))
+  end
+end
 
 end

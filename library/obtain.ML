@@ -130,8 +130,9 @@ end;
   fix x assm <<obtain_export>> "A x"
 *)
 
-local
+fun print_results int = Proof_Display.print_results int (Position.thread_data ())
 
+local
 fun gen_obtain prep_stmt prep_att that_binding raw_decls raw_fixes raw_prems raw_concls int state =
   let
     val _ = Proof.assert_forward_or_chain state;
@@ -175,10 +176,10 @@ fun gen_obtain prep_stmt prep_att that_binding raw_decls raw_fixes raw_prems raw
       end;
   in
     state
-    |> NuToplevel.setup_proof false NONE after_qed
-      [(Binding.name Auto_Bind.thesisN, NONE, NoSyn)]
-      [((that_binding, [Context_Rules.intro_query NONE]), [(that_prop, [])])]
-      [[(thesis, [])]] int
+    |> NuToplevel.setup_proof (print_results int) Proof_Context.mode_default false "\<nu>lemma"
+        NONE after_qed [(Binding.name Auto_Bind.thesisN, NONE, NoSyn)]
+        [((that_binding, [Context_Rules.intro_query NONE]), [(that_prop, [])])]
+        [[(thesis, [])]]
     |-> Proof.refine_insert
     |> Proof.map_context (fold Variable.bind_term result_binds)
   end;
@@ -260,9 +261,9 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
       end;
   in
     stat
-    |> NuToplevel.setup_proof false NONE after_qed
-      [] [(Binding.empty_atts, [(that_prop, [])])]
-      [[(goal, [])]] int
+    |> NuToplevel.setup_proof (print_results int) Proof_Context.mode_default false "\<nu>lemma"
+        NONE after_qed [] [(Binding.empty_atts, [(that_prop, [])])]
+        [[(goal, [])]]
     |-> Proof.refine_insert
   end;
 in

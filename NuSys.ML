@@ -16,7 +16,7 @@ signature NU_SYS = sig
 
   val process : Proof.state -> thm -> thm parser
 
-  val begin_proc : Proof.context -> term * term -> string list (*reg names*) -> term * thm
+  val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm
   val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm
 
   val declare_aux : Thm.binding * thm list -> thm -> Proof.context -> thm * Proof.context
@@ -33,23 +33,23 @@ type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
 fun head_only tac th =
   if nprems_of th = 1
   then tac th
-  else Goal.init (cprem_of th 1) |> tac
-        |> Seq.filter (fn th => nprems_of th = 0)
-        |> Seq.map (Goal.conclude #> implies_elim_with_prems th)
+  else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
-  (ALLGOALS (Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.in_using"))
+  (ALLGOALS (Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used"))
     THEN Simpdata.auto_tac ctx)
 val Premise_I = @{thm NuPrim.Premise_I}
 fun mk_premise_tac withdraw ctx th =
   if can (major_prem_of #> dest_premise_tag) th
-  then (head_only ((K (HEADGOAL (resolve0_tac [Premise_I]) THEN raw_auto ctx)) 1)
-      ORELSE withdraw
-    ) th
+  then (head_only (SOLVED' (K (HEADGOAL (resolve0_tac [Premise_I]) THEN raw_auto ctx)) 1)
+      ORELSE withdraw) th
   else Seq.empty
-val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch)
+val FailedPremise_I = @{thm FailedPremise_I} and FailedPremise_D = @{thm FailedPremise_D}
+val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch o (fn x => FailedPremise_D RS x))
+val dest_failed_premise_tag = dest_monop "NuSys.FailedPremise"
 val premise_tac = mk_premise_tac Seq.fail
 fun fininsh_premise_hyps th =
-  fold implies_intr (chyps_of th |> filter (can dest_premise_tag_c)) th
+  fold ((fn x => FailedPremise_I RS x) oo implies_intr)
+    (chyps_of th |> filter (can (dest_failed_premise_tag o term_of))) th
 
 fun mk_auto_resolve_tac thm_name ctx =
   HEADGOAL (SOLVED' (REPEAT_DETERM_N 100 o (fn i =>
@@ -119,10 +119,16 @@ fun apply_procs ctx procs spec  =
     ) |> intro_SPEC
 end
 fun apply_proc ctx = apply_procs ctx o single
+
+
+
 fun operate_reg operation ctx reg spec =
   apply_proc ctx (operation reg (registers_of_specthm spec |> term_of)) spec
 val assign_reg = operate_reg NuRegisters.assign_reg
 val load_reg = operate_reg NuRegisters.load_reg
+
+
+
 
 val accept_proc_thm = @{thm NuPrim.accept_proc}
 fun accept_proc ctx specthm =
@@ -134,40 +140,21 @@ fun accept_proc ctx specthm =
 
 val process = NuProcessor.process o Proof.context_of
 
-val top_blk_name = "\<t>\<o>\<p>_\<p>\<r>\<o>\<c>"
-val argument_name = "\<a>\<r>\<g>\<u>\<m>\<e>\<n>\<t>"
-val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
-fun starting_construction ctx arg_nuTy =
+
+
+
+val start_proc_thm = @{thm NuPrim.start_proc}
+fun start_proc ctx blk_name arg_nuTy =
   let
     val argTy = (case dest_Type (typ_of_cterm arg_nuTy) of ("Set.set", [ty]) => ty
-                   | _ => raise Fail "start_construction - argTy - not a set")
-    val stat_var = Free (top_blk_name, mk_stateT (proc_ctx_ty (argTy, void_ty))) |> cterm_of ctx
-    val arg_var = Free (argument_name, argTy) |> cterm_of ctx
+                   | _ => raise Fail "start_proc - argTy - not a set")
+    val stat_var = Free (blk_name, mk_stateT argTy) |> cterm_of ctx
+    val arg_var = Free (blk_name^"_arg", argTy) |> cterm_of ctx
     val init_thm = Drule.instantiate'_normalize [SOME (ctyp_of ctx argTy)]
-                      [SOME stat_var, SOME arg_var, SOME arg_nuTy] start_construction_thm
+                      [SOME stat_var, SOME arg_var, SOME arg_nuTy] start_proc_thm
     val init_thm = init_thm |> undisch
   in
     init_thm
-  end
-
-fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
-fun begin_proc ctx (arg,ret) reg_names =
-  let
-    val (arg,ret) = mk_raw_prod (arg,ret) |> Syntax.check_term ctx |> dest_prod
-    val (argT,retT) = apply2 (type_of #> dest_Type #> #2 #> hd) (arg,ret)
-    val procT = argT --> mk_stateT retT
-    (*val (proc,ctx) = Proof_Context.background_theory_result (
-          Sign.declare_const ctx ((name, argT --> mk_stateT retT), NoSyn)) ctx*)
-    val goal = HOLogic.mk_Trueprop (
-          Const ("NuPrim.Procedure",
-                    (argT --> mk_stateT retT) --> mk_setT argT --> mk_setT retT --> boolT)
-          $ Var (v_proc_var, procT) $ arg $ ret)
-    val th = arg |> Thm.cterm_of ctx
-              |> starting_construction ctx
-              |> fold (fn reg => assign_reg ctx reg #> accept_proc ctx) reg_names
-              |> Simplifier.simplify ctx
-  in
-    (goal,th)
   end
 
 fun meta_eq_to_hol_eq th =
@@ -181,38 +168,20 @@ fun meta_eq_to_hol_eq th =
     Thm.implies_elim rule th
   end
 
+val finish_proc_thm = @{thm NuPrim.finish_proc}
 fun finish_proc ctx goal th =
   let
-    (* val (tm,L) = cprop_of th |> dest_SpecTop_c *)
-    val (T,R) = dest_Trueprop_c (cprop_of th) |> dest_CurrentConstruction_c |> #2 |> dest_Proc_CtxTy_c
-    val codeblock = case codeblocks_of_c th of [cb] => cb
-                       | _ => error "unfinished sub-block"
-    val (s,a,S,f) = dest_codeblock_c codeblock
-    val aT = ctyp_of_cterm a
-    val bT = dest_ctyp0 (dest_ctyp0 (ctyp_of_cterm s))
-    val cT = dest_ctyp1 (dest_ctyp0 (ctyp_of_cterm s))
-    val finish_thm = Thm.instantiate (
-          [((("'a",0),["NuPrim.lrep"]),aT),
-           ((("'b",0),["NuPrim.lrep"]),bT),
-           ((("'c",0),["NuPrim.register_collection"]),cT)
-          ], [
-           ((("S",0), typ_of_cterm S),S),
-           ((("f",0), typ_of_cterm f),f),
-           ((("T",0), typ_of_cterm T),T),
-           ((("R",0), typ_of_cterm R),R)
-          ]) @{thm NuPrim.finish_construction}
+    val codeblock = current_codeblock th
+    val (s,a,_,_) = dest_codeblock_c codeblock
   in
     th |> implies_intr codeblock
        |> forall_intr s |> forall_intr a
-       |> implies_elim finish_thm
+       |> (fn x => x COMP finish_proc_thm)
        |> conversion ctx goal 
-       (* ctx |> Proof_Context.background_theory_result
-            (Thm.add_def (Proof_Context.defs_context ctx) false true
-                (Binding.suffix_name "_def" binding, def_term))
-        >> (Thm.implies_elim th o meta_eq_to_hol_eq o snd)
-        |> (fn (th,ctx) =>
-          th |> conversion goal |> cast ctx |> rpair ctx) *)
   end
+
+
+
 
 structure AuxAux = Generic_Data
 (
@@ -242,12 +211,18 @@ fun declare_auxes auxes th ctx =
   fold (fn a => fn (th,ctx) => declare_aux a th ctx) auxes (th,ctx)
 
 val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
-fun load_specthm th ctx =
-  (case elim_SPEC th of (focus,aux) =>
+fun hyp_export is_goal asms = (I,I)
+val codeblock_attrs = [] (* map (Attrib.attribute @{context}) @{attributes [used]} *)
+fun load_specthm specthm ctx =
+  (case elim_SPEC specthm of (focus,aux) =>
   let
     val auxes = user_facts_in_collection aux
+    val codeblocks = codeblocks_of specthm
   in
-    ctx |> note_auxes auxes
+    ctx
+      |> Proof_Context.add_assms hyp_export (map (fn cb =>
+          ((Binding.name (codeblock_name cb),codeblock_attrs), [(cb,[])])) codeblocks) |> #2
+      |> note_auxes auxes
       |-> (fn ths => Proof_Context.put_thms false (aux_name_raw, SOME (flat (map snd ths))))
   end)
 fun aux_facts ctx = Proof_Context.get_thms ctx aux_name

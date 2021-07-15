@@ -4,8 +4,8 @@ theory NuSys
   imports NuPrim NuSyntax
   keywords
     "proc" :: thy_goal_stmt
-  and "\<medium_left_bracket>" "as" "\<rightarrow>" "\<longmapsto>" :: quasi_command
-  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" :: prf_decl % "proof"
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<Longrightarrow>" :: quasi_command
+  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
@@ -14,9 +14,14 @@ abbrevs
   "!!" = "!!"
 begin
 
-named_theorems in_using \<open>theorems that will be inserted in ANY proof environments.\<close>
+named_theorems used \<open>theorems that will be inserted in ANY proof environments,
+which basically has the same effect as the using command.\<close>
   and final_proc_rewrite \<open>rules used to rewrite the generated procedure theorem in the final stage\<close>
 lemmas [final_proc_rewrite] = Premise_Irew End_of_Contextual_Stack_def[THEN eq_reflection]
+
+definition  FailedPremise :: "bool \<Rightarrow> prop" where "FailedPremise \<equiv> Premise"
+lemma FailedPremise_I: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP FailedPremise P" unfolding FailedPremise_def .
+lemma FailedPremise_D: "PROP FailedPremise P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding FailedPremise_def .
 
 ML_file_debug NuHelp.ML
 ML_file "./general/binary_tree.ML"
@@ -28,10 +33,10 @@ ML_file "./library/registers.ML"
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
-ML_file "./library/processors.ML"
 ML_file "./library/procedure.ML"
 ML_file "./library/exty.ML"
 ML_file NuSys.ML
+ML_file "./library/processors.ML"
 ML_file_debug NuToplevel.ML
 ML_file "./library/obtain.ML"
 
@@ -51,7 +56,6 @@ val nustatement = Parse.and_list1 (Parse_Spec.thm_name ":" -- opt_attribs -- Sca
 val structured_statement =
   nustatement -- Parse_Spec.if_statement' -- Parse.for_fixes
     >> (fn ((shows, assumes), fixes) => (fixes, assumes, shows));
-val bracket_begin = $$$ "\<medium_left_bracket>";
 in
 
 val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>exty_simproc\<close> "setup the pecific simproc for \<^const>\<open>ExTy\<close>"
@@ -66,7 +70,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>finish\<close> "Finish the procedure construction"
-    (Scan.succeed NuToplevel.finish_proc_cmd)
+    (Scan.succeed (Toplevel.end_proof NuToplevel.finish_proc_cmd))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<bullet>\<close> "The \<nu>construction"
@@ -92,6 +96,14 @@ val _ =
       >> (fn (b, c) => Toplevel.proof' (NuObtain.choose_cmd b c)));
 
 val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "construct nested sub-procedure"
+    (optional ($$$ "\<Longrightarrow>" |-- and_list (binding -- opt_attribs)) [] >> (Toplevel.proof' o NuToplevel.begin_block_cmd));
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "finish the nested sub-procedure construction"
+    (Scan.succeed (Toplevel.proof' NuToplevel.end_block_cmd));
+
+val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor\<close> "define \<nu>processor"
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword) -- Parse.nat -- Parse.term -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
         >> NuProcessor.setup_cmd)
@@ -99,7 +111,7 @@ val _ =
 val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor_resolver\<close> "define \<nu>processor resolver"
       (Parse.binding -- Parse.nat -- (Parse.term -- Parse.for_fixes) -- Parse.name_position -- Scan.optional Parse.text ""
-        >> (fn ((((b,precedence),pattern),facts),comment) => NuProcessor.setup_resolver b precedence pattern facts comment))
+        >> (fn ((((b,precedence),pattern),facts),comment) => NuProcessors.setup_resolver b precedence pattern facts comment))
 
 val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>overloads\<close> "declare \<nu>overloads"
@@ -125,7 +137,7 @@ end\<close>
       handle NuRegisters.NoSuchRegister _ => raise Bypass)
 end\<close>
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier\<close>
-\<nu>processor \<nu>autoprover 9000 \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP Q\<close> \<open>premise_prover (not_safe NuSys.premise_tac)\<close>
+\<nu>processor \<nu>autoprover 9000 \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP Q\<close> \<open>load_specthm (premise_prover (not_safe NuSys.premise_tac))\<close>
 \<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn focus => NuProcedure.parser >> (fn binding =>
     NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) focus)\<close>
 

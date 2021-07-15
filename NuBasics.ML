@@ -35,6 +35,7 @@ signature NU_BASICS = sig
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
   val current_block_var : thm -> cterm
+  val current_block_depth : thm -> int
   val dest_codeblock   : term -> term * term * term * term
   val dest_codeblock_c : cterm -> cterm * cterm * cterm * cterm
   val codeblocks_of   : thm -> term list
@@ -85,8 +86,6 @@ signature NU_BASICS = sig
   val intro_param : term -> thm
   val intro_param_name : string -> thm
 
-  val start_construction_thm : thm
-
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
 end
 structure NuBasics = struct
@@ -96,8 +95,6 @@ fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
 val void_ty = Type("NuPrim.void", [])
 fun proc_ctx_ty (a,b) = Type("NuPrim.proc_ctx", [a,b])
 fun mk_stateT ty = Type("NuPrim.state", [ty])
-
-val start_construction_thm = @{thm NuPrim.start_construction}
 
 fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
@@ -165,10 +162,13 @@ val registers_of_specthm = catch_th 0 "registers_of_specthm: Not a CurrentConstr
 val state_of_specthm = dest_SpecTop #> #1
 val current_block_var =
   Thm.prop_of
-    #> perhaps (dest_SpecTop #> #1 #> Logic.strip_assums_concl)
+    #> perhaps (dest_SpecTop #> #1)
+    #> perhaps Logic.strip_assums_concl
     #> perhaps dest_Trueprop
     #> block_var_of_Constuction
 val dest_codeblock   = perhaps dest_Trueprop #> dest_quadop "NuPrim.CodeBlock"
+fun current_block_depth th =
+  filter (can dest_codeblock) (hyps_of th) |> length
 val codeblock_name   = dest_codeblock #> #1 #> dest_Free #> #1
 val dest_codeblock_c = perhaps dest_Trueprop_c #> dest_quadop_c "NuPrim.CodeBlock"
 val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )

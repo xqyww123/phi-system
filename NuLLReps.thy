@@ -65,11 +65,13 @@ instance by standard (auto simp add: ac_simps intro: ceq_trans)
 end
 
 definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) nu"
-  where "NuNat _ = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (p = Word.of_nat x))"
+  where "NuNat _ = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (unat p = x))"
 syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
+thm of_nat_inverse
+value "unat (-4::2 word)"
 
-lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (p = Word.of_nat x)" unfolding NuNat_def by auto
+lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding NuNat_def by auto
 lemma [\<nu>equable]: "\<nu>Equalable (NuNat b) (K True)" unfolding \<nu>Equalable_def NuNat_def by auto
 
 definition NuBool :: "(1 word, bool) nu" ("\<bool>")
