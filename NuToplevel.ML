@@ -178,8 +178,9 @@ val end_block_cmd = gen_finish_proc (K I) Proof.local_qed
 end
 
 fun process_cmd toks stat =
-  stat |> Proof.set_facts
-    [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
+  (@{print} 123 ;
+  stat |> @{print} |> Proof.set_facts
+    [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst])
 
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
 fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =

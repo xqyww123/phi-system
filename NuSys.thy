@@ -74,7 +74,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<bullet>\<close> "The \<nu>construction"
-    (fn toks => (Toplevel.proof (NuToplevel.process_cmd (toks @ [Token.eof])), []))
+    (fn toks => (Toplevel.proof (NuToplevel.process_cmd ((toks @ [Token.eof]) |> @{print}) #> @{print}), []))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>premise\<close> "proof for premise"

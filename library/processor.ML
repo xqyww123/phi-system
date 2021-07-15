@@ -98,7 +98,7 @@ fun process_impl ctx procs (th,toks) limit =
         (List.app (fn (_, Processor {binding, pattern, enabled, proc,...}) =>
           if not enabled then ()
           else if can (Pattern.unify ctx (pattern,focus)) Envir.init
-          then ((*@{print} binding;*)
+          then (@{print} binding;
             if limit > 100 then error "too deep process" else ();
             raise Processed
               ((proc (Context.proof_of ctx) th
