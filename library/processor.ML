@@ -3,7 +3,7 @@ signature NU_PROCESSOR = sig
   exception Bypass
   exception ProcessTerminated of thm * Token.T list
   exception ProcessFail of binding * thm * exn
-  type proc = (Proof.context -> thm -> thm parser)
+  type proc = (Proof.context -> thm -> (unit -> thm) parser)
   val define : binding -> int (*precedence*) -> term (*pattern*) -> proc -> local_theory -> local_theory
   (* val get : Proof.context -> string -> T option *)
   val defined : Context.generic -> string -> bool
@@ -37,7 +37,7 @@ exception Bypass
 type binding = Binding.binding
 exception ProcessTerminated of thm * Token.T list
 exception ProcessFail of binding * thm * exn
-type proc = Proof.context -> thm -> thm parser
+type proc = Proof.context -> thm -> (unit -> thm) parser
 
 
 datatype processor = Processor of {
@@ -72,8 +72,8 @@ val get = Data.get #> Name_Space.get
 fun wrap_attr proc =
   Parse.args >> (fn toks =>
     Thm.rule_attribute [] (fn ctx => fn th =>
-      (proc (Context.proof_of ctx) th --| Scan.catch Parse.eof) toks |> fst))
-val wrap_attr = wrap_attr : (Proof.context -> thm -> thm parser) -> attribute parser
+      fst ((proc (Context.proof_of ctx) th --| Scan.catch Parse.eof) toks) ()))
+val wrap_attr = wrap_attr : (Proof.context -> thm -> (unit -> thm) parser) -> attribute parser
 fun defined ctx name =
   let
     val tab = Data.get ctx
@@ -91,6 +91,8 @@ fun disable name =
       Data.map (Name_Space.map_table_entry name (set_enabled false))
 
 exception Processed of (thm * Token.T list)
+fun eof_wrap parse [] = (fst (parse [Token.eof]), [])
+  | eof_wrap parse toks = parse toks
 fun process_impl ctx procs (th,toks) limit =
       let
         val focus = prop_of th |> dest_SpecTop |> #1
@@ -98,12 +100,14 @@ fun process_impl ctx procs (th,toks) limit =
         (List.app (fn (_, Processor {binding, pattern, enabled, proc,...}) =>
           if not enabled then ()
           else if can (Pattern.unify ctx (pattern,focus)) Envir.init
-          then (@{print} binding;
-            if limit > 100 then error "too deep process" else ();
-            raise Processed
-              ((proc (Context.proof_of ctx) th
-                || (fn _ => raise Bypass)) toks)
-          ) handle Bypass => ()
+          then let
+            val _ = if limit > 100 then error "too deep process" else ();
+            val (execute,toks) =
+              eof_wrap (proc (Context.proof_of ctx) th || (fn _ => raise Bypass)) toks
+            val _ = tracing ("process: " ^ Binding.print binding)
+            in
+            raise Processed (execute(), toks)
+            end handle Bypass => ()
               | Processed th_toks => raise Processed th_toks
               | ProcessTerminated th_toks => raise ProcessTerminated th_toks
               | ex => (@{print} th; @{print} binding; Exn.reraise (@{print} ex))
@@ -119,7 +123,7 @@ fun process ctx th toks =
   process_impl (Context.Proof ctx)
     (Data.get (Context.Proof ctx) |> Name_Space.dest_table |> sort (proc_ord o apply2 snd))
     (th,toks) 0)
-val process_attr = wrap_attr process
+val process_attr = wrap_attr (fn ctx => fn th => process ctx th #> apfst K)
 fun process_no_input ctx th = process ctx th [Token.eof] |> #1
 
 fun setup binding precedence term proc (comment:string) =

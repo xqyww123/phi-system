@@ -15,17 +15,23 @@ end
 structure NuProcessors : NU_PROCESSORS = struct
 open NuBasics NuHelp NuProcessor
 val simplifier = almost_safe (fn ctx => fn th =>
-  Simplifier.simplify ctx th |> (fn th2 =>
-    if Thm.eq_thm_prop (th, th2) then raise Bypass else Scan.succeed th2))
+  Scan.succeed (fn _ =>
+    Simplifier.simplify ctx th |> (fn th2 =>
+      if Thm.eq_thm_prop (th, th2) then raise Bypass else th2)))
 fun load_specthm proc ctx th toks = proc (NuSys.load_specthm th ctx) th toks
 fun focus_rule processor ctx th toks = 
   case elim_SPEC th of (focus,aux) =>
-    processor ctx focus toks |> apfst (fn th => intro_SPEC (th,aux))
+    processor ctx focus toks |> apfst (fn th => fn _ => intro_SPEC (th (),aux))
 fun premise_prover_raw prover ctx th =
-  Scan.succeed
-    ((cprem_of th 1 |> Goal.init |> prover ctx |> Seq.pull |> (fn x =>
-      case x of SOME (th,_) => Goal.conclude th | _ => raise Bypass)
-    ) RS th)
+  let
+    val goal = cprem_of th 1 |> Goal.init
+    fun exe _ = 
+      (goal |> prover ctx |> Seq.pull |> (fn x =>
+        case x of SOME (th,_) => Goal.conclude th | _ => raise Bypass)
+      ) RS th
+  in
+    Scan.succeed exe
+  end
 val premise_prover = focus_rule o premise_prover_raw
 
 fun setup_resolver binding precedence pattern facts comment lthy =

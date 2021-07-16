@@ -9,8 +9,6 @@ The toplevel structure of the ν-system.
 *)
 
 signature NU_TOPLEVEL = sig
-  val show_proc_expression_attr : attribute context_parser
-
   val begin_proc_cmd : Attrib.binding 
         -> xstring (*argument*)
         -> xstring (*return value*)
@@ -46,25 +44,6 @@ val register_label_head = "\<upsilon>"
 val delimiter_name = "NuPrim.Stack_Delimiter"
 val eof_ctx_stack_name = "NuPrim.End_of_Contextual_Stack"
 fun mk_eof_ctx_stack tm = Const(eof_ctx_stack_name, dummyT) $ tm
-
-val bool_opt_parser = Scan.lift
-      (Parse.$$$ "=" |-- ((Args.$$$ "false" >> K false) || (Args.$$$ "true" >> K true)))
-
-fun map_theory_total f = Context.mapping f (Proof_Context.background_theory f)
-
-(* val show_proc_expression = Config.declare_bool ("show_proc_expression", \<^here>) (K false) *)
-local
-val omitted = [Syntax.Print_Rule (("logic", "_codeblock_ x"),
-      ("logic", "CONST CodeBlock x exp"))]
-val detailed = [Syntax.Print_Rule (("logic", "_codeblock_exp_ x exp"),
-      ("logic", "CONST CodeBlock x exp"))]
-in
-val show_proc_expression_attr = let
-  fun attr opt _ ctx = ctx |> map_theory_total
-    (Isar_Cmd.no_translations (if opt then omitted else detailed)
-    #> Isar_Cmd.translations  (if opt then detailed else omitted))
-  in bool_opt_parser >> (Thm.declaration_attribute o attr) end
-end
 
 (** proc command **)
 
@@ -178,9 +157,8 @@ val end_block_cmd = gen_finish_proc (K I) Proof.local_qed
 end
 
 fun process_cmd toks stat =
-  (@{print} 123 ;
-  stat |> @{print} |> Proof.set_facts
-    [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst])
+  stat |> Proof.set_facts
+    [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
 
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
 fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
@@ -233,7 +211,7 @@ fun gen_have_aux prep_attr prep_prop goals int stat =
         val thes = thes |> map (Proof_Context.export ctx' (context_of stat))
                         |> map2 (apply_attr ctx') attrs
       in
-        stat |> map_context_result (declare_auxes (binds ~~ thes) specthm)
+        stat |> map_context_result (declare_facts (binds ~~ thes) specthm)
           |-> set_facts o single
       end
   in
@@ -267,7 +245,7 @@ fun begin_block_cmd bindings int stat =
     val level_prefix = "L\<nu>'"^(Int.toString level)^"_"^blk_name
     val next_specthm = start_proc ctx level_prefix arg
                         |> rpair (elim_SPEC specthm |> #2)
-                        |> intro_SPEC |> @{print}
+                        |> intro_SPEC
     fun after_qed (ctx',[[th]]) stat =
       stat |> set_facts[
         specthm

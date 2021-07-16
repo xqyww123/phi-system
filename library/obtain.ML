@@ -171,7 +171,7 @@ fun gen_obtain prep_stmt prep_att that_binding raw_decls raw_fixes raw_prems raw
         |> Proof.fix (map #1 decls)
         |> Proof.map_context (fold (Variable.bind_term o apsnd (Logic.close_term fixes)) binds)
         |> Proof.assm (obtain_export params_ctxt rule cparams) [] [] asms
-        |> Proof.map_context_result (NuSys.declare_auxes asm_thms specthm)
+        |> Proof.map_context_result (NuSys.declare_facts asm_thms specthm)
         |-> Proof.set_facts o single
       end;
   in

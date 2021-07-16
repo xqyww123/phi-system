@@ -1,7 +1,7 @@
 (* FIX ME: I have tried the best but the sidekick won't work right. Isabelle is not quite flexible in
   outer syntax and it is already the best hack can be given. *)
 theory NuSys
-  imports NuPrim NuSyntax
+  imports NuPrim
   keywords
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<Longrightarrow>" :: quasi_command
@@ -9,10 +9,11 @@ theory NuSys
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
-(*   and "finish" :: qed_block % "proof" *)
 abbrevs
   "!!" = "!!"
 begin
+
+section \<open>Preliminary constants and settings used in the system\<close>
 
 named_theorems used \<open>theorems that will be inserted in ANY proof environments,
 which basically has the same effect as the using command.\<close>
@@ -22,6 +23,8 @@ lemmas [final_proc_rewrite] = Premise_Irew End_of_Contextual_Stack_def[THEN eq_r
 definition  FailedPremise :: "bool \<Rightarrow> prop" where "FailedPremise \<equiv> Premise"
 lemma FailedPremise_I: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP FailedPremise P" unfolding FailedPremise_def .
 lemma FailedPremise_D: "PROP FailedPremise P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding FailedPremise_def .
+
+section \<open>Main implementation of the system\<close>
 
 ML_file_debug NuHelp.ML
 ML_file "./general/binary_tree.ML"
@@ -37,14 +40,20 @@ ML_file "./library/procedure.ML"
 ML_file "./library/exty.ML"
 ML_file NuSys.ML
 ML_file "./library/processors.ML"
-ML_file_debug NuToplevel.ML
+ML_file NuToplevel.ML
 ML_file "./library/obtain.ML"
+
+section \<open>Attributes and Commands\<close>
 
 ML \<open>Theory.setup (Global_Theory.add_thms_dynamic (@{binding "\<nu>instr"}, NuInstructions.list_definitions #> map snd))  \<close>
 attribute_setup \<nu>instr = \<open>Scan.succeed (Thm.declaration_attribute NuInstructions.add) \<close>
+  \<open>Instructions of \<nu>-system\<close>
+
 attribute_setup \<nu>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_position --| Parse.$$$ ")") #>
     (fn (name,(ctx,toks)) => Scan.lift (NuProcessor.get_attr ctx name) (ctx,toks))
   || Scan.lift NuProcessor.process_attr\<close>
+  \<open>Evaluate the \<nu>-system process or the process of the given processor on the target theorem\<close>
+
 attribute_setup show_proc_expression = \<open>NuToplevel.show_proc_expression_attr\<close>
 (* declare [[show_proc_expression = false]] *)
 
@@ -74,7 +83,8 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<bullet>\<close> "The \<nu>construction"
-    (fn toks => (Toplevel.proof (NuToplevel.process_cmd ((toks @ [Token.eof]) |> @{print}) #> @{print}), []))
+    (fn toks => (Toplevel.proof (NuToplevel.process_cmd (toks @ [Token.eof])),
+      if hd toks |> Token.is_eof then [Token.eof] else []))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>premise\<close> "proof for premise"
@@ -121,31 +131,34 @@ val _ =
 end
 \<close>
 
-
 attribute_setup \<nu>overload = \<open>Scan.lift (Parse.and_list1 NuProcedure.parser) >> (fn bindings => 
   Thm.declaration_attribute (fn th => fold (NuProcedure.overload th) bindings))\<close>
 
+section \<open>Processors\<close>
+
 \<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn ctx => fn th => NuParse.auto_level_force #->
   (fn auto_level' => NuProcessor.process (AutoLevel.reduce auto_level' ctx) th #> (fn x => raise ProcessTerminated x)))\<close>
-\<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>Scan.succeed oo NuSys.accept_proc\<close>
+
+\<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn th => Scan.succeed (fn _ => NuSys.accept_proc ctx th)\<close>
+
 \<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fold (fn idt => NuSys.assign_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
+    (fn idts => fn _ => fold (fn idt => NuSys.assign_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
 \<nu>processor  load_register 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  fn ctx => fn th => short_ident >> (fn idt => NuSys.load_reg ctx idt th
+  fn ctx => fn th => short_ident >> (fn idt => fn _ => NuSys.load_reg ctx idt th
       handle NuRegisters.NoSuchRegister _ => raise Bypass)
 end\<close>
+
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier\<close>
+
 \<nu>processor \<nu>autoprover 9000 \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP Q\<close> \<open>load_specthm (premise_prover (not_safe NuSys.premise_tac))\<close>
-\<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn focus => NuProcedure.parser >> (fn binding =>
+
+\<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn focus => NuProcedure.parser >> (fn binding => fn _ =>
     NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) focus)\<close>
 
 \<nu>processor_resolver resolve_disposable 100  \<open>\<nu>Disposable T \<Longrightarrow> PROP P\<close> \<nu>disposable
 \<nu>processor_resolver resolve_share 100  \<open>Nu_Share N sh f \<Longrightarrow> PROP P\<close> \<nu>share
-ML \<open>Goal.init @{cterm "A \<Longrightarrow> B"}\<close>
-
-
 
 
 end

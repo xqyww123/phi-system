@@ -1,13 +1,45 @@
+(* The Signature *)
 signature NU_SYS = sig
-  exception CastFail of term list
+  (** Tactics **)
+  exception CastFail of thm
   type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
-  val conversion : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
   val raw_auto : Proof.context -> tactic
   val premise_tac : Proof.context -> tactic
   val cast_tac : Proof.context -> tactic
+
+  (** Basic Operations **)
+
+  (*
+    `conversion` tries to convert the procedure theorem to the given form.
+      By @{thm NuPrim.conversion}, it generates a @{term Conversion} premise intended to be solved
+      by `cast` operation.
+    `cast` operations solves the first premise by `cast_tac`. Several proof obligation that cannot
+      be solved automatically will be charged as premises in the result theorem.
+          Γ |- cast_premise ==> P
+      ---------------------------------
+          Γ |- Premise Q1 ==> Premise Q2 ==> ... ==> P
+      where @{term "Premise Q1, Premise Q2"} are proof obligations of the cast.
+
+    In the cast proving, the unsolved premise marked with @{term Premise} tag is considered as
+    accecptable proof obligations intented to be solved by users (or by automatic provers if it
+    succeeds),
+    while any other unsolved premises are considered as failures of the casting or conversion, which
+    raise a CastFail exception.
+
+    Also note, in the `cast_tac` and also `premise_tac`, only premises tagged with @{term
+    Premise} will be tried to be solved automatically, while any other permises will not
+    be touched by automatic provers.
+  *)
+  val conversion : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
   val cast : Proof.context -> thm -> thm
 
+  (*
+    `apply_procs ctx procs specthm` applies the first appliable procedure in the `procs` on the
+      `specthm`, by exact (schematical) matching first and then converted calling second (see
+      @{thm NuPrim.apply_proc_conv}) with automatic cast proof by cast_tag.
 
+    About `accept_proc`, see @{thm NuPrim.accept_proc}
+  *)
   val apply_proc : Proof.context -> thm (*proc*) -> thm (*spec*) -> thm (*spec*)
   val apply_procs : Proof.context -> thm list -> thm -> thm
   val accept_proc : Proof.context -> thm -> thm
@@ -16,20 +48,48 @@ signature NU_SYS = sig
 
   val process : Proof.state -> thm -> thm parser
 
-  val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm
-  val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm
+  val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm (* see @{thm NuPrim.start_proc} *)
+  val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm (* see @{thm NuPrim.finish_proc} *)
 
-  val declare_aux : Thm.binding * thm list -> thm -> Proof.context -> thm * Proof.context
-  val declare_auxes : (Thm.binding * thm list) list -> thm -> Proof.context -> thm * Proof.context
+  (*
+    `declare_facts` declares ν-facts embedded in the specification theorem.
+    `load_specthm` activates all embedded ν-facts in a specification theorem.
+
+    There are two situation in the ν-system, the one for deductive construction
+    and the other one for normal Isar proof (e.g. νhave and νobtain).
+
+    In the deductive construction, all ν-facts are embedded in the specification
+    theorem, and the specification theorem has several codeblock assumptions
+    as undeclared hypothesises that are undeclared in the `Assumption`
+    structure. Codeblock assumption stores the constructed program and represents
+    the partial correctness hypothesises under the current symbolic execution
+    (the assertion that the execution so far is normal).
+    The codeblock assumption is updated by every `accept_proc` operation.
+
+    The operation `load_specthm` convert current construction context into a normal
+    Isar context by loading all embedded ν-facts with attribute evaluation and
+    declaring the codeblock assumptions. Therefore the codeblock assumptions are
+    fixed and procedure construction cannot be proceeded.
+
+    Attributes sent to `declare_facts` are not activated immediately, but stored
+    and activated until `load_specthm`, in the context loading the ν-facts.
+    Therefore, declarative attributes do not touch the deductive context,
+    but only the loading context.
+  *)
+  val declare_fact  : Thm.binding * thm list -> thm -> Proof.context -> thm * Proof.context
+  val declare_facts : (Thm.binding * thm list) list -> thm -> Proof.context -> thm * Proof.context
   (* `load_specthm (ctx,specthm)` puts auxiliary facts into the context by the name `\<nu>aux` *)
   val load_specthm  : thm -> Proof.context -> Proof.context
 
 end
+
+(* The Structure *)
 structure NuSys : NU_SYS = struct
 open Thm NuBasics Term
-exception CastFail of term list
+exception CastFail of thm
 type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
 
+(** Tactics **)
 fun head_only tac th =
   if nprems_of th = 1
   then tac th
@@ -57,14 +117,18 @@ fun mk_auto_resolve_tac thm_name ctx =
       ORELSE withdrawable_premise_tac ctx
   ))) #> Seq.map fininsh_premise_hyps
 
-val cast_tac = mk_auto_resolve_tac "NuPrim.\<nu>cast"
+val cast_tac = mk_auto_resolve_tac "NuPrim.\<nu>cast" 
 fun conclude fail x =
   case Seq.pull x
     of SOME (th, other) => Goal.conclude th
      | NONE => fail ()
+
+
+  (** Basic Operations **)
+
 fun cast ctx th = 
   Goal.protect 1 th |> head_only (cast_tac ctx)
-        |> conclude (fn _ => raise THM ("Cast fail", 1, [th]))
+        |> conclude (fn _ => raise CastFail th)
 val conversion_thm = @{thm conversion}
 fun conversion ctx to from =
   let
@@ -183,32 +247,32 @@ fun finish_proc ctx goal th =
 
 
 
-structure AuxAux = Generic_Data
+structure NuFacts = Generic_Data
 (
-  (* key : name of the auxiliary fact, value: the attribute to be evaluated *)
+  (*key : name of the auxiliary fact, value: the attribute to be evaluated*)
   type T = (Position.T * attribute list) Symtab.table; 
   val empty: T = Symtab.empty
   val extend = I
   val merge : T * T -> T = Symtab.join (fn _ => fn _ => raise Symtab.SAME);
 )
 fun get_aux_attrs ctx (name,auxth) =
-  case the_default (Position.none,[]) (Symtab.lookup (AuxAux.get (Context.Proof ctx)) name)
+  case the_default (Position.none,[]) (Symtab.lookup (NuFacts.get (Context.Proof ctx)) name)
     of (pos,attrs) =>
       ((Binding.make (name,pos), attrs), [(Conjunction.elim_conjunctions auxth,[])])
 fun note_auxes auxes ctx =
   Proof_Context.note_thmss "" (map (get_aux_attrs ctx) auxes) ctx
 fun fold1 f (h::r) = fold f r h
   | fold1 f [] = raise Fail "fold1"
-fun declare_aux ((binding,attrs),auxes) th ctx =
+fun declare_fact ((binding,attrs),auxes) th ctx =
   let
     val name = Binding.name_of binding
     val _ = if name = "\<glowing_star>" then error "reserved keyword: \<glowing_star>" else ()
   in
-  ctx |> Context.proof_map (AuxAux.map (Symtab.update_new (name, (Binding.pos_of binding, attrs))))
+  ctx |> Context.proof_map (NuFacts.map (Symtab.update_new (name, (Binding.pos_of binding, attrs))))
     |> pair (@{thm NuPrim.declare_fact} OF [intro_param_name name, fold1 Conjunction.intr auxes, th])
   end
-fun declare_auxes auxes th ctx =
-  fold (fn a => fn (th,ctx) => declare_aux a th ctx) auxes (th,ctx)
+fun declare_facts auxes th ctx =
+  fold (fn a => fn (th,ctx) => declare_fact a th ctx) auxes (th,ctx)
 
 val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
 fun hyp_export is_goal asms = (I,I)

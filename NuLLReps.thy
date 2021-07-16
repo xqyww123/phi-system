@@ -2,14 +2,18 @@ theory NuLLReps
   imports NuPrim  "HOL-Library.Word"
 begin
 
+text \<open>Semantic data representations\<close>
 
-  \<comment> \<open> StateOn stack registers
-    where stack :: lrep and registers :: register_collection \<close>
+section \<open>The construction state\<close>
 
 instantiation state :: (lrep) lrep begin
 definition llty_state :: "'a state itself \<Rightarrow> llty" where [simp]: "llty_state _ = la_z"
 instance by standard
 end
+
+section \<open>The integer data type\<close>
+
+subsection \<open>Lrep instantiations\<close>
 
 instantiation word :: (len) naive_lrep
 begin
@@ -35,6 +39,29 @@ definition ceq_word :: "'a word \<times> 'a word \<Rightarrow> bool" where [simp
 lemma ceq_word[simp]: "ceq (x,y) = (x = y)" for x :: "'a word" by simp
 instance by standard (auto+)
 end
+
+subsection \<open>Basic \<nu>-abstractions based on integer type\<close>
+
+subsubsection \<open>Natural number\<close>
+
+definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) nu"
+  where "NuNat _ = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (unat p = x))"
+syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
+translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
+
+lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding NuNat_def by auto
+lemma [\<nu>equable]: "\<nu>Equalable (NuNat b) (K True)" unfolding \<nu>Equalable_def NuNat_def by auto
+
+subsubsection \<open>Boolean\<close>
+
+definition NuBool :: "(1 word, bool) nu" ("\<bool>")
+  where "NuBool = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (p = 1) = x)"
+lemma [simp]: "p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding NuBool_def by simp
+lemma [\<nu>equable]: "\<nu>Equalable \<bool> (K True)" unfolding \<nu>Equalable_def NuBool_def by auto
+
+section \<open>The pair abstract structure\<close>
+
+subsection \<open>Lrep instantiations\<close>
 
 instantiation prod :: (zero_lrep, zero_lrep) zero_lrep begin
 definition lty_zero_prod :: "'a \<times> 'b" where [simp]: "lty_zero_prod = (lty_zero,lty_zero)"
@@ -64,19 +91,23 @@ definition ceq_prod :: "('a \<times> 'b) \<times> 'a \<times> 'b \<Rightarrow> b
 instance by standard (auto simp add: ac_simps intro: ceq_trans)
 end
 
-definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) nu"
-  where "NuNat _ = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (unat p = x))"
-syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
-translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
-thm of_nat_inverse
-value "unat (-4::2 word)"
+subsection \<open>Fusion \<nu>-abstraction\<close>
 
-lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding NuNat_def by auto
-lemma [\<nu>equable]: "\<nu>Equalable (NuNat b) (K True)" unfolding \<nu>Equalable_def NuNat_def by auto
+definition Fusion :: "('a1::lrep,'b1) nu \<Rightarrow> ('a2::lrep,'b2) nu \<Rightarrow> ('a1 \<times> 'a2, 'b1 \<times> 'b2) nu" (infixr "\<nuFusion>" 70) 
+  where "Fusion N M = Nu (\<lambda>px. case px of ((p1,p2),(x1,x2)) \<Rightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2))"
+lemma Fusion_abst[simp]: "(p1,p2) \<nuLinkL> N \<nuFusion> M \<nuLinkR> (x1,x2) \<longleftrightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2)"
+  unfolding Fusion_def by simp
+lemma "Inhabited ((x1,x2) \<tycolon> N1 \<nuFusion> N2) \<longleftrightarrow> Inhabited (x1 \<tycolon> N1) \<and> Inhabited (x2 \<tycolon> N2)"
+  unfolding Inhabited_def by simp
 
-definition NuBool :: "(1 word, bool) nu" ("\<bool>")
-  where "NuBool = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (p = 1) = x)"
-lemma [simp]: "p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding NuBool_def by simp
-lemma [\<nu>equable]: "\<nu>Equalable \<bool> (K True)" unfolding \<nu>Equalable_def NuBool_def by auto
+lemma [\<nu>share]: "Nu_Share N s1 f1 \<Longrightarrow> Nu_Share M s2 f2 \<Longrightarrow> Nu_Share (N \<nuFusion> M) (s1 \<times> s2) (\<lambda>z x. case x of (x1,x2) \<Rightarrow> (f1 z x1, f2 z x2))"
+  for N :: "('a :: sharable_lrep, 'b) nu" and M :: "('c :: sharable_lrep, 'd) nu" 
+  unfolding Nu_Share_def by auto
+lemma [\<nu>equable]: "\<nu>Equalable N p \<Longrightarrow> \<nu>Equalable M q \<Longrightarrow> \<nu>Equalable (N \<nuFusion> M) (\<lambda>x. case x of ((a1,b1),(a2,b2)) \<Rightarrow> p (a1,a2) \<and> q (b1,b2))"
+  unfolding \<nu>Equalable_def by auto
+
+lemma [\<nu>disposable]: "\<nu>Disposable (x \<tycolon> X) \<Longrightarrow> \<nu>Disposable (y \<tycolon> Y) \<Longrightarrow> \<nu>Disposable ((x,y) \<tycolon> X \<nuFusion> Y)"
+  unfolding \<nu>Disposable_def by auto
+
 
 end

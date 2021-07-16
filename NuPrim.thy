@@ -27,6 +27,7 @@ text \<open>The fundamental theory for \<nu>-system\<close>
 section Preliminary
 
 declare [[quick_and_dirty = true]]
+ML_file NuConfig.ML
 bundle show_more1 = [[show_hyps = true, show_types = true, show_sorts = true]]
 bundle show_more = [[show_hyps = true, show_types = true]]
 
@@ -362,7 +363,6 @@ lemma [elim]: "Inhabited (T \<flower> U) \<Longrightarrow> (Inhabited T \<Longri
 
 subsection \<open>The \<nu>-system VM and Procedure construction structures\<close>
 
-
 datatype 'a state = StatOn "('a::lrep)" | STrap | SNeg
 text\<open> The basic state of the \<nu>-system virtual machine is represented by type @{typ "('a::lrep) state"}.
   The valid state @{term "StatOn p"} essentially has two major form, one without registers and another one with them,
@@ -518,11 +518,29 @@ definition PendingConstruction :: " (('a::lrep) \<Rightarrow> ('b::lrep) state) 
 definition CodeBlock :: " ('a::lrep) state \<Rightarrow> ('b::lrep) => 'b set \<Rightarrow> ('b \<Rightarrow> 'a state) \<Rightarrow> bool" where
   CodeBlock_def: "CodeBlock stat arg ty prog \<longleftrightarrow> (arg \<in> ty \<and> prog arg = stat \<and> stat \<noteq> SNeg)"
 syntax "_codeblock_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>)" [100,0,0] 3)
+syntax "_codeblock_noarg_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h\<^bold>o\<^bold>u\<^bold>t \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t)" [100,0] 3)
 syntax "_codeblock_" :: "idt \<Rightarrow> logic \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>" [100,0] 3)
 syntax "_codeblock_noarg_" :: "idt \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h\<^bold>o\<^bold>u\<^bold>t \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t" [100] 3)
-translations "_codeblock_ v ty" <= "CONST CodeBlock v arg ty exp"
-  "_codeblock_noarg_ v" <= "_codeblock_ v (CONST End_of_Contextual_Stack x)"
-translations "_codeblock_exp_ v exp ty" <= "CONST CodeBlock v arg ty exp"
+
+attribute_setup show_codeblock_expression =  \<open>
+  Scan.lift (Parse.$$$ "=" |-- ((Args.$$$ "false" >> K false) || (Args.$$$ "true" >> K true)) >>
+    (Thm.declaration_attribute o K o Config.put_generic NuConfig.show_codeblock_expression))\<close>
+print_translation \<open>
+  let
+    fun is_EoS (Const (\<^const_syntax>\<open>End_of_Contextual_Stack\<close>, _) $ _) = true
+      | is_EoS tm = false
+    fun codeblock_print ctx [v,arg,ty,exp] =
+      if Config.get ctx NuConfig.show_codeblock_expression
+      then if is_EoS ty
+        then Syntax.const \<^syntax_const>\<open>_codeblock_noarg_exp_\<close> $ v $ exp
+        else Syntax.const \<^syntax_const>\<open>_codeblock_exp_\<close> $ v $ ty $ exp
+      else if is_EoS ty
+        then Syntax.const \<^syntax_const>\<open>_codeblock_noarg_\<close> $ v
+        else Syntax.const \<^syntax_const>\<open>_codeblock_\<close> $ v $ ty
+  in
+   [(\<^const_syntax>\<open>CodeBlock\<close>, codeblock_print)]
+  end
+\<close>
 
 lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv> ProtectorI (prog arg))"
   unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
@@ -594,6 +612,7 @@ qed
 
 lemma empty_facts: "PROP FactCollection (PROP NoFact) (PROP NoFact) (PROP NoFact)"
   by ((rule FactCollection_I)?; (rule NoFact)?)
+
 theorem start_proc:
   "CodeBlock s a S nop \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S"
   for S :: " ('a::lrep) set" and a :: 'a and s :: "'a state"
