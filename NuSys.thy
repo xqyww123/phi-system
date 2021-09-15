@@ -54,9 +54,10 @@ attribute_setup \<nu>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_po
   || Scan.lift NuProcessor.process_attr\<close>
   \<open>Evaluate the \<nu>-system process or the process of the given processor on the target theorem\<close>
 
-attribute_setup show_proc_expression = \<open>NuToplevel.show_proc_expression_attr\<close>
-(* declare [[show_proc_expression = false]] *)
-
+method_setup \<nu>resolve = \<open>let open Scan Parse in
+  option (Attrib.thms -- option (lift ($$$ "(") |-- Attrib.thms --| lift ($$$ ")"))) >> (fn ths => fn ctx =>
+    Method.METHOD (fn th2 => NuSys.auto_resolve ths th2 ctx))
+end\<close>
 
 ML \<open>
 
@@ -152,13 +153,9 @@ end\<close>
 
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier\<close>
 
-\<nu>processor \<nu>autoprover 9000 \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP Q\<close> \<open>load_specthm (premise_prover (not_safe NuSys.premise_tac))\<close>
+\<nu>processor \<nu>resolver 9000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>load_specthm (all_premises_prover (NuSys.auto_resolve NONE []))\<close>
 
 \<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn focus => NuProcedure.parser >> (fn binding => fn _ =>
     NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) focus)\<close>
-
-\<nu>processor_resolver resolve_disposable 100  \<open>\<nu>Disposable T \<Longrightarrow> PROP P\<close> \<nu>disposable
-\<nu>processor_resolver resolve_share 100  \<open>Nu_Share N sh f \<Longrightarrow> PROP P\<close> \<nu>share
-
 
 end

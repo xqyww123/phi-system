@@ -50,14 +50,14 @@ syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
 
 lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding NuNat_def by auto
-lemma [\<nu>equable]: "\<nu>Equalable (NuNat b) (K True)" unfolding \<nu>Equalable_def NuNat_def by auto
+lemma [\<nu>intro]: "\<nu>Equalable (NuNat b) (K True)" unfolding \<nu>Equalable_def NuNat_def by auto
 
 subsubsection \<open>Boolean\<close>
 
 definition NuBool :: "(1 word, bool) nu" ("\<bool>")
   where "NuBool = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (p = 1) = x)"
 lemma [simp]: "p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding NuBool_def by simp
-lemma [\<nu>equable]: "\<nu>Equalable \<bool> (K True)" unfolding \<nu>Equalable_def NuBool_def by auto
+lemma [\<nu>intro]: "\<nu>Equalable \<bool> (K True)" unfolding \<nu>Equalable_def NuBool_def by auto
 
 section \<open>The pair abstract structure\<close>
 
@@ -97,16 +97,16 @@ definition Fusion :: "('a1::lrep,'b1) nu \<Rightarrow> ('a2::lrep,'b2) nu \<Righ
   where "Fusion N M = Nu (\<lambda>px. case px of ((p1,p2),(x1,x2)) \<Rightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2))"
 lemma Fusion_abst[simp]: "(p1,p2) \<nuLinkL> N \<nuFusion> M \<nuLinkR> (x1,x2) \<longleftrightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2)"
   unfolding Fusion_def by simp
-lemma "Inhabited ((x1,x2) \<tycolon> N1 \<nuFusion> N2) \<longleftrightarrow> Inhabited (x1 \<tycolon> N1) \<and> Inhabited (x2 \<tycolon> N2)"
+lemma "Inhabited \<tort_lbrace>(x1,x2) \<tycolon> N1 \<nuFusion> N2\<tort_rbrace> \<longleftrightarrow> Inhabited \<tort_lbrace>x1 \<tycolon> N1\<tort_rbrace> \<and> Inhabited \<tort_lbrace>x2 \<tycolon> N2\<tort_rbrace>"
   unfolding Inhabited_def by simp
 
-lemma [\<nu>share]: "Nu_Share N s1 f1 \<Longrightarrow> Nu_Share M s2 f2 \<Longrightarrow> Nu_Share (N \<nuFusion> M) (s1 \<times> s2) (\<lambda>z x. case x of (x1,x2) \<Rightarrow> (f1 z x1, f2 z x2))"
+lemma [\<nu>intro]: "Nu_Share N s1 f1 \<Longrightarrow> Nu_Share M s2 f2 \<Longrightarrow> Nu_Share (N \<nuFusion> M) (s1 \<times> s2) (\<lambda>z x. case x of (x1,x2) \<Rightarrow> (f1 z x1, f2 z x2))"
   for N :: "('a :: sharable_lrep, 'b) nu" and M :: "('c :: sharable_lrep, 'd) nu" 
   unfolding Nu_Share_def by auto
-lemma [\<nu>equable]: "\<nu>Equalable N p \<Longrightarrow> \<nu>Equalable M q \<Longrightarrow> \<nu>Equalable (N \<nuFusion> M) (\<lambda>x. case x of ((a1,b1),(a2,b2)) \<Rightarrow> p (a1,a2) \<and> q (b1,b2))"
+lemma [\<nu>intro]: "\<nu>Equalable N p \<Longrightarrow> \<nu>Equalable M q \<Longrightarrow> \<nu>Equalable (N \<nuFusion> M) (\<lambda>x. case x of ((a1,b1),(a2,b2)) \<Rightarrow> p (a1,a2) \<and> q (b1,b2))"
   unfolding \<nu>Equalable_def by auto
 
-lemma [\<nu>disposable]: "\<nu>Disposable (x \<tycolon> X) \<Longrightarrow> \<nu>Disposable (y \<tycolon> Y) \<Longrightarrow> \<nu>Disposable ((x,y) \<tycolon> X \<nuFusion> Y)"
+lemma [\<nu>intro]: "\<nu>Disposable \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<Longrightarrow> \<nu>Disposable \<tort_lbrace>y \<tycolon> Y\<tort_rbrace> \<Longrightarrow> \<nu>Disposable \<tort_lbrace>(x,y) \<tycolon> X \<nuFusion> Y\<tort_rbrace>"
   unfolding \<nu>Disposable_def by auto
 
 

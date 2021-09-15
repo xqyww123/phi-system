@@ -65,12 +65,13 @@ fun parse_arg arg =
   let
     val (names,args) = arg |> HOLogic.strip_tuple |> map pass_name |> split_list
     val names = names |> Name.variant_list []
-    val arg = list_mk_binop_r0 delimiter_name (mk_eof_ctx_stack stack_R) args
+    val arg = list_mk_binop_r0 delimiter_name (mk_eof_ctx_stack stack_R)
+        (map mk_repset args)
   in
     (arg, names)
   end
 fun parse_ret ret =
-  ret |> HOLogic.strip_tuple
+  ret |> HOLogic.strip_tuple |> map mk_repset
     |> list_mk_binop_r0 delimiter_name (mk_eof_ctx_stack stack_R)
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
@@ -101,8 +102,8 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
     val preconds = preconds |> map (apfst (apsnd (map (Attrib.check_src ctx))))
     val (arg, reg_names) = arg |> Syntax.parse_term ctx |> parse_arg
-
     val ret = ret |> Syntax.parse_term ctx |> parse_ret
+
     val includes = includes |> map (Bundle.check ctx)
     val parse_term = Syntax.parse_term ctx
     val parse_prop = Syntax.parse_prop ctx

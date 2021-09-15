@@ -5,7 +5,8 @@ signature NU_SYS = sig
   type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
   val raw_auto : Proof.context -> tactic
   val premise_tac : Proof.context -> tactic
-  val cast_tac : Proof.context -> tactic
+  val auto_resolve : (thm list (*major*) * thm list option (*minor*)) option ->
+    thm list (*addtional major*) -> Proof.context -> tactic
 
   (** Basic Operations **)
 
@@ -13,7 +14,7 @@ signature NU_SYS = sig
     `conversion` tries to convert the procedure theorem to the given form.
       By @{thm NuPrim.conversion}, it generates a @{term Conversion} premise intended to be solved
       by `cast` operation.
-    `cast` operations solves the first premise by `cast_tac`. Several proof obligation that cannot
+    `cast` operations solves the first premise by `auto_resolve0`. Several proof obligation that cannot
       be solved automatically will be charged as premises in the result theorem.
           Γ |- cast_premise ==> P
       ---------------------------------
@@ -26,7 +27,7 @@ signature NU_SYS = sig
     while any other unsolved premises are considered as failures of the casting or conversion, which
     raise a CastFail exception.
 
-    Also note, in the `cast_tac` and also `premise_tac`, only premises tagged with @{term
+    Also note, in the `auto_resolve0` and also `premise_tac`, only premises tagged with @{term
     Premise} will be tried to be solved automatically, while any other permises will not
     be touched by automatic provers.
   *)
@@ -97,27 +98,45 @@ fun head_only tac th =
 fun raw_auto ctx =
   (ALLGOALS (Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used"))
     THEN Simpdata.auto_tac ctx)
+
+(*** Premise tac ***)
 val Premise_I = @{thm NuPrim.Premise_I}
 fun mk_premise_tac withdraw ctx th =
-  if can (major_prem_of #> dest_premise_tag) th
+  if AutoLevel.get ctx >= 2 andalso can (major_prem_of #> dest_premise_tag) th
   then (head_only (SOLVED' (K (HEADGOAL (resolve0_tac [Premise_I]) THEN raw_auto ctx)) 1)
       ORELSE withdraw) th
   else Seq.empty
 val FailedPremise_I = @{thm FailedPremise_I} and FailedPremise_D = @{thm FailedPremise_D}
-val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch o (fn x => FailedPremise_D RS x))
+val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch o @{print} o (fn x => FailedPremise_D RS x))
 val dest_failed_premise_tag = dest_monop "NuSys.FailedPremise"
 val premise_tac = mk_premise_tac Seq.fail
 fun fininsh_premise_hyps th =
   fold ((fn x => FailedPremise_I RS x) oo implies_intr)
     (chyps_of th |> filter (can (dest_failed_premise_tag o term_of))) th
 
-fun mk_auto_resolve_tac thm_name ctx =
-  HEADGOAL (SOLVED' (REPEAT_DETERM_N 100 o (fn i =>
-    resolve_tac ctx (Named_Theorems.get ctx thm_name) i
-      ORELSE withdrawable_premise_tac ctx
-  ))) #> Seq.map fininsh_premise_hyps
+(*** Simplify tag tac ***)
+fun simp_tag_tac ctx th =
+  case try (fn th => cprem_of th 1 |> dest_simplify_tag_c) th
+    of SOME (_,y) => ((Simplifier.rewrite ctx y RS @{thm Simplify_I}) RS th) |> Seq.single
+     | NONE => Seq.empty
 
-val cast_tac = mk_auto_resolve_tac "NuPrim.\<nu>cast" 
+(*** auto resolve tac ***)
+fun auto_resolve thms addtion ctx  =
+  let 
+    val (thms,minor_thms) = case thms of SOME (major, SOME minor) => (major, minor)
+                              | SOME (major, NONE) => (major, [])
+                              | NONE => (Named_Theorems.get ctx "NuPrim.\<nu>intro",
+                                         Named_Theorems.get ctx "NuPrim.\<nu>intro'")
+    val thms = addtion @ thms
+  in HEADGOAL (SOLVED' (REPEAT_DETERM_N 100 o (fn i =>
+      simp_tag_tac ctx
+      ORELSE resolve_tac ctx thms i
+        ORELSE withdrawable_premise_tac ctx
+        ORELSE resolve_tac ctx minor_thms i
+    ))) #> Seq.map fininsh_premise_hyps
+  end
+val auto_resolve0 = auto_resolve NONE []
+
 fun conclude fail x =
   case Seq.pull x
     of SOME (th, other) => Goal.conclude th
@@ -127,7 +146,7 @@ fun conclude fail x =
   (** Basic Operations **)
 
 fun cast ctx th = 
-  Goal.protect 1 th |> head_only (cast_tac ctx)
+  Goal.protect 1 th |> head_only (auto_resolve0 ctx)
         |> conclude (fn _ => raise CastFail th)
 val conversion_thm = @{thm conversion}
 fun conversion ctx to from =
@@ -177,7 +196,7 @@ fun apply_procs ctx procs spec  =
     resolve_N procs (mk_apply_thms apply_proc_conv_thm focus) 2 |> Seq.map (Goal.protect 1)
       |> Seq.append (resolve_N procs (mk_apply_thms apply_proc_thm focus) 1
                       |> Seq.map (Goal.protect 0))
-      |> Seq.maps (cast_tac ctx)
+      |> Seq.maps (auto_resolve0 ctx)
       |> Seq.pull |> (fn x => case x of SOME (th,_) => Goal.conclude th
                                  | NONE => raise THM ("fail to make the call", 0, focus::procs))
     ) |> intro_SPEC

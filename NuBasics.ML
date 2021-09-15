@@ -17,6 +17,7 @@ signature NU_BASICS = sig
   val name_tag_ty : typ
   val dest_name_tag : term -> string
   val mk_name_tag : string -> term
+  val mk_repset : term -> term
   val dest_register : term -> string * term
   val dest_registerTy : term -> string * term
   val Void_name : string
@@ -51,6 +52,8 @@ signature NU_BASICS = sig
   val dest_procedure_c : cterm -> cterm * cterm * cterm
   val dest_premise_tag  : term -> term
   val dest_premise_tag_c: cterm -> cterm
+  val dest_simplify_tag   : term -> term * term
+  val dest_simplify_tag_c : term -> cterm * cterm
 
   val elim_SPEC : thm -> thm * thm
   val intro_SPEC : thm * thm -> thm
@@ -92,20 +95,20 @@ structure NuBasics = struct
 open Thm Term HOLogic NuHelp
 
 fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
-val void_ty = Type("NuPrim.void", [])
-fun proc_ctx_ty (a,b) = Type("NuPrim.proc_ctx", [a,b])
-fun mk_stateT ty = Type("NuPrim.state", [ty])
+val void_ty = Type(@{type_name "NuPrim.void"}, [])
+fun proc_ctx_ty (a,b) = Type(@{type_name "NuPrim.proc_ctx"}, [a,b])
+fun mk_stateT ty = Type(@{type_name "NuPrim.state"}, [ty])
 
 fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
                                     | TERM _ => raise TERM (msg, [prop_of th])
 
-fun dest_param (Const ("NuPrim.ParamTag", _) $ x) = x
+fun dest_param (Const (@{const_name "NuPrim.ParamTag"}, _) $ x) = x
   | dest_param tm = raise TERM ("dest_param", [tm])
-val unit_const_name = "Product_Type.Unity"
-val name_tag_ty = Type ("NuPrim.name_tag", [])
+val unit_const_name = @{const_name "Product_Type.Unity"}
+val name_tag_ty = Type (@{type_name "NuPrim.name_tag"}, [])
 val name_tag_const_name = "NuPrim.name_tag.NAME_TAG"
-val unit_ty = Type ("Product_Type.unit", [])
+val unit_ty = Type (@{type_name "Product_Type.unit"}, [])
 val unit_const = Const("Product_Type.Unity", unit_ty)
 val name_tag_const = Const (name_tag_const_name, (unit_ty --> unit_ty) --> name_tag_ty)
 val dest_name_tag_raw   = dest_monop name_tag_const_name
@@ -119,20 +122,22 @@ val name_tag_c = @{cterm "NAME name"}
 fun mk_name_tag name = name_tag_const $ Abs (name, unit_ty, unit_const)
 fun mk_name_tag_c name = renamed_term (mk_name_tag name) name_tag_c
 
-val named_name = "NuPrim.Named"
+val named_name = @{const_name "NuPrim.Named"}
 fun dest_named tm =
   case try (dest_binop named_name) tm of
      SOME (v,tm) => (SOME (dest_name_tag v), tm)
    | NONE => (NONE, tm)
-val nuTy_name = "NuPrim.NuTyp"
+fun mk_repset (tm as (Const (@{const_name NuPrim.typing}, _) $ _)) = tm
+  | mk_repset tm = mk_monop @{const_name "NuPrim.RepSet"} tm
+val nuTy_name = @{const_name "NuPrim.typing"}
 val dest_nuTy = dest_binop nuTy_name
-fun dest_register (Const ("NuPrim.register.Register",_) $ name $ x) = (dest_name_tag name, x)
+fun dest_register (Const (@{const_name "NuPrim.register.Register"},_) $ name $ x) = (dest_name_tag name, x)
   | dest_register tm = raise TERM ("bad register",[tm])
-fun dest_registerTy (Const ("NuPrim.RegisterTy",_) $ name $ x) = (dest_name_tag name, x)
+fun dest_registerTy (Const (@{const_name "NuPrim.RegisterTy"},_) $ name $ x) = (dest_name_tag name, x)
   | dest_registerTy tm = raise TERM ("bad registerTy",[tm])
-val Void_name = "NuPrim.Void"
+val Void_name = @{const_name "NuPrim.Void"}
 
-fun dest_andTy (Const ("NuPrim.AndTy", _) $ t1 $ t2) = (t1, t2)
+fun dest_andTy (Const (@{const_name "NuPrim.AndTy"}, _) $ t1 $ t2) = (t1, t2)
   | dest_andTy t = raise TERM ("bad AndTy", [t]);
 fun dest_andTys tm =
   (case try dest_andTy tm of
@@ -141,20 +146,20 @@ fun dest_andTys tm =
 fun dest_registerTys regs = if same_const Void_name regs then NONE
   else SOME (BiTree.map_leaf (dest_registerTy #> #1) (dest_andTys regs))
 
-val dest_SpecTop   = dest_binop "NuPrim.SpecTop"
-val dest_SpecTop_c = dest_binop_c "NuPrim.SpecTop"
-val dest_CurrentConstruction   = dest_binop "NuPrim.CurrentConstruction"
-val dest_CurrentConstruction_c = dest_binop_c "NuPrim.CurrentConstruction"
-val dest_PendingConstruction   = dest_triop "NuPrim.PendingConstruction"
-val dest_PendingConstruction_c = dest_triop_c "NuPrim.PendingConstruction"
+val dest_SpecTop   = dest_binop @{const_name "NuPrim.SpecTop"}
+val dest_SpecTop_c = dest_binop_c @{const_name "NuPrim.SpecTop"}
+val dest_CurrentConstruction   = dest_binop @{const_name "NuPrim.CurrentConstruction"}
+val dest_CurrentConstruction_c = dest_binop_c @{const_name "NuPrim.CurrentConstruction"}
+val dest_PendingConstruction   = dest_triop @{const_name "NuPrim.PendingConstruction"}
+val dest_PendingConstruction_c = dest_triop_c @{const_name "NuPrim.PendingConstruction"}
 fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
   handle TERM _ => ((dest_PendingConstruction c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [c]))
 fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
   handle TERM _ => ((dest_PendingConstruction_c c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
-val dest_Proc_CtxTy   = dest_binop "NuPrim.Proc_CtxTy"
-val dest_Proc_CtxTy_c = dest_binop_c "NuPrim.Proc_CtxTy"
+val dest_Proc_CtxTy   = dest_binop @{const_name "NuPrim.Proc_CtxTy"}
+val dest_Proc_CtxTy_c = dest_binop_c @{const_name "NuPrim.Proc_CtxTy"}
 val registers_of_specthm = catch_th 0 "registers_of_specthm: Not a CurrentConstruction"
   (Thm.cprop_of #> dest_SpecTop_c #> #1 #> dest_Trueprop_c
     #> dest_CurrentConstruction_c #> #2 #> dest_Proc_CtxTy_c #> #2)
@@ -166,11 +171,11 @@ val current_block_var =
     #> perhaps Logic.strip_assums_concl
     #> perhaps dest_Trueprop
     #> block_var_of_Constuction
-val dest_codeblock   = perhaps dest_Trueprop #> dest_quadop "NuPrim.CodeBlock"
+val dest_codeblock   = perhaps dest_Trueprop #> dest_quadop @{const_name "NuPrim.CodeBlock"}
 fun current_block_depth th =
   filter (can dest_codeblock) (hyps_of th) |> length
 val codeblock_name   = dest_codeblock #> #1 #> dest_Free #> #1
-val dest_codeblock_c = perhaps dest_Trueprop_c #> dest_quadop_c "NuPrim.CodeBlock"
+val dest_codeblock_c = perhaps dest_Trueprop_c #> dest_quadop_c @{const_name "NuPrim.CodeBlock"}
 val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
 val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
 fun current_codeblock specthm =
@@ -236,8 +241,8 @@ fun intro_SPEC (focus,facts) =
   facts
 
 
-val dest_fact   = dest_binop   "NuPrim.Fact" #> apfst dest_name_tag
-val dest_fact_c = dest_binop_c "NuPrim.Fact" #> apfst (term_of #> dest_name_tag)
+val dest_fact   = dest_binop   @{const_name "NuPrim.Fact"} #> apfst dest_name_tag
+val dest_fact_c = dest_binop_c @{const_name "NuPrim.Fact"} #> apfst (term_of #> dest_name_tag)
 val vP = (("P",0), HOLogic.boolT) and v_label = (("label",0),name_tag_ty)
 val Fact_D = @{thm NuPrim.Fact_D} and Fact_I = @{thm NuPrim.Fact_I}
 fun elim_Fact th =
@@ -250,10 +255,10 @@ fun elim_Fact th =
 fun intro_Fact (name,th) =
   Thm.implies_elim
     (Thm.instantiate ([],[(v_label, mk_name_tag_c name), (vP, cprop_of th)]) Fact_I) th
-val dest_AndFact   = dest_binop   "NuPrim.AndFact"
-val dest_AndFact_c = dest_binop_c "NuPrim.AndFact"
+val dest_AndFact   = dest_binop   @{const_name "NuPrim.AndFact"}
+val dest_AndFact_c = dest_binop_c @{const_name "NuPrim.AndFact"}
 fun dest_AndFacts_impl ret tm =
-  if same_const "NuPrim.NoFact" tm then rev ret
+  if same_const @{const_name "NuPrim.NoFact"} tm then rev ret
   else (case dest_AndFact tm of (a,b) => dest_AndFacts_impl (a::ret) b)
 val dest_AndFacts = dest_AndFacts_impl []
 val vP = (("P",0),propT) and vQ = (("Q",0),propT) and vS = (("S",0),propT)
@@ -277,13 +282,13 @@ fun elim_AndFacts_impl ret [] = ret
   | elim_AndFacts_impl ret (th::r) = 
       (case try elim_AndFact th of
         NONE => 
-          if same_const "NuPrim.NoFact" (prop_of th)
+          if same_const @{const_name "NuPrim.NoFact"} (prop_of th)
           then elim_AndFacts_impl ret r
           else elim_AndFacts_impl (th::ret) r
       | SOME (th1, th2) => elim_AndFacts_impl ret (th1::th2::r))
 val elim_AndFacts = rev o elim_AndFacts_impl [] o single
-val dest_FactCollection   = dest_triop   "NuPrim.FactCollection"
-val dest_FactCollection_c = dest_triop_c "NuPrim.FactCollection"
+val dest_FactCollection   = dest_triop   @{const_name "NuPrim.FactCollection"}
+val dest_FactCollection_c = dest_triop_c @{const_name "NuPrim.FactCollection"}
 val th_FactCollection_D1 = @{thm NuPrim.FactCollection_D1}
 and th_FactCollection_D2 = @{thm NuPrim.FactCollection_D2}
 and th_FactCollection_D3 = @{thm NuPrim.FactCollection_D3}
@@ -305,7 +310,7 @@ fun user_facts_in_collection th =
     val (P,Q,S) = elim_FactCollection th
     val ths = elim_AndFacts Q |> map elim_Fact
   in
-    if same_const "NuPrim.NoFact" (prop_of P) then ths else ("\<glowing_star>",P)::ths
+    if same_const @{const_name "NuPrim.NoFact"} (prop_of P) then ths else ("\<glowing_star>",P)::ths
   end
 val intro_internal_fact_thm = @{thm NuPrim.intro_internal_fact}
 val vA = (("A",0),propT) and vP = (("P",0),propT) and vQ = (("Q",0),propT) and vL = (("L",0),propT)
@@ -333,17 +338,17 @@ fun apply3 f (a,b,c) = (f a, f b, f c)
 val NoFact = @{thm NuPrim.NoFact}
 fun holrule f th =
   case prop_of th
-    of (Const ("NuPrim.AndFact",_) $ _ $ _) =>
+    of (Const (@{const_name "NuPrim.AndFact"},_) $ _ $ _) =>
          elim_AndFact th |> apply2 (holrule f) |> intro_AndFact
-     | (Const ("NuPrim.SpecTop",_) $ _ $ _) =>
+     | (Const (@{const_name "NuPrim.SpecTop"},_) $ _ $ _) =>
          elim_SPEC th |> apply2 (holrule f) |> intro_SPEC
-     | (Const ("NuPrim.FactCollection",_) $ _ $ _ $ _) =>
+     | (Const (@{const_name "NuPrim.FactCollection"},_) $ _ $ _ $ _) =>
          elim_FactCollection th |> apply3 (holrule f) |> intro_FactCollection
-     | (Const ("NuPrim.Fact",_) $ _ $ _) =>
+     | (Const (@{const_name "NuPrim.Fact"},_) $ _ $ _) =>
          elim_Fact th |> apsnd (holrule f) |> intro_Fact
-     | (Const ("HOL.Trueprop", _) $ _) => f th
-     | (Const ("Pure.imp", _) $ _ $ _) => f th
-     | (Const ("NuPrim.NoFact", _)) => NoFact
+     | (Const (@{const_name "HOL.Trueprop"}, _) $ _) => f th
+     | (Const (@{const_name "Pure.imp"}, _) $ _ $ _) => f th
+     | (Const (@{const_name "NuPrim.NoFact"}, _)) => NoFact
      | tm => raise TERM ("holrule", [tm])
 
 val thm_PropBlock_I = @{thm NuPrim.PropBlock_I}
@@ -358,10 +363,12 @@ fun param_set_free_var_name ctx name thm =
       |> (fn x => thm_ParamTag RS x)
   end
 
-val dest_procedure   = dest_triop   "NuPrim.Procedure" o perhaps dest_Trueprop
-val dest_procedure_c = dest_triop_c "NuPrim.Procedure" o perhaps dest_Trueprop_c
-val dest_premise_tag  = dest_monop   "NuPrim.Premise" o perhaps dest_Trueprop
-val dest_premise_tag_c= dest_monop_c "NuPrim.Premise" o perhaps dest_Trueprop_c
+val dest_procedure   = dest_triop   @{const_name "NuPrim.Procedure"} o perhaps dest_Trueprop
+val dest_procedure_c = dest_triop_c @{const_name "NuPrim.Procedure"} o perhaps dest_Trueprop_c
+val dest_premise_tag  = dest_monop   @{const_name "NuPrim.Premise"}
+val dest_premise_tag_c= dest_monop_c @{const_name "NuPrim.Premise"}
+val dest_simplify_tag   = dest_binop   @{const_name "NuPrim.Simplify"}
+val dest_simplify_tag_c = dest_binop_c @{const_name "NuPrim.Simplify"}
 
 val vx = ("x",0) and va = ("'a",0)
 fun intro_param tm =
@@ -369,6 +376,6 @@ fun intro_param tm =
                    [((("x",0), typ_of (ctyp_of_cterm tm)), tm)]) @{thm ParamTag}
 val intro_param_name = intro_param o mk_name_tag_c
 
-val dest_Cast   = dest_triop   "NuPrim.Cast"
-val dest_Cast_c = dest_triop_c "NuPrim.Cast"
+val dest_Cast   = dest_triop   @{const_name "NuPrim.Cast"}
+val dest_Cast_c = dest_triop_c @{const_name "NuPrim.Cast"}
 end

@@ -49,25 +49,11 @@ lemma [\<nu>auto_destruct]:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> r \<tycolon> R\<boxbar>Z \<longmapsto> Z1 \<brangle> \<Longrightarrow>  \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> l \<tycolon> L\<boxbar>Z1 \<longmapsto> Z2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (stepinR g \<nuInstrComp> f) \<blangle> (l,r) \<tycolon> (L \<nuFusion> R)\<boxbar>Z \<longmapsto> Z2\<brangle>"
   unfolding AutoTag_def by (blast intro: instr_comp stepinR)
 lemma [\<nu>auto_construct]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> Z \<longmapsto> l \<tycolon> L\<boxbar>Z1 \<brangle> \<Longrightarrow>  \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> Z1 \<longmapsto> r \<tycolon> R\<boxbar>Z' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> op_pairring_make g) \<blangle> Z \<longmapsto> (l,r) \<tycolon> (L \<nuFusion> R)\<boxbar>Z'\<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> EoC Z \<longmapsto> l \<tycolon> L\<boxbar>EoC Z1 \<brangle> \<Longrightarrow>  \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle>EoC Z1 \<longmapsto> r \<tycolon> R\<boxbar>EoC Z' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> op_pairring_make g) \<blangle>EoC Z \<longmapsto> (l,r) \<tycolon> (L \<nuFusion> R)\<boxbar>EoC Z'\<brangle>"
   unfolding AutoTag_def by (blast intro: instr_comp op_pairring_make)
 
-definition op_const_int :: " ('x::len) word \<Rightarrow> (('a::lrep) \<Rightarrow> ('x word \<times>'a) state) "
-  where "op_const_int x r = StatOn (x,r)"
-lemma [\<nu>auto_construct]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int (Word.of_nat (numeral x)) \<blangle> Z \<longmapsto> (numeral x) \<tycolon> \<nat>[('x::len)]\<boxbar>Z \<brangle>"
-  unfolding op_const_int_def \<nu>def by auto  \<comment> \<open>Only literal number could be constructed automatically\<close>
-
 schematic_goal "\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle> ?x \<tycolon> ((\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c A \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c B) \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c D) \<nuFusion> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c C\<boxbar>Z \<longmapsto> (?Z1::(?'a::lrep) set) \<brangle>" by (rule \<nu>auto_destruct)+
-schematic_goal [simplified]:"\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle>(?Z1::(?'a::lrep) set) \<longmapsto> ((\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c (a::'c::lrep), 233), \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c (b::'d::lrep)) \<tycolon>  ((?N1 \<nuFusion> \<nat>[32]) \<nuFusion> ?N2)\<boxbar>Z \<brangle>" including show_more1 by (rule \<nu>auto_construct)+
 thm \<nu>auto_construct
-
-value "8::3 word"
-
-thm \<nu>auto_
-
-definition 
-
-
 
 ML \<open>@{term "29::32"}\<close>
 lemma [simplified]: "(10::3) = (0::3)"  by auto

@@ -1,4 +1,6 @@
 signature NU_REGISTERS = sig
+  val new_register : string (*name*) -> thm (*main part*) -> thm
+
   exception NameConfliction of string
   exception NoSuchRegister of string
   val new_reg_at : string (*name*) -> NuPath.T list -> thm
@@ -11,7 +13,31 @@ signature NU_REGISTERS = sig
 end
 structure NuRegisters : NU_REGISTERS = struct
 open NuGeneral NuBasics Term Thm
+
 exception NameConfliction of string
+
+(*
+* 1 : H
+* 2 : H
+* 3 : LH
+* 4 : H
+* 5 : LH
+* 6 : LH
+* 7 : LLH
+* 8 : H
+* 9 : LH
+* 10: LH
+* 11: LLH
+* 12: LH
+* ((11 10) (9 8)) (((7 6) (5 4)) ((3 2) (1 0)))
+* *)
+fun register_local_of main =
+  let
+    val 
+fun new_register name main =
+
+
+
 exception NoSuchRegister of string
 
 fun set_name name th = th |> renamed_prop (prop_of th |> map_abs_vars (fn s =>

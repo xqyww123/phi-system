@@ -4,6 +4,7 @@ signature NU_PROCESSORS = sig
   val load_specthm : proc -> proc
   val focus_rule : proc -> proc
   val premise_prover : (Proof.context -> tactic) -> proc
+  val all_premises_prover : (Proof.context -> tactic) -> proc
 
   val setup_resolver : binding -> int (*precedence*)
         -> (string * (binding * string option * mixfix) list) (* pattern *)
@@ -22,17 +23,13 @@ fun load_specthm proc ctx th toks = proc (NuSys.load_specthm th ctx) th toks
 fun focus_rule processor ctx th toks = 
   case elim_SPEC th of (focus,aux) =>
     processor ctx focus toks |> apfst (fn th => fn _ => intro_SPEC (th (),aux))
-fun premise_prover_raw prover ctx th =
-  let
-    val goal = cprem_of th 1 |> Goal.init
-    fun exe _ = 
-      (goal |> prover ctx |> Seq.pull |> (fn x =>
-        case x of SOME (th,_) => Goal.conclude th | _ => raise Bypass)
-      ) RS th
-  in
-    Scan.succeed exe
-  end
-val premise_prover = focus_rule o premise_prover_raw
+fun premise_prover_raw n prover ctx th =
+  Scan.succeed (fn _ => 
+    (if n = ~1 then th RS Drule.protectI else Goal.protect n th)
+      |> prover ctx |> Seq.pull |> (fn x =>
+          case x of SOME (th,_) => Goal.conclude th | _ => raise Bypass))
+val premise_prover = focus_rule o premise_prover_raw 1
+val all_premises_prover = focus_rule o premise_prover_raw ~1
 
 fun setup_resolver binding precedence pattern facts comment lthy =
   let
