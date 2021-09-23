@@ -7,6 +7,9 @@ signature NU_SYS = sig
   val premise_tac : Proof.context -> tactic
   val auto_resolve : (thm list (*major*) * thm list option (*minor*)) option ->
     thm list (*addtional major*) -> Proof.context -> tactic
+  val auto_resolve_rule : (thm list (*major*) * thm list option (*minor*)) option ->
+    thm list (*addtional major*) -> Proof.context -> thm -> thm
+
 
   (** Basic Operations **)
 
@@ -35,17 +38,16 @@ signature NU_SYS = sig
   val cast : Proof.context -> thm -> thm
 
   (*
-    `apply_procs ctx procs specthm` applies the first appliable procedure in the `procs` on the
-      `specthm`, by exact (schematical) matching first and then converted calling second (see
-      @{thm NuPrim.apply_proc_conv}) with automatic cast proof by cast_tag.
+    `apply_procs ctx procs whole_meta` applies the first appliable procedure in the `procs`
+    on the `whole_meta`, by exact (schematical) matching first and then converted calling second
+    (see @{thm NuPrim.apply_proc_conv}) with automatic cast proof by cast_tag.
 
     About `accept_proc`, see @{thm NuPrim.accept_proc}
   *)
-  val apply_proc : Proof.context -> thm (*proc*) -> thm (*spec*) -> thm (*spec*)
+  val apply_procs_major : Proof.context -> thm list (*procs*) -> thm (*whole*) -> thm
+  val apply_proc : Proof.context -> thm (*proc*) -> thm (*whole*) -> thm (*whole*)
   val apply_procs : Proof.context -> thm list -> thm -> thm
   val accept_proc : Proof.context -> thm -> thm
-  val assign_reg : Proof.context -> string (*name*) -> thm -> thm
-  val load_reg : Proof.context -> string (*name*) -> thm -> thm
 
   val process : Proof.state -> thm -> thm parser
 
@@ -90,6 +92,57 @@ open Thm NuBasics Term
 exception CastFail of thm
 type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
 
+structure NuFacts = Generic_Data
+(
+  (*key : name of the auxiliary fact, value: the attribute to be evaluated*)
+  type T = (Position.T * attribute list) Symtab.table; 
+  val empty: T = Symtab.empty
+  val extend = I
+  val merge : T * T -> T = Symtab.join (fn _ => fn _ => raise Symtab.SAME);
+)
+fun get_aux_attrs ctx (name,auxth) =
+  case the_default (Position.none,[]) (Symtab.lookup (NuFacts.get (Context.Proof ctx)) name)
+    of (pos,attrs) =>
+      ((Binding.make (name,pos), attrs), [(Conjunction.elim_conjunctions auxth,[])])
+fun note_auxes auxes ctx =
+  Proof_Context.note_thmss "" (map (get_aux_attrs ctx) auxes) ctx
+fun fold1 f (h::r) = fold f r h
+  | fold1 f [] = raise Fail "fold1"
+fun declare_fact ((binding,attrs),auxes) th ctx =
+  let
+    val name = Binding.name_of binding
+    val _ = if name = "\<glowing_star>" then error "reserved keyword: \<glowing_star>" else ()
+  in
+  ctx |> Context.proof_map (NuFacts.map (Symtab.update_new (name, (Binding.pos_of binding, attrs))))
+    |> pair (@{thm NuPrim.declare_fact} OF [intro_param_name name, fold1 Conjunction.intr auxes, th])
+  end
+fun declare_facts auxes th ctx =
+  fold (fn a => fn (th,ctx) => declare_fact a th ctx) auxes (th,ctx)
+
+
+val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
+fun hyp_export is_goal asms = (I,I)
+val codeblock_attrs = [] (* map (Attrib.attribute @{context}) @{attributes [used]} *)
+fun load_specthm specthm ctx =
+  (case elim_SPEC specthm of (focus,aux) =>
+  let
+    val auxes = user_facts_in_collection aux
+    val codeblocks = codeblocks_of specthm
+  in
+    ctx
+      |> Proof_Context.add_assms hyp_export (map (fn cb =>
+          ((Binding.name (codeblock_name cb),codeblock_attrs), [(cb,[])])) codeblocks) |> #2
+      |> note_auxes auxes
+      |-> (fn ths => Proof_Context.put_thms false (aux_name_raw, SOME (flat (map snd ths))))
+  end)
+fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
+fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
+
+
+
+
+
+
 (** Tactics **)
 fun head_only tac th =
   if nprems_of th = 1
@@ -131,19 +184,30 @@ fun auto_resolve thms addtion ctx  =
   in HEADGOAL (SOLVED' (REPEAT_DETERM_N 100 o (fn i =>
       simp_tag_tac ctx
       ORELSE resolve_tac ctx thms i
-        ORELSE withdrawable_premise_tac ctx
+        ORELSE premise_tac ctx
         ORELSE resolve_tac ctx minor_thms i
     ))) #> Seq.map fininsh_premise_hyps
   end
 val auto_resolve0 = auto_resolve NONE []
 
+fun auto_resolve_rule' major_minor addition ctx =
+  Tactic.rule_by_tactic ctx (REPEAT (auto_resolve major_minor addition ctx))
+fun auto_resolve_rule major_minor addition ctx th =
+  if can dest_SpecTop (prop_of th)
+  then elim_SPEC th
+    |> apfst (auto_resolve_rule' major_minor addition (load_specthm th ctx))
+    |> intro_SPEC
+  else auto_resolve_rule' major_minor addition ctx th
+val auto_resolve_rule0 = auto_resolve_rule NONE []
+
+
+
+  (** Basic Operations **)
+
 fun conclude fail x =
   case Seq.pull x
     of SOME (th, other) => Goal.conclude th
      | NONE => fail ()
-
-
-  (** Basic Operations **)
 
 fun cast ctx th = 
   Goal.protect 1 th |> head_only (auto_resolve0 ctx)
@@ -191,39 +255,34 @@ fun mk_apply_thms apply_thm focus =
 fun resolve_N thas thb i =
   biresolution NONE false (map (pair false) thas) i thb |> Seq.map solve_constraints
 in
-fun apply_procs ctx procs spec  =
-  elim_SPEC spec |> apfst (fn focus =>
-    resolve_N procs (mk_apply_thms apply_proc_conv_thm focus) 2 |> Seq.map (Goal.protect 1)
-      |> Seq.append (resolve_N procs (mk_apply_thms apply_proc_thm focus) 1
-                      |> Seq.map (Goal.protect 0))
-      |> Seq.maps (auto_resolve0 ctx)
-      |> Seq.pull |> (fn x => case x of SOME (th,_) => Goal.conclude th
-                                 | NONE => raise THM ("fail to make the call", 0, focus::procs))
-    ) |> intro_SPEC
+fun apply_procs_major ctx procs major  =
+  resolve_N procs (mk_apply_thms apply_proc_conv_thm major) 2 |> Seq.map (Goal.protect 1)
+    |> Seq.append (resolve_N procs (mk_apply_thms apply_proc_thm major) 1
+                    |> Seq.map (Goal.protect 0))
+    |> Seq.maps (auto_resolve0 ctx)
+    |> Seq.pull |> (fn x => case x of SOME (th,_) => Goal.conclude th
+                             | NONE => raise THM ("fail to make the call", 0, major::procs))
 end
+fun apply_procs ctx procs whole =
+  elim_SPEC whole |> apfst (apply_procs_major ctx procs) |> intro_SPEC
 fun apply_proc ctx = apply_procs ctx o single
 
-
-
-fun operate_reg operation ctx reg spec =
-  apply_proc ctx (operation reg (registers_of_specthm spec |> term_of)) spec
-val assign_reg = operate_reg NuRegisters.assign_reg
-val load_reg = operate_reg NuRegisters.load_reg
-
-
-
-
 val accept_proc_thm = @{thm NuPrim.accept_proc}
-fun accept_proc ctx specthm =
-  specthm |> disch_current_codeblock
+fun accept_proc0 ctx wmeta =
+  wmeta |> disch_current_codeblock
     |> mk_PropBlock 0 
     |> (fn x => x RS accept_proc_thm)
-    |> param_set_free_var_name ctx (current_block_var specthm |> dest_Free |> #1)
+    |> (fn th => 
+        let val (vname,vty) = prems_of th |> hd |> dest_codeblock |> #1 |> dest_Var
+          val (name,_) = current_block_var wmeta |> dest_Free
+        in Thm.instantiate ([],
+            [((vname,vty), Thm.cterm_of ctx (Free (name,vty)))]) th end)
     |> undisch
+fun accept_proc ctx meta = 
+  (if can (prop_of #> dest_SpecTop #> #1 #> block_var_of_Constuction) meta
+  then meta else auto_resolve_rule0 ctx meta) |> accept_proc0 ctx
 
 val process = NuProcessor.process o Proof.context_of
-
-
 
 
 val start_proc_thm = @{thm NuPrim.start_proc}
@@ -266,48 +325,4 @@ fun finish_proc ctx goal th =
 
 
 
-structure NuFacts = Generic_Data
-(
-  (*key : name of the auxiliary fact, value: the attribute to be evaluated*)
-  type T = (Position.T * attribute list) Symtab.table; 
-  val empty: T = Symtab.empty
-  val extend = I
-  val merge : T * T -> T = Symtab.join (fn _ => fn _ => raise Symtab.SAME);
-)
-fun get_aux_attrs ctx (name,auxth) =
-  case the_default (Position.none,[]) (Symtab.lookup (NuFacts.get (Context.Proof ctx)) name)
-    of (pos,attrs) =>
-      ((Binding.make (name,pos), attrs), [(Conjunction.elim_conjunctions auxth,[])])
-fun note_auxes auxes ctx =
-  Proof_Context.note_thmss "" (map (get_aux_attrs ctx) auxes) ctx
-fun fold1 f (h::r) = fold f r h
-  | fold1 f [] = raise Fail "fold1"
-fun declare_fact ((binding,attrs),auxes) th ctx =
-  let
-    val name = Binding.name_of binding
-    val _ = if name = "\<glowing_star>" then error "reserved keyword: \<glowing_star>" else ()
-  in
-  ctx |> Context.proof_map (NuFacts.map (Symtab.update_new (name, (Binding.pos_of binding, attrs))))
-    |> pair (@{thm NuPrim.declare_fact} OF [intro_param_name name, fold1 Conjunction.intr auxes, th])
-  end
-fun declare_facts auxes th ctx =
-  fold (fn a => fn (th,ctx) => declare_fact a th ctx) auxes (th,ctx)
-
-val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
-fun hyp_export is_goal asms = (I,I)
-val codeblock_attrs = [] (* map (Attrib.attribute @{context}) @{attributes [used]} *)
-fun load_specthm specthm ctx =
-  (case elim_SPEC specthm of (focus,aux) =>
-  let
-    val auxes = user_facts_in_collection aux
-    val codeblocks = codeblocks_of specthm
-  in
-    ctx
-      |> Proof_Context.add_assms hyp_export (map (fn cb =>
-          ((Binding.name (codeblock_name cb),codeblock_attrs), [(cb,[])])) codeblocks) |> #2
-      |> note_auxes auxes
-      |-> (fn ths => Proof_Context.put_thms false (aux_name_raw, SOME (flat (map snd ths))))
-  end)
-fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
-fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
 end

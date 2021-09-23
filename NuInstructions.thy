@@ -123,6 +123,15 @@ schematic_goal [simplified, simplified \<nu>post_construct]:
 
 definition [simp]:"difference x y = (if x < y then y - x else x - y)"
 
+context includes show_more begin
+thm address_here_mapper
+thm new_reg [OF address_left_mapper[OF address_here_mapper] ]
+thm new_reg
+term address_here
+thm address_here_mapper[THEN new_reg]
+thm new_reg[OF address_here_mapper]
+end
+
 proc diff : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(difference x y \<tycolon> \<nat>[32])"
   \<bullet> y x < if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket>  \<medium_left_bracket> \<bullet> x y - \<medium_right_bracket>
   \<bullet> finish

@@ -291,16 +291,11 @@ definition map_register :: " ('a \<Rightarrow> 'b) \<Rightarrow> ('a::lrep) regi
   where "map_register f r = (case r of (Register name x) \<Rightarrow> Register name (f x))"
 
 class register_collection = lrep
-class local_registers = lrep
-  \<comment> \<open>\<^class>\<open>local_registers\<close> is a binary tree organizing registers in a certain code block.
-    \<^class>\<open>register_collection\<close> is a binary tree organizing \<^class>\<open>local_registers\<close> to form contextual registers in a construction.
+  \<comment> \<open><^class>\<open>local_registers\<close> is a binary tree organizing registers in a certain code block.
+    \<^class>\<open>register_collection\<close> is a binary tree organizing \^class>\<open>local_registers\<close> to form contextual registers in a construction.
     A register_collection is always a lrep, but a lrep may not a register collection.
     register_collection ::= void | register_local local_registers | register_collection \<times> register_collection.
     local_registers ::= void | register | register \<times> register. \<close>
-
-datatype ('a::local_registers) register_local = register_local 'a
-definition get_register_local :: " ('a::local_registers) register_local \<Rightarrow> 'a"
-  where "get_register_local r = (case r of (register_local x) \<Rightarrow> x)"
 
 instantiation void :: lrep begin
 definition llty_void :: "void itself \<Rightarrow> llty" where [simp]: "llty_void _ = la_z"
@@ -308,7 +303,7 @@ definition disposable_void :: "void set" where "disposable_void = UNIV"
 instance by standard
 end
 
-instantiation register :: (lrep) local_registers begin
+instantiation register :: (lrep) register_collection begin
 definition llty_register :: "'a register itself \<Rightarrow> llty" where [simp]: "llty_register _ = la_z"
 definition disposable_register :: "'a register set"
   where disposable_register: "disposable_register = {Register name p | name p. p \<in> disposable}"
@@ -322,11 +317,8 @@ lemma [simp]: "(a,b) \<in> disposable \<longleftrightarrow> a \<in> disposable \
 instance by standard
 end
 
-instantiation void :: local_registers begin instance by standard end
 instantiation void :: register_collection begin instance by standard end
-instantiation prod :: (local_registers,local_registers) local_registers begin instance by standard end
 instantiation prod :: (register_collection,register_collection) register_collection begin instance by standard end
-instantiation register_local :: (local_registers) register_collection begin instance by standard end
 
 definition RegisterTy :: "name_tag \<Rightarrow> ('a::lrep) set \<Rightarrow> 'a register set" where
   RegisterTy_def: "RegisterTy name s = {r. case r of Register name' x \<Rightarrow> name' = name \<and> x \<in> s}"
@@ -487,10 +479,6 @@ definition address_left :: "('a,'b,'x,'y) address \<Rightarrow> ('a \<times> 'r,
 definition address_right :: "('a,'b,'x,'y) address \<Rightarrow> ('l \<times> 'a, 'l \<times> 'b, 'x, 'y) address"
   where "address_right adr = (case adr of Address g m \<Rightarrow> Address (g \<circ> snd) (apsnd o m))"
 
-
-definition address_reg_local :: "('a,'b,'x,'y) address \<Rightarrow> (('a::local_registers) register_local, ('b::local_registers) register_local, 'x, 'y) address"
-  where "address_reg_local adr = (case adr of Address g m \<Rightarrow> Address (g o get_register_local) (map_register_local o m))"
-
 definition AdrGet :: " ('a,'b,'x,'y) address \<Rightarrow> 'x set \<Rightarrow> 'a set \<Rightarrow> bool" ("(2\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s _/ \<blangle> _ \<^bold>@ _ \<brangle>)" [101,4,4] 100)
   where [\<nu>address_def]: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> X \<^bold>@ A \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_at adr \<blangle> A \<longmapsto> X \<brangle>"
 definition AdrMap :: " ('a,'b,'x,'y) address \<Rightarrow> 'x set \<Rightarrow> 'a set \<Rightarrow> 'y set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s _/ \<blangle> _ \<^bold>@ _ \<longmapsto> _ \<^bold>@ _ \<brangle>)" [101,4,4,4,4] 100)
@@ -519,13 +507,15 @@ definition new_reg_L :: "('G, 'G2, 't, 'x register \<times> 't) address \<Righta
   where "new_reg_L adr s = (case s of Proc_Ctx (x,R) G \<Rightarrow> StatOn (Proc_Ctx R (map_at adr (\<lambda>t. (Register (NAME _) x,t)) G)))"
 definition new_reg_R :: "('G, 'G2, 't, 't \<times> 'x register) address \<Rightarrow> (('x::lrep) \<times> ('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
   where "new_reg_R adr s = (case s of Proc_Ctx (x,R) G \<Rightarrow> StatOn (Proc_Ctx R (map_at adr (\<lambda>t. (t, Register (NAME _) x)) G)))" *)
+thm address_left_mapper
+thm address_here_mapper
 
-definition new_reg :: "('G, 'G2, ('r::local_registers), void register \<times> 'r) address \<Rightarrow> (('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
+definition new_reg :: "('G, 'G2, ('r::register_collection), void register \<times> 'r) address \<Rightarrow> (('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
   where "new_reg adr s = (case s of Proc_Ctx r G \<Rightarrow> StatOn (Proc_Ctx r (map_at adr (Pair (Register (NAME_TAG id) void)) G)))"
-definition new_reg_local :: "('G, 'G2, ('r::register_collection), void \<times> 'r) address \<Rightarrow> (('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
-  where "new_reg_local adr s = (case s of Proc_Ctx r G \<Rightarrow> StatOn (Proc_Ctx r (map_at adr (Pair void) G)))"
-definition delete_reg_local :: "('G, 'G2, ('r::local_registers) \<times> ('B::register_collection), 'B) address \<Rightarrow> (('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
-  where "delete_reg_local adr s = (case s of Proc_Ctx r G \<Rightarrow>
+definition new_reg_locale :: "('G, 'G2, ('r::register_collection), void \<times> 'r) address \<Rightarrow> (('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
+  where "new_reg_locale adr s = (case s of Proc_Ctx r G \<Rightarrow> StatOn (Proc_Ctx r (map_at adr (Pair void) G)))"
+definition delete_reg_locale :: "('G, 'G2, ('r::register_collection) \<times> ('B::register_collection), 'B) address \<Rightarrow> (('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
+  where "delete_reg_locale adr s = (case s of Proc_Ctx r G \<Rightarrow>
     if fst (get_at adr G) \<in> disposable then StatOn (Proc_Ctx r (map_at adr snd G)) else STrap)"
 
 definition store_reg :: "('G, 'G2, ('x::lrep) register, 'y register) address \<Rightarrow> (('y::lrep) \<times> ('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
@@ -549,23 +539,20 @@ lemma new_reg_R:"\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s
 
 
 
-lemma new_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> W \<^bold>@ G \<longmapsto> (RegisterTy name Void and_ty W) \<^bold>@ G2 \<brangle>
+lemma new_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> W \<^bold>@ G \<longmapsto> (\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r \<n>\<a>\<m>\<e> =  Void and_ty W) \<^bold>@ G2 \<brangle>
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg adr \<blangle> R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
   unfolding \<nu>address_def new_reg_def get_register_def map_register_def
   using name_tag_eq by (cases adr) auto
 
-lemma new_reg_local: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> W \<^bold>@ G \<longmapsto> (Void and_ty W) \<^bold>@ G2 \<brangle>
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg_local adr \<blangle> R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
-  unfolding \<nu>address_def new_reg_local_def get_register_def map_register_def
+lemma new_reg_locale: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> W \<^bold>@ G \<longmapsto> (Void and_ty W) \<^bold>@ G2 \<brangle>
+    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg_locale adr \<blangle> R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
+  unfolding \<nu>address_def new_reg_locale_def get_register_def map_register_def
   using name_tag_eq by (cases adr) auto
 
-lemma delete_reg_local: "\<nu>Disposable W \<Longrightarrow> \<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> (W and_ty Z) \<^bold>@ G \<longmapsto> Z \<^bold>@ G2 \<brangle>
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c delete_reg_local adr \<blangle> R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
-  unfolding \<nu>address_def delete_reg_local_def get_register_def map_register_def
+lemma delete_reg_locale: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> (W and_ty Z) \<^bold>@ G \<longmapsto> Z \<^bold>@ G2 \<brangle> \<Longrightarrow> \<nu>Disposable W
+    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c delete_reg_locale adr \<blangle> R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
+  unfolding \<nu>address_def delete_reg_locale_def get_register_def map_register_def
   using name_tag_eq by (cases adr) (auto 4 3)
-
-
-
 
 lemma store_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name X \<^bold>@ G \<longmapsto> RegisterTy name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<nu>Disposable X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg adr \<blangle> Y\<boxbar>R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
   unfolding \<nu>address_def store_reg_def get_register_def map_register_def by auto
@@ -671,7 +658,7 @@ theorem apply_proc: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^b
   unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def SpecTop_imp by auto
 
 theorem  accept_proc: "\<medium_left_bracket> \<And>s. CodeBlock s a S f \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L ) \<medium_right_bracket> \<Longrightarrow>
-  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m s' \<Longrightarrow> CodeBlock s' a S (f \<nuInstrComp> g) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: (PROP L))" for L :: "prop"
+  CodeBlock s' a S (f \<nuInstrComp> g) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: (PROP L))" for L :: "prop" and  s' :: "('c::lrep) state"
   unfolding PropBlock_def CodeBlock_def instr_comp_def CurrentConstruction_def PendingConstruction_def
 proof (rule SpecTop_I)
   assume a: "(\<And>s. a \<in> S \<and> f a = s \<and> s \<noteq> SNeg \<Longrightarrow> SPEC_TOP (bind s g \<in> \<S> T) (PROP L))" and b: " a \<in> S \<and> bind (f a) g = s' \<and> s' \<noteq> SNeg"

@@ -11,6 +11,17 @@ definition llty_state :: "'a state itself \<Rightarrow> llty" where [simp]: "llt
 instance by standard
 end
 
+section \<open>Miscellaneous built-in\<close>
+
+instantiation void :: naive_lrep begin
+definition share_void :: "zint \<Rightarrow> void \<Rightarrow> void" where [simp]: "share_void z = id"
+definition shareable_void :: "void set" where [simp]: "shareable_void = UNIV"
+definition revert_void :: "void \<times> void \<Rightarrow> bool" where [simp]: "revert_void xy = True"
+definition dpriv_void :: "void \<Rightarrow> void" where [simp]: "dpriv_void x = x"
+instance by standard auto
+end
+
+
 section \<open>The integer data type\<close>
 
 subsection \<open>Lrep instantiations\<close>

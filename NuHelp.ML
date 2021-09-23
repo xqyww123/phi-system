@@ -54,6 +54,7 @@ signature NU_HELP = sig
   val strip_named_binder   : string -> term -> (term * term) list * term
   val strip_named_binder_c : string -> cterm -> ((string * ctyp) * cterm) list * cterm
   val list_mk_binder   : string -> term list -> term -> term
+  val strip_implies_c : cterm -> cterm
 
   val dest_Trueprop_c : cterm -> cterm
   (*  Γ |- A ==> B
@@ -217,4 +218,7 @@ fun map_fixes f = map (fn (a,b,c) => (a,Option.map f b,c))
 fun int_of_string str =
   case Int.fromString str
     of SOME x => x | NONE => error (str ^ " is not a integer")
+
+fun strip_implies_c tm = strip_implies_c (#2 (dest_implies tm))
+  handle TERM _ => tm
 end

@@ -108,10 +108,6 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
     val parse_term = Syntax.parse_term ctx
     val parse_prop = Syntax.parse_prop ctx
     val (goal,th) = begin_proc ctx (arg,ret)
-    val th = th |> rpair empty_facts_thm |> intro_SPEC
-                |> apply_proc ctx begin_proc_ctx_thm |> accept_proc ctx
-                |> fold (fn reg => assign_reg ctx reg #> accept_proc ctx) reg_names
-                |> Simplifier.simplify ctx
     val elems = [Element.Fixes (fixes |> map (fn (b,ty,f) => (b, Option.map (Syntax.parse_typ ctx) ty, f))),
                  Element.Assumes (preconds
                     |> map (apsnd (map (apfst parse_prop #> apsnd (map parse_term)))))]
@@ -130,7 +126,14 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "impossible"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-      |> Proof.set_facts [th]
+      |> (fn stat =>
+          let val ctx = Proof.context_of stat
+          val th = th |> rpair empty_facts_thm |> intro_SPEC
+            |> apply_proc_naive begin_proc_ctx_thm |> accept_proc ctx
+            |> fold (fn name =>
+                NuRegisters.assign_reg ctx name #> accept_proc ctx) reg_names
+            |> Simplifier.simplify ctx
+          in Proof.set_facts [th] stat end)
       |> Proof.map_context
           (Proof_Context.put_thms false ("\<nu>thesis", SOME [Drule.mk_term (cterm_of ctx goal)]))
   end
@@ -153,8 +156,8 @@ fun gen_finish_proc prep_specthm qed int stat =
   end
 in
 val finish_proc_cmd = gen_finish_proc
-  (fn ctx => apply_proc ctx end_proc_ctx_thm #> accept_proc ctx) Proof.global_qed
-val end_block_cmd = gen_finish_proc (K I) Proof.local_qed
+  (fn ctx => apply_proc_naive end_proc_ctx_thm #> accept_proc ctx) Proof.global_qed
+val end_block_cmd = gen_finish_proc NuRegisters.delete_locale Proof.local_qed
 end
 
 fun process_cmd toks stat =
@@ -244,9 +247,6 @@ fun begin_block_cmd bindings int stat =
     val blk_name = block_name_of (term_of proc)
     val level = current_block_depth specthm
     val level_prefix = "L\<nu>'"^(Int.toString level)^"_"^blk_name
-    val next_specthm = start_proc ctx level_prefix arg
-                        |> rpair (elim_SPEC specthm |> #2)
-                        |> intro_SPEC
     fun after_qed (ctx',[[th]]) stat =
       stat |> set_facts[
         specthm
@@ -254,7 +254,7 @@ fun begin_block_cmd bindings int stat =
           |> apfst (fn focus =>
             (singleton (Proof_Context.export ctx' (context_of stat)) th) COMP focus
         ) |> intro_SPEC
-          |> perhaps (accept_proc (context_of stat))
+          |> NuProcessor.process_no_input (Proof.context_of stat)
       ]
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
@@ -264,14 +264,19 @@ fun begin_block_cmd bindings int stat =
         |> map (apsnd (fn x => elim_premise @ x))
   in
     stat
-      |> setup_proof (print_results int) Proof_Context.mode_schematic false "\<nu>block"
+      |> setup_proof (print_results int) Proof_Context.mode_schematic false
+      "\<nu>block"
           NONE after_qed [] (bindings ~~ (map (single o rpair [] o term_of) prems))
           [[(term_of goal,[])]] |> #2
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
-      |> Seq.the_result "impossible"
+      |> Seq.the_result "unreachable"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-      |> Proof.set_facts [next_specthm  ]
+      |> (fn stat => let val ctx = Proof.context_of stat 
+            val next_specthm = start_proc ctx level_prefix arg
+              |> rpair (elim_SPEC specthm |> #2)
+              |> intro_SPEC |> NuRegisters.new_locale ctx
+          in Proof.set_facts [next_specthm] stat end)
       |> Proof.map_context
           (Proof_Context.put_thms false ("\<nu>thesis", SOME [Drule.mk_term goal]))
   end

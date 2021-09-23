@@ -32,19 +32,20 @@ signature NU_BASICS = sig
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm
   val dest_Proc_CtxTy : term -> term * term
   val dest_Proc_CtxTy_c : cterm -> cterm * cterm
-  val registers_of_specthm : thm -> cterm
+  val registers_of_specthm   : thm -> cterm
+  val registers_of_specthm_c : thm -> cterm
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
-  val current_block_var : thm -> cterm
+  val current_block_var   : thm -> term
+  val current_block_var_c : thm -> cterm
   val current_block_depth : thm -> int
   val dest_codeblock   : term -> term * term * term * term
   val dest_codeblock_c : cterm -> cterm * cterm * cterm * cterm
   val codeblocks_of   : thm -> term list
-  val codeblocks_of_c : thm -> term list
+  val codeblocks_of_c : thm -> cterm list
   val codeblock_name   : term -> term * term * term * term
   val current_codeblock : thm -> cterm
-  val disch_codeblock : cterm -> thm -> thm
-  val disch_current_codeblock : thm -> thm
+  val apply_proc_naive : thm (*proc*) -> thm (*meta*) -> thm
   val export_codeblock : cterm * cterm -> thm -> thm
   val export_codeblocks : cterm list -> thm -> thm
 
@@ -98,6 +99,9 @@ fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
 val void_ty = Type(@{type_name "NuPrim.void"}, [])
 fun proc_ctx_ty (a,b) = Type(@{type_name "NuPrim.proc_ctx"}, [a,b])
 fun mk_stateT ty = Type(@{type_name "NuPrim.state"}, [ty])
+
+val thm_PropBlock_I = @{thm NuPrim.PropBlock_I}
+fun mk_PropBlock n th = Drule.comp_no_flatten (th, n) 1 thm_PropBlock_I
 
 fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
@@ -160,11 +164,18 @@ fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
 val dest_Proc_CtxTy   = dest_binop @{const_name "NuPrim.Proc_CtxTy"}
 val dest_Proc_CtxTy_c = dest_binop_c @{const_name "NuPrim.Proc_CtxTy"}
-val registers_of_specthm = catch_th 0 "registers_of_specthm: Not a CurrentConstruction"
+val registers_of_specthm_c = catch_th 0 "registers_of_specthm: Not a CurrentConstruction"
   (Thm.cprop_of #> dest_SpecTop_c #> #1 #> dest_Trueprop_c
     #> dest_CurrentConstruction_c #> #2 #> dest_Proc_CtxTy_c #> #2)
+val registers_of_specthm = registers_of_specthm_c #> term_of
 
 val state_of_specthm = dest_SpecTop #> #1
+val current_block_var_c =
+  Thm.cprop_of
+    #> perhaps (dest_SpecTop_c #> #1)
+    #> perhaps strip_implies_c
+    #> perhaps dest_Trueprop_c
+    #> block_var_of_Constuction_c
 val current_block_var =
   Thm.prop_of
     #> perhaps (dest_SpecTop #> #1)
@@ -189,7 +200,8 @@ fun current_codeblock specthm =
 fun disch_codeblock cb th =
   implies_intr cb th |> forall_intr (dest_codeblock_c cb |> #1)
 fun undisch_codeblock cb_var = Thm.forall_elim cb_var #> undisch
-fun disch_current_codeblock specthm = disch_codeblock (current_codeblock specthm) specthm
+fun disch_current_codeblock specthm =
+  disch_codeblock (current_codeblock specthm) specthm
 val thm_codeblock_export = @{thm NuPrim.codeblock_export}
 fun aconv_c (ctm1,ctm2) = aconv (term_of ctm1, term_of ctm2)
 val prop_term = @{cterm Pure.prop}
@@ -240,6 +252,9 @@ fun intro_SPEC (focus,facts) =
     focus)
   facts
 
+val thm_apply_proc = @{thm apply_proc}
+fun apply_proc_naive proc meta =
+  elim_SPEC meta |> apfst (fn major => thm_apply_proc OF [major, proc]) |> intro_SPEC
 
 val dest_fact   = dest_binop   @{const_name "NuPrim.Fact"} #> apfst dest_name_tag
 val dest_fact_c = dest_binop_c @{const_name "NuPrim.Fact"} #> apfst (term_of #> dest_name_tag)
@@ -351,8 +366,6 @@ fun holrule f th =
      | (Const (@{const_name "NuPrim.NoFact"}, _)) => NoFact
      | tm => raise TERM ("holrule", [tm])
 
-val thm_PropBlock_I = @{thm NuPrim.PropBlock_I}
-fun mk_PropBlock n th = Drule.comp_no_flatten (th, n) 1 thm_PropBlock_I
 
 val thm_ParamTag = @{thm NuPrim.ParamTag}
 fun param_set_free_var_name ctx name thm =
