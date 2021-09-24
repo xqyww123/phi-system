@@ -66,9 +66,9 @@ syntax
   (* "_is_" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("_ \<^bold>i\<^bold>s _" [5,5] 4)
   "_in_" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("_ \<^bold>i\<^bold>n _" [5,5] 4)
   "_as_" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("_ \<^bold>a\<^bold>s _" [5,5] 4) *)
-translations
+(* translations
   "a \<^bold>a\<^bold>n\<^bold>d b \<^bold>a\<^bold>n\<^bold>d c" <= "(a \<^bold>a\<^bold>n\<^bold>d b) \<^bold>a\<^bold>n\<^bold>d c"
-  "_linebreak_collection_ a (_linebreak_collection_ b c)" <= "_linebreak_collection_ (_linebreak_collection_ a b) c"
+  "_linebreak_collection_ a (_linebreak_collection_ b c)" <= "_linebreak_collection_ (_linebreak_collection_ a b) c" *)
 text \<open> `_pretty_and_` suppresses parentheses in the printing. For example, both the term
   "1 and 2 and 3" and  "(1 and 2) and 3" are printed identically, as "1 and 2 and 3". 
   It is useful to represent a collection of object which has some complicated inner structure
@@ -207,7 +207,7 @@ lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def
 lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 definition Nu_Share :: "('a::sharable_lrep,'b) nu \<Rightarrow> 'b set \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
-  where  "Nu_Share N s f \<longleftrightarrow> (\<forall>z p x. x \<in> s \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> p \<in> shareable \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
+  where [\<nu>def]: "Nu_Share N s f \<longleftrightarrow> (\<forall>z p x. x \<in> s \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> p \<in> shareable \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
 definition \<nu>Equalable :: "('a::ceq_lrep, 'b) nu \<Rightarrow> ('b \<times> 'b \<Rightarrow> bool) \<Rightarrow> bool"
   where "\<nu>Equalable N f \<longleftrightarrow> (\<forall>p1 p2 x1 x2. (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable (p1,p2) = f (x1,x2))"
 definition \<nu>Disposable :: " ('a::lrep) set \<Rightarrow> bool " where [\<nu>def]: "\<nu>Disposable T \<longleftrightarrow> (\<forall>x. x \<in> T \<longrightarrow> x \<in> disposable)"
@@ -278,7 +278,7 @@ text \<open>The name `void` coincides that, when a procedure has no input argume
   the \<nu>-type for the input would exactly be @{term Void}. \<close>
 lemma [simp,intro]: "void \<in> Void" unfolding Void_def by simp
 lemma [simp,intro]: "Inhabited Void" unfolding Inhabited_def by auto
-translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"
+(*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
 
 datatype 'a register = Register name_tag "'a::lrep"
   \<comment>\<open> Register label value
@@ -299,7 +299,7 @@ class register_collection = lrep
 
 instantiation void :: lrep begin
 definition llty_void :: "void itself \<Rightarrow> llty" where [simp]: "llty_void _ = la_z"
-definition disposable_void :: "void set" where "disposable_void = UNIV"
+definition disposable_void :: "void set" where [simp]: "disposable_void = UNIV"
 instance by standard
 end
 

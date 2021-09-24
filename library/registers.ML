@@ -10,6 +10,7 @@ signature NU_REGISTERS = sig
   (* store to an existing register or create a new one *)
   val assign_reg : Proof.context -> string (*name*) -> thm (*meta*) -> thm (*meta*)
   val load_reg : Proof.context -> string (*name*) -> thm (*meta*) -> thm (*meta*)
+  val move_reg : Proof.context -> string (*name*) -> thm (*meta*) -> thm (*meta*)
 end
 structure NuRegisters : NU_REGISTERS = struct
 open NuGeneral NuBasics Term Thm
@@ -17,17 +18,16 @@ open NuGeneral NuBasics Term Thm
 exception NameConfliction of string
 exception NoSuchRegister of string
 
-fun find_path2_impl name [] = raise NoSuchRegister name
-  | find_path2_impl name (((Const ("NuPrim.AndTy", _) $ t1 $ t2),path)::r)
-      = find_path2_impl name ((t1,NuPath.L::path)::(t2,NuPath.R::path)::r)
-  | find_path2_impl name (((Const ("NuPrim.RegisterTy",_) $ name' $ _),path)::r)
-      = if dest_name_tag name' = name then path else find_path2_impl name r
-  | find_path2_impl name ((Const ("NuPrim.Void", _), _)::r)
-      = find_path2_impl name r
-  | find_path2_impl name ((t,_)::r) = raise TERM ("register_path",[t])
-fun find_path2 name regs = find_path2_impl name [(regs,[])]
-fun exists_name name regs = (find_path2 name regs; true)
-  handle NoSuchRegister _ => false
+fun find_path_i name (Const ("NuPrim.AndTy", _) $ t1 $ t2)
+      = (case find_path_i name t1 of SOME x => SOME (NuPath.L :: x)
+           | NONE => case find_path_i name t2 of SOME x => SOME (NuPath.R :: x)
+           | NONE => NONE)
+  | find_path_i name (Const ("NuPrim.RegisterTy",_) $ name' $ _)
+      = if dest_name_tag name' = name then SOME [] else NONE
+  | find_path_i name _ = NONE
+fun find_path2 name regs =
+  case find_path_i name regs of SOME x => x | _ => raise NoSuchRegister name
+fun exists_name name regs = Option.isSome (find_path_i name regs)
 fun chk_confliction name regs =
   if exists_name name regs then raise NameConfliction name else ()
 
@@ -72,11 +72,14 @@ val store_reg_thm = @{thm store_reg}
 val load_reg_thm = @{thm load_reg}
 fun store_reg_at path = NuPath.mapper path RS store_reg_thm
 fun load_reg_at path = NuPath.mapper path RS load_reg_thm
+fun move_reg_at path = NuPath.mapper path RS @{thm remove_reg}
 
 fun store_reg ctx name meta =
   NuSys.apply_proc ctx (store_reg_at (find_path2 name (registers_of_specthm meta))) meta
 fun load_reg ctx name meta =
   NuSys.apply_proc ctx (load_reg_at (find_path2 name (registers_of_specthm meta))) meta
+fun move_reg ctx name meta =
+  NuSys.apply_proc ctx (move_reg_at (find_path2 name (registers_of_specthm meta))) meta
 
 fun perhaps' f x = (f x) handle NameConfliction _ => x
 fun assign_reg ctx name meta =

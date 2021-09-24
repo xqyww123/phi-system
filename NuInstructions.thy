@@ -9,10 +9,18 @@ text \<open>Basic instructions\<close>
 section \<open>Structural instructions\<close>
 
 subsection \<open>Basic sequential instructions\<close>
-subsubsection \<open>op_drop\<close>
+
+subsubsection \<open>drop\<close>
 definition op_drop :: "('a::lrep) \<times> ('r::lrep) \<Rightarrow> 'r state" where "op_drop x = (case x of (_,r) \<Rightarrow> StatOn r)"
 declare op_drop_def[\<nu>instr]
 theorem drop_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> X\<boxbar>R \<longmapsto> R \<brangle>" unfolding \<nu>def op_drop_def by auto
+
+subsubsection \<open>dup\<close>
+definition op_dup :: "('a::sharable_lrep) \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'a \<times> 'r) state"
+  where "op_dup x = (case x of (a,r) \<Rightarrow> if a \<in> shareable then StatOn (share (Gi 1) a, share (Gi 1) a, r) else STrap)"
+declare op_dup_def[\<nu>instr]
+theorem dup_\<nu>proc: "Nu_Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> x \<tycolon> X\<boxbar>R \<longmapsto> sh (Gi 1) x \<tycolon> X\<boxbar>sh (Gi 1) x \<tycolon> X\<boxbar>R \<brangle>"
+  unfolding \<nu>def op_dup_def by auto
 
 subsection \<open>Branch\<close>
 
@@ -123,24 +131,16 @@ schematic_goal [simplified, simplified \<nu>post_construct]:
 
 definition [simp]:"difference x y = (if x < y then y - x else x - y)"
 
-context includes show_more begin
-thm address_here_mapper
-thm new_reg [OF address_left_mapper[OF address_here_mapper] ]
-thm new_reg
-term address_here
-thm address_here_mapper[THEN new_reg]
-thm new_reg[OF address_here_mapper]
-end
-
-proc diff : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(difference x y \<tycolon> \<nat>[32])"
-  \<bullet> y x < if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket>  \<medium_left_bracket> \<bullet> x y - \<medium_right_bracket>
-  \<bullet> finish
+proc diff : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32], ya \<tycolon> \<nat>[32], yb \<tycolon> \<nat>[32], yc \<tycolon> \<nat>[32])" \<longmapsto> "(difference x y \<tycolon> \<nat>[32])"
+  \<bullet> y dup dup x < drop drop
+  \<bullet> x <  if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket> \<medium_left_bracket> \<bullet> x y - \<nu>obtain z where c: "x < z" by auto \<medium_right_bracket>
+  finish
 
 proc add2 : "(( x \<tycolon> \<nat>[32]) named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
   if "x < 100" and "y < 100"
   \<nu>have x[used]: "x < 100 \<and> y < 100" using that by auto
-  \<bullet> x x y + +
-  \<nu>obtain z where c: "x < z" by auto
+  \<bullet> x x y + < if \<medium_left_bracket>
+  \<nu>obtain z where c: "x < z" by auto \<medium_right_bracket>
   finish
 
 

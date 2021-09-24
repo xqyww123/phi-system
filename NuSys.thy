@@ -4,8 +4,8 @@ theory NuSys
   imports NuPrim
   keywords
     "proc" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<Longrightarrow>" :: quasi_command
-  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" :: prf_decl % "proof"
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<Longrightarrow>" "\<leftarrow>" :: quasi_command
+  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
@@ -32,13 +32,13 @@ ML_file "./general/auto_level.ML"
 ML_file "./library/path.ML"
 ML_file_debug NuBasics.ML
 ML_file "./library/general.ML"
-ML_file "./library/registers.ML"
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
 ML_file "./library/procedure.ML"
 ML_file "./library/exty.ML"
 ML_file NuSys.ML
+ML_file "./library/registers.ML"
 ML_file "./library/processors.ML"
 ML_file NuToplevel.ML
 ML_file "./library/obtain.ML"
@@ -115,6 +115,11 @@ val _ =
     (Scan.succeed (Toplevel.proof' NuToplevel.end_block_cmd));
 
 val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>reg\<close> "declare local registers"
+    (Scan.repeat Parse.short_ident >> (fn names => Toplevel.proof (fn stat =>
+      Proof.set_facts [Proof.the_fact stat |> NuRegisters.new_regs (Proof.context_of stat) names] stat)))
+
+val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor\<close> "define \<nu>processor"
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword) -- Parse.nat -- Parse.term -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
         >> NuProcessor.setup_cmd)
@@ -144,11 +149,15 @@ section \<open>Processors\<close>
 
 \<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fn _ => fold (fn idt => NuSys.assign_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
+    (fn idts => fn _ => fold (fn idt => NuRegisters.assign_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
 \<nu>processor  load_register 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  fn ctx => fn th => short_ident >> (fn idt => fn _ => NuSys.load_reg ctx idt th
+  fn ctx => fn th => short_ident >> (fn idt => fn _ => NuRegisters.load_reg ctx idt th
       handle NuRegisters.NoSuchRegister _ => raise Bypass)
+end\<close>
+\<nu>processor move_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
+  (fn ctx => fn th => ($$$ "\<leftarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
+    (fn idts => fn _ => fold (fn idt => NuRegisters.move_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
 
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier\<close>
