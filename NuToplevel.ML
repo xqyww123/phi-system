@@ -65,14 +65,14 @@ fun parse_arg arg =
   let
     val (names,args) = arg |> HOLogic.strip_tuple |> map pass_name |> split_list
     val names = names |> Name.variant_list []
-    val arg = list_mk_binop_r0 delimiter_name (mk_eof_ctx_stack stack_R)
+    val arg = list_mk_binop_l0 delimiter_name (mk_eof_ctx_stack stack_R)
         (map mk_repset args)
   in
     (arg, names)
   end
 fun parse_ret ret =
   ret |> HOLogic.strip_tuple |> map mk_repset
-    |> list_mk_binop_r0 delimiter_name (mk_eof_ctx_stack stack_R)
+    |> list_mk_binop_l0 delimiter_name (mk_eof_ctx_stack stack_R)
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 val v_goal_name = "\<nu>goalaa"

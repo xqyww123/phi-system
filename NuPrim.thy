@@ -12,7 +12,7 @@ theory NuPrim \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
       and "proc" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
       and "map" = "\<^bold>m\<^bold>a\<^bold>p"
       and "param" = "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m"
-      and ";;" = "\<boxbar>"
+      and ",," = "\<heavy_comma>"
       and cast = "\<^bold>c\<^bold>a\<^bold>s\<^bold>t"
       and meanwhile = "\<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e"
       and address = "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s"
@@ -348,19 +348,19 @@ lemma [\<nu>intro]: "\<nu>Disposable A \<Longrightarrow> \<nu>Disposable B \<Lon
 
 subsection \<open>Stack structure\<close>
 
-definition Stack_Delimiter :: " ('a :: lrep) set \<Rightarrow> ('b :: lrep) set \<Rightarrow> ('a \<times> 'b :: lrep) set " ( "(2_/\<boxbar>_)" [14,13] 13)
-  where "Stack_Delimiter = (\<times>)"
+definition Stack_Delimiter :: " ('a :: lrep) set \<Rightarrow> ('b :: lrep) set \<Rightarrow> ('b \<times> 'a :: lrep) set " ( "(2_/ \<heavy_comma> _)" [13,14] 13)
+  where "Stack_Delimiter a b = (b \<times> a)"
 definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " where "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
-translations "a" <= "a \<boxbar> CONST End_of_Contextual_Stack x" \<comment> \<open>hide the end\<close>
-lemma [simp]: "(a,b) \<in> (A \<boxbar> B) \<longleftrightarrow> a \<in> A \<and> b \<in> B" unfolding Stack_Delimiter_def by simp
-lemma Stack_Delimiter_I[intro]: "a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> (a,b) \<in> (A\<boxbar>B)" by simp
-lemma Stack_Delimiter_E[elim]: "ab \<in> (A\<boxbar>B) \<Longrightarrow> (\<And>a b. ab = (a,b) \<Longrightarrow> a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Stack_Delimiter_def by (cases ab) simp
-lemma [simp]: "Inhabited (U\<boxbar>V) \<longleftrightarrow> Inhabited U \<and> Inhabited V" unfolding Inhabited_def by auto
-lemma [intro]: "Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> Inhabited (U\<boxbar>V)" unfolding Inhabited_def by auto
-lemma [elim]: "Inhabited (U\<boxbar>V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
+translations "a" <= "a \<heavy_comma> CONST End_of_Contextual_Stack x" \<comment> \<open>hide the end\<close>
+lemma [simp]: "(a,b) \<in> (B \<heavy_comma> A) \<longleftrightarrow> a \<in> A \<and> b \<in> B" unfolding Stack_Delimiter_def by simp
+lemma Stack_Delimiter_I[intro]: "a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> (a,b) \<in> (B \<heavy_comma> A)" by simp
+lemma Stack_Delimiter_E[elim]: "ab \<in> (B \<heavy_comma> A) \<Longrightarrow> (\<And>a b. ab = (a,b) \<Longrightarrow> a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Stack_Delimiter_def by (cases ab) simp
+lemma [simp]: "Inhabited (U\<heavy_comma>V) \<longleftrightarrow> Inhabited U \<and> Inhabited V" unfolding Inhabited_def by auto
+lemma [intro]: "Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> Inhabited (U\<heavy_comma>V)" unfolding Inhabited_def by auto
+lemma [elim]: "Inhabited (U\<heavy_comma>V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
 
 
-translations "x \<tycolon> N\<boxbar>R" == "\<tort_lbrace>x \<tycolon> N\<tort_rbrace>\<boxbar>R"
+translations "R \<heavy_comma> x \<tycolon> N" == "R \<heavy_comma> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
 
 subsection \<open>Procedure construction context.\<close>
 
@@ -530,10 +530,10 @@ definition remove_reg :: "  ('R, 'R2, 'x register, void register) address \<Righ
   where "remove_reg adr s = (case s of Proc_Ctx S R \<Rightarrow>
     StatOn (Proc_Ctx (get_register (get_at adr R), S) (map_at adr (K (Register (NAME_TAG id) void)) R)))"
 
-(* lemma new_reg_0: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg_0 \<blangle> X\<boxbar>R \<flower> Void \<longmapsto> R \<flower> \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r \<n>\<a>\<m>\<e> = X \<brangle>" unfolding \<nu>address_def new_reg_0_def by auto
-lemma new_reg_L:"\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> T \<^bold>@ G \<longmapsto> (\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r \<n>\<a>\<m>\<e> = X and_ty T) \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg_L adr \<blangle> X\<boxbar>R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
+(* lemma new_reg_0: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg_0 \<blangle> X\<heavy_comma>R \<flower> Void \<longmapsto> R \<flower> \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r \<n>\<a>\<m>\<e> = X \<brangle>" unfolding \<nu>address_def new_reg_0_def by auto
+lemma new_reg_L:"\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> T \<^bold>@ G \<longmapsto> (\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r \<n>\<a>\<m>\<e> = X and_ty T) \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg_L adr \<blangle> X\<heavy_comma>R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
   unfolding \<nu>address_def new_reg_L_def by auto
-lemma new_reg_R:"\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> T \<^bold>@ G \<longmapsto> (T and_ty \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r \<n>\<a>\<m>\<e> = X) \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg_R adr \<blangle> X\<boxbar>R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
+lemma new_reg_R:"\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> T \<^bold>@ G \<longmapsto> (T and_ty \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r \<n>\<a>\<m>\<e> = X) \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg_R adr \<blangle> X\<heavy_comma>R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
   unfolding \<nu>address_def new_reg_R_def by auto *)
 
 
@@ -554,12 +554,12 @@ lemma delete_reg_locale: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s
   unfolding \<nu>address_def delete_reg_locale_def get_register_def map_register_def
   using name_tag_eq by (cases adr) (auto 4 3)
 
-lemma store_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name X \<^bold>@ G \<longmapsto> RegisterTy name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<nu>Disposable X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg adr \<blangle> Y\<boxbar>R \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
+lemma store_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name X \<^bold>@ G \<longmapsto> RegisterTy name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<nu>Disposable X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg adr \<blangle> R \<heavy_comma> Y \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
   unfolding \<nu>address_def store_reg_def get_register_def map_register_def by auto
 lemma load_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<^bold>@ A \<longmapsto> RegisterTy name \<tort_lbrace>sh (Gi 1) x \<tycolon> X\<tort_rbrace> \<^bold>@ B \<brangle>
-  \<Longrightarrow> Nu_Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg adr \<blangle> R \<flower> A \<longmapsto> sh (Gi 1) x \<tycolon>  X\<boxbar>R \<flower> B \<brangle>"
+  \<Longrightarrow> Nu_Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg adr \<blangle> R \<flower> A \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon>  X \<flower> B \<brangle>"
   unfolding \<nu>address_def load_reg_def Nu_Share_def get_register_def map_register_def by auto
-lemma remove_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> (RegisterTy name X) \<^bold>@ V \<longmapsto> (RegisterTy name Void) \<^bold>@ V' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c remove_reg adr \<blangle> R \<flower> V \<longmapsto> X\<boxbar>R \<flower> V' \<brangle>"
+lemma remove_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> (RegisterTy name X) \<^bold>@ V \<longmapsto> (RegisterTy name Void) \<^bold>@ V' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c remove_reg adr \<blangle> R \<flower> V \<longmapsto> R \<heavy_comma> X \<flower> V' \<brangle>"
   unfolding \<nu>address_def remove_reg_def get_register_def using name_tag_eq by (auto split: prod.split simp add: fst_def)
 
 
@@ -754,8 +754,8 @@ simproc_setup BinderNameTag (\<open>BinderNameTag name (binder f)\<close>) = \<o
 
 lemma [simp]: "x \<in> BinderNameTag name (ExTyp T) \<equiv> (\<exists>z. x \<in> T z)" unfolding ExTyp_def BinderNameTag_def by auto
 lemma [simp]: "\<S_S> (BinderNameTag name (\<exists>*x. T x)) = BinderNameTag name (\<exists>*x. \<S_S> (T x))" unfolding ExTyp_def BinderNameTag_def by auto
-lemma [simp]: "(BinderNameTag name (ExTyp A) \<boxbar> R) = BinderNameTag name (\<exists>* x. (A x \<boxbar> R))" unfolding ExTyp_def BinderNameTag_def by auto
-lemma [simp]: "(S\<boxbar>BinderNameTag name (ExTyp T)) = BinderNameTag name (\<exists>* z. (S \<boxbar> T z))" unfolding ExTyp_def BinderNameTag_def by auto
+lemma [simp]: "(BinderNameTag name (ExTyp A) \<heavy_comma> R) = BinderNameTag name (\<exists>* x. (A x \<heavy_comma> R))" unfolding ExTyp_def BinderNameTag_def by auto
+lemma [simp]: "(S\<heavy_comma>BinderNameTag name (ExTyp T)) = BinderNameTag name (\<exists>* z. (S \<heavy_comma> T z))" unfolding ExTyp_def BinderNameTag_def by auto
 lemma [simp]: "\<S> (BinderNameTag name (ExTyp T)) = BinderNameTag name (\<exists>* x. \<S> (T x))" unfolding ExTyp_def BinderNameTag_def by auto
 lemma [simp]: "(BinderNameTag name (ExTyp T) \<flower> R) = BinderNameTag name (\<exists>* x. (T x \<flower> R))" unfolding ExTyp_def BinderNameTag_def by auto
 lemma ExTyp_strip: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (BinderNameTag name (ExTyp T))) \<equiv> (\<exists>x. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T x)"
@@ -770,7 +770,7 @@ translations "\<exists>*x r. y" => "CONST BinderNameTag x (CONST ExTyp (\<lambda
 
 (* An example to illustrate this name retaining process *)
 notepad begin
-  assume "x \<in> (A\<boxbar>(\<exists>*aaa zz. B aaa zz)\<boxbar>(\<exists>*qq. C qq))"
+  assume "x \<in> (A\<heavy_comma>(\<exists>*aaa zz. B aaa zz)\<heavy_comma>(\<exists>*qq. C qq))"
   note this[simplified]
 end
 
@@ -810,9 +810,9 @@ lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A" by 
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e N = N' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<tort_lbrace>x \<tycolon> N\<tort_rbrace> \<longmapsto> \<tort_lbrace>x' \<tycolon> N'\<tort_rbrace>" unfolding Cast_def by simp
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x" by simp
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<S_S> A \<longmapsto> \<S_S> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P" by blast
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P2 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<boxbar>B) \<longmapsto> (A'\<boxbar>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<and> P2" by blast
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P2 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B) \<longmapsto> (A'\<heavy_comma>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<and> P2" by blast
 lemma LooseState_Cast[\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<S> A \<longmapsto> \<S> B" unfolding \<nu>def Cast_def by auto
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<boxbar>B) \<longmapsto> (A'\<boxbar>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and>Q"
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B) \<longmapsto> (A'\<heavy_comma>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and>Q"
   unfolding Cast_def by auto
 
 subsubsection \<open>Conversion\<close>
@@ -842,23 +842,23 @@ definition Atomic :: "'a \<Rightarrow> 'a" ("\<^bold>a\<^bold>t\<^bold>o\<^bold>
 definition EoC :: "'a \<Rightarrow> 'a" ("EoC{ _ }") where [\<nu>def, \<nu>post_construct]:"EoC{x} = x" \<comment> \<open>End of Construct\<close>
 definition AutoConstruct :: " 'exp \<Rightarrow> (('a::lrep) \<Rightarrow> ('b::lrep) state) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t _/ \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<blangle>_/ \<longmapsto> _ \<brangle>)" [20,101,10,10] 100)
   where [\<nu>def]:"AutoConstruct exp f S T \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>"
-lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c t \<tycolon> T) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> EoC{ t \<tycolon>T\<boxbar>Z } \<longmapsto> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c t \<tycolon> T\<boxbar>EoC Z \<brangle>"
+lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c t \<tycolon> T) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> EoC{ Z \<heavy_comma> t \<tycolon>T } \<longmapsto> EoC Z \<heavy_comma> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c t \<tycolon> T \<brangle>"
   unfolding AutoConstruct_def EoC_def Atomic_def AutoTag_def by (simp add: nop_\<nu>proc)
 
 lemma [simp]: "(Inhabited A \<and> Inhabited B) \<or> (Inhabited A' \<and> Inhabited B')
-  \<Longrightarrow> (A\<boxbar>B) = (A'\<boxbar>B') \<longleftrightarrow> A = A' \<and> B = B'" unfolding Stack_Delimiter_def Inhabited_def by (auto simp add: times_eq_iff) 
-lemma  [elim]: "(A\<boxbar>B) = (A'\<boxbar>B') \<Longrightarrow> (A = {} \<or> B = {} \<Longrightarrow> A' = {} \<or> B' = {} \<Longrightarrow> C) \<Longrightarrow> (A = A' \<Longrightarrow> B = B' \<Longrightarrow> C) \<Longrightarrow> C"
+  \<Longrightarrow> (A\<heavy_comma>B) = (A'\<heavy_comma>B') \<longleftrightarrow> A = A' \<and> B = B'" unfolding Stack_Delimiter_def Inhabited_def by (auto simp add: times_eq_iff) 
+lemma  [elim]: "(A\<heavy_comma>B) = (A'\<heavy_comma>B') \<Longrightarrow> (A = {} \<or> B = {} \<Longrightarrow> A' = {} \<or> B' = {} \<Longrightarrow> C) \<Longrightarrow> (A = A' \<Longrightarrow> B = B' \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Stack_Delimiter_def by (auto simp add: times_eq_iff)
 
-lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t A \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> (EoC Z  \<flower> W1) \<longmapsto> (A'\<boxbar>EoC Z \<flower> W2)\<brangle>
-      \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t B \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> (EoC{ A'\<boxbar>Z} \<flower> W2) \<longmapsto> (B'\<boxbar>EoC{ A'\<boxbar>Z} \<flower> W3) \<brangle>
-      \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (B,A) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> g) \<blangle> (EoC Z \<flower> W1) \<longmapsto> (B'\<boxbar>A'\<boxbar>EoC Z \<flower> W3) \<brangle>"
+lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t A \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> (EoC Z  \<flower> W1) \<longmapsto> (EoC Z \<heavy_comma> A' \<flower> W2)\<brangle>
+      \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t B \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> (EoC{ Z \<heavy_comma> A'} \<flower> W2) \<longmapsto> (EoC{ Z \<heavy_comma> A'} \<heavy_comma> B' \<flower> W3) \<brangle>
+      \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (B,A) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> g) \<blangle> (EoC Z \<flower> W1) \<longmapsto> (EoC Z\<heavy_comma> A' \<heavy_comma> B' \<flower> W3) \<brangle>"
   unfolding AutoConstruct_def EoC_def by auto
 lemma [\<nu>intro']: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t A \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> X \<longmapsto> Y \<brangle> \<Longrightarrow>
   \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t A \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c call f \<blangle>(X \<flower> W) \<longmapsto> (Y \<flower> W) \<brangle>"
   unfolding AutoConstruct_def EoC_def by auto
 
-lemma [\<nu>auto_destruct]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> t \<tycolon> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c T\<boxbar>Z \<longmapsto> t \<tycolon>T\<boxbar>Z \<brangle>" unfolding Atomic_def AutoTag_def using nop_\<nu>proc .
+lemma [\<nu>auto_destruct]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> Z \<heavy_comma> t \<tycolon> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c T \<longmapsto> Z \<heavy_comma> t \<tycolon>T \<brangle>" unfolding Atomic_def AutoTag_def using nop_\<nu>proc .
 
 subsubsection \<open>Register construction code\<close>
 
@@ -874,13 +874,13 @@ translations "_copy_reg_byname_ x" == "CONST copy_reg_byname (NAME x)"
 lemma [\<nu>intro]:
   "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name  \<tort_lbrace> x \<tycolon> X \<tort_rbrace>  \<^bold>@ G \<longmapsto> RegisterTy name  \<tort_lbrace> sh (Gi 1) x \<tycolon> X \<tort_rbrace> \<^bold>@ G2 \<brangle>
     \<Longrightarrow> Nu_Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y shx : sh (Gi 1) x \<Longrightarrow>
-    \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (copy_reg adr) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (load_reg adr) \<blangle> (EoC R \<flower> G) \<longmapsto> (shx \<tycolon> X\<boxbar>EoC R \<flower> G2) \<brangle>"
+    \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (copy_reg adr) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (load_reg adr) \<blangle> (EoC R \<flower> G) \<longmapsto> (EoC R \<heavy_comma> shx \<tycolon> X \<flower> G2) \<brangle>"
   including show_more1
   unfolding AutoConstruct_def Simplify_def using load_reg .
 
 lemma [\<nu>intro]:
   "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name  \<tort_lbrace> x \<tycolon> X \<tort_rbrace>  \<^bold>@ G \<longmapsto> RegisterTy name Void \<^bold>@ G2 \<brangle>
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (move_reg adr) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (remove_reg adr) \<blangle> (EoC R \<flower> G) \<longmapsto> (x \<tycolon> X\<boxbar>EoC R \<flower> G2) \<brangle>"
+  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (move_reg adr) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (remove_reg adr) \<blangle> (EoC R \<flower> G) \<longmapsto> (EoC R \<heavy_comma> x \<tycolon> X \<flower> G2) \<brangle>"
   including show_more
   unfolding AutoConstruct_def Simplify_def using remove_reg .
 

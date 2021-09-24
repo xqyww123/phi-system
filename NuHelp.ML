@@ -37,6 +37,9 @@ signature NU_HELP = sig
   val strip_binop_r (* right associative *) : string (* const name *) -> term -> term list
   val mk_monop : string (* const name *) -> term -> term
   val mk_binop : string (* const name *) -> term * term -> term
+  val list_mk_binop_l  (* left associative *) : string (* const name *) -> term list -> term
+  val list_mk_binop_l0 (* left associative *) : string (* const name *)
+        -> term (* initial term *) -> term list -> term
   val list_mk_binop_r  (* right associative *) : string (* const name *) -> term list -> term
   val list_mk_binop_r0 (* right associative *) : string (* const name *)
         -> term (* initial term *) -> term list -> term
@@ -142,6 +145,11 @@ fun list_mk_binop_r _  [] = raise Empty
   | list_mk_binop_r mk (h::r) = mk_binop mk (h, list_mk_binop_r mk r)
 fun list_mk_binop_r0 _  x0 [] = x0
   | list_mk_binop_r0 mk x0 (h::r) = mk_binop mk (h, list_mk_binop_r0 mk x0 r)
+fun list_mk_binop_l _  [] = raise Empty
+  | list_mk_binop_l _  [x] = x
+  | list_mk_binop_l mk (h::r) = mk_binop mk (list_mk_binop_l mk r, h)
+fun list_mk_binop_l0 _  x0 [] = x0
+  | list_mk_binop_l0 mk x0 (h::r) = mk_binop mk (list_mk_binop_l0 mk x0 r, h)
 
 fun dest_binder binder (tm as (Const (const,_) $ Abs (var,vty,body))) =
       if const = binder
