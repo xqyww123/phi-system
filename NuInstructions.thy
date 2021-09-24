@@ -19,8 +19,18 @@ subsubsection \<open>dup\<close>
 definition op_dup :: "('a::sharable_lrep) \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'a \<times> 'r) state"
   where "op_dup x = (case x of (a,r) \<Rightarrow> if a \<in> shareable then StatOn (share (Gi 1) a, share (Gi 1) a, r) else STrap)"
 declare op_dup_def[\<nu>instr]
-theorem dup_\<nu>proc: "Nu_Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon> X \<heavy_comma> sh (Gi 1) x \<tycolon> X  \<brangle>"
+theorem dup_\<nu>proc: "\<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon> X \<heavy_comma> sh (Gi 1) x \<tycolon> X  \<brangle>"
   unfolding \<nu>def op_dup_def by auto
+
+subsubsection \<open>tup & det\<close>
+
+definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::lrep) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
+  where "op_pair x = (case x of (a,b,r) \<Rightarrow> StatOn ((b,a),r))"
+definition op_depair :: "(('b::lrep) \<times> ('a::lrep)) \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'b \<times> 'r) state"
+  where "op_depair x = (case x of ((b,a),r) \<Rightarrow> StatOn (a,b,r))"
+
+theorem pr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
+theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
 
 subsection \<open>Branch\<close>
 

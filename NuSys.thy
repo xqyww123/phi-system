@@ -4,7 +4,7 @@ theory NuSys
   imports NuPrim
   keywords
     "proc" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<Longrightarrow>" "\<leftarrow>" :: quasi_command
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<Longrightarrow>" "\<leftarrow>" "^" "^*" :: quasi_command
   and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" :: thy_decl
@@ -144,6 +144,12 @@ section \<open>Processors\<close>
 
 \<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn ctx => fn th => NuParse.auto_level_force #->
   (fn auto_level' => NuProcessor.process (AutoLevel.reduce auto_level' ctx) th #> (fn x => raise ProcessTerminated x)))\<close>
+\<nu>processor repeat 12 \<open>PROP P\<close> \<open>let
+    fun repeat n f x = if n <= 0 then x else ((repeat (n-1) f (f x)) handle _ => x)
+  in fn ctx => fn th => Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*")
+    >> (fn (tok,n) => fn _ => (case Int.fromString n of SOME n => funpow n | _ => repeat 32)
+        (NuProcessor.process ctx #> (fn p => p [tok,Token.eof] |> #1)) th)
+  end\<close>
 
 \<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn th => Scan.succeed (fn _ => NuSys.accept_proc ctx th)\<close>
 

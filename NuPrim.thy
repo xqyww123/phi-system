@@ -206,16 +206,16 @@ lemma [elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrig
 lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto
 lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
-definition Nu_Share :: "('a::sharable_lrep,'b) nu \<Rightarrow> 'b set \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
-  where [\<nu>def]: "Nu_Share N s f \<longleftrightarrow> (\<forall>z p x. x \<in> s \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> p \<in> shareable \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
+definition \<nu>Share :: "('a::sharable_lrep,'b) nu \<Rightarrow> 'b set \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>Share N s f \<longleftrightarrow> (\<forall>z p x. x \<in> s \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> p \<in> shareable \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
 definition \<nu>Equalable :: "('a::ceq_lrep, 'b) nu \<Rightarrow> ('b \<times> 'b \<Rightarrow> bool) \<Rightarrow> bool"
   where "\<nu>Equalable N f \<longleftrightarrow> (\<forall>p1 p2 x1 x2. (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable (p1,p2) = f (x1,x2))"
 definition \<nu>Disposable :: " ('a::lrep) set \<Rightarrow> bool " where [\<nu>def]: "\<nu>Disposable T \<longleftrightarrow> (\<forall>x. x \<in> T \<longrightarrow> x \<in> disposable)"
 
-lemma [\<nu>intro]: "Nu_Share N UNIV (K id)" for N :: "('a::naive_lrep, 'b) nu" unfolding Nu_Share_def by simp
+lemma [\<nu>intro]: "\<nu>Share N UNIV (K id)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>Share_def by simp
 lemma K_rew: "(\<lambda>x. c) =  (K c)" by auto
 lemma [simp]: "\<nu>Equalable N (\<lambda>x. c) = \<nu>Equalable N (K c)" by (auto simp add: K_rew)
-lemma [simp]: "Nu_Share N s (\<lambda>z x. x) = Nu_Share N s (K id)" by (auto simp add: K_rew id_def)
+lemma [simp]: "\<nu>Share N s (\<lambda>z x. x) = \<nu>Share N s (K id)" by (auto simp add: K_rew id_def)
 lemma [\<nu>intro]: "\<nu>Disposable T" for T :: "('a::naive_lrep) set" unfolding \<nu>Disposable_def by simp
 
   section\<open>Structures for construction\<close>
@@ -351,16 +351,14 @@ subsection \<open>Stack structure\<close>
 definition Stack_Delimiter :: " ('a :: lrep) set \<Rightarrow> ('b :: lrep) set \<Rightarrow> ('b \<times> 'a :: lrep) set " ( "(2_/ \<heavy_comma> _)" [13,14] 13)
   where "Stack_Delimiter a b = (b \<times> a)"
 definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " where "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
-translations "a" <= "a \<heavy_comma> CONST End_of_Contextual_Stack x" \<comment> \<open>hide the end\<close>
+translations "a" <= "CONST End_of_Contextual_Stack x \<heavy_comma> a" \<comment> \<open>hide the end\<close>
+translations "R \<heavy_comma> x \<tycolon> N" == "R \<heavy_comma> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
 lemma [simp]: "(a,b) \<in> (B \<heavy_comma> A) \<longleftrightarrow> a \<in> A \<and> b \<in> B" unfolding Stack_Delimiter_def by simp
 lemma Stack_Delimiter_I[intro]: "a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> (a,b) \<in> (B \<heavy_comma> A)" by simp
 lemma Stack_Delimiter_E[elim]: "ab \<in> (B \<heavy_comma> A) \<Longrightarrow> (\<And>a b. ab = (a,b) \<Longrightarrow> a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Stack_Delimiter_def by (cases ab) simp
 lemma [simp]: "Inhabited (U\<heavy_comma>V) \<longleftrightarrow> Inhabited U \<and> Inhabited V" unfolding Inhabited_def by auto
 lemma [intro]: "Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> Inhabited (U\<heavy_comma>V)" unfolding Inhabited_def by auto
 lemma [elim]: "Inhabited (U\<heavy_comma>V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
-
-
-translations "R \<heavy_comma> x \<tycolon> N" == "R \<heavy_comma> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
 
 subsection \<open>Procedure construction context.\<close>
 
@@ -557,8 +555,8 @@ lemma delete_reg_locale: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s
 lemma store_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name X \<^bold>@ G \<longmapsto> RegisterTy name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<nu>Disposable X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg adr \<blangle> R \<heavy_comma> Y \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
   unfolding \<nu>address_def store_reg_def get_register_def map_register_def by auto
 lemma load_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<^bold>@ A \<longmapsto> RegisterTy name \<tort_lbrace>sh (Gi 1) x \<tycolon> X\<tort_rbrace> \<^bold>@ B \<brangle>
-  \<Longrightarrow> Nu_Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg adr \<blangle> R \<flower> A \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon>  X \<flower> B \<brangle>"
-  unfolding \<nu>address_def load_reg_def Nu_Share_def get_register_def map_register_def by auto
+  \<Longrightarrow> \<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg adr \<blangle> R \<flower> A \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon>  X \<flower> B \<brangle>"
+  unfolding \<nu>address_def load_reg_def \<nu>Share_def get_register_def map_register_def by auto
 lemma remove_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> (RegisterTy name X) \<^bold>@ V \<longmapsto> (RegisterTy name Void) \<^bold>@ V' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c remove_reg adr \<blangle> R \<flower> V \<longmapsto> R \<heavy_comma> X \<flower> V' \<brangle>"
   unfolding \<nu>address_def remove_reg_def get_register_def using name_tag_eq by (auto split: prod.split simp add: fst_def)
 
@@ -799,6 +797,8 @@ definition Cast :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow
   where "(\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P) \<longleftrightarrow> (\<forall>x. x \<in> A \<longrightarrow> x \<in> B \<and> P)"
 consts SimpleCast :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2\<^bold>c\<^bold>a\<^bold>s\<^bold>t _ \<longmapsto> _)" [2,14] 13)
 translations "(\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B)" == "(\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e CONST True)"
+translations "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P" == "\<^bold>c\<^bold>a\<^bold>s\<^bold>t \<tort_lbrace> x \<tycolon> X \<tort_rbrace> \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P"
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> x \<tycolon> X \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P" == "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> \<tort_lbrace> x \<tycolon> X \<tort_rbrace> \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P"
 (* abbreviation SimpleCast :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2\<^bold>c\<^bold>a\<^bold>s\<^bold>t _ \<longmapsto> _)" [2,14] 13)
   where "(\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B) \<equiv> (\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e True)" *)
 lemma Inhabited_subset: "Inhabited A \<Longrightarrow> A \<subseteq> B \<Longrightarrow> Inhabited B" unfolding Inhabited_def by auto
@@ -873,7 +873,7 @@ translations "_copy_reg_byname_ x" == "CONST copy_reg_byname (NAME x)"
 
 lemma [\<nu>intro]:
   "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name  \<tort_lbrace> x \<tycolon> X \<tort_rbrace>  \<^bold>@ G \<longmapsto> RegisterTy name  \<tort_lbrace> sh (Gi 1) x \<tycolon> X \<tort_rbrace> \<^bold>@ G2 \<brangle>
-    \<Longrightarrow> Nu_Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y shx : sh (Gi 1) x \<Longrightarrow>
+    \<Longrightarrow> \<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y shx : sh (Gi 1) x \<Longrightarrow>
     \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (copy_reg adr) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (load_reg adr) \<blangle> (EoC R \<flower> G) \<longmapsto> (EoC R \<heavy_comma> shx \<tycolon> X \<flower> G2) \<brangle>"
   including show_more1
   unfolding AutoConstruct_def Simplify_def using load_reg .

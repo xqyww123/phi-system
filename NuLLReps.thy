@@ -111,9 +111,9 @@ lemma Fusion_abst[simp]: "(p1,p2) \<nuLinkL> N \<nuFusion> M \<nuLinkR> (x1,x2) 
 lemma "Inhabited \<tort_lbrace>(x1,x2) \<tycolon> N1 \<nuFusion> N2\<tort_rbrace> \<longleftrightarrow> Inhabited \<tort_lbrace>x1 \<tycolon> N1\<tort_rbrace> \<and> Inhabited \<tort_lbrace>x2 \<tycolon> N2\<tort_rbrace>"
   unfolding Inhabited_def by simp
 
-lemma [\<nu>intro]: "Nu_Share N s1 f1 \<Longrightarrow> Nu_Share M s2 f2 \<Longrightarrow> Nu_Share (N \<nuFusion> M) (s1 \<times> s2) (\<lambda>z x. case x of (x1,x2) \<Rightarrow> (f1 z x1, f2 z x2))"
+lemma [\<nu>intro]: "\<nu>Share N s1 f1 \<Longrightarrow> \<nu>Share M s2 f2 \<Longrightarrow> \<nu>Share (N \<nuFusion> M) (s1 \<times> s2) (\<lambda>z x. case x of (x1,x2) \<Rightarrow> (f1 z x1, f2 z x2))"
   for N :: "('a :: sharable_lrep, 'b) nu" and M :: "('c :: sharable_lrep, 'd) nu" 
-  unfolding Nu_Share_def by auto
+  unfolding \<nu>Share_def by auto
 lemma [\<nu>intro]: "\<nu>Equalable N p \<Longrightarrow> \<nu>Equalable M q \<Longrightarrow> \<nu>Equalable (N \<nuFusion> M) (\<lambda>x. case x of ((a1,b1),(a2,b2)) \<Rightarrow> p (a1,a2) \<and> q (b1,b2))"
   unfolding \<nu>Equalable_def by auto
 
