@@ -1,13 +1,13 @@
 (* FIX ME: I have tried the best but the sidekick won't work right. Isabelle is not quite flexible in
   outer syntax and it is already the best hack can be given. *)
 theory NuSys
-  imports NuPrim
+  imports NuPrim NuLLReps
   keywords
     "proc" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<Longrightarrow>" "\<leftarrow>" "^" "^*" :: quasi_command
-  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" :: prf_decl % "proof"
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" :: quasi_command
+  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
-  and "\<nu>overloads" :: thy_decl
+  and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
 abbrevs
   "!!" = "!!"
@@ -120,6 +120,14 @@ val _ =
       Proof.set_facts [Proof.the_fact stat |> NuRegisters.new_regs (Proof.context_of stat) names] stat)))
 
 val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<Longrightarrow>\<close> "name the star fact"
+    (Parse.binding -- Parse.opt_attribs >> (Toplevel.proof o NuToplevel.name_star_fact_cmd))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>drop_fact\<close> "drop a fact"
+    (Parse.list Parse.binding >> (fn names => Toplevel.proof (fold NuToplevel.drop_fact_cmd names)))
+
+val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor\<close> "define \<nu>processor"
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword) -- Parse.nat -- Parse.term -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
         >> NuProcessor.setup_cmd)
@@ -130,15 +138,22 @@ val _ =
         >> (fn ((((b,precedence),pattern),facts),comment) => NuProcessors.setup_resolver b precedence pattern facts comment))
 
 val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>overloads\<close> "declare \<nu>overloads"
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>overloads\<close> "declare procedure overloads"
     (and_list1 (binding -- Scan.optional Parse.text "") >>
         (fold (fn (b,s) => NuProcedure.declare_overloading b s #> #2)))
+
+val _ =
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>cast_overloads\<close> "declare cast overloads"
+    (and_list1 (binding -- Scan.optional Parse.text "") >>
+        (fold (fn (b,s) => NuProcedure.declare_overloading_cast b s #> #2)))
 
 end
 \<close>
 
 attribute_setup \<nu>overload = \<open>Scan.lift (Parse.and_list1 NuProcedure.parser) >> (fn bindings => 
   Thm.declaration_attribute (fn th => fold (NuProcedure.overload th) bindings))\<close>
+attribute_setup \<nu>cast_overload = \<open>Scan.lift (Parse.and_list1 NuProcedure.parser) >> (fn bindings => 
+  Thm.declaration_attribute (fn th => fold (NuProcedure.overload_cast th) bindings))\<close>
 
 section \<open>Processors\<close>
 
@@ -170,7 +185,27 @@ end\<close>
 
 \<nu>processor \<nu>resolver 9000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>load_specthm (all_premises_prover (NuSys.auto_resolve NONE []))\<close>
 
-\<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn focus => NuProcedure.parser >> (fn binding => fn _ =>
-    NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) focus)\<close>
+\<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => NuProcedure.parser >> (fn binding => fn _ =>
+    NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) meta)\<close>
+
+\<nu>processor cast 8900 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => (Parse.$$$ "cast" |-- NuProcedure.parser) >> (fn binding => fn _ =>
+    NuSys.apply_casts ctx (NuProcedure.cast_thm ctx binding) meta)\<close>
+
+\<nu>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Parse.term >> (fn term => fn _ =>
+    NuBasics.elim_SPEC meta |> apfst (fn th =>
+      (Syntax.read_term ctx term |> Thm.cterm_of ctx |> NuBasics.intro_param) RS th) |> NuBasics.intro_SPEC)\<close>
+
+\<nu>processor literal_constructor 9500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.cartouche >> (fn term => fn _ =>
+  let val term = Syntax.read_term ctx term |> Thm.cterm_of ctx |> Simplifier.rewrite ctx |> Thm.rhs_of
+  in NuSys.auto_construct ctx term meta end)\<close>
+
+\<nu>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
+  let open NuBasics
+    val term = (stack_of_meta meta |> @{print} |> hd |> dest_RepSet |> dest_nuTy |> #2) handle TERM _ => @{term \<open>\<nat>[32]\<close>}
+    val term = mk_nuTy (Syntax.parse_term ctx num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
+  in NuSys.auto_construct ctx term meta  end)
+\<close>
+
+\<nu>cast_overloads E I
 
 end

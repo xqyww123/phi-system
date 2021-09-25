@@ -12,11 +12,15 @@ signature NU_BASICS = sig
   val mk_stateT : typ -> typ
 
   val dest_param : term -> term
+  val dest_RepSet : term -> term
   val dest_nuTy : term -> term * term
+  val mk_nuTy : term * term -> term
   val dest_named : term -> string option * term (* Named name, x -> (name,x) *)
   val name_tag_ty : typ
+  val name_tag_cty : ctyp
   val dest_name_tag : term -> string
   val mk_name_tag : string -> term
+  val mk_name_tag_c : string -> cterm
   val mk_repset : term -> term
   val dest_register : term -> string * term
   val dest_registerTy : term -> string * term
@@ -34,6 +38,7 @@ signature NU_BASICS = sig
   val dest_Proc_CtxTy_c : cterm -> cterm * cterm
   val registers_of_specthm   : thm -> cterm
   val registers_of_specthm_c : thm -> cterm
+  val stack_of_meta   : thm -> term list
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
   val current_block_var   : thm -> term
@@ -62,6 +67,7 @@ signature NU_BASICS = sig
 
   val dest_fact : term -> string * term
   val dest_fact_c : cterm -> string * cterm
+  val name_of_Fact : thm -> string
   val elim_Fact : thm -> string * thm
   val intro_Fact : string * thm -> thm
   val dest_AndFact : term -> term * term
@@ -70,6 +76,7 @@ signature NU_BASICS = sig
   val elim_AndFact : thm -> thm * thm
   val intro_AndFact : thm * thm -> thm
   val elim_AndFacts : thm -> thm list
+  val intro_AndFacts : thm list -> thm
   val dest_FactCollection   : term -> term * term * term
   val dest_FactCollection_c : cterm -> cterm * cterm * cterm
   val elim_FactCollection : thm -> thm * thm * thm
@@ -87,7 +94,7 @@ signature NU_BASICS = sig
   val dest_Cast   : term -> term * term * term
   val dest_Cast_c : cterm -> cterm * cterm * cterm
 
-  val intro_param : term -> thm
+  val intro_param : cterm -> thm
   val intro_param_name : string -> thm
 
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
@@ -111,6 +118,7 @@ fun dest_param (Const (@{const_name "NuPrim.ParamTag"}, _) $ x) = x
   | dest_param tm = raise TERM ("dest_param", [tm])
 val unit_const_name = @{const_name "Product_Type.Unity"}
 val name_tag_ty = Type (@{type_name "NuPrim.name_tag"}, [])
+val name_tag_cty = @{ctyp "NuPrim.name_tag"}
 val name_tag_const_name = "NuPrim.name_tag.NAME_TAG"
 val unit_ty = Type (@{type_name "Product_Type.unit"}, [])
 val unit_const = Const("Product_Type.Unity", unit_ty)
@@ -134,7 +142,9 @@ fun dest_named tm =
 fun mk_repset (tm as (Const (@{const_name NuPrim.typing}, _) $ _)) = tm
   | mk_repset tm = mk_monop @{const_name "NuPrim.RepSet"} tm
 val nuTy_name = @{const_name "NuPrim.typing"}
+val dest_RepSet = dest_monop "NuPrim.RepSet"
 val dest_nuTy = dest_binop nuTy_name
+val mk_nuTy = mk_binop nuTy_name
 fun dest_register (Const (@{const_name "NuPrim.register.Register"},_) $ name $ x) = (dest_name_tag name, x)
   | dest_register tm = raise TERM ("bad register",[tm])
 fun dest_registerTy (Const (@{const_name "NuPrim.RegisterTy"},_) $ name $ x) = (dest_name_tag name, x)
@@ -165,9 +175,13 @@ fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
 val dest_Proc_CtxTy   = dest_binop @{const_name "NuPrim.Proc_CtxTy"}
 val dest_Proc_CtxTy_c = dest_binop_c @{const_name "NuPrim.Proc_CtxTy"}
 val registers_of_specthm_c = catch_th 0 "registers_of_specthm: Not a CurrentConstruction"
-  (Thm.cprop_of #> dest_SpecTop_c #> #1 #> dest_Trueprop_c
+  (Thm.cprop_of #> perhaps (dest_SpecTop_c #> #1) #> perhaps dest_Trueprop_c
     #> dest_CurrentConstruction_c #> #2 #> dest_Proc_CtxTy_c #> #2)
 val registers_of_specthm = registers_of_specthm_c #> term_of
+val stack_of_meta = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
+  (Thm.prop_of #> perhaps (dest_SpecTop #> #1) #> perhaps dest_Trueprop
+    #> dest_CurrentConstruction #> #2 #> dest_Proc_CtxTy #> #1
+    #> strip_binop_l "NuPrim.Stack_Delimiter")
 
 val state_of_specthm = dest_SpecTop #> #1
 val current_block_var_c =
@@ -260,6 +274,7 @@ val dest_fact   = dest_binop   @{const_name "NuPrim.Fact"} #> apfst dest_name_ta
 val dest_fact_c = dest_binop_c @{const_name "NuPrim.Fact"} #> apfst (term_of #> dest_name_tag)
 val vP = (("P",0), HOLogic.boolT) and v_label = (("label",0),name_tag_ty)
 val Fact_D = @{thm NuPrim.Fact_D} and Fact_I = @{thm NuPrim.Fact_I}
+fun name_of_Fact th = th |> cprop_of |> dest_fact_c |> #1
 fun elim_Fact th =
   let
     val (name,P) = th |> cprop_of |> dest_fact_c
@@ -280,6 +295,7 @@ val vP = (("P",0),propT) and vQ = (("Q",0),propT) and vS = (("S",0),propT)
 val AndFact_D1 = @{thm AndFact_D1}
 and AndFact_D2 = @{thm AndFact_D2}
 and AndFact_I = @{thm AndFact_I}
+val NoFact = @{thm NuPrim.NoFact}
 fun elim_AndFact th =
   let
     val (P, Q) = dest_AndFact_c (Thm.cprop_of th)
@@ -302,6 +318,7 @@ fun elim_AndFacts_impl ret [] = ret
           else elim_AndFacts_impl (th::ret) r
       | SOME (th1, th2) => elim_AndFacts_impl ret (th1::th2::r))
 val elim_AndFacts = rev o elim_AndFacts_impl [] o single
+fun intro_AndFacts l = fold_rev (fn th1 => fn th2 => intro_AndFact (th1,th2)) l NoFact
 val dest_FactCollection   = dest_triop   @{const_name "NuPrim.FactCollection"}
 val dest_FactCollection_c = dest_triop_c @{const_name "NuPrim.FactCollection"}
 val th_FactCollection_D1 = @{thm NuPrim.FactCollection_D1}
@@ -350,7 +367,6 @@ val clean_user_facts_thm = @{thm NuPrim.clean_user_facts}
 fun clean_user_facts th = th RS clean_user_facts_thm
 
 fun apply3 f (a,b,c) = (f a, f b, f c)
-val NoFact = @{thm NuPrim.NoFact}
 fun holrule f th =
   case prop_of th
     of (Const (@{const_name "NuPrim.AndFact"},_) $ _ $ _) =>

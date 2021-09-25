@@ -32,6 +32,8 @@ signature NU_TOPLEVEL = sig
         -> bool -> Proof.state -> thm list * Proof.state
   val have_aux_cmd : ((Attrib.binding * Token.src list) * (string * string list) list) list
         -> bool -> Proof.state -> thm list * Proof.state
+  val name_star_fact_cmd : Attrib.binding -> Proof.state -> Proof.state
+  val drop_fact_cmd : Binding.binding -> Proof.state -> Proof.state
 
   val process_cmd : Token.T list -> Proof.state -> Proof.state
 end
@@ -48,7 +50,7 @@ fun mk_eof_ctx_stack tm = Const(eof_ctx_stack_name, dummyT) $ tm
 (** proc command **)
 
 val indTy = Type ("Nat.ind", [])
-val stack_R = Free ("\<R>", Type ("Set.set", [TFree ("'\<R>", ["NuPrim.lrep"])]))
+val stack_R = Free ("\<R>", Type ("Set.set", [TFree ("'\<R>", ["NuPrim.stack"])]))
 val arg_stat_term_name = "\<ss>"
 
 
@@ -227,6 +229,30 @@ val have_aux = gen_have_aux (K I) Syntax.check_prop
 val have_aux_cmd = gen_have_aux Attrib.attribute_cmd Syntax.read_prop
 end
 
+fun process (meta,stat) =
+  (NuProcessor.process_no_input (Proof.context_of stat) meta, stat)
+fun name_star_fact_cmd binding stat =
+  let
+    val ctx = Proof.context_of stat
+    val meta = Proof.the_fact stat
+  in
+    stat 
+      |> Proof.map_context_result
+            (NuSys.name_star_fact (apsnd (map (Attrib.attribute_cmd ctx)) binding) meta)
+      |> process
+      |-> Proof.set_facts o single
+  end
+fun drop_fact_cmd binding stat =
+  let
+    val ctx = Proof.context_of stat
+    val meta = Proof.the_fact stat
+  in
+    stat 
+      |> Proof.map_context_result
+            (NuSys.delete_fact (Binding.name_of binding) meta)
+      |-> Proof.set_facts o single
+  end
+
 local
 fun block_name_of (Var ((x,_),_)) = x
   | block_name_of _ = "block"
@@ -237,6 +263,18 @@ val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
 val attr_used = map (Attrib.attribute @{context}) @{attributes [used]}
 val elim_premise_tag = perhaps (mk_Trueprop o dest_premise_tag)
 in
+fun setup_proof' print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
+  let open Proof
+    val specthm = the_fact stat
+    fun after_qed ctxthms stat =
+      stat |> end_block 
+           |> after_qed' ctxthms
+  in
+    stat |> begin_block
+      |> map_context (open_meta specthm)
+      |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
+            (map (pair Binding.empty_atts) gl)
+  end
 fun begin_block_cmd bindings int stat =
   let open Proof
     val ctx = context_of stat
@@ -264,7 +302,7 @@ fun begin_block_cmd bindings int stat =
         |> map (apsnd (fn x => elim_premise @ x))
   in
     stat
-      |> setup_proof (print_results int) Proof_Context.mode_schematic false
+      |> setup_proof' (print_results int) Proof_Context.mode_schematic false
       "\<nu>block"
           NONE after_qed [] (bindings ~~ (map (single o rpair [] o term_of) prems))
           [[(term_of goal,[])]] |> #2

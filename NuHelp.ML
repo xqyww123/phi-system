@@ -35,6 +35,7 @@ signature NU_HELP = sig
   val dest_quadop   : string (* const name *) -> term -> term * term * term * term
   val dest_quadop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm
   val strip_binop_r (* right associative *) : string (* const name *) -> term -> term list
+  val strip_binop_l (* left associative *) : string (* const name *) -> term -> term list
   val mk_monop : string (* const name *) -> term -> term
   val mk_binop : string (* const name *) -> term * term -> term
   val list_mk_binop_l  (* left associative *) : string (* const name *) -> term list -> term
@@ -75,6 +76,8 @@ signature NU_HELP = sig
   val map_fixes : ('a -> 'b) ->
         (binding * 'a option * mixfix) list -> (binding * 'b option * mixfix) list
   val fix_frees : Position.T -> term list (* free terms *) -> state -> state
+  val fix_frees_lst : Position.T -> term list (* free terms *)
+        -> (binding * typ option * mixfix) list
 end
 structure NuHelp : NU_HELP = struct
 open Term Thm
@@ -115,6 +118,9 @@ fun dest_binop_c const tm =
 fun strip_bin_r_assoc strip tm =
   case try strip tm of SOME (a,b) => a :: (strip_bin_r_assoc strip b) | _ => [tm]
 val strip_binop_r = strip_bin_r_assoc o dest_binop
+fun strip_bin_l_assoc strip tm =
+  case try strip tm of SOME (a,b) => b :: (strip_bin_l_assoc strip a) | _ => [tm]
+val strip_binop_l = strip_bin_l_assoc o dest_binop
 fun dest_triop const (tm as Const (const', _) $ a $ b $ c) =
       if const' = const then (a,b,c) else raise TERM ("dest_triop "^const, [tm] )
   | dest_triop const tm = raise TERM ("dest_triop "^const, [tm])
@@ -193,6 +199,9 @@ fun undisch th = cprem_of th 1 |> assume |> implies_elim th
 fun fix_frees pos = map (Term.dest_Free #> (fn (name,ty) =>
         (Binding.make (name, pos), (if ty = Term.dummyT then NONE else SOME ty), Mixfix.NoSyn)
       )) #> Proof.fix
+fun fix_frees_lst pos = map (Term.dest_Free #> (fn (name,ty) =>
+        (Binding.make (name, pos), (if ty = Term.dummyT then NONE else SOME ty), Mixfix.NoSyn)
+      ))
 
 fun free_to_fix_1 ctx (tm as Term.Free (name,ty)) =
       (case Variable.lookup_fixed ctx name of SOME name' => Term.Free (name', ty) | _ => tm)

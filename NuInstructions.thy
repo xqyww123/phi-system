@@ -24,13 +24,22 @@ theorem dup_\<nu>proc: "\<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<
 
 subsubsection \<open>tup & det\<close>
 
-definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::lrep) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
+definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
   where "op_pair x = (case x of (a,b,r) \<Rightarrow> StatOn ((b,a),r))"
-definition op_depair :: "(('b::lrep) \<times> ('a::lrep)) \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'b \<times> 'r) state"
+definition op_depair :: "(('b::lrep) \<times> ('a::lrep)) \<times> ('r::stack) \<Rightarrow> ('a \<times> 'b \<times> 'r) state"
   where "op_depair x = (case x of ((b,a),r) \<Rightarrow> StatOn (a,b,r))"
+declare op_pair_def[\<nu>instr] op_depair_def[\<nu>instr]
 
 theorem pr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
 theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
+
+definition op_crash :: "('r::stack) \<Rightarrow> ('x::stack) state" where "op_crash r = SNeg"
+lemma op_crash:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
+
+(* consts xop_pair :: " ('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
+specification ("xop_pair") "\<^bold>p\<^bold>r\<^bold>o\<^bold>c xop_pair \<blangle> R \<heavy_comma> (a::'x) \<tycolon> A \<heavy_comma> (b::'y) \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>"
+   including show_more using op_crash by auto *)
+
 
 subsection \<open>Branch\<close>
 
@@ -57,22 +66,25 @@ subsection \<open>Integer arithmetic\<close>
 
 subsubsection \<open>constant\<close>
 
-definition op_const_int :: "('w::len) itself \<Rightarrow> ('w::len) word \<Rightarrow> ('r::lrep) \<Rightarrow> ('w word \<times> 'r) state"
+definition op_const_int :: "('w::len) itself \<Rightarrow> ('w::len) word \<Rightarrow> ('r::stack) \<Rightarrow> ('w word \<times> 'r) state"
   where "op_const_int _ c r = StatOn (c,r)"
 theorem const_nat_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) c \<blangle> R \<longmapsto> R \<heavy_comma> unat c \<tycolon> \<nat>['w] \<brangle>"
   unfolding \<nu>def op_const_int_def by auto
 
-(* lemma [\<nu>intro]:
+lemma [\<nu>intro]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>
-   \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t ((numeral x) \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (Word.of_nat (numeral x)) \<blangle> EoC Z \<longmapsto> (numeral x) \<tycolon> \<nat>['w]\<heavy_comma>EoC Z \<brangle>"
+   \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t ((numeral x) \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (Word.of_nat (numeral x)) \<blangle> Z \<longmapsto> Z \<heavy_comma> (numeral x) \<tycolon> \<nat>['w] \<brangle>"
   unfolding op_const_int_def \<nu>def including show_more1 apply auto by (metis mod_if unat_bintrunc unat_numeral)
   \<comment> \<open>Only literal number could be constructed automatically\<close>
 lemma [\<nu>intro]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (0 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 0 \<blangle> EoC Z \<longmapsto> 0 \<tycolon> \<nat>['w]\<heavy_comma>EoC Z \<brangle>"
-  unfolding EoC_def AutoConstruct_def using const_nat_\<nu>proc by (metis unat_0) 
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (0 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 0 \<blangle> Z \<longmapsto> Z \<heavy_comma> 0 \<tycolon> \<nat>['w] \<brangle>"
+  unfolding AutoConstruct_def using const_nat_\<nu>proc by (metis unat_0) 
 lemma [\<nu>intro]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (1 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 1 \<blangle> EoC Z \<longmapsto> 1 \<tycolon> \<nat>['w]\<heavy_comma>EoC Z \<brangle>"
-  unfolding EoC_def AutoConstruct_def using const_nat_\<nu>proc by (metis unat_1) *)
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (1 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 1 \<blangle> Z \<longmapsto> Z \<heavy_comma> 1 \<tycolon> \<nat>['w] \<brangle>"
+  unfolding AutoConstruct_def using const_nat_\<nu>proc by (metis unat_1)
+
+(* schematic_goal "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t 3 \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f
+  \<blangle>\<flower_L>\<medium_left_bracket> A \<flower_L>\<flower>\<flower_R>X\<medium_right_bracket>\<flower_R>   \<longmapsto> ?T \<brangle>" by (rule \<nu>intro) *)
 
 subsubsection \<open>plus\<close>
 
@@ -83,12 +95,6 @@ lemma [simp]: "(x \<tycolon> N) + (y \<tycolon> N) = (x + y \<tycolon> N)" using
 instance by standard
 end
 
-(* lemma[\<nu>intro]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (A,B) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> (EoC Z \<flower> W1) \<longmapsto> (xa \<tycolon> Na\<heavy_comma> xb \<tycolon> Nb\<heavy_comma>EoC Z \<flower> W2) \<brangle> \<Longrightarrow>
-   \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (+) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c add \<blangle> (xa \<tycolon> Na\<heavy_comma> xb \<tycolon> Nb\<heavy_comma>EoC Z \<flower> W2) \<longmapsto> (xc \<tycolon> Nc\<heavy_comma>EoC Z \<flower> W3)\<brangle> \<Longrightarrow>
-   \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (A + B) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> add) \<blangle>  (EoC Z \<flower> W1) \<longmapsto> (xc \<tycolon> Nc\<heavy_comma>EoC Z \<flower> W3) \<brangle>"
-  unfolding EoC_def AutoConstruct_def by rule+ *)
-
 definition op_add :: "nat \<Rightarrow> ('a::len) word \<times> ('a::len) word \<times> ('r::lrep) \<Rightarrow> (('a::len) word \<times> 'r) state"
   where "op_add w p = (case p of (a,b,r) \<Rightarrow> if LENGTH('a) = w then StatOn (a+b, r) else STrap)"
 declare op_add_def[\<nu>instr]
@@ -96,15 +102,6 @@ declare op_add_def[\<nu>instr]
 theorem add_nat_\<nu>proc[\<nu>overload +]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle>\<R> \<heavy_comma> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b] \<longmapsto> \<R> \<heavy_comma> x + y \<tycolon> \<nat>['b] \<brangle>"
   unfolding op_add_def Procedure_def by (auto simp add: of_nat_inverse) 
-
-(* lemma[\<nu>intro]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<Longrightarrow>
-  \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (+) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b] \<heavy_comma>EoC Z \<longmapsto> x + y \<tycolon> \<nat>['b] \<heavy_comma>EoC Z \<brangle>"
-  unfolding AutoConstruct_def EoC_def by (auto simp add: add_nat_\<nu>proc)
-lemma[\<nu>intro]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> EoC Z \<longmapsto> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b] \<heavy_comma>EoC Z \<brangle> \<Longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> op_add (LENGTH('b))) \<blangle> EoC Z \<longmapsto> \<tort_lbrace>(x \<tycolon> \<nat>['b]) + (y \<tycolon> \<nat>['b])\<tort_rbrace> \<heavy_comma>EoC Z \<brangle>"
-  by (auto simp add: add_nat_\<nu>proc) *)
 
 theorem add_nat_mod[\<nu>overload round_add]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> \<RR> \<heavy_comma> y \<tycolon> \<nat>['b::len] \<heavy_comma> x \<tycolon> \<nat>['b] \<longmapsto> \<RR> \<heavy_comma> ((x + y) mod 2^(LENGTH('b))) \<tycolon> \<nat>['b]  \<brangle>"
   unfolding op_add_def Procedure_def by (auto simp add: unat_word_ariths)
@@ -137,11 +134,13 @@ val x = Assumption.all_prems_of ctx\<close>
   by  (\<nu>resolve \<nu>intro (\<nu>intro'))  *)
 
  thm \<nu>intro
-
+ thm declare_fact
 definition [simp]:"difference x y = (if x < y then y - x else x - y)"
-
 proc diff : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(difference x y \<tycolon> \<nat>[32])"
-  \<bullet> x y < if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket> \<medium_left_bracket> \<bullet> x y - \<nu>obtain z where c: "x < z" by auto \<medium_right_bracket>
+  \<bullet> x cast someI \<open>{x}\<close> cast E
+  \<nu>choose a where \<open>some = a\<close> by auto
+  \<bullet> cast E 
+  \<bullet> y < if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket> \<medium_left_bracket> \<bullet> x y - \<medium_right_bracket>
   finish
 
 proc add2 : "(( x \<tycolon> \<nat>[32]) named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"

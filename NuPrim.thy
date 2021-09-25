@@ -89,13 +89,13 @@ subsubsection \<open>Structures assembling propositions\<close>
 definition NoFact :: "prop" ("\<^bold>n\<^bold>o\<^bold>t\<^bold>h\<^bold>i\<^bold>n\<^bold>g") where "NoFact \<equiv> Trueprop True"
 lemma NoFact: "PROP NoFact" unfolding NoFact_def using TrueI .
 definition AndFact :: "prop \<Rightarrow> prop \<Rightarrow> prop" (infixr "and'_fact" 3) where "AndFact \<equiv> (&&&)"
-translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
+translations "P" <= "CONST AndFact P (CONST NoFact)"
 translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
 lemma AndFact_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP P and_fact PROP Q" unfolding AndFact_def using conjunctionI .
 lemma AndFact_D1: "PROP P and_fact PROP Q \<Longrightarrow> PROP P" unfolding AndFact_def using conjunctionD1 .
 lemma AndFact_D2: "PROP P and_fact PROP Q \<Longrightarrow> PROP Q" unfolding AndFact_def using conjunctionD2 .
 
-definition FactTree :: "prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop"
+(* definition FactTree :: "prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop"
   where "FactTree (PROP X) (PROP L) (PROP R) \<equiv> (PROP X &&& PROP L &&& PROP R)"
 lemma FactTree_imp: "(PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP C) \<equiv> (PROP X \<Longrightarrow> PROP L \<Longrightarrow> PROP R \<Longrightarrow> PROP C)"
   unfolding FactTree_def conjunction_imp .
@@ -104,7 +104,7 @@ lemma FactTree_L: "PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PR
 lemma FactTree_R: "PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP R" unfolding FactTree_imp .
 lemma FactTree_I: "PROP X \<Longrightarrow> PROP L \<Longrightarrow> PROP R \<Longrightarrow> PROP FactTree (PROP X) (PROP L) (PROP R)"
   unfolding FactTree_def by (intro conjunctionI)
-translations "_pretty_and_ L (_pretty_and_ X R)" <= "CONST FactTree X L R"
+translations "_pretty_and_ L (_pretty_and_ X R)" <= "CONST FactTree X L R" *)
 
 subsubsection \<open>The type representing ownership\<close>
 
@@ -348,7 +348,11 @@ lemma [\<nu>intro]: "\<nu>Disposable A \<Longrightarrow> \<nu>Disposable B \<Lon
 
 subsection \<open>Stack structure\<close>
 
-definition Stack_Delimiter :: " ('a :: lrep) set \<Rightarrow> ('b :: lrep) set \<Rightarrow> ('b \<times> 'a :: lrep) set " ( "(2_/ \<heavy_comma> _)" [13,14] 13)
+class stack = lrep
+instantiation void :: stack begin instance by standard end
+instantiation prod :: (lrep,stack) stack begin instance by standard end
+
+definition Stack_Delimiter :: " ('a :: stack) set \<Rightarrow> ('b :: lrep) set \<Rightarrow> ('b \<times> 'a) set " ( "(2_/ \<heavy_comma> _)" [13,14] 13)
   where "Stack_Delimiter a b = (b \<times> a)"
 definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " where "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
 translations "a" <= "CONST End_of_Contextual_Stack x \<heavy_comma> a" \<comment> \<open>hide the end\<close>
@@ -645,9 +649,9 @@ lemma SpecTop_imp: "(PROP SpecTop (PROP P) (PROP L) \<Longrightarrow> PROP C) \<
   unfolding SpecTop_def conjunction_imp .
 lemma SpecTop_I: "PROP P \<Longrightarrow> PROP L \<Longrightarrow> PROP SpecTop (PROP P) (PROP L)" unfolding SpecTop_def using conjunctionI .
 
-(* lemma Specification_rule_focus: "(P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP Q) \<Longrightarrow> (PROP Q \<Longrightarrow> P \<Longrightarrow> P') \<Longrightarrow> (P' \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP Q)"
-    unfolding SpecTop_def by presburger
-lemma Specification_rule_aux: "(P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q) \<Longrightarrow> (Q \<Longrightarrow> Q') \<Longrightarrow> (P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q')"
+lemma SpecTop_cong_major: "(P \<equiv> P') \<Longrightarrow> (P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP Q) \<equiv> (P' \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP Q)"
+    unfolding SpecTop_def by auto
+(*lemma Specification_rule_aux: "(P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q) \<Longrightarrow> (Q \<Longrightarrow> Q') \<Longrightarrow> (P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q')"
     unfolding SpecTop_def  by presburger *)
 
 section \<open>Principal rules\<close>
@@ -707,12 +711,13 @@ lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightar
 
 lemma rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<blangle> U \<longmapsto> \<R> \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U \<longmapsto> \<R> \<brangle>" by fast
 
+
 lemma name_star_fact:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m name \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop Q) (PROP L) (PROP S))
+  "(PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop Q) (PROP L) (PROP S))
     \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP NoFact) (PROP Fact name Q and_fact PROP L) (PROP S))"
   unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
 lemma declare_fact:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m name \<Longrightarrow> A \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
+  "A \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
     \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP Fact name A and_fact PROP L) (PROP S))"
   unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
 lemma intro_internal_fact:
@@ -777,7 +782,9 @@ end
 definition AddtionTy :: " 'a set \<Rightarrow> bool \<Rightarrow> 'a set " (infixl "\<addition>" 50) where " T \<addition> P = {x. x \<in> T \<and> P}"
 lemma [simp]: "T \<addition> True = T" unfolding AddtionTy_def by fast
 lemma [simp]: "\<S_S> (T \<addition> P) = (\<S_S> T \<addition> P)" unfolding AddtionTy_def by auto
-lemma [simp]: "((((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<and> B) \<and> C) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L) \<equiv> (((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<and> (B \<and> C)) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L)" by simp
+lemma [intro]: "P \<Longrightarrow> x \<in> T \<Longrightarrow> x \<in> (T \<addition> P)" unfolding AddtionTy_def by auto
+lemma [elim]: "x \<in> (T \<addition> P) \<Longrightarrow> (x \<in> T \<Longrightarrow> P \<Longrightarrow> C) \<Longrightarrow> C" unfolding AddtionTy_def by auto
+(* lemma [simp]: "((((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<and> B) \<and> C) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L) \<equiv> (((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<and> (B \<and> C)) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L)" by simp *)
 
 lemma t1: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<addition> P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P" unfolding CurrentConstruction_def AddtionTy_def by (cases s) auto
 lemma [simp]:
@@ -815,6 +822,9 @@ lemma LooseState_Cast[\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<lon
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B) \<longmapsto> (A'\<heavy_comma>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and>Q"
   unfolding Cast_def by auto
 
+theorem apply_cast: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R \<heavy_comma> X \<flower> W)) \<Longrightarrow> (\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> Y \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R \<heavy_comma> Y \<flower> W) \<addition> P)"
+  unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def SpecTop_imp by (auto 4 6)
+
 subsubsection \<open>Conversion\<close>
 
 definition AutoTag :: "bool \<Rightarrow> bool" ("\<^bold>a\<^bold>u\<^bold>t\<^bold>o _" [100] 99) where [\<nu>def]: "\<^bold>a\<^bold>u\<^bold>t\<^bold>o P \<longleftrightarrow> P"
@@ -838,57 +848,24 @@ theorem apply_proc_conv: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>
 
 subsubsection \<open>Auto construct & destruct\<close>
 
-definition Atomic :: "'a \<Rightarrow> 'a" ("\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c _" [501] 500) where "\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c x = x"
-definition EoC :: "'a \<Rightarrow> 'a" ("EoC{ _ }") where [\<nu>def, \<nu>post_construct]:"EoC{x} = x" \<comment> \<open>End of Construct\<close>
 definition AutoConstruct :: " 'exp \<Rightarrow> (('a::lrep) \<Rightarrow> ('b::lrep) state) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t _/ \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<blangle>_/ \<longmapsto> _ \<brangle>)" [20,101,10,10] 100)
   where [\<nu>def]:"AutoConstruct exp f S T \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>"
-lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (\<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c t \<tycolon> T) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> EoC{ Z \<heavy_comma> t \<tycolon>T } \<longmapsto> EoC Z \<heavy_comma> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c t \<tycolon> T \<brangle>"
-  unfolding AutoConstruct_def EoC_def Atomic_def AutoTag_def by (simp add: nop_\<nu>proc)
+lemma AutoConstruct: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> AutoConstruct exp f S T \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)" for exp :: "'exp"
+  including show_more unfolding AutoConstruct_def using apply_proc by fast
+
+lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t X \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle>A \<longmapsto> B\<brangle> \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t X \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c call f \<blangle>(A \<flower> U) \<longmapsto> (B \<flower> U) \<brangle>"
+  unfolding AutoConstruct_def using call by fast
 
 lemma [simp]: "(Inhabited A \<and> Inhabited B) \<or> (Inhabited A' \<and> Inhabited B')
   \<Longrightarrow> (A\<heavy_comma>B) = (A'\<heavy_comma>B') \<longleftrightarrow> A = A' \<and> B = B'" unfolding Stack_Delimiter_def Inhabited_def by (auto simp add: times_eq_iff) 
 lemma  [elim]: "(A\<heavy_comma>B) = (A'\<heavy_comma>B') \<Longrightarrow> (A = {} \<or> B = {} \<Longrightarrow> A' = {} \<or> B' = {} \<Longrightarrow> C) \<Longrightarrow> (A = A' \<Longrightarrow> B = B' \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Stack_Delimiter_def by (auto simp add: times_eq_iff)
 
-lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t A \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> (EoC Z  \<flower> W1) \<longmapsto> (EoC Z \<heavy_comma> A' \<flower> W2)\<brangle>
-      \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t B \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> (EoC{ Z \<heavy_comma> A'} \<flower> W2) \<longmapsto> (EoC{ Z \<heavy_comma> A'} \<heavy_comma> B' \<flower> W3) \<brangle>
-      \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (B,A) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> g) \<blangle> (EoC Z \<flower> W1) \<longmapsto> (EoC Z\<heavy_comma> A' \<heavy_comma> B' \<flower> W3) \<brangle>"
-  unfolding AutoConstruct_def EoC_def by auto
-lemma [\<nu>intro']: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t A \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> X \<longmapsto> Y \<brangle> \<Longrightarrow>
-  \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t A \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c call f \<blangle>(X \<flower> W) \<longmapsto> (Y \<flower> W) \<brangle>"
-  unfolding AutoConstruct_def EoC_def by auto
-
-lemma [\<nu>auto_destruct]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> Z \<heavy_comma> t \<tycolon> \<^bold>a\<^bold>t\<^bold>o\<^bold>m\<^bold>i\<^bold>c T \<longmapsto> Z \<heavy_comma> t \<tycolon>T \<brangle>" unfolding Atomic_def AutoTag_def using nop_\<nu>proc .
-
-subsubsection \<open>Register construction code\<close>
-
-consts copy_reg :: "(('a::register_collection), 'a, ('b::sharable_lrep) register, 'b register) address \<Rightarrow> ('b,'bx) typing"
-  move_reg :: "(('a::register_collection), ('b::register_collection), ('c::lrep) register, void register) address \<Rightarrow> ('c,'cx) typing"
-  copy_reg_byname :: "name_tag \<Rightarrow> ('a::lrep,'b) typing"
-  move_reg_byname :: "name_tag \<Rightarrow> ('a::lrep,'b) typing"
-syntax "_copy_reg_byname_" :: "idt \<Rightarrow> ('a::lrep,'b) typing" ("$_" [1000] 999)
-  "_move_reg_byname_" :: "idt \<Rightarrow> ('a::lrep,'b) typing" ("$''_" [1000] 999)
-translations "_copy_reg_byname_ x" == "CONST copy_reg_byname (NAME x)"
-  "_move_reg_byname_ x" == "CONST move_reg_byname (NAME x)"
-
-lemma [\<nu>intro]:
-  "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name  \<tort_lbrace> x \<tycolon> X \<tort_rbrace>  \<^bold>@ G \<longmapsto> RegisterTy name  \<tort_lbrace> sh (Gi 1) x \<tycolon> X \<tort_rbrace> \<^bold>@ G2 \<brangle>
-    \<Longrightarrow> \<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y shx : sh (Gi 1) x \<Longrightarrow>
-    \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (copy_reg adr) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (load_reg adr) \<blangle> (EoC R \<flower> G) \<longmapsto> (EoC R \<heavy_comma> shx \<tycolon> X \<flower> G2) \<brangle>"
-  including show_more1
-  unfolding AutoConstruct_def Simplify_def using load_reg .
-
-lemma [\<nu>intro]:
-  "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name  \<tort_lbrace> x \<tycolon> X \<tort_rbrace>  \<^bold>@ G \<longmapsto> RegisterTy name Void \<^bold>@ G2 \<brangle>
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (move_reg adr) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c (remove_reg adr) \<blangle> (EoC R \<flower> G) \<longmapsto> (EoC R \<heavy_comma> x \<tycolon> X \<flower> G2) \<brangle>"
-  including show_more
-  unfolding AutoConstruct_def Simplify_def using remove_reg .
-
   section \<open>Appendix\<close>
 
 subsection \<open>Finalize the syntax sugars to be ready for use\<close>
 
 no_translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
-translations "_linebreak_collection_ P Q" <= "CONST AndFact P Q"
+(* translations "_linebreak_collection_ P Q" <= "CONST AndFact P Q" *)
 
 end

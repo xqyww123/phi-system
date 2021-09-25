@@ -219,21 +219,25 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
       (fn x => case x of (Const ("NuPrim.CurrentConstruction", ty) $ p $ T) =>
         case strip_named_binder "NuPrim.ExTyp" T of (vars, body) =>
           (map snd vars, (Const ("NuPrim.CurrentConstruction", ty) $ p $ body)))
-    val t1 = ((Thm.assume (current_codeblock focus)) COMP CodeBlock_unabbrev)
+    val t1 = ((Thm.assume (current_codeblock focus)) COMP CodeBlock_unabbrev) 
     val t2 = ((Thm.assume (current_codeblock focus)) COMP CodeBlock_abbrev)
     val focus = Raw_Simplifier.rewrite_rule ctx [ExTy_strip] focus
 
     (* val focus = Simplifier.asm_simplify
           (fold Simplifier.add_simp [ExTy_strip, CodeBlock_unabbrev] ctx)
           (disch_current_codeblock focus) |> @{print} *)
+    val fix_lst = fix_frees_lst Position.none org_vars
+    val (_,ctx_fixed) = Proof_Context.add_fixes fix_lst ctx
+    val org_vars' = map (free_to_fix ctx_fixed) org_vars
     val ({vars=decl_vars,propss=[insts],binds=[],result_binds=[],...}, params_ctx) =
-      prep_stmt raw_decls [map (rpair []) raw_insts]  ctx
-    val insts = map (dest_eq o dest_Trueprop) insts |> match_vars params_ctx [] [] org_vars
-    val inst_body = subst_free (org_vars ~~ insts) org_body |> @{print}
+      prep_stmt raw_decls [map (rpair []) raw_insts]  ctx_fixed
+    val insts = map (dest_eq o dest_Trueprop) insts |> match_vars params_ctx [] [] org_vars'
+    val inst_body = subst_free (org_vars ~~ insts) org_body
 
     val goal = inst_body |> list_mk_binder "HOL.Ex" (map (#2 o #2) decl_vars |> rev)
           |> mk_Trueprop |> Syntax.check_term params_ctx
-    val that_vars = map dest_Free org_vars |> Variable.variant_frees params_ctx [] |> map Free
+    val that_vars = map dest_Free org_vars' |> map Free
+           (*|> Variable.variant_frees params_ctx [] |> map Free |> @{print} *)
     val that_prop = mk_Trueprop (subst_free (org_vars ~~ that_vars) org_body)
     val cparams = map (Thm.cterm_of params_ctx o #2 o #2) decl_vars;
 
@@ -241,7 +245,7 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
     val specthm'_term = mk_Trueprop (subst_free [Logic.dest_equals (prop_of t1)] inst_body)
     val specthm' = intro_SPEC 
         (Thm.assume (Thm.cterm_of params_ctx specthm'_term)
-          |> Raw_Simplifier.rewrite_rule params_ctx [t2] |> @{print}
+          |> Raw_Simplifier.rewrite_rule params_ctx [t2]
         , facts)
     fun after_qed (result_ctxt, results) state' =
       let open NuBasics
@@ -250,7 +254,7 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
         val rule = rule
               |> Drule.forall_intr_list (map (Thm.cterm_of params_ctx) that_vars)
         val rule = (rule COMP focus_ex) |> Raw_Simplifier.rewrite_rule ctx' [t1]
-              |> expand_exE ctx' |> @{print}
+              |> expand_exE ctx'
         (* val (id,specthm) = specthm |> intro_interal_fact_spec rule *)
       in
         state'
@@ -272,3 +276,4 @@ val choose_cmd = gen_choose Proof_Context.read_stmt
 end
 
 end
+

@@ -15,10 +15,13 @@ signature NU_PROCESSORS = sig
 end
 structure NuProcessors : NU_PROCESSORS = struct
 open NuBasics NuHelp NuProcessor
-val simplifier = almost_safe (fn ctx => fn th =>
-  Scan.succeed (fn _ =>
-    Simplifier.simplify ctx th |> (fn th2 =>
-      if Thm.eq_thm_prop (th, th2) then raise Bypass else th2)))
+val simplifier = almost_safe (fn ctx => fn meta =>
+  Scan.succeed (fn _ => let
+    val ctx' = NuSys.load_specthm meta ctx
+                |> Simplifier.add_cong @{thm NuPrim.SpecTop_cong_major}
+    in Simplifier.simplify ctx' meta
+        |> (fn th2 => if Thm.eq_thm_prop (meta, th2) then raise Bypass else th2)
+    end))
 fun load_specthm proc ctx th toks = proc (NuSys.load_specthm th ctx) th toks
 fun focus_rule processor ctx th toks = 
   case elim_SPEC th of (focus,aux) =>
