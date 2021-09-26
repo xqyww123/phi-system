@@ -137,7 +137,7 @@ text \<open>The semantic framework follows a style of shallow embedding, where s
   are modelled by different Isabelle type. Model types are constrained by the base type class {\it lrep} and types representing
   objects that supports certain features are constrained by specific sub-classes which extend the base class {\it lrep} finally. \<close>
 
-datatype llty = la_i nat | la_p nat | la_s llty | la_a llty nat | la_z | la_C llty llty
+datatype llty = la_i nat | la_p nat | la_tup llty | la_array llty nat | la_z | la_C llty llty
   \<comment> \<open>LLVM types representing integers in specified bit length, pointers in the given space, structures of given content
   (usually a list by @{term la_C}), arrays of given content and fixed length, abstract type filtered during code extraction,
   and the list constructor which is used in argument list and structure's filed list,  respectively. \<close>
@@ -150,25 +150,25 @@ class zero_lrep = lrep + \<comment> \<open>memory allocation\<close>
   fixes lty_zero :: "'a" \<comment> \<open>The zero value to what concrete objects are initialized.\<close>
 
 class ceq_lrep = lrep + \<comment> \<open>equality comparison\<close>
-  fixes ceqable :: "('a * 'a) \<Rightarrow> bool" \<comment> \<open>Whether two values could be compared for equality\<close>
-  fixes ceq :: "('a * 'a) \<Rightarrow> bool" \<comment> \<open>The equality of two values.
+  fixes ceqable :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>Whether two values could be compared for equality\<close>
+  fixes ceq :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>The equality of two values.
     It is only valid when the two values could be compared, that the @{term ceqable} for them is true.\<close>
-  assumes ceqable_sym[ac_simps]: "ceqable (x,y) = ceqable (y,x)"
-  assumes ceq_refl[simp]: "ceqable (x,x) \<Longrightarrow> ceq (x,x)"
-  assumes ceq_sym[ac_simps]: "ceqable (x,y) \<Longrightarrow> ceq (x,y) \<longleftrightarrow> ceq (y,x)"
-  assumes ceq_trans: "ceqable (x,y) \<Longrightarrow> ceqable (y,z) \<Longrightarrow> ceqable (x,z)
-    \<Longrightarrow> ceq(x,y) \<Longrightarrow> ceq (y,z) \<Longrightarrow> ceq (x,z)"
+  assumes ceqable_sym[simp]: "ceqable x y = ceqable y x"
+  assumes ceq_refl[intro]: "ceqable x x \<Longrightarrow> ceq x x"
+  assumes ceq_sym[simp]: "ceqable x y \<Longrightarrow> ceq x y \<longleftrightarrow> ceq y x"
+  assumes ceq_trans: "ceqable x y \<Longrightarrow> ceqable y z \<Longrightarrow> ceqable x z
+    \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
 
 class sharable_lrep = lrep + \<comment> \<open>for objects whose the ownership can be shared \<close>
   fixes shareable :: "'a set" \<comment> \<open>Whether the ownership of a value could be shared.
       It is a predicate giving the precise control to decide on the shareability for each value.\<close>
     and share :: "zint \<Rightarrow> 'a \<Rightarrow> 'a"
-    and revert :: "'a * 'a \<Rightarrow> bool"
+    and revert :: " 'a \<Rightarrow> 'a \<Rightarrow> bool "
     and dpriv :: "'a \<Rightarrow> 'a"
-  assumes revert_refl[simp]: "revert (x,x)"
-  assumes revert_sym[ac_simps]: "revert (x,y) \<longleftrightarrow> revert (y,x)"
-  assumes revert_trans: "revert (x,y) \<Longrightarrow> revert (y,z) \<Longrightarrow> revert (x,z)"
-  assumes share_id[simp]: "share (Gi 0) = id"
+  assumes revert_refl[simp]: "revert x x"
+  assumes revert_sym[simp]: "revert x y \<longleftrightarrow> revert y x"
+  assumes revert_trans: "revert x y \<Longrightarrow> revert y z \<Longrightarrow> revert x z"
+  assumes share_id[simp]: "share (Gi 0) x = x"
   assumes share_assoc[simp]: "share b (share a x) = share (a + b) x"
 
 class naive_lrep = sharable_lrep +
@@ -176,7 +176,7 @@ class naive_lrep = sharable_lrep +
   assumes [simp]: "shareable = UNIV"
   assumes [simp]: "dpriv = id"
   assumes [simp]: "share z = id"
-  assumes [simp]: "revert xy = True"  
+  assumes [simp]: "revert x y = True"  
 
 subsection \<open>The \<nu>-type\<close>
 
@@ -209,8 +209,8 @@ lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrigh
 
 definition \<nu>Share :: "('a::sharable_lrep,'b) nu \<Rightarrow> 'b set \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Share N s f \<longleftrightarrow> (\<forall>z p x. x \<in> s \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> p \<in> shareable \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
-definition \<nu>CEqual :: "('a::ceq_lrep, 'b) nu \<Rightarrow> ('b \<times> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<times> 'b \<Rightarrow> bool) \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>CEqual N P eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2. P (x1,x2) \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable (p1,p2) \<and> ceq (p1,p2) = eq (x1,x2))"
+definition \<nu>CEqual :: "('a::ceq_lrep, 'b) nu \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>CEqual N P eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2. P x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
 definition \<nu>Disposable :: " ('a::lrep) set \<Rightarrow> bool " where [\<nu>def]: "\<nu>Disposable T \<longleftrightarrow> (\<forall>x. x \<in> T \<longrightarrow> x \<in> disposable)"
 
 lemma [\<nu>intro]: "\<nu>Share N UNIV (K id)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>Share_def by simp
