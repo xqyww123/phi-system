@@ -33,8 +33,18 @@ declare op_pair_def[\<nu>instr] op_depair_def[\<nu>instr]
 theorem pr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
 theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
 
-definition op_crash :: "('r::stack) \<Rightarrow> ('x::stack) state" where "op_crash r = SNeg"
+definition op_crash :: "('r::lrep) \<Rightarrow> ('x::lrep) state" where "op_crash r = SNeg"
 lemma op_crash:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
+
+consts op_while :: "'c itself \<Rightarrow> (('x::lrep) \<times> ('r::stack) \<flower> ('w::register_collection) \<Rightarrow> (('x \<times> 1 word) \<times> 'r \<flower> 'w) state)
+  \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state) \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state)"
+specification ("op_while")
+  while_\<nu>proc[simplified PremiseHOL ParamHOL]: "
+  ParamHOL P \<Longrightarrow> ParamHOL Rc \<Longrightarrow> ParamHOL Rb \<Longrightarrow> PremiseHOL (wf (Rc O Rb))
+  \<Longrightarrow> (\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> (x1::'c) \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> {(y, y \<in> P) | y. (y,x1) \<in> Rc } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>)) \<flower> W \<brangle>)
+  \<Longrightarrow> (\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)) \<flower> W \<longmapsto> (R \<heavy_comma> {y. (y,x2) \<in> Rb} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>)
+  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> (R \<heavy_comma> x \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>"
+  apply (rule exI) using op_crash by auto
 
 (* consts xop_pair :: " ('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
 specification ("xop_pair") "\<^bold>p\<^bold>r\<^bold>o\<^bold>c xop_pair \<blangle> R \<heavy_comma> (a::'x) \<tycolon> A \<heavy_comma> (b::'y) \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>"
@@ -59,7 +69,7 @@ lemma [simp]: "(if P then (x \<tycolon> N) else (y \<tycolon> N)) = ((if P then 
 
 section \<open>Arithmetic instructions\<close>
 
-\<nu>overloads "+" and round_add and "<" and "-"
+\<nu>overloads "+" and round_add and "<" and "-" and "="
 
 
 subsection \<open>Integer arithmetic\<close>
@@ -122,6 +132,9 @@ declare op_lt_def[\<nu>instr]
 theorem op_lt_\<nu>proc[\<nu>overload <]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt (TYPE('w::len)) \<blangle>\<R>\<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> \<R>\<heavy_comma> (x < y) \<tycolon> \<bool> \<brangle>"
   unfolding \<nu>def op_lt_def by (auto simp add: word_less_nat_alt)
 
+subsubsection \<open>equal\<close>
+(* definition op_equal :: "  " *)
+
 section \<open>Tests\<close>
 
 ML \<open>Locale.get_locales @{theory}\<close>
@@ -133,15 +146,37 @@ val x = Assumption.all_prems_of ctx\<close>
 + (233 \<tycolon>  \<nat>[32])) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle>((?Z1::(?'a::lrep) set) \<flower> \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r A = \<tort_lbrace> 16 \<tycolon> \<nat>[32]\<tort_rbrace> and_ty \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r B = \<tort_lbrace> 0 \<tycolon> \<nat>[32] \<tort_rbrace>) \<longmapsto> (?Z2::(?'b::lrep) set) \<brangle>"
   by  (\<nu>resolve \<nu>intro (\<nu>intro'))  *)
 
+  notepad
+begin
+  { fix x :: nat
+    have "x = x" by auto
+  }
+  ML_val \<open>@{term \<open>\<And>x. x\<close>}\<close>
+  assume A: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c xx \<blangle> R \<heavy_comma> (x \<in> {x. (0::nat) < x}) \<tycolon> X \<longmapsto> R2 \<brangle>  \<Longrightarrow> Q"
+  assume B: "(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC2
+    \<blangle>R\<heavy_comma> x1 \<tycolon> \<nat>[32]  \<longmapsto> R\<heavy_comma> {(y, y \<in> {x. 0 < x}) |y. (y, x1) \<in> Id} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<nat>[32] \<nuFusion> \<bool>) \<brangle>) \<Longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB2
+    \<blangle> R\<heavy_comma>x2 \<tycolon> (\<nat>[32] \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e {x. 0 < x})  \<longmapsto>  R\<heavy_comma>{y. (y, x2) \<in> less_than} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e \<nat>[32] \<brangle> \<Longrightarrow>
+  \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (call (op_while TYPE(nat) brC2 brB2)) \<^bold>o\<^bold>n \<t>\<o>\<p>_\<p>\<r>\<o>\<c> \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n
+  \<flower_L>\<medium_left_bracket> R\<heavy_comma>- {x. 0 < x} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e \<nat>[32] \<flower_L>\<flower>\<flower_R> Void \<medium_right_bracket>\<flower_R>"
+  note B[simplified]
+end
+
+
+ML \<open>Syntax.parse_term @{context} "(x::nat)"\<close>
+
+term if_\<nu>proc
  thm \<nu>intro
- thm declare_fact
+ thm SpecTop_cong_major
+
 definition [simp]:"difference x y = (if x < y then y - x else x - y)"
 proc diff : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(difference x y \<tycolon> \<nat>[32])"
-  \<bullet> x cast someI \<open>{x}\<close> cast E
-  \<nu>choose a where \<open>some = a\<close> by auto
-  \<bullet> cast E 
-  \<bullet> y < if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket> \<medium_left_bracket> \<bullet> x y - \<medium_right_bracket>
+  \<bullet> x while \<open>{x. 0 < x}\<close> Id less_than \<medium_left_bracket> \<bullet> \<rightarrow> a a 0 a < pr \<medium_right_bracket> \<medium_left_bracket> \<bullet> cast E \<Longrightarrow> th1[used] \<bullet> 1 -  \<medium_right_bracket>
+  \<bullet> cast E \<nu>choose a where "some = a" by auto
+  \<bullet> cast E \<Longrightarrow> th1[simp] drop_fact th1
+  \<bullet> drop x y < if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket> \<medium_left_bracket> \<bullet> x y - \<medium_right_bracket>
   finish
+
 
 proc add2 : "(( x \<tycolon> \<nat>[32]) named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
   if "x < 100" and "y < 100"

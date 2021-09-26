@@ -12,6 +12,7 @@ signature NU_BASICS = sig
   val mk_stateT : typ -> typ
 
   val dest_param : term -> term
+  val param_type : thm -> typ
   val dest_RepSet : term -> term
   val dest_nuTy : term -> term * term
   val mk_nuTy : term * term -> term
@@ -116,6 +117,9 @@ fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
 
 fun dest_param (Const (@{const_name "NuPrim.ParamTag"}, _) $ x) = x
   | dest_param tm = raise TERM ("dest_param", [tm])
+val dest_param_c = dest_monop_c "NuPrim.ParamTag"
+fun param_type_c th = cprem_of th 1 |> dest_param_c |> ctyp_of_cterm
+val param_type = param_type_c #> typ_of
 val unit_const_name = @{const_name "Product_Type.Unity"}
 val name_tag_ty = Type (@{type_name "NuPrim.name_tag"}, [])
 val name_tag_cty = @{ctyp "NuPrim.name_tag"}

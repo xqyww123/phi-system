@@ -5,7 +5,7 @@ theory NuSys
   keywords
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" :: quasi_command
-  and "\<bullet>" "premise" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" :: prf_decl % "proof"
+  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
@@ -83,12 +83,17 @@ val _ =
     (Scan.succeed (Toplevel.end_proof NuToplevel.finish_proc_cmd))
 
 val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<nu>debug\<close> "The \<nu>construction"
+    (Scan.succeed (Toplevel.proof (fn stat =>
+      stat |> Proof.map_context (NuSys.load_specthm (Proof.the_fact stat)))))
+
+val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<bullet>\<close> "The \<nu>construction"
     (fn toks => (Toplevel.proof (NuToplevel.process_cmd (toks @ [Token.eof])),
       if hd toks |> Token.is_eof then [Token.eof] else []))
 
 val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>premise\<close> "proof for premise"
+  Outer_Syntax.command \<^command_keyword>\<open>affirm\<close> "proof for premise"
     (Scan.succeed (Toplevel.proof' (snd oo NuToplevel.prove_prem)))
 
 val _ =
@@ -108,7 +113,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "construct nested sub-procedure"
-    (optional ($$$ "\<Longrightarrow>" |-- and_list (binding -- opt_attribs)) [] >> (Toplevel.proof' o NuToplevel.begin_block_cmd));
+    (optional ($$$ "(" |-- and_list (binding -- opt_attribs) --| $$$ ")") [] >> (Toplevel.proof' o NuToplevel.begin_block_cmd));
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "finish the nested sub-procedure construction"
@@ -170,7 +175,9 @@ section \<open>Processors\<close>
 
 \<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fn _ => fold (fn idt => NuRegisters.assign_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
+    (fn idts => fn _ => fold (fn idt =>
+      NuRegisters.assign_reg ctx idt
+        #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
 \<nu>processor  load_register 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   fn ctx => fn th => short_ident >> (fn idt => fn _ => NuRegisters.load_reg ctx idt th
@@ -181,28 +188,42 @@ end\<close>
     (fn idts => fn _ => fold (fn idt => NuRegisters.move_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
 
-\<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier\<close>
+\<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier []\<close>
+\<nu>processor \<nu>simplifier_final 10000 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close>
 
-\<nu>processor \<nu>resolver 9000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>load_specthm (all_premises_prover (NuSys.auto_resolve NONE []))\<close>
+\<nu>processor move_fact 50 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<addition> P\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+  meta RS @{thm move_fact_to_star1} handle THM _ => meta RS @{thm move_fact_to_star2})\<close>
+
+\<nu>processor \<nu>resolver 9000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+  NuBasics.elim_SPEC meta |> apfst (fn major =>
+  case Seq.pull (NuSys.auto_resolve NONE [] (NuSys.load_specthm meta ctx) major)
+    of SOME (major', _) => major' | _ => raise Bypass) |> NuBasics.intro_SPEC)\<close>
 
 \<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => NuProcedure.parser >> (fn binding => fn _ =>
-    NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) meta)\<close>
+    let val ctx = NuSys.load_specthm meta ctx
+    in NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) meta end)\<close>
 
-\<nu>processor cast 8900 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => (Parse.$$$ "cast" |-- NuProcedure.parser) >> (fn binding => fn _ =>
-    NuSys.apply_casts ctx (NuProcedure.cast_thm ctx binding) meta)\<close>
+\<nu>processor cast 8900 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>
+  \<open> fn ctx => fn meta => (Parse.$$$ "cast" |-- (Parse.$$$ "(" |-- Parse.list NuProcedure.parser --| Parse.$$$ ")" || (NuProcedure.parser >> single)))
+    >> (fn bindings => fn _ =>
+      let val ctx = NuSys.load_specthm meta ctx
+      in fold (NuSys.apply_casts ctx o NuProcedure.cast_thm ctx) bindings meta end)\<close>
 
 \<nu>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Parse.term >> (fn term => fn _ =>
     NuBasics.elim_SPEC meta |> apfst (fn th =>
-      (Syntax.read_term ctx term |> Thm.cterm_of ctx |> NuBasics.intro_param) RS th) |> NuBasics.intro_SPEC)\<close>
+      (Syntax.parse_term ctx term |> Type.constraint (NuBasics.param_type th) |> Syntax.check_term ctx
+        |> Thm.cterm_of ctx |> NuBasics.intro_param) RS th) |> NuBasics.intro_SPEC)\<close>
 
 \<nu>processor literal_constructor 9500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.cartouche >> (fn term => fn _ =>
   let val term = Syntax.read_term ctx term |> Thm.cterm_of ctx |> Simplifier.rewrite ctx |> Thm.rhs_of
+        val ctx = NuSys.load_specthm meta ctx
   in NuSys.auto_construct ctx term meta end)\<close>
 
 \<nu>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
   let open NuBasics
-    val term = (stack_of_meta meta |> @{print} |> hd |> dest_RepSet |> dest_nuTy |> #2) handle TERM _ => @{term \<open>\<nat>[32]\<close>}
+    val term = (stack_of_meta meta |> hd |> dest_RepSet |> dest_nuTy |> #2) handle TERM _ => @{term \<open>\<nat>[32]\<close>}
     val term = mk_nuTy (Syntax.parse_term ctx num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
+    val ctx = NuSys.load_specthm meta ctx
   in NuSys.auto_construct ctx term meta  end)
 \<close>
 

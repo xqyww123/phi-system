@@ -75,7 +75,8 @@ signature NU_HELP = sig
 
   val map_fixes : ('a -> 'b) ->
         (binding * 'a option * mixfix) list -> (binding * 'b option * mixfix) list
-  val fix_frees : Position.T -> term list (* free terms *) -> state -> state
+  val fix_frees : Position.T -> term list (* free terms *)
+        -> Proof.context -> (term -> term) * Proof.context
   val fix_frees_lst : Position.T -> term list (* free terms *)
         -> (binding * typ option * mixfix) list
 end
@@ -196,12 +197,15 @@ fun list_mk_binder binder = fold (mk_binder binder)
 
 fun undisch th = cprem_of th 1 |> assume |> implies_elim th
 
-fun fix_frees pos = map (Term.dest_Free #> (fn (name,ty) =>
-        (Binding.make (name, pos), (if ty = Term.dummyT then NONE else SOME ty), Mixfix.NoSyn)
-      )) #> Proof.fix
 fun fix_frees_lst pos = map (Term.dest_Free #> (fn (name,ty) =>
         (Binding.make (name, pos), (if ty = Term.dummyT then NONE else SOME ty), Mixfix.NoSyn)
       ))
+fun fix_frees pos frees =
+  Proof_Context.add_fixes (fix_frees_lst pos frees)
+    #> apfst (fn new_names => 
+      subst_free (frees ~~ new_names |> map (fn (free,new) =>
+          (free, Term.Free (new, Term.dest_Free free |> #2)))))
+
 
 fun free_to_fix_1 ctx (tm as Term.Free (name,ty)) =
       (case Variable.lookup_fixed ctx name of SOME name' => Term.Free (name', ty) | _ => tm)

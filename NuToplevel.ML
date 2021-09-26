@@ -17,7 +17,8 @@ signature NU_TOPLEVEL = sig
         -> (Attrib.binding * (string * string list) list) list (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state
   val finish_proc_cmd : bool -> Proof.state -> Proof.context
-  val begin_block_cmd : Attrib.binding list -> bool -> Proof.state -> Proof.state
+  val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
+        -> bool -> Proof.state -> Proof.state
   val end_block_cmd : bool -> Proof.state -> Proof.state
   
   val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
@@ -145,15 +146,20 @@ fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE 
 val end_proc_ctx_thm = @{thm NuPrim.end_proc_ctx}
 fun gen_finish_proc prep_specthm qed int stat =
   let
+    val meta = Proof.the_fact stat
     val ctx = Proof.context_of stat
     val goal = Proof_Context.get_thm ctx "\<nu>thesis" |> Drule.dest_term
-    val th = Proof.the_fact stat |> prep_specthm ctx
+    val (_,_,desired_nu) = dest_procedure_c goal
+    val meta = meta |> prep_specthm ctx
+    val meta = meta |> elim_SPEC
+          |> apfst (NuSys.cast (NuSys.load_specthm meta ctx) desired_nu)
+          |> intro_SPEC
     val end_tac = basic_method (fn ctx' => fn t => 
       (finish_proc ctx' goal
-        (singleton (Proof_Context.export ctx ctx') (elim_SPEC th |> fst))) RS t
+        (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))) RS t
         handle e => raise @{print} e)
   in
-    stat |> Proof.set_facts [th] 
+    stat |> Proof.set_facts [] 
       |> qed (SOME (end_tac, Position.no_range), false)
   end
 in
@@ -185,10 +191,12 @@ fun prove_prem int stat =
   let open Proof
     val specthm = the_fact stat
     val (focus,aux) = elim_SPEC specthm
-    val goal = Thm.prop_of specthm |> dest_SpecTop |> #1 |> Logic.dest_implies |> #1
+    val goal = Thm.prop_of specthm |> dest_SpecTop |> #1
+          |> Logic.dest_implies |> #1 |> dest_premise_tag |> mk_Trueprop
     fun after_qed (ctx',[[th]]) stat =
       let
         val [th] = Proof_Context.export ctx' (context_of stat) [th]
+        val th = th RS @{thm NuPrim.Premise_I}
       in
         set_facts [(NuProcessor.process_no_input
           (Proof.context_of stat |> AutoLevel.put 0)
@@ -263,37 +271,37 @@ val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
 val attr_used = map (Attrib.attribute @{context}) @{attributes [used]}
 val elim_premise_tag = perhaps (mk_Trueprop o dest_premise_tag)
 in
-fun setup_proof' print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
-  let open Proof
-    val specthm = the_fact stat
-    fun after_qed ctxthms stat =
-      stat |> end_block 
-           |> after_qed' ctxthms
-  in
-    stat |> begin_block
-      |> map_context (open_meta specthm)
-      |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
-            (map (pair Binding.empty_atts) gl)
-  end
 fun begin_block_cmd bindings int stat =
   let open Proof
-    val ctx = context_of stat
     val specthm = the_fact stat
-    val goal = specthm |> cprop_of |> dest_SpecTop_c |> #1 |> Thm.dest_implies |> #1
-    val (prems, goal) = (Drule.strip_imp_prems goal, Drule.strip_imp_concl goal)
-    val (proc,arg,ret) = dest_procedure_c goal 
-    val blk_name = block_name_of (term_of proc)
+    val stat = stat |> begin_block
+                |> map_context (open_meta specthm)
+    val ctx = context_of stat
+    val (vars, goal) = specthm |> prop_of |> dest_SpecTop |> #1
+          |> Logic.dest_implies |> #1 |> strip_binder "Pure.all"
+    val (inst, stat) = stat
+          |> Proof.map_context_result (fix_frees Position.none vars)
+    val goal = inst goal
+    val (prems, goal) = (Logic.strip_imp_prems goal, Logic.strip_imp_concl goal)
+    val (proc,arg,ret) = dest_procedure goal 
+    val blk_name = block_name_of proc
     val level = current_block_depth specthm
     val level_prefix = "L\<nu>'"^(Int.toString level)^"_"^blk_name
     fun after_qed (ctx',[[th]]) stat =
-      stat |> set_facts[
-        specthm
-          |> elim_SPEC
-          |> apfst (fn focus =>
-            (singleton (Proof_Context.export ctx' (context_of stat)) th) COMP focus
-        ) |> intro_SPEC
-          |> NuProcessor.process_no_input (Proof.context_of stat)
-      ]
+      stat |> end_block |> (fn stat => stat
+          |> set_facts[
+            specthm
+              |> elim_SPEC
+              |> apfst (fn focus =>
+                let val ctx'' = context_of stat
+                  val vars' = map inst vars |> Variable.export_terms ctx' ctx''
+                in ((singleton (Proof_Context.export ctx' ctx'') th
+                      |> Drule.forall_intr_list (map (cterm_of ctx'') vars')
+                    ) COMP focus)
+                end)
+              |> intro_SPEC
+              |> NuProcessor.process_no_input (Proof.context_of stat)
+          ])
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
     val bindings =
@@ -302,21 +310,23 @@ fun begin_block_cmd bindings int stat =
         |> map (apsnd (fn x => elim_premise @ x))
   in
     stat
-      |> setup_proof' (print_results int) Proof_Context.mode_schematic false
-      "\<nu>block"
-          NONE after_qed [] (bindings ~~ (map (single o rpair [] o term_of) prems))
-          [[(term_of goal,[])]] |> #2
+      |> internal_goal (print_results int) Proof_Context.mode_schematic false 
+          "\<nu>block" NONE after_qed []
+          (bindings ~~ (map (single o rpair []) prems))
+          [(Binding.empty_atts, [(goal,[])])] |> #2
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "unreachable"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
       |> (fn stat => let val ctx = Proof.context_of stat 
-            val next_specthm = start_proc ctx level_prefix arg
+            val next_specthm = start_proc ctx level_prefix (cterm_of ctx arg)
               |> rpair (elim_SPEC specthm |> #2)
               |> intro_SPEC |> NuRegisters.new_locale ctx
           in Proof.set_facts [next_specthm] stat end)
-      |> Proof.map_context
-          (Proof_Context.put_thms false ("\<nu>thesis", SOME [Drule.mk_term goal]))
+      |> Proof.map_context (fn ctx => 
+            Proof_Context.put_thms false ("\<nu>thesis",
+              SOME [Drule.mk_term (cterm_of ctx goal)]) ctx
+          )
   end
 end
 

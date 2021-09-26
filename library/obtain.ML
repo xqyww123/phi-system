@@ -265,7 +265,7 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
       end;
   in
     stat
-    |> NuToplevel.setup_proof (print_results int) Proof_Context.mode_default false "\<nu>lemma"
+    |> NuToplevel.setup_proof (print_results int) Proof_Context.mode_default false ""
         NONE after_qed [] [(Binding.empty_atts, [(that_prop, [])])]
         [[(goal, [])]]
     |-> Proof.refine_insert

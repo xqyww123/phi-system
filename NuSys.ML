@@ -16,7 +16,7 @@ signature NU_SYS = sig
   (*
     `conversion` tries to convert the procedure theorem to the given form.
       By @{thm NuPrim.conversion}, it generates a @{term Conversion} premise intended to be solved
-      by `cast` operation.
+      by `auto_resolve`
     `cast` operations solves the first premise by `auto_resolve0`. Several proof obligation that cannot
       be solved automatically will be charged as premises in the result theorem.
           Γ |- cast_premise ==> P
@@ -35,7 +35,7 @@ signature NU_SYS = sig
     be touched by automatic provers.
   *)
   val conversion : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
-  val cast : Proof.context -> thm -> thm
+  val cast : Proof.context -> cterm (*desired nu*) -> thm (*major*) -> thm
 
   (*
     `apply_procs ctx procs whole_meta` applies the first appliable procedure in the `procs`
@@ -91,6 +91,7 @@ signature NU_SYS = sig
   val load_specthm  : thm -> Proof.context -> Proof.context
 
   val auto_construct : Proof.context -> cterm -> thm -> thm
+  val transfer_facts_data : Context.generic -> Context.generic -> Context.generic
 end
 
 (* The Structure *)
@@ -107,6 +108,8 @@ structure NuFacts = Generic_Data
   val extend = I
   val merge : T * T -> T = Symtab.join (fn _ => fn _ => raise Symtab.SAME);
 )
+fun transfer_facts_data from = NuFacts.put (NuFacts.get from)
+
 fun ap2_3 f (a,b,c) = (a,f b,c)
 fun delete_fact name meta ctx =
   ctx |> Context.proof_map (NuFacts.map (Symtab.delete name))
@@ -181,8 +184,8 @@ fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
 
 (** Tactics **)
 fun head_only tac th =
-  if nprems_of th = 1
-  then tac th
+  if nprems_of th = 0
+  then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
   (ALLGOALS (Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used"))
@@ -213,6 +216,11 @@ fun simp_tag_tac ctx th =
 fun SOLVED tac st =
   if Thm.nprems_of st = 0 then all_tac st
   else (tac st |> Seq.filter (fn st' => Thm.nprems_of st' < Thm.nprems_of st));
+fun SOLVED_RULE rule fail th =
+  if Thm.nprems_of th = 0 then th
+  else let val th' = rule th
+       in if Thm.nprems_of th' < Thm.nprems_of th then th'
+          else fail th' end
 fun auto_resolve thms addtion ctx  =
   let 
     val (thms,minor_thms) = case thms of SOME (major, SOME minor) => (major, minor)
@@ -222,19 +230,23 @@ fun auto_resolve thms addtion ctx  =
     val thms = addtion @ thms
   in SOLVED (REPEAT_DETERM_N 100 (
       simp_tag_tac ctx
-      ORELSE resolve_tac ctx thms 1
+      ORELSE (resolve_tac ctx thms 1
+                               )
         ORELSE premise_tac ctx
         ORELSE resolve_tac ctx minor_thms 1
     )) (* #> Seq.map fininsh_premise_hyps *)
   end
 val auto_resolve0 = auto_resolve NONE []
 
-fun auto_resolve_rule' major_minor addition ctx =
-  Tactic.rule_by_tactic ctx (auto_resolve major_minor addition ctx)
+
+fun auto_resolve_rule' major_minor addition ctx th =
+  case Seq.pull (auto_resolve major_minor addition ctx th)
+    of SOME (th', _) => th'
+     | NONE => th
 fun auto_resolve_rule major_minor addition ctx th =
   if can dest_SpecTop (prop_of th)
   then elim_SPEC th
-    |> apfst (auto_resolve_rule' major_minor addition (load_specthm th ctx))
+    |> apfst (auto_resolve_rule' major_minor addition ctx)
     |> intro_SPEC
   else auto_resolve_rule' major_minor addition ctx th
 val auto_resolve_rule0 = auto_resolve_rule NONE []
@@ -242,16 +254,15 @@ val auto_resolve_rule0 = auto_resolve_rule NONE []
 
 
   (** Basic Operations **)
+fun cast ctx desired_nu major =
+  (major COMP
+    (Thm.instantiate ([((("'a",0),["NuPrim.lrep"]),
+                            ctyp_of_cterm desired_nu |> dest_ctyp0)],
+          [((("T'",0),typ_of_cterm desired_nu),desired_nu)])
+      @{thm NuPrim.cast}))
+   |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
 
-fun conclude fail x =
-  case Seq.pull x
-    of SOME (th, other) => Goal.conclude th
-     | NONE => fail ()
-
-fun cast ctx th = 
-  Goal.protect 1 th |> head_only (auto_resolve0 ctx)
-        |> conclude (fn _ => raise CastFail th)
-val conversion_thm = @{thm conversion}
+val conversion_thm = @{thm NuPrim.conversion}
 fun conversion ctx to from =
   let
     val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
@@ -274,7 +285,10 @@ fun conversion ctx to from =
         ((("V'",0), typ_of_cterm V'), V')])
       conversion_thm
   in
-    (from RSN (2,rule)) |> cast ctx
+    (from RSN (2,rule))
+      |> Goal.protect 1
+      |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
+      |> Goal.conclude
   end
 
 local open Tactical Tactic
@@ -312,7 +326,7 @@ fun apply_casts_major ctx procs major =
       |> Seq.map (Goal.protect 0))
 end
 fun apply_Xs X ctx procs meta =
-  elim_SPEC meta |> apfst (X (load_specthm meta ctx) procs) |> intro_SPEC
+  elim_SPEC meta |> apfst (X ctx procs) |> intro_SPEC
 val apply_procs = apply_Xs apply_procs_major
 fun apply_proc ctx = apply_procs ctx o single
 val apply_casts = apply_Xs apply_casts_major
@@ -376,13 +390,12 @@ fun finish_proc ctx goal th =
 fun auto_construct ctx term meta =
   let
     val (major,aux) = elim_SPEC meta
-    val ctx' = load_specthm meta ctx
     val next = @{thm AutoConstruct}
       |> Thm.instantiate ([((("'exp",0),["HOL.type"]),Thm.ctyp_of_cterm term)], [((("exp",0), Thm.typ_of_cterm term),term)])
       |> (fn th => major RS th)
-      |> Goal.protect 1 |> auto_resolve NONE [] ctx'
+      |> Goal.protect 1 |> auto_resolve NONE [] ctx
   in case Seq.pull next
-    of SOME (next, _) => Goal.conclude next |> @{print} |> rpair aux |> intro_SPEC
+    of SOME (next, _) => Goal.conclude next |> rpair aux |> intro_SPEC
       | _ => raise TERM ("fail to construct", [Thm.term_of term])
   end
 

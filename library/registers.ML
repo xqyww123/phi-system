@@ -47,13 +47,15 @@ fun tree_size ret ((Const ("NuPrim.AndTy", _) $ t1 $ t2)::r) =
 
 val new_reg_locale_th = @{thm new_reg_locale}
 val delete_reg_locale_th = @{thm delete_reg_locale}
-fun new_locale ctx meta =
+fun new_locale_i ctx meta =
   apply_proc_naive (top_mapper (current_block_depth meta) 0 RS new_reg_locale_th) meta
   |> NuSys.accept_proc ctx
-fun delete_locale ctx meta =
+fun new_locale ctx meta = new_locale_i (NuSys.load_specthm meta ctx) meta
+fun delete_locale_i ctx meta =
   NuSys.apply_proc ctx
     (top_mapper (current_block_depth meta) 0 RS delete_reg_locale_th) meta
   |> NuSys.accept_proc ctx
+fun delete_locale ctx meta = delete_locale_i (NuSys.load_specthm meta ctx) meta
 
 fun set_name name th = th |> renamed_prop (prop_of th |> map_abs_vars (fn s =>
       if s = "\<n>\<a>\<m>\<e>" then name else s))
@@ -74,14 +76,20 @@ fun store_reg_at path = NuPath.mapper path RS store_reg_thm
 fun load_reg_at path = NuPath.mapper path RS load_reg_thm
 fun move_reg_at path = NuPath.mapper path RS @{thm remove_reg}
 
-fun store_reg ctx name meta =
+fun store_reg_i ctx name meta =
   NuSys.apply_proc ctx (store_reg_at (find_path2 name (registers_of_specthm meta))) meta
-fun load_reg ctx name meta =
+fun load_reg_i ctx name meta =
   NuSys.apply_proc ctx (load_reg_at (find_path2 name (registers_of_specthm meta))) meta
 fun move_reg ctx name meta =
   NuSys.apply_proc ctx (move_reg_at (find_path2 name (registers_of_specthm meta))) meta
+fun load_reg ctx name meta =
+  load_reg_i (NuSys.load_specthm meta ctx) name meta
+fun store_reg ctx name meta =
+  store_reg_i (NuSys.load_specthm meta ctx) name meta
 
 fun perhaps' f x = (f x) handle NameConfliction _ => x
-fun assign_reg ctx name meta =
+fun assign_reg_i ctx name meta =
   perhaps' (new_reg ctx name) meta |> store_reg ctx name
+fun assign_reg ctx name meta =
+  assign_reg_i (NuSys.load_specthm meta ctx) name meta
 end

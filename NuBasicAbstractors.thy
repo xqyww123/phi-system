@@ -1,7 +1,7 @@
 theory NuBasicAbstractors
   imports NuLLReps NuSys
-  abbrevs "\<where>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e"
-    and "\<some>" = "\<^bold>s\<^bold>o\<^bold>m\<^bold>e"
+  abbrevs "<where>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e"
+    and "<some>" = "\<^bold>s\<^bold>o\<^bold>m\<^bold>e"
 begin
 
 text \<open>Basic \<nu>-abstractors\<close>
@@ -32,16 +32,17 @@ lemma [simp]: "p \<nuLinkL> N \<nuRefine> P \<nuLinkR> x \<longleftrightarrow> x
 lemma [elim]: "x \<ratio> N \<nuRefine> P \<Longrightarrow> (x \<in> P \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "(x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> Y \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuRefine> P \<longmapsto> Y \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<and>x \<in> P" unfolding Cast_def by auto
 lemma [\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P) \<longmapsto> x \<tycolon> N \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e x \<in> P" unfolding Cast_def by auto
+lemma where_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)" unfolding Cast_def by auto
 
-definition NuSome :: " ('a :: lrep, 'b) nu \<Rightarrow> ('a :: lrep, 'b set) nu " ("\<some>")
+definition NuSome :: " ('a :: lrep, 'b) nu \<Rightarrow> ('a :: lrep, 'b set) nu " ("<some>")
   where "NuSome N = Nu (\<lambda>(p,S). \<exists>x. x \<in> S \<and> (p \<nuLinkL> N \<nuLinkR> x))"
 notation NuSome ("\<^bold>s\<^bold>o\<^bold>m\<^bold>e")
-lemma [simp]: "p \<nuLinkL> \<some> N \<nuLinkR> X \<longleftrightarrow> (\<exists>x. x \<in> X \<and> (p \<nuLinkL> N \<nuLinkR> x))" unfolding NuSome_def by auto
-lemma [elim]: "X \<ratio> (\<some> N) \<Longrightarrow> (\<And>x. x \<in> X \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
-lemma [\<nu>intro]: "X \<subseteq> X' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<tycolon> (\<some> N) \<longmapsto> X' \<tycolon> (\<some> N)" unfolding Cast_def by auto
-lemma [\<nu>intro]: "x \<in> X \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by auto
+lemma [simp]: "p \<nuLinkL> \<^bold>s\<^bold>o\<^bold>m\<^bold>e N \<nuLinkR> X \<longleftrightarrow> (\<exists>x. x \<in> X \<and> (p \<nuLinkL> N \<nuLinkR> x))" unfolding NuSome_def by auto
+lemma [elim]: "X \<ratio> ( \<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<Longrightarrow> (\<And>x. x \<in> X \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X \<subseteq> X' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<longmapsto> X' \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by auto
+lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> X \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by auto
 lemma someI_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> X \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by auto
-lemma someE_\<nu>cast[\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<tycolon> (\<some> N) \<longmapsto> (\<exists>*some. \<tort_lbrace>some \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e X)\<tort_rbrace>)" unfolding Cast_def by auto
+lemma someE_\<nu>cast[\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<longmapsto> (\<exists>*some. \<tort_lbrace>some \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e X)\<tort_rbrace>)" unfolding Cast_def by auto
 
 (* section \<open>Others\<close>
 
