@@ -39,6 +39,7 @@ signature NU_BASICS = sig
   val dest_Proc_CtxTy_c : cterm -> cterm * cterm
   val registers_of_specthm   : thm -> cterm
   val registers_of_specthm_c : thm -> cterm
+  val dest_current_nu   : thm -> term
   val stack_of_meta   : thm -> term list
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
@@ -182,10 +183,10 @@ val registers_of_specthm_c = catch_th 0 "registers_of_specthm: Not a CurrentCons
   (Thm.cprop_of #> perhaps (dest_SpecTop_c #> #1) #> perhaps dest_Trueprop_c
     #> dest_CurrentConstruction_c #> #2 #> dest_Proc_CtxTy_c #> #2)
 val registers_of_specthm = registers_of_specthm_c #> term_of
+val dest_current_nu = Thm.prop_of #> perhaps (dest_SpecTop #> #1) #> perhaps dest_Trueprop
+    #> dest_CurrentConstruction #> #2
 val stack_of_meta = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
-  (Thm.prop_of #> perhaps (dest_SpecTop #> #1) #> perhaps dest_Trueprop
-    #> dest_CurrentConstruction #> #2 #> dest_Proc_CtxTy #> #1
-    #> strip_binop_l "NuPrim.Stack_Delimiter")
+  (dest_current_nu #> dest_Proc_CtxTy #> #1 #> strip_binop_l "NuPrim.Stack_Delimiter")
 
 val state_of_specthm = dest_SpecTop #> #1
 val current_block_var_c =

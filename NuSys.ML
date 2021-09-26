@@ -221,6 +221,21 @@ fun SOLVED_RULE rule fail th =
   else let val th' = rule th
        in if Thm.nprems_of th' < Thm.nprems_of th then th'
           else fail th' end
+
+fun REPEATX tac =
+  let
+    fun rep qs st =if length qs > 100 then raise Fail "" else
+      (case Seq.pull (tac st) of
+        NONE => SOME (st, Seq.make (fn () => repq qs))
+      | SOME (st', q) => rep (q :: qs) st')
+    and repq [] = NONE
+      | repq (q :: qs) = if length qs > 100 then raise Fail "" else
+          (case Seq.pull q of
+            NONE => repq qs
+          | SOME (st, q) => rep (q :: qs) st);
+  in fn st => Seq.make (fn () => rep [] st) end;
+
+
 fun auto_resolve thms addtion ctx  =
   let 
     val (thms,minor_thms) = case thms of SOME (major, SOME minor) => (major, minor)
@@ -228,10 +243,11 @@ fun auto_resolve thms addtion ctx  =
                               | NONE => (Named_Theorems.get ctx "NuPrim.\<nu>intro",
                                          Named_Theorems.get ctx "NuPrim.\<nu>intro'")
     val thms = addtion @ thms
-  in SOLVED (REPEAT_DETERM_N 100 (
+  in SOLVED (REPEATX (
       simp_tag_tac ctx
-      ORELSE (resolve_tac ctx thms 1
-                               )
+      (* ORELSE (fn th => resolve_tac ctx thms 1 (@{print} th) 
+                               |> Seq.map @{print}) *)
+        ORELSE (resolve_tac ctx thms 1)
         ORELSE premise_tac ctx
         ORELSE resolve_tac ctx minor_thms 1
     )) (* #> Seq.map fininsh_premise_hyps *)
@@ -255,7 +271,7 @@ val auto_resolve_rule0 = auto_resolve_rule NONE []
 
   (** Basic Operations **)
 fun cast ctx desired_nu major =
-  (major COMP
+  (major RS
     (Thm.instantiate ([((("'a",0),["NuPrim.lrep"]),
                             ctyp_of_cterm desired_nu |> dest_ctyp0)],
           [((("T'",0),typ_of_cterm desired_nu),desired_nu)])

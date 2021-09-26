@@ -98,8 +98,10 @@ fun begin_proc ctx (arg,ret) =
     (goal,th)
   end
 
-val begin_proc_ctx_thm = @{thm NuPrim.begin_proc_ctx}
-and empty_facts_thm = @{thm NuPrim.empty_facts}
+fun mk_regctx ctx meta =
+  if can (dest_current_nu #> dest_Proc_CtxTy) meta then meta
+  else apply_proc_naive @{thm NuPrim.begin_proc_ctx} meta |> accept_proc ctx
+val empty_facts_thm = @{thm NuPrim.empty_facts}
 fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
   let
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
@@ -132,7 +134,7 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
       |> (fn stat =>
           let val ctx = Proof.context_of stat
           val th = th |> rpair empty_facts_thm |> intro_SPEC
-            |> apply_proc_naive begin_proc_ctx_thm |> accept_proc ctx
+            |> mk_regctx ctx
             |> fold (fn name =>
                 NuRegisters.assign_reg ctx name #> accept_proc ctx) reg_names
             |> Simplifier.simplify ctx
@@ -140,6 +142,13 @@ fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
       |> Proof.map_context
           (Proof_Context.put_thms false ("\<nu>thesis", SOME [Drule.mk_term (cterm_of ctx goal)]))
   end
+
+
+fun RSNXX tha (i, thb) =
+  (case Seq.pull (biresolution NONE false [(false, tha)] i thb) of
+    SOME (th, _) => solve_constraints th
+  | _ => raise THM ("RSN: no unifiers", i, [tha, thb]));
+fun RSXX tha  thb = RSNXX tha (1,thb);
 
 local
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
@@ -151,20 +160,23 @@ fun gen_finish_proc prep_specthm qed int stat =
     val goal = Proof_Context.get_thm ctx "\<nu>thesis" |> Drule.dest_term
     val (_,_,desired_nu) = dest_procedure_c goal
     val meta = meta |> prep_specthm ctx
+    val meta = if not (can dest_Proc_CtxTy (term_of desired_nu))
+                  andalso can dest_Proc_CtxTy (dest_current_nu meta)
+               then apply_proc_naive end_proc_ctx_thm meta |> accept_proc ctx
+               else meta
     val meta = meta |> elim_SPEC
           |> apfst (NuSys.cast (NuSys.load_specthm meta ctx) desired_nu)
           |> intro_SPEC
     val end_tac = basic_method (fn ctx' => fn t => 
-      (finish_proc ctx' goal
-        (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))) RS t
+      RSXX (finish_proc ctx' goal
+        (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))) t
         handle e => raise @{print} e)
   in
     stat |> Proof.set_facts [] 
       |> qed (SOME (end_tac, Position.no_range), false)
   end
 in
-val finish_proc_cmd = gen_finish_proc
-  (fn ctx => apply_proc_naive end_proc_ctx_thm #> accept_proc ctx) Proof.global_qed
+val finish_proc_cmd = gen_finish_proc (K I) Proof.global_qed
 val end_block_cmd = gen_finish_proc NuRegisters.delete_locale Proof.local_qed
 end
 
@@ -305,7 +317,7 @@ fun begin_block_cmd bindings int stat =
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
     val bindings =
-      ((map (apsnd (map (Attrib.attribute ctx))) bindings)
+      ((map (apsnd (map (Attrib.attribute_cmd ctx))) bindings)
           @ (List.tabulate (delta, K (Binding.empty, attr_used))))
         |> map (apsnd (fn x => elim_premise @ x))
   in
@@ -321,7 +333,7 @@ fun begin_block_cmd bindings int stat =
       |> (fn stat => let val ctx = Proof.context_of stat 
             val next_specthm = start_proc ctx level_prefix (cterm_of ctx arg)
               |> rpair (elim_SPEC specthm |> #2)
-              |> intro_SPEC |> NuRegisters.new_locale ctx
+              |> intro_SPEC |> mk_regctx ctx |> NuRegisters.new_locale ctx
           in Proof.set_facts [next_specthm] stat end)
       |> Proof.map_context (fn ctx => 
             Proof_Context.put_thms false ("\<nu>thesis",

@@ -38,7 +38,7 @@ val bit1_num = bit1_num_i 0
 val address_left_mapper = @{thm address_left_mapper}
 val address_here_mapper = @{thm address_here_mapper}
 fun top_mapper depth delta = (* the address-mapper at top layer *)
-  funpow (delta + bit1_num depth)
+  funpow ((delta + bit1_num (@{print} depth - 1)) |> @{print})
     (fn th => th RS address_left_mapper) address_here_mapper
 fun tree_size ret ((Const ("NuPrim.AndTy", _) $ t1 $ t2)::r) =
       tree_size ret (t1::t2::r)
@@ -48,7 +48,7 @@ fun tree_size ret ((Const ("NuPrim.AndTy", _) $ t1 $ t2)::r) =
 val new_reg_locale_th = @{thm new_reg_locale}
 val delete_reg_locale_th = @{thm delete_reg_locale}
 fun new_locale_i ctx meta =
-  apply_proc_naive (top_mapper (current_block_depth meta) 0 RS new_reg_locale_th) meta
+  apply_proc_naive (top_mapper (current_block_depth (meta |> @{print})) 0 RS new_reg_locale_th) meta
   |> NuSys.accept_proc ctx
 fun new_locale ctx meta = new_locale_i (NuSys.load_specthm meta ctx) meta
 fun delete_locale_i ctx meta =
@@ -64,7 +64,7 @@ fun new_reg ctx name meta =
     val regs = registers_of_specthm meta
     val _ = chk_confliction name regs
     fun bit1_num' x = if x <= 1 then 0 else bit1_num (x - 1) + 1
-    val delta = bit1_num' bdep
+    val delta = bit1_num' bdep |> @{print}
     val local_num = funpow delta (dest_andTy #> fst) regs |> (tree_size 0 o single)
     val new_reg = top_mapper local_num delta RS set_name name @{thm new_reg}
   in apply_proc_naive new_reg meta |> NuSys.accept_proc ctx end

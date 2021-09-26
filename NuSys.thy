@@ -175,7 +175,7 @@ section \<open>Processors\<close>
 
 \<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fn _ => fold (fn idt =>
+    (fn idts => fn _ => fold_rev (fn idt =>
       NuRegisters.assign_reg ctx idt
         #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
@@ -191,7 +191,7 @@ end\<close>
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier []\<close>
 \<nu>processor \<nu>simplifier_final 10000 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close>
 
-\<nu>processor move_fact 50 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<addition> P\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+\<nu>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   meta RS @{thm move_fact_to_star1} handle THM _ => meta RS @{thm move_fact_to_star2})\<close>
 
 \<nu>processor \<nu>resolver 9000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
@@ -211,8 +211,10 @@ end\<close>
 
 \<nu>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Parse.term >> (fn term => fn _ =>
     NuBasics.elim_SPEC meta |> apfst (fn th =>
-      (Syntax.parse_term ctx term |> Type.constraint (NuBasics.param_type th) |> Syntax.check_term ctx
-        |> Thm.cterm_of ctx |> NuBasics.intro_param) RS th) |> NuBasics.intro_SPEC)\<close>
+      let val mapty = map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty)
+      in (Syntax.parse_term ctx term |> Type.constraint (NuBasics.param_type th |> mapty) |> Syntax.check_term ctx
+          |> Thm.cterm_of ctx |> NuBasics.intro_param) RS th
+      end) |> NuBasics.intro_SPEC)\<close>
 
 \<nu>processor literal_constructor 9500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.cartouche >> (fn term => fn _ =>
   let val term = Syntax.read_term ctx term |> Thm.cterm_of ctx |> Simplifier.rewrite ctx |> Thm.rhs_of

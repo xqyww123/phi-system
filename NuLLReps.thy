@@ -61,14 +61,31 @@ syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
 
 lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding NuNat_def by auto
-lemma [\<nu>intro]: "\<nu>Equalable (NuNat b) (K True)" unfolding \<nu>Equalable_def NuNat_def by auto
+lemma [\<nu>intro]: "\<nu>CEqual (NuNat b) (K True) (case_prod (=))"
+  unfolding \<nu>CEqual_def NuNat_def by (auto simp add: unsigned_word_eqI)
+
+definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) nu"
+  where "NuNatRound _ = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (p = of_nat x))"
+syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
+translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))" 
+
+lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding NuNatRound_def by auto
 
 subsubsection \<open>Boolean\<close>
+
+lemma [simp]: "(x \<noteq> 1) = (x = 0)" for x :: "1 word" proof -
+  have "(UNIV:: 1 word set) = {0,1}" unfolding UNIV_word_eq_word_of_nat
+  using less_2_cases apply auto apply force
+  by (metis UNIV_I UNIV_word_eq_word_of_nat len_num1 power_one_right)
+  then show ?thesis  by auto
+qed
 
 definition NuBool :: "(1 word, bool) nu" ("\<bool>")
   where "NuBool = Nu (\<lambda>px. case px of (p,x) \<Rightarrow> (p = 1) = x)"
 lemma [simp]: "p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding NuBool_def by simp
-lemma [\<nu>intro]: "\<nu>Equalable \<bool> (K True)" unfolding \<nu>Equalable_def NuBool_def by auto
+lemma [\<nu>intro]: "\<nu>CEqual \<bool> (K True) (case_prod (=))" unfolding \<nu>CEqual_def NuBool_def by auto
+
+
 
 section \<open>The pair abstract structure\<close>
 

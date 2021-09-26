@@ -36,6 +36,8 @@ theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle
 definition op_crash :: "('r::lrep) \<Rightarrow> ('x::lrep) state" where "op_crash r = SNeg"
 lemma op_crash:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
 
+subsubsection \<open>while\<close>
+
 consts op_while :: "'c itself \<Rightarrow> (('x::lrep) \<times> ('r::stack) \<flower> ('w::register_collection) \<Rightarrow> (('x \<times> 1 word) \<times> 'r \<flower> 'w) state)
   \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state) \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state)"
 specification ("op_while")
@@ -44,6 +46,18 @@ specification ("op_while")
   \<Longrightarrow> (\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> (x1::'c) \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> {(y, y \<in> P) | y. (y,x1) \<in> Rc } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>)) \<flower> W \<brangle>)
   \<Longrightarrow> (\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)) \<flower> W \<longmapsto> (R \<heavy_comma> {y. (y,x2) \<in> Rb} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>)
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> (R \<heavy_comma> x \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>"
+  apply (rule exI) using op_crash by auto
+
+subsubsection \<open>recursion\<close>
+
+consts op_recursion :: " 'a itself \<times> 'b itself \<Rightarrow>
+    ((('u::lrep) \<times> void \<Rightarrow> (('v::lrep) \<times> void) state) \<Rightarrow> ('u \<times> void \<Rightarrow> ('v \<times> void) state)) \<Rightarrow> ('u \<times> ('r::stack) \<Rightarrow> ('v \<times> 'r) state) "
+specification ("op_recursion")
+  recursion_\<nu>proc[simplified PremiseHOL ParamHOL]:
+  "ParamHOL h \<Longrightarrow> ParamHOL M \<Longrightarrow> ParamHOL WF \<Longrightarrow> PremiseHOL (wf WF) \<Longrightarrow>
+  (\<And>x' g. (\<And>x''. PremiseHOL ((x'',x') \<in> WF) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> h x'' \<tycolon> M \<brangle>)
+      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void\<heavy_comma> h x' \<tycolon> M \<brangle>)
+  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
   apply (rule exI) using op_crash by auto
 
 (* consts xop_pair :: " ('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
@@ -80,6 +94,8 @@ definition op_const_int :: "('w::len) itself \<Rightarrow> ('w::len) word \<Righ
   where "op_const_int _ c r = StatOn (c,r)"
 theorem const_nat_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) c \<blangle> R \<longmapsto> R \<heavy_comma> unat c \<tycolon> \<nat>['w] \<brangle>"
   unfolding \<nu>def op_const_int_def by auto
+theorem const_nat_round_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (of_nat n) \<blangle> R \<longmapsto> R \<heavy_comma> n \<tycolon> \<nat>\<^sup>r['w] \<brangle>"
+  unfolding \<nu>def op_const_int_def by auto
 
 lemma [\<nu>intro]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>
@@ -92,6 +108,17 @@ lemma [\<nu>intro]:
 lemma [\<nu>intro]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (1 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 1 \<blangle> Z \<longmapsto> Z \<heavy_comma> 1 \<tycolon> \<nat>['w] \<brangle>"
   unfolding AutoConstruct_def using const_nat_\<nu>proc by (metis unat_1)
+
+lemma [\<nu>intro]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>
+   \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t ((numeral x) \<tycolon> \<nat>\<^sup>r['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (Word.of_nat (numeral x)) \<blangle> Z \<longmapsto> Z \<heavy_comma> (numeral x) \<tycolon> \<nat>\<^sup>r['w] \<brangle>"
+  unfolding op_const_int_def \<nu>def including show_more1 by auto
+lemma [\<nu>intro]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (0 \<tycolon> \<nat>\<^sup>r['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 0 \<blangle> Z \<longmapsto> Z \<heavy_comma> 0 \<tycolon> \<nat>\<^sup>r['w] \<brangle>"
+  unfolding op_const_int_def \<nu>def including show_more1 by auto
+lemma [\<nu>intro]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (1 \<tycolon> \<nat>\<^sup>r['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 1 \<blangle> Z \<longmapsto> Z \<heavy_comma> 1 \<tycolon> \<nat>\<^sup>r['w] \<brangle>"
+  unfolding op_const_int_def \<nu>def including show_more1 by auto
 
 (* schematic_goal "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t 3 \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f
   \<blangle>\<flower_L>\<medium_left_bracket> A \<flower_L>\<flower>\<flower_R>X\<medium_right_bracket>\<flower_R>   \<longmapsto> ?T \<brangle>" by (rule \<nu>intro) *)
@@ -116,6 +143,8 @@ theorem add_nat_\<nu>proc[\<nu>overload +]:
 theorem add_nat_mod[\<nu>overload round_add]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> \<RR> \<heavy_comma> y \<tycolon> \<nat>['b::len] \<heavy_comma> x \<tycolon> \<nat>['b] \<longmapsto> \<RR> \<heavy_comma> ((x + y) mod 2^(LENGTH('b))) \<tycolon> \<nat>['b]  \<brangle>"
   unfolding op_add_def Procedure_def by (auto simp add: unat_word_ariths)
 
+theorem add_nat_round[\<nu>overload +]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> R\<heavy_comma> x \<tycolon> \<nat>\<^sup>r['b::len]\<heavy_comma> y \<tycolon> \<nat>\<^sup>r['b] \<longmapsto> R\<heavy_comma> (x + y) \<tycolon> \<nat>\<^sup>r['b] \<brangle>"
+  unfolding op_add_def Procedure_def by auto
 
 
 subsubsection \<open>subtraction\<close>
@@ -133,7 +162,13 @@ theorem op_lt_\<nu>proc[\<nu>overload <]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c 
   unfolding \<nu>def op_lt_def by (auto simp add: word_less_nat_alt)
 
 subsubsection \<open>equal\<close>
-(* definition op_equal :: "  " *)
+
+definition op_equal :: " ('a::ceq_lrep) \<times> ('a::ceq_lrep) \<times> ('r::stack) \<Rightarrow> (1 word \<times> 'r) state"
+  where "op_equal s = (case s of (a,b,r) \<Rightarrow>
+    if ceqable (b,a) then StatOn ((if ceq (b,a) then 1 else 0), r) else STrap)"
+theorem op_equal[\<nu>overload =]:
+  "\<nu>CEqual N P eq \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P (a,b) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal \<blangle> R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N \<longmapsto> R\<heavy_comma> eq (a,b) \<tycolon> \<bool> \<brangle>"
+  unfolding \<nu>def op_equal_def by auto
 
 section \<open>Tests\<close>
 
@@ -146,37 +181,51 @@ val x = Assumption.all_prems_of ctx\<close>
 + (233 \<tycolon>  \<nat>[32])) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle>((?Z1::(?'a::lrep) set) \<flower> \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r A = \<tort_lbrace> 16 \<tycolon> \<nat>[32]\<tort_rbrace> and_ty \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r B = \<tort_lbrace> 0 \<tycolon> \<nat>[32] \<tort_rbrace>) \<longmapsto> (?Z2::(?'b::lrep) set) \<brangle>"
   by  (\<nu>resolve \<nu>intro (\<nu>intro'))  *)
 
-  notepad
-begin
-  { fix x :: nat
-    have "x = x" by auto
-  }
-  ML_val \<open>@{term \<open>\<And>x. x\<close>}\<close>
-  assume A: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c xx \<blangle> R \<heavy_comma> (x \<in> {x. (0::nat) < x}) \<tycolon> X \<longmapsto> R2 \<brangle>  \<Longrightarrow> Q"
-  assume B: "(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC2
-    \<blangle>R\<heavy_comma> x1 \<tycolon> \<nat>[32]  \<longmapsto> R\<heavy_comma> {(y, y \<in> {x. 0 < x}) |y. (y, x1) \<in> Id} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<nat>[32] \<nuFusion> \<bool>) \<brangle>) \<Longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB2
-    \<blangle> R\<heavy_comma>x2 \<tycolon> (\<nat>[32] \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e {x. 0 < x})  \<longmapsto>  R\<heavy_comma>{y. (y, x2) \<in> less_than} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e \<nat>[32] \<brangle> \<Longrightarrow>
-  \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (call (op_while TYPE(nat) brC2 brB2)) \<^bold>o\<^bold>n \<t>\<o>\<p>_\<p>\<r>\<o>\<c> \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n
-  \<flower_L>\<medium_left_bracket> R\<heavy_comma>- {x. 0 < x} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e \<nat>[32] \<flower_L>\<flower>\<flower_R> Void \<medium_right_bracket>\<flower_R>"
-  note B[simplified]
+
+declare Nat.One_nat_def[simp del]
+
+fun fib :: "nat \<Rightarrow> nat"
+  where "fib x = (if x = 0 then 1 else if x = 1 then 1 else fib (x-1) + fib (x-2))"
+
+proc fibx : "x \<tycolon> \<nat>[32]" \<longmapsto> "fib x \<tycolon> \<nat>\<^sup>r[32]"
+  \<bullet> x recursion fib \<open>\<nat>\<^sup>r[32]\<close> less_than \<medium_left_bracket> (g_\<nu>proc)
+  \<bullet> \<rightarrow> x x 0 = if \<medium_left_bracket> \<bullet> \<open>1\<tycolon>\<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> (c0[used])
+      \<bullet> x 1 = if \<medium_left_bracket> \<bullet> \<open>1\<tycolon>\<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> (c1[used]) \<bullet> x 1 - g \<rightarrow> f1 x 2 - g \<rightarrow> f2 f1 f2 + \<medium_right_bracket>
+  \<medium_right_bracket> \<medium_right_bracket>
+  finish
+
+  thm fibx_\<nu>proc
+
+fun ackman :: "(nat \<times> nat) \<Rightarrow> nat"
+  where "ackman (0,n) = Suc n"
+  | "ackman (Suc m, 0) = ackman (m,1)"
+  | "ackman (Suc m, Suc n) = ackman (m, ackman (Suc m, n))"
+
+thm begin_proc_ctx
+proc ackman : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "ackman (x,y) \<tycolon> \<nat>[32]" if cond: "ackman (x,y) < 2^32"
+  \<bullet> x y pr cast where \<open>{xy. ackman xy < 2^32}\<close> affirm using cond by simp
+  \<bullet> recursion ackman \<open>\<nat>[32]\<close> \<open>less_than <*lex*> less_than\<close> \<medium_left_bracket> (g_\<nu>proc)
+  \<nu>obtain m n where th1[simp]: "x' = (m,n)" by (cases x')
+  \<bullet> cast E \<Longrightarrow> th2[used] \<bullet> dpr \<rightarrow> (m,n) m 0 = if \<medium_left_bracket> \<bullet> n 1 + \<medium_right_bracket> \<medium_left_bracket> \<bullet> m 1 -
+  \<bullet> n 0 = if \<medium_left_bracket> \<bullet> 1 pr 
+  \<bullet> cast where \<open>{xy. ackman xy < 2^32}\<close> affirm apply (cases m) by auto
+  \<bullet> g \<medium_right_bracket> \<medium_left_bracket> \<bullet> m n 1 - pr
+\<bullet> cast where \<open>{xy. ackman xy < 2^32}\<close> affirm apply (cases m; cases n) by auto
+  note c
+  \<nu>debug 
+  note c
+
 end
 
-
-ML \<open>Syntax.parse_term @{context} "(x::nat)"\<close>
-
-term if_\<nu>proc
- thm \<nu>intro
- thm SpecTop_cong_major
-
 definition [simp]:"difference x y = (if x < y then y - x else x - y)"
-proc diff : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(difference x y \<tycolon> \<nat>[32])"
+xproc diff : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(difference x y \<tycolon> \<nat>[32])"
   \<bullet> x while \<open>{x. 0 < x}\<close> Id less_than \<medium_left_bracket> \<bullet> \<rightarrow> a a 0 a < pr \<medium_right_bracket> \<medium_left_bracket> \<bullet> cast E \<Longrightarrow> th1[used] \<bullet> 1 -  \<medium_right_bracket>
   \<bullet> cast E \<nu>choose a where "some = a" by auto
-  \<bullet> cast E \<Longrightarrow> th1[simp] drop_fact th1
+  \<bullet> \<Longrightarrow> th1[simp] drop_fact th1
   \<bullet> drop x y < if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket> \<medium_left_bracket> \<bullet> x y - \<medium_right_bracket>
   finish
 
+end
 
 proc add2 : "(( x \<tycolon> \<nat>[32]) named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
   if "x < 100" and "y < 100"
