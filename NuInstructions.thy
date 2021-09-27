@@ -15,12 +15,20 @@ definition op_drop :: "('a::lrep) \<times> ('r::lrep) \<Rightarrow> 'r state" wh
 declare op_drop_def[\<nu>instr]
 theorem drop_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> R \<heavy_comma> X \<longmapsto> R \<brangle>" unfolding \<nu>def op_drop_def by auto
 
-subsubsection \<open>dup\<close>
-definition op_dup :: "('a::sharable_lrep) \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'a \<times> 'r) state"
-  where "op_dup x = (case x of (a,r) \<Rightarrow> if a \<in> shareable then StatOn (share (Gi 1) a, share (Gi 1) a, r) else STrap)"
+subsubsection \<open>dup & revert\<close>
+
+definition op_dup :: "('a::{share,lrep}) \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'a \<times> 'r) state"
+  where "op_dup x = (case x of (a,r) \<Rightarrow> if shareable a then StatOn (share (Gi 1) a, share (Gi 1) a, r) else STrap)"
 declare op_dup_def[\<nu>instr]
-theorem dup_\<nu>proc: "\<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon> X \<heavy_comma> sh (Gi 1) x \<tycolon> X  \<brangle>"
+theorem dup_\<nu>proc: "\<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e s x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon> X \<heavy_comma> sh (Gi 1) x \<tycolon> X  \<brangle>"
   unfolding \<nu>def op_dup_def by auto
+
+definition op_revert :: "('a::{share,lrep}) \<times> 'a \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'r) state"
+  where "op_revert x = (case x of (a,b,r) \<Rightarrow> if shareable a \<and> sharing_identical a b then StatOn (share (Gi (-1)) a, r) else STrap)"
+declare op_revert_def[\<nu>instr]
+theorem revert_\<nu>proc: "\<nu>Share N P sh \<Longrightarrow> \<nu>ShrIdentical N sid \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e sid a b
+  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_revert \<blangle> R \<heavy_comma> b \<tycolon> N \<heavy_comma> a \<tycolon> N \<longmapsto> R \<heavy_comma> sh (Gi (-1)) a \<tycolon> N \<brangle>"
+  unfolding \<nu>def op_revert_def by (auto 0 4)
 
 subsubsection \<open>tup & det\<close>
 

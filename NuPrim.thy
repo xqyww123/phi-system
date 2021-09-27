@@ -1,7 +1,7 @@
 (* KEEP IT SIMPLE AND STUPID *)
 
 theory NuPrim \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
-  imports Main "HOL-Library.Monad_Syntax"
+  imports Main "HOL-Library.Monad_Syntax" NuHelpMath
   abbrevs "is" = "\<^bold>i\<^bold>s"
       and "as" = "\<^bold>a\<^bold>s"
       and "register" = "\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r"
@@ -122,9 +122,10 @@ definition zero_zint_def[simp]: "0 = Gi 0"
 definition plus_zint_def: "a + b = (case (a,b) of
     (Gi n, Gi m) \<Rightarrow> Gi (n + m)  | _ \<Rightarrow> Gz)"
 
-lemma plus_zint_simps1[simp]:  "Gi n + Gi m = Gi (n + m)"  by (simp add: plus_zint_def)
-lemma plus_zint_simps2[simp]:  "Gz + x = Gz" by (simp add: plus_zint_def)
-lemma plus_zint_simps3[simp]:  "x + Gz = Gz" by (cases x,auto simp add: plus_zint_def)
+lemma [simp]:  "Gi n + Gi m = Gi (n + m)"  by (simp add: plus_zint_def)
+lemma [simp]:  "Gz + x = Gz" by (simp add: plus_zint_def)
+lemma [simp]:  "x + Gz = Gz" by (cases x,auto simp add: plus_zint_def)
+lemma [simp]: "x + Gi 0 = x" and [simp]: "Gi 0 + x = x" by (cases x; auto)+
 
 instance by standard ((simp add: plus_zint_def split: zint.splits)+)
 end  
@@ -137,19 +138,21 @@ text \<open>The semantic framework follows a style of shallow embedding, where s
   are modelled by different Isabelle type. Model types are constrained by the base type class {\it lrep} and types representing
   objects that supports certain features are constrained by specific sub-classes which extend the base class {\it lrep} finally. \<close>
 
-datatype llty = la_i nat | la_p nat | la_tup llty | la_array llty nat | la_z | la_C llty llty
+datatype llty = la_i nat \<comment> \<open>int bits\<close> | la_p nat \<comment> \<open>pointer space\<close> | la_tup llty | la_array llty nat | la_z | la_C llty llty
   \<comment> \<open>LLVM types representing integers in specified bit length, pointers in the given space, structures of given content
   (usually a list by @{term la_C}), arrays of given content and fixed length, abstract type filtered during code extraction,
   and the list constructor which is used in argument list and structure's filed list,  respectively. \<close>
 
-class lrep = \<comment>\<open>The basic class for types modelling concrete objects\<close>
+class disposable =
+  fixes disposable :: " 'a \<Rightarrow> bool " \<comment> \<open>Whether a value could be thrown away freely\<close>
+
+class lrep = disposable + \<comment>\<open>The basic class for types modelling concrete objects\<close>
   fixes llty :: "'a itself \<Rightarrow> llty" \<comment> \<open>The LLVM type to which the model type corresponds\<close>
-  fixes disposable :: " 'a set " \<comment> \<open>Whether a value could be thrown away freely\<close>
 
 class zero_lrep = lrep + \<comment> \<open>memory allocation\<close>
   fixes lty_zero :: "'a" \<comment> \<open>The zero value to what concrete objects are initialized.\<close>
 
-class ceq_lrep = lrep + \<comment> \<open>equality comparison\<close>
+class ceq =  \<comment> \<open>equality comparison\<close>
   fixes ceqable :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>Whether two values could be compared for equality\<close>
   fixes ceq :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>The equality of two values.
     It is only valid when the two values could be compared, that the @{term ceqable} for them is true.\<close>
@@ -159,26 +162,37 @@ class ceq_lrep = lrep + \<comment> \<open>equality comparison\<close>
   assumes ceq_trans: "ceqable x y \<Longrightarrow> ceqable y z \<Longrightarrow> ceqable x z
     \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
 
-class sharable_lrep = lrep + \<comment> \<open>for objects whose the ownership can be shared \<close>
-  fixes shareable :: "'a set" \<comment> \<open>Whether the ownership of a value could be shared.
+datatype ownership = OWS_1 zint | OWS_0 | OWS_C ownership ownership
+
+class ownership =
+  fixes ownership :: " 'a \<Rightarrow> ownership"
+
+class sharing_identical =
+  fixes sharing_identical :: " 'a \<Rightarrow> 'a \<Rightarrow> bool "
+  assumes sharing_identical_refl[simp]: "sharing_identical x x"
+  assumes sharing_identical_sym[simp]: "sharing_identical x y \<longleftrightarrow> sharing_identical y x"
+  assumes sharing_identical_trans: "sharing_identical x y \<Longrightarrow> sharing_identical y z \<Longrightarrow> sharing_identical x z"
+
+class share =
+  \<comment> \<open>for objects whose the ownership can be shared \<close>
+  fixes shareable :: "'a \<Rightarrow> bool" \<comment> \<open>Whether the ownership of a value could be shared.
       It is a predicate giving the precise control to decide on the shareability for each value.\<close>
     and share :: "zint \<Rightarrow> 'a \<Rightarrow> 'a"
-    and revert :: " 'a \<Rightarrow> 'a \<Rightarrow> bool "
     and dpriv :: "'a \<Rightarrow> 'a"
-  assumes revert_refl[simp]: "revert x x"
-  assumes revert_sym[simp]: "revert x y \<longleftrightarrow> revert y x"
-  assumes revert_trans: "revert x y \<Longrightarrow> revert y z \<Longrightarrow> revert x z"
   assumes share_id[simp]: "share (Gi 0) x = x"
   assumes share_assoc[simp]: "share b (share a x) = share (a + b) x"
 
-class naive_lrep = sharable_lrep +
-  assumes [simp]: "disposable = UNIV"
-  assumes [simp]: "shareable = UNIV"
-  assumes [simp]: "dpriv = id"
-  assumes [simp]: "share z = id"
-  assumes [simp]: "revert x y = True"  
+
+class naive_lrep = share + sharing_identical + lrep +
+  assumes [simp]: "disposable x = True"
+  assumes [simp]: "shareable x = True"
+  assumes [simp]: "dpriv x = x"
+  assumes [simp]: "share z x = x"
+  assumes [simp]: "sharing_identical x y = True"  
 
 subsection \<open>The \<nu>-type\<close>
+
+subsubsection \<open>Definitions\<close>
 
 datatype ('a::lrep,'b) nu = Nu "'a * 'b \<Rightarrow> bool"
 datatype ('a::lrep,'b) typing = typing 'b "('a,'b) nu" (infix "\<tycolon>" 15) \<comment>\<open>shortcut keys "<ty>"\<close>
@@ -201,23 +215,32 @@ text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete va
   the \<nu>-type @{term "x \<tycolon> N"} is inhabited. Basically it is used to derive implicated conditions of images,
   e.g. @{prop "(42 \<ratio> N 32) \<Longrightarrow> 42 < 2^32"}\<close>
 
+subsubsection \<open>Rudimentary lemmata\<close>
+
 lemma [simp]: "p \<nuLinkL> Nu R \<nuLinkR> x \<equiv> R (p,x)" unfolding RepSet_def by simp
 lemma inhabited[dest]: "p \<nuLinkL> N \<nuLinkR> x \<Longrightarrow> x \<ratio> N" unfolding Inhabited_def by auto
 lemma [elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
 lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto
 lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
-definition \<nu>Share :: "('a::sharable_lrep,'b) nu \<Rightarrow> 'b set \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>Share N s f \<longleftrightarrow> (\<forall>z p x. x \<in> s \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> p \<in> shareable \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
-definition \<nu>CEqual :: "('a::ceq_lrep, 'b) nu \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>CEqual N P eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2. P x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
-definition \<nu>Disposable :: " ('a::lrep) set \<Rightarrow> bool " where [\<nu>def]: "\<nu>Disposable T \<longleftrightarrow> (\<forall>x. x \<in> T \<longrightarrow> x \<in> disposable)"
+subsubsection \<open>Properties\<close>
 
-lemma [\<nu>intro]: "\<nu>Share N UNIV (K id)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>Share_def by simp
-lemma K_rew: "(\<lambda>x. c) =  (K c)" by auto
-lemma [simp]: "\<nu>CEqual N (\<lambda>x. c) = \<nu>CEqual N (K c)" by (auto simp add: K_rew)
-lemma [simp]: "\<nu>Share N s (\<lambda>z x. x) = \<nu>Share N s (K id)" by (auto simp add: K_rew id_def)
+definition \<nu>Share :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> bool) \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>Share N P f \<longleftrightarrow> (\<forall>z p x. P x \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> shareable p \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
+definition \<nu>CEqual :: "('a::{ceq,lrep}, 'b) nu \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>CEqual N P eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2. P x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
+definition \<nu>Disposable :: " ('a::lrep) set \<Rightarrow> bool " where [\<nu>def]: "\<nu>Disposable T \<longleftrightarrow> (\<forall>x. x \<in> T \<longrightarrow> disposable x)"
+definition \<nu>ShrIdentical :: " ('a::{sharing_identical,lrep}, 'b) nu \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>ShrIdentical N sid \<longleftrightarrow> (\<forall>p1 p2 x1 x2. sid x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> sharing_identical p1 p2)"
+definition \<nu>Ownership :: " ('a::{ownership,lrep}, 'b) nu \<Rightarrow> ('b \<Rightarrow> ownership) \<Rightarrow> bool "
+  where [\<nu>def]: "\<nu>Ownership N ow \<longleftrightarrow> (\<forall>p x. (p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> ownership p = ow x)"
+
+lemma [\<nu>intro]: "\<nu>Share N (\<lambda>x. True) (\<lambda>z x. x)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>Share_def by simp
+(* lemma K_rew: "(\<lambda>x. c) =  (K c)" by auto
+lemma [simp]: "\<nu>CEqual N (\<lambda>x. c) = \<nu>CEqual N (\<lambda>x. c)" by (auto simp add: K_rew)
+lemma [simp]: "\<nu>Share N s (\<lambda>z x. x) = \<nu>Share N s (K id)" by (auto simp add: K_rew id_def) *)
 lemma [\<nu>intro]: "\<nu>Disposable T" for T :: "('a::naive_lrep) set" unfolding \<nu>Disposable_def by simp
+lemma [\<nu>intro]: "\<nu>ShrIdentical N (\<lambda>x y. True)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>ShrIdentical_def by simp
 
   section\<open>Structures for construction\<close>
 
@@ -307,21 +330,25 @@ class register_collection = lrep
 
 instantiation void :: lrep begin
 definition llty_void :: "void itself \<Rightarrow> llty" where [simp]: "llty_void _ = la_z"
-definition disposable_void :: "void set" where [simp]: "disposable_void = UNIV"
+definition disposable_void :: "void \<Rightarrow> bool" where [simp]: "disposable_void x = True"
 instance by standard
 end
 
 instantiation register :: (lrep) register_collection begin
 definition llty_register :: "'a register itself \<Rightarrow> llty" where [simp]: "llty_register _ = la_z"
-definition disposable_register :: "'a register set"
-  where disposable_register: "disposable_register = {Register name p | name p. p \<in> disposable}"
+definition disposable_register :: "'a register \<Rightarrow> bool"
+  where disposable_register: "disposable_register = pred_register disposable"
+instance by standard
+end
+
+instantiation prod :: (disposable,disposable) disposable begin
+definition "disposable_prod = disposable \<times>\<^sub>p disposable"
+lemma [simp]: "disposable (a,b) \<longleftrightarrow> disposable a \<and> disposable b" unfolding disposable_prod_def by simp
 instance by standard
 end
 
 instantiation prod :: (lrep,lrep) lrep begin
 definition llty_prod :: "('a \<times> 'b) itself \<Rightarrow> llty" where [simp]: "llty_prod _ = la_C (llty TYPE('a)) (llty TYPE('b))"
-definition "disposable_prod = disposable \<times> disposable"
-lemma [simp]: "(a,b) \<in> disposable \<longleftrightarrow> a \<in> disposable \<and> b \<in> disposable" unfolding disposable_prod_def by simp
 instance by standard
 end
 
@@ -397,7 +424,7 @@ lemma [intro]: "Inhabited X \<Longrightarrow> Inhabited G \<Longrightarrow> Inha
 
 instantiation proc_ctx :: (lrep,register_collection) lrep begin
 definition llty_proc_ctx :: "('a,'b) proc_ctx itself \<Rightarrow> llty" where "llty_proc_ctx _ = la_C (llty TYPE('a)) (llty TYPE('b))"
-definition disposable_proc_ctx :: "('a,'b) proc_ctx set" where "disposable_proc_ctx = {}"
+definition disposable_proc_ctx :: "('a,'b) proc_ctx \<Rightarrow> bool" where "disposable_proc_ctx x = False"
 instance by standard
 end
 
@@ -526,14 +553,14 @@ definition new_reg_locale :: "('G, 'G2, ('r::register_collection), void \<times>
   where "new_reg_locale adr s = (case s of Proc_Ctx r G \<Rightarrow> StatOn (Proc_Ctx r (map_at adr (Pair void) G)))"
 definition delete_reg_locale :: "('G, 'G2, ('r::register_collection) \<times> ('B::register_collection), 'B) address \<Rightarrow> (('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
   where "delete_reg_locale adr s = (case s of Proc_Ctx r G \<Rightarrow>
-    if fst (get_at adr G) \<in> disposable then StatOn (Proc_Ctx r (map_at adr snd G)) else STrap)"
+    if disposable (fst (get_at adr G)) then StatOn (Proc_Ctx r (map_at adr snd G)) else STrap)"
 
 definition store_reg :: "('G, 'G2, ('x::lrep) register, 'y register) address \<Rightarrow> (('y::lrep) \<times> ('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
   where "store_reg adr s = (case s of Proc_Ctx (x,r) G \<Rightarrow>
-    if get_register (get_at adr G) \<in> disposable then  StatOn (Proc_Ctx r (map_at adr (map_register (K  x)) G)) else STrap)"
-definition load_reg :: " ('a, 'a, ('x :: sharable_lrep) register, 'x register) address \<Rightarrow> ('s::lrep) \<flower> ('a::register_collection) \<Rightarrow> ('x \<times> 's \<flower> 'a) state"
+    if disposable (get_register (get_at adr G)) then  StatOn (Proc_Ctx r (map_at adr (map_register (K  x)) G)) else STrap)"
+definition load_reg :: " ('a, 'a, ('x :: {share, lrep}) register, 'x register) address \<Rightarrow> ('s::lrep) \<flower> ('a::register_collection) \<Rightarrow> ('x \<times> 's \<flower> 'a) state"
   where "load_reg adr a = (case a of Proc_Ctx s rr \<Rightarrow>
-    if  get_register (get_at adr rr) \<in> shareable then
+    if shareable (get_register (get_at adr rr)) then
       StatOn (Proc_Ctx (share (Gi 1) (get_register (get_at adr rr)), s) (map_at adr (map_register (share (Gi 1))) rr))
     else STrap)"
 definition remove_reg :: "  ('R, 'R2, 'x register, void register) address \<Rightarrow> (('S::lrep) \<flower> ('R::register_collection)) \<Rightarrow> (('x::lrep) \<times> 'S \<flower> ('R2::register_collection)) state"
@@ -567,7 +594,7 @@ lemma delete_reg_locale: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s
 lemma store_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name X \<^bold>@ G \<longmapsto> RegisterTy name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<nu>Disposable X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg adr \<blangle> R \<heavy_comma> Y \<flower> G \<longmapsto> R \<flower> G2 \<brangle>"
   unfolding \<nu>address_def store_reg_def get_register_def map_register_def by auto
 lemma load_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> RegisterTy name \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<^bold>@ A \<longmapsto> RegisterTy name \<tort_lbrace>sh (Gi 1) x \<tycolon> X\<tort_rbrace> \<^bold>@ B \<brangle>
-  \<Longrightarrow> \<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> s \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg adr \<blangle> R \<flower> A \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon>  X \<flower> B \<brangle>"
+  \<Longrightarrow> \<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e s x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg adr \<blangle> R \<flower> A \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon>  X \<flower> B \<brangle>"
   unfolding \<nu>address_def load_reg_def \<nu>Share_def get_register_def map_register_def by auto
 lemma remove_reg: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> (RegisterTy name X) \<^bold>@ V \<longmapsto> (RegisterTy name Void) \<^bold>@ V' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c remove_reg adr \<blangle> R \<flower> V \<longmapsto> R \<heavy_comma> X \<flower> V' \<brangle>"
   unfolding \<nu>address_def remove_reg_def get_register_def using name_tag_eq by (auto split: prod.split simp add: fst_def)
