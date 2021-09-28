@@ -164,6 +164,11 @@ class ceq =  \<comment> \<open>equality comparison\<close>
 
 datatype ownership = OWS_1 zint | OWS_0 | OWS_C ownership ownership
 
+definition owns_prod :: " ('a \<Rightarrow> ownership) \<Rightarrow> ('b \<Rightarrow> ownership) \<Rightarrow> ('a \<times> 'b \<Rightarrow> ownership) " (infixl "\<times>\<^sub>o\<^sub>w" 80)
+  where "owns_prod ow1 ow2 = (\<lambda>(a,b). OWS_C (ow1 a) (ow2 b))"
+lemma [simp]: "owns_prod ow1 ow2 (a,b) = OWS_C (ow1 a) (ow2 b)"
+  unfolding owns_prod_def by simp
+
 class ownership =
   fixes ownership :: " 'a \<Rightarrow> ownership"
 
@@ -227,6 +232,8 @@ subsubsection \<open>Properties\<close>
 
 definition \<nu>Share :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> bool) \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Share N P f \<longleftrightarrow> (\<forall>z p x. P x \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> shareable p \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
+definition \<nu>Deprive :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> 'b) \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>Deprive N dp \<longleftrightarrow> (\<forall>p x. (p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> dpriv p \<nuLinkL> N \<nuLinkR> dp x)"
 definition \<nu>CEqual :: "('a::{ceq,lrep}, 'b) nu \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>CEqual N P eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2. P x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
 definition \<nu>Disposable :: " ('a::lrep) set \<Rightarrow> bool " where [\<nu>def]: "\<nu>Disposable T \<longleftrightarrow> (\<forall>x. x \<in> T \<longrightarrow> disposable x)"
@@ -236,6 +243,7 @@ definition \<nu>Ownership :: " ('a::{ownership,lrep}, 'b) nu \<Rightarrow> ('b \
   where [\<nu>def]: "\<nu>Ownership N ow \<longleftrightarrow> (\<forall>p x. (p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> ownership p = ow x)"
 
 lemma [\<nu>intro]: "\<nu>Share N (\<lambda>x. True) (\<lambda>z x. x)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>Share_def by simp
+lemma [\<nu>intro]: "\<nu>Deprive N id" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>Deprive_def by simp
 (* lemma K_rew: "(\<lambda>x. c) =  (K c)" by auto
 lemma [simp]: "\<nu>CEqual N (\<lambda>x. c) = \<nu>CEqual N (\<lambda>x. c)" by (auto simp add: K_rew)
 lemma [simp]: "\<nu>Share N s (\<lambda>z x. x) = \<nu>Share N s (K id)" by (auto simp add: K_rew id_def) *)

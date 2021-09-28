@@ -3,6 +3,7 @@ theory NuLLReps
   abbrevs "<own>" = "\<left_fish_tail>"
     and "<none>" = "\<down_fish_tail>"
     and "<object>" = "\<R_arr_tail>"
+    and "<pointer>"  = "\<TeardropAsterisk>"
 begin
 
 text \<open>Semantic data representations\<close>
@@ -46,6 +47,7 @@ instance by standard
 end
 
 instantiation owning :: (disposable) field begin instance by standard end
+instantiation owning :: (disposable) field_list begin instance by standard end
 
 instantiation owning :: (sharing_identical) sharing_identical begin
 definition sharing_identical_owning :: " 'a owning \<Rightarrow> 'a owning \<Rightarrow> bool "
@@ -112,10 +114,10 @@ instance by standard
 end
 
 instantiation memadr :: (len) field begin instance by standard end
+instantiation memadr :: (len) field_list begin instance by standard end
 
 instantiation memadr :: (len) sharing_identical begin
 definition sharing_identical_memadr :: " 'a memadr \<Rightarrow> 'a memadr \<Rightarrow> bool" where [simp]: "sharing_identical_memadr _ _ = True"
-definition ownership_memadr :: " 'a memadr \<Rightarrow> ownership" where [simp]: "ownership_memadr _ = OWS_0"
 instance by standard auto
 end
 
@@ -130,6 +132,21 @@ instantiation memadr :: (len) naive_lrep begin
 instance by standard auto
 end
 
+instantiation memadr :: (len) ownership begin
+definition ownership_memadr :: " 'a memadr \<Rightarrow> ownership" where [simp]: "ownership_memadr _ = OWS_0"
+instance by standard
+end
+
+lemma [\<nu>intro]: "\<nu>Ownership N (\<lambda>x. OWS_0)" for N :: "(('len::len) memadr, 'b) nu" unfolding \<nu>Ownership_def by simp
+
+subsection \<open>\<nu>-abstraction\<close>
+
+definition Pointer :: "(('len::len) memadr, identity) nu"
+  where "Pointer = Nu (\<lambda>px. case px of (memadr i, x) \<Rightarrow> i = x)"
+
+lemma [simp]: "memadr i \<nuLinkL> Pointer \<nuLinkR> i' \<longleftrightarrow> i = i'" unfolding Pointer_def by simp
+lemma [elim]: "i \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" .
+
 section \<open>Void\<close>
 
 instantiation void :: naive_lrep begin
@@ -140,7 +157,15 @@ definition dpriv_void :: "void \<Rightarrow> void" where [simp]: "dpriv_void x =
 instance by standard auto
 end
 
+instantiation void :: field begin instance by standard end
 instantiation void :: field_list begin instance by standard end
+
+instantiation void :: ownership begin
+definition ownership_void :: "void \<Rightarrow> ownership" where [simp]: "ownership_void _ = OWS_0"
+instance by standard
+end
+
+lemma [simp]: "\<nu>Ownership N (\<lambda>x. OWS_0)" for N :: "(void, 'b) nu" unfolding \<nu>Ownership_def by simp
 
 section \<open>The integer data type\<close>
 
@@ -154,9 +179,15 @@ definition shareable_word :: "'a word \<Rightarrow> bool" where [simp]: "shareab
 definition sharing_identical_word :: "'a word \<Rightarrow> 'a word \<Rightarrow> bool" where [simp]: "sharing_identical_word x y = True"
 definition dpriv_word :: "'a word \<Rightarrow> 'a word" where [simp]: "dpriv_word x = x"
 definition disposable_word :: "'a word \<Rightarrow> bool" where [simp]: "disposable_word _ = True"
-definition ownership_word :: " 'a word \<Rightarrow> ownership" where [simp]: "ownership_word _ = OWS_0"
 instance by standard auto
 end
+
+instantiation word :: (len) ownership begin
+definition ownership_word :: " 'a word \<Rightarrow> ownership" where [simp]: "ownership_word _ = OWS_0"
+instance by standard
+end
+
+lemma [\<nu>intro]: "\<nu>Ownership N (\<lambda>x. OWS_0)" for N :: "(('len::len) word, 'b) nu" unfolding \<nu>Ownership_def by simp
 
 instantiation word :: (len) zero_lrep
 begin
@@ -172,6 +203,7 @@ instance by standard (auto+)
 end
 
 instantiation word :: (len) field begin instance by standard end
+instantiation word :: (len) field_list begin instance by standard end
 
 subsection \<open>Basic \<nu>-abstractions based on integer type\<close>
 
@@ -264,6 +296,7 @@ lemma [\<nu>intro]: "\<nu>Share N s1 f1 \<Longrightarrow> \<nu>Share M s2 f2 \<L
 lemma [\<nu>intro]: "\<nu>CEqual N P eq1 \<Longrightarrow> \<nu>CEqual M Q eq2 \<Longrightarrow> \<nu>CEqual (N \<nuFusion> M) (P \<times>\<^sub>r Q) (eq1 \<times>\<^sub>r eq2)"unfolding \<nu>CEqual_def pair_forall by auto
 lemma [\<nu>intro]: "\<nu>Disposable \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<Longrightarrow> \<nu>Disposable \<tort_lbrace>y \<tycolon> Y\<tort_rbrace> \<Longrightarrow> \<nu>Disposable \<tort_lbrace>(x,y) \<tycolon> X \<nuFusion> Y\<tort_rbrace>" unfolding \<nu>Disposable_def pair_forall by auto
 lemma [\<nu>intro]: "\<nu>ShrIdentical N sid1 \<Longrightarrow> \<nu>ShrIdentical M sid2 \<Longrightarrow> \<nu>ShrIdentical (N \<nuFusion> M) (sid1 \<times>\<^sub>r sid2)" unfolding \<nu>ShrIdentical_def by (auto 0 4)
+lemma [\<nu>intro]: "\<nu>Ownership N ow1 \<Longrightarrow> \<nu>Ownership M ow2 \<Longrightarrow> \<nu>Ownership (N \<nuFusion> M) (ow1 \<times>\<^sub>o\<^sub>w ow2)" unfolding \<nu>Ownership_def by simp
 
 section \<open>Tuple\<close>
 
@@ -355,6 +388,7 @@ end
 subsubsection \<open>miscellaneous\<close>
 
 instantiation tuple :: (field_list) field begin instance by standard end
+instantiation tuple :: (field_list) field_list begin instance by standard end
 
 subsection \<open>Nu abstraction - `NuTuple`\<close>
 
@@ -368,6 +402,7 @@ lemma [\<nu>intro]: "\<nu>Share N s f \<Longrightarrow> \<nu>Share \<lbrace> N \
 lemma [\<nu>intro]: "\<nu>CEqual N P eq \<Longrightarrow> \<nu>CEqual \<lbrace> N \<rbrace> P eq" unfolding \<nu>CEqual_def tuple_forall by simp
 lemma [\<nu>intro]: "\<nu>Disposable \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<Longrightarrow> \<nu>Disposable \<tort_lbrace>x \<tycolon> \<lbrace> X \<rbrace>\<tort_rbrace>" unfolding \<nu>Disposable_def tuple_forall by simp
 lemma [\<nu>intro]: "\<nu>ShrIdentical N sid \<Longrightarrow> \<nu>ShrIdentical \<lbrace> N \<rbrace> sid" unfolding \<nu>ShrIdentical_def tuple_forall by simp
+lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>Ownership \<lbrace> N \<rbrace> ow" unfolding \<nu>Ownership_def tuple_forall by simp
 
 section \<open>Memory Witness\<close>
 
