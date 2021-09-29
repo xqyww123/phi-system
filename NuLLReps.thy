@@ -4,7 +4,7 @@ theory NuLLReps
     and "<none>" = "\<down_fish_tail>"
     and "<object>" = "\<R_arr_tail>"
     and "<pointer>"  = "\<TeardropAsterisk>"
-begin
+begin   
 
 text \<open>Semantic data representations\<close>
 
@@ -25,9 +25,9 @@ end
 
 section \<open>Owning\<close>
 
-datatype 'a owning = Owning zint 'a (infix "\<left_fish_tail>" 60) | OwnNone ("\<down_fish_tail>")
+datatype 'a owning = Owning zint 'a (infixr "\<left_fish_tail>" 60) | OwnNone ("\<down_fish_tail>")
   \<comment> \<open>\<^term>\<open>quantity_of_ownership \<left_fish_tail> data\<close>\<close>
-
+  
 lemma owning_forall: "All P \<longleftrightarrow> P \<down_fish_tail> \<and> (\<forall>z x. P (z \<left_fish_tail> x))" by (metis owning.exhaust) 
 lemma owning_exists: "Ex P \<longleftrightarrow> P \<down_fish_tail> \<or> (\<exists>z x. P (z \<left_fish_tail> x))" by (metis owning.exhaust) 
 
@@ -99,8 +99,41 @@ subsection \<open>Nu abstractions\<close>
 
 section \<open>Memory address\<close>
 
-datatype ('spc::len) memadr = memadr identity  \<comment> \<open>'spc : address space\<close>
-translations "id" <= "CONST memadr 0 id"
+datatype ('spc::len) memadr = memadr "identity owning"  \<comment> \<open>'spc : address space\<close>
+
+consts segment_size :: "identity \<Rightarrow> nat" \<comment> \<open>in unit of the number of elements\<close>
+consts segment_type :: "identity \<Rightarrow> llty" \<comment> \<open>type of the element in the segment\<close>
+
+definition within_mem :: "identity \<Rightarrow> bool" where "within_mem iden = (case iden of seg\<hyphen>i \<Rightarrow> i < segment_size seg | _ \<Rightarrow> False)"
+
+lemma within_mem_ex: "within_mem iden \<longleftrightarrow> (\<exists>seg i. iden = seg\<hyphen>i \<and> i < segment_size seg)"
+  unfolding within_mem_def by (auto split: identity.split)
+
+lemma [elim]: "within_mem iden \<Longrightarrow> (\<And>seg i. iden = seg\<hyphen>i \<Longrightarrow> i < segment_size seg \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding within_mem_ex by auto
+
+lemma [intro]: "i < segment_size seg \<Longrightarrow> within_mem (seg\<hyphen>i)" unfolding within_mem_def by auto
+
+
+text \<open>A memory address is represented by an identity, which is a number sequence, in the specific form
+  \<^term>\<open>id_to_segment\<hyphen>index_of_the_addressing_element_in_this_segment\<close>.
+  
+  The ownership here ensures when releasing the segment to which the address points, which requires the total ownership,
+  all holdings of this address are eliminated, so that no any copy will attend further computation.
+  It is significant when the released segment is recycled and allocated in the future, conflicting with obsolete dangling pointers.
+
+  The address \<^term>\<open>Seg\<hyphen>i\<close> is within the allocated segment only if i < segment_size (Seg\<hyphen>i).
+  Only within addresses can be compared between different segments. In the same segment, only within addresses and that at
+  the end edge can be compared (equality and quantitative).
+
+  Pointer to field of a record structure is not supported, whereas shifting of pointers to elements of an array is supported.
+  Considering field-pointing is an obsolete feature in modern languages, it is worthy to be sacrificed for the sake of the 
+  simplicity of the model, especially when this feature can be replaced by splitting the record into multiple small allocation units
+  at the cost of memory consumption. I admit it leads to memory fragment. This research totally is an adventure.
+  
+  This also means the fix-sized array embedded in the record structure also has to be allocated separately,
+  in a fashion with no distinction with indeterminate-sized array. I admit this hinders both time and memory performance.
+\<close>
 
 lemma memadr_exisits: "Ex P \<longleftrightarrow> (\<exists>id. P (memadr id))" by (metis memadr.exhaust) 
 lemma memadr_forall: "All P \<longleftrightarrow> (\<forall>id. P (memadr id))" by (metis memadr.exhaust) 
@@ -117,19 +150,23 @@ instantiation memadr :: (len) field begin instance by standard end
 instantiation memadr :: (len) field_list begin instance by standard end
 
 instantiation memadr :: (len) sharing_identical begin
-definition sharing_identical_memadr :: " 'a memadr \<Rightarrow> 'a memadr \<Rightarrow> bool" where [simp]: "sharing_identical_memadr _ _ = True"
+definition sharing_identical_memadr :: " 'a memadr \<Rightarrow> 'a memadr \<Rightarrow> bool" where [simp]: "sharing_identical_memadr = (=)"
 instance by standard auto
 end
 
 instantiation memadr :: (len) share begin
 definition shareable_memadr :: " 'a memadr \<Rightarrow> bool" where [simp]: "shareable_memadr _ = True"
-definition share_memadr :: "zint \<Rightarrow> 'a memadr \<Rightarrow> 'a memadr" where [simp]: "share_memadr z x = x"
-definition dpriv_memadr :: "'a memadr \<Rightarrow> 'a memadr" where [simp]: "dpriv_memadr x = x"
-instance by standard auto
-end
-
-instantiation memadr :: (len) naive_lrep begin
-instance by standard auto
+definition share_memadr :: "zint \<Rightarrow> 'a memadr \<Rightarrow> 'a memadr"
+  where "share_memadr z x = (case x of memadr a \<Rightarrow> memadr (share z a))"
+definition dpriv_memadr :: "'a memadr \<Rightarrow> 'a memadr"
+  where "dpriv_memadr x = (case x of memadr a \<Rightarrow> memadr (dpriv a))"
+lemma [simp]: "share z (memadr x) = memadr (share z x)" unfolding share_memadr_def by simp
+lemma [simp]: "dpriv (memadr x) = memadr (dpriv x)" unfolding dpriv_memadr_def by simp
+instance proof
+  fix x :: "'a memadr" and a b :: zint
+  show "share (Gi 0) x = x" by (cases x) simp
+  show "share b (share a x) = share (a + b) x" by (cases x) simp
+qed
 end
 
 instantiation memadr :: (len) ownership begin
@@ -139,13 +176,33 @@ end
 
 lemma [\<nu>intro]: "\<nu>Ownership N (\<lambda>x. OWS_0)" for N :: "(('len::len) memadr, 'b) nu" unfolding \<nu>Ownership_def by simp
 
+inductive ceqable_madr where
+  [simp]: "(i1 < n1 \<and> i2 < n2) \<or> (a1 = a2 \<and> i1 \<le> n1 \<and> i2 \<le> n2) \<Longrightarrow>
+    ceqable_madr (z1 \<left_fish_tail> a1\<hyphen>n1\<hyphen>i1) (z2 \<left_fish_tail> a2\<hyphen>n2\<hyphen>i2)"
+| [simp]: "ceqable_madr x y \<Longrightarrow> ceqable_madr y x"
+
+instantiation memadr :: (len) ceq begin
+definition ceqable_memadr :: " 'a memadr \<Rightarrow> 'a memadr \<Rightarrow> bool" where
+  "ceqable_memadr x y = (case x of memadr a \<Rightarrow> case y of memadr b \<Rightarrow> ceqable_madr a b)"
+lemma [simp]: "ceqable (memadr a) (memadr b) = ceqable_madr a b" unfolding ceqable_memadr_def by simp
+definition ceq_memadr :: " 'a memadr \<Rightarrow> 'a memadr \<Rightarrow> bool" where [simp]: "ceq_memadr = (=)"
+instance proof
+  fix x y z :: " 'a memadr"
+  show "ceqable x y = ceqable y x" by (rule; cases x; cases y) simp+
+  show "ceqable x x \<Longrightarrow> ceq x x" and "ceqable x y \<Longrightarrow> ceq x y = ceq y x"
+    and "ceqable x y \<Longrightarrow> ceqable y z \<Longrightarrow> ceqable x z \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z" by auto+
+qed
+end
+
 subsection \<open>\<nu>-abstraction\<close>
 
-definition Pointer :: "(('len::len) memadr, identity) nu"
+definition Pointer :: "(('len::len) memadr, identity owning) nu"
   where "Pointer = Nu (\<lambda>px. case px of (memadr i, x) \<Rightarrow> i = x)"
 
 lemma [simp]: "memadr i \<nuLinkL> Pointer \<nuLinkR> i' \<longleftrightarrow> i = i'" unfolding Pointer_def by simp
 lemma [elim]: "i \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" .
+
+lemma [\<nu>intro]: "\<nu>CEqual Pointer ceqable_madr (=)" unfolding \<nu>CEqual_def by (simp add: memadr_forall)
 
 section \<open>Void\<close>
 
@@ -406,8 +463,8 @@ lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>Ownership \<lbra
 
 section \<open>Memory Witness\<close>
 
-datatype ('len::len, 'a::field) memcon = memcon \<open>('len::len) memadr\<close> \<open>'a::field\<close>
-type_synonym ('len,'a) memobj = " ('len,'a) memcon owning"
+datatype ('a::field) memcon = memcon identity \<open>'a::field\<close>
+type_synonym 'a memobj = " 'a memcon owning"
 
 lemma memcon_forall: "All P \<longleftrightarrow> (\<forall>a x. P (memcon a x))" by (metis memcon.exhaust) 
 lemma memcon_exists: "Ex P \<longleftrightarrow> (\<exists>a x. P (memcon a x))" by (metis memcon.exhaust) 
@@ -415,26 +472,26 @@ lemma memcon_exists: "Ex P \<longleftrightarrow> (\<exists>a x. P (memcon a x))"
 
 subsection \<open>Instantiations\<close>
 
-instantiation memcon :: (len,field) disposable begin
-definition disposable_memcon :: " ('a,'b) memcon \<Rightarrow> bool" where [simp]: "disposable_memcon _ = False"
+instantiation memcon :: (field) disposable begin
+definition disposable_memcon :: " 'a memcon \<Rightarrow> bool" where [simp]: "disposable_memcon _ = False"
 instance by standard
 end
 
-instantiation memcon :: ("len", "{ownership, field}") ownership begin
-definition ownership_memcon :: " ('a,'b) memcon \<Rightarrow> ownership"
+instantiation memcon :: ("{ownership, field}") ownership begin
+definition ownership_memcon :: " 'a memcon \<Rightarrow> ownership"
   where "ownership_memcon x = (case x of memcon _ y \<Rightarrow> ownership y)"
 lemma [simp]: "ownership (memcon p x) = ownership x"
   unfolding ownership_memcon_def by simp
 instance by standard
 end
 
-instantiation memcon :: ("len", "{sharing_identical,ownership, field}") sharing_identical begin
-definition sharing_identical_memcon :: "  ('a,'b) memcon \<Rightarrow> ('a,'b) memcon \<Rightarrow> bool"
-  where "sharing_identical_memcon = rel_memcon (=) (inv_imagep (=) ownership)"
+instantiation memcon :: ( "{sharing_identical,ownership, field}") sharing_identical begin
+definition sharing_identical_memcon :: "  'a memcon \<Rightarrow> 'a memcon \<Rightarrow> bool"
+  where "sharing_identical_memcon = rel_memcon (inv_imagep (=) ownership)"
 lemma [simp]: "sharing_identical (memcon pa a) (memcon pb b) \<longleftrightarrow> (pa = pb) \<and> (ownership a = ownership b)"
-  unfolding sharing_identical_memcon_def by (cases pa; cases pb) simp
+  unfolding sharing_identical_memcon_def by simp
 instance proof
-  fix x y z :: " ('a,'b) memcon"
+  fix x y z :: " 'a memcon"
   show "sharing_identical x x" by (cases x) simp
   show "sharing_identical x y = sharing_identical y x" by (cases x; cases y) auto
   show "sharing_identical x y \<Longrightarrow> sharing_identical y z \<Longrightarrow> sharing_identical x z" by (cases x; cases y; cases z) auto
@@ -443,18 +500,18 @@ end
 
 subsection \<open>\<nu>-abstraction\<close>
 
-datatype 'a object = object identity 'a (infix "\<R_arr_tail>" 62)
+datatype 'a object = object identity 'a (infixr "\<R_arr_tail>" 60)
 
 lemma object_forall: "All P \<longleftrightarrow> (\<forall>a x. P (a \<R_arr_tail> x))" by (metis object.exhaust)
 lemma object_exists: "Ex P \<longleftrightarrow> (\<exists>a x. P (a \<R_arr_tail> x))" by (metis object.exhaust)
 
 
-definition MemObj :: "(('a::field), 'b) nu \<Rightarrow> ((('len::len),'a) memobj, 'b object owning) nu"
+definition MemObj :: "(('a::field), 'b) nu \<Rightarrow> ('a memobj, 'b object owning) nu"
   where "MemObj N = Nu (\<lambda>px.
-    case px of (zp \<left_fish_tail> memcon (memadr adrp) p , z \<left_fish_tail> (adrx \<R_arr_tail> x)) \<Rightarrow> (zp = z) \<and> (adrp = adrx) \<and> (p \<nuLinkL> N \<nuLinkR> x)
+    case px of (zp \<left_fish_tail> memcon adrp p , z \<left_fish_tail> (adrx \<R_arr_tail> x)) \<Rightarrow> (zp = z) \<and> (adrp = adrx) \<and> (p \<nuLinkL> N \<nuLinkR> x)
         | (\<down_fish_tail> , \<down_fish_tail>) \<Rightarrow> True | _ \<Rightarrow> False)"  
 
-lemma [simp]: "zp \<left_fish_tail> memcon (memadr  adrp) p \<nuLinkL> MemObj N \<nuLinkR> z \<left_fish_tail> adrx \<R_arr_tail> x \<longleftrightarrow> (zp = z) \<and> (adrp = adrx) \<and> (p \<nuLinkL> N \<nuLinkR> x)"
+lemma [simp]: "zp \<left_fish_tail> memcon adrp p \<nuLinkL> MemObj N \<nuLinkR> z \<left_fish_tail> adrx \<R_arr_tail> x \<longleftrightarrow> (zp = z) \<and> (adrp = adrx) \<and> (p \<nuLinkL> N \<nuLinkR> x)"
   and [simp]: "\<down_fish_tail> \<nuLinkL> MemObj N \<nuLinkR> x' \<longleftrightarrow> x' = \<down_fish_tail>" and [simp]: "p' \<nuLinkL> MemObj N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p' = \<down_fish_tail>"
   unfolding MemObj_def by  (auto simp add: memadr_forall split: memcon.split owning.split)
 
