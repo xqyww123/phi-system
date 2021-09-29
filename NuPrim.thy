@@ -149,9 +149,6 @@ class disposable =
 class lrep = disposable + \<comment>\<open>The basic class for types modelling concrete objects\<close>
   fixes llty :: "'a itself \<Rightarrow> llty" \<comment> \<open>The LLVM type to which the model type corresponds\<close>
 
-class zero_lrep = lrep + \<comment> \<open>memory allocation\<close>
-  fixes lty_zero :: "'a" \<comment> \<open>The zero value to what concrete objects are initialized.\<close>
-
 class ceq =  \<comment> \<open>equality comparison\<close>
   fixes ceqable :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>Whether two values could be compared for equality\<close>
   fixes ceq :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>The equality of two values.
@@ -199,14 +196,13 @@ subsection \<open>The \<nu>-type\<close>
 
 subsubsection \<open>Definitions\<close>
 
-datatype ('a::lrep,'b) nu = Nu "'a * 'b \<Rightarrow> bool"
+type_synonym ('a,'b) nu = " 'a \<Rightarrow> 'b \<Rightarrow> bool "
 datatype ('a::lrep,'b) typing = typing 'b "('a,'b) nu" (infix "\<tycolon>" 15) \<comment>\<open>shortcut keys "<ty>"\<close>
 primrec nu_of :: "('a::lrep,'b) typing \<Rightarrow> ('a,'b) nu" where "nu_of (x \<tycolon> N) = N"
 primrec image_of :: "('a::lrep,'b) typing \<Rightarrow> 'b" where "image_of (x \<tycolon> N) = x"
 
-definition RepSet :: "('a::lrep,'b) typing \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>")
-  where "\<tort_lbrace> ty \<tort_rbrace> = {p. case ty of (x \<tycolon> Nu R) \<Rightarrow> R (p,x) }"
-abbreviation NuTyping :: "('a::lrep) \<Rightarrow> ('a,'b) nu \<Rightarrow> 'b \<Rightarrow> bool" ("(_/ \<nuLinkL> _ \<nuLinkR>/ _)" [27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
+definition RepSet :: "('a::lrep,'b) typing \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>") where "\<tort_lbrace> ty \<tort_rbrace> = {p. case ty of (x \<tycolon> R) \<Rightarrow> R p x }"
+abbreviation Refining :: "('a::lrep) \<Rightarrow> ('a,'b) nu \<Rightarrow> 'b \<Rightarrow> bool" ("(_/ \<nuLinkL> _ \<nuLinkR>/ _)" [27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
   where  "(p \<nuLinkL> N \<nuLinkR> x) \<equiv> p \<in> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
 definition Inhabited :: " 'a set \<Rightarrow> bool" where "Inhabited s \<equiv> (\<exists>x. x \<in> s)"
 abbreviation InhabitTyp :: " 'b \<Rightarrow> ('a::lrep,'b) nu \<Rightarrow> bool" (infix "\<ratio>" 15)  \<comment>\<open>shortcut keys ":TY:"\<close>
@@ -222,7 +218,7 @@ text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete va
 
 subsubsection \<open>Rudimentary lemmata\<close>
 
-lemma [simp]: "p \<nuLinkL> Nu R \<nuLinkR> x \<equiv> R (p,x)" unfolding RepSet_def by simp
+lemma Refining_ex: "p \<nuLinkL> R \<nuLinkR> x \<equiv> R p x" unfolding RepSet_def by simp
 lemma inhabited[dest]: "p \<nuLinkL> N \<nuLinkR> x \<Longrightarrow> x \<ratio> N" unfolding Inhabited_def by auto
 lemma [elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
 lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto
@@ -230,6 +226,8 @@ lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrigh
 
 subsubsection \<open>Properties\<close>
 
+term "0"
+definition \<nu>Zero :: "('a::zero_lrep)"
 definition \<nu>Share :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> bool) \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Share N P f \<longleftrightarrow> (\<forall>z p x. P x \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> shareable p \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
 definition \<nu>Deprive :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> 'b) \<Rightarrow> bool"

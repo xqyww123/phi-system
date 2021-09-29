@@ -23,7 +23,7 @@ declare op_dup_def[\<nu>instr]
 theorem dup_\<nu>proc: "\<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e s x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon> X \<heavy_comma> sh (Gi 1) x \<tycolon> X  \<brangle>"
   unfolding \<nu>def op_dup_def by auto
 
-definition op_revert :: "('a::{share,lrep}) \<times> 'a \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'r) state"
+definition op_revert :: "('a::{share,lrep,sharing_identical}) \<times> 'a \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'r) state"
   where "op_revert x = (case x of (a,b,r) \<Rightarrow> if shareable a \<and> sharing_identical a b then StatOn (share (Gi (-1)) a, r) else STrap)"
 declare op_revert_def[\<nu>instr]
 theorem revert_\<nu>proc: "\<nu>Share N P sh \<Longrightarrow> \<nu>ShrIdentical N sid \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e sid a b
@@ -43,6 +43,21 @@ theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle
 
 definition op_crash :: "('r::lrep) \<Rightarrow> ('x::lrep) state" where "op_crash r = SNeg"
 lemma op_crash:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
+
+subsection \<open>Branch & Loop\<close>
+
+subsubsection \<open>op_if\<close>
+definition op_if :: " (('s::lrep) \<flower> ('sr::register_collection) \<Rightarrow> (('t::lrep) \<flower> ('tr::register_collection)) state) \<Rightarrow> ('s \<flower> 'sr \<Rightarrow> ('t \<flower> 'tr) state) \<Rightarrow> (1 word \<times> 's) \<flower> 'sr \<Rightarrow> ('t \<flower> 'tr) state"
+  where "op_if brT brF x = (case x of (Proc_Ctx (c,s) r) \<Rightarrow> if c = 1 then brT (Proc_Ctx s r) else brF (Proc_Ctx s r))"
+declare op_if_def[\<nu>instr]
+theorem if_\<nu>proc: "(\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e c \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> U \<flower> W \<longmapsto> Vt \<flower> Wt \<brangle>) \<Longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> c \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> U \<flower> W \<longmapsto> Vf \<flower> Wf \<brangle>)
+    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> U \<heavy_comma> (c \<tycolon> \<bool>) \<flower> W  \<longmapsto> (if c then Vt \<flower> Wt else (Vf \<flower> Wf)) \<brangle>"
+  unfolding \<nu>def op_if_def by auto
+
+lemma [simp]: "(if P then (A \<flower> B) else (A' \<flower> B')) = ((if P then A else A') \<flower> (if P then B else B'))" by auto
+lemma [simp]: "(if P then (A\<heavy_comma>B) else (A'\<heavy_comma>B')) = ((if P then A else A')\<heavy_comma>(if P then B else B'))" by auto
+lemma [simp]: "(if P then \<tort_lbrace>T1\<tort_rbrace> else \<tort_lbrace>T2\<tort_rbrace>) = \<tort_lbrace>if P then T1 else T2\<tort_rbrace>"  by auto
+lemma [simp]: "(if P then (x \<tycolon> N) else (y \<tycolon> N)) = ((if P then x else y) \<tycolon> N)"  by auto
 
 subsubsection \<open>while\<close>
 
@@ -67,27 +82,6 @@ specification ("op_recursion")
       \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void\<heavy_comma> h x' \<tycolon> M \<brangle>)
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
   apply (rule exI) using op_crash by auto
-
-(* consts xop_pair :: " ('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
-specification ("xop_pair") "\<^bold>p\<^bold>r\<^bold>o\<^bold>c xop_pair \<blangle> R \<heavy_comma> (a::'x) \<tycolon> A \<heavy_comma> (b::'y) \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>"
-   including show_more using op_crash by auto *)
-
-
-subsection \<open>Branch\<close>
-
-subsubsection \<open>op_if\<close>
-definition op_if :: " (('s::lrep) \<flower> ('sr::register_collection) \<Rightarrow> (('t::lrep) \<flower> ('tr::register_collection)) state) \<Rightarrow> ('s \<flower> 'sr \<Rightarrow> ('t \<flower> 'tr) state) \<Rightarrow> (1 word \<times> 's) \<flower> 'sr \<Rightarrow> ('t \<flower> 'tr) state"
-  where "op_if brT brF x = (case x of (Proc_Ctx (c,s) r) \<Rightarrow> if c = 1 then brT (Proc_Ctx s r) else brF (Proc_Ctx s r))"
-declare op_if_def[\<nu>instr]
-theorem if_\<nu>proc: "(\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e c \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> U \<flower> W \<longmapsto> Vt \<flower> Wt \<brangle>) \<Longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> c \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> U \<flower> W \<longmapsto> Vf \<flower> Wf \<brangle>)
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> U \<heavy_comma> (c \<tycolon> \<bool>) \<flower> W  \<longmapsto> (if c then Vt \<flower> Wt else (Vf \<flower> Wf)) \<brangle>"
-  unfolding \<nu>def op_if_def by auto
-
-lemma [simp]: "(if P then (A \<flower> B) else (A' \<flower> B')) = ((if P then A else A') \<flower> (if P then B else B'))" by auto
-lemma [simp]: "(if P then (A\<heavy_comma>B) else (A'\<heavy_comma>B')) = ((if P then A else A')\<heavy_comma>(if P then B else B'))" by auto
-lemma [simp]: "(if P then \<tort_lbrace>T1\<tort_rbrace> else \<tort_lbrace>T2\<tort_rbrace>) = \<tort_lbrace>if P then T1 else T2\<tort_rbrace>"  by auto
-lemma [simp]: "(if P then (x \<tycolon> N) else (y \<tycolon> N)) = ((if P then x else y) \<tycolon> N)"  by auto
-
 
 section \<open>Arithmetic instructions\<close>
 
@@ -171,12 +165,59 @@ theorem op_lt_\<nu>proc[\<nu>overload <]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c 
 
 subsubsection \<open>equal\<close>
 
-definition op_equal :: " ('a::ceq_lrep) \<times> ('a::ceq_lrep) \<times> ('r::stack) \<Rightarrow> (1 word \<times> 'r) state"
+definition op_equal :: " ('a::{ceq,lrep}) \<times> 'a \<times> ('r::stack) \<Rightarrow> (1 word \<times> 'r) state"
   where "op_equal s = (case s of (a,b,r) \<Rightarrow>
-    if ceqable (b,a) then StatOn ((if ceq (b,a) then 1 else 0), r) else STrap)"
+    if ceqable b a then StatOn ((if ceq b a then 1 else 0), r) else STrap)"
 theorem op_equal[\<nu>overload =]:
-  "\<nu>CEqual N P eq \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P (a,b) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal \<blangle> R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N \<longmapsto> R\<heavy_comma> eq (a,b) \<tycolon> \<bool> \<brangle>"
-  unfolding \<nu>def op_equal_def by auto
+  "\<nu>CEqual N P eq \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal \<blangle> R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N \<longmapsto> R\<heavy_comma> eq a b \<tycolon> \<bool> \<brangle>"
+  unfolding \<nu>def op_equal_def by (auto 4 5)
+
+section \<open>Tuple Operations\<close>
+
+subsection \<open>Tuple construction & destruction\<close>
+
+subsubsection \<open>op_constr_tuple\<close>
+
+definition op_constr_tuple :: "('a::field_list) \<times> ('r::stack) \<Rightarrow> ('a tuple \<times> 'r) state"
+  where "op_constr_tuple = (\<lambda>(a,r). StatOn (Tuple a, r))"
+
+theorem tup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_constr_tuple \<blangle> R\<heavy_comma> x \<tycolon> X \<longmapsto> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<brangle>"
+  unfolding op_constr_tuple_def Procedure_def by simp
+
+subsubsection \<open>op_destr_tuple\<close>
+
+definition op_destr_tuple :: "('a::field_list) tuple \<times> ('r::stack) \<Rightarrow> ('a \<times> 'r) state"
+  where "op_destr_tuple ar = (case ar of (Tuple a, r) \<Rightarrow> StatOn (a,r))"
+
+theorem det_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_destr_tuple \<blangle> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<longmapsto> R\<heavy_comma> x \<tycolon> X \<brangle>"
+  unfolding Procedure_def op_destr_tuple_def by (simp add: tuple_forall)
+
+section \<open>Memory Operations\<close>
+
+subsection \<open>Allocation\<close>
+
+\<nu>overloads alloc
+
+subsubsection \<open>op_alloc_id_space\<close>
+
+definition op_alloc_id_space :: " identifier \<times> ('r::stack) \<Rightarrow> (identifier \<times> identifier \<times> ('r::stack)) state"
+  where "op_alloc_id_space s = (case s of (i,r) \<Rightarrow> StatOn (alloc_identifier_space i, alloc_identifier i, r))"
+
+theorem op_alloc_id_space_\<nu>proc[\<nu>overload alloc]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_id_space \<blangle> R\<heavy_comma> i\<hyphen>j \<tycolon> IdSrc \<longmapsto> R\<heavy_comma> i\<hyphen>j+1 \<tycolon> IdSrc \<heavy_comma> i\<hyphen>j\<hyphen>0 \<tycolon> IdSrc\<brangle>"
+  unfolding op_alloc_id_space_def Procedure_def by (simp add: lrep_exps)
+
+subsubsection \<open>op_alloc\<close>
+
+definition op_alloc :: "('spc::len) itself \<Rightarrow> ('x::{zero,field}) itself
+    \<Rightarrow> identifier \<times> ('bits::len) word \<times> ('r::stack) \<Rightarrow> (identifier \<times> ('spc, 'x) memref \<times>'r) state"
+  where "op_alloc _ _ s = (case s of (i,n,r) \<Rightarrow> if segment_size i = unat n \<and> segment_type i = llty TYPE('x) then
+    StatOn (alloc_identifier i, Tuple (memptr (0 \<left_fish_tail>i |+ 0), 0 \<left_fish_tail> memcon (i |+ 0) 0), r) else SNeg)"
+
+theorem op_alloc_\<nu>proc[\<nu>overload alloc]:
+  "\<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('spc::len) TYPE('x)
+      \<blangle> R\<heavy_comma> n \<tycolon> \<nat>[('bits::len)] \<heavy_comma> i\<hyphen>j \<tycolon> IdSrc \<longmapsto> R\<heavy_comma> Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> zero \<tycolon> Ref N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc \<brangle>"
+  for N :: "('x::{zero,field},'b) nu"
+  unfolding \<nu>def op_alloc_def by auto
 
 section \<open>Tests\<close>
 
