@@ -18,7 +18,18 @@ section \<open>Preliminary constants and settings used in the system\<close>
 named_theorems used \<open>theorems that will be inserted in ANY proof environments,
 which basically has the same effect as the using command.\<close>
   and final_proc_rewrite \<open>rules used to rewrite the generated procedure theorem in the final stage\<close>
+  and final_proc_rewrite2
+
 lemmas [final_proc_rewrite] = Premise_Irew End_of_Contextual_Stack_def[THEN eq_reflection]
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Disposable S \<equiv> Trueprop (\<nu>Disposable S)" unfolding Premise_def .
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Share N P sh \<equiv> Trueprop (\<nu>Share N P sh)" unfolding Premise_def .
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Deprive N dp \<equiv> Trueprop (\<nu>Deprive N dp)" unfolding Premise_def .
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>ShrIdentical N sid \<equiv> Trueprop (\<nu>ShrIdentical N sid)" unfolding Premise_def .
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>CEqual N Pce ce \<equiv> Trueprop (\<nu>CEqual N Pce ce)" unfolding Premise_def .
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Ownership N ow \<equiv> Trueprop (\<nu>Ownership N ow)" unfolding Premise_def .
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Zero N zr \<equiv> Trueprop (\<nu>Zero N zr)" unfolding Premise_def .
+  
+thm final_proc_rewrite2
 
 definition  FailedPremise :: "bool \<Rightarrow> prop" where "FailedPremise \<equiv> Premise"
 lemma FailedPremise_I: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP FailedPremise P" unfolding FailedPremise_def .

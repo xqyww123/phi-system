@@ -81,7 +81,6 @@ fun parse_ret ret =
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 val v_goal_name = "\<nu>goalaa"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
-val final_proc_rewrite_rules = @{thms final_proc_rewrite}
 fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
 
 val top_blk_name = "\<t>\<o>\<p>_\<p>\<r>\<o>\<c>"
@@ -133,7 +132,10 @@ fun begin_proc_cmd binding arg ret rawfixes includes preconds int ctx =
     fun after_qed [[th]] lthy =
       lthy
         |> NuProcedure.define binding
-              (Raw_Simplifier.rewrite_rule lthy final_proc_rewrite_rules th)
+              (th |> Raw_Simplifier.rewrite_rule lthy
+                      (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
+                  |> Raw_Simplifier.rewrite_rule lthy
+                      (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2"))
         |-> (fn th => fn lthy =>
               (Proof_Display.print_results int Position.none ctx
                   (("\<nu>procedure", ""), [("", [th])]); lthy))

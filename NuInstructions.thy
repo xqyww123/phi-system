@@ -196,7 +196,7 @@ section \<open>Memory Operations\<close>
 
 subsection \<open>Allocation\<close>
 
-\<nu>overloads alloc and spawn
+\<nu>overloads spawn
 
 subsubsection \<open>op_alloc_id_space\<close>
 
@@ -220,10 +220,10 @@ theorem alloc_array_\<nu>proc:
   for N :: "('x::{zero,field},'b) nu"
   unfolding \<nu>def op_alloc_def by (auto simp add: list_all2_conv_all_nth)
 
-proc alloc1 : \<open>i\<hyphen>j \<tycolon> IdSrc named i\<close> \<longmapsto> \<open>Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> zero \<tycolon> Ref N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc\<close>
+proc alloc : \<open>i\<hyphen>j \<tycolon> IdSrc\<close> \<longmapsto> \<open>Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> zero \<tycolon> Ref N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc\<close>
   for N :: "('x::{zero,field},'b) nu"
-  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N" and A[\<nu>intro]: "\<nu>Zero N zero"
-  \<bullet> 1 \<leftarrow> i alloc_array N
+  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N" and [\<nu>intro]: "\<nu>Zero N zero"
+  \<bullet> 1 \<leftarrow> v alloc_array N
   finish
 
 
