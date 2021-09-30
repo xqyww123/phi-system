@@ -66,15 +66,16 @@ fun pass_name tm =
     ("(a1 ⦂ N1) × ⋯ × (ak ⦂ Nk) × ℛ ", [n1,...,nk]) with automatical naming for the anonymous *)
 fun parse_arg arg =
   let
-    val (names,args) = arg |> HOLogic.strip_tuple |> map pass_name |> split_list
+    val (names,args) = arg
+      |> strip_binop_l "NuPrim.Stack_Delimiter" |> map pass_name |> split_list
     val names = names |> Name.variant_list []
     val arg = list_mk_binop_l0 delimiter_name (mk_eof_ctx_stack stack_R)
-        (map mk_repset args)
+                (map mk_repset args)
   in
     (arg, names)
   end
 fun parse_ret ret =
-  ret |> HOLogic.strip_tuple |> map mk_repset
+  ret |> strip_binop_l "NuPrim.Stack_Delimiter" |> map mk_repset
     |> list_mk_binop_l0 delimiter_name (mk_eof_ctx_stack stack_R)
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
@@ -102,18 +103,30 @@ fun mk_regctx ctx meta =
   if can (dest_current_nu #> dest_Proc_CtxTy) meta then meta
   else apply_proc_naive @{thm NuPrim.begin_proc_ctx} meta |> accept_proc ctx
 val empty_facts_thm = @{thm NuPrim.empty_facts}
-fun begin_proc_cmd binding arg ret fixes includes preconds int ctx =
+
+fun prep_decls raw_vars ctxt =
   let
+    val (vars, ctxt') = fold_map Proof_Context.read_var raw_vars ctxt
+    val (xs, ctxt'') = ctxt'
+      |> Context_Position.set_visible false
+      |> Proof_Context.add_fixes vars
+      ||> Context_Position.restore_visible ctxt'
+  in ((vars, xs), ctxt'') end
+
+fun begin_proc_cmd binding arg ret rawfixes includes preconds int ctx =
+  let
+    val ((fixes,_), ctx_parse) = prep_decls rawfixes ctx
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
     val preconds = preconds |> map (apfst (apsnd (map (Attrib.check_src ctx))))
-    val (arg, reg_names) = arg |> Syntax.parse_term ctx |> parse_arg
-    val ret = ret |> Syntax.parse_term ctx |> parse_ret
+    val (arg, reg_names) = arg |> Syntax.parse_term ctx_parse |> parse_arg
+    val ret = ret |> Syntax.parse_term ctx_parse |> parse_ret
 
     val includes = includes |> map (Bundle.check ctx)
-    val parse_term = Syntax.parse_term ctx
-    val parse_prop = Syntax.parse_prop ctx
-    val (goal,th) = begin_proc ctx (arg,ret)
-    val elems = [Element.Fixes (fixes |> map (fn (b,ty,f) => (b, Option.map (Syntax.parse_typ ctx) ty, f))),
+    val parse_term = Syntax.read_term ctx_parse
+    val parse_prop = Syntax.read_prop ctx_parse
+    val parse_typ = Syntax.read_typ ctx_parse
+    val (goal,th) = begin_proc ctx_parse (arg,ret) 
+    val elems = [Element.Fixes fixes,
                  Element.Assumes (preconds
                     |> map (apsnd (map (apfst parse_prop #> apsnd (map parse_term)))))]
     val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]

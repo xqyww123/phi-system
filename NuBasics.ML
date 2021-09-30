@@ -144,8 +144,8 @@ fun dest_named tm =
   case try (dest_binop named_name) tm of
      SOME (v,tm) => (SOME (dest_name_tag v), tm)
    | NONE => (NONE, tm)
-fun mk_repset (tm as (Const (@{const_name NuPrim.typing}, _) $ _)) = tm
-  | mk_repset tm = mk_monop @{const_name "NuPrim.RepSet"} tm
+fun mk_repset (tm as (Const ("NuPrim.RepSet", _) $ _)) = tm
+  | mk_repset tm = mk_monop "NuPrim.RepSet" tm
 val nuTy_name = @{const_name "NuPrim.typing"}
 val dest_RepSet = dest_monop "NuPrim.RepSet"
 val dest_nuTy = dest_binop nuTy_name

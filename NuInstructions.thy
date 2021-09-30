@@ -196,28 +196,37 @@ section \<open>Memory Operations\<close>
 
 subsection \<open>Allocation\<close>
 
-\<nu>overloads alloc
+\<nu>overloads alloc and spawn
 
 subsubsection \<open>op_alloc_id_space\<close>
 
 definition op_alloc_id_space :: " identifier \<times> ('r::stack) \<Rightarrow> (identifier \<times> identifier \<times> ('r::stack)) state"
   where "op_alloc_id_space s = (case s of (i,r) \<Rightarrow> StatOn (alloc_identifier_space i, alloc_identifier i, r))"
 
-theorem op_alloc_id_space_\<nu>proc[\<nu>overload alloc]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_id_space \<blangle> R\<heavy_comma> i\<hyphen>j \<tycolon> IdSrc \<longmapsto> R\<heavy_comma> i\<hyphen>j+1 \<tycolon> IdSrc \<heavy_comma> i\<hyphen>j\<hyphen>0 \<tycolon> IdSrc\<brangle>"
+theorem alloc_id_space_\<nu>proc[\<nu>overload spawn]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_id_space \<blangle> R\<heavy_comma> i\<hyphen>j \<tycolon> IdSrc \<longmapsto> R\<heavy_comma> i\<hyphen>j+1 \<tycolon> IdSrc \<heavy_comma> i\<hyphen>j\<hyphen>0 \<tycolon> IdSrc\<brangle>"
   unfolding op_alloc_id_space_def Procedure_def by (simp add: lrep_exps)
 
 subsubsection \<open>op_alloc\<close>
 
-definition op_alloc :: "('spc::len) itself \<Rightarrow> ('x::{zero,field}) itself
-    \<Rightarrow> identifier \<times> ('bits::len) word \<times> ('r::stack) \<Rightarrow> (identifier \<times> ('spc, 'x) memref \<times>'r) state"
-  where "op_alloc _ _ s = (case s of (i,n,r) \<Rightarrow> if segment_size i = unat n \<and> segment_type i = llty TYPE('x) then
-    StatOn (alloc_identifier i, Tuple (memptr (0 \<left_fish_tail>i |+ 0), 0 \<left_fish_tail> memcon (i |+ 0) 0), r) else SNeg)"
 
-theorem op_alloc_\<nu>proc[\<nu>overload alloc]:
-  "\<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('spc::len) TYPE('x)
-      \<blangle> R\<heavy_comma> n \<tycolon> \<nat>[('bits::len)] \<heavy_comma> i\<hyphen>j \<tycolon> IdSrc \<longmapsto> R\<heavy_comma> Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> zero \<tycolon> Ref N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc \<brangle>"
+definition op_alloc :: "('x::{zero,field}) itself
+    \<Rightarrow> identifier \<times> ('bits::len) word \<times> ('r::stack) \<Rightarrow> (identifier \<times> (0, 'x) memref \<times>'r) state"
+  where "op_alloc _ s = (case s of (i,n,r) \<Rightarrow> if segment_len i = unat n \<and> segment_llty i = llty TYPE('x) then
+    StatOn (alloc_identifier i, Tuple ((memptr (0 \<left_fish_tail>i |+ 0) :: 0 memptr), 0 \<left_fish_tail> memcon (i |+ 0) (replicate (unat n) 0)), r) else SNeg)"
+
+theorem alloc_array_\<nu>proc:
+  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
+      \<blangle> R\<heavy_comma> n \<tycolon> \<nat>[('bits::len)] \<heavy_comma> i\<hyphen>j \<tycolon> IdSrc \<longmapsto> R\<heavy_comma> Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> replicate n zero \<tycolon> RefS N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc \<brangle>"
   for N :: "('x::{zero,field},'b) nu"
-  unfolding \<nu>def op_alloc_def by auto
+  unfolding \<nu>def op_alloc_def by (auto simp add: list_all2_conv_all_nth)
+
+proc alloc1 : \<open>i\<hyphen>j \<tycolon> IdSrc named i\<close> \<longmapsto> \<open>Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> zero \<tycolon> Ref N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc\<close>
+  for N :: "('x::{zero,field},'b) nu"
+  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N" and A[\<nu>intro]: "\<nu>Zero N zero"
+  \<bullet> 1 \<leftarrow> i alloc_array N
+  finish
+
+
 
 section \<open>Tests\<close>
 

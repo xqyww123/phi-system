@@ -159,7 +159,7 @@ class ceq =  \<comment> \<open>equality comparison\<close>
   assumes ceq_trans: "ceqable x y \<Longrightarrow> ceqable y z \<Longrightarrow> ceqable x z
     \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
 
-datatype ownership = OWS_1 zint | OWS_0 | OWS_C ownership ownership
+datatype ownership = OWS_1 zint | OWS_0 | OWS_C ownership ownership | OWS_L "ownership list"
 
 definition owns_prod :: " ('a \<Rightarrow> ownership) \<Rightarrow> ('b \<Rightarrow> ownership) \<Rightarrow> ('a \<times> 'b \<Rightarrow> ownership) " (infixl "\<times>\<^sub>o\<^sub>w" 80)
   where "owns_prod ow1 ow2 = (\<lambda>(a,b). OWS_C (ow1 a) (ow2 b))"
@@ -226,8 +226,8 @@ lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrigh
 
 subsubsection \<open>Properties\<close>
 
-term "0"
-definition \<nu>Zero :: "('a::zero_lrep)"
+definition \<nu>Zero :: "('a::{zero,lrep},'b) nu \<Rightarrow> 'b \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> 0 \<nuLinkL> N \<nuLinkR> x"
 definition \<nu>Share :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> bool) \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Share N P f \<longleftrightarrow> (\<forall>z p x. P x \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> shareable p \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
 definition \<nu>Deprive :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> 'b) \<Rightarrow> bool"
@@ -265,7 +265,7 @@ translations "NAME name" == "CONST NAME_TAG (\<lambda>name. ())"
 lemma name_tag_eq: "x = y" for x :: name_tag by (cases x, cases y) auto
 
 definition Named :: "name_tag \<Rightarrow> 'a \<Rightarrow> 'a" where "Named name x = x" \<comment>\<open>name tag\<close>
-syntax "_named_" :: "logic \<Rightarrow> idt \<Rightarrow> logic" (infix "named" 4)
+syntax "_named_" :: "logic \<Rightarrow> idt \<Rightarrow> logic" (infix "named" 14)
 translations "x named name" == "CONST Named (NAME name) x"
 ML_val \<open> Syntax.read_term @{context} "AAA named yy" \<close>
 
