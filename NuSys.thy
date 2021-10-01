@@ -4,7 +4,7 @@ theory NuSys
   imports NuPrim NuLLReps
   keywords
     "proc" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" :: quasi_command
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" :: quasi_command
   and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
@@ -174,8 +174,11 @@ attribute_setup \<nu>cast_overload = \<open>Scan.lift (Parse.and_list1 NuProcedu
 
 section \<open>Processors\<close>
 
+subsubsection \<open>Controls\<close>
+
 \<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn ctx => fn th => NuParse.auto_level_force #->
   (fn auto_level' => NuProcessor.process (AutoLevel.reduce auto_level' ctx) th #> (fn x => raise ProcessTerminated x)))\<close>
+
 \<nu>processor repeat 12 \<open>PROP P\<close> \<open>let
     fun repeat n f x = if n <= 0 then x else ((repeat (n-1) f (f x)) handle _ => x)
   in fn ctx => fn th => Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*")
@@ -183,33 +186,12 @@ section \<open>Processors\<close>
         (NuProcessor.process ctx #> (fn p => p [tok,Token.eof] |> #1)) th)
   end\<close>
 
+subsubsection \<open>Essential functions\<close>
+
 \<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn th => Scan.succeed (fn _ => NuSys.accept_proc ctx th)\<close>
-
-\<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fn _ => fold_rev (fn idt =>
-      NuRegisters.assign_reg ctx idt
-        #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
-end\<close>
-\<nu>processor  load_register 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  fn ctx => fn th => short_ident >> (fn idt => fn _ => NuRegisters.load_reg ctx idt th
-      handle NuRegisters.NoSuchRegister _ => raise Bypass)
-end\<close>
-\<nu>processor move_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  (fn ctx => fn th => ($$$ "\<leftarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fn _ => fold (fn idt => NuRegisters.move_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
-end\<close>
-
-\<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier []\<close>
-\<nu>processor \<nu>simplifier_final 10000 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close>
 
 \<nu>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   meta RS @{thm move_fact_to_star1} handle THM _ => meta RS @{thm move_fact_to_star2})\<close>
-
-\<nu>processor \<nu>resolver 9000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
-  NuBasics.elim_SPEC meta |> apfst (fn major =>
-  case Seq.pull (NuSys.auto_resolve NONE [] (NuSys.load_specthm meta ctx) major)
-    of SOME (major', _) => major' | _ => raise Bypass) |> NuBasics.intro_SPEC)\<close>
 
 \<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => NuProcedure.parser >> (fn binding => fn _ =>
     let val ctx = NuSys.load_specthm meta ctx
@@ -227,6 +209,41 @@ end\<close>
       in (Syntax.parse_term ctx term |> Type.constraint (NuBasics.param_type th |> mapty) |> Syntax.check_term ctx
           |> Thm.cterm_of ctx |> NuBasics.intro_param) RS th
       end) |> NuBasics.intro_SPEC)\<close>
+
+\<nu>processor rule 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close>
+  \<open>fn ctx => fn meta => (Parse.$$$ "\<Longleftarrow>" |-- NuProcedure.parser) >> (fn name => fn _ =>
+    let val ths = Proof_Context.get_fact ctx (Facts.Named (name, NONE)) in
+    case Thm.biresolution NONE false (ths |> map (pair false) |> @{print}) 1 meta |> Seq.pull
+      of SOME (th, _) => th | _ => raise THM ("RSN: no unifiers", 1, meta::ths) end)\<close>
+
+subsubsection \<open>Registers\<close>
+
+\<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
+  (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
+    (fn idts => fn _ => fold_rev (fn idt =>
+      NuRegisters.assign_reg ctx idt
+        #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
+end\<close>
+\<nu>processor  load_register 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
+  fn ctx => fn th => short_ident >> (fn idt => fn _ => NuRegisters.load_reg ctx idt th
+      handle NuRegisters.NoSuchRegister _ => raise Bypass)
+end\<close>
+\<nu>processor move_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
+  (fn ctx => fn th => ($$$ "\<leftarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
+    (fn idts => fn _ => fold (fn idt => NuRegisters.move_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
+end\<close>
+
+subsubsection \<open>Simplifiers & Resonings\<close>
+
+\<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier []\<close>
+\<nu>processor \<nu>simplifier_final 10000 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close>
+
+\<nu>processor \<nu>resolver 9000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+  NuBasics.elim_SPEC meta |> apfst (fn major =>
+  case Seq.pull (NuSys.auto_resolve NONE [] (NuSys.load_specthm meta ctx) major)
+    of SOME (major', _) => major' | _ => raise Bypass) |> NuBasics.intro_SPEC)\<close>
+
+subsubsection \<open>Literal operations\<close>
 
 \<nu>processor literal_constructor 9500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.cartouche >> (fn term => fn _ =>
   let val term = Syntax.read_term ctx term |> Thm.cterm_of ctx |> Simplifier.rewrite ctx |> Thm.rhs_of

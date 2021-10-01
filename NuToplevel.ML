@@ -58,7 +58,7 @@ val arg_stat_term_name = "\<ss>"
 val default_name = "v"
 val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst
 fun pass_name tm = 
-      case dest_named tm of
+      case dest_named (perhaps dest_RepSet tm) of
          (SOME name, tm) => (name, tm)
        | (NONE, tm) => (tm |> try auto_name |> the_default default_name, tm)
 
@@ -84,9 +84,10 @@ val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
 
 val top_blk_name = "\<t>\<o>\<p>_\<p>\<r>\<o>\<c>"
+
 fun begin_proc ctx (arg,ret) =
   let
-    val (arg,ret) = mk_raw_prod (arg,ret) |> Syntax.check_term ctx |> dest_prod
+    (* val (arg,ret) = mk_raw_prod (arg,ret) |> Syntax.check_term ctx |> dest_prod *)
     val (argT,retT) = apply2 (type_of #> dest_Type #> #2 #> hd) (arg,ret)
     val procT = argT --> mk_stateT retT
     val goal = HOLogic.mk_Trueprop (
@@ -119,12 +120,15 @@ fun begin_proc_cmd binding arg ret rawfixes includes preconds int ctx =
     val preconds = preconds |> map (apfst (apsnd (map (Attrib.check_src ctx))))
     val (arg, reg_names) = arg |> Syntax.parse_term ctx_parse |> parse_arg
     val ret = ret |> Syntax.parse_term ctx_parse |> parse_ret
-
+    (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
+    val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctx)
-    val parse_term = Syntax.read_term ctx_parse
-    val parse_prop = Syntax.read_prop ctx_parse
-    val parse_typ = Syntax.read_typ ctx_parse
-    val (goal,th) = begin_proc ctx_parse (arg,ret) 
+    val parse_term = Syntax.parse_term ctx_parse
+    val parse_prop = Syntax.parse_prop ctx_parse
+    val parse_typ = Syntax.parse_typ ctx_parse
+    (* val (goal,th) = begin_proc ctx_parse (arg,ret)  *)
+    val goal = HOLogic.mk_Trueprop (Const ("NuPrim.Procedure", dummyT)
+                  $ Var (v_proc_var, dummyT) $ arg $ ret)
     val elems = [Element.Fixes fixes,
                  Element.Assumes (preconds
                     |> map (apsnd (map (apfst parse_prop #> apsnd (map parse_term)))))]
@@ -148,14 +152,18 @@ fun begin_proc_cmd binding arg ret rawfixes includes preconds int ctx =
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
       |> (fn stat =>
           let val ctx = Proof.context_of stat
-          val th = th |> rpair empty_facts_thm |> intro_SPEC
+          val th = arg |> Syntax.check_term ctx
+            |> Thm.cterm_of ctx |> start_proc ctx top_blk_name
+            |> rpair empty_facts_thm |> intro_SPEC
             |> mk_regctx ctx
             |> fold (fn name =>
                 NuRegisters.assign_reg ctx name #> accept_proc ctx) reg_names
             |> Simplifier.simplify ctx
           in Proof.set_facts [th] stat end)
-      |> Proof.map_context
-          (Proof_Context.put_thms false ("\<nu>thesis", SOME [Drule.mk_term (cterm_of ctx goal)]))
+      |> Proof.map_context (fn ctx => 
+          ctx |> Proof_Context.put_thms false ("\<nu>thesis",
+            SOME [Drule.mk_term (cterm_of ctx (Syntax.check_term
+              (Proof_Context.set_mode Proof_Context.mode_schematic ctx) goal))]))
   end
 
 

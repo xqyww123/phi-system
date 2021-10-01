@@ -20,7 +20,7 @@ structure NuProcedure : NU_PROCEDURE = struct
 open NuBasics
 
 local open Parse in
-val parser = position (short_ident || long_ident || sym_ident || keyword)
+val parser = position (short_ident || long_ident || sym_ident || keyword || string)
 end
 
 val proc_suffix = "_\<nu>proc"
@@ -45,17 +45,32 @@ val cast_thm = gen_get_thm cast_suffix
 val compilation_thm = gen_get_thm compilation_suffix
 fun compilation_thm_of ctx tm = compilation_thm ctx (term_name tm, Position.none)
 
+fun strip_abs_var_n n tm = if n = 0 then [] else
+  case Thm.dest_abs NONE tm of (v,body) =>
+    v :: strip_abs_var_n (n-1) body
+fun norm_def n def = let open Thm Drule Term
+  val vars = strip_abs_var_n n (rhs_of def)
+        |> map (fn tm =>
+            Thm.var (term_of tm |> dest_Free |> #1 |> rpair 0,
+              ctyp_of_cterm tm))
+  in
+    fold (fn a => fn b => Thm.combination b a) (map reflexive vars) def
+  end
+
 fun define (binding,attrs) th lthy =
   let
     val (f,U,V) = Thm.concl_of th |> Logic.unvarify_global |> dest_procedure 
+    val arity = length (add_frees f [])
+    val f' = fold lambda (map Free (add_frees f [])) f
     val def_binding = Binding.suffix_name compilation_suffix binding
     val proc_binding = Binding.suffix_name proc_suffix binding
   in
     lthy
-      |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f))
+      |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
       |-> (fn (tm,(_,def)) => 
             Local_Theory.notes_kind procedure_kind
-              [((proc_binding,attrs), [([th RS (def RS @{thm NuPrim.rename_proc})],[])])]
+              [((proc_binding,attrs), [([th RS
+                  ((norm_def arity def) RS @{thm NuPrim.rename_proc})],[])])]
             #> apfst (fn [(_,[th])] => th)
           )
   end

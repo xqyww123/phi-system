@@ -153,18 +153,16 @@ lemma [\<nu>intro]: "\<nu>CEqual IdSrc (\<lambda>x y. True) (\<lambda>x y. True)
 
 section \<open>Memory address\<close>
 
-datatype memadr = memadr identifier nat (infix "|+" 60) \<comment> \<open>identifier to the segment, offset in the segment\<close>
-datatype ('spc) memptr = memptr "memadr owning"  \<comment> \<open>'spc : address space\<close>
+datatype memadr = memadr (segment_of_adr: identifier) (offset_of_adr: int) (infix "|+" 60) \<comment> \<open>identifier to the segment, offset in the segment\<close>
+datatype ('spc::len0) memptr = memptr "memadr owning"  \<comment> \<open>'spc : address space\<close>
 
 consts segment_len :: "identifier \<Rightarrow> nat" \<comment> \<open>in unit of the number of elements\<close>
 consts segment_llty :: "identifier \<Rightarrow> llty" \<comment> \<open>type of the element in the segment\<close>
-
-abbreviation "segment_of_adr a \<equiv> (case a of seg |+ i \<Rightarrow> seg)"
-abbreviation "offset_of_adr a \<equiv> (case a of seg |+ i \<Rightarrow> i)"
 abbreviation "memadr_len a \<equiv> segment_len (segment_of_adr a)"
 abbreviation "memadr_llty a \<equiv> segment_llty (segment_of_adr a)"
 
-abbreviation within_seg :: "memadr \<Rightarrow> bool" where "within_seg a \<equiv> offset_of_adr a < memadr_len a"
+abbreviation within_seg :: "memadr \<Rightarrow> bool" where "within_seg a \<equiv> 0 \<le> offset_of_adr a \<and> offset_of_adr a < int (memadr_len a)"
+abbreviation within_seg' :: "memadr \<Rightarrow> bool" where "within_seg' a \<equiv> 0 \<le> offset_of_adr a \<and> offset_of_adr a \<le> int (memadr_len a)"
 
 text \<open>A memory address is represented by an identifier, which is a number sequence, in the specific form
   \<^term>\<open>id_to_segment\<hyphen>index_of_the_addressing_element_in_this_segment\<close>.
@@ -193,21 +191,21 @@ lemma memadr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>s i. P (s
 
 subsection \<open>Instantiations for memptr\<close>
 
-instantiation memptr :: (type) lrep begin
+instantiation memptr :: (len0) lrep begin
 definition disposable_memptr :: "'a memptr \<Rightarrow> bool" where [simp]: "disposable_memptr _ = True"
 definition llty_memptr :: "'a memptr itself \<Rightarrow> llty" where [simp]: "llty_memptr _ = la_p LENGTH('a)"
 instance by standard
 end
 
-instantiation memptr :: (type) field begin instance by standard end
-instantiation memptr :: (type) field_list begin instance by standard end
+instantiation memptr :: (len0) field begin instance by standard end
+instantiation memptr :: (len0) field_list begin instance by standard end
 
-instantiation memptr :: (type) sharing_identical begin
+instantiation memptr :: (len0) sharing_identical begin
 definition sharing_identical_memptr :: " 'a memptr \<Rightarrow> 'a memptr \<Rightarrow> bool" where [simp]: "sharing_identical_memptr = (=)"
 instance by standard auto
 end
 
-instantiation memptr :: (type) share begin
+instantiation memptr :: (len0) share begin
 definition shareable_memptr :: " 'a memptr \<Rightarrow> bool" where [simp]: "shareable_memptr _ = True"
 definition share_memptr :: "zint \<Rightarrow> 'a memptr \<Rightarrow> 'a memptr"
   where "share_memptr z x = (case x of memptr a \<Rightarrow> memptr (share z a))"
@@ -222,18 +220,18 @@ instance proof
 qed
 end
 
-instantiation memptr :: (type) ownership begin
+instantiation memptr :: (len0) ownership begin
 definition ownership_memptr :: " 'a memptr \<Rightarrow> ownership" where [simp]: "ownership_memptr = case_memptr ownership"
 instance by standard
 end
 
 inductive ceqable_adr where
-  [intro,simp]: "(i1 < segment_len a1 \<and> i2 < segment_len a2) \<or>
-      (a1 = a2 \<and> i1 \<le> segment_len a1 \<and> i2 \<le> segment_len a2) \<Longrightarrow>
-    ceqable_adr (a1 |+ i1) (a2 |+ i2)"
+  [intro,simp]: "(within_seg a1 \<and> within_seg a2) \<or>
+      (segment_of_adr a1 = segment_of_adr a2 \<and> within_seg' a1 \<and> within_seg' a2) \<Longrightarrow>
+    ceqable_adr a1 a2"
 | [simp]: "ceqable_adr x y \<Longrightarrow> ceqable_adr y x"
 
-instantiation memptr :: (type) ceq begin
+instantiation memptr :: (len0) ceq begin
 definition ceqable_memptr :: " 'a memptr \<Rightarrow> 'a memptr \<Rightarrow> bool" where
   "ceqable_memptr x y = (case x of memptr a \<Rightarrow> case y of memptr b \<Rightarrow> rel1_owning ceqable_adr a b)"
 lemma [simp]: "ceqable (memptr a) (memptr b) = rel1_owning ceqable_adr a b" unfolding ceqable_memptr_def by simp
@@ -246,62 +244,102 @@ instance proof
 qed
 end
 
-instantiation memptr :: (type) zero begin
+instantiation memptr :: (len0) zero begin
 definition zero_memptr :: " 'a memptr" where [simp]: "zero_memptr = memptr \<down_fish_tail>"
 instance by standard
 end
 
-lemma [\<nu>intro]: "\<nu>Disposable S" for S :: "'spc memptr set" unfolding \<nu>Disposable_def by simp
+lemma [\<nu>intro]: "\<nu>Disposable S" for S :: "('spc0::len0) memptr set" unfolding \<nu>Disposable_def by simp
 
 subsection \<open>\<nu>-abstraction\<close>
 
 subsubsection \<open>Pointer\<close>
 
-definition Pointer' :: "'spc itself \<Rightarrow> ('spc memptr, memadr owning) nu"
-  where "Pointer' _ p x = (case p of (memptr i) \<Rightarrow> (i = x) \<and> pred_owning within_seg i)"
-syntax "_Pointer'_" :: "type \<Rightarrow> logic" (\<open>Pointer'[_']\<close>)
-translations "Pointer['x]" == "CONST Pointer' (TYPE('x))" 
-abbreviation "Pointer \<equiv> Pointer[0]"
+definition FreePtr' :: "('spc::len0) itself \<Rightarrow> ('spc memptr, memadr owning) nu"
+  where "FreePtr' _ p x = (case p of (memptr i) \<Rightarrow> (i = x) \<and> pred_owning within_seg i)"
+syntax "_FreePtr'_" :: "type \<Rightarrow> logic" (\<open>FreePtr'[_']\<close>)
+translations "FreePtr['x]" == "CONST FreePtr' (TYPE('x))" 
+abbreviation "FreePtr \<equiv> FreePtr[0]"
 
-lemma [simp]: "memptr i \<nuLinkL> Pointer['spc] \<nuLinkR> i' \<longleftrightarrow> (i = i') \<and> pred_owning within_seg i'" unfolding Pointer'_def Refining_ex by auto
-lemma [elim]: "z \<left_fish_tail> i \<ratio> Pointer['spc] \<Longrightarrow> (within_seg i \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+lemma [simp]: "memptr i \<nuLinkL> FreePtr['spc::len0] \<nuLinkR> i' \<longleftrightarrow> (i = i') \<and> pred_owning within_seg i'" unfolding FreePtr'_def Refining_ex by auto
+lemma [elim]: "z \<left_fish_tail> i \<ratio> FreePtr['spc::len0] \<Longrightarrow> (within_seg i \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>CEqual Pointer['spc] (rel1_owning (\<lambda>x y. True)) (=)" unfolding \<nu>CEqual_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Share Pointer['spc] (\<lambda>x. True) share" unfolding \<nu>Share_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>ShrIdentical Pointer['spc] (=)" unfolding \<nu>ShrIdentical_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Deprive Pointer['spc] dpriv" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Ownership Pointer['spc] ownership" unfolding \<nu>Ownership_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Zero Pointer['spc] \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>CEqual FreePtr['spc::len0] (rel1_owning (\<lambda>x y. True)) (=)" unfolding \<nu>CEqual_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Share FreePtr['spc::len0] (\<lambda>x. True) share" unfolding \<nu>Share_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>ShrIdentical FreePtr['spc::len0] (=)" unfolding \<nu>ShrIdentical_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Deprive FreePtr['spc::len0] dpriv" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Ownership FreePtr['spc::len0] ownership" unfolding \<nu>Ownership_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Zero FreePtr['spc::len0] \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Slide pointer\<close>
 
-definition SlidePtr' :: " 'spc itself \<Rightarrow> llty \<Rightarrow> ('spc memptr, memadr owning) nu"
+definition SlidePtr' :: " ('spc::len0) itself \<Rightarrow> llty \<Rightarrow> ('spc memptr, memadr owning) nu"
   where "SlidePtr' _ ty p x = (case p of (memptr ap) \<Rightarrow> ap = x \<and> pred_owning (\<lambda>a. memadr_llty a = ty) x)"
 syntax "_SlidePtr'_" :: "type \<Rightarrow> logic" (\<open>SlidePtr'[_']\<close>)
 translations "SlidePtr['x]" == "CONST SlidePtr' (TYPE('x))" 
 abbreviation "SlidePtr \<equiv> SlidePtr[0]"
 
-lemma [simp]: "memptr i \<nuLinkL> SlidePtr['spc] ty \<nuLinkR> i' \<longleftrightarrow> (i = i') \<and> pred_owning (\<lambda>a. memadr_llty a = ty) i'"
+lemma [simp]: "memptr i \<nuLinkL> SlidePtr['spc::len0] ty \<nuLinkR> i' \<longleftrightarrow> (i = i') \<and> pred_owning (\<lambda>a. memadr_llty a = ty) i'"
   unfolding SlidePtr'_def Refining_ex by auto
-lemma [elim]: " z \<left_fish_tail> a \<ratio> SlidePtr['spc] ty \<Longrightarrow> (memadr_llty a = ty \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (cases a) (simp add: lrep_exps)
+lemma [elim]: " z \<left_fish_tail> a \<ratio> SlidePtr['spc::len0] ty \<Longrightarrow> (memadr_llty a = ty \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (cases a) (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>CEqual (SlidePtr['spc] ty) (rel1_owning ceqable_adr) (=)" unfolding \<nu>CEqual_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Share (SlidePtr['spc] ty) (\<lambda>x. True) share" unfolding \<nu>Share_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>ShrIdentical (SlidePtr['spc] ty) (=)" unfolding \<nu>ShrIdentical_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Deprive (SlidePtr['spc] ty) dpriv" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Ownership (SlidePtr['spc] ty) ownership" unfolding \<nu>Ownership_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Zero (SlidePtr['spc] ty) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>CEqual (SlidePtr['spc::len0] ty) (rel1_owning ceqable_adr) (=)" unfolding \<nu>CEqual_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Share (SlidePtr['spc::len0] ty) (\<lambda>x. True) share" unfolding \<nu>Share_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>ShrIdentical (SlidePtr['spc::len0] ty) (=)" unfolding \<nu>ShrIdentical_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Deprive (SlidePtr['spc::len0] ty) dpriv" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Ownership (SlidePtr['spc::len0] ty) ownership" unfolding \<nu>Ownership_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Zero (SlidePtr['spc::len0] ty) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
-named_theorems slide_\<nu>cast and ptr_\<nu>cast
+subsubsection \<open>Typed Pointer\<close>
+
+definition Pointer' :: "('spc::len0) itself \<Rightarrow> llty \<Rightarrow> ('spc memptr, memadr owning) nu"
+  where "Pointer' _ ty p x = (case p of (memptr i) \<Rightarrow> (i = x) \<and> pred_owning within_seg x \<and> pred_owning (\<lambda>a. memadr_llty a = ty) x)"
+syntax "_Pointer'_" :: "type \<Rightarrow> logic" (\<open>Pointer'[_']\<close>)
+translations "Pointer['x]" == "CONST Pointer' (TYPE('x))" 
+abbreviation "Pointer \<equiv> Pointer[0]"
+
+lemma [simp]: "memptr i \<nuLinkL> Pointer['spc::len0] ty \<nuLinkR> i' \<longleftrightarrow>
+    (i = i') \<and> pred_owning within_seg i \<and> pred_owning (\<lambda>a. memadr_llty a = ty) i'"
+  unfolding Pointer'_def Refining_ex by auto
+lemma [elim]: " z \<left_fish_tail> a \<ratio> Pointer['spc::len0] ty \<Longrightarrow> (memadr_llty a = ty \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (cases a) (simp add: lrep_exps)
+
+lemma [\<nu>intro]: "\<nu>CEqual (Pointer['spc::len0] ty) (rel1_owning ceqable_adr) (=)" unfolding \<nu>CEqual_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Share (Pointer['spc::len0] ty) (\<lambda>x. True) share" unfolding \<nu>Share_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>ShrIdentical (Pointer['spc::len0] ty) (=)" unfolding \<nu>ShrIdentical_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Deprive (Pointer['spc::len0] ty) dpriv" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Ownership (Pointer['spc::len0] ty) ownership" unfolding \<nu>Ownership_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Zero (Pointer['spc::len0] ty) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+
+subsubsection \<open>Casts\<close>
+
+named_theorems slide_\<nu>cast and fixtyp_\<nu>cast and freetyp_\<nu>cast
 
 lemma [\<nu>intro, slide_\<nu>cast]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e pred_owning (\<lambda>x. case x of seg |+ i \<Rightarrow> segment_llty seg = ty) a \<Longrightarrow>
-    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> Pointer['spc] \<longmapsto> a \<tycolon> SlidePtr['spc] ty \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e pred_owning within_seg a "
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> Pointer['spc] ty \<longmapsto> a \<tycolon> SlidePtr['spc::len0] ty \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e pred_owning within_seg a "
   unfolding Cast_def by (cases a) (auto split: memadr.split simp add: lrep_exps)
 
-lemma [\<nu>intro, ptr_\<nu>cast]:
+lemma [\<nu>intro, slide_\<nu>cast]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e pred_owning (\<lambda>x. memadr_llty x = ty) a \<Longrightarrow>
+    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> FreePtr['spc] \<longmapsto> a \<tycolon> SlidePtr['spc::len0] ty \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e pred_owning within_seg a "
+  unfolding Cast_def by (cases a) (auto split: memadr.split simp add: lrep_exps)
+
+lemma [\<nu>intro, fixtyp_\<nu>cast]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e pred_owning within_seg a \<Longrightarrow>
-    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> SlidePtr['spc] ty \<longmapsto> a \<tycolon> Pointer['spc] \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e pred_owning (\<lambda>x. case x of seg |+ i \<Rightarrow> segment_llty seg = ty) a"
+    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> SlidePtr['spc] ty \<longmapsto> a \<tycolon> Pointer['spc::len0] ty"
+  unfolding Cast_def by (cases a) (auto simp add: lrep_exps split: memadr.split)
+
+lemma [\<nu>intro, fixtyp_\<nu>cast]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e pred_owning (\<lambda>x. memadr_llty x = ty) a \<Longrightarrow>
+    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> FreePtr['spc] \<longmapsto> a \<tycolon> Pointer['spc::len0] ty"
+  unfolding Cast_def by (cases a) (auto simp add: lrep_exps split: memadr.split)
+
+lemma [\<nu>intro, freetyp_\<nu>cast]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e pred_owning within_seg a \<Longrightarrow>
+    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> SlidePtr['spc] ty \<longmapsto> a \<tycolon> FreePtr['spc::len0]  \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e pred_owning (\<lambda>x. memadr_llty x = ty) a"
+  unfolding Cast_def by (cases a) (auto simp add: lrep_exps split: memadr.split)
+
+lemma [\<nu>intro, freetyp_\<nu>cast]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> Pointer['spc] ty \<longmapsto> a \<tycolon> FreePtr['spc::len0] \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e pred_owning (\<lambda>x. memadr_llty x = ty) a"
   unfolding Cast_def by (cases a) (auto simp add: lrep_exps split: memadr.split)
 
 section \<open>Void\<close>
@@ -380,6 +418,16 @@ translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))"
 
 lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding NuNatRound_def Refining_ex by auto
 lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
+
+subsubsection \<open>Integer\<close>
+
+definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) nu" where "NuInt _ p x = (sint p = x)"
+syntax "_NuInt_" :: "type \<Rightarrow> logic" (\<open>\<int>'[_']\<close>)
+translations "\<int>['x]" == "CONST NuInt (TYPE('x))" 
+
+lemma [simp]: "p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfolding NuInt_def Refining_ex by auto
+lemma [\<nu>intro]: "\<nu>CEqual (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>CEqual_def by (auto simp add: signed_word_eqI) 
+lemma [\<nu>intro]: "\<nu>Zero (NuInt b) 0" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Boolean\<close>
 
@@ -631,7 +679,66 @@ lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (Me
   by (simp add: lrep_exps list_all2_conv_all_nth) (auto 0 3)
 lemma [\<nu>intro]: "\<nu>Zero (MemSlice N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
-subsection \<open>\<nu>-abstraction : Obj\<close>
+section \<open>Ghost\<close>
+
+datatype 'a ghost = ghost 'a
+
+lemma ghost_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>x. P (ghost x))" by (metis ghost.exhaust)
+lemma ghost_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>x. P (ghost x))" by (metis ghost.exhaust)
+
+subsection \<open>Instantiations\<close>
+
+instantiation ghost :: (type) field begin
+definition llty_ghost :: " 'a ghost itself \<Rightarrow> llty" where [simp]: "llty_ghost _ = la_z"
+definition disposable_ghost :: " 'a ghost \<Rightarrow> bool " where [simp]: "disposable_ghost _ = True"
+instance by standard
+end
+
+lemma [\<nu>intro]: "\<nu>Disposable S" for S :: " 'a ghost set " unfolding \<nu>Disposable_def by simp
+
+instantiation ghost :: (type) field_list begin instance by standard end
+
+instantiation ghost :: (type) ceq begin
+definition ceqable_ghost :: " 'a ghost \<Rightarrow> 'a ghost \<Rightarrow> bool" where [simp]: "ceqable_ghost _ _ = True"
+definition ceq_ghost :: " 'a ghost \<Rightarrow> 'a ghost \<Rightarrow> bool" where [simp]: "ceq_ghost _ _ = True"
+instance by standard auto
+end
+
+instantiation ghost :: (type) sharing_identical begin
+definition sharing_identical_ghost :: "'a ghost \<Rightarrow> 'a ghost \<Rightarrow> bool" where [simp]: "sharing_identical_ghost _ _ = True"
+instance by standard auto
+end
+
+instantiation ghost :: (type) share begin
+definition shareable_ghost :: "'a ghost \<Rightarrow> bool" where [simp]: "shareable_ghost _ = True"
+definition share_ghost :: "zint \<Rightarrow> 'a ghost \<Rightarrow> 'a ghost" where [simp]: "share_ghost _ x = x"
+definition dpriv_ghost :: "'a ghost \<Rightarrow> 'a ghost" where [simp]: "dpriv_ghost x = x"
+instance by standard auto
+end
+
+instantiation ghost :: (type) ownership begin
+definition ownership_ghost :: " 'a ghost \<Rightarrow> ownership" where [simp]: "ownership_ghost _ = OWS_0"
+instance by standard
+end
+
+lemma [\<nu>intro]: "\<nu>Ownership N (\<lambda>_. OWS_0)" for N :: "('a ghost, 'b) nu" unfolding \<nu>Ownership_def by simp
+
+instantiation ghost :: (zero) zero begin
+definition zero_ghost :: " 'a ghost" where [simp]: "zero_ghost = ghost 0"
+instance by standard
+end
+
+subsubsection \<open>\<nu>-abstraction\<close>
+
+definition Ghost :: "('a ghost, 'a) nu" where "Ghost p x \<longleftrightarrow> (case p of ghost p' \<Rightarrow> p' = x)"
+
+lemma [simp]: "ghost p \<nuLinkL> Ghost \<nuLinkR> x \<longleftrightarrow> p = x" unfolding Ghost_def Refining_ex by auto
+
+lemma [\<nu>intro]: "\<nu>Share Ghost (\<lambda>x. True) (\<lambda>z x. x)" unfolding \<nu>Share_def by simp
+lemma [\<nu>intro]: "\<nu>ShrIdentical Ghost (\<lambda>_ _. True)" unfolding \<nu>ShrIdentical_def by simp
+lemma [\<nu>intro]: "\<nu>CEqual Ghost (\<lambda>_ _. True) (\<lambda>_ _. True)" unfolding \<nu>CEqual_def by simp
+lemma [\<nu>intro]: "\<nu>Deprive Ghost (\<lambda>x. x)" unfolding \<nu>Deprive_def by simp
+lemma [\<nu>intro]: "\<nu>Zero Ghost 0" unfolding \<nu>Zero_def by simp
 
 (* definition MemObj :: "(('a::field), 'b) nu \<Rightarrow> ('a memobj, 'b object owning) nu"
   where "MemObj N p x = (

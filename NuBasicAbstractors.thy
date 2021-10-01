@@ -4,6 +4,8 @@ theory NuBasicAbstractors
     and "<some>" = "\<^bold>s\<^bold>o\<^bold>m\<^bold>e"
 begin
 
+\<nu>cast_overloads singular and plural
+
 text \<open>Basic \<nu>-abstractors\<close>
 
 (* text \<open>Examples for automatic property inference\<close>
@@ -93,7 +95,6 @@ lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (Me
   by (simp add: lrep_exps list_all2_conv_all_nth) auto
 lemma [\<nu>intro]: "\<nu>Zero (MemObj N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
-\<nu>cast_overloads singular and plural
 lemma [\<nu>intro, \<nu>cast_overload singular]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t z \<left_fish_tail> a \<R_arr_tail> [x] \<tycolon> MemSlice N \<longmapsto> z \<left_fish_tail> a \<R_arr_tail> x \<tycolon> MemObj N" unfolding Cast_def by simp
 lemma [\<nu>intro, \<nu>cast_overload plural]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t z \<left_fish_tail> a \<R_arr_tail> x \<tycolon> MemObj N \<longmapsto> z \<left_fish_tail> a \<R_arr_tail> [x] \<tycolon> MemSlice N" unfolding Cast_def by simp
 
@@ -103,39 +104,53 @@ type_synonym ('spc,'x) memref = "('spc memptr \<times> 'x memobj) tuple"
 
 abbreviation "address_of_ref x \<equiv> (case x of _ \<left_fish_tail> a \<R_arr_tail> _ \<Rightarrow> a)"
 
-definition "RefS' spc N = \<lbrace> Pointer' spc \<nuFusion> MemSlice N \<rbrace>
-  <down-lift> (\<lambda>x. case x of (zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x) \<Rightarrow> (zp \<left_fish_tail> a, z \<left_fish_tail> a \<R_arr_tail> x) | (zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) \<Rightarrow> (zp \<left_fish_tail> a, \<down_fish_tail>) | \<down_fish_tail> \<Rightarrow> (\<down_fish_tail>,\<down_fish_tail>))
-  <where> {x. pred_owning (\<lambda>r. memadr_llty (adr_of_object r) = llty TYPE('b)) x}"
+definition "RefS' spc N = \<lbrace> Pointer' spc (llty (TYPE('b))) \<nuFusion> MemSlice N \<rbrace>
+  <down-lift> (\<lambda>x. case x of (zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x) \<Rightarrow> (zp \<left_fish_tail> a, z \<left_fish_tail> a \<R_arr_tail> x) | (zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) \<Rightarrow> (zp \<left_fish_tail> a, \<down_fish_tail>) | \<down_fish_tail> \<Rightarrow> (\<down_fish_tail>,\<down_fish_tail>))"
   for N :: "('b::field, 'c) nu"
 syntax "_RefS'_" :: "type => logic" ("RefS'[_']")
 translations "RefS['spc]" == "CONST RefS' (TYPE('spc))"
 abbreviation "RefS \<equiv> RefS[0]"
 
-lemma [simp]: "p \<nuLinkL> RefS['spc] N \<nuLinkR> (zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x) \<longleftrightarrow>
-    (memadr_llty a = llty TYPE('b)) \<and> (p \<nuLinkL> \<lbrace> Pointer['spc] \<nuFusion> MemSlice N \<rbrace> \<nuLinkR> (zp \<left_fish_tail> a, z \<left_fish_tail> a \<R_arr_tail> x))"
+lemma [simp]: "p \<nuLinkL> RefS['spc::len0] N \<nuLinkR> (zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x) \<longleftrightarrow>
+    (p \<nuLinkL> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace> \<nuLinkR> (zp \<left_fish_tail> a, z \<left_fish_tail> a \<R_arr_tail> x))"
   and [simp]: "p \<nuLinkL> RefS['spc] N \<nuLinkR> (zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) \<longleftrightarrow>
-    (memadr_llty a = llty TYPE('b)) \<and> (p \<nuLinkL> \<lbrace> Pointer['spc] \<nuFusion> MemSlice N \<rbrace> \<nuLinkR> (zp \<left_fish_tail> a, \<down_fish_tail>))"
-  and [simp]: "p \<nuLinkL> RefS['spc] N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p \<nuLinkL> \<lbrace> Pointer['spc] \<nuFusion> MemSlice N \<rbrace> \<nuLinkR> (\<down_fish_tail>, \<down_fish_tail>)"
+    (p \<nuLinkL> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace> \<nuLinkR> (zp \<left_fish_tail> a, \<down_fish_tail>))"
+  and [simp]: "p \<nuLinkL> RefS['spc] N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p \<nuLinkL> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace> \<nuLinkR> (\<down_fish_tail>, \<down_fish_tail>)"
   for N :: "('b::field, 'c) nu"
   unfolding RefS'_def by simp+
 
 abbreviation "share_ref z x \<equiv> (case x of (zp \<left_fish_tail> a \<R_arr_tail> zx \<left_fish_tail> x) \<Rightarrow> (zp + z \<left_fish_tail> a \<R_arr_tail> zx + z \<left_fish_tail> x) | (zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) \<Rightarrow> (zp + z \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) | \<down_fish_tail> \<Rightarrow> \<down_fish_tail>)"
-lemma [\<nu>intro]: "\<nu>Share (RefS['spc] N) (\<lambda>x. T) share_ref" unfolding \<nu>Share_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Share (RefS['spc::len0] N) (\<lambda>x. T) share_ref" unfolding \<nu>Share_def by (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (RefS['spc] N) (rel_owning (rel_object (rel_owning (list_all2 (inv_imagep (=) ow)))))"
+lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (RefS['spc::len0] N) (rel_owning (rel_object (rel_owning (list_all2 (inv_imagep (=) ow)))))"
   unfolding \<nu>ShrIdentical_def \<nu>Ownership_def by (auto simp add: lrep_exps list_all2_conv_all_nth) (auto 0 3)
 
 abbreviation "ownership_ref ref \<equiv>
   (case ref of zp \<left_fish_tail> a \<R_arr_tail> x \<Rightarrow> OWS_C (OWS_1 zp) (ownership x) | \<down_fish_tail> \<Rightarrow> OWS_C OWS_0 OWS_0)"
-lemma [\<nu>intro]: "\<nu>Ownership (RefS['spc] N) ownership_ref"
+lemma [\<nu>intro]: "\<nu>Ownership (RefS['spc::len0] N) ownership_ref"
   unfolding \<nu>Ownership_def by (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>Deprive (RefS['spc] N) (\<lambda>x. \<down_fish_tail>)" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>CEqual (RefS['spc] N) (rel1_owning (\<lambda>x y. True)) (rel_owning (rel_object (\<lambda>x y. True)))"
-  unfolding \<nu>CEqual_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Zero (RefS['spc] N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>Deprive (RefS['spc::len0] N) (\<lambda>x. \<down_fish_tail>)" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>CEqual (RefS['spc::len0] N) (rel1_owning (\<lambda>x y. True)) (rel_owning (rel_object (\<lambda>x y. True)))"
+  unfolding \<nu>CEqual_def by (auto simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Zero (RefS['spc::len0] N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
-subsubsection \<open>Slice Reference\<close>
+lemma [\<nu>cast_overload E]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N \<longmapsto> (zp \<left_fish_tail> a, z \<left_fish_tail> a \<R_arr_tail> xs) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace>"
+and [\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail> \<tycolon> RefS['spc::len0] N \<longmapsto> (zp \<left_fish_tail> a, \<down_fish_tail>) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace>"
+and [\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t \<down_fish_tail> \<tycolon> RefS['spc::len0] N \<longmapsto> (\<down_fish_tail>, \<down_fish_tail>) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace>"
+  for N :: "('b::field, 'c) nu"
+  unfolding Cast_def by (simp add: lrep_exps)+
+
+\<nu>cast_overloads RefS
+lemma [\<nu>cast_overload RefS]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (zp \<left_fish_tail> a, z \<left_fish_tail> a \<R_arr_tail> xs) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace> \<longmapsto> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N"
+and [\<nu>cast_overload RefS]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (zp \<left_fish_tail> a, \<down_fish_tail>) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace> \<longmapsto> zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail> \<tycolon> RefS['spc::len0] N"
+and [\<nu>cast_overload RefS]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (\<down_fish_tail>, \<down_fish_tail>) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace> \<longmapsto> \<down_fish_tail> \<tycolon> RefS['spc::len0] N"
+  for N :: "('b::field, 'c) nu"
+  unfolding Cast_def by (simp add: lrep_exps)+
+
+subsubsection \<open>Single Reference\<close>
 
 definition "Ref' spc N = RefS' spc N
     <down-lift> (\<lambda>x. case x of zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<Rightarrow> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> [x] | zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail> \<Rightarrow> zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail> | \<down_fish_tail> \<Rightarrow> \<down_fish_tail>)"
@@ -144,26 +159,53 @@ syntax "_Ref'_" :: "type => logic" ("Ref'[_']")
 translations "Ref['spc]" == "CONST Ref' (TYPE('spc))"
 abbreviation "Ref \<equiv> Ref[0]"
 
-lemma [simp]: "p \<nuLinkL> Ref['spc] N \<nuLinkR> (zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x) \<longleftrightarrow> p \<nuLinkL> RefS['spc] N \<nuLinkR>(zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> [x])"
+lemma [simp]: "p \<nuLinkL> Ref['spc::len0] N \<nuLinkR> (zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x) \<longleftrightarrow> p \<nuLinkL> RefS['spc] N \<nuLinkR>(zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> [x])"
   and [simp]: "p \<nuLinkL> Ref['spc] N \<nuLinkR> (zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) \<longleftrightarrow> p \<nuLinkL> RefS['spc] N \<nuLinkR>(zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>)"
   and [simp]: "p \<nuLinkL> Ref['spc] N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p \<nuLinkL> RefS['spc] N \<nuLinkR> \<down_fish_tail>"
   unfolding Ref'_def by auto
 
-lemma [\<nu>intro]: "\<nu>Share (Ref['spc] N) (\<lambda>x. T) share_ref" unfolding \<nu>Share_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Share (Ref['spc::len0] N) (\<lambda>x. T) share_ref" unfolding \<nu>Share_def by (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (Ref['spc] N) (rel_owning (rel_object (rel_owning (inv_imagep (=) ow))))"
+lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (Ref['spc::len0] N) (rel_owning (rel_object (rel_owning (inv_imagep (=) ow))))"
   unfolding \<nu>ShrIdentical_def \<nu>Ownership_def by (auto simp add: lrep_exps list_all2_conv_all_nth)
 
-lemma [\<nu>intro]: "\<nu>Ownership (Ref['spc] N) ownership_ref"
+lemma [\<nu>intro]: "\<nu>Ownership (Ref['spc::len0] N) ownership_ref"
   unfolding \<nu>Ownership_def by (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>Deprive (Ref['spc] N) (\<lambda>x. \<down_fish_tail>)" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>CEqual (Ref['spc] N) (rel1_owning (\<lambda>x y. True)) (rel_owning (rel_object (\<lambda>x y. True)))"
-  unfolding \<nu>CEqual_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Zero (Ref['spc] N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>Deprive (Ref['spc::len0] N) (\<lambda>x. \<down_fish_tail>)" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>CEqual (Ref['spc::len0] N) (rel1_owning (\<lambda>x y. True)) (rel_owning (rel_object (\<lambda>x y. True)))"
+  unfolding \<nu>CEqual_def by (auto simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Zero (Ref['spc::len0] N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
-lemma [\<nu>intro, \<nu>cast_overload singular]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> [x] \<tycolon> RefS['spc] N \<longmapsto> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc] N" unfolding Cast_def by simp
-lemma [\<nu>intro, \<nu>cast_overload plural]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc] N \<longmapsto> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> [x] \<tycolon> RefS['spc] N" unfolding Cast_def by simp
+lemma [\<nu>intro, \<nu>cast_overload singular]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> [x] \<tycolon> RefS['spc::len0] N \<longmapsto> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc] N" unfolding Cast_def by simp
+lemma [\<nu>intro, \<nu>cast_overload plural]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] N \<longmapsto> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> [x] \<tycolon> RefS['spc] N" unfolding Cast_def by simp
+
+lemma [\<nu>cast_overload E]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] N \<longmapsto> (zp \<left_fish_tail> a, z \<left_fish_tail> a \<R_arr_tail> x) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemObj N \<rbrace>"
+and [\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail> \<tycolon> Ref['spc::len0] N \<longmapsto> (zp \<left_fish_tail> a, \<down_fish_tail>) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemObj N \<rbrace>"
+and [\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t \<down_fish_tail> \<tycolon> Ref['spc::len0] N \<longmapsto> (\<down_fish_tail>, \<down_fish_tail>) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemObj N \<rbrace>"
+  for N :: "('b::field, 'c) nu"
+  unfolding Cast_def by (simp add: lrep_exps)+
+
+\<nu>cast_overloads Ref
+lemma [\<nu>cast_overload Ref]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (zp \<left_fish_tail> a, z \<left_fish_tail> a \<R_arr_tail> x) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemObj N \<rbrace> \<longmapsto> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] N"
+and [\<nu>cast_overload Ref]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (zp \<left_fish_tail> a, \<down_fish_tail>) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemObj N \<rbrace> \<longmapsto> zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail> \<tycolon> Ref['spc::len0] N"
+and [\<nu>cast_overload Ref]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (\<down_fish_tail>, \<down_fish_tail>) \<tycolon> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemObj N \<rbrace> \<longmapsto> \<down_fish_tail> \<tycolon> Ref['spc::len0] N"
+  for N :: "('b::field, 'c) nu"
+  unfolding Cast_def by (simp add: lrep_exps)+
+
+subsection \<open>Numbers\<close>
+
+\<nu>cast_overloads nat and int
+
+value \<open>sint (7::4 word)\<close>
+
+lemma [\<nu>cast_overload nat]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<int>['bits::len] \<longmapsto> nat x \<tycolon> \<nat>['bits]"
+  unfolding Cast_def Premise_def apply (simp add: lrep_exps) sorry
+
+lemma [\<nu>cast_overload int]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(LENGTH('bits) - 1) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<nat>['bits::len] \<longmapsto> int x \<tycolon> \<int>['bits]"
+  unfolding Cast_def Premise_def apply (simp add: lrep_exps)
 
 (* section \<open>Others\<close>
 

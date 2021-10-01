@@ -149,6 +149,9 @@ class disposable =
 class lrep = disposable + \<comment>\<open>The basic class for types modelling concrete objects\<close>
   fixes llty :: "'a itself \<Rightarrow> llty" \<comment> \<open>The LLVM type to which the model type corresponds\<close>
 
+syntax "_LLTY_" :: "type \<Rightarrow> logic" ("LLTY'[_']")
+translations  "LLTY['x]" == "CONST llty TYPE('x)"
+
 class ceq =  \<comment> \<open>equality comparison\<close>
   fixes ceqable :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>Whether two values could be compared for equality\<close>
   fixes ceq :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>The equality of two values.
@@ -229,7 +232,7 @@ subsubsection \<open>Properties\<close>
 definition \<nu>Zero :: "('a::{zero,lrep},'b) nu \<Rightarrow> 'b \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> 0 \<nuLinkL> N \<nuLinkR> x"
 definition \<nu>Share :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> bool) \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>Share N P f \<longleftrightarrow> (\<forall>z p x. P x \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> shareable p \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
+  where "\<nu>Share N P f \<longleftrightarrow> (\<forall>z p x. P x \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> shareable p \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
 definition \<nu>Deprive :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> 'b) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Deprive N dp \<longleftrightarrow> (\<forall>p x. (p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> dpriv p \<nuLinkL> N \<nuLinkR> dp x)"
 definition \<nu>CEqual :: "('a::{ceq,lrep}, 'b) nu \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
@@ -247,6 +250,9 @@ lemma [simp]: "\<nu>CEqual N (\<lambda>x. c) = \<nu>CEqual N (\<lambda>x. c)" by
 lemma [simp]: "\<nu>Share N s (\<lambda>z x. x) = \<nu>Share N s (K id)" by (auto simp add: K_rew id_def) *)
 lemma [\<nu>intro]: "\<nu>Disposable T" for T :: "('a::naive_lrep) set" unfolding \<nu>Disposable_def by simp
 lemma [\<nu>intro]: "\<nu>ShrIdentical N (\<lambda>x y. True)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>ShrIdentical_def by simp
+
+lemma [elim]: "\<nu>Share N P sh \<Longrightarrow> ((P x \<Longrightarrow> p \<nuLinkL> N \<nuLinkR> x \<Longrightarrow> shareable p) \<Longrightarrow> (P x \<Longrightarrow> p \<nuLinkL> N \<nuLinkR> x \<Longrightarrow> share z p \<nuLinkL> N \<nuLinkR> sh z x) \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding \<nu>Share_def by simp
 
   section\<open>Structures for construction\<close>
 
