@@ -32,7 +32,7 @@ definition NuRefine :: " ('a :: lrep, 'b) nu \<Rightarrow> 'b set \<Rightarrow> 
 notation NuRefine (infixl "<where>" 80) and NuRefine (infixl "\<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e" 80)
 
 lemma [simp]: "p \<nuLinkL> N \<nuRefine> P \<nuLinkR> x \<longleftrightarrow> x \<in> P \<and> (p \<nuLinkL> N \<nuLinkR> x)" unfolding NuRefine_def Refining_ex by auto
-lemma [elim]: "x \<ratio> N \<nuRefine> P \<Longrightarrow> (x \<in> P \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "x \<ratio> N \<nuRefine> P \<Longrightarrow> (x \<in> P \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "(x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> Y \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuRefine> P \<longmapsto> Y \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<and>x \<in> P" unfolding Cast_def by auto
 lemma [\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P) \<longmapsto> x \<tycolon> N \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e x \<in> P" unfolding Cast_def by auto
 lemma where_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)" unfolding Cast_def by auto
@@ -53,7 +53,7 @@ definition DownLift :: "(('a::lrep), 'b) nu \<Rightarrow> ('c \<Rightarrow> 'b) 
   where "DownLift N g p x = (p \<nuLinkL> N \<nuLinkR> g x)"
 
 lemma DownLift_exp[simp]: "p \<nuLinkL> N <down-lift> g \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> g x" unfolding DownLift_def Refining_ex by simp
-lemma [elim]: "x \<ratio> N <down-lift> g \<Longrightarrow> (g x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by simp
+lemma [elim,\<nu>elim]: "x \<ratio> N <down-lift> g \<Longrightarrow> (g x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by simp
 
 subsubsection \<open>Up Lifting\<close>
 
@@ -61,7 +61,7 @@ definition UpLift :: "(('a::lrep), 'c) nu \<Rightarrow> ('c \<Rightarrow> 'b) \<
   where "UpLift N f p x = (\<exists>y. f y = x \<and> (p \<nuLinkL> N \<nuLinkR> y))"
 
 lemma [simp]: "p \<nuLinkL> N <up-lift> f \<nuLinkR> x \<longleftrightarrow> (\<exists>y. (f y = x) \<and> (p \<nuLinkL> N \<nuLinkR> y))" unfolding UpLift_def Refining_ex by simp
-lemma [elim]: "x \<ratio> N <up-lift> f \<Longrightarrow> (\<And>y. y \<ratio> N \<Longrightarrow> f y = x \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "x \<ratio> N <up-lift> f \<Longrightarrow> (\<And>y. y \<ratio> N \<Longrightarrow> f y = x \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 subsubsection \<open>Operator Some\<close>
 
@@ -70,7 +70,7 @@ definition NuSome :: " ('a :: lrep, 'b) nu \<Rightarrow> ('a :: lrep, 'b set) nu
 notation NuSome ("\<^bold>s\<^bold>o\<^bold>m\<^bold>e")
 
 lemma [simp]: "p \<nuLinkL> \<^bold>s\<^bold>o\<^bold>m\<^bold>e N \<nuLinkR> X \<longleftrightarrow> (\<exists>x. x \<in> X \<and> (p \<nuLinkL> N \<nuLinkR> x))" unfolding NuSome_def Refining_ex by auto
-lemma [elim]: "X \<ratio> ( \<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<Longrightarrow> (\<And>x. x \<in> X \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "X \<ratio> ( \<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<Longrightarrow> (\<And>x. x \<in> X \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X \<subseteq> X' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<longmapsto> X' \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by (auto 2 3)
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> X \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by auto
 lemma someI_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> X \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by auto
@@ -118,6 +118,8 @@ lemma [simp]: "p \<nuLinkL> RefS['spc::len0] N \<nuLinkR> (zp \<left_fish_tail> 
   and [simp]: "p \<nuLinkL> RefS['spc] N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p \<nuLinkL> \<lbrace> Pointer['spc] LLTY['b] \<nuFusion> MemSlice N \<rbrace> \<nuLinkR> (\<down_fish_tail>, \<down_fish_tail>)"
   for N :: "('b::field, 'c) nu"
   unfolding RefS'_def by simp+
+lemma [elim,\<nu>elim]: "zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<ratio> RefS' spc N \<Longrightarrow> (zp \<left_fish_tail> a \<ratio> Pointer' spc LLTY['b] \<Longrightarrow> z \<left_fish_tail> a \<R_arr_tail> xs \<ratio> MemSlice N \<Longrightarrow> C) \<Longrightarrow> C"
+  for N :: "('b::field, 'c) nu" unfolding Inhabited_def RefS'_def by (simp add: lrep_exps)
 
 abbreviation "share_ref z x \<equiv> (case x of (zp \<left_fish_tail> a \<R_arr_tail> zx \<left_fish_tail> x) \<Rightarrow> (zp + z \<left_fish_tail> a \<R_arr_tail> zx + z \<left_fish_tail> x) | (zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) \<Rightarrow> (zp + z \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) | \<down_fish_tail> \<Rightarrow> \<down_fish_tail>)"
 lemma [\<nu>intro]: "\<nu>Share (RefS['spc::len0] N) (\<lambda>x. T) share_ref" unfolding \<nu>Share_def by (simp add: lrep_exps)

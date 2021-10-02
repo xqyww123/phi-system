@@ -223,7 +223,7 @@ subsubsection \<open>Rudimentary lemmata\<close>
 
 lemma Refining_ex: "p \<nuLinkL> R \<nuLinkR> x \<equiv> R p x" unfolding RepSet_def by simp
 lemma inhabited[dest]: "p \<nuLinkL> N \<nuLinkR> x \<Longrightarrow> x \<ratio> N" unfolding Inhabited_def by auto
-lemma [elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
 lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto
 lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
@@ -282,7 +282,7 @@ lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" 
   \<comment>\<open>A tag used to indicate a parameter should be specified during application. It retains the order of the parameters to be specified.
   For example, "@{prop "\<And>bit_width value. \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m bit_width \<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m value \<Longrightarrow> P bit_wdith value"},
     the first parameter `?bit_width` will be specified first and then the "?value".\<close>
-lemma [elim]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" by auto
+lemma [elim,\<nu>elim]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" by auto
 
 definition ParamHOL :: " 'a \<Rightarrow> bool" where "ParamHOL x = True"
 lemma ParamHOL: "Trueprop (ParamHOL x) \<equiv> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" unfolding ParamTag_def ParamHOL_def .
@@ -293,7 +293,7 @@ definition Premise :: "bool \<Rightarrow> prop" ("\<^bold>p\<^bold>r\<^bold>e\<^
   \<comment> \<open>A tag to hint automatic provers to try to prove this proof obligation\<close>
 lemma Premise_I: "P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding Premise_def by simp
 lemma Premise_E: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma [elim]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
+lemma [elim,\<nu>elim]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 lemma Premise_Irew: "(P \<Longrightarrow> PROP C) \<equiv> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP C)" unfolding Premise_def by simp
 
 definition PremiseHOL :: "bool \<Rightarrow> bool" where "PremiseHOL x = x"
@@ -389,7 +389,7 @@ lemma [intro]: "a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> (a, b) \
 lemma [elim]: "ab \<in> (A and_ty B) \<Longrightarrow> (\<And>a b. ab = (a, b) \<Longrightarrow> a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding AndTy_def And_def by (cases ab) simp
 lemma [intro]: "Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> Inhabited (A and_ty B)" unfolding Inhabited_def AndTy_def And_def by auto
-lemma [elim]: "Inhabited (A and_ty B) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "Inhabited (A and_ty B) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "\<nu>Disposable A \<Longrightarrow> \<nu>Disposable B \<Longrightarrow> \<nu>Disposable (A and_ty B)"
   unfolding \<nu>Disposable_def by auto
 
@@ -404,12 +404,13 @@ definition Stack_Delimiter :: " ('a :: stack) set \<Rightarrow> ('b :: lrep) set
 definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " ("\<^bold>E\<^bold>N\<^bold>D") where "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
 translations "a" <= "CONST End_of_Contextual_Stack x \<heavy_comma> a" \<comment> \<open>hide the end\<close>
 translations "R \<heavy_comma> x \<tycolon> N" == "R \<heavy_comma> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
+lemma [elim,\<nu>elim]: "Inhabited (End_of_Contextual_Stack S) \<Longrightarrow> C \<Longrightarrow> C" .
 lemma [simp]: "(a,b) \<in> (B \<heavy_comma> A) \<longleftrightarrow> a \<in> A \<and> b \<in> B" unfolding Stack_Delimiter_def by simp
 lemma Stack_Delimiter_I[intro]: "a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> (a,b) \<in> (B \<heavy_comma> A)" by simp
 lemma Stack_Delimiter_E[elim]: "ab \<in> (B \<heavy_comma> A) \<Longrightarrow> (\<And>a b. ab = (a,b) \<Longrightarrow> a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Stack_Delimiter_def by (cases ab) simp
 lemma [simp]: "Inhabited (U\<heavy_comma>V) \<longleftrightarrow> Inhabited U \<and> Inhabited V" unfolding Inhabited_def by auto
 lemma [intro]: "Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> Inhabited (U\<heavy_comma>V)" unfolding Inhabited_def by auto
-lemma [elim]: "Inhabited (U\<heavy_comma>V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "Inhabited (U\<heavy_comma>V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
 
 subsection \<open>Procedure construction context.\<close>
 
@@ -429,7 +430,7 @@ lemma [elim]: "c \<in> (X \<flower> G) \<Longrightarrow> (\<And>x g. c = Proc_Ct
 lemma [intro]: "x \<in> X \<Longrightarrow> g \<in> G \<Longrightarrow> Proc_Ctx x g \<in> (X \<flower> G)" unfolding Proc_CtxTy_def by auto
 lemma [simp]: "Inhabited (X \<flower> G) \<longleftrightarrow> Inhabited X \<and> Inhabited G"
   unfolding Proc_CtxTy_def Inhabited_def by auto
-lemma [elim]: "Inhabited (X \<flower> G) \<Longrightarrow> (Inhabited X \<Longrightarrow> Inhabited G \<Longrightarrow> C) \<Longrightarrow> C"
+lemma [elim,\<nu>elim]: "Inhabited (X \<flower> G) \<Longrightarrow> (Inhabited X \<Longrightarrow> Inhabited G \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Proc_CtxTy_def Inhabited_def by auto
 lemma [intro]: "Inhabited X \<Longrightarrow> Inhabited G \<Longrightarrow> Inhabited (X \<flower> G)"
   unfolding Proc_CtxTy_def Inhabited_def by auto
@@ -444,7 +445,7 @@ lemma [simp]: "(Proc_Ctx s r) \<in> (T \<flower> U) \<equiv> s \<in> T \<and> r 
 lemma [\<nu>elim]: "c \<in> (T \<flower> U) \<Longrightarrow> (\<And>s r. c = (Proc_Ctx s r) \<Longrightarrow> s \<in> T \<Longrightarrow> r \<in> U \<Longrightarrow> C) \<Longrightarrow> C" by (cases c) auto
 lemma Proc_CtxTy_intro[intro]: "s \<in> T \<Longrightarrow> r \<in> U \<Longrightarrow> Proc_Ctx s r \<in> (T \<flower> U)" by (simp add: Proc_CtxTy_def)
 lemma [intro]: "Inhabited T \<Longrightarrow> Inhabited U \<Longrightarrow> Inhabited (T \<flower> U)" unfolding Inhabited_def by auto
-lemma [elim]: "Inhabited (T \<flower> U) \<Longrightarrow> (Inhabited T \<Longrightarrow> Inhabited U \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto elim: \<nu>elim)
+lemma [elim,\<nu>elim]: "Inhabited (T \<flower> U) \<Longrightarrow> (Inhabited T \<Longrightarrow> Inhabited U \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto elim: \<nu>elim)
 
 subsection \<open>The \<nu>-system VM and Procedure construction structures\<close>
 
@@ -632,6 +633,8 @@ definition CurrentConstruction :: " ('a::lrep) state \<Rightarrow> 'a set \<Righ
 definition PendingConstruction :: " (('a::lrep) \<Rightarrow> ('b::lrep) state) \<Rightarrow> 'a state \<Rightarrow> 'b set \<Rightarrow> bool " ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,5] 4)
   where "PendingConstruction f s S \<longleftrightarrow> bind s f \<in> \<S> S"
 
+lemma [elim,\<nu>elim]: "CurrentConstruction s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C" unfolding CurrentConstruction_def by auto
+
 definition CodeBlock :: " ('a::lrep) state \<Rightarrow> ('b::lrep) => 'b set \<Rightarrow> ('b \<Rightarrow> 'a state) \<Rightarrow> bool" where
   CodeBlock_def: "CodeBlock stat arg ty prog \<longleftrightarrow> (arg \<in> ty \<and> prog arg = stat \<and> stat \<noteq> SNeg)"
 syntax "_codeblock_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>)" [100,0,0] 3)
@@ -659,6 +662,7 @@ print_translation \<open>
   end
 \<close>
 
+lemma [elim,\<nu>elim]: "CodeBlock v arg ty prog \<Longrightarrow> (Inhabited ty \<Longrightarrow> C) \<Longrightarrow> C" unfolding CodeBlock_def by auto
 lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv> ProtectorI (prog arg))"
   unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
 lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (prog arg) \<equiv> v"

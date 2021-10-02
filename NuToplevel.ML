@@ -83,7 +83,7 @@ val v_goal_name = "\<nu>goalaa"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
 
-val top_blk_name = "\<t>\<o>\<p>_\<p>\<r>\<o>\<c>"
+val top_blk_name = "L\<nu>0_top_block"
 
 fun begin_proc ctx (arg,ret) =
   let

@@ -128,7 +128,7 @@ fun get_aux_attrs ctx (name,auxth) =
     of (pos,attrs) =>
       ((Binding.make (name,pos), attrs), [(Conjunction.elim_conjunctions auxth,[])])
 fun note_auxes auxes ctx =
-  Proof_Context.note_thmss "" (map (get_aux_attrs ctx) auxes) ctx
+  Proof_Context.note_thmss "\<nu>fact" (map (get_aux_attrs ctx) auxes) ctx
 fun fold1 f (h::r) = fold f r h
   | fold1 f [] = raise Fail "fold1"
 fun gen_declare_fact rule (binding,attrs) meta ctx =
@@ -160,10 +160,10 @@ fun name_star_fact binding =
 
 val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
 fun hyp_export is_goal asms = (I,I)
-val codeblock_attrs = [] (* map (Attrib.attribute @{context}) @{attributes [used]} *)
+val using_attrs = map (Attrib.attribute @{context}) @{attributes [used]}
 fun open_meta meta =
   Proof_Context.add_assms hyp_export (map (fn cb =>
-    ((Binding.name (codeblock_name cb),codeblock_attrs),
+    ((Binding.name (codeblock_name cb),using_attrs),
         [(cb,[])])) (codeblocks_of meta)) #> #2
 fun load_specthm specthm ctx =
   let

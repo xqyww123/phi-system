@@ -40,9 +40,6 @@ fun eliminate ctxt rule xs As thm =
     |> singleton (Variable.export ctxt' ctxt)
   end;
 
-(* fun eliminate_nusys ctx id xs As th =
-  NuBasics.holrule (eliminate ctx
-    (NuBasics.elim_SPEC th |> #2 |> NuBasics.internal_fact_by_id id) xs As #> @{print}) th *)
 fun eliminate_nusys ctx rule xs As th =
   eliminate ctx (NuBasics.export_codeblocks
     (Thm.chyps_of th |> filter (can NuBasics.dest_codeblock_c)) rule) xs As th
