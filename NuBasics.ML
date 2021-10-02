@@ -86,7 +86,6 @@ signature NU_BASICS = sig
   val user_facts_in_collection : thm -> (string * thm) list
   val intro_interal_fact : thm (* thm to be added *) -> thm (* fact collection *) -> (int * thm)
   val intro_interal_fact_spec : thm (* thm to be added *) -> thm (* specthm *) -> (int * thm)
-  val internal_fact_by_id : int -> thm (* fact collection *) -> thm
   val clean_user_facts : thm -> thm
 
   (* Transform every HOL part of the facts theorem, including star fact, every user fact, and every
@@ -366,8 +365,6 @@ fun intro_interal_fact_spec A th =
   in
     (id, intro_SPEC (focus, facts'))
   end
-fun internal_fact_by_id id th =
-  elim_FactCollection th |> #3 |> elim_AndFacts |> (fn ths => List.nth (ths, length ths - id - 1))
 val clean_user_facts_thm = @{thm NuPrim.clean_user_facts}
 fun clean_user_facts th = th RS clean_user_facts_thm
 

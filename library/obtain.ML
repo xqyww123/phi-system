@@ -162,7 +162,6 @@ fun gen_obtain prep_stmt prep_att that_binding raw_decls raw_fixes raw_prems raw
           map (map (Thm.assume o Thm.cterm_of ctx0)) propss'
             |> map2 (apply_attr result_ctxt) attr_immediate
             |> (fn ths => attr_delayed ~~ ths);
-        (* val (id,specthm) = specthm |> intro_interal_fact_spec rule *)
       in
         state'
         |> Proof.fix (map #1 decls)
@@ -252,7 +251,6 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
               |> Drule.forall_intr_list (map (Thm.cterm_of params_ctx) that_vars)
         val rule = (rule COMP focus_ex) |> Raw_Simplifier.rewrite_rule ctx' [t1]
               |> expand_exE ctx'
-        (* val (id,specthm) = specthm |> intro_interal_fact_spec rule *)
       in
         state'
         |> Proof.fix (map #1 decl_vars)
