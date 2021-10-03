@@ -13,6 +13,7 @@ theory NuInstructions
     and "<Down>" = "\<Down>"
 begin
 
+declare Nat.One_nat_def[simp del]
 
 text \<open>Basic instructions\<close>
 
@@ -71,6 +72,16 @@ lemma [simp]: "(if P then (x \<tycolon> N) else (y \<tycolon> N)) = ((if P then 
 
 subsubsection \<open>while\<close>
 
+consts op_while_WF :: "'c itself \<Rightarrow> (('x::lrep) \<times> ('r::stack) \<flower> ('w::register_collection) \<Rightarrow> (('x \<times> 1 word) \<times> 'r \<flower> 'w) state)
+  \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state) \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state)"
+specification ("op_while_WF")
+  while_\<nu>proc[simplified PremiseHOL ParamHOL]: "
+  ParamHOL P \<Longrightarrow> ParamHOL Rc \<Longrightarrow> ParamHOL Rb \<Longrightarrow> PremiseHOL (wf (Rc O Rb))
+  \<Longrightarrow> (\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> (x1::'c) \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> {(y, y \<in> P) | y. (y,x1) \<in> Rc } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>)) \<flower> W \<brangle>)
+  \<Longrightarrow> (\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)) \<flower> W \<longmapsto> (R \<heavy_comma> {y. (y,x2) \<in> Rb} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>)
+  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while_WF TYPE('c) brC brB \<blangle> (R \<heavy_comma> x \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>"
+  apply (rule exI) using op_crash by auto
+
 consts op_while :: "'c itself \<Rightarrow> (('x::lrep) \<times> ('r::stack) \<flower> ('w::register_collection) \<Rightarrow> (('x \<times> 1 word) \<times> 'r \<flower> 'w) state)
   \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state) \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state)"
 specification ("op_while")
@@ -81,14 +92,25 @@ specification ("op_while")
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> (R \<heavy_comma> x \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>"
   apply (rule exI) using op_crash by auto
 
+
 subsubsection \<open>recursion\<close>
+
+consts op_recursion_WF :: " 'a itself \<times> 'b itself \<Rightarrow>
+    ((('u::lrep) \<times> void \<Rightarrow> (('v::lrep) \<times> void) state) \<Rightarrow> ('u \<times> void \<Rightarrow> ('v \<times> void) state)) \<Rightarrow> ('u \<times> ('r::stack) \<Rightarrow> ('v \<times> 'r) state) "
+specification ("op_recursion_WF")
+  recursion_WF_\<nu>proc[simplified PremiseHOL ParamHOL]:
+  "ParamHOL h \<Longrightarrow> ParamHOL M \<Longrightarrow> ParamHOL WF \<Longrightarrow> PremiseHOL (wf WF) \<Longrightarrow>
+  (\<And>x' g. (\<And>x''. PremiseHOL ((x'',x') \<in> WF) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> h x'' \<tycolon> M \<brangle>)
+      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void\<heavy_comma> h x' \<tycolon> M \<brangle>)
+  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion_WF (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
+  apply (rule exI) using op_crash by auto
 
 consts op_recursion :: " 'a itself \<times> 'b itself \<Rightarrow>
     ((('u::lrep) \<times> void \<Rightarrow> (('v::lrep) \<times> void) state) \<Rightarrow> ('u \<times> void \<Rightarrow> ('v \<times> void) state)) \<Rightarrow> ('u \<times> ('r::stack) \<Rightarrow> ('v \<times> 'r) state) "
 specification ("op_recursion")
   recursion_\<nu>proc[simplified PremiseHOL ParamHOL]:
-  "ParamHOL h \<Longrightarrow> ParamHOL M \<Longrightarrow> ParamHOL WF \<Longrightarrow> PremiseHOL (wf WF) \<Longrightarrow>
-  (\<And>x' g. (\<And>x''. PremiseHOL ((x'',x') \<in> WF) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> h x'' \<tycolon> M \<brangle>)
+  "ParamHOL h \<Longrightarrow> ParamHOL M \<Longrightarrow>
+  (\<And>x' g. (\<And>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> h x'' \<tycolon> M \<brangle>)
       \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void\<heavy_comma> h x' \<tycolon> M \<brangle>)
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
   apply (rule exI) using op_crash by auto
@@ -260,6 +282,7 @@ theorem alloc_array_\<nu>proc:
 proc alloc : \<open>i\<hyphen>j \<tycolon> IdSrc\<close> \<longmapsto> \<open>Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> zero \<tycolon> Ref N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc\<close>
   for N :: "('x::{zero,field},'b) nu"
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N" and [\<nu>intro]: "\<nu>Zero N zero"
+  \<nu>have A[simp]: "replicate 1 zero = [zero]" by (simp add: One_nat_def)
   \<bullet> 1 \<leftarrow> v alloc_array N
   finish
 
@@ -277,17 +300,28 @@ definition AdrRefining :: " ('a,'a,'ax,'ax) address \<Rightarrow> ('ax::lrep,'bx
 
 lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e AdrRefining a X A g m \<equiv> Trueprop (AdrRefining a X A g m)" unfolding Premise_def .
 
-lemma AdrRefining_here[\<nu>intro]: "AdrRefining address_here X X id id"
+lemma AdrRefining_here: "AdrRefining address_here X X id id"
   unfolding AdrRefining_def \<nu>address_def address_here_def by auto
-lemma [\<nu>intro]: "AdrRefining f X A gt mp \<Longrightarrow> AdrRefining (address_left f) X (A \<nuFusion> R) (gt o fst) (apfst o mp)"
+lemma AdrRefining_left: "AdrRefining f X A gt mp \<Longrightarrow> AdrRefining (address_left f) X (A \<nuFusion> R) (gt o fst) (apfst o mp)"
   unfolding AdrRefining_def \<nu>address_def address_left_def by auto
-lemma [\<nu>intro]: "AdrRefining f X A gt mp \<Longrightarrow> AdrRefining (address_right f) X (R \<nuFusion> A) (gt o snd) (apsnd o mp)"
+lemma AdrRefining_right: "AdrRefining f X A gt mp \<Longrightarrow> AdrRefining (address_right f) X (R \<nuFusion> A) (gt o snd) (apsnd o mp)"
   unfolding AdrRefining_def \<nu>address_def address_right_def by auto
 
 definition address_enter_tup :: "(('a::field_list),('b::field_list),'x,'y) address \<Rightarrow> ('a tuple, 'b tuple, 'x, 'y) address"
   where "address_enter_tup adr = (case adr of Address g m \<Rightarrow> Address (case_tuple g) (map_tuple o m))"
-lemma [\<nu>intro]: "AdrRefining f X A gt mp \<Longrightarrow> AdrRefining (address_enter_tup f) X \<lbrace> A \<rbrace> gt mp"
+lemma AdrRefining_tupl: "AdrRefining f X A gt mp \<Longrightarrow> AdrRefining (address_enter_tup f) X \<lbrace> A \<rbrace> gt mp"
   unfolding AdrRefining_def \<nu>address_def address_enter_tup_def by (auto simp add: tuple_forall)
+
+\<nu>processor field_accessing 110 \<open>AdrRefining f X \<lbrace> A \<rbrace> gt mp \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => Parse.nat >> (fn i => fn _ =>
+  NuBasics.elim_SPEC meta |> apfst (fn major =>
+  let open NuBasics NuHelp
+    val arity = Logic.dest_implies (prop_of major) |> #1 |> dest_Trueprop |> dest_quinop \<^const_name>\<open>AdrRefining\<close> |> #3
+        |> dest_monop \<^const_name>\<open>NuTuple\<close> |> strip_binop_r \<^const_name>\<open>Fusion\<close> |> length
+    val path1 = funpow (i-1) (fn th => th RS @{thm AdrRefining_right})
+        (@{thm AdrRefining_here} |> (fn th => if arity = i then th else th RS @{thm AdrRefining_left}))
+  in 
+    (path1 RS (@{thm AdrRefining_tupl} RS major))
+  end) |> NuBasics.intro_SPEC )\<close>
 
 subsubsection \<open>load\<close>
 
@@ -318,15 +352,15 @@ finish
 proc i_load_here[\<nu>overload "\<up>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X \<heavy_comma> i \<tycolon> \<nat>['bits::len]\<close>
   \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> list_map_at (sh (Gi 1)) i xs \<tycolon> RefS['spc] X\<heavy_comma> sh (z + Gi 1) (xs ! i) \<tycolon> X\<close>
   requires [intro]:"i < length xs" and [\<nu>intro]: "\<nu>Share X P sh" and [intro]: "P (xs ! i)"
-  \<bullet> \<leftarrow> (v,i) \<up>:
+  \<bullet> \<leftarrow> (v,i) \<up>: \<Longleftarrow> AdrRefining_here
 finish
 
 proc i_load_here1[\<nu>overload "\<up>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<close>
   \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> sh (Gi 1) x \<tycolon> Ref['spc] X\<heavy_comma> sh (z + Gi 1) x \<tycolon> X\<close>
   requires [\<nu>intro]: "\<nu>Share X P sh" and [intro]: "P x"
-  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<up>:
-finish
-    
+  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<up>: \<Longleftarrow> AdrRefining_here
+  finish
+
 subsubsection \<open>move\<close>
 
 definition op_move :: " ('a,'a,'ax,'ax) address
@@ -340,10 +374,31 @@ definition op_move :: " ('a,'a,'ax,'ax) address
 
 theorem op_move[\<nu>overload "\<Up>:"]: "
   AdrRefining field_index Y X gt mp \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<nu>Deprive Y dp
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_move field_index \<blangle> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> 0 \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]
-    \<longmapsto> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> 0 \<left_fish_tail> (list_map_at (mp dp) i xs) \<tycolon> RefS['spc] X\<heavy_comma> gt (xs ! i) \<tycolon> Y\<brangle> "
+  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_move field_index \<blangle> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]
+    \<longmapsto> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> (list_map_at (mp dp) i xs) \<tycolon> RefS['spc] X\<heavy_comma> gt (xs ! i) \<tycolon> Y\<brangle> "
   unfolding op_move_def \<nu>def AdrRefining_def \<nu>address_def  by
       (auto simp del: share_id simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
+
+proc i_move1[\<nu>overload "\<Up>:"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> mp dp x \<tycolon> Ref['spc] X\<heavy_comma> gt x \<tycolon> Y\<close>
+  for Y :: "('b::{share,field},'c) nu"
+  requires [\<nu>intro]: "AdrRefining field_index Y X gt mp" and [\<nu>intro]: "\<nu>Deprive Y dp"
+  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<Up>: 
+finish
+
+proc i_move_here[\<nu>overload \<Up>]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> (list_map_at dp i xs) \<tycolon> RefS['spc] X\<heavy_comma> xs ! i \<tycolon> X\<close>
+  for X :: "('a::{share,field},'c) nu"
+  requires [intro]:"i < length xs" and [\<nu>intro]: "\<nu>Deprive X dp"
+  \<bullet> \<leftarrow> (v,i) \<Up>: \<Longleftarrow> AdrRefining_here 
+finish
+
+proc i_move_here1[\<nu>overload \<Up>]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> dp x \<tycolon> Ref['spc] X\<heavy_comma> x \<tycolon> X\<close>
+  for X :: "('a::{share,field},'c) nu"
+  requires [\<nu>intro]: "\<nu>Deprive X dp"
+  \<bullet> \<leftarrow> v \<Up>: \<Longleftarrow> AdrRefining_here 
+finish
 
 subsubsection \<open>store\<close>
 
@@ -361,6 +416,25 @@ theorem op_store[\<nu>overload "\<Down>:"]: "
     \<longmapsto> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> (list_map_at (mp (\<lambda>_. y)) i xs) \<tycolon> RefS['spc] X\<brangle> "
   unfolding op_store_def \<nu>def AdrRefining_def \<nu>address_def  by
       (auto simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
+
+proc i_store1[\<nu>overload "\<Down>:"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> y \<tycolon> Y\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> mp (\<lambda>_. y) x \<tycolon> Ref['spc] X\<close>
+  for Y :: "('b::{share,field},'c) nu"
+  requires [\<nu>intro]: "AdrRefining field_index Y X gt mp"
+  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<leftarrow> y \<Down>: 
+finish
+
+proc i_store_here[\<nu>overload "\<Down>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<heavy_comma> y \<tycolon> X\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs[i := y] \<tycolon> RefS['spc] X\<close>
+  requires [intro]: "i < length xs"
+  \<bullet> \<leftarrow> (v,i,y) \<Down>: \<Longleftarrow> AdrRefining_here
+finish
+
+proc i_store_here1[\<nu>overload "\<Down>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> y \<tycolon> X\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> y \<tycolon> Ref['spc] X\<close>
+  for X :: "('a::{share,field},'b) nu"
+  \<bullet> \<leftarrow> (v,y) \<Down>: \<Longleftarrow> AdrRefining_here
+finish
 
 subsubsection \<open>revert\<close>
 
@@ -380,9 +454,33 @@ theorem op_revert_m[\<nu>overload "\<down>:"]: "
   unfolding op_revert_m_def \<nu>def \<nu>Share_def AdrRefining_def \<nu>address_def  by
       (auto 4 4 simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
 
+proc i_revert1[\<nu>overload "\<down>:"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> y \<tycolon> Y\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> mp (sh (Gi (-1))) x \<tycolon> Ref['spc] X\<close>
+  for Y :: "('b::{share,field,sharing_identical},'c) nu"
+  requires [\<nu>intro]: "AdrRefining field_index Y X gt mp" and [\<nu>intro]: "\<nu>Share Y P sh" and [\<nu>intro]: "\<nu>ShrIdentical Y sid"
+    and [simp]: "P (gt x)" and [simp]: "sid (sh z (gt x)) y"
+  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<leftarrow> y \<down>: 
+finish
+
+proc i_revert_here[\<nu>overload "\<down>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<heavy_comma> y \<tycolon> X\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> list_map_at (sh (Gi (-1))) i xs \<tycolon> RefS['spc] X\<close>
+  for X :: "('a::{share,field,sharing_identical},'b) nu"
+  requires [intro]: "i < length xs" and [\<nu>intro]: "\<nu>Share X P sh" and [\<nu>intro]: "\<nu>ShrIdentical X sid"
+    and [simp]: "P (xs ! i)" and [simp]: "sid (sh z (xs ! i)) y"
+  \<bullet> \<leftarrow> (v,i,y) \<down>: \<Longleftarrow> AdrRefining_here
+finish
+
+proc i_revert_here1[\<nu>overload "\<down>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> y \<tycolon> X\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> sh (Gi (-1)) x \<tycolon> Ref['spc] X\<close>
+  for X :: "('a::{share,sharing_identical,field},'b) nu"
+  requires [\<nu>intro]: "\<nu>Share X P sh" and [\<nu>intro]: "\<nu>ShrIdentical X sid"
+    and [simp]: "P x" and [simp]: "sid (sh z x) y"
+  \<bullet> \<leftarrow> (v,y) \<down>: \<Longleftarrow> AdrRefining_here
+finish
+
 subsection \<open>Pointer Arithmetic & Split\<close>
 
-\<nu>overloads split
+\<nu>overloads split and pop
 
 subsubsection \<open>op_shift_pointer\<close>
 
@@ -395,7 +493,7 @@ theorem op_shift_pointer[\<nu>overload +]:
   unfolding op_shift_pointer_def Procedure_def by (simp add: lrep_exps)
 
 theorem op_shift_pointer_within[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg (seg |+ (i + d)) \<Longrightarrow>
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg 0 (seg |+ (i + d)) \<Longrightarrow>
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> Pointer['spc::len0] ty\<heavy_comma> d \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + d) \<tycolon> Pointer['spc] ty \<brangle>"
   unfolding op_shift_pointer_def Procedure_def by (auto simp add: lrep_exps)
 
@@ -408,7 +506,7 @@ theorem op_shift_pointer'[\<nu>overload +]:
   unfolding op_shift_pointer'_def Procedure_def by (auto simp add: lrep_exps)
 
 theorem op_shift_pointer_within'[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg (seg |+ (i + int d)) \<Longrightarrow>
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg 0 (seg |+ (i + int d)) \<Longrightarrow>
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer' ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> Pointer['spc::len0] ty\<heavy_comma> d \<tycolon> \<nat>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + int d) \<tycolon> Pointer['spc] ty \<brangle>"
   unfolding op_shift_pointer'_def Procedure_def by (auto simp add: lrep_exps)
 
@@ -432,13 +530,49 @@ proc op_slice_mem2[\<nu>overload split]:
 subsubsection \<open>i_split_ref\<close>
 
 proc i_split_ref[\<nu>overload split]: \<open>zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N\<heavy_comma> n \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> z \<left_fish_tail> (drop n xs) \<tycolon> RefS['spc] N\<heavy_comma> zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> (take n xs) \<tycolon> RefS['spc] N\<close>
-  requires C[simp]: "n \<le> length xs"
-  \<bullet> \<leftarrow> v cast E det dpr n split \<rightarrow> (m1,m2) dup n +
-  \<bullet> cast fixtyp affirm using C proof -
-  note that
+  \<longmapsto> \<open>zp + Gi 1 \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> z \<left_fish_tail> (drop n xs) \<tycolon> RefS['spc] N\<heavy_comma> zp + Gi 1 \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> (take n xs) \<tycolon> RefS['spc] N\<close>
+  requires [used]: "n \<le> length xs"
+  \<bullet> \<leftarrow> v cast E det dpr n split \<rightarrow> (m1,m2) dup n
+  \<bullet> !! + cast fixtyp affirm by (auto 0 3)
+  \<bullet> \<leftarrow> m2 pr tup cast RefS \<rightarrow> m2
+  \<bullet> \<leftarrow> m1 pr tup cast RefS \<rightarrow> m1 \<leftarrow> (m2,m1)
+  finish
+
+proc i_pop_refs[simplified length_greater_0_conv, \<nu>overload pop]:
+  \<open>zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N\<close>
+    \<longmapsto> \<open>zp + Gi 1 \<left_fish_tail> (seg |+ (i + 1)) \<R_arr_tail> z \<left_fish_tail> tl xs \<tycolon> RefS['spc] N \<heavy_comma> zp + Gi 1 \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> hd xs \<tycolon> Ref['spc] N\<close>
+  requires [used]: "0 < length xs"
+  \<nu>have A[simp]: "take 1 xs = [hd xs]" by (simp add: One_nat_def take_Suc)
+  \<nu>have B[simp]: "drop 1 xs = tl xs" by (simp add: One_nat_def drop_Suc) 
+  \<bullet> \<leftarrow> v \<open>1 \<tycolon> \<nat>[32]\<close> split affirm by linarith
+  finish
+
+  
 
 section \<open>Tests\<close>
+
+abbreviation "FullRef N \<equiv> Ref N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
+abbreviation "Array N \<equiv> RefS N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
+
+
+lemma [\<nu>overload pop]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs \<noteq> [] \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c i_pop_refs \<blangle> R\<heavy_comma> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array N
+      \<longmapsto>  R\<heavy_comma> (seg |+ i + 1) \<R_arr_tail> tl xs \<tycolon> Array N\<heavy_comma> (seg |+ i) \<R_arr_tail> hd xs \<tycolon> FullRef N \<brangle>" sorry
+
+abbreviation "permuted l1 l2 \<equiv> set l1 = set l2"
+
+declare pair_forall[simp]
+
+proc qsort: \<open> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<heavy_comma> n \<tycolon> \<nat>[32]\<close>
+  \<longmapsto> \<open>{ (seg |+ i) \<R_arr_tail> ys | ys. permuted xs ys \<and> sorted ys } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (Array \<nat>[32])\<close>
+  requires "length xs = n"
+  \<bullet> \<leftarrow> (v,n) pr recursion \<open>(\<lambda>x. case x of ((seg |+ i) \<R_arr_tail> xs, n) \<Rightarrow>
+        { (seg |+ i) \<R_arr_tail> ys | ys. permuted xs ys \<and> sorted ys })\<close> \<open>\<^bold>s\<^bold>o\<^bold>m\<^bold>e (Array \<nat>[32])\<close>
+  \<medium_left_bracket> (g_\<nu>proc) \<nu>obtain seg i xs n  where [simp]: "x' = ((seg |+ i) \<R_arr_tail> xs, n)"
+  by (metis memadr.exhaust object.exhaust old.prod.exhaust) \<bullet>
+  \<nu>obtain seg i xs n  where B[simp]: "x' = ((seg |+ i) \<R_arr_tail> xs, n)"
+by (metis memadr.exhaust object.exhaust old.prod.exhaust) \<bullet>
+  \<bullet> dpr \<rightarrow> (xs, n) n 0 = if 
+  \<nu>debug note g_\<nu>proc
 
 ML \<open>Locale.get_locales @{theory}\<close>
 ML \<open>val ctx = Locale.init "NuPrim.ceq_lrep" @{theory}
@@ -450,7 +584,7 @@ val x = Assumption.all_prems_of ctx\<close>
   by  (\<nu>resolve \<nu>intro (\<nu>intro'))  *)
 
 
-declare Nat.One_nat_def[simp del]
+
 
 fun fib :: "nat \<Rightarrow> nat"
   where "fib x = (if x = 0 then 1 else if x = 1 then 1 else fib (x-1) + fib (x-2))"

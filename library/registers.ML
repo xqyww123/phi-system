@@ -48,8 +48,8 @@ fun tree_size ret ((Const ("NuPrim.AndTy", _) $ t1 $ t2)::r) =
 val new_reg_locale_th = @{thm new_reg_locale}
 val delete_reg_locale_th = @{thm delete_reg_locale}
 fun new_locale_i ctx meta =
-  apply_proc_naive (top_mapper (current_block_depth (meta |> @{print})) 0 RS new_reg_locale_th) meta
-  |> NuSys.accept_proc ctx
+  NuSys.apply_proc_naive ctx 
+    (top_mapper (current_block_depth (meta |> @{print})) 0 RS new_reg_locale_th) meta
 fun new_locale ctx meta = new_locale_i (NuSys.load_specthm meta ctx) meta
 fun delete_locale_i ctx meta =
   NuSys.apply_proc ctx
@@ -67,7 +67,7 @@ fun new_reg ctx name meta =
     val delta = bit1_num' bdep
     val local_num = funpow delta (dest_andTy #> fst) regs |> (tree_size 0 o single)
     val new_reg = top_mapper local_num delta RS set_name name @{thm new_reg}
-  in apply_proc_naive new_reg meta |> NuSys.accept_proc ctx end
+  in NuSys.apply_proc_naive ctx new_reg meta end
 fun new_regs ctx = fold (new_reg ctx)
 
 val store_reg_thm = @{thm store_reg}

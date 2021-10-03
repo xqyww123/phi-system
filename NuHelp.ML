@@ -34,6 +34,8 @@ signature NU_HELP = sig
   val dest_triop_c : string (* const name *) -> cterm -> cterm * cterm * cterm
   val dest_quadop   : string (* const name *) -> term -> term * term * term * term
   val dest_quadop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm
+  val dest_quinop   : string (* const name *) -> term -> term * term * term * term * term
+  val dest_quinop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm * cterm
   val strip_binop_r (* right associative *) : string (* const name *) -> term -> term list
   val strip_binop_l (* left associative *) : string (* const name *) -> term -> term list
   val mk_monop : string (* const name *) -> term -> term
@@ -143,6 +145,18 @@ fun dest_quadop_c const tm =
         val (f,a2) = Thm.dest_comb f
         val (f,a1) = Thm.dest_comb f
       in (a1,a2,a3,a4) end
+fun dest_quinop const (tm as Const (const', _) $ a $ b $ c $ d $ e) =
+      if const' = const then (a,b,c,d,e) else raise TERM ("dest_quinop "^const, [tm] )
+  | dest_quinop const tm = raise TERM ("dest_quinop "^const, [tm |> @{print}])
+fun dest_quinop_c const tm =
+      let
+        val _ = dest_quinop const (term_of tm)
+        val (f,a5) = Thm.dest_comb tm
+        val (f,a4) = Thm.dest_comb f
+        val (f,a3) = Thm.dest_comb f
+        val (f,a2) = Thm.dest_comb f
+        val (f,a1) = Thm.dest_comb f
+      in (a1,a2,a3,a4,a5) end
 val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
 fun mk_monop name arg = Const (name, Term.dummyT) $ arg

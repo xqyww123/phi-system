@@ -9,7 +9,7 @@ The toplevel structure of the ν-system.
 *)
 
 signature NU_TOPLEVEL = sig
-  val begin_proc_cmd : Attrib.binding 
+  val begin_proc_cmd : bool (*raw*) -> Attrib.binding 
         -> xstring (*argument*)
         -> xstring (*return value*)
         -> (binding * string option * mixfix) list (*for fixes*)
@@ -101,7 +101,7 @@ fun begin_proc ctx (arg,ret) =
 
 fun mk_regctx ctx meta =
   if can (dest_current_nu #> dest_Proc_CtxTy) meta then meta
-  else apply_proc_naive @{thm NuPrim.begin_proc_ctx} meta |> accept_proc ctx
+  else apply_proc_naive ctx @{thm NuPrim.begin_proc_ctx} meta
 val empty_facts_thm = @{thm NuPrim.empty_facts}
 
 fun prep_decls raw_vars ctxt =
@@ -113,13 +113,14 @@ fun prep_decls raw_vars ctxt =
       ||> Context_Position.restore_visible ctxt'
   in ((vars, xs), ctxt'') end
 
-fun begin_proc_cmd binding arg ret rawfixes includes preconds int ctx =
+fun begin_proc_cmd raw binding arg ret rawfixes includes preconds int ctx =
   let
     val ((fixes,_), ctx_parse) = prep_decls rawfixes ctx
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
     val preconds = preconds |> map (apfst (apsnd (map (Attrib.check_src ctx))))
-    val (arg, reg_names) = arg |> Syntax.parse_term ctx_parse |> parse_arg
-    val ret = ret |> Syntax.parse_term ctx_parse |> parse_ret
+    val arg = Syntax.parse_term ctx_parse arg
+    val (arg, reg_names) = if raw then (arg,[]) else parse_arg arg
+    val ret = ret |> Syntax.parse_term ctx_parse |> (if raw then I else parse_ret)
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctx)
@@ -185,7 +186,7 @@ fun gen_finish_proc prep_specthm qed int stat =
     val meta = meta |> prep_specthm ctx
     val meta = if not (can dest_Proc_CtxTy (term_of desired_nu))
                   andalso can dest_Proc_CtxTy (dest_current_nu meta)
-               then apply_proc_naive end_proc_ctx_thm meta |> accept_proc ctx
+               then apply_proc_naive ctx end_proc_ctx_thm meta
                else meta
     val meta = meta |> elim_SPEC
           |> apfst (NuSys.cast (NuSys.load_specthm meta ctx) desired_nu)

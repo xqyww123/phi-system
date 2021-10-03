@@ -20,7 +20,7 @@ fun simplifier cong = almost_safe (fn ctx => fn meta =>
                 |> fold Simplifier.add_cong (@{thm NuPrim.SpecTop_cong_major}::cong)
     val (major,aux) = elim_SPEC meta
     in Simplifier.full_simplify ctx' major
-        |> (fn th2 => if Thm.eq_thm_prop (major, th2) then raise Bypass else th2)
+        |> (fn th2 => if Thm.eq_thm_prop (major, th2) then raise Bypass NONE else th2)
         |> rpair aux |> intro_SPEC
     end))
 fun focus_rule processor ctx th toks = 
@@ -30,7 +30,7 @@ fun premise_prover_raw n prover ctx th =
   Scan.succeed (fn _ => 
     (if n = ~1 then th RS Drule.protectI else Goal.protect n th)
       |> prover ctx |> Seq.pull |> (fn x =>
-          case x of SOME (th,_) => Goal.conclude th | _ => raise Bypass))
+          case x of SOME (th,_) => Goal.conclude th | _ => raise Bypass NONE))
 val premise_prover = focus_rule o premise_prover_raw 1
 val all_premises_prover = focus_rule o premise_prover_raw ~1
 

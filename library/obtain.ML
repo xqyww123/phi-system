@@ -137,7 +137,7 @@ fun gen_obtain prep_stmt prep_att that_binding raw_decls raw_fixes raw_prems raw
     val ((_, thesis), thesis_ctxt) = obtain_thesis (Proof.context_of state);
 
     val ({vars, propss, binds, result_binds, ...}, params_ctxt) =
-      prep_stmt (raw_decls @ raw_fixes) (raw_prems @ map #2 raw_concls) thesis_ctxt;
+      prep_stmt ((raw_decls  |> @{print}) @ raw_fixes) (raw_prems @ map #2 raw_concls) thesis_ctxt;
     val (decls, fixes) = chop (length raw_decls) vars ||> map #2;
     val (premss, conclss) = chop (length raw_prems) propss;
     val propss' = (map o map) (Logic.close_prop fixes (flat premss)) conclss;
@@ -210,18 +210,18 @@ val trim_var = dest_Free #> apfst trim_var_name #> Free
 fun gen_choose prep_stmt raw_decls raw_insts int stat =
   let open NuBasics NuHelp HOLogic
     val ctx = Proof.context_of stat
-    val (focus,facts) = Proof.the_fact stat |> elim_SPEC
-    val (org_vars, org_body) = prop_of focus |> dest_Trueprop |>
-      (fn x => case x of (Const ("NuPrim.CurrentConstruction", ty) $ p $ T) =>
-        case strip_named_binder "NuPrim.ExTyp" T of (vars, body) =>
-          (map snd vars, (Const ("NuPrim.CurrentConstruction", ty) $ p $ body)))
-    val t1 = ((Thm.assume (current_codeblock focus)) COMP CodeBlock_unabbrev) 
-    val t2 = ((Thm.assume (current_codeblock focus)) COMP CodeBlock_abbrev)
-    val focus = Raw_Simplifier.rewrite_rule ctx [ExTy_strip] focus
+    val (major,facts) = Proof.the_fact stat |> elim_SPEC
+    val (org_vars, org_body) = prop_of major |> dest_Trueprop |> (fn x => 
+      case x of (Const ("NuPrim.CurrentConstruction", ty) $ p $ T) =>
+        let val (vars, body) = strip_named_binder "NuPrim.ExTyp" T
+        in (map snd vars, (Const ("NuPrim.CurrentConstruction", ty) $ p $ body)) end)
+    val t1 = ((Thm.assume (current_codeblock major)) COMP CodeBlock_unabbrev) 
+    val t2 = ((Thm.assume (current_codeblock major)) COMP CodeBlock_abbrev)
+    val major = Raw_Simplifier.rewrite_rule ctx [ExTy_strip] major
 
-    (* val focus = Simplifier.asm_simplify
+    (* val major = Simplifier.asm_simplify
           (fold Simplifier.add_simp [ExTy_strip, CodeBlock_unabbrev] ctx)
-          (disch_current_codeblock focus) |> @{print} *)
+          (disch_current_codeblock major) |> @{print} *)
     val fix_lst = fix_frees_lst Position.none org_vars
     val (_,ctx_fixed) = Proof_Context.add_fixes fix_lst ctx
     val org_vars' = map (free_to_fix ctx_fixed) org_vars
@@ -237,7 +237,7 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
     val that_prop = mk_Trueprop (subst_free (org_vars ~~ that_vars) org_body)
     val cparams = map (Thm.cterm_of params_ctx o #2 o #2) decl_vars;
 
-    val focus_ex = expand_exE params_ctx focus
+    val focus_ex = expand_exE params_ctx major
     val specthm'_term = mk_Trueprop (subst_free [Logic.dest_equals (prop_of t1)] inst_body)
     val specthm' = intro_SPEC 
         (Thm.assume (Thm.cterm_of params_ctx specthm'_term)

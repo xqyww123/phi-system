@@ -52,7 +52,6 @@ signature NU_BASICS = sig
   val codeblocks_of_c : thm -> cterm list
   val codeblock_name   : term -> term * term * term * term
   val current_codeblock : thm -> cterm
-  val apply_proc_naive : thm (*proc*) -> thm (*meta*) -> thm
   val export_codeblock : cterm * cterm -> thm -> thm
   val export_codeblocks : cterm list -> thm -> thm
 
@@ -84,8 +83,9 @@ signature NU_BASICS = sig
   val elim_FactCollection : thm -> thm * thm * thm
   val intro_FactCollection : thm * thm * thm -> thm
   val user_facts_in_collection : thm -> (string * thm) list
-  val intro_interal_fact : thm (* thm to be added *) -> thm (* fact collection *) -> (int * thm)
-  val intro_interal_fact_spec : thm (* thm to be added *) -> thm (* specthm *) -> (int * thm)
+  (* val intro_interal_fact : thm (* thm to be added *) -> thm (* fact collection *) -> (int * thm)
+  val intro_interal_fact_spec : thm (* thm to be added *) -> thm (* specthm *)
+  -> (int * thm) *)
   val clean_user_facts : thm -> thm
 
   (* Transform every HOL part of the facts theorem, including star fact, every user fact, and every
@@ -271,8 +271,6 @@ fun intro_SPEC (focus,facts) =
   facts
 
 val thm_apply_proc = @{thm apply_proc}
-fun apply_proc_naive proc meta =
-  elim_SPEC meta |> apfst (fn major => thm_apply_proc OF [major, proc]) |> intro_SPEC
 
 val dest_fact   = dest_binop   @{const_name "NuPrim.Fact"} #> apfst dest_name_tag
 val dest_fact_c = dest_binop_c @{const_name "NuPrim.Fact"} #> apfst (term_of #> dest_name_tag)
@@ -348,9 +346,8 @@ fun user_facts_in_collection th =
   in
     if same_const @{const_name "NuPrim.NoFact"} (prop_of P) then ths else ("\<glowing_star>",P)::ths
   end
-val intro_internal_fact_thm = @{thm NuPrim.intro_internal_fact}
 val vA = (("A",0),propT) and vP = (("P",0),propT) and vQ = (("Q",0),propT) and vL = (("L",0),propT)
-fun intro_interal_fact A th =
+(* fun intro_interal_fact A th =
   let
     val (Q,L,S) = cprop_of th |> dest_FactCollection_c
     val intro_thm =
@@ -364,7 +361,7 @@ fun intro_interal_fact_spec A th =
     val (id,facts') = intro_interal_fact A facts
   in
     (id, intro_SPEC (focus, facts'))
-  end
+  end *)
 val clean_user_facts_thm = @{thm NuPrim.clean_user_facts}
 fun clean_user_facts th = th RS clean_user_facts_thm
 

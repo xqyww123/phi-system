@@ -1,6 +1,6 @@
 signature NU_PROCESSOR = sig
   type binding = Binding.binding
-  exception Bypass
+  exception Bypass of thm option
   exception ProcessTerminated of thm * Token.T list
   exception ProcessFail of binding * thm * exn
   type proc = (Proof.context -> thm -> (unit -> thm) parser)
@@ -33,7 +33,7 @@ signature NU_PROCESSOR = sig
 end
 structure NuProcessor : NU_PROCESSOR = struct
 open Thm NuBasics
-exception Bypass
+exception Bypass of thm option
 type binding = Binding.binding
 exception ProcessTerminated of thm * Token.T list
 exception ProcessFail of binding * thm * exn
@@ -96,28 +96,28 @@ fun eof_wrap parse [] = (fst (parse [Token.eof]), [])
 fun process_impl ctx procs (th,toks) limit =
       let
         val focus = prop_of th |> dest_SpecTop |> #1
-      in
-        (List.app (fn (_, Processor {binding, pattern, enabled, proc,...}) =>
-          if not enabled then ()
+        val th = fold (fn (_, Processor {binding, pattern, enabled, proc,...}) => fn th =>
+          if not enabled then th
           else if can (Pattern.unify ctx (pattern,focus)) Envir.init
           then let
             val _ = if limit > 100 then error "too deep process" else ();
             val (execute,toks) =
-              eof_wrap (proc (Context.proof_of ctx) th || (fn _ => raise Bypass)) toks
+              eof_wrap (proc (Context.proof_of ctx) th || (fn _ => raise Bypass NONE)) toks
             val _ = tracing ("process: " ^ Binding.print binding)
             in
             raise Processed (execute(), toks)
-            end handle Bypass => ()
+            end handle Bypass NONE => th
+              | Bypass (SOME th') => th'
               | Processed th_toks => raise Processed th_toks
               | ProcessTerminated th_toks => raise ProcessTerminated th_toks
               | ex => (@{print} th; @{print} binding; Exn.reraise (@{print} ex))
             (* | ex => Exn.reraise (ProcessFail (binding,th,ex)) *)
-          else ()
-        ) procs 
-        ; (th,toks))
+          else th
+        ) procs th
+      in (th,toks)
+      end
       handle Processed th_toks => process_impl ctx procs th_toks (limit + 1)
         | ProcessTerminated th_toks => th_toks
-      end
 fun process ctx th toks =
   Runtime.exn_trace (fn _ =>
   process_impl (Context.Proof ctx)
@@ -152,8 +152,8 @@ fun setup_cmd (((((binding,precedence),term),fixes),proc),comment) ctx =
     )
   end
 
-fun almost_safe f ctx = if AutoLevel.get ctx >= 1 then f ctx else raise Bypass
-fun not_safe f ctx = if AutoLevel.get ctx >= 2 then f ctx else raise Bypass
+fun almost_safe f ctx = if AutoLevel.get ctx >= 1 then f ctx else raise Bypass NONE
+fun not_safe f ctx = if AutoLevel.get ctx >= 2 then f ctx else raise Bypass NONE
 fun parse_auto_level proc ctx th =
   NuParse.auto_level #-> (fn auto_level' => proc (AutoLevel.reduce auto_level' ctx) th)
 

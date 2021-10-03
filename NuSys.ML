@@ -47,6 +47,7 @@ signature NU_SYS = sig
   val apply_procs_major : Proof.context -> thm list (*procs*) -> thm (*whole*) -> thm
   val apply_proc : Proof.context -> thm (*proc*) -> thm (*whole*) -> thm (*whole*)
   val apply_procs : Proof.context -> thm list -> thm -> thm
+  val apply_proc_naive : Proof.context -> thm (*proc*) -> thm (*meta*) -> thm
   val accept_proc : Proof.context -> thm -> thm
   val apply_casts : Proof.context -> thm list -> thm -> thm
 
@@ -167,12 +168,15 @@ fun open_meta meta =
         [(cb,[])])) (codeblocks_of meta)) #> #2
 fun load_specthm specthm ctx =
   let
-    val (focus,aux) = elim_SPEC specthm
+    val (major,aux) = elim_SPEC specthm
     val auxes = user_facts_in_collection aux
+    val (_,_,vcurrent) = elim_FactCollection aux
   in
     ctx |> open_meta specthm
       |> note_auxes auxes
       |-> (fn ths => Proof_Context.put_thms false (aux_name_raw, SOME (flat (map snd ths))))
+      |> Proof_Context.note_thms "\<nu>current"
+          ((Binding.name "\<nu>current", using_attrs), [([vcurrent],[])]) |> #2
   end
 fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
 fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
@@ -224,12 +228,12 @@ fun SOLVED_RULE rule fail th =
 
 fun REPEATX tac =
   let
-    fun rep qs st =if length qs > 100 then raise Fail "" else
+    fun rep qs st = if length qs > 20 then raise Fail "too deep tac" else
       (case Seq.pull (tac st) of
         NONE => SOME (st, Seq.make (fn () => repq qs))
       | SOME (st', q) => rep (q :: qs) st')
     and repq [] = NONE
-      | repq (q :: qs) = if length qs > 100 then raise Fail "" else
+      | repq (q :: qs) = if length qs > 100 then raise Fail "too deep tac" else
           (case Seq.pull q of
             NONE => repq qs
           | SOME (st, q) => rep (q :: qs) st);
@@ -245,8 +249,8 @@ fun auto_resolve thms addtion ctx  =
     val thms = addtion @ thms
   in SOLVED (REPEATX (
       simp_tag_tac ctx
-      (* ORELSE (fn th => resolve_tac ctx thms 1 (@{print} th) 
-                               |> Seq.map @{print}) *)
+       ORELSE (fn th => resolve_tac ctx thms 1 (@{print} th) 
+                               |> Seq.map @{print})
         ORELSE (resolve_tac ctx thms 1)
         ORELSE premise_tac ctx
         ORELSE resolve_tac ctx minor_thms 1
@@ -312,14 +316,14 @@ val apply_proc_thm = @{thm NuPrim.apply_proc} and apply_proc_conv_thm = @{thm Nu
 val vA = (("'a",0),["NuPrim.lrep"])
 fun v_blk t = (("blk",0), mk_stateT t)
 fun vS t = (("S",0), HOLogic.mk_setT t)
-fun mk_apply_thms apply_thm focus =
+fun mk_apply_thms apply_thm major =
   let
-    val (blk,nuSet) = cprop_of focus |> dest_Trueprop_c |> dest_CurrentConstruction_c
+    val (blk,nuSet) = cprop_of major |> dest_Trueprop_c |> dest_CurrentConstruction_c
     val aT = ctyp_of_cterm blk |> dest_ctyp0
     val at = typ_of aT
   in
     Thm.implies_elim
-      (Thm.instantiate ([(vA,aT)],[(v_blk at, blk),(vS at, nuSet)]) apply_thm) focus
+      (Thm.instantiate ([(vA,aT)],[(v_blk at, blk),(vS at, nuSet)]) apply_thm) major
   end
 fun resolve_N thas thb i =
   biresolution NONE false (map (pair false) thas) i thb |> Seq.map solve_constraints
@@ -361,6 +365,10 @@ fun accept_proc0 ctx wmeta =
 fun accept_proc ctx meta = 
   (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
   then meta else auto_resolve_rule0 ctx meta) |> accept_proc0 ctx
+
+fun apply_proc_naive ctx proc meta =
+  elim_SPEC meta |> apfst (fn major => thm_apply_proc OF [major, proc]) |> intro_SPEC
+    |> accept_proc0 ctx
 
 val process = NuProcessor.process o Proof.context_of
 
