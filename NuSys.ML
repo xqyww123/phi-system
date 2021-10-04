@@ -5,9 +5,10 @@ signature NU_SYS = sig
   type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
   val raw_auto : Proof.context -> tactic
   val premise_tac : Proof.context -> tactic
-  val auto_resolve : (thm list (*major*) * thm list option (*minor*)) option ->
+  val auto_resolve : (thm list (*major*) * (thm list * thm list) option
+        (* priority, minor*)) option ->
     thm list (*addtional major*) -> Proof.context -> tactic
-  val auto_resolve_rule : (thm list (*major*) * thm list option (*minor*)) option ->
+  val auto_resolve_rule : (thm list (*major*) * (thm list * thm list) option (*minor*)) option ->
     thm list (*addtional major*) -> Proof.context -> thm -> thm
 
 
@@ -47,9 +48,9 @@ signature NU_SYS = sig
   val apply_procs_major : Proof.context -> thm list (*procs*) -> thm (*whole*) -> thm
   val apply_proc : Proof.context -> thm (*proc*) -> thm (*whole*) -> thm (*whole*)
   val apply_procs : Proof.context -> thm list -> thm -> thm
-  val apply_proc_naive : Proof.context -> thm (*proc*) -> thm (*meta*) -> thm
   val accept_proc : Proof.context -> thm -> thm
   val apply_casts : Proof.context -> thm list -> thm -> thm
+  val set_param : Proof.context -> term -> thm -> thm
 
   val process : Proof.state -> thm -> thm parser
 
@@ -93,6 +94,14 @@ signature NU_SYS = sig
 
   val auto_construct : Proof.context -> cterm -> thm -> thm
   val transfer_facts_data : Context.generic -> Context.generic -> Context.generic
+
+  val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
+        -> Proof_Context.mode -> bool -> string -> Method.text option
+        -> (Proof.context * thm list list -> Proof.state -> Proof.state)
+        -> (binding * typ option * mixfix) list (*fixes*)
+        -> (Thm.binding * (term * term list) list) list (*premis*)
+        -> (term * term list) list list (*no binding is allowed*)
+        -> Proof.state -> thm list * Proof.state
 end
 
 (* The Structure *)
@@ -193,7 +202,7 @@ fun head_only tac th =
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
   (ALLGOALS (Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used"))
-    THEN Simpdata.auto_tac ctx)
+    THEN Clasimp.auto_tac ctx)
 
 (*** Premise tac ***)
 val Premise_I = @{thm NuPrim.Premise_I}
@@ -203,7 +212,7 @@ fun mk_premise_tac withdraw ctx th =
       ORELSE withdraw) th
   else Seq.empty
 val FailedPremise_I = @{thm FailedPremise_I} and FailedPremise_D = @{thm FailedPremise_D}
-val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch o @{print} o (fn x => FailedPremise_D RS x))
+val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch o (fn x => FailedPremise_D RS x))
 val dest_failed_premise_tag = dest_monop "NuSys.FailedPremise"
 val premise_tac = mk_premise_tac Seq.fail
 fun fininsh_premise_hyps th =
@@ -228,7 +237,7 @@ fun SOLVED_RULE rule fail th =
 
 fun REPEATX tac =
   let
-    fun rep qs st = if length qs > 20 then raise Fail "too deep tac" else
+    fun rep qs st = if length qs > 100 then raise Fail "too deep tac" else
       (case Seq.pull (tac st) of
         NONE => SOME (st, Seq.make (fn () => repq qs))
       | SOME (st', q) => rep (q :: qs) st')
@@ -240,20 +249,23 @@ fun REPEATX tac =
   in fn st => Seq.make (fn () => rep [] st) end;
 
 
+fun print_dbg th = Seq.make (fn () => (@{print} th; NONE))
 fun auto_resolve thms addtion ctx  =
   let 
-    val (thms,minor_thms) = case thms of SOME (major, SOME minor) => (major, minor)
-                              | SOME (major, NONE) => (major, [])
-                              | NONE => (Named_Theorems.get ctx "NuPrim.\<nu>intro",
-                                         Named_Theorems.get ctx "NuPrim.\<nu>intro'")
+    val (thms,prio,minor_thms) =
+      case thms of SOME (major, SOME (prio,minor)) => (major,prio,minor)
+       | SOME (major, NONE) => (major,[],[])
+       | NONE => (Named_Theorems.get ctx "NuPrim.\<nu>intro",
+                  Named_Theorems.get ctx "NuPrim.\<nu>intro0",
+                  Named_Theorems.get ctx "NuPrim.\<nu>intro'")
     val thms = addtion @ thms
   in SOLVED (REPEATX (
       simp_tag_tac ctx
-       ORELSE (fn th => resolve_tac ctx thms 1 (@{print} th) 
-                               |> Seq.map @{print})
+        ORELSE (resolve_tac ctx prio 1)
         ORELSE (resolve_tac ctx thms 1)
         ORELSE premise_tac ctx
         ORELSE resolve_tac ctx minor_thms 1
+        (* ORELSE print_dbg *)
     )) (* #> Seq.map fininsh_premise_hyps *)
   end
 val auto_resolve0 = auto_resolve NONE []
@@ -366,9 +378,13 @@ fun accept_proc ctx meta =
   (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
   then meta else auto_resolve_rule0 ctx meta) |> accept_proc0 ctx
 
-fun apply_proc_naive ctx proc meta =
-  elim_SPEC meta |> apfst (fn major => thm_apply_proc OF [major, proc]) |> intro_SPEC
-    |> accept_proc0 ctx
+
+fun set_param' ctx term major =
+  (term |> Type.constraint (NuBasics.param_type major
+                  |> map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty))
+       |> Syntax.check_term ctx |> Thm.cterm_of ctx |> NuBasics.intro_param)
+    RS major
+fun set_param ctx term = map_major (set_param' ctx term)
 
 val process = NuProcessor.process o Proof.context_of
 
@@ -424,4 +440,17 @@ fun auto_construct ctx term meta =
   end
 
 
+fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
+  let open Proof
+    val specthm = the_fact stat
+    fun after_qed ctxthms stat =
+      stat |> end_block 
+           |> after_qed' ctxthms
+  in
+    stat |> begin_block
+      |> map_context (load_specthm specthm)
+      |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
+            (map (pair Binding.empty_atts) gl)
+      |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat) "NuSys.used") stat)
+  end
 end

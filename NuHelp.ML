@@ -256,4 +256,5 @@ fun int_of_string str =
 
 fun strip_implies_c tm = strip_implies_c (#2 (dest_implies tm))
   handle TERM _ => tm
+
 end

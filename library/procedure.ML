@@ -64,14 +64,18 @@ fun define (binding,attrs) th lthy =
     val f' = fold lambda (map Free (add_frees f [])) f
     val def_binding = Binding.suffix_name compilation_suffix binding
     val proc_binding = Binding.suffix_name proc_suffix binding
-  in
-    lthy
-      |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
-      |-> (fn (tm,(_,def)) => 
-            Local_Theory.notes_kind procedure_kind
-              [((proc_binding,attrs), [([th RS
-                  ((norm_def arity def) RS @{thm NuPrim.rename_proc})],[])])]
-            #> apfst (fn [(_,[th])] => th)
-          )
+  in if Binding.is_empty binding then
+      lthy |> Local_Theory.notes_kind procedure_kind
+                [((proc_binding,attrs), [([th],[])])]
+           |> apfst (fn [(_,[th])] => th)
+     else
+      lthy
+        |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
+        |-> (fn (tm,(_,def)) => 
+              Local_Theory.notes_kind procedure_kind
+                [((proc_binding,attrs), [([th RS
+                    ((norm_def arity def) RS @{thm NuPrim.rename_proc})],[])])]
+              #> apfst (fn [(_,[th])] => th)
+            )
   end
 end

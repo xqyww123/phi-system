@@ -35,7 +35,7 @@ ML_file NuConfig.ML
 bundle show_more1 = [[show_hyps = true, show_types = true, show_sorts = true]]
 bundle show_more = [[show_hyps = true, show_types = true]]
 
-named_theorems \<nu>intro "\<nu>-type introduction rules" and \<nu>intro' and \<nu>elim "\<nu>-type elimination rules"
+named_theorems \<nu>intro "\<nu>-type introduction rules" and \<nu>intro' and \<nu>intro0 and \<nu>elim "\<nu>-type elimination rules"
   \<comment> \<open>\<nu> introduction and elimination rules destructs and reconstructs \<nu> typings.
     They are not required in the program construction,
     and generally it is not expected to destruct \<nu> typings during the construction.
@@ -376,7 +376,7 @@ lemma [simp]: "Register v x \<in> RegisterTy v' T \<longleftrightarrow> v = v' \
 lemma [intro]: "x \<in> T \<Longrightarrow> Register name x \<in> RegisterTy name T" by simp
 lemma [elim]: "r \<in> RegisterTy name T \<Longrightarrow> (\<And>x. r = Register name x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases r) simp
 lemma [intro]: "Inhabited T \<Longrightarrow> Inhabited (RegisterTy name T)" unfolding Inhabited_def by auto
-lemma [dest]: "Inhabited (RegisterTy name T) \<Longrightarrow> Inhabited T" unfolding Inhabited_def by auto
+lemma [elim]: "Inhabited (RegisterTy name T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "\<nu>Disposable x \<Longrightarrow> \<nu>Disposable (RegisterTy name x)" unfolding \<nu>Disposable_def
   including show_more1 by (auto simp add: disposable_register)
 
@@ -680,9 +680,9 @@ definition FactCollection :: "prop \<Rightarrow> prop \<Rightarrow> prop \<Right
   where "FactCollection (PROP P) (PROP Q) (PROP S) \<equiv> (PROP P &&& PROP Q &&& PROP S)"
     \<comment> \<open>P: star fact, Q: fact list, S: \<nu>current\<close>
 consts FactCollection_sugar :: "prop \<Rightarrow> prop \<Rightarrow> prop"  ("\<glowing_star> _/ \<^bold>a\<^bold>n\<^bold>d _" [4,3] 3)
-(* translations
+translations
   "Q" <= " CONST FactCollection (CONST NoFact) Q S"
-  "CONST FactCollection_sugar P Q" <= "CONST FactCollection P Q S" *)
+  "CONST FactCollection_sugar P Q" <= "CONST FactCollection P Q S"
 lemma FactCollection_imp: " (PROP FactCollection (PROP P) (PROP Q) (PROP S) \<Longrightarrow> PROP R) \<equiv> (PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP S \<Longrightarrow> PROP R)"
   unfolding FactCollection_def conjunction_imp by rule
 lemma FactCollection_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP S \<Longrightarrow> PROP  FactCollection (PROP P) (PROP Q) (PROP S)"
@@ -789,6 +789,9 @@ lemma clean_user_facts:
 
   section \<open>Supplementary structures for elementary functions\<close>
 
+definition "SchemaTag x = x"
+translations "x" <= "CONST SchemaTag x"
+
   subsubsection \<open>Existential Nu-type\<close>
 
 datatype ('a,'b) to_be_bind_name = To_Be_Bind_Name 'b
@@ -876,10 +879,10 @@ lemma CastE[elim]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bo
    unfolding Cast_def Inhabited_def by (auto intro: Inhabited_subset)
 lemma CastI[intro]: "Inhabited A \<Longrightarrow> A \<subseteq> B \<Longrightarrow> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P"
   and [intro]: "\<not> Inhabited A \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P" unfolding Cast_def Inhabited_def by auto
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A" by blast
+lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A" by blast
 lemma "=_\<nu>cast": "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x' \<tycolon> N" unfolding Cast_def by auto
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e N = N' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<tort_lbrace>x \<tycolon> N\<tort_rbrace> \<longmapsto> \<tort_lbrace>x' \<tycolon> N'\<tort_rbrace>" unfolding Cast_def Premise_def by simp
-lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x" unfolding Premise_def by simp
+lemma [\<nu>intro0]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x" unfolding Premise_def by simp
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<S_S> A \<longmapsto> \<S_S> B \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P" by blast
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P2 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B) \<longmapsto> (A'\<heavy_comma>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<and> P2" by blast
 lemma LooseState_Cast[\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<S> A \<longmapsto> \<S> B" unfolding \<nu>def Cast_def by auto
@@ -922,7 +925,7 @@ subsubsection \<open>Auto construct & destruct\<close>
 definition AutoConstruct :: " 'exp \<Rightarrow> (('a::lrep) \<Rightarrow> ('b::lrep) state) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t _/ \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<blangle>_/ \<longmapsto> _ \<brangle>)" [20,101,10,10] 100)
   where [\<nu>def]:"AutoConstruct exp f S T \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>"
 lemma AutoConstruct: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> AutoConstruct exp f S T \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)" for exp :: "'exp"
-  including show_more unfolding AutoConstruct_def using apply_proc by fast
+  unfolding AutoConstruct_def using apply_proc .
 
 lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t X \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle>A \<longmapsto> B\<brangle> \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t X \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c call f \<blangle>(A \<flower> U) \<longmapsto> (B \<flower> U) \<brangle>"
   unfolding AutoConstruct_def using call by fast

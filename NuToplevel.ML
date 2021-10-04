@@ -21,13 +21,6 @@ signature NU_TOPLEVEL = sig
         -> bool -> Proof.state -> Proof.state
   val end_block_cmd : bool -> Proof.state -> Proof.state
   
-  val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
-        -> Proof_Context.mode -> bool -> string -> Method.text option
-        -> (Proof.context * thm list list -> Proof.state -> Proof.state)
-        -> (binding * typ option * mixfix) list (*fixes*)
-        -> (Thm.binding * (term * term list) list) list (*premis*)
-        -> (term * term list) list list (*no binding is allowed*)
-        -> Proof.state -> thm list * Proof.state
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
   val have_aux : ((Thm.binding * attribute list) * (term * term list) list) list
         -> bool -> Proof.state -> thm list * Proof.state
@@ -85,6 +78,8 @@ fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
 
 val top_blk_name = "L\<nu>0_top_block"
 
+fun print_results int = Proof_Display.print_results int (Position.thread_data ())
+
 fun begin_proc ctx (arg,ret) =
   let
     (* val (arg,ret) = mk_raw_prod (arg,ret) |> Syntax.check_term ctx |> dest_prod *)
@@ -101,7 +96,7 @@ fun begin_proc ctx (arg,ret) =
 
 fun mk_regctx ctx meta =
   if can (dest_current_nu #> dest_Proc_CtxTy) meta then meta
-  else apply_proc_naive ctx @{thm NuPrim.begin_proc_ctx} meta
+  else apply_proc_naive @{thm NuPrim.begin_proc_ctx} meta |> NuSys.accept_proc ctx
 val empty_facts_thm = @{thm NuPrim.empty_facts}
 
 fun prep_decls raw_vars ctxt =
@@ -156,7 +151,7 @@ fun begin_proc_cmd raw binding arg ret rawfixes includes preconds int ctx =
           val th = arg |> Syntax.check_term ctx
             |> Thm.cterm_of ctx |> start_proc ctx top_blk_name
             |> rpair empty_facts_thm |> intro_SPEC
-            |> mk_regctx ctx
+            |> (if raw then I else mk_regctx ctx)
             |> fold (fn name =>
                 NuRegisters.assign_reg ctx name #> accept_proc ctx) reg_names
             |> Simplifier.simplify ctx
@@ -186,7 +181,7 @@ fun gen_finish_proc prep_specthm qed int stat =
     val meta = meta |> prep_specthm ctx
     val meta = if not (can dest_Proc_CtxTy (term_of desired_nu))
                   andalso can dest_Proc_CtxTy (dest_current_nu meta)
-               then apply_proc_naive ctx end_proc_ctx_thm meta
+               then apply_proc_naive end_proc_ctx_thm meta |> NuSys.accept_proc ctx
                else meta
     val meta = meta |> elim_SPEC
           |> apfst (NuSys.cast (NuSys.load_specthm meta ctx) desired_nu)
@@ -208,20 +203,6 @@ fun process_cmd toks stat =
   stat |> Proof.set_facts
     [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
 
-fun print_results int = Proof_Display.print_results int (Position.thread_data ())
-fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
-  let open Proof
-    val specthm = the_fact stat
-    fun after_qed ctxthms stat =
-      stat |> end_block 
-           |> after_qed' ctxthms
-  in
-    stat |> begin_block
-      |> map_context (load_specthm specthm)
-      |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
-            (map (pair Binding.empty_atts) gl)
-      |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat) "NuSys.used") stat)
-  end
 
 fun prove_prem int stat =
   let open Proof
@@ -239,7 +220,7 @@ fun prove_prem int stat =
             (intro_SPEC (th RS focus, aux)))] stat
       end
   in
-    stat |> setup_proof (print_results int) Proof_Context.mode_default false ""
+    stat |> setup_proof (print_results int) Proof_Context.mode_schematic false ""
       NONE after_qed [] [] [[(goal,[])]]
   end
 
@@ -363,6 +344,7 @@ fun begin_block_cmd bindings int stat =
             Proof_Context.put_thms false ("\<nu>thesis",
               SOME [Drule.mk_term (cterm_of ctx goal)]) ctx
           )
+      |> NuObtain.obtain_quick_pairs_perhaps
   end
 end
 

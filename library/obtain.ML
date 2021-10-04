@@ -7,6 +7,8 @@ signature NU_OBTAIN = sig
     (binding * string option * mixfix) list -> (string * string list) list list ->
     ((Attrib.binding * Token.src list) * (string * string list) list) list ->
     bool -> Proof.state -> Proof.state
+  val obtain_quick_pairs : Proof.state -> Proof.state
+  val obtain_quick_pairs_perhaps : Proof.state -> Proof.state
   val choose: (binding * typ option * mixfix) list -> term list -> 
     bool -> Proof.state -> Proof.state
   val choose_cmd: (binding * string option * mixfix) list -> string list -> 
@@ -137,7 +139,7 @@ fun gen_obtain prep_stmt prep_att that_binding raw_decls raw_fixes raw_prems raw
     val ((_, thesis), thesis_ctxt) = obtain_thesis (Proof.context_of state);
 
     val ({vars, propss, binds, result_binds, ...}, params_ctxt) =
-      prep_stmt ((raw_decls  |> @{print}) @ raw_fixes) (raw_prems @ map #2 raw_concls) thesis_ctxt;
+      prep_stmt (raw_decls @ raw_fixes) (raw_prems @ map #2 raw_concls) thesis_ctxt;
     val (decls, fixes) = chop (length raw_decls) vars ||> map #2;
     val (premss, conclss) = chop (length raw_prems) propss;
     val propss' = (map o map) (Logic.close_prop fixes (flat premss)) conclss;
@@ -172,7 +174,7 @@ fun gen_obtain prep_stmt prep_att that_binding raw_decls raw_fixes raw_prems raw
       end;
   in
     state
-    |> NuToplevel.setup_proof (print_results int) Proof_Context.mode_default false "\<nu>lemma"
+    |> NuSys.setup_proof (print_results int) Proof_Context.mode_default false "\<nu>lemma"
         NONE after_qed [(Binding.name Auto_Bind.thesisN, NONE, NoSyn)]
         [((that_binding, [Context_Rules.intro_query NONE]), [(that_prop, [])])]
         [[(thesis, [])]]
@@ -183,6 +185,38 @@ in
 
 val obtain = gen_obtain Proof_Context.cert_stmt (K I);
 val obtain_cmd = gen_obtain Proof_Context.read_stmt Attrib.attribute_cmd;
+
+fun strip_tuple_lambda ret (Abs (v1,T1, Abs (v2,T2,_))) = rev ((v2,T2)::(v1,T1)::ret)
+  | strip_tuple_lambda ret (Abs (v,T, body))
+      = strip_tuple_lambda ((v,T)::ret) body
+  | strip_tuple_lambda ret (Const("Product_Type.prod.case_prod", _) $ body)
+      = strip_tuple_lambda ret body
+  | strip_tuple_lambda ret tm = raise TERM ("!!!!", [tm])
+val simp_attrs = map (Attrib.attribute @{context}) @{attributes [simp]}
+fun obtain_quick_pairs stat =
+  let open NuBasics
+    val meta = Proof.the_fact stat
+    val (x,nu) = stack_of_meta meta |> hd |> dest_RepSet |> dest_nuTy
+    val vars = nu |> dest_binop "NuBasicAbstractors.Schema" |> #2
+                  |> strip_tuple_lambda []
+    val decls = (map (fn (v,T) => (Binding.name v, SOME T, NoSyn)) vars)
+    val (vars',_) = Proof.context_of stat |> Proof_Context.add_fixes decls
+    val goal = HOLogic.mk_eq (x, HOLogic.mk_tuple (
+          map (fn (a,(_,T)) => Free (a,T)) (vars' ~~ vars))) |> mk_Trueprop
+  in
+    stat |> obtain Binding.empty decls
+              [] [] [(((Binding.empty,simp_attrs),[]),[(goal,[])])] false
+         |> Proof.local_terminal_proof ((Method.Basic (fn ctx =>
+              Method.CONTEXT_METHOD (fn facts =>
+                Induct.cases_context_tactic true [[SOME x]] NONE facts 1)
+              ), Position.no_range),
+            SOME (Method.Basic (fn ctx =>
+              Method.SIMPLE_METHOD' (Classical.fast_tac ctx)), Position.no_range))
+  end
+fun obtain_quick_pairs_perhaps stat = let open NuBasics in
+  if Proof.the_fact stat |> stack_of_meta |> hd
+      |> can (dest_RepSet #> dest_nuTy)
+  then obtain_quick_pairs stat else stat end
 
 end;
 
@@ -260,7 +294,7 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
       end;
   in
     stat
-    |> NuToplevel.setup_proof (print_results int) Proof_Context.mode_default false ""
+    |> NuSys.setup_proof (print_results int) Proof_Context.mode_default false ""
         NONE after_qed [] [(Binding.empty_atts, [(that_prop, [])])]
         [[(goal, [])]]
     |-> Proof.refine_insert

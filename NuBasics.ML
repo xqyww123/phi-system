@@ -64,6 +64,7 @@ signature NU_BASICS = sig
 
   val elim_SPEC : thm -> thm * thm
   val intro_SPEC : thm * thm -> thm
+  val map_major : (thm -> thm) -> thm -> thm
   val mk_PropBlock : int -> thm -> thm
 
   val dest_fact : term -> string * term
@@ -94,6 +95,7 @@ signature NU_BASICS = sig
 
   val dest_Cast   : term -> term * term * term
   val dest_Cast_c : cterm -> cterm * cterm * cterm
+  val apply_proc_naive : thm -> thm -> thm
 
   val intro_param : cterm -> thm
   val intro_param_name : string -> thm
@@ -269,8 +271,10 @@ fun intro_SPEC (focus,facts) =
       (Thm.instantiate ([],[(vP, cprop_of focus), (vL, cprop_of facts)]) @{thm NuPrim.SpecTop_I})
     focus)
   facts
+fun map_major f th =
+  if can (dest_SpecTop o prop_of) th then elim_SPEC th |> apfst f |> intro_SPEC
+  else f th
 
-val thm_apply_proc = @{thm apply_proc}
 
 val dest_fact   = dest_binop   @{const_name "NuPrim.Fact"} #> apfst dest_name_tag
 val dest_fact_c = dest_binop_c @{const_name "NuPrim.Fact"} #> apfst (term_of #> dest_name_tag)
@@ -406,4 +410,7 @@ val intro_param_name = intro_param o mk_name_tag_c
 
 val dest_Cast   = dest_triop   @{const_name "NuPrim.Cast"}
 val dest_Cast_c = dest_triop_c @{const_name "NuPrim.Cast"}
+
+val thm_apply_proc = @{thm apply_proc}
+fun apply_proc_naive proc = map_major (fn major => proc RS (major RS thm_apply_proc))
 end

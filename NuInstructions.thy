@@ -2,7 +2,7 @@ theory NuInstructions
   imports NuSys NuBasicAbstractors
   keywords
     "myconsider" :: prf_goal % "proof"
-    and "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" :: quasi_command
+    and "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "of" "while" :: quasi_command
   abbrevs "|^" = "\<up>"
     and "||^" = "\<Up>"
     and "|v" = "\<down>"
@@ -52,6 +52,14 @@ declare op_pair_def[\<nu>instr] op_depair_def[\<nu>instr]
 theorem pr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
 theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
 
+lemma pr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> SchemaTag (A \<nuFusion> B) \<flower> W \<brangle>"
+  unfolding SchemaTag_def by (rule call) (rule pr_\<nu>proc)
+lemma dpr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> SchemaTag (A \<nuFusion> B) \<flower> W \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<brangle>"
+  unfolding SchemaTag_def by (rule call) (rule dpr_\<nu>proc)
+
+\<nu>processor pair_auto_dest 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> SchemaTag (A \<nuFusion> B) \<flower> W)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+  meta |> NuBasics.apply_proc_naive @{thm dpr_auto_schema} |> NuSys.accept_proc ctx)\<close>
+
 definition op_crash :: "('r::lrep) \<Rightarrow> ('x::lrep) state" where "op_crash r = SNeg"
 lemma op_crash:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
 
@@ -75,7 +83,7 @@ subsubsection \<open>while\<close>
 consts op_while_WF :: "'c itself \<Rightarrow> (('x::lrep) \<times> ('r::stack) \<flower> ('w::register_collection) \<Rightarrow> (('x \<times> 1 word) \<times> 'r \<flower> 'w) state)
   \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state) \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state)"
 specification ("op_while_WF")
-  while_\<nu>proc[simplified PremiseHOL ParamHOL]: "
+  while_WF_\<nu>proc[simplified PremiseHOL ParamHOL]: "
   ParamHOL P \<Longrightarrow> ParamHOL Rc \<Longrightarrow> ParamHOL Rb \<Longrightarrow> PremiseHOL (wf (Rc O Rb))
   \<Longrightarrow> (\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> (x1::'c) \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> {(y, y \<in> P) | y. (y,x1) \<in> Rc } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>)) \<flower> W \<brangle>)
   \<Longrightarrow> (\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)) \<flower> W \<longmapsto> (R \<heavy_comma> {y. (y,x2) \<in> Rb} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>)
@@ -85,13 +93,45 @@ specification ("op_while_WF")
 consts op_while :: "'c itself \<Rightarrow> (('x::lrep) \<times> ('r::stack) \<flower> ('w::register_collection) \<Rightarrow> (('x \<times> 1 word) \<times> 'r \<flower> 'w) state)
   \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state) \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state)"
 specification ("op_while")
-  while_\<nu>proc[simplified PremiseHOL ParamHOL]: "
-  ParamHOL P \<Longrightarrow> ParamHOL Rc \<Longrightarrow> ParamHOL Rb \<Longrightarrow> PremiseHOL (wf (Rc O Rb))
-  \<Longrightarrow> (\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> (x1::'c) \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> {(y, y \<in> P) | y. (y,x1) \<in> Rc } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>)) \<flower> W \<brangle>)
-  \<Longrightarrow> (\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)) \<flower> W \<longmapsto> (R \<heavy_comma> {y. (y,x2) \<in> Rb} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>)
+  i_while_raw_\<nu>proc[simplified PremiseHOL ParamHOL]: "
+  ParamHOL P
+  \<Longrightarrow> (\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> (x1::'c) \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> {(y, y \<in> P) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>)) \<flower> W \<brangle>)
+  \<Longrightarrow> (\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>)
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> (R \<heavy_comma> x \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>"
   apply (rule exI) using op_crash by auto
 
+proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch)) \<flower> W\<close>
+  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P" and [THEN someI_ex, intro]: "\<exists>y. sch y = x" 
+    and brC: \<open>(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> x1 \<tycolon> X <schema> sch) \<flower> W \<longmapsto> (R \<heavy_comma> {(y, y \<in> P) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch \<nuFusion> \<bool>)) \<flower> W \<brangle>)\<close>
+    and brB: \<open>(\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X <schema> sch \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e SchemaTag P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch)) \<flower> W \<brangle>)\<close>
+  \<nu>have A: "SchemaTag P = P" unfolding SchemaTag_def by simp
+  \<bullet> cast i_schema sch  i_while_raw P \<Longleftarrow> brC \<Longleftarrow> brB[simplified A] finish
+
+\<nu>processor while 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close> \<open>fn ctx => fn meta => let open Parse Scan NuHelp NuBasics in
+  $$$ "while" |-- vars -- option ($$$ "in" |-- term) -- ($$$ "subj" |-- term) >> (fn ((vars, schema), subj) => fn _ =>
+  let val (vars',ctx) = Proof_Context.add_fixes (map (fn (a,b,c) => (a,Option.map (Syntax.read_typ ctx) b,c)) vars) ctx
+    val vars = (map (fn (x,_,_) => Binding.name_of x) vars) ~~ vars'
+    fun absfree ((a',a), T) body = Abs (a', T, abstract_over (Free (a, T), body));
+    val prodconst = Const (\<^const_name>\<open>case_prod\<close>, dummyT)
+    fun caseprod (tm as (Abs (_,_, Abs (_,_, _)))) = prodconst $ tm
+        | caseprod (tm as (Abs (_,_, Const (\<^const_name>\<open>case_prod\<close>, _) $ _))) = prodconst $ tm
+        | caseprod tm = tm
+    fun lambda_close tm = fold_rev (caseprod oo absfree o rpair dummyT) vars tm
+    val (arity,schema) = case schema of SOME sch =>
+                    let val raw = Syntax.parse_term ctx sch
+                    in (length (strip_binop_r \<^const_name>\<open>Pair\<close> raw), lambda_close raw) end
+                | _ => (length vars, Const (\<^const_name>\<open>id\<close>, dummyT))
+    val subj = lambda_close (Syntax.parse_term ctx subj) |> mk_monop \<^const_name>\<open>Collect\<close>
+    val apply_pr = apply_proc_naive @{thm pr_auto_schema} #> NuSys.accept_proc ctx
+  in meta |> funpow (arity-1) apply_pr |> apply_proc_naive @{thm i_while_\<nu>proc}
+          |> NuSys.set_param ctx schema |> NuSys.set_param ctx subj
+  end
+) end\<close>
+
+proc AA: \<open>i \<tycolon> \<nat>[32]\<heavy_comma>  zp \<left_fish_tail> adr \<R_arr_tail> z \<left_fish_tail> i \<tycolon> Ref \<nat>[32]\<close> \<longmapsto> \<open>i + j \<tycolon> \<nat>[32]\<close>
+  \<bullet> i \<leftarrow> v while i j in \<open>(i, zp \<left_fish_tail> adr \<R_arr_tail> z \<left_fish_tail> j)\<close> subj \<open>i < j\<close> \<medium_left_bracket> \<bullet>
+
+thm i_while_\<nu>compilation
 
 subsubsection \<open>recursion\<close>
 
@@ -553,6 +593,10 @@ section \<open>Tests\<close>
 
 abbreviation "FullRef N \<equiv> Ref N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
 abbreviation "Array N \<equiv> RefS N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
+
+proc' [\<nu>overload pop]: \<open>R\<heavy_comma> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array N\<close> \<longmapsto> \<open>R\<heavy_comma> (seg |+ i + 1) \<R_arr_tail> tl xs \<tycolon> Array N\<heavy_comma> (seg |+ i) \<R_arr_tail> hd xs \<tycolon> FullRef N\<close>
+  requires [simp]: "xs \<noteq> []"
+  \<bullet> pop finish
 
 
 lemma [\<nu>overload pop]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs \<noteq> [] \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c i_pop_refs \<blangle> R\<heavy_comma> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array N

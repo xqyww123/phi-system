@@ -4,8 +4,9 @@ theory NuSys
   imports NuPrim NuLLReps
   keywords
     "proc" "proc'" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" :: quasi_command
-  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug" :: prf_decl % "proof"
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "$" :: quasi_command
+  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug"
+          "\<nu>note" "\<nu>choose_quick" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
@@ -51,8 +52,8 @@ ML_file "./library/exty.ML"
 ML_file NuSys.ML
 ML_file "./library/registers.ML"
 ML_file "./library/processors.ML"
-ML_file NuToplevel.ML
 ML_file "./library/obtain.ML"
+ML_file NuToplevel.ML
 
 section \<open>Attributes and Commands\<close>
 
@@ -66,7 +67,7 @@ attribute_setup \<nu>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_po
   \<open>Evaluate the \<nu>-system process or the process of the given processor on the target theorem\<close>
 
 method_setup \<nu>resolve = \<open>let open Scan Parse in
-  option (Attrib.thms -- option (lift ($$$ "(") |-- Attrib.thms --| lift ($$$ ")"))) >> (fn ths => fn ctx =>
+  option (Attrib.thms -- option (lift ($$$ "(") |-- Attrib.thms --| lift ($$$ ")") -- (lift ($$$ "(") |-- Attrib.thms --| lift ($$$ ")")))) >> (fn ths => fn ctx =>
     Method.METHOD (fn th2 => NuSys.auto_resolve ths th2 ctx))
 end\<close>
 
@@ -85,13 +86,13 @@ val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>exty_simproc\<c
 val requires_statement = Scan.optional (Parse.$$$ "requires" |-- Parse.!!! Parse_Spec.statement) [];
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((Parse_Spec.thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
             -- requires_statement) >>
         (fn (((((b,arg),ret),fixes),includes),preconds) =>  
             (begin_proc_cmd false b arg ret fixes includes preconds)));
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc'\<close> "begin a procedure construction"
-    ((Parse_Spec.thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
             -- requires_statement) >>
         (fn (((((b,arg),ret),fixes),includes),preconds) =>  
             (begin_proc_cmd true b arg ret fixes includes preconds)));
@@ -104,6 +105,12 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<nu>debug\<close> "The \<nu>construction"
     (Scan.succeed (Toplevel.proof (fn stat =>
       stat |> Proof.map_context (NuSys.load_specthm (Proof.the_fact stat)))))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<nu>note\<close> "note command in \<nu> version"
+    (Parse_Spec.name_facts >> (fn facts => Toplevel.proof (fn stat =>
+      let val meta = Proof.the_fact stat
+      in stat |> Proof.note_thmss_cmd facts |> Proof.set_facts [meta] end)));
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<bullet>\<close> "The \<nu>construction"
@@ -128,6 +135,10 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<nu>choose\<close> "existential elimination"
     ( !!! vars --| $$$ "where" -- Scan.repeat1 Parse.prop
       >> (fn (b, c) => Toplevel.proof' (NuObtain.choose_cmd b c)));
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<nu>choose_quick\<close> "existential elimination"
+    ( Scan.succeed (Toplevel.proof (NuObtain.obtain_quick_pairs)));
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "construct nested sub-procedure"
@@ -210,37 +221,36 @@ subsubsection \<open>Essential functions\<close>
       in fold (NuSys.apply_casts ctx o NuProcedure.cast_thm ctx) bindings meta end)\<close>
 
 \<nu>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Parse.term >> (fn term => fn _ =>
-    NuBasics.elim_SPEC meta |> apfst (fn th =>
-      let val mapty = map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty)
-      in (Syntax.parse_term ctx term |> Type.constraint (NuBasics.param_type th |> mapty) |> @{print} |> Syntax.check_term ctx  |> @{print}
-          |> Thm.cterm_of ctx |> NuBasics.intro_param) RS th
-      end) |> NuBasics.intro_SPEC)\<close>
+    NuSys.set_param ctx (Syntax.parse_term ctx term) meta)\<close>
 
 \<nu>processor rule 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close>
-  \<open>fn ctx => fn meta => (Parse.$$$ "\<Longleftarrow>" |-- NuProcedure.parser) >> (fn name => fn _ =>
+  \<open>fn ctx => fn meta => (Parse.$$$ "\<Longleftarrow>" |-- NuProcedure.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
     let open NuBasics
-    val ths = Proof_Context.get_fact ctx (Facts.Named (name, NONE)) in
-    elim_SPEC meta |> apfst (fn major =>
+    val ctx = NuSys.load_specthm meta ctx
+    val attrs = map (Attrib.attribute_cmd ctx o Attrib.check_src ctx) attrs
+    val ths = Proof_Context.get_fact ctx (Facts.Named (name, NONE)) 
+    val (ths,ctx) = fold_map (Thm.proof_attributes attrs) ths ctx
+    in elim_SPEC meta |> apfst (fn major =>
     case Thm.biresolution NONE false (ths |> map (pair false) |> @{print}) 1 major |> Seq.pull
-      of SOME (th, _) => th | _ => raise THM ("RSN: no unifiers", 1, meta::ths)) |> intro_SPEC end)\<close>
+      of SOME (th, _) => th | _ => raise THM ("RSN: no unifiers", 1, major::ths)) |> intro_SPEC end)\<close>
 
 \<nu>processor set_\<nu>current 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   raise Bypass (SOME (meta RS @{thm set_\<nu>current})))\<close>
 
 subsubsection \<open>Registers\<close>
 
-\<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
+\<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close>  \<open>let open Parse in
   (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
     (fn idts => fn _ => fold_rev (fn idt =>
       NuRegisters.assign_reg ctx idt
         #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
-\<nu>processor  load_register 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
+\<nu>processor  load_register 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close>  \<open>let open Parse in
   fn ctx => fn th => short_ident >> (fn idt => fn _ => NuRegisters.load_reg ctx idt th
       handle NuRegisters.NoSuchRegister _ => raise Bypass NONE)
 end\<close>
-\<nu>processor move_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  (fn ctx => fn th => ($$$ "\<leftarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
+\<nu>processor move_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close>  \<open>let open Parse in
+  (fn ctx => fn th => (($$$ "\<leftarrow>" || $$$ "$") |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
     (fn idts => fn _ => fold (fn idt => NuRegisters.move_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
 
