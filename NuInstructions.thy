@@ -1,8 +1,7 @@
 theory NuInstructions
   imports NuSys NuBasicAbstractors
   keywords
-    "myconsider" :: prf_goal % "proof"
-    and "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "of" "while" :: quasi_command
+     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "of" "while" :: quasi_command
   abbrevs "|^" = "\<up>"
     and "||^" = "\<Up>"
     and "|v" = "\<down>"

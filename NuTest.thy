@@ -1,6 +1,9 @@
 theory NuTest
-  imports NuSys
+  imports NuSys NuInstructions
 begin
+
+abbreviation "FullRef N \<equiv> Ref N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
+abbreviation "Array N \<equiv> RefS N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
 
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = f x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = SchemaTag f x"
   unfolding Premise_def Simplify_def SchemaTag_def by auto
@@ -21,8 +24,6 @@ thm i_while_\<nu>compilation
 
 
 
-abbreviation "FullRef N \<equiv> Ref N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
-abbreviation "Array N \<equiv> RefS N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
 
 proc' [\<nu>overload pop]: \<open>R\<heavy_comma> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array N\<close> \<longmapsto> \<open>R\<heavy_comma> (seg |+ i + 1) \<R_arr_tail> tl xs \<tycolon> Array N\<heavy_comma> (seg |+ i) \<R_arr_tail> hd xs \<tycolon> FullRef N\<close>
   requires [simp]: "xs \<noteq> []"
