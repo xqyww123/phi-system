@@ -21,9 +21,15 @@ section \<open>Structural instructions\<close>
 subsection \<open>Basic sequential instructions\<close>
 
 subsubsection \<open>drop\<close>
-definition op_drop :: "('a::lrep) \<times> ('r::lrep) \<Rightarrow> 'r state" where "op_drop x = (case x of (_,r) \<Rightarrow> StatOn r)"
+
+definition op_drop :: "('a::lrep) \<times> ('r::lrep) \<Rightarrow> 'r state" where
+  "op_drop x = (case x of (a,r) \<Rightarrow> if disposable a then StatOn r else STrap)"
 declare op_drop_def[\<nu>instr]
-theorem drop_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> R \<heavy_comma> X \<longmapsto> R \<brangle>" unfolding \<nu>def op_drop_def by auto
+theorem drop_\<nu>proc: "\<nu>Disposable X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> R \<heavy_comma> X \<longmapsto> R \<brangle>" unfolding \<nu>def op_drop_def by auto
+
+definition op_fake_drop :: "('a::lrep) \<times> ('r::lrep) \<Rightarrow> 'r state" where
+  "op_fake_drop x = (case x of (_,r) \<Rightarrow> StatOn r)"
+theorem fake_drop_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_fake_drop \<blangle> R \<heavy_comma> X \<longmapsto> R \<brangle>" unfolding \<nu>def op_fake_drop_def by auto
 
 subsubsection \<open>dup & revert\<close>
 
@@ -99,7 +105,7 @@ specification ("op_while")
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> (R \<heavy_comma> x \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>"
   apply (rule exI) using op_crash by auto
 
-proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch)) \<flower> W\<close>
+proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch)) \<flower> W\<close>
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P" and [THEN someI_ex, intro]: "\<exists>y. sch y = x" 
     and brC: \<open>(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> x1 \<tycolon> X <schema> sch) \<flower> W \<longmapsto> (R \<heavy_comma> { (y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X <schema> sch)) \<flower> W \<brangle>)\<close>
     and brB: \<open>(\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X <schema> sch <where'> P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch)) \<flower> W \<brangle>)\<close>
@@ -577,7 +583,7 @@ proc i_pop_refs[simplified length_greater_0_conv, \<nu>overload pop]:
   requires [used]: "0 < length xs"
   \<nu>have A[simp]: "take 1 xs = [hd xs]" by (simp add: One_nat_def take_Suc)
   \<nu>have B[simp]: "drop 1 xs = tl xs" by (simp add: One_nat_def drop_Suc) 
-  \<bullet> \<leftarrow> v \<open>1 \<tycolon> \<nat>[32]\<close> split affirm by linarith \<bullet>
+  \<bullet> $v \<open>1 \<tycolon> \<nat>[32]\<close> split affirm by linarith \<bullet>
   finish
 
   

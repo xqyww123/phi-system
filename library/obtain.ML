@@ -13,6 +13,7 @@ signature NU_OBTAIN = sig
     bool -> Proof.state -> Proof.state
   val choose_cmd: (binding * string option * mixfix) list -> string list -> 
     bool -> Proof.state -> Proof.state
+  val chooseV : binding list -> Proof.state -> Proof.state
 end
 structure NuObtain : NU_OBTAIN = struct
 fun eliminate_term ctxt xs tm =
@@ -227,11 +228,11 @@ fun obtain_quick_pairs_perhaps stat = let open NuBasics in
 end;
 
 local
-val exE = @{thm exE} and ExTy_strip = @{thm NuPrim.ExTyp_strip}
+val ExTy_strip = @{thm NuPrim.ExTyp_strip}
 and CodeBlock_unabbrev = @{thm NuPrim.CodeBlock_unabbrev}
 and CodeBlock_abbrev = @{thm NuPrim.CodeBlock_abbrev}
 fun expand_exE ctx th =
-  (th RS exE) |>
+  (th RS @{thm exE}) |>
     Tactic.rule_by_tactic ctx (REPEAT (Tactic.eresolve_tac ctx [exE] 1))
 fun match_vars ctx ret [] [] [] = rev ret
   | match_vars ctx ret insts' [] (x::insts) =
@@ -257,7 +258,7 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
         in (map snd vars, (Const ("NuPrim.CurrentConstruction", ty) $ p $ body)) end)
     val t1 = ((Thm.assume (current_codeblock major)) COMP CodeBlock_unabbrev) 
     val t2 = ((Thm.assume (current_codeblock major)) COMP CodeBlock_abbrev)
-    val major = Raw_Simplifier.rewrite_rule ctx [ExTy_strip] major
+    val major = Raw_Simplifier.rewrite_rule ctx [ExTy_strip] major |> @{print}
 
     (* val major = Simplifier.asm_simplify
           (fold Simplifier.add_simp [ExTy_strip, CodeBlock_unabbrev] ctx)
@@ -271,7 +272,7 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
     val inst_body = subst_free (org_vars ~~ insts) org_body
 
     val goal = inst_body |> list_mk_binder "HOL.Ex" (map (#2 o #2) decl_vars |> rev)
-          |> mk_Trueprop |> Syntax.check_term params_ctx
+          |> mk_Trueprop |> Syntax.check_term params_ctx |> @{print}
     val that_vars = map dest_Free org_vars' |> map Free
            (*|> Variable.variant_frees params_ctx [] |> map Free |> @{print} *)
     val that_prop = mk_Trueprop (subst_free (org_vars ~~ that_vars) org_body)
@@ -280,21 +281,22 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
     val focus_ex = expand_exE params_ctx major
     val specthm'_term = mk_Trueprop (subst_free [Logic.dest_equals (prop_of t1)] inst_body)
     val specthm' = intro_SPEC 
-        (Thm.assume (Thm.cterm_of params_ctx specthm'_term)
-          |> Raw_Simplifier.rewrite_rule params_ctx [t2]
+        (Thm.assume (Thm.cterm_of params_ctx specthm'_term |> @{print})
+          |> Raw_Simplifier.rewrite_rule params_ctx [t2 |> @{print}]
         , facts)
     fun after_qed (result_ctxt, results) state' =
       let open NuBasics
         val ctx' = Proof.context_of state'
-        val [rule] = Proof_Context.export result_ctxt ctx' (flat results)
+        val [rule] = Proof_Context.export result_ctxt ctx' (flat results) |> @{print}
         val rule = rule
-              |> Drule.forall_intr_list (map (Thm.cterm_of params_ctx) that_vars)
-        val rule = (rule COMP focus_ex) |> Raw_Simplifier.rewrite_rule ctx' [t1]
-              |> expand_exE ctx'
+              |> Drule.forall_intr_list (map (Thm.cterm_of params_ctx) that_vars |> @{print})
+        val rule = (rule COMP (@{print} focus_ex)) |> @{print} |> Raw_Simplifier.rewrite_rule ctx'
+        [t1 |> @{print}]
+              |> expand_exE ctx' |> @{print}
       in
         state'
         |> Proof.fix (map #1 decl_vars)
-        |> Proof.assm (obtain_export params_ctx rule cparams) [] []
+        |> Proof.assm (obtain_export params_ctx rule (@{print} cparams)) [] []
             [(Binding.empty_atts, [(specthm'_term,[])])]
         |> Proof.set_facts [specthm']
       end;
@@ -308,7 +310,37 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
 in
 val choose = gen_choose Proof_Context.cert_stmt
 val choose_cmd = gen_choose Proof_Context.read_stmt
-end
 
+fun chooseV inst_names stat =
+  let open NuBasics NuHelp HOLogic Term
+    val (major,facts) = Proof.the_fact stat |> elim_SPEC
+    val ctx = Proof.context_of stat
+    val t1 = ((Thm.assume (current_codeblock major)) COMP @{thm NuPrim.CodeBlock_unabbrev}) 
+    val t2 = ((Thm.assume (current_codeblock major)) COMP @{thm NuPrim.CodeBlock_abbrev})
+    val major = Raw_Simplifier.rewrite_rule ctx @{thms AutoExTyp_strip ExTyp_strip}
+                  major |> @{print}
+    val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder "HOL.Ex"
+    val var_tys = map fastype_of vars
+    val (inst_names, stat) = Proof.map_context_result (Proof_Context.add_fixes
+          (map (fn (ty,nam) => (nam, SOME ty, NoSyn)) (var_tys~~inst_names))
+        ) stat
+    val insts = map Free (inst_names ~~ var_tys)
+    val ctx = Proof.context_of stat
+    val meta'_term = mk_Trueprop (subst_free
+          ((Logic.dest_equals (prop_of t1))::(vars ~~ insts)) body)
+    val meta' = intro_SPEC 
+        (Thm.assume (Thm.cterm_of ctx meta'_term)
+          |> Raw_Simplifier.rewrite_rule ctx [t2]
+        , facts)
+    val rule = expand_exE ctx (Raw_Simplifier.rewrite_rule ctx [t1] major)
+    val cinsts = map (Thm.cterm_of ctx) insts;
+  in
+    stat |> Proof.assm (obtain_export ctx rule cinsts) [] []
+              [(Binding.empty_atts, [(meta'_term,[])])]
+         |> Proof.set_facts [meta']
+  end
+
+
+end
 end
 

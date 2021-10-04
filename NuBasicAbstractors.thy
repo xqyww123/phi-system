@@ -92,6 +92,23 @@ lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longm
 lemma someI_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> X \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by auto
 lemma someE_\<nu>cast[\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<longmapsto> (\<exists>*some. \<tort_lbrace>some \<tycolon> N \<tort_rbrace> \<addition> (some \<in> X))" unfolding Cast_def by auto
 
+subsubsection \<open>AutoSome and AutoExTy\<close>
+
+definition SchemaSome :: " ('a :: lrep, 'b) nu \<Rightarrow> ('a :: lrep, 'b set) nu " ("<some''>") where "SchemaSome = NuSome"
+
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e M \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> <some'> M \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P"
+  unfolding SchemaSome_def .
+lemma [simp]: "\<tort_lbrace> s \<tycolon> <some'> N \<tort_rbrace> = (\<exists>*' x. \<tort_lbrace> x \<tycolon> N \<tort_rbrace> \<addition> (x \<in> s))" unfolding SchemaSome_def by auto
+
+
+lemma
+  assumes A: "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> s \<tycolon> <some'> N \<flower> G)"
+  shows SchemaSome_ex: "\<exists>x. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> x \<tycolon> N \<flower> G) \<addition> (x \<in> s)"
+proof -
+  have t1: "\<tort_lbrace> s \<tycolon> <some'> N \<tort_rbrace> = (\<exists>*x. \<tort_lbrace> x \<tycolon> N \<tort_rbrace> \<addition> (x \<in> s))" unfolding SchemaSome_def by auto
+  show ?thesis using A[simplified t1, simplified, simplified ExTyp_strip] .
+qed
+
 subsubsection \<open>MemObj\<close>
 
 definition "MemObj N = MemSlice N <down-lift> (\<lambda>x. case x of z \<left_fish_tail> a \<R_arr_tail> x \<Rightarrow> z \<left_fish_tail> a \<R_arr_tail> [x] | \<down_fish_tail> \<Rightarrow> \<down_fish_tail>)"

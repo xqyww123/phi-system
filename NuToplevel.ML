@@ -202,6 +202,8 @@ end
 fun process_cmd toks stat =
   stat |> Proof.set_facts
     [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
+  handle NuProcessor.Process_State_Call (toks,meta,f) =>
+    process_cmd toks (Proof.set_facts [meta] stat |> f)
 
 
 fun prove_prem int stat =

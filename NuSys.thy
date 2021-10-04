@@ -5,7 +5,7 @@ theory NuSys
   keywords
     "proc" "proc'" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "$" :: quasi_command
-  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug"
+  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<nu>choose2" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug"
           "\<nu>note" "\<nu>choose_quick" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
@@ -137,6 +137,11 @@ val _ =
       >> (fn (b, c) => Toplevel.proof' (NuObtain.choose_cmd b c)));
 
 val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<nu>choose2\<close> "existential elimination"
+    ( Scan.repeat1 Parse.binding >> (Toplevel.proof o NuObtain.chooseV));
+
+
+val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<nu>choose_quick\<close> "existential elimination"
     ( Scan.succeed (Toplevel.proof (NuObtain.obtain_quick_pairs)));
 
@@ -207,7 +212,7 @@ subsubsection \<open>Essential functions\<close>
 
 \<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn th => Scan.succeed (fn _ => NuSys.accept_proc ctx th)\<close>
 
-\<nu>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+\<nu>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<addition> P)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   meta RS @{thm move_fact_to_star1} handle THM _ => meta RS @{thm move_fact_to_star2})\<close>
 
 \<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => NuProcedure.parser >> (fn binding => fn _ =>
@@ -236,6 +241,10 @@ subsubsection \<open>Essential functions\<close>
 
 \<nu>processor set_\<nu>current 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   raise Bypass (SOME (meta RS @{thm set_\<nu>current})))\<close>
+
+\<nu>processor choose_AutoExTy 10 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n AutoExTyp T\<close> \<open>fn ctx => fn meta =>
+  Parse.list1 Parse.binding >> (fn vars => fn () =>
+    raise Process_State_Call' (meta, NuObtain.chooseV vars))\<close>
 
 subsubsection \<open>Registers\<close>
 

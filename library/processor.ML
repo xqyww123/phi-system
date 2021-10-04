@@ -3,6 +3,8 @@ signature NU_PROCESSOR = sig
   exception Bypass of thm option
   exception ProcessTerminated of thm * Token.T list
   exception ProcessFail of binding * thm * exn
+  exception Process_State_Call of Token.T list * thm * (Proof.state -> Proof.state)
+  exception Process_State_Call' of thm * (Proof.state -> Proof.state)
   type proc = (Proof.context -> thm -> (unit -> thm) parser)
   val define : binding -> int (*precedence*) -> term (*pattern*) -> proc -> local_theory -> local_theory
   (* val get : Proof.context -> string -> T option *)
@@ -38,6 +40,8 @@ type binding = Binding.binding
 exception ProcessTerminated of thm * Token.T list
 exception ProcessFail of binding * thm * exn
 type proc = Proof.context -> thm -> (unit -> thm) parser
+exception Process_State_Call of Token.T list * thm * (Proof.state -> Proof.state)
+exception Process_State_Call' of thm * (Proof.state -> Proof.state)
 
 
 datatype processor = Processor of {
@@ -106,10 +110,13 @@ fun process_impl ctx procs (th,toks) limit =
             val _ = tracing ("process: " ^ Binding.print binding)
             in
             raise Processed (execute(), toks)
+              handle Process_State_Call' (meta,f) =>
+                        raise Process_State_Call (toks,meta,f)
             end handle Bypass NONE => th
               | Bypass (SOME th') => th'
               | Processed th_toks => raise Processed th_toks
               | ProcessTerminated th_toks => raise ProcessTerminated th_toks
+              | Process_State_Call arg => raise Process_State_Call arg
               | ex => (@{print} th; @{print} binding; Exn.reraise (@{print} ex))
             (* | ex => Exn.reraise (ProcessFail (binding,th,ex)) *)
           else th

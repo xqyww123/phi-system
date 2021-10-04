@@ -702,7 +702,7 @@ lemma [simp]: "zp \<left_fish_tail> memcon adrp p \<nuLinkL> MemSlice N \<nuLink
     (zp = z) \<and> (adrp = adrx) \<and> list_all2 (\<lambda>p x. p \<nuLinkL> N \<nuLinkR> x) p x \<and> within_seg (length x) adrx"
   and [simp]: "\<down_fish_tail> \<nuLinkL> MemSlice N \<nuLinkR> x' \<longleftrightarrow> x' = \<down_fish_tail>" and [simp]: "p' \<nuLinkL> MemSlice N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p' = \<down_fish_tail>"
   unfolding MemSlice_def Refining_ex by (auto simp add: memptr_forall split: memcon.split owning.split)
-thm List.list_all2_all_nthI
+
 lemma [elim,\<nu>elim]: "z \<left_fish_tail> a \<R_arr_tail> xs \<ratio> MemSlice N \<Longrightarrow>
     (within_seg (length xs) a \<Longrightarrow> (\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def apply (auto 6 6 simp add: lrep_exps list_all2_conv_all_nth) by blast 
