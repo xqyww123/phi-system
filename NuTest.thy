@@ -2,6 +2,13 @@ theory NuTest
   imports NuSys NuInstructions
 begin
 
+proc add2: "(x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
+  requires [used]:"x < 100" and [used]:"y < 100"
+  \<bullet> x x y + +
+  finish
+
+thm add2_\<nu>proc
+
 abbreviation "FullRef N \<equiv> Ref N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
 abbreviation "Array N \<equiv> RefS N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
 
@@ -121,12 +128,7 @@ if A[used]:"x < 100" and [used]:"y < 100"
 thm add2_\<nu>proc
 
 
-proc add3: "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
-  if [used]:"x < 100" and [used]:"y < 100"
-  \<bullet> x x y + +
-  \<nu>have gg: "x < 200"  by auto
-  finish
-thm add3_\<nu>proc
+
 
 
 proc xxx: "(x \<tycolon> \<nat>[32] named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])" for x :: nat  if A:"x < 100" and B:"y < 100" \<medium_left_bracket>
