@@ -193,11 +193,18 @@ fun strip_tuple_lambda ret (Abs (v1,T1, Abs (v2,T2,_))) = rev ((v2,T2)::(v1,T1):
       = strip_tuple_lambda ret body
   | strip_tuple_lambda ret tm = raise TERM ("!!!!", [tm])
 val simp_attrs = map (Attrib.attribute @{context}) @{attributes [simp]}
+
+val has_schema = let open NuBasics in
+      can (dest_RepSet #> dest_nuTy #> #2
+      #> repeate (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
+      #> dest_binop "NuBasicAbstractors.Schema")
+                 end
 fun obtain_quick_pairs stat =
   let open NuBasics
     val meta = Proof.the_fact stat
     val (x,nu) = stack_of_meta meta |> hd |> dest_RepSet |> dest_nuTy
-    val vars = nu |> dest_binop "NuBasicAbstractors.Schema" |> #2
+    val vars = nu |> repeate (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
+                  |> dest_binop "NuBasicAbstractors.Schema" |> #2
                   |> strip_tuple_lambda []
     val decls = (map (fn (v,T) => (Binding.name v, SOME T, NoSyn)) vars)
     val (vars',_) = Proof.context_of stat |> Proof_Context.add_fixes decls
@@ -214,8 +221,7 @@ fun obtain_quick_pairs stat =
               Method.SIMPLE_METHOD' (Classical.fast_tac ctx)), Position.no_range))
   end
 fun obtain_quick_pairs_perhaps stat = let open NuBasics in
-  if Proof.the_fact stat |> stack_of_meta |> hd
-      |> can (dest_RepSet #> dest_nuTy)
+  if Proof.the_fact stat |> stack_of_meta |> @{print} |> hd |> has_schema
   then obtain_quick_pairs stat else stat end
 
 end;

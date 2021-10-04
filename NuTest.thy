@@ -2,10 +2,131 @@ theory NuTest
   imports NuSys
 begin
 
-ML \<open>Name_Space.full_name (Name_Space.naming_of (Context.Proof @{context})) @{binding aaa}\<close>
-ML \<open>NuProcessor.defined (Context.Proof @{context}) "resolve_share"\<close>
-ML \<open>NuProcessor.get_attr (Context.Proof @{context}) ("resolve_share11", Position.none) 0\<close>
-ML \<open>curry (op ::)\<close>
+lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = f x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = SchemaTag f x"
+  unfolding Premise_def Simplify_def SchemaTag_def by auto
+
+lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = f x y \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = (case_prod f) (x,y)"
+  unfolding Premise_def Simplify_def SchemaTag_def by auto
+
+proc AA: \<open>i \<tycolon> \<nat>[32]\<heavy_comma>  zp \<left_fish_tail> adr \<R_arr_tail> Gi 0 \<left_fish_tail> i \<tycolon> Ref \<nat>[32]\<close> \<longmapsto> \<open>i + j \<tycolon> \<nat>[32]\<close>
+  \<bullet> i $v while i j in \<open>(i, zp \<left_fish_tail> adr \<R_arr_tail> Gi 0 \<left_fish_tail> j)\<close> subj \<open>i < j\<close>   \<medium_left_bracket> \<bullet> \<up>\<rightarrow> (a,b,c) a c < a $b pr^2\<medium_right_bracket> 
+  \<medium_left_bracket> \<bullet> \<Longrightarrow> A[used] \<bullet> \<up> 1 - \<Down> pr \<medium_right_bracket> \<bullet>
+  \<bullet> cast E \<nu>choose a b where "some = (a,b)" by
+
+
+
+
+thm i_while_\<nu>compilation
+
+
+
+
+abbreviation "FullRef N \<equiv> Ref N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
+abbreviation "Array N \<equiv> RefS N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
+
+proc' [\<nu>overload pop]: \<open>R\<heavy_comma> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array N\<close> \<longmapsto> \<open>R\<heavy_comma> (seg |+ i + 1) \<R_arr_tail> tl xs \<tycolon> Array N\<heavy_comma> (seg |+ i) \<R_arr_tail> hd xs \<tycolon> FullRef N\<close>
+  requires [simp]: "xs \<noteq> []"
+  \<bullet> pop finish
+
+
+lemma [\<nu>overload pop]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs \<noteq> [] \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c i_pop_refs \<blangle> R\<heavy_comma> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array N
+      \<longmapsto>  R\<heavy_comma> (seg |+ i + 1) \<R_arr_tail> tl xs \<tycolon> Array N\<heavy_comma> (seg |+ i) \<R_arr_tail> hd xs \<tycolon> FullRef N \<brangle>" sorry
+
+abbreviation "permuted l1 l2 \<equiv> set l1 = set l2"
+
+declare pair_forall[simp]
+
+proc qsort: \<open> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<heavy_comma> n \<tycolon> \<nat>[32]\<close>
+  \<longmapsto> \<open>{ (seg |+ i) \<R_arr_tail> ys | ys. permuted xs ys \<and> sorted ys } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (Array \<nat>[32])\<close>
+  requires "length xs = n"
+  \<bullet> \<leftarrow> (v,n) pr recursion \<open>(\<lambda>x. case x of ((seg |+ i) \<R_arr_tail> xs, n) \<Rightarrow>
+        { (seg |+ i) \<R_arr_tail> ys | ys. permuted xs ys \<and> sorted ys })\<close> \<open>\<^bold>s\<^bold>o\<^bold>m\<^bold>e (Array \<nat>[32])\<close>
+  \<medium_left_bracket> (g_\<nu>proc) \<nu>obtain seg i xs n  where [simp]: "x' = ((seg |+ i) \<R_arr_tail> xs, n)"
+  by (metis memadr.exhaust object.exhaust old.prod.exhaust) \<bullet>
+  \<nu>obtain seg i xs n  where B[simp]: "x' = ((seg |+ i) \<R_arr_tail> xs, n)"
+by (metis memadr.exhaust object.exhaust old.prod.exhaust) \<bullet>
+  \<bullet> dpr \<rightarrow> (xs, n) n 0 = if 
+  \<nu>debug note g_\<nu>proc
+
+ML \<open>Locale.get_locales @{theory}\<close>
+ML \<open>val ctx = Locale.init "NuPrim.ceq_lrep" @{theory}
+val x = Assumption.all_prems_of ctx\<close>
+
+(* schematic_goal [simplified, simplified \<nu>post_construct]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (233 \<tycolon> \<nat>[32], ((copy_reg::((32 word register \<times> 32 word register), (32 word register \<times> 32 word register), (32 word) register, 32 word register) address \<Rightarrow> (32 word, nat) typing)) (address_left address_here)
++ (233 \<tycolon>  \<nat>[32])) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<blangle>((?Z1::(?'a::lrep) set) \<flower> \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r A = \<tort_lbrace> 16 \<tycolon> \<nat>[32]\<tort_rbrace> and_ty \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r B = \<tort_lbrace> 0 \<tycolon> \<nat>[32] \<tort_rbrace>) \<longmapsto> (?Z2::(?'b::lrep) set) \<brangle>"
+  by  (\<nu>resolve \<nu>intro (\<nu>intro'))  *)
+
+
+
+
+fun fib :: "nat \<Rightarrow> nat"
+  where "fib x = (if x = 0 then 1 else if x = 1 then 1 else fib (x-1) + fib (x-2))"
+
+proc fibx : "x \<tycolon> \<nat>[32]" \<longmapsto> "fib x \<tycolon> \<nat>\<^sup>r[32]"
+  \<bullet> x recursion fib \<open>\<nat>\<^sup>r[32]\<close> less_than \<medium_left_bracket> (g_\<nu>proc)
+  \<bullet> \<rightarrow> x x 0 = if \<medium_left_bracket> \<bullet> \<open>1\<tycolon>\<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> (c0[used])
+      \<bullet> x 1 = if \<medium_left_bracket> \<bullet> \<open>1\<tycolon>\<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> (c1[used]) \<bullet> x 1 - g \<rightarrow> f1 x 2 - g \<rightarrow> f2 f1 f2 + \<medium_right_bracket>
+  \<medium_right_bracket> \<medium_right_bracket>
+  finish
+
+  thm fibx_\<nu>proc
+
+fun ackman :: "(nat \<times> nat) \<Rightarrow> nat"
+  where "ackman (0,n) = Suc n"
+  | "ackman (Suc m, 0) = ackman (m,1)"
+  | "ackman (Suc m, Suc n) = ackman (m, ackman (Suc m, n))"
+
+thm begin_proc_ctx
+proc ackman : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "ackman (x,y) \<tycolon> \<nat>[32]" if cond: "ackman (x,y) < 2^32"
+  \<bullet> x y pr cast where \<open>{xy. ackman xy < 2^32}\<close> affirm using cond by simp
+  \<bullet> recursion ackman \<open>\<nat>[32]\<close> \<open>less_than <*lex*> less_than\<close> \<medium_left_bracket> (g_\<nu>proc)
+  \<nu>obtain m n where th1[simp]: "x' = (m,n)" by (cases x')
+  \<bullet> cast E \<Longrightarrow> th2[used] \<bullet> dpr \<rightarrow> (m,n) m 0 = if \<medium_left_bracket> \<bullet> n 1 + \<medium_right_bracket> \<medium_left_bracket> \<bullet> m 1 -
+  \<bullet> n 0 = if \<medium_left_bracket> \<bullet> 1 pr 
+  \<bullet> cast where \<open>{xy. ackman xy < 2^32}\<close> affirm apply (cases m) by auto
+  \<bullet> g \<medium_right_bracket> \<medium_left_bracket> \<bullet> m n 1 - pr
+\<bullet> cast where \<open>{xy. ackman xy < 2^32}\<close> affirm apply (cases m; cases n) by auto
+  note c
+  \<nu>debug 
+  note c
+
+end
+
+definition [simp]:"difference x y = (if x < y then y - x else x - y)"
+xproc diff : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(difference x y \<tycolon> \<nat>[32])"
+  \<bullet> x while \<open>{x. 0 < x}\<close> Id less_than \<medium_left_bracket> \<bullet> \<rightarrow> a a 0 a < pr \<medium_right_bracket> \<medium_left_bracket> \<bullet> cast E \<Longrightarrow> th1[used] \<bullet> 1 -  \<medium_right_bracket>
+  \<bullet> cast E \<nu>choose a where "some = a" by auto
+  \<bullet> \<Longrightarrow> th1[simp] drop_fact th1
+  \<bullet> drop x y < if \<medium_left_bracket> \<bullet> y x - \<medium_right_bracket> \<medium_left_bracket> \<bullet> x y - \<medium_right_bracket>
+  finish
+
+end
+
+proc add2 : "(( x \<tycolon> \<nat>[32]) named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
+  if "x < 100" and "y < 100"
+  \<nu>have x[used]: "x < 100 \<and> y < 100" using that by auto
+  \<bullet> x x y + < if \<medium_left_bracket>
+  \<nu>obtain z where c: "x < z" by auto \<medium_right_bracket>
+  finish
+
+
+proc add02: "(( x \<tycolon> \<nat>[32]) named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
+if A[used]:"x < 100" and [used]:"y < 100"
+    \<bullet> x x y + +
+    \<nu>obtain z where c: "x < z" by auto
+  finish
+
+thm add2_\<nu>proc
+
+
+proc add3: "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
+  if [used]:"x < 100" and [used]:"y < 100"
+  \<bullet> x x y + +
+  \<nu>have gg: "x < 200"  by auto
+  finish
+thm add3_\<nu>proc
+
 
 proc xxx: "(x \<tycolon> \<nat>[32] named x, y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])" for x :: nat  if A:"x < 100" and B:"y < 100" \<medium_left_bracket>
   \<bullet> \<rightarrow> (x,y) x y +

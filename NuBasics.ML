@@ -7,6 +7,8 @@ Basic supports for the nu-system.
 infix 0 MP MP_BY
 
 signature NU_BASICS = sig
+  val repeate : ('a -> 'a) -> 'a -> 'a
+
   val void_ty : typ
   val proc_ctx_ty : typ * typ -> typ
   val mk_stateT : typ -> typ
@@ -105,6 +107,7 @@ end
 structure NuBasics = struct
 open Thm Term HOLogic NuHelp
 
+fun repeate f x = repeate f (f x) handle TERM _ => x | THM _ => x
 fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
 val void_ty = Type(@{type_name "NuPrim.void"}, [])
 fun proc_ctx_ty (a,b) = Type(@{type_name "NuPrim.proc_ctx"}, [a,b])
@@ -187,7 +190,8 @@ val registers_of_specthm = registers_of_specthm_c #> term_of
 val dest_current_nu = Thm.prop_of #> perhaps (dest_SpecTop #> #1) #> perhaps dest_Trueprop
     #> dest_CurrentConstruction #> #2
 val stack_of_meta = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
-  (dest_current_nu #> dest_Proc_CtxTy #> #1 #> strip_binop_l "NuPrim.Stack_Delimiter")
+  (dest_current_nu #> repeate (dest_binop "NuPrim.AddtionTy" #> #1)
+    #> dest_Proc_CtxTy #> #1 #> strip_binop_l "NuPrim.Stack_Delimiter")
 
 val state_of_specthm = dest_SpecTop #> #1
 val current_block_var_c =

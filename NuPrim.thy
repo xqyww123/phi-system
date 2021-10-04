@@ -790,7 +790,7 @@ lemma clean_user_facts:
   section \<open>Supplementary structures for elementary functions\<close>
 
 definition "SchemaTag x = x"
-translations "x" <= "CONST SchemaTag x"
+(* translations "x" <= "CONST SchemaTag x" *)
 
   subsubsection \<open>Existential Nu-type\<close>
 
