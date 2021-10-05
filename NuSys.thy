@@ -3,7 +3,7 @@
 theory NuSys
   imports NuPrim NuLLReps
   keywords
-    "proc" "proc'" :: thy_goal_stmt
+    "proc" "proc'" "rec_proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "$" :: quasi_command
   and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<nu>choose2" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug"
           "\<nu>note" "\<nu>choose_quick" :: prf_decl % "proof"
@@ -90,12 +90,21 @@ val _ =
             -- requires_statement) >>
         (fn (((((b,arg),ret),fixes),includes),preconds) =>  
             (begin_proc_cmd false b arg ret fixes includes preconds)));
+
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc'\<close> "begin a procedure construction"
     ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
             -- requires_statement) >>
         (fn (((((b,arg),ret),fixes),includes),preconds) =>  
             (begin_proc_cmd true b arg ret fixes includes preconds)));
+
+val loop_variables = $$$ "var" |-- !!! vars;
+val _ =
+  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- loop_variables -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
+            -- requires_statement) >>
+        (fn ((((((b,arg),ret),lvars),fixes),includes),preconds) =>  
+            (begin_proc_cmd false b arg ret fixes includes preconds)));
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>finish\<close> "Finish the procedure construction"

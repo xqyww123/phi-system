@@ -16,6 +16,14 @@ signature NU_TOPLEVEL = sig
         -> (xstring * Position.T) list (*includes*)
         -> (Attrib.binding * (string * string list) list) list (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state
+  (* val begin_rec_proc_cmd : Attrib.binding 
+        -> xstring (*argument*)
+        -> xstring (*return value*)
+        -> (binding * string option * mixfix) list (*loop variables fixes*)
+        -> (binding * string option * mixfix) list (*for fixes*)
+        -> (xstring * Position.T) list (*includes*)
+        -> (Attrib.binding * (string * string list) list) list (*pre-conditions*)
+        -> bool -> Proof.context -> Proof.state *)
   val finish_proc_cmd : bool -> Proof.state -> Proof.context
   val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
@@ -99,29 +107,29 @@ fun mk_regctx ctx meta =
   else apply_proc_naive @{thm NuPrim.begin_proc_ctx} meta |> NuSys.accept_proc ctx
 val empty_facts_thm = @{thm NuPrim.empty_facts}
 
-fun prep_decls raw_vars ctxt =
+fun prep_decls prep_var raw_vars ctxt =
   let
-    val (vars, ctxt') = fold_map Proof_Context.read_var raw_vars ctxt
+    val (vars, ctxt') = fold_map prep_var raw_vars ctxt
     val (xs, ctxt'') = ctxt'
       |> Context_Position.set_visible false
       |> Proof_Context.add_fixes vars
       ||> Context_Position.restore_visible ctxt'
   in ((vars, xs), ctxt'') end
 
-fun begin_proc_cmd raw binding arg ret rawfixes includes preconds int ctx =
+fun gen_begin_proc prep_prop prep_term prep_typ prep_var
+      raw binding arg ret rawfixes includes preconds int ctx =
   let
-    val ((fixes,_), ctx_parse) = prep_decls rawfixes ctx
+    val ((fixes,_), ctx_parse) = prep_decls prep_var rawfixes ctx
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
     val preconds = preconds |> map (apfst (apsnd (map (Attrib.check_src ctx))))
-    val arg = Syntax.parse_term ctx_parse arg
-    val (arg, reg_names) = if raw then (arg,[]) else parse_arg arg
-    val ret = ret |> Syntax.parse_term ctx_parse |> (if raw then I else parse_ret)
+    val (arg, reg_names) = prep_term ctx_parse arg |> (if raw then rpair [] else parse_arg)
+    val ret = prep_term ctx_parse ret |> (if raw then I else parse_ret)
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctx)
-    val parse_term = Syntax.parse_term ctx_parse
-    val parse_prop = Syntax.parse_prop ctx_parse
-    val parse_typ = Syntax.parse_typ ctx_parse
+    val parse_term = prep_term ctx_parse
+    val parse_prop = prep_prop ctx_parse
+    val parse_typ = prep_typ ctx_parse
     (* val (goal,th) = begin_proc ctx_parse (arg,ret)  *)
     val goal = HOLogic.mk_Trueprop (Const ("NuPrim.Procedure", dummyT)
                   $ Var (v_proc_var, dummyT) $ arg $ ret)
@@ -161,6 +169,16 @@ fun begin_proc_cmd raw binding arg ret rawfixes includes preconds int ctx =
             SOME [Drule.mk_term (cterm_of ctx (Syntax.check_term
               (Proof_Context.set_mode Proof_Context.mode_schematic ctx) goal))]))
   end
+
+val begin_proc_cmd = gen_begin_proc Syntax.parse_prop Syntax.parse_term
+                        Syntax.parse_typ Proof_Context.read_var
+val begin_proc = gen_begin_proc (K I) (K I) (K I) Proof_Context.cert_var
+
+(* fun begin_rec_proc_cmd binding arg ret raw_loop_vars rawfixes includes preconds int ctx =
+  let
+    val stat = begin_proc_cmd false binding arg ret (raw_loop_vars @ rawfixes)
+                  includes preconds int ctx
+    val meta = Proof.the_fact stat *)
 
 
 fun RSNXX tha (i, thb) =

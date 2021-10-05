@@ -4,7 +4,7 @@ begin
 
 proc add2: "(x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
   requires [used]: "x < 100" and [used]:"y < 100"
-  \<bullet> x x y + +
+  \<bullet> x x +
   finish
 
 thm add2_\<nu>proc
@@ -18,10 +18,9 @@ lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bo
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = f x y \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = (case_prod f) (x,y)"
   unfolding Premise_def Simplify_def SchemaTag_def by auto
 
-proc AA: \<open>i \<tycolon> \<nat>[32]\<heavy_comma>  zp \<left_fish_tail> adr \<R_arr_tail> Gi 0 \<left_fish_tail> i \<tycolon> Ref \<nat>[32]\<close> \<longmapsto> \<open>i + j \<tycolon> \<nat>[32]\<close>
+proc AA: \<open>i \<tycolon> \<nat>[32]\<heavy_comma>  zp \<left_fish_tail> adr \<R_arr_tail> Gi 0 \<left_fish_tail> i \<tycolon> Ref \<nat>[32]\<close> \<longmapsto> \<open>i \<tycolon> \<nat>[32]\<close>
   \<bullet> i $v while i j in \<open>(i, zp \<left_fish_tail> adr \<R_arr_tail> Gi 0 \<left_fish_tail> j)\<close> subj \<open>i < j\<close>   \<medium_left_bracket> \<bullet> \<up>\<rightarrow> (a,b,c) a c < a $b pr^2\<medium_right_bracket> 
-  \<medium_left_bracket> \<bullet> \<Longrightarrow> A[used] \<bullet> \<up> 1 - \<Down> pr \<medium_right_bracket> \<bullet>
-  \<bullet> cast E \<nu>choose a b where "some = (a,b)" by
+  \<medium_left_bracket> \<bullet> \<Longrightarrow> A[used] \<bullet> \<up> 1 - \<Down> pr \<medium_right_bracket> \<bullet> aa, bb \<rightarrow> v
 
 
 
