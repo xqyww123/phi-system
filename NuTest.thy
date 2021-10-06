@@ -4,7 +4,7 @@ begin
 
 proc add2: "(x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
   requires [used]: "x < 100" and [used]:"y < 100"
-  \<bullet> x x +
+  \<bullet> x x y + +
   finish
 
 thm add2_\<nu>proc

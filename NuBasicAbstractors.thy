@@ -235,13 +235,48 @@ subsection \<open>Numbers\<close>
 
 \<nu>cast_overloads nat and int
 
-value \<open>sint (7::4 word)\<close>
+value \<open>sint (8::4 word)\<close>
+value \<open>uint (15::4 word)\<close>
 
-lemma [\<nu>cast_overload nat]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<int>['bits::len] \<longmapsto> nat x \<tycolon> \<nat>['bits]"
-  unfolding Cast_def Premise_def apply (simp add: lrep_exps) sorry
+lemma unat_nat: assumes a0:"0 < x" and a1:"sint (xa::('a::len) word) = x"
+  shows "unat xa = nat x"
+proof-
+  have a00:"0 < sint xa"
+    by (simp add: a0 a1)
+  then have "bit xa (LENGTH('a) - Suc 0)  = False"
+    using bit_last_iff by force  
+  moreover have "signed_take_bit (LENGTH('a) - Suc 0) xa = xa"
+    by (metis scast_id signed_scast_eq) 
+  moreover have "sint xa =  signed_take_bit (LENGTH('a) - Suc 0) (uint xa)"using sint_uint by auto
+  ultimately have "uint xa = sint xa"
+    using bit_uint_iff signed_take_bit_eq_if_positive uint_take_bit_eq 
+    by metis 
+  then show ?thesis using a0 a1 by auto
+qed
+  
+
+lemma [\<nu>cast_overload nat]: 
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<int>['bits::len] \<longmapsto> nat x \<tycolon> \<nat>['bits]"
+  unfolding Cast_def Premise_def apply (simp add: lrep_exps) using unat_nat  by auto
+
+lemma sint_int: assumes a0:"x < 2 ^ (LENGTH('bits::len) - Suc 0)" and a1:"unat (xa::'bits word) = x"
+  shows "sint xa = int x"
+proof-
+  have a00:"unat xa <  2 ^ (LENGTH('bits) - Suc 0)"
+    by (simp add: a0 a1)  
+  then have "bit xa (LENGTH('bits) - Suc 0)  = False"
+    apply transfer apply auto  
+    by (metis bit_take_bit_iff decr_length_less_iff linorder_not_le 
+        order_less_irrefl take_bit_int_eq_self_iff take_bit_nonnegative) 
+  moreover have "sint xa =  signed_take_bit (LENGTH('bits) - Suc 0) (uint xa)"using sint_uint by auto
+  ultimately have "uint xa = sint xa"
+    using bit_uint_iff signed_take_bit_eq_if_positive uint_take_bit_eq 
+    by (metis scast_id signed_of_int  word_of_int_uint)     
+  then show ?thesis using a0 a1 by auto
+qed
 
 lemma [\<nu>cast_overload int]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(LENGTH('bits) - 1) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<nat>['bits::len] \<longmapsto> int x \<tycolon> \<int>['bits]"
-  unfolding Cast_def Premise_def apply (simp add: lrep_exps)
+  unfolding Cast_def Premise_def apply (simp add: lrep_exps) using sint_int by auto
 
 (* section \<open>Others\<close>
 
@@ -273,7 +308,12 @@ ML \<open>@{term "29::32"}\<close>
 lemma [simplified]: "(10::3) = (0::3)"  by auto
   thm term_def *)
 
-schematic_goal [simplified]:"\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B\<heavy_comma>(x \<tycolon> C \<nuRefine> P)\<heavy_comma>D) \<longmapsto> (A\<heavy_comma>B\<heavy_comma>x \<tycolon> C\<heavy_comma>D) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e ?P" by (rule \<nu>intro)+
-schematic_goal "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B) \<longmapsto> (A\<heavy_comma>B) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e ?P" by (rule \<nu>intro)
+schematic_goal [simplified]:"\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B\<heavy_comma>(x \<tycolon> C \<nuRefine> P)\<heavy_comma>D) \<longmapsto> (A\<heavy_comma>B\<heavy_comma>x \<tycolon> C\<heavy_comma>D) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e ?P"       
+  by (rule \<nu>intro, auto)+
+
+schematic_goal "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B) \<longmapsto> (A\<heavy_comma>B) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e ?P"
+  by (auto intro: \<nu>intro)
+  
 
 end
+

@@ -267,12 +267,12 @@ subsubsection \<open>Essential functions\<close>
 
 \<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => NuProcedure.parser >> (fn binding => fn _ =>
     let open NuBasics NuSys
-val ctx = NuSys.load_specthm meta ctx
   val procs = NuProcedure.procedure_thm ctx binding
   val xa = hd procs |> Thm.concl_of |> auto_fusion_arity |> @{print}
   val meta =funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctx) meta
     handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'} #> accept_proc ctx) meta
 val meta = @{print} meta
+val ctx = NuSys.load_specthm meta ctx
     in NuSys.apply_procs ctx procs meta end)\<close>
 
 \<nu>processor cast 8900 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>

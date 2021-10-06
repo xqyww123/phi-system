@@ -150,21 +150,6 @@ proc' i_recursion: \<open>R\<heavy_comma> x \<tycolon> N\<close> \<longmapsto> \
   \<bullet> cast i_schema sch cast refine P recursion h M \<Longleftarrow>' g[intro_forall ?x' ?g] 
   finish 
 
-rec_proc AA: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32]\<close> var x y
-  includes show_more
-  \<bullet> pr
-  \<bullet> AA
-  \<nu>debug 
-  ML_val \<open>Thm.chyps_of @{thm AA_\<nu>proc} \<close>
-  note AA_\<nu>proc
-  \<medium_right_bracket>
-  finish
-   \<nu>debug
-   note AA_\<nu>proc
-  
-
-thm i_recursion_\<nu>proc
-
 proc' i'_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch)) \<flower> W\<close>
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P" and [THEN someI_ex, intro]: "\<exists>y. sch y = x" 
     and brC: \<open>(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> x1 \<tycolon> X <schema> sch) \<flower> W \<longmapsto> (R \<heavy_comma> { (y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X <schema> sch)) \<flower> W \<brangle>)\<close>
