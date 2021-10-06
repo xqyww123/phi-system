@@ -323,6 +323,21 @@ fun conversion ctx to from =
       |> Goal.conclude
   end
 
+val accept_proc_thm = @{thm NuPrim.accept_proc}
+fun accept_proc0 ctx wmeta =
+  wmeta |> disch_current_codeblock
+    |> mk_PropBlock 0 
+    |> (fn x => x RS accept_proc_thm)
+    |> (fn th => 
+        let val (vname,vty) = prems_of th |> hd |> dest_codeblock |> #1 |> dest_Var
+          val (name,_) = current_block_var wmeta |> dest_Free
+        in Thm.instantiate ([],
+            [((vname,vty), Thm.cterm_of ctx (Free (name,vty)))]) th end)
+    |> undisch
+fun accept_proc ctx meta = 
+  (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
+  then meta else auto_resolve_rule0 ctx meta) |> accept_proc0 ctx
+
 local open Tactical Tactic
 val apply_proc_thm = @{thm NuPrim.apply_proc} and apply_proc_conv_thm = @{thm NuPrim.apply_proc_conv}
 val vA = (("'a",0),["NuPrim.lrep"])
@@ -354,29 +369,16 @@ fun apply_procs_major ctx procs major =
                         |> Seq.map (Goal.protect 0)))
 fun apply_casts_major ctx procs major =
   apply_X_major ctx major procs
-    (resolve_N procs (major RS @{thm apply_cast}) 1
-      |> Seq.map (Goal.protect 0))
+    (resolve_N procs (
+      major RS @{thm apply_cast'} handle THM _ => major RS @{thm apply_cast}) 1
+    |> Seq.map (Goal.protect 0))
 end
 fun apply_Xs X ctx procs meta =
-  elim_SPEC meta |> apfst (X ctx procs) |> intro_SPEC
+  elim_SPEC meta |> apfst (X ctx procs #> @{print}) |> intro_SPEC
 val apply_procs = apply_Xs apply_procs_major
 fun apply_proc ctx = apply_procs ctx o single
 val apply_casts = apply_Xs apply_casts_major
 
-val accept_proc_thm = @{thm NuPrim.accept_proc}
-fun accept_proc0 ctx wmeta =
-  wmeta |> disch_current_codeblock
-    |> mk_PropBlock 0 
-    |> (fn x => x RS accept_proc_thm)
-    |> (fn th => 
-        let val (vname,vty) = prems_of th |> hd |> dest_codeblock |> #1 |> dest_Var
-          val (name,_) = current_block_var wmeta |> dest_Free
-        in Thm.instantiate ([],
-            [((vname,vty), Thm.cterm_of ctx (Free (name,vty)))]) th end)
-    |> undisch
-fun accept_proc ctx meta = 
-  (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
-  then meta else auto_resolve_rule0 ctx meta) |> accept_proc0 ctx
 
 
 fun set_param' ctx term major =

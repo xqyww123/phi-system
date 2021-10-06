@@ -16,14 +16,14 @@ signature NU_TOPLEVEL = sig
         -> (xstring * Position.T) list (*includes*)
         -> (Attrib.binding * (string * string list) list) list (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state
-  (* val begin_rec_proc_cmd : Attrib.binding 
+  val begin_rec_proc_cmd : Attrib.binding 
         -> xstring (*argument*)
         -> xstring (*return value*)
         -> (binding * string option * mixfix) list (*loop variables fixes*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
-        -> (Attrib.binding * (string * string list) list) list (*pre-conditions*)
-        -> bool -> Proof.context -> Proof.state *)
+        -> xstring option (*pre-conditions*)
+        -> bool -> Proof.context -> Proof.state
   val finish_proc_cmd : bool -> Proof.state -> Proof.context
   val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
@@ -88,7 +88,7 @@ val top_blk_name = "L\<nu>0_top_block"
 
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
 
-fun begin_proc ctx (arg,ret) =
+(* fun begin_proc ctx (arg,ret) =
   let
     (* val (arg,ret) = mk_raw_prod (arg,ret) |> Syntax.check_term ctx |> dest_prod *)
     val (argT,retT) = apply2 (type_of #> dest_Type #> #2 #> hd) (arg,ret)
@@ -100,7 +100,7 @@ fun begin_proc ctx (arg,ret) =
     val th = arg |> Thm.cterm_of ctx |> start_proc ctx top_blk_name
   in
     (goal,th)
-  end
+  end *)
 
 fun mk_regctx ctx meta =
   if can (dest_current_nu #> dest_Proc_CtxTy) meta then meta
@@ -174,11 +174,6 @@ val begin_proc_cmd = gen_begin_proc Syntax.parse_prop Syntax.parse_term
                         Syntax.parse_typ Proof_Context.read_var
 val begin_proc = gen_begin_proc (K I) (K I) (K I) Proof_Context.cert_var
 
-(* fun begin_rec_proc_cmd binding arg ret raw_loop_vars rawfixes includes preconds int ctx =
-  let
-    val stat = begin_proc_cmd false binding arg ret (raw_loop_vars @ rawfixes)
-                  includes preconds int ctx
-    val meta = Proof.the_fact stat *)
 
 
 fun RSNXX tha (i, thb) =
@@ -196,6 +191,10 @@ fun gen_finish_proc prep_specthm qed int stat =
     val ctx = Proof.context_of stat
     val goal = Proof_Context.get_thm ctx "\<nu>thesis" |> Drule.dest_term
     val (_,_,desired_nu) = dest_procedure_c goal
+    (* quick fix: *)
+    val xa = term_of desired_nu |> auto_fusion_arity
+    val meta = funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctx) meta
+      handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'} #> accept_proc ctx) meta
     val meta = meta |> prep_specthm ctx
     val meta = if not (can dest_Proc_CtxTy (term_of desired_nu))
                   andalso can dest_Proc_CtxTy (dest_current_nu meta)
@@ -213,8 +212,14 @@ fun gen_finish_proc prep_specthm qed int stat =
       |> qed (SOME (end_tac, Position.no_range), false)
   end
 in
-val finish_proc_cmd = gen_finish_proc (K I) Proof.global_qed
 val end_block_cmd = gen_finish_proc NuRegisters.delete_locale Proof.local_qed
+
+fun gen_finish_proc' prep_specthm qed int stat =
+  let val meta = Proof.the_fact stat
+  in if length (codeblocks_of meta) > 1 then 
+      gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
+    else gen_finish_proc prep_specthm qed int stat end
+val finish_proc_cmd = gen_finish_proc' (K I) Proof.global_qed
 end
 
 fun process_cmd toks stat =
@@ -308,7 +313,7 @@ val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
 val attr_used = map (Attrib.attribute @{context}) @{attributes [used]}
 val elim_premise_tag = perhaps (mk_Trueprop o dest_premise_tag)
 in
-fun begin_block_cmd bindings int stat =
+fun gen_begin_block prep_attr bindings int stat =
   let open Proof
     val specthm = the_fact stat
     val stat = stat |> begin_block
@@ -342,20 +347,21 @@ fun begin_block_cmd bindings int stat =
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
     val bindings =
-      ((map (apsnd (map (Attrib.attribute_cmd ctx))) bindings)
+      ((map (apsnd (map (prep_attr ctx))) bindings)
           @ (List.tabulate (delta, K (Binding.empty, attr_used))))
         |> map (apsnd (fn x => elim_premise @ x))
+    val _ = map (Thm.cterm_of ctx) prems |> @{print}
   in
     stat
       |> internal_goal (print_results int) Proof_Context.mode_schematic false 
           "\<nu>block" NONE after_qed []
           (bindings ~~ (map (single o rpair []) prems))
-          [(Binding.empty_atts, [(goal,[])])] |> #2
+          [(Binding.empty_atts, [(goal |> @{print},[])])] |> #2
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "unreachable"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-      |> (fn stat => let val ctx = Proof.context_of stat 
+      |> (fn stat => let val ctx = Proof.context_of stat
             val next_specthm = start_proc ctx level_prefix (cterm_of ctx arg)
               |> rpair (elim_SPEC specthm |> #2)
               |> intro_SPEC |> mk_regctx ctx |> NuRegisters.new_locale ctx
@@ -366,6 +372,70 @@ fun begin_block_cmd bindings int stat =
           )
       |> NuObtain.obtain_quick_pairs_perhaps
   end
+val begin_block_cmd = gen_begin_block Attrib.attribute_cmd
+val begin_block = gen_begin_block (K I)
 end
 
+
+fun gen_begin_rec_proc prep_term prep_var
+  binding arg ret raw_loop_vars rawfixes includes precond int ctx =
+  let
+    val pr_proc = @{thm pr_auto_schema'}
+    val dpr_proc = @{thm dpr_auto_schema'}
+    val i_rec_proc = Proof_Context.get_thm ctx "NuInstructions.i_recursion_\<nu>proc"
+
+    val ((fixes,_), ctx_parse) = prep_decls prep_var rawfixes ctx
+    val ((loop_vars, loop_vars_names'), ctx_parse) =
+          prep_decls prep_var raw_loop_vars ctx_parse
+    val precond = Option.map (prep_term ctx_parse) precond
+
+    val arg = prep_term ctx_parse arg
+    val ret = prep_term ctx_parse ret
+    val (_,args) = arg
+      |> strip_binop_l "NuPrim.Stack_Delimiter" |> map pass_name |> split_list
+    val rets = ret |> strip_binop_l "NuPrim.Stack_Delimiter"
+    val arg_arity = length args
+    val (arg, _) = parse_arg arg
+    val ret = parse_ret ret
+    val ret_nu = map (perhaps dest_RepSet #> dest_nuTy #> #2) rets
+          |> list_mk_binop_r @{const_name AutoFusion}
+
+
+    val precond' = case precond of SOME x =>
+          [((Binding.name "precondition",[]),[(mk_Trueprop x,[])])] | _ => []
+    val stat = begin_proc true binding arg ret (loop_vars @ fixes)
+                  includes precond' int ctx
+    val ctx = Proof.context_of stat
+
+    val vars = (map (fn (x,_,_) => Binding.name_of x) loop_vars) ~~ loop_vars_names'
+    val schema = map (perhaps dest_RepSet #> dest_nuTy #> #1) args |> rev
+          |> list_mk_binop_r "Product_Type.Pair"
+          |> tuple_abs vars
+    val cond = case precond of SOME c =>
+            tuple_abs vars c |> mk_monop @{const_name Set.Collect}
+                | NONE => Const (@{const_name Orderings.top_class.top}, dummyT) (* it's term UNIV *)
+    val rec_func = map (perhaps dest_RepSet #> dest_nuTy #> #1) rets |> rev
+          |> list_mk_binop_r "Product_Type.Pair"
+          |> tuple_abs vars
+    val meta = Proof.the_fact stat
+          |> funpow (arg_arity-1)
+              (NuBasics.apply_proc_naive pr_proc #> NuSys.accept_proc ctx)
+          |> NuBasics.apply_proc_naive i_rec_proc
+          |> NuSys.set_param ctx ret_nu
+          |> NuSys.set_param ctx schema
+          |> NuSys.set_param ctx cond
+          |> NuSys.set_param ctx rec_func
+          |> NuSys.auto_resolve_rule NONE [] ctx
+          |> (fn meta =>
+              case precond of SOME _ =>
+                elim_SPEC meta |> apfst (fn major =>
+                    (Proof_Context.get_thm ctx "precondition" RS @{thm StructuralTag_I}) RS major)
+                  |> intro_SPEC
+              | NONE => meta)
+  in
+    stat |> Proof.set_facts[meta]
+      |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>proc", [])] false 
+  end
+
+val begin_rec_proc_cmd = gen_begin_rec_proc Syntax.parse_term Proof_Context.read_var
 end

@@ -48,22 +48,12 @@ theorem revert_\<nu>proc: "\<nu>Share N P sh \<Longrightarrow> \<nu>ShrIdentical
 
 subsubsection \<open>tup & det\<close>
 
-definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
-  where "op_pair x = (case x of (a,b,r) \<Rightarrow> StatOn ((b,a),r))"
-definition op_depair :: "(('b::lrep) \<times> ('a::lrep)) \<times> ('r::stack) \<Rightarrow> ('a \<times> 'b \<times> 'r) state"
-  where "op_depair x = (case x of ((b,a),r) \<Rightarrow> StatOn (a,b,r))"
-declare op_pair_def[\<nu>instr] op_depair_def[\<nu>instr]
 
-theorem pr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
-theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
 
-lemma pr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> SchemaTag (A \<nuFusion> B) \<flower> W \<brangle>"
-  unfolding SchemaTag_def by (rule call) (rule pr_\<nu>proc)
-lemma dpr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> SchemaTag (A \<nuFusion> B) \<flower> W \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<brangle>"
-  unfolding SchemaTag_def by (rule call) (rule dpr_\<nu>proc)
-
-\<nu>processor pair_auto_dest 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> SchemaTag (A \<nuFusion> B) \<flower> W)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+\<nu>processor pair_auto_dest 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<flower> W)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   meta |> NuBasics.apply_proc_naive @{thm dpr_auto_schema} |> NuSys.accept_proc ctx)\<close>
+\<nu>processor pair_auto_dest' 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B))\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+  meta |> NuBasics.apply_proc_naive @{thm dpr_auto_schema'} |> NuSys.accept_proc ctx)\<close>
 
 definition op_crash :: "('r::lrep) \<Rightarrow> ('x::lrep) state" where "op_crash r = SNeg"
 lemma op_crash:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
@@ -111,21 +101,17 @@ proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<lo
     and brB: \<open>(\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X <schema> sch <where'> P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch)) \<flower> W \<brangle>)\<close>
   \<bullet> cast i_schema sch  i_while_raw P \<Longleftarrow> brC \<Longleftarrow> brB[simplified SchemaCondition_simp] finish
 
+ML \<open>@{term "(a,b)"}\<close>
 \<nu>processor while 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close> \<open>fn ctx => fn meta => let open Parse Scan NuHelp NuBasics in
   $$$ "while" |-- vars -- option ($$$ "in" |-- term) -- ($$$ "subj" |-- term) >> (fn ((vars, schema), subj) => fn _ =>
-  let val (vars',ctx) = Proof_Context.add_fixes (map (fn (a,b,c) => (a,Option.map (Syntax.read_typ ctx) b,c)) vars) ctx
+  let open NuHelp
+    val (vars',ctx) = Proof_Context.add_fixes (map (fn (a,b,c) => (a,Option.map (Syntax.read_typ ctx) b,c)) vars) ctx
     val vars = (map (fn (x,_,_) => Binding.name_of x) vars) ~~ vars'
-    fun absfree ((a',a), T) body = Abs (a', T, abstract_over (Free (a, T), body));
-    val prodconst = Const (\<^const_name>\<open>case_prod\<close>, dummyT)
-    fun caseprod (tm as (Abs (_,_, Abs (_,_, _)))) = prodconst $ tm
-        | caseprod (tm as (Abs (_,_, Const (\<^const_name>\<open>case_prod\<close>, _) $ _))) = prodconst $ tm
-        | caseprod tm = tm
-    fun lambda_close tm = fold_rev (caseprod oo absfree o rpair dummyT) vars tm
     val (arity,schema) = case schema of SOME sch =>
                     let val raw = Syntax.parse_term ctx sch
-                    in (length (strip_binop_r \<^const_name>\<open>Pair\<close> raw), lambda_close raw) end
+                    in (length (strip_binop_r \<^const_name>\<open>Pair\<close> raw), tuple_abs vars raw) end
                 | _ => (length vars, Const (\<^const_name>\<open>id\<close>, dummyT))
-    val subj = lambda_close (Syntax.parse_term ctx subj) |> mk_monop \<^const_name>\<open>Collect\<close>
+    val subj = tuple_abs vars (Syntax.parse_term ctx subj) |> mk_monop \<^const_name>\<open>Collect\<close>
     val apply_pr = apply_proc_naive @{thm pr_auto_schema} #> NuSys.accept_proc ctx
   in meta |> funpow (arity-1) apply_pr |> apply_proc_naive @{thm i_while_\<nu>proc}
           |> NuSys.set_param ctx schema |> NuSys.set_param ctx subj
@@ -139,8 +125,8 @@ consts op_recursion_WF :: " 'a itself \<times> 'b itself \<Rightarrow>
 specification ("op_recursion_WF")
   recursion_WF_\<nu>proc[simplified PremiseHOL ParamHOL]:
   "ParamHOL h \<Longrightarrow> ParamHOL M \<Longrightarrow> ParamHOL WF \<Longrightarrow> PremiseHOL (wf WF) \<Longrightarrow>
-  (\<And>x' g. (\<And>x''. PremiseHOL ((x'',x') \<in> WF) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> h x'' \<tycolon> M \<brangle>)
-      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void\<heavy_comma> h x' \<tycolon> M \<brangle>)
+  (\<And>x' g. (\<And>x''. PremiseHOL ((x'',x') \<in> WF) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> h x'' \<tycolon> M \<brangle>)
+      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x' \<tycolon> M \<brangle>)
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion_WF (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
   apply (rule exI) using op_crash by auto
 
@@ -148,13 +134,36 @@ consts op_recursion :: " 'a itself \<times> 'b itself \<Rightarrow>
     ((('u::lrep) \<times> void \<Rightarrow> (('v::lrep) \<times> void) state) \<Rightarrow> ('u \<times> void \<Rightarrow> ('v \<times> void) state)) \<Rightarrow> ('u \<times> ('r::stack) \<Rightarrow> ('v \<times> 'r) state) "
 specification ("op_recursion")
   recursion_\<nu>proc[simplified PremiseHOL ParamHOL]:
-  "ParamHOL h \<Longrightarrow> ParamHOL M \<Longrightarrow>
-  (\<And>x' g. (\<And>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma> h x'' \<tycolon> M \<brangle>)
-      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D Void \<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D Void\<heavy_comma> h x' \<tycolon> M \<brangle>)
+  "ParamHOL h \<Longrightarrow> ParamHOL M\<Longrightarrow>
+  (\<And>x' g. (\<And>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x'' \<tycolon> M \<brangle>)
+      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x' \<tycolon> M \<brangle>)
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
   apply (rule exI) using op_crash by auto
 
-proc i_recursion: \<open>\<close>
+proc' i_recursion: \<open>R\<heavy_comma> x \<tycolon> N\<close> \<longmapsto> \<open>R\<heavy_comma> h y \<tycolon> M\<close>
+  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m M" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m h"
+    and [simplified StructuralTag_def, intro]: "<Structural> sch y = x"
+    and [simplified StructuralTag_def, intro]: "<Structural> y \<in> P"
+    and g[simplified SchemaCondition_def]:
+      \<open>(\<And>x' g. (\<And>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> x'' \<tycolon>  N <schema> sch <where> P \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x'' \<tycolon> M \<brangle>)
+        \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma>  x' \<tycolon> N <schema> sch <where'> P \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x' \<tycolon> M \<brangle>)\<close>
+  \<bullet> cast i_schema sch cast refine P recursion h M \<Longleftarrow>' g[intro_forall ?x' ?g] 
+  finish 
+
+rec_proc AA: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32]\<close> var x y
+  includes show_more
+  \<bullet> pr
+  \<bullet> AA
+  \<nu>debug 
+  ML_val \<open>Thm.chyps_of @{thm AA_\<nu>proc} \<close>
+  note AA_\<nu>proc
+  \<medium_right_bracket>
+  finish
+   \<nu>debug
+   note AA_\<nu>proc
+  
+
+thm i_recursion_\<nu>proc
 
 proc' i'_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch)) \<flower> W\<close>
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P" and [THEN someI_ex, intro]: "\<exists>y. sch y = x" 

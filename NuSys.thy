@@ -4,7 +4,7 @@ theory NuSys
   imports NuPrim NuLLReps
   keywords
     "proc" "proc'" "rec_proc" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "$" :: quasi_command
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" :: quasi_command
   and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<nu>choose2" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug"
           "\<nu>note" "\<nu>choose_quick" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
@@ -35,6 +35,38 @@ thm final_proc_rewrite2
 definition  FailedPremise :: "bool \<Rightarrow> prop" where "FailedPremise \<equiv> Premise"
 lemma FailedPremise_I: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP FailedPremise P" unfolding FailedPremise_def .
 lemma FailedPremise_D: "PROP FailedPremise P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding FailedPremise_def .
+
+subsection \<open>Structural Pairs\<close>
+
+definition StructuralTag ("<Structural> _" [10] 9) where "StructuralTag \<equiv> Trueprop"
+lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def .
+
+lemma [\<nu>intro]: "<Structural> f x y = (a,b) \<Longrightarrow> <Structural> case_prod f (x,y) = (a,b)"
+  unfolding StructuralTag_def by simp
+lemma [\<nu>intro0]: "<Structural> x = a \<Longrightarrow> <Structural> y = b \<Longrightarrow> <Structural> (x,y) = (a,b) "
+  unfolding StructuralTag_def Premise_def by simp
+lemma [\<nu>intro0]: "<Structural> x = x" unfolding StructuralTag_def by fast
+lemma [\<nu>intro]: "<Structural> x \<in> UNIV" unfolding StructuralTag_def by fast
+lemma [\<nu>intro]: "<Structural> P x \<Longrightarrow> <Structural> x \<in> Collect P" unfolding StructuralTag_def by fast
+lemma [\<nu>intro]: "<Structural> P x y \<Longrightarrow> <Structural> case_prod P (x,y)" unfolding StructuralTag_def by fast
+
+definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
+  where "op_pair x = (case x of (a,b,r) \<Rightarrow> StatOn ((b,a),r))"
+definition op_depair :: "(('b::lrep) \<times> ('a::lrep)) \<times> ('r::stack) \<Rightarrow> ('a \<times> 'b \<times> 'r) state"
+  where "op_depair x = (case x of ((b,a),r) \<Rightarrow> StatOn (a,b,r))"
+(* declare op_pair_def[\<nu>instr] op_depair_def[\<nu>instr] *)
+
+theorem pr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
+theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
+
+lemma pr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<flower> W \<brangle>"
+  unfolding AutoFusion_def by (rule call) (rule pr_\<nu>proc)
+lemma dpr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<flower> W \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<brangle>"
+  unfolding AutoFusion_def by (rule call) (rule dpr_\<nu>proc)
+lemma pr_auto_schema': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<brangle>"
+  unfolding AutoFusion_def by (rule pr_\<nu>proc)
+lemma dpr_auto_schema': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>"
+  unfolding AutoFusion_def by (rule dpr_\<nu>proc)
 
 section \<open>Main implementation of the system\<close>
 
@@ -84,6 +116,7 @@ val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>exty_simproc\<c
   (Parse.binding >> NuExTyp.set_simproc_cmd)
 
 val requires_statement = Scan.optional (Parse.$$$ "requires" |-- Parse.!!! Parse_Spec.statement) [];
+val requires_opt1 = Scan.option (Parse.$$$ "requires" |-- Parse.term);
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
     ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
@@ -102,9 +135,9 @@ val loop_variables = $$$ "var" |-- !!! vars;
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
     ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- loop_variables -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
-            -- requires_statement) >>
+            -- requires_opt1) >>
         (fn ((((((b,arg),ret),lvars),fixes),includes),preconds) =>  
-            (begin_proc_cmd false b arg ret fixes includes preconds)));
+            (begin_rec_proc_cmd b arg ret lvars fixes includes preconds)));
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>finish\<close> "Finish the procedure construction"
@@ -198,6 +231,14 @@ val _ =
 end
 \<close>
 
+attribute_setup intro_forall = \<open>Scan.lift (Scan.repeat Args.var) >> (fn tms =>
+  Thm.rule_attribute [] (fn ctx => fn th => 
+    let open Thm
+    val vs = add_vars th []
+    val foralls = map (fn tm => case find_first (fn v => #1 (dest_Var (term_of v)) = tm) vs
+                  of SOME y => y | _ => error (#1 tm ^ " is not a var ")) tms
+    in Drule.forall_intr_list foralls th end)) \<close>
+
 attribute_setup \<nu>overload = \<open>Scan.lift (Parse.and_list1 NuProcedure.parser) >> (fn bindings => 
   Thm.declaration_attribute (fn th => fold (NuProcedure.overload th) bindings))\<close>
 attribute_setup \<nu>cast_overload = \<open>Scan.lift (Parse.and_list1 NuProcedure.parser) >> (fn bindings => 
@@ -225,8 +266,14 @@ subsubsection \<open>Essential functions\<close>
   meta RS @{thm move_fact_to_star1} handle THM _ => meta RS @{thm move_fact_to_star2})\<close>
 
 \<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => NuProcedure.parser >> (fn binding => fn _ =>
-    let val ctx = NuSys.load_specthm meta ctx
-    in NuSys.apply_procs ctx (NuProcedure.procedure_thm ctx binding) meta end)\<close>
+    let open NuBasics NuSys
+val ctx = NuSys.load_specthm meta ctx
+  val procs = NuProcedure.procedure_thm ctx binding
+  val xa = hd procs |> Thm.concl_of |> auto_fusion_arity |> @{print}
+  val meta =funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctx) meta
+    handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'} #> accept_proc ctx) meta
+val meta = @{print} meta
+    in NuSys.apply_procs ctx procs meta end)\<close>
 
 \<nu>processor cast 8900 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>
   \<open> fn ctx => fn meta => (Parse.$$$ "cast" |-- (Parse.$$$ "(" |-- Parse.list NuProcedure.parser --| Parse.$$$ ")" || (NuProcedure.parser >> single)))
@@ -247,6 +294,15 @@ subsubsection \<open>Essential functions\<close>
     in elim_SPEC meta |> apfst (fn major =>
     case Thm.biresolution NONE false (ths |> map (pair false) |> @{print}) 1 major |> Seq.pull
       of SOME (th, _) => th | _ => raise THM ("RSN: no unifiers", 1, major::ths)) |> intro_SPEC end)\<close>
+
+\<nu>processor rule_by_COMP 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close>
+  \<open>fn ctx => fn meta => (Parse.$$$ "\<Longleftarrow>'" |-- NuProcedure.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
+    let open NuBasics
+    val ctx = NuSys.load_specthm meta ctx
+    val attrs = map (Attrib.attribute_cmd ctx o Attrib.check_src ctx) attrs
+    val [th] = Proof_Context.get_fact ctx (Facts.Named (name, NONE)) 
+    val ([th],ctx) = fold_map (Thm.proof_attributes attrs) [th] ctx
+    in elim_SPEC meta |> apfst (fn major => th COMP major) |> intro_SPEC end)\<close>
 
 \<nu>processor set_\<nu>current 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   raise Bypass (SOME (meta RS @{thm set_\<nu>current})))\<close>

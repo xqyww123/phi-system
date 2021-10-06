@@ -103,6 +103,7 @@ signature NU_BASICS = sig
   val intro_param_name : string -> thm
 
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
+  val auto_fusion_arity : term -> int
 end
 structure NuBasics = struct
 open Thm Term HOLogic NuHelp
@@ -417,4 +418,13 @@ val dest_Cast_c = dest_triop_c @{const_name "NuPrim.Cast"}
 
 val thm_apply_proc = @{thm apply_proc}
 fun apply_proc_naive proc = map_major (fn major => proc RS (major RS thm_apply_proc))
+
+val auto_fusion_arity =
+  Logic.strip_assums_concl #> perhaps dest_Trueprop #> perhaps (dest_procedure #> #2)
+  #> perhaps (dest_binop "NuPrim.Stack_Delimiter" #> #2)
+  #> perhaps dest_RepSet #> perhaps (dest_nuTy #> #2)
+  #> repeate (dest_binop "NuBasicAbstractors.NuRefine" #> #1)
+  #> repeate (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
+  #> repeate (dest_binop "NuBasicAbstractors.Schema" #> #1)
+  #> strip_binop_r "NuLLReps.AutoFusion" #> length
 end
