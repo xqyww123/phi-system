@@ -487,9 +487,9 @@ lemma [dest]: "Inhabited (\<S_S> T) \<Longrightarrow> Inhabited T" unfolding Inh
 
 definition Procedure :: "('a \<Rightarrow> 'b state) \<Rightarrow> ('a::lrep) set \<Rightarrow> ('b::lrep) set \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
   where [\<nu>def]:"Procedure f T U \<longleftrightarrow> (\<forall>a. a \<in> T \<longrightarrow> f a \<in> \<S> U)"
-definition Map :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<Rightarrow> 'b) set " (infix "\<mapsto>" 60) where "A \<mapsto> B = {f. \<forall>a. a \<in> A \<longrightarrow> f a \<in> B }"
+definition Map :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<Rightarrow> 'b) set " where "Map A B = {f. \<forall>a. a \<in> A \<longrightarrow> f a \<in> B }"
 abbreviation Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<blangle>(2 _/ \<longmapsto> _ )\<brangle>)" [101,2,2] 100)
-  where "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle> \<equiv> f \<in> T \<mapsto> U"
+  where "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle> \<equiv> f \<in> Map T U"
 lemma [\<nu>def]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> A\<longmapsto> B\<brangle> \<longleftrightarrow> (\<forall>a. a \<in> A \<longrightarrow> f a \<in> B)" unfolding Map_def by auto
 lemma [intro]: "(\<And>x. x \<in> T \<Longrightarrow> f x \<in> U) \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle>" unfolding \<nu>def by auto
 lemma [simp]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> \<S> U \<brangle> \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> U \<brangle>" unfolding \<nu>def by fast 
@@ -537,7 +537,7 @@ definition address_right :: "('a,'b,'x,'y) address \<Rightarrow> ('l \<times> 'a
 definition AdrGet :: " ('a,'b,'x,'y) address \<Rightarrow> 'x set \<Rightarrow> 'a set \<Rightarrow> bool" ("(2\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s _/ \<blangle> _ \<^bold>@ _ \<brangle>)" [101,4,4] 100)
   where [\<nu>address_def]: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> X \<^bold>@ A \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_at adr \<blangle> A \<longmapsto> X \<brangle>"
 definition AdrMap :: " ('a,'b,'x,'y) address \<Rightarrow> 'x set \<Rightarrow> 'a set \<Rightarrow> 'y set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s _/ \<blangle> _ \<^bold>@ _ \<longmapsto> _ \<^bold>@ _ \<brangle>)" [101,4,4,4,4] 100)
-  where [\<nu>address_def]: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_at adr \<blangle> A \<longmapsto> X \<brangle> \<and> \<^bold>m\<^bold>a\<^bold>p map_at adr \<blangle> X \<mapsto> Y \<longmapsto> A \<mapsto> B \<brangle>"
+  where [\<nu>address_def]: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s adr \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_at adr \<blangle> A \<longmapsto> X \<brangle> \<and> \<^bold>m\<^bold>a\<^bold>p map_at adr \<blangle> Map X Y \<longmapsto> Map A B \<brangle>"
 
 lemma address_here_getter[\<nu>intro]: "\<^bold>a\<^bold>d\<^bold>d\<^bold>r\<^bold>e\<^bold>s\<^bold>s address_here \<blangle> A \<^bold>@ A \<brangle>"
   unfolding \<nu>address_def  address_here_def by auto

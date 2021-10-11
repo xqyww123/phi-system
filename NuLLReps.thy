@@ -107,7 +107,7 @@ end
 
 section \<open>Identifier\<close>
 
-datatype identifier = idhypen identifier nat (infixl "\<hyphen>" 64) | ID_MEM | ID_CONST string
+datatype identifier = idhypen identifier int (infixl "\<hyphen>" 64) | ID_MEM | ID_CONST string
   \<comment> \<open>A tree-like structure allowing infinite sub identifier space, like folders where infinite sub-folders can be allocated\<close>
 
 definition alloc_identifier :: "identifier \<Rightarrow> identifier"
@@ -274,23 +274,40 @@ lemma [\<nu>intro]: "\<nu>Disposable S" for S :: "('spc0::len0) memptr set" unfo
 
 subsection \<open>\<nu>-abstraction\<close>
 
-subsubsection \<open>Pointer\<close>
+subsubsection \<open>RawPointer\<close>
 
-definition FreePtr' :: "('spc::len0) itself \<Rightarrow> ('spc memptr, memadr owning) nu"
-  where "FreePtr' _ p x = (case p of (memptr i) \<Rightarrow> (i = x) \<and> pred_owning (within_seg 0) i)"
-syntax "_FreePtr'_" :: "type \<Rightarrow> logic" (\<open>FreePtr'[_']\<close>)
-translations "FreePtr['x]" == "CONST FreePtr' (TYPE('x))" 
-abbreviation "FreePtr \<equiv> FreePtr[0]"
+definition RawPtr' :: "('spc::len0) itself \<Rightarrow> ('spc memptr, memadr owning) nu"
+  where "RawPtr' _ p x = (case p of (memptr i) \<Rightarrow> i = x)"
+syntax "_RawPtr'_" :: "type \<Rightarrow> logic" (\<open>RawPtr'[_']\<close>)
+translations "RawPtr['x]" == "CONST RawPtr' (TYPE('x))" 
+abbreviation "RawPtr \<equiv> RawPtr[0]"
 
-lemma [simp]: "memptr i \<nuLinkL> FreePtr['spc::len0] \<nuLinkR> i' \<longleftrightarrow> (i = i') \<and> pred_owning (within_seg 0) i'" unfolding FreePtr'_def Refining_ex by auto
-lemma [elim,\<nu>elim]: "z \<left_fish_tail> i \<ratio> FreePtr['spc::len0] \<Longrightarrow> (within_seg 0 i \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+lemma [simp]: "memptr i \<nuLinkL> RawPtr['spc::len0] \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding RawPtr'_def Refining_ex by auto
+lemma [elim,\<nu>elim]: "z \<left_fish_tail> i \<ratio> RawPtr['spc::len0] \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>CEqual FreePtr['spc::len0] (rel1_owning (\<lambda>x y. True)) (=)" unfolding \<nu>CEqual_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Share FreePtr['spc::len0] (\<lambda>x. True) share" unfolding \<nu>Share_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>ShrIdentical FreePtr['spc::len0] (=)" unfolding \<nu>ShrIdentical_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Deprive FreePtr['spc::len0] dpriv" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Ownership FreePtr['spc::len0] ownership" unfolding \<nu>Ownership_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Zero FreePtr['spc::len0] \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>Share RawPtr['spc::len0] (\<lambda>x. True) share" unfolding \<nu>Share_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>ShrIdentical RawPtr['spc::len0] (=)" unfolding \<nu>ShrIdentical_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Deprive RawPtr['spc::len0] dpriv" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Ownership RawPtr['spc::len0] ownership" unfolding \<nu>Ownership_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Zero RawPtr['spc::len0] \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+
+subsubsection \<open>ComparablePointer\<close>
+
+definition ComparablePtr' :: "('spc::len0) itself \<Rightarrow> ('spc memptr, memadr owning) nu"
+  where "ComparablePtr' _ p x = (case p of (memptr i) \<Rightarrow> (i = x) \<and> pred_owning (within_seg 0) i)"
+syntax "_ComparablePtr'_" :: "type \<Rightarrow> logic" (\<open>ComparablePtr'[_']\<close>)
+translations "ComparablePtr['x]" == "CONST ComparablePtr' (TYPE('x))" 
+abbreviation "ComparablePtr \<equiv> ComparablePtr[0]"
+
+lemma [simp]: "memptr i \<nuLinkL> ComparablePtr['spc::len0] \<nuLinkR> i' \<longleftrightarrow> (i = i') \<and> pred_owning (within_seg 0) i'" unfolding ComparablePtr'_def Refining_ex by auto
+lemma [elim,\<nu>elim]: "z \<left_fish_tail> i \<ratio> ComparablePtr['spc::len0] \<Longrightarrow> (within_seg 0 i \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+
+lemma [\<nu>intro]: "\<nu>CEqual ComparablePtr['spc::len0] (rel1_owning (\<lambda>x y. True)) (=)" unfolding \<nu>CEqual_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Share ComparablePtr['spc::len0] (\<lambda>x. True) share" unfolding \<nu>Share_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>ShrIdentical ComparablePtr['spc::len0] (=)" unfolding \<nu>ShrIdentical_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Deprive ComparablePtr['spc::len0] dpriv" unfolding \<nu>Deprive_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Ownership ComparablePtr['spc::len0] ownership" unfolding \<nu>Ownership_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Zero ComparablePtr['spc::len0] \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Slide pointer\<close>
 
@@ -644,11 +661,11 @@ lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbr
 
 section \<open>Memory Witness\<close>
 
-datatype ('a::field) memcon = memcon memadr \<open>('a::field) list\<close>
+datatype ('a::field) memcon = memcon \<open>(memadr, ('a::field)) map\<close>
 type_synonym 'a memobj = " 'a memcon owning"
 
-lemma memcon_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>a x. P (memcon a x))" by (metis memcon.exhaust) 
-lemma memcon_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>a x. P (memcon a x))" by (metis memcon.exhaust) 
+lemma memcon_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>f. P (memcon f))" by (metis memcon.exhaust) 
+lemma memcon_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>f. P (memcon f))" by (metis memcon.exhaust) 
 
 
 subsection \<open>Instantiations\<close>
@@ -657,26 +674,39 @@ instantiation memcon :: (field) disposable begin
 definition disposable_memcon :: " 'a memcon \<Rightarrow> bool" where [simp]: "disposable_memcon _ = False"
 instance by standard
 end
-
+(*
 instantiation memcon :: ("{ownership, field}") ownership begin
 definition ownership_memcon :: " 'a memcon \<Rightarrow> ownership"
-  where "ownership_memcon x = (case x of memcon _ y \<Rightarrow> OWS_L (map ownership y))"
+  where "ownership_memcon x = (case x of memcon y \<Rightarrow> OWS_L (map ownership y))"
 lemma [simp]: "ownership (memcon p x) = OWS_L (map ownership x)"
   unfolding ownership_memcon_def by simp
 instance by standard
-end
+end *)
 
 instantiation memcon :: ( "{sharing_identical,ownership, field}") sharing_identical begin
 definition sharing_identical_memcon :: "  'a memcon \<Rightarrow> 'a memcon \<Rightarrow> bool"
-  where "sharing_identical_memcon = rel_memcon (inv_imagep (=) ownership)"
-lemma [simp]: "sharing_identical (memcon pa a) (memcon pb b) \<longleftrightarrow> (pa = pb) \<and> list_all2 (inv_imagep (=) ownership) a b"
-  unfolding sharing_identical_memcon_def by auto
+  where "sharing_identical_memcon = rel_memcon sharing_identical"
+
+lemma [simp]: "sharing_identical (memcon fa) (memcon fb) \<longleftrightarrow> (\<forall>x. rel_option sharing_identical (fa x) (fb x))"
+  unfolding sharing_identical_memcon_def by (auto simp add: rel_fun_def)
 instance proof
   fix x y z :: " 'a memcon"
-  show "sharing_identical x x" by (cases x, simp, rule list_all2_refl) simp
-  show "sharing_identical x y = sharing_identical y x" by (cases x; cases y; simp add: list_all2_conv_all_nth) auto
+  show "sharing_identical x x" apply (cases x) apply (simp add: lrep_exps)
+    by (simp add: list_all2_refl option.rel_refl) 
+  show "sharing_identical x y = sharing_identical y x"
+    apply (cases x; cases y; simp; rule)
+    subgoal premises prems for xa xaa apply rule subgoal for x
+      by (insert prems(3)[THEN spec, of x]; cases \<open>xaa x\<close>; cases \<open>xa x\<close>) (auto simp add: list_all2_conv_all_nth)
+    done
+    subgoal premises prems for xa xaa apply rule subgoal for x
+      by (insert prems(3)[THEN spec, of x]; cases \<open>xaa x\<close>; cases \<open>xa x\<close>) (auto simp add: list_all2_conv_all_nth)
+    done done
   show "sharing_identical x y \<Longrightarrow> sharing_identical y z \<Longrightarrow> sharing_identical x z"
-    by (cases x; cases y; cases z; simp add: list_all2_conv_all_nth)
+    apply (cases x; cases y; cases z; simp) subgoal premises prems for xa xaa xb apply rule subgoal for x 
+        apply (insert prems(1)[THEN spec, of x] prems(2)[THEN spec, of x]; cases "xa x"; cases "xb x"; cases "xaa x")
+        apply (auto simp add: list_all2_conv_all_nth)
+        by (meson sharing_identical_sym sharing_identical_trans)
+      done done
 qed
 end
 
@@ -690,32 +720,52 @@ abbreviation "x_of_object obj \<equiv> (case obj of a \<R_arr_tail> x \<Rightarr
 lemma object_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>a x. P (a \<R_arr_tail> x))" by (metis object.exhaust)
 lemma object_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>a x. P (a \<R_arr_tail> x))" by (metis object.exhaust)
 
+subsection \<open>\<nu>-abstraction : MemMap\<close>
+
+definition MemMap :: "(('a::field), 'b) nu \<Rightarrow> ('a memobj, (memadr, 'b) map owning) nu"
+  where "MemMap N p x = (
+    case (p,x) of (zp \<left_fish_tail> memcon f, z \<left_fish_tail> g) \<Rightarrow>
+        (zp = z) \<and> (\<forall>adr. rel_option (\<lambda>p x. p \<nuLinkL> N \<nuLinkR> x) (f adr) (g adr))
+    | (\<down_fish_tail> , \<down_fish_tail>) \<Rightarrow> True | _ \<Rightarrow> False)"
+
+lemma [simp]: "zp \<left_fish_tail> memcon f \<nuLinkL> MemMap N \<nuLinkR> z \<left_fish_tail> g \<longleftrightarrow>
+    (zp = z) \<and> (\<forall>adr. rel_option (\<lambda>p x. p \<nuLinkL> N \<nuLinkR> x) (f adr) (g adr))"
+  and [simp]: "\<down_fish_tail> \<nuLinkL> MemMap N \<nuLinkR> x' \<longleftrightarrow> x' = \<down_fish_tail>" and [simp]: "p' \<nuLinkL> MemMap N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p' = \<down_fish_tail>"
+  unfolding MemMap_def Refining_ex by (auto simp add: memptr_forall split: memcon.split owning.split)
+
+lemma [elim,\<nu>elim]: "z \<left_fish_tail> f \<ratio> MemMap N \<Longrightarrow> ((\<And>x. f adr = Some x \<Longrightarrow> x \<ratio> N) \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def apply (auto 6 6 simp add: lrep_exps list_all2_conv_all_nth)
+  by (metis memadr.exhaust option_rel_Some2)  
+
+lemma [\<nu>intro]: "\<nu>Share (MemMap N) (\<lambda>x. True) share"
+  unfolding \<nu>Share_def by (simp add: owning_forall memcon_forall memptr_forall object_forall)
+lemma [\<nu>intro]: "\<nu>Disposable \<tort_lbrace>\<down_fish_tail> \<tycolon> MemMap N\<tort_rbrace>" unfolding \<nu>Disposable_def by simp
+lemma [\<nu>intro]: "\<nu>CEqual (MemMap N) (\<lambda>x y. True) (\<lambda>x y. True)" unfolding \<nu>CEqual_def by simp
+lemma [\<nu>intro]: "\<nu>Ownership (MemMap N) ownership"
+  unfolding \<nu>Ownership_def by (simp add: owning_forall memcon_forall memptr_forall object_exists)
+lemma [\<nu>intro]: "\<nu>Zero (MemMap N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+
 subsection \<open>\<nu>-abstraction : Slice\<close>
 
 definition MemSlice :: "(('a::field), 'b) nu \<Rightarrow> ('a memobj, 'b list object owning) nu"
   where "MemSlice N p x = (
-    case (p,x) of (zp \<left_fish_tail> memcon adrp p , z \<left_fish_tail> (adrx \<R_arr_tail> x)) \<Rightarrow>
-        (zp = z) \<and> (adrp = adrx) \<and> list_all2 (\<lambda>p x. p \<nuLinkL> N \<nuLinkR> x) p x \<and> within_seg (length x) adrx
+    case (p,x) of (zp \<left_fish_tail> memcon f , z \<left_fish_tail> ((seg |+ ofs) \<R_arr_tail> x)) \<Rightarrow>
+        (zp = z) \<and> (\<forall>i < length x. \<exists>p'. f (seg |+ (ofs + int i)) = Some p' \<and> (p' \<nuLinkL> N \<nuLinkR> x ! i) )
     | (\<down_fish_tail> , \<down_fish_tail>) \<Rightarrow> True | _ \<Rightarrow> False)"
 
-lemma [simp]: "zp \<left_fish_tail> memcon adrp p \<nuLinkL> MemSlice N \<nuLinkR> z \<left_fish_tail> adrx \<R_arr_tail> x \<longleftrightarrow>
-    (zp = z) \<and> (adrp = adrx) \<and> list_all2 (\<lambda>p x. p \<nuLinkL> N \<nuLinkR> x) p x \<and> within_seg (length x) adrx"
+lemma [simp]: "zp \<left_fish_tail> memcon f \<nuLinkL> MemSlice N \<nuLinkR> z \<left_fish_tail> (seg |+ ofs) \<R_arr_tail> x \<longleftrightarrow>
+    (zp = z) \<and> (\<forall>i < length x. \<exists>p'. f (seg |+ (ofs + int i)) = Some p' \<and> (p' \<nuLinkL> N \<nuLinkR> x ! i) )"
   and [simp]: "\<down_fish_tail> \<nuLinkL> MemSlice N \<nuLinkR> x' \<longleftrightarrow> x' = \<down_fish_tail>" and [simp]: "p' \<nuLinkL> MemSlice N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p' = \<down_fish_tail>"
   unfolding MemSlice_def Refining_ex by (auto simp add: memptr_forall split: memcon.split owning.split)
 
 lemma [elim,\<nu>elim]: "z \<left_fish_tail> a \<R_arr_tail> xs \<ratio> MemSlice N \<Longrightarrow>
-    (within_seg (length xs) a \<Longrightarrow> (\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def apply (auto 6 6 simp add: lrep_exps list_all2_conv_all_nth) by blast 
+    ((\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (cases a; auto 6 6 simp add: lrep_exps list_all2_conv_all_nth) 
 
 lemma [\<nu>intro]: "\<nu>Share (MemSlice N) (\<lambda>x. True) share"
-  unfolding \<nu>Share_def by (simp add: owning_forall memcon_forall memptr_forall object_forall)
+  unfolding \<nu>Share_def by (simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Disposable \<tort_lbrace>\<down_fish_tail> \<tycolon> MemSlice N\<tort_rbrace>" unfolding \<nu>Disposable_def by simp
 lemma [\<nu>intro]: "\<nu>CEqual (MemSlice N) (\<lambda>x y. True) (\<lambda>x y. True)" unfolding \<nu>CEqual_def by simp
-lemma [\<nu>intro]: "\<nu>Ownership (MemSlice N) ownership"
-  unfolding \<nu>Ownership_def by (simp add: owning_forall memcon_forall memptr_forall object_exists)
-lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (MemSlice N) (rel_owning (rel_object (list_all2 (inv_imagep (=) ow))))"
-  unfolding \<nu>Ownership_def \<nu>ShrIdentical_def
-  by (simp add: lrep_exps list_all2_conv_all_nth) (auto 0 3)
 lemma [\<nu>intro]: "\<nu>Zero (MemSlice N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
 section \<open>Ghost\<close>

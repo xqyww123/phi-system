@@ -63,7 +63,7 @@ subsubsection \<open>calling conversion\<close>
 definition strip_end_tail :: " (('a::lrep) \<times> void \<Rightarrow> (('b::lrep) \<times> void) state) \<Rightarrow> 'a \<times> ('r::stack) \<Rightarrow> ('b \<times> 'r) state"
   where "strip_end_tail f s = (case s of (a,r) \<Rightarrow> bind (f (a,void)) (\<lambda>(b,_). StatOn (b,r)))"
 lemma strip_end_tail: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> A \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c strip_end_tail f \<blangle> R\<heavy_comma> A \<longmapsto> R\<heavy_comma> B \<brangle>"
-  unfolding strip_end_tail_def Procedure_def bind_def by auto
+  unfolding strip_end_tail_def Procedure_def bind_def by (auto 4 4)
 
 subsection \<open>Branch & Loop\<close>
 
@@ -334,7 +334,9 @@ subsubsection \<open>op_alloc\<close>
 definition op_alloc :: "('x::{zero,field}) itself
     \<Rightarrow> identifier \<times> ('bits::len) word \<times> ('r::stack) \<Rightarrow> (identifier \<times> (0, 'x) memref \<times>'r) state"
   where "op_alloc _ s = (case s of (i,n,r) \<Rightarrow> if segment_len i = unat n \<and> segment_llty i = llty TYPE('x) then
-    StatOn (alloc_identifier i, Tuple ((memptr (0 \<left_fish_tail>i |+ 0) :: 0 memptr), 0 \<left_fish_tail> memcon (i |+ 0) (replicate (unat n) 0)), r) else SNeg)"
+    StatOn (alloc_identifier i, Tuple ((memptr (0 \<left_fish_tail>i |+ 0) :: 0 memptr),
+          0 \<left_fish_tail> memcon (\<lambda>adr. case adr of (seg |+ ofs) \<Rightarrow> if seg = i \<and> ofs < int (unat n) then Some 0 else None)), r)
+  else SNeg)"
 
 theorem alloc_array_\<nu>proc:
   "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
@@ -389,13 +391,32 @@ lemma AdrRefining_tupl: "AdrRefining f X A gt mp \<Longrightarrow> AdrRefining (
 subsubsection \<open>load\<close>
 
 definition op_load :: " ('a,'a,'ax,'ax) address
-      \<Rightarrow> ('bits::len) word \<times> ('spc::len0,('a::field)) memref \<times> ('r::stack)
-      \<Rightarrow> (('ax::{field,share}) \<times> ('spc,'a) memref \<times> 'r) state "
-  where "op_load path s = (case s of (i, Tuple (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon adr' as), r) \<Rightarrow>
-    if shareable (get_at path (as ! unat i)) \<and> adr' = adr then
-      StatOn (share (z + Gi 1) (get_at path (as ! unat i)),
-          Tuple (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon adr (list_map_at (map_at path (share (Gi 1))) (unat i) as)), r)
-    else STrap)"
+      \<Rightarrow> ('spc::len0) memptr \<times>('a::field) memobj \<times> ('r::stack)
+      \<Rightarrow> (('ax::{field,share}) \<times> ('spc::len0) memptr \<times>('a::field) memobj \<times> 'r) state "
+  where "op_load path s = (case s of (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon f, r) \<Rightarrow>
+    (case f adr of Some data \<Rightarrow>
+    if shareable (get_at path data) then
+      StatOn (share (z + Gi 1) (get_at path data),
+          memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon (f(adr := Some (map_at path (share (Gi 1)) data))), r)
+    else STrap | _ \<Rightarrow> STrap))"
+
+lemma [elim!]: "rel_option R p (Some x) \<Longrightarrow> (\<And>p'. p = Some p' \<Longrightarrow> R p' x \<Longrightarrow> C) \<Longrightarrow> C" by (cases p) auto
+lemma rel_option_elim: "rel_option R p x \<Longrightarrow> (p = None \<Longrightarrow> x = None \<Longrightarrow> C) \<Longrightarrow> (\<And>p' x'. p = Some p' \<Longrightarrow> x = Some x' \<Longrightarrow> R p' x' \<Longrightarrow> C) \<Longrightarrow>  C"
+  by (cases p; cases x) auto 
+
+theorem op_load[\<nu>overload "\<up>"]:
+  "AdrRefining field_index Y X gt mp \<Longrightarrow> \<nu>Share Y P sh
+  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e m a = Some x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P (gt x)
+  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load field_index \<blangle> R\<heavy_comma> z \<left_fish_tail>m \<tycolon> MemMap X\<heavy_comma> zp \<left_fish_tail> a \<tycolon> RawPtr['spc::len0]
+    \<longmapsto> R\<heavy_comma> z \<left_fish_tail>m(a := Some (mp (sh (Gi 1)) x)) \<tycolon> MemMap X\<heavy_comma> zp \<left_fish_tail> a \<tycolon> RawPtr['spc::len0]\<heavy_comma> sh (z + Gi 1) (gt x) \<tycolon> Y\<brangle> "
+unfolding op_load_def \<nu>def \<nu>Share_def AdrRefining_def \<nu>address_def  apply
+      (auto split: option.split simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
+  by (metis option.rel_inject option.rel_distinct)+
+
+
+   
+
+
 
 theorem op_load[\<nu>overload "\<up>:"]: "
   AdrRefining field_index Y X gt mp \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<nu>Share Y P sh

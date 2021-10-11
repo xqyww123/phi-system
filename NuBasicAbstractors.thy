@@ -121,14 +121,9 @@ lemma [simp]: "p \<nuLinkL> MemObj N \<nuLinkR> z \<left_fish_tail> a \<R_arr_ta
   unfolding MemObj_def by auto
 
 lemma [\<nu>intro]: "\<nu>Share (MemObj N) (\<lambda>x. True) share"
-  unfolding \<nu>Share_def by (simp add: owning_forall memcon_forall memptr_forall object_forall)
+  unfolding \<nu>Share_def by (simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Disposable \<tort_lbrace>\<down_fish_tail> \<tycolon> MemObj N\<tort_rbrace>" unfolding \<nu>Disposable_def by simp
 lemma [\<nu>intro]: "\<nu>CEqual (MemObj N) (\<lambda>x y. True) (\<lambda>x y. True)" unfolding \<nu>CEqual_def by simp
-lemma [\<nu>intro]: "\<nu>Ownership (MemObj N) ownership"
-  unfolding \<nu>Ownership_def by (simp add: owning_forall memcon_forall memptr_forall object_exists)
-lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (MemObj N) (rel_owning (rel_object (inv_imagep (=) ow)))"
-  unfolding \<nu>Ownership_def \<nu>ShrIdentical_def
-  by (simp add: lrep_exps list_all2_conv_all_nth) auto
 lemma [\<nu>intro]: "\<nu>Zero (MemObj N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
 
 lemma [\<nu>intro, \<nu>cast_overload singular]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t z \<left_fish_tail> a \<R_arr_tail> [x] \<tycolon> MemSlice N \<longmapsto> z \<left_fish_tail> a \<R_arr_tail> x \<tycolon> MemObj N" unfolding Cast_def by simp
@@ -160,8 +155,8 @@ lemma [elim,\<nu>elim]: "zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail
 abbreviation "share_ref z x \<equiv> (case x of (zp \<left_fish_tail> a \<R_arr_tail> zx \<left_fish_tail> x) \<Rightarrow> (zp + z \<left_fish_tail> a \<R_arr_tail> zx + z \<left_fish_tail> x) | (zp \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) \<Rightarrow> (zp + z \<left_fish_tail> a \<R_arr_tail> \<down_fish_tail>) | \<down_fish_tail> \<Rightarrow> \<down_fish_tail>)"
 lemma [\<nu>intro]: "\<nu>Share (RefS['spc::len0] N) (\<lambda>x. T) share_ref" unfolding \<nu>Share_def by (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (RefS['spc::len0] N) (rel_owning (rel_object (rel_owning (list_all2 (inv_imagep (=) ow)))))"
-  unfolding \<nu>ShrIdentical_def \<nu>Ownership_def by (auto simp add: lrep_exps list_all2_conv_all_nth) (auto 0 3)
+(* lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (RefS['spc::len0] N) (rel_owning (rel_object (rel_owning (list_all2 (inv_imagep (=) ow)))))"
+  unfolding \<nu>ShrIdentical_def \<nu>Ownership_def by (auto simp add: lrep_exps list_all2_conv_all_nth) (auto 0 3) *)
 
 abbreviation "ownership_ref ref \<equiv>
   (case ref of zp \<left_fish_tail> a \<R_arr_tail> x \<Rightarrow> OWS_C (OWS_1 zp) (ownership x) | \<down_fish_tail> \<Rightarrow> OWS_C OWS_0 OWS_0)"
@@ -204,8 +199,8 @@ lemma [simp]: "p \<nuLinkL> Ref['spc::len0] N \<nuLinkR> (zp \<left_fish_tail> a
 
 lemma [\<nu>intro]: "\<nu>Share (Ref['spc::len0] N) (\<lambda>x. T) share_ref" unfolding \<nu>Share_def by (simp add: lrep_exps)
 
-lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (Ref['spc::len0] N) (rel_owning (rel_object (rel_owning (inv_imagep (=) ow))))"
-  unfolding \<nu>ShrIdentical_def \<nu>Ownership_def by (auto simp add: lrep_exps list_all2_conv_all_nth)
+(* lemma [\<nu>intro]: "\<nu>Ownership N ow \<Longrightarrow> \<nu>ShrIdentical (Ref['spc::len0] N) (rel_owning (rel_object (rel_owning (inv_imagep (=) ow))))"
+  unfolding \<nu>ShrIdentical_def \<nu>Ownership_def by (auto simp add: lrep_exps list_all2_conv_all_nth) *)
 
 lemma [\<nu>intro]: "\<nu>Ownership (Ref['spc::len0] N) ownership_ref"
   unfolding \<nu>Ownership_def by (simp add: lrep_exps)
@@ -310,12 +305,6 @@ ML \<open>@{term "29::32"}\<close>
 lemma [simplified]: "(10::3) = (0::3)"  by auto
   thm term_def *)
 
-schematic_goal [simplified]:"\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B\<heavy_comma>(x \<tycolon> C \<nuRefine> P)\<heavy_comma>D) \<longmapsto> (A\<heavy_comma>B\<heavy_comma>x \<tycolon> C\<heavy_comma>D) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e ?P"       
-  by (rule \<nu>intro, auto)+
-
-schematic_goal "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B) \<longmapsto> (A\<heavy_comma>B) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e ?P"
-  by (auto intro: \<nu>intro)
-  
 
 end
 
