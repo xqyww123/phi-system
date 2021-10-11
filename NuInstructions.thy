@@ -315,7 +315,7 @@ definition op_destr_tuple :: "('a::field_list) tuple \<times> ('r::stack) \<Righ
 theorem det_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_destr_tuple \<blangle> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<longmapsto> R\<heavy_comma> x \<tycolon> X \<brangle>"
   unfolding Procedure_def op_destr_tuple_def by (simp add: tuple_forall)
 
-section \<open>Memory Operations\<close>
+section \<open>Memory & Pointer Operations\<close>
 
 subsection \<open>Allocation\<close>
 
@@ -351,12 +351,83 @@ proc alloc : \<open>i\<hyphen>j \<tycolon> IdSrc\<close> \<longmapsto> \<open>Gi
   \<bullet> 1 \<leftarrow> v alloc_array N
   finish
 
+subsection \<open>Pointer Arithmetic & Split\<close>
+
+\<nu>overloads split and pop
+
+subsubsection \<open>op_shift_pointer\<close>
+
+definition op_shift_pointer :: "llty \<Rightarrow> ('bits::len) word \<times> ('spc::len0) memptr \<times> ('r::stack) \<Rightarrow> ('spc memptr \<times> 'r) state"
+  where "op_shift_pointer ty s = (case s of (d, memptr(z \<left_fish_tail> seg |+ i), r) \<Rightarrow>
+    if segment_llty seg = ty then StatOn (memptr (z \<left_fish_tail> seg |+ (i + sint d)), r) else STrap)"
+
+theorem op_shift_pointer[\<nu>overload +]:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> SlidePtr['spc::len0] ty\<heavy_comma> d \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + d) \<tycolon> SlidePtr['spc] ty \<brangle>"
+  unfolding op_shift_pointer_def Procedure_def by (simp add: lrep_exps)
+
+theorem op_shift_pointer_within[\<nu>overload +]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg 0 (seg |+ (i + d)) \<Longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> Pointer['spc::len0] ty\<heavy_comma> d \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + d) \<tycolon> Pointer['spc] ty \<brangle>"
+  unfolding op_shift_pointer_def Procedure_def by (auto simp add: lrep_exps)
+
+definition op_shift_pointer' :: "llty \<Rightarrow> ('bits::len) word \<times> ('spc::len0) memptr \<times> ('r::stack) \<Rightarrow> ('spc memptr \<times> 'r) state"
+  where "op_shift_pointer' ty s = (case s of (d, memptr(z \<left_fish_tail> seg |+ i), r) \<Rightarrow>
+    if segment_llty seg = ty then StatOn (memptr (z \<left_fish_tail> seg |+ (i + uint d)), r) else STrap)"
+
+theorem op_shift_pointer'[\<nu>overload +]:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer' ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> SlidePtr['spc::len0] ty\<heavy_comma> d \<tycolon> \<nat>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + int d) \<tycolon> SlidePtr['spc] ty \<brangle>"
+  unfolding op_shift_pointer'_def Procedure_def by (auto simp add: lrep_exps)
+
+theorem op_shift_pointer_within'[\<nu>overload +]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg 0 (seg |+ (i + int d)) \<Longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer' ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> Pointer['spc::len0] ty\<heavy_comma> d \<tycolon> \<nat>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + int d) \<tycolon> Pointer['spc] ty \<brangle>"
+  unfolding op_shift_pointer'_def Procedure_def by (auto simp add: lrep_exps)
+
+subsubsection \<open>op_separate_mem\<close>
+
+definition op_separate_mem :: " memadr set \<Rightarrow> ('x::field) memobj \<times> ('r::stack) \<Rightarrow> ('x memobj \<times> 'x memobj \<times> 'r) state "
+  where "op_separate_mem P s = (case s of (z \<left_fish_tail> memcon f, r) \<Rightarrow> StatOn (z \<left_fish_tail> memcon (f |` P), z \<left_fish_tail> memcon (f |` (- P)),  r))"
+
+definition op_merge_mem :: " ('x::field) memobj \<times> 'x memobj \<times> ('r::stack) \<Rightarrow> ('x memobj \<times> 'r) state "
+  where "op_merge_mem s = (case s of (z1 \<left_fish_tail> memcon f1, z2 \<left_fish_tail> memcon f2, r) \<Rightarrow>
+    if z1 = z2 \<and> (dom f1 \<inter> dom f2) = {} then StatOn (z2 \<left_fish_tail> memcon (f1 ++ f2), r) else STrap)"
+
+(* theorem op_slice_mem_\<nu>proc[\<nu>overload split]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n \<le> length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_slice_mem \<blangle> R\<heavy_comma> z \<left_fish_tail> (seg |+ i) \<R_arr_tail> xs \<tycolon> MemSlice N\<heavy_comma> n \<tycolon> Ghost
+    \<longmapsto> R\<heavy_comma> z \<left_fish_tail> (seg |+ i) \<R_arr_tail> (take n xs) \<tycolon> MemSlice N\<heavy_comma> z \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> (drop n xs) \<tycolon> MemSlice N \<brangle>"
+  unfolding op_slice_mem_def Procedure_def Premise_def by (auto simp add: lrep_exps list_all2_conv_all_nth) 
+
+proc op_slice_mem2[\<nu>overload split]:
+  \<open>z \<left_fish_tail> (seg |+ i) \<R_arr_tail> xs \<tycolon> MemSlice N\<heavy_comma> n \<tycolon> \<nat>['bits::len]\<close>
+  \<longmapsto> \<open>z \<left_fish_tail> (seg |+ i) \<R_arr_tail> (take n xs) \<tycolon> MemSlice N\<heavy_comma> z \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> (drop n xs) \<tycolon> MemSlice N\<close>
+  requires [intro]: " n \<le> length xs"
+  \<bullet> \<leftarrow> v n ghostize  op_slice_mem finish
+
+subsubsection \<open>i_split_ref\<close>
+
+proc i_split_ref[\<nu>overload split]: \<open>zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N\<heavy_comma> n \<tycolon> \<nat>['bits::len]\<close>
+  \<longmapsto> \<open>zp + Gi 1 \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> z \<left_fish_tail> (drop n xs) \<tycolon> RefS['spc] N\<heavy_comma> zp + Gi 1 \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> (take n xs) \<tycolon> RefS['spc] N\<close>
+  requires [used]: "n \<le> length xs"
+  \<bullet> \<leftarrow> v cast E det dpr n split \<rightarrow> (m1,m2) dup n
+  \<bullet> !! + cast fixtyp affirm by (auto 0 3)
+  \<bullet> \<leftarrow> m2 pr tup cast RefS \<rightarrow> m2
+  \<bullet> \<leftarrow> m1 pr tup cast RefS \<rightarrow> m1 \<leftarrow> (m2,m1)
+  finish
+
+proc i_pop_refs[simplified length_greater_0_conv, \<nu>overload pop]:
+  \<open>zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N\<close>
+    \<longmapsto> \<open>zp + Gi 1 \<left_fish_tail> (seg |+ (i + 1)) \<R_arr_tail> z \<left_fish_tail> tl xs \<tycolon> RefS['spc] N \<heavy_comma> zp + Gi 1 \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> hd xs \<tycolon> Ref['spc] N\<close>
+  requires [used]: "0 < length xs"
+  \<nu>have A[simp]: "take 1 xs = [hd xs]" by (simp add: One_nat_def take_Suc)
+  \<nu>have B[simp]: "drop 1 xs = tl xs" by (simp add: One_nat_def drop_Suc) 
+  \<bullet> $v \<open>1 \<tycolon> \<nat>[32]\<close> split affirm by linarith \<bullet>
+  finish *)
+
 subsection \<open>Load & Store\<close>
 
 \<nu>overloads \<up> and "\<up>:" and \<Up> and "\<Up>:" and \<down> and "\<down>:" and \<Down> and "\<Down>:"
 
 abbreviation "list_map_at f i l \<equiv> list_update l i (f (l ! i))"
-
 
 subsubsection \<open>Field Path Refining\<close>
 
@@ -404,7 +475,7 @@ lemma [elim!]: "rel_option R p (Some x) \<Longrightarrow> (\<And>p'. p = Some p'
 lemma rel_option_elim: "rel_option R p x \<Longrightarrow> (p = None \<Longrightarrow> x = None \<Longrightarrow> C) \<Longrightarrow> (\<And>p' x'. p = Some p' \<Longrightarrow> x = Some x' \<Longrightarrow> R p' x' \<Longrightarrow> C) \<Longrightarrow>  C"
   by (cases p; cases x) auto 
 
-theorem op_load[\<nu>overload "\<up>"]:
+theorem op_load[\<nu>overload "\<up>:"]:
   "AdrRefining field_index Y X gt mp \<Longrightarrow> \<nu>Share Y P sh
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e m a = Some x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P (gt x)
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load field_index \<blangle> R\<heavy_comma> z \<left_fish_tail>m \<tycolon> MemMap X\<heavy_comma> zp \<left_fish_tail> a \<tycolon> RawPtr['spc::len0]
@@ -413,10 +484,9 @@ unfolding op_load_def \<nu>def \<nu>Share_def AdrRefining_def \<nu>address_def  
       (auto split: option.split simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
   by (metis option.rel_inject option.rel_distinct)+
 
-
-   
-
-
+proc i_load_n[\<nu>overload "\<up>:"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<close>
+  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> mp (sh (Gi 1)) x \<tycolon> RefS['spc] X\<heavy_comma> sh (z + Gi 1) (gt x) \<tycolon> Y\<close>
+  \<bullet> v cast E det dpr 
 
 theorem op_load[\<nu>overload "\<up>:"]: "
   AdrRefining field_index Y X gt mp \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<nu>Share Y P sh
@@ -562,73 +632,5 @@ proc i_revert_here1[\<nu>overload "\<down>"]: \<open>zp \<left_fish_tail> a \<R_
   \<bullet> \<leftarrow> (v,y) \<down>: \<Longleftarrow> AdrRefining_here
 finish
 
-subsection \<open>Pointer Arithmetic & Split\<close>
-
-\<nu>overloads split and pop
-
-subsubsection \<open>op_shift_pointer\<close>
-
-definition op_shift_pointer :: "llty \<Rightarrow> ('bits::len) word \<times> ('spc::len0) memptr \<times> ('r::stack) \<Rightarrow> ('spc memptr \<times> 'r) state"
-  where "op_shift_pointer ty s = (case s of (d, memptr(z \<left_fish_tail> seg |+ i), r) \<Rightarrow>
-    if segment_llty seg = ty then StatOn (memptr (z \<left_fish_tail> seg |+ (i + sint d)), r) else STrap)"
-
-theorem op_shift_pointer[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> SlidePtr['spc::len0] ty\<heavy_comma> d \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + d) \<tycolon> SlidePtr['spc] ty \<brangle>"
-  unfolding op_shift_pointer_def Procedure_def by (simp add: lrep_exps)
-
-theorem op_shift_pointer_within[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg 0 (seg |+ (i + d)) \<Longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> Pointer['spc::len0] ty\<heavy_comma> d \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + d) \<tycolon> Pointer['spc] ty \<brangle>"
-  unfolding op_shift_pointer_def Procedure_def by (auto simp add: lrep_exps)
-
-definition op_shift_pointer' :: "llty \<Rightarrow> ('bits::len) word \<times> ('spc::len0) memptr \<times> ('r::stack) \<Rightarrow> ('spc memptr \<times> 'r) state"
-  where "op_shift_pointer' ty s = (case s of (d, memptr(z \<left_fish_tail> seg |+ i), r) \<Rightarrow>
-    if segment_llty seg = ty then StatOn (memptr (z \<left_fish_tail> seg |+ (i + uint d)), r) else STrap)"
-
-theorem op_shift_pointer'[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer' ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> SlidePtr['spc::len0] ty\<heavy_comma> d \<tycolon> \<nat>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + int d) \<tycolon> SlidePtr['spc] ty \<brangle>"
-  unfolding op_shift_pointer'_def Procedure_def by (auto simp add: lrep_exps)
-
-theorem op_shift_pointer_within'[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg 0 (seg |+ (i + int d)) \<Longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer' ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> Pointer['spc::len0] ty\<heavy_comma> d \<tycolon> \<nat>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + int d) \<tycolon> Pointer['spc] ty \<brangle>"
-  unfolding op_shift_pointer'_def Procedure_def by (auto simp add: lrep_exps)
-
-subsubsection \<open>op_slice_mem\<close>
-
-definition op_slice_mem :: " nat ghost \<times> ('x::field) memobj \<times> ('r::stack) \<Rightarrow> ('x memobj \<times> 'x memobj \<times> 'r) state "
-  where "op_slice_mem s = (case s of (ghost n, z \<left_fish_tail> memcon (seg |+ i) l, r) \<Rightarrow>
-    if n \<le> length l then StatOn (z \<left_fish_tail> memcon (seg |+ (i + int n)) (drop n l),z \<left_fish_tail> memcon (seg |+ i) (take n l),  r) else STrap)"
-
-theorem op_slice_mem_\<nu>proc[\<nu>overload split]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n \<le> length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_slice_mem \<blangle> R\<heavy_comma> z \<left_fish_tail> (seg |+ i) \<R_arr_tail> xs \<tycolon> MemSlice N\<heavy_comma> n \<tycolon> Ghost
-    \<longmapsto> R\<heavy_comma> z \<left_fish_tail> (seg |+ i) \<R_arr_tail> (take n xs) \<tycolon> MemSlice N\<heavy_comma> z \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> (drop n xs) \<tycolon> MemSlice N \<brangle>"
-  unfolding op_slice_mem_def Procedure_def Premise_def by (auto simp add: lrep_exps list_all2_conv_all_nth)
-
-proc op_slice_mem2[\<nu>overload split]:
-  \<open>z \<left_fish_tail> (seg |+ i) \<R_arr_tail> xs \<tycolon> MemSlice N\<heavy_comma> n \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>z \<left_fish_tail> (seg |+ i) \<R_arr_tail> (take n xs) \<tycolon> MemSlice N\<heavy_comma> z \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> (drop n xs) \<tycolon> MemSlice N\<close>
-  requires [intro]: " n \<le> length xs"
-  \<bullet> \<leftarrow> v n ghostize  op_slice_mem finish
-
-subsubsection \<open>i_split_ref\<close>
-
-proc i_split_ref[\<nu>overload split]: \<open>zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N\<heavy_comma> n \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>zp + Gi 1 \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> z \<left_fish_tail> (drop n xs) \<tycolon> RefS['spc] N\<heavy_comma> zp + Gi 1 \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> (take n xs) \<tycolon> RefS['spc] N\<close>
-  requires [used]: "n \<le> length xs"
-  \<bullet> \<leftarrow> v cast E det dpr n split \<rightarrow> (m1,m2) dup n
-  \<bullet> !! + cast fixtyp affirm by (auto 0 3)
-  \<bullet> \<leftarrow> m2 pr tup cast RefS \<rightarrow> m2
-  \<bullet> \<leftarrow> m1 pr tup cast RefS \<rightarrow> m1 \<leftarrow> (m2,m1)
-  finish
-
-proc i_pop_refs[simplified length_greater_0_conv, \<nu>overload pop]:
-  \<open>zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N\<close>
-    \<longmapsto> \<open>zp + Gi 1 \<left_fish_tail> (seg |+ (i + 1)) \<R_arr_tail> z \<left_fish_tail> tl xs \<tycolon> RefS['spc] N \<heavy_comma> zp + Gi 1 \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> hd xs \<tycolon> Ref['spc] N\<close>
-  requires [used]: "0 < length xs"
-  \<nu>have A[simp]: "take 1 xs = [hd xs]" by (simp add: One_nat_def take_Suc)
-  \<nu>have B[simp]: "drop 1 xs = tl xs" by (simp add: One_nat_def drop_Suc) 
-  \<bullet> $v \<open>1 \<tycolon> \<nat>[32]\<close> split affirm by linarith \<bullet>
-  finish
   
 end

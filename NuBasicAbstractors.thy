@@ -112,6 +112,32 @@ proof -
   show ?thesis using A[simplified t1, simplified, simplified ExTyp_strip] .
 qed
 
+subsection \<open>\<nu>-abstraction : Slice\<close>
+
+definition MemSlice :: "(('a::field), 'b) nu \<Rightarrow> ('a memobj, 'b list object owning) nu"
+  where "MemSlice N p x = (
+    case (p,x) of (zp \<left_fish_tail> memcon f , z \<left_fish_tail> ((seg |+ ofs) \<R_arr_tail> x)) \<Rightarrow>
+        (zp = z) \<and> (\<forall>i < length x. \<exists>p'. f (seg |+ (ofs + int i)) = Some p' \<and> (p' \<nuLinkL> N \<nuLinkR> x ! i) )
+    | (\<down_fish_tail> , \<down_fish_tail>) \<Rightarrow> True | _ \<Rightarrow> False)"
+
+lemma [simp]: "zp \<left_fish_tail> memcon f \<nuLinkL> MemSlice N \<nuLinkR> z \<left_fish_tail> (seg |+ ofs) \<R_arr_tail> x \<longleftrightarrow>
+    (zp = z) \<and> (\<forall>i < length x. \<exists>p'. f (seg |+ (ofs + int i)) = Some p' \<and> (p' \<nuLinkL> N \<nuLinkR> x ! i) )"
+  and [simp]: "\<down_fish_tail> \<nuLinkL> MemSlice N \<nuLinkR> x' \<longleftrightarrow> x' = \<down_fish_tail>" and [simp]: "p' \<nuLinkL> MemSlice N \<nuLinkR> \<down_fish_tail> \<longleftrightarrow> p' = \<down_fish_tail>"
+  unfolding MemSlice_def Refining_ex by (auto simp add: memptr_forall split: memcon.split owning.split)
+
+lemma [elim,\<nu>elim]: "z \<left_fish_tail> a \<R_arr_tail> xs \<ratio> MemSlice N \<Longrightarrow>
+    ((\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (cases a; auto 6 6 simp add: lrep_exps list_all2_conv_all_nth) 
+
+lemma [\<nu>intro]: "\<nu>Share (MemSlice N) (\<lambda>x. True) share"
+  unfolding \<nu>Share_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Disposable \<tort_lbrace>\<down_fish_tail> \<tycolon> MemSlice N\<tort_rbrace>" unfolding \<nu>Disposable_def by simp
+lemma [\<nu>intro]: "\<nu>CEqual (MemSlice N) (\<lambda>x y. True) (\<lambda>x y. True)" unfolding \<nu>CEqual_def by simp
+lemma [\<nu>intro]: "\<nu>Zero (MemSlice N) \<down_fish_tail>" unfolding \<nu>Zero_def by simp
+
+definition "memmap_of_slice adr = (\<lambda>a. (case adr of (seg |+ ofs) \<Rightarrow> ))"
+lemma [\<nu>overload_cast E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t z \<left_fish_tail> (seg |+ ofs) \<R_arr_tail> xs \<tycolon> MemSlice N \<longmapsto> z \<left_fish_tail> (\<lambda>adr. )"
+
 subsubsection \<open>MemObj\<close>
 
 definition "MemObj N = MemSlice N <down-lift> (\<lambda>x. case x of z \<left_fish_tail> a \<R_arr_tail> x \<Rightarrow> z \<left_fish_tail> a \<R_arr_tail> [x] | \<down_fish_tail> \<Rightarrow> \<down_fish_tail>)"
