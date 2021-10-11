@@ -265,7 +265,7 @@ fun auto_resolve thms addtion ctx  =
         ORELSE (resolve_tac ctx thms 1)
         ORELSE premise_tac ctx
         ORELSE resolve_tac ctx minor_thms 1
-        (* ORELSE print_dbg *)
+        ORELSE print_dbg
     )) (* #> Seq.map fininsh_premise_hyps *)
   end
 val auto_resolve0 = auto_resolve NONE []
@@ -374,7 +374,7 @@ fun apply_casts_major ctx procs major =
     |> Seq.map (Goal.protect 0))
 end
 fun apply_Xs X ctx procs meta =
-  elim_SPEC meta |> apfst (X ctx procs #> @{print}) |> intro_SPEC
+  elim_SPEC meta |> apfst (X ctx procs) |> intro_SPEC
 val apply_procs = apply_Xs apply_procs_major
 fun apply_proc ctx = apply_procs ctx o single
 val apply_casts = apply_Xs apply_casts_major

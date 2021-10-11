@@ -82,6 +82,8 @@ lemma K_intro[intro]: "(\<forall>x y. f x y = x) \<Longrightarrow> f = K" by (si
 definition ProtectorI :: "'a \<Rightarrow> 'a" where "ProtectorI x = x"
 lemma [cong]: "ProtectorI X \<equiv> ProtectorI X" .
 
+definition WorkingProtector :: "'a \<Rightarrow> 'a" where "WorkingProtector x \<equiv> x"
+
 datatype 'a tree = Leaf | Node 'a \<open>'a tree\<close> \<open>'a tree\<close>
 
 subsubsection \<open>Structures assembling propositions\<close>
@@ -371,11 +373,12 @@ definition RegisterTy :: "name_tag \<Rightarrow> ('a::lrep) set \<Rightarrow> 'a
   RegisterTy_def: "RegisterTy name s = {r. case r of Register name' x \<Rightarrow> name' = name \<and> x \<in> s}"
 syntax "_register_set_" :: "idt \<Rightarrow> 'a set \<Rightarrow> 'a register set" ("\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r _ = _" [5,5] 4)
 translations "_register_set_ name S" == "CONST RegisterTy (NAME name) S"
+translations "S" <= "CONST RegisterTy (NAME name) \<tort_lbrace>S\<tort_rbrace>"
 lemma [simp]: "Register v x \<in> RegisterTy v' T \<longleftrightarrow> v = v' \<and> x \<in> T" unfolding RegisterTy_def by simp
 lemma [intro]: "x \<in> T \<Longrightarrow> Register name x \<in> RegisterTy name T" by simp
 lemma [elim]: "r \<in> RegisterTy name T \<Longrightarrow> (\<And>x. r = Register name x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases r) simp
 lemma [intro]: "Inhabited T \<Longrightarrow> Inhabited (RegisterTy name T)" unfolding Inhabited_def by auto
-lemma [elim]: "Inhabited (RegisterTy name T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim!]: "Inhabited (RegisterTy name T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "\<nu>Disposable x \<Longrightarrow> \<nu>Disposable (RegisterTy name x)" unfolding \<nu>Disposable_def
   including show_more1 by (auto simp add: disposable_register)
 
@@ -421,7 +424,7 @@ declare proc_ctx.split[split]
 definition Proc_CtxTy :: " ('a::lrep) set \<Rightarrow> ('b::register_collection) set \<Rightarrow> ('a \<flower> 'b) set" (infix "\<flower>" 2) \<comment> \<open>the flower operator\<close>
   where "Proc_CtxTy s t = { Proc_Ctx a b | a b. a \<in>s \<and> b \<in> t}"
     \<comment> \<open>The font of the flower operator is not specified, since any flower is a flower.\<close>
-notation Proc_CtxTy ("(2\<flower_L>\<medium_left_bracket> _/ \<flower_L>\<flower>\<flower_R> _ \<medium_right_bracket>\<flower_R>)" [2,2] 1000)  \<comment> \<open>Better decoration for better attention. It is the center of the construction.\<close>
+notation Proc_CtxTy ("\<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k\<^bold>: _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s _" [2,2] 1000)  \<comment> \<open>Better decoration for better attention. It is the center of the construction.\<close>
 (* two syntax sugars, defined as constants rather than syntax objects in order to merely enable definition-jumping by `Ctrl-Click`. *)
 consts Proc_Ctx_NoRegisters :: ind ("\<^bold>n\<^bold>o \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s")
 consts Proc_Ctx_EmptyStack :: ind ("\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k")

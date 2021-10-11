@@ -2,15 +2,53 @@ theory NuTest
   imports NuSys NuInstructions
 begin
 
-proc add2: "(x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
-  requires [used]: "x < 100" and [used]:"y < 100"
-  \<bullet> x x y + +
+  proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x -1 \<tycolon> \<nat>[32]\<close>
+    requires [used]: \<open>0 < x\<close>
+    \<bullet> x 1 -
   finish
 
-thm add2_\<nu>proc
+term  " (adr, Mem(adr, xs), \<cdots>) \<nuLinkL> List \<nuLinkR> lst \<equiv> ((\<forall>i<len. xs ! i = list ! i) \<and> \<cdots>) "
+term " proc_needs_two_list (StatOn( (adr1, Mem(adr1, xs1), \<cdots>) \<heavy_comma>  (adr2, Mem(adr2, xs2), \<cdots>)  )) = \<dots> "
+term " \<^bold>p\<^bold>r\<^bold>o\<^bold>c proc_needs_two_list \<blangle> lst1 \<tycolon> List \<nuFusion> lst2 \<tycolon> List \<longmapsto> \<cdots> \<brangle> "
+term " \<forall>p. p \<nuLinkL> List \<nuFusion> List \<nuLinkR> (lst1, lst2) \<longrightarrow> proc_needs_two_list p \<nuLinkL> Result \<nuLinkR> result"
+  \<comment> \<open>where there are some adr1 xs1 adr2 ... subject to
+     \<^term>\<open>p = (adr1, Mem(adr1, xs1), \<cdots>) \<heavy_comma>  (adr2, Mem(adr2, xs2), \<cdots>)\<close>\<close>
+text \<open>from \<^term>\<open>p \<nuLinkL> List \<nuFusion> List \<nuLinkR> (lst1, lst2)\<close> we can have
+  \<^term>\<open>(adr1, Mem(adr1, xs1), \<cdots>) \<nuLinkL> List \<nuLinkR> lst1\<close> and also
+  \<^term>\<open>(adr2, Mem(adr2, xs2), \<cdots>) \<nuLinkL> List \<nuLinkR> lst2\<close> \<close>
+
+
 
 abbreviation "FullRef N \<equiv> Ref N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
 abbreviation "Array N \<equiv> RefS N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
+
+lemma [simp]: "\<tort_lbrace>Gz \<left_fish_tail> (seg |+ ofs) \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS N \<tort_rbrace> = \<tort_lbrace>(seg |+ ofs) \<R_arr_tail> xs \<tycolon> Array N\<tort_rbrace>" by auto
+lemma [elim]: "a < b + 1 \<Longrightarrow> (a < b \<Longrightarrow> C) \<Longrightarrow> (a = b \<Longrightarrow> C) \<Longrightarrow> C" for a :: nat
+  by linarith 
+declare nth_list_update[simp] not_le[simp]
+
+rec_proc qsort: \<open> (seg |+ ofs) \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<heavy_comma> n \<tycolon> \<nat>[32]\<close>
+  \<longmapsto> \<open>{ (seg |+ ofs) \<R_arr_tail> ys | ys. permuted xs ys \<and> sorted ys } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (Array \<nat>[32])\<close>
+  var ofs xs requires "length xs = n"
+  \<bullet> \<Longrightarrow> precondition[used] \<bullet> \<rightarrow> (v,n) n 0 = if \<medium_left_bracket> \<bullet> $v \<medium_right_bracket> \<medium_left_bracket> \<bullet> $v n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[32]\<close> 0
+  \<bullet> while xs' i j in \<open>((seg |+ ofs) \<R_arr_tail> xs', i, j)\<close> subj \<open>j \<noteq> n\<close>
+    always \<open>i \<le> j \<and> j \<le> n \<and> length xs' = n \<and> (if j = n then xs' ! (i-1) = xs ! (n-1) else xs' ! (n-1) = xs ! (n-1))
+      \<and> (\<forall>k. k <i \<longrightarrow> xs' ! k \<le> xs ! (n-1)) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! (n-1) < xs' ! k) \<close>
+  \<medium_left_bracket> \<bullet> \<Longrightarrow> x[used] \<bullet> \<rightarrow> (xs,i,j) j n < $xs i j pr^3 \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<Longrightarrow> x[used] \<bullet> \<rightarrow> (xs,i,j) $xs j \<up>\<rightarrow> j' i \<up>\<rightarrow> i' \<rightarrow> xs
+  \<bullet> j' pivot \<le> if \<medium_left_bracket> \<bullet> $xs i' j \<Down> j' i \<Down> \<rightarrow> xs i 1 + \<rightarrow> i \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<bullet> $xs i j 1 + pr^2 \<medium_right_bracket>
+  \<bullet> xs2, i, j \<Longrightarrow> x[used] \<bullet> drop 1 - \<rightarrow> i i split \<bullet> i qsort
+  \<nu>debug 
+  thm qsort_\<nu>proc
+
+(*   \<bullet> \<Longrightarrow> precondition[used] \<bullet> \<rightarrow> (v,n) n 0 = if \<medium_left_bracket> \<bullet> $v \<medium_right_bracket> \<medium_left_bracket> \<bullet> $v \<open>0\<tycolon>\<nat>[32]\<close> \<up>\<rightarrow> pivot \<open>1\<tycolon>\<nat>[32]\<close> \<open>1\<tycolon>\<nat>[32]\<close>
+  \<bullet> while xs' i j in \<open>((seg |+ ofs) \<R_arr_tail> xs', i, j)\<close> subj \<open>j \<noteq> n\<close>
+      always \<open>0 < i \<and> i \<le> j \<and> j \<le> n \<and> length xs' = n \<and> xs' ! 0 = xs ! 0 \<and> (\<forall>k. k <i \<longrightarrow> xs' ! k \<le> xs ! 0) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! 0 < xs' ! k) \<close>
+  \<medium_left_bracket> \<bullet> \<Longrightarrow> x[used] \<bullet> \<rightarrow> (a,b,c) c n < $a b c pr^3 \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<Longrightarrow> x[used] \<bullet> \<rightarrow> (xs,i,j) $xs j \<up>\<rightarrow> j' i \<up>\<rightarrow> i' \<rightarrow> xs
+  \<bullet> j' pivot \<le> if \<medium_left_bracket> \<bullet> $xs i' j \<Down> j' i \<Down> \<rightarrow> xs i 1 + \<rightarrow> i \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<bullet> $xs i j 1 + pr^2 \<medium_right_bracket>
+  \<bullet> xs2, i, j \<Longrightarrow> x[used] \<bullet> drop 1 - \<rightarrow> i i \<up>0 \<Down>pivot i \<Down> *)
+
+end
+
 
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = f x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = SchemaTag f x"
   unfolding Premise_def Simplify_def SchemaTag_def by auto
@@ -18,10 +56,19 @@ lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bo
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = f x y \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X = (case_prod f) (x,y)"
   unfolding Premise_def Simplify_def SchemaTag_def by auto
 
+
 proc AA: \<open>i \<tycolon> \<nat>[32]\<heavy_comma>  zp \<left_fish_tail> adr \<R_arr_tail> Gi 0 \<left_fish_tail> i \<tycolon> Ref \<nat>[32]\<close> \<longmapsto> \<open>i \<tycolon> \<nat>[32]\<close>
   \<bullet> i $v while i j in \<open>(i, zp \<left_fish_tail> adr \<R_arr_tail> Gi 0 \<left_fish_tail> j)\<close> subj \<open>i < j\<close>   \<medium_left_bracket> \<bullet> \<up>\<rightarrow> (a,b,c) a c < a $b pr^2\<medium_right_bracket> 
   \<medium_left_bracket> \<bullet> \<Longrightarrow> A[used] \<bullet> \<up> 1 - \<Down> pr \<medium_right_bracket> \<bullet> aa, bb \<rightarrow> v
 
+
+
+proc add2: "(x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32])" \<longmapsto> "(x + x + y \<tycolon> \<nat>[32])"
+  requires [used]: "x < 100" and [used]:"y < 100"
+  \<bullet> x x y + +
+  finish
+
+thm add2_\<nu>proc
 
 
 
