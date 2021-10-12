@@ -110,6 +110,17 @@ translations "_pretty_and_ L (_pretty_and_ X R)" <= "CONST FactTree X L R" *)
 
 subsubsection \<open>The type representing ownership\<close>
 
+
+
+
+
+
+
+
+
+
+
+
 datatype zint = Gz | Gi int
 text\<open> Type @{typ zint} is used to represent ownership. @{term "Gi i"} represents
   $2^{-i}$ part of the ownership, and @{term "Gi 0"} is the total. @{term Gz} represents
@@ -139,12 +150,62 @@ text \<open>The semantic framework follows a style of shallow embedding, where s
   are modelled by different Isabelle type. Model types are constrained by the base type class {\it lrep} and types representing
   objects that supports certain features are constrained by specific sub-classes which extend the base class {\it lrep} finally. \<close>
 datatype identifier = idhypen identifier nat (infixl "\<hyphen>" 64) | ID_ROOT
-type_synonym reversion = "identifier \<times> nat"
 
-datatype deep_model = DM_Int nat nat | DM_Pointer nat reversion | DM_fusion deep_model deep_model
+primrec iden_children_pred :: "identifier \<Rightarrow> identifier \<Rightarrow> bool" where
+  "iden_children_pred father ID_ROOT \<longleftrightarrow> (father = ID_ROOT)" |
+  "iden_children_pred father (idt\<hyphen>i) \<longleftrightarrow> (father = (idt\<hyphen>i)) \<or> iden_children_pred father idt"
+abbreviation "iden_children idt \<equiv> Collect (iden_children_pred idt)"
+
+
+datatype deep_model = DM_Int nat nat | DM_Pointer nat identifier | DM_fusion deep_model deep_model
   | DM_record deep_model | DM_array "deep_model list"
-type_synonym resources = "reversion \<rightharpoonup> deep_model"
+type_synonym resources = "identifier \<rightharpoonup> deep_model"
 type_synonym reference_counter = "identifier \<Rightarrow> nat"
+
+
+class lrep
+
+type_synonym ('a,'b) \<nu> = " resources \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> bool "
+type_synonym 'a \<nu>set = " resources \<Rightarrow> 'a set "
+
+definition NuResources :: " 'a \<nu>set \<Rightarrow> identifier set \<Rightarrow> bool "
+  where "NuResources S rcss \<longleftrightarrow> (\<forall>m id v p. id \<notin> rcss \<longrightarrow> p \<in> S m \<longrightarrow> p \<in> S (m(id := v)))"
+
+definition DisjNuSet :: " ('a::lrep) \<nu>set \<Rightarrow> identifier set \<Rightarrow> ('a::lrep) \<nu>set "
+  where "DisjNuSet S rcss = (if NuResources S (- rcss) then S else (\<lambda>map. {}))"
+lemma [simp]: "p \<in> DisjNuSet T claim mp \<longleftrightarrow> p \<in> T mp \<and> NuResources T (- claim)"
+  unfolding DisjNuSet_def by auto
+lemma "p \<in> DisjNuSet S rcss m \<Longrightarrow> rcs \<in> rcss \<Longrightarrow> p \<in> S m \<Longrightarrow> p \<in> S (m(rcs := v))"
+  unfolding DisjNuSet_def NuResources_def
+  by (smt (z3) Compl_iff empty_iff) 
+
+abbreviation "disjoint A B \<equiv> (A \<inter> B = {})"
+
+instantiation prod:: (lrep,lrep) lrep begin instance by standard end
+
+definition Stack_Delimiter :: " ('a :: lrep) \<nu>set \<Rightarrow> ('b :: lrep) \<nu>set \<Rightarrow> ('b \<times> 'a) \<nu>set " ( "(2_/ \<heavy_comma> _)" [13,14] 13)
+  where "Stack_Delimiter a b = (\<lambda>res. (b res \<times> a res))"
+
+lemma "NuResources A rcssA \<and> NuResources B rcssB \<Longrightarrow> NuResources (A\<heavy_comma>B) (rcssA \<union> rcssB)"
+  unfolding NuResources_def Stack_Delimiter_def by simp
+lemma " NuResources T rcss \<Longrightarrow> disjoint rcss claim \<Longrightarrow> x \<in> T mp \<Longrightarrow> x \<in> DisjNuSet T claim mp"
+  by (auto simp add: Stack_Delimiter_def NuResources_def)
+lemma " x \<in> DisjNuSet T claim mp \<Longrightarrow> y \<in> DisjNuSet U claim mp \<Longrightarrow> (y,x) \<in> DisjNuSet (T\<heavy_comma>U) claim mp"
+  unfolding Stack_Delimiter_def NuResources_def by (auto simp add: NuResources_def)
+lemma " NuResources B rcssB \<Longrightarrow> disjoint rcssB claim  \<Longrightarrow> a \<in> DisjNuSet A claim mp \<Longrightarrow> b \<in> B mp \<Longrightarrow> (b,a) \<in> DisjNuSet (A\<heavy_comma> B) claim mp"
+  unfolding Stack_Delimiter_def NuResources_def by (auto simp add: NuResources_def)
+
+
+
+
+
+
+
+
+
+
+
+
 
 datatype llty = la_i nat \<comment> \<open>int bits\<close> | la_p nat \<comment> \<open>pointer space\<close> | la_tup llty | la_array llty nat | la_z | la_C llty llty
   \<comment> \<open>LLVM types representing integers in specified bit length, pointers in the given space, structures of given content
