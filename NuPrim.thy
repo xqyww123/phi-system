@@ -138,78 +138,54 @@ subsection\<open>LRep: Low Representation for semantics\<close>
 text \<open>The semantic framework follows a style of shallow embedding, where semantics for different type (e.g. integers, floats)
   are modelled by different Isabelle type. Model types are constrained by the base type class {\it lrep} and types representing
   objects that supports certain features are constrained by specific sub-classes which extend the base class {\it lrep} finally. \<close>
+datatype identifier = idhypen identifier nat (infixl "\<hyphen>" 64) | ID_ROOT
+type_synonym reversion = "identifier \<times> nat"
+
+datatype deep_model = DM_Int nat nat | DM_Pointer nat reversion | DM_fusion deep_model deep_model
+  | DM_record deep_model | DM_array "deep_model list"
+type_synonym resources = "reversion \<rightharpoonup> deep_model"
+type_synonym reference_counter = "identifier \<Rightarrow> nat"
 
 datatype llty = la_i nat \<comment> \<open>int bits\<close> | la_p nat \<comment> \<open>pointer space\<close> | la_tup llty | la_array llty nat | la_z | la_C llty llty
   \<comment> \<open>LLVM types representing integers in specified bit length, pointers in the given space, structures of given content
   (usually a list by @{term la_C}), arrays of given content and fixed length, abstract type filtered during code extraction,
   and the list constructor which is used in argument list and structure's filed list,  respectively. \<close>
 
-class disposable =
-  fixes disposable :: " 'a \<Rightarrow> bool " \<comment> \<open>Whether a value could be thrown away freely\<close>
-
-class lrep = disposable + \<comment>\<open>The basic class for types modelling concrete objects\<close>
+class lrep =  \<comment>\<open>The basic class for types modelling concrete objects\<close>
   fixes llty :: "'a itself \<Rightarrow> llty" \<comment> \<open>The LLVM type to which the model type corresponds\<close>
+  fixes deepize :: " 'a \<Rightarrow> deep_model "
 
 syntax "_LLTY_" :: "type \<Rightarrow> logic" ("LLTY'[_']")
 translations  "LLTY['x]" == "CONST llty TYPE('x)"
-
-class ceq =  \<comment> \<open>equality comparison\<close>
-  fixes ceqable :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>Whether two values could be compared for equality\<close>
-  fixes ceq :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>The equality of two values.
-    It is only valid when the two values could be compared, that the @{term ceqable} for them is true.\<close>
-  assumes ceqable_sym[simp]: "ceqable x y = ceqable y x"
-  assumes ceq_refl[intro]: "ceqable x x \<Longrightarrow> ceq x x"
-  assumes ceq_sym[simp]: "ceqable x y \<Longrightarrow> ceq x y \<longleftrightarrow> ceq y x"
-  assumes ceq_trans: "ceqable x y \<Longrightarrow> ceqable y z \<Longrightarrow> ceqable x z
-    \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
-
-datatype ownership = OWS_1 zint | OWS_0 | OWS_C ownership ownership | OWS_L "ownership list"
-
-definition owns_prod :: " ('a \<Rightarrow> ownership) \<Rightarrow> ('b \<Rightarrow> ownership) \<Rightarrow> ('a \<times> 'b \<Rightarrow> ownership) " (infixl "\<times>\<^sub>o\<^sub>w" 80)
-  where "owns_prod ow1 ow2 = (\<lambda>(a,b). OWS_C (ow1 a) (ow2 b))"
-lemma [simp]: "owns_prod ow1 ow2 (a,b) = OWS_C (ow1 a) (ow2 b)"
-  unfolding owns_prod_def by simp
-
-class ownership =
-  fixes ownership :: " 'a \<Rightarrow> ownership"
-
-class sharing_identical =
-  fixes sharing_identical :: " 'a \<Rightarrow> 'a \<Rightarrow> bool "
-  assumes sharing_identical_refl[simp]: "sharing_identical x x"
-  assumes sharing_identical_sym[simp]: "sharing_identical x y \<longleftrightarrow> sharing_identical y x"
-  assumes sharing_identical_trans: "sharing_identical x y \<Longrightarrow> sharing_identical y z \<Longrightarrow> sharing_identical x z"
-
-class share =
-  \<comment> \<open>for objects whose the ownership can be shared \<close>
-  fixes shareable :: "'a \<Rightarrow> bool" \<comment> \<open>Whether the ownership of a value could be shared.
-      It is a predicate giving the precise control to decide on the shareability for each value.\<close>
-    and share :: "zint \<Rightarrow> 'a \<Rightarrow> 'a"
-    and dpriv :: "'a \<Rightarrow> 'a"
-  assumes share_id[simp]: "share (Gi 0) x = x"
-  assumes share_assoc[simp]: "share b (share a x) = share (a + b) x"
-
-
-class naive_lrep = share + sharing_identical + lrep +
-  assumes [simp]: "disposable x = True"
-  assumes [simp]: "shareable x = True"
-  assumes [simp]: "dpriv x = x"
-  assumes [simp]: "share z x = x"
-  assumes [simp]: "sharing_identical x y = True"  
 
 subsection \<open>The \<nu>-type\<close>
 
 subsubsection \<open>Definitions\<close>
 
-type_synonym ('a,'b) nu = " 'a \<Rightarrow> 'b \<Rightarrow> bool "
-datatype ('a::lrep,'b) typing = typing 'b "('a,'b) nu" (infix "\<tycolon>" 15) \<comment>\<open>shortcut keys "<ty>"\<close>
-primrec nu_of :: "('a::lrep,'b) typing \<Rightarrow> ('a,'b) nu" where "nu_of (x \<tycolon> N) = N"
+datatype 'a state = Success (reference_counter: reference_counter) (resources_state: resources) 'a | Fail | PartialCorrect
+
+ceq : INF
+
+class dispose =
+  fixes dispose :: " 'a \<Rightarrow> reference_counter \<Rightarrow> reference_counter "
+
+class naive_dispose = dispose +
+  assumes [simp]: "dispose x = id"
+
+type_synonym ('a,'b) \<nu> = " resources \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> bool "
+type_synonym 'a \<nu>set = " resources \<Rightarrow> 'a set "
+definition Nu :: "('a,'b) \<nu> \<Rightarrow> bool" where "Nu N \<longleftrightarrow> (\<forall>res res' p x. res \<subseteq>\<^sub>m res' \<longrightarrow> N res p x \<longrightarrow> N res' p x)"
+definition NuSet :: " 'a \<nu>set \<Rightarrow> bool" where "NuSet S \<longleftrightarrow> (\<forall>res res' p. res \<subseteq>\<^sub>m res' \<longrightarrow> p \<in> S res \<longrightarrow> p \<in> S res')"
+
+datatype ('a::lrep,'b) typing = typing 'b "('a,'b) \<nu>" (infix "\<tycolon>" 15) \<comment>\<open>shortcut keys "<ty>"\<close>
+primrec nu_of :: "('a::lrep,'b) typing \<Rightarrow> ('a,'b) \<nu>" where "nu_of (x \<tycolon> N) = N"
 primrec image_of :: "('a::lrep,'b) typing \<Rightarrow> 'b" where "image_of (x \<tycolon> N) = x"
 
-definition RepSet :: "('a::lrep,'b) typing \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>") where "\<tort_lbrace> ty \<tort_rbrace> = {p. case ty of (x \<tycolon> R) \<Rightarrow> R p x }"
-abbreviation Refining :: "('a::lrep) \<Rightarrow> ('a,'b) nu \<Rightarrow> 'b \<Rightarrow> bool" ("(_/ \<nuLinkL> _ \<nuLinkR>/ _)" [27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
-  where  "(p \<nuLinkL> N \<nuLinkR> x) \<equiv> p \<in> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
-definition Inhabited :: " 'a set \<Rightarrow> bool" where "Inhabited s \<equiv> (\<exists>x. x \<in> s)"
-abbreviation InhabitTyp :: " 'b \<Rightarrow> ('a::lrep,'b) nu \<Rightarrow> bool" (infix "\<ratio>" 15)  \<comment>\<open>shortcut keys ":TY:"\<close>
+definition RepSet :: "('a::lrep,'b) typing \<Rightarrow> resources \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>") where "\<tort_lbrace> ty \<tort_rbrace> = (\<lambda>res. {p. case ty of (x \<tycolon> N) \<Rightarrow> N res p x })"
+abbreviation Refining :: "('a::lrep) \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> resources \<Rightarrow> 'b \<Rightarrow> bool" ("(_/ \<nuLinkL> _ | _ \<nuLinkR>/ _)" [27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
+  where  "(p \<nuLinkL> N | res \<nuLinkR> x) \<equiv> p \<in> \<tort_lbrace>x \<tycolon> N\<tort_rbrace> res"
+definition Inhabited :: " (resources \<Rightarrow> 'a set) \<Rightarrow> bool" where "Inhabited s \<equiv> (\<exists>x res. x \<in> s res)"
+abbreviation InhabitTyp :: " 'b \<Rightarrow> ('a::lrep,'b) \<nu> \<Rightarrow> bool" (infix "\<ratio>" 15)  \<comment>\<open>shortcut keys ":TY:"\<close>
   where  "(x \<ratio> N) \<equiv> Inhabited \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
 text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete values,
   e.g. @{prop "a_concrete_int32 \<in> \<tort_lbrace>(42::nat) \<tycolon> N 32\<tort_rbrace> "} and also @{prop "state \<in> State (\<tort_lbrace>42 \<tycolon> N\<tort_rbrace> \<times> \<tort_lbrace>24 \<tycolon> N\<tort_rbrace> \<times> \<cdots> )"}.
@@ -222,38 +198,21 @@ text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete va
 
 subsubsection \<open>Rudimentary lemmata\<close>
 
-lemma Refining_ex: "p \<nuLinkL> R \<nuLinkR> x \<equiv> R p x" unfolding RepSet_def by simp
-lemma inhabited[dest]: "p \<nuLinkL> N \<nuLinkR> x \<Longrightarrow> x \<ratio> N" unfolding Inhabited_def by auto
-lemma [elim!,\<nu>elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
-lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto
-lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma Refining_ex: "p \<nuLinkL> R | res \<nuLinkR> x \<equiv> R res p x" unfolding RepSet_def by simp
+(* lemma [elim!,\<nu>elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto *)
+lemma [intro]: "x \<in> S res \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto
+lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x res. x \<in> S res \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 subsubsection \<open>Properties\<close>
 
-definition \<nu>Zero :: "('a::{zero,lrep},'b) nu \<Rightarrow> 'b \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> 0 \<nuLinkL> N \<nuLinkR> x"
-definition \<nu>Share :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> bool) \<Rightarrow> (zint \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow> bool"
-  where "\<nu>Share N P f \<longleftrightarrow> (\<forall>z p x. P x \<and>(p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> shareable p \<and> (share z p \<nuLinkL> N \<nuLinkR> f z x))"
-definition \<nu>Deprive :: "('a::{share,lrep},'b) nu \<Rightarrow> ('b \<Rightarrow> 'b) \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>Deprive N dp \<longleftrightarrow> (\<forall>p x. (p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> dpriv p \<nuLinkL> N \<nuLinkR> dp x)"
-definition \<nu>CEqual :: "('a::{ceq,lrep}, 'b) nu \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>CEqual N P eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2. P x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
-definition \<nu>Disposable :: " ('a::lrep) set \<Rightarrow> bool " where [\<nu>def]: "\<nu>Disposable T \<longleftrightarrow> (\<forall>x. x \<in> T \<longrightarrow> disposable x)"
-definition \<nu>ShrIdentical :: " ('a::{sharing_identical,lrep}, 'b) nu \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>ShrIdentical N sid \<longleftrightarrow> (\<forall>p1 p2 x1 x2. sid x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> sharing_identical p1 p2)"
-definition \<nu>Ownership :: " ('a::{ownership,lrep}, 'b) nu \<Rightarrow> ('b \<Rightarrow> ownership) \<Rightarrow> bool "
-  where [\<nu>def]: "\<nu>Ownership N ow \<longleftrightarrow> (\<forall>p x. (p \<nuLinkL> N \<nuLinkR> x) \<longrightarrow> ownership p = ow x)"
+definition \<nu>Zero :: "('a::{zero,lrep},'b) \<nu> \<Rightarrow> 'b \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> (\<forall>res. 0 \<nuLinkL> N | res \<nuLinkR> x )"
+definition \<nu>Equal :: "('a::{lrep}, 'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>Equal N eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 res. (p1 \<nuLinkL> N | res \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N | res \<nuLinkR> x2) \<longrightarrow>  (p1 = p2) = eq x1 x2)"
+definition \<nu>Dispose :: " ('a::{dispose,lrep}) \<nu>set \<Rightarrow> (reference_counter \<Rightarrow> reference_counter) \<Rightarrow> bool "
+  where [\<nu>def]: "\<nu>Dispose S dp \<longleftrightarrow> (\<forall>p res. p \<in> S res \<longrightarrow> dispose p = dp)"
 
-lemma [\<nu>intro]: "\<nu>Share N (\<lambda>x. True) (\<lambda>z x. x)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>Share_def by simp
-lemma [\<nu>intro]: "\<nu>Deprive N id" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>Deprive_def by simp
-(* lemma K_rew: "(\<lambda>x. c) =  (K c)" by auto
-lemma [simp]: "\<nu>CEqual N (\<lambda>x. c) = \<nu>CEqual N (\<lambda>x. c)" by (auto simp add: K_rew)
-lemma [simp]: "\<nu>Share N s (\<lambda>z x. x) = \<nu>Share N s (K id)" by (auto simp add: K_rew id_def) *)
-lemma [\<nu>intro]: "\<nu>Disposable T" for T :: "('a::naive_lrep) set" unfolding \<nu>Disposable_def by simp
-lemma [\<nu>intro]: "\<nu>ShrIdentical N (\<lambda>x y. True)" for N :: "('a::naive_lrep, 'b) nu" unfolding \<nu>ShrIdentical_def by simp
-
-lemma [elim]: "\<nu>Share N P sh \<Longrightarrow> ((P x \<Longrightarrow> p \<nuLinkL> N \<nuLinkR> x \<Longrightarrow> shareable p) \<Longrightarrow> (P x \<Longrightarrow> p \<nuLinkL> N \<nuLinkR> x \<Longrightarrow> share z p \<nuLinkL> N \<nuLinkR> sh z x) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding \<nu>Share_def by simp
+lemma [\<nu>intro]: "\<nu>Dispose \<tort_lbrace>x \<tycolon> T\<tort_rbrace>  id" for T :: "('a::{naive_dispose,lrep}, 'b) \<nu>" unfolding \<nu>Dispose_def by simp
 
   section\<open>Structures for construction\<close>
 
@@ -317,12 +276,13 @@ subsection \<open>Register and its collection\<close>
 
 datatype void = void \<comment>\<open> End of the stack \<close>
 declare void.split[split]
-definition Void :: "void set" where "Void = {void}" 
+definition Void :: "resources \<Rightarrow> void set" where "Void _ = {void}" 
 text \<open>The name `void` coincides that, when a procedure has no input arguments,
   the \<nu>-type for the input would exactly be @{term Void}. \<close>
-lemma [simp,intro]: "void \<in> Void" unfolding Void_def by simp
+lemma [simp,intro]: "void \<in> Void res" unfolding Void_def by simp
 lemma [simp,intro]: "Inhabited Void" unfolding Inhabited_def by auto
 lemma [elim!, \<nu>elim]: "Inhabited Void \<Longrightarrow> C \<Longrightarrow> C" .
+lemma [intro]: "NuSet Void" unfolding NuSet_def Void_def by simp
 (*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
 
 datatype 'a register = Register name_tag "'a::lrep"
@@ -331,6 +291,8 @@ datatype 'a register = Register name_tag "'a::lrep"
 syntax "_register_as_" :: "idt \<Rightarrow> 'a \<Rightarrow> 'a register" ("\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r _ \<^bold>a\<^bold>s _" [5,5] 4)
 translations "_register_as_ name exp" == "CONST Register (NAME name) exp"
 declare register.split[split]
+lemma register_forall: "All P \<longleftrightarrow> (\<forall>x. P (Register (NAME_TAG id) x))" by (metis name_tag_eq register.exhaust)
+lemma register_exists: "Ex P \<longleftrightarrow> (\<exists>x. P (Register (NAME_TAG id) x))" by (metis name_tag_eq register.exhaust)
 definition get_register :: " ('a::lrep) register \<Rightarrow> 'a" where "get_register r = (case r of (Register _ x) \<Rightarrow> x)"
 definition map_register :: " ('a \<Rightarrow> 'b) \<Rightarrow> ('a::lrep) register \<Rightarrow> ('b::lrep) register "
   where "map_register f r = (case r of (Register name x) \<Rightarrow> Register name (f x))"
@@ -344,20 +306,30 @@ class register_collection = lrep
 
 instantiation void :: lrep begin
 definition llty_void :: "void itself \<Rightarrow> llty" where [simp]: "llty_void _ = la_z"
-definition disposable_void :: "void \<Rightarrow> bool" where [simp]: "disposable_void x = True"
 instance by standard
+end
+
+instantiation void :: naive_dispose begin
+definition dispose_void :: " void \<Rightarrow> reference_counter \<Rightarrow> reference_counter " where [simp]: "dispose_void _ = id"
+instance by standard simp
 end
 
 instantiation register :: (lrep) register_collection begin
 definition llty_register :: "'a register itself \<Rightarrow> llty" where [simp]: "llty_register _ = la_z"
-definition disposable_register :: "'a register \<Rightarrow> bool"
-  where disposable_register: "disposable_register = pred_register disposable"
 instance by standard
 end
 
-instantiation prod :: (disposable,disposable) disposable begin
-definition "disposable_prod = disposable \<times>\<^sub>p disposable"
-lemma [simp]: "disposable (a,b) \<longleftrightarrow> disposable a \<and> disposable b" unfolding disposable_prod_def by simp
+instantiation register :: ("{dispose,lrep}") dispose begin
+definition dispose_register :: " 'a register \<Rightarrow> reference_counter \<Rightarrow> reference_counter "
+  where "dispose_register x = (case x of Register name y \<Rightarrow> dispose y)"
+lemma [simp]: "dispose (Register name y) = dispose y" unfolding dispose_register_def by simp
+instance by standard
+end
+
+instantiation prod :: (dispose,dispose) dispose begin
+definition dispose_prod :: " 'a \<times> 'b \<Rightarrow> reference_counter \<Rightarrow> reference_counter"
+  where "dispose_prod = (\<lambda>(a,b). dispose a o dispose b)"
+lemma [simp]: "dispose (a,b) = dispose a o dispose b" unfolding dispose_prod_def by simp
 instance by standard
 end
 
@@ -369,32 +341,31 @@ end
 instantiation void :: register_collection begin instance by standard end
 instantiation prod :: (register_collection,register_collection) register_collection begin instance by standard end
 
-definition RegisterTy :: "name_tag \<Rightarrow> ('a::lrep) set \<Rightarrow> 'a register set" where
-  RegisterTy_def: "RegisterTy name s = {r. case r of Register name' x \<Rightarrow> name' = name \<and> x \<in> s}"
+definition RegisterTy :: "name_tag \<Rightarrow> (resources \<Rightarrow> ('a::lrep) set) \<Rightarrow> (resources \<Rightarrow> 'a register set)" where
+  RegisterTy_def: "RegisterTy name s = (\<lambda>res. {r. case r of Register name' x \<Rightarrow> name' = name \<and> x \<in> s res})"
 syntax "_register_set_" :: "idt \<Rightarrow> 'a set \<Rightarrow> 'a register set" ("\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r _ = _" [5,5] 4)
 translations "_register_set_ name S" == "CONST RegisterTy (NAME name) S"
 translations "S" <= "CONST RegisterTy (NAME name) \<tort_lbrace>S\<tort_rbrace>"
-lemma [simp]: "Register v x \<in> RegisterTy v' T \<longleftrightarrow> v = v' \<and> x \<in> T" unfolding RegisterTy_def by simp
-lemma [intro]: "x \<in> T \<Longrightarrow> Register name x \<in> RegisterTy name T" by simp
-lemma [elim]: "r \<in> RegisterTy name T \<Longrightarrow> (\<And>x. r = Register name x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases r) simp
+lemma [simp]: "Register v x \<in> RegisterTy v' T res \<longleftrightarrow> v = v' \<and> x \<in> T res" unfolding RegisterTy_def by simp
+lemma [intro]: "x \<in> T res \<Longrightarrow> Register name x \<in> RegisterTy name T res" by simp
+lemma [elim]: "r \<in> RegisterTy name T res \<Longrightarrow> (\<And>x. r = Register name x \<Longrightarrow> x \<in> T res \<Longrightarrow> C) \<Longrightarrow> C" by (cases r) simp
 lemma [intro]: "Inhabited T \<Longrightarrow> Inhabited (RegisterTy name T)" unfolding Inhabited_def by auto
-lemma [elim!]: "Inhabited (RegisterTy name T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
-lemma [\<nu>intro]: "\<nu>Disposable x \<Longrightarrow> \<nu>Disposable (RegisterTy name x)" unfolding \<nu>Disposable_def
-  including show_more1 by (auto simp add: disposable_register)
+lemma [elim!]: "Inhabited (RegisterTy name T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto 5 0)
+lemma [\<nu>intro]: "\<nu>Dispose T dp \<Longrightarrow> \<nu>Dispose (RegisterTy name T) dp" unfolding \<nu>Dispose_def by (simp add: register_forall)
+lemma [intro]: "NuSet T \<Longrightarrow> NuSet (RegisterTy name T)" unfolding NuSet_def by (simp add: register_forall) 
 
 definition And :: " 'a \<Rightarrow> 'b \<Rightarrow> 'a \<times> 'b " (infixr "and'_pair" 3)  where [simp]:"And = Pair"
-definition AndTy :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<times> 'b) set " (infixr "and'_ty" 3)  where  "AndTy = (\<times>)"
+definition AndTy :: " 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> ('a \<times> 'b) \<nu>set " (infixr "and'_ty" 3)  where  "(A and_ty B) = (\<lambda>res. A res \<times> B res)"
 translations
   "a \<^bold>a\<^bold>n\<^bold>d b" <= "a and_pair b"
   "a \<^bold>a\<^bold>n\<^bold>d b" <= "a and_ty b"
-lemma [simp]: "(a, b) \<in> (A and_ty B) \<longleftrightarrow> a \<in> A \<and> b \<in> B" unfolding AndTy_def And_def by simp
-lemma [intro]: "a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> (a, b) \<in> (A and_ty B)" by simp
-lemma [elim]: "ab \<in> (A and_ty B) \<Longrightarrow> (\<And>a b. ab = (a, b) \<Longrightarrow> a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> C) \<Longrightarrow> C"
+lemma [simp]: "(a, b) \<in> (A and_ty B) res \<longleftrightarrow> a \<in> A res \<and> b \<in> B res" unfolding AndTy_def And_def by simp
+(* lemma [intro]: "a \<in> A res \<Longrightarrow> b \<in> B \<Longrightarrow> (a, b) \<in> (A and_ty B)" by simp *)
+lemma [elim]: "ab \<in> (A and_ty B) res \<Longrightarrow> (\<And>a b. ab = (a, b) \<Longrightarrow> a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding AndTy_def And_def by (cases ab) simp
-lemma [intro]: "Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> Inhabited (A and_ty B)" unfolding Inhabited_def AndTy_def And_def by auto
 lemma [elim!,\<nu>elim]: "Inhabited (A and_ty B) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
-lemma [\<nu>intro]: "\<nu>Disposable A \<Longrightarrow> \<nu>Disposable B \<Longrightarrow> \<nu>Disposable (A and_ty B)"
-  unfolding \<nu>Disposable_def by auto
+lemma [\<nu>intro]: "\<nu>Dispose A dpa \<Longrightarrow> \<nu>Dispose B dpb \<Longrightarrow> \<nu>Dispose (A and_ty B) (dpa o dpb)"
+  unfolding \<nu>Dispose_def by auto
 
 subsection \<open>Stack structure\<close>
 
@@ -402,27 +373,25 @@ class stack = lrep
 instantiation void :: stack begin instance by standard end
 instantiation prod :: (lrep,stack) stack begin instance by standard end
 
-definition Stack_Delimiter :: " ('a :: stack) set \<Rightarrow> ('b :: lrep) set \<Rightarrow> ('b \<times> 'a) set " ( "(2_/ \<heavy_comma> _)" [13,14] 13)
-  where "Stack_Delimiter a b = (b \<times> a)"
+definition Stack_Delimiter :: " ('a :: stack) \<nu>set \<Rightarrow> ('b :: lrep) \<nu>set \<Rightarrow> ('b \<times> 'a) \<nu>set " ( "(2_/ \<heavy_comma> _)" [13,14] 13)
+  where "Stack_Delimiter a b = (\<lambda>res. (b res \<times> a res))"
 definition End_of_Stack ("\<^bold>E\<^bold>N\<^bold>D") where "End_of_Stack = Void"
 definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " where "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
 translations "a" <= "CONST End_of_Contextual_Stack x \<heavy_comma> a" \<comment> \<open>hide the end\<close>
   "a" <= "CONST End_of_Stack\<heavy_comma> a"
 translations "R \<heavy_comma> x \<tycolon> N" == "R \<heavy_comma> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
 lemma [elim,\<nu>elim]: "Inhabited (End_of_Contextual_Stack S) \<Longrightarrow> C \<Longrightarrow> C" .
-lemma [simp]: "(a,b) \<in> (B \<heavy_comma> A) \<longleftrightarrow> a \<in> A \<and> b \<in> B" unfolding Stack_Delimiter_def by simp
-lemma Stack_Delimiter_I[intro]: "a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> (a,b) \<in> (B \<heavy_comma> A)" by simp
-lemma Stack_Delimiter_E[elim]: "ab \<in> (B \<heavy_comma> A) \<Longrightarrow> (\<And>a b. ab = (a,b) \<Longrightarrow> a \<in> A \<Longrightarrow> b \<in> B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Stack_Delimiter_def by (cases ab) simp
-lemma [simp]: "Inhabited (U\<heavy_comma>V) \<longleftrightarrow> Inhabited U \<and> Inhabited V" unfolding Inhabited_def by auto
-lemma [intro]: "Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> Inhabited (U\<heavy_comma>V)" unfolding Inhabited_def by auto
-lemma [elim!,\<nu>elim]: "Inhabited (U\<heavy_comma>V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto
+lemma [simp]: "(a,b) \<in> (B \<heavy_comma> A) res \<longleftrightarrow> a \<in> A res \<and> b \<in> B res" unfolding Stack_Delimiter_def by simp
+lemma [intro]: "a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> (a,b) \<in> (B \<heavy_comma> A) res" by simp
+lemma [elim]: "ab \<in> (B \<heavy_comma> A) res \<Longrightarrow> (\<And>a b. ab = (a,b) \<Longrightarrow> a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> C) \<Longrightarrow> C" unfolding Stack_Delimiter_def by (cases ab) simp
+lemma [elim!,\<nu>elim]: "Inhabited (U\<heavy_comma>V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 subsection \<open>Procedure construction context.\<close>
 
 datatype ('a, 'r) "proc_ctx" ("_/ \<flower> _" [2,2] 1)  = Proc_Ctx "('a::lrep)" "('r::register_collection)"
 declare proc_ctx.split[split]
-definition Proc_CtxTy :: " ('a::lrep) set \<Rightarrow> ('b::register_collection) set \<Rightarrow> ('a \<flower> 'b) set" (infix "\<flower>" 2) \<comment> \<open>the flower operator\<close>
-  where "Proc_CtxTy s t = { Proc_Ctx a b | a b. a \<in>s \<and> b \<in> t}"
+definition Proc_CtxTy :: " ('a::lrep) \<nu>set \<Rightarrow> ('b::register_collection) \<nu>set \<Rightarrow> ('a \<flower> 'b) \<nu>set" (infix "\<flower>" 2) \<comment> \<open>the flower operator\<close>
+  where "Proc_CtxTy s t = (\<lambda>res. { Proc_Ctx a b | a b. a \<in>s res \<and> b \<in> t res})"
     \<comment> \<open>The font of the flower operator is not specified, since any flower is a flower.\<close>
 notation Proc_CtxTy ("\<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k\<^bold>: _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s _" [2,2] 1000)  \<comment> \<open>Better decoration for better attention. It is the center of the construction.\<close>
 (* two syntax sugars, defined as constants rather than syntax objects in order to merely enable definition-jumping by `Ctrl-Click`. *)
@@ -430,14 +399,10 @@ consts Proc_Ctx_NoRegisters :: ind ("\<^bold>n\<^bold>o \<^bold>r\<^bold>e\<^bol
 consts Proc_Ctx_EmptyStack :: ind ("\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k")
 translations "x \<flower> \<^bold>n\<^bold>o \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s" == "x \<flower> CONST Void"
   "\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k" <= "CONST End_of_Contextual_Stack s"
-lemma [elim]: "c \<in> (X \<flower> G) \<Longrightarrow> (\<And>x g. c = Proc_Ctx x g \<Longrightarrow> x \<in> X \<Longrightarrow> g \<in> G \<Longrightarrow> C) \<Longrightarrow> C"
+lemma [elim]: "c \<in> (X \<flower> G) res \<Longrightarrow> (\<And>x g. c = Proc_Ctx x g \<Longrightarrow> x \<in> X res \<Longrightarrow> g \<in> G res \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Proc_CtxTy_def by (cases c) auto
-lemma [intro]: "x \<in> X \<Longrightarrow> g \<in> G \<Longrightarrow> Proc_Ctx x g \<in> (X \<flower> G)" unfolding Proc_CtxTy_def by auto
-lemma [simp]: "Inhabited (X \<flower> G) \<longleftrightarrow> Inhabited X \<and> Inhabited G"
-  unfolding Proc_CtxTy_def Inhabited_def by auto
+lemma [intro]: "x \<in> X res \<Longrightarrow> g \<in> G res \<Longrightarrow> Proc_Ctx x g \<in> (X \<flower> G) res" unfolding Proc_CtxTy_def by auto
 lemma [elim!,\<nu>elim]: "Inhabited (X \<flower> G) \<Longrightarrow> (Inhabited X \<Longrightarrow> Inhabited G \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Proc_CtxTy_def Inhabited_def by auto
-lemma [intro]: "Inhabited X \<Longrightarrow> Inhabited G \<Longrightarrow> Inhabited (X \<flower> G)"
   unfolding Proc_CtxTy_def Inhabited_def by auto
 
 instantiation proc_ctx :: (lrep,register_collection) lrep begin
@@ -446,15 +411,12 @@ definition disposable_proc_ctx :: "('a,'b) proc_ctx \<Rightarrow> bool" where "d
 instance by standard
 end
 
-lemma [simp]: "(Proc_Ctx s r) \<in> (T \<flower> U) \<equiv> s \<in> T \<and> r \<in> U" by (simp add: Proc_CtxTy_def)
-lemma [\<nu>elim]: "c \<in> (T \<flower> U) \<Longrightarrow> (\<And>s r. c = (Proc_Ctx s r) \<Longrightarrow> s \<in> T \<Longrightarrow> r \<in> U \<Longrightarrow> C) \<Longrightarrow> C" by (cases c) auto
-lemma Proc_CtxTy_intro[intro]: "s \<in> T \<Longrightarrow> r \<in> U \<Longrightarrow> Proc_Ctx s r \<in> (T \<flower> U)" by (simp add: Proc_CtxTy_def)
-lemma [intro]: "Inhabited T \<Longrightarrow> Inhabited U \<Longrightarrow> Inhabited (T \<flower> U)" unfolding Inhabited_def by auto
-lemma [elim!,\<nu>elim]: "Inhabited (T \<flower> U) \<Longrightarrow> (Inhabited T \<Longrightarrow> Inhabited U \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto elim: \<nu>elim)
+lemma [simp]: "(Proc_Ctx s r) \<in> (T \<flower> U) res \<equiv> s \<in> T res \<and> r \<in> U res" by (simp add: Proc_CtxTy_def)
+(* lemma [\<nu>elim]: "c \<in> (T \<flower> U) res \<Longrightarrow> (\<And>s r. c = (Proc_Ctx s r) \<Longrightarrow> s \<in> T \<Longrightarrow> r \<in> U \<Longrightarrow> C) \<Longrightarrow> C" by (cases c) auto *)
+lemma Proc_CtxTy_intro[intro]: "s \<in> T res \<Longrightarrow> r \<in> U res \<Longrightarrow> Proc_Ctx s r \<in> (T \<flower> U) res" by (simp add: Proc_CtxTy_def)
 
 subsection \<open>The \<nu>-system VM and Procedure construction structures\<close>
 
-datatype 'a state = StatOn "('a::lrep)" | STrap | SNeg
 text\<open> The basic state of the \<nu>-system virtual machine is represented by type @{typ "('a::lrep) state"}.
   The valid state @{term "StatOn p"} essentially has two major form, one without registers and another one with them,
       \<^item> @{term "StatOn (x1, x2, \<cdots>, xn, void)"},
@@ -464,9 +426,10 @@ text\<open> The basic state of the \<nu>-system virtual machine is represented b
   The negative state @{term SNeg} represents the admissible error situation that is not considered in partial correctness.
   For example, @{term SNeg} may represents an admissible crash, and in that case the partial correctness certifies that
     ``if the program exits normally, the output would be correct''.\<close>
+
 declare state.split[split]
 definition StrictStateTy :: " ('a::lrep) set \<Rightarrow> 'a state set" ("\<S_S> _" [56] 55)
-  where "\<S_S> T = {s. case s of StatOn x \<Rightarrow> x \<in> T | STrap \<Rightarrow> False | SNeg \<Rightarrow> False}"
+  where "\<S_S> T = {s. case s of Success x \<Rightarrow> x \<in> T | Fail \<Rightarrow> False | ParticalCorrect \<Rightarrow> False}"
 definition LooseStateTy :: " ('a::lrep) set \<Rightarrow> 'a state set" ("\<S> _" [56] 55)
   where "\<S> T = {s. case s of StatOn x \<Rightarrow> x \<in> T | STrap \<Rightarrow> False | SNeg \<Rightarrow> True}"
 lemma [simp]: "StatOn x \<in> \<S_S> T \<equiv> x \<in> T" and [simp]: "\<not> (SNeg \<in> \<S_S> T)" and [simp]: "\<not> (STrap \<in> \<S_S> T)"
