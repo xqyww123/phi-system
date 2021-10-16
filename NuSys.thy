@@ -1,10 +1,10 @@
 (* FIX ME: I have tried the best but the sidekick won't work right. Isabelle is not quite flexible in
   outer syntax and it is already the best hack can be given. *)
 theory NuSys
-  imports NuPrim NuLLReps
+  imports NuPrime NuLLReps
   keywords
     "proc" "proc'" "rec_proc" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" :: quasi_command
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always" :: quasi_command
   and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<nu>choose2" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug"
           "\<nu>note" "\<nu>choose_quick" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
@@ -21,20 +21,160 @@ which basically has the same effect as the using command.\<close>
   and final_proc_rewrite \<open>rules used to rewrite the generated procedure theorem in the final stage\<close>
   and final_proc_rewrite2
 
-lemmas [final_proc_rewrite] = Premise_Irew End_of_Contextual_Stack_def[THEN eq_reflection]
-lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Disposable S \<equiv> Trueprop (\<nu>Disposable S)" unfolding Premise_def .
-lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Share N P sh \<equiv> Trueprop (\<nu>Share N P sh)" unfolding Premise_def .
-lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Deprive N dp \<equiv> Trueprop (\<nu>Deprive N dp)" unfolding Premise_def .
-lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>ShrIdentical N sid \<equiv> Trueprop (\<nu>ShrIdentical N sid)" unfolding Premise_def .
-lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>CEqual N Pce ce \<equiv> Trueprop (\<nu>CEqual N Pce ce)" unfolding Premise_def .
-lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Ownership N ow \<equiv> Trueprop (\<nu>Ownership N ow)" unfolding Premise_def .
-lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Zero N zr \<equiv> Trueprop (\<nu>Zero N zr)" unfolding Premise_def .
+lemmas [final_proc_rewrite] = Premise_Irew WorkingProtector_def
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Zero N zr \<equiv> (\<nu>Zero N zr)" unfolding Premise_def .
   
-thm final_proc_rewrite2
+definition  FailedPremise :: "bool \<Rightarrow> bool" where "FailedPremise \<equiv> Premise"
+lemma FailedPremise_I: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> FailedPremise P" unfolding FailedPremise_def .
+lemma FailedPremise_D: "FailedPremise P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding FailedPremise_def .
 
-definition  FailedPremise :: "bool \<Rightarrow> prop" where "FailedPremise \<equiv> Premise"
-lemma FailedPremise_I: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> PROP FailedPremise P" unfolding FailedPremise_def .
-lemma FailedPremise_D: "PROP FailedPremise P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding FailedPremise_def .
+section \<open>Syntax\<close>
+
+subsection \<open>Logical image models\<close>
+
+text \<open>A set of models having common meanings, useful for representing logical images\<close>
+
+consts val_of :: " 'a \<Rightarrow> 'b "
+consts key_of :: " 'a \<Rightarrow> 'b "
+
+datatype ('a, 'b) object (infixr "\<R_arr_tail>" 60) = object (key_of_obj: 'a) (val_of_obj: 'b) (infixr "\<R_arr_tail>" 60)
+adhoc_overloading key_of key_of_obj and val_of val_of_obj
+
+lemma object_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>a x. P (a \<R_arr_tail> x))" by (metis object.exhaust)
+lemma object_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>a x. P (a \<R_arr_tail> x))" by (metis object.exhaust)
+
+datatype ('a, 'b) owning (infixr "\<left_fish_tail>" 60) = owning (resources_of: 'a) (val_of_owning: 'b) (infixr "\<left_fish_tail>" 60)
+adhoc_overloading val_of val_of_owning
+
+lemma owning_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>a x. P (a \<left_fish_tail> x))" by (metis owning.exhaust)
+lemma owning_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>a x. P (a \<left_fish_tail> x))" by (metis owning.exhaust)
+
+section \<open>Mechanisms\<close>
+
+subsection \<open>Register\<close>
+
+definition AndTy :: " 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> ('a \<times> 'b) \<nu>set " (infixr "\<^bold>a\<^bold>n\<^bold>d" 3)  where  "(A \<^bold>a\<^bold>n\<^bold>d B) = (\<lambda>res. A res \<times> B res)"
+lemma [simp]: "(a, b) \<in> (A \<^bold>a\<^bold>n\<^bold>d B) res \<longleftrightarrow> a \<in> A res \<and> b \<in> B res" unfolding AndTy_def by simp
+lemma [intro]: "a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> (a, b) \<in> (A \<^bold>a\<^bold>n\<^bold>d B) res" by simp
+lemma [elim]: "ab \<in> (A \<^bold>a\<^bold>n\<^bold>d B) res \<Longrightarrow> (\<And>a b. ab = (a, b) \<Longrightarrow> a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding AndTy_def by (cases ab) simp
+lemma [elim!,\<nu>elim]: "Inhabited (A \<^bold>a\<^bold>n\<^bold>d B) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [\<nu>intro]: "\<nu>Resources_of_set A as \<Longrightarrow> \<nu>Resources_of_set B bs \<Longrightarrow> \<nu>Resources_of_set (A \<^bold>a\<^bold>n\<^bold>d B) (as \<union> bs)"
+  unfolding \<nu>Resources_of_set_def  by auto
+
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A \<^bold>a\<^bold>n\<^bold>d B) \<longmapsto> (A' \<^bold>a\<^bold>n\<^bold>d B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and> Q"
+  unfolding Cast_def by auto
+lemma StackDelimiter_to_AndTy: " (A\<heavy_comma> B) \<equiv> (B \<^bold>a\<^bold>n\<^bold>d A) " unfolding Stack_Delimiter_def AndTy_def by simp
+
+subsection \<open>Index for Shallow Representation\<close>
+
+text \<open>Indexes provide the function to access and map the addressed part in a nested structure (e.g. a nested pair @{term "(a,((b,c),d))"}.
+  It is achieved by nested composition of address functions. For example "get_at (address_L (address_R address_here))"
+  returns @{term b} for the pattern @{term "((a,b),c)"}, and "map_at (address_L (address_R address_here)) f"
+  maps a @{term "((a,b),c)"} to @{term "((a, f b),c)"}\<close>
+
+named_theorems \<nu>index_def
+
+datatype ('a,'b,'x,'y) index = Index (get_idx: "'a \<Rightarrow> 'x") (map_idx: "('x \<Rightarrow> 'y) \<Rightarrow> 'a \<Rightarrow> 'b")
+declare  index.split[split] Map'_def[\<nu>index_def]
+
+definition index_here :: "('a,'b,'a,'b) index" where "index_here = Index id id"
+definition index_left :: "('a,'b,'x,'y) index \<Rightarrow> ('a \<times> 'r, 'b \<times> 'r, 'x, 'y) index"
+  where "index_left adr = (case adr of Index g m \<Rightarrow> Index (g \<circ> fst) (apfst o m))"
+definition index_right :: "('a,'b,'x,'y) index \<Rightarrow> ('l \<times> 'a, 'l \<times> 'b, 'x, 'y) index"
+  where "index_right adr = (case adr of Index g m \<Rightarrow> Index (g \<circ> snd) (apsnd o m))"
+
+
+definition AdrGet :: " ('a,'b,'x,'y) index \<Rightarrow> 'x \<nu>set \<Rightarrow> 'a \<nu>set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _ \<^bold>@ _ \<brangle>)" [101,4,4] 100)
+  where [\<nu>index_def]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<blangle> X \<^bold>@ A \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_idx adr \<blangle> A \<longmapsto> X \<brangle>"
+definition AdrMap :: " ('a,'b,'x,'y) index \<Rightarrow> 'x \<nu>set \<Rightarrow> 'a \<nu>set \<Rightarrow> 'y \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _ \<^bold>@ _ \<longmapsto> _ \<^bold>@ _ \<brangle>)" [101,4,4,4,4] 100)
+  where [\<nu>index_def]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_idx idx \<blangle> A \<longmapsto> X \<brangle> \<and>
+    (\<forall>f h. (\<forall>a. a \<in> X h \<longrightarrow> f a \<in> Y h) \<longrightarrow> (\<forall>a. a \<in> A h \<longrightarrow> map_idx idx f  a \<in> B h))"
+declare Map_def[\<nu>index_def]
+
+lemma index_here_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle>"
+  unfolding \<nu>index_def  index_here_def by auto
+lemma index_here_mapper[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<brangle>"
+  unfolding \<nu>index_def  index_here_def by auto
+lemma index_left_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left f \<blangle> X \<^bold>@ (A \<^bold>a\<^bold>n\<^bold>d R) \<brangle>"
+  unfolding \<nu>index_def index_left_def by (cases f) auto
+lemma index_right_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (L \<^bold>a\<^bold>n\<^bold>d A) \<brangle>"
+  unfolding \<nu>index_def index_right_def by (cases f) auto
+lemma index_stack_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> N) \<brangle>"
+  unfolding \<nu>index_def index_right_def by (cases f) auto
+lemma index_left_mapper[\<nu>intro]:
+    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left f \<blangle> X \<^bold>@ (A \<^bold>a\<^bold>n\<^bold>d R) \<longmapsto> Y \<^bold>@ (B \<^bold>a\<^bold>n\<^bold>d R) \<brangle>"
+  unfolding \<nu>index_def index_left_def by (cases f) auto
+lemma index_right_mapper[\<nu>intro]:
+    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (L \<^bold>a\<^bold>n\<^bold>d A) \<longmapsto> Y \<^bold>@ (L \<^bold>a\<^bold>n\<^bold>d B) \<brangle>"
+  unfolding \<nu>index_def index_right_def by (cases f) auto
+lemma index_stack_mapper[\<nu>intro]:
+    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> N) \<longmapsto> Y \<^bold>@ (B\<heavy_comma> N) \<brangle>"
+  unfolding \<nu>index_def index_right_def by (cases f) auto
+
+subsection \<open>Register\<close>
+
+definition RegisterCollection :: " 'a \<Rightarrow> 'a " where "RegisterCollection x = x"
+
+lemma RegisterCollection_rew[final_proc_rewrite]: "RegisterCollection x \<equiv> x" unfolding RegisterCollection_def .
+lemma Named_rew[final_proc_rewrite]: "Named name x \<equiv> x" unfolding Named_def .
+
+lemma index_reg_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ RegisterCollection A \<brangle>"
+  unfolding RegisterCollection_def .
+lemma index_reg_mapper[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A  \<longmapsto> Y \<^bold>@ B \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ RegisterCollection A \<longmapsto> Y \<^bold>@ RegisterCollection B \<brangle>"
+  unfolding RegisterCollection_def .
+
+(* definition new_reg_0 :: "(('x::lrep) \<times> ('R::lrep) \<flower> void) \<Rightarrow> ('R \<flower> 'x register) state"
+  where "new_reg_0 s = (case s of Proc_Ctx (x,R) void \<Rightarrow> StatOn (Proc_Ctx R (Register (NAME _) x)))"
+definition new_reg_L :: "('G, 'G2, 't, 'x register \<times> 't) index \<Rightarrow> (('x::lrep) \<times> ('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
+  where "new_reg_L adr s = (case s of Proc_Ctx (x,R) G \<Rightarrow> StatOn (Proc_Ctx R (map_at adr (\<lambda>t. (Register (NAME _) x,t)) G)))"
+definition new_reg_R :: "('G, 'G2, 't, 't \<times> 'x register) index \<Rightarrow> (('x::lrep) \<times> ('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
+  where "new_reg_R adr s = (case s of Proc_Ctx (x,R) G \<Rightarrow> StatOn (Proc_Ctx R (map_at adr (\<lambda>t. (t, Register (NAME _) x)) G)))" *)
+
+subsubsection \<open>Instruction Definitions\<close>
+
+definition new_reg :: "('r::stack, 'r2::stack, 'x::lrep, void \<times> 'x) index \<Rightarrow> 'r \<longmapsto> 'r2"
+  where "new_reg idx h r = Success h (map_idx idx (Pair void) r)"
+definition delete_reg :: "('r::stack, 'r2::stack, 'x::lrep \<times> 'b::lrep, 'b) index \<Rightarrow> 'r \<longmapsto> 'r2"
+  where "delete_reg idx h s = Success h (map_idx idx snd s)"
+
+definition store_reg :: "('r::stack, 'r2::stack, 'x::lrep, 'y::lrep) index \<Rightarrow> 'y \<times> 'r \<longmapsto> 'r2"
+  where "store_reg idx h = (\<lambda>(y,r). Success h (map_idx idx (\<lambda>x.  y) r))"
+definition load_reg :: "('r::stack, 'r::stack, 'x::lrep, 'x::lrep) index \<Rightarrow> 'r \<longmapsto> 'x \<times> 'r"
+  where "load_reg idx h r = Success h (get_idx idx r, r)"
+definition move_reg :: "('r::stack, 'r2::stack, 'x::lrep, void) index \<Rightarrow> 'r \<longmapsto> 'x \<times> 'r2"
+  where "move_reg idx h r = Success h (get_idx idx r, map_idx idx (\<lambda>_. void) r)"
+
+subsubsection \<open>Instruction Specifications\<close>
+
+lemma new_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> W \<^bold>@ G \<longmapsto> ( \<ltbrak>\<n>\<a>\<m>\<e>\<rtbrak>. Void \<^bold>a\<^bold>n\<^bold>d W) \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg idx \<blangle> G \<longmapsto> G2 \<brangle>"
+  unfolding \<nu>index_def \<nu>def new_reg_def by (cases idx) auto 
+
+lemma delete_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle>(W \<^bold>a\<^bold>n\<^bold>d Z) \<^bold>@ G \<longmapsto> Z \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c delete_reg idx \<blangle> G \<longmapsto> G2 \<brangle>"
+  unfolding \<nu>index_def \<nu>def delete_reg_def  by (cases idx) auto
+
+lemma store_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Named name X \<^bold>@ G \<longmapsto> Named name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg idx \<blangle> G\<heavy_comma> Y \<longmapsto> G2 \<brangle>"
+  unfolding \<nu>index_def \<nu>def store_reg_def by (cases idx) auto
+
+lemma load_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Named name  \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<^bold>@ R \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg idx \<blangle> R \<longmapsto> R \<heavy_comma> x \<tycolon> X \<brangle>"
+  unfolding \<nu>index_def \<nu>def load_reg_def by auto
+
+lemma move_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Named name X \<^bold>@ R \<longmapsto> Named name Void \<^bold>@ R' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c move_reg idx \<blangle> R \<longmapsto> R' \<heavy_comma> X \<brangle>"
+  unfolding \<nu>index_def \<nu>def move_reg_def by (cases idx) auto
+
+(* schematic_goal "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right (index_left (index_left (index_here))) \<blangle> ?X \<^bold>@ ?A \<brangle>" by (rule \<nu>intro)+
+schematic_goal th1: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x (?adr::('a \<times> 'b \<times> 'c,?'z, 'b, ?'x) index) \<blangle> X \<^bold>@ (A \<^bold>a\<^bold>n\<^bold>d X \<^bold>a\<^bold>n\<^bold>d C) \<longmapsto> ?Y \<^bold>@ ?Z \<brangle>" 
+  including show_more by (rule \<nu>intro)+ *)
+
+subsubsection \<open>Initial registers\<close>
+
+definition op_init_registers :: "('s::stack, 's2::stack, 'r::stack, void) index \<Rightarrow> 's \<longmapsto> 's2 \<times> 'r"
+  where "op_init_registers idx h s = Success h (map_idx idx (\<lambda>_. void) s, get_idx idx s)"
+
+lemma op_init_register:
+    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> RegisterCollection R \<^bold>@ S \<longmapsto> Void \<^bold>@ S' \<brangle>
+      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_init_registers idx \<blangle> S \<longmapsto> RegisterCollection (S' \<^bold>a\<^bold>n\<^bold>d R) \<brangle>"
+  unfolding RegisterCollection_def op_init_registers_def \<nu>def \<nu>index_def by auto
 
 subsection \<open>Structural Pairs\<close>
 
@@ -50,15 +190,15 @@ lemma [\<nu>intro]: "<Structural> x \<in> UNIV" unfolding StructuralTag_def by f
 lemma [\<nu>intro]: "<Structural> P x \<Longrightarrow> <Structural> x \<in> Collect P" unfolding StructuralTag_def by fast
 lemma [\<nu>intro]: "<Structural> P x y \<Longrightarrow> <Structural> case_prod P (x,y)" unfolding StructuralTag_def by fast
 
-definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<Rightarrow> (('b \<times> 'a) \<times> 'r) state"
-  where "op_pair x = (case x of (a,b,r) \<Rightarrow> StatOn ((b,a),r))"
-definition op_depair :: "(('b::lrep) \<times> ('a::lrep)) \<times> ('r::stack) \<Rightarrow> ('a \<times> 'b \<times> 'r) state"
-  where "op_depair x = (case x of ((b,a),r) \<Rightarrow> StatOn (a,b,r))"
+definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<longmapsto> (('b \<times> 'a) \<times> 'r)"
+  where "op_pair h x = (case x of (a,b,r) \<Rightarrow> Success h ((b,a),r))"
+definition op_depair :: "(('b::lrep) \<times> ('a::lrep)) \<times> ('r::stack) \<longmapsto> ('a \<times> 'b \<times> 'r)"
+  where "op_depair h x = (case x of ((b,a),r) \<Rightarrow> Success h (a,b,r))"
 (* declare op_pair_def[\<nu>instr] op_depair_def[\<nu>instr] *)
 
 theorem pr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
 theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
-
+(*
 lemma pr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<flower> W \<brangle>"
   unfolding AutoFusion_def by (rule call) (rule pr_\<nu>proc)
 lemma dpr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<flower> W \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<brangle>"
@@ -67,6 +207,28 @@ lemma pr_auto_schema': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> 
   unfolding AutoFusion_def by (rule pr_\<nu>proc)
 lemma dpr_auto_schema': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>"
   unfolding AutoFusion_def by (rule dpr_\<nu>proc)
+*)
+section \<open>Sugars\<close>
+
+consts EmptyStack_sugar :: " 'sugar " ("\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k")
+consts Register_sugar :: " 'i_am \<Rightarrow> 'just \<Rightarrow> 'a_sugar " ("(2_)//\<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r\<^bold>s\<^bold>: (2_)" [14,14] 13)
+
+translations
+  "R \<heavy_comma> x \<tycolon> N" == "R \<heavy_comma> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
+  "x \<tycolon> N \<heavy_comma> R" == "\<tort_lbrace>x \<tycolon> N\<tort_rbrace> \<heavy_comma> R"
+  "x" <= "x \<^bold>a\<^bold>n\<^bold>d CONST Void"
+  "P" <= "CONST AndFact P (CONST NoFact)"
+  "x" <= "CONST RegisterCollection (CONST End_of_Contextual_Stack R)\<heavy_comma> x"
+  "x" <= "CONST End_of_Contextual_Stack R \<heavy_comma> x"
+  "\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k" <= "CONST RegisterCollection (CONST End_of_Contextual_Stack R)"
+  "CONST Register_sugar \<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k G" <= "CONST RegisterCollection G"
+  "\<^bold>e\<^bold>m\<^bold>p\<^bold>t\<^bold>y \<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k" <= "CONST End_of_Contextual_Stack R"
+  "CONST Register_sugar T G" <= "(CONST RegisterCollection G)\<heavy_comma> T"
+  "CONST Register_sugar (T\<heavy_comma> U) G " <= "CONST Register_sugar T G \<heavy_comma> U"
+
+translations "_linebreak_collection_ P Q" <= "CONST AndFact P Q"
+translations "P" <= "CONST AndFact P (CONST NoFact)"
+
 
 section \<open>Main implementation of the system\<close>
 
@@ -85,7 +247,7 @@ ML_file NuSys.ML
 ML_file "./library/registers.ML"
 ML_file "./library/processors.ML"
 ML_file "./library/obtain.ML"
-ML_file NuToplevel.ML
+ML_file NuToplevel.ML 
 
 section \<open>Attributes and Commands\<close>
 
@@ -115,7 +277,8 @@ in
 val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>exty_simproc\<close> "setup the pecific simproc for \<^const>\<open>ExTy\<close>"
   (Parse.binding >> NuExTyp.set_simproc_cmd)
 
-val requires_statement = Scan.optional (Parse.$$$ "requires" |-- Parse.!!! Parse_Spec.statement) [];
+val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
+val requires_statement = Scan.optional (Parse.$$$ "requires" |-- Parse.!!! statement1) [];
 val requires_opt1 = Scan.option (Parse.$$$ "requires" |-- Parse.term);
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
@@ -268,10 +431,9 @@ subsubsection \<open>Essential functions\<close>
 \<nu>processor call 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => NuProcedure.parser >> (fn binding => fn _ =>
     let open NuBasics NuSys
   val procs = NuProcedure.procedure_thm ctx binding
-  val xa = hd procs |> Thm.concl_of |> auto_fusion_arity |> @{print}
+  (* val xa = hd procs |> Thm.concl_of |> auto_fusion_arity |> @{print}
   val meta =funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctx) meta
-    handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'} #> accept_proc ctx) meta
-val meta = @{print} meta
+    handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'} #> accept_proc ctx) meta *)
 val ctx = NuSys.load_specthm meta ctx
     in NuSys.apply_procs ctx procs meta end)\<close>
 
@@ -313,17 +475,17 @@ val ctx = NuSys.load_specthm meta ctx
 
 subsubsection \<open>Registers\<close>
 
-\<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close>  \<open>let open Parse in
+\<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
     (fn idts => fn _ => fold_rev (fn idt =>
       NuRegisters.assign_reg ctx idt
         #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
-\<nu>processor  load_register 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close>  \<open>let open Parse in
+\<nu>processor  load_register 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   fn ctx => fn th => short_ident >> (fn idt => fn _ => NuRegisters.load_reg ctx idt th
       handle NuRegisters.NoSuchRegister _ => raise Bypass NONE)
 end\<close>
-\<nu>processor move_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close>  \<open>let open Parse in
+\<nu>processor move_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   (fn ctx => fn th => (($$$ "\<leftarrow>" || $$$ "$") |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
     (fn idts => fn _ => fold (fn idt => NuRegisters.move_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>

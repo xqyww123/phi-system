@@ -103,7 +103,7 @@ by (metis memadr.exhaust object.exhaust old.prod.exhaust) \<bullet>
   \<nu>debug note g_\<nu>proc
 
 ML \<open>Locale.get_locales @{theory}\<close>
-ML \<open>val ctx = Locale.init "NuPrim.ceq_lrep" @{theory}
+ML \<open>val ctx = Locale.init "NuPrime.ceq_lrep" @{theory}
 val x = Assumption.all_prems_of ctx\<close>
 
 (* schematic_goal [simplified, simplified \<nu>post_construct]:
@@ -304,9 +304,9 @@ end
 
 
 
-term NuPrim.CodeBlock
+term NuPrime.CodeBlock
 ML \<open>\<^const_name>\<open>CodeBlock\<close>\<close>
-term "NuPrim.CurrentConstruction"
+term "NuPrime.CurrentConstruction"
 ML_val \<open>HOLogic.strip_tuple @{term "(A,B,C)"}\<close>
 proc "(x \<tycolon> \<nat>[32] named x, y \<tycolon> \<nat>[32])" for x :: nat \<medium_left_bracket> 
     x y y + + 

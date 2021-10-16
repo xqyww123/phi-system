@@ -4,7 +4,7 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
   imports Main "HOL-Library.Monad_Syntax" NuHelpMath
   abbrevs "is" = "\<^bold>i\<^bold>s"
       and "as" = "\<^bold>a\<^bold>s"
-      and "register" = "\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r"
+      and "<and>" = "\<^bold>a\<^bold>n\<^bold>d"
       and "in" = "\<^bold>i\<^bold>n"
       and "with" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"
       and "auxiliary_facts" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s"
@@ -59,7 +59,6 @@ lemmas  PropBlock_I = PropBlock_def[THEN equal_elim_rule2]
 lemmas  PropBlock_D = PropBlock_def[THEN equal_elim_rule1]
 
 syntax
-  "_pretty_and_" :: "logic \<Rightarrow> logic \<Rightarrow> logic"  ("_/ \<^bold>a\<^bold>n\<^bold>d _" [4,3] 3)
   "_linebreak_" :: "logic \<Rightarrow> logic" ("//\<zero_width_space>_" [3] 3)
   "_linebreak_collection_" :: "logic \<Rightarrow> logic \<Rightarrow> logic"  ("_//\<invisible_separator>_" [4,3] 3)
   "_with_" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("_/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _" [2,1] 1)
@@ -88,8 +87,7 @@ subsubsection \<open>Structures assembling propositions\<close>
 definition NoFact :: "prop" ("\<^bold>n\<^bold>o\<^bold>t\<^bold>h\<^bold>i\<^bold>n\<^bold>g") where "NoFact \<equiv> Trueprop True"
 lemma NoFact: "PROP NoFact" unfolding NoFact_def using TrueI .
 definition AndFact :: "prop \<Rightarrow> prop \<Rightarrow> prop" (infixr "and'_fact" 3) where "AndFact \<equiv> (&&&)"
-translations "P" <= "CONST AndFact P (CONST NoFact)"
-translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
+
 lemma AndFact_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP P and_fact PROP Q" unfolding AndFact_def using conjunctionI .
 lemma AndFact_D1: "PROP P and_fact PROP Q \<Longrightarrow> PROP P" unfolding AndFact_def using conjunctionD1 .
 lemma AndFact_D2: "PROP P and_fact PROP Q \<Longrightarrow> PROP Q" unfolding AndFact_def using conjunctionD2 .
@@ -209,7 +207,7 @@ datatype ('a,'b) typing = typing 'b "('a,'b) \<nu>" (infix "\<tycolon>" 15) \<co
 primrec nu_of :: "('a,'b) typing \<Rightarrow> ('a,'b) \<nu>" where "nu_of (x \<tycolon> N) = N"
 primrec image_of :: "('a,'b) typing \<Rightarrow> 'b" where "image_of (x \<tycolon> N) = x"
 
-definition RepSet :: "('a,'b) typing \<Rightarrow> heap \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>") where "\<tort_lbrace> ty \<tort_rbrace> = (\<lambda>res. {p. case ty of (x \<tycolon> N) \<Rightarrow> N res p x })"
+definition RepSet :: "('a,'b) typing \<Rightarrow> heap \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>" [10] ) where "\<tort_lbrace> ty \<tort_rbrace> = (\<lambda>res. {p. case ty of (x \<tycolon> N) \<Rightarrow> N res p x })"
 abbreviation Refining :: "heap \<Rightarrow> 'a \<Rightarrow> ('a,'b) \<nu> \<Rightarrow>  'b \<Rightarrow> bool" ("([_] _/ \<nuLinkL> _  \<nuLinkR>/ _)" [15, 27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
   where  "([res] p \<nuLinkL> N \<nuLinkR> x) \<equiv> p \<in> \<tort_lbrace>x \<tycolon> N\<tort_rbrace> res"
 definition Inhabited :: " (heap \<Rightarrow> 'a set) \<Rightarrow> bool" where "Inhabited s \<equiv> (\<exists>x res. x \<in> s res)"
@@ -259,12 +257,19 @@ syntax "_NAME_" :: "idt \<Rightarrow> name_tag" ("NAME _" [0] 1000)
   "_NAME2_" :: "idt => idt => name_tag" ("NAME2 _ _" [0,0] 1000)
 translations "NAME name" == "CONST NAME_TAG (\<lambda>name. ())"
 
-syntax "_named_" :: "logic \<Rightarrow> idt \<Rightarrow> logic" (infix "named" 14)
-translations "x named name" == "CONST Named (NAME name) x"
+consts "named_sugar" :: " 'i_am \<Rightarrow> 'merely \<Rightarrow> 'a_sugar " ("\<ltbrak>_\<rtbrak>. _" [10,15] 14)
+translations
+  "\<ltbrak>name\<rtbrak>. x \<tycolon> T" == "\<ltbrak>name\<rtbrak>. \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
+  "\<ltbrak>name\<rtbrak>. x" == "CONST Named (NAME name) x"
+
+lemma [simp]: "x \<in> Named name S \<longleftrightarrow> x \<in> S" unfolding Named_def ..
+lemma [simp]: "x \<in> Named name S heap \<longleftrightarrow> x \<in> S heap" unfolding Named_def ..
+lemma [\<nu>intro]: "\<nu>Resources_of_set S rcss \<Longrightarrow> \<nu>Resources_of_set (Named name S) rcss"
+  unfolding \<nu>Resources_of_set_def Named_def by simp
 
 subsubsection \<open>Parameter tag\<close>
 
-definition ParamTag :: " 'a \<Rightarrow> prop" ("\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m _" [1000] 10) where "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<equiv> Trueprop True"
+definition ParamTag :: " 'a \<Rightarrow> bool" ("\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m _" [1000] 26) where "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<equiv> True"
 lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" unfolding ParamTag_def using TrueI .
   \<comment>\<open>A tag used to indicate a parameter should be specified during application. It retains the order of the parameters to be specified.
   For example, "@{prop "\<And>bit_width value. \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m bit_width \<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m value \<Longrightarrow> P bit_wdith value"},
@@ -276,7 +281,7 @@ lemma ParamHOL: "Trueprop (ParamHOL x) \<equiv> \<^bold>p\<^bold>a\<^bold>r\<^bo
 
 subsubsection \<open>Premise tag\<close>
 
-definition Premise :: "bool \<Rightarrow> bool" ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [10] 9) where [\<nu>def]:"Premise x = x"
+definition Premise :: "bool \<Rightarrow> bool" ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where [\<nu>def]:"Premise x = x"
   \<comment> \<open>A tag to hint automatic provers to try to prove this proof obligation\<close>
 lemma Premise_I: "P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding Premise_def by simp
 lemma Premise_E: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> P" unfolding Premise_def by simp
@@ -314,33 +319,30 @@ class stack = lrep
 
 instantiation prod :: (lrep,stack) stack begin instance by standard end
 
-definition Stack_Delimiter :: " ('a :: stack) \<nu>set \<Rightarrow> ('b :: lrep) \<nu>set \<Rightarrow> ('b \<times> 'a) \<nu>set " ( "(2_/ \<heavy_comma> _)" [13,14] 13)
+subsubsection \<open>Delimiter operator\<close>
+
+definition Stack_Delimiter :: " ('a :: stack) \<nu>set \<Rightarrow> ('b :: lrep) \<nu>set \<Rightarrow> ('b \<times> 'a) \<nu>set " ( "(2_/ \<heavy_comma> _)" [14,15] 14)
   where "Stack_Delimiter a b = (\<lambda>res. (b res \<times> a res))"
 translations "R \<heavy_comma> x \<tycolon> N" == "R \<heavy_comma> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
+  "x \<tycolon> N \<heavy_comma> R" == "\<tort_lbrace>x \<tycolon> N\<tort_rbrace> \<heavy_comma> R"
 
 lemma [simp]: "(a,b) \<in> (B \<heavy_comma> A) res \<longleftrightarrow> a \<in> A res \<and> b \<in> B res" unfolding Stack_Delimiter_def by simp
 lemma [intro]: "a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> (a,b) \<in> (B \<heavy_comma> A) res" by simp
 lemma [elim]: "ab \<in> (B \<heavy_comma> A) res \<Longrightarrow> (\<And>a b. ab = (a,b) \<Longrightarrow> a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> C) \<Longrightarrow> C" unfolding Stack_Delimiter_def by (cases ab) simp
 lemma [elim!,\<nu>elim]: "Inhabited (U\<heavy_comma>V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
-definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " where "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
+subsubsection \<open>Tag: End_of_Contextual_Stack\<close>
+
+definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " ("\<^bold>E\<^bold>N\<^bold>D") where "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
+lemmas End_of_Contextual_Stack_rew = End_of_Contextual_Stack_def[THEN eq_reflection]
 lemma [elim,\<nu>elim]: "Inhabited (End_of_Contextual_Stack S) \<Longrightarrow> C \<Longrightarrow> C" .
-
-consts "ClaimSugar" :: " 'meaningless \<Rightarrow> 'meaningless " ("[\<^bold>c\<^bold>l\<^bold>a\<^bold>i\<^bold>m]")
-  \<comment> \<open>merely a syntax sugar. We define it as a constants rather than syntax object merely for the support of the
-    `jumping-to-definition` feature of the Isabelle by `Ctrl-Click`\<close>
-translations "x" <= "CONST End_of_Contextual_Stack R \<heavy_comma> x" \<comment> \<open>hide the end\<close>
-
-(* lemma " \<nu>Resources_of_set T rcss \<Longrightarrow> disjoint rcss claim \<Longrightarrow> x \<in> T mp \<Longrightarrow> x \<in> Claim T claim mp"
-  by (auto simp add: Stack_Delimiter_def \<nu>Resources_of_set_def) *)
 
 subsection \<open>The \<nu>-system VM and Procedure construction structures\<close>
 
 datatype 'a state = Success heap 'a | Fail | PartialCorrect
 text\<open> The basic state of the \<nu>-system virtual machine is represented by type @{typ "('a::lrep) state"}.
-  The valid state @{term "StatOn p"} essentially has two major form, one without registers and another one with them,
-      \<^item> @{term "StatOn (x1, x2, \<cdots>, xn, void)"},
-      \<^item> @{term "StatOn (Proc_Ctx (x1, x2, \<cdots>, xn, void ) (register_local (\<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r r1 \<^bold>a\<^bold>s y1 and_pair \<^bold>r\<^bold>e\<^bold>g\<^bold>i\<^bold>s\<^bold>t\<^bold>e\<^bold>r r2 \<^bold>a\<^bold>s y2 and_pair \<cdots>)))"},
+  The valid state `Success` essentially has two major form, one without registers and another one with them,
+      \<^item> "StatOn (x1, x2, \<cdots>, xn, void)",
   where @{term "(x1, x2, \<cdots>, xn, void)"} represents the stack in the state, with @{term x\<^sub>i} as the i-th element on the stack.
   The @{term STrap} is trapped state due to invalid operations like zero division.
   The negative state @{term PartialCorrect} represents the admissible error situation that is not considered in partial correctness.
@@ -348,10 +350,14 @@ text\<open> The basic state of the \<nu>-system virtual machine is represented b
     ``if the program exits normally, the output would be correct''.\<close>
 
 declare state.split[split]
+
+subsubsection \<open>Types specifying states\<close>
+
 definition StrictStateTy :: " ('a::lrep) \<nu>set \<Rightarrow> 'a state set" ("\<S_S> _" [56] 55)
   where "\<S_S> T = {s. case s of Success heap x \<Rightarrow> Heap heap \<and> x \<in> T heap | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
 definition LooseStateTy :: " ('a::lrep) \<nu>set \<Rightarrow> 'a state set" ("\<S> _" [56] 55)
   where "\<S> T = {s. case s of Success heap x \<Rightarrow> Heap heap \<and> x \<in> T heap | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
+
 lemma [simp]: "Success heap x \<in> \<S_S> T \<equiv> Heap heap \<and> x \<in> T heap" and [simp]: "\<not> (Fail \<in> \<S_S> T)" and [simp]: "\<not> (PartialCorrect \<in> \<S_S> T)"
   and [simp]: "Success heap x \<in> \<S> T \<equiv> Heap heap \<and> x \<in> T heap" and [simp]: "\<not> (Fail \<in> \<S> T)" and [simp]: "(PartialCorrect \<in> \<S> T)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
@@ -365,12 +371,14 @@ lemma LooseStateTy_upgrade: "s \<in> \<S> T \<Longrightarrow> s \<noteq> Partial
 lemma StrictStateTy_degrade: "s \<in> \<S_S> T \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
 lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> s \<in> \<S_S> T) \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
 
+subsubsection \<open>\<nu>-Procedure\<close>
+
 type_synonym ('a,'b) proc = "heap \<Rightarrow> 'a \<Rightarrow> 'b state" (infix "\<longmapsto>" 0)
 definition Procedure :: "('a \<longmapsto> 'b) \<Rightarrow> ('a::lrep) \<nu>set \<Rightarrow> ('b::lrep) \<nu>set \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
   where [\<nu>def]:"Procedure f T U \<longleftrightarrow> (\<forall>a h. Heap h \<longrightarrow> a \<in> T h \<longrightarrow> f h a \<in> \<S> U)"
 definition Map :: " 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> ('a \<Rightarrow> 'b) set " where "Map A B = {f. \<forall>a h. a \<in> A h \<longrightarrow> f a \<in> B h }"
-abbreviation Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<blangle>(2 _/ \<longmapsto> _ )\<brangle>)" [101,2,2] 100)
-  where "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle> \<equiv> \<forall>a h. a \<in> T h \<longrightarrow> f a \<in> U h"
+definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<blangle>(2 _/ \<longmapsto> _ )\<brangle>)" [101,2,2] 100)
+  where [\<nu>def]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle> \<equiv> \<forall>a h. a \<in> T h \<longrightarrow> f a \<in> U h"
 lemma [intro]: "(\<And>x h. x \<in> T h \<Longrightarrow> f x \<in> U h) \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle>" by auto
 (* lemma [simp]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> \<S> U \<brangle> \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> U \<brangle>" unfolding \<nu>def by fast  *)
 
@@ -388,11 +396,10 @@ lemma nop_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> T \<lo
 lemma instr_comp[intro]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> B \<longmapsto> C \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> g) \<blangle> A \<longmapsto> C \<brangle>"
   unfolding instr_comp_def Procedure_def bind_def by auto fastforce+
 
-(* 
 
+subsection \<open>Top-level Construction Structures\<close>
 
-*)
-  subsection \<open>Top-level constructions\<close>
+subsubsection \<open>Construction Context & Code block\<close>
 
 definition CurrentConstruction :: " ('a::lrep) state \<Rightarrow> 'a \<nu>set \<Rightarrow> bool " ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,11] 10)
   where "CurrentConstruction s S \<longleftrightarrow> s \<in> \<S_S> S"
@@ -434,6 +441,8 @@ lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv>
 lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (prog (fst arg) (snd arg)) \<equiv> v"
   unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
 
+subsubsection \<open>Contextual Fact\<close>
+
 definition Fact :: "name_tag \<Rightarrow> bool \<Rightarrow> prop" where "Fact label P \<equiv>Trueprop P"
 syntax "Fact_sugar_" :: "idt \<Rightarrow> logic \<Rightarrow> prop" ("\<^item> _ : _" [5,0] 4)
 translations "Fact_sugar_ name P" == "CONST Fact (NAME name) P"
@@ -455,6 +464,11 @@ lemma FactCollection_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP 
 lemma FactCollection_D1: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP P" unfolding FactCollection_imp .
 lemma FactCollection_D2: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP Q" unfolding FactCollection_imp .
 lemma FactCollection_D3: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP S" unfolding FactCollection_imp .
+
+lemma empty_facts: "PROP FactCollection (PROP NoFact) (PROP NoFact) (PROP NoFact)"
+  by ((rule FactCollection_I)?; (rule NoFact)?)
+
+subsubsection \<open>Top structure of the sequent\<close>
 
 definition SpecTop :: "prop \<Rightarrow> prop \<Rightarrow> prop" where SpecTop_def: "SpecTop \<equiv> (&&&)"
 \<comment>\<open> SpecTop focus lemmata
@@ -480,7 +494,6 @@ section \<open>Principal rules\<close>
 theorem apply_proc: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
   unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def SpecTop_imp by auto
 
-lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> PROP R)" by rule simp+
 theorem  accept_proc: "\<medium_left_bracket> \<And>s. CodeBlock s a S f \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L ) \<medium_right_bracket> \<Longrightarrow>
   CodeBlock s' a S (f \<nuInstrComp> g) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: (PROP L))" for L :: "prop" and  s' :: "('c::lrep) state"
   unfolding PropBlock_def CodeBlock_def instr_comp_def CurrentConstruction_def PendingConstruction_def 
@@ -495,15 +508,12 @@ qed done
 lemma codeblock_export: "PROP Pure.prop (\<And>s. CodeBlock s a T f \<Longrightarrow> PROP C) \<Longrightarrow> PROP Pure.prop (\<And>s. CodeBlock s a T (f \<nuInstrComp> g) \<Longrightarrow> PROP C)"
   unfolding CodeBlock_def prop_def instr_comp_def proof -
   assume A[of "f (fst a) (snd a)", simplified]: "(\<And>s. Heap (fst a) \<and> snd a \<in> T (fst a) \<and> f (fst a) (snd a) = s \<and> s \<noteq> PartialCorrect \<Longrightarrow> PROP C)"
-  fix s show "Heap (fst a) \<and> snd a \<in> T (fst a) \<and> NuPrime.bind (f (fst a) (snd a)) g = s \<and> s \<noteq> PartialCorrect \<Longrightarrow> PROP C" proof -
-    assume [unfolded bind_def]: "Heap (fst a) \<and> snd a \<in> T (fst a) \<and> NuPrime.bind (f (fst a) (snd a)) g = s \<and> s \<noteq> PartialCorrect"
+  fix s show "Heap (fst a) \<and> snd a \<in> T (fst a) \<and> bind (f (fst a) (snd a)) g = s \<and> s \<noteq> PartialCorrect \<Longrightarrow> PROP C" proof -
+    assume [unfolded bind_def]: "Heap (fst a) \<and> snd a \<in> T (fst a) \<and> bind (f (fst a) (snd a)) g = s \<and> s \<noteq> PartialCorrect"
     then have "Heap (fst a) \<and> snd a \<in> T (fst a) \<and> f (fst a) (snd a) \<noteq> PartialCorrect" by auto
     from this[THEN A] show "PROP C" .
   qed
 qed
-
-lemma empty_facts: "PROP FactCollection (PROP NoFact) (PROP NoFact) (PROP NoFact)"
-  by ((rule FactCollection_I)?; (rule NoFact)?)
 
 theorem start_proc:
   "CodeBlock s a S nop \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S"
@@ -547,7 +557,7 @@ lemma clean_user_facts:
     (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection NoFact NoFact (PROP S))"
   unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I NoFact)
 
-  section \<open>Supplementary structures for elementary functions\<close>
+  section \<open>Supplementary structures and mechanisms for elementary functions\<close>
 
 definition "SchemaTag x = x"
 (* translations "x" <= "CONST SchemaTag x" *)
@@ -624,14 +634,6 @@ lemma [\<nu>intro0]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^b
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P2 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A\<heavy_comma>B) \<longmapsto> (A'\<heavy_comma>B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P1 \<and> P2"
   unfolding Cast_def by auto
 
-
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A and_ty B) \<longmapsto> (A' and_ty B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and> Q"
-  unfolding Cast_def by auto
-
-lemma "\<nu>Resources_of_set B rcssB \<Longrightarrow> disjoint rcssB claim  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (Claim A claim \<heavy_comma> B) \<longmapsto> Claim (A\<heavy_comma> B) claim"
-  unfolding Stack_Delimiter_def \<nu>Resources_of_set_def Cast_def disjoint_def by (auto simp add: \<nu>Resources_of_set_def)
-    
-
 theorem apply_cast: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R \<heavy_comma> X)) \<Longrightarrow> (\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> Y \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R \<heavy_comma> Y) \<addition> P)"
   unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def SpecTop_imp Cast_def by (auto 4 6)
 theorem cast: "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' "
@@ -674,17 +676,62 @@ subsubsection \<open>Abstractor\<close>
 
 definition Claim :: " ('a::lrep) \<nu>set \<Rightarrow> resource_key set \<Rightarrow> ('a::lrep) \<nu>set " (infix "<Claim>" 60)
   where "Claim S claim = (if \<nu>Resources_of_set S (- claim) then S else (\<lambda>map. {}))"
-translations "[\<^bold>c\<^bold>l\<^bold>a\<^bold>i\<^bold>m] claims" <= "CONST End_of_Contextual_Stack R <Claim> claims"
 
 lemma [simp]: "p \<in> Claim T claim heap \<longleftrightarrow> p \<in> T heap \<and> \<nu>Resources_of_set T (- claim)" unfolding Claim_def by auto
 lemma [simp]: "Claim (Claim T claim1) claim2 = Claim T (claim1 \<union> claim2)"
   unfolding Claim_def \<nu>Resources_of_set_def  by auto
+
+lemma "\<nu>Resources_of_set B rcssB \<Longrightarrow> disjoint rcssB claim  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (Claim A claim \<heavy_comma> B) \<longmapsto> Claim (A\<heavy_comma> B) claim"
+  unfolding Stack_Delimiter_def \<nu>Resources_of_set_def Cast_def disjoint_def by (auto simp add: \<nu>Resources_of_set_def)
 
 lemma [\<nu>intro]:
   " claims' <involve> claims \<Longrightarrow>
     \<^bold>c\<^bold>a\<^bold>s\<^bold>t (End_of_Contextual_Stack R <Claim> claims) \<longmapsto> (End_of_Contextual_Stack R <Claim> claims') "
   unfolding Cast_def involve_claim_def End_of_Contextual_Stack_def by (auto simp add: \<nu>Resources_of_set_def)
 
+consts "ClaimSugar" :: " 'just \<Rightarrow> 'sugar " ("[\<^bold>c\<^bold>l\<^bold>a\<^bold>i\<^bold>m _]")
+  \<comment> \<open>merely a syntax sugar. We define it as a constants rather than syntax object merely for the support of the
+    `jumping-to-definition` feature of the Isabelle by `Ctrl-Click`\<close>
+translations "[\<^bold>c\<^bold>l\<^bold>a\<^bold>i\<^bold>m claims]" <= "CONST End_of_Contextual_Stack R <Claim> claims"
+
+subsubsection \<open>Claim clauses\<close>
+
+text \<open>lexical elements for claim clauses, to be adhoc-overloaded\<close>
+consts "write" :: " 'a \<Rightarrow> resource_key set "
+consts dispose :: " 'a \<Rightarrow> resource_key set "
+consts all :: " 'a \<Rightarrow> 'b "
+
+definition resource_write_address :: "memaddr \<Rightarrow> resource_key set"
+  where "resource_write_address addr = {MemAddress addr }"
+lemma [simp]: "a \<in> resource_write_address addr \<longleftrightarrow> a = MemAddress addr" unfolding resource_write_address_def by simp
+
+definition resource_dipose_address :: "memaddr \<Rightarrow> resource_key set"
+  where "resource_dipose_address addr = {Dispose (MemAddress addr) }"
+lemma [simp]: "a \<in> resource_dipose_address addr \<longleftrightarrow> a = Dispose (MemAddress addr)"
+  unfolding resource_dipose_address_def by simp
+
+definition resource_write_address_set :: "memaddr set \<Rightarrow> resource_key set"
+  where "resource_write_address_set addrs = MemAddress` addrs"
+lemma [simp]: "a \<in> resource_write_address_set addrs \<longleftrightarrow> a \<in> MemAddress` addrs"
+  unfolding resource_write_address_set_def by simp
+
+definition resource_dispose_address_set :: "memaddr set \<Rightarrow> resource_key set"
+  where "resource_dispose_address_set addrs = (Dispose o MemAddress)` addrs"
+lemma [simp]: "a \<in> resource_dispose_address_set addrs \<longleftrightarrow> a \<in> (Dispose o MemAddress)` addrs"
+  unfolding resource_dispose_address_set_def by simp
+
+adhoc_overloading "write" resource_write_address resource_write_address_set
+  and dispose resource_dipose_address resource_dispose_address_set
+
+definition array :: " memaddr \<Rightarrow> nat \<Rightarrow> memaddr set "
+  where "array addr n = (case addr of base |+ ofs \<Rightarrow> { (base |+ ofs') | ofs'. ofs \<le> ofs' \<and> ofs' < ofs + int n})"
+lemma [simp]: "base |+ ofs \<in> array (base' |+ ofs') n \<longleftrightarrow>  base = base' \<and> ofs' \<le> ofs \<and> ofs < ofs' + int n"
+  unfolding array_def by simp
+
+definition "union_of_sets l = \<Union> (set l)"
+lemma [simp,disj_simp]: "union_of_sets [] = {}" and [simp,disj_simp]: "union_of_sets (h # ls) = union_of_sets ls \<union> h"
+  unfolding union_of_sets_def by auto
+adhoc_overloading all union_of_sets
 
 subsubsection \<open>Disjointness\<close>
 
@@ -731,28 +778,18 @@ lemma [disj_intro]: "(resource_dipose_address b) \<perpendicular> (resource_writ
   and [disj_intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e base \<noteq> base' \<or> ofs < ofs' \<or> ofs' + int n \<le> ofs \<Longrightarrow> (base |+ ofs) \<notin> array (base' |+ ofs') n"
   unfolding disjoint_def by auto
 
+ subsubsection \<open>Auto construct & destruct\<close>
 
-(* subsubsection \<open>Auto construct & destruct\<close>
-
-definition AutoConstruct :: " 'exp \<Rightarrow> (('a::lrep) \<Rightarrow> ('b::lrep) state) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t _/ \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<blangle>_/ \<longmapsto> _ \<brangle>)" [20,101,10,10] 100)
+definition AutoConstruct :: " 'exp \<Rightarrow> ('a::lrep \<longmapsto> 'b::lrep) \<Rightarrow> 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> bool "("\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t _/ \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<blangle>_/ \<longmapsto> _ \<brangle>)" [20,101,10,10] 100)
   where [\<nu>def]:"AutoConstruct exp f S T \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>"
 lemma AutoConstruct: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> AutoConstruct exp f S T \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)" for exp :: "'exp"
   unfolding AutoConstruct_def using apply_proc .
 
-lemma [\<nu>intro]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t X \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle>A \<longmapsto> B\<brangle> \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t X \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c call f \<blangle>(A \<flower> U) \<longmapsto> (B \<flower> U) \<brangle>"
-  unfolding AutoConstruct_def using call by fast
-
-lemma [simp]: "(Inhabited A \<and> Inhabited B) \<or> (Inhabited A' \<and> Inhabited B')
+(* lemma [simp]: "(Inhabited A \<and> Inhabited B) \<or> (Inhabited A' \<and> Inhabited B')
   \<Longrightarrow> (A\<heavy_comma>B) = (A'\<heavy_comma>B') \<longleftrightarrow> A = A' \<and> B = B'" unfolding Stack_Delimiter_def Inhabited_def by (auto simp add: times_eq_iff) 
 lemma  [elim]: "(A\<heavy_comma>B) = (A'\<heavy_comma>B') \<Longrightarrow> (A = {} \<or> B = {} \<Longrightarrow> A' = {} \<or> B' = {} \<Longrightarrow> C) \<Longrightarrow> (A = A' \<Longrightarrow> B = B' \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Stack_Delimiter_def by (auto simp add: times_eq_iff)
 *)
-  section \<open>Appendix\<close>
 
-subsection \<open>Finalize the syntax sugars to be ready for use\<close>
-
-no_translations "_pretty_and_ P Q" <= "CONST AndFact P Q"
-translations "_linebreak_collection_ P Q" <= "CONST AndFact P Q"
-translations "P" <= "CONST AndFact P (CONST NoFact)"
 
 end

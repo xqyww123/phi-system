@@ -16,7 +16,7 @@ signature NU_SYS = sig
 
   (*
     `conversion` tries to convert the procedure theorem to the given form.
-      By @{thm NuPrim.conversion}, it generates a @{term Conversion} premise intended to be solved
+      By @{thm NuPrime.conversion}, it generates a @{term Conversion} premise intended to be solved
       by `auto_resolve`
     `cast` operations solves the first premise by `auto_resolve0`. Several proof obligation that cannot
       be solved automatically will be charged as premises in the result theorem.
@@ -41,9 +41,9 @@ signature NU_SYS = sig
   (*
     `apply_procs ctx procs whole_meta` applies the first appliable procedure in the `procs`
     on the `whole_meta`, by exact (schematical) matching first and then converted calling second
-    (see @{thm NuPrim.apply_proc_conv}) with automatic cast proof by cast_tag.
+    (see @{thm NuPrime.apply_proc_conv}) with automatic cast proof by cast_tag.
 
-    About `accept_proc`, see @{thm NuPrim.accept_proc}
+    About `accept_proc`, see @{thm NuPrime.accept_proc}
   *)
   val apply_procs_major : Proof.context -> thm list (*procs*) -> thm (*whole*) -> thm
   val apply_proc : Proof.context -> thm (*proc*) -> thm (*whole*) -> thm (*whole*)
@@ -54,8 +54,8 @@ signature NU_SYS = sig
 
   val process : Proof.state -> thm -> thm parser
 
-  val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm (* see @{thm NuPrim.start_proc} *)
-  val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm (* see @{thm NuPrim.finish_proc} *)
+  val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm (* see @{thm NuPrime.start_proc} *)
+  val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm (* see @{thm NuPrime.finish_proc} *)
 
   (*
     `declare_facts` declares/addes ν-facts to be embedded in the specification theorem.
@@ -152,7 +152,7 @@ fun gen_declare_fact rule (binding,attrs) meta ctx =
   end
 fun declare_fact (thmbind,auxes) = gen_declare_fact (fn name => fn meta =>
     (Thm.instantiate ([],[((("name",0), name_tag_ty), mk_name_tag_c name)])
-      @{thm NuPrim.declare_fact})
+      @{thm NuPrime.declare_fact})
     OF [fold1 Conjunction.intr auxes, meta]
   ) thmbind
 fun declare_facts auxes meta ctx =
@@ -163,7 +163,7 @@ fun name_star_fact binding =
       val (target,_,_) = elim_SPEC meta |> #2 |> elim_FactCollection
     in
       meta RS (Thm.instantiate ([],[((("name",0), name_tag_ty), mk_name_tag_c name)])
-          @{thm NuPrim.name_star_fact})
+          @{thm NuPrime.name_star_fact})
     end
   ) binding
 
@@ -205,15 +205,17 @@ fun raw_auto ctx =
     THEN Clasimp.auto_tac ctx)
 
 (*** Premise tac ***)
-val Premise_I = @{thm NuPrim.Premise_I}
+val Premise_I = @{thm NuPrime.Premise_I}
+fun print_dbg th = Seq.make (fn () => (@{print} th; NONE))
+fun print_dbg' th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 fun mk_premise_tac withdraw ctx th =
-  if AutoLevel.get ctx >= 2 andalso can (major_prem_of #> dest_premise_tag) th
+  if AutoLevel.get ctx >= 2 andalso can (major_prem_of #> dest_Trueprop #> dest_premise_tag) th
   then (head_only (SOLVED' (K (HEADGOAL (resolve0_tac [Premise_I]) THEN raw_auto ctx)) 1)
       ORELSE withdraw) th
   else Seq.empty
 val FailedPremise_I = @{thm FailedPremise_I} and FailedPremise_D = @{thm FailedPremise_D}
 val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch o (fn x => FailedPremise_D RS x))
-val dest_failed_premise_tag = dest_monop "NuSys.FailedPremise"
+val dest_failed_premise_tag = dest_Trueprop #> dest_monop @{const_name "FailedPremise"}
 val premise_tac = mk_premise_tac Seq.fail
 fun fininsh_premise_hyps th =
   fold ((fn x => FailedPremise_I RS x) oo implies_intr)
@@ -221,7 +223,7 @@ fun fininsh_premise_hyps th =
 
 (*** Simplify tag tac ***)
 fun simp_tag_tac ctx th =
-  case try (fn th => cprem_of th 1 |> dest_simplify_tag_c) th
+  case try (fn th => cprem_of th 1 |> dest_Trueprop_c |> dest_simplify_tag_c) th
     of SOME (_,y) => ((Simplifier.rewrite ctx y RS @{thm Simplify_I}) RS th) |> Seq.single
      | NONE => Seq.empty
 
@@ -249,21 +251,20 @@ fun REPEATX tac =
   in fn st => Seq.make (fn () => rep [] st) end;
 
 
-fun print_dbg th = Seq.make (fn () => (@{print} th; NONE))
 fun auto_resolve thms addtion ctx  =
   let 
     val (thms,prio,minor_thms) =
       case thms of SOME (major, SOME (prio,minor)) => (major,prio,minor)
        | SOME (major, NONE) => (major,[],[])
-       | NONE => (Named_Theorems.get ctx "NuPrim.\<nu>intro",
-                  Named_Theorems.get ctx "NuPrim.\<nu>intro0",
-                  Named_Theorems.get ctx "NuPrim.\<nu>intro'")
+       | NONE => (Named_Theorems.get ctx "NuPrime.\<nu>intro",
+                  Named_Theorems.get ctx "NuPrime.\<nu>intro0",
+                  Named_Theorems.get ctx "NuPrime.\<nu>intro'")
     val thms = addtion @ thms
   in SOLVED (REPEATX (
       simp_tag_tac ctx
         ORELSE (resolve_tac ctx prio 1)
         ORELSE (resolve_tac ctx thms 1)
-        ORELSE premise_tac ctx
+        ORELSE (premise_tac ctx)
         ORELSE resolve_tac ctx minor_thms 1
         ORELSE print_dbg
     )) (* #> Seq.map fininsh_premise_hyps *)
@@ -288,26 +289,24 @@ val auto_resolve_rule0 = auto_resolve_rule NONE []
   (** Basic Operations **)
 fun cast ctx desired_nu major =
   (major RS
-    (Thm.instantiate ([((("'a",0),["NuPrim.lrep"]),
-                            ctyp_of_cterm desired_nu |> dest_ctyp0)],
+    (Thm.instantiate ([((("'a",0),["NuPrime.lrep"]),
+                            ctyp_of_cterm desired_nu |> dest_tynuset_c)],
           [((("T'",0),typ_of_cterm desired_nu),desired_nu)])
-      @{thm NuPrim.cast}))
+      @{thm NuPrime.cast}))
    |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
 
-val conversion_thm = @{thm NuPrim.conversion}
+val conversion_thm = @{thm NuPrime.conversion}
 fun conversion ctx to from =
   let
     val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
     val (f',U',V') = dest_procedure_c to
-    val a = dest_ctyp0 (ctyp_of_cterm f)
-    val b = dest_ctyp0 (dest_ctyp1 (ctyp_of_cterm f))
-    val c = dest_ctyp0 (ctyp_of_cterm f')
-    val d = dest_ctyp0 (dest_ctyp1 (ctyp_of_cterm f'))
+    val (a,b) = dest_typroc_c (ctyp_of_cterm f)
+    val (c,d) = dest_typroc_c (ctyp_of_cterm f')
     val rule = Thm.instantiate
-      ([((("'a",0),["NuPrim.lrep"]), a),
-        ((("'b",0),["NuPrim.lrep"]), b),
-        ((("'c",0),["NuPrim.lrep"]), c),
-        ((("'d",0),["NuPrim.lrep"]), d)
+      ([((("'a",0),["NuPrime.lrep"]), a),
+        ((("'b",0),["NuPrime.lrep"]), b),
+        ((("'c",0),["NuPrime.lrep"]), c),
+        ((("'d",0),["NuPrime.lrep"]), d)
        ],[
         ((("f",0),  typ_of_cterm f),  f),
         ((("U",0),  typ_of_cterm U),  U),
@@ -323,7 +322,7 @@ fun conversion ctx to from =
       |> Goal.conclude
   end
 
-val accept_proc_thm = @{thm NuPrim.accept_proc}
+val accept_proc_thm = @{thm NuPrime.accept_proc}
 fun accept_proc0 ctx wmeta =
   wmeta |> disch_current_codeblock
     |> mk_PropBlock 0 
@@ -339,10 +338,10 @@ fun accept_proc ctx meta =
   then meta else auto_resolve_rule0 ctx meta) |> accept_proc0 ctx
 
 local open Tactical Tactic
-val apply_proc_thm = @{thm NuPrim.apply_proc} and apply_proc_conv_thm = @{thm NuPrim.apply_proc_conv}
-val vA = (("'a",0),["NuPrim.lrep"])
+val apply_proc_thm = @{thm NuPrime.apply_proc} and apply_proc_conv_thm = @{thm NuPrime.apply_proc_conv}
+val vA = (("'a",0),["NuPrime.lrep"])
 fun v_blk t = (("blk",0), mk_stateT t)
-fun vS t = (("S",0), HOLogic.mk_setT t)
+fun vS t = (("S",0), @{typ heap} --> HOLogic.mk_setT t)
 fun mk_apply_thms apply_thm major =
   let
     val (blk,nuSet) = cprop_of major |> dest_Trueprop_c |> dest_CurrentConstruction_c
@@ -361,16 +360,21 @@ fun apply_X_major ctx major procs seq =
       |> Seq.pull |> (fn x => 
           case x of SOME (th,_) => Goal.conclude th
                   | NONE => raise THM ("fail to make the call", 0, major::procs))
+fun expand_proc ctx = 
+  repeate (fn th => th RS @{thm spec}) #> 
+  repeate (fn th => th RS @{thm mp}) #>
+  Raw_Simplifier.rewrite_rule ctx @{thms End_of_Contextual_Stack_rew}
 fun apply_procs_major ctx procs major =
-  apply_X_major ctx major procs
-    (resolve_N procs (mk_apply_thms apply_proc_conv_thm major) 2
-      |> Seq.map (Goal.protect 1)
-      |> Seq.append (resolve_N procs (mk_apply_thms apply_proc_thm major) 1
-                        |> Seq.map (Goal.protect 0)))
+  let val procs = map (expand_proc ctx) procs
+  in apply_X_major ctx major procs
+      (resolve_N procs (mk_apply_thms apply_proc_conv_thm major) 2
+        |> Seq.map (Goal.protect 1)
+        |> Seq.append (resolve_N procs (mk_apply_thms apply_proc_thm major) 1
+                          |> Seq.map (Goal.protect 0)))
+  end
 fun apply_casts_major ctx procs major =
   apply_X_major ctx major procs
-    (resolve_N procs (
-      major RS @{thm apply_cast'} handle THM _ => major RS @{thm apply_cast}) 1
+    (resolve_N procs (major RS @{thm apply_cast}) 1
     |> Seq.map (Goal.protect 0))
 end
 fun apply_Xs X ctx procs meta =
@@ -391,15 +395,14 @@ fun set_param ctx term = map_major (set_param' ctx term)
 val process = NuProcessor.process o Proof.context_of
 
 
-val start_proc_thm = @{thm NuPrim.start_proc}
 fun start_proc ctx blk_name arg_nuTy =
   let
-    val argTy = (case dest_Type (typ_of_cterm arg_nuTy) of ("Set.set", [ty]) => ty
+    val argTy = (case typ_of_cterm arg_nuTy of Type ("fun", [_, Type ("Set.set", [ty])]) => ty
                    | _ => raise Fail "start_proc - argTy - not a set")
     val stat_var = Free (blk_name, mk_stateT argTy) |> cterm_of ctx
-    val arg_var = Free (blk_name^"_arg", argTy) |> cterm_of ctx
+    val arg_var = Free (blk_name^"_arg", HOLogic.mk_prodT(@{typ heap}, argTy)) |> cterm_of ctx
     val init_thm = Drule.instantiate'_normalize [SOME (ctyp_of ctx argTy)]
-                      [SOME stat_var, SOME arg_var, SOME arg_nuTy] start_proc_thm
+                      [SOME stat_var, SOME arg_var, SOME arg_nuTy] @{thm start_proc}
     val init_thm = init_thm |> undisch
   in
     init_thm
@@ -416,16 +419,18 @@ fun meta_eq_to_hol_eq th =
     Thm.implies_elim rule th
   end
 
-val finish_proc_thm = @{thm NuPrim.finish_proc}
+val finish_proc_thm = @{thm NuPrime.finish_proc}
 fun finish_proc ctx goal th =
   let
     val codeblock = current_codeblock th
     val (s,a,_,_) = dest_codeblock_c codeblock
+    val (prems, th) = undisch_all th
   in
     th |> implies_intr codeblock
        |> forall_intr s |> forall_intr a
        |> (fn x => x COMP finish_proc_thm)
-       |> conversion ctx goal 
+       |> conversion ctx goal
+       |> implies_intr_list prems
   end
 
 

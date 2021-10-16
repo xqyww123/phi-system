@@ -6,6 +6,8 @@ Application-irrelevant basic tools.
 *)
 
 signature NU_HELP = sig
+  val last : 'a list -> 'a
+
   type state = Proof.state
 
   exception NotFree of term
@@ -37,6 +39,7 @@ signature NU_HELP = sig
   val dest_quinop   : string (* const name *) -> term -> term * term * term * term * term
   val dest_quinop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm * cterm
   val strip_binop_r (* right associative *) : string (* const name *) -> term -> term list
+  val strip_binop_r_c (* right associative *) : string (* const name *) -> cterm -> cterm list
   val strip_binop_l (* left associative *) : string (* const name *) -> term -> term list
   val mk_monop : string (* const name *) -> term -> term
   val mk_binop : string (* const name *) -> term * term -> term
@@ -68,6 +71,7 @@ signature NU_HELP = sig
   * ---------------
   *   Γ, A |- B *)
   val undisch : thm -> thm
+  val undisch_all : thm -> cterm list * thm
   (*  Γ1 |- A ==> B      Γ2 |- A1 ==> A2 ==> ... A
   *  ------------------------------------------------
   *     Γ1 ∪ Γ2 |- A1 ==> A2 ==> ... ==> B
@@ -85,6 +89,10 @@ signature NU_HELP = sig
 end
 structure NuHelp : NU_HELP = struct
 open Term Thm
+
+fun last [] = raise Fail "last"
+  | last [x] = x
+  | last (h::ls) = last ls
 
 type state = Proof.state
 exception NotFree of term
@@ -122,6 +130,7 @@ fun dest_binop_c const tm =
 fun strip_bin_r_assoc strip tm =
   case try strip tm of SOME (a,b) => a :: (strip_bin_r_assoc strip b) | _ => [tm]
 val strip_binop_r = strip_bin_r_assoc o dest_binop
+val strip_binop_r_c = strip_bin_r_assoc o dest_binop_c
 fun strip_bin_l_assoc strip tm =
   case try strip tm of SOME (a,b) => b :: (strip_bin_l_assoc strip a) | _ => [tm]
 val strip_binop_l = strip_bin_l_assoc o dest_binop
@@ -179,8 +188,8 @@ fun dest_binder binder (tm as (Const (const,_) $ Abs (var,vty,body))) =
       else raise TERM ("dest_binder "^binder, [tm])
   | dest_binder binder tm = raise TERM ("dest_binder "^binder, [tm])
 fun dest_binder_c binder = dest_monop_c binder #> dest_abs NONE
-val dest_binder_name_tag   = dest_binop   "NuPrim.BinderNameTag"
-val dest_binder_name_tag_c = dest_binop_c "NuPrim.BinderNameTag"
+val dest_binder_name_tag   = dest_binop   "NuPrime.BinderNameTag"
+val dest_binder_name_tag_c = dest_binop_c "NuPrime.BinderNameTag"
 fun dest_named_binder binder tm =
       case dest_binder_name_tag tm of (var,bind) =>
         case dest_binder binder bind of (var' as Free (_,vty), body) =>
@@ -211,6 +220,7 @@ fun list_mk_binder binder = fold (mk_binder binder)
 (** helpful rules **)
 
 fun undisch th = cprem_of th 1 |> assume |> implies_elim th
+fun undisch_all th = (cprems_of th, implies_elim_list th (map assume (cprems_of th)))
 
 fun fix_frees_lst pos = map (Term.dest_Free #> (fn (name,ty) =>
         (Binding.make (name, pos), (if ty = Term.dummyT then NONE else SOME ty), Mixfix.NoSyn)

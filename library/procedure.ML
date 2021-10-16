@@ -57,25 +57,27 @@ fun norm_def n def = let open Thm Drule Term
     fold (fn a => fn b => Thm.combination b a) (map reflexive vars) def
   end
 
-fun define (binding,attrs) th lthy =
+fun define (binding,attrs) proc_th lthy =
   let
-    val (f,U,V) = Thm.concl_of th |> Logic.unvarify_global |> dest_procedure 
+    val (f,U,V) = Thm.concl_of proc_th |> Logic.unvarify_global |> dest_procedure 
     val arity = length (add_frees f [])
     val f' = fold lambda (map Free (add_frees f [])) f
     val def_binding = Binding.suffix_name compilation_suffix binding
     val proc_binding = Binding.suffix_name proc_suffix binding
   in if Binding.is_empty binding then
       lthy |> Local_Theory.notes_kind procedure_kind
-                [((proc_binding,attrs), [([th],[])])]
-           |> apfst (fn [(_,[th])] => th)
+                [((proc_binding,attrs), [([proc_th],[])])]
+           |> apfst (fn [(_,[proc_th])] => proc_th)
      else
       lthy
         |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
-        |-> (fn (tm,(_,def)) => 
-              Local_Theory.notes_kind procedure_kind
-                [((proc_binding,attrs), [([th RS
-                    ((norm_def arity def) RS @{thm NuPrim.rename_proc})],[])])]
-              #> apfst (fn [(_,[th])] => th)
+        |-> (fn (tm,(_,def)) => fn lthy =>
+          lthy |> Local_Theory.notes_kind procedure_kind
+                 [((proc_binding,attrs), [([
+                     Raw_Simplifier.rewrite_rule lthy [Thm.symmetric (norm_def arity def)
+  |> @{print}] proc_th |> @{print}
+                   ],[])])]
+               |> apfst (fn [(_,[proc_th])] => proc_th)
             )
   end
 end

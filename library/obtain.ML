@@ -228,9 +228,9 @@ fun obtain_quick_pairs_perhaps stat = let open NuBasics in
 end;
 
 local
-val ExTy_strip = @{thm NuPrim.ExTyp_strip}
-and CodeBlock_unabbrev = @{thm NuPrim.CodeBlock_unabbrev}
-and CodeBlock_abbrev = @{thm NuPrim.CodeBlock_abbrev}
+val ExTy_strip = @{thm NuPrime.ExTyp_strip}
+and CodeBlock_unabbrev = @{thm NuPrime.CodeBlock_unabbrev}
+and CodeBlock_abbrev = @{thm NuPrime.CodeBlock_abbrev}
 fun expand_exE ctx th =
   (th RS @{thm exE}) |>
     Tactic.rule_by_tactic ctx (REPEAT (Tactic.eresolve_tac ctx [exE] 1))
@@ -253,9 +253,9 @@ fun gen_choose prep_stmt raw_decls raw_insts int stat =
     val ctx = Proof.context_of stat
     val (major,facts) = Proof.the_fact stat |> elim_SPEC
     val (org_vars, org_body) = prop_of major |> dest_Trueprop |> (fn x => 
-      case x of (Const ("NuPrim.CurrentConstruction", ty) $ p $ T) =>
-        let val (vars, body) = strip_named_binder "NuPrim.ExTyp" T
-        in (map snd vars, (Const ("NuPrim.CurrentConstruction", ty) $ p $ body)) end)
+      case x of (Const ("NuPrime.CurrentConstruction", ty) $ p $ T) =>
+        let val (vars, body) = strip_named_binder "NuPrime.ExTyp" T
+        in (map snd vars, (Const ("NuPrime.CurrentConstruction", ty) $ p $ body)) end)
     val t1 = ((Thm.assume (current_codeblock major)) COMP CodeBlock_unabbrev) 
     val t2 = ((Thm.assume (current_codeblock major)) COMP CodeBlock_abbrev)
     val major = Raw_Simplifier.rewrite_rule ctx [ExTy_strip] major |> @{print}
@@ -315,9 +315,9 @@ fun chooseV inst_names stat =
   let open NuBasics NuHelp HOLogic Term
     val (major,facts) = Proof.the_fact stat |> elim_SPEC
     val ctx = Proof.context_of stat
-    val t1 = ((Thm.assume (current_codeblock major)) COMP @{thm NuPrim.CodeBlock_unabbrev}) 
-    val t2 = ((Thm.assume (current_codeblock major)) COMP @{thm NuPrim.CodeBlock_abbrev})
-    val major = Raw_Simplifier.rewrite_rule ctx @{thms AutoExTyp_strip ExTyp_strip}
+    val t1 = ((Thm.assume (current_codeblock major)) COMP @{thm NuPrime.CodeBlock_unabbrev}) 
+    val t2 = ((Thm.assume (current_codeblock major)) COMP @{thm NuPrime.CodeBlock_abbrev})
+    val major = Raw_Simplifier.rewrite_rule ctx @{thms (* AutoExTyp_strip *) ExTyp_strip}
                   major |> @{print}
     val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder "HOL.Ex"
     val var_tys = map fastype_of vars

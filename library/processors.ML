@@ -17,7 +17,6 @@ open NuBasics NuHelp NuProcessor
 fun simplifier cong = almost_safe (fn ctx => fn meta =>
   Scan.succeed (fn _ => let
     val ctx' = NuSys.load_specthm meta ctx
-                |> fold Simplifier.add_cong (@{thm NuPrim.SpecTop_cong_major}::cong)
     val (major,aux) = elim_SPEC meta
     in Simplifier.full_simplify ctx' major
         |> (fn th2 => if Thm.eq_thm_prop (major, th2) then raise Bypass NONE else th2)

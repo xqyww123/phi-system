@@ -22,45 +22,32 @@ subsection \<open>Basic sequential instructions\<close>
 
 subsubsection \<open>drop\<close>
 
-definition op_drop :: "('a::lrep) \<times> ('r::lrep) \<Rightarrow> 'r state" where
-  "op_drop x = (case x of (a,r) \<Rightarrow> if disposable a then StatOn r else STrap)"
+definition op_drop :: "('a::lrep) \<times> ('r::stack) \<longmapsto> 'r" where
+  "op_drop h x = (case x of (a,r) \<Rightarrow> Success h r)"
 declare op_drop_def[\<nu>instr]
-theorem drop_\<nu>proc: "\<nu>Disposable X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> R \<heavy_comma> X \<longmapsto> R \<brangle>" unfolding \<nu>def op_drop_def by auto
+theorem drop_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> R \<heavy_comma> X \<longmapsto> R \<brangle>" unfolding \<nu>def op_drop_def by auto
 
-definition op_fake_drop :: "('a::lrep) \<times> ('r::lrep) \<Rightarrow> 'r state" where
-  "op_fake_drop x = (case x of (_,r) \<Rightarrow> StatOn r)"
-theorem fake_drop_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_fake_drop \<blangle> R \<heavy_comma> X \<longmapsto> R \<brangle>" unfolding \<nu>def op_fake_drop_def by auto
+subsubsection \<open>dup\<close>
 
-subsubsection \<open>dup & revert\<close>
-
-definition op_dup :: "('a::{share,lrep}) \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'a \<times> 'r) state"
-  where "op_dup x = (case x of (a,r) \<Rightarrow> if shareable a then StatOn (share (Gi 1) a, share (Gi 1) a, r) else STrap)"
+definition op_dup :: "('a::lrep) \<times> ('r::stack) \<longmapsto> ('a \<times> 'a \<times> 'r)"
+  where "op_dup h x = (case x of (a,r) \<Rightarrow> Success h (a, a, r))"
 declare op_dup_def[\<nu>instr]
-theorem dup_\<nu>proc: "\<nu>Share X s sh \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e s x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> sh (Gi 1) x \<tycolon> X \<heavy_comma> sh (Gi 1) x \<tycolon> X  \<brangle>"
+theorem dup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> x \<tycolon> X \<heavy_comma> x \<tycolon> X  \<brangle>"
   unfolding \<nu>def op_dup_def by auto
-
-definition op_revert :: "('a::{share,lrep,sharing_identical}) \<times> 'a \<times> ('r::lrep) \<Rightarrow> ('a \<times> 'r) state"
-  where "op_revert x = (case x of (a,b,r) \<Rightarrow> if shareable a \<and> sharing_identical a b then StatOn (share (Gi (-1)) a, r) else STrap)"
-declare op_revert_def[\<nu>instr]
-theorem revert_\<nu>proc: "\<nu>Share N P sh \<Longrightarrow> \<nu>ShrIdentical N sid \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e sid a b
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_revert \<blangle> R \<heavy_comma> b \<tycolon> N \<heavy_comma> a \<tycolon> N \<longmapsto> R \<heavy_comma> sh (Gi (-1)) a \<tycolon> N \<brangle>"
-  unfolding \<nu>def op_revert_def by (auto 0 4)
 
 subsubsection \<open>tup & det\<close>
 
-
-
-\<nu>processor pair_auto_dest 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<flower> W)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+(* \<nu>processor pair_auto_dest 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<flower> W)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   meta |> NuBasics.apply_proc_naive @{thm dpr_auto_schema} |> NuSys.accept_proc ctx)\<close>
 \<nu>processor pair_auto_dest' 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B))\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
-  meta |> NuBasics.apply_proc_naive @{thm dpr_auto_schema'} |> NuSys.accept_proc ctx)\<close>
+  meta |> NuBasics.apply_proc_naive @{thm dpr_auto_schema'} |> NuSys.accept_proc ctx)\<close> *)
 
-definition op_crash :: "('r::lrep) \<Rightarrow> ('x::lrep) state" where "op_crash r = SNeg"
+definition op_crash :: "('r::lrep) \<longmapsto> ('x::lrep)" where "op_crash heap r = PartialCorrect"
 lemma op_crash:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
 
 subsubsection \<open>calling conversion\<close>
 
-definition strip_end_tail :: " (('a::lrep) \<times> void \<Rightarrow> (('b::lrep) \<times> void) state) \<Rightarrow> 'a \<times> ('r::stack) \<Rightarrow> ('b \<times> 'r) state"
+definition strip_end_tail :: " ('a::lrep \<times> void \<longmapsto> ('b::lrep \<times> void)) \<Rightarrow> 'a \<times> ('r::stack) \<longmapsto> ('b \<times> 'r)"
   where "strip_end_tail f s = (case s of (a,r) \<Rightarrow> bind (f (a,void)) (\<lambda>(b,_). StatOn (b,r)))"
 lemma strip_end_tail: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> A \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c strip_end_tail f \<blangle> R\<heavy_comma> A \<longmapsto> R\<heavy_comma> B \<brangle>"
   unfolding strip_end_tail_def Procedure_def bind_def by (auto 4 4)
@@ -68,42 +55,37 @@ lemma strip_end_tail: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<^bold
 subsection \<open>Branch & Loop\<close>
 
 subsubsection \<open>op_if\<close>
-definition op_if :: " (('s::lrep) \<flower> ('sr::register_collection) \<Rightarrow> (('t::lrep) \<flower> ('tr::register_collection)) state) \<Rightarrow> ('s \<flower> 'sr \<Rightarrow> ('t \<flower> 'tr) state) \<Rightarrow> (1 word \<times> 's) \<flower> 'sr \<Rightarrow> ('t \<flower> 'tr) state"
-  where "op_if brT brF x = (case x of (Proc_Ctx (c,s) r) \<Rightarrow> if c = 1 then brT (Proc_Ctx s r) else brF (Proc_Ctx s r))"
+definition op_if :: " ('s::stack \<longmapsto> 't::stack) \<Rightarrow> ('s \<longmapsto> 't) \<Rightarrow> (1 word \<times> 's) \<longmapsto> 't"
+  where "op_if brT brF heap s = (case s of (c,r) \<Rightarrow> if c = 1 then brT heap r else brF heap r)"
 declare op_if_def[\<nu>instr]
-theorem if_\<nu>proc: "(\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e c \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> U \<flower> W \<longmapsto> Vt \<flower> Wt \<brangle>) \<Longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> c \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> U \<flower> W \<longmapsto> Vf \<flower> Wf \<brangle>)
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> U \<heavy_comma> (c \<tycolon> \<bool>) \<flower> W  \<longmapsto> (if c then Vt \<flower> Wt else (Vf \<flower> Wf)) \<brangle>"
+theorem if_\<nu>proc: "(\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e c \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> U \<longmapsto> Vt \<brangle>) \<longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> c \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> U \<longmapsto> Vf \<brangle>)
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> U \<heavy_comma> c \<tycolon> \<bool> \<longmapsto> (if c then Vt else Vf) \<brangle>"
   unfolding \<nu>def op_if_def by auto
 
-lemma [simp]: "(if P then (A \<flower> B) else (A' \<flower> B')) = ((if P then A else A') \<flower> (if P then B else B'))" by auto
 lemma [simp]: "(if P then (A\<heavy_comma>B) else (A'\<heavy_comma>B')) = ((if P then A else A')\<heavy_comma>(if P then B else B'))" by auto
 lemma [simp]: "(if P then \<tort_lbrace>T1\<tort_rbrace> else \<tort_lbrace>T2\<tort_rbrace>) = \<tort_lbrace>if P then T1 else T2\<tort_rbrace>"  by auto
 lemma [simp]: "(if P then (x \<tycolon> N) else (y \<tycolon> N)) = ((if P then x else y) \<tycolon> N)"  by auto
-lemma [simp]: "(if P then (A and_ty B) else (A' and_ty B')) = ((if P then A else A') and_ty (if P then B else B'))"  by auto
-lemma [simp]: "(if P then RegisterTy name T else RegisterTy name' T') = RegisterTy name (if P then T else T')" by (auto simp add: name_tag_eq)
-(*TODO: maybe too radical*)
-lemma [simp]: "(if P then a \<R_arr_tail> x else a' \<R_arr_tail> x') = (if P then a else a') \<R_arr_tail> (if P then x else x')" by auto
+lemma [simp]: "(if P then (A \<^bold>a\<^bold>n\<^bold>d B) else (A' \<^bold>a\<^bold>n\<^bold>d B')) = ((if P then A else A') \<^bold>a\<^bold>n\<^bold>d (if P then B else B'))"  by auto
+lemma [simp]: "(if P then Named name T else Named name' T') = Named name (if P then T else T')" unfolding Named_def by simp
+lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
 
 subsubsection \<open>while\<close>
 
-consts op_while_WF :: "'c itself \<Rightarrow> (('x::lrep) \<times> ('r::stack) \<flower> ('w::register_collection) \<Rightarrow> (('x \<times> 1 word) \<times> 'r \<flower> 'w) state)
-  \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state) \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state)"
+consts op_while_WF :: "'c itself \<Rightarrow> ('x::lrep \<times> 'r::stack \<longmapsto> ('x \<times> 1 word) \<times> 'r) \<Rightarrow> ('x \<times> 'r \<longmapsto> 'x \<times> 'r) \<Rightarrow> 'x \<times> 'r \<longmapsto> 'x \<times> 'r"
 specification ("op_while_WF")
-  while_WF_\<nu>proc[simplified PremiseHOL ParamHOL]: "
-  ParamHOL P \<Longrightarrow> ParamHOL Rc \<Longrightarrow> ParamHOL Rb \<Longrightarrow> PremiseHOL (wf (Rc O Rb))
-  \<Longrightarrow> (\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> (x1::'c) \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> {(y, y \<in> P) | y. (y,x1) \<in> Rc } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>)) \<flower> W \<brangle>)
-  \<Longrightarrow> (\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)) \<flower> W \<longmapsto> (R \<heavy_comma> {y. (y,x2) \<in> Rb} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>)
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while_WF TYPE('c) brC brB \<blangle> (R \<heavy_comma> x \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>"
+  while_WF_\<nu>proc: "
+  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Rc \<longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Rb \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e wf (Rc O Rb)
+  \<longrightarrow> (\<forall>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> R \<heavy_comma> (x1::'c) \<tycolon> X \<longmapsto> R \<heavy_comma> {(y, y \<in> P) | y. (y,x1) \<in> Rc } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>) \<brangle>)
+  \<longrightarrow> (\<forall>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P) \<longmapsto> R \<heavy_comma> {y. (y,x2) \<in> Rb} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X \<brangle>)
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while_WF TYPE('c) brC brB \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X \<brangle>"
   apply (rule exI) using op_crash by auto
 
-consts op_while :: "'c itself \<Rightarrow> (('x::lrep) \<times> ('r::stack) \<flower> ('w::register_collection) \<Rightarrow> ((1 word \<times> 'x) \<times> 'r \<flower> 'w) state)
-  \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state) \<Rightarrow> ('x \<times> 'r \<flower> 'w \<Rightarrow> ('x \<times> 'r \<flower> 'w) state)"
+consts op_while :: "'c itself \<Rightarrow> ('x::lrep \<times> 'r::stack \<longmapsto> (1 word \<times> 'x) \<times> 'r) \<Rightarrow> ('x \<times> 'r \<longmapsto> 'x \<times> 'r) \<Rightarrow> ('x \<times> 'r \<longmapsto> 'x \<times> 'r)"
 specification ("op_while")
-  i_while_raw_\<nu>proc[simplified PremiseHOL ParamHOL]: "
-  ParamHOL P
-  \<Longrightarrow> (\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> (x1::'c) \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> {(y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X)) \<flower> W \<brangle>)
-  \<Longrightarrow> (\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>)
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> (R \<heavy_comma> x \<tycolon> X) \<flower> W \<longmapsto> (R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X) \<flower> W \<brangle>"
+  i_while_raw_\<nu>proc: "
+  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<longrightarrow> (\<forall>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> R \<heavy_comma> (x1::'c) \<tycolon> X \<longmapsto> R \<heavy_comma> {(y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X)\<brangle>)
+  \<longrightarrow> (\<forall>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P) \<longmapsto> R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X \<brangle>)
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X\<brangle>"
   apply (rule exI) using op_crash by auto
 
 proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch <where''> Always)) \<flower> W\<close>
@@ -114,7 +96,6 @@ proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<lo
   \<bullet> cast i_schema sch cast refine' Always  i_while_raw P \<Longleftarrow> brC \<Longleftarrow> brB[simplified SchemaCondition_simp] finish
 
 
-ML \<open>@{term "(a,b)"}\<close>
 \<nu>processor while 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close> \<open>fn ctx => fn meta => let open Parse Scan NuHelp NuBasics in
   $$$ "while" |-- vars -- option ($$$ "in" |-- term) -- ($$$ "subj" |-- term) -- Scan.option ($$$ "always" |-- term) >> (fn (((vars, schema), subj), always) => fn _ =>
   let open NuHelp
@@ -137,11 +118,11 @@ ML \<open>@{term "(a,b)"}\<close>
 subsubsection \<open>recursion\<close>
 
 consts op_recursion_WF :: " 'a itself \<times> 'b itself \<Rightarrow>
-    ((('u::lrep) \<times> void \<Rightarrow> (('v::lrep) \<times> void) state) \<Rightarrow> ('u \<times> void \<Rightarrow> ('v \<times> void) state)) \<Rightarrow> ('u \<times> ('r::stack) \<Rightarrow> ('v \<times> 'r) state) "
+    (('u::lrep \<times> void \<longmapsto> ('v::lrep) \<times> void) \<longmapsto> ('u \<times> void \<longmapsto> 'v \<times> void)) \<Rightarrow> ('u \<times> 'r::stack \<longmapsto> 'v \<times> 'r) "
 specification ("op_recursion_WF")
-  recursion_WF_\<nu>proc[simplified PremiseHOL ParamHOL]:
-  "ParamHOL h \<Longrightarrow> ParamHOL M \<Longrightarrow> ParamHOL WF \<Longrightarrow> PremiseHOL (wf WF) \<Longrightarrow>
-  (\<And>x' g. (\<And>x''. PremiseHOL ((x'',x') \<in> WF) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> h x'' \<tycolon> M \<brangle>)
+  recursion_WF_\<nu>proc:
+  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m h \<longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m M \<longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m WF \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e wf WF \<longrightarrow>
+  (\<forall>x' g. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (x'',x') \<in> WF \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> h x'' \<tycolon> M \<brangle>)
       \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x' \<tycolon> M \<brangle>)
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion_WF (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
   apply (rule exI) using op_crash by auto
@@ -175,50 +156,23 @@ proc' i'_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<l
 
 section \<open>Basic instructions\<close>
 
-subsection \<open>Ghost\<close>
-
-\<nu>overloads ghost and ghostize
-
-definition op_ghost :: "('r \<Rightarrow> 'a) ghost \<Rightarrow> ('r::stack) \<Rightarrow> ('a ghost \<times> 'r) state"
-  where "op_ghost gen r = StatOn (map_ghost (\<lambda>g. g r) gen,r)"
-
-(* TODO: this procedure is too dangerous to disable the compilation *)
-lemma [\<nu>intro]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (x \<tycolon> Ghost) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_ghost (ghost (\<lambda>_. x)) \<blangle> R \<longmapsto> R \<heavy_comma> x \<tycolon> Ghost \<brangle>"
-  unfolding op_ghost_def \<nu>def by simp
-
-lemma [\<nu>overload ghost]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_ghost (ghost (\<lambda>(x,r). unat x)) \<blangle> R\<heavy_comma> x \<tycolon> \<nat>['bits::len] \<longmapsto> R\<heavy_comma> x \<tycolon> \<nat>['bits]\<heavy_comma> x \<tycolon> Ghost \<brangle>"
-  unfolding op_ghost_def Procedure_def by simp
-
-proc i_ghostize_nat[\<nu>overload ghostize]: \<open>x \<tycolon> \<nat>['bits::len]\<close> \<longmapsto> \<open>x \<tycolon> Ghost \<close>
-  \<bullet> x ghost \<rightarrow> y drop y finish
-
-lemma [\<nu>overload ghost]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_ghost (ghost (\<lambda>(x,r). sint x)) \<blangle> R\<heavy_comma> x \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> x \<tycolon> \<int>['bits]\<heavy_comma> x \<tycolon> Ghost \<brangle>"
-  unfolding op_ghost_def Procedure_def by simp
-
-proc i_ghostize_int[\<nu>overload ghostize]: \<open>x \<tycolon> \<int>['bits::len]\<close> \<longmapsto> \<open>x \<tycolon> Ghost \<close>
-  \<bullet> x ghost \<rightarrow> y drop y finish
-
 section \<open>Arithmetic instructions\<close>
 
 \<nu>overloads "+" and round_add and "<" and "\<le>" and "-" and "="
-
 
 subsection \<open>Integer arithmetic\<close>
 
 subsubsection \<open>constant\<close>
 
-definition op_const_int :: "('w::len) itself \<Rightarrow> ('w::len) word \<Rightarrow> ('r::stack) \<Rightarrow> ('w word \<times> 'r) state"
-  where "op_const_int _ c r = StatOn (c,r)"
+definition op_const_int :: "('w::len) itself \<Rightarrow> ('w::len) word \<Rightarrow> ('r::stack) \<longmapsto> 'w word \<times> 'r"
+  where "op_const_int _ c h r = Success h (c,r)"
 theorem const_nat_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) c \<blangle> R \<longmapsto> R \<heavy_comma> unat c \<tycolon> \<nat>['w] \<brangle>"
   unfolding \<nu>def op_const_int_def by auto
 theorem const_nat_round_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (of_nat n) \<blangle> R \<longmapsto> R \<heavy_comma> n \<tycolon> \<nat>\<^sup>r['w] \<brangle>"
   unfolding \<nu>def op_const_int_def by auto
 
 lemma [\<nu>intro]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<longrightarrow>
    \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t ((numeral x) \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (Word.of_nat (numeral x)) \<blangle> Z \<longmapsto> Z \<heavy_comma> (numeral x) \<tycolon> \<nat>['w] \<brangle>"
   unfolding op_const_int_def \<nu>def including show_more1 apply auto by (metis mod_if unat_bintrunc unat_numeral)
   \<comment> \<open>Only literal number could be constructed automatically\<close>
@@ -245,20 +199,24 @@ lemma [\<nu>intro]:
 
 subsubsection \<open>plus\<close>
 
-instantiation typing :: (lrep, plus) plus begin
+(* instantiation typing :: (lrep, plus) plus begin
 definition plus_typing :: "('a,'b) typing \<Rightarrow> ('a,'b) typing \<Rightarrow> ('a,'b) typing"
   where "nu_of a = nu_of b \<Longrightarrow> plus_typing a b = (case a of xa \<tycolon> Na \<Rightarrow> case b of xb \<tycolon> Nb \<Rightarrow> xa + xb \<tycolon> Na)"
 lemma [simp]: "(x \<tycolon> N) + (y \<tycolon> N) = (x + y \<tycolon> N)" using plus_typing_def by auto
 instance by standard
-end
+end *)
 
-definition op_add :: "nat \<Rightarrow> ('a::len) word \<times> ('a::len) word \<times> ('r::lrep) \<Rightarrow> (('a::len) word \<times> 'r) state"
-  where "op_add w p = (case p of (a,b,r) \<Rightarrow> if LENGTH('a) = w then StatOn (a+b, r) else STrap)"
+definition op_add :: "nat \<Rightarrow> ('a::len) word \<times> ('a::len) word \<times> ('r::lrep) \<longmapsto> ('a::len) word \<times> 'r"
+  where "op_add w h = (\<lambda>(a,b,r). if LENGTH('a) = w then Success h (a+b, r) else Fail)"
 declare op_add_def[\<nu>instr]
 
 theorem add_nat_\<nu>proc[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle>\<R> \<heavy_comma> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b] \<longmapsto> \<R> \<heavy_comma> x + y \<tycolon> \<nat>['b] \<brangle>"
+  "\<forall>x y. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle>\<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b] \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x + y \<tycolon> \<nat>['b] \<brangle>"
   unfolding op_add_def Procedure_def by (auto simp add: of_nat_inverse) 
+
+
+proc xx: \<open>x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x + y \<tycolon> \<nat>[32]\<close> for x y requires [used]: "x < 100" and [used]: "y < 100"
+  \<bullet> x y + finis
 
 theorem add_nat_mod[\<nu>overload round_add]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> \<RR> \<heavy_comma> y \<tycolon> \<nat>['b::len] \<heavy_comma> x \<tycolon> \<nat>['b] \<longmapsto> \<RR> \<heavy_comma> ((x + y) mod 2^(LENGTH('b))) \<tycolon> \<nat>['b]  \<brangle>"
   unfolding op_add_def Procedure_def by (auto simp add: unat_word_ariths)
@@ -357,71 +315,18 @@ subsection \<open>Pointer Arithmetic & Split\<close>
 
 subsubsection \<open>op_shift_pointer\<close>
 
-definition op_shift_pointer :: "llty \<Rightarrow> ('bits::len) word \<times> ('spc::len0) memptr \<times> ('r::stack) \<Rightarrow> ('spc memptr \<times> 'r) state"
-  where "op_shift_pointer ty s = (case s of (d, memptr(z \<left_fish_tail> seg |+ i), r) \<Rightarrow>
-    if segment_llty seg = ty then StatOn (memptr (z \<left_fish_tail> seg |+ (i + sint d)), r) else STrap)"
+definition op_shift_pointer :: "llty \<Rightarrow> ('bits::len) word \<times> ('spc::len0) memptr \<times> ('r::stack) \<longmapsto> ('spc memptr \<times> 'r)"
+  where "op_shift_pointer ty heap s = (case s of (d, memptr(base |+ i), r) \<Rightarrow>
+    if segment_llty base = ty then Success heap (memptr (base |+ (i + sint d)), r) else Fail)"
 
 theorem op_shift_pointer[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> SlidePtr['spc::len0] ty\<heavy_comma> d \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + d) \<tycolon> SlidePtr['spc] ty \<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_comma> seg |+ i \<tycolon> TypedPtr['spc::len0] ty\<heavy_comma> d \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> seg |+ (i + d) \<tycolon> TypedPtr['spc] ty \<brangle>"
   unfolding op_shift_pointer_def Procedure_def by (simp add: lrep_exps)
-
-theorem op_shift_pointer_within[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg 0 (seg |+ (i + d)) \<Longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> Pointer['spc::len0] ty\<heavy_comma> d \<tycolon> \<int>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + d) \<tycolon> Pointer['spc] ty \<brangle>"
-  unfolding op_shift_pointer_def Procedure_def by (auto simp add: lrep_exps)
-
-definition op_shift_pointer' :: "llty \<Rightarrow> ('bits::len) word \<times> ('spc::len0) memptr \<times> ('r::stack) \<Rightarrow> ('spc memptr \<times> 'r) state"
-  where "op_shift_pointer' ty s = (case s of (d, memptr(z \<left_fish_tail> seg |+ i), r) \<Rightarrow>
-    if segment_llty seg = ty then StatOn (memptr (z \<left_fish_tail> seg |+ (i + uint d)), r) else STrap)"
-
-theorem op_shift_pointer'[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer' ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> SlidePtr['spc::len0] ty\<heavy_comma> d \<tycolon> \<nat>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + int d) \<tycolon> SlidePtr['spc] ty \<brangle>"
-  unfolding op_shift_pointer'_def Procedure_def by (auto simp add: lrep_exps)
 
 theorem op_shift_pointer_within'[\<nu>overload +]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e within_seg 0 (seg |+ (i + int d)) \<Longrightarrow>
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer' ty \<blangle> R\<heavy_comma> z \<left_fish_tail> seg |+ i \<tycolon> Pointer['spc::len0] ty\<heavy_comma> d \<tycolon> \<nat>['bits::len] \<longmapsto> R\<heavy_comma> z \<left_fish_tail> seg |+ (i + int d) \<tycolon> Pointer['spc] ty \<brangle>"
   unfolding op_shift_pointer'_def Procedure_def by (auto simp add: lrep_exps)
-
-subsubsection \<open>op_separate_mem\<close>
-
-definition op_separate_mem :: " memadr set \<Rightarrow> ('x::field) memobj \<times> ('r::stack) \<Rightarrow> ('x memobj \<times> 'x memobj \<times> 'r) state "
-  where "op_separate_mem P s = (case s of (z \<left_fish_tail> memcon f, r) \<Rightarrow> StatOn (z \<left_fish_tail> memcon (f |` P), z \<left_fish_tail> memcon (f |` (- P)),  r))"
-
-definition op_merge_mem :: " ('x::field) memobj \<times> 'x memobj \<times> ('r::stack) \<Rightarrow> ('x memobj \<times> 'r) state "
-  where "op_merge_mem s = (case s of (z1 \<left_fish_tail> memcon f1, z2 \<left_fish_tail> memcon f2, r) \<Rightarrow>
-    if z1 = z2 \<and> (dom f1 \<inter> dom f2) = {} then StatOn (z2 \<left_fish_tail> memcon (f1 ++ f2), r) else STrap)"
-
-(* theorem op_slice_mem_\<nu>proc[\<nu>overload split]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n \<le> length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_slice_mem \<blangle> R\<heavy_comma> z \<left_fish_tail> (seg |+ i) \<R_arr_tail> xs \<tycolon> MemSlice N\<heavy_comma> n \<tycolon> Ghost
-    \<longmapsto> R\<heavy_comma> z \<left_fish_tail> (seg |+ i) \<R_arr_tail> (take n xs) \<tycolon> MemSlice N\<heavy_comma> z \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> (drop n xs) \<tycolon> MemSlice N \<brangle>"
-  unfolding op_slice_mem_def Procedure_def Premise_def by (auto simp add: lrep_exps list_all2_conv_all_nth) 
-
-proc op_slice_mem2[\<nu>overload split]:
-  \<open>z \<left_fish_tail> (seg |+ i) \<R_arr_tail> xs \<tycolon> MemSlice N\<heavy_comma> n \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>z \<left_fish_tail> (seg |+ i) \<R_arr_tail> (take n xs) \<tycolon> MemSlice N\<heavy_comma> z \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> (drop n xs) \<tycolon> MemSlice N\<close>
-  requires [intro]: " n \<le> length xs"
-  \<bullet> \<leftarrow> v n ghostize  op_slice_mem finish
-
-subsubsection \<open>i_split_ref\<close>
-
-proc i_split_ref[\<nu>overload split]: \<open>zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N\<heavy_comma> n \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>zp + Gi 1 \<left_fish_tail> (seg |+ (i + int n)) \<R_arr_tail> z \<left_fish_tail> (drop n xs) \<tycolon> RefS['spc] N\<heavy_comma> zp + Gi 1 \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> (take n xs) \<tycolon> RefS['spc] N\<close>
-  requires [used]: "n \<le> length xs"
-  \<bullet> \<leftarrow> v cast E det dpr n split \<rightarrow> (m1,m2) dup n
-  \<bullet> !! + cast fixtyp affirm by (auto 0 3)
-  \<bullet> \<leftarrow> m2 pr tup cast RefS \<rightarrow> m2
-  \<bullet> \<leftarrow> m1 pr tup cast RefS \<rightarrow> m1 \<leftarrow> (m2,m1)
-  finish
-
-proc i_pop_refs[simplified length_greater_0_conv, \<nu>overload pop]:
-  \<open>zp \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] N\<close>
-    \<longmapsto> \<open>zp + Gi 1 \<left_fish_tail> (seg |+ (i + 1)) \<R_arr_tail> z \<left_fish_tail> tl xs \<tycolon> RefS['spc] N \<heavy_comma> zp + Gi 1 \<left_fish_tail> (seg |+ i) \<R_arr_tail> z \<left_fish_tail> hd xs \<tycolon> Ref['spc] N\<close>
-  requires [used]: "0 < length xs"
-  \<nu>have A[simp]: "take 1 xs = [hd xs]" by (simp add: One_nat_def take_Suc)
-  \<nu>have B[simp]: "drop 1 xs = tl xs" by (simp add: One_nat_def drop_Suc) 
-  \<bullet> $v \<open>1 \<tycolon> \<nat>[32]\<close> split affirm by linarith \<bullet>
-  finish *)
 
 subsection \<open>Load & Store\<close>
 
