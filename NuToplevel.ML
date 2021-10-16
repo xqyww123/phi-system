@@ -58,9 +58,7 @@ val arg_stat_term_name = "\<ss>"
 
 
 val default_name = "v"
-fun normalize_name name =
-  if String.isSuffix "__" name then String.substring (name,0, size name - 2) else name
-val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst #> normalize_name
+val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst
 fun pass_name tm = 
       case dest_named_opt tm of
          (SOME name, tm) => (name, tm)
@@ -127,74 +125,58 @@ fun prep_decls prep_var raw_vars ctxt =
   in ((vars, xs), ctxt'') end
 
 fun gen_begin_proc prep_prop prep_term prep_typ prep_var
-      raw binding raw_arg raw_ret rawfixes includes raw_preconds int ctx =
+      raw binding arg ret rawfixes includes preconds int ctx =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes ctx
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
     val parse_term = prep_term ctx_parse
     val parse_prop = prep_prop ctx_parse
     val parse_typ = prep_typ ctx_parse
-    val arg = prep_term ctx_parse raw_arg |> parse_arg true
-    val ret = prep_term ctx_parse raw_ret |> parse_ret
+    val preconds = preconds |> map (
+      apfst (apsnd (map (Attrib.check_src ctx))) #>
+      apsnd (apfst parse_prop #> apsnd (map parse_term) #> single))
+    val arg = prep_term ctx_parse arg |> parse_arg raw
+    val ret = prep_term ctx_parse ret |> parse_ret
+    (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
+    val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctx)
-    val ctx_parse = Proof_Context.set_mode Proof_Context.mode_schematic ctx_parse
-    val goal_proc = Const (@{const_name "Procedure"}, dummyT) $ Var (v_proc_var, dummyT) $ arg $ ret
-    val precond_terms = map (snd #> fst #> prep_term ctx_parse) raw_preconds
-    val goal = Syntax.check_term ctx_parse
-      (HOLogic.mk_Trueprop (
-        goal_proc
-          |> fold (fn a => fn b => NuHelp.mk_binop @{const_name HOL.implies} (a,b)) precond_terms
-          |> NuHelp.list_mk_binder @{const_name HOL.All} (map (fn x => Free (x, dummyT)) var_names)
-      ))
+    (* val (goal,th) = begin_proc ctx_parse (arg,ret)  *)
+    val goal = mk_Trueprop
+      (Const (@{const_name "Procedure"}, dummyT) $ Var (v_proc_var, dummyT) $ arg $ ret)
+    val elems = [Element.Fixes fixes, Element.Assumes preconds]
     val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]
     fun after_qed [[th]] lthy =
       lthy
         |> NuProcedure.define binding
-              (th |> @{print}
-      |> Raw_Simplifier.rewrite_rule lthy
-                      (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
-                  |> Raw_Simplifier.rewrite_rule lthy
-                      (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2")
-      |> @{print}
-                      )
+              (th 
+                |> Raw_Simplifier.rewrite_rule lthy @{thms Premise_Irew}
+                |> Raw_Simplifier.rewrite_rule lthy
+                    (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
+                |> Raw_Simplifier.rewrite_rule lthy
+                    (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2")
+              )
         |-> (fn th => fn lthy =>
               (Proof_Display.print_results int Position.none ctx
                   (("\<nu>procedure", ""), [("", [th])]); lthy))
   in
-    ctx
-      |> Specification.schematic_theorem false ""
-            NONE after_qed Binding.empty_atts includes [] concls int
-      |> Proof.proof (SOME (Method.Basic (fn _ =>
-            Method.SIMPLE_METHOD (REPEAT (HEADGOAL (resolve0_tac @{thms allI impI})))),
-            Position.no_range))
+    ctx |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
+              includes elems concls int
+      |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
+            Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "impossible"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-      |> Proof.fix fixes
       |> (fn stat =>
-          let 
-          val ctx = Proof.context_of stat |> Proof_Context.set_mode Proof_Context.mode_schematic
-          val arg = prep_term ctx raw_arg |> parse_arg raw
-          val ret = prep_term ctx raw_ret |> parse_ret
-          val goal_proc = Const (@{const_name "Procedure"}, dummyT)
-                $ Var (v_proc_var, dummyT) $ arg $ ret
-                  |> Syntax.check_term ctx
-          val ctx = Proof_Context.augment goal_proc ctx
-          val preconds = raw_preconds |> map (
-            apfst (apsnd (map (Attrib.check_src ctx #> Attrib.attribute ctx))) #>
-            apsnd (apfst (prep_prop ctx #> Syntax.check_prop ctx)
-                #> apsnd (map (prep_term ctx #> Syntax.check_term ctx)) #> single))
+          let val ctx = Proof.context_of stat
           val th = arg |> Syntax.check_term ctx
             |> Thm.cterm_of ctx |> start_proc ctx top_blk_name
             |> rpair empty_facts_thm |> intro_SPEC
             |> (if raw then I else init_registers ctx)
             |> Simplifier.simplify ctx
-          in 
-            stat |> Proof.assume [] [] preconds
-              |> Proof.set_facts [th] 
-              |> Proof.map_context
-                  (Proof_Context.put_thms false ("\<nu>thesis",
-                    SOME [Drule.mk_term (cterm_of ctx goal_proc)]))
-          end)
+          in Proof.set_facts [th] stat end)
+      |> Proof.map_context (fn ctx => 
+          ctx |> Proof_Context.put_thms false ("\<nu>thesis",
+            SOME [Drule.mk_term (cterm_of ctx (Syntax.check_term
+              (Proof_Context.set_mode Proof_Context.mode_schematic ctx) goal))]))
   end
 
 val begin_proc_cmd = gen_begin_proc Syntax.parse_prop Syntax.parse_term
@@ -207,9 +189,10 @@ fun RSNXX tha (i, thb) =
   (case Seq.pull (biresolution NONE false [(false, tha)] i thb) of
     SOME (th, _) => solve_constraints th
   | _ => raise THM ("RSN: no unifiers", i, [tha, thb]));
-fun RSXX tha  thb = tha COMP thb;
+fun RSXX tha  thb = RSNXX tha (1,thb);
 
 local
+fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
 fun gen_finish_proc prep_specthm qed int stat =
   let
     val meta = Proof.the_fact stat
@@ -226,12 +209,10 @@ fun gen_finish_proc prep_specthm qed int stat =
     val meta = meta |> elim_SPEC
           |> apfst (NuSys.cast (NuSys.load_specthm meta ctx) desired_nu)
           |> intro_SPEC
-    val end_tac = Method.Basic (fn ctx' => Method.SIMPLE_METHOD (
-      HEADGOAL (solve_tac ctx'
-        [finish_proc ctx goal
-            (singleton (Proof_Context.export ctx ctx') (fst (elim_SPEC meta)))
-          |> Raw_Simplifier.rewrite_rule ctx @{thms Named_rew} |> @{print}]
-      )) handle e => raise @{print} e)
+    val end_tac = basic_method (fn ctx' => fn t => 
+      RSXX (finish_proc ctx' goal
+        (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))) t
+        handle e => raise @{print} e)
   in
     stat |> Proof.set_facts [] 
       |> qed (SOME (end_tac, Position.no_range), false)
@@ -348,7 +329,7 @@ fun gen_begin_block prep_attr bindings int stat =
           |> Logic.dest_implies |> #1 |> strip_binder "Pure.all"
     val (inst, stat) = stat
           |> Proof.map_context_result (fix_frees Position.none vars)
-    val goal = inst goal
+    val (vars, goal) = (map inst vars, inst goal)
     val (prems, goal) = (Logic.strip_imp_prems goal, Logic.strip_imp_concl goal)
     val (proc,arg,ret) = dest_procedure goal 
     val blk_name = block_name_of proc
@@ -361,7 +342,7 @@ fun gen_begin_block prep_attr bindings int stat =
               |> elim_SPEC
               |> apfst (fn focus =>
                 let val ctx'' = context_of stat
-                  val vars' = map inst vars |> Variable.export_terms ctx' ctx''
+                  val vars' = Variable.export_terms ctx' ctx'' vars
                 in ((singleton (Proof_Context.export ctx' ctx'') th
                       |> Drule.forall_intr_list (map (cterm_of ctx'') vars')
                     ) COMP focus)

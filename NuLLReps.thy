@@ -97,7 +97,6 @@ abbreviation "Pointer \<equiv> Pointer[0]"
 
 lemma [simp]: "[heap] memptr i \<nuLinkL> Pointer' spc \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Pointer'_def Refining_ex by auto
 lemma [elim,\<nu>elim]: " addr \<ratio> (Pointer' spc) \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Equal (Pointer' spc) ceqable (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Zero (Pointer' spc) 0" unfolding \<nu>Zero_def by simp
 lemma [\<nu>intro]: "\<nu>Resources (Pointer' spc) (\<lambda>x. {})" unfolding \<nu>def by (simp add: lrep_exps)
 
@@ -113,7 +112,7 @@ lemma [simp]: "[heap] memptr i \<nuLinkL> TypedPtr' spc ty \<nuLinkR> i' \<longl
   unfolding TypedPtr'_def Refining_ex by auto
 lemma [elim,\<nu>elim]: " addr \<ratio> TypedPtr' spc ty \<Longrightarrow> (memaddr_llty addr = ty \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Equal (TypedPtr' spc ty) ceqable (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps)
+(* lemma [\<nu>intro]: "\<nu>Equal (TypedPtr' spc ty) ceqable (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps) *)
 lemma [\<nu>intro]: "\<nu>Resources (TypedPtr' spc ty) (\<lambda>x. {})" unfolding \<nu>def by (simp add: lrep_exps)
 
 subsubsection \<open>Casts\<close>
@@ -198,7 +197,7 @@ translations "\<nat>['x]" == "CONST NuNat (TYPE('x))"
 lemma [simp]: "[heap] p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding NuNat_def Refining_ex by auto
 lemma [elim,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
-lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>heap x y. True) (=)"
+lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI)
 lemma [\<nu>intro]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by simp
 lemma [\<nu>intro]: "\<nu>Resources (NuNat b) (\<lambda>x. {})" unfolding \<nu>def by simp
@@ -220,7 +219,7 @@ lemma [simp]: "[heap] p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" u
 lemma [elim,\<nu>elim]: "x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def apply simp by (metis One_nat_def sint_ge sint_lt) 
 
-lemma [\<nu>intro]: "\<nu>Equal (NuInt b) (\<lambda>h x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
+lemma [\<nu>intro]: "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
 lemma [\<nu>intro]: "\<nu>Zero (NuInt b) 0" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Boolean\<close>
@@ -234,7 +233,7 @@ qed
 
 definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool h p x = ((p = 1) = x)"
 lemma [simp]: "[heap] p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding NuBool_def Refining_ex by simp
-lemma [\<nu>intro]: "\<nu>Equal \<bool> (\<lambda>heap x y. True)  (=)" unfolding \<nu>Equal_def by auto
+lemma [\<nu>intro]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
 
 lemma [\<nu>intro]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
 

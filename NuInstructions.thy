@@ -211,14 +211,11 @@ definition op_add :: "nat \<Rightarrow> ('a::len) word \<times> ('a::len) word \
 declare op_add_def[\<nu>instr]
 
 theorem add_nat_\<nu>proc[\<nu>overload +]:
-  "\<forall>x y. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle>\<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b] \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x + y \<tycolon> \<nat>['b] \<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle>\<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b] \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x + y \<tycolon> \<nat>['b] \<brangle>"
   unfolding op_add_def Procedure_def by (auto simp add: of_nat_inverse) 
 
-
-proc xx: \<open>x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x + y \<tycolon> \<nat>[32]\<close> for x y requires [used]: "x < 100" and [used]: "y < 100"
-  \<bullet> x y + finis
-
-theorem add_nat_mod[\<nu>overload round_add]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> \<RR> \<heavy_comma> y \<tycolon> \<nat>['b::len] \<heavy_comma> x \<tycolon> \<nat>['b] \<longmapsto> \<RR> \<heavy_comma> ((x + y) mod 2^(LENGTH('b))) \<tycolon> \<nat>['b]  \<brangle>"
+theorem add_nat_mod[\<nu>overload round_add]:
+    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle>\<^bold>E\<^bold>N\<^bold>D \<RR> \<heavy_comma> y \<tycolon> \<nat>['b::len] \<heavy_comma> x \<tycolon> \<nat>['b] \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<RR> \<heavy_comma> ((x + y) mod 2^(LENGTH('b))) \<tycolon> \<nat>['b]  \<brangle>"
   unfolding op_add_def Procedure_def by (auto simp add: unat_word_ariths)
 
 theorem add_nat_round[\<nu>overload +]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add (LENGTH('b)) \<blangle> R\<heavy_comma> x \<tycolon> \<nat>\<^sup>r['b::len]\<heavy_comma> y \<tycolon> \<nat>\<^sup>r['b] \<longmapsto> R\<heavy_comma> (x + y) \<tycolon> \<nat>\<^sup>r['b] \<brangle>"
@@ -226,17 +223,19 @@ theorem add_nat_round[\<nu>overload +]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op
 
 
 subsubsection \<open>subtraction\<close>
-definition op_sub :: "('a::len) itself \<Rightarrow> 'a word \<times> 'a word \<times> ('r::lrep) \<Rightarrow> ('a word \<times> 'r) state"
-  where "op_sub _ p = (case p of (a,b,r) \<Rightarrow> if a \<le> b then StatOn (b - a, r) else STrap)"
+definition op_sub :: "('a::len) itself \<Rightarrow> 'a word \<times> 'a word \<times> ('r::lrep) \<longmapsto> 'a word \<times> 'r"
+  where "op_sub _ h = (\<lambda>(a,b,r) \<Rightarrow> Success h (b - a, r))"
 declare op_sub_def[\<nu>instr]
-theorem sub_nat_\<nu>proc[\<nu>overload -]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub TYPE('w::len) \<blangle> \<R> \<heavy_comma> x \<tycolon> \<nat>['w] \<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> \<R> \<heavy_comma> x - y \<tycolon> \<nat>['w] \<brangle>"
-  unfolding \<nu>def op_sub_def apply auto apply (meson le_less unat_sub) using word_le_nat_alt by blast
+theorem sub_nat_\<nu>proc[\<nu>overload -]:
+    "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub TYPE('w::len) \<blangle> \<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x \<tycolon> \<nat>['w] \<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x - y \<tycolon> \<nat>['w] \<brangle>"
+  unfolding \<nu>def op_sub_def apply auto by (meson unat_sub_if_size)
   
 subsubsection \<open>less\<close>
-definition op_lt :: " ('w::len) itself \<Rightarrow> ('w word \<times> 'w word \<times> ('r::lrep)) \<Rightarrow> (1 word \<times> 'r) state"
-  where "op_lt _ s = (case s of (a,b,r) \<Rightarrow>  StatOn ((if  b < a then 1 else 0), r))"
+definition op_lt :: " ('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<times> ('r::lrep) \<longmapsto> 1 word \<times> 'r"
+  where "op_lt _ h = (\<lambda>(a,b,r).  Success h ((if  b < a then 1 else 0), r))"
 declare op_lt_def[\<nu>instr]
-theorem op_lt_\<nu>proc[\<nu>overload <]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt (TYPE('w::len)) \<blangle>\<R>\<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> \<R>\<heavy_comma> (x < y) \<tycolon> \<bool> \<brangle>"
+theorem op_lt_\<nu>proc[\<nu>overload <]:
+    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt (TYPE('w::len)) \<blangle> \<^bold>E\<^bold>N\<^bold>D \<R>\<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<R>\<heavy_comma> (x < y) \<tycolon> \<bool> \<brangle>"
   unfolding \<nu>def op_lt_def by (auto simp add: word_less_nat_alt)
 
 definition op_le :: " ('w::len) itself \<Rightarrow> ('w word \<times> 'w word \<times> ('r::lrep)) \<Rightarrow> (1 word \<times> 'r) state"
