@@ -238,18 +238,18 @@ theorem op_lt_\<nu>proc[\<nu>overload <]:
     "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt (TYPE('w::len)) \<blangle> \<^bold>E\<^bold>N\<^bold>D \<R>\<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<R>\<heavy_comma> (x < y) \<tycolon> \<bool> \<brangle>"
   unfolding \<nu>def op_lt_def by (auto simp add: word_less_nat_alt)
 
-definition op_le :: " ('w::len) itself \<Rightarrow> ('w word \<times> 'w word \<times> ('r::lrep)) \<Rightarrow> (1 word \<times> 'r) state"
-  where "op_le _ s = (case s of (a,b,r) \<Rightarrow>  StatOn ((if  b \<le> a then 1 else 0), r))"
-theorem op_le_\<nu>proc[\<nu>overload \<le>]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le (TYPE('w::len)) \<blangle>\<R>\<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> \<R>\<heavy_comma> (x \<le> y) \<tycolon> \<bool> \<brangle>"
+definition op_le :: " ('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<times> ('r::lrep) \<longmapsto> 1 word \<times> 'r "
+  where "op_le _ h = (\<lambda>(a,b,r).  Success h ((if  b \<le> a then 1 else 0), r))"
+theorem op_le_\<nu>proc[\<nu>overload \<le>]:
+    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le (TYPE('w::len)) \<blangle> \<^bold>E\<^bold>N\<^bold>D \<R> \<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<R>\<heavy_comma> (x \<le> y) \<tycolon> \<bool> \<brangle>"
   unfolding \<nu>def op_le_def by (auto simp add: word_le_nat_alt)
 
 subsubsection \<open>equal\<close>
 
-definition op_equal :: " ('a::{ceq,lrep}) \<times> 'a \<times> ('r::stack) \<Rightarrow> (1 word \<times> 'r) state"
-  where "op_equal s = (case s of (a,b,r) \<Rightarrow>
-    if ceqable b a then StatOn ((if ceq b a then 1 else 0), r) else STrap)"
+definition op_equal :: " ('a::{ceq,lrep}) \<times> 'a \<times> ('r::stack) \<longmapsto> 1 word \<times> 'r"
+  where "op_equal h = (\<lambda>(a,b,r). if ceqable h b a then Success h ((if ceq b a then 1 else 0), r) else Fail)"
 theorem op_equal[\<nu>overload =]:
-  "\<nu>CEqual N P eq \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal \<blangle> R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N \<longmapsto> R\<heavy_comma> eq a b \<tycolon> \<bool> \<brangle>"
+  "\<nu>Equal N P eq \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a b \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal \<blangle> R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N \<longmapsto> R\<heavy_comma> eq a b \<tycolon> \<bool> \<brangle>"
   unfolding \<nu>def op_equal_def by (auto 4 5)
 
 section \<open>Tuple Operations\<close>

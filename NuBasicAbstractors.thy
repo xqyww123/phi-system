@@ -122,8 +122,11 @@ lemma [simp]:
   "[heap] memptr p \<nuLinkL> Ref T \<nuLinkR> addr \<R_arr_tail> x \<longleftrightarrow>
     p = addr \<and> (\<exists>v. heap (MemAddress addr) = Some v \<and> ([heap] shallowize v \<nuLinkL> T \<nuLinkR> x))"
   unfolding Ref_def Refining_ex by auto
+
 lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources (Ref T) (\<lambda>obj. case obj of addr \<R_arr_tail> x \<Rightarrow> write addr \<union> rcss x)"
   unfolding \<nu>def by (auto simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Equal (Ref N) (\<lambda>x y. True) (inv_imagep (=) key_of)"
+  unfolding \<nu>Equal_def by (auto simp add: lrep_exps)
 
 subsection \<open>\<nu>-abstraction : Slice\<close>
 
@@ -138,13 +141,14 @@ lemma [simp]: "[heap] memptr p \<nuLinkL> Slice N \<nuLinkR> (base |+ ofs) \<R_a
 lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Slice N \<Longrightarrow> ((\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (cases a; auto 6 6 simp add: lrep_exps list_all2_conv_all_nth) 
 
-lemma [\<nu>intro]: "\<nu>Equal (Slice N) (\<lambda>h. inv_imagep (ceqable h) key_of) (inv_imagep (=) key_of)"
-  unfolding \<nu>Equal_def by (auto simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Equal (Slice N) (\<lambda>x y. True) (inv_imagep (=) key_of)"
+  unfolding \<nu>Equal_def apply (auto simp add: lrep_exps) 
 
 lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources (Slice T) (\<lambda>obj. case obj of addr \<R_arr_tail> xs \<Rightarrow>
     write (array addr (length xs)) \<union> (all (map rcss xs)))"
-  unfolding \<nu>def union_of_sets_def apply (auto 4 2 simp add: image_iff lrep_exps Ball_def)
-  by (metis add_less_cancel_left of_nat_less_iff zle_iff_zadd) 
+  unfolding \<nu>def union_of_sets_def apply (auto 0 2 simp add: image_iff lrep_exps Ball_def)
+   by (metis add_less_cancel_left of_nat_less_iff zle_iff_zadd)+
+
 
 subsection \<open>Numbers\<close>
 

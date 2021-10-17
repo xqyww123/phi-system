@@ -62,7 +62,7 @@ definition zero_memptr :: "'a memptr" where [simp]: "zero_memptr = memptr 0"
 instance by standard
 end
 
-abbreviation "addr_allocated heap addr \<equiv> Dispose (MemAddress addr) \<in> dom heap"
+abbreviation "addr_allocated heap addr \<equiv> MemAddress addr \<in> dom heap"
 
 instantiation memaddr :: ceq begin
 definition ceqable_memaddr :: " heap \<Rightarrow> memaddr \<Rightarrow> memaddr \<Rightarrow> bool"

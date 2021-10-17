@@ -21,7 +21,7 @@ which basically has the same effect as the using command.\<close>
   and final_proc_rewrite \<open>rules used to rewrite the generated procedure theorem in the final stage\<close>
   and final_proc_rewrite2
 
-lemmas [final_proc_rewrite] = Premise_Irew WorkingProtector_def
+lemmas [final_proc_rewrite] = WorkingProtector_def
 lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<nu>Zero N zr \<equiv> (\<nu>Zero N zr)" unfolding Premise_def .
   
 definition  FailedPremise :: "bool \<Rightarrow> bool" where "FailedPremise \<equiv> Premise"

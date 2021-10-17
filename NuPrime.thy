@@ -142,10 +142,11 @@ end
 datatype deep_model = DM_int nat nat | DM_pointer nat memaddr | DM_fusion deep_model deep_model
   | DM_record deep_model | DM_array "deep_model list" | DM_none
 
-datatype resource_key = MemAddress memaddr | ChainDB_key nat | Dispose resource_key
+datatype resource_key = MemAddress memaddr | ChainDB_key nat
   \<comment> \<open>The write operation on address `addr` requires owning of resource `MemAddress addr`,
     while the dispose of that memory on `addr` requires both owning of resource `MemAddress addr`
       and `Dispose (MemAddress addr)`\<close>
+datatype claim_key = WeakWrite resource_key | Alive resource_key
 
 type_synonym heap = "resource_key \<rightharpoonup> deep_model"
 
@@ -233,11 +234,13 @@ definition \<nu>Zero :: "('a::{zero,lrep},'b) \<nu> \<Rightarrow> 'b \<Rightarro
   where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> (\<forall>res. [res] 0 \<nuLinkL> N \<nuLinkR> x )"
 definition \<nu>Equal :: "('a::{lrep,ceq}, 'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Equal N can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 heap.
-    ceqable heap p1 p2 \<and> ([heap] p1 \<nuLinkL> N \<nuLinkR> x1) \<and> ([heap] p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> can_eq x1 x2 \<and> (ceq p1 p2 = eq x1 x2))"
+    can_eq x1 x2 \<and> ([heap] p1 \<nuLinkL> N \<nuLinkR> x1) \<and> ([heap] p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable heap p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
 
-definition \<nu>Resources_of_set :: " 'a \<nu>set \<Rightarrow> resource_key set \<Rightarrow> bool "
-  where [\<nu>def]: "\<nu>Resources_of_set S rcss \<longleftrightarrow> (\<forall>heap adr v p. adr \<notin> rcss \<longrightarrow> p \<in> S heap \<longrightarrow> p \<in> S (heap(adr := v)))"
-definition \<nu>Resources :: " ('a::lrep, 'b) \<nu> \<Rightarrow> ('b \<Rightarrow> resource_key set) \<Rightarrow> bool "
+definition \<nu>Resources_of_set :: " 'a \<nu>set \<Rightarrow> claim_key set \<Rightarrow> bool "
+  where [\<nu>def]: "\<nu>Resources_of_set S rcss \<longleftrightarrow>
+    (\<forall>heap adr p. Alive adr \<notin> rcss \<longrightarrow>  p \<in> S heap \<longrightarrow> p \<in> S (heap(adr := None))) \<and>
+    (\<forall>heap key v' v p. WeakWrite key \<notin> rcss \<longrightarrow> heap key = Some v \<longrightarrow> p \<in> S heap \<longrightarrow> p \<in> S (heap(key := Some v')))"
+definition \<nu>Resources :: " ('a::lrep, 'b) \<nu> \<Rightarrow> ('b \<Rightarrow> claim_key set) \<Rightarrow> bool "
   where [\<nu>def]: "\<nu>Resources T rcss \<longleftrightarrow> (\<forall>x. \<nu>Resources_of_set \<tort_lbrace> x \<tycolon> T \<tort_rbrace> (rcss x))"
 
 
@@ -275,9 +278,6 @@ lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" 
   For example, "@{prop "\<And>bit_width value. \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m bit_width \<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m value \<Longrightarrow> P bit_wdith value"},
     the first parameter `?bit_width` will be specified first and then the "?value".\<close>
 lemma [elim!,\<nu>elim]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" by auto
-
-definition ParamHOL :: " 'a \<Rightarrow> bool" where "ParamHOL x = True"
-lemma ParamHOL: "Trueprop (ParamHOL x) \<equiv> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" unfolding ParamTag_def ParamHOL_def .
 
 subsubsection \<open>Premise tag\<close>
 
@@ -379,7 +379,7 @@ definition Procedure :: "('a \<longmapsto> 'b) \<Rightarrow> ('a::lrep) \<nu>set
 definition Map :: " 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> ('a \<Rightarrow> 'b) set " where "Map A B = {f. \<forall>a h. a \<in> A h \<longrightarrow> f a \<in> B h }"
 definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<blangle>(2 _/ \<longmapsto> _ )\<brangle>)" [101,2,2] 100)
   where [\<nu>def]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle> \<equiv> \<forall>a h. a \<in> T h \<longrightarrow> f a \<in> U h"
-lemma [intro]: "(\<And>x h. x \<in> T h \<Longrightarrow> f x \<in> U h) \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle>" by auto
+(* lemma [intro]: "(\<And>x h. x \<in> T h \<Longrightarrow> f x \<in> U h) \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle>" by auto *)
 (* lemma [simp]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> \<S> U \<brangle> \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> U \<brangle>" unfolding \<nu>def by fast  *)
 
 subsection \<open>Primitive operations and instructions required in the system\<close>
@@ -669,12 +669,12 @@ subsection \<open>Resource  Claim\<close>
 named_theorems disj_intro and disj_intro0 and disj_elim and disj_dest and disj_simp
 
 definition disjoint (infix "\<perpendicular>" 60) where "disjoint A B \<equiv> (A \<inter> B = {})"
-definition involve_claim :: " resource_key set \<Rightarrow> resource_key set \<Rightarrow> bool" (infix "<involve>" 50)
+definition involve_claim :: " claim_key set \<Rightarrow> claim_key set \<Rightarrow> bool" (infix "<involve>" 50)
   where "involve_claim = (\<subseteq>)"
 
 subsubsection \<open>Abstractor\<close>
 
-definition Claim :: " ('a::lrep) \<nu>set \<Rightarrow> resource_key set \<Rightarrow> ('a::lrep) \<nu>set " (infix "<Claim>" 60)
+definition Claim :: " ('a::lrep) \<nu>set \<Rightarrow> claim_key set \<Rightarrow> ('a::lrep) \<nu>set " (infix "<Claim>" 60)
   where "Claim S claim = (if \<nu>Resources_of_set S (- claim) then S else (\<lambda>map. {}))"
 
 lemma [simp]: "p \<in> Claim T claim heap \<longleftrightarrow> p \<in> T heap \<and> \<nu>Resources_of_set T (- claim)" unfolding Claim_def by auto
@@ -682,12 +682,12 @@ lemma [simp]: "Claim (Claim T claim1) claim2 = Claim T (claim1 \<union> claim2)"
   unfolding Claim_def \<nu>Resources_of_set_def  by auto
 
 lemma "\<nu>Resources_of_set B rcssB \<Longrightarrow> disjoint rcssB claim  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (Claim A claim \<heavy_comma> B) \<longmapsto> Claim (A\<heavy_comma> B) claim"
-  unfolding Stack_Delimiter_def \<nu>Resources_of_set_def Cast_def disjoint_def by (auto simp add: \<nu>Resources_of_set_def)
+  unfolding Stack_Delimiter_def \<nu>Resources_of_set_def Cast_def disjoint_def by (auto 4 3 simp add: \<nu>Resources_of_set_def)
 
 lemma [\<nu>intro]:
   " claims' <involve> claims \<Longrightarrow>
     \<^bold>c\<^bold>a\<^bold>s\<^bold>t (End_of_Contextual_Stack R <Claim> claims) \<longmapsto> (End_of_Contextual_Stack R <Claim> claims') "
-  unfolding Cast_def involve_claim_def End_of_Contextual_Stack_def by (auto simp add: \<nu>Resources_of_set_def)
+  unfolding Cast_def involve_claim_def End_of_Contextual_Stack_def by (auto 4 3 simp add: \<nu>Resources_of_set_def)
 
 consts "ClaimSugar" :: " 'just \<Rightarrow> 'sugar " ("[\<^bold>c\<^bold>l\<^bold>a\<^bold>i\<^bold>m _]")
   \<comment> \<open>merely a syntax sugar. We define it as a constants rather than syntax object merely for the support of the
@@ -697,31 +697,32 @@ translations "[\<^bold>c\<^bold>l\<^bold>a\<^bold>i\<^bold>m claims]" <= "CONST 
 subsubsection \<open>Claim clauses\<close>
 
 text \<open>lexical elements for claim clauses, to be adhoc-overloaded\<close>
-consts "write" :: " 'a \<Rightarrow> resource_key set "
-consts dispose :: " 'a \<Rightarrow> resource_key set "
+consts "write" :: " 'a \<Rightarrow> claim_key set "
+consts alive :: " 'a \<Rightarrow> claim_key set "
 consts all :: " 'a \<Rightarrow> 'b "
 
-definition resource_write_address :: "memaddr \<Rightarrow> resource_key set"
-  where "resource_write_address addr = {MemAddress addr }"
-lemma [simp]: "a \<in> resource_write_address addr \<longleftrightarrow> a = MemAddress addr" unfolding resource_write_address_def by simp
+definition resource_write_address :: "memaddr \<Rightarrow> claim_key set"
+  where "resource_write_address addr = {WeakWrite (MemAddress addr), Alive (MemAddress addr)}"
+lemma [simp]: "a \<in> resource_write_address addr \<longleftrightarrow> a = WeakWrite (MemAddress addr) \<or> a = Alive (MemAddress addr)"
+  unfolding resource_write_address_def by simp
 
-definition resource_dipose_address :: "memaddr \<Rightarrow> resource_key set"
-  where "resource_dipose_address addr = {Dispose (MemAddress addr) }"
-lemma [simp]: "a \<in> resource_dipose_address addr \<longleftrightarrow> a = Dispose (MemAddress addr)"
-  unfolding resource_dipose_address_def by simp
+definition resource_alive_address :: "memaddr \<Rightarrow> claim_key set"
+  where "resource_alive_address addr = {Alive (MemAddress addr) }"
+lemma [simp]: "a \<in> resource_alive_address addr \<longleftrightarrow> a = Alive (MemAddress addr)"
+  unfolding resource_alive_address_def by simp
 
-definition resource_write_address_set :: "memaddr set \<Rightarrow> resource_key set"
-  where "resource_write_address_set addrs = MemAddress` addrs"
-lemma [simp]: "a \<in> resource_write_address_set addrs \<longleftrightarrow> a \<in> MemAddress` addrs"
+definition resource_write_address_set :: "memaddr set \<Rightarrow> claim_key set"
+  where "resource_write_address_set addrs = (Alive o MemAddress)` addrs \<union> (WeakWrite o MemAddress) ` addrs"
+lemma [simp]: "a \<in> resource_write_address_set addrs \<longleftrightarrow> a \<in> (Alive o MemAddress)` addrs \<or> a \<in> (WeakWrite o MemAddress)` addrs"
   unfolding resource_write_address_set_def by simp
 
-definition resource_dispose_address_set :: "memaddr set \<Rightarrow> resource_key set"
-  where "resource_dispose_address_set addrs = (Dispose o MemAddress)` addrs"
-lemma [simp]: "a \<in> resource_dispose_address_set addrs \<longleftrightarrow> a \<in> (Dispose o MemAddress)` addrs"
-  unfolding resource_dispose_address_set_def by simp
+definition resource_alive_address_set :: "memaddr set \<Rightarrow> claim_key set"
+  where "resource_alive_address_set addrs = (Alive o MemAddress)` addrs"
+lemma [simp]: "a \<in> resource_alive_address_set addrs \<longleftrightarrow> a \<in> (Alive o MemAddress)` addrs"
+  unfolding resource_alive_address_set_def by simp
 
 adhoc_overloading "write" resource_write_address resource_write_address_set
-  and dispose resource_dipose_address resource_dispose_address_set
+  and alive resource_alive_address resource_alive_address_set
 
 definition array :: " memaddr \<Rightarrow> nat \<Rightarrow> memaddr set "
   where "array addr n = (case addr of base |+ ofs \<Rightarrow> { (base |+ ofs') | ofs'. ofs \<le> ofs' \<and> ofs' < ofs + int n})"
@@ -756,27 +757,23 @@ lemma [disj_intro]: "x <involve> L ! i \<Longrightarrow> \<^bold>p\<^bold>r\<^bo
   unfolding Premise_def involve_claim_def union_of_sets_def by (meson Sup_upper2 nth_mem) 
 
 lemma [disj_intro]: "addr \<in> addrs \<Longrightarrow> (resource_write_address addr) <involve> (resource_write_address_set addrs)"
-  and [disj_intro]: "addr \<in> addrs \<Longrightarrow> (resource_dipose_address addr) <involve> (resource_dispose_address_set addrs)"
+  and [disj_intro]: "addr \<in> addrs \<Longrightarrow> (resource_alive_address addr) <involve> (resource_alive_address_set addrs)"
   and [disj_intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ofs' \<le> ofs \<and> ofs < ofs' + int n \<Longrightarrow> (base |+ ofs) \<in> array (base |+ ofs') n"
   unfolding involve_claim_def by auto
 
-notepad
-begin
-  assume A[simplified disj_simp]: "(resource_write_address a) \<perpendicular> (resource_dispose_address_set b)"
-end
-
-lemma [disj_intro]: "(resource_dipose_address b) \<perpendicular> (resource_write_address a)"
-  and [disj_intro]: "(resource_dipose_address b) \<perpendicular> (resource_write_address_set as)"
-  and [disj_intro]: "(resource_dispose_address_set bs) \<perpendicular> (resource_write_address a)"
-  and [disj_intro]: "(resource_dispose_address_set bs) \<perpendicular> (resource_write_address_set as)"
-  and [disj_intro]: "b \<notin> bs \<Longrightarrow> (resource_dipose_address b) \<perpendicular> (resource_dispose_address_set bs)"
-  and [disj_intro]: "a \<notin> as \<Longrightarrow> (resource_write_address a) \<perpendicular> (resource_write_address_set as)"
-  and [disj_intro]: "b \<noteq> b' \<Longrightarrow> (resource_dipose_address b) \<perpendicular> (resource_dipose_address b')"
-  and [disj_intro]: "a \<noteq> a' \<Longrightarrow> (resource_write_address a) \<perpendicular> (resource_write_address a')"
-  and [disj_intro]: "as \<perpendicular> as' \<Longrightarrow> (resource_write_address_set as) \<perpendicular> (resource_write_address_set as')"
-  and [disj_intro]: "bs \<perpendicular> bs' \<Longrightarrow> (resource_dispose_address_set bs) \<perpendicular> (resource_dispose_address_set bs')"
+lemma [disj_intro]: "a \<noteq> b \<Longrightarrow> (resource_alive_address a) \<perpendicular> (resource_write_address b)"
+  and [disj_intro]: "a \<notin> bs \<Longrightarrow> (resource_alive_address a) \<perpendicular> (resource_write_address_set bs)"
+  and [disj_intro]: "b \<notin> as \<Longrightarrow> (resource_alive_address_set as) \<perpendicular> (resource_write_address b)"
+  and [disj_intro]: "as \<perpendicular> bs \<Longrightarrow> (resource_alive_address_set as) \<perpendicular> (resource_write_address_set bs)"
+  and [disj_intro]: "a \<notin> as \<Longrightarrow> (resource_alive_address a) \<perpendicular> (resource_alive_address_set as)"
+  and [disj_intro]: "b \<notin> bs \<Longrightarrow> (resource_write_address b) \<perpendicular> (resource_write_address_set bs)"
+  and [disj_intro]: "a \<noteq> a' \<Longrightarrow> (resource_alive_address a) \<perpendicular> (resource_alive_address a')"
+  and [disj_intro]: "b \<noteq> b' \<Longrightarrow> (resource_write_address b) \<perpendicular> (resource_write_address b')"
+  and [disj_intro]: "bs \<perpendicular> bs' \<Longrightarrow> (resource_write_address_set bs) \<perpendicular> (resource_write_address_set bs')"
+  and [disj_intro]: "as \<perpendicular> as' \<Longrightarrow> (resource_alive_address_set as) \<perpendicular> (resource_alive_address_set as')"
   and [disj_intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e base \<noteq> base' \<or> ofs < ofs' \<or> ofs' + int n \<le> ofs \<Longrightarrow> (base |+ ofs) \<notin> array (base' |+ ofs') n"
   unfolding disjoint_def by auto
+
 
  subsubsection \<open>Auto construct & destruct\<close>
 
