@@ -249,8 +249,8 @@ subsubsection \<open>equal\<close>
 definition op_equal :: " ('a::{ceq,lrep}) \<times> 'a \<times> ('r::stack) \<longmapsto> 1 word \<times> 'r"
   where "op_equal h = (\<lambda>(a,b,r). if ceqable h b a then Success h ((if ceq b a then 1 else 0), r) else Fail)"
 theorem op_equal[\<nu>overload =]:
-  "\<nu>Equal N P eq \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a b \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal \<blangle> R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N \<longmapsto> R\<heavy_comma> eq a b \<tycolon> \<bool> \<brangle>"
-  unfolding \<nu>def op_equal_def by (auto 4 5)
+  "\<nu>Equal N P eq \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a b \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> eq a b \<tycolon> \<bool> \<brangle>"
+  unfolding \<nu>def op_equal_def by (auto 0 6)
 
 section \<open>Tuple Operations\<close>
 
@@ -258,48 +258,101 @@ subsection \<open>Tuple construction & destruction\<close>
 
 subsubsection \<open>op_constr_tuple\<close>
 
-definition op_constr_tuple :: "('a::field_list) \<times> ('r::stack) \<Rightarrow> ('a tuple \<times> 'r) state"
-  where "op_constr_tuple = (\<lambda>(a,r). StatOn (Tuple a, r))"
+definition op_constr_tuple :: "('a::field_list) \<times> ('r::stack) \<longmapsto> 'a tuple \<times> 'r"
+  where "op_constr_tuple h = (\<lambda>(a,r). Success h (Tuple a, r))"
 
-theorem tup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_constr_tuple \<blangle> R\<heavy_comma> x \<tycolon> X \<longmapsto> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<brangle>"
+theorem tup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_constr_tuple \<blangle> \<^bold>E\<^bold>N\<^bold>D R \<heavy_comma> x \<tycolon> X \<longmapsto> \<^bold>E\<^bold>N\<^bold>D R \<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<brangle>"
   unfolding op_constr_tuple_def Procedure_def by simp
 
 subsubsection \<open>op_destr_tuple\<close>
 
-definition op_destr_tuple :: "('a::field_list) tuple \<times> ('r::stack) \<Rightarrow> ('a \<times> 'r) state"
-  where "op_destr_tuple ar = (case ar of (Tuple a, r) \<Rightarrow> StatOn (a,r))"
+definition op_destr_tuple :: "('a::field_list) tuple \<times> ('r::stack) \<longmapsto> 'a \<times> 'r"
+  where "op_destr_tuple h s = (case s of (Tuple a, r) \<Rightarrow> Success h (a,r))"
 
-theorem det_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_destr_tuple \<blangle> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<longmapsto> R\<heavy_comma> x \<tycolon> X \<brangle>"
+theorem det_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_destr_tuple \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<longmapsto> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> x \<tycolon> X \<brangle>"
   unfolding Procedure_def op_destr_tuple_def by (simp add: tuple_forall)
 
 section \<open>Memory & Pointer Operations\<close>
 
+\<nu>overloads merge and pop
+
+subsection \<open>Pointer Arithmetic\<close>
+
+definition op_shift_pointer :: "llty \<Rightarrow> 'spc size_t word \<times> 'spc::len0 memptr \<times> 'r::stack \<longmapsto> 'spc::len0 memptr \<times> 'spc::len0 memptr \<times> 'r::stack"
+  where "op_shift_pointer ty h s = (case s of (delta, memptr (seg |+ ofs), r) \<Rightarrow>
+    Success h (memptr (seg |+ (ofs + delta * of_nat (size_of ty))), memptr (seg |+ ofs), r))"
+
+theorem op_shift_pointer_raw[\<nu>overload +]:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr \<tycolon> RawPointer\<heavy_comma> delta \<tycolon> Identity \<longmapsto>
+      \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr \<tycolon> RawPointer\<heavy_comma> shift_addr addr (delta * of_nat (size_of ty)) \<tycolon> RawPointer \<brangle>"
+  unfolding \<nu>def op_shift_pointer_def by (cases addr) (simp add: lrep_exps)
+
+theorem op_shift_pointer_slice[\<nu>overload +]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < length xs \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer LLTY('p) \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr \<R_arr_tail> xs \<tycolon> Slice['spc::len] T\<heavy_comma> n \<tycolon> \<nat>['spc size_t]
+      \<longmapsto> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr \<R_arr_tail> take n xs \<tycolon> Slice T\<heavy_comma> shift_addr addr n \<R_arr_tail> drop n xs \<tycolon> Slice T \<brangle>"
+  for T :: "('p::field, 'x) \<nu>"
+  unfolding \<nu>def op_shift_pointer_def apply (cases addr)
+  by (auto simp add: lrep_exps the_same_addr_def raw_offset_of_def distrib_right
+        add.commute add.left_commute)
+
+theorem op_slice_merge[\<nu>overload merge]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e shift_addr addr1 (length xs1) = addr2 \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr1 \<R_arr_tail> xs1 \<tycolon> Slice T\<heavy_comma> addr2 \<R_arr_tail> xs2 \<tycolon> Slice T
+      \<longmapsto> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr1 \<R_arr_tail> xs1 @ xs2 \<tycolon> Slice T \<brangle>"
+  unfolding \<nu>def op_drop_def apply (cases addr1; cases addr2) apply (auto simp add: lrep_exps)
+  subgoal for x2 x1a base ofs basea ofsa b h i apply (cases "i < length xs1")
+     apply (metis nth_append) subgoal premises prems proof -
+      obtain j where [simp]: "i = length xs1 + j" using prems
+        by (metis add.commute le_Suc_ex not_le_imp_less) 
+      show "\<exists>p'. h (MemAddress (x1a |+ x2 + i)) = Some p' \<and> ([h] shallowize p' \<nuLinkL> T  \<nuLinkR> (xs1 @ xs2) ! i)"
+        using prems apply simp by (metis add.assoc add.commute)
+    qed done done
+
+
 subsection \<open>Allocation\<close>
-
-\<nu>overloads spawn
-
-subsubsection \<open>op_alloc_id_space\<close>
-
-definition op_alloc_id_space :: " identifier \<times> ('r::stack) \<Rightarrow> (identifier \<times> identifier \<times> ('r::stack)) state"
-  where "op_alloc_id_space s = (case s of (i,r) \<Rightarrow> StatOn (alloc_identifier_space i, alloc_identifier i, r))"
-
-theorem alloc_id_space_\<nu>proc[\<nu>overload spawn]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_id_space \<blangle> R\<heavy_comma> i\<hyphen>j \<tycolon> IdSrc \<longmapsto> R\<heavy_comma> i\<hyphen>j+1 \<tycolon> IdSrc \<heavy_comma> i\<hyphen>j\<hyphen>0 \<tycolon> IdSrc\<brangle>"
-  unfolding op_alloc_id_space_def Procedure_def by (simp add: lrep_exps)
 
 subsubsection \<open>op_alloc\<close>
 
-definition op_alloc :: "('x::{zero,field}) itself
-    \<Rightarrow> identifier \<times> ('bits::len) word \<times> ('r::stack) \<Rightarrow> (identifier \<times> (0, 'x) memref \<times>'r) state"
-  where "op_alloc _ s = (case s of (i,n,r) \<Rightarrow> if segment_len i = unat n \<and> segment_llty i = llty TYPE('x) then
-    StatOn (alloc_identifier i, Tuple ((memptr (0 \<left_fish_tail>i |+ 0) :: 0 memptr),
-          0 \<left_fish_tail> memcon (\<lambda>adr. case adr of (seg |+ ofs) \<Rightarrow> if seg = i \<and> ofs < int (unat n) then Some 0 else None)), r)
-  else SNeg)"
+definition "heap_assignN n v seg heap = (\<lambda>key. case key of MemAddress (seg' |+ ofs') \<Rightarrow>
+      if seg' = seg \<and> ofs' < n then v else heap key | _ \<Rightarrow> heap key)"
+
+lemma heap_assignN_subset: "Heap h \<Longrightarrow> h \<subseteq>\<^sub>m heap_assignN n v (malloc h) h"
+  unfolding heap_assignN_def map_le_def Ball_def by (simp add: malloc2 resource_key_forall memaddr_forall)
+lemma heap_assignN_mono: "Heap h \<Longrightarrow> [h] p \<in>\<^sub>\<nu> T \<Longrightarrow> [heap_assignN n v (malloc h) h] p \<in>\<^sub>\<nu> T"
+  unfolding NuSet_def using \<nu>set_mono[OF heap_assignN_subset] .
+
+lemma [intro]: "Heap h \<Longrightarrow> Heap (heap_assignN n v seg h)" proof -
+  have "AvailableSegments h \<subseteq> {seg} \<union> AvailableSegments (heap_assignN n v seg h)"
+    unfolding AvailableSegments_def heap_assignN_def by auto 
+  then show "Heap h \<Longrightarrow> Heap (heap_assignN n v seg h)" 
+    unfolding Heap_def using infinite_super by auto
+qed
+
+lemma [simp]: "i < n \<Longrightarrow> heap_assignN n v seg h (MemAddress (seg |+ i)) = v"
+  unfolding heap_assignN_def by simp
+
+
+definition op_alloc :: "('x::{zero,field}) itself \<Rightarrow> 0 size_t word \<times> ('r::stack) \<longmapsto> 0 memptr \<times>'r"
+  where "op_alloc _ heap s = (case s of (n,r) \<Rightarrow>  let seg = malloc heap in
+  if segment_len seg = unat n \<and> segment_llty seg = LLTY('x) \<and> segment_space seg = 0 then
+    Success (heap_assignN (unat n) (Some (deepize (0 :: 'x))) seg heap) (memptr (seg |+ 0), r)
+  else PartialCorrect)"
 
 theorem alloc_array_\<nu>proc:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
-      \<blangle> R\<heavy_comma> n \<tycolon> \<nat>[('bits::len)] \<heavy_comma> i\<hyphen>j \<tycolon> IdSrc \<longmapsto> R\<heavy_comma> Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> replicate n zero \<tycolon> RefS N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc \<brangle>"
-  for N :: "('x::{zero,field},'b) nu"
-  unfolding \<nu>def op_alloc_def by (auto simp add: list_all2_conv_all_nth)
+  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
+      \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> n \<tycolon> \<nat>[0 size_t]
+        \<longmapsto> (\<exists>*seg. \<^bold>E\<^bold>N\<^bold>D R <Claim> write (array (seg |+ 0) n)\<heavy_comma> (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Slice N) \<brangle>"
+  for N :: "('x::{zero,field},'b)\<nu>"
+  unfolding \<nu>def op_alloc_def 
+  by (auto simp add: lrep_exps list_all2_conv_all_nth Let_def the_same_addr_def 
+         intro: heap_assignN_mono) 
+
+lemma "Heap h \<Longrightarrow> [h] p \<in>\<^sub>\<nu> R \<Longrightarrow> \<nu>Resources_of_set R (- write (array (malloc h |+ i) j))"
+  unfolding \<nu>Resources_of_set_def apply (auto simp add: memaddr_forall resource_key_forall malloc3)
+  apply (intro malloc3)
+  thm malloc3
+  thm \<nu>Resources_of_set_def
 
 proc alloc : \<open>i\<hyphen>j \<tycolon> IdSrc\<close> \<longmapsto> \<open>Gi 0 \<left_fish_tail>(i\<hyphen>j |+ 0) \<R_arr_tail> Gi 0 \<left_fish_tail> zero \<tycolon> Ref N \<heavy_comma> i\<hyphen>j + 1 \<tycolon> IdSrc\<close>
   for N :: "('x::{zero,field},'b) nu"
@@ -309,8 +362,6 @@ proc alloc : \<open>i\<hyphen>j \<tycolon> IdSrc\<close> \<longmapsto> \<open>Gi
   finish
 
 subsection \<open>Pointer Arithmetic & Split\<close>
-
-\<nu>overloads split and pop
 
 subsubsection \<open>op_shift_pointer\<close>
 

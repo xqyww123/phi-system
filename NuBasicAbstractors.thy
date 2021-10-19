@@ -24,6 +24,11 @@ val th2 = SOLVED' (Tactical.REPEAT o Tactic.ares_tac @{context} @{thms \<nu>shar
 *)
 section \<open>Abstractors for specification\<close>
 
+subsubsection \<open>Identity\<close>
+
+definition Identity :: " ('a::lrep, 'a) \<nu> " where "Identity h p x \<longleftrightarrow> p = x"
+lemma [simp]: "[h] p \<nuLinkL> Identity \<nuLinkR> x \<longleftrightarrow> p = x" unfolding Refining_ex Identity_def Nu_def by auto
+
 subsubsection \<open>Refinement\<close>
 
 definition NuRefine :: " ('a :: lrep, 'b) \<nu> \<Rightarrow> 'b set \<Rightarrow> ('a, 'b) \<nu> " (infixl "\<nuRefine>" 80)
@@ -31,7 +36,7 @@ definition NuRefine :: " ('a :: lrep, 'b) \<nu> \<Rightarrow> 'b set \<Rightarro
 
 notation NuRefine (infixl "<where>" 80) and NuRefine (infixl "\<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e" 80)
 
-lemma [simp]: "[h] p \<nuLinkL> N \<nuRefine> P \<nuLinkR> x \<longleftrightarrow> x \<in> P \<and> ([h] p \<nuLinkL> N \<nuLinkR> x)" unfolding NuRefine_def Refining_ex by auto
+lemma [simp]: "[h] p \<nuLinkL> N \<nuRefine> P \<nuLinkR> x \<longleftrightarrow> x \<in> P \<and> ([h] p \<nuLinkL> N \<nuLinkR> x)" unfolding NuRefine_def Refining_ex Nu_def by auto
 lemma [elim,\<nu>elim]: "x \<ratio> N \<nuRefine> P \<Longrightarrow> (x \<in> P \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "(x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> Y \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuRefine> P \<longmapsto> Y \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<and>x \<in> P" unfolding Cast_def by auto
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M <where> P \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q" unfolding Cast_def by auto
@@ -39,6 +44,8 @@ lemma [\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon>
 lemma refine_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)" unfolding Cast_def by auto
 
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e z \<in> S \<Longrightarrow> \<nu>Zero N z \<Longrightarrow> \<nu>Zero (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e S) z" unfolding \<nu>Zero_def Premise_def by simp
+lemma "\<nu>Equal (N <where> P) can_eq eq \<longleftrightarrow> \<nu>Equal N (\<lambda>x y. x \<in> P \<and> y \<in> P \<and> can_eq x y) eq"
+  unfolding \<nu>Equal_def by auto
 
 definition SchemaCondition (infixl "<where''>" 80) where "SchemaCondition = NuRefine"
 abbreviation WorkingSchemaCondition (infixl "<where''''>" 80) where "WorkingSchemaCondition \<equiv> WorkingProtector SchemaCondition"
@@ -53,13 +60,18 @@ subsubsection \<open>Down Lifting\<close>
 definition DownLift :: "(('a::lrep), 'b) \<nu> \<Rightarrow> ('c \<Rightarrow> 'b) \<Rightarrow> ('a,'c) \<nu>" (infixl "<down-lift>" 80)
   where "DownLift N g heap p x = ([heap] p \<nuLinkL> N \<nuLinkR> g x)"
 
-lemma DownLift_exp[simp]: "[h] p \<nuLinkL> N <down-lift> g \<nuLinkR> x \<longleftrightarrow> [h] p \<nuLinkL> N \<nuLinkR> g x" unfolding DownLift_def Refining_ex by simp
+lemma DownLift_exp[simp]: "[h] p \<nuLinkL> N <down-lift> g \<nuLinkR> x \<longleftrightarrow> [h] p \<nuLinkL> N \<nuLinkR> g x"
+  unfolding DownLift_def Refining_ex Nu_def by simp
 lemma [elim,\<nu>elim]: "x \<ratio> N <down-lift> g \<Longrightarrow> (g x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by simp
 
 lemma [\<nu>cast_overload E]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N <down-lift> g \<longmapsto> g x \<tycolon> N" unfolding Cast_def by simp
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e g x = x' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N <down-lift> g \<longmapsto> x' \<tycolon> N" unfolding Cast_def by auto
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y1 \<tycolon> M \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y1 = g y  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M <down-lift> g" unfolding Cast_def by auto
 lemma "\<down>lift_\<nu>cast": "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e g y = x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> N <down-lift> g" unfolding Cast_def by auto
+
+(* term image
+lemma "\<nu>Equal (N <down-lift> g) can_eq eq \<longleftrightarrow> \<nu>Equal N (inv_imagep can_eq g) (inv_imagep eq g)"
+  unfolding \<nu>Equal_def by auto *)
 
 definition Schema (infixl "<schema>" 80) where "Schema = DownLift"
 lemma i_schema_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e g y = x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> N <schema> g" unfolding Cast_def Schema_def by auto
@@ -72,8 +84,12 @@ subsubsection \<open>Up Lifting\<close>
 definition UpLift :: "(('a::lrep), 'c) \<nu> \<Rightarrow> ('c \<Rightarrow> 'b) \<Rightarrow> ('a,'b) \<nu>" (infixl "<up-lift>" 80)
   where "UpLift N f h p x = (\<exists>y. f y = x \<and> ([h] p \<nuLinkL> N \<nuLinkR> y))"
 
-lemma [simp]: "[h] p \<nuLinkL> N <up-lift> f \<nuLinkR> x \<longleftrightarrow> (\<exists>y. (f y = x) \<and> ([h] p \<nuLinkL> N \<nuLinkR> y))" unfolding UpLift_def Refining_ex by simp
+lemma [simp]: "[h] p \<nuLinkL> N <up-lift> f \<nuLinkR> x \<longleftrightarrow> (\<exists>y. (f y = x) \<and> ([h] p \<nuLinkL> N \<nuLinkR> y))"
+  unfolding UpLift_def Refining_ex Nu_def by auto
 lemma [elim,\<nu>elim]: "x \<ratio> N <up-lift> f \<Longrightarrow> (\<And>y. y \<ratio> N \<Longrightarrow> f y = x \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+
+lemma "\<nu>Equal (N <up-lift> f) can_eq eq \<longleftrightarrow> \<nu>Equal N (inv_imagep can_eq f) (inv_imagep eq f)"
+  unfolding \<nu>Equal_def by (auto 0 6)
 
 subsubsection \<open>Operator Some\<close>
 
@@ -81,7 +97,7 @@ definition NuSome :: " ('a :: lrep, 'b) \<nu> \<Rightarrow> ('a :: lrep, 'b set)
   where "NuSome N h p S = (\<exists>x. x \<in> S \<and> ([h] p \<nuLinkL> N \<nuLinkR> x))"
 notation NuSome ("\<^bold>s\<^bold>o\<^bold>m\<^bold>e")
 
-lemma [simp]: "[h] p \<nuLinkL> \<^bold>s\<^bold>o\<^bold>m\<^bold>e N \<nuLinkR> X \<longleftrightarrow> (\<exists>x. x \<in> X \<and> ([h] p \<nuLinkL> N \<nuLinkR> x))" unfolding NuSome_def Refining_ex by auto
+lemma [simp]: "[h] p \<nuLinkL> \<^bold>s\<^bold>o\<^bold>m\<^bold>e N \<nuLinkR> X \<longleftrightarrow> (\<exists>x. x \<in> X \<and> ([h] p \<nuLinkL> N \<nuLinkR> x))" unfolding NuSome_def Refining_ex Nu_def by auto
 lemma [elim,\<nu>elim]: "X \<ratio> ( \<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<Longrightarrow> (\<And>x. x \<in> X \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e X \<subseteq> X' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<longmapsto> X' \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by (auto 2 3)
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<in> Y \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> Y \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e M) \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P" unfolding Cast_def by auto
@@ -110,44 +126,59 @@ subsection \<open>\<nu>-abstraction : DeepModel\<close>
 definition DeepModel :: "('a::lrep, 'b) \<nu> \<Rightarrow> (deep_model, 'b) \<nu>"
   where "DeepModel T h p x \<longleftrightarrow> [h] shallowize p \<nuLinkL> T \<nuLinkR> x"
 
-lemma [simp]: "[h] deepize p \<nuLinkL> DeepModel T \<nuLinkR> x \<longleftrightarrow> [h] p \<nuLinkL> T \<nuLinkR> x" unfolding DeepModel_def Refining_ex by auto
+lemma [simp]: "[h] deepize p \<nuLinkL> DeepModel T \<nuLinkR> x \<longleftrightarrow> [h] p \<nuLinkL> T \<nuLinkR> x" unfolding DeepModel_def Refining_ex Nu_def by auto
 
 subsection \<open>\<nu>-abstraction : Ref\<close>
 
-definition Ref  :: "('a::lrep, 'b) \<nu> \<Rightarrow> ('spc::len0 memptr, memaddr \<R_arr_tail> 'b) \<nu>"
-  where "Ref T heap p x \<longleftrightarrow> (case x of adr \<R_arr_tail> xx \<Rightarrow> p = memptr adr \<and>
+definition Ref  :: "('a::lrep, 'b) \<nu> \<Rightarrow> ('spc::len0 memptr, nat memaddr \<R_arr_tail> 'b) \<nu>"
+  where "Ref T heap p x \<longleftrightarrow> (case x of adr \<R_arr_tail> xx \<Rightarrow> ([heap] p \<nuLinkL> Pointer \<nuLinkR> adr) \<and>
     (\<exists>v. heap (MemAddress adr) = Some v \<and> ([heap] shallowize v \<nuLinkL> T \<nuLinkR> xx)))"
 
+lemma [simp]: "Nu (Ref T)" unfolding Nu_def Ref_def by (auto simp add: lrep_exps)
 lemma [simp]:
-  "[heap] memptr p \<nuLinkL> Ref T \<nuLinkR> addr \<R_arr_tail> x \<longleftrightarrow>
-    p = addr \<and> (\<exists>v. heap (MemAddress addr) = Some v \<and> ([heap] shallowize v \<nuLinkL> T \<nuLinkR> x))"
-  unfolding Ref_def Refining_ex by auto
-
-lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources (Ref T) (\<lambda>obj. case obj of addr \<R_arr_tail> x \<Rightarrow> write addr \<union> rcss x)"
+  "[heap] addrp \<nuLinkL> Ref T \<nuLinkR> addr \<R_arr_tail> x \<longleftrightarrow>
+    ([heap] addrp \<nuLinkL> Pointer \<nuLinkR> addr) \<and> (\<exists>v. heap (MemAddress addr) = Some v \<and> ([heap] shallowize v \<nuLinkL> T \<nuLinkR> x))"
+  by (auto simp add: lrep_exps Ref_def Refining_ex)
+lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources (Ref T) (\<lambda>x. write (key_of x) \<union> rcss (val_of x))"
   unfolding \<nu>def by (auto simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Equal (Ref N) (\<lambda>x y. True) (inv_imagep (=) key_of)"
-  unfolding \<nu>Equal_def by (auto simp add: lrep_exps)
+  unfolding \<nu>Equal_def  using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def addr'_allocated_def)
 
 subsection \<open>\<nu>-abstraction : Slice\<close>
 
-definition Slice :: "('a::field, 'b) \<nu> \<Rightarrow> ('spc::len memptr, memaddr \<R_arr_tail> 'b list) \<nu>"
-  where "Slice N heap p x' = (case x' of (base |+ ofs) \<R_arr_tail> xs \<Rightarrow>
-        (p = memptr (base |+ ofs)) \<and> (\<forall>i < length xs. \<exists>p'. heap (MemAddress (base |+ (ofs + int i))) = Some p' \<and> ([heap] shallowize p' \<nuLinkL> N \<nuLinkR> xs ! i) ))"
+definition Slice :: "('a::field, 'b) \<nu> \<Rightarrow> ('spc::len0 memptr, nat memaddr \<R_arr_tail> 'b list) \<nu>"
+  where "Slice N heap p x' = (case x' of (base |+ ofs) \<R_arr_tail> xs \<Rightarrow> case p of memptr addrp \<Rightarrow>
+        (the_same_addr addrp (base |+ ofs)) \<and>
+        ofs + length xs \<le> segment_len base \<and>
+        segment_llty base = LLTY('a) \<and>
+        (\<forall>i < length xs. \<exists>p'. heap (MemAddress (base |+ (ofs + i))) = Some p' \<and> ([heap] shallowize p' \<nuLinkL> N \<nuLinkR> xs ! i) ))"
+abbreviation "Slice_explicit_ty" :: "'spc::len itself \<Rightarrow> ('a::field, 'b) \<nu> \<Rightarrow> ('spc::len memptr, nat memaddr \<R_arr_tail> 'b list) \<nu>"
+  where "Slice_explicit_ty _ \<equiv> Slice"
+syntax "_Slice_explicit_ty_" :: "type \<Rightarrow> logic" ("Slice[_]")
+translations "Slice['ty]"  == "CONST Slice_explicit_ty TYPE('ty)"
 
+lemma [simp]: "Nu (Slice N)" unfolding Nu_def Slice_def by (auto 0 3 simp add: lrep_exps)
 lemma [simp]: "[heap] memptr p \<nuLinkL> Slice N \<nuLinkR> (base |+ ofs) \<R_arr_tail> xs \<longleftrightarrow>
-    (p = (base |+ ofs)) \<and> (\<forall>i < length xs. \<exists>p'. heap (MemAddress (base |+ (ofs + int i))) = Some p' \<and> ([heap] shallowize p' \<nuLinkL> N \<nuLinkR> xs ! i) )"
-  unfolding Slice_def Refining_ex by (auto simp add: lrep_exps)
+    (the_same_addr p (base |+ ofs)) \<and> 
+    ofs + length xs \<le> segment_len base \<and>
+    segment_llty base = LLTY('a) \<and>
+    (\<forall>i < length xs. \<exists>p'. heap (MemAddress (base |+ (ofs + i))) = Some p' \<and> ([heap] shallowize p' \<nuLinkL> N \<nuLinkR> xs ! i) )"
+  for N :: "('a::field, 'b) \<nu>"
+  by (auto simp add: lrep_exps Slice_def Refining_ex)
 
 lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Slice N \<Longrightarrow> ((\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (cases a; auto 6 6 simp add: lrep_exps list_all2_conv_all_nth) 
 
-lemma [\<nu>intro]: "\<nu>Equal (Slice N) (\<lambda>x y. True) (inv_imagep (=) key_of)"
-  unfolding \<nu>Equal_def apply (auto simp add: lrep_exps) 
+lemma [\<nu>intro]: "\<nu>Equal (Slice N)
+  (\<lambda>x y. (val_of x \<noteq> [] \<and> val_of y \<noteq> []) \<or> segment_of_addr (key_of x) = segment_of_addr (key_of y))
+  (inv_imagep (=) key_of)"
+  unfolding \<nu>Equal_def using raw_offset_of_inj
+  by (auto 4 4 simp add: lrep_exps the_same_addr_def addr'_allocated_def)
 
 lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources (Slice T) (\<lambda>obj. case obj of addr \<R_arr_tail> xs \<Rightarrow>
     write (array addr (length xs)) \<union> (all (map rcss xs)))"
-  unfolding \<nu>def union_of_sets_def apply (auto 0 2 simp add: image_iff lrep_exps Ball_def)
-   by (metis add_less_cancel_left of_nat_less_iff zle_iff_zadd)+
+  unfolding \<nu>def union_of_sets_def
+  by (auto 0 2 simp add: image_iff lrep_exps Ball_def) (metis add_less_cancel_left le_add1)+
 
 
 subsection \<open>Numbers\<close>

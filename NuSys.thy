@@ -53,11 +53,12 @@ section \<open>Mechanisms\<close>
 
 subsection \<open>Register\<close>
 
-definition AndTy :: " 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> ('a \<times> 'b) \<nu>set " (infixr "\<^bold>a\<^bold>n\<^bold>d" 3)  where  "(A \<^bold>a\<^bold>n\<^bold>d B) = (\<lambda>res. A res \<times> B res)"
-lemma [simp]: "(a, b) \<in> (A \<^bold>a\<^bold>n\<^bold>d B) res \<longleftrightarrow> a \<in> A res \<and> b \<in> B res" unfolding AndTy_def by simp
-lemma [intro]: "a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> (a, b) \<in> (A \<^bold>a\<^bold>n\<^bold>d B) res" by simp
-lemma [elim]: "ab \<in> (A \<^bold>a\<^bold>n\<^bold>d B) res \<Longrightarrow> (\<And>a b. ab = (a, b) \<Longrightarrow> a \<in> A res \<Longrightarrow> b \<in> B res \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding AndTy_def by (cases ab) simp
+definition AndTy :: " 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> ('a \<times> 'b) \<nu>set " (infixr "\<^bold>a\<^bold>n\<^bold>d" 3)
+  where "(A \<^bold>a\<^bold>n\<^bold>d B) = Abs_\<nu>set (\<lambda>heap. set_of_\<nu> A heap \<times> set_of_\<nu> B heap) "
+lemma [simp]: "[heap] (a, b) \<in>\<^sub>\<nu> (A \<^bold>a\<^bold>n\<^bold>d B) \<longleftrightarrow> [heap] a \<in>\<^sub>\<nu> A \<and> [heap] b \<in>\<^sub>\<nu> B"
+  unfolding AndTy_def by transfer (auto simp add: NuSet_def Abs_\<nu>set_inverse)
+lemma [intro]: "[h] a \<in>\<^sub>\<nu> A \<Longrightarrow> [h] b \<in>\<^sub>\<nu> B \<Longrightarrow> [h] (a, b) \<in>\<^sub>\<nu> (A \<^bold>a\<^bold>n\<^bold>d B)" by simp
+lemma [elim]: "[h] ab \<in>\<^sub>\<nu> (A \<^bold>a\<^bold>n\<^bold>d B) \<Longrightarrow> (\<And>a b. ab = (a, b) \<Longrightarrow> [h] a \<in>\<^sub>\<nu> A \<Longrightarrow> [h] b \<in>\<^sub>\<nu> B \<Longrightarrow> C) \<Longrightarrow> C" by (cases ab) simp
 lemma [elim!,\<nu>elim]: "Inhabited (A \<^bold>a\<^bold>n\<^bold>d B) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 lemma [\<nu>intro]: "\<nu>Resources_of_set A as \<Longrightarrow> \<nu>Resources_of_set B bs \<Longrightarrow> \<nu>Resources_of_set (A \<^bold>a\<^bold>n\<^bold>d B) (as \<union> bs)"
   unfolding \<nu>Resources_of_set_def  by auto
@@ -89,7 +90,7 @@ definition AdrGet :: " ('a,'b,'x,'y) index \<Rightarrow> 'x \<nu>set \<Rightarro
   where [\<nu>index_def]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<blangle> X \<^bold>@ A \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_idx adr \<blangle> A \<longmapsto> X \<brangle>"
 definition AdrMap :: " ('a,'b,'x,'y) index \<Rightarrow> 'x \<nu>set \<Rightarrow> 'a \<nu>set \<Rightarrow> 'y \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _ \<^bold>@ _ \<longmapsto> _ \<^bold>@ _ \<brangle>)" [101,4,4,4,4] 100)
   where [\<nu>index_def]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_idx idx \<blangle> A \<longmapsto> X \<brangle> \<and>
-    (\<forall>f h. (\<forall>a. a \<in> X h \<longrightarrow> f a \<in> Y h) \<longrightarrow> (\<forall>a. a \<in> A h \<longrightarrow> map_idx idx f  a \<in> B h))"
+    (\<forall>f h. (\<forall>a. [h] a \<in>\<^sub>\<nu> X \<longrightarrow> [h] f a \<in>\<^sub>\<nu> Y) \<longrightarrow> (\<forall>a. [h] a \<in>\<^sub>\<nu> A \<longrightarrow> [h] map_idx idx f  a \<in>\<^sub>\<nu> B))"
 declare Map_def[\<nu>index_def]
 
 lemma index_here_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle>"
@@ -148,7 +149,7 @@ definition move_reg :: "('r::stack, 'r2::stack, 'x::lrep, void) index \<Rightarr
 subsubsection \<open>Instruction Specifications\<close>
 
 lemma new_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> W \<^bold>@ G \<longmapsto> ( \<ltbrak>\<n>\<a>\<m>\<e>\<rtbrak>. Void \<^bold>a\<^bold>n\<^bold>d W) \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c new_reg idx \<blangle> G \<longmapsto> G2 \<brangle>"
-  unfolding \<nu>index_def \<nu>def new_reg_def by (cases idx) auto 
+  unfolding \<nu>index_def \<nu>def new_reg_def by (cases idx) auto
 
 lemma delete_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle>(W \<^bold>a\<^bold>n\<^bold>d Z) \<^bold>@ G \<longmapsto> Z \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c delete_reg idx \<blangle> G \<longmapsto> G2 \<brangle>"
   unfolding \<nu>index_def \<nu>def delete_reg_def  by (cases idx) auto
