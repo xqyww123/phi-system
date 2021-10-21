@@ -139,44 +139,54 @@ lemma [simp]:
   "[heap] addrp \<nuLinkL> Ref T \<nuLinkR> addr \<R_arr_tail> x \<longleftrightarrow>
     ([heap] addrp \<nuLinkL> Pointer \<nuLinkR> addr) \<and> (\<exists>v. heap (MemAddress addr) = Some v \<and> ([heap] shallowize v \<nuLinkL> T \<nuLinkR> x))"
   by (auto simp add: lrep_exps Ref_def Refining_ex)
-lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources (Ref T) (\<lambda>x. write (key_of x) \<union> rcss (val_of x))"
+lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources (Ref T) (\<lambda>x. total (key_of x) \<union> rcss (val_of x))"
   unfolding \<nu>def by (auto simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Equal (Ref N) (\<lambda>x y. True) (inv_imagep (=) key_of)"
-  unfolding \<nu>Equal_def  using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def addr'_allocated_def)
+  unfolding \<nu>Equal_def  using raw_offset_of_inj by (auto simp add: lrep_exps same_addr_offset_def addr'_allocated_def)
 
 subsection \<open>\<nu>-abstraction : Slice\<close>
+
 
 definition Slice :: "('a::field, 'b) \<nu> \<Rightarrow> ('spc::len0 memptr, nat memaddr \<R_arr_tail> 'b list) \<nu>"
   where "Slice N heap p x' = (case x' of (base |+ ofs) \<R_arr_tail> xs \<Rightarrow> case p of memptr addrp \<Rightarrow>
         (the_same_addr addrp (base |+ ofs)) \<and>
         ofs + length xs \<le> segment_len base \<and>
         segment_llty base = LLTY('a) \<and>
-        (\<forall>i < length xs. \<exists>p'. heap (MemAddress (base |+ (ofs + i))) = Some p' \<and> ([heap] shallowize p' \<nuLinkL> N \<nuLinkR> xs ! i) ))"
+        (\<forall>i < length xs. \<exists>p'. heap (MemAddress (base |+ (ofs + i))) = Some p' \<and> ([heap] shallowize p' \<nuLinkL> N \<nuLinkR> xs ! i)) \<and>
+        (\<forall>i < length xs. \<exists>rcs. \<nu>Resources N rcs \<and> rcs (xs ! i) \<perpendicular> (write(array (base |+ ofs) (length xs))))
+    )"
 abbreviation "Slice_explicit_ty" :: "'spc::len itself \<Rightarrow> ('a::field, 'b) \<nu> \<Rightarrow> ('spc::len memptr, nat memaddr \<R_arr_tail> 'b list) \<nu>"
   where "Slice_explicit_ty _ \<equiv> Slice"
 syntax "_Slice_explicit_ty_" :: "type \<Rightarrow> logic" ("Slice[_]")
 translations "Slice['ty]"  == "CONST Slice_explicit_ty TYPE('ty)"
 
-lemma [simp]: "Nu (Slice N)" unfolding Nu_def Slice_def by (auto 0 3 simp add: lrep_exps)
+lemma [simp]: "Nu (Slice N)" unfolding Nu_def Slice_def 
+  apply (simp add: lrep_exps) using Retained_subset_heap by fastforce
+  
 lemma [simp]: "[heap] memptr p \<nuLinkL> Slice N \<nuLinkR> (base |+ ofs) \<R_arr_tail> xs \<longleftrightarrow>
     (the_same_addr p (base |+ ofs)) \<and> 
     ofs + length xs \<le> segment_len base \<and>
     segment_llty base = LLTY('a) \<and>
-    (\<forall>i < length xs. \<exists>p'. heap (MemAddress (base |+ (ofs + i))) = Some p' \<and> ([heap] shallowize p' \<nuLinkL> N \<nuLinkR> xs ! i) )"
+    (\<forall>i < length xs. (\<exists>p'. heap (MemAddress (base |+ (ofs + i))) = Some p')
+      \<and> (\<forall>p'. heap (MemAddress (base |+ (ofs + i))) = Some p' \<longrightarrow> [heap] shallowize p' \<nuLinkL> N \<nuLinkR> xs ! i)) \<and>
+    (\<forall>i < length xs. \<exists>rcs. \<nu>Resources N rcs \<and> rcs (xs ! i) \<perpendicular> (write(array (base |+ ofs) (length xs))))"
   for N :: "('a::field, 'b) \<nu>"
   by (auto simp add: lrep_exps Slice_def Refining_ex)
 
 lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Slice N \<Longrightarrow> ((\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (cases a; auto 6 6 simp add: lrep_exps list_all2_conv_all_nth) 
+  unfolding Inhabited_def by (cases a; simp add: lrep_exps list_all2_conv_all_nth) blast 
+
 
 lemma [\<nu>intro]: "\<nu>Equal (Slice N)
   (\<lambda>x y. (val_of x \<noteq> [] \<and> val_of y \<noteq> []) \<or> segment_of_addr (key_of x) = segment_of_addr (key_of y))
   (inv_imagep (=) key_of)"
   unfolding \<nu>Equal_def using raw_offset_of_inj
-  by (auto 4 4 simp add: lrep_exps the_same_addr_def addr'_allocated_def)
+  by (auto simp add: lrep_exps same_addr_offset_def addr'_allocated_def)
+   (metis Nat.add_0_right add_leD1 domIff length_greater_0_conv option.simps(3))+
+  
 
 lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources (Slice T) (\<lambda>obj. case obj of addr \<R_arr_tail> xs \<Rightarrow>
-    write (array addr (length xs)) \<union> (all (map rcss xs)))"
+    total (array addr (length xs)) \<union> (all (map rcss xs)))"
   unfolding \<nu>def union_of_sets_def
   by (auto 0 2 simp add: image_iff lrep_exps Ball_def) (metis add_less_cancel_left le_add1)+
 

@@ -29,10 +29,12 @@ specification (addrspace_capacity) addrspace_capacity_L0: "0 < addrspace_capacit
 specification (size_of)
   size_of_L0[simp]: "size_of x \<noteq> 0"
   by auto
+
 specification (segment_len)
   segment_len_valid: "segment_len seg * size_of (segment_llty seg) < 2 ^ (addrspace_capacity (segment_space seg) - 1)"
 proof show "\<forall>seg. (\<lambda>_.  0) seg * size_of (segment_llty seg) < 2 ^ (addrspace_capacity (segment_space seg) - 1)"
     using addrspace_capacity_L0 by auto qed
+
 lemma segment_len_valid2: "segment_len seg * size_of (segment_llty seg) < 2 ^ (addrspace_capacity (segment_space seg))"
   using segment_len_valid
   by (metis addrspace_capacity_L0 le_less_trans one_less_numeral_iff order_less_imp_le power_commutes
@@ -120,16 +122,34 @@ lemma raw_offset_of_inj:
       by (meson le_less_trans mult_le_mono1) 
     ultimately show "ofs1 = ofs2" using prems size_of_L0 addrspace_capacity_L0 by auto
   qed done
+
+definition same_addr_offset :: "msegment \<Rightarrow> ('spc::len0) size_t word \<Rightarrow> nat \<Rightarrow> bool"
+  where "same_addr_offset seg ofsp ofsx \<longleftrightarrow> ofsx \<le> segment_len seg \<and>
+    segment_space seg = LENGTH('spc) \<and>raw_offset_of seg ofsx = ofsp"
 definition the_same_addr :: "('spc::len0) raw_memaddr \<Rightarrow> nat memaddr \<Rightarrow> bool"
-  where "the_same_addr addrp addrx \<longleftrightarrow>
-    valid_memaddr addrx \<and>
-    segment_space (segment_of_addr addrx) = LENGTH('spc) \<and>
-    map_memaddr (raw_offset_of (segment_of_addr addrx)) addrx = addrp"
+  where "the_same_addr addrp addrx \<equiv>
+    segment_of_addr addrp = segment_of_addr addrx
+    \<and> same_addr_offset (segment_of_addr addrx)  (offset_of_addr addrp) (offset_of_addr addrx)"
+lemma [simp]: "the_same_addr (base |+ ofs) (base' |+ ofs') \<longleftrightarrow> base = base' \<and> same_addr_offset base' ofs ofs'"
+  unfolding the_same_addr_def by simp
+
+lemma same_addr_offset_inj: "same_addr_offset seg p a1 \<and> same_addr_offset seg p a2 \<Longrightarrow> a1 = a2"
+  by (auto simp add: same_addr_offset_def raw_offset_of_def raw_offset_of_inj)
+
+consts logical_offset_of :: "msegment \<Rightarrow> ('spc::len0) size_t word \<Rightarrow> nat"
+specification (logical_offset_of)
+  logical_offset_of[simp]: "same_addr_offset seg ofsp ofsx \<Longrightarrow> logical_offset_of seg ofsp = ofsx"
+proof show "\<forall>ofsp ofsx seg. same_addr_offset seg ofsp ofsx \<longrightarrow>  (\<lambda>seg p. @x. same_addr_offset seg p x) seg ofsp = ofsx"
+    using same_addr_offset_inj by blast qed
+
+definition "logical_addr_of addrp = (case addrp of seg |+ ofsp \<Rightarrow> seg |+ logical_offset_of seg ofsp) "
+lemma [simp]: "logical_addr_of (seg |+ ofsp) = seg |+ logical_offset_of seg ofsp"
+  unfolding logical_addr_of_def by simp
+
 
 abbreviation "addr_allocated heap addr \<equiv> MemAddress addr \<in> dom heap"
 definition addr'_allocated :: "heap \<Rightarrow> ('spc::len0) raw_memaddr \<Rightarrow> bool"
   where "addr'_allocated heap addr' \<longleftrightarrow> (\<exists>addr. the_same_addr addr' addr \<and> addr_allocated heap addr)"
-thm malloc
 
 (* instantiation memaddr :: ceq begin
 definition ceqable_memaddr :: " heap \<Rightarrow> memaddr \<Rightarrow> memaddr \<Rightarrow> bool"
@@ -178,7 +198,7 @@ lemma [simp]: "[heap] memptr raw \<nuLinkL> WeakPointer \<nuLinkR> addr \<longle
   unfolding Refining_ex by (simp add: WeakPointer_def)
 lemma [elim,\<nu>elim]: " addr \<ratio> WeakPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma WeakPointer_EQ[\<nu>intro]: "\<nu>Equal WeakPointer (\<lambda>x y. segment_of_addr x = segment_of_addr y) (=)"
-  unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def addr'_allocated_def)
+  unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def same_addr_offset_def addr'_allocated_def)
 lemma WeakPointer_Resources[\<nu>intro]: "\<nu>Resources WeakPointer (\<lambda>h. {})" unfolding \<nu>def by (simp add: lrep_exps)
 
 
@@ -192,7 +212,7 @@ lemma [simp]: "[heap] memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftri
   unfolding Refining_ex by (simp add: Pointer_def)
 lemma [elim,\<nu>elim]: " addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma Pointer_EQ[\<nu>intro]: "\<nu>Equal Pointer (\<lambda>x y. True) (=)"
-  unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def addr'_allocated_def)
+  unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps same_addr_offset_def addr'_allocated_def)
 lemma Pointer_Resources[\<nu>intro]: "\<nu>Resources Pointer alive" unfolding \<nu>def by (simp add: lrep_exps)
 
 subsubsection \<open>Casts\<close>
