@@ -294,28 +294,24 @@ theorem op_shift_pointer_slice[\<nu>overload +]:
   for T :: "('p::field, 'x) \<nu>"
   unfolding \<nu>def op_shift_pointer_def apply (cases addr)
   by (auto simp add: lrep_exps same_addr_offset_def raw_offset_of_def distrib_right
-        add.commute add.left_commute)
+        add.commute add.left_commute disjoint_rew2 claim_key_forall resource_key_forall)
+
 
 theorem op_slice_merge[\<nu>overload merge]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e shift_addr addr1 (length xs1) = addr2 \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr1 \<R_arr_tail> xs1 \<tycolon> Slice T\<heavy_comma> addr2 \<R_arr_tail> xs2 \<tycolon> Slice T
       \<longmapsto> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr1 \<R_arr_tail> xs1 @ xs2 \<tycolon> Slice T \<brangle>"
-  unfolding \<nu>def op_drop_def apply (cases addr1; cases addr2) apply (auto 3 3 simp add: lrep_exps)
-  apply (metis (no_types, hide_lams) add.assoc domIff le_iff_add not_None_eq not_le)
-  subgoal for x2 x1a ofs ofsa b h i apply (cases "i < length xs1")
-     apply (metis nth_append) subgoal premises prems proof -
-      obtain j where [simp]: "i = length xs1 + j" using prems
-        by (metis add.commute le_Suc_ex not_le_imp_less) 
-      show ?thesis using prems apply simp by (metis add.assoc add.commute)
-    qed done done
-
+  unfolding \<nu>def op_drop_def apply (cases addr1; cases addr2)
+  apply (auto 0 0 simp add: lrep_exps nth_append)
+  by (metis add.assoc add_diff_inverse_nat diff_add_inverse diff_less_mono not_le)
 
 subsection \<open>Allocation\<close>
 
 subsubsection \<open>op_alloc\<close>
 
 definition "heap_assignN n v seg heap = (\<lambda>key. case key of MemAddress (seg' |+ ofs') \<Rightarrow>
-      if seg' = seg \<and> ofs' < n then v else heap key | _ \<Rightarrow> heap key)"
+      if seg' = seg \<and> ofs' < n then v else
+      if seg' = seg \<and> ofs' = n then Some DM_none else heap key | _ \<Rightarrow> heap key)"
 
 lemma heap_assignN_subset: "Heap h \<Longrightarrow> h \<subseteq>\<^sub>m heap_assignN n v (malloc h) h"
   unfolding heap_assignN_def map_le_def Ball_def by (simp add: malloc2 resource_key_forall memaddr_forall)
@@ -329,7 +325,10 @@ lemma [intro]: "Heap h \<Longrightarrow> Heap (heap_assignN n v seg h)" proof -
     unfolding Heap_def using infinite_super by auto
 qed
 
-lemma [simp]: "i < n \<Longrightarrow> heap_assignN n v seg h (MemAddress (seg |+ i)) = v"
+lemma heap_assignN_allocated: "i \<le> n \<Longrightarrow> allocated (heap_assignN n (Some v) seg h) (seg |+ i)"
+  unfolding addr_allocated_def heap_assignN_def by auto
+  
+lemma heap_assignN_allocated_eval: "i < n \<Longrightarrow> heap_assignN n v seg h (MemAddress (seg |+ i)) = v"
   unfolding heap_assignN_def by simp
 
 
@@ -341,23 +340,23 @@ definition op_alloc :: "('x::{zero,field}) itself \<Rightarrow> 0 size_t word \<
 
 
 
-lemma heap_extension_S2: "h \<subseteq>\<^sub>m h' \<Longrightarrow> heap_extension claim h' heap \<Longrightarrow> heap_extension claim h heap"
-  by (rotate_tac 1, induct rule: heap_extension.induct) auto
+
 
       
 theorem alloc_array_\<nu>proc:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
+  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<forall>seg::msegment. \<nu>Independent \<tort_lbrace> zero \<tycolon> N \<tort_rbrace> (write seg) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
       \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> n \<tycolon> \<nat>[0 size_t]
-        \<longmapsto> (\<exists>*seg. \<^bold>E\<^bold>N\<^bold>D R <Claim> total (array (seg |+ 0) n)\<heavy_comma> (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Slice N) \<brangle>"
+        \<longmapsto> (\<exists>*seg. \<^bold>E\<^bold>N\<^bold>D R <Claim> total (seg)\<heavy_comma> (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Slice N) \<brangle>"
   for N :: "('x::{zero,field},'b)\<nu>"
   unfolding \<nu>def op_alloc_def 
-  apply (auto simp add: lrep_exps list_all2_conv_all_nth Let_def same_addr_offset_def 
-         intro: heap_assignN_mono) 
+  apply (auto 5 3 simp add: lrep_exps list_all2_conv_all_nth Let_def same_addr_offset_def
+      heap_assignN_allocated_eval
+         intro: heap_assignN_mono heap_assignN_allocated) 
   subgoal premises prems00 for a b h proof -
-    have "\<And>len v. Heap h \<Longrightarrow> [h] b \<in>\<^sub>\<nu> R \<Longrightarrow> Retained R (total (array (malloc h |+ 0) len)) (heap_assignN len v (malloc h) h) b"
+    have "\<And>len v. Heap h \<Longrightarrow> [h] b \<in>\<^sub>\<nu> R \<Longrightarrow> Retained R (total (malloc h)) (heap_assignN len v (malloc h) h) b"
     subgoal for len v proof -
-    have t1: "\<And>h'. heap_extension (total (array (malloc h |+ 0) len)) h h' \<Longrightarrow> Heap h \<Longrightarrow> h \<subseteq>\<^sub>m h'"
-      subgoal for h' apply (induct "total (array (malloc h |+ 0) len)" h h' rule: heap_extension.induct)
+    have t1: "\<And>h'. heap_extension (total (malloc h)) h h' \<Longrightarrow> Heap h \<Longrightarrow> h \<subseteq>\<^sub>m h'"
+      subgoal for h' apply (induct "total (malloc h)" h h' rule: heap_extension.induct)
            apply (auto intro: map_le_trans) 
       subgoal for heap heap' v x by (cases x) (auto simp add: map_le_def malloc)
       subgoal for heap heap' x by (cases x) (auto simp add: map_le_def malloc)
@@ -365,13 +364,13 @@ theorem alloc_array_\<nu>proc:
     have t2: "Heap h \<Longrightarrow> h \<subseteq>\<^sub>m heap_assignN len v (malloc h) h"
       unfolding heap_assignN_def map_le_def by (auto split: resource_key.split memaddr.split simp add: malloc)
     note t3 = t2[THEN heap_extension_S2, THEN t1]
-    show "Heap h \<Longrightarrow> [h] b \<in>\<^sub>\<nu> R \<Longrightarrow> Retained R (total (array (malloc h |+ 0) len)) (heap_assignN len v (malloc h) h) b"
+    show "Heap h \<Longrightarrow> [h] b \<in>\<^sub>\<nu> R \<Longrightarrow> Retained R (total (malloc h)) (heap_assignN len v (malloc h) h) b"
     unfolding Retained_def apply auto
     subgoal for heap apply(rotate_tac -1)
-      apply(induct "total (array (malloc h |+ 0) len)" "heap_assignN len v (malloc h) h" heap rule: heap_extension.induct)
+      apply(induct "total (malloc h)" "heap_assignN len v (malloc h) h" heap rule: heap_extension.induct)
       apply (auto intro: heap_assignN_mono)
-      subgoal for heap' va x by (cases x, simp) (metis map_le_upd t3 malloc3 \<nu>set_mono)
-      subgoal for heap' x by (cases x, simp) (metis map_le_upd t3 malloc3 \<nu>set_mono)
+      subgoal for heap' va x by (cases x, simp) (metis \<nu>set_mono fun_upd_triv malloc map_le_imp_upd_le t3)
+      subgoal for heap' x by (cases x, simp) (metis \<nu>set_mono fun_upd_triv malloc map_le_upd t3) 
       done done
   qed done
   thus ?thesis using prems00 by fast
@@ -487,22 +486,19 @@ note \<nu>Resources_of_set_retained *)
     have t4: "Retained X (write (array (x1a |+ x2a) (length xs))) h"
       thm \<nu>Resources_of_set_retained *)
     show ?thesis using prems apply (simp add: logical_offset_of[OF t2] Let_def)
-      using \<nu>Resources_retained apply (auto  split: option.split)
+      apply (auto  split: option.split)
       subgoal premises prems2 for x2b proof -
-        
+        have tt: "[h] (shallowize x2b) \<nuLinkL> X  \<nuLinkR> (xs ! unat aa)" using prems2 by blast 
         have t5: "[h] x2 (\<lambda>_. a) (shallowize x2b) \<nuLinkL> X  \<nuLinkR> mp (\<lambda>_. y) (xs ! unat aa)"
-          using prems2 by (metis option.inject) 
-        show ?thesis using prems t5 by (blast intro: \<nu>Resources_retained)
-          apply(rule \<nu>Resources_retained)
-          using prems apply (blast intro: \<nu>Resources_retained)
-          using prems apply (blast intro: \<nu>Resources_retained)
-          using prems t5 apply (blast intro: \<nu>Resources_retained)
-          using prems2 apply fast
-          using prems2 apply fast
-          using t5 apply fast
-          using prems2 apply blast
-          using prems2 t5 \<nu>Resources_retained by auto qed
-      subgoal premises prems2 for x2b ia proof
+          using prems2 tt by auto
+        show ?thesis using prems t5 by (blast intro: \<nu>Resources_retained) qed
+      subgoal premises prems2 for x2b ia p' proof -
+        have tt1: "[h] shallowize p' \<nuLinkL> X  \<nuLinkR> xs ! ia" using prems2 by auto
+        show ?thesis  apply(rule \<nu>Resources_retained)
+          using prems apply blast
+          using prems tt1 apply blast
+          thm \<nu>Resources_retained
+          using prems2 tt1 apply (blast intro: \<nu>Resources_retained) 
           
   qed done
 

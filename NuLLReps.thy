@@ -135,6 +135,8 @@ lemma [simp]: "the_same_addr (base |+ ofs) (base' |+ ofs') \<longleftrightarrow>
 
 lemma same_addr_offset_inj: "same_addr_offset seg p a1 \<and> same_addr_offset seg p a2 \<Longrightarrow> a1 = a2"
   by (auto simp add: same_addr_offset_def raw_offset_of_def raw_offset_of_inj)
+lemma same_addr_offset_inj2: "same_addr_offset seg p1 a \<and> same_addr_offset seg p2 a \<Longrightarrow> p1 = p2"
+  by (auto simp add: same_addr_offset_def raw_offset_of_def raw_offset_of_inj)
 
 consts logical_offset_of :: "msegment \<Rightarrow> ('spc::len0) size_t word \<Rightarrow> nat"
 specification (logical_offset_of)
@@ -146,8 +148,6 @@ definition "logical_addr_of addrp = (case addrp of seg |+ ofsp \<Rightarrow> seg
 lemma [simp]: "logical_addr_of (seg |+ ofsp) = seg |+ logical_offset_of seg ofsp"
   unfolding logical_addr_of_def by simp
 
-
-abbreviation "addr_allocated heap addr \<equiv> MemAddress addr \<in> dom heap"
 definition addr'_allocated :: "heap \<Rightarrow> ('spc::len0) raw_memaddr \<Rightarrow> bool"
   where "addr'_allocated heap addr' \<longleftrightarrow> (\<exists>addr. the_same_addr addr' addr \<and> addr_allocated heap addr)"
 
@@ -183,10 +183,11 @@ definition RawPointer :: "('spc::len0 memptr, 'spc raw_memaddr) \<nu>"
 
 lemma [simp]: "Nu RawPointer" unfolding Nu_def RawPointer_def by simp
 lemma [simp]: "[heap] memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_ex by (simp add: RawPointer_def)
-lemma [elim,\<nu>elim]: " addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+lemma [elim,\<nu>elim]: "[h] addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Zero RawPointer undefined" unfolding \<nu>Zero_def by simp
 lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of_addr x = segment_of_addr y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Resources RawPointer (\<lambda>x. {})" unfolding \<nu>def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>p \<tycolon> RawPointer\<tort_rbrace> C" unfolding \<nu>Independent_def by (simp add: lrep_exps)
 
 subsubsection \<open>Potentially Dangling Pointer\<close>
 
@@ -196,10 +197,11 @@ definition WeakPointer :: "('spc::len0 memptr, nat memaddr) \<nu>"
 lemma [simp]: "Nu WeakPointer" unfolding WeakPointer_def Nu_def by simp
 lemma [simp]: "[heap] memptr raw \<nuLinkL> WeakPointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
   unfolding Refining_ex by (simp add: WeakPointer_def)
-lemma [elim,\<nu>elim]: " addr \<ratio> WeakPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+lemma [elim,\<nu>elim]: "[h] addr \<ratio> WeakPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma WeakPointer_EQ[\<nu>intro]: "\<nu>Equal WeakPointer (\<lambda>x y. segment_of_addr x = segment_of_addr y) (=)"
   unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def same_addr_offset_def addr'_allocated_def)
 lemma WeakPointer_Resources[\<nu>intro]: "\<nu>Resources WeakPointer (\<lambda>h. {})" unfolding \<nu>def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> WeakPointer\<tort_rbrace> S" unfolding \<nu>Independent_def by (simp add: lrep_exps)
 
 
 subsubsection \<open>Founded Pointer\<close>
@@ -207,13 +209,14 @@ subsubsection \<open>Founded Pointer\<close>
 definition Pointer :: "('spc::len0 memptr, nat memaddr) \<nu>"
   where "Pointer h p x \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x \<and> addr_allocated h x)"
 
-lemma [simp]: "Nu Pointer" unfolding Nu_def Pointer_def by (auto simp add: memptr_forall)
+lemma [simp]: "Nu Pointer" unfolding Nu_def Pointer_def by (auto simp add: memptr_forall addr_allocated_def)
 lemma [simp]: "[heap] memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr \<and> addr_allocated heap addr"
   unfolding Refining_ex by (simp add: Pointer_def)
-lemma [elim,\<nu>elim]: " addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+lemma [elim,\<nu>elim]: "[h] addr \<ratio> Pointer \<Longrightarrow> (addr_allocated h addr \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma Pointer_EQ[\<nu>intro]: "\<nu>Equal Pointer (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps same_addr_offset_def addr'_allocated_def)
-lemma Pointer_Resources[\<nu>intro]: "\<nu>Resources Pointer alive" unfolding \<nu>def by (simp add: lrep_exps)
+lemma Pointer_Resources[\<nu>intro]: "\<nu>Resources Pointer alive" unfolding \<nu>def by (auto simp add: lrep_exps addr_allocated_def)
+lemma [\<nu>intro]: "alive x \<perpendicular> C \<Longrightarrow> \<nu>Independent \<tort_lbrace>x \<tycolon> Pointer\<tort_rbrace> C" unfolding \<nu>Independent_def by (auto simp add: lrep_exps disjoint_rew2 addr_allocated_def)
 
 subsubsection \<open>Casts\<close>
 
@@ -259,9 +262,10 @@ definition Void :: "void \<nu>set" where "Void = Abs_\<nu>set (\<lambda>_. {void
 text \<open>The name `void` coincides that, when a procedure has no input arguments,
   the \<nu>-type for the input would exactly be @{term Void}. \<close>
 lemma [simp,intro]: "[heap] p \<in>\<^sub>\<nu> Void" unfolding Void_def by (auto simp add: Abs_\<nu>set_inverse NuSet_def)
-lemma [simp,intro]: "Inhabited Void" unfolding Inhabited_def by auto
-lemma [elim!, \<nu>elim]: "Inhabited Void \<Longrightarrow> C \<Longrightarrow> C" .
+lemma [simp,intro]: "Inhabited h Void" unfolding Inhabited_def by auto
+lemma [elim!, \<nu>elim]: "Inhabited h Void \<Longrightarrow> C \<Longrightarrow> C" .
 lemma [intro]: "\<nu>Resources_of_set Void {}" unfolding \<nu>Resources_of_set_def by simp
+lemma [intro]: "\<nu>Independent Void S" unfolding \<nu>Independent_def by simp
 (*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
 
 section \<open>The integer data type\<close>
@@ -295,12 +299,13 @@ translations "\<nat>['x]" == "CONST NuNat (TYPE('x))"
 
 lemma [simp]: "Nu (NuNat b)" unfolding Nu_def NuNat_def by simp
 lemma [simp]: "[heap] p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_ex by (simp add: NuNat_def)
-lemma [elim,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "[h] x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI)
 lemma [\<nu>intro]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by simp
 lemma [\<nu>intro]: "\<nu>Resources (NuNat b) (\<lambda>x. {})" unfolding \<nu>def by simp
+lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> NuNat b\<tort_rbrace> C" unfolding \<nu>Independent_def by simp
 
 definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ h p x = (p = of_nat x)"
 syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
@@ -318,7 +323,7 @@ translations "\<int>['x]" == "CONST NuInt (TYPE('x))"
 
 lemma [simp]: "Nu (NuInt b)" unfolding Nu_def NuInt_def by simp
 lemma [simp]: "[heap] p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfolding Refining_ex by (simp add: NuInt_def)
-lemma [elim,\<nu>elim]: "x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
+lemma [elim,\<nu>elim]: "[h] x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def apply simp by (metis One_nat_def sint_ge sint_lt) 
 
 lemma [\<nu>intro]: "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
@@ -368,15 +373,15 @@ definition Fusion :: "('a1::lrep,'b1) \<nu> \<Rightarrow> ('a2::lrep,'b2) \<nu> 
 lemma [simp]: "Nu (N \<nuFusion> M)" unfolding Nu_def Fusion_def  by auto
 lemma [simp]: "[heap] (p1,p2) \<nuLinkL> N \<nuFusion> M \<nuLinkR> (x1,x2) \<longleftrightarrow> ([heap] p1 \<nuLinkL> N \<nuLinkR> x1) \<and> ([heap] p2 \<nuLinkL> M \<nuLinkR> x2)"
   by (simp add: Fusion_def Refining_ex)
-lemma [elim,\<nu>elim]: "(x1,x2) \<ratio> N1 \<nuFusion> N2 \<Longrightarrow> (x1 \<ratio> N1 \<Longrightarrow> x2 \<ratio> N2 \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "[h] (x1,x2) \<ratio> N1 \<nuFusion> N2 \<Longrightarrow> ([h] x1 \<ratio> N1 \<Longrightarrow> [h] x2 \<ratio> N2 \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 lemma [\<nu>intro]: "\<nu>Zero N z1 \<Longrightarrow> \<nu>Zero M z2 \<Longrightarrow> \<nu>Zero (N \<nuFusion> M) (z1,z2)" unfolding \<nu>Zero_def by simp
 
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x' \<tycolon> N' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M \<longmapsto> y' \<tycolon> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (x,y) \<tycolon> N \<nuFusion> M \<longmapsto> (x',y') \<tycolon> N' \<nuFusion> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and> Q" unfolding Cast_def by auto
+lemma [\<nu>intro]: "[h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x' \<tycolon> N' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> [h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M \<longmapsto> y' \<tycolon> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow>
+  [h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t (x,y) \<tycolon> N \<nuFusion> M \<longmapsto> (x',y') \<tycolon> N' \<nuFusion> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and> Q" unfolding Cast_def by auto
 
 definition AutoFusion (infixr "\<nuFusion>''" 70)  where "AutoFusion = Fusion"
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion>' M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P"
+lemma [\<nu>intro]: "[h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> [h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion>' M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P"
   unfolding Cast_def AutoFusion_def .
 
 section \<open>Tuple\<close>
@@ -431,10 +436,11 @@ definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b)
 
 lemma [simp]: "Nu \<lbrace> N \<rbrace>" unfolding Nu_def NuTuple_def by (auto simp add: tuple_forall)
 lemma [simp]: "[heap] Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> [heap] p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_ex)
-lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by simp
+lemma [elim,\<nu>elim]: "[h] x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> ([h] x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by simp
 
 lemma [\<nu>intro]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
 lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
 lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources \<lbrace> T \<rbrace> rcss" unfolding \<nu>def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> T\<tort_rbrace> C \<Longrightarrow> \<nu>Independent \<tort_lbrace>x \<tycolon> \<lbrace> T \<rbrace>\<tort_rbrace> C" unfolding \<nu>def by (simp add: lrep_exps)
 
 end
