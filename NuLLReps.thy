@@ -23,27 +23,25 @@ consts segment_len :: "msegment \<Rightarrow> nat" \<comment> \<open>in unit of 
 consts segment_llty :: "msegment \<Rightarrow> llty" \<comment> \<open>type of the element in the segment\<close>
 consts size_of :: "llty \<Rightarrow> nat" \<comment> \<open>in unit of bytes\<close>
 abbreviation "memaddr_llty adr \<equiv> segment_llty (segment_of_addr adr)"
-consts segment_space :: "msegment \<Rightarrow> nat" \<comment> \<open>LLVM address space of the segment\<close>
-consts addrspace_capacity :: "nat \<Rightarrow> nat" \<comment> \<open>in unit of bits\<close>
-specification (addrspace_capacity) addrspace_capacity_L0: "0 < addrspace_capacity spc" by auto
+consts addrspace_capacity :: "nat" \<comment> \<open>in unit of bits\<close>
+specification (addrspace_capacity) addrspace_capacity_L0: "0 < addrspace_capacity" by auto
 specification (size_of)
   size_of_L0[simp]: "size_of x \<noteq> 0"
   by auto
 
 specification (segment_len)
-  segment_len_valid: "segment_len seg * size_of (segment_llty seg) < 2 ^ (addrspace_capacity (segment_space seg) - 1)"
-proof show "\<forall>seg. (\<lambda>_.  0) seg * size_of (segment_llty seg) < 2 ^ (addrspace_capacity (segment_space seg) - 1)"
+  segment_len_valid: "segment_len seg * size_of (segment_llty seg) < 2 ^ (addrspace_capacity - 1)"
+proof show "\<forall>seg. (\<lambda>_.  0) seg * size_of (segment_llty seg) < 2 ^ (addrspace_capacity - 1)"
     using addrspace_capacity_L0 by auto qed
 
-lemma segment_len_valid2: "segment_len seg * size_of (segment_llty seg) < 2 ^ (addrspace_capacity (segment_space seg))"
+lemma segment_len_valid2: "segment_len seg * size_of (segment_llty seg) < 2 ^ addrspace_capacity"
   using segment_len_valid
   by (metis addrspace_capacity_L0 le_less_trans one_less_numeral_iff order_less_imp_le power_commutes
       power_less_power_Suc power_minus_mult semiring_norm(76))
-  
 
-typedef ('b::len0) size_t = "UNIV :: nat set" ..
-instantiation size_t :: (len0) len begin
-definition len_of_size_t :: "'a size_t itself \<Rightarrow> nat" where [simp]: "len_of_size_t _ = addrspace_capacity LENGTH('a)"
+typedef size_t = "UNIV :: nat set" ..
+instantiation size_t :: len begin
+definition len_of_size_t :: "size_t itself \<Rightarrow> nat" where [simp]: "len_of_size_t _ = addrspace_capacity"
 instance apply standard using addrspace_capacity_L0 by auto
 end
 
@@ -58,11 +56,9 @@ lemma malloc2: "Heap h \<Longrightarrow> MemAddress (malloc h |+ ofs) \<notin> d
 lemmas malloc3 = \<nu>set_mono_1[OF malloc2]
 
 
-type_synonym 'spc raw_memaddr = "'spc size_t  word memaddr"
+type_synonym raw_memaddr = "size_t  word memaddr"
 
-declare  [[typedef_overloaded]]
-datatype  ('spc::len0) memptr = memptr " 'spc raw_memaddr "  \<comment> \<open>'spc : address space\<close>
-declare  [[typedef_overloaded = false]]
+datatype memptr = memptr "raw_memaddr "  \<comment> \<open>'spc : address space\<close>
 
 
 
@@ -86,47 +82,46 @@ lemma memptr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>addr. P (
 
 subsection \<open>Instantiations for memptr\<close>
 
-instantiation memptr :: (len0) lrep begin
-definition llty_memptr :: " 'a memptr itself \<Rightarrow> llty" where "llty_memptr _ = llty_pointer LENGTH('a)"
-definition deepize_memptr :: " 'a memptr \<Rightarrow> deep_model"
-  where "deepize_memptr ptr = DM_pointer LENGTH('a) (case_memptr (map_memaddr unat) ptr)"
-definition shallowize_memptr :: " deep_model \<Rightarrow> 'a memptr "
-  where "shallowize_memptr dm = (case dm of DM_pointer _ addr \<Rightarrow> memptr (map_memaddr of_nat addr))"
+instantiation memptr :: lrep begin
+definition llty_memptr :: " memptr itself \<Rightarrow> llty" where "llty_memptr _ = llty_pointer"
+definition deepize_memptr :: " memptr \<Rightarrow> deep_model"
+  where "deepize_memptr ptr = DM_pointer (case_memptr (map_memaddr unat) ptr)"
+definition shallowize_memptr :: " deep_model \<Rightarrow> memptr "
+  where "shallowize_memptr dm = (case dm of DM_pointer addr \<Rightarrow> memptr (map_memaddr of_nat addr))"
 instance apply standard subgoal for x apply (cases x) subgoal for xa apply (cases xa)
       by (auto simp add: shallowize_memptr_def deepize_memptr_def) done done 
 end
 
-instantiation memptr :: (len0) field begin instance by standard end
-instantiation memptr :: (len0) field_list begin instance by standard end
+instantiation memptr :: field begin instance by standard end
+instantiation memptr :: field_list begin instance by standard end
 
-instantiation memptr :: (len0) zero begin
-definition zero_memptr :: "'a memptr" where [simp]: "zero_memptr = memptr undefined"
+instantiation memptr :: zero begin
+definition zero_memptr :: " memptr" where [simp]: "zero_memptr = memptr undefined"
 instance by standard
 end
 
 
 abbreviation valid_memaddr :: "nat memaddr \<Rightarrow> bool"
   where "valid_memaddr addr \<equiv> offset_of_addr addr \<le> segment_len (segment_of_addr addr)"
-definition raw_offset_of :: " msegment \<Rightarrow> nat \<Rightarrow> ('spc::len0) size_t word"
+definition raw_offset_of :: " msegment \<Rightarrow> nat \<Rightarrow> size_t word"
   where "raw_offset_of seg i = of_nat (i * size_of (segment_llty seg))"
 lemma [simp]: "raw_offset_of seg 0 = 0" unfolding raw_offset_of_def by auto
 lemma raw_offset_of_inj:
-  "valid_memaddr (seg |+ ofs1) \<Longrightarrow> valid_memaddr (seg |+ ofs2) \<Longrightarrow> segment_space seg = LENGTH('spc::len0) \<Longrightarrow>
-    raw_offset_of seg ofs1 = (raw_offset_of seg ofs2 :: 'spc size_t word) \<Longrightarrow> ofs1 = ofs2"
+  "valid_memaddr (seg |+ ofs1) \<Longrightarrow> valid_memaddr (seg |+ ofs2) \<Longrightarrow>
+    raw_offset_of seg ofs1 = (raw_offset_of seg ofs2 :: size_t word) \<Longrightarrow> ofs1 = ofs2"
   unfolding raw_offset_of_def word_of_nat_eq_iff take_bit_nat_def apply simp subgoal premises prems proof -
-    have "ofs1 * size_of (segment_llty seg) < 2 ^ (addrspace_capacity (segment_space seg))"
+    have "ofs1 * size_of (segment_llty seg) < 2 ^ addrspace_capacity"
       using prems segment_len_valid2 size_of_L0
       by (meson le_less_trans mult_le_mono1)
-    moreover have "ofs2 * size_of (segment_llty seg) < 2 ^ (addrspace_capacity (segment_space seg))"
+    moreover have "ofs2 * size_of (segment_llty seg) < 2 ^ addrspace_capacity"
       using prems segment_len_valid2 size_of_L0
       by (meson le_less_trans mult_le_mono1) 
     ultimately show "ofs1 = ofs2" using prems size_of_L0 addrspace_capacity_L0 by auto
   qed done
 
-definition same_addr_offset :: "msegment \<Rightarrow> ('spc::len0) size_t word \<Rightarrow> nat \<Rightarrow> bool"
-  where "same_addr_offset seg ofsp ofsx \<longleftrightarrow> ofsx \<le> segment_len seg \<and>
-    segment_space seg = LENGTH('spc) \<and>raw_offset_of seg ofsx = ofsp"
-definition the_same_addr :: "('spc::len0) raw_memaddr \<Rightarrow> nat memaddr \<Rightarrow> bool"
+definition same_addr_offset :: "msegment \<Rightarrow> size_t word \<Rightarrow> nat \<Rightarrow> bool"
+  where "same_addr_offset seg ofsp ofsx \<longleftrightarrow> ofsx \<le> segment_len seg \<and> raw_offset_of seg ofsx = ofsp"
+definition the_same_addr :: "raw_memaddr \<Rightarrow> nat memaddr \<Rightarrow> bool"
   where "the_same_addr addrp addrx \<equiv>
     segment_of_addr addrp = segment_of_addr addrx
     \<and> same_addr_offset (segment_of_addr addrx)  (offset_of_addr addrp) (offset_of_addr addrx)"
@@ -138,7 +133,7 @@ lemma same_addr_offset_inj: "same_addr_offset seg p a1 \<and> same_addr_offset s
 lemma same_addr_offset_inj2: "same_addr_offset seg p1 a \<and> same_addr_offset seg p2 a \<Longrightarrow> p1 = p2"
   by (auto simp add: same_addr_offset_def raw_offset_of_def raw_offset_of_inj)
 
-consts logical_offset_of :: "msegment \<Rightarrow> ('spc::len0) size_t word \<Rightarrow> nat"
+consts logical_offset_of :: "msegment \<Rightarrow> size_t word \<Rightarrow> nat"
 specification (logical_offset_of)
   logical_offset_of[simp]: "same_addr_offset seg ofsp ofsx \<Longrightarrow> logical_offset_of seg ofsp = ofsx"
 proof show "\<forall>ofsp ofsx seg. same_addr_offset seg ofsp ofsx \<longrightarrow>  (\<lambda>seg p. @x. same_addr_offset seg p x) seg ofsp = ofsx"
@@ -148,7 +143,7 @@ definition "logical_addr_of addrp = (case addrp of seg |+ ofsp \<Rightarrow> seg
 lemma [simp]: "logical_addr_of (seg |+ ofsp) = seg |+ logical_offset_of seg ofsp"
   unfolding logical_addr_of_def by simp
 
-definition addr'_allocated :: "heap \<Rightarrow> ('spc::len0) raw_memaddr \<Rightarrow> bool"
+definition addr'_allocated :: "heap \<Rightarrow> raw_memaddr \<Rightarrow> bool"
   where "addr'_allocated heap addr' \<longleftrightarrow> (\<exists>addr. the_same_addr addr' addr \<and> addr_allocated heap addr)"
 
 (* instantiation memaddr :: ceq begin
@@ -158,16 +153,16 @@ definition ceq_memaddr :: " memaddr \<Rightarrow> memaddr \<Rightarrow> bool" wh
 instance by standard auto
 end *)
 
-instantiation memptr :: (len0) ceq begin
-definition ceqable_memptr :: " heap \<Rightarrow> 'a memptr \<Rightarrow> 'a memptr \<Rightarrow> bool" where
+instantiation memptr :: ceq begin
+definition ceqable_memptr :: " heap \<Rightarrow> memptr \<Rightarrow> memptr \<Rightarrow> bool" where
   "ceqable_memptr heap x y = (case x of memptr a \<Rightarrow> case y of memptr b \<Rightarrow>
     (addr'_allocated heap a \<and> addr'_allocated heap b) \<or> (segment_of_addr a = segment_of_addr b))"
 lemma [simp]: "ceqable heap (memptr a) (memptr b) \<longleftrightarrow>
   (addr'_allocated heap a \<and> addr'_allocated heap b) \<or> (segment_of_addr a = segment_of_addr b)"
   unfolding ceqable_memptr_def by simp
-definition ceq_memptr :: " 'a memptr \<Rightarrow> 'a memptr \<Rightarrow> bool" where [simp]: "ceq_memptr = (=)"
+definition ceq_memptr :: " memptr \<Rightarrow> memptr \<Rightarrow> bool" where [simp]: "ceq_memptr = (=)"
 instance proof
-  fix x y z :: " 'a memptr" and h :: heap
+  fix x y z :: " memptr" and h :: heap
   show "ceqable h x y = ceqable h y x" by (cases x; cases y) auto
   show "ceqable h x x \<Longrightarrow> ceq x x" and "ceqable h x y \<Longrightarrow> ceq x y = ceq y x"
     and "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z" by auto+
@@ -178,7 +173,7 @@ subsection \<open>\<nu>-abstraction\<close>
 
 subsubsection \<open>Raw Pointer\<close>
 
-definition RawPointer :: "('spc::len0 memptr, 'spc raw_memaddr) \<nu>"
+definition RawPointer :: "(memptr, raw_memaddr) \<nu>"
   where "RawPointer h p x = (case p of (memptr i) \<Rightarrow> (i = x))"
 
 lemma [simp]: "Nu RawPointer" unfolding Nu_def RawPointer_def by simp
@@ -191,7 +186,7 @@ lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>p \<tycolon> RawPointer\<tor
 
 subsubsection \<open>Potentially Dangling Pointer\<close>
 
-definition WeakPointer :: "('spc::len0 memptr, nat memaddr) \<nu>"
+definition WeakPointer :: "(memptr, nat memaddr) \<nu>"
   where "WeakPointer h p x \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x)"
 
 lemma [simp]: "Nu WeakPointer" unfolding WeakPointer_def Nu_def by simp
@@ -206,7 +201,7 @@ lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> WeakPointer\<to
 
 subsubsection \<open>Founded Pointer\<close>
 
-definition Pointer :: "('spc::len0 memptr, nat memaddr) \<nu>"
+definition Pointer :: "(memptr, nat memaddr) \<nu>"
   where "Pointer h p x \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x \<and> addr_allocated h x)"
 
 lemma [simp]: "Nu Pointer" unfolding Nu_def Pointer_def by (auto simp add: memptr_forall addr_allocated_def)
@@ -441,6 +436,6 @@ lemma [elim,\<nu>elim]: "[h] x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> 
 lemma [\<nu>intro]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
 lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
 lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources \<lbrace> T \<rbrace> rcss" unfolding \<nu>def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> T\<tort_rbrace> C \<Longrightarrow> \<nu>Independent \<tort_lbrace>x \<tycolon> \<lbrace> T \<rbrace>\<tort_rbrace> C" unfolding \<nu>def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> T\<tort_rbrace> C \<Longrightarrow> \<nu>Independent \<tort_lbrace>x \<tycolon> \<lbrace> T \<rbrace>\<tort_rbrace> C" unfolding \<nu>Independent_def by (simp add: lrep_exps)
 
 end

@@ -303,7 +303,7 @@ theorem op_slice_merge[\<nu>overload merge]:
       \<longmapsto> \<^bold>E\<^bold>N\<^bold>D R\<heavy_comma> addr1 \<R_arr_tail> xs1 @ xs2 \<tycolon> Slice T \<brangle>"
   unfolding \<nu>def op_drop_def apply (cases addr1; cases addr2)
   apply (auto 0 0 simp add: lrep_exps nth_append)
-  by (metis add.assoc add_diff_inverse_nat diff_add_inverse diff_less_mono not_le)
+  by (metis add.assoc add_diff_inverse_nat diff_add_inverse diff_less_mono not_le
 
 subsection \<open>Allocation\<close>
 
@@ -422,9 +422,9 @@ lemma FieldIndex_tupl: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (ind
 
 subsubsection \<open>load\<close>
 
-definition op_load :: " llty \<Rightarrow> ('a::lrep,'a,'ax,'ax) index \<Rightarrow> ('spc::len0) size_t word \<times> 'spc memptr \<times> ('r::stack) \<longmapsto> 'ax::field \<times>'r "
-  where "op_load lty idx heap s = (case s of (ofs, memptr adr, r) \<Rightarrow>
-    (case heap (MemAddress (logical_addr_of (shift_addr adr (ofs * of_nat (size_of lty))))) of Some data \<Rightarrow>
+definition op_load :: " llty \<Rightarrow> ('a::lrep,'a,'ax,'ax) index \<Rightarrow> 'spc memptr \<times> ('r::stack) \<longmapsto> 'ax::field \<times>'r "
+  where "op_load lty idx heap s = (case s of (memptr adr, r) \<Rightarrow>
+    (case heap (MemAddress (logical_addr_of adr)) of Some data \<Rightarrow>
       if lty = LLTY('a) then Success heap (get_idx idx (shallowize data), r) else Fail
     | _ \<Rightarrow> Fail))"
 

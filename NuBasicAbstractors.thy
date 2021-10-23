@@ -173,9 +173,9 @@ lemma [simp]: "[heap] memptr p \<nuLinkL> Slice N \<nuLinkR> (base |+ ofs) \<R_a
 )" for N :: "('a::field, 'b) \<nu>"
   by (auto simp add: lrep_exps Slice_def Refining_ex)
 
-
+  
 lemma [elim,\<nu>elim]: "[h] a \<R_arr_tail> xs \<ratio> Slice N \<Longrightarrow> (
-    (\<And>i. i < length xs \<Longrightarrow> ([h] xs ! i \<ratio> N) \<and> (h \<^bold>a\<^bold>t a ||+ i \<^bold>i\<^bold>s xs ! i \<tycolon> N) \<and> \<nu>Independent \<tort_lbrace>xs ! i \<tycolon> N\<tort_rbrace> (write (segment_of_addr a)))
+    (\<And>i. i < length xs \<Longrightarrow> ([h] xs ! i \<ratio> N) \<and> (h \<^bold>a\<^bold>t a ||+ i \<^bold>i\<^bold>s xs ! i \<tycolon> N))
      \<Longrightarrow> (\<And>i. i \<le> length xs \<Longrightarrow> allocated h (segment_of_addr a |+ i))
   \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (cases a) (auto simp add: lrep_exps list_all2_conv_all_nth)

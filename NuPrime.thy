@@ -142,7 +142,7 @@ abbreviation shift_addr :: " 'a::plus memaddr \<Rightarrow> 'a \<Rightarrow> 'a 
 lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base  |+ ofs))" by (metis memaddr.exhaust)
 lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base  |+ ofs))" by (metis memaddr.exhaust)
 
-datatype deep_model = DM_int nat nat | DM_pointer nat "nat memaddr" | DM_fusion deep_model deep_model
+datatype deep_model = DM_int nat nat | DM_pointer "nat memaddr" | DM_fusion deep_model deep_model
   | DM_record deep_model | DM_array "deep_model list" | DM_none
 
 datatype resource_key = MemAddress "nat memaddr" | ChainDB_key nat
@@ -184,7 +184,7 @@ text \<open>The semantic framework follows a style of shallow embedding, where s
   are modelled by different Isabelle type. Model types are constrained by the base type class {\it lrep} and types representing
   objects that supports certain features are constrained by specific sub-classes which extend the base class {\it lrep} finally. \<close>
 
-datatype llty = llty_int nat \<comment> \<open>int bits\<close> | llty_pointer nat \<comment> \<open>pointer space\<close> | llty_tup llty | llty_array llty nat | llty_nil | llty_fusion llty llty
+datatype llty = llty_int nat \<comment> \<open>int bits\<close> | llty_pointer | llty_tup llty | llty_array llty nat | llty_nil | llty_fusion llty llty
 
 class lrep =  \<comment>\<open>The basic class for types modelling concrete objects\<close>
   fixes llty :: " 'a itself \<Rightarrow> llty "
