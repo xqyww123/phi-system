@@ -64,20 +64,20 @@ fun define (binding,attrs) proc_th lthy =
     val f' = fold lambda (map Free (add_frees f [])) f
     val def_binding = Binding.suffix_name compilation_suffix binding
     val proc_binding = Binding.suffix_name proc_suffix binding
-  in if Binding.is_empty binding then
-      lthy |> Local_Theory.notes_kind procedure_kind
+    val (lthy, proc_th) =
+      if Binding.is_empty binding then (lthy, proc_th)
+      else lthy
+            |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
+            |-> (fn (tm,(_,def)) => fn lthy =>
+                  (lthy, (proc_th RS (norm_def arity def RS @{thm rename_proc}))))
+    val proc_th = proc_th
+          |> Raw_Simplifier.rewrite_rule lthy @{thms Premise_Irew}
+          |> Raw_Simplifier.rewrite_rule lthy
+              (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
+          |> Raw_Simplifier.rewrite_rule lthy
+              (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2")
+  in lthy |> Local_Theory.notes_kind procedure_kind
                 [((proc_binding,attrs), [([proc_th],[])])]
-           |> apfst (fn [(_,[proc_th])] => proc_th)
-     else
-      lthy
-        |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
-        |-> (fn (tm,(_,def)) => fn lthy =>
-          lthy |> Local_Theory.notes_kind procedure_kind
-                 [((proc_binding,attrs), [([
-                     Raw_Simplifier.rewrite_rule lthy [Thm.symmetric (norm_def arity def)
-  |> @{print}] proc_th |> @{print}
-                   ],[])])]
-               |> apfst (fn [(_,[proc_th])] => proc_th)
-            )
+          |> apfst (fn [(_,[proc_th])] => proc_th)
   end
 end

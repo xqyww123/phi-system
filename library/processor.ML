@@ -125,6 +125,7 @@ fun process_impl ctx procs (th,toks) limit =
       end
       handle Processed th_toks => process_impl ctx procs th_toks (limit + 1)
         | ProcessTerminated th_toks => th_toks
+        | NDBG th => (th,[Token.eof])
 fun process ctx th toks =
   Runtime.exn_trace (fn _ =>
   process_impl (Context.Proof ctx)

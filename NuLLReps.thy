@@ -22,7 +22,8 @@ text \<open>The concept of the address space is one of the notions in the LLVM\<
 consts segment_len :: "msegment \<Rightarrow> nat" \<comment> \<open>in unit of the number of elements\<close>
 consts segment_llty :: "msegment \<Rightarrow> llty" \<comment> \<open>type of the element in the segment\<close>
 consts size_of :: "llty \<Rightarrow> nat" \<comment> \<open>in unit of bytes\<close>
-abbreviation "memaddr_llty adr \<equiv> segment_llty (segment_of_addr adr)"
+abbreviation "address_llty adr \<equiv> segment_llty (segment_of adr)"
+abbreviation "address_len adr \<equiv> segment_len (segment_of adr)"
 consts addrspace_capacity :: "nat" \<comment> \<open>in unit of bits\<close>
 specification (addrspace_capacity) addrspace_capacity_L0: "0 < addrspace_capacity" by auto
 specification (size_of)
@@ -53,7 +54,6 @@ lemma malloc: "Heap h \<Longrightarrow> h (MemAddress (malloc h |+ ofs)) = None"
 
 lemma malloc2: "Heap h \<Longrightarrow> MemAddress (malloc h |+ ofs) \<notin> dom h"
   using malloc by (simp add: domIff) 
-lemmas malloc3 = \<nu>set_mono_1[OF malloc2]
 
 
 type_synonym raw_memaddr = "size_t  word memaddr"
@@ -102,10 +102,12 @@ end
 
 
 abbreviation valid_memaddr :: "nat memaddr \<Rightarrow> bool"
-  where "valid_memaddr addr \<equiv> offset_of_addr addr \<le> segment_len (segment_of_addr addr)"
+  where "valid_memaddr addr \<equiv> offset_of addr \<le> segment_len (segment_of addr)"
 definition raw_offset_of :: " msegment \<Rightarrow> nat \<Rightarrow> size_t word"
   where "raw_offset_of seg i = of_nat (i * size_of (segment_llty seg))"
 lemma [simp]: "raw_offset_of seg 0 = 0" unfolding raw_offset_of_def by auto
+lemma [simp]: "raw_offset_of seg (ofs + unat delt) = raw_offset_of seg ofs + delt * word_of_nat (size_of (segment_llty seg))"
+  unfolding raw_offset_of_def using distrib_right by auto
 lemma raw_offset_of_inj:
   "valid_memaddr (seg |+ ofs1) \<Longrightarrow> valid_memaddr (seg |+ ofs2) \<Longrightarrow>
     raw_offset_of seg ofs1 = (raw_offset_of seg ofs2 :: size_t word) \<Longrightarrow> ofs1 = ofs2"
@@ -123,8 +125,8 @@ definition same_addr_offset :: "msegment \<Rightarrow> size_t word \<Rightarrow>
   where "same_addr_offset seg ofsp ofsx \<longleftrightarrow> ofsx \<le> segment_len seg \<and> raw_offset_of seg ofsx = ofsp"
 definition the_same_addr :: "raw_memaddr \<Rightarrow> nat memaddr \<Rightarrow> bool"
   where "the_same_addr addrp addrx \<equiv>
-    segment_of_addr addrp = segment_of_addr addrx
-    \<and> same_addr_offset (segment_of_addr addrx)  (offset_of_addr addrp) (offset_of_addr addrx)"
+    segment_of addrp = segment_of addrx
+    \<and> same_addr_offset (segment_of addrx)  (offset_of addrp) (offset_of addrx)"
 lemma [simp]: "the_same_addr (base |+ ofs) (base' |+ ofs') \<longleftrightarrow> base = base' \<and> same_addr_offset base' ofs ofs'"
   unfolding the_same_addr_def by simp
 
@@ -143,8 +145,8 @@ definition "logical_addr_of addrp = (case addrp of seg |+ ofsp \<Rightarrow> seg
 lemma [simp]: "logical_addr_of (seg |+ ofsp) = seg |+ logical_offset_of seg ofsp"
   unfolding logical_addr_of_def by simp
 
-definition addr'_allocated :: "heap \<Rightarrow> raw_memaddr \<Rightarrow> bool"
-  where "addr'_allocated heap addr' \<longleftrightarrow> (\<exists>addr. the_same_addr addr' addr \<and> addr_allocated heap addr)"
+(* definition addr'_allocated :: "heap \<Rightarrow> raw_memaddr \<Rightarrow> bool"
+  where "addr'_allocated heap addr' \<longleftrightarrow> (\<exists>addr. the_same_addr addr' addr \<and> addr_allocated heap addr)" *)
 
 (* instantiation memaddr :: ceq begin
 definition ceqable_memaddr :: " heap \<Rightarrow> memaddr \<Rightarrow> memaddr \<Rightarrow> bool"
@@ -156,9 +158,9 @@ end *)
 instantiation memptr :: ceq begin
 definition ceqable_memptr :: " heap \<Rightarrow> memptr \<Rightarrow> memptr \<Rightarrow> bool" where
   "ceqable_memptr heap x y = (case x of memptr a \<Rightarrow> case y of memptr b \<Rightarrow>
-    (addr'_allocated heap a \<and> addr'_allocated heap b) \<or> (segment_of_addr a = segment_of_addr b))"
+    (segment_of a = segment_of b))"
 lemma [simp]: "ceqable heap (memptr a) (memptr b) \<longleftrightarrow>
-  (addr'_allocated heap a \<and> addr'_allocated heap b) \<or> (segment_of_addr a = segment_of_addr b)"
+  (segment_of a = segment_of b)"
   unfolding ceqable_memptr_def by simp
 definition ceq_memptr :: " memptr \<Rightarrow> memptr \<Rightarrow> bool" where [simp]: "ceq_memptr = (=)"
 instance proof
@@ -174,56 +176,36 @@ subsection \<open>\<nu>-abstraction\<close>
 subsubsection \<open>Raw Pointer\<close>
 
 definition RawPointer :: "(memptr, raw_memaddr) \<nu>"
-  where "RawPointer h p x = (case p of (memptr i) \<Rightarrow> (i = x))"
+  where "RawPointer p x = (case p of (memptr i) \<Rightarrow> (i = x))"
 
-lemma [simp]: "Nu RawPointer" unfolding Nu_def RawPointer_def by simp
-lemma [simp]: "[heap] memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_ex by (simp add: RawPointer_def)
-lemma [elim,\<nu>elim]: "[h] addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+lemma [simp]: "memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_ex by (simp add: RawPointer_def)
+lemma [elim,\<nu>elim]: "addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Zero RawPointer undefined" unfolding \<nu>Zero_def by simp
-lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of_addr x = segment_of_addr y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Resources RawPointer (\<lambda>x. {})" unfolding \<nu>def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>p \<tycolon> RawPointer\<tort_rbrace> C" unfolding \<nu>Independent_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps)
 
-subsubsection \<open>Potentially Dangling Pointer\<close>
-
-definition WeakPointer :: "(memptr, nat memaddr) \<nu>"
-  where "WeakPointer h p x \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x)"
-
-lemma [simp]: "Nu WeakPointer" unfolding WeakPointer_def Nu_def by simp
-lemma [simp]: "[heap] memptr raw \<nuLinkL> WeakPointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
-  unfolding Refining_ex by (simp add: WeakPointer_def)
-lemma [elim,\<nu>elim]: "[h] addr \<ratio> WeakPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma WeakPointer_EQ[\<nu>intro]: "\<nu>Equal WeakPointer (\<lambda>x y. segment_of_addr x = segment_of_addr y) (=)"
-  unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def same_addr_offset_def addr'_allocated_def)
-lemma WeakPointer_Resources[\<nu>intro]: "\<nu>Resources WeakPointer (\<lambda>h. {})" unfolding \<nu>def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> WeakPointer\<tort_rbrace> S" unfolding \<nu>Independent_def by (simp add: lrep_exps)
-
-
-subsubsection \<open>Founded Pointer\<close>
+subsubsection \<open>Pointer\<close>
 
 definition Pointer :: "(memptr, nat memaddr) \<nu>"
-  where "Pointer h p x \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x \<and> addr_allocated h x)"
+  where "Pointer p x \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x)"
 
-lemma [simp]: "Nu Pointer" unfolding Nu_def Pointer_def by (auto simp add: memptr_forall addr_allocated_def)
-lemma [simp]: "[heap] memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr \<and> addr_allocated heap addr"
+lemma [simp]: "memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
   unfolding Refining_ex by (simp add: Pointer_def)
-lemma [elim,\<nu>elim]: "[h] addr \<ratio> Pointer \<Longrightarrow> (addr_allocated h addr \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma Pointer_EQ[\<nu>intro]: "\<nu>Equal Pointer (\<lambda>x y. True) (=)"
-  unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps same_addr_offset_def addr'_allocated_def)
-lemma Pointer_Resources[\<nu>intro]: "\<nu>Resources Pointer alive" unfolding \<nu>def by (auto simp add: lrep_exps addr_allocated_def)
-lemma [\<nu>intro]: "alive x \<perpendicular> C \<Longrightarrow> \<nu>Independent \<tort_lbrace>x \<tycolon> Pointer\<tort_rbrace> C" unfolding \<nu>Independent_def by (auto simp add: lrep_exps disjoint_rew2 addr_allocated_def)
+lemma [elim,\<nu>elim]: "addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+lemma [\<nu>intro]: "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
+  unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def same_addr_offset_def)
+
 
 subsubsection \<open>Casts\<close>
 
 (* named_theorems fixtyp_\<nu>cast and freetyp_\<nu>cast
 
 lemma [\<nu>intro, fixtyp_\<nu>cast]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e memaddr_llty addr = ty \<Longrightarrow>
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e address_llty addr = ty \<Longrightarrow>
     \<^bold>c\<^bold>a\<^bold>s\<^bold>t addr \<tycolon> Pointer['spc] \<longmapsto> addr \<tycolon> TypedPtr['spc::len0] ty"
   unfolding Cast_def by (cases addr) (auto simp add: lrep_exps split: memaddr.split)
 
 lemma [\<nu>intro, freetyp_\<nu>cast]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t addr \<tycolon> TypedPtr['spc] ty \<longmapsto> addr \<tycolon> Pointer['spc::len0] \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e memaddr_llty addr = ty"
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t addr \<tycolon> TypedPtr['spc] ty \<longmapsto> addr \<tycolon> Pointer['spc::len0] \<^bold>w\<^bold>i\<^bold>t\<^bold>h address_llty addr = ty"
   unfolding Cast_def by (cases addr) (auto simp add: lrep_exps split: memaddr.split)
 *)
 section \<open>Void\<close>
@@ -253,14 +235,12 @@ end
 
 subsection \<open>Abstractor\<close>
 
-definition Void :: "void \<nu>set" where "Void = Abs_\<nu>set (\<lambda>_. {void})" 
+definition Void :: "void set" where "Void = {void}"
 text \<open>The name `void` coincides that, when a procedure has no input arguments,
   the \<nu>-type for the input would exactly be @{term Void}. \<close>
-lemma [simp,intro]: "[heap] p \<in>\<^sub>\<nu> Void" unfolding Void_def by (auto simp add: Abs_\<nu>set_inverse NuSet_def)
-lemma [simp,intro]: "Inhabited h Void" unfolding Inhabited_def by auto
-lemma [elim!, \<nu>elim]: "Inhabited h Void \<Longrightarrow> C \<Longrightarrow> C" .
-lemma [intro]: "\<nu>Resources_of_set Void {}" unfolding \<nu>Resources_of_set_def by simp
-lemma [intro]: "\<nu>Independent Void S" unfolding \<nu>Independent_def by simp
+lemma [simp,intro]: "p \<in> Void" unfolding Void_def by simp
+lemma [simp,intro]: "Inhabited Void" unfolding Inhabited_def by auto
+lemma [elim!, \<nu>elim]: "Inhabited Void \<Longrightarrow> C \<Longrightarrow> C" .
 (*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
 
 section \<open>The integer data type\<close>
@@ -288,37 +268,32 @@ subsection \<open>Basic \<nu>-abstractions based on integer type\<close>
 
 subsubsection \<open>Natural number\<close>
 
-definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNat _ h p x = (unat p = x)"
+definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNat _ p x = (unat p = x)"
 syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
 
-lemma [simp]: "Nu (NuNat b)" unfolding Nu_def NuNat_def by simp
-lemma [simp]: "[heap] p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_ex by (simp add: NuNat_def)
-lemma [elim,\<nu>elim]: "[h] x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_ex by (simp add: NuNat_def)
+lemma [elim,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI)
 lemma [\<nu>intro]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by simp
-lemma [\<nu>intro]: "\<nu>Resources (NuNat b) (\<lambda>x. {})" unfolding \<nu>def by simp
-lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> NuNat b\<tort_rbrace> C" unfolding \<nu>Independent_def by simp
 
-definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ h p x = (p = of_nat x)"
+definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ p x = (p = of_nat x)"
 syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
 translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))" 
 
-lemma [simp]: "Nu (NuNatRound b)" unfolding Nu_def NuNatRound_def by simp
-lemma [simp]: "[heap] p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding Refining_ex  by (simp add: NuNatRound_def)
+lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding Refining_ex  by (simp add: NuNatRound_def)
 lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Integer\<close>
 
-definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) \<nu>" where "NuInt _ h p x = (sint p = x)"
+definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) \<nu>" where "NuInt _ p x = (sint p = x)"
 syntax "_NuInt_" :: "type \<Rightarrow> logic" (\<open>\<int>'[_']\<close>)
 translations "\<int>['x]" == "CONST NuInt (TYPE('x))" 
 
-lemma [simp]: "Nu (NuInt b)" unfolding Nu_def NuInt_def by simp
-lemma [simp]: "[heap] p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfolding Refining_ex by (simp add: NuInt_def)
-lemma [elim,\<nu>elim]: "[h] x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
+lemma [simp]: "p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfolding Refining_ex by (simp add: NuInt_def)
+lemma [elim,\<nu>elim]: " x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def apply simp by (metis One_nat_def sint_ge sint_lt) 
 
 lemma [\<nu>intro]: "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
@@ -333,12 +308,10 @@ lemma [simp]: "(x \<noteq> 1) = (x = 0)" for x :: "1 word" proof -
   then show ?thesis  by auto
 qed
 
-definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool h p x = ((p = 1) = x)"
+definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool p x = ((p = 1) = x)"
 
-lemma [simp]: "Nu NuBool" unfolding Nu_def NuBool_def by simp
-lemma [simp]: "[heap] p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_ex by (simp add: NuBool_def)
+lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_ex by (simp add: NuBool_def)
 lemma [\<nu>intro]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
-
 lemma [\<nu>intro]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
 
 section \<open>Prod & the pair abstract structure\<close>
@@ -362,21 +335,19 @@ end
 subsection \<open>Fusion \<nu>-abstraction\<close>
 
 definition Fusion :: "('a1::lrep,'b1) \<nu> \<Rightarrow> ('a2::lrep,'b2) \<nu> \<Rightarrow> ('a1 \<times> 'a2, 'b1 \<times> 'b2) \<nu>" (infixr "\<nuFusion>" 70) 
-  where "Fusion N M heap p x = (case p of (p1,p2) \<Rightarrow> case x of (x1,x2) \<Rightarrow> 
-    ([heap] p1 \<nuLinkL> N \<nuLinkR> x1) \<and> ([heap] p2 \<nuLinkL> M \<nuLinkR> x2))"
+  where "Fusion N M p x = (case p of (p1,p2) \<Rightarrow> case x of (x1,x2) \<Rightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2))"
 
-lemma [simp]: "Nu (N \<nuFusion> M)" unfolding Nu_def Fusion_def  by auto
-lemma [simp]: "[heap] (p1,p2) \<nuLinkL> N \<nuFusion> M \<nuLinkR> (x1,x2) \<longleftrightarrow> ([heap] p1 \<nuLinkL> N \<nuLinkR> x1) \<and> ([heap] p2 \<nuLinkL> M \<nuLinkR> x2)"
+lemma [simp]: "(p1,p2) \<nuLinkL> N \<nuFusion> M \<nuLinkR> (x1,x2) \<longleftrightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2)"
   by (simp add: Fusion_def Refining_ex)
-lemma [elim,\<nu>elim]: "[h] (x1,x2) \<ratio> N1 \<nuFusion> N2 \<Longrightarrow> ([h] x1 \<ratio> N1 \<Longrightarrow> [h] x2 \<ratio> N2 \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim,\<nu>elim]: "(x1,x2) \<ratio> N1 \<nuFusion> N2 \<Longrightarrow> (x1 \<ratio> N1 \<Longrightarrow> x2 \<ratio> N2 \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 lemma [\<nu>intro]: "\<nu>Zero N z1 \<Longrightarrow> \<nu>Zero M z2 \<Longrightarrow> \<nu>Zero (N \<nuFusion> M) (z1,z2)" unfolding \<nu>Zero_def by simp
 
-lemma [\<nu>intro]: "[h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x' \<tycolon> N' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> [h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M \<longmapsto> y' \<tycolon> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow>
-  [h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t (x,y) \<tycolon> N \<nuFusion> M \<longmapsto> (x',y') \<tycolon> N' \<nuFusion> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and> Q" unfolding Cast_def by auto
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x' \<tycolon> N' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M \<longmapsto> y' \<tycolon> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow>
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (x,y) \<tycolon> N \<nuFusion> M \<longmapsto> (x',y') \<tycolon> N' \<nuFusion> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q" unfolding Cast_def by auto
 
 definition AutoFusion (infixr "\<nuFusion>''" 70)  where "AutoFusion = Fusion"
-lemma [\<nu>intro]: "[h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion> M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> [h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion>' M' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P"
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion>' M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def AutoFusion_def .
 
 section \<open>Tuple\<close>
@@ -427,15 +398,14 @@ instantiation tuple :: (field_list) field_list begin instance by standard end
 
 subsection \<open>Nu abstraction - `NuTuple`\<close>
 
-definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b) \<nu>" ("\<lbrace> _ \<rbrace>") where "\<lbrace> N \<rbrace> h p x = (case p of Tuple p' \<Rightarrow> [h] p' \<nuLinkL> N \<nuLinkR> x)"
+definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b) \<nu>" ("\<lbrace> _ \<rbrace>") where "\<lbrace> N \<rbrace> p x = (case p of Tuple p' \<Rightarrow> p' \<nuLinkL> N \<nuLinkR> x)"
 
-lemma [simp]: "Nu \<lbrace> N \<rbrace>" unfolding Nu_def NuTuple_def by (auto simp add: tuple_forall)
-lemma [simp]: "[heap] Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> [heap] p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_ex)
-lemma [elim,\<nu>elim]: "[h] x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> ([h] x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by simp
+lemma [simp]: "Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_ex)
+lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by simp
 
 lemma [\<nu>intro]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
 lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
-lemma [\<nu>intro]: "\<nu>Resources T rcss \<Longrightarrow> \<nu>Resources \<lbrace> T \<rbrace> rcss" unfolding \<nu>def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Independent \<tort_lbrace>x \<tycolon> T\<tort_rbrace> C \<Longrightarrow> \<nu>Independent \<tort_lbrace>x \<tycolon> \<lbrace> T \<rbrace>\<tort_rbrace> C" unfolding \<nu>Independent_def by (simp add: lrep_exps)
+
+
 
 end

@@ -5,7 +5,7 @@ theory NuSys
   keywords
     "proc" "proc'" "rec_proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always" :: quasi_command
-  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<nu>choose2" "\<medium_left_bracket>" "\<medium_right_bracket>" "reg" "\<Longrightarrow>" "drop_fact" "\<nu>debug"
+  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<nu>choose" "\<nu>choose2" "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "drop_fact" "\<nu>debug" "\<nu>debug'"
           "\<nu>note" "\<nu>choose_quick" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
@@ -50,9 +50,117 @@ adhoc_overloading val_of val_of_owning
 lemma owning_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>a x. P (a \<left_fish_tail> x))" by (metis owning.exhaust)
 lemma owning_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>a x. P (a \<left_fish_tail> x))" by (metis owning.exhaust)
 
+subsection \<open>Argument and return list\<close>
+
+consts "Arg_Ret_Pair_sugar" :: " (heap \<times> 'a::lrep) set \<Rightarrow> (heap \<times> 'b::lrep) set \<Rightarrow> 'wow_sugar" (infix "\<longmapsto>" 2)
+
+ML \<open>local open Ast in
+  fun tr_pair_i ret (Appl [Constant \<^syntax_const>\<open>_tuple_args\<close>, X, Y])
+        = tr_pair_i (Appl [Constant \<^const_syntax>\<open>Stack_Delimiter\<close>, ret, X]) Y
+    | tr_pair_i ret (Appl [Constant \<^syntax_const>\<open>_tuple_arg\<close>, y])
+        = Appl [Constant \<^const_syntax>\<open>Stack_Delimiter\<close>, ret, y]
+  fun tr_pair (Appl [Constant \<^syntax_const>\<open>_tuple\<close>, X, Y]) = tr_pair_i X Y
+    | tr_pair x = x
+  fun tr_stack (Appl [Constant \<^const_syntax>\<open>Stack_Delimiter\<close>, X, Y])
+        = Appl [Constant \<^const_syntax>\<open>Stack_Delimiter\<close>, tr_stack X, Y]
+    | tr_stack (a as Appl [Constant \<^const_syntax>\<open>typing\<close>, _, _])
+        = Appl [Constant \<^const_syntax>\<open>Stack_Delimiter\<close>, Variable "\<R>", a]
+    | tr_stack variable = variable
+  val tr_stack_final = tr_stack o tr_pair
+  fun tr_context (Appl [Constant \<^const_syntax>\<open>Context\<close>, X, Y])
+        = (Appl [Constant \<^const_syntax>\<open>Context\<close>, tr_stack_final X, Y])
+    | tr_context (X as Appl [Constant \<^const_syntax>\<open>Stack_Delimiter\<close>, _, _])
+        = (Appl [Constant \<^const_syntax>\<open>Context\<close>, tr_stack_final X, Variable "\<H>"])
+    | tr_context (X as Appl [Constant \<^const_syntax>\<open>typing\<close>, _, _])
+        = (Appl [Constant \<^const_syntax>\<open>Context\<close>, tr_stack_final X, Variable "\<H>"])
+    | tr_context v = v
+  fun tr_context_final x = tr_context (tr_pair x)
+  fun tr_proc ([f, T, U])
+    = (Appl [Constant \<^const_syntax>\<open>Procedure\<close>, f, tr_context_final T, tr_context_final U])
+  fun tr_arg_ret_pair ([T, U])
+    = (Appl [Constant \<^const_syntax>\<open>Arg_Ret_Pair_sugar\<close>, tr_context_final T, tr_context_final U])
+end\<close>
+
+parse_ast_translation \<open>[
+  (\<^const_syntax>\<open>Procedure\<close>, K tr_proc),
+  (\<^const_syntax>\<open>Arg_Ret_Pair_sugar\<close>, K tr_arg_ret_pair)
+]\<close>
+
 section \<open>Mechanisms\<close>
 
-subsection \<open>Register\<close>
+subsection \<open>Heap\<close>
+
+definition Nothing :: "heap set" where  "Nothing = {Map.empty}"
+
+lemma Separation_emptyL: "(Nothing \<heavy_asterisk> S) = S" and Separation_emptyR: "(S \<heavy_asterisk> Nothing) = S"
+  unfolding Nothing_def Separation_def by auto
+
+definition Heap_Cast_Protector :: " heap set \<Rightarrow> heap set " ("\<medium_left_bracket> _ \<medium_right_bracket>") where "Heap_Cast_Protector x = x"
+translations "\<medium_left_bracket> x \<tycolon> T \<medium_right_bracket>" \<rightleftharpoons> "\<medium_left_bracket> \<tort_lbrace> x \<tycolon> T \<tort_rbrace> \<medium_right_bracket>"
+
+(* lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t \<medium_left_bracket> H \<medium_right_bracket> \<longmapsto> H \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m  \<longmapsto> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket>" unfolding Heap_Cast_Protector_def using cast_dual_id . *)
+lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> H' \<heavy_asterisk> y \<tycolon> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<heavy_asterisk> y\<^sub>m \<tycolon> Y \<longmapsto> x\<^sub>m \<tycolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
+  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> H' \<heavy_asterisk> \<medium_left_bracket> y \<tycolon> Y \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> y\<^sub>m \<tycolon> Y \<medium_right_bracket> \<longmapsto> x\<^sub>m \<tycolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Heap_Cast_Protector_def .
+
+lemma heap_idx_this:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X\<^sub>m' \<longmapsto> X\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> X' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m' \<medium_right_bracket> \<longmapsto> X\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Cast_def Separation_emptyL Heap_Cast_Protector_def by simp
+lemma heap_idx_L[\<nu>intro0]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S' \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l S' \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t L \<heavy_asterisk> S \<longmapsto> L \<heavy_asterisk> S' \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l L \<heavy_asterisk> S' \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> L \<heavy_asterisk> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Cast_def CastDual_def Heap_Cast_Protector_def
+  by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
+lemma heap_idx_R[\<nu>intro]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S' \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l S' \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<heavy_asterisk> R \<longmapsto> S' \<heavy_asterisk> R \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l S' \<heavy_asterisk> R \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket> \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Cast_def CastDual_def Heap_Cast_Protector_def
+  by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
+
+lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m" unfolding Heap_Cast_Protector_def using cast_dual_id .
+lemma [\<nu>intro]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S1 \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>d\<^bold>u\<^bold>a\<^bold>l S1\<^sub>m \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S1 \<longmapsto> \<medium_left_bracket> S2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<medium_right_bracket> \<longmapsto> S1\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q2
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> \<medium_left_bracket> S2 \<heavy_asterisk> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<heavy_asterisk> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1 \<and> Q2"
+  unfolding Cast_def CastDual_def Heap_Cast_Protector_def
+  by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
+
+lemma heap_extract_this: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X \<dbl_and> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  unfolding Cast_def Separation_emptyL by (auto intro: map_le_refl)
+lemma heap_extract_L[\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S \<dbl_and> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t L \<heavy_asterisk> S \<longmapsto> L \<heavy_asterisk> S \<dbl_and> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  unfolding Cast_def using NonSeparation_distrib_L Separation_def by blast
+lemma heap_extract_R[\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S \<dbl_and> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<heavy_asterisk> R \<longmapsto> S \<heavy_asterisk> R \<dbl_and> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  unfolding Cast_def using NonSeparation_distrib_R Separation_def by blast
+
+
+lemma heap_put_this: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> X \<longmapsto> X" unfolding Cast_def Separation_emptyL by simp
+lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<heavy_asterisk> X \<longmapsto> S' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t L \<heavy_asterisk> S \<heavy_asterisk> X \<longmapsto> L \<heavy_asterisk> S' "
+  unfolding Cast_def by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
+lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<heavy_asterisk> X \<longmapsto> S' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (S \<heavy_asterisk> R) \<heavy_asterisk> X \<longmapsto> S' \<heavy_asterisk> R "
+  unfolding Cast_def by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
+
+lemma context_cast[\<nu>intro]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t K \<longmapsto> K' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (K\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<longmapsto> (K'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H') \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q"
+  unfolding Cast_def by (auto simp add: pair_forall)
+
+lemma context_cast_dual[\<nu>intro]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t K \<longmapsto> K' \<^bold>w\<^bold>i\<^bold>t\<^bold>h PK
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h PH \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H2 \<medium_right_bracket> \<longmapsto> H2' \<^bold>w\<^bold>h\<^bold>e\<^bold>n QH
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (K\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<longmapsto> (K'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H') \<^bold>w\<^bold>i\<^bold>t\<^bold>h PK \<and> PH \<^bold>d\<^bold>u\<^bold>a\<^bold>l (K2\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H2) \<longmapsto> (K2\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H2') \<^bold>w\<^bold>h\<^bold>e\<^bold>n QH"
+  unfolding CastDual_def Cast_def Heap_Cast_Protector_def by (auto simp add: pair_forall)
+
+
+lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t L \<heavy_asterisk> S \<longmapsto> L \<heavy_asterisk> S'"
+  unfolding Cast_def by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq) 
+lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<heavy_asterisk> R \<longmapsto> S' \<heavy_asterisk> R"
+  unfolding Cast_def by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
+
+
+
+
+
+(* subsection \<open>Register\<close>
 
 definition AndTy :: " 'a \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> ('a \<times> 'b) \<nu>set " (infixr "\<^bold>a\<^bold>n\<^bold>d" 3)
   where "(A \<^bold>a\<^bold>n\<^bold>d B) = Abs_\<nu>set (\<lambda>heap. set_of_\<nu> A heap \<times> set_of_\<nu> B heap) "
@@ -64,10 +172,10 @@ lemma [elim!,\<nu>elim]: "Inhabited (A \<^bold>a\<^bold>n\<^bold>d B) \<Longrigh
 lemma [\<nu>intro]: "\<nu>Resources_of_set A as \<Longrightarrow> \<nu>Resources_of_set B bs \<Longrightarrow> \<nu>Resources_of_set (A \<^bold>a\<^bold>n\<^bold>d B) (as \<union> bs)"
   unfolding \<nu>Resources_of_set_def  by auto
 
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A \<^bold>a\<^bold>n\<^bold>d B) \<longmapsto> (A' \<^bold>a\<^bold>n\<^bold>d B') \<^bold>m\<^bold>e\<^bold>a\<^bold>n\<^bold>w\<^bold>h\<^bold>i\<^bold>l\<^bold>e P \<and> Q"
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (A \<^bold>a\<^bold>n\<^bold>d B) \<longmapsto> (A' \<^bold>a\<^bold>n\<^bold>d B') \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q"
   unfolding Cast_def by auto
 lemma StackDelimiter_to_AndTy: " (A\<heavy_comma> B) \<equiv> (B \<^bold>a\<^bold>n\<^bold>d A) " unfolding Stack_Delimiter_def AndTy_def by simp
-
+*)
 subsection \<open>Index for Shallow Representation\<close>
 
 text \<open>Indexes provide the function to access and map the addressed part in a nested structure (e.g. a nested pair @{term "(a,((b,c),d))"}.
@@ -87,33 +195,34 @@ definition index_right :: "('a,'b,'x,'y) index \<Rightarrow> ('l \<times> 'a, 'l
   where "index_right adr = (case adr of Index g m \<Rightarrow> Index (g \<circ> snd) (apsnd o m))"
 
 
-definition AdrGet :: " ('a,'b,'x,'y) index \<Rightarrow> 'x \<nu>set \<Rightarrow> 'a \<nu>set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _ \<^bold>@ _ \<brangle>)" [101,4,4] 100)
+definition AdrGet :: " ('a,'b,'x,'y) index \<Rightarrow> 'x set \<Rightarrow> 'a set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _ \<^bold>@ _ \<brangle>)" [101,4,4] 100)
   where [\<nu>index_def]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<blangle> X \<^bold>@ A \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_idx adr \<blangle> A \<longmapsto> X \<brangle>"
-definition AdrMap :: " ('a,'b,'x,'y) index \<Rightarrow> 'x \<nu>set \<Rightarrow> 'a \<nu>set \<Rightarrow> 'y \<nu>set \<Rightarrow> 'b \<nu>set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _ \<^bold>@ _ \<longmapsto> _ \<^bold>@ _ \<brangle>)" [101,4,4,4,4] 100)
+definition AdrMap :: " ('a,'b,'x,'y) index \<Rightarrow> 'x set \<Rightarrow> 'a set \<Rightarrow> 'y set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _ \<^bold>@ _ \<longmapsto> _ \<^bold>@ _ \<brangle>)" [101,4,4,4,4] 100)
   where [\<nu>index_def]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<brangle> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_idx idx \<blangle> A \<longmapsto> X \<brangle> \<and>
-    (\<forall>f h. (\<forall>a. [h] a \<in>\<^sub>\<nu> X \<longrightarrow> [h] f a \<in>\<^sub>\<nu> Y) \<longrightarrow> (\<forall>a. [h] a \<in>\<^sub>\<nu> A \<longrightarrow> [h] map_idx idx f  a \<in>\<^sub>\<nu> B))"
+    (\<forall>f. (\<forall>a. a \<in> X \<longrightarrow> f a \<in> Y) \<longrightarrow> (\<forall>a. a \<in> A \<longrightarrow> map_idx idx f  a \<in> B))"
 declare Map_def[\<nu>index_def]
 
 lemma index_here_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle>"
   unfolding \<nu>index_def  index_here_def by auto
 lemma index_here_mapper[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<brangle>"
   unfolding \<nu>index_def  index_here_def by auto
-lemma index_left_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left f \<blangle> X \<^bold>@ (A \<^bold>a\<^bold>n\<^bold>d R) \<brangle>"
+(* lemma index_left_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left f \<blangle> X \<^bold>@ (A \<^bold>a\<^bold>n\<^bold>d R) \<brangle>"
   unfolding \<nu>index_def index_left_def by (cases f) auto
 lemma index_right_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (L \<^bold>a\<^bold>n\<^bold>d A) \<brangle>"
-  unfolding \<nu>index_def index_right_def by (cases f) auto
+  unfolding \<nu>index_def index_right_def by (cases f) auto *)
 lemma index_stack_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> N) \<brangle>"
   unfolding \<nu>index_def index_right_def by (cases f) auto
-lemma index_left_mapper[\<nu>intro]:
+(* lemma index_left_mapper[\<nu>intro]:
     "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left f \<blangle> X \<^bold>@ (A \<^bold>a\<^bold>n\<^bold>d R) \<longmapsto> Y \<^bold>@ (B \<^bold>a\<^bold>n\<^bold>d R) \<brangle>"
   unfolding \<nu>index_def index_left_def by (cases f) auto
 lemma index_right_mapper[\<nu>intro]:
     "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (L \<^bold>a\<^bold>n\<^bold>d A) \<longmapsto> Y \<^bold>@ (L \<^bold>a\<^bold>n\<^bold>d B) \<brangle>"
-  unfolding \<nu>index_def index_right_def by (cases f) auto
+  unfolding \<nu>index_def index_right_def by (cases f) auto *)
 lemma index_stack_mapper[\<nu>intro]:
     "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> N) \<longmapsto> Y \<^bold>@ (B\<heavy_comma> N) \<brangle>"
   unfolding \<nu>index_def index_right_def by (cases f) auto
 
+(*
 subsection \<open>Register\<close>
 
 definition RegisterCollection :: " 'a \<Rightarrow> 'a " where "RegisterCollection x = x"
@@ -177,12 +286,12 @@ lemma op_init_register:
     "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> RegisterCollection R \<^bold>@ S \<longmapsto> Void \<^bold>@ S' \<brangle>
       \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_init_registers idx \<blangle> S \<longmapsto> RegisterCollection (S' \<^bold>a\<^bold>n\<^bold>d R) \<brangle>"
   unfolding RegisterCollection_def op_init_registers_def \<nu>def \<nu>index_def by auto
-
+*)
 subsection \<open>Structural Pairs\<close>
 
 definition StructuralTag ("<Structural> _" [10] 9) where "StructuralTag \<equiv> Trueprop"
 lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def .
-
+(*
 lemma [\<nu>intro]: "<Structural> f x y = (a,b) \<Longrightarrow> <Structural> case_prod f (x,y) = (a,b)"
   unfolding StructuralTag_def by simp
 lemma [\<nu>intro0]: "<Structural> x = a \<Longrightarrow> <Structural> y = b \<Longrightarrow> <Structural> (x,y) = (a,b) "
@@ -231,13 +340,13 @@ translations
 translations "_linebreak_collection_ P Q" <= "CONST AndFact P Q"
 translations "P" <= "CONST AndFact P (CONST NoFact)"
 
-
+*)
 section \<open>Main implementation of the system\<close>
 
 ML_file_debug NuHelp.ML
 ML_file "./general/binary_tree.ML"
 ML_file "./general/auto_level.ML"
-ML_file "./library/path.ML"
+(* ML_file "./library/path.ML" *)
 ML_file_debug NuBasics.ML
 ML_file "./library/general.ML"
 ML_file "./library/instructions.ML"
@@ -246,7 +355,7 @@ ML_file "./library/processor.ML"
 ML_file "./library/procedure.ML"
 ML_file "./library/exty.ML"
 ML_file NuSys.ML
-ML_file "./library/registers.ML"
+(* ML_file "./library/registers.ML" *)
 ML_file "./library/processors.ML"
 ML_file "./library/obtain.ML"
 ML_file NuToplevel.ML 
@@ -284,25 +393,25 @@ val requires_statement = Scan.optional (Parse.$$$ "requires" |-- Parse.!!! state
 val requires_opt1 = Scan.option (Parse.$$$ "requires" |-- Parse.term);
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
             -- requires_statement) >>
-        (fn (((((b,arg),ret),fixes),includes),preconds) =>  
-            (begin_proc_cmd false b arg ret fixes includes preconds)));
+        (fn ((((b,arg_ret),fixes),includes),preconds) =>  
+            (begin_proc_cmd false b arg_ret fixes includes preconds)));
 
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc'\<close> "begin a procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
             -- requires_statement) >>
-        (fn (((((b,arg),ret),fixes),includes),preconds) =>  
-            (begin_proc_cmd true b arg ret fixes includes preconds)));
+        (fn ((((b,arg_ret),fixes),includes),preconds) =>  
+            (begin_proc_cmd true b arg_ret fixes includes preconds)));
 
 val loop_variables = $$$ "var" |-- !!! vars;
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- loop_variables -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term -- loop_variables -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
             -- requires_opt1) >>
-        (fn ((((((b,arg),ret),lvars),fixes),includes),preconds) =>  
-            (begin_rec_proc_cmd b arg ret lvars fixes includes preconds)));
+        (fn (((((b,arg_ret),lvars),fixes),includes),preconds) =>  
+            (begin_rec_proc_cmd b arg_ret lvars fixes includes preconds)));
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>finish\<close> "Finish the procedure construction"
@@ -312,6 +421,11 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<nu>debug\<close> "The \<nu>construction"
     (Scan.succeed (Toplevel.proof (fn stat =>
       stat |> Proof.map_context (NuSys.load_specthm (Proof.the_fact stat)))))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<nu>debug'\<close> "The \<nu>construction"
+    (Scan.succeed (Toplevel.proof (fn stat =>
+      stat |> Proof.map_context (NuSys.open_meta (Proof.the_fact stat)))))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<nu>note\<close> "note command in \<nu> version"
@@ -360,10 +474,10 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "finish the nested sub-procedure construction"
     (Scan.succeed (Toplevel.proof' NuToplevel.end_block_cmd));
 
-val _ =
+(* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>reg\<close> "declare local registers"
     (Scan.repeat Parse.short_ident >> (fn names => Toplevel.proof (fn stat =>
-      Proof.set_facts [Proof.the_fact stat |> NuRegisters.new_regs (Proof.context_of stat) names] stat)))
+      Proof.set_facts [Proof.the_fact stat |> NuRegisters.new_regs (Proof.context_of stat) names] stat))) *)
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<Longrightarrow>\<close> "name the star fact"
@@ -448,8 +562,8 @@ val ctx = NuSys.load_specthm meta ctx
 \<nu>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Parse.term >> (fn term => fn _ =>
     NuSys.set_param ctx (Syntax.parse_term ctx term) meta)\<close>
 
-\<nu>processor rule 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close>
-  \<open>fn ctx => fn meta => (Parse.$$$ "\<Longleftarrow>" |-- NuProcedure.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
+\<nu>processor rule 8800 \<open>PROP P \<Longrightarrow> PROP Q\<close>
+  \<open>fn ctx => fn meta => (NuProcedure.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
     let open NuBasics
     val ctx = NuSys.load_specthm meta ctx
     val attrs = map (Attrib.attribute_cmd ctx o Attrib.check_src ctx) attrs
@@ -475,7 +589,7 @@ val ctx = NuSys.load_specthm meta ctx
   Parse.list1 Parse.binding >> (fn vars => fn () =>
     raise Process_State_Call' (meta, NuObtain.chooseV vars))\<close>
 
-subsubsection \<open>Registers\<close>
+(* subsubsection \<open>Registers\<close>
 
 \<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
   (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
@@ -491,13 +605,13 @@ end\<close>
   (fn ctx => fn th => (($$$ "\<leftarrow>" || $$$ "$") |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
     (fn idts => fn _ => fold (fn idt => NuRegisters.move_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
 end\<close>
-
+*)
 subsubsection \<open>Simplifiers & Resonings\<close>
 
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier []\<close>
 (* \<nu>processor \<nu>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
-\<nu>processor \<nu>resolver 9000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+\<nu>processor \<nu>resolver 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   NuBasics.elim_SPEC meta |> apfst (fn major =>
   case Seq.pull (NuSys.auto_resolve NONE [] (NuSys.load_specthm meta ctx) major)
     of SOME (major', _) => major' | _ => raise Bypass NONE) |> NuBasics.intro_SPEC)\<close>

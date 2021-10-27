@@ -16,7 +16,9 @@ structure NuProcessors : NU_PROCESSORS = struct
 open NuBasics NuHelp NuProcessor
 fun simplifier cong = almost_safe (fn ctx => fn meta =>
   Scan.succeed (fn _ => let
+    val simps = Named_Theorems.get ctx "NuSys.used"
     val ctx' = NuSys.load_specthm meta ctx
+    val ctx' = Raw_Simplifier.addsimps (ctx', simps)
     val (major,aux) = elim_SPEC meta
     in Simplifier.full_simplify ctx' major
         |> (fn th2 => if Thm.eq_thm_prop (major, th2) then raise Bypass NONE else th2)

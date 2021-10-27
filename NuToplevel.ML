@@ -10,15 +10,13 @@ The toplevel structure of the ν-system.
 
 signature NU_TOPLEVEL = sig
   val begin_proc_cmd : bool (*raw*) -> Attrib.binding 
-        -> xstring (*argument*)
-        -> xstring (*return value*)
+        -> xstring (*argument and return*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
         -> (Attrib.binding * (string * string list)) list (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state
   val begin_rec_proc_cmd : Attrib.binding 
-        -> xstring (*argument*)
-        -> xstring (*return value*)
+        -> xstring (*argument and return*)
         -> (binding * string option * mixfix) list (*loop variables fixes*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
@@ -48,12 +46,14 @@ val register_label_head = "\<upsilon>"
 val delimiter_name = "NuPrime.Stack_Delimiter"
 val eof_ctx_stack_name = "NuPrime.End_of_Contextual_Stack"
 fun mk_eof_ctx_stack tm = Const(eof_ctx_stack_name, dummyT) $ tm
-fun mk_register_collection tm = Const(@{const_name RegisterCollection}, dummyT) $ tm
+val mk_register_collection = I
+(* fun mk_register_collection tm = Const(@{const_name RegisterCollection},
+* dummyT) $ tm *)
 
 (** proc command **)
 
 val indTy = Type ("Nat.ind", [])
-val stack_R = Free ("\<R>", @{typ "'\<R>::stack \<nu>set"})
+val stack_R = Free ("\<R>", @{typ "'\<R>::stack set"})
 val arg_stat_term_name = "\<ss>"
 
 
@@ -106,13 +106,13 @@ fun print_results int = Proof_Display.print_results int (Position.thread_data ()
     (goal,th)
   end *)
 
-fun init_registers ctx meta =
-  apply_proc_naive (
+fun init_registers ctx meta = meta
+  (* apply_proc_naive (
       funpow (length (stack_of_meta meta) - 1) (fn th => th RS @{thm index_right_mapper})
         @{thm index_here_mapper}
       RS @{thm op_init_register})
       (Raw_Simplifier.rewrite_rule ctx @{thms StackDelimiter_to_AndTy} meta |> @{print})
-    |> NuSys.accept_proc ctx
+    |> NuSys.accept_proc ctx *)
 val empty_facts_thm = @{thm NuPrime.empty_facts}
 
 fun prep_decls prep_var raw_vars ctxt =
@@ -125,7 +125,7 @@ fun prep_decls prep_var raw_vars ctxt =
   in ((vars, xs), ctxt'') end
 
 fun gen_begin_proc prep_prop prep_term prep_typ prep_var
-      raw binding arg ret rawfixes includes preconds int ctx =
+      raw binding arg_ret rawfixes includes preconds int ctx =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes ctx
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
@@ -135,8 +135,7 @@ fun gen_begin_proc prep_prop prep_term prep_typ prep_var
     val preconds = preconds |> map (
       apfst (apsnd (map (Attrib.check_src ctx))) #>
       apsnd (apfst parse_prop #> apsnd (map parse_term) #> single))
-    val arg = prep_term ctx_parse arg |> parse_arg raw
-    val ret = prep_term ctx_parse ret |> parse_ret
+    val (arg, ret) = prep_term ctx_parse arg_ret |> NuHelp.dest_binop @{const_name Arg_Ret_Pair_sugar}
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctx)
@@ -147,14 +146,7 @@ fun gen_begin_proc prep_prop prep_term prep_typ prep_var
     val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]
     fun after_qed [[th]] lthy =
       lthy
-        |> NuProcedure.define binding
-              (th 
-                |> Raw_Simplifier.rewrite_rule lthy @{thms Premise_Irew}
-                |> Raw_Simplifier.rewrite_rule lthy
-                    (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
-                |> Raw_Simplifier.rewrite_rule lthy
-                    (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2")
-              )
+        |> NuProcedure.define binding th 
         |-> (fn th => fn lthy =>
               (Proof_Display.print_results int Position.none ctx
                   (("\<nu>procedure", ""), [("", [th])]); lthy))
@@ -205,7 +197,8 @@ fun gen_finish_proc prep_specthm qed int stat =
       handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'}
       #> accept_proc ctx) meta *)
     val meta = meta |> prep_specthm ctx
-          |> Raw_Simplifier.rewrite_rule ctx @{thms RegisterCollection_rew}
+          (* |> Raw_Simplifier.rewrite_rule ctx @{thms RegisterCollection_rew}
+          * *)
     val meta = meta |> elim_SPEC
           |> apfst (NuSys.cast (NuSys.load_specthm meta ctx) desired_nu)
           |> intro_SPEC
@@ -218,14 +211,14 @@ fun gen_finish_proc prep_specthm qed int stat =
       |> qed (SOME (end_tac, Position.no_range), false)
   end
 in
-val end_block_cmd = gen_finish_proc NuRegisters.delete_locale Proof.local_qed
+val end_block_cmd = gen_finish_proc (K I) (*NuRegisters.delete_locale*) Proof.local_qed
 
 fun gen_finish_proc' prep_specthm qed int stat =
   let val meta = Proof.the_fact stat
   in if length (codeblocks_of meta) > 1 then 
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
     else gen_finish_proc prep_specthm qed int stat end
-val finish_proc_cmd = gen_finish_proc' NuRegisters.delete_locale Proof.global_qed
+val finish_proc_cmd = gen_finish_proc' (K I) (*NuRegisters.delete_locale*) Proof.global_qed
 end
 
 fun process_cmd toks stat =
@@ -370,7 +363,7 @@ fun gen_begin_block prep_attr bindings int stat =
       |> (fn stat => let val ctx = Proof.context_of stat
             val next_specthm = start_proc ctx level_prefix (cterm_of ctx arg)
               |> rpair (elim_SPEC specthm |> #2) |> intro_SPEC
-              |> NuRegisters.new_locale ctx
+              (* |> NuRegisters.new_locale ctx *)
           in Proof.set_facts [next_specthm] stat end)
       |> Proof.map_context (fn ctx => 
             Proof_Context.put_thms false ("\<nu>thesis",
@@ -384,7 +377,7 @@ end
 
 
 fun gen_begin_rec_proc prep_term prep_var
-  binding arg ret raw_loop_vars rawfixes includes precond int ctx =
+  binding arg_ret raw_loop_vars rawfixes includes precond int ctx =
   let
     (* val pr_proc = @{thm pr_auto_schema'}
     val dpr_proc = @{thm dpr_auto_schema'} *)
@@ -395,8 +388,8 @@ fun gen_begin_rec_proc prep_term prep_var
           prep_decls prep_var raw_loop_vars ctx_parse
     val precond = Option.map (prep_term ctx_parse) precond
 
-    val arg = prep_term ctx_parse arg
-    val ret = prep_term ctx_parse ret
+    val arg_ret = prep_term ctx_parse arg_ret
+    val (arg, ret) = NuHelp.dest_binop @{const_name Arg_Ret_Pair_sugar} arg_ret
     val (_,args) = arg
       |> strip_binop_l "NuPrime.Stack_Delimiter" |> map pass_name |> split_list
     val rets = ret |> strip_binop_l "NuPrime.Stack_Delimiter"
@@ -409,7 +402,7 @@ fun gen_begin_rec_proc prep_term prep_var
 
     val precond' = case precond of SOME x =>
           [((Binding.name "precondition",[]),(mk_Trueprop x,[]))] | _ => []
-    val stat = begin_proc true binding arg ret (loop_vars @ fixes)
+    val stat = begin_proc true binding arg_ret (loop_vars @ fixes)
                   includes precond' int ctx
     val ctx = Proof.context_of stat
 

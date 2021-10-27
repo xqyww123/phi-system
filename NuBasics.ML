@@ -7,6 +7,7 @@ Basic supports for the nu-system.
 infix 0 MP MP_BY
 
 signature NU_BASICS = sig
+  exception NDBG of thm
   val repeate : ('a -> 'a) -> 'a -> 'a
 
   val void_ty : typ
@@ -27,7 +28,7 @@ signature NU_BASICS = sig
   val mk_name_tag_c : string -> cterm
   val mk_repset : term -> term
   val Void_name : string
-  val dest_andTy : term -> term * term
+  (* val dest_andTy : term -> term * term *)
   val dest_SpecTop   : term -> term * term
   val dest_SpecTop_c : cterm -> cterm * cterm
   val dest_CurrentConstruction : term -> term * term
@@ -100,16 +101,16 @@ signature NU_BASICS = sig
 end
 structure NuBasics = struct
 open Thm Term HOLogic NuHelp
+exception NDBG of thm
 
 fun repeate f x = repeate f (f x) handle TERM _ => x | THM _ => x
 fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
 val void_ty = Type(@{type_name "void"}, [])
 fun mk_stateT ty = Type(@{type_name "state"}, [ty])
-(* \<alpha> \<nu>set *)
-val dest_tynuset_c = dest_ctyp1 #> dest_ctyp0
-(* \<alpha> |--> \<beta> *)
-fun dest_typroc_c ty =
-  (dest_ctyp0 (dest_ctyp1 ty), dest_ctyp0 (dest_ctyp1 (dest_ctyp1 ty)))
+(* \<alpha> set *)
+val dest_tynuset_c = dest_ctyp0
+(* heap \<times> \<alpha> |--> \<beta> set *)
+fun dest_typroc_c ty = (dest_ctyp1 (dest_ctyp0 ty), dest_ctyp0 (dest_ctyp1 ty))
 
 val thm_PropBlock_I = @{thm NuPrime.PropBlock_I}
 fun mk_PropBlock n th = Drule.comp_no_flatten (th, n) 1 thm_PropBlock_I
@@ -153,8 +154,8 @@ val nuTy_name = @{const_name "typing"}
 val dest_RepSet = dest_monop @{const_name "RepSet"}
 val dest_nuTy = dest_binop nuTy_name
 val mk_nuTy = mk_binop nuTy_name
-fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
-  | dest_andTy t = raise TERM ("bad AndTy", [t]);
+(* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
+  | dest_andTy t = raise TERM ("bad AndTy", [t]); *)
 
 val dest_SpecTop   = dest_binop @{const_name "SpecTop"}
 val dest_SpecTop_c = dest_binop_c @{const_name "SpecTop"}
@@ -387,8 +388,8 @@ val dest_procedure_c = perhaps dest_Trueprop_c
   #> strip_binder_c @{const_name All} #> #2
   #> strip_binop_r_c @{const_name HOL.implies} #> last
   #> dest_triop_c @{const_name "Procedure"}
-val dest_premise_tag  = dest_monop   @{const_name "NuPrime.Premise"}
-val dest_premise_tag_c= dest_monop_c @{const_name "NuPrime.Premise"}
+val dest_premise_tag  = dest_monop   @{const_name "NuPrime.Premise"} o perhaps dest_Trueprop
+val dest_premise_tag_c= dest_monop_c @{const_name "NuPrime.Premise"} o perhaps dest_Trueprop_c
 val dest_simplify_tag   = dest_binop   @{const_name "NuPrime.Simplify"}
 val dest_simplify_tag_c = dest_binop_c @{const_name "NuPrime.Simplify"}
 

@@ -194,6 +194,9 @@ fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
 
 
 
+fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
+fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))
+fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 
 (** Tactics **)
 fun head_only tac th =
@@ -201,13 +204,11 @@ fun head_only tac th =
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
-  (ALLGOALS (Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used"))
+  ((Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used") 1)
     THEN Clasimp.auto_tac ctx)
 
 (*** Premise tac ***)
 val Premise_I = @{thm NuPrime.Premise_I}
-fun print_dbg th = Seq.make (fn () => (@{print} th; NONE))
-fun print_dbg' th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 fun mk_premise_tac withdraw ctx th =
   if AutoLevel.get ctx >= 2 andalso can (major_prem_of #> dest_Trueprop #> dest_premise_tag) th
   then (head_only (SOLVED' (K (HEADGOAL (resolve0_tac [Premise_I]) THEN raw_auto ctx)) 1)
@@ -262,11 +263,12 @@ fun auto_resolve thms addtion ctx  =
     val thms = addtion @ thms
   in SOLVED (REPEATX (
       simp_tag_tac ctx
+        (* ORELSE print_dbg' (* TODO: support for debug printing *) *)
         ORELSE (resolve_tac ctx prio 1)
         ORELSE (resolve_tac ctx thms 1)
         ORELSE (premise_tac ctx)
         ORELSE resolve_tac ctx minor_thms 1
-        ORELSE print_dbg
+        ORELSE print_dbg'
     )) (* #> Seq.map fininsh_premise_hyps *)
   end
 val auto_resolve0 = auto_resolve NONE []
@@ -290,7 +292,7 @@ val auto_resolve_rule0 = auto_resolve_rule NONE []
 fun cast ctx desired_nu major =
   (major RS
     (Thm.instantiate ([((("'a",0),["NuPrime.lrep"]),
-                            ctyp_of_cterm desired_nu |> dest_tynuset_c)],
+                            ctyp_of_cterm desired_nu |> dest_tynuset_c |> dest_ctyp1)],
           [((("T'",0),typ_of_cterm desired_nu),desired_nu)])
       @{thm NuPrime.cast}))
    |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
@@ -300,7 +302,7 @@ fun conversion ctx to from =
   let
     val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
     val (f',U',V') = dest_procedure_c to
-    val (a,b) = dest_typroc_c (ctyp_of_cterm f)
+    val (a,b) = dest_typroc_c (ctyp_of_cterm f) 
     val (c,d) = dest_typroc_c (ctyp_of_cterm f')
     val rule = Thm.instantiate
       ([((("'a",0),["NuPrime.lrep"]), a),
@@ -341,7 +343,7 @@ local open Tactical Tactic
 val apply_proc_thm = @{thm NuPrime.apply_proc} and apply_proc_conv_thm = @{thm NuPrime.apply_proc_conv}
 val vA = (("'a",0),["NuPrime.lrep"])
 fun v_blk t = (("blk",0), mk_stateT t)
-fun vS t = (("S",0), @{typ heap} --> HOLogic.mk_setT t)
+fun vS t = (("S",0), HOLogic.mk_setT (HOLogic.mk_prodT(@{typ heap}, t)))
 fun mk_apply_thms apply_thm major =
   let
     val (blk,nuSet) = cprop_of major |> dest_Trueprop_c |> dest_CurrentConstruction_c
@@ -397,7 +399,7 @@ val process = NuProcessor.process o Proof.context_of
 
 fun start_proc ctx blk_name arg_nuTy =
   let
-    val argTy = (case typ_of_cterm arg_nuTy of Type ("fun", [_, Type ("Set.set", [ty])]) => ty
+    val argTy = (case typ_of_cterm arg_nuTy of Type ("Set.set", [Type (@{type_name prod}, [_, ty])]) => ty
                    | _ => raise Fail "start_proc - argTy - not a set")
     val stat_var = Free (blk_name, mk_stateT argTy) |> cterm_of ctx
     val arg_var = Free (blk_name^"_arg", HOLogic.mk_prodT(@{typ heap}, argTy)) |> cterm_of ctx
