@@ -95,8 +95,15 @@ definition Nothing :: "heap set" where  "Nothing = {Map.empty}"
 lemma Separation_emptyL: "(Nothing \<heavy_asterisk> S) = S" and Separation_emptyR: "(S \<heavy_asterisk> Nothing) = S"
   unfolding Nothing_def Separation_def by auto
 
+subsection \<open>Heap Cast\<close>
+
 definition Heap_Cast_Protector :: " heap set \<Rightarrow> heap set " ("\<medium_left_bracket> _ \<medium_right_bracket>") where "Heap_Cast_Protector x = x"
+  \<comment> \<open>The protector marks the goal to be gained\<close>
 translations "\<medium_left_bracket> x \<tycolon> T \<medium_right_bracket>" \<rightleftharpoons> "\<medium_left_bracket> \<tort_lbrace> x \<tycolon> T \<tort_rbrace> \<medium_right_bracket>"
+
+lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m" unfolding Heap_Cast_Protector_def using cast_dual_id .
+
+subsubsection \<open>Separation Cast\<close>
 
 (* lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t \<medium_left_bracket> H \<medium_right_bracket> \<longmapsto> H \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m  \<longmapsto> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket>" unfolding Heap_Cast_Protector_def using cast_dual_id . *)
 lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> H' \<heavy_asterisk> y \<tycolon> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<heavy_asterisk> y\<^sub>m \<tycolon> Y \<longmapsto> x\<^sub>m \<tycolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
@@ -118,7 +125,6 @@ lemma heap_idx_R[\<nu>intro]:
   unfolding Cast_def CastDual_def Heap_Cast_Protector_def
   by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
 
-lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m" unfolding Heap_Cast_Protector_def using cast_dual_id .
 lemma [\<nu>intro]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S1 \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>d\<^bold>u\<^bold>a\<^bold>l S1\<^sub>m \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1
     \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S1 \<longmapsto> \<medium_left_bracket> S2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<medium_right_bracket> \<longmapsto> S1\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q2
@@ -126,7 +132,16 @@ lemma [\<nu>intro]:
   unfolding Cast_def CastDual_def Heap_Cast_Protector_def
   by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
 
-lemma heap_extract_this: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X \<dbl_and> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+subsubsection \<open>Non-Separation Cast\<close>
+
+lemma [\<nu>intro]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S1 \<dbl_and> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>d\<^bold>u\<^bold>a\<^bold>l S1\<^sub>m \<dbl_and> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S1 \<longmapsto> \<medium_left_bracket> S2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<medium_right_bracket> \<longmapsto> S1\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q2
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> \<medium_left_bracket> S2 \<dbl_and> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<dbl_and> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1 \<and> Q2"
+  unfolding Cast_def CastDual_def Heap_Cast_Protector_def by auto
+
+
+lemma heap_extract_this: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X \<dbl_and> \<medium_left_bracket> X' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Separation_emptyL by (auto intro: map_le_refl)
 lemma heap_extract_L[\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S \<dbl_and> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t L \<heavy_asterisk> S \<longmapsto> L \<heavy_asterisk> S \<dbl_and> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def using NonSeparation_distrib_L Separation_def by blast

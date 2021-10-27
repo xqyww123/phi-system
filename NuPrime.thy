@@ -28,6 +28,8 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
       and "<stack>" = "\<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k"
       and "<dual>" = "\<^bold>d\<^bold>u\<^bold>a\<^bold>l"
       and "<when>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>n"
+      and "<intro>" = "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o"
+      and "<dest>" = "\<^bold>d\<^bold>e\<^bold>s\<^bold>t"
 begin
 
 text \<open>The fundamental theory for \<nu>-system\<close>
@@ -296,6 +298,11 @@ subsubsection \<open>Simplify tag\<close>
 definition Simplify :: "'a \<Rightarrow> 'a \<Rightarrow> prop" ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y _ : _" [100,10] 9) 
   where "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y x : y \<equiv> (x \<equiv> y)"
 lemma Simplify_I: "y \<equiv> x \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y x : y" unfolding Simplify_def .
+
+subsubsection \<open>Intro and Dest tag\<close>
+
+definition Intro :: " bool \<Rightarrow> bool " ("\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o _") where "Intro P = P"
+definition Dest :: " bool \<Rightarrow> bool " ("\<^bold>d\<^bold>e\<^bold>s\<^bold>t _") where "Dest P = P"
 
 subsection \<open>Register and its collection\<close>
 
@@ -677,6 +684,7 @@ definition Cast :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow
 consts SimpleCast :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2\<^bold>c\<^bold>a\<^bold>s\<^bold>t _/ \<longmapsto> _)" [2,14] 13)
 translations "(\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B)" == "(\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h CONST True)"
 
+
 definition CastDual :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> 'b set \<Rightarrow> 'b set \<Rightarrow> bool \<Rightarrow> bool " ("(2\<^bold>c\<^bold>a\<^bold>s\<^bold>t _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _/ \<^bold>d\<^bold>u\<^bold>a\<^bold>l _/ \<longmapsto> _/ \<^bold>w\<^bold>h\<^bold>e\<^bold>n _)" [2,2,2,2,14] 13)
   where "CastDual A B P A' B' P' \<longleftrightarrow> (\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P) \<and> (P' \<longrightarrow> (\<^bold>c\<^bold>a\<^bold>s\<^bold>t A' \<longmapsto> B'))"
 consts SimpCastDual1 :: " 'a set \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> 'b set \<Rightarrow> bool \<Rightarrow> bool " ("(2\<^bold>c\<^bold>a\<^bold>s\<^bold>t _/ \<longmapsto> _/ \<^bold>d\<^bold>u\<^bold>a\<^bold>l _/ \<longmapsto> _/ \<^bold>w\<^bold>h\<^bold>e\<^bold>n _)" [2,2,2,14] 13)
@@ -721,6 +729,8 @@ theorem cast: "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t b
 (* theorem proc_cast': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A' \<longmapsto> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A' \<longmapsto> B' \<brangle>"
   unfolding Procedure_def Cast_def by (auto 0 4) *)
 
+lemma [\<nu>intro']: "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Intro_def .
+lemma [\<nu>intro']: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Dest_def .
 
 subsection \<open>Conversion\<close>
 
