@@ -12,6 +12,7 @@ theory NuSys
   and "finish" :: "qed" % "proof"
 abbrevs
   "!!" = "!!"
+  and "<implies>" = "\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s"
 begin
 
 section \<open>Preliminary constants and settings used in the system\<close>
@@ -88,6 +89,8 @@ parse_ast_translation \<open>[
 
 section \<open>Mechanisms\<close>
 
+
+
 subsection \<open>Heap\<close>
 
 definition Nothing :: "heap set" where  "Nothing = {Map.empty}"
@@ -95,53 +98,75 @@ definition Nothing :: "heap set" where  "Nothing = {Map.empty}"
 lemma Separation_emptyL: "(Nothing \<heavy_asterisk> S) = S" and Separation_emptyR: "(S \<heavy_asterisk> Nothing) = S"
   unfolding Nothing_def Separation_def by auto
 
-subsection \<open>Heap Cast\<close>
+subsection \<open>Cast\<close>
 
-definition Heap_Cast_Protector :: " heap set \<Rightarrow> heap set " ("\<medium_left_bracket> _ \<medium_right_bracket>") where "Heap_Cast_Protector x = x"
+definition Heap_Cast_Goal :: " heap set \<Rightarrow> heap set " ("\<medium_left_bracket> _ \<medium_right_bracket>") where "Heap_Cast_Goal x = x"
   \<comment> \<open>The protector marks the goal to be gained\<close>
 translations "\<medium_left_bracket> x \<tycolon> T \<medium_right_bracket>" \<rightleftharpoons> "\<medium_left_bracket> \<tort_lbrace> x \<tycolon> T \<tort_rbrace> \<medium_right_bracket>"
 
-lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m" unfolding Heap_Cast_Protector_def using cast_dual_id .
+lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m" unfolding Heap_Cast_Goal_def using cast_dual_id .
+
+lemma context_cast[\<nu>intro]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t K \<longmapsto> K' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (K\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<longmapsto> (K'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H') \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q"
+  unfolding Cast_def Heap_Cast_Goal_def by (auto simp add: pair_forall)
+
+lemma context_cast_dual[\<nu>intro]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t K \<longmapsto> K' \<^bold>w\<^bold>i\<^bold>t\<^bold>h PK
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h PH \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H2 \<medium_right_bracket> \<longmapsto> H2' \<^bold>w\<^bold>h\<^bold>e\<^bold>n QH
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (K\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<longmapsto> (K'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H') \<^bold>w\<^bold>i\<^bold>t\<^bold>h PK \<and> PH \<^bold>d\<^bold>u\<^bold>a\<^bold>l (K2\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H2) \<longmapsto> (K2\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H2') \<^bold>w\<^bold>h\<^bold>e\<^bold>n QH"
+  unfolding CastDual_def Cast_def Heap_Cast_Goal_def by (auto simp add: pair_forall)
+
 
 subsubsection \<open>Separation Cast\<close>
 
-(* lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t \<medium_left_bracket> H \<medium_right_bracket> \<longmapsto> H \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m  \<longmapsto> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket>" unfolding Heap_Cast_Protector_def using cast_dual_id . *)
 lemma [\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> H' \<heavy_asterisk> y \<tycolon> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<heavy_asterisk> y\<^sub>m \<tycolon> Y \<longmapsto> x\<^sub>m \<tycolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
   \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> H' \<heavy_asterisk> \<medium_left_bracket> y \<tycolon> Y \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> y\<^sub>m \<tycolon> Y \<medium_right_bracket> \<longmapsto> x\<^sub>m \<tycolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
-  unfolding Heap_Cast_Protector_def .
+  unfolding Heap_Cast_Goal_def .
 
 lemma heap_idx_this:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X\<^sub>m' \<longmapsto> X\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
-    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> X' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m' \<medium_right_bracket> \<longmapsto> X\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
-  unfolding Cast_def Separation_emptyL Heap_Cast_Protector_def by simp
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> X\<^sub>m"
+  unfolding Cast_def Separation_emptyL Heap_Cast_Goal_def CastDual_def by simp
+
 lemma heap_idx_L[\<nu>intro0]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S' \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l S' \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
     \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t L \<heavy_asterisk> S \<longmapsto> L \<heavy_asterisk> S' \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l L \<heavy_asterisk> S' \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> L \<heavy_asterisk> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
-  unfolding Cast_def CastDual_def Heap_Cast_Protector_def
+  unfolding Cast_def CastDual_def Heap_Cast_Goal_def
   by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
+
 lemma heap_idx_R[\<nu>intro]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S' \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l S' \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
     \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<heavy_asterisk> R \<longmapsto> S' \<heavy_asterisk> R \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l S' \<heavy_asterisk> R \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket> \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
-  unfolding Cast_def CastDual_def Heap_Cast_Protector_def
+  unfolding Cast_def CastDual_def Heap_Cast_Goal_def
   by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
 
 lemma [\<nu>intro]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S1 \<heavy_asterisk> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>d\<^bold>u\<^bold>a\<^bold>l S1\<^sub>m \<heavy_asterisk> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1
     \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S1 \<longmapsto> \<medium_left_bracket> S2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<medium_right_bracket> \<longmapsto> S1\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q2
     \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> \<medium_left_bracket> S2 \<heavy_asterisk> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<heavy_asterisk> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1 \<and> Q2"
-  unfolding Cast_def CastDual_def Heap_Cast_Protector_def
+  unfolding Cast_def CastDual_def Heap_Cast_Goal_def
   by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
 
+(* TODO: implement the Different tactic and then enable the \<nu>intro' *)
+lemma [ (*\<nu>intro'*) ]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> T \<longmapsto> D \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n P' \<Longrightarrow> Different \<tort_lbrace> x \<tycolon> T \<tort_rbrace> D \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P'
+  \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t I \<longmapsto> x\<^sub>m \<tycolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q' \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
+  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t D \<longmapsto> D' \<heavy_asterisk> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l I'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> I \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
+  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> T \<longmapsto> D' \<heavy_asterisk> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l I'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> x\<^sub>m \<tycolon> T \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Dest_def Intro_def CastDual_def Different_def Heap_Cast_Goal_def Cast_def
+  by (simp add: Premise_def)
+  
+
 subsubsection \<open>Non-Separation Cast\<close>
+
+abbreviation HeapImplies :: " heap set \<Rightarrow> heap set \<Rightarrow> bool "
 
 lemma [\<nu>intro]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S1 \<dbl_and> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>d\<^bold>u\<^bold>a\<^bold>l S1\<^sub>m \<dbl_and> \<medium_left_bracket> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1
     \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S1 \<longmapsto> \<medium_left_bracket> S2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<medium_right_bracket> \<longmapsto> S1\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q2
     \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> \<medium_left_bracket> S2 \<dbl_and> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> S2 \<dbl_and> X\<^sub>m \<medium_right_bracket> \<longmapsto> S\<^sub>m \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1 \<and> Q2"
-  unfolding Cast_def CastDual_def Heap_Cast_Protector_def by auto
+  unfolding Cast_def CastDual_def Heap_Cast_Goal_def by auto
 
 
-lemma heap_extract_this: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X \<dbl_and> \<medium_left_bracket> X' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+lemma heap_extract_this: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> (X \<dbl_and> \<medium_left_bracket> X' \<medium_right_bracket>) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Separation_emptyL by (auto intro: map_le_refl)
 lemma heap_extract_L[\<nu>intro0]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S \<dbl_and> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t L \<heavy_asterisk> S \<longmapsto> L \<heavy_asterisk> S \<dbl_and> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def using NonSeparation_distrib_L Separation_def by blast
@@ -155,15 +180,6 @@ lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<heavy_asterisk> X \<longmapsto> 
 lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<heavy_asterisk> X \<longmapsto> S' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (S \<heavy_asterisk> R) \<heavy_asterisk> X \<longmapsto> S' \<heavy_asterisk> R "
   unfolding Cast_def by (smt (verit, del_insts) Separation_assoc Separation_comm Separation_def mem_Collect_eq)
 
-lemma context_cast[\<nu>intro]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t K \<longmapsto> K' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (K\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<longmapsto> (K'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H') \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q"
-  unfolding Cast_def by (auto simp add: pair_forall)
-
-lemma context_cast_dual[\<nu>intro]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t K \<longmapsto> K' \<^bold>w\<^bold>i\<^bold>t\<^bold>h PK
-    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h PH \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H2 \<medium_right_bracket> \<longmapsto> H2' \<^bold>w\<^bold>h\<^bold>e\<^bold>n QH
-    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (K\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<longmapsto> (K'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H') \<^bold>w\<^bold>i\<^bold>t\<^bold>h PK \<and> PH \<^bold>d\<^bold>u\<^bold>a\<^bold>l (K2\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H2) \<longmapsto> (K2\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H2') \<^bold>w\<^bold>h\<^bold>e\<^bold>n QH"
-  unfolding CastDual_def Cast_def Heap_Cast_Protector_def by (auto simp add: pair_forall)
 
 
 lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t L \<heavy_asterisk> S \<longmapsto> L \<heavy_asterisk> S'"
@@ -627,9 +643,8 @@ subsubsection \<open>Simplifiers & Resonings\<close>
 (* \<nu>processor \<nu>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
 \<nu>processor \<nu>resolver 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
-  NuBasics.elim_SPEC meta |> apfst (fn major =>
-  case Seq.pull (NuSys.auto_resolve NONE [] (NuSys.load_specthm meta ctx) major)
-    of SOME (major', _) => major' | _ => raise Bypass NONE) |> NuBasics.intro_SPEC)\<close>
+  NuSys.auto_resolve_rule NONE [] (NuSys.load_specthm meta ctx) meta
+    handle NuSys.ReasoningFail _ => raise Bypass NONE)\<close>
 
 subsubsection \<open>Literal operations\<close>
 

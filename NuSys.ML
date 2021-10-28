@@ -2,6 +2,7 @@
 signature NU_SYS = sig
   (** Tactics **)
   exception CastFail of thm
+  exception ReasoningFail of thm
   type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
   val raw_auto : Proof.context -> tactic
   val premise_tac : Proof.context -> tactic
@@ -10,6 +11,8 @@ signature NU_SYS = sig
     thm list (*addtional major*) -> Proof.context -> tactic
   val auto_resolve_rule : (thm list (*major*) * (thm list * thm list) option (*minor*)) option ->
     thm list (*addtional major*) -> Proof.context -> thm -> thm
+    (* raises ReasoningFail if none of premises is solved, but exits normally if
+    * there is no premises in the theorem. *)
 
 
   (** Basic Operations **)
@@ -108,6 +111,7 @@ end
 structure NuSys : NU_SYS = struct
 open Thm NuBasics Term
 exception CastFail of thm
+exception ReasoningFail of thm
 type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
 
 structure NuFacts = Generic_Data
@@ -261,29 +265,33 @@ fun auto_resolve thms addtion ctx  =
                   Named_Theorems.get ctx "NuPrime.\<nu>intro0",
                   Named_Theorems.get ctx "NuPrime.\<nu>intro'")
     val thms = addtion @ thms
+    val lowest = Named_Theorems.get ctx "NuPrime.\<nu>intro''"
   in SOLVED (REPEATX (
       simp_tag_tac ctx
         (* ORELSE print_dbg' (* TODO: support for debug printing *) *)
-        ORELSE (resolve_tac ctx prio 1)
-        ORELSE (resolve_tac ctx thms 1)
+        ORELSE (HEADGOAL (resolve_tac ctx prio))
+        ORELSE (HEADGOAL (resolve_tac ctx thms))
         ORELSE (premise_tac ctx)
         ORELSE resolve_tac ctx minor_thms 1
+        ORELSE resolve_tac ctx lowest 1
         ORELSE print_dbg'
     )) (* #> Seq.map fininsh_premise_hyps *)
   end
 val auto_resolve0 = auto_resolve NONE []
 
 
-fun auto_resolve_rule' major_minor addition ctx th =
-  case Seq.pull (auto_resolve major_minor addition ctx th)
-    of SOME (th', _) => th'
-     | NONE => th
+fun auto_resolve_rule' i major_minor addition ctx th =
+  if Thm.nprems_of th = 0 then th else
+  case Seq.pull (Goal.protect 1 th |> auto_resolve major_minor addition ctx)
+    of SOME (th', _) =>
+        Goal.conclude th' |> auto_resolve_rule' (i+1) major_minor addition ctx 
+     | NONE => (if i = 0 then raise ReasoningFail th else th)
 fun auto_resolve_rule major_minor addition ctx th =
   if can dest_SpecTop (prop_of th)
   then elim_SPEC th
-    |> apfst (auto_resolve_rule' major_minor addition ctx)
+    |> apfst (auto_resolve_rule' 0 major_minor addition ctx)
     |> intro_SPEC
-  else auto_resolve_rule' major_minor addition ctx th
+  else auto_resolve_rule' 0 major_minor addition ctx th
 val auto_resolve_rule0 = auto_resolve_rule NONE []
 
 

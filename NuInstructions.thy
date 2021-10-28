@@ -32,7 +32,7 @@ subsubsection \<open>dup\<close>
 definition op_dup :: "('a::lrep) \<times> ('r::stack) \<longmapsto> ('a \<times> 'a \<times> 'r)"
   where "op_dup x = (case x of (h,a,r) \<Rightarrow> Success (h, a, a, r))"
 declare op_dup_def[\<nu>instr]
-theorem dup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R \<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R \<heavy_comma> x \<tycolon> X \<heavy_comma> x \<tycolon> X \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+theorem dup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> x \<tycolon> X \<longmapsto> x \<tycolon> X \<heavy_comma> x \<tycolon> X\<brangle>"
   unfolding \<nu>def op_dup_def by auto
 
 
@@ -52,7 +52,7 @@ subsubsection \<open>calling conversion\<close>
   where "strip_end_tail f s = (case s of (a,r) \<Rightarrow> bind (f (a,void)) (\<lambda>(b,_). StatOn (b,r)))"
 lemma strip_end_tail: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> A \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c strip_end_tail f \<blangle> R\<heavy_comma> A \<longmapsto> R\<heavy_comma> B \<brangle>"
   unfolding strip_end_tail_def Procedure_def bind_def by (auto 4 4)
-
+*)
 subsection \<open>Branch & Loop\<close>
 
 subsubsection \<open>op_if\<close>
@@ -64,12 +64,13 @@ theorem if_\<nu>proc: "(\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<
   unfolding \<nu>def op_if_def by auto
 
 lemma [simp]: "(if P then (A\<heavy_comma>B) else (A'\<heavy_comma>B')) = ((if P then A else A')\<heavy_comma>(if P then B else B'))" by auto
+lemma [simp]: "(if P then (A \<heavy_asterisk> B) else (A' \<heavy_asterisk> B')) = ((if P then A else A') \<heavy_asterisk> (if P then B else B'))" by auto
 lemma [simp]: "(if P then \<tort_lbrace>T1\<tort_rbrace> else \<tort_lbrace>T2\<tort_rbrace>) = \<tort_lbrace>if P then T1 else T2\<tort_rbrace>"  by auto
 lemma [simp]: "(if P then (x \<tycolon> N) else (y \<tycolon> N)) = ((if P then x else y) \<tycolon> N)"  by auto
-lemma [simp]: "(if P then (A \<^bold>a\<^bold>n\<^bold>d B) else (A' \<^bold>a\<^bold>n\<^bold>d B')) = ((if P then A else A') \<^bold>a\<^bold>n\<^bold>d (if P then B else B'))"  by auto
+(* lemma [simp]: "(if P then (A \<^bold>a\<^bold>n\<^bold>d B) else (A' \<^bold>a\<^bold>n\<^bold>d B')) = ((if P then A else A') \<^bold>a\<^bold>n\<^bold>d (if P then B else B'))"  by auto *)
 lemma [simp]: "(if P then Named name T else Named name' T') = Named name (if P then T else T')" unfolding Named_def by simp
 lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
-
+(*
 subsubsection \<open>while\<close>
 
 consts op_while_WF :: "'c itself \<Rightarrow> ('x::lrep \<times> 'r::stack \<longmapsto> ('x \<times> 1 word) \<times> 'r) \<Rightarrow> ('x \<times> 'r \<longmapsto> 'x \<times> 'r) \<Rightarrow> 'x \<times> 'r \<longmapsto> 'x \<times> 'r"

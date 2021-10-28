@@ -34,16 +34,22 @@ subsubsection \<open>Refinement\<close>
 definition NuRefine :: " ('a :: lrep, 'b) \<nu> \<Rightarrow> 'b set \<Rightarrow> ('a, 'b) \<nu> " (infixl "\<nuRefine>" 80)
   where "(N \<nuRefine> T) p x = (x \<in> T \<and>(p \<nuLinkL> N \<nuLinkR> x))"
 
-notation NuRefine (infixl "<where>" 80) and NuRefine (infixl "\<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e" 80)
+notation NuRefine (infixl "<where>" 80)
 
 lemma [simp]: " p \<nuLinkL> N \<nuRefine> P \<nuLinkR> x \<longleftrightarrow> x \<in> P \<and> ( p \<nuLinkL> N \<nuLinkR> x)" unfolding NuRefine_def Refining_ex by auto
 lemma [elim,\<nu>elim]: " x \<ratio> N \<nuRefine> P \<Longrightarrow> (x \<in> P \<Longrightarrow> x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
-lemma [\<nu>intro]: "(x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuRefine> P \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<and>x \<in> P" unfolding Cast_def by auto
+
+lemma [\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t N \<longmapsto> x \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t N \<longmapsto> x \<tycolon> M <where> S \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n x \<in> S \<and> Q"
+  unfolding Intro_def Cast_def by auto
+lemma [\<nu>intro]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M \<longmapsto> N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M <where> S \<longmapsto> N \<^bold>w\<^bold>i\<^bold>t\<^bold>h x \<in> S \<and> P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Dest_def Cast_def by auto
+lemma refine_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x \<tycolon> (N <where> P)" unfolding Cast_def by auto
+
+(* lemma [\<nu>intro]: "(x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuRefine> P \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<and>x \<in> P" unfolding Cast_def by auto
 lemma [\<nu>intro]: " \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M <where> P \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q" unfolding Cast_def by auto
 (* lemma [\<nu>cast_overload E]: " \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P) \<longmapsto> x \<tycolon> N \<^bold>w\<^bold>i\<^bold>t\<^bold>h x \<in> P" unfolding Cast_def by auto *)
-lemma refine_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P)" unfolding Cast_def by auto
-
-lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e z \<in> S \<Longrightarrow> \<nu>Zero N z \<Longrightarrow> \<nu>Zero (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e S) z" unfolding \<nu>Zero_def Premise_def by simp
+*)
+lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e z \<in> S \<Longrightarrow> \<nu>Zero N z \<Longrightarrow> \<nu>Zero (N <where> S) z" unfolding \<nu>Zero_def Premise_def by simp
 lemma "\<nu>Equal (N <where> P) can_eq eq \<longleftrightarrow> \<nu>Equal N (\<lambda>x y. x \<in> P \<and> y \<in> P \<and> can_eq x y) eq"
   unfolding \<nu>Equal_def by auto
 
@@ -66,6 +72,12 @@ lemma [elim,\<nu>elim]: " x \<ratio> N <down-lift> g \<Longrightarrow> ( g x \<r
 
 (* lemma [\<nu>cast_overload E]: " \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N <down-lift> g \<longmapsto> g x \<tycolon> N" unfolding Cast_def by simp *)
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e g x = x' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N <down-lift> g \<longmapsto> x' \<tycolon> N" unfolding Cast_def by auto
+
+lemma [\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t N \<longmapsto> x \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t N \<longmapsto> y \<tycolon> M <down-lift> g \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n (g y = x) \<and> Q"
+  unfolding Intro_def Cast_def by auto
+lemma [\<nu>intro]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t g y \<tycolon> M \<longmapsto> N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M <down-lift> g \<longmapsto> N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Dest_def Cast_def by auto
+
 lemma [\<nu>intro]: " \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y1 \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y1 = g y  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M <down-lift> g" unfolding Cast_def by auto
 lemma "\<down>lift_\<nu>cast": "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e g y = x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> N <down-lift> g" unfolding Cast_def by auto
 
@@ -87,6 +99,14 @@ definition UpLift :: "(('a::lrep), 'c) \<nu> \<Rightarrow> ('c \<Rightarrow> 'b)
 lemma [simp]: " p \<nuLinkL> N <up-lift> f \<nuLinkR> x \<longleftrightarrow> (\<exists>y. (f y = x) \<and> (p \<nuLinkL> N \<nuLinkR> y))"
   unfolding UpLift_def Refining_ex by auto
 lemma [elim,\<nu>elim]: " x \<ratio> N <up-lift> f \<Longrightarrow> (\<And>y. f y = x \<Longrightarrow> y \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+
+lemma [\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t N \<longmapsto> x \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t N \<longmapsto> y \<tycolon> M <up-lift> g \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n (g x = y) \<and> Q"
+  unfolding Intro_def Cast_def by auto
+lemma [\<nu>intro]: "(\<And> x.  (g x = y) \<Longrightarrow> \<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M \<longmapsto> N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q) \<Longrightarrow> \<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M <up-lift> g \<longmapsto> N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Dest_def Cast_def by auto
+
+lemma "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M <up-lift> g \<longmapsto> (\<exists>* x. \<tort_lbrace>x \<tycolon> M\<tort_rbrace> \<addition> (g x = y))"
+  unfolding Dest_def Cast_def by auto
 
 lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> f x \<tycolon> N <up-lift> f" unfolding Cast_def by auto
 lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> f x \<tycolon> N <up-lift> f" unfolding Cast_def by auto
@@ -212,7 +232,7 @@ lemma cast_dual_trans:
 
 lemma [THEN cast_dual_trans, \<nu>intro]: 
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N
-  \<^bold>d\<^bold>u\<^bold>a\<^bold>l a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N \<^bold>w\<^bold>h\<^bold>e\<^bold>n \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs' = mapSome xs2"
+  \<^bold>d\<^bold>u\<^bold>a\<^bold>l a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N \<^bold>w\<^bold>h\<^bold>e\<^bold>n xs' = mapSome xs2"
   unfolding Cast_def CastDual_def by (cases a) (auto simp add: pred_option_def Ball_def)
 
 
