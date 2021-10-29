@@ -79,6 +79,11 @@ end *)
 
 lemma memptr_exisits[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>addr. P (memptr addr))" by (metis memptr.exhaust) 
 lemma memptr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>addr. P (memptr addr))" by (metis memptr.exhaust) 
+lemma [simp]: "memptr (case x of memptr a \<Rightarrow> a) = x" by (cases x) simp
+lemma memptr_All: "(\<And>x. PROP P x) \<equiv> (\<And>addr. PROP P (memptr addr))"
+proof fix addr assume "\<And>x. PROP P x" then show "PROP P (memptr addr)" .
+next fix x assume "\<And>addr. PROP P (memptr addr)" from \<open>PROP P (memptr (case x of memptr a \<Rightarrow> a))\<close> show "PROP P x" by simp
+qed
 
 subsection \<open>Instantiations for memptr\<close>
 

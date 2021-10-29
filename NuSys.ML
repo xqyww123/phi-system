@@ -226,6 +226,17 @@ fun fininsh_premise_hyps th =
   fold ((fn x => FailedPremise_I RS x) oo implies_intr)
     (chyps_of th |> filter (can (dest_failed_premise_tag o term_of))) th
 
+(*** Different tag tac ***)
+fun different_tag th =
+  case Thm.prems_of th
+    of prem :: _ =>
+      (case try (dest_Trueprop #> dest_binop @{const_name "Different"}) prem
+        of SOME (a,b) =>
+          if Term.aconv (a,b) then Seq.empty else Seq.single (@{thm Different_I} RS th)
+         | _ => Seq.empty)
+     | _ => Seq.empty
+
+
 (*** Simplify tag tac ***)
 fun simp_tag_tac ctx th =
   case try (fn th => cprem_of th 1 |> dest_Trueprop_c |> dest_simplify_tag_c) th
@@ -267,8 +278,9 @@ fun auto_resolve thms addtion ctx  =
     val thms = addtion @ thms
     val lowest = Named_Theorems.get ctx "NuPrime.\<nu>intro''"
   in SOLVED (REPEATX (
-      simp_tag_tac ctx
-        (* ORELSE print_dbg' (* TODO: support for debug printing *) *)
+      different_tag
+        ORELSE simp_tag_tac ctx
+         ORELSE print_dbg' (* TODO: support for debug printing *)
         ORELSE (HEADGOAL (resolve_tac ctx prio))
         ORELSE (HEADGOAL (resolve_tac ctx thms))
         ORELSE (premise_tac ctx)

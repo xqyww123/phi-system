@@ -70,6 +70,8 @@ lemma [simp]: "(if P then (x \<tycolon> N) else (y \<tycolon> N)) = ((if P then 
 (* lemma [simp]: "(if P then (A \<^bold>a\<^bold>n\<^bold>d B) else (A' \<^bold>a\<^bold>n\<^bold>d B')) = ((if P then A else A') \<^bold>a\<^bold>n\<^bold>d (if P then B else B'))"  by auto *)
 lemma [simp]: "(if P then Named name T else Named name' T') = Named name (if P then T else T')" unfolding Named_def by simp
 lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
+
+
 (*
 subsubsection \<open>while\<close>
 
@@ -302,7 +304,7 @@ theorem op_shift_pointer_slice[ unfolded Separation_assoc, \<nu>overload split ]
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer LLTY('p) \<blangle> R\<heavy_comma> addr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> xs \<tycolon> Array T
       \<longmapsto> R\<heavy_comma> addr ||+ n \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> (addr \<R_arr_tail> take n xs \<tycolon> Array T \<heavy_asterisk> shift_addr addr n \<R_arr_tail> drop n xs \<tycolon> Array T) \<brangle>"
   for T :: "('p::field, 'x) \<nu>"
-  unfolding \<nu>def op_shift_pointer_def apply (cases addr)
+  unfolding \<nu>def op_shift_pointer_def Array_def apply (cases addr)
   apply (auto simp add: lrep_exps same_addr_offset_def raw_offset_of_def distrib_right
         add.commute add.left_commute intro: heap_split_id )
   subgoal for x1 x2 aa h1 h2 b
@@ -364,7 +366,7 @@ theorem alloc_array_\<nu>proc:
       \<blangle> R\<heavy_comma> n \<tycolon> \<nat>[size_t] \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H
         \<longmapsto> (\<exists>*seg. (R\<heavy_comma> (seg |+ 0) \<tycolon> Pointer \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Array N)) \<brangle>"
   for N :: "('x::{zero,field},'b)\<nu>"
-  unfolding \<nu>def op_alloc_def 
+  unfolding \<nu>def op_alloc_def Array_def
   apply (auto simp add: lrep_exps list_all2_conv_all_nth Let_def same_addr_offset_def) 
   apply (rule malloc_split, simp add: heap_assignN_eval)
   apply (auto simp add: heap_assignN_eval) done
@@ -472,6 +474,8 @@ theorem op_store[ \<nu>overload "\<down>:" ]:
       using prems by (auto simp add: MemAddrState_def)
   qed done
 
+lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF FieldIndex_here, simplified]
+lemmas [ \<nu>overload "\<down>" ] = op_store[THEN mp, OF FieldIndex_here, simplified]
 
 proc i_store_n[\<nu>overload "\<down>:"]:
   \<open>a ||+ i \<tycolon> Pointer\<heavy_comma> y \<tycolon> Y \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X
@@ -482,7 +486,6 @@ proc i_store_n[\<nu>overload "\<down>:"]:
   finish
 
 
-
 proc i_load_n[\<nu>overload "\<up>:"]:
   \<open>a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X
     \<longmapsto> gt (xs ! i) \<tycolon> Y\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close>
@@ -491,152 +494,14 @@ proc i_load_n[\<nu>overload "\<up>:"]:
   \<bullet> + \<up>: idx
   finish
 
+lemmas [ \<nu>overload "\<up>" ] = i_load_n_\<nu>proc[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
+lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>proc[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
 
-
-
-theorem op_load[\<nu>overload "\<up>:"]: "
-  FieldIndex field_index Y X gt mp \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<nu>Share Y P sh
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P (gt (xs ! i))
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load field_index \<blangle> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]
-    \<longmapsto> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> (list_map_at (mp (sh (Gi 1))) i xs) \<tycolon> RefS['spc] X\<heavy_comma> sh (z + Gi 1) (gt (xs ! i)) \<tycolon> Y\<brangle> "
-  unfolding op_load_def \<nu>def \<nu>Share_def FieldIndex_def \<nu>index_def  by
-      (auto 4 4 simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
-
-proc i_load1[\<nu>overload "\<up>:"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> mp (sh (Gi 1)) x \<tycolon> Ref['spc] X\<heavy_comma> sh (z + Gi 1) (gt x) \<tycolon> Y\<close>
-  for Y :: "('b::{share,field},'c) nu"
-  requires [\<nu>intro]: "FieldIndex field_index Y X gt mp" and [\<nu>intro]: "\<nu>Share Y P sh" and [simp]: "P (gt x)" 
-  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<up>:
-finish
-
-proc i_load_here[\<nu>overload "\<up>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X \<heavy_comma> i \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> list_map_at (sh (Gi 1)) i xs \<tycolon> RefS['spc] X\<heavy_comma> sh (z + Gi 1) (xs ! i) \<tycolon> X\<close>
-  requires [intro]:"i < length xs" and [\<nu>intro]: "\<nu>Share X P sh" and [intro]: "P (xs ! i)"
-  \<bullet> \<leftarrow> (v,i) \<up>: \<Longleftarrow> FieldIndex_here
-finish
-
-proc i_load_here1[\<nu>overload "\<up>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> sh (Gi 1) x \<tycolon> Ref['spc] X\<heavy_comma> sh (z + Gi 1) x \<tycolon> X\<close>
-  requires [\<nu>intro]: "\<nu>Share X P sh" and [intro]: "P x"
-  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<up>: \<Longleftarrow> FieldIndex_here
-  finish
-
-subsubsection \<open>move\<close>
-
-definition op_move :: " ('a,'a,'ax,'ax) index
-      \<Rightarrow> ('bits::len) word \<times> ('spc::len0,('a::field)) memref \<times> ('r::stack)
-      \<Rightarrow> (('ax::{field,share}) \<times> ('spc,'a) memref \<times> 'r) state "
-  where "op_move path s = (case s of (i, Tuple (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon adr' as), r) \<Rightarrow>
-    if z = Gi 0 \<and> adr' = adr then
-      StatOn (get_at path (as ! unat i),
-          Tuple (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon adr (list_map_at (map_at path dpriv) (unat i) as)), r)
-    else STrap)"
-
-theorem op_move[\<nu>overload "\<Up>:"]: "
-  FieldIndex field_index Y X gt mp \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<nu>Deprive Y dp
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_move field_index \<blangle> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]
-    \<longmapsto> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> (list_map_at (mp dp) i xs) \<tycolon> RefS['spc] X\<heavy_comma> gt (xs ! i) \<tycolon> Y\<brangle> "
-  unfolding op_move_def \<nu>def FieldIndex_def \<nu>index_def  by
-      (auto simp del: share_id simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
-
-proc i_move1[\<nu>overload "\<Up>:"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> mp dp x \<tycolon> Ref['spc] X\<heavy_comma> gt x \<tycolon> Y\<close>
-  for Y :: "('b::{share,field},'c) nu"
-  requires [\<nu>intro]: "FieldIndex field_index Y X gt mp" and [\<nu>intro]: "\<nu>Deprive Y dp"
-  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<Up>: 
-finish
-
-proc i_move_here[\<nu>overload \<Up>]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> (list_map_at dp i xs) \<tycolon> RefS['spc] X\<heavy_comma> xs ! i \<tycolon> X\<close>
-  for X :: "('a::{share,field},'c) nu"
-  requires [intro]:"i < length xs" and [\<nu>intro]: "\<nu>Deprive X dp"
-  \<bullet> \<leftarrow> (v,i) \<Up>: \<Longleftarrow> FieldIndex_here 
-finish
-
-proc i_move_here1[\<nu>overload \<Up>]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> dp x \<tycolon> Ref['spc] X\<heavy_comma> x \<tycolon> X\<close>
-  for X :: "('a::{share,field},'c) nu"
-  requires [\<nu>intro]: "\<nu>Deprive X dp"
-  \<bullet> \<leftarrow> v \<Up>: \<Longleftarrow> FieldIndex_here 
-finish
-
-subsubsection \<open>store\<close>
-
-definition op_store :: " ('a,'a,'ax,'ax) index
-      \<Rightarrow> ('bits::len) word \<times> ('ax::field) \<times> ('spc::len0,('a::field)) memref \<times> ('r::stack)
-      \<Rightarrow> (('spc,'a) memref \<times> 'r) state "
-  where "op_store path s = (case s of (i, y, Tuple (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon adr' as), r) \<Rightarrow>
-    if z = Gi 0 \<and> adr' = adr then
-      StatOn (Tuple (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon adr (list_map_at (map_at path (\<lambda>_. y)) (unat i) as)), r)
-    else STrap)"
-
-theorem op_store[\<nu>overload "\<Down>:"]: "
-  FieldIndex field_index Y X gt mp \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store field_index \<blangle> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> y \<tycolon> Y\<heavy_comma> i \<tycolon> \<nat>['bits::len]
-    \<longmapsto> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> (list_map_at (mp (\<lambda>_. y)) i xs) \<tycolon> RefS['spc] X\<brangle> "
-  unfolding op_store_def \<nu>def FieldIndex_def \<nu>index_def  by
-      (auto simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
-
-proc i_store1[\<nu>overload "\<Down>:"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> y \<tycolon> Y\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> mp (\<lambda>_. y) x \<tycolon> Ref['spc] X\<close>
-  for Y :: "('b::{share,field},'c) nu"
-  requires [\<nu>intro]: "FieldIndex field_index Y X gt mp"
-  \<bullet> $v $y \<open>0 \<tycolon> \<nat>[32]\<close> \<Down>: 
-finish
-
-proc i_store_here[\<nu>overload "\<Down>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> y \<tycolon> X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> xs[i := y] \<tycolon> RefS['spc] X\<close>
-  requires [intro]: "i < length xs"
-  \<bullet> $v $y i \<Down>: \<Longleftarrow> FieldIndex_here
-finish
-
-proc i_store_here1[\<nu>overload "\<Down>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> y \<tycolon> X\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> y \<tycolon> Ref['spc] X\<close>
-  for X :: "('a::{share,field},'b) nu"
-  \<bullet> \<leftarrow> (v,y) \<Down>: \<Longleftarrow> FieldIndex_here
-finish
-
-subsubsection \<open>revert\<close>
-
-definition op_revert_m :: " ('a,'a,'ax,'ax) index
-      \<Rightarrow> ('ax::{field,share,sharing_identical}) \<times> ('bits::len) word \<times> ('spc::len0,('a::field)) memref \<times> ('r::stack)
-      \<Rightarrow> (('spc,'a) memref \<times> 'r) state "
-  where "op_revert_m path s = (case s of (y, i, Tuple (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon adr' as), r) \<Rightarrow>
-    if  adr' = adr then
-      StatOn (Tuple (memptr (zp \<left_fish_tail> adr), z \<left_fish_tail> memcon adr (list_map_at (map_at path (share (Gi (-1)))) (unat i) as)), r)
-    else STrap)"
-
-theorem op_revert_m[\<nu>overload "\<down>:"]: "
-  FieldIndex field_index Y X gt mp \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<nu>Share Y P sh \<Longrightarrow> \<nu>ShrIdentical Y sid
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P (gt (xs ! i)) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e sid (sh z (gt (xs ! i))) y
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_revert_m field_index \<blangle> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<heavy_comma> y \<tycolon> Y
-    \<longmapsto> R\<heavy_comma> zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> (list_map_at (mp (sh (Gi (-1)))) i xs) \<tycolon> RefS['spc] X\<brangle> "
-  unfolding op_revert_m_def \<nu>def \<nu>Share_def FieldIndex_def \<nu>index_def  by
-      (auto 4 4 simp add: lrep_exps list_all2_conv_all_nth nth_list_update)
-
-proc i_revert1[\<nu>overload "\<down>:"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> y \<tycolon> Y\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> mp (sh (Gi (-1))) x \<tycolon> Ref['spc] X\<close>
-  for Y :: "('b::{share,field,sharing_identical},'c) nu"
-  requires [\<nu>intro]: "FieldIndex field_index Y X gt mp" and [\<nu>intro]: "\<nu>Share Y P sh" and [\<nu>intro]: "\<nu>ShrIdentical Y sid"
-    and [simp]: "P (gt x)" and [simp]: "sid (sh z (gt x)) y"
-  \<bullet> \<leftarrow> v \<open>0 \<tycolon> \<nat>[32]\<close> \<leftarrow> y \<down>: 
-finish
-
-proc i_revert_here[\<nu>overload "\<down>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> xs \<tycolon> RefS['spc::len0] X\<heavy_comma> i \<tycolon> \<nat>['bits::len]\<heavy_comma> y \<tycolon> X\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> list_map_at (sh (Gi (-1))) i xs \<tycolon> RefS['spc] X\<close>
-  for X :: "('a::{share,field,sharing_identical},'b) nu"
-  requires [intro]: "i < length xs" and [\<nu>intro]: "\<nu>Share X P sh" and [\<nu>intro]: "\<nu>ShrIdentical X sid"
-    and [simp]: "P (xs ! i)" and [simp]: "sid (sh z (xs ! i)) y"
-  \<bullet> \<leftarrow> (v,i,y) \<down>: \<Longleftarrow> FieldIndex_here
-finish
-
-proc i_revert_here1[\<nu>overload "\<down>"]: \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> x \<tycolon> Ref['spc::len0] X\<heavy_comma> y \<tycolon> X\<close>
-  \<longmapsto> \<open>zp \<left_fish_tail> a \<R_arr_tail> z \<left_fish_tail> sh (Gi (-1)) x \<tycolon> Ref['spc] X\<close>
-  for X :: "('a::{share,sharing_identical,field},'b) nu"
-  requires [\<nu>intro]: "\<nu>Share X P sh" and [\<nu>intro]: "\<nu>ShrIdentical X sid"
-    and [simp]: "P x" and [simp]: "sid (sh z x) y"
-  \<bullet> \<leftarrow> (v,y) \<down>: \<Longleftarrow> FieldIndex_here
-finish
-
+lemma "(\<And>x. PROP P x) \<equiv> (\<And>a b. PROP P (a \<R_arr_tail> b))" 
+proof fix a b assume "(\<And>x. PROP P x) " then show "PROP P (a \<R_arr_tail> b)" .
+next fix x assume "\<And>a b. PROP P (a \<R_arr_tail> b)"
+    from \<open>PROP P (key_of x \<R_arr_tail> val_of x)\<close> show "PROP P x" by simp
+qed
   
+thm atomize_all
 end
