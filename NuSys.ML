@@ -359,7 +359,9 @@ fun accept_proc_naive wmeta =
           val (name,_) = current_block_var wmeta |> dest_Free
         in Thm.instantiate ([],
             [((vname,vty), Thm.global_cterm_of thy (Free (name,vty)))]) th end)
+      |>  @{print}
     |> undisch
+      |>  @{print}
 fun accept_proc ctx meta = 
   (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
   then meta else auto_resolve_rule0 ctx meta) |> accept_proc_naive

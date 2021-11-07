@@ -897,11 +897,6 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "finish the nested sub-procedure construction"
     (Scan.succeed (Toplevel.proof' NuToplevel.end_block_cmd));
 
-(* val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>reg\<close> "declare local registers"
-    (Scan.repeat Parse.short_ident >> (fn names => Toplevel.proof (fn stat =>
-      Proof.set_facts [Proof.the_fact stat |> NuRegisters.new_regs (Proof.context_of stat) names] stat))) *)
-
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<Longrightarrow>\<close> "name the star fact"
     (Parse.binding -- Parse.opt_attribs >> (Toplevel.proof o NuToplevel.name_star_fact_cmd))
@@ -1012,23 +1007,6 @@ val ctx = NuSys.load_specthm meta ctx
   Parse.list1 Parse.binding >> (fn vars => fn () =>
     raise Process_State_Call' (meta, NuObtain.chooseV vars))\<close> *)
 
-(* subsubsection \<open>Registers\<close>
-
-\<nu>processor assign_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  (fn ctx => fn th => ($$$ "\<rightarrow>" |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fn _ => fold_rev (fn idt =>
-      NuRegisters.assign_reg ctx idt
-        #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
-end\<close>
-\<nu>processor  load_register 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  fn ctx => fn th => short_ident >> (fn idt => fn _ => NuRegisters.load_reg ctx idt th
-      handle NuRegisters.NoSuchRegister _ => raise Bypass NONE)
-end\<close>
-\<nu>processor move_register 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>let open Parse in
-  (fn ctx => fn th => (($$$ "\<leftarrow>" || $$$ "$") |-- (short_ident >> single || $$$ "(" |-- list1 short_ident --| $$$ ")")) >>
-    (fn idts => fn _ => fold (fn idt => NuRegisters.move_reg ctx idt #> NuProcessor.process_no_input (AutoLevel.reduce 1 ctx)) idts th))
-end\<close>
-*)
 subsubsection \<open>Simplifiers & Resonings\<close>
 
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier []\<close>

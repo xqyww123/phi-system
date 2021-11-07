@@ -33,6 +33,7 @@ signature NU_HELP = sig
   val dest_monop_c : string (* const name *) -> cterm -> cterm
   val dest_binop   : string (* const name *) -> term -> term * term
   val dest_binop_c : string (* const name *) -> cterm -> cterm * cterm
+  val dest_binop_ty: string (* const name *) -> typ -> typ * typ
   val dest_triop   : string (* const name *) -> term -> term * term * term
   val dest_triop_c : string (* const name *) -> cterm -> cterm * cterm * cterm
   val dest_quadop   : string (* const name *) -> term -> term * term * term * term
@@ -41,6 +42,7 @@ signature NU_HELP = sig
   val dest_quinop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm * cterm
   val strip_binop_r (* right associative *) : string (* const name *) -> term -> term list
   val strip_binop_r_c (* right associative *) : string (* const name *) -> cterm -> cterm list
+  val strip_binop_ty (* right associative *) : string (* const name *) -> typ -> typ list
   val strip_binop_l (* left associative *) : string (* const name *) -> term -> term list
   val mk_monop : string (* const name *) -> term -> term
   val mk_binop : string (* const name *) -> term * term -> term
@@ -60,6 +62,7 @@ signature NU_HELP = sig
         string -> term -> term list * term
   val strip_binder_nc : int -> string -> cterm -> cterm list * cterm
   val strip_binder   : string -> term -> term list * term
+  val strip_binder_vars : string -> term -> (string * typ) list
   val strip_binder_c : string -> cterm -> cterm list * cterm
   val strip_named_binder   : string -> term -> (term * term) list * term
   val strip_named_binder_c : string -> cterm -> ((string * ctyp) * cterm) list * cterm
@@ -131,10 +134,14 @@ fun dest_binop const (tm as Const (const', _) $ a $ b) =
   | dest_binop const tm = raise TERM ("dest_binop "^const, [tm])
 fun dest_binop_c const tm =
       (dest_binop const (term_of tm); Thm.dest_binop tm)
+fun dest_binop_ty const (ty as Type (const', [a, b])) =
+      if const' = const then (a,b) else raise TYPE ("dest_binop_ty "^const, [ty], [])
+  | dest_binop_ty const ty = raise TYPE ("dest_binop_ty "^const, [ty], [])
 fun strip_bin_r_assoc strip tm =
   case try strip tm of SOME (a,b) => a :: (strip_bin_r_assoc strip b) | _ => [tm]
 val strip_binop_r = strip_bin_r_assoc o dest_binop
 val strip_binop_r_c = strip_bin_r_assoc o dest_binop_c
+val strip_binop_ty = strip_bin_r_assoc o dest_binop_ty
 fun strip_bin_l_assoc strip tm =
   case try strip tm of SOME (a,b) => b :: (strip_bin_l_assoc strip a) | _ => [tm]
 val strip_binop_l = strip_bin_l_assoc o dest_binop
@@ -221,9 +228,13 @@ val strip_named_binder   = strip_named_binder_n ~1
 val strip_named_binder_c = strip_named_binder_nc ~1
 fun list_mk_binder binder = fold (mk_binder binder)
 
+fun strip_binder_vars binder (Const (binder', _) $ Abs (name, ty, body))
+      = if binder' = binder then (name,ty) :: strip_binder_vars binder body else []
+  | strip_binder_vars _ _ = []
+
 (** helpful rules **)
 
-fun undisch th = cprem_of th 1 |> assume |> implies_elim th
+fun undisch th = cprem_of th 1 |> (fn th => (@{print} (Term.add_tvars (Thm.term_of th) []); th)) |> assume |> implies_elim th
 fun undisch_all th = (cprems_of th, implies_elim_list th (map assume (cprems_of th)))
 
 fun fix_frees_lst pos = map (Term.dest_Free #> (fn (name,ty) =>

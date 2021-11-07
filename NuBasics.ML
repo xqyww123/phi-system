@@ -9,6 +9,7 @@ infix 0 MP MP_BY
 signature NU_BASICS = sig
   exception NDBG of thm
   val repeate : ('a -> 'a) -> 'a -> 'a
+  val ntimes : int -> ('a -> 'a) -> 'a -> 'a
 
   val void_ty : typ
   val mk_stateT : typ -> typ
@@ -107,6 +108,7 @@ open Thm Term HOLogic NuHelp
 exception NDBG of thm
 
 fun repeate f x = repeate f (f x) handle TERM _ => x | THM _ => x
+fun ntimes n f x = if n <= 0 then x else ntimes (n-1) f (f x)
 fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
 val void_ty = Type(@{type_name "void"}, [])
 fun mk_stateT ty = Type(@{type_name "state"}, [ty])

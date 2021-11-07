@@ -23,7 +23,7 @@ subsection \<open>Basic sequential instructions\<close>
 subsubsection \<open>crash\<close>
 
 definition op_crash :: "('x::stack) \<longmapsto> ('y::stack)" where "op_crash _ = PartialCorrect"
-lemma op_crash:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
+lemma crash_\<nu>proc[no_atp]:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> x \<tycolon> X \<longmapsto> y \<tycolon> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
 
 
 subsubsection \<open>drop\<close>
@@ -72,14 +72,21 @@ subsubsection \<open>let & local_value\<close>
 
 definition op_let :: " ('v::lrep \<Rightarrow> 's::stack \<longmapsto> 't::stack) \<Rightarrow> ('v \<times> 's \<longmapsto> 't)"
   where "op_let body = (\<lambda>(h,v,s). body v (h,s))"
-lemma op_let: " (\<forall>p. p \<nuLinkL> T \<nuLinkR> x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H' \<brangle>) \<longrightarrow>
-   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> S\<heavy_comma> x \<tycolon> T\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H' \<brangle>"
+lemma op_let: " (\<And>p. p \<nuLinkL> T \<nuLinkR> x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> SH' \<brangle>) \<Longrightarrow>
+   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> S\<heavy_comma> x \<tycolon> T\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> SH' \<brangle>"
   unfolding Procedure_def op_let_def by auto
 
 definition op_local_value :: " 'v::lrep \<Rightarrow> 's::stack \<longmapsto> 'v \<times> 's "
   where "op_local_value v = (\<lambda>(h,s). Success (h,v,s))"
-lemma op_local_value: "v \<nuLinkL> T \<nuLinkR> x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<blangle> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> S\<heavy_comma> x \<tycolon> T\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+lemma op_local_value: "v \<nuLinkL> T \<nuLinkR> x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<blangle> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> S\<heavy_comma> x \<tycolon> T\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding Procedure_def op_local_value_def by auto
+
+ML_file "library/local_value.ML"
+
+\<nu>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H)\<close> \<open>let open Parse in
+  fn _ => fn meta => ($$$ "\<rightarrow>" |-- list1 binding) >> (fn idts => fn _ =>
+    raise Process_State_Call'' meta (Local_Value.mk_let (rev idts)))
+end\<close>
 
 
 subsection \<open>Branches & Loops\<close>
@@ -113,7 +120,7 @@ translations " c \<tycolon> Ctx <stack-head> a \<tycolon> A " == " (CONST Pair a
 lemma [simp]: "(h,a,s) \<nuLinkL> Nu_Stack_Head A Ctx \<nuLinkR> (ax,hsx) \<longleftrightarrow> (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> hsx)"
   unfolding Nu_Stack_Head_def Refining_ex by simp
 
-lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> (R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) <stack-head> (x \<tycolon> X)"
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> (R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) <stack-head> (x \<tycolon> X)"
   unfolding Cast_def by simp
 
   subsubsection \<open>until\<close>
@@ -405,6 +412,37 @@ definition op_destr_tuple :: "('a::field_list) tuple \<times> ('r::stack) \<long
 theorem det_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_destr_tuple \<blangle> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding Procedure_def op_destr_tuple_def by (simp add: tuple_forall)
 
+subsection \<open>Field Index\<close>
+
+definition FieldIndex :: " ('a,'a,'ax,'ax) index \<Rightarrow> ('ax::lrep,'bx) \<nu> \<Rightarrow> ('a::lrep,'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'bx) \<Rightarrow> (('bx \<Rightarrow> 'bx) \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow>bool"
+  where "FieldIndex adr X A gt mp \<longleftrightarrow> (\<forall>a f. \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<blangle> \<tort_lbrace>gt a \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>a \<tycolon> A\<tort_rbrace> \<longmapsto> \<tort_lbrace>f (gt a) \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>mp f a \<tycolon> A\<tort_rbrace> \<brangle>)"
+
+lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e FieldIndex a X A g m \<equiv> FieldIndex a X A g m" unfolding Premise_def .
+
+lemma FieldIndex_here: "FieldIndex index_here X X id id"
+  unfolding FieldIndex_def \<nu>index_def index_here_def by auto
+lemma FieldIndex_left: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_left f) X (A \<cross_product> R) (gt o fst) (apfst o mp)"
+  unfolding FieldIndex_def \<nu>index_def index_left_def by auto
+lemma FieldIndex_right: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_right f) X (R \<cross_product> A) (gt o snd) (apsnd o mp)"
+  unfolding FieldIndex_def \<nu>index_def index_right_def by auto
+
+definition index_enter_tup :: "(('a::field_list),('b::field_list),'x,'y) index \<Rightarrow> ('a tuple, 'b tuple, 'x, 'y) index"
+  where "index_enter_tup adr = (case adr of Index g m \<Rightarrow> Index (case_tuple g) (map_tuple o m))"
+lemma FieldIndex_tupl: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_enter_tup f) X \<lbrace> A \<rbrace> gt mp"
+  unfolding FieldIndex_def \<nu>index_def index_enter_tup_def by (auto simp add: tuple_forall)
+
+\<nu>processor field_index 110 \<open>FieldIndex f X \<lbrace> A \<rbrace> gt mp \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => Parse.nat >> (fn i => fn _ =>
+  NuBasics.elim_SPEC meta |> apfst (fn major =>
+  let open NuBasics NuHelp
+    val arity = Logic.dest_implies (prop_of major) |> #1 |> dest_Trueprop |> dest_quinop \<^const_name>\<open>FieldIndex\<close> |> #3
+        |> dest_monop \<^const_name>\<open>NuTuple\<close> |> strip_binop_r \<^const_name>\<open>Fusion\<close> |> length
+    val path1 = funpow (i-1) (fn th => th RS @{thm FieldIndex_right})
+        (@{thm FieldIndex_here} |> (fn th => if arity = i then th else th RS @{thm FieldIndex_left}))
+  in 
+    (path1 RS (@{thm FieldIndex_tupl} RS major))
+  end) |> NuBasics.intro_SPEC )\<close>
+
+
 section \<open>Memory & Pointer Operations\<close>
 
  \<nu>overloads merge and split
@@ -512,37 +550,6 @@ subsection \<open>Load & Store\<close>
 
 abbreviation "list_map_at f i l \<equiv> list_update l i (f (l ! i))"
 
-subsubsection \<open>Field Path Refining\<close>
-
-definition FieldIndex :: " ('a,'a,'ax,'ax) index \<Rightarrow> ('ax::lrep,'bx) \<nu> \<Rightarrow> ('a::lrep,'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'bx) \<Rightarrow> (('bx \<Rightarrow> 'bx) \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow>bool"
-  where "FieldIndex adr X A gt mp \<longleftrightarrow> (\<forall>a f. \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<blangle> \<tort_lbrace>gt a \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>a \<tycolon> A\<tort_rbrace> \<longmapsto> \<tort_lbrace>f (gt a) \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>mp f a \<tycolon> A\<tort_rbrace> \<brangle>)"
-
-lemma [final_proc_rewrite2]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e FieldIndex a X A g m \<equiv> FieldIndex a X A g m" unfolding Premise_def .
-
-lemma FieldIndex_here: "FieldIndex index_here X X id id"
-  unfolding FieldIndex_def \<nu>index_def index_here_def by auto
-lemma FieldIndex_left: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_left f) X (A \<cross_product> R) (gt o fst) (apfst o mp)"
-  unfolding FieldIndex_def \<nu>index_def index_left_def by auto
-lemma FieldIndex_right: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_right f) X (R \<cross_product> A) (gt o snd) (apsnd o mp)"
-  unfolding FieldIndex_def \<nu>index_def index_right_def by auto
-
-definition index_enter_tup :: "(('a::field_list),('b::field_list),'x,'y) index \<Rightarrow> ('a tuple, 'b tuple, 'x, 'y) index"
-  where "index_enter_tup adr = (case adr of Index g m \<Rightarrow> Index (case_tuple g) (map_tuple o m))"
-lemma FieldIndex_tupl: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_enter_tup f) X \<lbrace> A \<rbrace> gt mp"
-  unfolding FieldIndex_def \<nu>index_def index_enter_tup_def by (auto simp add: tuple_forall)
-
-\<nu>processor field_accessing 110 \<open>FieldIndex f X \<lbrace> A \<rbrace> gt mp \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => Parse.nat >> (fn i => fn _ =>
-  NuBasics.elim_SPEC meta |> apfst (fn major =>
-  let open NuBasics NuHelp
-    val arity = Logic.dest_implies (prop_of major) |> #1 |> dest_Trueprop |> dest_quinop \<^const_name>\<open>FieldIndex\<close> |> #3
-        |> dest_monop \<^const_name>\<open>NuTuple\<close> |> strip_binop_r \<^const_name>\<open>Fusion\<close> |> length
-    val path1 = funpow (i-1) (fn th => th RS @{thm FieldIndex_right})
-        (@{thm FieldIndex_here} |> (fn th => if arity = i then th else th RS @{thm FieldIndex_left}))
-  in 
-    (path1 RS (@{thm FieldIndex_tupl} RS major))
-  end) |> NuBasics.intro_SPEC )\<close>
-
-
 subsubsection \<open>load\<close>
 
 definition op_load :: " llty \<Rightarrow> ('a::lrep,'a,'ax,'ax) index \<Rightarrow> memptr \<times> ('r::stack) \<longmapsto> 'ax::field \<times>'r "
@@ -578,28 +585,6 @@ definition op_store :: " llty \<Rightarrow> ('a::lrep,'a,'ax,'ax) index \<Righta
     case heap key of Some data \<Rightarrow>
       if lty = LLTY('a) then Success (heap(key \<mapsto> map_deepmodel (map_idx idx (\<lambda>_. x)) data), memptr addr, r) else Fail
     | _ \<Rightarrow> Fail))"
-
-(* lemma [elim!]: "rel_option R p (Some x) \<Longrightarrow> (\<And>p'. p = Some p' \<Longrightarrow> R p' x \<Longrightarrow> C) \<Longrightarrow> C" by (cases p) auto
-lemma rel_option_elim: "rel_option R p x \<Longrightarrow> (p = None \<Longrightarrow> x = None \<Longrightarrow> C) \<Longrightarrow> (\<And>p' x'. p = Some p' \<Longrightarrow> x = Some x' \<Longrightarrow> R p' x' \<Longrightarrow> C) \<Longrightarrow>  C"
-  by (cases p; cases x) auto *)
-
-(* lemma same_addr_offset_plus: "ofs' + delta \<le> segment_len base \<Longrightarrow> same_addr_offset base ofs ofs' \<Longrightarrow>
-  same_addr_offset base (ofs + of_nat delta * word_of_nat (size_of (segment_llty base))) (ofs' + delta)"
-  unfolding same_addr_offset_def raw_offset_of_def using distrib_right by auto
-
-lemma same_addr_offset_plus': "ofs' + unat delta \<le> segment_len base \<Longrightarrow> same_addr_offset base ofs ofs' \<Longrightarrow>
-  same_addr_offset base (ofs + delta * word_of_nat (size_of (segment_llty base))) (ofs' + unat delta)"
-  unfolding same_addr_offset_def raw_offset_of_def by (auto simp add: distrib_right) *)
-
-
-
-
-
-(* theorem op_store[ (* \<nu>overload "\<down>:" *)]:
-  "FieldIndex field_index Y X gt mp \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store LLTY('x) field_index
-    \<blangle> R\<heavy_comma> i \<tycolon> \<nat>[size_t] \<heavy_comma> y \<tycolon> Y\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> xs \<tycolon> Array X
-      \<longmapsto> R \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Slice X\<brangle> " *)
 
 theorem op_store[ \<nu>overload "\<down>:" ]:
   "FieldIndex field_index Y X gt mp \<longrightarrow>
