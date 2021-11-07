@@ -165,7 +165,7 @@ type_synonym heap = "resource_key \<rightharpoonup> deep_model"
 
 
 
-datatype com =
+(* datatype com =
   Basic " heap \<times> deep_model \<Rightarrow> heap \<times> deep_model"
   | Seq com com
   | Branch "com" "com"
@@ -196,7 +196,7 @@ definition Boolean :: " bool \<Rightarrow> deep_model set"
   where "Boolean b = { DM_int 1 (if b then 1 else 0) }"
 
 
-
+*)
 
 
 
@@ -351,7 +351,7 @@ definition Dest :: " bool \<Rightarrow> bool " ("\<^bold>d\<^bold>e\<^bold>s\<^b
 
 subsubsection \<open>Different tag\<close>
 
-definition Different :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " where "Different A B = True"
+definition Different :: " 'a \<Rightarrow> 'b \<Rightarrow> bool " where "Different A B = True"
   \<comment> \<open>A premise that solved by automatic reasoning only if the term expressions of A and B
   are not alpha-equivalent. It is useful to break up the self-loop. For example,
   while the introduction rule `cast A \<longmapsto> B \<Longrightarrow> cast B \<longmapsto> C \<Longrightarrow> cast A \<longmapsto> C` causes loop if given `cast A \<longmapsto> A`,
@@ -376,13 +376,6 @@ class stack = lrep
 
 instantiation prod :: (lrep,stack) stack begin instance by standard end
 
-subsubsection \<open>Context Type\<close>
-
-definition Context :: " ('a :: stack) set \<Rightarrow> heap set \<Rightarrow> (heap \<times> 'a) set " ( "(2_ \<heavy_comma>/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _)" [10,14] 13)
-  where "(S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) = {(h,s). h \<in> H \<and> Heap h \<and> s \<in> S}"
-
-lemma [simp]: " (h,s) \<in> (S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<longleftrightarrow> h \<in> H \<and> Heap h \<and> s \<in> S" unfolding Context_def by simp
-lemma [elim!,\<nu>elim]: "Inhabited (S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<Longrightarrow> (Inhabited S \<Longrightarrow> Inhabited H \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 subsubsection \<open>Tag: End_of_Contextual_Stack\<close>
 
@@ -411,13 +404,13 @@ definition StrictStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a stat
 definition LooseStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a state set" ("\<S> _" [56] 55)
   where "\<S> T = {s. case s of Success x \<Rightarrow> x \<in> T | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
 
-lemma [simp]: "Success x \<in> \<S_S> T \<equiv> x \<in> T" and [simp]: "\<not> (Fail \<in> \<S_S> T)" and [simp]: "\<not> (PartialCorrect \<in> \<S_S> T)"
-  and [simp]: "Success x \<in> \<S> T \<equiv> x \<in> T" and [simp]: "\<not> (Fail \<in> \<S> T)" and [simp]: "(PartialCorrect \<in> \<S> T)"
+lemma [iff]: "Success x \<in> \<S_S> T \<equiv> x \<in> T" and [iff]: "\<not> (Fail \<in> \<S_S> T)" and [iff]: "\<not> (PartialCorrect \<in> \<S_S> T)"
+  and [iff]: "Success x \<in> \<S> T \<equiv> x \<in> T" and [iff]: "\<not> (Fail \<in> \<S> T)" and [iff]: "(PartialCorrect \<in> \<S> T)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
 (* lemma [dest]: "s \<in> \<S_S> T \<Longrightarrow> Inhabited T" unfolding Inhabited_def by (cases s) auto *)
     \<comment>\<open>The inhabited property can be inferred from @{term StrictStateTy} only rather than @{term LooseStateTy}. \<close>
-lemma [elim]: "s \<in> \<S_S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
-lemma [intro]: " x \<in> T \<Longrightarrow> Success x \<in> \<S_S> T" by simp
+lemma StrictStateTy_elim[elim]: "s \<in> \<S_S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
+lemma StrictStateTy_intro[intro]: " x \<in> T \<Longrightarrow> Success x \<in> \<S_S> T" by simp
 lemma [elim]: "s \<in> \<S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> (s = PartialCorrect \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
 lemma [intro]: " x \<in> T \<Longrightarrow> Success x \<in> \<S> T" and [intro]: "PartialCorrect \<in> \<S> T" by simp_all
 lemma LooseStateTy_upgrade: "s \<in> \<S> T \<Longrightarrow> s \<noteq> PartialCorrect \<Longrightarrow> s \<in> \<S_S> T" by (cases s) auto
@@ -429,6 +422,9 @@ subsubsection \<open>\<nu>-Procedure\<close>
 type_synonym ('a,'b) proc = " (heap \<times> 'a) \<Rightarrow> 'b state" (infix "\<longmapsto>" 0)
 definition Procedure :: "('a \<longmapsto> 'b) \<Rightarrow> (heap \<times> 'a::lrep) set \<Rightarrow> (heap \<times> 'b::lrep) set \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
   where [\<nu>def]:"Procedure f T U \<longleftrightarrow> (\<forall>a. a \<in> T \<longrightarrow> f a \<in> \<S> U)"
+
+translations "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
 
 definition Map :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<Rightarrow> 'b) set " where "Map A B = {f. \<forall>a. a \<in> A \<longrightarrow> f a \<in> B }"
 definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<blangle>(2 _/ \<longmapsto> _ )\<brangle>)" [101,2,2] 100)
@@ -459,9 +455,13 @@ definition CurrentConstruction :: " ('a::lrep) state \<Rightarrow> (heap \<times
   where "CurrentConstruction s S \<longleftrightarrow> s \<in> \<S_S> S"
 definition PendingConstruction :: " (('a::lrep) \<longmapsto> ('b::lrep)) \<Rightarrow> 'a state \<Rightarrow> (heap \<times> 'b) set \<Rightarrow> bool " ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,5] 4)
   where "PendingConstruction f s S \<longleftrightarrow> bind s f \<in> \<S> S"
+translations "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)" \<rightleftharpoons> "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
+  "CONST PendingConstruction f s (x \<tycolon> T)" \<rightleftharpoons> "CONST PendingConstruction f s \<tort_lbrace> x \<tycolon> T\<tort_rbrace>"
 
-lemma [elim!,\<nu>elim]: "CurrentConstruction s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
+lemma CurrentConstruction_D: "CurrentConstruction s S \<Longrightarrow> Inhabited S"
   unfolding CurrentConstruction_def by (cases s) auto
+(* lemma [elim!,\<nu>elim]: "CurrentConstruction s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding CurrentConstruction_def by (cases s) auto *)
 
 definition CodeBlock :: " ('a::lrep) state \<Rightarrow> heap \<times> ('b::lrep) => (heap \<times> 'b) set \<Rightarrow> ('b \<longmapsto> 'a) \<Rightarrow> bool" where
   CodeBlock_def: "CodeBlock stat arg ty prog \<longleftrightarrow> (arg \<in> ty \<and> prog arg = stat \<and> stat \<noteq> PartialCorrect)"
@@ -550,9 +550,9 @@ section \<open>Principal rules\<close>
 theorem apply_proc: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
   unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def SpecTop_imp by auto
 
-theorem  accept_proc: "\<medium_left_bracket> \<And>s. CodeBlock s a S f \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L ) \<medium_right_bracket> \<Longrightarrow>
+theorem accept_proc: "\<medium_left_bracket> \<And>s. CodeBlock s a S f \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L ) \<medium_right_bracket> \<Longrightarrow>
   CodeBlock s' a S (f \<nuInstrComp> g) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: (PROP L))" for L :: "prop" and  s' :: "('c::lrep) state"
-  unfolding PropBlock_def CodeBlock_def instr_comp_def CurrentConstruction_def PendingConstruction_def 
+  unfolding PropBlock_def CodeBlock_def instr_comp_def CurrentConstruction_def PendingConstruction_def
   subgoal premises prems proof (rule SpecTop_I)
   from prems(2) have sa: "a \<in> S \<and> f a = f a \<and> f a \<noteq> PartialCorrect" 
     by (cases "f a") (auto simp add: bind_def)
@@ -560,6 +560,11 @@ theorem  accept_proc: "\<medium_left_bracket> \<And>s. CodeBlock s a S f \<Longr
   from th[THEN SpecTop_focus] show "s' \<in> \<S_S> T" using prems(2) by (blast intro: LooseStateTy_upgrade)
   from th[THEN SpecTop_facts] show "PROP L" .
 qed done
+
+theorem accept_proc' : "\<medium_left_bracket> \<And>s. CodeBlock s a S f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<medium_right_bracket> \<Longrightarrow>
+  CodeBlock s' a S (f \<nuInstrComp> g) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)" for  s' :: "('c::lrep) state"
+  unfolding PropBlock_def CodeBlock_def instr_comp_def CurrentConstruction_def PendingConstruction_def bind_def
+  by (auto 4 4)
 
 lemma codeblock_export: "PROP Pure.prop (\<And>s. CodeBlock s a T f \<Longrightarrow> PROP C) \<Longrightarrow> PROP Pure.prop (\<And>s. CodeBlock s a T (f \<nuInstrComp> g) \<Longrightarrow> PROP C)"
   unfolding CodeBlock_def prop_def instr_comp_def proof -
@@ -606,7 +611,8 @@ lemma declare_fact:
 lemma set_\<nu>current:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
     \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (Trueprop (Inhabited T)))"
-  unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact) auto
+  unfolding SpecTop_imp FactCollection_imp
+  by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact) (auto dest: CurrentConstruction_D)
 
 lemma clean_user_facts:
   "(PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S)) \<Longrightarrow>

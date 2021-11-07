@@ -51,6 +51,7 @@ signature NU_SYS = sig
   val apply_procs_major : Proof.context -> thm list (*procs*) -> thm (*whole*) -> thm
   val apply_proc : Proof.context -> thm (*proc*) -> thm (*whole*) -> thm (*whole*)
   val apply_procs : Proof.context -> thm list -> thm -> thm
+  val accept_proc_naive : thm -> thm (* the version without auto *)
   val accept_proc : Proof.context -> thm -> thm
   val apply_casts : Proof.context -> thm list -> thm -> thm
   val set_param : Proof.context -> term -> thm -> thm
@@ -58,7 +59,11 @@ signature NU_SYS = sig
   val process : Proof.state -> thm -> thm parser
 
   val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm (* see @{thm NuPrime.start_proc} *)
-  val finish_proc : Proof.context -> cterm (*goal*) -> thm -> thm (* see @{thm NuPrime.finish_proc} *)
+  val finish_proc : thm -> thm (* see @{thm NuPrime.finish_proc} *)
+  val rename_blk_var : string -> thm -> thm
+        (* current old_name reulst in ...
+        * ---------------------------------
+        *  current new_name reulst in *)
 
   (*
     `declare_facts` declares/addes ν-facts to be embedded in the specification theorem.
@@ -174,11 +179,11 @@ fun name_star_fact binding =
 
 val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
 fun hyp_export is_goal asms = (I,I)
-val using_attrs = map (Attrib.attribute @{context}) @{attributes [used]}
 fun open_meta meta =
   Proof_Context.add_assms hyp_export (map (fn cb =>
-    ((Binding.name (codeblock_name cb),using_attrs),
+    ((Binding.name (codeblock_name cb),[]),
         [(cb,[])])) (codeblocks_of meta)) #> #2
+val curr_const_attrs = [Thm.declaration_attribute (Named_Theorems.add_thm "NuSys.used")]
 fun load_specthm specthm ctx =
   let
     val (major,aux) = elim_SPEC specthm
@@ -189,7 +194,7 @@ fun load_specthm specthm ctx =
       |> note_auxes auxes
       |-> (fn ths => Proof_Context.put_thms false (aux_name_raw, SOME (flat (map snd ths))))
       |> Proof_Context.note_thms "\<nu>current"
-          ((Binding.name "\<nu>current", using_attrs), [([vcurrent],[])]) |> #2
+          ((Binding.name "\<nu>current", curr_const_attrs), [([vcurrent],[])]) |> #2
   end
 fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
 fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
@@ -280,13 +285,13 @@ fun auto_resolve thms addtion ctx  =
   in SOLVED (REPEATX (
       different_tag
         ORELSE simp_tag_tac ctx
-         ORELSE print_dbg' (* TODO: support for debug printing *)
+        (* ORELSE print_dbg' (* TODO: support for debug printing *) *)
         ORELSE (HEADGOAL (resolve_tac ctx prio))
         ORELSE (HEADGOAL (resolve_tac ctx thms))
         ORELSE (premise_tac ctx)
         ORELSE resolve_tac ctx minor_thms 1
         ORELSE resolve_tac ctx lowest 1
-        ORELSE print_dbg'
+        (* ORELSE print_dbg' *)
     )) (* #> Seq.map fininsh_premise_hyps *)
   end
 val auto_resolve0 = auto_resolve NONE []
@@ -313,11 +318,11 @@ fun cast ctx desired_nu major =
   (major RS
     (Thm.instantiate ([((("'a",0),["NuPrime.lrep"]),
                             ctyp_of_cterm desired_nu |> dest_tynuset_c |> dest_ctyp1)],
-          [((("T'",0),typ_of_cterm desired_nu),desired_nu)])
-      @{thm NuPrime.cast}))
+          [((("T'",0),typ_of_cterm desired_nu), desired_nu)])
+      @{thm "cast"}))
    |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
 
-val conversion_thm = @{thm NuPrime.conversion}
+val conversion_thm = @{thm conversion}
 fun conversion ctx to from =
   let
     val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
@@ -344,23 +349,23 @@ fun conversion ctx to from =
       |> Goal.conclude
   end
 
-val accept_proc_thm = @{thm NuPrime.accept_proc}
-fun accept_proc0 ctx wmeta =
+fun accept_proc_naive wmeta =
   wmeta |> disch_current_codeblock
     |> mk_PropBlock 0 
-    |> (fn x => x RS accept_proc_thm)
+    |> (fn x => x RS @{thm NuPrime.accept_proc} handle THM _ => x RS @{thm accept_proc'})
     |> (fn th => 
-        let val (vname,vty) = prems_of th |> hd |> dest_codeblock |> #1 |> dest_Var
+        let val thy = Thm.theory_of_thm th
+          val (vname,vty) = prems_of th |> hd |> dest_codeblock |> #1 |> dest_Var
           val (name,_) = current_block_var wmeta |> dest_Free
         in Thm.instantiate ([],
-            [((vname,vty), Thm.cterm_of ctx (Free (name,vty)))]) th end)
+            [((vname,vty), Thm.global_cterm_of thy (Free (name,vty)))]) th end)
     |> undisch
 fun accept_proc ctx meta = 
   (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
-  then meta else auto_resolve_rule0 ctx meta) |> accept_proc0 ctx
+  then meta else auto_resolve_rule0 ctx meta) |> accept_proc_naive
 
 local open Tactical Tactic
-val apply_proc_thm = @{thm NuPrime.apply_proc} and apply_proc_conv_thm = @{thm NuPrime.apply_proc_conv}
+val apply_proc_thm = @{thm NuPrime.apply_proc} and apply_proc_conv_thm = @{thm apply_proc_conv}
 val vA = (("'a",0),["NuPrime.lrep"])
 fun v_blk t = (("blk",0), mk_stateT t)
 fun vS t = (("S",0), HOLogic.mk_setT (HOLogic.mk_prodT(@{typ heap}, t)))
@@ -382,12 +387,8 @@ fun apply_X_major ctx major procs seq =
       |> Seq.pull |> (fn x => 
           case x of SOME (th,_) => Goal.conclude th
                   | NONE => raise THM ("fail to make the call", 0, major::procs))
-fun expand_proc ctx = 
-  repeate (fn th => th RS @{thm spec}) #> 
-  repeate (fn th => th RS @{thm mp}) #>
-  Raw_Simplifier.rewrite_rule ctx @{thms End_of_Contextual_Stack_rew}
 fun apply_procs_major ctx procs major =
-  let val procs = map (expand_proc ctx) procs
+  let val procs = map expand_proc procs
   in apply_X_major ctx major procs
       (resolve_N procs (mk_apply_thms apply_proc_conv_thm major) 2
         |> Seq.map (Goal.protect 1)
@@ -441,18 +442,24 @@ fun meta_eq_to_hol_eq th =
     Thm.implies_elim rule th
   end
 
-val finish_proc_thm = @{thm NuPrime.finish_proc}
-fun finish_proc ctx goal th =
+fun finish_proc th =
   let
     val codeblock = current_codeblock th
     val (s,a,_,_) = dest_codeblock_c codeblock
-    val (prems, th) = undisch_all th
   in
     th |> implies_intr codeblock
        |> forall_intr s |> forall_intr a
-       |> (fn x => x COMP finish_proc_thm)
-       |> conversion ctx goal
-       |> implies_intr_list prems
+       |> (fn x => x COMP @{thm NuPrime.finish_proc})
+  end
+
+fun rename_blk_var name meta =
+  let
+    val codeblock = current_codeblock meta
+    val (s,_,_,_) = dest_codeblock_c codeblock
+    val thy = Thm.theory_of_thm meta
+    val s' = Thm.global_cterm_of thy (Free (name, typ_of_cterm s))
+  in
+    meta |> implies_intr codeblock |> forall_intr s |> forall_elim s' |> undisch
   end
 
 

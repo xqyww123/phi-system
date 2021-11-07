@@ -10,18 +10,19 @@ The toplevel structure of the ν-system.
 
 signature NU_TOPLEVEL = sig
   val begin_proc_cmd : bool (*raw*) -> Attrib.binding 
-        -> xstring (*argument and return*)
+        -> xstring (*argument*)
+        -> xstring (*return*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
         -> (Attrib.binding * (string * string list)) list (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state
-  val begin_rec_proc_cmd : Attrib.binding 
+  (* val begin_rec_proc_cmd : Attrib.binding 
         -> xstring (*argument and return*)
         -> (binding * string option * mixfix) list (*loop variables fixes*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
         -> xstring option (*pre-conditions*)
-        -> bool -> Proof.context -> Proof.state
+        -> bool -> Proof.context -> Proof.state *)
   val finish_proc_cmd : bool -> Proof.state -> Proof.context
   val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
@@ -64,24 +65,6 @@ fun pass_name tm =
          (SOME name, tm) => (name, tm)
        | (NONE, tm) => (tm |> try auto_name |> the_default default_name, tm)
 
-(* "(a1 ⦂ N1 named n1, ⋯ ,ak ⦂ Nk named nk)" -->
-    ("(a1 ⦂ N1) × ⋯ × (ak ⦂ Nk) × ℛ ", [n1,...,nk]) with automatical naming for the anonymous *)
-fun parse_arg raw arg =
-  let
-    val (names,args) = arg
-      |> strip_binop_l "NuPrime.Stack_Delimiter"
-      |> map (perhaps dest_RepSet #> pass_name) |> split_list
-    val names = names |> Name.variant_list [] |> map mk_name_tag
-    val args = map (NuHelp.mk_monop @{const_name RepSet}) args
-    val args = if raw then args else
-      map (NuHelp.mk_binop @{const_name Named}) (names ~~ args)
-  in
-    list_mk_binop_l0 delimiter_name
-      (mk_register_collection (mk_eof_ctx_stack stack_R)) args
-  end
-fun parse_ret ret =
-  ret |> strip_binop_l "NuPrime.Stack_Delimiter" |> map mk_repset
-    |> list_mk_binop_l0 delimiter_name (mk_eof_ctx_stack stack_R)
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 val v_goal_name = "\<nu>goalaa"
@@ -125,7 +108,7 @@ fun prep_decls prep_var raw_vars ctxt =
   in ((vars, xs), ctxt'') end
 
 fun gen_begin_proc prep_prop prep_term prep_typ prep_var
-      raw binding arg_ret rawfixes includes preconds int ctx =
+      raw binding arg ret rawfixes includes preconds int ctx =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes ctx
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
@@ -135,7 +118,8 @@ fun gen_begin_proc prep_prop prep_term prep_typ prep_var
     val preconds = preconds |> map (
       apfst (apsnd (map (Attrib.check_src ctx))) #>
       apsnd (apfst parse_prop #> apsnd (map parse_term) #> single))
-    val (arg, ret) = prep_term ctx_parse arg_ret |> NuHelp.dest_binop @{const_name Arg_Ret_Pair_sugar}
+    val arg = prep_term ctx_parse arg |> NuBasics.parse_arg_list |> mk_repset
+    val ret = prep_term ctx_parse ret |> NuBasics.parse_arg_list |> mk_repset
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctx)
@@ -203,9 +187,11 @@ fun gen_finish_proc prep_specthm qed int stat =
           |> apfst (NuSys.cast (NuSys.load_specthm meta ctx) desired_nu)
           |> intro_SPEC
     val end_tac = basic_method (fn ctx' => fn t => 
-      RSXX (finish_proc ctx' goal
-        (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))) t
-        handle e => raise @{print} e)
+      RSXX (
+        finish_proc (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))
+          |> conversion ctx' goal
+      ) t
+      handle e => raise @{print} e)
   in
     stat |> Proof.set_facts [] 
       |> qed (SOME (end_tac, Position.no_range), false)
@@ -215,7 +201,7 @@ val end_block_cmd = gen_finish_proc (K I) (*NuRegisters.delete_locale*) Proof.lo
 
 fun gen_finish_proc' prep_specthm qed int stat =
   let val meta = Proof.the_fact stat
-  in if length (codeblocks_of meta) > 1 then 
+  in if current_block_depth meta > 1 then 
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
     else gen_finish_proc prep_specthm qed int stat end
 val finish_proc_cmd = gen_finish_proc' (K I) (*NuRegisters.delete_locale*) Proof.global_qed
@@ -319,15 +305,18 @@ fun gen_begin_block prep_attr bindings int stat =
                 |> map_context (open_meta specthm)
     val ctx = context_of stat
     val (vars, goal) = specthm |> prop_of |> dest_SpecTop |> #1
-          |> Logic.dest_implies |> #1 |> strip_binder "Pure.all"
+          |> Logic.dest_implies |> #1
+          |> dest_Trueprop |> strip_binder @{const_name All}
     val (inst, stat) = stat
           |> Proof.map_context_result (fix_frees Position.none vars)
     val (vars, goal) = (map inst vars, inst goal)
-    val (prems, goal) = (Logic.strip_imp_prems goal, Logic.strip_imp_concl goal)
-    val (proc,arg,ret) = dest_procedure goal 
+    val prems_goal = strip_binop_r @{const_name implies} goal
+    val (prems, goal) = (front prems_goal, last prems_goal)
+    val (proc,arg,ret) = dest_procedure goal
     val blk_name = block_name_of proc
     val level = current_block_depth specthm
     val level_prefix = "L\<nu>'"^(Int.toString level)^"_"^blk_name
+    val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
     fun after_qed (ctx',[[th]]) stat =
       stat |> end_block |> (fn stat => stat
           |> set_facts[
@@ -338,6 +327,7 @@ fun gen_begin_block prep_attr bindings int stat =
                   val vars' = Variable.export_terms ctx' ctx'' vars
                 in ((singleton (Proof_Context.export ctx' ctx'') th
                       |> Drule.forall_intr_list (map (cterm_of ctx'') vars')
+                      |> Raw_Simplifier.rewrite_rule ctx'' @{thms atomize_imp atomize_all}
                     ) COMP focus)
                 end)
               |> intro_SPEC
@@ -349,13 +339,13 @@ fun gen_begin_block prep_attr bindings int stat =
       ((map (apsnd (map (prep_attr ctx))) bindings)
           @ (List.tabulate (delta, K (Binding.empty, attr_used))))
         |> map (apsnd (fn x => elim_premise @ x))
-    val _ = map (Thm.cterm_of ctx) prems |> @{print}
   in
     stat
       |> internal_goal (print_results int) Proof_Context.mode_schematic false 
           "\<nu>block" NONE after_qed []
           (bindings ~~ (map (single o rpair []) prems))
           [(Binding.empty_atts, [(goal |> @{print},[])])] |> #2
+      |> @{print}
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "unreachable"
@@ -369,14 +359,14 @@ fun gen_begin_block prep_attr bindings int stat =
             Proof_Context.put_thms false ("\<nu>thesis",
               SOME [Drule.mk_term (cterm_of ctx goal)]) ctx
           )
-      |> NuObtain.obtain_quick_pairs_perhaps
+      (* |> NuObtain.obtain_quick_pairs_perhaps *)
   end
 val begin_block_cmd = gen_begin_block Attrib.attribute_cmd
 val begin_block = gen_begin_block (K I)
 end
 
 
-fun gen_begin_rec_proc prep_term prep_var
+(* fun gen_begin_rec_proc prep_term prep_var
   binding arg_ret raw_loop_vars rawfixes includes precond int ctx =
   let
     (* val pr_proc = @{thm pr_auto_schema'}
@@ -436,5 +426,6 @@ fun gen_begin_rec_proc prep_term prep_var
       |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>proc", [])] false 
   end
 
-val begin_rec_proc_cmd = gen_begin_rec_proc Syntax.parse_term Proof_Context.read_var
+val begin_rec_proc_cmd = gen_begin_rec_proc Syntax.parse_term
+Proof_Context.read_var *)
 end

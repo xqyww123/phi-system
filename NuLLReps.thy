@@ -240,12 +240,15 @@ end
 
 subsection \<open>Abstractor\<close>
 
-definition Void :: "void set" where "Void = {void}"
+definition NuVoid :: "(void, unit) \<nu>" where "NuVoid _ _ = True"
 text \<open>The name `void` coincides that, when a procedure has no input arguments,
   the \<nu>-type for the input would exactly be @{term Void}. \<close>
-lemma [simp,intro]: "p \<in> Void" unfolding Void_def by simp
-lemma [simp,intro]: "Inhabited Void" unfolding Inhabited_def by auto
-lemma [elim!, \<nu>elim]: "Inhabited Void \<Longrightarrow> C \<Longrightarrow> C" .
+
+consts Void_sugar :: " 'a_sugar " ("Void")
+translations "Void" == "() \<tycolon> CONST NuVoid"
+
+lemma [simp]: "p \<nuLinkL> NuVoid \<nuLinkR> x" unfolding NuVoid_def Refining_ex by simp
+lemma [elim!, \<nu>elim]: "Inhabited \<tort_lbrace>Void\<tort_rbrace> \<Longrightarrow> C \<Longrightarrow> C" by simp
 (*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
 
 section \<open>The integer data type\<close>

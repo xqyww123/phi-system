@@ -5,6 +5,7 @@ signature NU_PROCESSOR = sig
   exception ProcessFail of binding * thm * exn
   exception Process_State_Call of Token.T list * thm * (Proof.state -> Proof.state)
   exception Process_State_Call' of thm * (Proof.state -> Proof.state)
+  val Process_State_Call'' : thm -> (thm -> Proof.context -> thm * Proof.context) -> exn
   type proc = (Proof.context -> thm -> (unit -> thm) parser)
   val define : binding -> int (*precedence*) -> term (*pattern*) -> proc -> local_theory -> local_theory
   (* val get : Proof.context -> string -> T option *)
@@ -42,6 +43,9 @@ exception ProcessFail of binding * thm * exn
 type proc = Proof.context -> thm -> (unit -> thm) parser
 exception Process_State_Call of Token.T list * thm * (Proof.state -> Proof.state)
 exception Process_State_Call' of thm * (Proof.state -> Proof.state)
+fun Process_State_Call'' th f = Process_State_Call' (th, (fn stat =>
+      Proof.map_context_result (f (Proof.the_fact stat)) stat
+        |-> (Proof.set_facts o single)))
 
 
 datatype processor = Processor of {

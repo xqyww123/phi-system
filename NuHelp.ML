@@ -7,6 +7,7 @@ Application-irrelevant basic tools.
 
 signature NU_HELP = sig
   val last : 'a list -> 'a
+  val front : 'a list -> 'a list
 
   type state = Proof.state
 
@@ -93,6 +94,9 @@ open Term Thm
 fun last [] = raise Fail "last"
   | last [x] = x
   | last (h::ls) = last ls
+fun front [] = raise Fail "front"
+  | front [x] = []
+  | front (h::ls) = h :: front ls
 
 type state = Proof.state
 exception NotFree of term
