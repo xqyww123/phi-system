@@ -60,7 +60,7 @@ signature NU_SYS = sig
 
   val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm (* see @{thm NuPrime.start_proc} *)
   val finish_proc : thm -> thm (* see @{thm NuPrime.finish_proc} *)
-  val rename_blk_var : string -> thm -> thm
+  val rename_blk_var : string -> thm -> cterm (*renamed block*) * thm
         (* current old_name reulst in ...
         * ---------------------------------
         *  current new_name reulst in *)
@@ -349,19 +349,17 @@ fun conversion ctx to from =
       |> Goal.conclude
   end
 
-fun accept_proc_naive wmeta =
-  wmeta |> disch_current_codeblock
+fun accept_proc_naive meta =
+  meta |> disch_current_codeblock
     |> mk_PropBlock 0 
     |> (fn x => x RS @{thm NuPrime.accept_proc} handle THM _ => x RS @{thm accept_proc'})
     |> (fn th => 
         let val thy = Thm.theory_of_thm th
           val (vname,vty) = prems_of th |> hd |> dest_codeblock |> #1 |> dest_Var
-          val (name,_) = current_block_var wmeta |> dest_Free
+          val (name,_) = current_block_var meta |> dest_Free
         in Thm.instantiate ([],
             [((vname,vty), Thm.global_cterm_of thy (Free (name,vty)))]) th end)
-      |>  @{print}
     |> undisch
-      |>  @{print}
 fun accept_proc ctx meta = 
   (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
   then meta else auto_resolve_rule0 ctx meta) |> accept_proc_naive
@@ -460,8 +458,9 @@ fun rename_blk_var name meta =
     val (s,_,_,_) = dest_codeblock_c codeblock
     val thy = Thm.theory_of_thm meta
     val s' = Thm.global_cterm_of thy (Free (name, typ_of_cterm s))
+    val meta = meta |> implies_intr codeblock |> forall_intr s |> forall_elim s'
   in
-    meta |> implies_intr codeblock |> forall_intr s |> forall_elim s' |> undisch
+    (cprem_of meta 1, undisch meta)
   end
 
 

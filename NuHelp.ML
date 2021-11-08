@@ -234,7 +234,7 @@ fun strip_binder_vars binder (Const (binder', _) $ Abs (name, ty, body))
 
 (** helpful rules **)
 
-fun undisch th = cprem_of th 1 |> (fn th => (@{print} (Term.add_tvars (Thm.term_of th) []); th)) |> assume |> implies_elim th
+fun undisch th = cprem_of th 1 |> assume |> implies_elim th
 fun undisch_all th = (cprems_of th, implies_elim_list th (map assume (cprems_of th)))
 
 fun fix_frees_lst pos = map (Term.dest_Free #> (fn (name,ty) =>

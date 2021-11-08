@@ -12,7 +12,7 @@ fun local_value_export rule vars asms major =
 fun mk_let names meta ctx =
   let
     val blk_var as (Free (blk_name,_)) = current_block_var meta
-    val meta = rename_blk_var
+    val (old_codeblock, meta) = rename_blk_var
       ("\<nu>hide_"^(string_of_int (length (codeblocks_of meta)))^blk_name) meta
     val (major, aux) = elim_SPEC meta
     val arity = length names
@@ -36,6 +36,7 @@ fun mk_let names meta ctx =
     val (_,ctx) = Proof_Context.note_thmss ""
       (names ~~ push_local_values |> map (fn (n,th) =>
         ((Binding.suffix_name "_\<nu>proc" n,[]), [([th],[])]))) ctx
+    val (_,ctx) = Assumption.add_assms (fn _ => fn _ => (I,I)) [old_codeblock] ctx
   in
     (intro_SPEC (major', aux), ctx)
   end
