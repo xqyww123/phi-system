@@ -68,7 +68,7 @@ signature NU_HELP = sig
   val strip_named_binder_c : string -> cterm -> ((string * ctyp) * cterm) list * cterm
   val list_mk_binder   : string -> term list -> term -> term
   val strip_implies_c : cterm -> cterm
-  val tuple_abs : (string * string) list -> term -> term
+  val tuple_abs : ((string * string) * typ) list -> term -> term
 
   val dest_Trueprop_c : cterm -> cterm
   (*  Γ |- A ==> B
@@ -283,11 +283,11 @@ fun int_of_string str =
 fun strip_implies_c tm = strip_implies_c (#2 (dest_implies tm))
   handle TERM _ => tm
 
-fun absfree ((a',a), T) body = Abs (a', T, abstract_over (Free (a, T), body));
+fun absfree ((a',a),T) body = Abs (a', T, abstract_over (Free (a, T), body));
 val prodconst = Const (@{const_name case_prod}, dummyT)
 fun caseprod (tm as (Abs (_,_, Abs (_,_, _)))) = prodconst $ tm
   | caseprod (tm as (Abs (_,_, Const (@{const_name case_prod}, _) $ _))) = prodconst $ tm
   | caseprod tm = tm
-val tuple_abs = fold_rev (caseprod oo absfree o rpair dummyT)
+val tuple_abs = fold_rev (caseprod oo absfree)
     
 end

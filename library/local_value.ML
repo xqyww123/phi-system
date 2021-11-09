@@ -16,7 +16,7 @@ fun mk_let names meta ctx =
       ("\<nu>hide_"^(string_of_int (length (codeblocks_of meta)))^blk_name) meta
     val (major, aux) = elim_SPEC meta
     val arity = length names
-    val op_let = ntimes (arity - 1) (fn th => th RS @{thm op_let}) @{thm op_let}
+    val op_let = ntimes (arity - 1) (fn _ => fn th => th RS @{thm op_let}) @{thm op_let}
     val major = apply_proc_naive op_let major
     val prem = Thm.cprems_of major |> hd
     val vtys = strip_binder_vars @{const_name Pure.all} (term_of prem) |> map #2

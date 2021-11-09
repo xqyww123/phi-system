@@ -132,6 +132,8 @@ end
 *)
 section\<open>Low representation for semantics\<close>
 
+subsection \<open>Memory Pointer\<close>
+
 datatype msegment = Null (*address space*) nat | MSegment nat
 type_synonym addr_space = nat
   \<comment> \<open>Address space is a notion of the LLVM. The space 0 is the main memory of the device.
@@ -145,8 +147,17 @@ abbreviation shift_addr :: " 'a::plus memaddr \<Rightarrow> 'a \<Rightarrow> 'a 
 lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base  |+ ofs))" by (metis memaddr.exhaust)
 lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base  |+ ofs))" by (metis memaddr.exhaust)
 
+
+subsection \<open>Function table & Function pointer\<close>
+
+typedef fun_addr = "UNIV :: nat set" ..
+
+subsection \<open>Deep Value Model\<close>
+
 datatype deep_model = DM_int nat nat | DM_pointer "nat memaddr" | DM_fusion deep_model deep_model
-  | DM_record deep_model | DM_array "deep_model list" | DM_none
+  | DM_record deep_model | DM_array "deep_model list" | DM_fun_addr fun_addr | DM_none
+
+subsection \<open>Memory & Heap\<close>
 
 datatype resource_key = MemAddress "nat memaddr" | ChainDB_key nat
   \<comment> \<open>The write operation on address `addr` requires owning of resource `MemAddress addr`,
@@ -158,10 +169,27 @@ lemma resource_key_exists: "Ex P \<longleftrightarrow> (\<exists>addr. P (MemAdd
 
 type_synonym heap = "resource_key \<rightharpoonup> deep_model"
 
+subsection \<open>State Model\<close>
 
+datatype 'a state = Success "heap \<times> 'a" | Fail | PartialCorrect
+text\<open> The basic state of the \<nu>-system virtual machine is represented by type "('a::lrep) state"}.
+  The valid state `Success` essentially has two major form, one without registers and another one with them,
+      \<^item> "StatOn (x1, x2, \<cdots>, xn, void)",
+  where "(x1, x2, \<cdots>, xn, void)" represents the stack in the state, with @{term x\<^sub>i} as the i-th element on the stack.
+  The @{term STrap} is trapped state due to invalid operations like zero division.
+  The negative state @{term PartialCorrect} represents the admissible error situation that is not considered in partial correctness.
+  For example, @{term PartialCorrect} may represents an admissible crash, and in that case the partial correctness certifies that
+    ``if the program exits normally, the output would be correct''.\<close>
 
+declare state.split[split]
 
+type_synonym ('a,'b) proc = " (heap \<times> 'a) \<Rightarrow> 'b state" (infix "\<longmapsto>" 0)
 
+consts fun_table :: " fun_addr \<rightharpoonup> 'a \<longmapsto> 'b "
+consts fun_addr_NULL :: fun_addr
+
+specification (fun_table)
+  fun_addr_NULL: "fun_table fun_addr_NULL = None" by auto
 
 
 
@@ -220,7 +248,7 @@ text \<open>The semantic framework follows a style of shallow embedding, where s
   are modelled by different Isabelle type. Model types are constrained by the base type class {\it lrep} and types representing
   objects that supports certain features are constrained by specific sub-classes which extend the base class {\it lrep} finally. \<close>
 
-datatype llty = llty_int nat \<comment> \<open>int bits\<close> | llty_pointer | llty_tup llty | llty_array llty nat | llty_nil | llty_fusion llty llty
+datatype llty = llty_int nat \<comment> \<open>int bits\<close> | llty_pointer | llty_tup llty | llty_array llty nat | llty_nil | llty_fusion llty llty | Lty_fun_addr
 
 class lrep =  \<comment>\<open>The basic class for types modelling concrete objects\<close>
   fixes llty :: " 'a itself \<Rightarrow> llty "
@@ -244,7 +272,7 @@ class ceq =  \<comment> \<open>equality comparison\<close>
   assumes ceq_trans: "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z
     \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
 
-type_synonym ('a,'b) \<nu> = " 'a \<Rightarrow> 'b \<Rightarrow> bool "
+type_synonym ('a,'b) \<nu> = " 'b \<Rightarrow> 'a \<Rightarrow> bool "
 
 subsection \<open>The \<nu>-type\<close>
 
@@ -252,16 +280,16 @@ subsubsection \<open>Definitions\<close>
 
 (* ceq : INF *)
 
-datatype ('a,'b) typing = typing (typing_img: 'b ) (typing_nu: "('a,'b) \<nu>") ("_ \<tycolon> _" [16,16] 15) \<comment>\<open>shortcut keys "<ty>"\<close>
+datatype ('a,'b) typing = typing (typing_img: 'b ) (typing_nu: "('a,'b) \<nu>") ("_ \<tycolon> _" [18,18] 17) \<comment>\<open>shortcut keys "<ty>"\<close>
 primrec nu_of :: "('a,'b) typing \<Rightarrow> ('a,'b) \<nu>" where "nu_of (x \<tycolon> N) = N"
 primrec image_of :: "('a,'b) typing \<Rightarrow> 'b" where "image_of (x \<tycolon> N) = x"
 
-definition RepSet :: "('a,'b) typing \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>" [10] ) where "\<tort_lbrace> ty \<tort_rbrace> = {p. case ty of (x \<tycolon> N) \<Rightarrow> N p x }"
-abbreviation Refining :: "'a \<Rightarrow> ('a,'b) \<nu> \<Rightarrow>  'b \<Rightarrow> bool" ("(_/ \<nuLinkL> _  \<nuLinkR>/ _)" [27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
-  where  "(p \<nuLinkL> N \<nuLinkR> x) \<equiv> p \<in> \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
-definition Inhabited :: " 'a set \<Rightarrow> bool" where "Inhabited s \<equiv> (\<exists>x. x \<in> s)"
-abbreviation InhabitNu :: " 'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> bool" ("_ \<ratio> _" [16,16] 15)  \<comment>\<open>shortcut keys ":TY:"\<close>
-  where  " x \<ratio> N \<equiv> Inhabited \<tort_lbrace>x \<tycolon> N\<tort_rbrace>"
+definition RepSet :: "('a,'b) typing \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>" [10] ) where "\<tort_lbrace> ty \<tort_rbrace> = {p. case ty of (x \<tycolon> N) \<Rightarrow> N x p }"
+definition Refining :: "'a \<Rightarrow> ('a,'b) \<nu> \<Rightarrow>  'b \<Rightarrow> bool" ("(_/ \<nuLinkL> _  \<nuLinkR>/ _)" [27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
+  where  "(p \<nuLinkL> N \<nuLinkR> x) \<longleftrightarrow> N x p"
+definition Inhabited :: " ('a,'b) typing \<Rightarrow> bool" where  "Inhabited typ = (\<exists>p. p \<in> \<tort_lbrace> typ \<tort_rbrace>)"
+abbreviation InhabitNu :: " 'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> bool" ("_ \<ratio> _" [18,18] 17)  \<comment>\<open>shortcut keys ":TY:"\<close>
+  where  " (x \<ratio> T) \<equiv> Inhabited (x \<tycolon> T)"
 text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete values,
   e.g. @{prop " a_concrete_int32 \<in> \<tort_lbrace>(42::nat) \<tycolon> N 32\<tort_rbrace>"} and also "state \<in> State (\<tort_lbrace>42 \<tycolon> N\<tort_rbrace> \<times> \<tort_lbrace>24 \<tycolon> N\<tort_rbrace> \<times> \<cdots> )".
   It constitutes basic elements in specification.
@@ -271,11 +299,12 @@ text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete va
   the \<nu>-type @{term "x \<tycolon> N"} is inhabited. Basically it is used to derive implicated conditions of images,
   e.g. @{prop "( 42 \<ratio> N 32) \<Longrightarrow> 42 < 2^32"}\<close>
 
-lemma Refining_ex: " p \<nuLinkL> R \<nuLinkR> x \<longleftrightarrow> R p x" unfolding RepSet_def by auto
+lemma [simp]: "p \<in> \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<longleftrightarrow> p \<nuLinkL> T \<nuLinkR> x" unfolding RepSet_def Refining_def by simp
+(* lemma Refining_ex: " p \<nuLinkL> R \<nuLinkR> x \<longleftrightarrow> R x p" unfolding RepSet_def by auto *)
 
 (* lemma [elim!,\<nu>elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto *)
-lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto
-lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+(* lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto 
+lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto *)
 
 
 subsubsection \<open>Properties\<close>
@@ -294,7 +323,6 @@ subsection \<open>Auxiliary tags\<close>
 subsubsection \<open>Name tag\<close>
 
 datatype name_tag = NAME_TAG "unit \<Rightarrow> unit"
-definition Named :: "name_tag \<Rightarrow> 'a \<Rightarrow> 'a" where "Named name x = x" \<comment>\<open>name tag\<close>
 
 lemma [cong]: "NAME_TAG x \<equiv> NAME_TAG x"  using reflexive .
 lemma name_tag_eq: "x = y" for x :: name_tag by (cases x, cases y) auto
@@ -302,14 +330,6 @@ lemma name_tag_eq: "x = y" for x :: name_tag by (cases x, cases y) auto
 syntax "_NAME_" :: "idt \<Rightarrow> name_tag" ("NAME _" [0] 1000)
   "_NAME2_" :: "idt => idt => name_tag" ("NAME2 _ _" [0,0] 1000)
 translations "NAME name" == "CONST NAME_TAG (\<lambda>name. ())"
-
-consts "named_sugar" :: " 'i_am \<Rightarrow> 'merely \<Rightarrow> 'a_sugar " ("\<ltbrak>_\<rtbrak>. _" [10,15] 14)
-translations
-  "\<ltbrak>name\<rtbrak>. x \<tycolon> T" == "\<ltbrak>name\<rtbrak>. \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
-  "\<ltbrak>name\<rtbrak>. x" == "CONST Named (NAME name) x"
-
-lemma [simp]: "x \<in> Named name S \<longleftrightarrow> x \<in> S" unfolding Named_def ..
-lemma [simp]: "x \<in> Named name S \<longleftrightarrow> x \<in> S" unfolding Named_def ..
 
 subsubsection \<open>Parameter tag\<close>
 
@@ -377,25 +397,13 @@ class stack = lrep
 instantiation prod :: (lrep,stack) stack begin instance by standard end
 
 
-subsubsection \<open>Tag: End_of_Contextual_Stack\<close>
+(* subsubsection \<open>Tag: End_of_Contextual_Stack\<close>
 
 definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " ("\<^bold>E\<^bold>N\<^bold>D") where [\<nu>def]: "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
 lemmas End_of_Contextual_Stack_rew = End_of_Contextual_Stack_def[THEN eq_reflection]
-lemma [elim,\<nu>elim]: "Inhabited (End_of_Contextual_Stack S) \<Longrightarrow> C \<Longrightarrow> C" .
+lemma [elim,\<nu>elim]: "Inhabited (End_of_Contextual_Stack S) \<Longrightarrow> C \<Longrightarrow> C" . *)
 
 subsection \<open>The \<nu>-system VM and Procedure construction structures\<close>
-
-datatype 'a state = Success "heap \<times> 'a" | Fail | PartialCorrect
-text\<open> The basic state of the \<nu>-system virtual machine is represented by type @{typ "('a::lrep) state"}.
-  The valid state `Success` essentially has two major form, one without registers and another one with them,
-      \<^item> "StatOn (x1, x2, \<cdots>, xn, void)",
-  where "(x1, x2, \<cdots>, xn, void)" represents the stack in the state, with @{term x\<^sub>i} as the i-th element on the stack.
-  The @{term STrap} is trapped state due to invalid operations like zero division.
-  The negative state @{term PartialCorrect} represents the admissible error situation that is not considered in partial correctness.
-  For example, @{term PartialCorrect} may represents an admissible crash, and in that case the partial correctness certifies that
-    ``if the program exits normally, the output would be correct''.\<close>
-
-declare state.split[split]
 
 subsubsection \<open>Types specifying states\<close>
 
@@ -419,7 +427,6 @@ lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> 
 
 subsubsection \<open>\<nu>-Procedure\<close>
 
-type_synonym ('a,'b) proc = " (heap \<times> 'a) \<Rightarrow> 'b state" (infix "\<longmapsto>" 0)
 definition Procedure :: "('a \<longmapsto> 'b) \<Rightarrow> (heap \<times> 'a::lrep) set \<Rightarrow> (heap \<times> 'b::lrep) set \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
   where [\<nu>def]:"Procedure f T U \<longleftrightarrow> (\<forall>a. a \<in> T \<longrightarrow> f a \<in> \<S> U)"
 
@@ -458,8 +465,8 @@ definition PendingConstruction :: " (('a::lrep) \<longmapsto> ('b::lrep)) \<Righ
 translations "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)" \<rightleftharpoons> "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
   "CONST PendingConstruction f s (x \<tycolon> T)" \<rightleftharpoons> "CONST PendingConstruction f s \<tort_lbrace> x \<tycolon> T\<tort_rbrace>"
 
-lemma CurrentConstruction_D: "CurrentConstruction s S \<Longrightarrow> Inhabited S"
-  unfolding CurrentConstruction_def by (cases s) auto
+lemma CurrentConstruction_D: "CurrentConstruction s \<tort_lbrace>T\<tort_rbrace> \<Longrightarrow> Inhabited T"
+  unfolding CurrentConstruction_def Inhabited_def by (cases s) auto
 (* lemma [elim!,\<nu>elim]: "CurrentConstruction s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding CurrentConstruction_def by (cases s) auto *)
 
@@ -475,23 +482,17 @@ attribute_setup show_codeblock_expression =  \<open>
     (Thm.declaration_attribute o K o Config.put_generic NuConfig.show_codeblock_expression))\<close>
 print_translation \<open>
   let
-    fun is_EoS (Const (\<^const_syntax>\<open>End_of_Contextual_Stack\<close>, _) $ _) = true
-      | is_EoS tm = false
     fun codeblock_print ctx [v,arg,ty,exp] =
       if Config.get ctx NuConfig.show_codeblock_expression
-      then if is_EoS ty
-        then Syntax.const \<^syntax_const>\<open>_codeblock_noarg_exp_\<close> $ v $ exp
-        else Syntax.const \<^syntax_const>\<open>_codeblock_exp_\<close> $ v $ ty $ exp
-      else if is_EoS ty
-        then Syntax.const \<^syntax_const>\<open>_codeblock_noarg_\<close> $ v
-        else Syntax.const \<^syntax_const>\<open>_codeblock_\<close> $ v $ ty
+      then  Syntax.const \<^syntax_const>\<open>_codeblock_exp_\<close> $ v $ ty $ exp
+      else Syntax.const \<^syntax_const>\<open>_codeblock_\<close> $ v $ ty
   in
    [(\<^const_syntax>\<open>CodeBlock\<close>, codeblock_print)]
   end
 \<close>
 
-lemma [elim!,\<nu>elim]: "CodeBlock v arg ty prog \<Longrightarrow> (Inhabited ty \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding CodeBlock_def by auto
+lemma [elim!,\<nu>elim]: "CodeBlock v arg \<tort_lbrace>T\<tort_rbrace> prog \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding CodeBlock_def Inhabited_def by (cases arg) auto
 lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv> ProtectorI (prog arg))"
   unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
 lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (prog arg) \<equiv> v"
@@ -609,8 +610,8 @@ lemma declare_fact:
   unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
 
 lemma set_\<nu>current:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
-    \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (Trueprop (Inhabited T)))"
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x \<tycolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
+    \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x \<tycolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (Trueprop (x \<ratio> T)))"
   unfolding SpecTop_imp FactCollection_imp
   by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact) (auto dest: CurrentConstruction_D)
 

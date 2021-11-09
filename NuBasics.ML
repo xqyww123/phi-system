@@ -9,7 +9,7 @@ infix 0 MP MP_BY
 signature NU_BASICS = sig
   exception NDBG of thm
   val repeate : ('a -> 'a) -> 'a -> 'a
-  val ntimes : int -> ('a -> 'a) -> 'a -> 'a
+  val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
   val void_ty : typ
   val mk_stateT : typ -> typ
@@ -27,8 +27,11 @@ signature NU_BASICS = sig
   val dest_name_tag : term -> string
   val mk_name_tag : string -> term
   val mk_name_tag_c : string -> cterm
+  val mk_named : string -> term -> term
+  val mk_name_hint : string -> term -> term
   val mk_repset : term -> term
-  val Void_name : string
+  val mk_auto_tag : term -> term
+
   (* val dest_andTy : term -> term * term *)
   val dest_SpecTop   : term -> term * term
   val dest_SpecTop_c : cterm -> cterm * cterm
@@ -36,7 +39,7 @@ signature NU_BASICS = sig
   val dest_CurrentConstruction_c : cterm -> cterm * cterm
   val dest_PendingConstruction : term -> term * term * term
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm
-  val dest_current_nu   : thm -> term
+  val dest_current_nu   : thm -> term * term
   val stack_of_meta   : thm -> term list
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
@@ -108,7 +111,8 @@ open Thm Term HOLogic NuHelp
 exception NDBG of thm
 
 fun repeate f x = repeate f (f x) handle TERM _ => x | THM _ => x
-fun ntimes n f x = if n <= 0 then x else ntimes (n-1) f (f x)
+fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
+fun ntimes n f x = ntimes_i 0 n f x
 fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
 val void_ty = Type(@{type_name "void"}, [])
 fun mk_stateT ty = Type(@{type_name "state"}, [ty])
@@ -146,6 +150,8 @@ fun dest_name_tag tm =
 val name_tag_c = @{cterm "NAME name"}
 fun mk_name_tag name = name_tag_const $ Abs (name, unit_ty, unit_const)
 fun mk_name_tag_c name = renamed_term (mk_name_tag name) name_tag_c
+fun mk_named name tm = Const(@{const_name Named}, dummyT) $ mk_name_tag name $ tm
+fun mk_name_hint name tm = Const(@{const_name NameHint}, dummyT) $ mk_name_tag name $ tm
 
 val named_name = @{const_name "Named"}
 val dest_named = dest_binop named_name #> apfst dest_name_tag
@@ -161,6 +167,7 @@ val dest_RepSet = dest_monop @{const_name "RepSet"} #> dest_nuTy
 val mk_nuTy = mk_binop nuTy_name
 (* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
   | dest_andTy t = raise TERM ("bad AndTy", [t]); *)
+val mk_auto_tag = mk_monop @{const_name "Auto"}
 
 val dest_SpecTop   = dest_binop @{const_name "SpecTop"}
 val dest_SpecTop_c = dest_binop_c @{const_name "SpecTop"}
@@ -175,7 +182,7 @@ fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
   handle TERM _ => ((dest_PendingConstruction_c c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
 val dest_current_nu = Thm.prop_of #> perhaps (dest_SpecTop #> #1) #> perhaps dest_Trueprop
-    #> dest_CurrentConstruction #> #2
+    #> dest_CurrentConstruction #> #2 #> dest_RepSet
 fun strip_stack ret (Const (@{const_name "Pair"}, _) $ a $ b,
                      Const (@{const_name "Stack_Delimiter"}, _) $ A $ B)
       = strip_stack ((a,A)::ret) (b,B)
@@ -184,7 +191,7 @@ fun dest_topctx (Const (@{const_name "Pair"}, _) $ a $ b,
                  Const (@{const_name "NuTopCtx"}, _) $ A $ B)
       = ((a,A),(b,B))
 val stack_of_meta = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
-  (dest_current_nu #> dest_RepSet
+  (dest_current_nu
     #> apsnd (repeate (dest_binop @{const_name "NuAddition"} #> #1))
     #> dest_topctx #> #2
     #> strip_stack [])

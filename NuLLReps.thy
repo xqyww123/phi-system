@@ -181,9 +181,9 @@ subsection \<open>\<nu>-abstraction\<close>
 subsubsection \<open>Raw Pointer\<close>
 
 definition RawPointer :: "(memptr, raw_memaddr) \<nu>"
-  where "RawPointer p x = (case p of (memptr i) \<Rightarrow> (i = x))"
+  where "RawPointer x p = (case p of (memptr i) \<Rightarrow> (i = x))"
 
-lemma [simp]: "memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_ex by (simp add: RawPointer_def)
+lemma [simp]: "memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_def by (simp add: RawPointer_def)
 lemma [elim,\<nu>elim]: "addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Zero RawPointer undefined" unfolding \<nu>Zero_def by simp
 lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps)
@@ -191,10 +191,10 @@ lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment
 subsubsection \<open>Pointer\<close>
 
 definition Pointer :: "(memptr, nat memaddr) \<nu>"
-  where "Pointer p x \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x)"
+  where "Pointer x p \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x)"
 
 lemma [simp]: "memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
-  unfolding Refining_ex by (simp add: Pointer_def)
+  unfolding Refining_def by (simp add: Pointer_def)
 lemma [elim,\<nu>elim]: "addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma [\<nu>intro]: "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
   unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def same_addr_offset_def)
@@ -247,8 +247,8 @@ text \<open>The name `void` coincides that, when a procedure has no input argume
 consts Void_sugar :: " 'a_sugar " ("Void")
 translations "Void" == "() \<tycolon> CONST NuVoid"
 
-lemma [simp]: "p \<nuLinkL> NuVoid \<nuLinkR> x" unfolding NuVoid_def Refining_ex by simp
-lemma [elim!, \<nu>elim]: "Inhabited \<tort_lbrace>Void\<tort_rbrace> \<Longrightarrow> C \<Longrightarrow> C" by simp
+lemma [simp]: "p \<nuLinkL> NuVoid \<nuLinkR> x" unfolding NuVoid_def Refining_def by simp
+lemma [elim!, \<nu>elim]: "Inhabited Void \<Longrightarrow> C \<Longrightarrow> C" by simp
 (*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
 
 section \<open>The integer data type\<close>
@@ -276,31 +276,31 @@ subsection \<open>Basic \<nu>-abstractions based on integer type\<close>
 
 subsubsection \<open>Natural number\<close>
 
-definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNat _ p x = (unat p = x)"
+definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNat _ x p = (unat p = x)"
 syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
 
-lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_ex by (simp add: NuNat_def)
+lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_def by (simp add: NuNat_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI)
 lemma [\<nu>intro]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by simp
 
-definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ p x = (p = of_nat x)"
+definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ x p = (p = of_nat x)"
 syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
 translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))" 
 
-lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding Refining_ex  by (simp add: NuNatRound_def)
+lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding Refining_def  by (simp add: NuNatRound_def)
 lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Integer\<close>
 
-definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) \<nu>" where "NuInt _ p x = (sint p = x)"
+definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) \<nu>" where "NuInt _ x p = (sint p = x)"
 syntax "_NuInt_" :: "type \<Rightarrow> logic" (\<open>\<int>'[_']\<close>)
 translations "\<int>['x]" == "CONST NuInt (TYPE('x))" 
 
-lemma [simp]: "p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfolding Refining_ex by (simp add: NuInt_def)
+lemma [simp]: "p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfolding Refining_def by (simp add: NuInt_def)
 lemma [elim,\<nu>elim]: " x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def apply simp by (metis One_nat_def sint_ge sint_lt) 
 
@@ -316,9 +316,9 @@ lemma [simp]: "(x \<noteq> 1) = (x = 0)" for x :: "1 word" proof -
   then show ?thesis  by auto
 qed
 
-definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool p x = ((p = 1) = x)"
+definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool x p = ((p = 1) = x)"
 
-lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_ex by (simp add: NuBool_def)
+lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_def by (simp add: NuBool_def)
 lemma [\<nu>intro]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
 lemma [\<nu>intro]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
 
@@ -340,12 +340,12 @@ lemma [simp]: "ceq (a1,b1) (a2,b2) \<longleftrightarrow> ceq a1 a2 \<and> ceq b1
 instance by standard (auto intro: ceq_trans)
 end
 
-subsection \<open>Fusion \<nu>-abstraction\<close>
+(* subsection \<open>Fusion \<nu>-abstraction\<close>
 
 
 definition AutoFusion (infixr "\<nuFusion>''" 70)  where "AutoFusion = Fusion"
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion>' M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Cast_def AutoFusion_def .
+  unfolding Cast_def AutoFusion_def . *)
 
 section \<open>Tuple\<close>
 
@@ -395,14 +395,55 @@ instantiation tuple :: (field_list) field_list begin instance by standard end
 
 subsection \<open>Nu abstraction - `NuTuple`\<close>
 
-definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b) \<nu>" ("\<lbrace> _ \<rbrace>") where "\<lbrace> N \<rbrace> p x = (case p of Tuple p' \<Rightarrow> p' \<nuLinkL> N \<nuLinkR> x)"
+definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b) \<nu>" ("\<lbrace> _ \<rbrace>") where "\<lbrace> N \<rbrace> x p = (case p of Tuple p' \<Rightarrow> p' \<nuLinkL> N \<nuLinkR> x)"
 
-lemma [simp]: "Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_ex)
+lemma [simp]: "Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by simp
 
 lemma [\<nu>intro]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
 lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
 
+section \<open>Function Pointer\<close>
 
+subsubsection \<open>lrep\<close>
+
+instantiation fun_addr ::  lrep begin
+definition llty_fun_addr :: " fun_addr itself \<Rightarrow> llty " where [simp]: "llty_fun_addr _ = Lty_fun_addr"
+definition deepize_fun_addr :: " fun_addr \<Rightarrow> deep_model " where "deepize_fun_addr = DM_fun_addr"
+definition shallowize_fun_addr :: " deep_model \<Rightarrow> fun_addr " where "shallowize_fun_addr x = (case x of DM_fun_addr y \<Rightarrow> y)"
+instance apply standard using shallowize_fun_addr_def deepize_fun_addr_def by auto
+end
+
+subsubsection \<open>zero\<close>
+
+instantiation fun_addr :: zero begin
+definition zero_fun_addr :: " fun_addr " where "zero_fun_addr = fun_addr_NULL"
+instance by standard
+end
+
+subsubsection \<open>ceq\<close>
+
+instantiation fun_addr :: ceq begin
+definition ceqable_fun_addr :: " heap \<Rightarrow> fun_addr \<Rightarrow> fun_addr \<Rightarrow> bool " where [simp]: "ceqable_fun_addr _ _ _ = True"
+definition ceq_fun_addr :: " fun_addr \<Rightarrow> fun_addr \<Rightarrow> bool " where [simp]: "ceq_fun_addr = (=)"
+instance by standard auto
+end
+
+subsubsection \<open>miscellaneous\<close>
+
+instantiation fun_addr :: field begin instance by standard end
+instantiation fun_addr :: field_list begin instance by standard end
+
+subsubsection \<open>\<nu>-abstractor\<close>
+
+definition op_func_pointer :: "('a \<longmapsto> 'b) \<Rightarrow> ('r :: stack) \<longmapsto> (fun_addr \<times> 'r)"
+  where "op_func_pointer f = (\<lambda>(h,r).
+    if (\<exists>a. fun_table a = Some f)
+    then Success (h, (SOME a. fun_table a = Some f), r)
+    else PartialCorrect
+)"
+
+definition FunPtr :: "(heap \<times> 'ap::lrep,'ax) \<nu> \<Rightarrow> (heap \<times> 'bp::lrep,'bx) \<nu> \<Rightarrow> (fun_addr, 'ax \<longmapsto> 'bx) \<nu>"
+  where "FunPtr A B fx faddr  = (\<exists>fp. fun_table faddr = Some fp \<and> (\<forall>a b. \<^bold>p\<^bold>r\<^bold>o\<^bold>c fp \<blangle> a \<tycolon> A \<longmapsto> b \<tycolon> B \<brangle>))"
 
 end

@@ -285,7 +285,7 @@ fun auto_resolve thms addtion ctx  =
   in SOLVED (REPEATX (
       different_tag
         ORELSE simp_tag_tac ctx
-        (* ORELSE print_dbg' (* TODO: support for debug printing *) *)
+        ORELSE print_dbg' (* TODO: support for debug printing *)
         ORELSE (HEADGOAL (resolve_tac ctx prio))
         ORELSE (HEADGOAL (resolve_tac ctx thms))
         ORELSE (premise_tac ctx)

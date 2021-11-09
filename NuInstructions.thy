@@ -1,7 +1,7 @@
 theory NuInstructions
   imports NuSys NuBasicAbstractors
   keywords
-     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "of" "while" "always" :: quasi_command
+     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "of" "while" "until" "always" "var" "heap" :: quasi_command
   abbrevs "|^" = "\<up>"
     and "||^" = "\<Up>"
     and "|v" = "\<down>"
@@ -61,14 +61,6 @@ theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle
 \<nu>processor pair_auto_dest' 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B))\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   meta |> NuBasics.apply_proc_naive @{thm dpr_auto_schema'} |> NuSys.accept_proc ctx)\<close> *)
 
-subsubsection \<open>calling conversion\<close>
-
-(* definition strip_end_tail :: " ('a::lrep \<times> void \<longmapsto> ('b::lrep \<times> void)) \<Rightarrow> 'a \<times> ('r::stack) \<longmapsto> ('b \<times> 'r)"
-  where "strip_end_tail f s = (case s of (a,r) \<Rightarrow> bind (f (a,void)) (\<lambda>(b,_). StatOn (b,r)))"
-lemma strip_end_tail: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> A \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c strip_end_tail f \<blangle> R\<heavy_comma> A \<longmapsto> R\<heavy_comma> B \<brangle>"
-  unfolding strip_end_tail_def Procedure_def bind_def by (auto 4 4)
-*)
-
 subsubsection \<open>let & local_value\<close>
 
 definition op_let :: " ('v::lrep \<Rightarrow> 's::stack \<longmapsto> 't::stack) \<Rightarrow> ('v \<times> 's \<longmapsto> 't)"
@@ -88,6 +80,24 @@ ML_file "library/local_value.ML"
   fn _ => fn meta => ($$$ "\<rightarrow>" |-- list1 binding) >> (fn idts => fn _ =>
     raise Process_State_Call'' meta (Local_Value.mk_let (rev idts)))
 end\<close>
+
+subsubsection \<open>function call\<close>
+  \<comment> \<open>A function is the program function in the ordinary meaning that called by pushing stack frame, rarely inline
+    (whereas a procedure is generally inline), which is a procedure of \<^term>\<open>Void\<close> as its stack remainder so that
+    it can only access its arguments and never the stack remainder.
+    A function always corresponds an LLVM function, whereas other ordinary procedures are totally inline at the calling place generally
+      except some cases of optimization.
+    Only a function but no other ordinary procedure locates at a decided address in memory during the runtime,
+    so that has function pointers to it, and therefore can be indirectly called by the pointer. \<close>
+
+
+
+
+(* definition strip_end_tail :: " ('a::lrep \<times> void \<longmapsto> ('b::lrep \<times> void)) \<Rightarrow> 'a \<times> ('r::stack) \<longmapsto> ('b \<times> 'r)"
+  where "strip_end_tail f s = (case s of (a,r) \<Rightarrow> bind (f (a,void)) (\<lambda>(b,_). StatOn (b,r)))"
+lemma strip_end_tail: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> A \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c strip_end_tail f \<blangle> R\<heavy_comma> A \<longmapsto> R\<heavy_comma> B \<brangle>"
+  unfolding strip_end_tail_def Procedure_def bind_def by (auto 4 4)
+*)
 
 
 subsection \<open>Branches & Loops\<close>
@@ -112,7 +122,7 @@ lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr
 subsubsection \<open>Stack Head\<close> \<comment> \<open>A technically auxiliary \<nu>-abstractor\<close>
 
 definition Nu_Stack_Head :: "('a::lrep,'ax) \<nu> \<Rightarrow> (heap \<times> 'stack,'hsx) \<nu> \<Rightarrow> (heap \<times> 'a \<times> 'stack, 'ax \<times> 'hsx) \<nu>"
-  where "Nu_Stack_Head A Ctx = (\<lambda>(h,a,s) (ax,hsx). (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> (hsx)) )"
+  where "Nu_Stack_Head A Ctx = (\<lambda>(ax,hsx) (h,a,s). (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> (hsx)) )"
 
 consts "Stack_Head_sugar" :: " 'just \<Rightarrow> 'a \<Rightarrow> 'sugar " ( "_/ <stack-head> _" [13,14] 13) \<comment> \<open>Note it is left associative\<close>
 translations " c \<tycolon> Ctx <stack-head> a \<tycolon> A " == " (CONST Pair a c) \<tycolon> (CONST Nu_Stack_Head A Ctx) "
@@ -120,9 +130,15 @@ translations " c \<tycolon> Ctx <stack-head> a \<tycolon> A " == " (CONST Pair a
 
 lemma [simp]: "(h,a,s) \<nuLinkL> Nu_Stack_Head A Ctx \<nuLinkR> (ax,hsx) \<longleftrightarrow> (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> hsx)"
   unfolding Nu_Stack_Head_def Refining_ex by simp
+lemma [cong]: "\<tort_lbrace>a \<tycolon> A\<tort_rbrace> = \<tort_lbrace>a' \<tycolon> A'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>hs \<tycolon> HS\<tort_rbrace> = \<tort_lbrace>hs' \<tycolon> HS'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>(a,hs) \<tycolon> Nu_Stack_Head A HS\<tort_rbrace> = \<tort_lbrace>(a',hs') \<tycolon> Nu_Stack_Head A' HS'\<tort_rbrace>" by auto
+lemma [simp,\<nu>auto_expansion]: "\<tort_lbrace> (a,h,s) \<tycolon> Nu_Stack_Head A (NuTopCtx H S) \<tort_rbrace> = \<tort_lbrace> (h,a,s) \<tycolon> NuTopCtx H (A <stack-div> S) \<tort_rbrace>" by auto
 
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> (R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) <stack-head> (x \<tycolon> X)"
-  unfolding Cast_def by simp
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> c \<tycolon> Ctx \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> c \<tycolon> Ctx <stack-head> (x \<tycolon> X) \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
+  unfolding Intro_def Cast_def by simp
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t c \<tycolon> Ctx \<longmapsto> (R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q
+    \<Longrightarrow> \<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t c \<tycolon> Ctx <stack-head> (x \<tycolon> X) \<longmapsto> (R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  unfolding Dest_def Cast_def by simp blast
+
 
   subsubsection \<open>until\<close>
 
@@ -149,18 +165,55 @@ definition Until :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<lo
   "Until f s = (if (\<exists>y. SemUnt f s y) then The (SemUnt f s) else PartialCorrect)"
 
 
-lemma Until_\<nu>proc: "(\<forall>x x'. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> X \<longmapsto> x' \<tycolon> X <stack-head> c x' \<tycolon> \<bool> \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> X \<longmapsto> x' \<tycolon> X \<and>\<^sup>\<nu> (\<not> c x') \<brangle>"
+lemma Until: "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X <stack-head> c x' \<tycolon> \<bool> \<brangle>)
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> X \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu> (\<not> c x') \<brangle>"
+  for X :: "(heap \<times> 'a::lrep, 'b) \<nu>"
   unfolding Until_def Procedure_def 
   apply (auto simp add: SemUnt_deterministic2)
   subgoal for a b xa
     apply (rotate_tac 1)
-    apply (induct  body "(a, b)" xa arbitrary: a b rule: SemUnt.induct)
-     apply ( auto 4 7)
-    subgoal premises prems for f h r s'' a b proof -
-      show ?thesis apply (rule prems(3)) using prems  by (auto 4 7)
-    qed
-    done done
+    by (induct  body "(a, b)" xa arbitrary: a b x rule: SemUnt.induct) (auto 0 7)
+  done
+
+lemma Auto_def2: "Auto x \<equiv> x" unfolding Auto_def .
+
+ML_file \<open>library/loop.ML\<close>
+
+\<nu>processor until 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)\<close> \<open>fn ctx => fn meta => 
+let open Parse Scan NuHelp NuBasics in
+  $$$ "until" |-- vars -- option ($$$ "in" |-- list1 term)
+     -- option ($$$ "heap" |-- list1 term) -- ($$$ "subj" |-- term) -- Scan.option ($$$ "always" |-- term)
+    >> (fn ((((vars, stack_schema), heap_schema), subj), always) => fn _ =>
+      NuLoop.mk_loop_proc @{thm Until} vars stack_schema heap_schema subj always ctx meta)
+end\<close>
+
+ML \<open>(addsimps)\<close>
+ML \<open>\<^named_theorems>\<open>\<nu>auto_expansion\<close>\<close>
+
+notepad
+begin
+  assume A[simplified Auto_def]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle>  x \<tycolon> Auto NuRefine T P \<longmapsto> Y \<brangle>"
+end
+
+lemma [simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> x \<tycolon> Auto NuRefine T P \<longmapsto> R \<brangle> = \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> (x \<tycolon> T) \<and> x \<in> P \<longmapsto> R \<brangle>"  by simp
+thm Auto_def
+
+thm atomize_eq
+proc test: \<open>i \<tycolon> \<nat>[32]\<heavy_comma> j \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>0 \<tycolon> \<nat>[32]\<close>
+  \<bullet> until i'' j in i'', j subj \<open>0 < i''\<close>  always "j = 1"
+  thm Named_def
+
+  term \<open>(\<lambda>c. c) \<tycolon> Named (NAME xx) (ExNu (\<lambda>c. T))\<close>
+
+proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch <where''> Always)) \<flower> W\<close>
+  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Always" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P"
+    and [simplified StructuralTag_def, intro]: "<Structural> sch y = x" and [intro]: "y \<in> Always"
+    and brC: \<open>(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> x1 \<tycolon> X <schema> sch <where''> Always) \<flower> W \<longmapsto> (R \<heavy_comma> { (y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X <schema> sch <where''> Always)) \<flower> W \<brangle>)\<close>
+    and brB: \<open>(\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X <schema> sch <where''> Always <where'> P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch <where''> Always)) \<flower> W \<brangle>)\<close>
+  \<bullet> cast i_schema sch cast refine' Always  i_while_raw P \<Longleftarrow> brC \<Longleftarrow> brB[simplified SchemaCondition_simp] finish
+
+
+
 
 (* lemma Until': "(\<forall>s h s' h'. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<longmapsto> s' \<tycolon> S\<heavy_comma> c h' s' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H \<brangle>)
   \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<longmapsto> (s' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H) \<and> \<not> c h' s'\<brangle>"
@@ -204,7 +257,7 @@ definition op_recursion :: "(('r \<longmapsto> 'r) \<Rightarrow> ('r \<longmapst
   where "op_recursion F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
 lemma op_recursion:
-    "(\<forall>x' y' g. (\<forall>x'' y''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> x'' \<tycolon> X \<longmapsto> y'' \<tycolon> Y \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<blangle> x' \<tycolon> X \<longmapsto> y' \<tycolon> Y \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion F \<blangle> x \<tycolon> X \<longmapsto> y \<tycolon> Y \<brangle>"
+    "(\<forall>x' g. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> x'' \<tycolon> X \<longmapsto> f x'' \<tycolon> Y \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<blangle> x' \<tycolon> X \<longmapsto> f x' \<tycolon> Y \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion F \<blangle> x \<tycolon> X \<longmapsto> f x \<tycolon> Y \<brangle>"
   unfolding op_recursion_def Procedure_def
   apply (auto simp add: SemRec_deterministic2)
   subgoal for a b xa apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
@@ -229,32 +282,6 @@ specification ("op_while")
   \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X\<brangle>"
   apply (rule exI) using op_crash by auto
 
-proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch <where''> Always)) \<flower> W\<close>
-  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Always" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P"
-    and [simplified StructuralTag_def, intro]: "<Structural> sch y = x" and [intro]: "y \<in> Always"
-    and brC: \<open>(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> x1 \<tycolon> X <schema> sch <where''> Always) \<flower> W \<longmapsto> (R \<heavy_comma> { (y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X <schema> sch <where''> Always)) \<flower> W \<brangle>)\<close>
-    and brB: \<open>(\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X <schema> sch <where''> Always <where'> P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch <where''> Always)) \<flower> W \<brangle>)\<close>
-  \<bullet> cast i_schema sch cast refine' Always  i_while_raw P \<Longleftarrow> brC \<Longleftarrow> brB[simplified SchemaCondition_simp] finish
-
-
-\<nu>processor while 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (T \<flower> W)\<close> \<open>fn ctx => fn meta => let open Parse Scan NuHelp NuBasics in
-  $$$ "while" |-- vars -- option ($$$ "in" |-- term) -- ($$$ "subj" |-- term) -- Scan.option ($$$ "always" |-- term) >> (fn (((vars, schema), subj), always) => fn _ =>
-  let open NuHelp
-    val (vars',ctx) = Proof_Context.add_fixes (map (fn (a,b,c) => (a,Option.map (Syntax.read_typ ctx) b,c)) vars) ctx
-    val vars = (map (fn (x,_,_) => Binding.name_of x) vars) ~~ vars'
-    val always = case always of SOME x =>
-          Syntax.parse_term ctx x |> tuple_abs vars |> mk_monop \<^const_name>\<open>Collect\<close>
-      | NONE => Const (\<^const_name>\<open>Orderings.top_class.top\<close>, dummyT)
-    val (arity,schema) = case schema of SOME sch =>
-                    let val raw = Syntax.parse_term ctx sch
-                    in (length (strip_binop_r \<^const_name>\<open>Pair\<close> raw), tuple_abs vars raw) end
-                | _ => (length vars, Const (\<^const_name>\<open>id\<close>, dummyT))
-    val subj = tuple_abs vars (Syntax.parse_term ctx subj) |> mk_monop \<^const_name>\<open>Collect\<close>
-    val apply_pr = apply_proc_naive @{thm pr_auto_schema} #> NuSys.accept_proc ctx
-  in meta |> funpow (arity-1) apply_pr |> apply_proc_naive @{thm i_while_\<nu>proc}
-         |> NuSys.set_param ctx schema |> NuSys.set_param ctx always  |> NuSys.set_param ctx subj
-  end
-) end\<close>
 
 subsubsection \<open>recursion\<close>
 
@@ -615,7 +642,5 @@ proc i_store_n[\<nu>overload "\<down>:"]:
 
 lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>proc[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
 
-proc test: \<open>r \<tycolon> R\<heavy_comma> x \<tycolon> X\<heavy_comma> c \<tycolon> \<bool>\<close> \<longmapsto> \<open>r \<tycolon> R\<close>
-  \<bullet> if \<medium_left_bracket> \<bullet> \<rightarrow> x \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<rightarrow> y \<medium_right_bracket>
-  finish
+
 end
