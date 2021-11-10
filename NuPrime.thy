@@ -272,9 +272,10 @@ class ceq =  \<comment> \<open>equality comparison\<close>
   assumes ceq_trans: "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z
     \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
 
-type_synonym ('a,'b) \<nu> = " 'b \<Rightarrow> 'a \<Rightarrow> bool "
 
 subsection \<open>The \<nu>-type\<close>
+
+type_synonym ('a,'b) \<nu> = " 'b \<Rightarrow> 'a \<Rightarrow> bool "
 
 subsubsection \<open>Definitions\<close>
 
@@ -723,7 +724,7 @@ lemma "infinite (from n)"
 
 
 datatype ENat =  N | S  ENat
-
+/home/xero/
 primrec min where
   "min N _ = N" | "min _ N = N" | "min (S n) (S m) = min n m"
    "min n m = (case n of

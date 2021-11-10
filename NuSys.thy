@@ -30,7 +30,7 @@ lemma FailedPremise_I: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<
 lemma FailedPremise_D: "FailedPremise P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding FailedPremise_def .
 
 ML_file NuHelp.ML
-
+ML_file \<open>library/NuSimpCongruence.ML\<close>
 
 section \<open>Syntax\<close>
 
@@ -70,22 +70,6 @@ parse_translation \<open>[
   (\<^syntax_const>\<open>_\<nu>typing_x\<close>, (fn _ => fn [tm] => parse_typing_x tm)),
   (\<^syntax_const>\<open>_\<nu>typing_ty\<close>, (fn _ => fn [tm] => parse_typing_ty tm))
 ]\<close>
-
-(* subsection \<open>General Sugars\<close>
-
-definition Nu_Eq_tag :: " 'x \<Rightarrow> 'x " where "Nu_Eq_tag x = x"
-abbreviation "Nu_eq" ("_ \<tycolon> _ \<longleftrightarrow> _ \<tycolon> _" [19,19,19,19] 18)
-  where "x \<tycolon> T \<longleftrightarrow> x' \<tycolon> T' \<equiv> T (Nu_Eq_tag x) = T' (Nu_Eq_tag x')"
-
-lemma [iff]: "(x \<tycolon> T \<longleftrightarrow> x' \<tycolon> T') \<longleftrightarrow> (\<forall>p. p \<nuLinkL> T \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> T' \<nuLinkR> x')" unfolding Nu_Eq_tag_def Refining_def by auto
-lemma [intro, cong]: "(x \<tycolon> T \<longleftrightarrow> x' \<tycolon> T') \<Longrightarrow> \<tort_lbrace>x \<tycolon> T\<tort_rbrace> = \<tort_lbrace>x' \<tycolon> T'\<tort_rbrace>" by auto
-*)
-(* consts "Nu_eq_sugar" :: " 'just \<Rightarrow> 'a \<Rightarrow> 'sugar " (infix "\<longleftrightarrow>\<^sup>\<nu>" 16)
-translations
-  "x \<tycolon> T \<longleftrightarrow>\<^sup>\<nu> x' \<tycolon> T' " \<rightleftharpoons> "T (CONST Nu_Eq_tag x) = T' (CONST Nu_Eq_tag x')"
-  " T \<longleftrightarrow>\<^sup>\<nu> T' " => " (_\<nu>typing_ty T) (CONST Nu_Eq_tag (_\<nu>typing_x T')) = (_\<nu>typing_ty T') (CONST Nu_Eq_tag (_\<nu>typing_x T'))"
-  "(x \<tycolon> T) \<longleftrightarrow> (x' \<tycolon> T') " => "T (CONST Nu_Eq_tag x) = T' (CONST Nu_Eq_tag x')" *)
-
 
 
 subsection \<open>Logical image models\<close>
@@ -212,8 +196,6 @@ subsubsection \<open>Hidden name hint\<close>
 definition NameHint :: "name_tag \<Rightarrow> 'a \<Rightarrow> 'a" where "NameHint name x = x" \<comment>\<open>name tag\<close>
 translations "X" <= "CONST NameHint name X"
 
-lemma [simp]: "\<tort_lbrace>x \<tycolon> T\<tort_rbrace> = \<tort_lbrace>x' \<tycolon> T'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>x \<tycolon> NameHint name T\<tort_rbrace> = \<tort_lbrace>x' \<tycolon> NameHint name T'\<tort_rbrace> "
-  unfolding NameHint_def .
 
 subsection \<open>Other Tags\<close>
 
@@ -245,10 +227,6 @@ consts Heap_Delimiter_sugar :: " 'just \<Rightarrow> 'a \<Rightarrow> 'sugar " (
 
 translations " (a \<tycolon> A) \<heavy_asterisk> (b \<tycolon> B) " \<rightleftharpoons> " (CONST Pair b a) \<tycolon> (B <heap-sep> A) "
   " A \<heavy_asterisk> B " => " (CONST Pair (_\<nu>typing_x B) (_\<nu>typing_x A)) \<tycolon> ((_\<nu>typing_ty B) <heap-sep> (_\<nu>typing_ty A)) "
-
-lemma [cong]: "\<tort_lbrace>a \<tycolon> A\<tort_rbrace> = \<tort_lbrace>a' \<tycolon> A'\<tort_rbrace> \<Longrightarrow> b \<tycolon> B \<longleftrightarrow> b' \<tycolon> B' \<Longrightarrow> (a,b) \<tycolon> (A <heap-sep> B) \<longleftrightarrow> (a',b') \<tycolon> (A' <heap-sep> B')"
-  unfolding atomize_eq unfolding Heap_Delimiter_def by auto
-
 
 
 
@@ -317,17 +295,7 @@ definition Fusion :: "('a1,'b1) \<nu> \<Rightarrow> ('a2,'b2) \<nu> \<Rightarrow
 lemma [simp]: "(p1,p2) \<nuLinkL> N \<cross_product> M \<nuLinkR> (x1,x2) \<longleftrightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2)"
   by (simp add: Fusion_def Refining_def)
 lemma [elim,\<nu>elim]: "(x1,x2) \<ratio> N1 \<cross_product> N2 \<Longrightarrow> (x1 \<ratio> N1 \<Longrightarrow> x2 \<ratio> N2 \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
-lemma []: "\<tort_lbrace>x \<tycolon> X\<tort_rbrace> = \<tort_lbrace>x' \<tycolon> X'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>y \<tycolon> Y\<tort_rbrace> = \<tort_lbrace>y' \<tycolon> Y'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>(x,y) \<tycolon> X \<cross_product> Y\<tort_rbrace> = \<tort_lbrace>(x',y') \<tycolon> X' \<cross_product> Y'\<tort_rbrace> "  by (auto 4 4)
 
-
-declare [ [simp_trace] ]
-notepad
-begin
-  fix x x' :: nat and X X' :: "('a::lrep, nat) \<nu>"
-  assume [simp]: "\<tort_lbrace>x \<tycolon> X\<tort_rbrace> = \<tort_lbrace>x' \<tycolon> X'\<tort_rbrace>"
-  ML_val \<open>Simplifier.prems_of @{context}\<close>
-  assume [simplified]: "P \<tort_lbrace> (x,x) \<tycolon> X \<cross_product> X \<tort_rbrace>
-end
 
 lemma [\<nu>intro]: "\<nu>Zero N z1 \<Longrightarrow> \<nu>Zero M z2 \<Longrightarrow> \<nu>Zero (N \<cross_product> M) (z1,z2)" unfolding \<nu>Zero_def by simp
 
@@ -348,8 +316,6 @@ translations " a \<tycolon> A\<heavy_comma> b \<tycolon> B " == " (CONST Pair b 
   " A \<heavy_comma> B" => " (CONST Pair (_\<nu>typing_x B) (_\<nu>typing_x A)) \<tycolon> ((_\<nu>typing_ty B) <stack-div> (_\<nu>typing_ty A)) "
 
 lemma [simp]: "(pa,pb) \<nuLinkL> A <stack-div> B \<nuLinkR> (xa,xb) \<longleftrightarrow> (pa \<nuLinkL> A \<nuLinkR> xa) \<and> (pb \<nuLinkL> B \<nuLinkR> xb)" unfolding Stack_Delimiter_def by simp
-lemma [cong]: " a \<tycolon> A \<longleftrightarrow> a' \<tycolon> A' \<Longrightarrow> b \<tycolon> B \<longleftrightarrow> b' \<tycolon> B' \<Longrightarrow> (a,b) \<tycolon> (A <stack-div> B) \<longleftrightarrow> (a',b') \<tycolon> (A' <stack-div> B')"
-  unfolding atomize_eq unfolding Stack_Delimiter_def by auto
 
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> A \<longmapsto> a' \<tycolon> A' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t b \<tycolon> B \<longmapsto> b' \<tycolon> B' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q2 \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a \<tycolon> A\<heavy_comma> b \<tycolon> B) \<longmapsto> (a' \<tycolon> A'\<heavy_comma> b' \<tycolon> B') \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q1 \<and> Q2"
@@ -394,28 +360,18 @@ translations "\<exists>* a b. P" \<rightleftharpoons> "\<exists>* a. (\<exists>*
 
 notation ExNu_sugar (binder "\<exists>\<^sup>\<nu> " 10)
 
+lemma ExNu_cong: "(\<And>c. \<tort_lbrace>x c \<tycolon> T c\<tort_rbrace> \<equiv> \<tort_lbrace>x' c \<tycolon> T' c\<tort_rbrace>) \<Longrightarrow> \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<equiv> \<tort_lbrace> x' \<tycolon> ExNu T' \<tort_rbrace>"
+  unfolding atomize_eq RepSet_def ExNu_def Refining_def by simp blast
 
-lemma [cong]: "(\<And>c. x c \<tycolon> T c \<longleftrightarrow> x' c \<tycolon> T' c) \<Longrightarrow> x \<tycolon> ExNu T \<longleftrightarrow> x' \<tycolon> ExNu T'" by simp
 
-notepad
-begin
-  fix x x' :: nat and T T' :: "('a::lrep,nat) \<nu>"
-  assume [simp]: "x \<tycolon> T \<longleftrightarrow> x' \<tycolon> T' "
-  assume [simplified]: "P \<tort_lbrace> \<exists>*x.  (x,x) \<tycolon> T \<cross_product> T \<tort_rbrace>"
-  thm AA
-end
-notepad
-begin
-  fix x x' :: nat and T T' :: "('a::lrep,nat) \<nu>"
-  assume [simp]: "\<tort_lbrace>x \<tycolon> T\<tort_rbrace> = \<tort_lbrace>x' \<tycolon> T'\<tort_rbrace>"
-  assume [simplified]: "P \<tort_lbrace>  (x,x) \<tycolon> T \<cross_product> T \<tort_rbrace>"
-end
-end
+
+simproc_setup ExNu_cong ("\<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace>") = \<open>K (NuSimpCong.simproc_qualifier @{thm ExNu_cong})\<close>
 
 
 
 
-lemma ExNu_pair: "\<tort_lbrace>\<exists>*c. x c \<tycolon> T c\<tort_rbrace> = \<tort_lbrace>\<exists>*c1 c2. x (c1,c2) \<tycolon> T (c1,c2) \<tort_rbrace>" by auto
+
+lemma ExNu_pair: "\<tort_lbrace> x \<tycolon> ExNu T \<tort_rbrace> = \<tort_lbrace>\<exists>*c1 c2. x (c1,c2) \<tycolon> T (c1,c2) \<tort_rbrace>" by auto
 
 lemma [simp]: "p \<in> \<S>  \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<longleftrightarrow> (\<exists>z. p \<in> \<S>  \<tort_lbrace> x z \<tycolon> T z\<tort_rbrace> )" by (auto 4 3)
 lemma [simp]: "p \<in> \<S_S> \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<longleftrightarrow> (\<exists>z. p \<in> \<S_S> \<tort_lbrace>x z \<tycolon> T z\<tort_rbrace>)" by (auto 4 3)
@@ -488,7 +444,8 @@ lemma move_fact_to_star2[simp]:
   unfolding t1 SpecTop_imp conj_imp FactCollection_imp
   by (intro equal_intr_rule SpecTop_I FactCollection_I conjI) (* (unfold SpecTop_imp conj_imp FactCollection_imp) *)
 
-lemma [cong]: "\<tort_lbrace>x \<tycolon> T\<tort_rbrace> = \<tort_lbrace>x' \<tycolon> T'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>x \<tycolon> T \<and>\<^sup>\<nu> P\<tort_rbrace> = \<tort_lbrace>x' \<tycolon> T' \<and>\<^sup>\<nu> P\<tort_rbrace>" by auto
+lemma NuAddition_cong: "\<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<equiv> \<tort_lbrace>x' \<tycolon> T'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>x \<tycolon> T \<and>\<^sup>\<nu> P\<tort_rbrace> \<equiv> \<tort_lbrace>x' \<tycolon> T' \<and>\<^sup>\<nu> P\<tort_rbrace>" unfolding atomize_eq by auto
+simproc_setup NuAddition_cong ("\<tort_lbrace>x \<tycolon> T \<and>\<^sup>\<nu> P\<tort_rbrace>") = \<open>K (NuSimpCong.simproc @{thm NuAddition_cong})\<close>
 
 subsubsection \<open>Auto tag\<close>
 
@@ -909,11 +866,12 @@ translations "P" <= "CONST AndFact P (CONST NoFact)"
 *)
 section \<open>Main implementation of the system\<close>
 
+ML_file NuBasics.ML
 ML_file "./general/binary_tree.ML"
 ML_file "./general/auto_level.ML"
 (* ML_file "./library/path.ML" *)
 ML \<open>Syntax.parse_term @{context} "xxx"\<close>
-ML_file NuBasics.ML
+
 ML_file "./library/general.ML"
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
