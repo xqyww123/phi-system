@@ -317,7 +317,8 @@ val auto_resolve_rule0 = auto_resolve_rule NONE []
 fun cast ctx desired_nu major =
   (major RS
     (Thm.instantiate ([((("'a",0),["NuPrime.lrep"]),
-                            ctyp_of_cterm desired_nu |> dest_tynuset_c |> dest_ctyp1)],
+                        ctyp_of_cterm desired_nu |> dest_tynuset_c |> dest_ctyp1 
+                                                    (*heap \<times> 'a*))],
           [((("T'",0),typ_of_cterm desired_nu), desired_nu)])
       @{thm "cast"}))
    |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)

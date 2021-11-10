@@ -181,7 +181,7 @@ subsection \<open>\<nu>-abstraction\<close>
 subsubsection \<open>Raw Pointer\<close>
 
 definition RawPointer :: "(memptr, raw_memaddr) \<nu>"
-  where "RawPointer x p = (case p of (memptr i) \<Rightarrow> (i = x))"
+  where "RawPointer x = { memptr i | i. i = x}"
 
 lemma [simp]: "memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_def by (simp add: RawPointer_def)
 lemma [elim,\<nu>elim]: "addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
@@ -191,7 +191,7 @@ lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment
 subsubsection \<open>Pointer\<close>
 
 definition Pointer :: "(memptr, nat memaddr) \<nu>"
-  where "Pointer x p \<longleftrightarrow> (case p of (memptr raw) \<Rightarrow> the_same_addr raw x)"
+  where "Pointer x = { memptr raw | raw. the_same_addr raw x}"
 
 lemma [simp]: "memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
   unfolding Refining_def by (simp add: Pointer_def)
@@ -240,7 +240,7 @@ end
 
 subsection \<open>Abstractor\<close>
 
-definition NuVoid :: "(void, unit) \<nu>" where "NuVoid _ _ = True"
+definition NuVoid :: "(void, unit) \<nu>" where "NuVoid _ = UNIV"
 text \<open>The name `void` coincides that, when a procedure has no input arguments,
   the \<nu>-type for the input would exactly be @{term Void}. \<close>
 
@@ -248,7 +248,7 @@ consts Void_sugar :: " 'a_sugar " ("Void")
 translations "Void" == "() \<tycolon> CONST NuVoid"
 
 lemma [simp]: "p \<nuLinkL> NuVoid \<nuLinkR> x" unfolding NuVoid_def Refining_def by simp
-lemma [elim!, \<nu>elim]: "Inhabited Void \<Longrightarrow> C \<Longrightarrow> C" by simp
+lemma [elim!, \<nu>elim]: "Inhabited \<tort_lbrace>Void\<tort_rbrace> \<Longrightarrow> C \<Longrightarrow> C" by simp
 (*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
 
 section \<open>The integer data type\<close>
@@ -276,7 +276,7 @@ subsection \<open>Basic \<nu>-abstractions based on integer type\<close>
 
 subsubsection \<open>Natural number\<close>
 
-definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNat _ x p = (unat p = x)"
+definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNat _ x = {p. unat p = x }"
 syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
 
@@ -287,7 +287,7 @@ lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI)
 lemma [\<nu>intro]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by simp
 
-definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ x p = (p = of_nat x)"
+definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ x = {p. p = of_nat x}"
 syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
 translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))" 
 
@@ -296,7 +296,7 @@ lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Integer\<close>
 
-definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) \<nu>" where "NuInt _ x p = (sint p = x)"
+definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) \<nu>" where "NuInt _ x = {p. sint p = x}"
 syntax "_NuInt_" :: "type \<Rightarrow> logic" (\<open>\<int>'[_']\<close>)
 translations "\<int>['x]" == "CONST NuInt (TYPE('x))" 
 
@@ -316,7 +316,7 @@ lemma [simp]: "(x \<noteq> 1) = (x = 0)" for x :: "1 word" proof -
   then show ?thesis  by auto
 qed
 
-definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool x p = ((p = 1) = x)"
+definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool x = {p. (p = 1) = x }"
 
 lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_def by (simp add: NuBool_def)
 lemma [\<nu>intro]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
@@ -395,7 +395,7 @@ instantiation tuple :: (field_list) field_list begin instance by standard end
 
 subsection \<open>Nu abstraction - `NuTuple`\<close>
 
-definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b) \<nu>" ("\<lbrace> _ \<rbrace>") where "\<lbrace> N \<rbrace> x p = (case p of Tuple p' \<Rightarrow> p' \<nuLinkL> N \<nuLinkR> x)"
+definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b) \<nu>" ("\<lbrace> _ \<rbrace>") where "\<lbrace> N \<rbrace> x = { Tuple p | p. p \<nuLinkL> N \<nuLinkR> x}"
 
 lemma [simp]: "Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by simp
@@ -444,6 +444,6 @@ definition op_func_pointer :: "('a \<longmapsto> 'b) \<Rightarrow> ('r :: stack)
 )"
 
 definition FunPtr :: "(heap \<times> 'ap::lrep,'ax) \<nu> \<Rightarrow> (heap \<times> 'bp::lrep,'bx) \<nu> \<Rightarrow> (fun_addr, 'ax \<longmapsto> 'bx) \<nu>"
-  where "FunPtr A B fx faddr  = (\<exists>fp. fun_table faddr = Some fp \<and> (\<forall>a b. \<^bold>p\<^bold>r\<^bold>o\<^bold>c fp \<blangle> a \<tycolon> A \<longmapsto> b \<tycolon> B \<brangle>))"
+  where "FunPtr A B fx  = {faddr. (\<exists>fp. fun_table faddr = Some fp \<and> (\<forall>a b. \<^bold>p\<^bold>r\<^bold>o\<^bold>c fp \<blangle> a \<tycolon> A \<longmapsto> b \<tycolon> B \<brangle>))}"
 
 end

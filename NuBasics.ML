@@ -19,7 +19,9 @@ signature NU_BASICS = sig
   val dest_param : term -> term
   val param_type : thm -> typ
   val dest_RepSet : term -> term * term
+  val dest_RepSet_c : cterm -> cterm * cterm
   val dest_nuTy : term -> term * term
+  val dest_nuTy_c : cterm -> cterm * cterm
   val mk_nuTy : term * term -> term
   val dest_named_opt : term -> string option * term (* Named name, x -> (name,x) *)
   val name_tag_ty : typ
@@ -40,6 +42,7 @@ signature NU_BASICS = sig
   val dest_PendingConstruction : term -> term * term * term
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm
   val dest_current_nu   : thm -> term * term
+  val dest_current_nu_c : thm -> cterm * cterm
   val stack_of_meta   : thm -> term list
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
@@ -163,7 +166,9 @@ fun mk_repset (tm as (Const (@{const_name "RepSet"}, _) $ _)) = tm
   | mk_repset tm = mk_monop @{const_name "RepSet"} tm
 val nuTy_name = @{const_name "typing"}
 val dest_nuTy = dest_binop nuTy_name
+val dest_nuTy_c = dest_binop_c nuTy_name
 val dest_RepSet = dest_monop @{const_name "RepSet"} #> dest_nuTy
+val dest_RepSet_c = dest_monop_c @{const_name "RepSet"} #> dest_nuTy_c
 val mk_nuTy = mk_binop nuTy_name
 (* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
   | dest_andTy t = raise TERM ("bad AndTy", [t]); *)
@@ -175,26 +180,49 @@ val dest_CurrentConstruction   = dest_binop @{const_name "CurrentConstruction"}
 val dest_CurrentConstruction_c = dest_binop_c @{const_name "CurrentConstruction"}
 val dest_PendingConstruction   = dest_triop @{const_name "PendingConstruction"}
 val dest_PendingConstruction_c = dest_triop_c @{const_name "PendingConstruction"}
+
 fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
   handle TERM _ => ((dest_PendingConstruction c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [c]))
 fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
   handle TERM _ => ((dest_PendingConstruction_c c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
+
 val dest_current_nu = Thm.prop_of #> perhaps (dest_SpecTop #> #1) #> perhaps dest_Trueprop
     #> dest_CurrentConstruction #> #2 #> dest_RepSet
+val dest_current_nu_c = Thm.cprop_of #> perhaps (dest_SpecTop_c #> #1) #> perhaps dest_Trueprop_c
+    #> dest_CurrentConstruction_c #> #2 #> dest_RepSet_c
+
 fun strip_stack ret (Const (@{const_name "Pair"}, _) $ a $ b,
                      Const (@{const_name "Stack_Delimiter"}, _) $ A $ B)
       = strip_stack ((a,A)::ret) (b,B)
   | strip_stack ret (a,A) = (a,A)::ret
+fun strip_stack_c (xs,TS) = (strip_binop_r_c @{const_name "Pair"} xs,
+                             strip_binop_r_c @{const_name "Stack_Delimiter"} TS)
+
 fun dest_topctx (Const (@{const_name "Pair"}, _) $ a $ b,
                  Const (@{const_name "NuTopCtx"}, _) $ A $ B)
       = ((a,A),(b,B))
+  | dest_topctx (x,T) = raise TERM ("dest_topctx", [x,T])
+fun dest_topctx_c (x,T) =
+  let
+    val _ = dest_topctx (term_of x, term_of T)
+    val (a,b) = Thm.dest_binop x
+    val (A,B) = Thm.dest_binop T
+  in
+    ((a,A),(b,B))
+  end
+
 val stack_of_meta = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
   (dest_current_nu
     #> apsnd (repeate (dest_binop @{const_name "NuAddition"} #> #1))
     #> dest_topctx #> #2
     #> strip_stack [])
+val stack_of_meta_c = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
+  (dest_current_nu_c
+    #> apsnd (repeate (dest_binop_c @{const_name "NuAddition"} #> #1))
+    #> dest_topctx_c #> #2
+    #> strip_stack_c)
 
 val current_block_var_c =
   Thm.cprop_of

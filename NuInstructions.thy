@@ -122,16 +122,20 @@ lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr
 subsubsection \<open>Stack Head\<close> \<comment> \<open>A technically auxiliary \<nu>-abstractor\<close>
 
 definition Nu_Stack_Head :: "('a::lrep,'ax) \<nu> \<Rightarrow> (heap \<times> 'stack,'hsx) \<nu> \<Rightarrow> (heap \<times> 'a \<times> 'stack, 'ax \<times> 'hsx) \<nu>"
-  where "Nu_Stack_Head A Ctx = (\<lambda>(ax,hsx) (h,a,s). (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> (hsx)) )"
+  where "Nu_Stack_Head A Ctx = (\<lambda>(ax,hsx). {(h,a,s). (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> (hsx))} )"
 
 consts "Stack_Head_sugar" :: " 'just \<Rightarrow> 'a \<Rightarrow> 'sugar " ( "_/ <stack-head> _" [13,14] 13) \<comment> \<open>Note it is left associative\<close>
 translations " c \<tycolon> Ctx <stack-head> a \<tycolon> A " == " (CONST Pair a c) \<tycolon> (CONST Nu_Stack_Head A Ctx) "
   " Ctx <stack-head> A " => " (CONST Pair (_\<nu>typing_x A) (_\<nu>typing_x Ctx)) \<tycolon> (CONST Nu_Stack_Head (_\<nu>typing_ty A) (_\<nu>typing_ty Ctx)) "
 
 lemma [simp]: "(h,a,s) \<nuLinkL> Nu_Stack_Head A Ctx \<nuLinkR> (ax,hsx) \<longleftrightarrow> (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> hsx)"
-  unfolding Nu_Stack_Head_def Refining_ex by simp
-lemma [cong]: "\<tort_lbrace>a \<tycolon> A\<tort_rbrace> = \<tort_lbrace>a' \<tycolon> A'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>hs \<tycolon> HS\<tort_rbrace> = \<tort_lbrace>hs' \<tycolon> HS'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>(a,hs) \<tycolon> Nu_Stack_Head A HS\<tort_rbrace> = \<tort_lbrace>(a',hs') \<tycolon> Nu_Stack_Head A' HS'\<tort_rbrace>" by auto
-lemma [simp,\<nu>auto_expansion]: "\<tort_lbrace> (a,h,s) \<tycolon> Nu_Stack_Head A (NuTopCtx H S) \<tort_rbrace> = \<tort_lbrace> (h,a,s) \<tycolon> NuTopCtx H (A <stack-div> S) \<tort_rbrace>" by auto
+  unfolding Nu_Stack_Head_def Refining_def by simp
+lemma [simp]: "\<tort_lbrace> (a,h,s) \<tycolon> Nu_Stack_Head A (NuTopCtx H S) \<tort_rbrace> = \<tort_lbrace> (h,a,s) \<tycolon> NuTopCtx H (A <stack-div> S) \<tort_rbrace>" by auto
+lemma [simp]: "\<tort_lbrace>c \<tycolon> Ctx \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P <stack-head> x \<tycolon> T\<tort_rbrace> = \<tort_lbrace> (c \<tycolon> Ctx <stack-head> x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<tort_rbrace>" unfolding Auto_def by auto
+
+lemma Nu_Stack_Head_cong: "\<tort_lbrace>c \<tycolon> Ctx\<tort_rbrace> \<equiv> \<tort_lbrace>c' \<tycolon> Ctx'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>c \<tycolon> Ctx <stack-head> x \<tycolon> T\<tort_rbrace> \<equiv> \<tort_lbrace>c' \<tycolon> Ctx' <stack-head> x \<tycolon> T\<tort_rbrace>"
+  unfolding atomize_eq by auto
+simproc_setup Nu_Stack_Head_cong ("\<tort_lbrace>c \<tycolon> Ctx <stack-head> x \<tycolon> T\<tort_rbrace>") = \<open>K (NuSimpCong.simproc @{thm Nu_Stack_Head_cong})\<close>
 
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> c \<tycolon> Ctx \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> c \<tycolon> Ctx <stack-head> (x \<tycolon> X) \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
   unfolding Intro_def Cast_def by simp
@@ -166,16 +170,17 @@ definition Until :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<lo
 
 
 lemma Until: "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X <stack-head> c x' \<tycolon> \<bool> \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> X \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu> (\<not> c x') \<brangle>"
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> X \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu>' (\<not> c x') \<brangle>"
   for X :: "(heap \<times> 'a::lrep, 'b) \<nu>"
-  unfolding Until_def Procedure_def 
+  unfolding Until_def Procedure_def Auto_def
   apply (auto simp add: SemUnt_deterministic2)
   subgoal for a b xa
     apply (rotate_tac 1)
     by (induct  body "(a, b)" xa arbitrary: a b x rule: SemUnt.induct) (auto 0 7)
   done
 
-lemma Auto_def2: "Auto x \<equiv> x" unfolding Auto_def .
+definition "decorated_All \<equiv> All"
+definition "decorated_ExNu \<equiv> ExNu"
 
 ML_file \<open>library/loop.ML\<close>
 
@@ -187,22 +192,13 @@ let open Parse Scan NuHelp NuBasics in
       NuLoop.mk_loop_proc @{thm Until} vars stack_schema heap_schema subj always ctx meta)
 end\<close>
 
-ML \<open>(addsimps)\<close>
-ML \<open>\<^named_theorems>\<open>\<nu>auto_expansion\<close>\<close>
 
 notepad
 begin
   assume A[simplified Auto_def]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle>  x \<tycolon> Auto NuRefine T P \<longmapsto> Y \<brangle>"
 end
 
-lemma [simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> x \<tycolon> Auto NuRefine T P \<longmapsto> R \<brangle> = \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> (x \<tycolon> T) \<and> x \<in> P \<longmapsto> R \<brangle>"  by simp
-thm Auto_def
-
-thm atomize_eq
-proc test: \<open>i \<tycolon> \<nat>[32]\<heavy_comma> j \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>0 \<tycolon> \<nat>[32]\<close>
-  \<bullet> until i'' j in i'', j subj \<open>0 < i''\<close>  always "j = 1"
-  thm Named_def
-
+(*
   term \<open>(\<lambda>c. c) \<tycolon> Named (NAME xx) (ExNu (\<lambda>c. T))\<close>
 
 proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch <where''> Always)) \<flower> W\<close>
@@ -226,7 +222,7 @@ note prems
       show ?thesis apply (rule prems(3)) using prems by (auto 4 7)
     qed
     done done *)
-
+*)
 
   subsubsection \<open>recursion\<close>
 
@@ -642,5 +638,15 @@ proc i_store_n[\<nu>overload "\<down>:"]:
 
 lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>proc[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
 
+
+
+ML \<open>@{type_name set}\<close>
+proc test: \<open>R\<heavy_comma> i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>R\<heavy_comma> 0 \<tycolon> \<nat>[32]\<close>
+  \<bullet> until i subj \<open>0 < i\<close> \<medium_left_bracket> \<bullet> \<rightarrow> i i 1 -
+  \<bullet> 0 i <
+  thm decorated_All_def[symmetric]
+  \<medium_left_bracket>  \<nu>debug note that 
+
+  thm XXXX
 
 end

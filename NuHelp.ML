@@ -33,23 +33,27 @@ signature NU_HELP = sig
   val dest_monop_c : string (* const name *) -> cterm -> cterm
   val dest_binop   : string (* const name *) -> term -> term * term
   val dest_binop_c : string (* const name *) -> cterm -> cterm * cterm
-  val dest_binop_ty: string (* const name *) -> typ -> typ * typ
+  val dest_binop_ty  : string (* const name *) -> typ -> typ * typ
+  val dest_binop_ty_c: string (* const name *) -> ctyp -> ctyp * ctyp
   val dest_triop   : string (* const name *) -> term -> term * term * term
   val dest_triop_c : string (* const name *) -> cterm -> cterm * cterm * cterm
   val dest_quadop   : string (* const name *) -> term -> term * term * term * term
   val dest_quadop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm
   val dest_quinop   : string (* const name *) -> term -> term * term * term * term * term
   val dest_quinop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm * cterm
-  val strip_binop_r (* right associative *) : string (* const name *) -> term -> term list
+  val strip_binop_r   (* right associative *) : string (* const name *) -> term -> term list
   val strip_binop_r_c (* right associative *) : string (* const name *) -> cterm -> cterm list
-  val strip_binop_ty (* right associative *) : string (* const name *) -> typ -> typ list
+  val strip_binop_ty   (* right associative *) : string (* const name *) -> typ -> typ list
+  val strip_binop_ty_c (* right associative *) : string (* const name *) -> ctyp -> ctyp list
   val strip_binop_l (* left associative *) : string (* const name *) -> term -> term list
   val mk_monop : string (* const name *) -> term -> term
   val mk_binop : string (* const name *) -> term * term -> term
+  val mk_binop_ty : string (* const name *) -> typ * typ -> typ
   val list_mk_binop_l  (* left associative *) : string (* const name *) -> term list -> term
   val list_mk_binop_l0 (* left associative *) : string (* const name *)
         -> term (* initial term *) -> term list -> term
   val list_mk_binop_r  (* right associative *) : string (* const name *) -> term list -> term
+  val list_mk_binop_r_ty  (* right associative *) : string (* type name *) -> typ list -> typ
   val list_mk_binop_r0 (* right associative *) : string (* const name *)
         -> term (* initial term *) -> term list -> term
   val dest_binder    : string (*binder name*) -> term -> term * term
@@ -137,11 +141,14 @@ fun dest_binop_c const tm =
 fun dest_binop_ty const (ty as Type (const', [a, b])) =
       if const' = const then (a,b) else raise TYPE ("dest_binop_ty "^const, [ty], [])
   | dest_binop_ty const ty = raise TYPE ("dest_binop_ty "^const, [ty], [])
+fun dest_binop_ty_c const ty = (dest_binop_ty const (typ_of ty);
+      (dest_ctyp0 ty, dest_ctyp1 ty))
 fun strip_bin_r_assoc strip tm =
   case try strip tm of SOME (a,b) => a :: (strip_bin_r_assoc strip b) | _ => [tm]
-val strip_binop_r = strip_bin_r_assoc o dest_binop
+val strip_binop_r   = strip_bin_r_assoc o dest_binop
 val strip_binop_r_c = strip_bin_r_assoc o dest_binop_c
-val strip_binop_ty = strip_bin_r_assoc o dest_binop_ty
+val strip_binop_ty   = strip_bin_r_assoc o dest_binop_ty
+val strip_binop_ty_c = strip_bin_r_assoc o dest_binop_ty_c
 fun strip_bin_l_assoc strip tm =
   case try strip tm of SOME (a,b) => b :: (strip_bin_l_assoc strip a) | _ => [tm]
 val strip_binop_l = strip_bin_l_assoc o dest_binop
@@ -182,9 +189,12 @@ val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
 fun mk_monop name arg = Const (name, Term.dummyT) $ arg
 fun mk_binop name (lhs,rhs) = Const (name, Term.dummyT) $ lhs $ rhs
-fun list_mk_binop_r _  [] = raise Empty
-  | list_mk_binop_r _  [x] = x
-  | list_mk_binop_r mk (h::r) = mk_binop mk (h, list_mk_binop_r mk r)
+fun mk_binop_ty name (lhs,rhs) = Type (name, [lhs, rhs])
+fun gen_list_mk_binop_r _  [] = raise Empty
+  | gen_list_mk_binop_r _  [x] = x
+  | gen_list_mk_binop_r mk (h::r) = mk (h, gen_list_mk_binop_r mk r)
+val list_mk_binop_r = gen_list_mk_binop_r o mk_binop
+val list_mk_binop_r_ty = gen_list_mk_binop_r o mk_binop_ty
 fun list_mk_binop_r0 _  x0 [] = x0
   | list_mk_binop_r0 mk x0 (h::r) = mk_binop mk (h, list_mk_binop_r0 mk x0 r)
 fun list_mk_binop_l _  [] = raise Empty

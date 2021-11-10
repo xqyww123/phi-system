@@ -13,8 +13,8 @@ fun chk_simplified NONE = NONE
 
 fun simproc cong ctx cterm =
   let
-    val (lhs,_) = Thm.cconcl_of cong |> @{print} |> dest_binop_c @{const_name "Pure.eq"}
-    val cong = Thm.instantiate (Thm.first_order_match (lhs,cterm)) cong
+    val (lhs,_) = Thm.cconcl_of cong |> dest_binop_c @{const_name "Pure.eq"}
+    val cong = Thm.instantiate (Thm.first_order_match (lhs,cterm)) cong (* |> @{print} *)
   in
     SINGLE (ALLGOALS (SOLVED' (Simplifier.asm_simp_tac ctx))) cong |> chk_simplified
   end handle Pattern.MATCH => NONE
@@ -40,7 +40,7 @@ fun simproc_qualifier cong ctx cterm =
     case Thm.term_of cterm
       of (Const (@{const_name RepSet},_) $ (Const (@{const_name typing}, _)
           $ _ $ (Const _ $ Abs (name, _, _))))
-        => Option.map (norm_name name) (simproc cong ctx cterm)
+        => Option.map (norm_name name) (simproc cong ctx cterm) (* |> @{print} *)
       | _ => NONE
   end
   

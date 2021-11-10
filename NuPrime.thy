@@ -193,42 +193,6 @@ specification (fun_table)
 
 
 
-(* datatype com =
-  Basic " heap \<times> deep_model \<Rightarrow> heap \<times> deep_model"
-  | Seq com com
-  | Branch "com" "com"
-  | Until "com"
-
-inductive Sem :: "com \<Rightarrow> heap \<times> deep_model \<Rightarrow> heap \<times> deep_model \<Rightarrow> bool" where
-  "Sem (Basic f) s (f s)"
-| Sem_Seq:  "Sem f1 s s' \<Longrightarrow> Sem f2 s' s'' \<Longrightarrow> Sem (Seq f1 f2) s s'' "
-| "Sem f s (h, DM_fusion (DM_int 1 0) s') \<Longrightarrow> Sem (Until f) s (h, s')"
-| "Sem f s (h, DM_fusion (DM_int 1 1) s') \<Longrightarrow> Sem (Until f) (h,s') s'' \<Longrightarrow> Sem (Until f) s s''"
-
-inductive_cases AA[elim!]:
-  "Sem (Basic f) s s'" "Sem (Seq c1 c2) s s'"
-thm AA
-
-definition Proc :: " com \<Rightarrow> (heap \<times> deep_model) set \<Rightarrow> (heap \<times> deep_model) set \<Rightarrow> bool"
-  where "Proc f A B \<longleftrightarrow> (\<forall>x y. x \<in> A \<and> Sem f x y \<longrightarrow> y \<in> B)"
-
-lemma "Proc f A B \<Longrightarrow> Proc g B C \<Longrightarrow> Proc (Seq f g) A C"
-  unfolding Proc_def apply (auto intro: Sem_Seq)
-  by blast
-
-definition Ctx :: " heap set \<Rightarrow> deep_model set \<Rightarrow> (heap \<times> deep_model) set "
-  where "Ctx = (\<times>)"
-definition Fusion :: "(deep_model) set \<Rightarrow> (deep_model) set \<Rightarrow> (deep_model) set"
-  where "Fusion A B = { (DM_fusion a b) | a b. a \<in> A \<and> b \<in> B }"
-definition Boolean :: " bool \<Rightarrow> deep_model set"
-  where "Boolean b = { DM_int 1 (if b then 1 else 0) }"
-
-
-*)
-
-
-
-
 
 
 definition AvailableSegments :: "heap \<Rightarrow> msegment set"
@@ -275,7 +239,7 @@ class ceq =  \<comment> \<open>equality comparison\<close>
 
 subsection \<open>The \<nu>-type\<close>
 
-type_synonym ('a,'b) \<nu> = " 'b \<Rightarrow> 'a \<Rightarrow> bool "
+type_synonym ('a,'b) \<nu> = " 'b \<Rightarrow> 'a set "
 
 subsubsection \<open>Definitions\<close>
 
@@ -285,12 +249,12 @@ datatype ('a,'b) typing = typing (typing_img: 'b ) (typing_nu: "('a,'b) \<nu>") 
 primrec nu_of :: "('a,'b) typing \<Rightarrow> ('a,'b) \<nu>" where "nu_of (x \<tycolon> N) = N"
 primrec image_of :: "('a,'b) typing \<Rightarrow> 'b" where "image_of (x \<tycolon> N) = x"
 
-definition RepSet :: "('a,'b) typing \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>" [10] ) where "\<tort_lbrace> ty \<tort_rbrace> = {p. case ty of (x \<tycolon> N) \<Rightarrow> N x p }"
+definition RepSet :: "('a,'b) typing \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>" [10] ) where "\<tort_lbrace> ty \<tort_rbrace> = (case ty of (x \<tycolon> N) \<Rightarrow> N x)"
 definition Refining :: "'a \<Rightarrow> ('a,'b) \<nu> \<Rightarrow>  'b \<Rightarrow> bool" ("(_/ \<nuLinkL> _  \<nuLinkR>/ _)" [27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
-  where  "(p \<nuLinkL> N \<nuLinkR> x) \<longleftrightarrow> N x p"
-definition Inhabited :: " ('a,'b) typing \<Rightarrow> bool" where  "Inhabited typ = (\<exists>p. p \<in> \<tort_lbrace> typ \<tort_rbrace>)"
+  where  "(p \<nuLinkL> N \<nuLinkR> x) \<longleftrightarrow> p \<in> N x"
+definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
 abbreviation InhabitNu :: " 'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> bool" ("_ \<ratio> _" [18,18] 17)  \<comment>\<open>shortcut keys ":TY:"\<close>
-  where  " (x \<ratio> T) \<equiv> Inhabited (x \<tycolon> T)"
+  where  " (x \<ratio> T) \<equiv> Inhabited \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete values,
   e.g. @{prop " a_concrete_int32 \<in> \<tort_lbrace>(42::nat) \<tycolon> N 32\<tort_rbrace>"} and also "state \<in> State (\<tort_lbrace>42 \<tycolon> N\<tort_rbrace> \<times> \<tort_lbrace>24 \<tycolon> N\<tort_rbrace> \<times> \<cdots> )".
   It constitutes basic elements in specification.
@@ -349,6 +313,7 @@ definition Premise :: "bool \<Rightarrow> bool" ("\<^bold>p\<^bold>r\<^bold>e\<^
 
 lemma Premise_I: "P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding Premise_def by simp
 lemma Premise_E: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> P" unfolding Premise_def by simp
+
 lemma [elim!,\<nu>elim]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 lemma Premise_Irew: "(P \<Longrightarrow> C) \<equiv> Trueprop (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> C)" unfolding Premise_def atomize_imp .
 
@@ -466,7 +431,7 @@ definition PendingConstruction :: " (('a::lrep) \<longmapsto> ('b::lrep)) \<Righ
 translations "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)" \<rightleftharpoons> "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
   "CONST PendingConstruction f s (x \<tycolon> T)" \<rightleftharpoons> "CONST PendingConstruction f s \<tort_lbrace> x \<tycolon> T\<tort_rbrace>"
 
-lemma CurrentConstruction_D: "CurrentConstruction s \<tort_lbrace>T\<tort_rbrace> \<Longrightarrow> Inhabited T"
+lemma CurrentConstruction_D: "CurrentConstruction s T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (cases s) auto
 (* lemma [elim!,\<nu>elim]: "CurrentConstruction s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding CurrentConstruction_def by (cases s) auto *)
@@ -492,8 +457,8 @@ print_translation \<open>
   end
 \<close>
 
-lemma [elim!,\<nu>elim]: "CodeBlock v arg \<tort_lbrace>T\<tort_rbrace> prog \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding CodeBlock_def Inhabited_def by (cases arg) auto
+lemma [elim!,\<nu>elim]: "CodeBlock v arg S prog \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding CodeBlock_def Inhabited_def by blast
 lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv> ProtectorI (prog arg))"
   unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
 lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (prog arg) \<equiv> v"
@@ -611,8 +576,8 @@ lemma declare_fact:
   unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
 
 lemma set_\<nu>current:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x \<tycolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
-    \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x \<tycolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (Trueprop (x \<ratio> T)))"
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
+    \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (Trueprop (Inhabited T)))"
   unfolding SpecTop_imp FactCollection_imp
   by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact) (auto dest: CurrentConstruction_D)
 

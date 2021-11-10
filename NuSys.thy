@@ -201,8 +201,6 @@ subsection \<open>Other Tags\<close>
 
 definition Auto :: " 'a \<Rightarrow> 'a " where "Auto x = x"
 
-named_theorems \<nu>auto_expansion
-
 section \<open>Essential \<nu>-abstractor\<close>
 
 subsection \<open>Separation Conjecture\<close>
@@ -215,7 +213,7 @@ lemma [elim]: "A \<perpendicular> B \<Longrightarrow> ((\<And>x. x \<in> A \<Lon
 lemma [iff]: "{} \<perpendicular> S" and [iff]: "S \<perpendicular> {}" unfolding disjoint_def by auto
 
 definition Separation :: " (heap, 'a) \<nu> \<Rightarrow> (heap, 'b) \<nu> \<Rightarrow> (heap, 'a \<times> 'b) \<nu>" (infixr "\<^emph>" 70)
-  where "A \<^emph> B = (\<lambda>(a,b) h. (\<exists>h2 h1. h = h2 ++ h1 \<and> dom h2 \<perpendicular> dom h1 \<and> (h1 \<nuLinkL> A \<nuLinkR> a) \<and> (h2 \<nuLinkL> B \<nuLinkR> b)))"
+  where "A \<^emph> B = (\<lambda>(a,b) . {h. (\<exists>h2 h1. h = h2 ++ h1 \<and> dom h2 \<perpendicular> dom h1 \<and> (h1 \<nuLinkL> A \<nuLinkR> a) \<and> (h2 \<nuLinkL> B \<nuLinkR> b))})"
 
 lemma Separation_exp[iff]: "h \<nuLinkL> A \<^emph> B \<nuLinkR> (a,b) \<longleftrightarrow>
   (\<exists>h2 h1. h = h2 ++ h1 \<and> dom h2 \<perpendicular> dom h1 \<and> (h1 \<nuLinkL> A \<nuLinkR> a) \<and> (h2 \<nuLinkL> B \<nuLinkR> b))"
@@ -280,7 +278,7 @@ lemma NonSeparation_distrib_R: "h \<in> ((A \<dbl_and> P) \<heavy_asterisk> B) \
   by (metis NonSeparation_distrib_L Separation_comm) *)
   
 
-lemma [elim!,\<nu>elim]: "Inhabited (a \<tycolon> A \<heavy_asterisk> b \<tycolon> B) \<Longrightarrow> (a \<ratio> A \<Longrightarrow> b \<ratio> B \<Longrightarrow> C) \<Longrightarrow> C"
+lemma [elim!,\<nu>elim]: "Inhabited \<tort_lbrace>a \<tycolon> A \<heavy_asterisk> b \<tycolon> B\<tort_rbrace> \<Longrightarrow> (a \<ratio> A \<Longrightarrow> b \<ratio> B \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def Heap_Delimiter_def by auto
 (* lemma [elim!,\<nu>elim]: "Inhabited (A \<dbl_and> B) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by auto *)
@@ -290,7 +288,7 @@ subsection \<open>Fusion and its derivatives\<close>
 subsubsection \<open>Fusion\<close>
 
 definition Fusion :: "('a1,'b1) \<nu> \<Rightarrow> ('a2,'b2) \<nu> \<Rightarrow> ('a1 \<times> 'a2, 'b1 \<times> 'b2) \<nu>" (infixr "\<cross_product>" 70) 
-  where "Fusion N M x p = (case p of (p1,p2) \<Rightarrow> case x of (x1,x2) \<Rightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2))"
+  where "Fusion N M x = {(p1,p2). case x of (x1,x2) \<Rightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2)}"
 
 lemma [simp]: "(p1,p2) \<nuLinkL> N \<cross_product> M \<nuLinkR> (x1,x2) \<longleftrightarrow> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> M \<nuLinkR> x2)"
   by (simp add: Fusion_def Refining_def)
@@ -326,14 +324,14 @@ subsection \<open>Top Context\<close>
 subsubsection \<open>Context Type\<close> \<comment> \<open>The pair of heap and stack\<close>
 
 definition NuTopCtx :: " (heap, 'hx) \<nu> \<Rightarrow> ('s :: stack, 'sx) \<nu> \<Rightarrow> (heap \<times> 's, 'hx \<times> 'sx) \<nu> " (infix "<top-ctx>" 59)
-  where "(H <top-ctx> S) = (\<lambda>(h,s) (hp,sp). (hp \<nuLinkL> H \<nuLinkR> h) \<and> (sp \<nuLinkL> S \<nuLinkR> s) \<and> Heap hp)"
+  where "(H <top-ctx> S) = (\<lambda>(h,s). {(hp,sp). (hp \<nuLinkL> H \<nuLinkR> h) \<and> (sp \<nuLinkL> S \<nuLinkR> s) \<and> Heap hp})"
 consts "NuTopCtx_sugar" :: " 'just \<Rightarrow> 'a \<Rightarrow> 'sugar " ( "(2_ \<heavy_comma>/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _)" [10,14] 13)
 translations "(s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H)" \<rightleftharpoons> "(CONST Pair h s) \<tycolon> CONST NuTopCtx H S"
   "(S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H)" => "(_\<nu>typing_x H, _\<nu>typing_x S) \<tycolon> CONST NuTopCtx (_\<nu>typing_ty H) (_\<nu>typing_ty S)"
 
 lemma [simp]: " ((hp, sp) \<nuLinkL> H <top-ctx> S  \<nuLinkR> (h, s)) \<longleftrightarrow> (hp \<nuLinkL> H  \<nuLinkR> h) \<and> (sp \<nuLinkL> S  \<nuLinkR> s) \<and> Heap hp"
   unfolding NuTopCtx_def Refining_def by simp
-lemma [elim!,\<nu>elim]: "Inhabited (s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<Longrightarrow> (s \<ratio> S \<Longrightarrow> h \<ratio> H \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
+lemma [elim!,\<nu>elim]: "Inhabited \<tort_lbrace>s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<tort_rbrace> \<Longrightarrow> (s \<ratio> S \<Longrightarrow> h \<ratio> H \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t h \<tycolon> H \<longmapsto> h' \<tycolon> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ph \<^bold>w\<^bold>h\<^bold>e\<^bold>n Qh \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t s \<tycolon> S \<longmapsto> s' \<tycolon> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ps \<^bold>w\<^bold>h\<^bold>e\<^bold>n Qs \<Longrightarrow>
@@ -343,7 +341,7 @@ lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t h \<tycolon> H \<longm
 subsection \<open>Existential Nu-type\<close>
 
 definition ExNu :: " ('c \<Rightarrow> ('a,'b) \<nu>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<nu> "
-  where "ExNu N x p = (\<exists>c. p \<nuLinkL> N c \<nuLinkR> x c)"
+  where "ExNu N x = {p. (\<exists>c. p \<nuLinkL> N c \<nuLinkR> x c)}"
 lemma [simp]: "p \<nuLinkL> ExNu N \<nuLinkR> x \<longleftrightarrow> (\<exists>c. p \<nuLinkL> N c \<nuLinkR> x c)" unfolding ExNu_def Refining_def by simp
 
 
@@ -361,9 +359,7 @@ translations "\<exists>* a b. P" \<rightleftharpoons> "\<exists>* a. (\<exists>*
 notation ExNu_sugar (binder "\<exists>\<^sup>\<nu> " 10)
 
 lemma ExNu_cong: "(\<And>c. \<tort_lbrace>x c \<tycolon> T c\<tort_rbrace> \<equiv> \<tort_lbrace>x' c \<tycolon> T' c\<tort_rbrace>) \<Longrightarrow> \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<equiv> \<tort_lbrace> x' \<tycolon> ExNu T' \<tort_rbrace>"
-  unfolding atomize_eq RepSet_def ExNu_def Refining_def by simp blast
-
-
+  unfolding atomize_eq RepSet_def ExNu_def Refining_def by simp
 
 simproc_setup ExNu_cong ("\<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace>") = \<open>K (NuSimpCong.simproc_qualifier @{thm ExNu_cong})\<close>
 
@@ -416,18 +412,18 @@ lemma AutoExTyp_strip: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\
 subsection \<open>Addition Nu-type : coheres true proposition\<close>
 
 definition NuAddition :: " ('p,'x) \<nu> \<Rightarrow> bool \<Rightarrow> ('p,'x) \<nu> " (infixl "\<and>\<^sup>\<nu>" 50)
-  where " (N \<and>\<^sup>\<nu> P) = (\<lambda>x p. P \<and> (p \<nuLinkL> N \<nuLinkR> x))"
+  where " (N \<and>\<^sup>\<nu> P) = (\<lambda>x. {p. P \<and> (p \<nuLinkL> N \<nuLinkR> x)})"
 translations "(x \<tycolon> T) \<and>\<^sup>\<nu> P" => "x \<tycolon> T \<and>\<^sup>\<nu> P"
   "(x \<tycolon> T) \<and> P" => "x \<tycolon> T \<and>\<^sup>\<nu> P"
-lemma [simp]: "p \<nuLinkL> T \<and>\<^sup>\<nu> P \<nuLinkR> x \<longleftrightarrow> P \<and> (p \<nuLinkL> T \<nuLinkR> x)" unfolding NuAddition_def Refining_def ..
+lemma [simp]: "p \<nuLinkL> T \<and>\<^sup>\<nu> P \<nuLinkR> x \<longleftrightarrow> P \<and> (p \<nuLinkL> T \<nuLinkR> x)" unfolding NuAddition_def Refining_def by simp
 
-lemma [simp]: "\<tort_lbrace> x \<tycolon> T \<and>\<^sup>\<nu> True\<tort_rbrace> = \<tort_lbrace> x \<tycolon> T \<tort_rbrace>" by auto
+(* lemma [simp]: "\<tort_lbrace> x \<tycolon> T \<and>\<^sup>\<nu> True\<tort_rbrace> = \<tort_lbrace> x \<tycolon> T \<tort_rbrace>" by auto
 lemma [simp]: "\<tort_lbrace>L \<heavy_comma> (x \<tycolon> T) \<and> P\<tort_rbrace> = \<tort_lbrace>(L \<heavy_comma> x \<tycolon> T) \<and> P\<tort_rbrace>" and [simp]: "\<tort_lbrace>(x \<tycolon> T) \<and> P\<heavy_comma> R\<tort_rbrace> = \<tort_lbrace>(x \<tycolon> T\<heavy_comma> R) \<and> P\<tort_rbrace>"
   unfolding Stack_Delimiter_def by auto
 lemma [simp]: "\<tort_lbrace>L \<heavy_asterisk> (x \<tycolon> T) \<and> P\<tort_rbrace> = \<tort_lbrace>(L \<heavy_asterisk> x \<tycolon> T) \<and> P\<tort_rbrace>" and [simp]: "\<tort_lbrace>(x \<tycolon> T) \<and> P\<heavy_asterisk> R\<tort_rbrace> = \<tort_lbrace>(x \<tycolon> T\<heavy_asterisk> R) \<and> P\<tort_rbrace>"
   unfolding Heap_Delimiter_def by auto blast+
 lemma [simp]: "\<tort_lbrace> (s \<tycolon> S) \<and> P \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<tort_rbrace> = \<tort_lbrace> (s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<and> P \<tort_rbrace>"
-  and [simp]: "\<tort_lbrace> s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (h \<tycolon> H) \<and> P \<tort_rbrace> = \<tort_lbrace> (s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<and> P \<tort_rbrace>" by auto
+  and [simp]: "\<tort_lbrace> s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (h \<tycolon> H) \<and> P \<tort_rbrace> = \<tort_lbrace> (s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<and> P \<tort_rbrace>" by auto *)
 
 
 lemma t1: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and> P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x \<tycolon> T) \<and> P" unfolding CurrentConstruction_def by (cases s) auto
@@ -449,32 +445,36 @@ simproc_setup NuAddition_cong ("\<tort_lbrace>x \<tycolon> T \<and>\<^sup>\<nu> 
 
 subsubsection \<open>Auto tag\<close>
 
-abbreviation AutoAddition (infixl "\<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o" 50) where "AutoAddition \<equiv> Auto NuAddition"
+abbreviation AutoAddition (infixl "\<and>\<^sup>\<nu>''" 50) where "AutoAddition \<equiv> Auto NuAddition"
+notation AutoAddition (infixl "\<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o" 50)
 translations "(x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P" => "x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P"
 
-lemma [simp,\<nu>auto_expansion]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<longmapsto> Y \<brangle> = (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> x \<tycolon> T \<longmapsto> Y \<brangle>)"
+lemma [simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<longmapsto> Y \<brangle> = (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> x \<tycolon> T \<longmapsto> Y \<brangle>)"
   unfolding Auto_def Procedure_def Premise_def by simp blast
-lemma [simp,\<nu>auto_expansion]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> X \<longmapsto> y \<tycolon> Y \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<brangle> = \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> X \<longmapsto> y \<tycolon> Y \<and>\<^sup>\<nu> P \<brangle>"
+lemma [simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> X \<longmapsto> y \<tycolon> Y \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<brangle> = \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> X \<longmapsto> y \<tycolon> Y \<and>\<^sup>\<nu> P \<brangle>"
   unfolding Auto_def ..
 
-lemma [simp,\<nu>auto_expansion]: "\<tort_lbrace> x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o True\<tort_rbrace> = \<tort_lbrace> x \<tycolon> T \<tort_rbrace>" unfolding Auto_def by simp
-lemma [simp,\<nu>auto_expansion]: "\<tort_lbrace>L \<heavy_comma> (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace> = \<tort_lbrace>(L \<heavy_comma> x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>"
-    and [simp,\<nu>auto_expansion]: "\<tort_lbrace>(x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<heavy_comma> R\<tort_rbrace> = \<tort_lbrace>(x \<tycolon> T\<heavy_comma> R) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>"
-  unfolding Auto_def by simp+
-lemma [simp,\<nu>auto_expansion]: "\<tort_lbrace>L \<heavy_asterisk> (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace> = \<tort_lbrace>(L \<heavy_asterisk> x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>"
-    and [simp,\<nu>auto_expansion]: "\<tort_lbrace>(x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<heavy_asterisk> R\<tort_rbrace> = \<tort_lbrace>(x \<tycolon> T\<heavy_asterisk> R) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>"
-  unfolding Auto_def by simp+
-lemma [simp,\<nu>auto_expansion]: "\<tort_lbrace> (s \<tycolon> S) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<tort_rbrace> = \<tort_lbrace> (s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<tort_rbrace>"
-    and [simp,\<nu>auto_expansion]: "\<tort_lbrace> s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (h \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<tort_rbrace> = \<tort_lbrace> (s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<tort_rbrace>"
-  unfolding Auto_def by simp+
+lemma [simp]: "\<tort_lbrace> x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o True\<tort_rbrace> = \<tort_lbrace> x \<tycolon> T \<tort_rbrace>" unfolding Auto_def  by auto
+lemma [simp]: "\<tort_lbrace> x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o Q\<tort_rbrace> = \<tort_lbrace> x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (Q \<and> P) \<tort_rbrace>" unfolding Auto_def  by auto
+lemma [simp]: "\<tort_lbrace>L \<heavy_comma> (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace> = \<tort_lbrace>(L \<heavy_comma> x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>"
+    and [simp]: "\<tort_lbrace>(x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<heavy_comma> R\<tort_rbrace> = \<tort_lbrace>(x \<tycolon> T\<heavy_comma> R) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>"
+  unfolding Auto_def Stack_Delimiter_def by auto
+lemma [simp]: "\<tort_lbrace>L \<heavy_asterisk> (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace> = \<tort_lbrace>(L \<heavy_asterisk> x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>"
+    and [simp]: "\<tort_lbrace>(x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<heavy_asterisk> R\<tort_rbrace> = \<tort_lbrace>(x \<tycolon> T\<heavy_asterisk> R) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>"
+  unfolding Auto_def Heap_Delimiter_def by auto blast+
+lemma [simp]: "\<tort_lbrace> (s \<tycolon> S) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<tort_rbrace> = \<tort_lbrace> (s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<tort_rbrace>"
+    and [simp]: "\<tort_lbrace> s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (h \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<tort_rbrace> = \<tort_lbrace> (s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<tort_rbrace>"
+  unfolding Auto_def by auto
 
+lemma AutoAddition_cong: "\<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<equiv> \<tort_lbrace>x' \<tycolon> T'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace> \<equiv> \<tort_lbrace>x' \<tycolon> T' \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>" unfolding Auto_def by simp
+simproc_setup AutoAddition_cong ("\<tort_lbrace>x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P\<tort_rbrace>") = \<open>K (NuSimpCong.simproc @{thm AutoAddition_cong})\<close>
 
 section \<open>Mechanisms - II\<close>
 
 
 subsection \<open>Heap\<close>
 
-definition NuNothing :: "(heap, unit) \<nu>" where  "NuNothing x h \<longleftrightarrow> h = Map.empty"
+definition NuNothing :: "(heap, unit) \<nu>" where  "NuNothing x = {h. h = Map.empty}"
 consts Nothing_sugar :: " 'a_sugar " ("Nothing")
 translations "Nothing" \<rightleftharpoons> "() \<tycolon> CONST NuNothing"
 lemma [simp]: "h \<nuLinkL> NuNothing \<nuLinkR> x \<longleftrightarrow> h = Map.empty" unfolding Refining_def NuNothing_def by simp
@@ -514,7 +514,7 @@ lemma MemAddrState_I_neq[intro]: "k2 \<noteq> k \<Longrightarrow> MemAddrState h
 
 lemma MemAddrState_E[elim]:
   "MemAddrState h addr S \<Longrightarrow> (addr_allocated h addr \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding MemAddrState_def by auto
+  unfolding MemAddrState_def Inhabited_def by blast
 lemma MemAddrState_I:
   "addr_allocated h addr \<Longrightarrow> shallowize (the (h (MemAddress addr))) \<in> S \<Longrightarrow> MemAddrState h addr S"
   unfolding MemAddrState_def by auto
@@ -1127,7 +1127,7 @@ subsubsection \<open>Literal operations\<close>
 \<nu>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
   let open NuBasics
     val num = Syntax.parse_term ctx num
-    fun mk term = mk_nuTy (num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx |> @{print}
+    fun mk term = mk_nuTy (num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
     val term = ((stack_of_meta meta |> hd |> #2 |> mk)
       handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
         | ERROR _ => mk @{term \<open>\<nat>[32]\<close>}) |> @{print}

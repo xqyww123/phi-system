@@ -344,8 +344,7 @@ fun gen_begin_block prep_attr bindings int stat =
       |> internal_goal (print_results int) Proof_Context.mode_schematic false 
           "\<nu>block" NONE after_qed []
           (bindings ~~ (map (single o rpair []) prems))
-          [(Binding.empty_atts, [(goal |> @{print},[])])] |> #2
-      |> @{print}
+          [(Binding.empty_atts, [(goal,[])])] |> #2
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "unreachable"
