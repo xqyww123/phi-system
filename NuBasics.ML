@@ -490,10 +490,12 @@ fun tr_heap (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name Heap_D
 fun tr_topctx (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name NuTopCtx},ty2) $ A $ B)
     = let val (a',A') = tr_heap (a, A); val (b', B') = tr_stack (b,B)
        in (Const (@{const_name Pair}, ty1) $ a' $ b', Const (@{const_name NuTopCtx},ty2) $ A' $ B') end
-  | tr_topctx (a, A) =
-       let val (a',A') = tr_stack (a, A)
-       in (Const (@{const_name Pair}, dummyT) $ Free ("\<hh>", dummyT) $ a',
-             Const (@{const_name NuTopCtx},dummyT) $ Free ("\<HH>", dummyT) $ A') end
+  | tr_topctx (tm as (a, A)) =
+      if is_free_var a andalso is_free_var A then tm
+      else
+        let val (a',A') = tr_stack (@{print} (a, A))
+        in (Const (@{const_name Pair}, dummyT) $ Free ("\<hh>", dummyT) $ a',
+              Const (@{const_name NuTopCtx},dummyT) $ Free ("\<HH>", dummyT) $ A') end
 
 fun tr_final tr tm = mk_nuTy (tr (dest_nuTy tm))
 
