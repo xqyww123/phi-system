@@ -1,5 +1,6 @@
 signature LOCAL_VALUE = sig
-  val mk_let : Binding.binding list -> thm -> Proof.context -> thm * Proof.context
+  val mk_let : bool (*whether push local values back to the stack*)
+    -> Binding.binding list -> thm -> Proof.context -> thm * Proof.context
 end
 
 structure Local_Value : LOCAL_VALUE = struct
@@ -9,15 +10,15 @@ fun local_value_export rule vars asms major =
   ((fold_rev Thm.implies_intr asms (finish_proc major) |> Drule.forall_intr_list vars) COMP rule)
     |> accept_proc_naive
 
-fun mk_let names meta ctx =
+fun mk_let flag_push_back names meta ctx =
   let
     val blk_var as (Free (blk_name,_)) = current_block_var meta
     val (old_codeblock, meta) = rename_blk_var
       ("\<nu>hide_"^(string_of_int (length (codeblocks_of meta)))^blk_name) meta
-    val (major, aux) = elim_SPEC meta
     val arity = length names
     val op_let = ntimes (arity - 1) (fn _ => fn th => th RS @{thm op_let}) @{thm op_let}
-    val major = apply_proc_naive op_let major
+    val meta = apply_proc ctx op_let meta |> @{print}
+    val (major, aux) = elim_SPEC meta
     val prem = Thm.cprems_of major |> hd
     val lrep_tys = strip_binder_vars @{const_name Pure.all} (term_of prem) |> map #2
     val (lrep_names,ctx) = Proof_Context.add_fixes
@@ -39,8 +40,12 @@ fun mk_let names meta ctx =
       (names ~~ push_local_values |> map (fn (n,th) =>
         ((Binding.suffix_name "_\<nu>proc" n,[]), [([th],[])]))) ctx
     val (_,ctx) = Assumption.add_assms (fn _ => fn _ => (I,I)) [old_codeblock] ctx
+    val meta = intro_SPEC (major', aux)
+    val meta = if flag_push_back then
+          fold_rev (accept_proc_naive oo apply_proc_naive) push_local_values meta
+      else meta
   in
-    (intro_SPEC (major', aux), ctx)
+    (meta, ctx)
   end
 
 end

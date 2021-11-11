@@ -233,8 +233,8 @@ fun fininsh_premise_hyps th =
 
 (*** Different tag tac ***)
 fun different_tag th =
-  case Thm.prems_of th
-    of prem :: _ =>
+  case try Thm.major_prem_of th
+    of SOME prem =>
       (case try (dest_Trueprop #> dest_binop @{const_name "Different"}) prem
         of SOME (a,b) =>
           if Term.aconv (a,b) then Seq.empty else Seq.single (@{thm Different_I} RS th)
@@ -286,12 +286,12 @@ fun auto_resolve thms addtion ctx  =
       different_tag
         ORELSE simp_tag_tac ctx
         ORELSE print_dbg' (* TODO: support for debug printing *)
-        ORELSE (HEADGOAL (resolve_tac ctx prio))
-        ORELSE (HEADGOAL (resolve_tac ctx thms))
-        ORELSE (premise_tac ctx)
-        ORELSE resolve_tac ctx minor_thms 1
-        ORELSE resolve_tac ctx lowest 1
-        (* ORELSE print_dbg' *)
+        APPEND (HEADGOAL (resolve_tac ctx prio))
+        APPEND (HEADGOAL (resolve_tac ctx thms))
+        APPEND (premise_tac ctx)
+        APPEND resolve_tac ctx minor_thms 1
+        APPEND resolve_tac ctx lowest 1
+        ORELSE (fn th => Seq.make (fn () => (@{print} "END"; @{print} th; NONE)))
     )) (* #> Seq.map fininsh_premise_hyps *)
   end
 val auto_resolve0 = auto_resolve NONE []

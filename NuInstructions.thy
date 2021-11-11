@@ -1,7 +1,7 @@
 theory NuInstructions
   imports NuSys NuBasicAbstractors
   keywords
-     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "of" "while" "until" "always" "var" "heap" :: quasi_command
+     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "of" "while" "until" "always" "var" "heap" "--" :: quasi_command
   abbrevs "|^" = "\<up>"
     and "||^" = "\<Up>"
     and "|v" = "\<down>"
@@ -65,21 +65,22 @@ subsubsection \<open>let & local_value\<close>
 
 definition op_let :: " ('v::lrep \<Rightarrow> 's::stack \<longmapsto> 't::stack) \<Rightarrow> ('v \<times> 's \<longmapsto> 't)"
   where "op_let body = (\<lambda>(h,v,s). body v (h,s))"
-lemma op_let: " (\<And>p. p \<nuLinkL> T \<nuLinkR> x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> SH' \<brangle>) \<Longrightarrow>
-   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> S\<heavy_comma> x \<tycolon> T\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> SH' \<brangle>"
+lemma op_let: " (\<And>p. p \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> x \<tycolon> X \<longmapsto> x' \<tycolon> X' \<brangle>) \<Longrightarrow>
+   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> x \<tycolon> X \<heavy_comma>^ a \<tycolon> A \<longmapsto> x' \<tycolon> X' \<brangle>"
   unfolding Procedure_def op_let_def by auto
 
 definition op_local_value :: " 'v::lrep \<Rightarrow> 's::stack \<longmapsto> 'v \<times> 's "
   where "op_local_value v = (\<lambda>(h,s). Success (h,v,s))"
-lemma op_local_value: "v \<nuLinkL> T \<nuLinkR> x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<blangle> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> S\<heavy_comma> x \<tycolon> T\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+lemma op_local_value: "v \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<blangle> x \<tycolon> X \<longmapsto> x \<tycolon> X \<heavy_comma>^ a \<tycolon> A \<brangle>"
   unfolding Procedure_def op_local_value_def by auto
 
 ML_file "library/local_value.ML"
 
 \<nu>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H)\<close> \<open>let open Parse in
-  fn _ => fn meta => ($$$ "\<rightarrow>" |-- list1 binding) >> (fn idts => fn _ =>
-    raise Process_State_Call'' meta (Local_Value.mk_let (rev idts)))
+  fn _ => fn meta => (($$$ "\<rightarrow>" || $$$ "--") -- list1 binding) >> (fn (keyword,idts) => fn _ =>
+    raise Process_State_Call'' meta (Local_Value.mk_let (keyword = "--") (rev idts)))
 end\<close>
+
 
 subsubsection \<open>function call\<close>
   \<comment> \<open>A function is the program function in the ordinary meaning that called by pushing stack frame, rarely inline
@@ -107,8 +108,8 @@ subsubsection \<open>op_if\<close>
 definition op_if :: " ('s::stack \<longmapsto> 't::stack) \<Rightarrow> ('s \<longmapsto> 't) \<Rightarrow> (1 word \<times> 's) \<longmapsto> 't"
   where "op_if brT brF s = (case s of (heap,c,r) \<Rightarrow> if c = 1 then brT (heap,r) else brF (heap,r))"
 declare op_if_def[\<nu>instr]
-theorem if_\<nu>proc: "(c \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> U\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> Vt \<brangle>) \<longrightarrow> (\<not> c \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> U\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> Vf \<brangle>)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> U\<heavy_comma> c \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> (if c then Vt else Vf) \<brangle>"
+theorem if_\<nu>proc: "(c \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> x \<tycolon> X \<longmapsto> vt \<tycolon> Y \<brangle>) \<longrightarrow> (\<not> c \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> x \<tycolon> X \<longmapsto> vf \<tycolon> Y \<brangle>)
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> x \<tycolon> X \<heavy_comma>^ c \<tycolon> \<bool> \<longmapsto> (if c then vt else vf) \<tycolon> Y \<brangle>"
   unfolding \<nu>def op_if_def by auto
 
 lemma [simp]: "(if P then \<tort_lbrace>x \<tycolon> X\<tort_rbrace> else \<tort_lbrace>y \<tycolon> Y\<tort_rbrace>) = \<tort_lbrace>(if P then x else y) \<tycolon> (if P then X else Y)\<tort_rbrace>" by simp
@@ -118,37 +119,6 @@ lemma [simp]: "(if P then (A <heap-sep> B) else (A' <heap-sep> B')) = ((if P the
 (* lemma [simp]: "(if P then (A \<^bold>a\<^bold>n\<^bold>d B) else (A' \<^bold>a\<^bold>n\<^bold>d B')) = ((if P then A else A') \<^bold>a\<^bold>n\<^bold>d (if P then B else B'))"  by auto *)
 lemma [simp]: "(if P then Named name T else Named name' T') = Named name (if P then T else T')" unfolding Named_def by simp
 lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
-
-subsubsection \<open>Stack Head\<close> \<comment> \<open>A technically auxiliary \<nu>-abstractor\<close>
-
-definition Nu_Front_Stack :: "('a::lrep,'ax) \<nu> \<Rightarrow> (heap \<times> 'stack,'hsx) \<nu> \<Rightarrow> (heap \<times> 'a \<times> 'stack, 'ax \<times> 'hsx) \<nu>"
-  where "Nu_Front_Stack A Ctx = (\<lambda>(ax,hsx). {(h,a,s). (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> (hsx))} )"
-
-consts "Front_Stack_sugar" :: " 'just \<Rightarrow> 'a \<Rightarrow> 'sugar " ( "_/ \<heavy_comma>^ _" [13,14] 13) \<comment> \<open>Note it is left associative\<close>
-translations " c \<tycolon> Ctx \<heavy_comma>^ a \<tycolon> A " == " (CONST Pair a c) \<tycolon> (CONST Nu_Front_Stack A Ctx) "
-  " Ctx \<heavy_comma>^ A " => " (CONST Pair (_\<nu>typing_x A) (_\<nu>typing_x Ctx)) \<tycolon> (CONST Nu_Front_Stack (_\<nu>typing_ty A) (_\<nu>typing_ty Ctx)) "
-
-text \<open>Normally the stack elements are written `before` the heap elements, \<^term>\<open>s1 \<tycolon> S1\<heavy_comma> s2 \<tycolon> S2\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<close>.
-  The \<^term>\<open>Nu_Front_Stack\<close> allows one writes the stack elements `after` the heap, as \<^term>\<open>s1 \<tycolon> S1\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_comma>^ s2 \<tycolon> S2\<close>.
-  Both of the two \<nu>-types specify the same low concretes.
-  It is useful when one needs to specify over the whole remaining stack and heap, e.g., theorem `Until` (see later)
-    which requires body to return \<^term>\<open>x \<tycolon> X \<heavy_comma>^ loop_condition \<tycolon> \<bool>\<close> where the \<^term>\<open>x \<tycolon> X\<close> instantiated by caller
-    specifies all the heap and remaining stack except the leading loop_condition.\<close>
-
-lemma [simp]: "(h,a,s) \<nuLinkL> Nu_Front_Stack A Ctx \<nuLinkR> (ax,hsx) \<longleftrightarrow> (a \<nuLinkL> A \<nuLinkR> ax) \<and> ((h,s) \<nuLinkL> Ctx \<nuLinkR> hsx)"
-  unfolding Nu_Front_Stack_def Refining_def by simp
-lemma [simp]: "\<tort_lbrace> (a,h,s) \<tycolon> Nu_Front_Stack A (NuTopCtx H S) \<tort_rbrace> = \<tort_lbrace> (h,a,s) \<tycolon> NuTopCtx H (A <stack-div> S) \<tort_rbrace>" by auto
-lemma [simp]: "\<tort_lbrace>c \<tycolon> Ctx \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<heavy_comma>^ x \<tycolon> T\<tort_rbrace> = \<tort_lbrace> (c \<tycolon> Ctx \<heavy_comma>^ x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<tort_rbrace>" unfolding Auto_def by auto
-
-lemma Nu_Front_Stack_cong: "\<tort_lbrace>c \<tycolon> Ctx\<tort_rbrace> \<equiv> \<tort_lbrace>c' \<tycolon> Ctx'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>c \<tycolon> Ctx \<heavy_comma>^ x \<tycolon> T\<tort_rbrace> \<equiv> \<tort_lbrace>c' \<tycolon> Ctx' \<heavy_comma>^ x \<tycolon> T\<tort_rbrace>"
-  unfolding atomize_eq by auto
-simproc_setup Nu_Front_Stack_cong ("\<tort_lbrace>c \<tycolon> Ctx \<heavy_comma>^ x \<tycolon> T\<tort_rbrace>") = \<open>K (NuSimpCong.simproc @{thm Nu_Front_Stack_cong})\<close>
-
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> c \<tycolon> Ctx \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> c \<tycolon> Ctx \<heavy_comma>^ (x \<tycolon> X) \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
-  unfolding Intro_def Cast_def by simp
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t c \<tycolon> Ctx \<longmapsto> (R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q
-    \<Longrightarrow> \<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t c \<tycolon> Ctx \<heavy_comma>^ (x \<tycolon> X) \<longmapsto> (R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Dest_def Cast_def by simp blast
 
 
 subsubsection \<open>until\<close>
@@ -203,10 +173,14 @@ subsubsection \<open>while\<close>
 
 
 proc "while": \<open>x \<tycolon> X\<close> \<longmapsto> \<open>x \<tycolon> X\<close>
-  requires Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X \<heavy_comma>^ c x \<tycolon> \<bool> \<brangle>"
-    and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X' \<brangle>"
-  \<bullet> "__Until__" \<medium_left_bracket> \<bullet> Cond 
-
+  for X :: "(heap \<times> 'a::stack, 'b) \<nu>"
+  requires Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X \<heavy_comma>^ c x' \<tycolon> \<bool> \<brangle>"
+    and Body_\<nu>proc: "\<forall>x. c x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X \<brangle>"
+  \<bullet> "__Until__" \<medium_left_bracket> \<bullet> Cond   \<bullet> if Body_\<nu>proc[THEN spec] \<nu>debug 
+  note this[OF Body_\<nu>proc[THEN spec]]
+  note
+ Body_\<nu>proc[THEN spec]
+  term op_if
 (*
   term \<open>(\<lambda>c. c) \<tycolon> Named (NAME xx) (ExNu (\<lambda>c. T))\<close>
 

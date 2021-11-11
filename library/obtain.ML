@@ -7,13 +7,13 @@ signature NU_OBTAIN = sig
     (binding * string option * mixfix) list -> (string * string list) list list ->
     ((Attrib.binding * Token.src list) * (string * string list) list) list ->
     bool -> Proof.state -> Proof.state
-  val obtain_quick_pairs : Proof.state -> Proof.state
-  val obtain_quick_pairs_perhaps : Proof.state -> Proof.state
+  (* val obtain_quick_pairs : Proof.state -> Proof.state *)
   val choose: (binding * typ option * mixfix) list -> term list -> 
     bool -> Proof.state -> Proof.state
   val choose_cmd: (binding * string option * mixfix) list -> string list -> 
     bool -> Proof.state -> Proof.state
   val chooseV : binding list -> Proof.state -> Proof.state
+  val auto_choose : Proof.state -> Proof.state
 end
 structure NuObtain : NU_OBTAIN = struct
 fun eliminate_term ctxt xs tm =
@@ -195,12 +195,7 @@ fun strip_tuple_lambda ret (Abs (v1,T1, Abs (v2,T2,_))) = rev ((v2,T2)::(v1,T1):
   | strip_tuple_lambda ret tm = raise TERM ("!!!!", [tm])
 val simp_attrs = map (Attrib.attribute @{context}) @{attributes [simp]}
 
-val has_schema = let open NuBasics in
-      can (dest_RepSet #> dest_nuTy #> #2
-      #> repeate (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
-      #> dest_binop "NuBasicAbstractors.Schema")
-                 end
-fun obtain_quick_pairs stat =
+(* fun obtain_quick_pairs stat =
   let open NuBasics
     val meta = Proof.the_fact stat
     val (x,nu) = stack_of_meta meta |> hd |> dest_RepSet |> dest_nuTy
@@ -221,16 +216,13 @@ fun obtain_quick_pairs stat =
             SOME (Method.Basic (fn ctx =>
               Method.SIMPLE_METHOD' (Classical.fast_tac ctx)), Position.no_range))
   end
-fun obtain_quick_pairs_perhaps stat = let open NuBasics in
-  if Proof.the_fact stat |> stack_of_meta |> @{print} |> hd |> has_schema
-  then obtain_quick_pairs stat else stat end
-
-end;
+  *)
+end
 
 local
-val ExTy_strip = @{thm NuPrime.ExTyp_strip}
-and CodeBlock_unabbrev = @{thm NuPrime.CodeBlock_unabbrev}
-and CodeBlock_abbrev = @{thm NuPrime.CodeBlock_abbrev}
+val ExTy_strip = @{thm ExTyp_strip}
+and CodeBlock_unabbrev = @{thm CodeBlock_unabbrev}
+and CodeBlock_abbrev = @{thm CodeBlock_abbrev}
 fun expand_exE ctx th =
   (th RS @{thm exE}) |>
     Tactic.rule_by_tactic ctx (REPEAT (Tactic.eresolve_tac ctx [exE] 1))
@@ -315,8 +307,8 @@ fun chooseV inst_names stat =
   let open NuBasics NuHelp HOLogic Term
     val (major,facts) = Proof.the_fact stat |> elim_SPEC
     val ctx = Proof.context_of stat
-    val t1 = ((Thm.assume (current_codeblock major)) COMP @{thm NuPrime.CodeBlock_unabbrev}) 
-    val t2 = ((Thm.assume (current_codeblock major)) COMP @{thm NuPrime.CodeBlock_abbrev})
+    val t1 = ((Thm.assume (current_codeblock major)) COMP @{thm CodeBlock_unabbrev}) 
+    val t2 = ((Thm.assume (current_codeblock major)) COMP @{thm CodeBlock_abbrev})
     val major = Raw_Simplifier.rewrite_rule ctx @{thms (* AutoExTyp_strip *) ExTyp_strip}
                   major |> @{print}
     val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder "HOL.Ex"
@@ -339,6 +331,12 @@ fun chooseV inst_names stat =
               [(Binding.empty_atts, [(meta'_term,[])])]
          |> Proof.set_facts [meta']
   end
+
+fun auto_choose stat =
+  case NuBasics.dest_current_nu (Proof.the_fact stat)
+    of (_, Const (@{const_name ExNu}, _) $ Abs (name, _, _)) =>
+      chooseV [Binding.name name] stat
+     | _ => raise Fail ""
 
 
 end
