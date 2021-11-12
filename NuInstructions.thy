@@ -12,7 +12,7 @@ theory NuInstructions
     and "<Down>" = "\<Down>"
 begin
 
-declare Nat.One_nat_def[simp del]
+declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del]
 
 text \<open>Basic instructions\<close>
 
@@ -124,9 +124,10 @@ lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr
 subsubsection \<open>until\<close>
 
 inductive SemUnt :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> heap \<times> 'r \<Rightarrow> 'r state \<Rightarrow> bool" where
-  "f s = Success (h,0,r) \<Longrightarrow> SemUnt f s (Success (h,r))"
+  "f s = Success (h,1,r) \<Longrightarrow> SemUnt f s (Success (h,r))"
 | "f s = PartialCorrect \<Longrightarrow> SemUnt f s PartialCorrect"
-| "f s = Success (h,1,r) \<Longrightarrow> SemUnt f (h,r) s'' \<Longrightarrow> SemUnt f s s''"
+| "f s = Fail \<Longrightarrow> SemUnt f s Fail"
+| "f s = Success (h,0,r) \<Longrightarrow> SemUnt f (h,r) s'' \<Longrightarrow> SemUnt f s s''"
 
 lemma SemUnt_deterministic:
   assumes "SemUnt c s s1"
@@ -146,8 +147,27 @@ definition Until :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<lo
   "Until f s = (if (\<exists>y. SemUnt f s y) then The (SemUnt f s) else PartialCorrect)"
 
 
+(* lemma "__Until___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S \<heavy_comma> c x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<brangle>)
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>*x'. ((x' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<and>\<^sup>\<nu>' (\<not> c x')) \<brangle>"
+  
+  unfolding Until_def Procedure_def Auto_def
+  apply (auto simp add: SemUnt_deterministic2)
+  subgoal for a b xa
+    apply (rotate_tac 1)
+    apply (induct  body "(a, b)" xa arbitrary: a b x rule: SemUnt.induct)
+      apply  (auto 0 7 elim!: someI_ex)
+    subgoal premises prems for f h r s'' a b x proof -
+      have A[THEN someI_ex, simplified]: "(\<exists>z.  (h, 1, r) \<in> \<tort_lbrace> z \<tycolon> S \<heavy_comma> c z \<tycolon> \<bool> \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p z \<tycolon> H \<tort_rbrace>)" using prems by (auto 0 5)
+      show ?thesis apply (rule prems(3)) using A prems apply (auto 0 9)
+        thm someI
+      using  prems apply auto
+    proof -
+      
+      note prems
+  done
+*)
 lemma "__Until___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X \<heavy_comma>^ c x' \<tycolon> \<bool> \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> X \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu>' (\<not> c x') \<brangle>"
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> X \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu>' c x' \<brangle>"
   for X :: "(heap \<times> 'a::lrep, 'b) \<nu>"
   unfolding Until_def Procedure_def Auto_def
   apply (auto simp add: SemUnt_deterministic2)
@@ -156,26 +176,73 @@ lemma "__Until___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c 
     by (induct  body "(a, b)" xa arbitrary: a b x rule: SemUnt.induct) (auto 0 7)
   done
 
-definition "decorated_All \<equiv> All"
-definition "decorated_ExNu \<equiv> ExNu"
+definition Variants_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'vars \<Rightarrow> 'stack \<Rightarrow> ('vars \<Rightarrow> 'stack) \<Rightarrow> 'heap \<Rightarrow> ('vars \<Rightarrow> 'heap) \<Rightarrow> ('vars \<Rightarrow> bool) \<Rightarrow> bool "
+    ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t\<^bold>s _ \<^bold>a\<^bold>s _/ \<^bold>i\<^bold>n _ '(\<^bold>p\<^bold>a\<^bold>t\<^bold>t\<^bold>e\<^bold>r\<^bold>n _') \<^bold>a\<^bold>n\<^bold>d/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _ '(\<^bold>p\<^bold>a\<^bold>t\<^bold>t\<^bold>e\<^bold>r\<^bold>n _')/ \<^bold>a\<^bold>l\<^bold>w\<^bold>a\<^bold>y\<^bold>s _" )
+    where "Variants_Tag var_names vars stack stack_schema heap heap_schema always
+      \<longleftrightarrow> (stack = stack_schema vars) \<and> (heap = heap_schema vars)"
 
-ML_file \<open>library/loop.ML\<close>
+lemma Variants_Tag_I: "stack = stack_schema vars \<Longrightarrow> heap = heap_schema vars \<Longrightarrow>
+  Variants_Tag var_names vars stack stack_schema heap heap_schema always" unfolding Variants_Tag_def ..
 
-\<nu>processor until 110 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)\<close> \<open>fn ctx => fn meta => 
+definition Variants_Quant_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'a \<Rightarrow> 'a" ("<expand'_vars>")
+  where "Variants_Quant_Tag vars a = a"
+translations " <expand_vars> tag (x \<tycolon> T)" \<rightleftharpoons> "x \<tycolon> <expand_vars> tag T"
+
+definition Variants_Subj :: " ('vars \<Rightarrow> unit) \<Rightarrow> ('vars \<Rightarrow> bool) \<Rightarrow> bool" ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t\<^bold>s _ \<^bold>s\<^bold>u\<^bold>b\<^bold>j _")
+  where "Variants_Subj vars subj \<longleftrightarrow> True"
+lemma Variants_Subj_I: "Variants_Subj vars subj" unfolding Variants_Subj_def ..
+
+
+lemma case_prod_expn_I: "A = B x y \<Longrightarrow> A = case_prod B (x,y)" by simp
+
+ML_file \<open>library/variables_tag.ML\<close>
+
+lemma until_\<nu>proc:
+  "Variants_Tag vars x Sx pat_s Hx pat_h always \<longrightarrow>
+  Variants_Subj vars cond \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always x \<longrightarrow>
+  <expand_vars> vars (\<forall>x. always x \<longrightarrow>
+      \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> pat_s x \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x \<tycolon> H
+          \<longmapsto>  <expand_vars> vars (\<exists>\<^sup>\<nu> x'. (pat_s x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x' \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (always x')) \<brangle>) \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> Sx \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p Hx \<tycolon> H
+      \<longmapsto> <expand_vars> vars (\<exists>\<^sup>\<nu> x'. (pat_h x', pat_s x') \<tycolon> H <top-ctx> S \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (cond x' \<and> always x'))\<brangle>"
+  unfolding Variants_Tag_def Variants_Quant_Tag_def Premise_def apply simp
+  using "__Until___\<nu>proc"[of _ "(H <top-ctx> S) <auto-down-lift> (\<lambda>x. (pat_h x, pat_s x)) <auto-where> (Collect always)",
+      simplified, unfolded Premise_def] by blast
+
+
+\<nu>processor vars_by_pattern 110 \<open>Variants_Tag vars x Sx pat_s Hx pat_h always \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
 let open Parse Scan NuHelp NuBasics in
-  $$$ "until" |-- vars -- option ($$$ "in" |-- list1 term)
-     -- option ($$$ "heap" |-- list1 term) -- ($$$ "subj" |-- term) -- Scan.option ($$$ "always" |-- term)
-    >> (fn ((((vars, stack_schema), heap_schema), subj), always) => fn _ =>
-      NuLoop.mk_loop_proc @{thm "__Until___\<nu>proc"} vars stack_schema heap_schema subj always ctx meta)
+  list1 params -- option ($$$ "in" |-- list1 term) -- option ($$$ "heap" |-- list1 term)
+    -- Scan.option ($$$ "always" |-- term)
+    >> (fn ((((vars, stack_schema), heap_schema)), always) => fn _ =>
+    if Option.isSome stack_schema orelse Option.isSome heap_schema then
+      NuVariablesTag.variables_tag_pattern_match (flat vars) stack_schema heap_schema always ctx meta
+    else raise Bypass NONE)
 end\<close>
+
+\<nu>processor vars_by_fixed_terms 111 \<open>Variants_Tag vars x Sx pat_s Hx pat_h always \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
+let open Parse Scan NuHelp NuBasics in
+  list1 term -- Scan.option ($$$ "always" |-- term)
+    >> (fn (vars, always) => fn _ =>
+      NuVariablesTag.variables_tag_terms vars NONE NONE always ctx meta)
+end\<close>
+
+\<nu>processor vars_subj 111 \<open>Variants_Subj vars subj \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
+let open Parse Scan NuHelp NuBasics in $$$ "subj" |-- term >> (fn subj => fn _ =>
+      NuVariablesTag.vars_subj subj ctx meta)
+end\<close>
+
 
 subsubsection \<open>while\<close>
 
 
-proc "while": \<open>x \<tycolon> X\<close> \<longmapsto> \<open>x \<tycolon> X\<close>
+proc "while": \<open>s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<close> \<longmapsto> \<open>x \<tycolon> X\<close>
   for X :: "(heap \<times> 'a::stack, 'b) \<nu>"
-  requires Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X \<heavy_comma>^ c x' \<tycolon> \<bool> \<brangle>"
-    and Body_\<nu>proc: "\<forall>x. c x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X \<brangle>"
+  requires 
+    Cond_\<nu>proc: "\<forall>x. always x \<longrightarrow>
+      \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> pat_s x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x \<tycolon> H \<longmapsto> \<exists>* x'. (pat_s x' \<tycolon> S\<heavy_comma> c x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x' \<tycolon> H) \<and>\<^sup>\<nu>' always x' \<brangle>"
+    and Body_\<nu>proc: "\<forall>x. always x \<longrightarrow> cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> pat_s x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x \<tycolon> H \<longmapsto> \<exists>* x'. pat_s x' \<tycolon> X \<brangle>"
   \<bullet> "__Until__" \<medium_left_bracket> \<bullet> Cond   \<bullet> if Body_\<nu>proc[THEN spec] \<nu>debug 
   note this[OF Body_\<nu>proc[THEN spec]]
   note
