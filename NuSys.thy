@@ -285,8 +285,6 @@ lemma [elim!,\<nu>elim]: "Inhabited \<tort_lbrace>a \<tycolon> A \<heavy_asteris
 (* lemma [elim!,\<nu>elim]: "Inhabited (A \<dbl_and> B) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by auto *)
 
-subsection \<open>Fusion and its derivatives\<close>
-
 subsection \<open>Top Context\<close> \<comment> \<open>The pair of heap and stack\<close>
 
 definition NuTopCtx :: " (heap, 'hx) \<nu> \<Rightarrow> ('s :: stack, 'sx) \<nu> \<Rightarrow> (heap \<times> 's, 'hx \<times> 'sx) \<nu> " (infix "<top-ctx>" 59)
@@ -299,10 +297,16 @@ lemma [simp]: " ((hp, sp) \<nuLinkL> H <top-ctx> S  \<nuLinkR> (h, s)) \<longlef
   unfolding NuTopCtx_def Refining_def by simp
 lemma [elim!,\<nu>elim]: "Inhabited \<tort_lbrace>s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<tort_rbrace> \<Longrightarrow> (s \<ratio> S \<Longrightarrow> h \<ratio> H \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
+lemma NuTopCtx_cong: "\<tort_lbrace>h \<tycolon> H\<tort_rbrace> \<equiv> \<tort_lbrace>h' \<tycolon> H'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>s \<tycolon> S\<tort_rbrace> \<equiv> \<tort_lbrace>s' \<tycolon> S'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<tort_rbrace> \<equiv> \<tort_lbrace>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<tort_rbrace>"
+  unfolding atomize_eq by (auto 0 3)
+simproc_setup NuTopCtx_cong ("\<tort_lbrace>s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<tort_rbrace>") = \<open>K (fn ctx => fn tm => @{print} (NuSimpCong.simproc @{thm NuTopCtx_cong} ctx (@{print} tm)))\<close>
+
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t h \<tycolon> H \<longmapsto> h' \<tycolon> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ph \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t s \<tycolon> S \<longmapsto> s' \<tycolon> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ps \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t (s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H) \<longmapsto> (s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H') \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ph \<and> Ps"
   unfolding Cast_def by simp blast
+
+subsection \<open>Fusion and its derivatives\<close>
 
 subsubsection \<open>Fusion\<close>
 
@@ -337,6 +341,10 @@ lemma [simp]: "(pa,pb) \<nuLinkL> A <stack-div> B \<nuLinkR> (xa,xb) \<longleftr
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<tycolon> A \<longmapsto> a' \<tycolon> A' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<Longrightarrow> (P1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t b \<tycolon> B \<longmapsto> b' \<tycolon> B' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2) \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a \<tycolon> A\<heavy_comma> b \<tycolon> B) \<longmapsto> (a' \<tycolon> A'\<heavy_comma> b' \<tycolon> B') \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2"
   unfolding Cast_def by simp blast
+
+lemma Stack_Delimiter_cong: "\<tort_lbrace>a \<tycolon> A\<tort_rbrace> \<equiv> \<tort_lbrace>a' \<tycolon> A'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>b \<tycolon> B\<tort_rbrace> \<equiv> \<tort_lbrace>b' \<tycolon> B'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>b \<tycolon> B\<heavy_comma> a \<tycolon> A\<tort_rbrace> \<equiv> \<tort_lbrace>b' \<tycolon> B'\<heavy_comma> a' \<tycolon> A'\<tort_rbrace>"
+  unfolding atomize_eq by (auto 0 3)
+simproc_setup Stack_Delimiter_cong ("\<tort_lbrace>b \<tycolon> B\<heavy_comma> a \<tycolon> A\<tort_rbrace>") = \<open>K (NuSimpCong.simproc @{thm Stack_Delimiter_cong})\<close>
 
 subsubsection \<open>Front Stack\<close>
 

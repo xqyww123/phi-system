@@ -13,59 +13,65 @@ fun strip_abs_fixes (Abs (name,ty,body)) =
   | strip_abs_fixes (Const (@{const_name case_prod}, _) $ body) = strip_abs_fixes body
   | strip_abs_fixes _ = []
 
-fun forall_expansion vars ctx =
+fun tag_name names_ty tm = Const (@{const_name case_named},
+      (dummyT --> dummyT) --> Type (@{type_name named}, [dummyT, names_ty]) --> dummyT) $ tm
+
+fun forall_expansion names_ty ctx =
   let
-    val var_names = strip_abs_names vars
+    val var_names = dest_name_tylabels names_ty
     val arity = length var_names
     val ([P],ctx) = Variable.add_fixes ["\<P>"] ctx
-    val P_term = Var((P,0), list_mk_binop_r_ty @{type_name prod} (strip_abs_tys vars) --> boolT)
+    val P_term = Var((P,0),
+          (mk_binop_ty @{type_name named} 
+            (HOLogic.mk_tupleT (List.tabulate (arity, (fn i => TVar (("'x",i),["HOL.type"])))), names_ty)
+          --> boolT))
     val forall = Const (@{const_name Pure.eq}, dummyT)
-      $ (Const (@{const_name Variants_Quant_Tag}, dummyT) $ vars $ (Const (@{const_name All}, dummyT) $ P_term))
+      $ (Const (@{const_name All}, dummyT) $ P_term)
       $ (fold_rev (fn v => fn tm =>
                 Const (@{const_name All}, dummyT) $ Abs (v, dummyT, tm)) var_names
-          (P_term $
-            list_mk_binop_r @{const_name Pair} (List.tabulate (arity,
-              (fn i => Bound (arity - i - 1))))))
+          (P_term $ (Const (@{const_name tag}, dummyT) $
+            list_mk_binop_r @{const_name Pair}
+              (List.tabulate (arity, (fn i => Bound (arity - i - 1)))))))
     val ctx = Proof_Context.set_mode Proof_Context.mode_schematic ctx
-                addsimps @{thms pair_forall Variants_Quant_Tag_def}
+                addsimps @{thms pair_forall named_forall}
     val forall = Syntax.check_prop ctx forall |> cterm_of ctx
     val forall = case Goal.init forall |> SINGLE (HEADGOAL (Simplifier.simp_tac ctx))
                    of SOME th => Goal.conclude th
                     | _ => raise CTERM ("fail to solve \<forall>-expansion", [forall])
   in forall end
 
-fun ExNu_expansion vars ctx =
+fun ExNu_expansion names_ty ctx =
   let
-    val var_names = strip_abs_names vars
+    val var_names = dest_name_tylabels names_ty
     val arity = length var_names
     val ([T,X],ctx) = Variable.add_fixes ["\<TT>","\<xx>"] ctx
-    val T_term = Var((T,0), dummyT)
-    val X_term = Var((X,0), dummyT)
+    val abs_arg = mk_binop_ty @{type_name named} 
+          (HOLogic.mk_tupleT (List.tabulate (arity, (fn i => TVar (("'x",i),["HOL.type"])))), names_ty)
+    val tya = TVar(("'a",0), @{sort "type"})
+    val tyb = TVar(("'b",0), @{sort "type"})
+    val T_term = Var((T,0), abs_arg --> mk_Nu_ty (tya,tyb))
+    val X_term = Var((X,0), abs_arg --> tyb)
     val expansion = Const (@{const_name Pure.eq}, dummyT)
-      $ mk_repset (mk_nuTy (X_term,
-          Const (@{const_name Variants_Quant_Tag}, dummyT) $ vars $ mk_monop @{const_name ExNu} T_term))
+      $ mk_repset (mk_nuTy (X_term, mk_monop @{const_name ExNu} T_term))
       $ mk_repset (mk_nuTy (
           (fold_rev (fn v => fn tm =>
                 Abs (v, dummyT, tm)) var_names
-            (X_term $
+            (X_term $ (Const (@{const_name tag}, dummyT) $
               list_mk_binop_r @{const_name Pair} (List.tabulate (arity,
-                (fn i => Bound (arity - i - 1)))))),
+                (fn i => Bound (arity - i - 1))))))),
           (fold_rev (fn v => fn tm =>
                 Const (@{const_name ExNu}, dummyT) $ Abs (v, dummyT, tm)) var_names
-            (T_term $
+            (T_term $ (Const (@{const_name tag}, dummyT) $
               list_mk_binop_r @{const_name Pair} (List.tabulate (arity,
-                (fn i => Bound (arity - i - 1))))))
+                (fn i => Bound (arity - i - 1)))))))
       ))
       
     val ctx = (Proof_Context.set_mode Proof_Context.mode_schematic ctx)
-          addsimps @{thms ExNu_pair Variants_Quant_Tag_def}
+          addsimps @{thms ExNu_pair named_ExNu}
     val expansion = Syntax.check_prop ctx expansion |> cterm_of ctx |> @{print}
     val expansion = case Goal.init expansion |> SINGLE (HEADGOAL (Simplifier.simp_tac ctx))
                    of SOME th => Goal.conclude th
                     | _ => raise CTERM ("fail to solve \<exists>\<sup>\<nu>-expansion", [expansion])
-
-    val tfrees = Term.add_tfree_names (Thm.prop_of expansion) []
-    val expansion = Drule.generalize (tfrees, []) expansion
   in expansion end
 
 
@@ -74,15 +80,22 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
     val ctx = Proof_Context.set_mode Proof_Context.mode_schematic ctx
                 |> Proof_Context.set_mode Proof_Context.mode_pattern
     val (major,aux) = elim_SPEC meta
-    val Const (@{const_name Variants_Tag}, _) $ _ $ _ $ stack_term $ _ $ heap_term $ _ $ _
-          = Thm.major_prem_of major |> dest_Trueprop
+    val Const (@{const_name Variant_Cast}, _)
+          $ (stack_typing as (Const (@{const_name typing}, _) $ stack_term $ stack_Nu))
+          $ (heap_typing as (Const (@{const_name typing}, _) $ heap_term $ heap_Nu))
+          $ _ $ _ $ _
+      = Thm.major_prem_of major |> dest_Trueprop
     val heap_ty = fastype_of heap_term
     val stack_ty = fastype_of stack_term
     val stack = HOLogic.strip_tuple stack_term |> @{print}
     val heap = HOLogic.strip_tuple heap_term
 
     val arity = length vars
-    val lambda_vars = @{term "()"} |> tuple_abs vars
+    val ctx = fold (fn ((name,_),_) => Variable.declare_typ (TFree ("'"^name, ["HOL.type"]))) vars ctx
+    val names_ty = map (fn ((name,_),_) => TFree ("'"^name, ["HOL.type"])) vars
+                    |> HOLogic.mk_tupleT 
+
+    val always = Option.map (Syntax.parse_term ctx #> tuple_abs vars #> tag_name names_ty) always
 
     val stack_schema = rev (
       case stack_schema of SOME sch => map (Syntax.parse_term ctx) sch
@@ -90,7 +103,12 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
     val _ = if length stack_schema >= length stack then error "Insufficient stack elements" else ()
     val stack_schema = stack_schema @ (drop (length stack_schema) stack |> map (map_types (K dummyT)))
                           |> list_mk_binop_r @{const_name Pair} |> Type.constraint stack_ty |> @{print}
-                          |> tuple_abs vars |> @{print}
+                          |> tuple_abs vars |> tag_name names_ty |> @{print}
+    val stack_Nu = mk_auto_tag (Const (@{const_name DownLift}, dummyT)) $ stack_Nu $ stack_schema
+    val stack_Nu = case always of SOME tm =>
+              mk_auto_tag (Const (@{const_name NuRefine}, dummyT))
+                $ stack_Nu $ mk_monop @{const_name Collect} tm
+          | NONE => stack_Nu
 
     val heap_schema = rev(
       case heap_schema of SOME sch => map (Syntax.parse_term ctx) sch
@@ -98,31 +116,27 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
     val _ = if length heap_schema >= length heap then error "Insufficient heap elements" else ()
     val heap_schema = heap_schema @ (drop (length heap_schema) heap |> map (map_types (K dummyT)))
                           |> list_mk_binop_r @{const_name Pair} |> Type.constraint heap_ty
-                          |> tuple_abs vars
+                          |> tuple_abs vars |> tag_name names_ty 
+    val heap_Nu = mk_auto_tag (Const (@{const_name DownLift}, dummyT)) $ heap_Nu $ heap_schema
 
-    val always = (case always of SOME tm => Syntax.parse_term ctx tm
-                               | NONE => Const (@{const_name True}, boolT))
-                    |> tuple_abs vars
-
-    val var_tag = Const (@{const_name Variants_Tag}, dummyT) $ lambda_vars $ dummy
-                    $ stack_term $ stack_schema $ heap_term $ heap_schema $ always
-                     |> mk_Trueprop |> Syntax.check_prop ctx 
-    val Const (@{const_name Variants_Tag}, _) $ lambda_vars $ _ $ _ $ _ $ _ $ _ $ _
-      = dest_Trueprop var_tag
-    val var_tag = cterm_of ctx var_tag
+    val var_tag = Const (@{const_name Variant_Cast}, dummyT)
+          $ stack_typing $ heap_typing $ dummy $ stack_Nu $ heap_Nu
+              |> mk_Trueprop |> Syntax.check_prop ctx
+    val var_tag = cterm_of ctx var_tag |> @{print}
     val goal = Goal.init var_tag
                   |> SINGLE (REPEAT (HEADGOAL (resolve_tac ctx
-                        @{thms Variants_Tag_I case_prod_expn_I HOL.refl})))
-                  |> @{print}
+                        @{thms Variant_Cast_I Variant_Cast_I_always
+                               case_prod_expn_I case_named_expn_I HOL.refl})))
     val var_tag_th = (case goal of SOME concl => Goal.conclude concl
                         | NONE => raise CTERM ("fail to solve", [var_tag])) |> @{print}
 
-    val forall = forall_expansion lambda_vars ctx |> @{print}
-    val exNu = ExNu_expansion lambda_vars ctx |> @{print}
+    val forall = forall_expansion names_ty ctx |> @{print}
+    val exNu = ExNu_expansion names_ty ctx |> @{print}
     val major = (var_tag_th RS major)
                   |> Raw_Simplifier.rewrite_rule ctx (forall::exNu::
                     @{thms HOL.simp_thms[unfolded atomize_eq[symmetric]]
                            Product_Type.prod.case[unfolded atomize_eq[symmetric]]})
+                  |> Simplifier.full_simplify ctx
   in
     intro_SPEC (major, aux)
   end

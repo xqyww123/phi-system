@@ -45,6 +45,8 @@ lemma [\<nu>intro]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^b
   unfolding Dest_def Cast_def by auto
 lemma refine_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x \<tycolon> (N <where> P)" unfolding Cast_def by auto
 
+abbreviation AutoRefine (infixl "<auto-where>" 80)
+  where "AutoRefine \<equiv> Auto NuRefine"
 lemma [simp]:"\<tort_lbrace>x \<tycolon> Auto NuRefine T P \<tort_rbrace> = \<tort_lbrace> x \<tycolon> Auto NuAddition T (x \<in> P) \<tort_rbrace>"
   unfolding Auto_def by auto
 

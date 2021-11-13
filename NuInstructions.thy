@@ -141,31 +141,11 @@ proof -
 qed
 
 lemma SemUnt_deterministic2: " SemUnt body s x \<Longrightarrow> The ( SemUnt body s) = x"
-  using SemUnt_deterministic by blast 
+  using SemUnt_deterministic by blast
 
 definition Until :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<longmapsto> 'r" where
   "Until f s = (if (\<exists>y. SemUnt f s y) then The (SemUnt f s) else PartialCorrect)"
-
-
-(* lemma "__Until___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S \<heavy_comma> c x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>*x'. ((x' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<and>\<^sup>\<nu>' (\<not> c x')) \<brangle>"
   
-  unfolding Until_def Procedure_def Auto_def
-  apply (auto simp add: SemUnt_deterministic2)
-  subgoal for a b xa
-    apply (rotate_tac 1)
-    apply (induct  body "(a, b)" xa arbitrary: a b x rule: SemUnt.induct)
-      apply  (auto 0 7 elim!: someI_ex)
-    subgoal premises prems for f h r s'' a b x proof -
-      have A[THEN someI_ex, simplified]: "(\<exists>z.  (h, 1, r) \<in> \<tort_lbrace> z \<tycolon> S \<heavy_comma> c z \<tycolon> \<bool> \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p z \<tycolon> H \<tort_rbrace>)" using prems by (auto 0 5)
-      show ?thesis apply (rule prems(3)) using A prems apply (auto 0 9)
-        thm someI
-      using  prems apply auto
-    proof -
-      
-      note prems
-  done
-*)
 lemma "__Until___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X \<heavy_comma>^ c x' \<tycolon> \<bool> \<brangle>)
   \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> X \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu>' c x' \<brangle>"
   for X :: "(heap \<times> 'a::lrep, 'b) \<nu>"
@@ -176,13 +156,33 @@ lemma "__Until___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c 
     by (induct  body "(a, b)" xa arbitrary: a b x rule: SemUnt.induct) (auto 0 7)
   done
 
-definition Variants_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'vars \<Rightarrow> 'stack \<Rightarrow> ('vars \<Rightarrow> 'stack) \<Rightarrow> 'heap \<Rightarrow> ('vars \<Rightarrow> 'heap) \<Rightarrow> ('vars \<Rightarrow> bool) \<Rightarrow> bool "
+lemma named_ExNu: "\<tort_lbrace> x \<tycolon> ExNu T \<tort_rbrace> = \<tort_lbrace>\<exists>*c. x (tag c) \<tycolon> T (tag c) \<tort_rbrace>" by (auto simp add: named_exists)
+
+
+
+definition Variant_Cast :: " ('stack_low, 'stack) typing \<Rightarrow> ('heap_low, 'heap) typing
+    \<Rightarrow> 'vars \<Rightarrow> ('stack_low, 'vars) \<nu> \<Rightarrow> ('heap_low, 'vars) \<nu> \<Rightarrow> bool "
+      ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t _/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _/ \<longmapsto> _/ \<tycolon> _/ \<^bold>a\<^bold>n\<^bold>d _" )
+  where "Variant_Cast stack heap insts stackTy' heapTy' \<longleftrightarrow>
+    \<tort_lbrace>stack\<tort_rbrace> = \<tort_lbrace>insts \<tycolon> stackTy'\<tort_rbrace> \<and> \<tort_lbrace>heap\<tort_rbrace> = \<tort_lbrace>insts \<tycolon> heapTy'\<tort_rbrace>"
+
+lemma Variant_Cast_I:
+  "s = pattern\<^sub>s vars \<Longrightarrow> h = pattern\<^sub>h vars \<Longrightarrow>
+  Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars (S <auto-down-lift> pattern\<^sub>s) (H <auto-down-lift> pattern\<^sub>h)"
+  unfolding Variant_Cast_def by auto
+
+lemma Variant_Cast_I_always:
+  "s = pattern\<^sub>s vars \<Longrightarrow> h = pattern\<^sub>h vars \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always vars \<Longrightarrow>
+  Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars (S <auto-down-lift> pattern\<^sub>s <auto-where> Collect always) (H <auto-down-lift> pattern\<^sub>h)"
+  unfolding Variant_Cast_def by auto
+
+(* definition Variants_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'vars \<Rightarrow> 'stack \<Rightarrow> ('vars \<Rightarrow> 'stack) \<Rightarrow> 'heap \<Rightarrow> ('vars \<Rightarrow> 'heap) \<Rightarrow> ('vars \<Rightarrow> bool) \<Rightarrow> bool "
     ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t\<^bold>s _ \<^bold>a\<^bold>s _/ \<^bold>i\<^bold>n _ '(\<^bold>p\<^bold>a\<^bold>t\<^bold>t\<^bold>e\<^bold>r\<^bold>n _') \<^bold>a\<^bold>n\<^bold>d/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _ '(\<^bold>p\<^bold>a\<^bold>t\<^bold>t\<^bold>e\<^bold>r\<^bold>n _')/ \<^bold>a\<^bold>l\<^bold>w\<^bold>a\<^bold>y\<^bold>s _" )
     where "Variants_Tag var_names vars stack stack_schema heap heap_schema always
       \<longleftrightarrow> (stack = stack_schema vars) \<and> (heap = heap_schema vars)"
 
 lemma Variants_Tag_I: "stack = stack_schema vars \<Longrightarrow> heap = heap_schema vars \<Longrightarrow>
-  Variants_Tag var_names vars stack stack_schema heap heap_schema always" unfolding Variants_Tag_def ..
+  Variants_Tag var_names vars stack stack_schema heap heap_schema always" unfolding Variants_Tag_def .. *)
 
 definition Variants_Quant_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'a \<Rightarrow> 'a" ("<expand'_vars>")
   where "Variants_Quant_Tag vars a = a"
@@ -194,24 +194,23 @@ lemma Variants_Subj_I: "Variants_Subj vars subj" unfolding Variants_Subj_def ..
 
 
 lemma case_prod_expn_I: "A = B x y \<Longrightarrow> A = case_prod B (x,y)" by simp
+lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by simp
 
 ML_file \<open>library/variables_tag.ML\<close>
 
+term Variant_Cast
 lemma until_\<nu>proc:
-  "Variants_Tag vars x Sx pat_s Hx pat_h always \<longrightarrow>
-  Variants_Subj vars cond \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always x \<longrightarrow>
-  <expand_vars> vars (\<forall>x. always x \<longrightarrow>
-      \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> pat_s x \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x \<tycolon> H
-          \<longmapsto>  <expand_vars> vars (\<exists>\<^sup>\<nu> x'. (pat_s x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x' \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (always x')) \<brangle>) \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> Sx \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p Hx \<tycolon> H
-      \<longmapsto> <expand_vars> vars (\<exists>\<^sup>\<nu> x'. (pat_h x', pat_s x') \<tycolon> H <top-ctx> S \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (cond x' \<and> always x'))\<brangle>"
-  unfolding Variants_Tag_def Variants_Quant_Tag_def Premise_def apply simp
-  using "__Until___\<nu>proc"[of _ "(H <top-ctx> S) <auto-down-lift> (\<lambda>x. (pat_h x, pat_s x)) <auto-where> (Collect always)",
-      simplified, unfolded Premise_def] by blast
+  "Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<longrightarrow>
+  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
+  (\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> S' \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H'
+          \<longmapsto> \<exists>\<^sup>\<nu> x'. (x' \<tycolon> S'\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H') \<brangle>) \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H
+      \<longmapsto> \<exists>\<^sup>\<nu> x'. (x' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H') \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o cond x' \<brangle>"
+  unfolding Variant_Cast_def Premise_def apply simp
+  using "__Until___\<nu>proc"[of _ "(H' <top-ctx> S') <auto-down-lift> (\<lambda>x. (x,x))", simplified, unfolded Premise_def] by blast
 
 
-\<nu>processor vars_by_pattern 110 \<open>Variants_Tag vars x Sx pat_s Hx pat_h always \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
+\<nu>processor vars_by_pattern 110 \<open>Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
 let open Parse Scan NuHelp NuBasics in
   list1 params -- option ($$$ "in" |-- list1 term) -- option ($$$ "heap" |-- list1 term)
     -- Scan.option ($$$ "always" |-- term)
@@ -221,7 +220,7 @@ let open Parse Scan NuHelp NuBasics in
     else raise Bypass NONE)
 end\<close>
 
-\<nu>processor vars_by_fixed_terms 111 \<open>Variants_Tag vars x Sx pat_s Hx pat_h always \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
+\<nu>processor vars_by_fixed_terms 111 \<open>Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
 let open Parse Scan NuHelp NuBasics in
   list1 term -- Scan.option ($$$ "always" |-- term)
     >> (fn (vars, always) => fn _ =>
@@ -232,7 +231,16 @@ end\<close>
 let open Parse Scan NuHelp NuBasics in $$$ "subj" |-- term >> (fn subj => fn _ =>
       NuVariablesTag.vars_subj subj ctx meta)
 end\<close>
+term tag
+declare [ [ML_print_depth = 100, unfolded] ]
 
+ML \<open>Variable.def_type @{context} true ("'xxx", 0)\<close>
+ML \<open>@{sort type}\<close>
+proc test: \<open>r \<tycolon> R\<heavy_comma> i \<tycolon> \<nat>[32]\<heavy_comma> j \<tycolon> \<nat>[32]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<close> \<longmapsto> \<open>r \<tycolon> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<close>
+  \<bullet> until i, j
+  
+  \<nu>debug ML_val \<open>Thm.prop_of @{thm this[THEN SpecTop_focus]}\<close>
+ML_val \<open>Variable.def_type @{context} false ("\<nu>i", 9)\<close>
 
 subsubsection \<open>while\<close>
 

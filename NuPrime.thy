@@ -293,8 +293,19 @@ lemma [cong]: "NAME_TAG x \<equiv> NAME_TAG x"  using reflexive .
 lemma name_tag_eq: "x = y" for x :: name_tag by (cases x, cases y) auto
 
 syntax "_NAME_" :: "idt \<Rightarrow> name_tag" ("NAME _" [0] 1000)
-  "_NAME2_" :: "idt => idt => name_tag" ("NAME2 _ _" [0,0] 1000)
 translations "NAME name" == "CONST NAME_TAG (\<lambda>name. ())"
+
+subsubsection \<open>Name tag by type\<close>
+
+datatype ('x, 'name) named (infix "named" 30) = tag 'x
+
+text \<open>It is another name tag which tags names in type by free variables, e.g., \<^typ>\<open>(nat \<times> int) named ('name_i \<times> 'name_j)\<close>.
+  It is useful for the rewrite and expansion of quantification which retains name information of bound variables,
+    e.g. the transformation from \<^prop>\<open>\<forall>(x::(nat \<times> int) named ('i \<times> 'j)). P x\<close> to \<^prop>\<open>\<forall>(i::nat) (j::int). P (tag (i,j))\<close>\<close>
+
+lemma named_forall: "All P \<longleftrightarrow> (\<forall>x. P (tag x))" by (metis named.exhaust)
+lemma named_exists: "Ex P \<longleftrightarrow> (\<exists>x. P (tag x))" by (metis named.exhaust)
+
 
 subsubsection \<open>Parameter tag\<close>
 

@@ -23,6 +23,7 @@ signature NU_BASICS = sig
   val dest_nuTy : term -> term * term
   val dest_nuTy_c : cterm -> cterm * cterm
   val mk_nuTy : term * term -> term
+  val mk_Nu_ty : typ * typ -> typ
   val dest_named_opt : term -> string option * term (* Named name, x -> (name,x) *)
   val name_tag_ty : typ
   val name_tag_cty : ctyp
@@ -33,6 +34,7 @@ signature NU_BASICS = sig
   val mk_name_hint : string -> term -> term
   val mk_repset : term -> term
   val mk_auto_tag : term -> term
+  val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
 
   (* val dest_andTy : term -> term * term *)
   val dest_SpecTop   : term -> term * term
@@ -170,6 +172,7 @@ val dest_nuTy_c = dest_binop_c nuTy_name
 val dest_RepSet = dest_monop @{const_name "RepSet"} #> dest_nuTy
 val dest_RepSet_c = dest_monop_c @{const_name "RepSet"} #> dest_nuTy_c
 val mk_nuTy = mk_binop nuTy_name
+fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 (* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
   | dest_andTy t = raise TERM ("bad AndTy", [t]); *)
 val mk_auto_tag = mk_monop @{const_name "Auto"}
@@ -459,6 +462,12 @@ val expand_proc =
 val thm_apply_proc = @{thm apply_proc}
 fun apply_proc_naive proc =
   map_major (fn major => expand_proc proc RS (major RS thm_apply_proc))
+
+
+fun trim_tylabel_name name = String.substring(name, 1, size name - 1)
+fun dest_name_tylabel (TFree (name,_)) = trim_tylabel_name name
+  | dest_name_tylabel (TVar ((name,_),_)) = trim_tylabel_name name
+val dest_name_tylabels = HOLogic.strip_tupleT #> map dest_name_tylabel
 
 (* val auto_fusion_arity =
   Logic.strip_assums_concl #> perhaps dest_Trueprop #> perhaps (dest_procedure #> #2)
