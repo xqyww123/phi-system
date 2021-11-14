@@ -35,8 +35,6 @@ signature NU_TOPLEVEL = sig
         -> bool -> Proof.state -> thm list * Proof.state
   val name_star_fact_cmd : Attrib.binding -> Proof.state -> Proof.state
   val drop_fact_cmd : Binding.binding -> Proof.state -> Proof.state
-
-  val process_cmd : Token.T list -> Proof.state -> Proof.state
 end
 
 structure NuToplevel : NU_TOPLEVEL = struct
@@ -60,10 +58,6 @@ val arg_stat_term_name = "\<ss>"
 
 val default_name = "v"
 val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst
-fun pass_name tm = 
-      case dest_named_opt tm of
-         (SOME name, tm) => (name, tm)
-       | (NONE, tm) => (tm |> try auto_name |> the_default default_name, tm)
 
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
@@ -207,12 +201,6 @@ fun gen_finish_proc' prep_specthm qed int stat =
 val finish_proc_cmd = gen_finish_proc' (K I) (*NuRegisters.delete_locale*) Proof.global_qed
 end
 
-fun process_cmd toks stat =
-  stat |> Proof.set_facts
-    [(NuSys.process stat (Proof.the_fact stat) --| Scan.catch Parse.eof ) toks |> fst]
-  handle NuProcessor.Process_State_Call (toks,meta,f) =>
-    process_cmd toks (Proof.set_facts [meta] stat |> f)
-
 
 fun prove_prem int stat =
   let open Proof
@@ -318,7 +306,7 @@ fun gen_begin_block prep_attr bindings int stat =
     val level_prefix = "L\<nu>'"^(Int.toString level)^"_"^blk_name
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
     fun after_qed (ctx',[[th]]) stat =
-      stat |> end_block |> (fn stat => stat
+      end_block stat |> (fn stat => stat
           |> set_facts[
             specthm
               |> elim_SPEC
@@ -331,7 +319,6 @@ fun gen_begin_block prep_attr bindings int stat =
                     ) COMP focus)
                 end)
               |> intro_SPEC
-              |> NuProcessor.process_no_input (Proof.context_of stat)
           ])
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()

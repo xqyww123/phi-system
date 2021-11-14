@@ -14,7 +14,9 @@ signature NU_PROCESSOR = sig
   val enable : string -> Context.generic -> Context.generic
   val disable : string -> Context.generic -> Context.generic
   val list : Context.generic -> (binding * term (*pattern*)) list
-  val process : Proof.context -> thm -> thm parser
+  val internal_process : Proof.context -> thm -> thm parser
+  val simple_process   : Proof.context -> thm -> thm parser
+  val powerful_process : Token.T list -> Proof.state -> Proof.state
   val process_no_input : Proof.context -> thm -> thm
   val process_attr : attribute parser
 
@@ -34,6 +36,7 @@ signature NU_PROCESSOR = sig
         * (binding * string option * mixfix) list)
         * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
 end
+
 structure NuProcessor : NU_PROCESSOR = struct
 open Thm NuBasics
 exception Bypass of thm option
@@ -130,13 +133,28 @@ fun process_impl ctx procs (th,toks) limit =
       handle Processed th_toks => process_impl ctx procs th_toks (limit + 1)
         | ProcessTerminated th_toks => th_toks
         | NDBG th => (th,[Token.eof])
-fun process ctx th toks =
+
+fun internal_process ctx th toks =
   Runtime.exn_trace (fn _ =>
   process_impl (Context.Proof ctx)
     (Data.get (Context.Proof ctx) |> Name_Space.dest_table |> sort (proc_ord o apply2 snd))
     (th,toks) 0)
-val process_attr = wrap_attr (fn ctx => fn th => process ctx th #> apfst K)
-fun process_no_input ctx th = process ctx th [Token.eof] |> #1
+fun simple_process ctx th toks =
+  internal_process ctx th toks handle Process_State_Call (toks,thm,f) => (thm,toks)
+fun powerful_process toks stat =
+  let
+    val meta = Proof.the_fact stat
+    val (meta,toks) = (internal_process (Proof.context_of stat) meta
+                          --| Scan.catch Parse.eof) toks
+  in
+    Proof.set_facts [meta] stat
+  end handle Process_State_Call (toks,meta,f) =>
+    powerful_process toks (Proof.set_facts [meta] stat |> f)
+
+val process_attr = wrap_attr (fn ctx => fn th => simple_process ctx th #> apfst K)
+fun process_no_input ctx th = simple_process ctx th [Token.eof] |> #1
+
+
 
 fun setup binding precedence term proc (comment:string) =
   define binding precedence term proc

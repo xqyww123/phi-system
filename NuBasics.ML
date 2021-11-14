@@ -20,21 +20,25 @@ signature NU_BASICS = sig
   val param_type : thm -> typ
   val dest_RepSet : term -> term * term
   val dest_RepSet_c : cterm -> cterm * cterm
+  val mk_RepSet : term * term -> term
   val dest_nuTy : term -> term * term
   val dest_nuTy_c : cterm -> cterm * cterm
   val mk_nuTy : term * term -> term
   val mk_Nu_ty : typ * typ -> typ
-  val dest_named_opt : term -> string option * term (* Named name, x -> (name,x) *)
-  val name_tag_ty : typ
-  val name_tag_cty : ctyp
-  val dest_name_tag : term -> string
-  val mk_name_tag : string -> term
-  val mk_name_tag_c : string -> cterm
-  val mk_named : string -> term -> term
+  val dest_labelled_opt : term -> string option * term (* Labelled name, x -> (name,x) *)
+  val label_ty : typ
+  val label_cty : ctyp
+  val dest_label : term -> string
+  val mk_label : string -> term
+  val mk_label_c : string -> cterm
+  val mk_labelled : string -> term -> term
   val mk_name_hint : string -> term -> term
   val mk_repset : term -> term
   val mk_auto_tag : term -> term
   val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
+  val mk_name_tylabels : string list -> typ (* ["i","j","k"] -> 'i \<times> 'j \<times> 'k *)
+  val dest_named : typ -> (string * typ) list
+  val normlize_name : string -> string
 
   (* val dest_andTy : term -> term * term *)
   val dest_SpecTop   : term -> term * term
@@ -133,36 +137,35 @@ fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
                                     | TERM _ => raise TERM (msg, [prop_of th])
 
-fun dest_param (Const (@{const_name "ParamTag"}, _) $ x) = x
-  | dest_param tm = raise TERM ("dest_param", [tm])
+val dest_param = perhaps dest_Trueprop #> dest_monop @{const_name "ParamTag"}
 val dest_param_c = dest_monop_c @{const_name "ParamTag"}
 fun param_type_c th = cprem_of th 1 |> dest_param_c |> ctyp_of_cterm
-val param_type = param_type_c #> typ_of
+fun param_type th = major_prem_of th |> dest_param |> type_of
 val unit_const_name = @{const_name "Product_Type.Unity"}
-val name_tag_ty = Type (@{type_name "name_tag"}, [])
-val name_tag_cty = @{ctyp "name_tag"}
-val name_tag_const_name = @{const_name "NAME_TAG"}
+val label_ty = Type (@{type_name "label"}, [])
+val label_cty = @{ctyp "label"}
+val label_const_name = @{const_name "LABEL_TAG"}
 val unit_ty = Type (@{type_name "Product_Type.unit"}, [])
 val unit_const = Const("Product_Type.Unity", unit_ty)
-val name_tag_const = Const (name_tag_const_name, (unit_ty --> unit_ty) --> name_tag_ty)
-val dest_name_tag_raw   = dest_monop name_tag_const_name
-val dest_name_tag_raw_c = dest_monop_c name_tag_const_name
+val label_const = Const (label_const_name, (unit_ty --> unit_ty) --> label_ty)
+val dest_label_raw   = dest_monop label_const_name
+val dest_label_raw_c = dest_monop_c label_const_name
 fun dest_Abs (Abs x) =  x
   | dest_Abs t = raise TERM("dest_Abs", [t]);
-fun dest_name_tag tm =
-  tm |> Type.strip_constraints |> dest_name_tag_raw |> dest_Abs |> #1
-    handle TERM _ => raise TERM ("dest_name_tag", [tm])
-val name_tag_c = @{cterm "NAME name"}
-fun mk_name_tag name = name_tag_const $ Abs (name, unit_ty, unit_const)
-fun mk_name_tag_c name = renamed_term (mk_name_tag name) name_tag_c
-fun mk_named name tm = Const(@{const_name Named}, dummyT) $ mk_name_tag name $ tm
-fun mk_name_hint name tm = Const(@{const_name NameHint}, dummyT) $ mk_name_tag name $ tm
+fun dest_label tm =
+  tm |> Type.strip_constraints |> dest_label_raw |> dest_Abs |> #1
+    handle TERM _ => raise TERM ("dest_label", [tm])
+val label_c = @{cterm "LABEL name"}
+fun mk_label name = label_const $ Abs (name, unit_ty, unit_const)
+fun mk_label_c name = renamed_term (mk_label name) label_c
+fun mk_labelled name tm = Const(@{const_name Labelled}, dummyT) $ mk_label name $ tm
+fun mk_name_hint name tm = Const(@{const_name NameHint}, dummyT) $ mk_label name $ tm
 
-val named_name = @{const_name "Named"}
-val dest_named = dest_binop named_name #> apfst dest_name_tag
-fun dest_named_opt tm =
-  case try (dest_binop named_name) tm of
-     SOME (v,tm) => (SOME (dest_name_tag v), tm)
+val labelled_name = @{const_name "Labelled"}
+val dest_labelled = dest_binop labelled_name #> apfst dest_label
+fun dest_labelled_opt tm =
+  case try (dest_binop labelled_name) tm of
+     SOME (v,tm) => (SOME (dest_label v), tm)
    | NONE => (NONE, tm)
 fun mk_repset (tm as (Const (@{const_name "RepSet"}, _) $ _)) = tm
   | mk_repset tm = mk_monop @{const_name "RepSet"} tm
@@ -172,6 +175,7 @@ val dest_nuTy_c = dest_binop_c nuTy_name
 val dest_RepSet = dest_monop @{const_name "RepSet"} #> dest_nuTy
 val dest_RepSet_c = dest_monop_c @{const_name "RepSet"} #> dest_nuTy_c
 val mk_nuTy = mk_binop nuTy_name
+val mk_RepSet = mk_nuTy #> mk_monop @{const_name "RepSet"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 (* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
   | dest_andTy t = raise TERM ("bad AndTy", [t]); *)
@@ -314,9 +318,9 @@ fun map_major f th =
   else f th
 
 
-val dest_fact   = dest_binop   @{const_name "Fact"} #> apfst dest_name_tag
-val dest_fact_c = dest_binop_c @{const_name "Fact"} #> apfst (term_of #> dest_name_tag)
-val vP = (("P",0), HOLogic.boolT) and v_label = (("label",0),name_tag_ty)
+val dest_fact   = dest_binop   @{const_name "Fact"} #> apfst dest_label
+val dest_fact_c = dest_binop_c @{const_name "Fact"} #> apfst (term_of #> dest_label)
+val vP = (("P",0), HOLogic.boolT) and v_label = (("label",0),label_ty)
 val Fact_D = @{thm NuPrime.Fact_D} and Fact_I = @{thm NuPrime.Fact_I}
 fun name_of_Fact th = th |> cprop_of |> dest_fact_c |> #1
 fun elim_Fact th =
@@ -328,7 +332,7 @@ fun elim_Fact th =
   end
 fun intro_Fact (name,th) =
   Thm.implies_elim
-    (Thm.instantiate ([],[(v_label, mk_name_tag_c name), (vP, cprop_of th)]) Fact_I) th
+    (Thm.instantiate ([],[(v_label, mk_label_c name), (vP, cprop_of th)]) Fact_I) th
 val dest_AndFact   = dest_binop   @{const_name "AndFact"}
 val dest_AndFact_c = dest_binop_c @{const_name "AndFact"}
 fun dest_AndFacts_impl ret tm =
@@ -450,7 +454,7 @@ val vx = ("x",0) and va = ("'a",0)
 fun intro_param tm =
   Thm.instantiate ([((("'a",0), ["HOL.type"]), ctyp_of_cterm tm)],
                    [((("x",0), typ_of (ctyp_of_cterm tm)), tm)]) @{thm ParamTag}
-val intro_param_name = intro_param o mk_name_tag_c
+val intro_param_name = intro_param o mk_label_c
 
 val dest_Cast   = dest_triop   @{const_name "Cast"}
 val dest_Cast_c = dest_triop_c @{const_name "Cast"}
@@ -468,6 +472,13 @@ fun trim_tylabel_name name = String.substring(name, 1, size name - 1)
 fun dest_name_tylabel (TFree (name,_)) = trim_tylabel_name name
   | dest_name_tylabel (TVar ((name,_),_)) = trim_tylabel_name name
 val dest_name_tylabels = HOLogic.strip_tupleT #> map dest_name_tylabel
+fun mk_name_tylabels names = HOLogic.mk_tupleT (map (fn x => TFree ("'"^x, ["HOL.type"])) names)
+fun dest_named (Type (@{type_name named}, [tys, names]))
+      = dest_name_tylabels names ~~ HOLogic.strip_tupleT tys
+  | dest_named ty = raise TYPE ("dest_named", [ty], [])
+fun normlize_name name =
+  if String.isSuffix "__" name then String.substring (name,0, size name - 2)
+  else name
 
 (* val auto_fusion_arity =
   Logic.strip_assums_concl #> perhaps dest_Trueprop #> perhaps (dest_procedure #> #2)
@@ -499,6 +510,7 @@ fun tr_heap (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name Heap_D
 fun tr_topctx (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name NuTopCtx},ty2) $ A $ B)
     = let val (a',A') = tr_heap (a, A); val (b', B') = tr_stack (b,B)
        in (Const (@{const_name Pair}, ty1) $ a' $ b', Const (@{const_name NuTopCtx},ty2) $ A' $ B') end
+  | tr_topctx (tm as (_, Const (@{const_name ExNu}, _) $ _)) = tm
   | tr_topctx (tm as (a, A)) =
       if is_free_var a andalso is_free_var A then tm
       else

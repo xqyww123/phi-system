@@ -59,8 +59,7 @@ signature NU_HELP = sig
   val dest_binder    : string (*binder name*) -> term -> term * term
   val dest_binder_c  : string (*binder name*) -> cterm -> cterm * cterm
   (* one wrapped by `BinderNameTag` *)
-  val dest_named_binder    : string (*binder name*) -> term -> (term * term) * term
-  val dest_named_binder_c  : string (*binder name*) -> cterm -> ((string * ctyp) * cterm) * cterm
+  val mk_abstract  : term (*var*) -> term (*body*) -> term
   val mk_binder    : string (*binder name*) -> term -> term -> term
   val strip_binder_n   : int (*number of binders to be destructed*) ->
         string -> term -> term list * term
@@ -68,11 +67,10 @@ signature NU_HELP = sig
   val strip_binder   : string -> term -> term list * term
   val strip_binder_vars : string -> term -> (string * typ) list
   val strip_binder_c : string -> cterm -> cterm list * cterm
-  val strip_named_binder   : string -> term -> (term * term) list * term
-  val strip_named_binder_c : string -> cterm -> ((string * ctyp) * cterm) list * cterm
   val list_mk_binder   : string -> term list -> term -> term
+  val list_mk_abstract : term list -> term -> term
   val strip_implies_c : cterm -> cterm
-  val tuple_abs : ((string * string) * typ) list -> term -> term
+  val tuple_abs : (string * (string * typ)) list -> term -> term
 
   val dest_Trueprop_c : cterm -> cterm
   (*  Γ |- A ==> B
@@ -211,16 +209,10 @@ fun dest_binder binder (tm as (Const (const,_) $ Abs (var,vty,body))) =
 fun dest_binder_c binder = dest_monop_c binder #> dest_abs NONE
 val dest_binder_name_tag   = dest_binop   "NuPrime.BinderNameTag"
 val dest_binder_name_tag_c = dest_binop_c "NuPrime.BinderNameTag"
-fun dest_named_binder binder tm =
-      case dest_binder_name_tag tm of (var,bind) =>
-        case dest_binder binder bind of (var' as Free (_,vty), body) =>
-          ((Free (term_name var, vty), var'), body)
-fun dest_named_binder_c binder tm =
-      case dest_binder_name_tag_c tm of (var,bind) =>
-        case dest_binder_c binder bind of (var', body) =>
-          (((term_name (term_of var), ctyp_of_cterm var'), var'), body)
-fun mk_binder binder (Free namty) body = mk_monop binder (absfree namty body)
-  | mk_binder _ tm _ = raise TERM ("mk_binder: should be a free variable", [tm])
+fun mk_abstract (Free namty) body = absfree namty body
+  | mk_abstract tm _ = raise TERM ("mk_abstract: should be a free variable", [tm])
+fun mk_binder binder var body = mk_monop binder (mk_abstract var body)
+
 fun gen_strip_binder num dest tm =
   if num = 0 then ([],tm)
   else case try dest tm
@@ -230,13 +222,10 @@ fun gen_strip_binder num dest tm =
         else ([],tm)
 fun strip_binder_n  n = gen_strip_binder n o dest_binder
 fun strip_binder_nc n = gen_strip_binder n o dest_binder_c
-fun strip_named_binder_n  n = gen_strip_binder n o dest_named_binder
-fun strip_named_binder_nc n = gen_strip_binder n o dest_named_binder_c
 val strip_binder   = strip_binder_n ~1
 val strip_binder_c = strip_binder_nc ~1
-val strip_named_binder   = strip_named_binder_n ~1
-val strip_named_binder_c = strip_named_binder_nc ~1
 fun list_mk_binder binder = fold (mk_binder binder)
+val list_mk_abstract = fold mk_abstract
 
 fun strip_binder_vars binder (Const (binder', _) $ Abs (name, ty, body))
       = if binder' = binder then (name,ty) :: strip_binder_vars binder body else []
@@ -293,11 +282,11 @@ fun int_of_string str =
 fun strip_implies_c tm = strip_implies_c (#2 (dest_implies tm))
   handle TERM _ => tm
 
-fun absfree ((a',a),T) body = Abs (a', T, abstract_over (Free (a, T), body));
+fun absfree'' (a',(a,T)) body = Abs (a', T, abstract_over (Free (a, T), body));
 val prodconst = Const (@{const_name case_prod}, dummyT)
 fun caseprod (tm as (Abs (_,_, Abs (_,_, _)))) = prodconst $ tm
   | caseprod (tm as (Abs (_,_, Const (@{const_name case_prod}, _) $ _))) = prodconst $ tm
   | caseprod tm = tm
-val tuple_abs = fold_rev (caseprod oo absfree)
+val tuple_abs = fold_rev (caseprod oo absfree'')
     
 end

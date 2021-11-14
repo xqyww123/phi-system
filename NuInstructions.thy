@@ -108,55 +108,60 @@ subsubsection \<open>op_if\<close>
 definition op_if :: " ('s::stack \<longmapsto> 't::stack) \<Rightarrow> ('s \<longmapsto> 't) \<Rightarrow> (1 word \<times> 's) \<longmapsto> 't"
   where "op_if brT brF s = (case s of (heap,c,r) \<Rightarrow> if c = 1 then brT (heap,r) else brF (heap,r))"
 declare op_if_def[\<nu>instr]
-theorem if_\<nu>proc: "(c \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> x \<tycolon> X \<longmapsto> vt \<tycolon> Y \<brangle>) \<longrightarrow> (\<not> c \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> x \<tycolon> X \<longmapsto> vf \<tycolon> Y \<brangle>)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> x \<tycolon> X \<heavy_comma>^ c \<tycolon> \<bool> \<longmapsto> (if c then vt else vf) \<tycolon> Y \<brangle>"
+theorem if_\<nu>proc: "(cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> x \<tycolon> X \<longmapsto> y\<^sub>T \<tycolon> Y \<brangle>) \<longrightarrow> (\<not> cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> x \<tycolon> X \<longmapsto> y\<^sub>F \<tycolon> Y \<brangle>)
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> x \<tycolon> X \<heavy_comma>^ cond \<tycolon> \<bool> \<longmapsto> (if cond then y\<^sub>T else y\<^sub>F) \<tycolon> Y \<brangle>"
   unfolding \<nu>def op_if_def by auto
+text \<open>Despite the feasibility of divergence of \<nu>-types in the branch, i.e.
+  \<^term>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> x \<tycolon> X \<heavy_comma>^ cond \<tycolon> \<bool> \<longmapsto> (if cond then y\<^sub>T else y\<^sub>F) \<tycolon> (if cond then Y\<^sub>T else Y\<^sub>F ) \<brangle>\<close>,
+  from the design of the programming principles, considering the role of \<nu>-types which encodes the invariant properties,
+  we prohibit the divergence of \<nu>-types.\<close>
 
 lemma [simp]: "(if P then \<tort_lbrace>x \<tycolon> X\<tort_rbrace> else \<tort_lbrace>y \<tycolon> Y\<tort_rbrace>) = \<tort_lbrace>(if P then x else y) \<tycolon> (if P then X else Y)\<tort_rbrace>" by simp
 lemma [simp]: "(if P then (a,b) else (a',b')) = ((if P then a else a'), (if P then b else b'))" by simp
+(* lemma AA: "(if P then A else B) = (\<lambda>x. if P then A x else B x)" by simp *)
 lemma [simp]: "(if P then (A <stack-div> B) else (A' <stack-div> B')) = ((if P then A else A') <stack-div> (if P then B else B'))" by simp
 lemma [simp]: "(if P then (A <heap-sep> B) else (A' <heap-sep> B')) = ((if P then A else A') <heap-sep> (if P then B else B'))" by simp
 (* lemma [simp]: "(if P then (A \<^bold>a\<^bold>n\<^bold>d B) else (A' \<^bold>a\<^bold>n\<^bold>d B')) = ((if P then A else A') \<^bold>a\<^bold>n\<^bold>d (if P then B else B'))"  by auto *)
-lemma [simp]: "(if P then Named name T else Named name' T') = Named name (if P then T else T')" unfolding Named_def by simp
+lemma [simp]: "(if P then Labelled name T else Labelled name' T') = Labelled name (if P then T else T')" unfolding Labelled_def by simp
 lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
 
 
 subsubsection \<open>until\<close>
 
-inductive SemUnt :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> heap \<times> 'r \<Rightarrow> 'r state \<Rightarrow> bool" where
-  "f s = Success (h,1,r) \<Longrightarrow> SemUnt f s (Success (h,r))"
-| "f s = PartialCorrect \<Longrightarrow> SemUnt f s PartialCorrect"
-| "f s = Fail \<Longrightarrow> SemUnt f s Fail"
-| "f s = Success (h,0,r) \<Longrightarrow> SemUnt f (h,r) s'' \<Longrightarrow> SemUnt f s s''"
+inductive SemDoWhile :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> heap \<times> 'r \<Rightarrow> 'r state \<Rightarrow> bool" where
+  "f s = Success (h,0,r) \<Longrightarrow> SemDoWhile f s (Success (h,r))"
+| "f s = PartialCorrect \<Longrightarrow> SemDoWhile f s PartialCorrect"
+| "f s = Fail \<Longrightarrow> SemDoWhile f s Fail"
+| "f s = Success (h,1,r) \<Longrightarrow> SemDoWhile f (h,r) s'' \<Longrightarrow> SemDoWhile f s s''"
 
-lemma SemUnt_deterministic:
-  assumes "SemUnt c s s1"
-      and "SemUnt c s s2"
+lemma SemDoWhile_deterministic:
+  assumes "SemDoWhile c s s1"
+      and "SemDoWhile c s s2"
     shows "s1 = s2"
 proof -
-  have "SemUnt c s s1 \<Longrightarrow> (\<forall>s2. SemUnt c s s2 \<longrightarrow> s1 = s2)"
-    by (induct rule: SemUnt.induct) (subst SemUnt.simps, simp)+
+  have "SemDoWhile c s s1 \<Longrightarrow> (\<forall>s2. SemDoWhile c s s2 \<longrightarrow> s1 = s2)"
+    by (induct rule: SemDoWhile.induct) (subst SemDoWhile.simps, simp)+
   thus ?thesis
     using assms by simp
 qed
 
-lemma SemUnt_deterministic2: " SemUnt body s x \<Longrightarrow> The ( SemUnt body s) = x"
-  using SemUnt_deterministic by blast
+lemma SemDoWhile_deterministic2: " SemDoWhile body s x \<Longrightarrow> The ( SemDoWhile body s) = x"
+  using SemDoWhile_deterministic by blast
 
-definition Until :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<longmapsto> 'r" where
-  "Until f s = (if (\<exists>y. SemUnt f s y) then The (SemUnt f s) else PartialCorrect)"
-  
-lemma "__Until___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> X \<longmapsto> \<exists>* x'. x' \<tycolon> X \<heavy_comma>^ c x' \<tycolon> \<bool> \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> x \<tycolon> X \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu>' c x' \<brangle>"
+definition DoWhile :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<longmapsto> 'r" where
+  "DoWhile f s = (if (\<exists>y. SemDoWhile f s y) then The (SemDoWhile f s) else PartialCorrect)"
+
+lemma "__DoWhile___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> X <where> P \<longmapsto> \<exists>* x'. x' \<tycolon> X \<heavy_comma>^ x' \<in> P \<tycolon> \<bool> \<brangle>)
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c DoWhile body \<blangle> x \<tycolon> X <where> P \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu>' (x' \<notin> P) \<brangle>"
   for X :: "(heap \<times> 'a::lrep, 'b) \<nu>"
-  unfolding Until_def Procedure_def Auto_def
-  apply (auto simp add: SemUnt_deterministic2)
+  unfolding DoWhile_def Procedure_def Auto_def
+  apply (auto simp add: SemDoWhile_deterministic2)
   subgoal for a b xa
     apply (rotate_tac 1)
-    by (induct  body "(a, b)" xa arbitrary: a b x rule: SemUnt.induct) (auto 0 7)
+    by (induct  body "(a, b)" xa arbitrary: a b x rule: SemDoWhile.induct) (auto 0 7)
   done
 
-lemma named_ExNu: "\<tort_lbrace> x \<tycolon> ExNu T \<tort_rbrace> = \<tort_lbrace>\<exists>*c. x (tag c) \<tycolon> T (tag c) \<tort_rbrace>" by (auto simp add: named_exists)
+
 
 
 
@@ -198,16 +203,17 @@ lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by
 
 ML_file \<open>library/variables_tag.ML\<close>
 
-term Variant_Cast
-lemma until_\<nu>proc:
+lemma do_while_\<nu>proc:
   "Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<longrightarrow>
   \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
-  (\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> S' \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H'
+  \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
+  (\<forall>x. cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> S' \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H'
           \<longmapsto> \<exists>\<^sup>\<nu> x'. (x' \<tycolon> S'\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H') \<brangle>) \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H
-      \<longmapsto> \<exists>\<^sup>\<nu> x'. (x' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H') \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o cond x' \<brangle>"
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c DoWhile body \<blangle> s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H
+      \<longmapsto> \<exists>\<^sup>\<nu> x'. (x' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H') \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x') \<brangle>"
   unfolding Variant_Cast_def Premise_def apply simp
-  using "__Until___\<nu>proc"[of _ "(H' <top-ctx> S') <auto-down-lift> (\<lambda>x. (x,x))", simplified, unfolded Premise_def] by blast
+  using "__DoWhile___\<nu>proc"[of _ "(H' <top-ctx> S') <auto-down-lift> (\<lambda>x. (x,x))" "Collect cond",
+    simplified NuRefine_to_auto, simplified, unfolded Premise_def] by blast
 
 
 \<nu>processor vars_by_pattern 110 \<open>Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
@@ -234,24 +240,26 @@ end\<close>
 term tag
 declare [ [ML_print_depth = 100, unfolded] ]
 
-ML \<open>Variable.def_type @{context} true ("'xxx", 0)\<close>
-ML \<open>@{sort type}\<close>
-proc test: \<open>r \<tycolon> R\<heavy_comma> i \<tycolon> \<nat>[32]\<heavy_comma> j \<tycolon> \<nat>[32]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<close> \<longmapsto> \<open>r \<tycolon> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<close>
-  \<bullet> until i, j
-  
-  \<nu>debug ML_val \<open>Thm.prop_of @{thm this[THEN SpecTop_focus]}\<close>
-ML_val \<open>Variable.def_type @{context} false ("\<nu>i", 9)\<close>
 
 subsubsection \<open>while\<close>
 
 
-proc "while": \<open>s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<close> \<longmapsto> \<open>x \<tycolon> X\<close>
-  for X :: "(heap \<times> 'a::stack, 'b) \<nu>"
-  requires 
-    Cond_\<nu>proc: "\<forall>x. always x \<longrightarrow>
-      \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> pat_s x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x \<tycolon> H \<longmapsto> \<exists>* x'. (pat_s x' \<tycolon> S\<heavy_comma> c x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x' \<tycolon> H) \<and>\<^sup>\<nu>' always x' \<brangle>"
-    and Body_\<nu>proc: "\<forall>x. always x \<longrightarrow> cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> pat_s x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p pat_h x \<tycolon> H \<longmapsto> \<exists>* x'. pat_s x' \<tycolon> X \<brangle>"
-  \<bullet> "__Until__" \<medium_left_bracket> \<bullet> Cond   \<bullet> if Body_\<nu>proc[THEN spec] \<nu>debug 
+
+proc "while": \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<close> \<longmapsto> \<open>\<exists>* x. (x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x)\<close>
+  requires [unfolded Variant_Cast_def, simp]: "Variant_Cast (s' \<tycolon> S') (h' \<tycolon> H') vars S H"
+    and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H)\<brangle>"
+    and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<brangle>"
+  \<bullet> Cond if \<medium_left_bracket> \<bullet> do_while x' \<open>cond x'\<close> \<medium_left_bracket> \<bullet> Body Cond \<medium_right_bracket> \<bullet> \<medium_right_bracket>
+  \<medium_left_bracket> \<bullet> 
+  \<medium_right_bracket> \<bullet> 
+  finish
+
+  \<nu>debug 
+  thm used 
+  thm this
+  
+  \<medium_left_bracket> \<bullet> Cond -- c if \<medium_left_bracket> \<bullet> Body \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<medium_right_bracket> \<bullet> c
+
   note this[OF Body_\<nu>proc[THEN spec]]
   note
  Body_\<nu>proc[THEN spec]

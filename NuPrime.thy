@@ -285,15 +285,15 @@ definition \<nu>Equal :: "('a::{lrep,ceq}, 'b) \<nu> \<Rightarrow> ('b \<Rightar
 
 subsection \<open>Auxiliary tags\<close>
 
-subsubsection \<open>Name tag\<close>
+subsubsection \<open>Label tag\<close>
 
-datatype name_tag = NAME_TAG "unit \<Rightarrow> unit"
+datatype label = LABEL_TAG "unit \<Rightarrow> unit"
 
-lemma [cong]: "NAME_TAG x \<equiv> NAME_TAG x"  using reflexive .
-lemma name_tag_eq: "x = y" for x :: name_tag by (cases x, cases y) auto
+lemma [cong]: "LABEL_TAG x \<equiv> LABEL_TAG x"  using reflexive .
+lemma label_eq: "x = y" for x :: label by (cases x, cases y) auto
 
-syntax "_NAME_" :: "idt \<Rightarrow> name_tag" ("NAME _" [0] 1000)
-translations "NAME name" == "CONST NAME_TAG (\<lambda>name. ())"
+syntax "_LABEL_" :: "idt \<Rightarrow> label" ("LABEL _" [0] 1000)
+translations "LABEL name" == "CONST LABEL_TAG (\<lambda>name. ())"
 
 subsubsection \<open>Name tag by type\<close>
 
@@ -477,9 +477,9 @@ lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (p
 
 subsubsection \<open>Contextual Fact\<close>
 
-definition Fact :: "name_tag \<Rightarrow> bool \<Rightarrow> prop" where "Fact label P \<equiv>Trueprop P"
+definition Fact :: "label \<Rightarrow> bool \<Rightarrow> prop" where "Fact label P \<equiv>Trueprop P"
 syntax "Fact_sugar_" :: "idt \<Rightarrow> logic \<Rightarrow> prop" ("\<^item> _ : _" [5,0] 4)
-translations "Fact_sugar_ name P" == "CONST Fact (NAME name) P"
+translations "Fact_sugar_ name P" == "CONST Fact (LABEL name) P"
 lemma Fact_I: "P \<Longrightarrow> PROP Fact label P" unfolding Fact_def .
 lemma Fact_D: "\<^item> name : P \<Longrightarrow> P" unfolding Fact_def .
 

@@ -50,6 +50,8 @@ abbreviation AutoRefine (infixl "<auto-where>" 80)
 lemma [simp]:"\<tort_lbrace>x \<tycolon> Auto NuRefine T P \<tort_rbrace> = \<tort_lbrace> x \<tycolon> Auto NuAddition T (x \<in> P) \<tort_rbrace>"
   unfolding Auto_def by auto
 
+lemma NuRefine_to_auto:"\<tort_lbrace>x \<tycolon> T <where> P \<tort_rbrace> = \<tort_lbrace>x \<tycolon> T <auto-where> P \<tort_rbrace>" unfolding Auto_def ..
+
 (* lemma [\<nu>intro]: "(x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuRefine> P \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<and>x \<in> P" unfolding Cast_def by auto
 lemma [\<nu>intro]: " \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M <where> P \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q" unfolding Cast_def by auto
 (* lemma [\<nu>cast_overload E]: " \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> (N \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P) \<longmapsto> x \<tycolon> N \<^bold>w\<^bold>i\<^bold>t\<^bold>h x \<in> P" unfolding Cast_def by auto *)
@@ -87,10 +89,9 @@ lemma [\<nu>intro]: " \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<long
 lemma "\<down>lift_\<nu>cast": "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e g y = x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> N <down-lift> g" unfolding Cast_def by auto
 
 
-abbreviation AutoDownLift (infixl "<auto-down-lift>" 80)
-  where "AutoDownLift \<equiv> Auto DownLift"
+abbreviation AutoDownLift (infixl "<auto-down-lift>" 80) where "AutoDownLift T f \<equiv> Auto (DownLift T f)"
 
-lemma [simp]:"\<tort_lbrace>x \<tycolon> Auto DownLift T f \<tort_rbrace> = \<tort_lbrace> f x \<tycolon> T \<tort_rbrace>" unfolding Auto_def by auto
+lemma [simp]:"\<tort_lbrace>x \<tycolon> T <auto-down-lift> f \<tort_rbrace> = \<tort_lbrace> f x \<tycolon> T \<tort_rbrace>" unfolding Auto_def by auto
 
 (* term image
 lemma "\<nu>Equal (N <down-lift> g) can_eq eq \<longleftrightarrow> \<nu>Equal N (inv_imagep can_eq g) (inv_imagep eq g)"

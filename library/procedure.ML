@@ -71,7 +71,7 @@ fun define (binding,attrs) proc_th lthy =
             |-> (fn (tm,(_,def)) => fn lthy =>
                   (lthy, (proc_th RS (norm_def arity def RS @{thm rename_proc}))))
     val proc_th = proc_th
-          |> Raw_Simplifier.rewrite_rule lthy @{thms Premise_Irew}
+          (* |> Raw_Simplifier.rewrite_rule lthy @{thms Premise_Irew} *)
           |> Raw_Simplifier.rewrite_rule lthy
               (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
           |> Raw_Simplifier.rewrite_rule lthy

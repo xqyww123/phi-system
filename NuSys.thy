@@ -5,7 +5,7 @@ theory NuSys
   keywords
     "proc" "proc'" (* "rec_proc" *) :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always" :: quasi_command
-  and "\<bullet>" "affirm" "\<nu>have" (* "\<nu>obtain" "\<nu>choose" "\<nu>choose2" *) "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "drop_fact" "\<nu>debug" "\<nu>debug'"
+  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "drop_fact" "\<nu>debug" "\<nu>debug'"
           "\<nu>note" (* "\<nu>choose_quick" *) :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
@@ -184,24 +184,26 @@ subsection \<open>Name tag\<close>
 
 subsubsection \<open>Explicit name tag\<close>
 
-definition Named :: "name_tag \<Rightarrow> 'a \<Rightarrow> 'a" where "Named name x = x" \<comment>\<open>name tag\<close>
+definition Labelled :: "label \<Rightarrow> 'a \<Rightarrow> 'a" where "Labelled name x = x" \<comment>\<open>name tag\<close>
 consts "named_sugar" :: " 'i_am \<Rightarrow> 'merely \<Rightarrow> 'a_sugar " ("\<ltbrak>_\<rtbrak>. _" [10,15] 14)
 translations
   "\<ltbrak>name\<rtbrak>. x \<tycolon> T" == "x \<tycolon> (\<ltbrak>name\<rtbrak>. T)"
-  "\<ltbrak>name\<rtbrak>. x" == "CONST Named (NAME name) x"
+  "\<ltbrak>name\<rtbrak>. x" == "CONST Labelled (LABEL name) x"
 
-lemma [simp]: "x \<in> Named name S \<longleftrightarrow> x \<in> S" unfolding Named_def ..
-lemma [simp]: "x \<in> Named name S \<longleftrightarrow> x \<in> S" unfolding Named_def ..
+lemma [simp]: "x \<in> Labelled name S \<longleftrightarrow> x \<in> S" unfolding Labelled_def ..
+lemma [simp]: "x \<in> Labelled name S \<longleftrightarrow> x \<in> S" unfolding Labelled_def ..
 
 subsubsection \<open>Hidden name hint\<close>
 
-definition NameHint :: "name_tag \<Rightarrow> 'a \<Rightarrow> 'a" where "NameHint name x = x" \<comment>\<open>name tag\<close>
+definition NameHint :: "label \<Rightarrow> 'a \<Rightarrow> 'a" where "NameHint name x = x" \<comment>\<open>name tag\<close>
 translations "X" <= "CONST NameHint name X"
 
 
 subsection \<open>Other Tags\<close>
 
 definition Auto :: " 'a \<Rightarrow> 'a " where "Auto x = x"
+
+lemma [\<nu>intro']: "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> T \<longmapsto> x \<tycolon> Auto T" unfolding Auto_def Intro_def using cast_id .
 
 section \<open>Essential \<nu>-abstractor\<close>
 
@@ -299,7 +301,7 @@ lemma [elim!,\<nu>elim]: "Inhabited \<tort_lbrace>s \<tycolon> S \<heavy_comma> 
 
 lemma NuTopCtx_cong: "\<tort_lbrace>h \<tycolon> H\<tort_rbrace> \<equiv> \<tort_lbrace>h' \<tycolon> H'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>s \<tycolon> S\<tort_rbrace> \<equiv> \<tort_lbrace>s' \<tycolon> S'\<tort_rbrace> \<Longrightarrow> \<tort_lbrace>s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<tort_rbrace> \<equiv> \<tort_lbrace>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<tort_rbrace>"
   unfolding atomize_eq by (auto 0 3)
-simproc_setup NuTopCtx_cong ("\<tort_lbrace>s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<tort_rbrace>") = \<open>K (fn ctx => fn tm => @{print} (NuSimpCong.simproc @{thm NuTopCtx_cong} ctx (@{print} tm)))\<close>
+simproc_setup NuTopCtx_cong ("\<tort_lbrace>s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H\<tort_rbrace>") = \<open>K (NuSimpCong.simproc @{thm NuTopCtx_cong})\<close>
 
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t h \<tycolon> H \<longmapsto> h' \<tycolon> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ph \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t s \<tycolon> S \<longmapsto> s' \<tycolon> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ps \<Longrightarrow>
@@ -404,11 +406,8 @@ lemma ExNu_cong: "(\<And>c. \<tort_lbrace>x c \<tycolon> T c\<tort_rbrace> \<equ
 
 simproc_setup ExNu_cong ("\<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace>") = \<open>K (NuSimpCong.simproc_qualifier @{thm ExNu_cong})\<close>
 
-
-
-
-
 lemma ExNu_pair: "\<tort_lbrace> x \<tycolon> ExNu T \<tort_rbrace> = \<tort_lbrace>\<exists>*c1 c2. x (c1,c2) \<tycolon> T (c1,c2) \<tort_rbrace>" by auto
+lemma named_ExNu: "\<tort_lbrace> x \<tycolon> ExNu T \<tort_rbrace> = \<tort_lbrace>\<exists>*c. x (tag c) \<tycolon> T (tag c) \<tort_rbrace>" by (auto simp add: named_exists)
 
 lemma [simp]: "p \<in> \<S>  \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<longleftrightarrow> (\<exists>z. p \<in> \<S>  \<tort_lbrace> x z \<tycolon> T z\<tort_rbrace> )" by (auto 4 3)
 lemma [simp]: "p \<in> \<S_S> \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<longleftrightarrow> (\<exists>z. p \<in> \<S_S> \<tort_lbrace>x z \<tycolon> T z\<tort_rbrace>)" by (auto 4 3)
@@ -455,9 +454,11 @@ subsection \<open>Addition Nu-type : coheres true proposition\<close>
 
 definition NuAddition :: " ('p,'x) \<nu> \<Rightarrow> bool \<Rightarrow> ('p,'x) \<nu> " (infixl "\<and>\<^sup>\<nu>" 50)
   where " (N \<and>\<^sup>\<nu> P) = (\<lambda>x. {p. P \<and> (p \<nuLinkL> N \<nuLinkR> x)})"
-translations "(x \<tycolon> T) \<and>\<^sup>\<nu> P" => "x \<tycolon> T \<and>\<^sup>\<nu> P"
-  "(x \<tycolon> T) \<and> P" => "x \<tycolon> T \<and>\<^sup>\<nu> P"
+translations "(x \<tycolon> T) \<and>\<^sup>\<nu> P" \<rightleftharpoons> "x \<tycolon> T \<and>\<^sup>\<nu> P"
+  "(x \<tycolon> T) \<and> P" => "x \<tycolon> (T \<and>\<^sup>\<nu> P)"
 lemma [simp]: "p \<nuLinkL> T \<and>\<^sup>\<nu> P \<nuLinkR> x \<longleftrightarrow> P \<and> (p \<nuLinkL> T \<nuLinkR> x)" unfolding NuAddition_def Refining_def by simp
+
+lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> T \<longmapsto> (x \<tycolon> T) \<and>\<^sup>\<nu> P" unfolding Intro_def Cast_def Premise_def by simp
 
 (* lemma [simp]: "\<tort_lbrace> x \<tycolon> T \<and>\<^sup>\<nu> True\<tort_rbrace> = \<tort_lbrace> x \<tycolon> T \<tort_rbrace>" by auto
 lemma [simp]: "\<tort_lbrace>L \<heavy_comma> (x \<tycolon> T) \<and> P\<tort_rbrace> = \<tort_lbrace>(L \<heavy_comma> x \<tycolon> T) \<and> P\<tort_rbrace>" and [simp]: "\<tort_lbrace>(x \<tycolon> T) \<and> P\<heavy_comma> R\<tort_rbrace> = \<tort_lbrace>(x \<tycolon> T\<heavy_comma> R) \<and> P\<tort_rbrace>"
@@ -487,9 +488,9 @@ simproc_setup NuAddition_cong ("\<tort_lbrace>x \<tycolon> T \<and>\<^sup>\<nu> 
 
 subsubsection \<open>Auto tag\<close>
 
-abbreviation AutoAddition (infixl "\<and>\<^sup>\<nu>''" 50) where "AutoAddition \<equiv> Auto NuAddition"
+abbreviation AutoAddition (infixl "\<and>\<^sup>\<nu>''" 50) where "AutoAddition T P \<equiv> Auto (NuAddition T P)"
 notation AutoAddition (infixl "\<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o" 50)
-translations "(x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P" => "x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P"
+translations "(x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P" \<rightleftharpoons> "x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P"
 
 lemma [simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> x \<tycolon> T \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<longmapsto> Y \<brangle> = (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> x \<tycolon> T \<longmapsto> Y \<brangle>)"
   unfolding Auto_def Procedure_def Premise_def by simp blast
@@ -795,7 +796,7 @@ subsection \<open>Register\<close>
 definition RegisterCollection :: " 'a \<Rightarrow> 'a " where "RegisterCollection x = x"
 
 lemma RegisterCollection_rew[final_proc_rewrite]: "RegisterCollection x \<equiv> x" unfolding RegisterCollection_def .
-lemma Named_rew[final_proc_rewrite]: "Named name x \<equiv> x" unfolding Named_def .
+lemma Labelled_rew[final_proc_rewrite]: "Labelled name x \<equiv> x" unfolding Labelled_def .
 
 lemma index_reg_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ RegisterCollection A \<brangle>"
   unfolding RegisterCollection_def .
@@ -803,11 +804,11 @@ lemma index_reg_mapper[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold
   unfolding RegisterCollection_def .
 
 (* definition new_reg_0 :: "(('x::lrep) \<times> ('R::lrep) \<flower> void) \<Rightarrow> ('R \<flower> 'x register) state"
-  where "new_reg_0 s = (case s of Proc_Ctx (x,R) void \<Rightarrow> StatOn (Proc_Ctx R (Register (NAME _) x)))"
+  where "new_reg_0 s = (case s of Proc_Ctx (x,R) void \<Rightarrow> StatOn (Proc_Ctx R (Register (LABEL _) x)))"
 definition new_reg_L :: "('G, 'G2, 't, 'x register \<times> 't) index \<Rightarrow> (('x::lrep) \<times> ('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
-  where "new_reg_L adr s = (case s of Proc_Ctx (x,R) G \<Rightarrow> StatOn (Proc_Ctx R (map_at adr (\<lambda>t. (Register (NAME _) x,t)) G)))"
+  where "new_reg_L adr s = (case s of Proc_Ctx (x,R) G \<Rightarrow> StatOn (Proc_Ctx R (map_at adr (\<lambda>t. (Register (LABEL _) x,t)) G)))"
 definition new_reg_R :: "('G, 'G2, 't, 't \<times> 'x register) index \<Rightarrow> (('x::lrep) \<times> ('R::lrep) \<flower> ('G::register_collection)) \<Rightarrow> ('R \<flower> ('G2::register_collection)) state"
-  where "new_reg_R adr s = (case s of Proc_Ctx (x,R) G \<Rightarrow> StatOn (Proc_Ctx R (map_at adr (\<lambda>t. (t, Register (NAME _) x)) G)))" *)
+  where "new_reg_R adr s = (case s of Proc_Ctx (x,R) G \<Rightarrow> StatOn (Proc_Ctx R (map_at adr (\<lambda>t. (t, Register (LABEL _) x)) G)))" *)
 
 subsubsection \<open>Instruction Definitions\<close>
 
@@ -831,13 +832,13 @@ lemma new_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> W \
 lemma delete_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle>(W \<^bold>a\<^bold>n\<^bold>d Z) \<^bold>@ G \<longmapsto> Z \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c delete_reg idx \<blangle> G \<longmapsto> G2 \<brangle>"
   unfolding \<nu>index_def \<nu>def delete_reg_def  by (cases idx) auto
 
-lemma store_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Named name X \<^bold>@ G \<longmapsto> Named name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg idx \<blangle> G\<heavy_comma> Y \<longmapsto> G2 \<brangle>"
+lemma store_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Labelled name X \<^bold>@ G \<longmapsto> Labelled name Y \<^bold>@ G2 \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c store_reg idx \<blangle> G\<heavy_comma> Y \<longmapsto> G2 \<brangle>"
   unfolding \<nu>index_def \<nu>def store_reg_def by (cases idx) auto
 
-lemma load_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Named name  \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<^bold>@ R \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg idx \<blangle> R \<longmapsto> R \<heavy_comma> x \<tycolon> X \<brangle>"
+lemma load_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Labelled name  \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<^bold>@ R \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c load_reg idx \<blangle> R \<longmapsto> R \<heavy_comma> x \<tycolon> X \<brangle>"
   unfolding \<nu>index_def \<nu>def load_reg_def by auto
 
-lemma move_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Named name X \<^bold>@ R \<longmapsto> Named name Void \<^bold>@ R' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c move_reg idx \<blangle> R \<longmapsto> R' \<heavy_comma> X \<brangle>"
+lemma move_reg: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> Labelled name X \<^bold>@ R \<longmapsto> Labelled name Void \<^bold>@ R' \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c move_reg idx \<blangle> R \<longmapsto> R' \<heavy_comma> X \<brangle>"
   unfolding \<nu>index_def \<nu>def move_reg_def by (cases idx) auto
 
 (* schematic_goal "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right (index_left (index_left (index_here))) \<blangle> ?X \<^bold>@ ?A \<brangle>" by (rule \<nu>intro)+
@@ -1002,7 +1003,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<bullet>\<close> "The \<nu>construction"
-    (fn toks => (Toplevel.proof (NuToplevel.process_cmd (toks @ [Token.eof])),
+    (fn toks => (Toplevel.proof (NuProcessor.powerful_process (toks @ [Token.eof])),
       if hd toks |> Token.is_eof then [Token.eof] else []))
 
 val _ =
@@ -1014,24 +1015,10 @@ val _ =
     (and_list1 ((binding -- opt_attribs -- opt_attribs --| $$$ ":") -- and_list1 (prop -- repeat prop)) >>
       (Toplevel.proof' o (snd ooo NuToplevel.have_aux_cmd)))
 
-(* val _ =
+val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<nu>obtain\<close> "generalized elimination"
     (Parse.parbinding -- Scan.optional (Parse.vars --| Parse.where_) [] -- structured_statement
       >> (fn ((a, b), (c, d, e)) => Toplevel.proof' (NuObtain.obtain_cmd a b c d e))); 
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<nu>choose\<close> "existential elimination"
-    ( !!! vars --| $$$ "where" -- Scan.repeat1 Parse.prop
-      >> (fn (b, c) => Toplevel.proof' (NuObtain.choose_cmd b c)));
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<nu>choose2\<close> "existential elimination"
-    ( Scan.repeat1 Parse.binding >> (Toplevel.proof o NuObtain.chooseV)); 
-
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<nu>choose_quick\<close> "existential elimination"
-    ( Scan.succeed (Toplevel.proof (NuObtain.obtain_quick_pairs))); *)
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "construct nested sub-procedure"
@@ -1090,13 +1077,13 @@ section \<open>Processors\<close>
 subsection \<open>Controls\<close>
 
 \<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn ctx => fn th => NuParse.auto_level_force #->
-  (fn auto_level' => NuProcessor.process (AutoLevel.reduce auto_level' ctx) th #> (fn x => raise ProcessTerminated x)))\<close>
+  (fn auto_level' => NuProcessor.internal_process (AutoLevel.reduce auto_level' ctx) th #> (fn x => raise ProcessTerminated x)))\<close>
 
 \<nu>processor repeat 12 \<open>PROP P\<close> \<open>let
     fun repeat n f x = if n <= 0 then x else ((repeat (n-1) f (f x)) handle _ => x)
   in fn ctx => fn th => Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*")
     >> (fn (tok,n) => fn _ => (case Int.fromString n of SOME n => funpow n | _ => repeat 32)
-        (NuProcessor.process ctx #> (fn p => p [tok,Token.eof] |> #1)) th)
+        (NuProcessor.simple_process ctx #> (fn p => p [tok,Token.eof] |> #1)) th)
   end\<close>
 
 subsection \<open>Essential functions\<close>
@@ -1122,7 +1109,7 @@ val ctx = NuSys.load_specthm meta ctx
       in fold (NuSys.apply_casts ctx o NuProcedure.cast_thm ctx) bindings meta end)\<close>
 
 \<nu>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Parse.term >> (fn term => fn _ =>
-    NuSys.set_param ctx (Syntax.parse_term ctx term) meta)\<close>
+    NuSys.set_param_cmd ctx term meta)\<close>
 
 \<nu>processor rule 8800 \<open>PROP P \<Longrightarrow> PROP Q\<close>
   \<open>fn ctx => fn meta => (NuProcedure.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
@@ -1140,7 +1127,7 @@ val ctx = NuSys.load_specthm meta ctx
     let open NuBasics
     val ctx = NuSys.load_specthm meta ctx
     val attrs = map (Attrib.attribute_cmd ctx o Attrib.check_src ctx) attrs
-    val [th] = Proof_Context.get_fact ctx (Facts.Named (name, NONE)) 
+    val [th] = Proof_Context.get_fact ctx (Facts.Labelled (name, NONE)) 
     val ([th],ctx) = fold_map (Thm.proof_attributes attrs) [th] ctx
     in elim_SPEC meta |> apfst (fn major => th COMP major) |> intro_SPEC end)\<close>
 *)

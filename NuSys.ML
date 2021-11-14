@@ -55,8 +55,7 @@ signature NU_SYS = sig
   val accept_proc : Proof.context -> thm -> thm
   val apply_casts : Proof.context -> thm list -> thm -> thm
   val set_param : Proof.context -> term -> thm -> thm
-
-  val process : Proof.state -> thm -> thm parser
+  val set_param_cmd : Proof.context -> string -> thm -> thm
 
   val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm (* see @{thm NuPrime.start_proc} *)
   val finish_proc : thm -> thm (* see @{thm NuPrime.finish_proc} *)
@@ -160,7 +159,7 @@ fun gen_declare_fact rule (binding,attrs) meta ctx =
     |> pair (rule name meta)
   end
 fun declare_fact (thmbind,auxes) = gen_declare_fact (fn name => fn meta =>
-    (Thm.instantiate ([],[((("name",0), name_tag_ty), mk_name_tag_c name)])
+    (Thm.instantiate ([],[((("name",0), label_ty), mk_label_c name)])
       @{thm NuPrime.declare_fact})
     OF [fold1 Conjunction.intr auxes, meta]
   ) thmbind
@@ -171,7 +170,7 @@ fun name_star_fact binding =
     let
       val (target,_,_) = elim_SPEC meta |> #2 |> elim_FactCollection
     in
-      meta RS (Thm.instantiate ([],[((("name",0), name_tag_ty), mk_name_tag_c name)])
+      meta RS (Thm.instantiate ([],[((("name",0), label_ty), mk_label_c name)])
           @{thm NuPrime.name_star_fact})
     end
   ) binding
@@ -315,13 +314,16 @@ val auto_resolve_rule0 = auto_resolve_rule NONE []
 
   (** Basic Operations **)
 fun cast ctx desired_nu major =
-  (major RS
-    (Thm.instantiate ([((("'a",0),["NuPrime.lrep"]),
+  let
+    val _ = term_of desired_nu |> dest_RepSet (*validates the argument*)
+    val insts = ([((("'a",0),["NuPrime.lrep"]),
                         ctyp_of_cterm desired_nu |> dest_tynuset_c |> dest_ctyp1 
                                                     (*heap \<times> 'a*))],
-          [((("T'",0),typ_of_cterm desired_nu), desired_nu)])
-      @{thm "cast"}))
-   |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
+                 [((("T'",0),typ_of_cterm desired_nu), desired_nu)])
+  in
+    (major RS Thm.instantiate insts @{thm "cast"})
+      |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
+  end
 
 val conversion_thm = @{thm conversion}
 fun conversion ctx to from =
@@ -409,14 +411,34 @@ val apply_casts = apply_Xs apply_casts_major
 
 
 
+fun param_type major =
+  NuBasics.param_type major
+    |> map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty)
+  (* TODO: how to parse (check) the term of a desired type pattern? *)
 fun set_param' ctx term major =
-  (term |> Type.constraint (NuBasics.param_type major
-                  |> map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty))
-       |> Syntax.check_term ctx |> Thm.cterm_of ctx |> NuBasics.intro_param)
+  (term |> Type.constraint (param_type major)
+            (* TODO: how to parse (check) the term of a desired type pattern? *)
+        |> Syntax.check_term ctx |> Thm.cterm_of ctx |> NuBasics.intro_param)
     RS major
-fun set_param ctx term = map_major (set_param' ctx term)
+fun set_param_cmd' ctx term major =
+  case try (dest_funT #> apfst dest_named) (param_type major)
+    of SOME (name_and_tys, rng) =>
+        let
+          val fixes = map (fn (name,ty) =>
+                (Binding.name name, (if ty = dummyT then NONE else SOME ty), NoSyn)) name_and_tys
+     |> @{print}
+          val (fixed_names, ctx) = Proof_Context.add_fixes fixes ctx
+          val term = Syntax.parse_term ctx term
+                      |> tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
+                      |> @{print}
+                      |> mk_monop @{const_name case_named}
+        in
+          set_param' ctx term major
+        end
+     | NONE => set_param' ctx (Syntax.parse_term ctx term) major
 
-val process = NuProcessor.process o Proof.context_of
+fun set_param ctx term = map_major (set_param' ctx term)
+fun set_param_cmd ctx term = map_major (set_param_cmd' ctx term)
 
 
 fun start_proc ctx blk_name arg_nuTy =

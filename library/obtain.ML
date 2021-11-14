@@ -7,28 +7,32 @@ signature NU_OBTAIN = sig
     (binding * string option * mixfix) list -> (string * string list) list list ->
     ((Attrib.binding * Token.src list) * (string * string list) list) list ->
     bool -> Proof.state -> Proof.state
-  (* val obtain_quick_pairs : Proof.state -> Proof.state *)
-  val choose: (binding * typ option * mixfix) list -> term list -> 
-    bool -> Proof.state -> Proof.state
-  val choose_cmd: (binding * string option * mixfix) list -> string list -> 
-    bool -> Proof.state -> Proof.state
   val chooseV : binding list -> Proof.state -> Proof.state
   val auto_choose : Proof.state -> Proof.state
 end
 structure NuObtain : NU_OBTAIN = struct
-fun eliminate_term ctxt xs tm =
-  let
+fun eliminate_term ctxt xs thm =
+  let open NuBasics
+    val tm = Thm.prop_of thm
+    val (X,Nu) = dest_current_nu thm
     val vs = map (dest_Free o Thm.term_of) xs;
     val bads = Term.fold_aterms (fn t as Free v =>
       if member (op =) vs v then insert (op aconv) t else I | _ => I) tm [];
-    val _ = null bads orelse
-      error ("Result contains obtained parameters: " ^
-        space_implode " " (map (Syntax.string_of_term ctxt) bads));
-  in tm end;
+  in
+    if null bads then thm
+    else let
+      val Nu = list_mk_binder @{const_name ExNu} (@{print} bads) Nu
+      val X = list_mk_abstract bads X
+      val typing' = mk_RepSet (X,Nu) |> Syntax.check_term ctxt |> cterm_of ctxt
+    in
+      NuSys.cast ctxt typing' thm (* TODO: manually indicate the tactic to boost
+      up the performance *)
+    end
+  end;
 
 fun eliminate ctxt rule xs As thm =
   let
-    val _ = eliminate_term ctxt xs (Thm.full_prop_of thm);
+    val thm = eliminate_term ctxt xs thm;
     val _ = Object_Logic.is_judgment ctxt (Thm.concl_of thm) orelse
       error "Conclusion in obtained context must be object-logic judgment"
 
@@ -47,8 +51,7 @@ fun eliminate_nusys ctx rule xs As th =
   eliminate ctx (NuBasics.export_codeblocks
     (Thm.chyps_of th |> filter (can NuBasics.dest_codeblock_c)) rule) xs As th
   handle e => raise (@{print} e)
-fun obtain_export ctxt rule xs _ As =
-  (eliminate_nusys ctxt rule xs As, eliminate_term ctxt xs)
+fun obtain_export ctxt rule xs _ As = (eliminate_nusys ctxt rule xs As, I)
 
 
 (* result declaration *)
@@ -240,68 +243,7 @@ fun trim_var_name name =
   then String.substring (name, 0, String.size name - 2)
   else name
 val trim_var = dest_Free #> apfst trim_var_name #> Free
-fun gen_choose prep_stmt raw_decls raw_insts int stat =
-  let open NuBasics NuHelp HOLogic
-    val ctx = Proof.context_of stat
-    val (major,facts) = Proof.the_fact stat |> elim_SPEC
-    val (org_vars, org_body) = prop_of major |> dest_Trueprop |> (fn x => 
-      case x of (Const ("NuPrime.CurrentConstruction", ty) $ p $ T) =>
-        let val (vars, body) = strip_named_binder "NuPrime.ExTyp" T
-        in (map snd vars, (Const ("NuPrime.CurrentConstruction", ty) $ p $ body)) end)
-    val t1 = ((Thm.assume (current_codeblock major)) COMP CodeBlock_unabbrev) 
-    val t2 = ((Thm.assume (current_codeblock major)) COMP CodeBlock_abbrev)
-    val major = Raw_Simplifier.rewrite_rule ctx [ExTy_strip] major |> @{print}
-
-    (* val major = Simplifier.asm_simplify
-          (fold Simplifier.add_simp [ExTy_strip, CodeBlock_unabbrev] ctx)
-          (disch_current_codeblock major) |> @{print} *)
-    val fix_lst = fix_frees_lst Position.none org_vars
-    val (_,ctx_fixed) = Proof_Context.add_fixes fix_lst ctx
-    val org_vars' = map (free_to_fix ctx_fixed) org_vars
-    val ({vars=decl_vars,propss=[insts],binds=[],result_binds=[],...}, params_ctx) =
-      prep_stmt raw_decls [map (rpair []) raw_insts]  ctx_fixed
-    val insts = map (dest_eq o dest_Trueprop) insts |> match_vars params_ctx [] [] org_vars'
-    val inst_body = subst_free (org_vars ~~ insts) org_body
-
-    val goal = inst_body |> list_mk_binder "HOL.Ex" (map (#2 o #2) decl_vars |> rev)
-          |> mk_Trueprop |> Syntax.check_term params_ctx |> @{print}
-    val that_vars = map dest_Free org_vars' |> map Free
-           (*|> Variable.variant_frees params_ctx [] |> map Free |> @{print} *)
-    val that_prop = mk_Trueprop (subst_free (org_vars ~~ that_vars) org_body)
-    val cparams = map (Thm.cterm_of params_ctx o #2 o #2) decl_vars;
-
-    val focus_ex = expand_exE params_ctx major
-    val specthm'_term = mk_Trueprop (subst_free [Logic.dest_equals (prop_of t1)] inst_body)
-    val specthm' = intro_SPEC 
-        (Thm.assume (Thm.cterm_of params_ctx specthm'_term |> @{print})
-          |> Raw_Simplifier.rewrite_rule params_ctx [t2 |> @{print}]
-        , facts)
-    fun after_qed (result_ctxt, results) state' =
-      let open NuBasics
-        val ctx' = Proof.context_of state'
-        val [rule] = Proof_Context.export result_ctxt ctx' (flat results) |> @{print}
-        val rule = rule
-              |> Drule.forall_intr_list (map (Thm.cterm_of params_ctx) that_vars |> @{print})
-        val rule = (rule COMP (@{print} focus_ex)) |> @{print} |> Raw_Simplifier.rewrite_rule ctx'
-        [t1 |> @{print}]
-              |> expand_exE ctx' |> @{print}
-      in
-        state'
-        |> Proof.fix (map #1 decl_vars)
-        |> Proof.assm (obtain_export params_ctx rule (@{print} cparams)) [] []
-            [(Binding.empty_atts, [(specthm'_term,[])])]
-        |> Proof.set_facts [specthm']
-      end;
-  in
-    stat
-    |> NuSys.setup_proof (print_results int) Proof_Context.mode_default false ""
-        NONE after_qed [] [(Binding.empty_atts, [(that_prop, [])])]
-        [[(goal, [])]]
-    |-> Proof.refine_insert
-  end;
 in
-val choose = gen_choose Proof_Context.cert_stmt
-val choose_cmd = gen_choose Proof_Context.read_stmt
 
 fun chooseV inst_names stat =
   let open NuBasics NuHelp HOLogic Term
@@ -309,8 +251,7 @@ fun chooseV inst_names stat =
     val ctx = Proof.context_of stat
     val t1 = ((Thm.assume (current_codeblock major)) COMP @{thm CodeBlock_unabbrev}) 
     val t2 = ((Thm.assume (current_codeblock major)) COMP @{thm CodeBlock_abbrev})
-    val major = Raw_Simplifier.rewrite_rule ctx @{thms (* AutoExTyp_strip *) ExTyp_strip}
-                  major |> @{print}
+    val major = Raw_Simplifier.rewrite_rule ctx @{thms ExTyp_strip} major |> @{print}
     val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder "HOL.Ex"
     val var_tys = map fastype_of vars
     val (inst_names, stat) = Proof.map_context_result (Proof_Context.add_fixes
@@ -335,7 +276,7 @@ fun chooseV inst_names stat =
 fun auto_choose stat =
   case NuBasics.dest_current_nu (Proof.the_fact stat)
     of (_, Const (@{const_name ExNu}, _) $ Abs (name, _, _)) =>
-      chooseV [Binding.name name] stat
+      chooseV [Binding.name (NuBasics.normlize_name name) |> @{print}] stat
      | _ => raise Fail ""
 
 
