@@ -3,7 +3,7 @@
 theory NuSys
   imports NuPrime NuLLReps
   keywords
-    "proc" "proc'" (* "rec_proc" *) :: thy_goal_stmt
+    "proc" (* "rec_proc" *) :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always" :: quasi_command
   and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "drop_fact" "\<nu>debug" "\<nu>debug'"
           "\<nu>note" (* "\<nu>choose_quick" *) :: prf_decl % "proof"
@@ -958,20 +958,14 @@ val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>exty_simproc\<c
 
 val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
 val requires_statement = Scan.optional (Parse.$$$ "requires" |-- Parse.!!! statement1) [];
+val premises_statement = Scan.optional (Parse.$$$ "premises" |-- Parse.!!! statement1) [];
 val requires_opt1 = Scan.option (Parse.$$$ "requires" |-- Parse.term);
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
     ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
-            -- requires_statement) >>
+            -- (requires_statement -- premises_statement)) >>
         (fn (((((b,arg),ret),fixes),includes),preconds) =>  
             (begin_proc_cmd false b arg ret fixes includes preconds)));
-
-val _ =
-  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc'\<close> "begin a procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
-            -- requires_statement) >>
-        (fn (((((b,arg),ret),fixes),includes),preconds) =>  
-            (begin_proc_cmd true b arg ret fixes includes preconds)));
 
 (* val loop_variables = $$$ "var" |-- !!! vars;
 val _ =

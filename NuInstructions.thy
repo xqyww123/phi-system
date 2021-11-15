@@ -1,7 +1,7 @@
 theory NuInstructions
   imports NuSys NuBasicAbstractors
   keywords
-     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "of" "while" "until" "always" "var" "heap" "--" :: quasi_command
+     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "always" "heap" "--" :: quasi_command
   abbrevs "|^" = "\<up>"
     and "||^" = "\<Up>"
     and "|v" = "\<down>"
@@ -179,7 +179,7 @@ lemma Variant_Cast_I:
 lemma Variant_Cast_I_always:
   "s = pattern\<^sub>s vars \<Longrightarrow> h = pattern\<^sub>h vars \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always vars \<Longrightarrow>
   Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars (S <auto-down-lift> pattern\<^sub>s <auto-where> Collect always) (H <auto-down-lift> pattern\<^sub>h)"
-  unfolding Variant_Cast_def by auto
+  unfolding Variant_Cast_def Auto_def by auto
 
 (* definition Variants_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'vars \<Rightarrow> 'stack \<Rightarrow> ('vars \<Rightarrow> 'stack) \<Rightarrow> 'heap \<Rightarrow> ('vars \<Rightarrow> 'heap) \<Rightarrow> ('vars \<Rightarrow> bool) \<Rightarrow> bool "
     ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t\<^bold>s _ \<^bold>a\<^bold>s _/ \<^bold>i\<^bold>n _ '(\<^bold>p\<^bold>a\<^bold>t\<^bold>t\<^bold>e\<^bold>r\<^bold>n _') \<^bold>a\<^bold>n\<^bold>d/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _ '(\<^bold>p\<^bold>a\<^bold>t\<^bold>t\<^bold>e\<^bold>r\<^bold>n _')/ \<^bold>a\<^bold>l\<^bold>w\<^bold>a\<^bold>y\<^bold>s _" )
@@ -215,7 +215,6 @@ lemma do_while_\<nu>proc:
   using "__DoWhile___\<nu>proc"[of _ "(H' <top-ctx> S') <auto-down-lift> (\<lambda>x. (x,x))" "Collect cond",
     simplified NuRefine_to_auto, simplified, unfolded Premise_def] by blast
 
-
 \<nu>processor vars_by_pattern 110 \<open>Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
 let open Parse Scan NuHelp NuBasics in
   list1 params -- option ($$$ "in" |-- list1 term) -- option ($$$ "heap" |-- list1 term)
@@ -244,26 +243,13 @@ declare [ [ML_print_depth = 100, unfolded] ]
 subsubsection \<open>while\<close>
 
 
-
-proc "while": \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<close> \<longmapsto> \<open>\<exists>* x. (x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x)\<close>
+proc while: \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<close> \<longmapsto> \<open>\<exists>* x. (x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x)\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast (s' \<tycolon> S') (h' \<tycolon> H') vars S H"
     and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H)\<brangle>"
     and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<brangle>"
-  \<bullet> Cond if \<medium_left_bracket> \<bullet> do_while x' \<open>cond x'\<close> \<medium_left_bracket> \<bullet> Body Cond \<medium_right_bracket> \<bullet> \<medium_right_bracket>
-  \<medium_left_bracket> \<bullet> 
-  \<medium_right_bracket> \<bullet> 
+  \<bullet> Cond if \<medium_left_bracket> \<bullet> do_while x' \<open>cond x'\<close> \<medium_left_bracket> \<bullet> Body Cond \<medium_right_bracket> \<bullet> \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<medium_right_bracket> \<bullet> 
   finish
 
-  \<nu>debug 
-  thm used 
-  thm this
-  
-  \<medium_left_bracket> \<bullet> Cond -- c if \<medium_left_bracket> \<bullet> Body \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<medium_right_bracket> \<bullet> c
-
-  note this[OF Body_\<nu>proc[THEN spec]]
-  note
- Body_\<nu>proc[THEN spec]
-  term op_if
 (*
   term \<open>(\<lambda>c. c) \<tycolon> Named (NAME xx) (ExNu (\<lambda>c. T))\<close>
 

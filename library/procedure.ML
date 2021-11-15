@@ -71,11 +71,11 @@ fun define (binding,attrs) proc_th lthy =
             |-> (fn (tm,(_,def)) => fn lthy =>
                   (lthy, (proc_th RS (norm_def arity def RS @{thm rename_proc}))))
     val proc_th = proc_th
-          (* |> Raw_Simplifier.rewrite_rule lthy @{thms Premise_Irew} *)
-          |> Raw_Simplifier.rewrite_rule lthy
+          |> Raw_Simplifier.rewrite_rule lthy @{thms atomize_imp}
+          (* |> Raw_Simplifier.rewrite_rule lthy
               (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
           |> Raw_Simplifier.rewrite_rule lthy
-              (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2")
+              (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2") *)
   in lthy |> Local_Theory.notes_kind procedure_kind
                 [((proc_binding,attrs), [([proc_th],[])])]
           |> apfst (fn [(_,[proc_th])] => proc_th)

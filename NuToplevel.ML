@@ -14,7 +14,10 @@ signature NU_TOPLEVEL = sig
         -> xstring (*return*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
-        -> (Attrib.binding * (string * string list)) list (*pre-conditions*)
+        -> ((Attrib.binding * (string * string list)) list *
+              (* pre-conditions to be wrapped by @{term Premise} automatically *)
+            (Attrib.binding * (string * string list)) list
+              (* other normal pre-conditions *))
         -> bool -> Proof.context -> Proof.state
   (* val begin_rec_proc_cmd : Attrib.binding 
         -> xstring (*argument and return*)
@@ -102,16 +105,18 @@ fun prep_decls prep_var raw_vars ctxt =
   in ((vars, xs), ctxt'') end
 
 fun gen_begin_proc prep_prop prep_term prep_typ prep_var
-      raw binding arg ret rawfixes includes preconds int ctx =
+      raw binding arg ret rawfixes includes (raw_preconds, raw_prems) int ctx =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes ctx
     val binding = binding |> apsnd (map (Attrib.check_src ctx))
     val parse_term = prep_term ctx_parse
     val parse_prop = prep_prop ctx_parse
     val parse_typ = prep_typ ctx_parse
-    val preconds = preconds |> map (
-      apfst (apsnd (map (Attrib.check_src ctx))) #>
-      apsnd (apfst parse_prop #> apsnd (map parse_term) #> single))
+    fun prep_precond prep = (apfst (apsnd (map (Attrib.check_src ctx))) #>
+          apsnd (apfst (parse_term #> prep #> mk_Trueprop)
+                  #> apsnd (map parse_term) #> single))
+    val preconds = (map (prep_precond (mk_monop @{const_name Premise})) raw_prems
+                    @ map (prep_precond I) raw_preconds)
     val arg = prep_term ctx_parse arg |> NuBasics.parse_arg_list |> mk_repset
     val ret = prep_term ctx_parse ret |> NuBasics.parse_arg_list |> mk_repset
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
