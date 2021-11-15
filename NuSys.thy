@@ -4,8 +4,8 @@ theory NuSys
   imports NuPrime NuLLReps
   keywords
     "proc" (* "rec_proc" *) :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always" :: quasi_command
-  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "drop_fact" "\<nu>debug" "\<nu>debug'"
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" :: quasi_command
+  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<Longrightarrow>" "drop_fact" "\<nu>debug" "\<nu>debug'"
           "\<nu>note" (* "\<nu>choose_quick" *) :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>processor_resolver" "\<nu>exty_simproc" :: thy_decl % "ML"
   and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
@@ -718,8 +718,40 @@ lemma conversion_trans: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\
   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> Xf \<longmapsto> Yf\<brangle> \<long_dobule_mapsto> h \<blangle> Xh \<longmapsto> Yh \<brangle>"
   unfolding Conversion_def by blast
 
+subsection \<open>Function\<close>
 
- subsubsection \<open>Auto construct & destruct\<close>
+datatype ('a,'b) argument_types = argument_type (assemble_arg: "'a \<Rightarrow> 'b") (dissemble_arg: "'b \<Rightarrow> 'a")
+definition no_argument :: "('r, void \<times> 'r) argument_types"
+  where "no_argument = argument_type (\<lambda>r. (void, r)) (\<lambda>(_,r). r)"
+definition and_argument :: "('a, 'b \<times> 'r) argument_types \<Rightarrow> 'x itself \<Rightarrow> ('x \<times> 'a, ('x \<times> 'b) \<times> 'r) argument_types"
+  where "and_argument args _ =
+    argument_type (\<lambda>(x,r). case assemble_arg args r of (b,r') \<Rightarrow> ((x,b),r'))
+      (\<lambda>((x,b),r). (x, dissemble_arg args (b,r)))"
+
+definition Arguments :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a,'b) argument_types \<Rightarrow> bool " where
+  "Arguments A B args \<longleftrightarrow> (\<forall>a. a \<in> A \<longrightarrow> assemble_arg args a \<in> B) \<and> (\<forall>b. b \<in> B \<longrightarrow> dissemble_arg args b \<in> A)"
+
+lemma [\<nu>intro]: "Arguments \<tort_lbrace>r \<tycolon> R\<tort_rbrace> \<tort_lbrace>r \<tycolon> R\<heavy_comma> Void\<tort_rbrace> no_argument"
+  unfolding no_argument_def Arguments_def by simp
+lemma [\<nu>intro]: "Arguments \<tort_lbrace>a \<tycolon> A\<tort_rbrace> \<tort_lbrace>R\<heavy_comma> b \<tycolon> B\<tort_rbrace> args \<Longrightarrow> Arguments \<tort_lbrace>a \<tycolon> A\<heavy_comma> x \<tycolon> X\<tort_rbrace> \<tort_lbrace>R\<heavy_comma> ((x,b) \<tycolon> X \<cross_product> B)\<tort_rbrace> (and_argument args TYPE('xp))"
+  for X :: "('xp::lrep, 'x) \<nu>" unfolding and_argument_def Arguments_def by (cases args) (auto split: prod.split)
+
+definition op_call :: " ('r1, 'a \<times> 'r2) argument_types \<Rightarrow> ('r3, 'b \<times> 'r2) argument_types \<Rightarrow> ('a \<longmapsto> 'b) \<Rightarrow> ('r1 \<longmapsto> 'r3)"
+  where "op_call args rets f = (\<lambda>(h,r1). case assemble_arg args r1 of (a,r2) \<Rightarrow>
+    (case f (h,a) of Success (h2,b) \<Rightarrow> Success (h, dissemble_arg rets (b,r2))
+        | PartialCorrect \<Rightarrow> PartialCorrect | Fail \<Rightarrow> Fail))"
+
+lemma op_call:
+  "Arguments \<tort_lbrace>s \<tycolon> S\<tort_rbrace> \<tort_lbrace>r \<tycolon> R\<heavy_comma> a \<tycolon> A\<tort_rbrace> args \<Longrightarrow>
+   Arguments \<tort_lbrace>s' \<tycolon> S'\<tort_rbrace> \<tort_lbrace>r \<tycolon> R\<heavy_comma> b \<tycolon> B\<tort_rbrace> rets \<Longrightarrow>
+   \<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> a \<tycolon> A\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<longmapsto> b \<tycolon> B\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H' \<brangle> \<Longrightarrow>
+   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_call args rets f \<blangle> s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<longmapsto> s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<brangle>"
+  unfolding Procedure_def Function_def op_call_def Arguments_def
+  by (cases args, cases rets) (auto 0 4 split: state.split prod.split)
+
+lemmas apply_func = apply_proc[OF _ op_call]
+
+subsection \<open>Auto construct & destruct\<close>
 
 definition AutoConstruct :: " 'exp \<Rightarrow> ('a::lrep \<longmapsto> 'b::lrep) \<Rightarrow> (heap \<times> 'a) set \<Rightarrow> (heap \<times> 'b) set \<Rightarrow> bool "("\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t _/ \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<blangle>_/ \<longmapsto> _ \<brangle>)" [20,101,10,10] 100)
   where [\<nu>def]:"AutoConstruct exp f S T \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>"
@@ -1015,14 +1047,6 @@ val _ =
       >> (fn ((a, b), (c, d, e)) => Toplevel.proof' (NuObtain.obtain_cmd a b c d e))); 
 
 val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "construct nested sub-procedure"
-    (optional ($$$ "(" |-- and_list (binding -- opt_attribs) --| $$$ ")") [] >> (Toplevel.proof' o NuToplevel.begin_block_cmd));
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "finish the nested sub-procedure construction"
-    (Scan.succeed (Toplevel.proof' NuToplevel.end_block_cmd));
-
-val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<Longrightarrow>\<close> "name the star fact"
     (Parse.binding -- Parse.opt_attribs >> (Toplevel.proof o NuToplevel.name_star_fact_cmd))
 
@@ -1128,6 +1152,29 @@ val ctx = NuSys.load_specthm meta ctx
 
 \<nu>processor set_\<nu>current 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   raise Bypass (SOME (meta RS @{thm set_\<nu>current})))\<close>
+
+subsubsection \<open>Sub-procedure\<close>
+
+\<nu>processor begin_sub_procedure 8700 \<open>PROP Q\<close> \<open>let open Parse Scan in fn ctx => fn meta =>
+  $$$ "\<medium_left_bracket>" |-- optional ($$$ "premises" |-- and_list (binding -- opt_attribs)) [] >> (fn prems => fn () =>
+  raise Process_State_Call' (meta, NuToplevel.begin_block_cmd prems true)
+) end\<close>
+
+\<nu>processor end_sub_procedure 8700 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>let open Parse Scan in fn ctx => fn meta =>
+  $$$ "\<medium_right_bracket>" >> (fn x => fn () =>
+  (@{print} x; raise Process_State_Call' (meta, NuToplevel.end_block_cmd true))
+) end\<close>
+
+(*
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "construct nested sub-procedure"
+    (optional ($$$ "(" |-- and_list (binding -- opt_attribs) --| $$$ ")") [] >> (Toplevel.proof' o NuToplevel.begin_block_cmd));
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "finish the nested sub-procedure construction"
+    (Scan.succeed (Toplevel.proof' NuToplevel.end_block_cmd));
+
+*)
 
 subsubsection \<open>Existential elimination\<close>
 

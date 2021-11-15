@@ -368,11 +368,11 @@ fun accept_proc ctx meta =
   then meta else auto_resolve_rule0 ctx meta) |> accept_proc_naive
 
 local open Tactical Tactic
-val apply_proc_thm = @{thm NuPrime.apply_proc} and apply_proc_conv_thm = @{thm apply_proc_conv}
 val vA = (("'a",0),["NuPrime.lrep"])
 fun v_blk t = (("blk",0), mk_stateT t)
 fun vS t = (("S",0), HOLogic.mk_setT (HOLogic.mk_prodT(@{typ heap}, t)))
-fun mk_apply_thms apply_thm major =
+fun mk_apply_thms apply_thm major = major RS apply_thm
+fun mk_apply_thms' apply_thm major =
   let
     val (blk,nuSet) = cprop_of major |> dest_Trueprop_c |> dest_CurrentConstruction_c
     val aT = ctyp_of_cterm blk |> dest_ctyp0
@@ -393,9 +393,9 @@ fun apply_X_major ctx major procs seq =
 fun apply_procs_major ctx procs major =
   let val procs = map expand_proc procs
   in apply_X_major ctx major procs
-      (resolve_N procs (mk_apply_thms apply_proc_conv_thm major) 2
+      (resolve_N procs (mk_apply_thms @{thm apply_proc_conv} major) 2
         |> Seq.map (Goal.protect 1)
-        |> Seq.append (resolve_N procs (mk_apply_thms apply_proc_thm major) 1
+        |> Seq.append (resolve_N procs (mk_apply_thms @{thm apply_proc} major) 1
                           |> Seq.map (Goal.protect 0)))
   end
 fun apply_casts_major ctx procs major =

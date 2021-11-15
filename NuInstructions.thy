@@ -103,7 +103,7 @@ lemma strip_end_tail: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<^bold
 
 subsection \<open>Branches & Loops\<close>
 
-subsubsection \<open>op_if\<close>
+subsubsection \<open>if\<close>
 
 definition op_if :: " ('s::stack \<longmapsto> 't::stack) \<Rightarrow> ('s \<longmapsto> 't) \<Rightarrow> (1 word \<times> 's) \<longmapsto> 't"
   where "op_if brT brF s = (case s of (heap,c,r) \<Rightarrow> if c = 1 then brT (heap,r) else brF (heap,r))"
@@ -126,7 +126,7 @@ lemma [simp]: "(if P then Labelled name T else Labelled name' T') = Labelled nam
 lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
 
 
-subsubsection \<open>until\<close>
+subsubsection \<open>do while\<close>
 
 inductive SemDoWhile :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> heap \<times> 'r \<Rightarrow> 'r state \<Rightarrow> bool" where
   "f s = Success (h,0,r) \<Longrightarrow> SemDoWhile f s (Success (h,r))"
@@ -247,37 +247,11 @@ proc while: \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast (s' \<tycolon> S') (h' \<tycolon> H') vars S H"
     and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H)\<brangle>"
     and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<brangle>"
-  \<bullet> Cond if \<medium_left_bracket> \<bullet> do_while x' \<open>cond x'\<close> \<medium_left_bracket> \<bullet> Body Cond \<medium_right_bracket> \<bullet> \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<medium_right_bracket> \<bullet> 
+  \<bullet> Cond if \<medium_left_bracket> do_while x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
   finish
 
-(*
-  term \<open>(\<lambda>c. c) \<tycolon> Named (NAME xx) (ExNu (\<lambda>c. T))\<close>
-
-proc' i_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch <where''> Always)) \<flower> W\<close>
-  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Always" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P"
-    and [simplified StructuralTag_def, intro]: "<Structural> sch y = x" and [intro]: "y \<in> Always"
-    and brC: \<open>(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> x1 \<tycolon> X <schema> sch <where''> Always) \<flower> W \<longmapsto> (R \<heavy_comma> { (y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X <schema> sch <where''> Always)) \<flower> W \<brangle>)\<close>
-    and brB: \<open>(\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X <schema> sch <where''> Always <where'> P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch <where''> Always)) \<flower> W \<brangle>)\<close>
-  \<bullet> cast i_schema sch cast refine' Always  i_while_raw P \<Longleftarrow> brC \<Longleftarrow> brB[simplified SchemaCondition_simp] finish
-
-
-
-
-(* lemma Until': "(\<forall>s h s' h'. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<longmapsto> s' \<tycolon> S\<heavy_comma> c h' s' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Until body \<blangle> s \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<longmapsto> (s' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H) \<and> \<not> c h' s'\<brangle>"
-  unfolding Until_def Procedure_def apply (auto simp add: SemUnt_deterministic2)
-  subgoal for a b x apply (rotate_tac 1)
-    apply (induct  body "(a, b)" x arbitrary: a b rule: SemUnt.induct)
-    apply (auto 4 7)
-    subgoal premises prems for f ha r s'' a b proof -
-note prems
-      show ?thesis apply (rule prems(3)) using prems by (auto 4 7)
-    qed
-    done done *)
-*)
 
   subsubsection \<open>recursion\<close>
-
 
 inductive SemRec :: "(('r \<longmapsto> 'r) \<Rightarrow> ('r \<longmapsto> 'r)) \<Rightarrow> heap \<times> 'r \<Rightarrow> 'r state \<Rightarrow> bool" where
   SemRec_I0: "(\<And>g. F g x = y) \<Longrightarrow> SemRec F x y"
@@ -311,69 +285,9 @@ lemma op_recursion:
   subgoal for a b xa apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
 
 
-subsubsection \<open>while\<close>
-(*
-consts op_while_WF :: "'c itself \<Rightarrow> ('x::lrep \<times> 'r::stack \<longmapsto> ('x \<times> 1 word) \<times> 'r) \<Rightarrow> ('x \<times> 'r \<longmapsto> 'x \<times> 'r) \<Rightarrow> 'x \<times> 'r \<longmapsto> 'x \<times> 'r"
-specification ("op_while_WF")
-  while_WF_\<nu>proc: "
-  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Rc \<longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Rb \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e wf (Rc O Rb)
-  \<longrightarrow> (\<forall>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> R \<heavy_comma> (x1::'c) \<tycolon> X \<longmapsto> R \<heavy_comma> {(y, y \<in> P) | y. (y,x1) \<in> Rc } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X \<nuFusion> \<bool>) \<brangle>)
-  \<longrightarrow> (\<forall>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P) \<longmapsto> R \<heavy_comma> {y. (y,x2) \<in> Rb} \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while_WF TYPE('c) brC brB \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X \<brangle>"
-  apply (rule exI) using op_crash by auto
-
-consts op_while :: "'c itself \<Rightarrow> ('x::lrep \<times> 'r::stack \<longmapsto> (1 word \<times> 'x) \<times> 'r) \<Rightarrow> ('x \<times> 'r \<longmapsto> 'x \<times> 'r) \<Rightarrow> ('x \<times> 'r \<longmapsto> 'x \<times> 'r)"
-specification ("op_while")
-  i_while_raw_\<nu>proc: "
-  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<longrightarrow> (\<forall>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> R \<heavy_comma> (x1::'c) \<tycolon> X \<longmapsto> R \<heavy_comma> {(y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X)\<brangle>)
-  \<longrightarrow> (\<forall>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> R \<heavy_comma> x2 \<tycolon> (X \<^bold>w\<^bold>h\<^bold>e\<^bold>r\<^bold>e P) \<longmapsto> R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_while TYPE('c) brC brB \<blangle> R \<heavy_comma> x \<tycolon> X \<longmapsto> R \<heavy_comma> - P \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e X\<brangle>"
-  apply (rule exI) using op_crash by auto
-
-
-subsubsection \<open>recursion\<close>
-
-consts op_recursion_WF :: " 'a itself \<times> 'b itself \<Rightarrow>
-    (('u::lrep \<times> void \<longmapsto> ('v::lrep) \<times> void) \<longmapsto> ('u \<times> void \<longmapsto> 'v \<times> void)) \<Rightarrow> ('u \<times> 'r::stack \<longmapsto> 'v \<times> 'r) "
-specification ("op_recursion_WF")
-  recursion_WF_\<nu>proc:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m h \<longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m M \<longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m WF \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e wf WF \<longrightarrow>
-  (\<forall>x' g. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (x'',x') \<in> WF \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> h x'' \<tycolon> M \<brangle>)
-      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x' \<tycolon> M \<brangle>)
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion_WF (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
-  apply (rule exI) using op_crash by auto
-
-consts op_recursion :: " 'a itself \<times> 'b itself \<Rightarrow>
-    ((('u::lrep) \<times> void \<Rightarrow> (('v::lrep) \<times> void) state) \<Rightarrow> ('u \<times> void \<Rightarrow> ('v \<times> void) state)) \<Rightarrow> ('u \<times> ('r::stack) \<Rightarrow> ('v \<times> 'r) state) "
-specification ("op_recursion")
-  recursion_\<nu>proc[simplified PremiseHOL ParamHOL]:
-  "ParamHOL h \<Longrightarrow> ParamHOL M\<Longrightarrow>
-  (\<And>x' g. (\<And>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> x'' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x'' \<tycolon> M \<brangle>)
-      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma>  x' \<tycolon> N \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x' \<tycolon> M \<brangle>)
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion (TYPE('a), TYPE('d)) f \<blangle> R\<heavy_comma> (x::'a) \<tycolon> N \<longmapsto> R\<heavy_comma> (h x::'d) \<tycolon> M \<brangle>"
-  apply (rule exI) using op_crash by auto
-
-proc' i_recursion: \<open>R\<heavy_comma> x \<tycolon> N\<close> \<longmapsto> \<open>R\<heavy_comma> h y \<tycolon> M\<close>
-  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m M" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m h"
-    and [simplified StructuralTag_def, intro]: "<Structural> sch y = x"
-    and [simplified StructuralTag_def, intro]: "<Structural> y \<in> P"
-    and g[simplified SchemaCondition_def]:
-      \<open>(\<And>x' g. (\<And>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> \<^bold>E\<^bold>N\<^bold>D \<heavy_comma> x'' \<tycolon>  N <schema> sch <where> P \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x'' \<tycolon> M \<brangle>)
-        \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f g \<blangle> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma>  x' \<tycolon> N <schema> sch <where'> P \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> h x' \<tycolon> M \<brangle>)\<close>
-  \<bullet> cast i_schema sch cast refine P recursion h M \<Longleftarrow>' g[intro_forall ?x' ?g] 
-  finish 
-
-proc' i'_while: \<open>(R \<heavy_comma> x \<tycolon> X) \<flower> W\<close> \<longmapsto> \<open>(R \<heavy_comma> - P \<tycolon> <some'> (X <schema> sch)) \<flower> W\<close>
-  requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m sch" and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P" and [THEN someI_ex, intro]: "\<exists>y. sch y = x" 
-    and brC: \<open>(\<And>x1. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brC \<blangle> (R \<heavy_comma> x1 \<tycolon> X <schema> sch) \<flower> W \<longmapsto> (R \<heavy_comma> { (y \<in> P, y) |y. True } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (\<bool> \<nuFusion> X <schema> sch)) \<flower> W \<brangle>)\<close>
-    and brB: \<open>(\<And>x2. \<^bold>p\<^bold>r\<^bold>o\<^bold>c brB \<blangle> (R \<heavy_comma> x2 \<tycolon> (X <schema> sch <where'> P)) \<flower> W \<longmapsto> (R \<heavy_comma> UNIV \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (X <schema> sch)) \<flower> W \<brangle>)\<close>
-  \<bullet> cast i_schema sch  i_while_raw P \<Longleftarrow> brC \<Longleftarrow> brB[simplified SchemaCondition_simp] finish
-
-*)
-
 section \<open>Arithmetic instructions\<close>
 
-\<nu>overloads "+" and round_add and "<" and "\<le>" and "-" and "="
+\<nu>overloads "+" and round_add and "<" and "\<le>" and "-" and "=" and "not"
 
 subsection \<open>Integer arithmetic\<close>
 
@@ -459,6 +373,15 @@ definition op_le :: " ('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<
 theorem op_le_\<nu>proc[\<nu>overload \<le>]:
     "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le TYPE('w::len) \<blangle> R\<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> (x \<le> y) \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding \<nu>def op_le_def by (auto simp add: word_le_nat_alt)
+
+subsubsection \<open>bit-wise not\<close>
+
+definition op_not :: "('w::len) itself \<Rightarrow> 'w word \<times> ('r::stack) \<longmapsto> 'w word \<times> 'r"
+  where "op_not len = (\<lambda>(h,x,r). Success (h,not x,r))"
+
+lemma boolean_not_\<nu>proc[\<nu>overload not]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not TYPE(1) \<blangle> R\<heavy_comma> x \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> \<not> x \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+  unfolding Procedure_def op_not_def apply (auto simp add: lrep_exps)
+  by (metis even_take_bit_eq even_zero iszero_def odd_numeral one_neq_zero)
 
 subsubsection \<open>equal\<close>
 

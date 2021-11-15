@@ -10,6 +10,7 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
       and "<with>" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"
       and "<facts>" = "\<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s"
       and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
+      and "<func" = "\<^bold>f\<^bold>u\<^bold>n\<^bold>c"
       and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
       and "<param>" = "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m"
       and ",," = "\<heavy_comma>"
@@ -415,6 +416,31 @@ definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b 
   where [\<nu>def]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle> \<equiv> \<forall>a. a \<in> T \<longrightarrow> f a \<in> U"
 (* lemma [intro]: "(\<And>x h. x \<in> T h \<Longrightarrow> f x \<in> U h) \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle>" by auto *)
 (* lemma [simp]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> \<S> U \<brangle> \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> U \<brangle>" unfolding \<nu>def by fast  *)
+
+definition Function ("(2\<^bold>f\<^bold>u\<^bold>n\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100) where "Function = Procedure"
+translations "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
+  "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
+
+text \<open>One thing is, a \<^const>\<open>Procedure\<close> does not mean a low-level function in the target object,
+  note the stack remainder, but only a logical procedure.
+  It is not necessarily complied to a low level function (an LLVM function),
+  but most of the time the call of it is inline-expanded.
+  Logically the presence of stack remainder prevents it to be regarded as a standalone function,
+  especially when representing function pointers and closures the remainder is cumbersome.
+  For this, \<^const>\<open>Function\<close> explicitly representing a standalone function is introduced
+  based on procedures whose stack remainder is always `void`
+    (but the heap remainder is retained because it accords the logic),
+  i.e. `func f \<blangle> void \<tycolon> Void\<heavy_comma> arg1 \<tycolon> Arg1\<heavy_comma> \<cdots> \<heavy_comma> <heap> heap_remainder \<tycolon> H\<heavy_comma> \<cdots>
+    \<longmapsto> void \<tycolon> Void\<heavy_comma> ret1 \<tycolon> Ret1\<heavy_comma> \<cdots>\<heavy_comma> <heap> heap_remainder \<tycolon> H\<heavy_comma> \<cdots> \<brangle>`.
+  The distinctions between Procedure and Function are, while both of them can be called and used directly in the
+  interactive programming (the difference is transparent when calling then),
+  \<^item> the stack remainder of a function is always void,
+  \<^item> only a function can have function pointers and closures relating it,
+  \<^item> only functions whose type is decided (without polymorphic variables)
+    generate low-level functions in the target object (e.g. an obj file, or a DLL file).
+  \<^item> about internal implementation, the calling of a function is by a specific `call` instruction stating types of
+    arguments and return values, so it requires slightly more time and space to reason and represent the program.\<close>
+
 
 subsection \<open>Primitive operations and instructions required in the system\<close>
 
