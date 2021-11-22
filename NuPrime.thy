@@ -10,7 +10,7 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
       and "<with>" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"
       and "<facts>" = "\<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s"
       and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
-      and "<func" = "\<^bold>f\<^bold>u\<^bold>n\<^bold>c"
+      and "<func>" = "\<^bold>f\<^bold>u\<^bold>n\<^bold>c"
       and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
       and "<param>" = "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m"
       and ",," = "\<heavy_comma>"
@@ -306,6 +306,11 @@ text \<open>It is another name tag which tags names in type by free variables, e
 
 lemma named_forall: "All P \<longleftrightarrow> (\<forall>x. P (tag x))" by (metis named.exhaust)
 lemma named_exists: "Ex P \<longleftrightarrow> (\<exists>x. P (tag x))" by (metis named.exhaust)
+lemma [simp]: "tag (case x of tag x \<Rightarrow> x) = x" by (cases x) simp
+lemma named_All: "(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (tag x))"
+proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
+next fix x :: "'a named 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
+qed
 
 
 subsubsection \<open>Parameter tag\<close>
@@ -421,6 +426,8 @@ definition Function ("(2\<^bold>f\<^bold>u\<^bold>n\<^bold>c _/ \<blangle>(2 _/ 
 translations "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
   "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
 
+lemma Function_I: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> B \<brangle>" unfolding Function_def .
+
 text \<open>One thing is, a \<^const>\<open>Procedure\<close> does not mean a low-level function in the target object,
   note the stack remainder, but only a logical procedure.
   It is not necessarily complied to a low level function (an LLVM function),
@@ -437,8 +444,8 @@ text \<open>One thing is, a \<^const>\<open>Procedure\<close> does not mean a lo
   \<^item> the stack remainder of a function is always void,
   \<^item> only a function can have function pointers and closures relating it,
   \<^item> only functions whose type is decided (without polymorphic variables)
-    generate low-level functions in the target object (e.g. an obj file, or a DLL file).
-  \<^item> about internal implementation, the calling of a function is by a specific `call` instruction stating types of
+    can generate low-level functions in the target object (e.g. an obj file, or a DLL file).
+  \<^item> about internal implementation, the calling of a function is by a specific `op_call` instruction stating types of
     arguments and return values, so it requires slightly more time and space to reason and represent the program.\<close>
 
 

@@ -12,7 +12,7 @@ theory NuInstructions
     and "<Down>" = "\<Down>"
 begin
 
-declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del]
+declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
 
 text \<open>Basic instructions\<close>
 
@@ -66,12 +66,12 @@ subsubsection \<open>let & local_value\<close>
 definition op_let :: " ('v::lrep \<Rightarrow> 's::stack \<longmapsto> 't::stack) \<Rightarrow> ('v \<times> 's \<longmapsto> 't)"
   where "op_let body = (\<lambda>(h,v,s). body v (h,s))"
 lemma op_let: " (\<And>p. p \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> x \<tycolon> X \<longmapsto> x' \<tycolon> X' \<brangle>) \<Longrightarrow>
-   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> x \<tycolon> X \<heavy_comma>^ a \<tycolon> A \<longmapsto> x' \<tycolon> X' \<brangle>"
+   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> x \<tycolon> X\<heavy_comma>^ a \<tycolon> A \<longmapsto> x' \<tycolon> X' \<brangle>"
   unfolding Procedure_def op_let_def by auto
 
 definition op_local_value :: " 'v::lrep \<Rightarrow> 's::stack \<longmapsto> 'v \<times> 's "
   where "op_local_value v = (\<lambda>(h,s). Success (h,v,s))"
-lemma op_local_value: "v \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<blangle> x \<tycolon> X \<longmapsto> x \<tycolon> X \<heavy_comma>^ a \<tycolon> A \<brangle>"
+lemma op_local_value: "v \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<blangle> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> S\<heavy_comma> a \<tycolon> A\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding Procedure_def op_local_value_def by auto
 
 ML_file "library/local_value.ML"
@@ -162,47 +162,6 @@ lemma "__DoWhile___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>
   done
 
 
-
-
-
-definition Variant_Cast :: " ('stack_low, 'stack) typing \<Rightarrow> ('heap_low, 'heap) typing
-    \<Rightarrow> 'vars \<Rightarrow> ('stack_low, 'vars) \<nu> \<Rightarrow> ('heap_low, 'vars) \<nu> \<Rightarrow> bool "
-      ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t _/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _/ \<longmapsto> _/ \<tycolon> _/ \<^bold>a\<^bold>n\<^bold>d _" )
-  where "Variant_Cast stack heap insts stackTy' heapTy' \<longleftrightarrow>
-    \<tort_lbrace>stack\<tort_rbrace> = \<tort_lbrace>insts \<tycolon> stackTy'\<tort_rbrace> \<and> \<tort_lbrace>heap\<tort_rbrace> = \<tort_lbrace>insts \<tycolon> heapTy'\<tort_rbrace>"
-
-lemma Variant_Cast_I:
-  "s = pattern\<^sub>s vars \<Longrightarrow> h = pattern\<^sub>h vars \<Longrightarrow>
-  Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars (S <auto-down-lift> pattern\<^sub>s) (H <auto-down-lift> pattern\<^sub>h)"
-  unfolding Variant_Cast_def by auto
-
-lemma Variant_Cast_I_always:
-  "s = pattern\<^sub>s vars \<Longrightarrow> h = pattern\<^sub>h vars \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always vars \<Longrightarrow>
-  Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars (S <auto-down-lift> pattern\<^sub>s <auto-where> Collect always) (H <auto-down-lift> pattern\<^sub>h)"
-  unfolding Variant_Cast_def Auto_def by auto
-
-(* definition Variants_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'vars \<Rightarrow> 'stack \<Rightarrow> ('vars \<Rightarrow> 'stack) \<Rightarrow> 'heap \<Rightarrow> ('vars \<Rightarrow> 'heap) \<Rightarrow> ('vars \<Rightarrow> bool) \<Rightarrow> bool "
-    ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t\<^bold>s _ \<^bold>a\<^bold>s _/ \<^bold>i\<^bold>n _ '(\<^bold>p\<^bold>a\<^bold>t\<^bold>t\<^bold>e\<^bold>r\<^bold>n _') \<^bold>a\<^bold>n\<^bold>d/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _ '(\<^bold>p\<^bold>a\<^bold>t\<^bold>t\<^bold>e\<^bold>r\<^bold>n _')/ \<^bold>a\<^bold>l\<^bold>w\<^bold>a\<^bold>y\<^bold>s _" )
-    where "Variants_Tag var_names vars stack stack_schema heap heap_schema always
-      \<longleftrightarrow> (stack = stack_schema vars) \<and> (heap = heap_schema vars)"
-
-lemma Variants_Tag_I: "stack = stack_schema vars \<Longrightarrow> heap = heap_schema vars \<Longrightarrow>
-  Variants_Tag var_names vars stack stack_schema heap heap_schema always" unfolding Variants_Tag_def .. *)
-
-definition Variants_Quant_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'a \<Rightarrow> 'a" ("<expand'_vars>")
-  where "Variants_Quant_Tag vars a = a"
-translations " <expand_vars> tag (x \<tycolon> T)" \<rightleftharpoons> "x \<tycolon> <expand_vars> tag T"
-
-definition Variants_Subj :: " ('vars \<Rightarrow> unit) \<Rightarrow> ('vars \<Rightarrow> bool) \<Rightarrow> bool" ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t\<^bold>s _ \<^bold>s\<^bold>u\<^bold>b\<^bold>j _")
-  where "Variants_Subj vars subj \<longleftrightarrow> True"
-lemma Variants_Subj_I: "Variants_Subj vars subj" unfolding Variants_Subj_def ..
-
-
-lemma case_prod_expn_I: "A = B x y \<Longrightarrow> A = case_prod B (x,y)" by simp
-lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by simp
-
-ML_file \<open>library/variables_tag.ML\<close>
-
 lemma do_while_\<nu>proc:
   "Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<longrightarrow>
   \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
@@ -215,34 +174,10 @@ lemma do_while_\<nu>proc:
   using "__DoWhile___\<nu>proc"[of _ "(H' <top-ctx> S') <auto-down-lift> (\<lambda>x. (x,x))" "Collect cond",
     simplified NuRefine_to_auto, simplified, unfolded Premise_def] by blast
 
-\<nu>processor vars_by_pattern 110 \<open>Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
-let open Parse Scan NuHelp NuBasics in
-  list1 params -- option ($$$ "in" |-- list1 term) -- option ($$$ "heap" |-- list1 term)
-    -- Scan.option ($$$ "always" |-- term)
-    >> (fn ((((vars, stack_schema), heap_schema)), always) => fn _ =>
-    if Option.isSome stack_schema orelse Option.isSome heap_schema then
-      NuVariablesTag.variables_tag_pattern_match (flat vars) stack_schema heap_schema always ctx meta
-    else raise Bypass NONE)
-end\<close>
-
-\<nu>processor vars_by_fixed_terms 111 \<open>Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
-let open Parse Scan NuHelp NuBasics in
-  list1 term -- Scan.option ($$$ "always" |-- term)
-    >> (fn (vars, always) => fn _ =>
-      NuVariablesTag.variables_tag_terms vars NONE NONE always ctx meta)
-end\<close>
-
-\<nu>processor vars_subj 111 \<open>Variants_Subj vars subj \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
-let open Parse Scan NuHelp NuBasics in $$$ "subj" |-- term >> (fn subj => fn _ =>
-      NuVariablesTag.vars_subj subj ctx meta)
-end\<close>
-term tag
-declare [ [ML_print_depth = 100, unfolded] ]
-
 
 subsubsection \<open>while\<close>
 
-
+ML \<open>order_list\<close>
 proc while: \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<close> \<longmapsto> \<open>\<exists>* x. (x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x)\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast (s' \<tycolon> S') (h' \<tycolon> H') vars S H"
     and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H)\<brangle>"
@@ -279,11 +214,12 @@ definition op_recursion :: "(('r \<longmapsto> 'r) \<Rightarrow> ('r \<longmapst
   where "op_recursion F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
 lemma op_recursion:
-    "(\<forall>x' g. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> x'' \<tycolon> X \<longmapsto> f x'' \<tycolon> Y \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<blangle> x' \<tycolon> X \<longmapsto> f x' \<tycolon> Y \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion F \<blangle> x \<tycolon> X \<longmapsto> f x \<tycolon> Y \<brangle>"
-  unfolding op_recursion_def Procedure_def
+  "(\<And>g x'. (\<forall>x''. \<^bold>f\<^bold>u\<^bold>n\<^bold>c g \<blangle> x'' \<tycolon> X x'' \<longmapsto> f x'' \<tycolon> Y x'' \<brangle>) \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c F g \<blangle> x' \<tycolon> X x' \<longmapsto> f x' \<tycolon> Y x' \<brangle>) \<Longrightarrow>
+    (\<forall>x. \<^bold>f\<^bold>u\<^bold>n\<^bold>c op_recursion F \<blangle> x \<tycolon> X x \<longmapsto> f x \<tycolon> Y x \<brangle>)"
+  for X :: "'b \<Rightarrow> (heap \<times> 'a::lrep, 'b) \<nu>"
+  unfolding op_recursion_def Procedure_def Function_def atomize_all
   apply (auto simp add: SemRec_deterministic2)
-  subgoal for a b xa apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
-
+  subgoal for x a b xa apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
 
 section \<open>Arithmetic instructions\<close>
 
@@ -301,7 +237,7 @@ theorem const_nat_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int 
   unfolding \<nu>def op_const_int_def by auto *)
 
 lemma [\<nu>intro]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<longrightarrow>
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>
    \<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t ((numeral x) \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (Word.of_nat (numeral x)) \<blangle> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R \<heavy_comma> (numeral x) \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding op_const_int_def \<nu>def including show_more1 apply auto by (metis mod_if unat_bintrunc unat_numeral)
   \<comment> \<open>Only literal number could be constructed automatically\<close>
@@ -401,7 +337,7 @@ definition op_constr_tuple :: "('a::field_list) \<times> ('r::stack) \<longmapst
   where "op_constr_tuple = (\<lambda>(h,a,r). Success (h, Tuple a, r))"
 
 theorem tup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_constr_tuple \<blangle> R \<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R \<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
-  unfolding op_constr_tuple_def Procedure_def by simp
+  unfolding op_constr_tuple_def Procedure_def by (simp add: pair_forall)
 
 subsubsection \<open>op_destr_tuple\<close>
 
@@ -409,7 +345,7 @@ definition op_destr_tuple :: "('a::field_list) tuple \<times> ('r::stack) \<long
   where "op_destr_tuple s = (case s of (h,Tuple a, r) \<Rightarrow> Success (h,a,r))"
 
 theorem det_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_destr_tuple \<blangle> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
-  unfolding Procedure_def op_destr_tuple_def by (simp add: tuple_forall)
+  unfolding Procedure_def op_destr_tuple_def by (simp add: tuple_forall pair_forall)
 
 subsection \<open>Field Index\<close>
 
@@ -614,8 +550,44 @@ proc i_store_n[\<nu>overload "\<down>:"]:
 lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>proc[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
 
 
+fun fib where
+  "fib 0 = 1" | "fib (Suc 0) = 1" | "fib (Suc (Suc n)) = fib n + fib (Suc n)"
+lemma [simp]: "(if i \<le> 1 then 1 else fib (i - 2) + fib (i - 1)) = fib i" by (cases i rule: fib.cases) auto
 
-ML \<open>@{type_name set}\<close>
+ML \<open>Proof_Context.cert_var\<close>
+ML \<open>map_filter\<close>
+term case_named
+thm NuPrime.named.case[unfolded atomize_eq[symmetric]]
+thm NuAddition_auto_func_no_prems
+(* int fib (int i) { if (i \<le> 1) return 1; else return fib (i-2) + fib (i-1); } *)
+rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
+  \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> i 2 - Fib i 1 - Fib + \<medium_right_bracket>
+  finish
+thm case_prod_expn_I
+
+thm spec
+thm recursive_func_help_2
+thm Fib_\<nu>compilation
+
+thm finish_proc
+thm op_recursion
+thm pair_forall
+thm recursive_func_help_1
+thm NuAddition_anti_auto
+
+ML \<open>try\<close>
+rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<heavy_comma> (j::int) \<tycolon> X\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>[32]\<heavy_comma> j \<tycolon> X\<close> var i
+  premises [used]: \<open>0 < i\<close>
+  \<bullet> Fib 
+\<nu>debug thm Fib_\<nu>proc
+  finish
+thm Fib_\<nu>compilation
+thm rename_proc
+
+
+ML \<open>Thm.intro_rules\<close>
+ML \<open>Thmtab.lookup\<close>
+thm apply_proc_conv
 proc test: \<open>R\<heavy_comma> i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>R\<heavy_comma> 0 \<tycolon> \<nat>[32]\<close>
   \<bullet> until i subj \<open>0 < i\<close> \<medium_left_bracket> \<bullet> \<rightarrow> i i 1 -
   \<bullet> 0 i <

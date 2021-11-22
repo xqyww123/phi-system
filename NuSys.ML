@@ -41,19 +41,10 @@ signature NU_SYS = sig
   val conversion : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
   val cast : Proof.context -> cterm (*desired nu*) -> thm (*major*) -> thm
 
-  (*
-    `apply_procs ctx procs whole_meta` applies the first appliable procedure in the `procs`
-    on the `whole_meta`, by exact (schematical) matching first and then converted calling second
-    (see @{thm NuPrime.apply_proc_conv}) with automatic cast proof by cast_tag.
-
-    About `accept_proc`, see @{thm NuPrime.accept_proc}
-  *)
-  val apply_procs_major : Proof.context -> thm list (*procs*) -> thm (*whole*) -> thm
-  val apply_proc : Proof.context -> thm (*proc*) -> thm (*whole*) -> thm (*whole*)
-  val apply_procs : Proof.context -> thm list -> thm -> thm
+  val apply : Proof.context -> thm list -> thm -> thm
+  val apply_proc_naive : thm (*proc*) -> thm (*meta or major*) -> thm
   val accept_proc_naive : thm -> thm (* the version without auto *)
   val accept_proc : Proof.context -> thm -> thm
-  val apply_casts : Proof.context -> thm list -> thm -> thm
   val set_param : Proof.context -> term -> thm -> thm
   val set_param_cmd : Proof.context -> string -> thm -> thm
 
@@ -286,7 +277,7 @@ fun auto_resolve thms addtion ctx  =
         ORELSE simp_tag_tac ctx
         ORELSE print_dbg' (* TODO: support for debug printing *)
         APPEND (HEADGOAL (resolve_tac ctx prio))
-        APPEND (HEADGOAL (resolve_tac ctx thms))
+        APPEND (HEADGOAL (resolve_tac ctx (@{print} thms)))
         APPEND (premise_tac ctx)
         APPEND resolve_tac ctx minor_thms 1
         APPEND resolve_tac ctx lowest 1
@@ -328,7 +319,7 @@ fun cast ctx desired_nu major =
 val conversion_thm = @{thm conversion}
 fun conversion ctx to from =
   let
-    val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
+    val (f ,U ,V ) = dest_procedure_c (cconcl_of from) |> @{print}
     val (f',U',V') = dest_procedure_c to
     val (a,b) = dest_typroc_c (ctyp_of_cterm f) 
     val (c,d) = dest_typroc_c (ctyp_of_cterm f')
@@ -367,48 +358,14 @@ fun accept_proc ctx meta =
   (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
   then meta else auto_resolve_rule0 ctx meta) |> accept_proc_naive
 
-local open Tactical Tactic
-val vA = (("'a",0),["NuPrime.lrep"])
-fun v_blk t = (("blk",0), mk_stateT t)
-fun vS t = (("S",0), HOLogic.mk_setT (HOLogic.mk_prodT(@{typ heap}, t)))
-fun mk_apply_thms apply_thm major = major RS apply_thm
-fun mk_apply_thms' apply_thm major =
-  let
-    val (blk,nuSet) = cprop_of major |> dest_Trueprop_c |> dest_CurrentConstruction_c
-    val aT = ctyp_of_cterm blk |> dest_ctyp0
-    val at = typ_of aT
-  in
-    Thm.implies_elim
-      (Thm.instantiate ([(vA,aT)],[(v_blk at, blk),(vS at, nuSet)]) apply_thm) major
-  end
-fun resolve_N thas thb i =
-  biresolution NONE false (map (pair false) thas) i thb |> Seq.map solve_constraints
-in
-
-fun apply_X_major ctx major procs seq =
-  seq |> Seq.maps (auto_resolve0 ctx)
-      |> Seq.pull |> (fn x => 
-          case x of SOME (th,_) => Goal.conclude th
-                  | NONE => raise THM ("fail to make the call", 0, major::procs))
-fun apply_procs_major ctx procs major =
-  let val procs = map expand_proc procs
-  in apply_X_major ctx major procs
-      (resolve_N procs (mk_apply_thms @{thm apply_proc_conv} major) 2
-        |> Seq.map (Goal.protect 1)
-        |> Seq.append (resolve_N procs (mk_apply_thms @{thm apply_proc} major) 1
-                          |> Seq.map (Goal.protect 0)))
-  end
-fun apply_casts_major ctx procs major =
-  apply_X_major ctx major procs
-    (resolve_N procs (major RS @{thm apply_cast}) 1
-    |> Seq.map (Goal.protect 0))
-end
-fun apply_Xs X ctx procs meta =
-  elim_SPEC meta |> apfst (X ctx procs) |> intro_SPEC
-val apply_procs = apply_Xs apply_procs_major
-fun apply_proc ctx = apply_procs ctx o single
-val apply_casts = apply_Xs apply_casts_major
-
+fun apply' ctx appliants major =
+  NuApply.apply ctx appliants major
+    |> Seq.maps (auto_resolve0 ctx)
+    |> Seq.pull |> (fn x => 
+        case x of SOME (th,_) => Goal.conclude th
+                | NONE => raise THM ("fail to apply", 0, major::appliants))
+fun apply ctx appliants = map_major (apply' ctx appliants)
+val apply_proc_naive = NuApply.apply_proc_naive
 
 
 fun param_type major =
@@ -473,6 +430,7 @@ fun finish_proc th =
     th |> implies_intr codeblock
        |> forall_intr s |> forall_intr a
        |> (fn x => x COMP @{thm NuPrime.finish_proc})
+       |> @{print}
   end
 
 fun rename_blk_var name meta =
@@ -511,6 +469,7 @@ fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes a
       |> map_context (load_specthm specthm)
       |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
             (map (pair Binding.empty_atts) gl)
-      |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat) "NuSys.used") stat)
+      (* |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat)
+      * "NuSys.used") stat) *)
   end
 end

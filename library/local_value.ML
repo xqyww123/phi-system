@@ -17,7 +17,7 @@ fun mk_let flag_push_back names meta ctx =
       ("\<nu>hide_"^(string_of_int (length (codeblocks_of meta)))^blk_name) meta
     val arity = length names
     val op_let = ntimes (arity - 1) (fn _ => fn th => th RS @{thm op_let}) @{thm op_let}
-    val meta = apply_proc ctx op_let meta |> @{print}
+    val meta = NuSys.apply ctx [op_let] meta |> @{print}
     val (major, aux) = elim_SPEC meta
     val prem = Thm.cprems_of major |> hd
     val lrep_tys = strip_binder_vars @{const_name Pure.all} (term_of prem) |> map #2
@@ -32,7 +32,8 @@ fun mk_let flag_push_back names meta ctx =
     val (_,arg_nu,_) = dest_procedure_c proc
     val major' = start_proc ctx blk_name arg_nu
     val (asm_thms, ctx) =
-      Proof_Context.add_assms (fn _ => fn As => (local_value_export major lrep_terms As, I))
+      Proof_Context.add_assms (fn _ => fn As => (local_value_export (@{print}
+      major) lrep_terms As, I))
         (names ~~ asms |> map (fn (n,a) => ((n,[]), [(term_of a,[])]))) ctx
     val local_value_thms = map (snd #> hd) asm_thms
     val push_local_values = map (fn th => th RS @{thm op_local_value}) local_value_thms

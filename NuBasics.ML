@@ -38,7 +38,9 @@ signature NU_BASICS = sig
   val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
   val mk_name_tylabels : string list -> typ (* ["i","j","k"] -> 'i \<times> 'j \<times> 'k *)
   val dest_named : typ -> (string * typ) list
+  val dest_named_only_names : typ -> (string * typ) list
   val normlize_name : string -> string
+  val normlize_thm_of_names : thm -> thm
 
   (* val dest_andTy : term -> term * term *)
   val dest_SpecTop   : term -> term * term
@@ -104,8 +106,6 @@ signature NU_BASICS = sig
 
   val dest_Cast   : term -> term * term * term
   val dest_Cast_c : cterm -> cterm * cterm * cterm
-  val expand_proc : thm -> thm
-  val apply_proc_naive : thm (*proc*) -> thm (*meta or major*) -> thm
 
   val intro_param : cterm -> thm
   val intro_param_name : string -> thm
@@ -113,7 +113,7 @@ signature NU_BASICS = sig
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
   (* val auto_fusion_arity : term -> int *)
 
-  val parse_arg_list : term -> term
+  val parse_arg_list : bool (*void tail*) -> term -> term
 end
 structure NuBasics = struct
 open Thm Term HOLogic NuHelp
@@ -122,7 +122,6 @@ exception NDBG of thm
 fun repeate f x = repeate f (f x) handle TERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
-fun perhaps f x = (f x) handle TERM _ => x | THM _ => x
 val void_ty = Type(@{type_name "void"}, [])
 fun mk_stateT ty = Type(@{type_name "state"}, [ty])
 (* \<alpha> set *)
@@ -137,7 +136,7 @@ fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
                                     | TERM _ => raise TERM (msg, [prop_of th])
 
-val dest_param = perhaps dest_Trueprop #> dest_monop @{const_name "ParamTag"}
+val dest_param = perhaps (try dest_Trueprop) #> dest_monop @{const_name "ParamTag"}
 val dest_param_c = dest_monop_c @{const_name "ParamTag"}
 fun param_type_c th = cprem_of th 1 |> dest_param_c |> ctyp_of_cterm
 fun param_type th = major_prem_of th |> dest_param |> type_of
@@ -195,10 +194,12 @@ fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
   handle TERM _ => ((dest_PendingConstruction_c c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
 
-val dest_current_nu = Thm.prop_of #> perhaps (dest_SpecTop #> #1) #> perhaps dest_Trueprop
-    #> dest_CurrentConstruction #> #2 #> dest_RepSet
-val dest_current_nu_c = Thm.cprop_of #> perhaps (dest_SpecTop_c #> #1) #> perhaps dest_Trueprop_c
-    #> dest_CurrentConstruction_c #> #2 #> dest_RepSet_c
+val dest_current_nu =
+      Thm.prop_of #> perhaps (try (dest_SpecTop #> #1)) #> perhaps (try dest_Trueprop)
+        #> dest_CurrentConstruction #> #2 #> dest_RepSet
+val dest_current_nu_c =
+      Thm.cprop_of #> perhaps (try (dest_SpecTop_c #> #1)) #> perhaps (try dest_Trueprop_c)
+        #> dest_CurrentConstruction_c #> #2 #> dest_RepSet_c
 
 fun strip_stack ret (Const (@{const_name "Pair"}, _) $ a $ b,
                      Const (@{const_name "Stack_Delimiter"}, _) $ A $ B)
@@ -233,19 +234,19 @@ val stack_of_meta_c = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
 
 val current_block_var_c =
   Thm.cprop_of
-    #> perhaps (dest_SpecTop_c #> #1)
-    #> perhaps strip_implies_c
-    #> perhaps dest_Trueprop_c
+    #> perhaps (try (dest_SpecTop_c #> #1))
+    #> perhaps (try strip_implies_c)
+    #> perhaps (try dest_Trueprop_c)
     #> block_var_of_Constuction_c
 val current_block_var =
   Thm.prop_of
-    #> perhaps (dest_SpecTop #> #1)
-    #> perhaps Logic.strip_assums_concl
-    #> perhaps dest_Trueprop
+    #> perhaps (try (dest_SpecTop #> #1))
+    #> perhaps (try Logic.strip_assums_concl)
+    #> perhaps (try dest_Trueprop)
     #> block_var_of_Constuction
-val dest_codeblock   = perhaps dest_Trueprop #> dest_quadop @{const_name "NuPrime.CodeBlock"}
+val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_quadop @{const_name "NuPrime.CodeBlock"}
 val codeblock_name   = dest_codeblock #> #1 #> dest_Free #> #1
-val dest_codeblock_c = perhaps dest_Trueprop_c #> dest_quadop_c @{const_name "NuPrime.CodeBlock"}
+val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "NuPrime.CodeBlock"}
 val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
 val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
 fun current_block_depth th =
@@ -437,16 +438,18 @@ fun param_set_free_var_name ctx name thm =
       |> (fn x => thm_ParamTag RS x)
   end
 
-val dest_procedure   = perhaps dest_Trueprop
+val dest_procedure   = perhaps (try dest_Trueprop)
   #> strip_binder @{const_name All} #> #2
   #> strip_binop_r @{const_name HOL.implies} #> last
-  #> dest_triop @{const_name "Procedure"}
-val dest_procedure_c = perhaps dest_Trueprop_c
+  #> (fn tm => dest_triop @{const_name "Function"} tm
+      handle TERM _ => dest_triop @{const_name "Procedure"} tm)
+val dest_procedure_c = perhaps (try dest_Trueprop_c)
   #> strip_binder_c @{const_name All} #> #2
   #> strip_binop_r_c @{const_name HOL.implies} #> last
-  #> dest_triop_c @{const_name "Procedure"}
-val dest_premise_tag  = dest_monop   @{const_name "NuPrime.Premise"} o perhaps dest_Trueprop
-val dest_premise_tag_c= dest_monop_c @{const_name "NuPrime.Premise"} o perhaps dest_Trueprop_c
+  #> (fn ctm => dest_triop_c @{const_name "Function"} ctm
+      handle TERM _ => dest_triop_c @{const_name "Procedure"} ctm)
+val dest_premise_tag  = dest_monop   @{const_name "NuPrime.Premise"} o perhaps (try dest_Trueprop)
+val dest_premise_tag_c= dest_monop_c @{const_name "NuPrime.Premise"} o perhaps (try dest_Trueprop_c)
 val dest_simplify_tag   = dest_binop   @{const_name "NuPrime.Simplify"}
 val dest_simplify_tag_c = dest_binop_c @{const_name "NuPrime.Simplify"}
 
@@ -459,31 +462,38 @@ val intro_param_name = intro_param o mk_label_c
 val dest_Cast   = dest_triop   @{const_name "Cast"}
 val dest_Cast_c = dest_triop_c @{const_name "Cast"}
 
-val expand_proc = 
-  repeate (fn th => th RS @{thm spec}) #> 
-  repeate (fn th => th RS @{thm mp})
 
-val thm_apply_proc = @{thm apply_proc}
-fun apply_proc_naive proc =
-  map_major (fn major => expand_proc proc RS (major RS thm_apply_proc))
-
-
-fun trim_tylabel_name name = String.substring(name, 1, size name - 1)
+fun trim_tylabel_name name = String.substring(name, 2, size name - 2)
 fun dest_name_tylabel (TFree (name,_)) = trim_tylabel_name name
   | dest_name_tylabel (TVar ((name,_),_)) = trim_tylabel_name name
 val dest_name_tylabels = HOLogic.strip_tupleT #> map dest_name_tylabel
-fun mk_name_tylabels names = HOLogic.mk_tupleT (map (fn x => TFree ("'"^x, ["HOL.type"])) names)
+fun mk_name_tylabels names = HOLogic.mk_tupleT (map (fn x => TFree ("'_"^x, ["HOL.type"])) names)
 fun dest_named (Type (@{type_name named}, [tys, names]))
       = dest_name_tylabels names ~~ HOLogic.strip_tupleT tys
   | dest_named ty = raise TYPE ("dest_named", [ty], [])
+fun dest_named_only_names (Type (@{type_name named}, [_, names]))
+      = dest_name_tylabels names
+  | dest_named_only_names ty = raise TYPE ("dest_named", [ty], [])
 fun normlize_name name =
   if String.isSuffix "__" name then String.substring (name,0, size name - 2)
   else name
+fun normlize_thm_of_names th =
+  let
+    val thy = Thm.theory_of_thm th
+    val insts = Thm.add_tvars th []
+                  |> map_filter (fn x => case typ_of x of TVar (tvar as ((name,_),["HOL.type"])) =>
+                      if String.isPrefix "'_" name
+                      then SOME (tvar, Thm.global_ctyp_of thy (TFree (name,["HOL.type"])))
+                      else NONE
+                                            | _ => NONE)
+  in
+    Thm.instantiate (insts,[]) th
+  end
 
 (* val auto_fusion_arity =
-  Logic.strip_assums_concl #> perhaps dest_Trueprop #> perhaps (dest_procedure #> #2)
-  #> perhaps (dest_binop "NuPrime.Stack_Delimiter" #> #2)
-  #> perhaps dest_RepSet #> perhaps (dest_nuTy #> #2)
+  Logic.strip_assums_concl #> perhaps (try dest_Trueprop) #> perhaps_try (dest_procedure #> #2)
+  #> perhaps_try (dest_binop "NuPrime.Stack_Delimiter" #> #2)
+  #> perhaps (try dest_RepSet) #> perhaps_try (dest_nuTy #> #2)
   #> repeate (dest_binop "NuBasicAbstractors.NuRefine" #> #1)
   #> repeate (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
   #> repeate (dest_binop "NuBasicAbstractors.Schema" #> #1)
@@ -494,12 +504,16 @@ fun is_free_var' tm = is_Free tm orelse is_Var tm
 fun is_free_var tm = is_free_var' (Type.strip_constraints tm)
 in
 
-fun tr_stack (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name Stack_Delimiter},ty2) $ A $ B)
-    = (case tr_stack (b, B) of (b', B') =>
+fun tr_stack void_tail (Const (@{const_name Pair}, ty1) $ a $ b,
+                        Const (@{const_name Stack_Delimiter},ty2) $ A $ B)
+    = (case tr_stack void_tail (b, B) of (b', B') =>
         (Const (@{const_name Pair}, ty1) $ a $ b', Const (@{const_name Stack_Delimiter},ty2) $ A $ B'))
-  | tr_stack (ab as (a, A)) = if is_free_var a andalso is_free_var A then ab else
-        (Const (@{const_name Pair}, dummyT) $ a $ Free ("\<rr>", dummyT),
-          Const (@{const_name Stack_Delimiter},dummyT) $ A $ Free ("\<RR>", dummyT))
+  | tr_stack void_tail (ab as (a, A)) =
+      if is_free_var a andalso is_free_var A then ab else
+        (Const (@{const_name Pair}, dummyT) $ a
+            $ (if void_tail then @{term "()"} else Free ("\<rr>", dummyT)),
+          Const (@{const_name Stack_Delimiter},dummyT) $ A
+            $ (if void_tail then @{term NuVoid} else Free ("\<RR>", dummyT)))
 fun tr_heap (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name Heap_Delimiter},ty2) $ A $ B)
     = (case tr_heap (b, B) of (b', B') =>
         (Const (@{const_name Pair}, ty1) $ a $ b', Const (@{const_name Heap_Delimiter},ty2) $ A $ B'))
@@ -507,20 +521,21 @@ fun tr_heap (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name Heap_D
         (Const (@{const_name Pair}, dummyT) $ a $ Free ("\<hh>", dummyT),
           Const (@{const_name Heap_Delimiter},dummyT) $ A $ Free ("\<HH>", dummyT))
 
-fun tr_topctx (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name NuTopCtx},ty2) $ A $ B)
-    = let val (a',A') = tr_heap (a, A); val (b', B') = tr_stack (b,B)
+fun tr_topctx void_tail (Const (@{const_name Pair}, ty1) $ a $ b,
+                         Const (@{const_name NuTopCtx},ty2) $ A $ B)
+    = let val (a',A') = tr_heap (a, A); val (b', B') = tr_stack void_tail (b,B)
        in (Const (@{const_name Pair}, ty1) $ a' $ b', Const (@{const_name NuTopCtx},ty2) $ A' $ B') end
-  | tr_topctx (tm as (_, Const (@{const_name ExNu}, _) $ _)) = tm
-  | tr_topctx (tm as (a, A)) =
+  | tr_topctx void_tail (tm as (_, Const (@{const_name ExNu}, _) $ _)) = tm
+  | tr_topctx void_tail (tm as (a, A)) =
       if is_free_var a andalso is_free_var A then tm
       else
-        let val (a',A') = tr_stack (@{print} (a, A))
+        let val (a',A') = tr_stack void_tail (@{print} (a, A))
         in (Const (@{const_name Pair}, dummyT) $ Free ("\<hh>", dummyT) $ a',
               Const (@{const_name NuTopCtx},dummyT) $ Free ("\<HH>", dummyT) $ A') end
 
 fun tr_final tr tm = mk_nuTy (tr (dest_nuTy tm))
 
-val parse_arg_list = tr_final tr_topctx
+fun parse_arg_list void_tail = tr_final (tr_topctx void_tail)
 
 end
 end

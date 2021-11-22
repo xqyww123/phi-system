@@ -60,7 +60,7 @@ datatype processor = Processor of {
             }
 fun precedence_of (Processor{precedence,...}) = precedence
 fun proc_of (Processor{proc,...}) = proc
-val proc_ord = int_ord o apply2 precedence_of
+fun proc_ord (a,b) = int_ord (precedence_of a, precedence_of b)
 fun mk_processor (binding, precedence, pat, proc) =
       Processor {binding = binding, precedence = precedence, pattern = pat, enabled = true, proc = proc}
 fun set_enabled v (Processor {binding, precedence, pattern, enabled, proc}) =
@@ -109,7 +109,8 @@ fun process_impl ctx procs (th,toks) limit =
         val focus = prop_of th |> dest_SpecTop |> #1
         val th = fold (fn (_, Processor {binding, pattern, enabled, proc,...}) => fn th =>
           if not enabled then th
-          else if can (Pattern.unify ctx (pattern,focus)) Envir.init
+          else if can (Pattern.match (Context.theory_of ctx) (pattern, focus))
+              (Envir.type_env Envir.init, Envir.term_env Envir.init)
           then let
             val _ = if limit > 100 then error "too deep process" else ();
             val (execute,toks) =
@@ -126,8 +127,8 @@ fun process_impl ctx procs (th,toks) limit =
               | Process_State_Call arg => raise Process_State_Call arg
               | ex => (@{print} th; @{print} binding; Exn.reraise (@{print} ex))
             (* | ex => Exn.reraise (ProcessFail (binding,th,ex)) *)
-          else th
-        ) procs th
+          else th)
+        procs th
       in (th,toks)
       end
       handle Processed th_toks => process_impl ctx procs th_toks (limit + 1)

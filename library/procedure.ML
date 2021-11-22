@@ -59,17 +59,26 @@ fun norm_def n def = let open Thm Drule Term
 
 fun define (binding,attrs) proc_th lthy =
   let
-    val (f,U,V) = Thm.concl_of proc_th |> Logic.unvarify_global |> dest_procedure 
-    val arity = length (add_frees f [])
-    val f' = fold lambda (map Free (add_frees f [])) f
+    val (f,U,V) = Thm.concl_of (Drule.zero_var_indexes proc_th) |> dest_procedure 
+    val vars = fold_aterms (fn Var v => insert (op =) (Var v)
+                             | Free v => insert (op =) (Free v)
+                             | _ => I) f  [];
+    val arity = length vars
+    fun lambda v body = Abs (term_name v, fastype_of v, abstract_over (v,body))
+    val f' = fold lambda vars f |> Logic.unvarify_types_global
     val def_binding = Binding.suffix_name compilation_suffix binding
     val proc_binding = Binding.suffix_name proc_suffix binding
+    fun rename def proc_th =
+          (proc_th RS (def RS @{thm rename_func}))
+      handle THM _ =>
+          (proc_th RS (def RS @{thm rename_proc}))
+
     val (lthy, proc_th) =
       if Binding.is_empty binding then (lthy, proc_th)
       else lthy
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
             |-> (fn (tm,(_,def)) => fn lthy =>
-                  (lthy, (proc_th RS (norm_def arity def RS @{thm rename_proc}))))
+                  (lthy, rename (norm_def arity def) proc_th))
     val proc_th = proc_th
           |> Raw_Simplifier.rewrite_rule lthy @{thms atomize_imp}
           (* |> Raw_Simplifier.rewrite_rule lthy
