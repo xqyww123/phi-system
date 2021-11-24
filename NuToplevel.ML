@@ -31,6 +31,17 @@ signature NU_TOPLEVEL = sig
             (Attrib.binding * (string * string list)) list
               (* other normal pre-conditions *))
         -> bool -> Proof.context -> Proof.state
+  val begin_cast_cmd : Attrib.binding
+        -> xstring (*domain*)
+        -> xstring (*image*)
+        -> xstring option (*addtional_prop,   cast domain |--> image with additional_prop*)
+        -> (binding * string option * mixfix) list (*for fixes*)
+        -> (xstring * Position.T) list (*includes*)
+        -> ((Attrib.binding * (string * string list)) list *
+              (* pre-conditions to be wrapped by @{term Premise} automatically *)
+            (Attrib.binding * (string * string list)) list
+              (* other normal pre-conditions *))
+        -> bool -> Proof.context -> Proof.state
   (* val begin_rec_proc_cmd : Attrib.binding 
         -> xstring (*argument and return*)
         -> (binding * string option * mixfix) list (*loop variables fixes*)
@@ -76,6 +87,7 @@ val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst
 
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
+val v_lrep_var = "\<l>\<r>\<e>\<p>"
 val v_goal_name = "\<nu>goalaa"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
@@ -116,7 +128,7 @@ fun prep_decls prep_var raw_vars ctxt =
       ||> Context_Position.restore_visible ctxt'
   in ((vars, xs), ctxt'') end
 
-fun gen_begin_proc prep_term prep_typ prep_var prep_Nu constr_process post_process
+fun gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process
       binding arg ret rawfixes includes (raw_preconds, raw_prems) int ctx =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes ctx
@@ -128,22 +140,15 @@ fun gen_begin_proc prep_term prep_typ prep_var prep_Nu constr_process post_proce
                   #> apsnd (map parse_term) #> single))
     val preconds = (map (prep_precond (mk_monop @{const_name Premise})) raw_prems
                     @ map (prep_precond I) raw_preconds)
-    val (arg, ret, preconds) = prep_Nu (ctx_parse,(fixes,var_names))
+    val (goal, constr_process, preconds) = mk_Goal (ctx_parse,(fixes,var_names))
                                        (parse_term arg, parse_term ret, preconds)
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctx)
     (* val (goal,th) = begin_proc ctx_parse (arg,ret)  *)
-    val goal = mk_Trueprop
-      (Const (@{const_name "Procedure"}, dummyT) $ Var (v_proc_var, dummyT) $ arg $ ret)
     val elems = [Element.Fixes fixes, Element.Assumes preconds]
     val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]
-    fun after_qed [[th]] lthy =
-      lthy
-        |> NuProcedure.define binding (post_process lthy th)
-        |-> (fn th => fn lthy =>
-              (Proof_Display.print_results int Position.none ctx
-                  (("\<nu>procedure", ""), [("", [th])]); lthy))
+    fun after_qed [[th]] lthy = post_process binding int lthy th
   in
     ctx |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
               includes elems concls int
@@ -151,29 +156,54 @@ fun gen_begin_proc prep_term prep_typ prep_var prep_Nu constr_process post_proce
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "impossible"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-      |> (fn stat =>
-          let val ctx = Proof.context_of stat
-          val th = arg |> Syntax.check_term ctx
-            |> Thm.cterm_of ctx |> start_proc ctx top_blk_name
-            |> rpair empty_facts_thm |> intro_SPEC
-            |> Simplifier.simplify ctx
-          in Proof.set_facts [th] stat end)
+      |> constr_process
       |> Proof.map_context (fn ctx => 
           ctx |> Proof_Context.put_thms false ("\<nu>thesis",
             SOME [Drule.mk_term (cterm_of ctx (Syntax.check_term
               (Proof_Context.set_mode Proof_Context.mode_schematic ctx) goal))]))
-      |> constr_process
   end
 
+fun gen_begin_proc prep_term prep_typ prep_var prep_Nu post_process =
+  let
+    fun mk_Goal ctx_fixes arg_ret_conds =
+      let
+        val (arg, ret, preconds) = prep_Nu ctx_fixes arg_ret_conds
+        val goal = mk_Trueprop
+          (Const (@{const_name "Procedure"}, dummyT) $ Var (v_proc_var, dummyT) $ arg $ ret)
+        fun constr_process stat =
+          let
+            val ctx = Proof.context_of stat
+            val sequent = 
+                  arg |> Syntax.check_term ctx
+                    |> Thm.cterm_of ctx |> start_proc ctx top_blk_name
+                    |> rpair empty_facts_thm |> intro_SPEC
+                    |> Simplifier.simplify ctx
+          in
+            Proof.set_facts [sequent] stat
+          end
+      in
+        (goal, constr_process, preconds)
+      end
+    fun post_process' binding int lthy th =
+      lthy
+        |> NuProcedure.define binding (post_process lthy th)
+        |-> (fn th => fn lthy =>
+              (Proof_Display.print_results int (Binding.pos_of (fst binding)) ctx
+                  (("\<nu>procedure", ""), [("", [th])]); lthy))
+  in
+    gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process'
+  end
+    
+
 val begin_proc =
-      gen_begin_proc (K I) (K I) Proof_Context.cert_var (K I) I (K I)
+      gen_begin_proc (K I) (K I) Proof_Context.cert_var (K I) (K I)
 val begin_proc_cmd =
       gen_begin_proc Syntax.parse_term Syntax.parse_typ Proof_Context.read_var
         (fn (ctx,_) => fn (arg,ret,conds) =>
           (mk_repset (NuBasics.parse_arg_list false arg),
            mk_repset (NuBasics.parse_arg_list false ret),
            conds)
-        ) I (K I)
+        ) (K I)
 
 fun gen_begin_rec_proc prep_term prep_typ prep_var
         (binding,attr) raw_arg raw_ret (raw_vars, raw_fixes) raw_includes raw_preconds int ctx =
@@ -260,11 +290,55 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
           |> @{print}
       end
   in
-    gen_begin_proc prep_term prep_typ prep_var parse_arg_list I post_process
+    gen_begin_proc prep_term prep_typ prep_var parse_arg_list post_process
         (binding,attr) raw_arg raw_ret (raw_vars @ raw_fixes) raw_includes raw_preconds int ctx
   end
 
 val begin_rec_proc_cmd = gen_begin_rec_proc Syntax.parse_term Syntax.parse_typ Proof_Context.read_var
+
+fun gen_begin_cast_cmd prep_term prep_typ prep_var
+      binding arg ret additional_prop =
+  let
+    fun mk_Goal (ctx,_) (arg, ret, preconds) =
+      let
+        val arg = mk_repset arg
+        val ret = mk_repset ret
+        val additional_prop = case additional_prop
+                                of SOME x => prep_term ctx x
+                                 | _ => @{term True}
+        val goal = mk_Trueprop
+          (Const (@{const_name "Cast"}, dummyT) $ arg $ ret $ additional_prop)
+        fun constr_process stat =
+          let
+            val ctx = Proof.context_of stat
+            val arg = Syntax.check_term ctx arg
+            val Type (@{type_name set}, [ty]) = fastype_of arg
+            val ([lrep_name],stat) = Proof.map_context_result (Proof_Context.add_fixes
+                                        [(Binding.name v_lrep_var, SOME ty, NoSyn)]) stat
+            val sequent_term = mk_Trueprop (
+                  Const (@{const_name Set.member}, dummyT) $ Free (lrep_name, ty) $ arg)
+                    |> Syntax.check_prop ctx
+            val ([(_,[sequent])],stat) = Proof.map_context_result (
+                  Proof_Context.add_assms Assumption.assume_export
+                      [(Binding.empty_atts, [(sequent_term,[])])]) stat
+            val sequent = intro_SPEC (sequent, empty_facts_thm)
+          in
+            Proof.set_facts [sequent] stat
+          end
+      in
+        (goal, constr_process, preconds)
+      end
+    fun post_process binding int lthy th =
+          (Proof_Display.print_results int (Binding.pos_of (fst binding)) ctx
+            (("\<nu>cast", ""), [("", [th])]); lthy)
+  in
+    gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process
+      binding arg ret
+  end
+
+val begin_cast_cmd =
+      gen_begin_cast_cmd Syntax.parse_term Syntax.parse_typ Proof_Context.read_var
+
 
 (* fun gen_begin_rec_proc prep_term prep_var
   binding arg_ret raw_loop_vars rawfixes includes precond int ctx =
