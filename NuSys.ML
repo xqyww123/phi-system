@@ -5,14 +5,6 @@ signature NU_SYS = sig
   exception ReasoningFail of thm
   type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
   val raw_auto : Proof.context -> tactic
-  val premise_tac : Proof.context -> tactic
-  val auto_resolve : (thm list (*major*) * (thm list * thm list) option
-        (* priority, minor*)) option ->
-    thm list (*addtional major*) -> Proof.context -> tactic
-  val auto_resolve_rule : (thm list (*major*) * (thm list * thm list) option (*minor*)) option ->
-    thm list (*addtional major*) -> Proof.context -> thm -> thm
-    (* raises ReasoningFail if none of premises is solved, but exits normally if
-    * there is no premises in the theorem. *)
 
 
   (** Basic Operations **)
@@ -39,7 +31,11 @@ signature NU_SYS = sig
     be touched by automatic provers.
   *)
   val conversion : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
+  val conversion_completely : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
+        (* solve all the premises by Nu_Resonser, raising CastFail if failed *)
   val cast : Proof.context -> cterm (*desired nu*) -> thm (*major*) -> thm
+  val cast_completely : Proof.context -> cterm (*desired nu*) -> thm (*major*) -> thm
+        (* solve all the premises by Nu_Resonser, raising CastFail if failed *)
 
   val apply : Proof.context -> thm list -> thm -> thm
   val apply_proc_naive : thm (*proc*) -> thm (*meta or major*) -> thm
@@ -312,9 +308,11 @@ fun cast ctx desired_nu major =
                                                     (*heap \<times> 'a*))],
                  [((("T'",0),typ_of_cterm desired_nu), desired_nu)])
   in
-    (major RS Thm.instantiate insts @{thm "cast"})
-      |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
+    major RS Thm.instantiate insts @{thm "cast"}
   end
+fun cast_completely ctx desired_nu major =
+  cast ctx desired_nu major
+    |> SOLVED_RULE (Nu_Reasoner.reason ctx) (fn th => raise CastFail th)
 
 val conversion_thm = @{thm conversion}
 fun conversion ctx to from =
@@ -337,11 +335,13 @@ fun conversion ctx to from =
         ((("V'",0), typ_of_cterm V'), V')])
       conversion_thm
   in
-    (from RSN (2,rule))
-      |> Goal.protect 1
-      |> SOLVED_RULE (auto_resolve_rule0 ctx) (fn th => raise CastFail th)
-      |> Goal.conclude
+    from RSN (2,rule)
   end
+fun conversion_completely ctx to from =
+  conversion ctx to from
+    |> Goal.protect 1
+    |> SOLVED_RULE (Nu_Reasoner.reason ctx) (fn th => raise CastFail th)
+    |> Goal.conclude
 
 fun accept_proc_naive meta =
   meta |> disch_current_codeblock
@@ -356,14 +356,14 @@ fun accept_proc_naive meta =
     |> undisch
 fun accept_proc ctx meta = 
   (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
-  then meta else auto_resolve_rule0 ctx meta) |> accept_proc_naive
+  then meta else Nu_Reasoner.reason ctx meta) |> accept_proc_naive
 
 fun apply' ctx appliants major =
   NuApply.apply ctx appliants major
-    |> Seq.maps (auto_resolve0 ctx)
-    |> Seq.pull |> (fn x => 
-        case x of SOME (th,_) => Goal.conclude th
-                | NONE => raise THM ("fail to apply", 0, major::appliants))
+    |> Nu_Reasoner.reason_s ctx
+    |> (fn x => case Seq.pull x
+                  of SOME (th,_) => Goal.conclude th
+                   | NONE => raise THM ("fail to apply", 0, major::appliants))
 fun apply ctx appliants = map_major (apply' ctx appliants)
 val apply_proc_naive = NuApply.apply_proc_naive
 
@@ -424,7 +424,7 @@ fun meta_eq_to_hol_eq th =
 
 fun finish_proc th =
   let
-    val codeblock = current_codeblock th
+    val codeblock = current_codeblock th |> @{print}
     val (s,a,_,_) = dest_codeblock_c codeblock
   in
     th |> implies_intr codeblock
@@ -448,13 +448,14 @@ fun rename_blk_var name meta =
 fun auto_construct ctx term meta =
   let
     val (major,aux) = elim_SPEC meta
-    val next = @{thm AutoConstruct}
+    val thm = @{thm AutoConstruct}
       |> Thm.instantiate ([((("'exp",0),["HOL.type"]),Thm.ctyp_of_cterm term)], [((("exp",0), Thm.typ_of_cterm term),term)])
       |> (fn th => major RS th)
-      |> Goal.protect 1 |> auto_resolve NONE [] ctx
-  in case Seq.pull next
-    of SOME (next, _) => Goal.conclude next |> rpair aux |> intro_SPEC
-      | _ => raise TERM ("fail to construct", [Thm.term_of term])
+      |> Goal.protect 1
+      |> Nu_Reasoner.reason ctx
+  in if Thm.no_prems thm
+     then Goal.conclude thm |> rpair aux |> intro_SPEC
+     else raise TERM ("fail to construct", [Thm.term_of term])
   end
 
 

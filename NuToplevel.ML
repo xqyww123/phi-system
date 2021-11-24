@@ -350,12 +350,12 @@ fun gen_finish_proc prep_specthm qed int stat =
           (* |> Raw_Simplifier.rewrite_rule ctx @{thms RegisterCollection_rew}
           * *)
     val meta = meta |> elim_SPEC
-          |> apfst (NuSys.cast (NuSys.load_specthm meta ctx) desired_nu)
+          |> apfst (NuSys.cast_completely (NuSys.load_specthm meta ctx) desired_nu)
           |> intro_SPEC
     val end_tac = basic_method (fn ctx' => fn t => 
       RSXX (
         finish_proc (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))
-          |> conversion ctx' goal
+          |> conversion_completely ctx' goal
       ) t
       handle e => raise @{print} e)
   in

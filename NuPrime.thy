@@ -39,19 +39,11 @@ ML_file NuConfig.ML
 bundle show_more1 = [[show_hyps = true, show_types = true, show_sorts = true]]
 bundle show_more = [[show_hyps = true, show_types = true]]
 
-named_theorems \<nu>intro0 "\<nu> auto reasoning rules - highest priority"
-  and \<nu>intro "\<nu> auto reasoning rules - normal priority"
-  and \<nu>intro' "\<nu> auto reasoning rules - low priority"
-  and \<nu>intro'' "\<nu> auto reasoning rules - lowest priority"
-  \<comment> \<open>Prioritized introduction rules. No rule of lower priority will be applied unless all rules of
-    higher priority are attempted. \<close>
 named_theorems \<nu>elim "\<nu>-type elimination rules"
 named_theorems \<nu>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
   (* and \<nu>address_def \<open>primitive definitions for unfolding in proofs for address\<close> *)
   and \<nu>post_construct and \<nu>auto_destruct
 named_theorems typing_expn "expansion theorems for abstractions" and lrep_exps
-
-declare conjI[\<nu>intro] TrueI[\<nu>intro]
 
 subsection \<open>Syntax and Notations\<close>
 

@@ -25,14 +25,14 @@ fun eliminate_term ctxt xs thm =
       val X = list_mk_abstract bads X
       val typing' = mk_RepSet (X,Nu) |> Syntax.check_term ctxt |> cterm_of ctxt
     in
-      NuSys.cast ctxt typing' thm (* TODO: manually indicate the tactic to boost
+      NuSys.cast_completely ctxt typing' thm (* TODO: manually indicate the tactic to boost
       up the performance *)
     end
   end;
 
 fun eliminate ctxt rule xs As thm =
   let
-    val thm = eliminate_term ctxt xs thm;
+    val thm = eliminate_term ctxt xs thm |> @{print};
     val _ = Object_Logic.is_judgment ctxt (Thm.concl_of thm) orelse
       error "Conclusion in obtained context must be object-logic judgment"
 
@@ -49,7 +49,8 @@ fun eliminate ctxt rule xs As thm =
 
 fun eliminate_nusys ctx rule xs As th =
   eliminate ctx (NuBasics.export_codeblocks
-    (Thm.chyps_of th |> filter (can NuBasics.dest_codeblock_c)) rule) xs As th
+    (Thm.chyps_of th |> filter (can NuBasics.dest_codeblock_c)) rule |>
+    @{print}) xs As (@{print} th)
   handle e => raise (@{print} e)
 fun obtain_export ctxt rule xs _ As = (eliminate_nusys ctxt rule xs As, I)
 

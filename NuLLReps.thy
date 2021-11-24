@@ -1,5 +1,5 @@
 theory NuLLReps
-  imports NuPrime  "HOL-Library.Word"
+  imports NuSys "HOL-Library.Word"
   abbrevs "<own>" = "\<left_fish_tail>"
     and "<none>" = "\<down_fish_tail>"
     and "<object>" = "\<R_arr_tail>"
@@ -10,10 +10,6 @@ text \<open>Semantic data representations\<close>
 
 declare pair_forall[lrep_exps] pair_exists[lrep_exps]
 
-section \<open>Preliminary notions\<close>
-
-class field = lrep \<comment> \<open>a field in the record tuple\<close>
-class field_list = lrep
 
 section \<open>Memory address\<close>
 
@@ -185,8 +181,8 @@ definition RawPointer :: "(memptr, raw_memaddr) \<nu>"
 
 lemma [simp]: "memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_def by (simp add: RawPointer_def)
 lemma [elim,\<nu>elim]: "addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Zero RawPointer undefined" unfolding \<nu>Zero_def by simp
-lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps)
+lemma [\<nu>intro 1]: "\<nu>Zero RawPointer undefined" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro 1]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps)
 
 subsubsection \<open>Pointer\<close>
 
@@ -196,7 +192,7 @@ definition Pointer :: "(memptr, nat memaddr) \<nu>"
 lemma [simp]: "memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
   unfolding Refining_def by (simp add: Pointer_def)
 lemma [elim,\<nu>elim]: "addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
+lemma [\<nu>intro 1]: "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
   unfolding \<nu>Equal_def using raw_offset_of_inj by (auto simp add: lrep_exps the_same_addr_def same_addr_offset_def)
 
 
@@ -213,43 +209,6 @@ lemma [\<nu>intro, freetyp_\<nu>cast]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t addr \<tycolon> TypedPtr['spc] ty \<longmapsto> addr \<tycolon> Pointer['spc::len0] \<^bold>w\<^bold>i\<^bold>t\<^bold>h address_llty addr = ty"
   unfolding Cast_def by (cases addr) (auto simp add: lrep_exps split: memaddr.split)
 *)
-section \<open>Void\<close>
-
-datatype void = void
-declare void.split[split]
-
-lemma [simp]: "x = y" for x :: void by (cases x; cases y) fast
-
-subsection \<open>Settings\<close>
-
-instantiation void :: stack begin
-definition llty_void :: "void itself \<Rightarrow> llty" where "llty_void _ = llty_nil"
-definition deepize_void :: "void \<Rightarrow> deep_model" where "deepize_void _ = DM_none"
-instance by standard auto 
-end
-
-
-instantiation void :: field begin instance by standard end
-instantiation void :: field_list begin instance by standard end
-
-instantiation void :: zero begin
-definition zero_void :: "void" where [simp]: "zero_void = void"
-instance by standard
-end
-
-
-subsection \<open>Abstractor\<close>
-
-definition NuVoid :: "(void, unit) \<nu>" where "NuVoid _ = UNIV"
-text \<open>The name `void` coincides that, when a procedure has no input arguments,
-  the \<nu>-type for the input would exactly be @{term Void}. \<close>
-
-consts Void_sugar :: " 'a_sugar " ("Void")
-translations "Void" == "() \<tycolon> CONST NuVoid"
-
-lemma [simp]: "p \<nuLinkL> NuVoid \<nuLinkR> x" unfolding NuVoid_def Refining_def by simp
-lemma [elim!, \<nu>elim]: "Inhabited \<tort_lbrace>Void\<tort_rbrace> \<Longrightarrow> C \<Longrightarrow> C" by simp
-(*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
 
 section \<open>The integer data type\<close>
 
@@ -283,16 +242,30 @@ translations "\<nat>['x]" == "CONST NuNat (TYPE('x))"
 lemma [simp]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_def by (simp add: NuNat_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto
 
-lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
+lemma [\<nu>intro 1]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI)
-lemma [\<nu>intro]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro 1]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by simp
 
 definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ x = {p. p = of_nat x}"
 syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
 translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))" 
 
 lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding Refining_def  by (simp add: NuNatRound_def)
-lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro 1]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
+
+
+\<nu>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
+  let open NuBasics
+    val num = Syntax.parse_term ctx num
+    fun mk term = mk_nuTy (num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
+    val term = ((stack_of_meta meta |> hd |> #2 |> mk)
+      handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
+        | ERROR _ => mk @{term \<open>\<nat>[32]\<close>}) |> @{print}
+    val ctx = NuSys.load_specthm meta ctx
+  in NuSys.auto_construct ctx term meta  end)
+\<close>
+
+
 
 subsubsection \<open>Integer\<close>
 
@@ -304,8 +277,8 @@ lemma [simp]: "p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfoldin
 lemma [elim,\<nu>elim]: " x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def apply simp by (metis One_nat_def sint_ge sint_lt) 
 
-lemma [\<nu>intro]: "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
-lemma [\<nu>intro]: "\<nu>Zero (NuInt b) 0" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro 1]: "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
+lemma [\<nu>intro 1]: "\<nu>Zero (NuInt b) 0" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Boolean\<close>
 
@@ -319,26 +292,8 @@ qed
 definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool x = {p. (p = 1) = x }"
 
 lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_def by (simp add: NuBool_def)
-lemma [\<nu>intro]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
-lemma [\<nu>intro]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
-
-section \<open>Prod & the pair abstract structure\<close>
-
-subsection \<open>Lrep instantiations\<close>
-
-instantiation prod :: (field, field_list) field_list begin instance by standard end
-
-instantiation prod :: (zero, zero) zero begin
-definition zero_prod :: "'a \<times> 'b" where [simp]: "zero_prod = (0,0)"
-instance by standard
-end
-instantiation prod :: (ceq, ceq) ceq begin
-definition ceqable_prod :: "heap \<Rightarrow> 'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> bool" where "ceqable_prod heap = ceqable heap \<times>\<^sub>r ceqable heap"
-lemma [simp]: "ceqable heap (a1,b1) (a2,b2) \<longleftrightarrow> ceqable heap a1 a2 \<and> ceqable heap b1 b2" unfolding ceqable_prod_def by auto
-definition ceq_prod :: "'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> bool" where "ceq_prod = ceq \<times>\<^sub>r ceq"
-lemma [simp]: "ceq (a1,b1) (a2,b2) \<longleftrightarrow> ceq a1 a2 \<and> ceq b1 b2" unfolding ceq_prod_def by auto
-instance by standard (auto intro: ceq_trans)
-end
+lemma [\<nu>intro 1]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
+lemma [\<nu>intro 1]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
 
 (* subsection \<open>Fusion \<nu>-abstraction\<close>
 
@@ -400,8 +355,8 @@ definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b)
 lemma [simp]: "Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by simp
 
-lemma [\<nu>intro]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
-lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro 1]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
+lemma [\<nu>intro 1]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
 
 section \<open>Function Pointer\<close>
 
