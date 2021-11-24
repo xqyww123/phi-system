@@ -7,8 +7,8 @@ theory NuSys
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "i.e." :: quasi_command
   and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<Longrightarrow>" "drop_fact" "\<nu>debug" "\<nu>debug'"
           "\<nu>note" (* "\<nu>choose_quick" *) :: prf_decl % "proof"
-  and "\<nu>processor" "\<nu>processor_resolver" "\<nu>reasoner" :: thy_decl % "ML"
-  and "\<nu>overloads" "\<nu>cast_overloads" :: thy_decl
+  and "\<nu>processor" "\<nu>processor_resolver" "\<nu>reasoner" "setup_\<nu>application_method" :: thy_decl % "ML"
+  and "\<nu>overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
 abbrevs
   "!!" = "!!"
@@ -16,7 +16,9 @@ abbrevs
   and "<argument>" = "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t"
 begin
 
-section \<open>Preliminary constants and settings used in the system\<close>
+section \<open>Prelude of the Prelude\<close>
+
+subsection \<open>Preliminary constants and settings\<close>
 
 named_theorems used \<open>theorems that will be inserted in ANY proof environments,
 which basically has the same effect as the using command.\<close>
@@ -34,16 +36,28 @@ attribute_setup rotated = \<open>Scan.lift (Scan.optional Parse.int 1 -- Scan.op
   (fn (k,j) => Thm.rule_attribute [] (fn _ => Thm.permute_prems j k))\<close>
   \<open>Enhanced version of the Pure.rotated\<close>
 
-subsection \<open>Prelude of the system\<close>
+subsection \<open>Prelude ML programs\<close>
 
 ML_file NuHelp.ML
 ML_file \<open>library/NuSimpCongruence.ML\<close>
 ML_file \<open>library/cost_net.ML\<close>
 
+
+subsection \<open>Overload\<close>
+
+ML_file \<open>library/applicant.ML\<close>
+
+attribute_setup \<nu>overload = \<open>Scan.lift (Parse.and_list1 NuApplicant.parser) >> (fn bindings => 
+  Thm.declaration_attribute (fn th => fold (NuApplicant.overload th) bindings))\<close>
+
+\<nu>overloads D \<open>Destructural cast\<close>
+
+
 subsection \<open>\<nu> Reasoner\<close>
 
 definition "\<nu>Intro_Rule x = x"
 definition "\<nu>Elim_Rule x = x"
+definition "\<nu>Application_Rule x = x"
 
 ML_file \<open>library/reasoner.ML\<close>
 
@@ -570,7 +584,8 @@ lemma [simp]: "\<tort_lbrace>y \<tycolon> L \<heavy_comma> x \<tycolon> ExNu T\<
 lemma ExTyp_strip: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> ExNu T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x c \<tycolon> T c)"
   unfolding CurrentConstruction_def by auto
 
-lemma [\<nu>intro -20]: "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x c \<tycolon> T c \<longmapsto> (\<exists>*c. x c \<tycolon> T c)" unfolding Intro_def Cast_def by (simp add: nu_exps) blast
+lemma ExTyp_I_\<nu>app[\<nu>intro -20]:
+  "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x c \<tycolon> T c \<longmapsto> (\<exists>*c. x c \<tycolon> T c)" unfolding Intro_def Cast_def by (simp add: nu_exps) blast
 lemma [\<nu>intro 3]: "(\<And>c. \<^bold>c\<^bold>a\<^bold>s\<^bold>t x c \<tycolon> T c \<longmapsto> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P c) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (\<exists>*c. x c \<tycolon> T c) \<longmapsto> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<exists>c. P c)"
   unfolding Cast_def by (simp add: nu_exps) blast
 
@@ -690,19 +705,12 @@ lemma [elim,\<nu>elim]: " x \<ratio> N \<nuRefine> P \<Longrightarrow> (x \<in> 
 
 lemma [\<nu>intro 1]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> S \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M \<longmapsto> x \<tycolon> M <where> S"
   unfolding Intro_def Cast_def by (simp add: nu_exps) blast
-lemma AAA[\<nu>intro 1]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M <where> S \<longmapsto> x \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h x \<in> S"
+lemma [\<nu>intro 1, \<nu>overload D]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M <where> S \<longmapsto> x \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h x \<in> S"
   unfolding Dest_def Cast_def by (simp add: nu_exps)
 lemma [\<nu>intro 1]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M \<longmapsto> x' \<tycolon> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x' \<in> S \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M \<longmapsto> x' \<tycolon> M' <where> S \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def by (simp add: nu_exps) blast
-lemma refine_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x \<tycolon> (N <where> P)"
+lemma refine_\<nu>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> x \<tycolon> (N <where> P)"
   unfolding Cast_def by (simp add: nu_exps) blast
-
-ML \<open>
-val ctx = Proof_Context.set_mode Proof_Context.mode_schematic @{context}
-fun mk_cterm s = Syntax.read_prop ctx s |> Thm.cterm_of ctx
-val th = Goal.init (mk_cterm "(\<And> x. P x \<Longrightarrow> \<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M <where> S \<longmapsto> ?M' x \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P x)")
-val th2 = @{thm AAA} RS th
-\<close>
 
 abbreviation AutoRefine (infixl "<auto-where>" 80)
   where "AutoRefine \<equiv> Auto NuRefine"
@@ -743,12 +751,12 @@ lemma [\<nu>intro 1]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^
 
 lemma [\<nu>intro 1]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (g y = x) \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M \<longmapsto> y \<tycolon> M <down-lift> g"
   unfolding Intro_def Cast_def by (simp add: nu_exps) blast
-lemma [\<nu>intro 1]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M <down-lift> g \<longmapsto> g y \<tycolon> M"
+lemma [\<nu>intro 1, \<nu>overload D]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> M <down-lift> g \<longmapsto> g y \<tycolon> M"
   unfolding Dest_def Cast_def by (simp add: nu_exps)
 
 lemma [\<nu>intro 1]: " \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y1 \<tycolon> M \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y1 = g y  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> M <down-lift> g"
   unfolding Cast_def by (simp add: nu_exps) blast
-lemma "\<down>lift_\<nu>cast": "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e g y = x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> N <down-lift> g"
+lemma "\<down>lift_\<nu>app": "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e g y = x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> y \<tycolon> N <down-lift> g"
   unfolding Cast_def by (simp add: nu_exps) blast
 
 
@@ -775,6 +783,11 @@ lemma [simp]: " p \<nuLinkL> N <up-lift> f \<nuLinkR> x \<longleftrightarrow> (\
   unfolding UpLift_def Refining_def by auto
 lemma [elim,\<nu>elim]: " x \<ratio> N <up-lift> f \<Longrightarrow> (\<And>y. f y = x \<Longrightarrow> y \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: nu_exps) blast
+
+lemma "\<up>lift_\<nu>app": "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m y \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y = g x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M \<longmapsto> y \<tycolon> M <up-lift> g"
+  unfolding Cast_def by (simp add: nu_exps) blast
+lemma [\<nu>overload D]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M <up-lift> g \<longmapsto> (\<exists> \<tycolon> M) "
+  unfolding Cast_def by (simp add: nu_exps) blast
 
 lemma [\<nu>intro 1]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y = g x \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> M \<longmapsto> y \<tycolon> M <up-lift> g"
   unfolding Intro_def Cast_def by (simp add: nu_exps) blast
@@ -1267,14 +1280,14 @@ ML_file "./general/binary_tree.ML"
 ML_file "./general/auto_level.ML"
 (* ML_file "./library/path.ML" *)
 ML \<open>Syntax.parse_term @{context} "xxx"\<close>
-
+ML_file \<open>library/application.ML\<close>
 ML_file "./library/general.ML"
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
 ML_file "./library/procedure.ML"
 (* ML_file "./library/exty.ML" *)
-ML_file \<open>library/application.ML\<close>
+
 ML_file NuSys.ML
 ML_file "./library/processors.ML"
 ML_file "./library/obtain.ML"
@@ -1394,16 +1407,6 @@ val _ =
       (Parse.binding -- Parse.nat -- (Parse.term -- Parse.for_fixes) -- Parse.name_position -- Scan.optional Parse.text ""
         >> (fn ((((b,precedence),pattern),facts),comment) => NuProcessors.setup_resolver b precedence pattern facts comment))
 
-val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>overloads\<close> "declare procedure overloads"
-    (and_list1 (binding -- Scan.optional Parse.text "") >>
-        (fold (fn (b,s) => NuProcedure.declare_overloading b s #> #2)))
-
-val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>cast_overloads\<close> "declare cast overloads"
-    (and_list1 (binding -- Scan.optional Parse.text "") >>
-        (fold (fn (b,s) => NuProcedure.declare_overloading_cast b s #> #2)))
-
 end
 \<close>
 
@@ -1417,22 +1420,28 @@ attribute_setup intro_forall = \<open>Scan.lift (Scan.repeat Args.var) >> (fn tm
 
 subsection \<open>Application method\<close>
 
-attribute_setup \<nu>application_method = \<open>Scan.lift (Parse.int -- Parse.int) >> (fn (idx,fee) =>
-  Thm.declaration_attribute (fn th => NuApply.update {thm=th, applicant_idx = idx, fee=fee}))\<close>
+attribute_setup \<nu>application_method = \<open>Scan.lift (Parse.int -- (Parse.int >> ~)) >> (fn (idx,cost) =>
+  Thm.declaration_attribute (fn th => NuApply.update (cost,{thm=th, applicant_idx = idx})))\<close>
 
-declare apply_proc[\<nu>application_method 1 0]
-declare apply_proc_conv[\<nu>application_method 2 100]
-declare "cast"[\<nu>application_method 1 3]
-lemmas apply_func = apply_proc[OF _ op_call, \<nu>application_method 3 10]
-lemmas apply_func_conv = apply_proc_conv[OF _ _ op_call, rotated 1 1, \<nu>application_method 3 110]
+declare apply_proc[\<nu>application_method 1 100]
+declare apply_proc_conv[\<nu>application_method 2 40]
+declare "cast"[\<nu>application_method 1 90]
+lemmas apply_func = apply_proc[OF _ op_call, \<nu>application_method 3 80]
+lemmas apply_func_conv = apply_proc_conv[OF _ _ op_call, rotated 1 1, \<nu>application_method 3 60]
 
-subsection \<open>Overload\<close>
-
-attribute_setup \<nu>overload = \<open>Scan.lift (Parse.and_list1 NuProcedure.parser) >> (fn bindings => 
-  Thm.declaration_attribute (fn th => fold (NuProcedure.overload th) bindings))\<close>
-
-attribute_setup \<nu>cast_overload = \<open>Scan.lift (Parse.and_list1 NuProcedure.parser) >> (fn bindings =>
-  Thm.declaration_attribute (fn th => fold (NuProcedure.overload_cast th) bindings))\<close>
+consts \<nu>Application_Rewrite :: bool
+setup_\<nu>application_method \<open>\<nu>Application_Rewrite\<close> 1000 \<open>PROP P &&& A = B\<close> | \<open>PROP P &&& (A \<equiv> B)\<close> = \<open>
+  fn ctx => fn applicants => fn major =>
+    let
+      fun is_simprule (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)) = true
+          | is_simprule (Const (\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _) = true
+          | is_simprule _ = false
+      val applicants = List.filter (is_simprule o Thm.concl_of) applicants
+    in
+      if null applicants then Seq.empty else Seq.make (fn () =>
+        SOME (Simplifier.simplify (Raw_Simplifier.clear_simpset ctx addsimps applicants) major, Seq.empty))
+    end
+\<close>
 
 subsection \<open>Quantification Expansion\<close>
 
@@ -1466,9 +1475,9 @@ subsection \<open>Constructive\<close>
 \<nu>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and> P)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   meta RS @{thm move_fact_to_star1} handle THM _ => meta RS @{thm move_fact_to_star2})\<close>
 
-\<nu>processor "apply" 9000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open> fn ctx => fn meta => NuProcedure.parser >> (fn binding => fn _ =>
+\<nu>processor "apply" 9000 \<open>P\<close> \<open> fn ctx => fn meta => NuApplicant.parser >> (fn binding => fn _ =>
     let open NuBasics NuSys
-  val procs = NuProcedure.procedure_thm ctx binding
+  val procs = NuApplicant.applicant_thms ctx binding
   (* val xa = hd procs |> Thm.concl_of |> auto_fusion_arity |> @{print}
   val meta =funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctx) meta
     handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'} #> accept_proc ctx) meta *)
@@ -1484,7 +1493,7 @@ val ctx = NuSys.load_specthm meta ctx in NuSys.apply ctx procs meta end)\<close>
     NuSys.set_param_cmd ctx term meta)\<close>
 
 \<nu>processor rule 7100 \<open>P \<Longrightarrow> PROP Q\<close>
-  \<open>fn ctx => fn meta => (NuProcedure.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
+  \<open>fn ctx => fn meta => (NuApplicant.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
     let open NuBasics
     val ctx = NuSys.load_specthm meta ctx
     val attrs = map (Attrib.attribute_cmd ctx o Attrib.check_src ctx) attrs

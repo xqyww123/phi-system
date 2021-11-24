@@ -188,7 +188,7 @@ fun gen_begin_proc prep_term prep_typ prep_var prep_Nu post_process =
       lthy
         |> NuProcedure.define binding (post_process lthy th)
         |-> (fn th => fn lthy =>
-              (Proof_Display.print_results int (Binding.pos_of (fst binding)) ctx
+              (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
                   (("\<nu>procedure", ""), [("", [th])]); lthy))
   in
     gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process'
@@ -329,7 +329,7 @@ fun gen_begin_cast_cmd prep_term prep_typ prep_var
         (goal, constr_process, preconds)
       end
     fun post_process binding int lthy th =
-          (Proof_Display.print_results int (Binding.pos_of (fst binding)) ctx
+          (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
             (("\<nu>cast", ""), [("", [th])]); lthy)
   in
     gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process

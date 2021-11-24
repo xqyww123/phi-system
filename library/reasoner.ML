@@ -1,6 +1,9 @@
 signature NU_REASONER = sig
   type cost = int
-  type reasoner = {name: term, pattern: term list, tactic: Proof.context -> tactic}
+  type 'a generic_reasoner = {name: term, pattern: term list, tactic: 'a}
+  type reasoner = (Proof.context -> tactic) generic_reasoner
+  val reasoner_eq : ('a generic_reasoner * 'a generic_reasoner) -> bool
+
   exception Success of thm
   val add : cost * reasoner -> Context.generic -> Context.generic
   val del : reasoner -> Context.generic -> Context.generic
@@ -21,7 +24,7 @@ signature NU_REASONER = sig
 
   val reason' : Proof.context -> reasoner Cost_Net.T -> thm -> thm
   val reason : Proof.context -> thm -> thm
-  val reason_s : Proof.context -> thm Seq.seq -> thm Seq.seq (* Note it only returns one
+  val reason_s : Proof.context -> (cost * thm Seq.seq) list -> thm Seq.seq (* Note it only returns one
     theorem in the returned sequence, that the one succeeded first or of least cost. *)
   val reason_tac : Proof.context -> tactic
 
@@ -33,7 +36,8 @@ structure Nu_Reasoner : NU_REASONER = struct
 open NuHelp
 
 type cost = int
-type reasoner = {name: term, pattern: term list, tactic: Proof.context -> tactic}
+type 'a generic_reasoner = {name: term, pattern: term list, tactic: 'a}
+type reasoner = (Proof.context -> tactic) generic_reasoner
 
 exception Success of thm
 
@@ -76,7 +80,7 @@ fun gen_reason ctx iter tactics (nprems,best_cost,best_stat) states =
     else case Seq.pull seq
       of SOME (th,seq') =>
           (let
-            val _ = @{print} (cost, th)
+            (* val _ = @{print} (cost, th) *)
             val cost = if Thm.nprems_of th < nprems then cost - 1000000 else cost
             val (nrems,best_cost,best_stat) =
               if Thm.nprems_of th < nprems then (Thm.nprems_of th, cost, th)
@@ -84,12 +88,12 @@ fun gen_reason ctx iter tactics (nprems,best_cost,best_stat) states =
               else (nprems,best_cost,best_stat)
             val states = states
                   |> fold (fn (c,seq'') => States.insert (cost+c, seq''))
-                        (call_tactics ctx tactics th |> @{print})
+                        (call_tactics ctx tactics th)
                   |> States.insert (cost, seq')
           in
             gen_reason ctx (iter+1) tactics (nprems,best_cost,best_stat) states
           end)
-       | NONE => (@{print} cost; gen_reason ctx iter tactics (nprems,best_cost,best_stat) states)
+       | NONE => gen_reason ctx iter tactics (nprems,best_cost,best_stat) states
   end
 
 fun gen_reason' ctx iter tactics (nprems,best_cost,best_stat) states =
@@ -98,13 +102,14 @@ fun gen_reason' ctx iter tactics (nprems,best_cost,best_stat) states =
 
 fun reason' ctx tactics thm =
   gen_reason' ctx 0 tactics (Thm.nprems_of thm,0,thm) (States.insert (0, Seq.single thm) States.empty)
-fun reason'_s ctx tactics seq = Seq.make (fn () =>
-  case Seq.pull seq
-    of SOME (th, seq') =>
-        SOME (gen_reason' ctx 0 tactics (Thm.nprems_of th,0,th)
-                (States.insert (0, Seq.cons th seq) States.empty),
-              Seq.empty)
-     | NONE => NONE
+fun reason'_s ctx tactics seqs = Seq.make (fn () =>
+    let
+      val ret = gen_reason' ctx 0 tactics (100000000,100000000,Drule.dummy_thm)
+                  (fold States.insert seqs States.empty)
+    in
+      if Thm.prop_of ret = Thm.prop_of Drule.dummy_thm
+      then NONE else SOME (ret, Seq.empty)
+    end
   )
 
 fun reasoner_eq ({name,pattern,...}, {name=name',pattern=pattern',...}) =
@@ -126,7 +131,6 @@ fun reason ctx = reason' ctx (Tactics.get (Context.Proof ctx))
 fun reason_s ctx = reason'_s ctx (Tactics.get (Context.Proof ctx))
 val reason_tac = Seq.single oo reason
 
-(* Toplevel commands *)
 fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
   let
     val patterns = if null patterns then [name] else patterns
@@ -147,7 +151,7 @@ fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
   end
 
 val _ =
-  Outer_Syntax.local_theory @{command_keyword \<nu>reasoner} "define νreasoner"
+  Outer_Syntax.local_theory @{command_keyword \<nu>reasoner} "define \<nu>reasoner"
     (Parse.term -- (Parse.int >> ~) -- Parse.enum "|" Parse.term --| @{keyword =} -- Parse.ML_source
       >> setup_cmd)
 

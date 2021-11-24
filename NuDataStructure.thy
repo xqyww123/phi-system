@@ -18,6 +18,18 @@ lemma Dest_Cast_I: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bo
   unfolding Dest_def Cast_def Premise_def by simp
 ML \<open>find_first\<close>
 
+
+lemma "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e len < length data \<Longrightarrow>
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a \<R_arr_tail> (len,length data,addr),addr \<R_arr_tail> data) \<tycolon> Ref \<lbrace> \<nat>[size_t] \<cross_product> \<nat>[size_t] \<cross_product> Pointer \<rbrace> \<^emph> Array T
+    \<longmapsto> a \<R_arr_tail> take len data \<tycolon> DynLst T"
+  unfolding DynLst_def by (rule Cast_I) \<nu>reason
+
+ML \<open>Term.dummy_prop\<close>
+ML \<open>Thm.prop_of Drule.dummy_thm\<close>
+\<nu>cast AA: \<open>a \<R_arr_tail> l \<tycolon> DynLst T\<close>
+  \<longmapsto> \<open>\<exists>* addr buf. (a \<R_arr_tail> (length l,length l + length buf,addr),addr \<R_arr_tail> (l @ buf)) \<tycolon> Ref \<lbrace> \<nat>[size_t] \<cross_product> \<nat>[size_t] \<cross_product> Pointer \<rbrace> \<^emph> Array T\<close>
+  \<bullet> DynLst_def D_\<nu>cast
+
 lemma "(\<And>x. \<exists>y. y = x)" proof
 
 lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l \<tycolon> DynLst T
@@ -45,11 +57,6 @@ notepad
 begin
   assume  A[simplified (no_asm_simp)]: "id ((a,b,c) = (a',b',c')) \<Longrightarrow> P (a,b,c)"
 end
-
-lemma "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e len < length data \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a \<R_arr_tail> (len,length data,addr),addr \<R_arr_tail> data) \<tycolon> Ref \<lbrace> \<nat>[size_t] \<cross_product> \<nat>[size_t] \<cross_product> Pointer \<rbrace> \<^emph> Array T
-    \<longmapsto> a \<R_arr_tail> take len data \<tycolon> DynLst T"
-  unfolding DynLst_def by (rule Cast_I) \<nu>reason
 
 
 end

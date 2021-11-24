@@ -362,7 +362,7 @@ fun apply' ctx appliants major =
   NuApply.apply ctx appliants major
     |> Nu_Reasoner.reason_s ctx
     |> (fn x => case Seq.pull x
-                  of SOME (th,_) => Goal.conclude th
+                  of SOME (th,_) => perhaps (try Goal.conclude) th
                    | NONE => raise THM ("fail to apply", 0, major::appliants))
 fun apply ctx appliants = map_major (apply' ctx appliants)
 val apply_proc_naive = NuApply.apply_proc_naive

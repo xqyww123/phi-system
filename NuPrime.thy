@@ -43,7 +43,7 @@ named_theorems \<nu>elim "\<nu>-type elimination rules"
 named_theorems \<nu>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
   (* and \<nu>address_def \<open>primitive definitions for unfolding in proofs for address\<close> *)
   and \<nu>post_construct and \<nu>auto_destruct
-named_theorems typing_expn "expansion theorems for abstractions" and lrep_exps
+named_theorems typing_expn "expansion theorems for abstractions" and lrep_exps and nu_exps
 
 subsection \<open>Syntax and Notations\<close>
 
@@ -257,7 +257,7 @@ text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete va
   the \<nu>-type @{term "x \<tycolon> N"} is inhabited. Basically it is used to derive implicated conditions of images,
   e.g. @{prop "( 42 \<ratio> N 32) \<Longrightarrow> 42 < 2^32"}\<close>
 
-lemma [simp]: "p \<in> \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<longleftrightarrow> p \<nuLinkL> T \<nuLinkR> x" unfolding RepSet_def Refining_def by simp
+lemma [nu_exps]: "p \<in> \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<longleftrightarrow> p \<nuLinkL> T \<nuLinkR> x" unfolding RepSet_def Refining_def by simp
 (* lemma Refining_ex: " p \<nuLinkL> R \<nuLinkR> x \<longleftrightarrow> R x p" unfolding RepSet_def by auto *)
 
 (* lemma [elim!,\<nu>elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto *)
@@ -343,6 +343,9 @@ subsubsection \<open>Intro and Dest tag\<close>
 
 definition Intro :: " bool \<Rightarrow> bool " ("\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o _" [12] 11) where "Intro P = P"
 definition Dest :: " bool \<Rightarrow> bool " ("\<^bold>d\<^bold>e\<^bold>s\<^bold>t _" [12] 11) where "Dest P = P"
+
+lemma Intro_D: "Intro P \<Longrightarrow> P" unfolding Intro_def .
+lemma Dest_D: "Dest P \<Longrightarrow> P" unfolding Dest_def .
 
 subsubsection \<open>Different tag\<close>
 
