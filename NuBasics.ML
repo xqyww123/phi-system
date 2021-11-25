@@ -225,7 +225,7 @@ val stack_of_meta = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
   (dest_current_nu
     #> apsnd (repeate (dest_binop @{const_name "NuAddition"} #> #1))
     #> dest_topctx #> #2
-    #> strip_stack [])
+    #> strip_stack [] #> rev)
 val stack_of_meta_c = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
   (dest_current_nu_c
     #> apsnd (repeate (dest_binop_c @{const_name "NuAddition"} #> #1))

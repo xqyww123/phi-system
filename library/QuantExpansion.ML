@@ -44,6 +44,12 @@ fun mk_the_cases P_term names =
           = Const (@{const_name case_prod},
                     (tya --> tyb --> fastype_of body) -->
                         HOLogic.mk_prodT (tya,tyb) --> fastype_of body) $ tm
+      | mk_case (tm as (Abs (_, tya,
+              Const (@{const_name case_prod},
+                Type ("fun", [_, Type("fun", [tyb,ty_body])])) $ _)))
+          = Const (@{const_name case_prod},
+                    (tya --> tyb --> ty_body) -->
+                        HOLogic.mk_prodT (tya,tyb) --> ty_body) $ tm
       | mk_case tm = tm
     val arity = length names
   in
@@ -95,7 +101,7 @@ fun ExNu_expansion names ctx =
       
     val ctx = (Proof_Context.set_mode Proof_Context.mode_schematic ctx)
           addsimps @{thms ExNu_pair named_ExNu}
-    val expansion = Syntax.check_prop ctx expansion |> cterm_of ctx |> @{print}
+    val expansion = Syntax.check_prop ctx expansion |> cterm_of ctx
     val expansion = case Goal.init expansion |> SINGLE (HEADGOAL (Simplifier.simp_tac ctx))
                    of SOME th => Goal.conclude th
                     | _ => raise CTERM ("fail to solve \<exists>\<sup>\<nu>-expansion", [expansion])
@@ -107,8 +113,7 @@ fun schematic_var_expansion ctx th =
           fold_rev (fn a => fn ty => a --> ty) (HOLogic.strip_tupleT domains) rng
     val insts = add_vars (Thm.prop_of th) []
                   |> map_filter (try (` (dest_named o domain_type o snd)) #> Option.map (fn (names, tm) =>
-                      (tm, mk_the_cases (Var (tm |> apsnd uncurry_ty)) names
-                              |> cterm_of ctx |> @{print})
+                      (tm, mk_the_cases (Var (tm |> apsnd uncurry_ty)) names |> cterm_of ctx)
                     ))
   in
     Thm.instantiate ([], insts) th

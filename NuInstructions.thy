@@ -189,12 +189,16 @@ lemma do_while_\<nu>proc:
 
 
 subsubsection \<open>while\<close>
-ML \<open>NuApply.content (Context.Proof @{context})\<close>
+
+ML \<open>Proof_Context.note_thmss\<close>
 proc while: \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<close> \<longmapsto> \<open>\<exists>* x. (x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x)\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast (s' \<tycolon> S') (h' \<tycolon> H') vars S H"
     and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H)\<brangle>"
     and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<brangle>"
-  \<bullet> Cond if  \<medium_left_bracket> do_while x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
+  \<bullet> Cond if  \<medium_left_bracket>
+  \<bullet> do_while
+  \<bullet> x'  
+  \<bullet> \<open>cond x'\<close>\<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
   finish
 
 
@@ -515,7 +519,7 @@ lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF FieldIndex_here, simplifi
 proc i_load_n[\<nu>overload "\<up>:"]:
   \<open>a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>gt (xs ! i) \<tycolon> Y\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
-  requires [used]: "i < length xs" and idx: "FieldIndex field_index Y X gt mp"
+  requires [used]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs" and idx: "FieldIndex field_index Y X gt mp"
   \<bullet> + \<up>: idx
   finish
 
@@ -553,7 +557,7 @@ lemmas [ \<nu>overload "\<down>" ] = op_store[THEN mp, OF FieldIndex_here, simpl
 proc i_store_n[\<nu>overload "\<down>:"]:
   \<open>R\<heavy_comma> a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> y \<tycolon> Y \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
-  requires [used]: "i < length xs" and idx: "FieldIndex field_index Y X gt mp"
+  requires [used]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs" and idx: "FieldIndex field_index Y X gt mp"
   \<bullet> \<rightarrow> y + y \<down>: idx drop
   finish
 
@@ -564,21 +568,10 @@ fun fib where
   "fib 0 = 1" | "fib (Suc 0) = 1" | "fib (Suc (Suc n)) = fib n + fib (Suc n)"
 lemma [simp]: "(if i \<le> 1 then 1 else fib (i - 2) + fib (i - 1)) = fib i" by (cases i rule: fib.cases) auto
 
-ML \<open>Proof_Context.cert_var\<close>
-ML \<open>map_filter\<close>
-term case_named
-thm NuPrime.named.case[unfolded atomize_eq[symmetric]]
-thm NuAddition_auto_func_no_prems
 (* int fib (int i) { if (i \<le> 1) return 1; else return fib (i-2) + fib (i-1); } *)
 rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
   \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> i 2 - Fib i 1 - Fib + \<medium_right_bracket>
   finish
-
-thm finish_proc
-thm op_recursion
-thm pair_forall
-thm recursive_func_help_1
-thm NuAddition_anti_auto
 
 
 end

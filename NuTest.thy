@@ -1,41 +1,47 @@
 theory NuTest
-  imports NuSys NuInstructions
+  imports NuStd_Base NuInstructions "HOL-Library.Permutation"
 begin
+
+declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
 
   proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x -1 \<tycolon> \<nat>[32]\<close>
     requires [used]: \<open>0 < x\<close>
-    \<bullet> x 1 -
+    \<bullet> 1 -
   finish
-
-term  " (adr, Mem(adr, xs), \<cdots>) \<nuLinkL> List \<nuLinkR> lst \<equiv> ((\<forall>i<len. xs ! i = list ! i) \<and> \<cdots>) "
-term " proc_needs_two_list (StatOn( (adr1, Mem(adr1, xs1), \<cdots>) \<heavy_comma>  (adr2, Mem(adr2, xs2), \<cdots>)  )) = \<dots> "
-term " \<^bold>p\<^bold>r\<^bold>o\<^bold>c proc_needs_two_list \<blangle> lst1 \<tycolon> List \<nuFusion> lst2 \<tycolon> List \<longmapsto> \<cdots> \<brangle> "
-term " \<forall>p. p \<nuLinkL> List \<nuFusion> List \<nuLinkR> (lst1, lst2) \<longrightarrow> proc_needs_two_list p \<nuLinkL> Result \<nuLinkR> result"
-  \<comment> \<open>where there are some adr1 xs1 adr2 ... subject to
-     \<^term>\<open>p = (adr1, Mem(adr1, xs1), \<cdots>) \<heavy_comma>  (adr2, Mem(adr2, xs2), \<cdots>)\<close>\<close>
-text \<open>from \<^term>\<open>p \<nuLinkL> List \<nuFusion> List \<nuLinkR> (lst1, lst2)\<close> we can have
-  \<^term>\<open>(adr1, Mem(adr1, xs1), \<cdots>) \<nuLinkL> List \<nuLinkR> lst1\<close> and also
-  \<^term>\<open>(adr2, Mem(adr2, xs2), \<cdots>) \<nuLinkL> List \<nuLinkR> lst2\<close> \<close>
-
-
-
-abbreviation "FullRef N \<equiv> Ref N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
-abbreviation "Array N \<equiv> RefS N <down-lift> (\<lambda>raw. case raw of a \<R_arr_tail> x \<Rightarrow> Gz \<left_fish_tail> a \<R_arr_tail> Gi 0 \<left_fish_tail> x)"
-
-lemma [simp]: "\<tort_lbrace>Gz \<left_fish_tail> (seg |+ ofs) \<R_arr_tail> Gi 0 \<left_fish_tail> xs \<tycolon> RefS N \<tort_rbrace> = \<tort_lbrace>(seg |+ ofs) \<R_arr_tail> xs \<tycolon> Array N\<tort_rbrace>" by auto
+term sort
+lemma [simp]: "j + 1 = length xs \<Longrightarrow> length xs - 1 = j" by auto
 lemma [elim]: "a < b + 1 \<Longrightarrow> (a < b \<Longrightarrow> C) \<Longrightarrow> (a = b \<Longrightarrow> C) \<Longrightarrow> C" for a :: nat
-  by linarith 
+  by linarith
 declare nth_list_update[simp] not_le[simp]
-
-rec_proc qsort: \<open> (seg |+ ofs) \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<heavy_comma> n \<tycolon> \<nat>[32]\<close>
-  \<longmapsto> \<open>{ (seg |+ ofs) \<R_arr_tail> ys | ys. permuted xs ys \<and> sorted ys } \<tycolon> \<^bold>s\<^bold>o\<^bold>m\<^bold>e (Array \<nat>[32])\<close>
-  var ofs xs requires "length xs = n"
-  \<bullet> \<Longrightarrow> precondition[used] \<bullet> \<rightarrow> (v,n) n 0 = if \<medium_left_bracket> \<bullet> $v \<medium_right_bracket> \<medium_left_bracket> \<bullet> $v n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[32]\<close> 0
-  \<bullet> while xs' i j in \<open>((seg |+ ofs) \<R_arr_tail> xs', i, j)\<close> subj \<open>j \<noteq> n\<close>
-    always \<open>i \<le> j \<and> j \<le> n \<and> length xs' = n \<and> (if j = n then xs' ! (i-1) = xs ! (n-1) else xs' ! (n-1) = xs ! (n-1))
-      \<and> (\<forall>k. k <i \<longrightarrow> xs' ! k \<le> xs ! (n-1)) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! (n-1) < xs' ! k) \<close>
-  \<medium_left_bracket> \<bullet> \<Longrightarrow> x[used] \<bullet> \<rightarrow> (xs,i,j) j n < $xs i j pr^3 \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<Longrightarrow> x[used] \<bullet> \<rightarrow> (xs,i,j) $xs j \<up>\<rightarrow> j' i \<up>\<rightarrow> i' \<rightarrow> xs
-  \<bullet> j' pivot \<le> if \<medium_left_bracket> \<bullet> $xs i' j \<Down> j' i \<Down> \<rightarrow> xs i 1 + \<rightarrow> i \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<bullet> $xs i j 1 + pr^2 \<medium_right_bracket>
+thm "\<up>_\<nu>app"
+ML \<open>@{term "case x of (i,j,k) \<Rightarrow> f i j k"}\<close>
+term \<open>case_prod\<close>
+term perm
+thm Variant_Cast_I_always
+declare [ [ML_print_depth = 100] ]
+Variant_Cast_I
+rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_asterisk> ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
+  \<longmapsto> \<open>(Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_asterisk> ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>[32])\<close>
+  var ptr xs premises [used]: "length xs = n"
+  \<bullet> -- n 0 = if \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[size_t]\<close> 0
+  \<bullet> while
+  \<bullet> var i, j, ys in i, j heap "ptr \<R_arr_tail> ys" always 
+    \<open>i \<le> j \<and> j \<le> n \<and> length ys = n \<and>
+    (if j = n then 0 < i \<and> ys ! (i-1) = xs ! (n-1) else ys ! (n-1) = xs ! (n-1)) \<and>
+    (\<forall>k. k <i \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! (n-1) < ys ! k)\<close>
+  \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> \<rightarrow> i,j ptr i \<up>\<rightarrow> i' ptr j \<up>-- j' pivot \<le> if
+  \<bullet> \<medium_left_bracket> ptr j i' \<down> ptr i j' \<down> n i 1 
+  \<bullet> + \<rightarrow> i1 drop i1 \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket>
+  \<bullet> n j 1 + \<rightarrow> j1 drop j1
+  \<bullet> \<medium_right_bracket>
+  \<nu>have a1[used]: "j = n \<and> 0 < i" using used by auto
+  \<bullet> drop 1 - \<rightarrow> i ptr i 
+  \<bullet> split_array ptr n
+  \<bullet> qsort
+  thm qsort_\<nu>proc
+  
+  \<bullet> 
   \<bullet> xs2, i, j \<Longrightarrow> x[used] \<bullet> drop 1 - \<rightarrow> i i split \<bullet> i qsort
   \<nu>debug 
   thm qsort_\<nu>proc

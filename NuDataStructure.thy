@@ -39,7 +39,7 @@ proc DynLst_new: \<open>R\<heavy_comma> buf_size \<tycolon> \<nat>[size_t]\<heav
         and [\<nu>intro]: \<open>\<nu>Zero T zero\<close>
   \<bullet> \<rightarrow> buf_size
   \<bullet> alloc \<open>\<lbrace> \<nat>[size_t] \<cross_product> \<nat>[size_t] \<cross_product> Pointer \<rbrace>\<close>
-  \<bullet> buf_size \<down>: 2 buf_size alloc_array \<open>T\<close> \<down>: 3 DynLst_I
+  \<bullet> buf_size \<down>: 2 buf_size alloc_array \<open>T\<close> -- ppptr \<down>: 3 DynLst_I
   finish
 
 

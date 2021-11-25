@@ -15,8 +15,10 @@ fun local_value_export rule vars asms major =
 fun mk_let flag_push_back names meta ctx =
   let
     val blk_var as (Free (blk_name,_)) = current_block_var meta
-    val (old_codeblock, meta) = rename_blk_var
+    val old_codeblock = current_codeblock meta
+    (* val (old_codeblock, meta) = rename_blk_var
       ("\<nu>hide_"^(string_of_int (length (codeblocks_of meta)))^blk_name) meta
+      *)
     val arity = length names
     val op_let = ntimes (arity - 1) (fn _ => fn th => th RS @{thm op_let}) @{thm op_let}
     val meta = NuSys.apply ctx [op_let] meta |> @{print}
@@ -32,7 +34,7 @@ fun mk_let flag_push_back names meta ctx =
     val asm_proc = strip_binop_r_c @{const_name Pure.imp} prem
     val (asms,proc) = (front asm_proc, last asm_proc)
     val (_,arg_nu,_) = dest_procedure_c proc
-    val major' = start_proc ctx blk_name arg_nu
+    val major' = start_proc ctx (blk_name^"'") arg_nu
     val (asm_thms, ctx) =
       Proof_Context.add_assms (fn _ => fn As => (local_value_export (@{print}
       major) lrep_terms As, I))

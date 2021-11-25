@@ -129,11 +129,17 @@ fun delete_fact_may name meta ctx =
   delete_fact name meta ctx handle Symtab.UNDEF _ => (meta,ctx)
 
 fun get_aux_attrs ctx (name,auxth) =
-  case the_default (Position.none,[]) (Symtab.lookup (NuFacts.get (Context.Proof ctx)) name)
-    of (pos,attrs) =>
-      ((Binding.make (name,pos), attrs), [(Conjunction.elim_conjunctions auxth,[])])
+  let
+    val (pos,attrs) =
+      if name = "\<glowing_star>"
+      then (Position.none,[Thm.declaration_attribute (Named_Theorems.add_thm "NuSys.used")])
+      else the_default (Position.none,[]) (Symtab.lookup (NuFacts.get (Context.Proof ctx)) name)
+  in
+    ((Binding.make (name,pos), attrs), [(Conjunction.elim_conjunctions auxth,[])])
+  end
 fun note_auxes auxes ctx =
   Proof_Context.note_thmss "\<nu>fact" (map (get_aux_attrs ctx) auxes) ctx
+
 fun fold1 f (h::r) = fold f r h
   | fold1 f [] = raise Fail "fold1"
 fun gen_declare_fact rule (binding,attrs) meta ctx =

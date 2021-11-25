@@ -5,6 +5,9 @@ end
 structure Nu_Reasoners : NU_REASONERS = struct
 open Thm NuBasics Term
 
+fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
+fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
+
 (** Tactics **)
 fun head_only tac th =
   if Thm.nprems_of th = 0
@@ -12,10 +15,8 @@ fun head_only tac th =
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
   ((Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used") 1)
+    THEN print_dbg
     THEN Clasimp.auto_tac ctx)
-
-fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
-fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 
 (*** Premise tac ***)
 val Premise_I = @{thm NuPrime.Premise_I}

@@ -32,8 +32,8 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
       = Thm.major_prem_of major |> dest_Trueprop
     val heap_ty = fastype_of heap_term
     val stack_ty = fastype_of stack_term
-    val stack = HOLogic.strip_tuple stack_term
-    val heap = HOLogic.strip_tuple heap_term
+    val stack = strip_binop_r "Product_Type.Pair" (stack_term |> @{print})
+    val heap = strip_binop_r "Product_Type.Pair" heap_term
 
     val arity = length vars
     val names = map fst vars
@@ -43,9 +43,15 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
 
     val stack_schema = rev (
       case stack_schema of SOME sch => map (Syntax.parse_term ctx) sch
-        | _ => [])
+        | _ => []) |> @{print}
     val _ = if length stack_schema >= length stack then error "Insufficient stack elements" else ()
-    val stack_schema = stack_schema @ (drop (length stack_schema) stack |> map (map_types (K dummyT)))
+    val stack_schema = (@{print} stack_schema) @ (drop (length stack_schema) stack |> @{print}
+                                      |> map (map_types (K dummyT))
+                                    (* We strip type denotations here in order to catch them when
+                                    * lambda-abstraction (since the type of lambda variable is also
+                                    * dummyT), and they can be infered latter by explicit
+                                    * type constraints. *))
+                          |> @{print}
                           |> list_mk_binop_r @{const_name Pair} |> Type.constraint stack_ty
                           |> tuple_abs vars |> mk_cases_named names
     val stack_Nu = mk_auto_tag (Const (@{const_name DownLift}, dummyT) $ stack_Nu $ stack_schema)
@@ -53,6 +59,7 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
               mk_auto_tag (Const (@{const_name NuRefine}, dummyT)
                 $ stack_Nu $ mk_monop @{const_name Collect} tm)
           | NONE => stack_Nu
+    val _ = debug_term ctx "aaa " stack_Nu
 
     val heap_schema = rev(
       case heap_schema of SOME sch => map (Syntax.parse_term ctx) sch
@@ -65,7 +72,8 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
 
     val var_tag = Const (@{const_name Variant_Cast}, dummyT)
           $ stack_typing $ heap_typing $ dummy $ stack_Nu $ heap_Nu
-              |> mk_Trueprop |> Syntax.check_prop ctx
+              |> mk_Trueprop 
+              |> Syntax.check_prop ctx
     val var_tag = cterm_of ctx var_tag
     val goal = Goal.init var_tag |> @{print}
                   |> SINGLE (REPEAT (HEADGOAL (resolve_tac ctx
@@ -77,7 +85,9 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
     val forall = forall_expansion names ctx |> @{print}
     val exNu = ExNu_expansion names ctx |> @{print}
     val major = (var_tag_th RS major)
+                  |> @{print}
                   |> schematic_var_expansion ctx
+                  |> @{print}
                   |> Raw_Simplifier.rewrite_rule ctx (forall::exNu::
                     @{thms HOL.simp_thms[unfolded atomize_eq[symmetric]]
                            Product_Type.prod.case[unfolded atomize_eq[symmetric]]})

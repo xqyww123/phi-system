@@ -242,7 +242,7 @@ syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
 
 lemma [nu_exps]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_def by (simp add: NuNat_def)
-lemma [elim,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto simp add: nu_exps)
+lemma [elim!,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto simp add: nu_exps)
 
 lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI nu_exps)
@@ -260,7 +260,7 @@ lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
   let open NuBasics
     val num = Syntax.parse_term ctx num
     fun mk term = mk_nuTy (num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
-    val term = ((stack_of_meta meta |> hd |> #2 |> mk)
+    val term = ((stack_of_meta meta |> @{print} |> hd |> #2 |> mk)
       handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
         | ERROR _ => mk @{term \<open>\<nat>[32]\<close>}) |> @{print}
     val ctx = NuSys.load_specthm meta ctx

@@ -247,7 +247,8 @@ in
 
 fun chooseV inst_names stat =
   let open NuBasics NuHelp HOLogic Term
-    val (major,facts) = Proof.the_fact stat |> elim_SPEC
+    val (major,facts) = Proof.the_fact stat |> elim_SPEC |> @{print}
+    val _ = @{print} inst_names
     val ctx = Proof.context_of stat
     val t1 = ((Thm.assume (current_codeblock major)) COMP @{thm CodeBlock_unabbrev}) 
     val t2 = ((Thm.assume (current_codeblock major)) COMP @{thm CodeBlock_abbrev})
@@ -274,11 +275,13 @@ fun chooseV inst_names stat =
   end
 
 fun auto_choose stat =
-  case NuBasics.dest_current_nu (Proof.the_fact stat)
-    of (_, Const (@{const_name ExNu}, _) $ Abs (name, _, _)) =>
-      chooseV [Binding.name (NuBasics.normlize_name name)] stat
-     | _ => raise Fail ""
-
+  let
+    val (_,Nu) = NuBasics.dest_current_nu (Proof.the_fact stat)
+    val vars = NuHelp.strip_binder_vars @{const_name ExNu} Nu |> map fst
+                  |> map (Binding.name o NuBasics.normlize_name)
+  in
+    chooseV vars stat
+  end
 
 end
 end

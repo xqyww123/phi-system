@@ -445,7 +445,7 @@ fun gen_finish_proc' prep_specthm qed int stat =
   in if current_block_depth meta > 1 then 
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
     else gen_finish_proc prep_specthm qed int stat end
-val finish_proc_cmd = gen_finish_proc' (K I) (*NuRegisters.delete_locale*) Proof.global_qed
+val finish_proc_cmd = gen_finish_proc (K I) (*NuRegisters.delete_locale*) Proof.global_qed
 end
 
 

@@ -6,6 +6,7 @@ Application-irrelevant basic tools.
 *)
 
 signature NU_HELP = sig
+  val debug_term : Proof.context -> string -> term -> term
   val last : 'a list -> 'a
   val front : 'a list -> 'a list
 
@@ -95,6 +96,8 @@ signature NU_HELP = sig
 end
 structure NuHelp : NU_HELP = struct
 open Term Thm
+fun debug_term ctx prompt term =
+  (tracing (prompt ^ Syntax.string_of_term ctx term); term)
 
 fun last [] = raise Fail "last"
   | last [x] = x
