@@ -48,9 +48,8 @@ fun eliminate ctxt rule xs As thm =
   end;
 
 fun eliminate_nusys ctx rule xs As th =
-  eliminate ctx (NuBasics.export_codeblocks
-    (Thm.chyps_of th |> filter (can NuBasics.dest_codeblock_c)) rule |>
-    @{print}) xs As (@{print} th)
+  eliminate ctx (NuBasics.export_codeblocks ctx
+    (Thm.chyps_of th |> filter (can NuBasics.dest_codeblock_c)) rule) xs As th
   handle e => raise (@{print} e)
 fun obtain_export ctxt rule xs _ As = (eliminate_nusys ctxt rule xs As, I)
 
@@ -271,13 +270,13 @@ fun chooseV inst_names stat =
   in
     stat |> Proof.assm (obtain_export ctx rule cinsts) [] []
               [(Binding.empty_atts, [(meta'_term,[])])]
-         |> Proof.set_facts [meta']
+         |> Proof.set_facts [meta' |> @{print}]
   end
 
 fun auto_choose stat =
   case NuBasics.dest_current_nu (Proof.the_fact stat)
     of (_, Const (@{const_name ExNu}, _) $ Abs (name, _, _)) =>
-      chooseV [Binding.name (NuBasics.normlize_name name) |> @{print}] stat
+      chooseV [Binding.name (NuBasics.normlize_name name)] stat
      | _ => raise Fail ""
 
 

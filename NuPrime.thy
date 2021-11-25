@@ -38,6 +38,7 @@ section Preliminary
 ML_file NuConfig.ML
 bundle show_more1 = [[show_hyps = true, show_types = true, show_sorts = true]]
 bundle show_more = [[show_hyps = true, show_types = true]]
+bundle show_hyps = [[show_hyps = true]]
 
 named_theorems \<nu>elim "\<nu>-type elimination rules"
 named_theorems \<nu>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
@@ -257,7 +258,7 @@ text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete va
   the \<nu>-type @{term "x \<tycolon> N"} is inhabited. Basically it is used to derive implicated conditions of images,
   e.g. @{prop "( 42 \<ratio> N 32) \<Longrightarrow> 42 < 2^32"}\<close>
 
-lemma [nu_exps]: "p \<in> \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<longleftrightarrow> p \<nuLinkL> T \<nuLinkR> x" unfolding RepSet_def Refining_def by simp
+lemma [simp]: "p \<in> \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<longleftrightarrow> p \<nuLinkL> T \<nuLinkR> x" unfolding RepSet_def Refining_def by simp
 (* lemma Refining_ex: " p \<nuLinkL> R \<nuLinkR> x \<longleftrightarrow> R x p" unfolding RepSet_def by auto *)
 
 (* lemma [elim!,\<nu>elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto *)
@@ -485,7 +486,7 @@ syntax "_codeblock_noarg_" :: "idt \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bo
 attribute_setup show_codeblock_expression =  \<open>
   Scan.lift (Parse.$$$ "=" |-- ((Args.$$$ "false" >> K false) || (Args.$$$ "true" >> K true)) >>
     (Thm.declaration_attribute o K o Config.put_generic NuConfig.show_codeblock_expression))\<close>
-print_translation \<open>
+(* print_translation \<open>
   let
     fun codeblock_print ctx [v,arg,ty,exp] =
       if Config.get ctx NuConfig.show_codeblock_expression
@@ -494,7 +495,7 @@ print_translation \<open>
   in
    [(\<^const_syntax>\<open>CodeBlock\<close>, codeblock_print)]
   end
-\<close>
+\<close>*)
 
 lemma [elim!,\<nu>elim]: "CodeBlock v arg S prog \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding CodeBlock_def Inhabited_def by blast

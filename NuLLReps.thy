@@ -52,7 +52,8 @@ lemma malloc2: "Heap h \<Longrightarrow> MemAddress (malloc h |+ ofs) \<notin> d
   using malloc by (simp add: domIff) 
 
 
-type_synonym raw_memaddr = "size_t  word memaddr"
+type_synonym raw_memaddr = "size_t word memaddr"
+type_synonym logical_memaddr = "nat memaddr"
 
 datatype memptr = memptr "raw_memaddr "  \<comment> \<open>'spc : address space\<close>
 
@@ -97,7 +98,7 @@ instantiation memptr :: field begin instance by standard end
 instantiation memptr :: field_list begin instance by standard end
 
 instantiation memptr :: zero begin
-definition zero_memptr :: " memptr" where [simp]: "zero_memptr = memptr undefined"
+definition zero_memptr :: " memptr" where [simp]: "zero_memptr = memptr (undefined |+ 0)"
 instance by standard
 end
 
@@ -181,8 +182,8 @@ definition RawPointer :: "(memptr, raw_memaddr) \<nu>"
 
 lemma [nu_exps]: "memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_def by (simp add: RawPointer_def nu_exps)
 lemma [elim,\<nu>elim]: "addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<nu>intro 1]: "\<nu>Zero RawPointer undefined" unfolding \<nu>Zero_def by (simp add: nu_exps)
-lemma [\<nu>intro 1]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps nu_exps)
+lemma [\<nu>intro]: "\<nu>Zero RawPointer (undefined |+ 0)" unfolding \<nu>Zero_def by (simp add: nu_exps)
+lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps nu_exps)
 
 subsubsection \<open>Pointer\<close>
 
@@ -192,8 +193,9 @@ definition Pointer :: "(memptr, nat memaddr) \<nu>"
 lemma [nu_exps]: "memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
   unfolding Refining_def by (simp add: Pointer_def)
 lemma [elim,\<nu>elim]: "addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<nu>intro 1]: "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
+lemma [\<nu>intro]: "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
   unfolding \<nu>Equal_def using raw_offset_of_inj by (simp add: lrep_exps the_same_addr_def same_addr_offset_def nu_exps) blast
+lemma [\<nu>intro]: "\<nu>Zero Pointer (undefined |+ 0)" unfolding \<nu>Zero_def by (simp add: nu_exps same_addr_offset_def)
 
 
 subsubsection \<open>Casts\<close>
@@ -242,16 +244,16 @@ translations "\<nat>['x]" == "CONST NuNat (TYPE('x))"
 lemma [nu_exps]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_def by (simp add: NuNat_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto simp add: nu_exps)
 
-lemma [\<nu>intro 1]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
+lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI nu_exps)
-lemma [\<nu>intro 1]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by (simp add: nu_exps)
+lemma [\<nu>intro]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by (simp add: nu_exps)
 
 definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ x = {p. p = of_nat x}"
 syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
 translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))" 
 
 lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding Refining_def  by (simp add: NuNatRound_def)
-lemma [\<nu>intro 1]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
 
 
 \<nu>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
@@ -277,8 +279,8 @@ lemma [simp]: "p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfoldin
 lemma [elim,\<nu>elim]: " x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: nu_exps) (metis One_nat_def sint_ge sint_lt) 
 
-lemma [\<nu>intro 1]: "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
-lemma [\<nu>intro 1]: "\<nu>Zero (NuInt b) 0" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
+lemma [\<nu>intro]: "\<nu>Zero (NuInt b) 0" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Boolean\<close>
 
@@ -292,8 +294,8 @@ qed
 definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool x = {p. (p = 1) = x }"
 
 lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_def by (simp add: NuBool_def)
-lemma [\<nu>intro 1]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
-lemma [\<nu>intro 1]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
+lemma [\<nu>intro]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
 
 (* subsection \<open>Fusion \<nu>-abstraction\<close>
 
@@ -355,8 +357,8 @@ definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b)
 lemma [simp]: "Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by (simp add: nu_exps)
 
-lemma [\<nu>intro 1]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
-lemma [\<nu>intro 1]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
+lemma [\<nu>intro]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
+lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
 
 section \<open>Function Pointer\<close>
 

@@ -7,8 +7,10 @@ structure Local_Value : LOCAL_VALUE = struct
 open NuHelp NuBasics NuSys
 
 fun local_value_export rule vars asms major =
-  ((fold_rev Thm.implies_intr asms (finish_proc major) |> Drule.forall_intr_list vars) COMP rule)
+  ((fold_rev Thm.implies_intr asms (finish_proc (@{print} major) |> @{print})
+        |> Drule.forall_intr_list vars) COMP rule)
     |> accept_proc_naive
+  handle e => raise (@{print} e) 
 
 fun mk_let flag_push_back names meta ctx =
   let

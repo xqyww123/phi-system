@@ -3,7 +3,7 @@ theory NuBasicAbstractors
   abbrevs "<some>" = "\<^bold>s\<^bold>o\<^bold>m\<^bold>e"
 begin
 
-\<nu>cast_overloads singular and plural
+\<nu>overloads singular and plural
 
 text \<open>Basic \<nu>-abstractors\<close>
 
@@ -64,7 +64,7 @@ lemma [simp]: "deepize p \<nuLinkL> DeepModel T \<nuLinkR> x \<longleftrightarro
 
 subsection \<open>\<nu>-abstraction : Ref\<close>
 
-definition Ref  :: "('a::lrep, 'b) \<nu> \<Rightarrow> (heap, nat memaddr \<R_arr_tail> 'b) \<nu>"
+definition Ref  :: "('a::field, 'b) \<nu> \<Rightarrow> (heap, nat memaddr \<R_arr_tail> 'b) \<nu>"
   where "Ref T xx = {heap. (case xx of addr \<R_arr_tail> x \<Rightarrow> heap \<^bold>a\<^bold>t addr \<^bold>i\<^bold>s x \<tycolon> T)}"
 
 lemma [simp]: "heap \<nuLinkL> Ref T \<nuLinkR> addr \<R_arr_tail> x \<longleftrightarrow> (heap \<^bold>a\<^bold>t addr \<^bold>i\<^bold>s x \<tycolon> T)"
@@ -92,18 +92,18 @@ lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Array' N \<Longrightarrow> 
   unfolding Inhabited_def[of "\<tort_lbrace>a \<R_arr_tail> xs \<tycolon> Array' N\<tort_rbrace>"]
   by (cases a) (auto simp add: lrep_exps pred_option_def list_all2_conv_all_nth)
 
-lemma Array'_to_Ref_\<nu>proc[\<nu>intro -300]:
+lemma Array'_to_Ref_\<nu>proc[\<nu>intro 10]:
  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! i) \<noteq> None \<Longrightarrow>
   \<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_asterisk> (a ||+ i) \<R_arr_tail> the (xs ! i) \<tycolon> Ref N"
   unfolding Dest_def Cast_def Heap_Delimiter_def
-  apply (cases a) apply auto apply (rule heap_split_by_addr_set[of _  _ "-{a ||+ i}"])
+  apply (cases a) apply (auto simp add: nu_exps) apply (rule heap_split_by_addr_set[of _  _ "-{a ||+ i}"])
   by (auto simp add: pred_option_def Ball_def nth_list_update)
 
-lemma [\<nu>intro -1]:
+lemma [\<nu>intro 30]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow>
   \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_asterisk> (a ||+ i) \<R_arr_tail> y \<tycolon> Ref N \<longmapsto> a \<R_arr_tail> xs[i := Some y] \<tycolon> Array' N"
   unfolding Intro_def Cast_def Heap_Delimiter_def
-  apply (cases a) apply (auto simp add: pred_option_def Ball_def)
+  apply (cases a) apply (auto simp add: pred_option_def Ball_def nu_exps)
   by (metis MemAddrState_add_I1 MemAddrState_add_I2 nth_list_update option.sel)
 
 (* lemma Array'_dual_Ref_\<nu>proc [\<nu>intro]:
@@ -136,9 +136,9 @@ lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Array N \<Longrightarrow> (
   unfolding Array_def
   by (cases a) (auto simp add: lrep_exps list_all2_conv_all_nth)
 
-lemma [THEN cast_trans, simplified, \<nu>intro -3]:
+(* lemma [THEN cast_trans, simplified, \<nu>intro 50]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> map Some xs \<tycolon> Array' N"
-  unfolding Cast_def Array_def by (cases a) auto
+  unfolding Cast_def Array_def by (cases a) auto *)
 
 definition mapSome :: " 'a list \<Rightarrow> 'a option list " where "mapSome = map Some"
 lemma [simp]: "length (mapSome l) = length l" unfolding mapSome_def by auto
@@ -147,11 +147,15 @@ lemma [simp]: "i < length l \<Longrightarrow> (mapSome l) [i := Some v] = mapSom
 lemma [simp]: "i < length l \<Longrightarrow> the (mapSome l ! i) = l ! i" unfolding mapSome_def by auto
 
 
-lemma [\<nu>intro -1]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs' = mapSome xs2 \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t  a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N"
+lemma [\<nu>intro 50]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs' = mapSome xs2 \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t  a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N"
   unfolding Cast_def Intro_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
-lemma [\<nu>intro -300]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N"
+lemma [\<nu>intro 10]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N"
   unfolding Cast_def Dest_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
 
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> [x] \<tycolon> Array T \<longmapsto> a \<R_arr_tail> x \<tycolon> Ref T"
+  unfolding Cast_def Array_def by (cases a) (simp add: pred_option_def Ball_def)
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> a \<R_arr_tail> [x] \<tycolon> Array T"
+  unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
 
 (* lemma [THEN cast_dual_trans, \<nu>intro]: 
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N
@@ -161,7 +165,7 @@ lemma [\<nu>intro -300]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t \<^bold>c\<^bold>
 
 subsection \<open>Numbers\<close>
 
-\<nu>cast_overloads nat and int
+\<nu>overloads nat and int
 
 lemma unat_nat: assumes a0:"0 < x" and a1:"sint (xa::('a::len) word) = x"
   shows "unat xa = nat x"
@@ -180,9 +184,9 @@ proof-
 qed
   
 
-lemma [\<nu>cast_overload nat]: 
+lemma [\<nu>overload nat]: 
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<int>['bits::len] \<longmapsto> nat x \<tycolon> \<nat>['bits]"
-  unfolding Cast_def Premise_def apply (simp add: lrep_exps) using unat_nat  by auto
+  unfolding Cast_def Premise_def apply (simp add: lrep_exps nu_exps) using unat_nat  by auto
 
 lemma sint_int: assumes a0:"x < 2 ^ (LENGTH('bits::len) - Suc 0)" and a1:"unat (xa::'bits word) = x"
   shows "sint xa = int x"
@@ -200,8 +204,8 @@ proof-
   then show ?thesis using a0 a1 by auto
 qed
 
-lemma [\<nu>cast_overload int]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(LENGTH('bits) - 1) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<nat>['bits::len] \<longmapsto> int x \<tycolon> \<int>['bits]"
-  unfolding Cast_def Premise_def apply (simp add: lrep_exps) using sint_int by auto
+lemma [\<nu>overload int]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(LENGTH('bits) - 1) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<nat>['bits::len] \<longmapsto> int x \<tycolon> \<int>['bits]"
+  unfolding Cast_def Premise_def apply (simp add: lrep_exps nu_exps) using sint_int by auto
 
 (* section \<open>Others\<close>
 

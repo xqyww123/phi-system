@@ -436,10 +436,13 @@ fun finish_proc th =
 fun rename_blk_var name meta =
   let
     val codeblock = current_codeblock meta
-    val (s,_,_,_) = dest_codeblock_c codeblock
+    val (s,a,_,_) = dest_codeblock_c codeblock
     val thy = Thm.theory_of_thm meta
     val s' = Thm.global_cterm_of thy (Free (name, typ_of_cterm s))
-    val meta = meta |> implies_intr codeblock |> forall_intr s |> forall_elim s'
+    val a' = Thm.global_cterm_of thy (Free (name^"_arg", typ_of_cterm a))
+    val meta = meta |> implies_intr codeblock
+                |> forall_intr s |> forall_elim s'
+                (* |> forall_intr a |> forall_elim a' *)
   in
     (cprem_of meta 1, undisch meta)
   end

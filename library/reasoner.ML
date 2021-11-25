@@ -80,9 +80,10 @@ fun gen_reason ctx iter tactics (nprems,best_cost,best_stat) states =
     else case Seq.pull seq
       of SOME (th,seq') =>
           (let
-            (* val _ = @{print} (cost, th) *)
+            val _ = @{print} (cost, th)
+            val nprems = if nprems < 0 then Thm.nprems_of th else nprems
             val cost = if Thm.nprems_of th < nprems then cost - 1000000 else cost
-            val (nrems,best_cost,best_stat) =
+            val (nprems,best_cost,best_stat) =
               if Thm.nprems_of th < nprems then (Thm.nprems_of th, cost, th)
               else if cost < best_cost then (nprems,cost,th)
               else (nprems,best_cost,best_stat)
@@ -104,7 +105,7 @@ fun reason' ctx tactics thm =
   gen_reason' ctx 0 tactics (Thm.nprems_of thm,0,thm) (States.insert (0, Seq.single thm) States.empty)
 fun reason'_s ctx tactics seqs = Seq.make (fn () =>
     let
-      val ret = gen_reason' ctx 0 tactics (100000000,100000000,Drule.dummy_thm)
+      val ret = gen_reason' ctx 0 tactics (~1,100000000,Drule.dummy_thm)
                   (fold States.insert seqs States.empty)
     in
       if Thm.prop_of ret = Thm.prop_of Drule.dummy_thm

@@ -63,8 +63,8 @@ signature NU_BASICS = sig
   val codeblocks_of_c : thm -> cterm list
   val codeblock_name   : term -> term * term * term * term
   val current_codeblock : thm -> cterm
-  val export_codeblock : cterm * cterm -> thm -> thm
-  val export_codeblocks : cterm list -> thm -> thm
+  val export_codeblock : Proof.context -> cterm * cterm -> thm -> thm
+  val export_codeblocks : Proof.context -> cterm list -> thm -> thm
 
   val dest_procedure   : term -> term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm
@@ -268,12 +268,13 @@ fun disch_current_codeblock specthm =
 val thm_codeblock_export = @{thm NuPrime.codeblock_export}
 fun aconv_c (ctm1,ctm2) = aconv (term_of ctm1, term_of ctm2)
 val prop_term = @{cterm Pure.prop}
-fun export_codeblock (codeblock,destined_codeblock) th =
+fun export_codeblock ctx (codeblock,destined_codeblock) th =
   if aconv_c (codeblock,destined_codeblock) then th
   else let
     val (s,_,_,_) = dest_codeblock_c destined_codeblock
-    val goal = cprop_of (disch_codeblock destined_codeblock th)
-          |> Thm.apply prop_term |> Goal.init
+    val goal = Thm.all ctx (dest_codeblock_c destined_codeblock |> #1)
+        (Thm.mk_binop @{cterm Pure.imp} destined_codeblock (cprop_of th))
+          |> Thm.apply prop_term |> Goal.init |> @{print}
     val endth = disch_codeblock codeblock th |> Goal.protect 0
     fun loop th = (endth RS th |> Goal.conclude)
       handle THM _ => loop (thm_codeblock_export RS th)
@@ -282,7 +283,7 @@ fun export_codeblock (codeblock,destined_codeblock) th =
   end
   handle THM e => (@{print} e; raise THM ("export_codeblock", 1,
     [th, Thm.assume codeblock, Thm.assume destined_codeblock]))
-fun export_codeblocks destined_codeblocks th =
+fun export_codeblocks ctx destined_codeblocks th =
   let
     val codeblock_name = term_of #> dest_codeblock #> #1 #> term_name
     val destined = fold (fn cb => Symtab.update_new (codeblock_name cb, cb))
@@ -292,7 +293,7 @@ fun export_codeblocks destined_codeblocks th =
                |> Option.mapPartial (Symtab.lookup destined)
                |> Option.map (pair cb))
   in
-    fold export_codeblock exports th
+    fold (export_codeblock ctx) exports th
   end
 
 

@@ -427,11 +427,12 @@ fun gen_finish_proc prep_specthm qed int stat =
           |> apfst (NuSys.cast_completely (NuSys.load_specthm meta ctx) desired_nu)
           |> intro_SPEC
     val end_tac = basic_method (fn ctx' => fn t => 
+      Runtime.exn_trace (fn () =>
       RSXX (
         finish_proc (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))
           |> conversion_completely ctx' goal
-      ) t
-      handle e => raise @{print} e)
+      ) t)
+      handle e => (Runtime.exn_system_message e; raise @{print} e))
   in
     stat |> Proof.set_facts [] 
       |> qed (SOME (end_tac, Position.no_range), false)
