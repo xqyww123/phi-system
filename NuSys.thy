@@ -4,10 +4,9 @@ theory NuSys
   imports NuPrime
   keywords
     "proc" "rec_proc" "\<nu>cast" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "i.e." :: quasi_command
-  and "\<bullet>" "affirm" "\<nu>have" "\<nu>obtain" "\<Longrightarrow>" "drop_fact" "\<nu>debug" "\<nu>debug'"
-          "\<nu>note" (* "\<nu>choose_quick" *) :: prf_decl % "proof"
-  and "\<nu>processor" "\<nu>processor_resolver" "\<nu>reasoner" "setup_\<nu>application_method" :: thy_decl % "ML"
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" :: quasi_command
+  and "\<bullet>" "affirm" :: prf_decl % "proof"
+  and "\<nu>processor" "\<nu>reasoner" "setup_\<nu>application_method" :: thy_decl % "ML"
   and "\<nu>overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
 abbrevs
@@ -696,16 +695,12 @@ lemma t1: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<
   unfolding CurrentConstruction_def Auto_def by (cases s) (simp add: nu_exps, blast+)
 lemma [simp]: "((((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> B) \<and> C) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L) \<equiv> (((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> (B \<and> C)) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L)" by simp
 
-lemma move_fact_to_star1[simp]:
-  "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o Q) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP NoFact) (PROP L) (PROP I))
-    \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x \<tycolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop Q) (PROP L) (PROP I))"
-  unfolding t1 SpecTop_imp conj_imp FactCollection_imp
-  by (intro equal_intr_rule SpecTop_I FactCollection_I conjI NoFact) (* (unfold SpecTop_imp conj_imp FactCollection_imp) *)
-lemma move_fact_to_star2[simp]:
-  "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o Q) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop P) (PROP L) (PROP I))
-    \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x \<tycolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection  (Trueprop (Q \<and> P)) (PROP L) (PROP I))"
-  unfolding t1 SpecTop_imp conj_imp FactCollection_imp
-  by (intro equal_intr_rule SpecTop_I FactCollection_I conjI) (* (unfold SpecTop_imp conj_imp FactCollection_imp) *)
+lemma extract_addition_fact_major:
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o Q) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T))"
+  by (meson CurrentConstruction_def t1)
+lemma extract_addition_fact_minor:
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o Q) \<Longrightarrow> Q"
+  by (meson CurrentConstruction_def t1)
 
 
 subsection \<open>Identity\<close>
@@ -1086,6 +1081,8 @@ lemma apply_cast: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bol
   unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def SpecTop_imp Cast_def by (auto 4 6 simp add: nu_exps)
 lemma "cast": "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' "
   for T' :: "(heap \<times> 'a::lrep) set" unfolding Cast_def CurrentConstruction_def by auto
+lemma "cast'": "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' "
+  for T' :: "(heap \<times> 'a::lrep) set" unfolding Cast_def PendingConstruction_def by auto
 
 lemma cast_\<nu>app: "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> x' \<tycolon> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> x' \<tycolon> X'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Argument_def by (simp add: nu_exps) blast
@@ -1389,7 +1386,6 @@ ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
 ML_file "./library/procedure.ML"
 (* ML_file "./library/exty.ML" *)
-
 ML_file NuSys.ML
 ML_file "./library/processors.ML"
 ML_file "./library/obtain.ML"
@@ -1456,22 +1452,6 @@ val _ =
     (Scan.succeed (Toplevel.end_proof NuToplevel.finish_proc_cmd))
 
 val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<nu>debug\<close> "The \<nu>construction"
-    (Scan.succeed (Toplevel.proof (fn stat =>
-      stat |> Proof.map_context (NuSys.load_specthm (Proof.the_fact stat)))))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<nu>debug'\<close> "The \<nu>construction"
-    (Scan.succeed (Toplevel.proof (fn stat =>
-      stat |> Proof.map_context (NuSys.open_meta (Proof.the_fact stat)))))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<nu>note\<close> "note command in \<nu> version"
-    (Parse_Spec.name_facts >> (fn facts => Toplevel.proof (fn stat =>
-      let val meta = Proof.the_fact stat
-      in stat |> Proof.note_thmss_cmd facts |> Proof.set_facts [meta] end)));
-
-val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<bullet>\<close> "The \<nu>construction"
     (fn toks => (Toplevel.proof (NuProcessor.powerful_process (toks @ [Token.eof])),
       if hd toks |> Token.is_eof then [Token.eof] else []))
@@ -1481,33 +1461,10 @@ val _ =
     (Scan.succeed (Toplevel.proof' (snd oo NuToplevel.prove_prem)))
 
 val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<nu>have\<close> "proof for premise"
-    (and_list1 ((binding -- opt_attribs -- opt_attribs --| $$$ ":") -- and_list1 (prop -- repeat prop)) >>
-      (Toplevel.proof' o (snd ooo NuToplevel.have_aux_cmd)))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<nu>obtain\<close> "generalized elimination"
-    (Parse.parbinding -- Scan.optional (Parse.vars --| Parse.where_) [] -- structured_statement
-      >> (fn ((a, b), (c, d, e)) => Toplevel.proof' (NuObtain.obtain_cmd a b c d e))); 
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<Longrightarrow>\<close> "name the star fact"
-    (Parse.binding -- Parse.opt_attribs >> (Toplevel.proof o NuToplevel.name_star_fact_cmd))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>drop_fact\<close> "drop a fact"
-    (Parse.list Parse.binding >> (fn names => Toplevel.proof (fold NuToplevel.drop_fact_cmd names)))
-
-val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor\<close> "define \<nu>processor"
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
           -- Parse.nat -- Parse.term -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
         >> NuProcessor.setup_cmd)
-
-val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<nu>processor_resolver\<close> "define \<nu>processor resolver"
-      (Parse.binding -- Parse.nat -- (Parse.term -- Parse.for_fixes) -- Parse.name_position -- Scan.optional Parse.text ""
-        >> (fn ((((b,precedence),pattern),facts),comment) => NuProcessors.setup_resolver b precedence pattern facts comment))
 
 end
 \<close>
@@ -1567,113 +1524,111 @@ section \<open>Processors\<close>
 
 subsection \<open>Controls\<close>
 
-\<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn ctx => fn th => NuParse.auto_level_force #->
+(* \<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn ctx => fn th => NuParse.auto_level_force #->
   (fn auto_level' => NuProcessor.internal_process (AutoLevel.reduce auto_level' ctx) th #> (fn x => raise ProcessTerminated x)))\<close>
+*)
 
 \<nu>processor repeat 12 \<open>PROP P\<close> \<open>let
-    fun repeat n f x = if n <= 0 then x else ((repeat (n-1) f (f x)) handle _ => x)
-  in fn ctx => fn th => Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*")
-    >> (fn (tok,n) => fn _ => (case Int.fromString n of SOME n => funpow n | _ => repeat 32)
-        (NuProcessor.simple_process ctx #> (fn p => p [tok,Token.eof] |> #1)) th)
+    fun repeat n f (th,ctx) =
+      if n <= 0 then (th,ctx) else repeat (n-1) f (f th ctx)
+    fun repeat' n f (th,ctx) =
+      if n <= 0 then (th,ctx) else (repeat' (n-1) f (f th ctx) handle _ => (th,ctx))
+  in fn ctx => fn th =>
+    Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*") >> (fn (tok,n) => fn () =>
+        (case Int.fromString n of SOME n => repeat n | _ => repeat' 32)
+          (NuProcessor.process_by_input [tok])
+          (th,ctx)
+    )
   end\<close>
 
 subsection \<open>Constructive\<close>
 
-\<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn th => Scan.succeed (fn _ => NuSys.accept_proc ctx th)\<close>
-
-\<nu>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
-  meta RS @{thm move_fact_to_star1} handle THM _ => meta RS @{thm move_fact_to_star2})\<close>
-
+\<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta =>
+  Scan.succeed (fn _ => NuSys.accept_proc meta ctx)\<close>
+(*
+\<nu>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P)\<close>
+\<open>fn ctx => fn sequent => Scan.succeed (fn _ =>
+  let
+    val facts = Proof_Context.get_thms ctx "\<glowing_star>"
+    val ctx = Proof_Context.put_thms true ("\<glowing_star>",
+        SOME ((sequent RS @{thm extract_addition_fact_minor}) :: facts) ) ctx
+  in
+    (sequent RS @{thm extract_addition_fact_major}, ctx)
+  end)\<close>
+*)
 \<nu>processor "apply" 9000 \<open>P\<close> \<open> fn ctx => fn meta => NuApplicant.parser >> (fn binding => fn _ =>
-    let open NuBasics NuSys
-  val procs = NuApplicant.applicant_thms ctx binding
-  (* val xa = hd procs |> Thm.concl_of |> auto_fusion_arity |> @{print}
-  val meta =funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctx) meta
-    handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'} #> accept_proc ctx) meta *)
-val ctx = NuSys.load_specthm meta ctx in NuSys.apply ctx procs meta end)\<close>
-
-(* \<nu>processor cast 8900 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>
-  \<open> fn ctx => fn meta => (Parse.$$$ "cast" |-- (Parse.$$$ "(" |-- Parse.list NuProcedure.parser --| Parse.$$$ ")" || (NuProcedure.parser >> single)))
-    >> (fn bindings => fn _ =>
-      let val ctx = NuSys.load_specthm meta ctx
-      in fold (NuSys.apply_casts ctx o NuProcedure.cast_thm ctx) bindings meta end)\<close> *)
+  (NuSys.apply ctx (NuApplicant.applicant_thms ctx binding) meta, ctx))\<close>
 
 \<nu>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Parse.term >> (fn term => fn _ =>
-    NuSys.set_param_cmd ctx term meta)\<close>
+    (NuSys.set_param_cmd ctx term meta, ctx))\<close>
 
 \<nu>processor rule 7100 \<open>P \<Longrightarrow> PROP Q\<close>
-  \<open>fn ctx => fn meta => (NuApplicant.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
+  \<open>fn ctx => fn sequent => (NuApplicant.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
     let open NuBasics
-    val ctx = NuSys.load_specthm meta ctx
     val attrs = map (Attrib.attribute_cmd ctx o Attrib.check_src ctx) attrs
     val ths = case try (Proof_Context.get_fact ctx) (Facts.Named (name, NONE)) of SOME x => x
          | NONE => Proof_Context.get_fact ctx (Facts.Named (name |> apfst (fn s => s ^ "_\<nu>proc"), NONE))
     val (ths,ctx) = fold_map (Thm.proof_attributes attrs) ths ctx
-    in elim_SPEC meta |> apfst (perhaps (try (fn th => @{thm Argument_I} RS th)))
-            |> apfst (fn major =>
-    case Thm.biresolution NONE false (ths |> map (pair false) |> @{print}) 1 major |> Seq.pull
-      of SOME (th, _) => th | _ => raise THM ("RSN: no unifiers", 1, major::ths)) |> intro_SPEC end)\<close>
+    val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
+    in case Seq.pull (Thm.biresolution NONE false (map (pair false) ths |> @{print}) 1 sequent)
+            of SOME (th, _) => (th,ctx)
+              | _ => raise THM ("RSN: no unifiers", 1, sequent::ths) end)\<close>
 
-(* \<nu>processor rule_by_COMP 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close>
-  \<open>fn ctx => fn meta => (Parse.$$$ "\<Longleftarrow>'" |-- NuProcedure.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
-    let open NuBasics
-    val ctx = NuSys.load_specthm meta ctx
-    val attrs = map (Attrib.attribute_cmd ctx o Attrib.check_src ctx) attrs
-    val [th] = Proof_Context.get_fact ctx (Facts.Labelled (name, NONE)) 
-    val ([th],ctx) = fold_map (Thm.proof_attributes attrs) [th] ctx
-    in elim_SPEC meta |> apfst (fn major => th COMP major) |> intro_SPEC end)\<close>
-*)
+\<nu>processor set_\<nu>current 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>
+\<open>fn ctx => fn sequent => Scan.succeed (fn _ =>
+  let
+    val ctx = Proof_Context.put_thms true ("\<nu>current", SOME [sequent]) ctx
+  in
+    raise Bypass (SOME(sequent, ctx))
+  end)\<close>
 
-\<nu>processor set_\<nu>current 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
-  raise Bypass (SOME (meta RS @{thm set_\<nu>current})))\<close>
 
 subsubsection \<open>Sub-procedure\<close>
 
 \<nu>processor begin_sub_procedure 7000 \<open>PROP Q\<close> \<open>let open Parse Scan in fn ctx => fn meta =>
   $$$ "\<medium_left_bracket>" |-- optional ($$$ "premises" |-- and_list (binding -- opt_attribs)) [] >> (fn prems => fn () =>
-  raise Process_State_Call' (meta, NuToplevel.begin_block_cmd prems true)
+  raise Process_State_Call' ((meta,ctx), NuToplevel.begin_block_cmd prems true)
 ) end\<close>
 
 \<nu>processor end_sub_procedure 7000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>let open Parse Scan in fn ctx => fn meta =>
   $$$ "\<medium_right_bracket>" >> (fn x => fn () =>
-  raise Process_State_Call' (meta, NuToplevel.end_block_cmd true)
+  raise Process_State_Call' ((meta,ctx), NuToplevel.end_block_cmd true)
 ) end\<close>
-
-(*
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "construct nested sub-procedure"
-    (optional ($$$ "(" |-- and_list (binding -- opt_attribs) --| $$$ ")") [] >> (Toplevel.proof' o NuToplevel.begin_block_cmd));
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "finish the nested sub-procedure construction"
-    (Scan.succeed (Toplevel.proof' NuToplevel.end_block_cmd));
-
-*)
 
 subsubsection \<open>Existential elimination\<close>
 
 \<nu>processor auto_existential_elimination 50 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace>\<close>
   \<open>fn ctx => fn meta => Scan.succeed (fn () =>
-    raise Process_State_Call' (meta, NuObtain.auto_choose))\<close>
+    raise Process_State_Call' ((meta,ctx), NuObtain.auto_choose))\<close>
 
 subsection \<open>Simplifiers & Resonings\<close>
 
 \<nu>processor \<nu>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>  \<open>NuProcessors.simplifier []\<close>
 (* \<nu>processor \<nu>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
-\<nu>processor \<nu>reason 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
+\<nu>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P)\<close>
+\<open>fn ctx => fn sequent => Scan.succeed (fn _ =>
+  let
+    val facts = Proof_Context.get_thms ctx "\<glowing_star>"
+    val ctx = Proof_Context.put_thms true ("\<glowing_star>",
+        SOME ((sequent RS @{thm extract_addition_fact_minor}) :: facts) ) ctx
+  in
+    (sequent RS @{thm extract_addition_fact_major}, ctx)
+  end)\<close>
+
+\<nu>processor \<nu>reason 1000 \<open>PROP P \<Longrightarrow> PROP Q\<close> \<open>fn ctx => fn sequent => Scan.succeed (fn _ =>
   let open NuBasics
-    val meta' = elim_SPEC meta
-      |> apfst (Nu_Reasoner.reason (NuSys.load_specthm meta ctx))
-      |> intro_SPEC
-  in if Thm.prop_of meta = Thm.prop_of meta' then raise Bypass (SOME meta') else meta' end)\<close>
+    val sequent' = Nu_Reasoner.reason ctx sequent
+  in if Thm.prop_of sequent' = Thm.prop_of sequent
+    then raise Bypass (SOME (sequent, ctx))
+    else (sequent',ctx)
+  end)\<close>
 
 subsection \<open>Literal operations\<close>
 
 \<nu>processor literal_constructor 9500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.cartouche >> (fn term => fn _ =>
   let val term = Syntax.read_term ctx term |> Thm.cterm_of ctx |> Simplifier.rewrite ctx |> Thm.rhs_of
-        val ctx = NuSys.load_specthm meta ctx
-  in NuSys.auto_construct ctx term meta end)\<close>
+  in (NuSys.auto_construct ctx term meta, ctx) end)\<close>
 
 section \<open>Mechanism III\<close>
 
@@ -1712,10 +1667,10 @@ ML_file_debug \<open>library/variables_tag.ML\<close>
 let open Parse Scan NuHelp NuBasics in
   ($$$ "var" |-- list1 params -- option ($$$ "in" |-- list1 term) -- option ($$$ "heap" |-- list1 term) -- Scan.option ($$$ "always" |-- term))
     >> (fn ((((vars, stack_schema), heap_schema)), always) => fn _ =>
-      NuVariablesTag.variables_tag_pattern_match (flat vars) stack_schema heap_schema always ctx meta |> @{print})
+      (NuVariablesTag.variables_tag_pattern_match (flat vars) stack_schema heap_schema always ctx meta |> @{print}, ctx))
 ||
   (list1 term -- Scan.option ($$$ "always" |-- term) >> (fn (vars, always) => fn _ =>
-      NuVariablesTag.variables_tag_terms vars always ctx meta) )
+      (NuVariablesTag.variables_tag_terms vars always ctx meta, ctx)) )
 end\<close>
 
 subsection \<open>Auto Reasoners\<close>

@@ -11,6 +11,10 @@ signature NU_BASICS = sig
   val repeate : ('a -> 'a) -> 'a -> 'a
   val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
+  val nu_bind_name : string
+  val the_nu_fact : Proof.state -> thm
+  val set_nu_fact : thm -> Proof.state -> Proof.state
+
   val void_ty : typ
   val mk_stateT : typ -> typ
   val dest_tynuset_c : ctyp -> ctyp
@@ -43,8 +47,6 @@ signature NU_BASICS = sig
   val normlize_thm_of_names : thm -> thm
 
   (* val dest_andTy : term -> term * term *)
-  val dest_SpecTop   : term -> term * term
-  val dest_SpecTop_c : cterm -> cterm * cterm
   val dest_CurrentConstruction : term -> term * term
   val dest_CurrentConstruction_c : cterm -> cterm * cterm
   val dest_PendingConstruction : term -> term * term * term
@@ -57,14 +59,12 @@ signature NU_BASICS = sig
   val current_block_var   : thm -> term
   val current_block_var_c : thm -> cterm
   val current_block_depth : thm -> int
-  val dest_codeblock   : term -> term * term * term * term
-  val dest_codeblock_c : cterm -> cterm * cterm * cterm * cterm
+  val dest_codeblock   : term -> term * term * term
+  val dest_codeblock_c : cterm -> cterm * cterm * cterm
+  val codeblock_name   : term -> string
   val codeblocks_of   : thm -> term list
   val codeblocks_of_c : thm -> cterm list
-  val codeblock_name   : term -> term * term * term * term
   val current_codeblock : thm -> cterm
-  val export_codeblock : Proof.context -> cterm * cterm -> thm -> thm
-  val export_codeblocks : Proof.context -> cterm list -> thm -> thm
 
   val dest_procedure   : term -> term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm
@@ -73,9 +73,6 @@ signature NU_BASICS = sig
   val dest_simplify_tag   : term -> term * term
   val dest_simplify_tag_c : term -> cterm * cterm
 
-  val elim_SPEC : thm -> thm * thm
-  val intro_SPEC : thm * thm -> thm
-  val map_major : (thm -> thm) -> thm -> thm
   val mk_PropBlock : int -> thm -> thm
 
   val dest_fact : term -> string * term
@@ -118,6 +115,12 @@ end
 structure NuBasics = struct
 open Thm Term HOLogic NuHelp
 exception NDBG of thm
+
+val nu_bind_name = "\<nu>"
+fun the_nu_fact stat = Proof_Context.get_thm (Proof.context_of stat) nu_bind_name
+fun set_nu_fact th stat = stat
+  |> Proof.set_facts [th]
+  |> Proof.map_context (Proof_Context.put_thms false (nu_bind_name, SOME [th]));
 
 fun repeate f x = repeate f (f x) handle TERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
@@ -180,12 +183,14 @@ fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
   | dest_andTy t = raise TERM ("bad AndTy", [t]); *)
 val mk_auto_tag = mk_monop @{const_name "Auto"}
 
-val dest_SpecTop   = dest_binop @{const_name "SpecTop"}
-val dest_SpecTop_c = dest_binop_c @{const_name "SpecTop"}
-val dest_CurrentConstruction   = dest_binop @{const_name "CurrentConstruction"}
-val dest_CurrentConstruction_c = dest_binop_c @{const_name "CurrentConstruction"}
-val dest_PendingConstruction   = dest_triop @{const_name "PendingConstruction"}
-val dest_PendingConstruction_c = dest_triop_c @{const_name "PendingConstruction"}
+val dest_CurrentConstruction   =
+      perhaps (try dest_Trueprop) #> dest_binop @{const_name "CurrentConstruction"}
+val dest_CurrentConstruction_c =
+      perhaps (try dest_Trueprop_c) #> dest_binop_c @{const_name "CurrentConstruction"}
+val dest_PendingConstruction   =
+      perhaps (try dest_Trueprop) #> dest_triop @{const_name "PendingConstruction"}
+val dest_PendingConstruction_c =
+      perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "PendingConstruction"}
 
 fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
   handle TERM _ => ((dest_PendingConstruction c |> #2)
@@ -194,12 +199,15 @@ fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
   handle TERM _ => ((dest_PendingConstruction_c c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
 
+fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
 val dest_current_nu =
-      Thm.prop_of #> perhaps (try (dest_SpecTop #> #1)) #> perhaps (try dest_Trueprop)
-        #> dest_CurrentConstruction #> #2 #> dest_RepSet
+      Thm.prop_of #> perhaps (try dest_Trueprop)
+        #> orelse_opt (try (dest_PendingConstruction #> #3)) (dest_CurrentConstruction #> #2)
+        #> dest_RepSet
 val dest_current_nu_c =
-      Thm.cprop_of #> perhaps (try (dest_SpecTop_c #> #1)) #> perhaps (try dest_Trueprop_c)
-        #> dest_CurrentConstruction_c #> #2 #> dest_RepSet_c
+      Thm.cprop_of #> perhaps (try dest_Trueprop_c)
+        #> orelse_opt (try (dest_PendingConstruction_c #> #3)) (dest_CurrentConstruction_c #> #2)
+        #> dest_RepSet_c
 
 fun strip_stack ret (Const (@{const_name "Pair"}, _) $ a $ b,
                      Const (@{const_name "Stack_Delimiter"}, _) $ A $ B)
@@ -234,19 +242,17 @@ val stack_of_meta_c = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
 
 val current_block_var_c =
   Thm.cprop_of
-    #> perhaps (try (dest_SpecTop_c #> #1))
     #> perhaps (try strip_implies_c)
     #> perhaps (try dest_Trueprop_c)
     #> block_var_of_Constuction_c
 val current_block_var =
   Thm.prop_of
-    #> perhaps (try (dest_SpecTop #> #1))
     #> perhaps (try Logic.strip_assums_concl)
     #> perhaps (try dest_Trueprop)
     #> block_var_of_Constuction
-val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_quadop @{const_name "NuPrime.CodeBlock"}
-val codeblock_name   = dest_codeblock #> #1 #> dest_Free #> #1
-val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "NuPrime.CodeBlock"}
+val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_triop @{const_name "NuPrime.CodeBlock"}
+val codeblock_name   = dest_codeblock #> #1 #> term_name
+val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "NuPrime.CodeBlock"}
 val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
 val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
 fun current_block_depth th =
@@ -265,60 +271,10 @@ fun disch_codeblock cb th =
 fun undisch_codeblock cb_var = Thm.forall_elim cb_var #> undisch
 fun disch_current_codeblock specthm =
   disch_codeblock (current_codeblock specthm) specthm
-val thm_codeblock_export = @{thm NuPrime.codeblock_export}
-fun aconv_c (ctm1,ctm2) = aconv (term_of ctm1, term_of ctm2)
-val prop_term = @{cterm Pure.prop}
-fun export_codeblock ctx (codeblock,destined_codeblock) th =
-  if aconv_c (codeblock,destined_codeblock) then th
-  else let
-    val (s,_,_,_) = dest_codeblock_c destined_codeblock
-    val goal = Thm.all ctx (dest_codeblock_c destined_codeblock |> #1)
-        (Thm.mk_binop @{cterm Pure.imp} destined_codeblock (cprop_of th))
-          |> Thm.apply prop_term |> Goal.init |> @{print}
-    val endth = disch_codeblock codeblock th |> Goal.protect 0
-    fun loop th = (endth RS th |> Goal.conclude)
-      handle THM _ => loop (thm_codeblock_export RS th)
-  in
-    loop goal |> Goal.conclude |> undisch_codeblock s
-  end
-  handle THM e => (@{print} e; raise THM ("export_codeblock", 1,
-    [th, Thm.assume codeblock, Thm.assume destined_codeblock]))
-fun export_codeblocks ctx destined_codeblocks th =
-  let
-    val codeblock_name = term_of #> dest_codeblock #> #1 #> term_name
-    val destined = fold (fn cb => Symtab.update_new (codeblock_name cb, cb))
-          destined_codeblocks Symtab.empty
-    val exports = chyps_of th |> List.mapPartial (fn cb =>
-            cb |> try codeblock_name
-               |> Option.mapPartial (Symtab.lookup destined)
-               |> Option.map (pair cb))
-  in
-    fold (export_codeblock ctx) exports th
-  end
 
 
 fun th1 MP th2 = Drule.comp_no_flatten (th1, 0) 1 th2
 fun rule MP_BY args = fold (fn arg => fn rule => arg MP rule) args rule
-
-val vP = (("P",0),propT) and vL = (("L",0),propT) and vQ = (("Q",0),propT)
-fun elim_SPEC th = 
-  let
-    val (P,L) = dest_SpecTop_c (cprop_of th)
-    val inst = Thm.instantiate ([],[(vP,P),(vL,L)])
-  in
-   (Thm.implies_elim (inst @{thm SpecTop_focus}) th,
-    Thm.implies_elim (inst @{thm SpecTop_facts}) th)
-  end
-fun intro_SPEC (focus,facts) = 
-  Thm.implies_elim
-    (Thm.implies_elim
-      (Thm.instantiate ([],[(vP, cprop_of focus), (vL, cprop_of facts)]) @{thm NuPrime.SpecTop_I})
-    focus)
-  facts
-fun map_major f th =
-  if can (dest_SpecTop o prop_of) th then elim_SPEC th |> apfst f |> intro_SPEC
-  else f th
-
 
 val dest_fact   = dest_binop   @{const_name "Fact"} #> apfst dest_label
 val dest_fact_c = dest_binop_c @{const_name "Fact"} #> apfst (term_of #> dest_label)
@@ -418,8 +374,6 @@ fun holrule f th =
   case prop_of th
     of (Const (@{const_name "AndFact"},_) $ _ $ _) =>
          elim_AndFact th |> apply2 (holrule f) |> intro_AndFact
-     | (Const (@{const_name "SpecTop"},_) $ _ $ _) =>
-         elim_SPEC th |> apply2 (holrule f) |> intro_SPEC
      | (Const (@{const_name "FactCollection"},_) $ _ $ _ $ _) =>
          elim_FactCollection th |> apply3 (holrule f) |> intro_FactCollection
      | (Const (@{const_name "Fact"},_) $ _ $ _) =>

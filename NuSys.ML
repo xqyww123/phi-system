@@ -3,9 +3,7 @@ signature NU_SYS = sig
   (** Tactics **)
   exception CastFail of thm
   exception ReasoningFail of thm
-  type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
   val raw_auto : Proof.context -> tactic
-
 
   (** Basic Operations **)
 
@@ -39,55 +37,17 @@ signature NU_SYS = sig
 
   val apply : Proof.context -> thm list -> thm -> thm
   val apply_proc_naive : thm (*proc*) -> thm (*meta or major*) -> thm
-  val accept_proc_naive : thm -> thm (* the version without auto *)
-  val accept_proc : Proof.context -> thm -> thm
+  val accept_proc : thm -> Proof.context -> thm * Proof.context
   val set_param : Proof.context -> term -> thm -> thm
   val set_param_cmd : Proof.context -> string -> thm -> thm
 
-  val start_proc : Proof.context -> string (*blk name*) -> cterm -> thm (* see @{thm NuPrime.start_proc} *)
-  val finish_proc : thm -> thm (* see @{thm NuPrime.finish_proc} *)
+  val start_proc : string (*blk name*) -> cterm -> Proof.context -> thm * Proof.context
   val rename_blk_var : string -> thm -> cterm (*renamed block*) * thm
         (* current old_name reulst in ...
         * ---------------------------------
         *  current new_name reulst in *)
 
-  (*
-    `declare_facts` declares/addes ν-facts to be embedded in the specification theorem.
-    `load_specthm` activates all embedded ν-facts in a specification theorem.
-
-    There are two situation in the ν-system, the one for deductive construction
-    and the other one for normal Isar proof (e.g. νhave and νobtain).
-
-    In the deductive construction, all ν-facts are embedded in the specification
-    theorem, and the specification theorem has several codeblock assumptions
-    as undeclared hypothesises that are undeclared in the `Assumption`
-    structure. Codeblock assumption stores the constructed program and represents
-    the partial correctness hypothesises under the current symbolic execution
-    (the assertion that the execution so far is normal).
-    The codeblock assumption is updated by every `accept_proc` operation.
-
-    The operation `load_specthm` convert current construction context into a normal
-    Isar context by loading all embedded ν-facts with attribute evaluation and
-    declaring the codeblock assumptions. Therefore the codeblock assumptions are
-    fixed and procedure construction cannot be proceeded.
-
-    Attributes sent to `declare_facts` are not activated immediately, but stored
-    and activated until `load_specthm`, in the context loading the ν-facts.
-    Therefore, declarative attributes do not touch the deductive context,
-    but only the loading context.
-  *)
-  val declare_fact  : Thm.binding * thm list -> thm -> Proof.context -> thm * Proof.context
-  val declare_facts : (Thm.binding * thm list) list -> thm -> Proof.context -> thm * Proof.context
-  val name_star_fact : Thm.binding -> thm -> Proof.context -> thm * Proof.context
-  val delete_fact : string -> thm -> Proof.context -> thm * Proof.context
-  (* declares all codeblock hypothesis *)
-  val open_meta  : thm -> Proof.context -> Proof.context
-  (* `load_specthm (ctx,specthm)` open the meta, and then 
-    * puts all auxiliary facts into the context by the name `\<nu>aux` *)
-  val load_specthm  : thm -> Proof.context -> Proof.context
-
   val auto_construct : Proof.context -> cterm -> thm -> thm
-  val transfer_facts_data : Context.generic -> Context.generic -> Context.generic
 
   val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
         -> Proof_Context.mode -> bool -> string -> Method.text option
@@ -103,96 +63,12 @@ structure NuSys : NU_SYS = struct
 open Thm NuBasics Term
 exception CastFail of thm
 exception ReasoningFail of thm
-type proc_conctx = {proc_const: cterm, binding: Binding.binding, goal: cterm}
-
-structure NuFacts = Generic_Data
-(
-  (*key : name of the auxiliary fact, value: the attribute to be evaluated*)
-  type T = (Position.T * attribute list) Symtab.table; 
-  val empty: T = Symtab.empty
-  val extend = I
-  val merge : T * T -> T = Symtab.join (fn _ => fn _ => raise Symtab.SAME);
-)
-fun transfer_facts_data from = NuFacts.put (NuFacts.get from)
-
-fun ap2_3 f (a,b,c) = (a,f b,c)
-fun delete_fact name meta ctx =
-  ctx |> Context.proof_map (NuFacts.map (Symtab.delete name))
-    |> pair (elim_SPEC meta
-        |> apsnd (elim_FactCollection
-            #> ap2_3 (elim_AndFacts
-              #> filter (fn th => name_of_Fact th <> name)
-              #> intro_AndFacts)
-            #> intro_FactCollection)
-        |> intro_SPEC)
-fun delete_fact_may name meta ctx =
-  delete_fact name meta ctx handle Symtab.UNDEF _ => (meta,ctx)
-
-fun get_aux_attrs ctx (name,auxth) =
-  let
-    val (pos,attrs) =
-      if name = "\<glowing_star>"
-      then (Position.none,[Thm.declaration_attribute (Named_Theorems.add_thm "NuSys.used")])
-      else the_default (Position.none,[]) (Symtab.lookup (NuFacts.get (Context.Proof ctx)) name)
-  in
-    ((Binding.make (name,pos), attrs), [(Conjunction.elim_conjunctions auxth,[])])
-  end
-fun note_auxes auxes ctx =
-  Proof_Context.note_thmss "\<nu>fact" (map (get_aux_attrs ctx) auxes) ctx
-
-fun fold1 f (h::r) = fold f r h
-  | fold1 f [] = raise Fail "fold1"
-fun gen_declare_fact rule (binding,attrs) meta ctx =
-  let
-    val name = Binding.name_of binding
-    val _ = if name = "\<glowing_star>" then error "reserved keyword: \<glowing_star>" else ()
-    val (meta,ctx) = delete_fact_may name meta ctx
-  in
-  ctx |> Context.proof_map (NuFacts.map (Symtab.update_new (name, (Binding.pos_of binding, attrs))))
-    |> pair (rule name meta)
-  end
-fun declare_fact (thmbind,auxes) = gen_declare_fact (fn name => fn meta =>
-    (Thm.instantiate ([],[((("name",0), label_ty), mk_label_c name)])
-      @{thm NuPrime.declare_fact})
-    OF [fold1 Conjunction.intr auxes, meta]
-  ) thmbind
-fun declare_facts auxes meta ctx =
-  fold (fn a => fn (th,ctx) => declare_fact a th ctx) auxes (meta,ctx)
-fun name_star_fact binding = 
-  gen_declare_fact (fn name => fn meta =>
-    let
-      val (target,_,_) = elim_SPEC meta |> #2 |> elim_FactCollection
-    in
-      meta RS (Thm.instantiate ([],[((("name",0), label_ty), mk_label_c name)])
-          @{thm NuPrime.name_star_fact})
-    end
-  ) binding
-
 
 val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
 fun hyp_export is_goal asms = (I,I)
-fun open_meta meta =
-  Proof_Context.add_assms hyp_export (map (fn cb =>
-    ((Binding.name (codeblock_name cb),[]),
-        [(cb,[])])) (codeblocks_of meta)) #> #2
 val curr_const_attrs = [Thm.declaration_attribute (Named_Theorems.add_thm "NuSys.used")]
-fun load_specthm specthm ctx =
-  let
-    val (major,aux) = elim_SPEC specthm
-    val auxes = user_facts_in_collection aux
-    val (_,_,vcurrent) = elim_FactCollection aux
-  in
-    ctx |> open_meta specthm
-      |> note_auxes auxes
-      |-> (fn ths => Proof_Context.put_thms false (aux_name_raw, SOME (flat (map snd ths))))
-      |> Proof_Context.note_thms "\<nu>current"
-          ((Binding.name "\<nu>current", curr_const_attrs), [([vcurrent],[])]) |> #2
-  end
 fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
 fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
-
-
-
 
 
 fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
@@ -295,26 +171,18 @@ fun auto_resolve_rule' i major_minor addition ctx th =
     of SOME (th', _) =>
         Goal.conclude th' |> auto_resolve_rule' (i+1) major_minor addition ctx 
      | NONE => (if i = 0 then raise ReasoningFail th else th)
-fun auto_resolve_rule major_minor addition ctx th =
-  if can dest_SpecTop (prop_of th)
-  then elim_SPEC th
-    |> apfst (auto_resolve_rule' 0 major_minor addition ctx)
-    |> intro_SPEC
-  else auto_resolve_rule' 0 major_minor addition ctx th
+fun auto_resolve_rule sequent addition ctx th = auto_resolve_rule' 0 sequent addition ctx th
 val auto_resolve_rule0 = auto_resolve_rule NONE []
 
 
 
   (** Basic Operations **)
-fun cast ctx desired_nu major =
+fun cast ctx desired_nu sequent =
   let
-    val _ = term_of desired_nu |> dest_RepSet (*validates the argument*)
-    val insts = ([((("'a",0),["NuPrime.lrep"]),
-                        ctyp_of_cterm desired_nu |> dest_tynuset_c |> dest_ctyp1 
-                                                    (*heap \<times> 'a*))],
-                 [((("T'",0),typ_of_cterm desired_nu), desired_nu)])
+    val cast  = Drule.infer_instantiate ctx [(("T'",0),desired_nu)] @{thm "cast"}
+    val cast' = Drule.infer_instantiate ctx [(("T'",0),desired_nu)] @{thm "cast'"}
   in
-    major RS Thm.instantiate insts @{thm "cast"}
+    sequent RS cast' handle THM _ => sequent RS cast
   end
 fun cast_completely ctx desired_nu major =
   cast ctx desired_nu major
@@ -349,28 +217,44 @@ fun conversion_completely ctx to from =
     |> SOLVED_RULE (Nu_Reasoner.reason ctx) (fn th => raise CastFail th)
     |> Goal.conclude
 
-fun accept_proc_naive meta =
-  meta |> disch_current_codeblock
-    |> mk_PropBlock 0 
-    |> (fn x => x RS @{thm NuPrime.accept_proc} handle THM _ => x RS @{thm accept_proc'})
-    |> (fn th => 
-        let val thy = Thm.theory_of_thm th
-          val (vname,vty) = prems_of th |> hd |> dest_codeblock |> #1 |> dest_Var
-          val (name,_) = current_block_var meta |> dest_Free
-        in Thm.instantiate ([],
-            [((vname,vty), Thm.global_cterm_of thy (Free (name,vty)))]) th end)
-    |> undisch
-fun accept_proc ctx meta = 
-  (if can (prop_of #> dest_SpecTop #> #1 #> dest_Trueprop #> dest_PendingConstruction) meta
-  then meta else Nu_Reasoner.reason ctx meta) |> accept_proc_naive
+fun export_codeblock cb sequent =
+  let
+    val (s',_,_) = dest_codeblock_c cb
+  in
+    sequent
+      |> Thm.implies_intr cb
+      |> Thm.forall_intr s'
+      |> (fn th => th COMP @{thm reassemble_proc})
+      (* |> Thm.assumption NONE 1
+      |> Seq.make_results |> Seq.the_result "export_codeblock" *)
+  end
 
-fun apply' ctx appliants major =
+fun accept_proc sequent ctx =
+  let
+    val (f,s,_) = dest_PendingConstruction (Thm.prop_of sequent)
+    val tyb = range_type (fastype_of f)
+    val name = term_name s |> Variable.revert_fixed ctx
+    val ([name],ctx) = Variable.add_fixes [name] ctx
+    val s' = Free (name, tyb)
+    val ctx = Variable.declare_constraints s' ctx
+    val s' = Thm.cterm_of ctx s'
+    val accept_proc_thm = Drule.infer_instantiate ctx [(("s'",0),s')] @{thm accept_proc}
+    val sequent = sequent RS accept_proc_thm
+    val assm = Thm.cprem_of sequent 1
+    val ([cb],ctx) = Assumption.add_assms
+          (fn _ => fn [cb] => (export_codeblock cb, I)) [assm] ctx
+    val sequent = cb RS sequent
+  in
+    (sequent,ctx)
+  end
+
+
+fun apply ctx appliants major =
   NuApply.apply ctx appliants major
     |> Nu_Reasoner.reason_s ctx
     |> (fn x => case Seq.pull x
                   of SOME (th,_) => perhaps (try Goal.conclude) th
                    | NONE => raise THM ("fail to apply", 0, major::appliants))
-fun apply ctx appliants = map_major (apply' ctx appliants)
 val apply_proc_naive = NuApply.apply_proc_naive
 
 
@@ -378,12 +262,12 @@ fun param_type major =
   NuBasics.param_type major
     |> map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty)
   (* TODO: how to parse (check) the term of a desired type pattern? *)
-fun set_param' ctx term major =
+fun set_param ctx term major =
   (term |> Type.constraint (param_type major)
             (* TODO: how to parse (check) the term of a desired type pattern? *)
         |> Syntax.check_term ctx |> Thm.cterm_of ctx |> NuBasics.intro_param)
     RS major
-fun set_param_cmd' ctx term major =
+fun set_param_cmd ctx term major =
   case try (dest_funT #> apfst dest_named) (param_type major)
     of SOME (name_and_tys, rng) =>
         let
@@ -396,25 +280,37 @@ fun set_param_cmd' ctx term major =
                       |> @{print}
                       |> mk_monop @{const_name case_named}
         in
-          set_param' ctx term major
+          set_param ctx term major
         end
-     | NONE => set_param' ctx (Syntax.parse_term ctx term) major
-
-fun set_param ctx term = map_major (set_param' ctx term)
-fun set_param_cmd ctx term = map_major (set_param_cmd' ctx term)
+     | NONE => set_param ctx (Syntax.parse_term ctx term) major
 
 
-fun start_proc ctx blk_name arg_nuTy =
+fun export_start_proc cc sequent =
   let
-    val argTy = (case typ_of_cterm arg_nuTy of Type ("Set.set", [Type (@{type_name prod}, [_, ty])]) => ty
-                   | _ => raise Fail "start_proc - argTy - not a set")
-    val stat_var = Free (blk_name, mk_stateT argTy) |> cterm_of ctx
-    val arg_var = Free (blk_name^"_arg", HOLogic.mk_prodT(@{typ heap}, argTy)) |> cterm_of ctx
-    val init_thm = Drule.instantiate'_normalize [SOME (ctyp_of ctx argTy)]
-                      [SOME stat_var, SOME arg_var, SOME arg_nuTy] @{thm start_proc}
-    val init_thm = init_thm |> undisch
+    val (s',_) = dest_CurrentConstruction_c cc
   in
-    init_thm
+    sequent
+      |> Thm.implies_intr cc
+      |> Thm.forall_intr s'
+      |> (fn th => th COMP @{thm reassemble_proc_final})
+  end
+
+fun start_proc blk_name arg_nuTy ctx =
+  let
+    val ty_a = (case typ_of_cterm arg_nuTy
+                   of Type ("Set.set", [Type (@{type_name prod}, [_, ty])]) => ty
+                    | _ => raise Fail "start_proc - argTy - not a set")
+    val ([blk_name],ctx) = Variable.add_fixes [blk_name] ctx
+    val stat_var = Free (blk_name, mk_stateT ty_a) 
+    val ctx = Variable.declare_constraints stat_var ctx
+    val init = Const(@{const_name CurrentConstruction},
+                  fastype_of stat_var --> typ_of_cterm arg_nuTy --> boolT)
+               $ stat_var
+    val init = Thm.apply @{cterm Trueprop} (Thm.apply (Thm.cterm_of ctx init) arg_nuTy)
+    val ([init],ctx) = Assumption.add_assms
+          (fn _ => fn [cc] => (export_start_proc cc, I)) [init] ctx
+  in
+    (init,ctx)
   end
 
 fun meta_eq_to_hol_eq th =
@@ -428,24 +324,12 @@ fun meta_eq_to_hol_eq th =
     Thm.implies_elim rule th
   end
 
-fun finish_proc th =
-  let
-    val codeblock = current_codeblock th |> @{print}
-    val (s,a,_,_) = dest_codeblock_c codeblock
-  in
-    th |> implies_intr codeblock
-       |> forall_intr s |> forall_intr a
-       |> (fn x => x COMP @{thm NuPrime.finish_proc})
-       |> @{print}
-  end
-
 fun rename_blk_var name meta =
   let
     val codeblock = current_codeblock meta
-    val (s,a,_,_) = dest_codeblock_c codeblock
+    val (s,_,_) = dest_codeblock_c codeblock
     val thy = Thm.theory_of_thm meta
     val s' = Thm.global_cterm_of thy (Free (name, typ_of_cterm s))
-    val a' = Thm.global_cterm_of thy (Free (name^"_arg", typ_of_cterm a))
     val meta = meta |> implies_intr codeblock
                 |> forall_intr s |> forall_elim s'
                 (* |> forall_intr a |> forall_elim a' *)
@@ -454,29 +338,27 @@ fun rename_blk_var name meta =
   end
 
 
-fun auto_construct ctx term meta =
+fun auto_construct ctx term sequent =
   let
-    val (major,aux) = elim_SPEC meta
-    val thm = @{thm AutoConstruct}
+    val sequent = @{thm AutoConstruct}
       |> Thm.instantiate ([((("'exp",0),["HOL.type"]),Thm.ctyp_of_cterm term)], [((("exp",0), Thm.typ_of_cterm term),term)])
-      |> (fn th => major RS th)
+      |> (fn th => sequent RS th)
       |> Goal.protect 1
       |> Nu_Reasoner.reason ctx
-  in if Thm.no_prems thm
-     then Goal.conclude thm |> rpair aux |> intro_SPEC
+  in if Thm.no_prems sequent
+     then Goal.conclude sequent
      else raise TERM ("fail to construct", [Thm.term_of term])
   end
 
 
 fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
   let open Proof
-    val specthm = the_fact stat
+    val specthm = the_nu_fact stat
     fun after_qed ctxthms stat =
       stat |> end_block 
            |> after_qed' ctxthms
   in
     stat |> begin_block
-      |> map_context (load_specthm specthm)
       |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
             (map (pair Binding.empty_atts) gl)
       (* |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat)

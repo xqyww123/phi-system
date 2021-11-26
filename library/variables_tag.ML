@@ -20,16 +20,15 @@ fun strip_abs_fixes (Abs (name,ty,body)) =
   | strip_abs_fixes _ = []
 
 
-fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
+fun gen_set_variables_tag vars stack_schema heap_schema always ctx sequent =
   let
     val ctx = Proof_Context.set_mode Proof_Context.mode_schematic ctx
                 |> Proof_Context.set_mode Proof_Context.mode_pattern
-    val (major,aux) = elim_SPEC meta
     val Const (@{const_name Variant_Cast}, _)
           $ (stack_typing as (Const (@{const_name typing}, _) $ stack_term $ stack_Nu))
           $ (heap_typing as (Const (@{const_name typing}, _) $ heap_term $ heap_Nu))
           $ _ $ _ $ _
-      = Thm.major_prem_of major |> dest_Trueprop
+      = Thm.major_prem_of sequent |> dest_Trueprop
     val heap_ty = fastype_of heap_term
     val stack_ty = fastype_of stack_term
     val stack = strip_binop_r "Product_Type.Pair" (stack_term |> @{print})
@@ -84,7 +83,7 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
 
     val forall = forall_expansion names ctx |> @{print}
     val exNu = ExNu_expansion names ctx |> @{print}
-    val major = (var_tag_th RS major)
+    val sequent = (var_tag_th RS sequent)
                   |> @{print}
                   |> schematic_var_expansion ctx
                   |> @{print}
@@ -93,31 +92,31 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
                            Product_Type.prod.case[unfolded atomize_eq[symmetric]]})
                   |> Simplifier.full_simplify ctx
   in
-    intro_SPEC (major, aux)
+    sequent
   end
 
-fun variables_tag_pattern_match raw_vars stack_schema heap_schema always ctx meta =
+fun variables_tag_pattern_match raw_vars stack_schema heap_schema always ctx sequent =
   let
     val origin_var_names = map (fn (x,_,_) => Binding.name_of x) raw_vars
     val (new_var_names,ctx) =
       Proof_Context.add_fixes (map (fn (a,b,c) => (a, Option.map (Syntax.read_typ ctx) b, c)) raw_vars) ctx
     val vars = origin_var_names ~~ map (rpair dummyT) new_var_names
   in
-    gen_set_variables_tag vars stack_schema heap_schema always ctx meta
+    gen_set_variables_tag vars stack_schema heap_schema always ctx sequent
   end
 
-fun variables_tag_terms raw_vars always ctx meta =
+fun variables_tag_terms raw_vars always ctx sequent =
   let
     val vars = map (Syntax.parse_term ctx #> Syntax.check_term ctx
                       #> term_name #> (fn name => (normlize_name name,(name,dummyT)) )) raw_vars
   in
-    gen_set_variables_tag vars NONE NONE always ctx meta
+    gen_set_variables_tag vars NONE NONE always ctx sequent
   end
 
-(* fun vars_subj subj ctx meta =
+(* fun vars_subj subj ctx sequent =
   let
-    val (major,aux) = elim_SPEC meta
-    val Const (@{const_name Variants_Subj}, _) $ vars $ _ = Thm.major_prem_of major |> dest_Trueprop
+    val (sequent,aux) = elim_SPEC sequent
+    val Const (@{const_name Variants_Subj}, _) $ vars $ _ = Thm.sequent_prem_of sequent |> dest_Trueprop
     val (new_var_names,ctx) = Proof_Context.add_fixes (strip_abs_fixes vars) ctx
     val origin_var_names = strip_abs_names vars
     val subj = Syntax.parse_term ctx subj
@@ -125,9 +124,9 @@ fun variables_tag_terms raw_vars always ctx meta =
     val var_subj = Const (@{const_name Variants_Subj}, dummyT) $ vars $ subj
                     |> mk_Trueprop |> Syntax.check_prop ctx |> cterm_of ctx
                     |> trivial |> (fn th => @{thm Variants_Subj_I} RS th) |> @{print}
-    val major = var_subj RS major
+    val sequent = var_subj RS sequent
   in
-    intro_SPEC (major, aux)
+    intro_SPEC (sequent, aux)
   end *)
 
 end

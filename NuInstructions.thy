@@ -82,9 +82,9 @@ lemma op_local_value: "v \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<
 ML_file "library/local_value.ML"
 
 \<nu>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H)\<close> \<open>let open Parse in
-  fn _ => fn meta => (($$$ "\<rightarrow>" || $$$ "--") -- list1 binding) >> (fn (keyword,idts) => fn _ =>
-    raise Process_State_Call'' meta (Local_Value.mk_let (keyword = "--") (rev idts)))
-end\<close>
+  fn ctx => fn sequent => (($$$ "\<rightarrow>" || $$$ "--") -- list1 binding) >> (fn (keyword,idts) => fn _ =>
+    Local_Value.mk_let (keyword = "--") (rev idts) sequent ctx
+) end\<close>
 
 
 subsubsection \<open>function call\<close>
@@ -95,7 +95,6 @@ subsubsection \<open>function call\<close>
       except some cases of optimization.
     Only a function but no other ordinary procedure locates at a decided address in memory during the runtime,
     so that has function pointers to it, and therefore can be indirectly called by the pointer. \<close>
-
 
 
 
@@ -190,15 +189,11 @@ lemma do_while_\<nu>proc:
 
 subsubsection \<open>while\<close>
 
-ML \<open>Proof_Context.note_thmss\<close>
 proc while: \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<close> \<longmapsto> \<open>\<exists>* x. (x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x)\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast (s' \<tycolon> S') (h' \<tycolon> H') vars S H"
     and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H)\<brangle>"
     and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<brangle>"
-  \<bullet> Cond if  \<medium_left_bracket>
-  \<bullet> do_while
-  \<bullet> x'  
-  \<bullet> \<open>cond x'\<close>\<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
+  \<bullet> Cond if \<medium_left_bracket> do_while x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
   finish
 
 
@@ -382,16 +377,17 @@ definition index_enter_tup :: "(('a::field_list),('b::field_list),'x,'y) index \
 lemma FieldIndex_tupl: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_enter_tup f) X \<lbrace> A \<rbrace> gt mp"
   unfolding FieldIndex_def \<nu>index_def index_enter_tup_def by (auto simp add: tuple_forall nu_exps)
 
-\<nu>processor field_index 110 \<open>FieldIndex f X \<lbrace> A \<rbrace> gt mp \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => Parse.nat >> (fn i => fn _ =>
-  NuBasics.elim_SPEC meta |> apfst (fn major =>
+\<nu>processor field_index 110 \<open>FieldIndex f X \<lbrace> A \<rbrace> gt mp \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn major => Parse.nat >> (fn i => fn _ =>
   let open NuBasics NuHelp
-    val arity = Logic.dest_implies (prop_of major) |> #1 |> dest_Trueprop |> dest_quinop \<^const_name>\<open>FieldIndex\<close> |> #3
+    val arity = Logic.dest_implies (prop_of major) |> #1
+        |> dest_Trueprop |> dest_quinop \<^const_name>\<open>FieldIndex\<close> |> #3
         |> dest_monop \<^const_name>\<open>NuTuple\<close> |> strip_binop_r \<^const_name>\<open>Fusion\<close> |> length
     val path1 = funpow (i-1) (fn th => th RS @{thm FieldIndex_right})
-        (@{thm FieldIndex_here} |> (fn th => if arity = i then th else th RS @{thm FieldIndex_left}))
+        (@{thm FieldIndex_here}
+              |> (fn th => if arity = i then th else th RS @{thm FieldIndex_left}))
   in 
-    (path1 RS (@{thm FieldIndex_tupl} RS major))
-  end) |> NuBasics.intro_SPEC )\<close>
+    (path1 RS (@{thm FieldIndex_tupl} RS major), ctx)
+  end)\<close>
 
 
 section \<open>Memory & Pointer Operations\<close>
@@ -489,7 +485,7 @@ theorem alloc_array_\<nu>proc:
 
 proc alloc : \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H\<close> \<longmapsto> \<open>\<exists>*ptr. (R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> ptr \<R_arr_tail> zero \<tycolon> Ref T)\<close>
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T" and [\<nu>intro]: "\<nu>Zero T zero"
-  \<nu>have A[simp]: "replicate 1 zero = [zero]" by (simp add: One_nat_def)
+  have A[simp]: "replicate 1 zero = [zero]" by (simp add: One_nat_def)
   \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> alloc_array T
   finish
 
@@ -513,7 +509,7 @@ theorem op_load[ \<nu>overload "\<up>:" ]:
   for X :: "('x::field, 'c) \<nu>"
   unfolding op_load_def Procedure_def FieldIndex_def \<nu>index_def Heap_Delimiter_def
   by (cases field_index, cases addr)  (auto simp add: lrep_exps MemAddrState_def nu_exps split: option.split iff: addr_allocated_def)
-
+thm "\<up>:_\<nu>app"
 lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF FieldIndex_here, simplified]
 
 proc i_load_n[\<nu>overload "\<up>:"]:

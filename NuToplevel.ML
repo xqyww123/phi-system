@@ -55,12 +55,6 @@ signature NU_TOPLEVEL = sig
   val end_block_cmd : bool -> Proof.state -> Proof.state
   
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
-  val have_aux : ((Thm.binding * attribute list) * (term * term list) list) list
-        -> bool -> Proof.state -> thm list * Proof.state
-  val have_aux_cmd : ((Attrib.binding * Token.src list) * (string * string list) list) list
-        -> bool -> Proof.state -> thm list * Proof.state
-  val name_star_fact_cmd : Attrib.binding -> Proof.state -> Proof.state
-  val drop_fact_cmd : Binding.binding -> Proof.state -> Proof.state
 end
 
 structure NuToplevel : NU_TOPLEVEL = struct
@@ -160,10 +154,13 @@ fun gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process
           ctx |> Proof_Context.put_thms false ("\<nu>thesis",
             SOME [Drule.mk_term (cterm_of ctx (Syntax.check_term
               (Proof_Context.set_mode Proof_Context.mode_schematic ctx) goal))]))
+      |> Proof.map_context (
+          Proof_Context.put_thms false ("\<nu>current", SOME []) #>
+          Proof_Context.put_thms false ("\<glowing_star>", SOME []) )
       |> constr_process
   end
 
-fun gen_begin_proc prep_term prep_typ prep_var prep_Nu post_process =
+fun gen_begin_proc prep_term prep_typ prep_var prep_Nu post_process binding =
   let
     fun mk_Goal ctx_fixes arg_ret_conds =
       let
@@ -172,16 +169,13 @@ fun gen_begin_proc prep_term prep_typ prep_var prep_Nu post_process =
           (Const (@{const_name "Procedure"}, dummyT) $ Var (v_proc_var, dummyT) $ arg $ ret)
         fun constr_process stat =
           let
-            val ctx = Proof.context_of stat
-            val sequent = 
-                  arg |> Syntax.check_term ctx
-                    |> Thm.cterm_of ctx |> start_proc ctx top_blk_name
-                    |> rpair empty_facts_thm |> intro_SPEC
-                    |> Simplifier.simplify ctx
+            val goal_proc = Thm.cprem_of (#goal (Proof.goal stat)) 1 |> Drule.strip_imp_concl
+            val (_,Arg,_) = dest_procedure_c goal_proc
           in
             stat
               |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-              |> Proof.set_facts [sequent]
+              |> Proof.map_context_result (start_proc (Binding.name_of (fst binding)) Arg)
+              |-> NuBasics.set_nu_fact
           end
       in
         (goal, constr_process, preconds)
@@ -193,7 +187,7 @@ fun gen_begin_proc prep_term prep_typ prep_var prep_Nu post_process =
               (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
                   (("\<nu>procedure", ""), [("", [th])]); lthy))
   in
-    gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process'
+    gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process' binding
   end
     
 val begin_proc =
@@ -435,9 +429,8 @@ fun gen_begin_cast_cmd prep_term prep_typ prep_var
             val ([(_,[sequent])],stat) = Proof.map_context_result (
                   Proof_Context.add_assms Assumption.assume_export
                       [(Binding.empty_atts, [(sequent_term,[])])]) stat
-            val sequent = intro_SPEC (sequent, empty_facts_thm)
           in
-            Proof.set_facts [sequent] stat
+            NuBasics.set_nu_fact sequent stat
           end
       in
         (goal, constr_process, preconds)
@@ -525,7 +518,7 @@ local
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
 fun gen_finish_proc prep_specthm qed int stat =
   let
-    val meta = Proof.the_fact stat
+    val meta = NuBasics.the_nu_fact stat
     val ctx = Proof.context_of stat
     val goal = Proof_Context.get_thm ctx "\<nu>thesis" |> Drule.dest_term
     val (_,_,desired_nu) = dest_procedure_c goal
@@ -537,16 +530,14 @@ fun gen_finish_proc prep_specthm qed int stat =
     val meta = meta |> prep_specthm ctx
           (* |> Raw_Simplifier.rewrite_rule ctx @{thms RegisterCollection_rew}
           * *)
-    val meta = meta |> elim_SPEC
-          |> apfst (NuSys.cast_completely (NuSys.load_specthm meta ctx) desired_nu)
-          |> intro_SPEC
-    val end_tac = basic_method (fn ctx' => fn t => 
+    val meta = NuSys.cast_completely ctx desired_nu meta RS @{thm reassemble_proc_0}
+    val end_tac = basic_method (fn ctx' => fn prooof_stat => 
       Runtime.exn_trace (fn () =>
       RSXX (
-        finish_proc (singleton (Proof_Context.export ctx ctx') (elim_SPEC meta |> fst))
+        singleton (Proof_Context.export ctx ctx') meta
           |> conversion_completely ctx' goal
-      ) t)
-      handle e => (Runtime.exn_system_message e; raise @{print} e))
+      ) prooof_stat)
+      handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
   in
     stat |> Proof.set_facts [] 
       |> qed (SOME (end_tac, Position.no_range), false)
@@ -554,87 +545,33 @@ fun gen_finish_proc prep_specthm qed int stat =
 in
 val end_block_cmd = gen_finish_proc (K I) (*NuRegisters.delete_locale*) Proof.local_qed
 
-fun gen_finish_proc' prep_specthm qed int stat =
+(* fun gen_finish_proc' prep_specthm qed int stat =
   let val meta = Proof.the_fact stat
   in if current_block_depth meta > 1 then 
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
-    else gen_finish_proc prep_specthm qed int stat end
+    else gen_finish_proc prep_specthm qed int stat end *)
 val finish_proc_cmd = gen_finish_proc (K I) (*NuRegisters.delete_locale*) Proof.global_qed
 end
 
 
 fun prove_prem int stat =
   let open Proof
-    val specthm = the_fact stat
-    val (focus,aux) = elim_SPEC specthm
-    val goal = Thm.prop_of specthm |> dest_SpecTop |> #1
-          |> Logic.dest_implies |> #1 |> dest_premise_tag |> mk_Trueprop
+    val specthm = the_nu_fact stat
+    val goal = Thm.prop_of specthm
+                |> Logic.dest_implies |> #1 |> dest_premise_tag |> mk_Trueprop
     fun after_qed (ctx',[[th]]) stat =
       let
         val [th] = Proof_Context.export ctx' (context_of stat) [th]
         val th = th RS @{thm NuPrime.Premise_I}
       in
-        set_facts [(NuProcessor.process_no_input
-          (Proof.context_of stat |> AutoLevel.put 0)
-            (intro_SPEC (th RS focus, aux)))] stat
+        stat |> Proof.map_context_result
+                  (AutoLevel.put 0
+                    #> NuProcessor.process_no_input (th RS specthm))
+             |-> NuBasics.set_nu_fact
       end
   in
     stat |> setup_proof (print_results int) Proof_Context.mode_schematic false ""
       NONE after_qed [] [] [[(goal,[])]]
-  end
-
-local
-fun gen_have_aux prep_attr prep_prop goals int stat =
-  let open Proof
-    val ctx = context_of stat
-    fun prep1 ((a,b),c) = ((a, map (prep_attr ctx) b), map (prep_attr ctx) c)
-    val ctx' = Proof_Context.set_mode Proof_Context.mode_schematic ctx
-    fun prep2 (a,b) = (prep_prop ctx a, map (prep_prop ctx') b)
-    val goals = map (fn (a,b) => (prep1 a, map prep2 b)) goals
-    val specthm = the_fact stat
-    val binds = map (fst #> fst) goals
-    val attrs = map (fst #> snd) goals
-    fun apply_attr ctx attr = map (fn th => (proof_attributes attr th ctx |> #1))
-    fun after_qed (ctx',thes) stat =
-      let
-        val ctx = context_of stat
-        val thes = thes |> map (Proof_Context.export ctx' (context_of stat))
-                        |> map2 (apply_attr ctx') attrs
-      in
-        stat |> map_context_result (declare_facts (binds ~~ thes) specthm)
-          |-> set_facts o single
-      end
-  in
-    stat |> setup_proof (print_results int) Proof_Context.mode_default false "\<nu>lemma"
-      NONE after_qed [] [] (map snd goals)
-  end
-in
-val have_aux = gen_have_aux (K I) Syntax.check_prop
-val have_aux_cmd = gen_have_aux Attrib.attribute_cmd Syntax.read_prop
-end
-
-fun process (meta,stat) =
-  (NuProcessor.process_no_input (Proof.context_of stat) meta, stat)
-fun name_star_fact_cmd binding stat =
-  let
-    val ctx = Proof.context_of stat
-    val meta = Proof.the_fact stat
-  in
-    stat 
-      |> Proof.map_context_result
-            (NuSys.name_star_fact (apsnd (map (Attrib.attribute_cmd ctx)) binding) meta)
-      |> process
-      |-> Proof.set_facts o single
-  end
-fun drop_fact_cmd binding stat =
-  let
-    val ctx = Proof.context_of stat
-    val meta = Proof.the_fact stat
-  in
-    stat 
-      |> Proof.map_context_result
-            (NuSys.delete_fact (Binding.name_of binding) meta)
-      |-> Proof.set_facts o single
   end
 
 local
@@ -647,18 +584,20 @@ val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
 val attr_used = map (Attrib.attribute @{context}) @{attributes [used]}
 val elim_premise_tag = perhaps (try (mk_Trueprop o dest_premise_tag))
 in
+
 fun gen_begin_block prep_attr bindings int stat =
   let open Proof
-    val specthm = the_fact stat
+    val specthm = the_nu_fact stat
     val stat = stat |> begin_block
-                |> map_context (open_meta specthm)
     val ctx = context_of stat
-    val (vars, goal) = specthm |> prop_of |> dest_SpecTop |> #1
-          |> Logic.dest_implies |> #1
-          |> dest_Trueprop |> strip_binder @{const_name All}
-    val (inst, stat) = stat
-          |> Proof.map_context_result (fix_frees Position.none vars)
-    val (vars, goal) = (map inst vars, inst goal)
+    val (vars, goal) = prop_of specthm
+                          |> Logic.dest_implies |> #1
+                          |> dest_Trueprop |> strip_binder_raw @{const_name All}
+    val (var_names, stat) = stat
+          |> Proof.map_context_result (Proof_Context.add_fixes
+              (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars))
+    val vars = map (Free o apsnd snd) (var_names ~~ vars)
+    val goal = subst_bounds (rev vars, goal)
     val prems_goal = strip_binop_r @{const_name implies} goal
     val (prems, goal) = (front prems_goal, last prems_goal)
     val (proc,arg,ret) = dest_procedure goal
@@ -666,21 +605,18 @@ fun gen_begin_block prep_attr bindings int stat =
     val level = current_block_depth specthm
     val level_prefix = "L\<nu>'"^(Int.toString level)^"_"^blk_name
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
+    val _ = debug_term ctx "aaaa " goal
     fun after_qed (ctx',[[th]]) stat =
-      end_block stat |> (fn stat => stat
-          |> set_facts[
-            specthm
-              |> elim_SPEC
-              |> apfst (fn focus =>
-                let val ctx'' = context_of stat
-                  val vars' = Variable.export_terms ctx' ctx'' vars
-                in ((singleton (Proof_Context.export ctx' ctx'') th
-                      |> Drule.forall_intr_list (map (cterm_of ctx'') vars')
-                      |> Raw_Simplifier.rewrite_rule ctx'' @{thms atomize_imp atomize_all}
-                    ) COMP focus)
-                end)
-              |> intro_SPEC
-          ])
+      end_block stat |> (fn stat =>
+        stat |> NuBasics.set_nu_fact (
+                  let val ctx'' = context_of stat
+                    val vars' = Variable.export_terms ctx' ctx'' vars
+                  in ((singleton (Proof_Context.export ctx' ctx'') th
+                        |> Drule.forall_intr_list (map (cterm_of ctx'') vars')
+                        |> Raw_Simplifier.rewrite_rule ctx'' @{thms atomize_imp atomize_all}
+                      ) COMP specthm)
+                  end
+          ))
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
     val bindings =
@@ -693,15 +629,13 @@ fun gen_begin_block prep_attr bindings int stat =
           "\<nu>block" NONE after_qed []
           (bindings ~~ (map (single o rpair []) prems))
           [(Binding.empty_atts, [(goal,[])])] |> #2
+ |> @{print}
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
-      |> Seq.the_result "unreachable"
+      |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-      |> (fn stat => let val ctx = Proof.context_of stat
-            val next_specthm = start_proc ctx level_prefix (cterm_of ctx arg)
-              |> rpair (elim_SPEC specthm |> #2) |> intro_SPEC
-              (* |> NuRegisters.new_locale ctx *)
-          in Proof.set_facts [next_specthm] stat end)
+      |> Proof.map_context_result (start_proc level_prefix (cterm_of ctx arg))
+      |-> NuBasics.set_nu_fact
       |> Proof.map_context (fn ctx => 
             Proof_Context.put_thms false ("\<nu>thesis",
               SOME [Drule.mk_term (cterm_of ctx goal)]) ctx
@@ -769,7 +703,8 @@ end
                   |> intro_SPEC
               | NONE => meta)
   in
-    stat |> Proof.set_facts[meta]
+    stat
+      |-> NuBasics.set_nu_fact meta
       |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>proc", [])] false 
   end
 

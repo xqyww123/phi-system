@@ -31,8 +31,7 @@ val expand_appliant =
   perhaps (try (fn th => th RS @{thm Dest_D}))
 
 val thm_apply_proc = @{thm apply_proc}
-fun apply_proc_naive proc =
-  map_major (fn major => expand_appliant proc RS (major RS thm_apply_proc))
+fun apply_proc_naive proc sequent = expand_appliant proc RS (sequent RS thm_apply_proc)
 
 type applicant_idx = int
 type cost = int

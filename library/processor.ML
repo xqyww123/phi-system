@@ -1,12 +1,11 @@
 signature NU_PROCESSOR = sig
   type binding = Binding.binding
-  exception Bypass of thm option
-  exception ProcessTerminated of thm * Token.T list
-  exception ProcessFail of binding * thm * exn
-  exception Process_State_Call of Token.T list * thm * (Proof.state -> Proof.state)
-  exception Process_State_Call' of thm * (Proof.state -> Proof.state)
-  val Process_State_Call'' : thm -> (thm -> Proof.context -> thm * Proof.context) -> exn
-  type proc = (Proof.context -> thm -> (unit -> thm) parser)
+  exception Bypass of (thm * Proof.context) option
+  exception ProcessTerminated of (thm * Proof.context) * Token.T list
+  exception ProcessFail of binding * (thm * Proof.context) * exn
+  exception Process_State_Call of Token.T list * (thm * Proof.context) * (Proof.state -> Proof.state)
+  exception Process_State_Call' of (thm * Proof.context) * (Proof.state -> Proof.state)
+  type proc = (Proof.context -> thm -> (unit -> thm * Proof.context) parser)
   val define : binding -> int (*precedence*) -> term (*pattern*) -> proc -> local_theory -> local_theory
   (* val get : Proof.context -> string -> T option *)
   val defined : Context.generic -> string -> bool
@@ -14,10 +13,11 @@ signature NU_PROCESSOR = sig
   val enable : string -> Context.generic -> Context.generic
   val disable : string -> Context.generic -> Context.generic
   val list : Context.generic -> (binding * term (*pattern*)) list
-  val internal_process : Proof.context -> thm -> thm parser
-  val simple_process   : Proof.context -> thm -> thm parser
+  val internal_process : thm -> Proof.context -> (thm * Proof.context) parser
+  val simple_process : thm -> Proof.context -> (thm * Proof.context) parser
   val powerful_process : Token.T list -> Proof.state -> Proof.state
-  val process_no_input : Proof.context -> thm -> thm
+  val process_by_input : Token.T list -> thm -> Proof.context -> thm * Proof.context
+  val process_no_input : thm -> Proof.context -> thm * Proof.context
   val process_attr : attribute parser
 
   (* be activated only when auto level >= 1 *)
@@ -39,17 +39,14 @@ end
 
 structure NuProcessor : NU_PROCESSOR = struct
 open Thm NuBasics
-exception Bypass of thm option
+exception Bypass of (thm * Proof.context) option
 type binding = Binding.binding
-exception ProcessTerminated of thm * Token.T list
-exception ProcessFail of binding * thm * exn
-type proc = Proof.context -> thm -> (unit -> thm) parser
-exception Process_State_Call of Token.T list * thm * (Proof.state -> Proof.state)
-exception Process_State_Call' of thm * (Proof.state -> Proof.state)
-fun Process_State_Call'' th f = Process_State_Call' (th, (fn stat =>
-      Proof.map_context_result (f (Proof.the_fact stat)) stat
-        |-> (Proof.set_facts o single)))
+exception ProcessTerminated of (thm * Proof.context) * Token.T list
+exception ProcessFail of binding * (thm * Proof.context) * exn
+exception Process_State_Call of Token.T list * (thm * Proof.context) * (Proof.state -> Proof.state)
+exception Process_State_Call' of (thm * Proof.context) * (Proof.state -> Proof.state)
 
+type proc = Proof.context -> thm -> (unit -> thm * Proof.context) parser
 
 datatype processor = Processor of {
               binding : binding,
@@ -83,8 +80,9 @@ val get = Data.get #> Name_Space.get
 fun wrap_attr proc =
   Parse.args >> (fn toks =>
     Thm.rule_attribute [] (fn ctx => fn th =>
-      fst ((proc (Context.proof_of ctx) th --| Scan.catch Parse.eof) toks) ()))
-val wrap_attr = wrap_attr : (Proof.context -> thm -> (unit -> thm) parser) -> attribute parser
+      (proc (Context.proof_of ctx) th --| Scan.catch Parse.eof) toks
+              |> fst |> (fn f => f ()) |> fst))
+val wrap_attr = wrap_attr : proc -> attribute parser
 fun defined ctx name =
   let
     val tab = Data.get ctx
@@ -101,59 +99,67 @@ fun enable name =
 fun disable name =
       Data.map (Name_Space.map_table_entry name (set_enabled false))
 
-exception Processed of (thm * Token.T list)
+exception Processed of ((thm * Proof.context) * Token.T list)
 fun eof_wrap parse [] = (fst (parse [Token.eof]), [])
   | eof_wrap parse toks = parse toks
-fun process_impl ctx procs (th,toks) limit =
+fun process_impl procs (th_ctx,toks) limit =
       let
-        val focus = prop_of th |> dest_SpecTop |> #1
-        val th = fold (fn (_, Processor {binding, pattern, enabled, proc,...}) => fn th =>
-          if not enabled then th
-          else if can (Pattern.match (Context.theory_of ctx) (pattern, focus))
-              (Envir.type_env Envir.init, Envir.term_env Envir.init)
+        val prop = prop_of (fst th_ctx)
+        val th_ctx = fold (fn (_, Processor {binding, pattern, enabled, proc,...}) => fn (th,ctx) =>
+          if not enabled then (th,ctx)
+          else if can (Pattern.match (Proof_Context.theory_of ctx) (pattern, prop))
+                        (Envir.type_env Envir.init, Envir.term_env Envir.init)
           then let
             val _ = if limit > 100 then error "too deep process" else ();
             val (execute,toks) =
-              eof_wrap (proc (Context.proof_of ctx) th || (fn _ => raise Bypass NONE)) toks
+              eof_wrap (proc ctx th || (fn _ => raise Bypass NONE)) toks
             val _ = tracing ("process: " ^ Binding.print binding)
             in
             raise Processed (execute(), toks)
               handle Process_State_Call' (meta,f) =>
-                        raise Process_State_Call (toks,meta,f)
-            end handle Bypass NONE => th
-              | Bypass (SOME th') => th'
-              | Processed th_toks => raise Processed th_toks
-              | ProcessTerminated th_toks => raise ProcessTerminated th_toks
+                  raise Process_State_Call (toks,meta,f)
+            end handle Bypass NONE => (th,ctx)
+              | Bypass (SOME th_ctx') => th_ctx'
+              | Processed th_ctx_toks => raise Processed th_ctx_toks
               | Process_State_Call arg => raise Process_State_Call arg
+              | ProcessTerminated th_ctx_toks => raise ProcessTerminated th_ctx_toks
               | ex => (@{print} th; @{print} binding; Exn.reraise (@{print} ex))
             (* | ex => Exn.reraise (ProcessFail (binding,th,ex)) *)
-          else th)
-        procs th
-      in (th,toks)
+          else (th,ctx)) procs th_ctx
+      in (th_ctx,toks)
       end
-      handle Processed th_toks => process_impl ctx procs th_toks (limit + 1)
+      handle Processed th_ctx_toks => process_impl procs th_ctx_toks (limit + 1)
         | ProcessTerminated th_toks => th_toks
-        | NDBG th => (th,[Token.eof])
+        | NDBG th => ((th,snd th_ctx),[Token.eof])
 
-fun internal_process ctx th toks =
+fun internal_process th ctx toks =
   Runtime.exn_trace (fn _ =>
-  process_impl (Context.Proof ctx)
+  process_impl
     (Data.get (Context.Proof ctx) |> Name_Space.dest_table |> sort (proc_ord o apply2 snd))
-    (th,toks) 0)
+    ((th,ctx),toks) 0)
+
 fun simple_process ctx th toks =
-  internal_process ctx th toks handle Process_State_Call (toks,thm,f) => (thm,toks)
+  internal_process ctx th toks handle Process_State_Call (toks,th_ctx,f) => (th_ctx,toks)
+
 fun powerful_process toks stat =
   let
-    val meta = Proof.the_fact stat
-    val (meta,toks) = (internal_process (Proof.context_of stat) meta
-                          --| Scan.catch Parse.eof) toks
+    val meta = the_nu_fact stat
   in
-    Proof.set_facts [meta] stat
-  end handle Process_State_Call (toks,meta,f) =>
-    powerful_process toks (Proof.set_facts [meta] stat |> f)
+    stat
+      |> Proof.map_context_result (fn ctx =>
+            (internal_process meta ctx --| Scan.catch Parse.eof) toks
+              |> #1
+          )
+      |-> NuBasics.set_nu_fact
+    handle Process_State_Call (toks,(meta,ctx),f) =>
+      powerful_process toks (stat |> Proof.map_context (K ctx)
+                                  |> NuBasics.set_nu_fact meta
+                                  |> f)
+  end
 
-val process_attr = wrap_attr (fn ctx => fn th => simple_process ctx th #> apfst K)
-fun process_no_input ctx th = simple_process ctx th [Token.eof] |> #1
+val process_attr = wrap_attr (fn ctx => fn th => simple_process th ctx #> apfst K)
+fun process_by_input tokens th ctx = simple_process th ctx (tokens @ [Token.eof]) |> #1
+val process_no_input = process_by_input []
 
 
 

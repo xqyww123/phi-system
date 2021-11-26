@@ -476,12 +476,10 @@ lemma CurrentConstruction_D: "CurrentConstruction s T \<Longrightarrow> Inhabite
 (* lemma [elim!,\<nu>elim]: "CurrentConstruction s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding CurrentConstruction_def by (cases s) auto *)
 
-definition CodeBlock :: " ('a::lrep) state \<Rightarrow> heap \<times> ('b::lrep) => (heap \<times> 'b) set \<Rightarrow> ('b \<longmapsto> 'a) \<Rightarrow> bool" where
-  CodeBlock_def: "CodeBlock stat arg ty prog \<longleftrightarrow> (arg \<in> ty \<and> prog arg = stat \<and> stat \<noteq> PartialCorrect)"
+definition CodeBlock :: " ('a::lrep) state \<Rightarrow> ('b::lrep) state => ('b \<longmapsto> 'a) \<Rightarrow> bool" where
+  CodeBlock_def: "CodeBlock stat arg prog \<longleftrightarrow> (bind arg prog = stat \<and> stat \<noteq> PartialCorrect)"
 syntax "_codeblock_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>)" [100,0,0] 3)
-syntax "_codeblock_noarg_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h\<^bold>o\<^bold>u\<^bold>t \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t)" [100,0] 3)
 syntax "_codeblock_" :: "idt \<Rightarrow> logic \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>" [100,0] 3)
-syntax "_codeblock_noarg_" :: "idt \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h\<^bold>o\<^bold>u\<^bold>t \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t" [100] 3)
 
 (* definition CodeBlock' :: " ('a::lrep) state \<Rightarrow> ('b::lrep) state => ('b \<longmapsto> 'a) \<Rightarrow> bool" where
   CodeBlock'_def: "CodeBlock' stat arg prog \<longleftrightarrow> (bind arg prog = stat \<and> stat \<noteq> PartialCorrect)"
@@ -503,12 +501,10 @@ attribute_setup show_codeblock_expression =  \<open>
   end
 \<close>*)
 
-lemma [elim!,\<nu>elim]: "CodeBlock v arg S prog \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding CodeBlock_def Inhabited_def by blast
-lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv> ProtectorI (prog arg))"
+(* lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv> ProtectorI (prog arg))"
   unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
 lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (prog arg) \<equiv> v"
-  unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
+  unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast *)
 
 subsubsection \<open>Contextual Fact\<close>
 
@@ -562,55 +558,33 @@ section \<open>Principal rules\<close>
 
 theorem apply_proc: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
   unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def SpecTop_imp by auto
+ML \<open>first_field "bc" "abcd"\<close>
 
-theorem accept_proc: "\<medium_left_bracket> \<And>s. CodeBlock s a S f \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L ) \<medium_right_bracket> \<Longrightarrow>
-  CodeBlock s' a S (f \<nuInstrComp> g) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: (PROP L))" for L :: "prop" and  s' :: "('c::lrep) state"
-  unfolding PropBlock_def CodeBlock_def instr_comp_def CurrentConstruction_def PendingConstruction_def
-  subgoal premises prems proof (rule SpecTop_I)
-  from prems(2) have sa: "a \<in> S \<and> f a = f a \<and> f a \<noteq> PartialCorrect" 
-    by (cases "f a") (auto simp add: bind_def)
-  note th = prems(1)[OF sa, simplified prems(2)[THEN conjunct1]]
-  from th[THEN SpecTop_focus] show "s' \<in> \<S_S> T" using prems(2) by (blast intro: LooseStateTy_upgrade)
-  from th[THEN SpecTop_facts] show "PROP L" .
-qed done
+theorem accept_proc: "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> CodeBlock s' s f \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  for s' :: "('b::stack) state"
+  unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def
+  by (simp add: LooseStateTy_upgrade)
 
-theorem accept_proc' : "\<medium_left_bracket> \<And>s. CodeBlock s a S f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<medium_right_bracket> \<Longrightarrow>
-  CodeBlock s' a S (f \<nuInstrComp> g) \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)" for  s' :: "('c::lrep) state"
-  unfolding PropBlock_def CodeBlock_def instr_comp_def CurrentConstruction_def PendingConstruction_def bind_def
-  by (auto 4 4)
+theorem reassemble_proc_0:
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g nop \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def nop_def bind_def by (cases s) simp+
 
+theorem reassemble_proc:
+  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<nuInstrComp> g) \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def instr_comp_def
+  by force
 
+theorem reassemble_proc_final:
+  "(\<And>s. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> S \<longmapsto> T \<brangle>"
+  unfolding CurrentConstruction_def PendingConstruction_def Procedure_def bind_def 
+  by force
 
-lemma codeblock_export: "PROP Pure.prop (\<And>s. CodeBlock s a T f \<Longrightarrow> PROP C) \<Longrightarrow> PROP Pure.prop (\<And>s. CodeBlock s a T (f \<nuInstrComp> g) \<Longrightarrow> PROP C)"
-  unfolding CodeBlock_def prop_def instr_comp_def proof -
-  assume A[of "f a", simplified]: "(\<And>s. a \<in> T \<and> f a = s \<and> s \<noteq> PartialCorrect \<Longrightarrow> PROP C)"
-  fix s show "a \<in> T \<and> bind (f a) g = s \<and> s \<noteq> PartialCorrect \<Longrightarrow> PROP C" proof -
-    assume [unfolded bind_def]: "a \<in> T \<and> bind (f a) g = s \<and> s \<noteq> PartialCorrect"
-    then have "a \<in> T \<and> f a \<noteq> PartialCorrect" by auto
-    from this[THEN A] show "PROP C" .
-  qed
-qed
-
-theorem start_proc:
-  "CodeBlock s a S nop \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S"
-  for S :: " (heap \<times> 'a::lrep) set" and a :: "heap \<times> 'a" and s :: "'a state"
-  unfolding nop_def CodeBlock_def CurrentConstruction_def by auto
-
-theorem finish_proc: "(\<And>a s. CodeBlock s a S f \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T))
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>" for S :: "(heap \<times> 'a::lrep) set" and  T :: "(heap \<times> 'b::lrep) set"
-  unfolding CodeBlock_def Procedure_def
-  subgoal premises rule apply (rule,rule) subgoal premises a for a proof -
-    note rule[of "a" "f a", unfolded CurrentConstruction_def, simplified] 
-    then show "f a \<in> \<S> T" unfolding instr_comp_def bind_def
-      using LooseStateTy_introByStrict a by (cases "f a") auto
-  qed done done
-
-theorem start_block:
+(* theorem start_block:
   "((PROP X) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L) \<Longrightarrow>
       CodeBlock s a U nop \<Longrightarrow>
       (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L)"
   for U :: " (heap \<times> 'a::lrep) set" and V :: "(heap \<times> 'b::lrep) set" and s :: " 'a state" and a :: "heap \<times> 'a"
-  unfolding nop_def CodeBlock_def CurrentConstruction_def SpecTop_imp by (rule SpecTop_I) auto
+  unfolding nop_def CodeBlock_def CurrentConstruction_def SpecTop_imp by (rule SpecTop_I) auto *)
 
 lemma rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<blangle> U \<longmapsto> \<R> \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U \<longmapsto> \<R> \<brangle>" by fast
 
@@ -637,117 +611,5 @@ lemma clean_user_facts:
   section \<open>Supplementary structures and mechanisms for elementary functions\<close>
 
 definition "SchemaTag x = x"
-(* translations "x" <= "CONST SchemaTag x" *)
 
-(* definition recursion :: "(('r \<longmapsto> 'r) \<Rightarrow> ('r \<longmapsto> 'r)) \<Rightarrow> 'r \<longmapsto> 'r"
-  where "recursion F s = (if (\<exists>s' R. wf R \<and> wfrec_rel R F s s'))"
-
-lemma t1: "wf R \<Longrightarrow> adm_wf R f \<Longrightarrow> wfrec_rel R f s s1 \<Longrightarrow> wfrec_rel R f s s2 \<Longrightarrow> s1 = s2"
-  using wfrec_unique by metis 
-
-
-lemma tt2:
-  assumes "wf R1" "wf R2" "adm_wf R1 F" "adm_wf R2 F"
-    "wfrec_rel R1 F s s1" "wfrec_rel R2 F s s2"
-  shows "s1 = s2"
-  using \<open>wf R1\<close> \<open>wf R2\<close>
-proof induct
-  define f1 where "f1 y = (THE z. wfrec_rel R1 F y z)" for y
-  case (less x)
-  then have "\<And>y z. (y, x) \<in> R1 \<Longrightarrow> wfrec_rel R1 F y z \<longleftrightarrow> z = f1 y"
-    unfolding f1_def by (rule theI_unique)
-  with \<open>adm_wf R F\<close> show ?case
-    by (subst wfrec_rel.simps) (auto simp: adm_wf_def)
-qed
-
-
-term wfrec
-inductive SemRec :: "(('r \<longmapsto> 'r) \<Rightarrow> ('r \<longmapsto> 'r)) \<Rightarrow> heap \<times> 'r \<Rightarrow> 'r state \<Rightarrow> bool" where
-  "wf R \<Longrightarrow> adm_wf R f \<Longrightarrow> wfrec_rel R f s s' \<Longrightarrow> SemRec f s s' "
-lemma SemRec_deterministic:
-  assumes "SemRec c s s1"
-      and "SemRec c s s2"
-    shows "s1 = s2"
-proof -
-  have "SemRec c s s1 \<Longrightarrow> (\<forall>s2. SemRec c s s2 \<longrightarrow> s1 = s2)"
-    apply (induct rule: SemRec.induct)
-    apply (subst SemRec.simps)
-    using wfrec_unique
-    thm wfrec_unique
-    apply ( simp)+
-  thus ?thesis
-    using assms by simp
-qed
-
-
-thm SemRec.cases
-
-inductive SemUnt :: "('r \<longmapsto> bool \<times> 'r) \<Rightarrow> heap \<times> 'r \<Rightarrow> 'r state \<Rightarrow> bool" where
-  "f s = Success (h,False,r) \<Longrightarrow> SemUnt f s (Success (h,r))"
-| "f s = PartialCorrect \<Longrightarrow> SemUnt f s PartialCorrect"
-| "f s = Success (h,True,r) \<Longrightarrow> SemUnt f (h,r) s'' \<Longrightarrow> SemUnt f s s''"
-
-lemma SemUnt_deterministic:
-  assumes "SemUnt c s s1"
-      and "SemUnt c s s2"
-    shows "s1 = s2"
-proof -
-  have "SemUnt c s s1 \<Longrightarrow> (\<forall>s2. SemUnt c s s2 \<longrightarrow> s1 = s2)"
-    by (induct rule: SemUnt.induct) (subst SemUnt.simps, simp)+
-  thus ?thesis
-    using assms by simp
-qed
-
-definition Unt :: "('r \<longmapsto> bool \<times> 'r) \<Rightarrow> 'r \<longmapsto> 'r" where
-  "Unt f s = (if (\<exists>y. SemUnt f s y) then (THE y. SemUnt f s y) else PartialCorrect)"
-
-lemma "\<exists>until. "
-
-
-
-datatype com =
-  Basic " heap \<times> deep_model \<Rightarrow> heap \<times> deep_model"
-  | Seq com com
-  | Branch "com" "com"
-  | Until "com"
-
-inductive Sem :: "com \<Rightarrow> heap \<times> deep_model \<Rightarrow> heap \<times> deep_model \<Rightarrow> bool" where
-  "Sem (Basic f) s (f s)"
-| "Sem f1 s s' \<Longrightarrow> Sem f2 s' s'' \<Longrightarrow> Sem (Seq f1 f2) s s'' "
-| "Sem f s (h, DM_fusion (DM_int 1 0) s') \<Longrightarrow> Sem (Until f) s (h, s')"
-| "Sem f s (h, DM_fusion (DM_int 1 1) s') \<Longrightarrow> Sem (Until f) (h,s') s'' \<Longrightarrow> Sem (Until f) s s''"
-
-
-end
-codatatype 'a colist = conil | cocons 'a " 'a colist "
-primcorec "from" where "from n  = cocons n (from (Suc n))"
-thm colist.coinduct
-coinductive infinite where
-  Inf: "infinite l \<Longrightarrow> infinite (cocons x l)"
-thm infinite.coinduct
-lemma "infinite (from n)"
-  apply (coinduct rule: infinite.coinduct[of "\<lambda>x. \<exists>n. x = from n "])
-   apply auto
-  using from.code by blast 
-
-  subgoal premises _ for x
-  apply clarify
-  thm from_def
-  thm infinite.coinduct
-
-
-datatype ENat =  N | S  ENat
-/home/xero/
-primrec min where
-  "min N _ = N" | "min _ N = N" | "min (S n) (S m) = min n m"
-   "min n m = (case n of
-       N \<Rightarrow> N
-     | S n' \<Rightarrow> (case m of
-        N \<Rightarrow> N
-      | S m' \<Rightarrow> S (min n' m')))"
-
-coinductive le where
-  leN: "le N m"
-| leS: "le n m \<Longrightarrow> le (S n) (S m)"
-*)
 end
