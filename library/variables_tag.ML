@@ -33,7 +33,7 @@ fun gen_set_variables_tag vars stack_schema heap_schema always ctx meta =
     val heap_ty = fastype_of heap_term
     val stack_ty = fastype_of stack_term
     val stack = strip_binop_r "Product_Type.Pair" (stack_term |> @{print})
-    val heap = strip_binop_r "Product_Type.Pair" heap_term
+    val heap  = strip_binop_r "Product_Type.Pair" heap_term
 
     val arity = length vars
     val names = map fst vars

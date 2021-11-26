@@ -87,9 +87,9 @@ fun gen_reason ctx iter tactics (nprems,best_cost,best_stat) states =
     else case Seq.pull seq
       of SOME (th,seq') =>
           (let
-            val _ = @{print} (cost, th)
             val nprems = if nprems < 0 then Thm.nprems_of th else nprems
             val cost = if Thm.nprems_of th < nprems then cost - 1000000 else cost
+            val _ = @{print} (cost, th)
             val (nprems,best_cost,best_stat) =
               if Thm.nprems_of th < nprems then (Thm.nprems_of th, cost, th)
               else if cost < best_cost then (nprems,cost,th)

@@ -18,11 +18,19 @@ ML \<open>@{term "case x of (i,j,k) \<Rightarrow> f i j k"}\<close>
 term \<open>case_prod\<close>
 term perm
 thm Variant_Cast_I_always
+ML \<open>Seq.the_result\<close>
 declare [ [ML_print_depth = 100] ]
 Variant_Cast_I
+ML \<open>@{term op_recursion}\<close>
+thm op_recursion
+
+ML \<open>val th = Goal.init @{cterm "P \<Longrightarrow> Q \<Longrightarrow> P"} |> Thm.eq_assumption 1\<close>
+
 rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_asterisk> ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
   \<longmapsto> \<open>(Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_asterisk> ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>[32])\<close>
-  var ptr xs premises [used]: "length xs = n"
+  var ptr xs h H premises [used]: "length xs = n"
+apply simp
+thm qsort_\<nu>proc
   \<bullet> -- n 0 = if \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[size_t]\<close> 0
   \<bullet> while
   \<bullet> var i, j, ys in i, j heap "ptr \<R_arr_tail> ys" always 
@@ -38,7 +46,7 @@ rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[
   \<nu>have a1[used]: "j = n \<and> 0 < i" using used by auto
   \<bullet> drop 1 - \<rightarrow> i ptr i 
   \<bullet> split_array ptr n
-  \<bullet> qsort
+  \<bullet> qsor
   thm qsort_\<nu>proc
   
   \<bullet> 

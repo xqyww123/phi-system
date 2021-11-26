@@ -204,7 +204,7 @@ proc while: \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^
 
   subsubsection \<open>recursion\<close>
 
-inductive SemRec :: "(('r \<longmapsto> 'r) \<Rightarrow> ('r \<longmapsto> 'r)) \<Rightarrow> heap \<times> 'r \<Rightarrow> 'r state \<Rightarrow> bool" where
+inductive SemRec :: "(('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y)) \<Rightarrow> heap \<times> 'x \<Rightarrow> 'y state \<Rightarrow> bool" where
   SemRec_I0: "(\<And>g. F g x = y) \<Longrightarrow> SemRec F x y"
 | SemRec_IS: "SemRec (F o F) x y \<Longrightarrow> SemRec F x y"
 
@@ -226,7 +226,7 @@ qed
 lemma SemRec_deterministic2: " SemRec body s x \<Longrightarrow> The ( SemRec body s) = x"
   using SemRec_deterministic by blast
 
-definition op_recursion :: "(('r \<longmapsto> 'r) \<Rightarrow> ('r \<longmapsto> 'r)) \<Rightarrow> 'r \<longmapsto> 'r"
+definition op_recursion :: "(('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y)) \<Rightarrow> 'x \<longmapsto> 'y"
   where "op_recursion F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
 lemma op_recursion:
