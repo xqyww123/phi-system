@@ -394,13 +394,13 @@ fun param_set_free_var_name ctx name thm =
   end
 
 val dest_procedure   = perhaps (try dest_Trueprop)
-  #> strip_binder @{const_name All} #> #2
-  #> strip_binop_r @{const_name HOL.implies} #> last
+  (* #> strip_binder @{const_name All} #> #2
+  #> strip_binop_r @{const_name HOL.implies} #> last *)
   #> (fn tm => dest_triop @{const_name "Function"} tm
       handle TERM _ => dest_triop @{const_name "Procedure"} tm)
 val dest_procedure_c = perhaps (try dest_Trueprop_c)
-  #> strip_binder_c @{const_name All} #> #2
-  #> strip_binop_r_c @{const_name HOL.implies} #> last
+  (* #> strip_binder_c @{const_name All} #> #2
+  #> strip_binop_r_c @{const_name HOL.implies} #> last *)
   #> (fn ctm => dest_triop_c @{const_name "Function"} ctm
       handle TERM _ => dest_triop_c @{const_name "Procedure"} ctm)
 val dest_premise_tag  = dest_monop   @{const_name "NuPrime.Premise"} o perhaps (try dest_Trueprop)
@@ -484,7 +484,7 @@ fun tr_topctx void_tail (Const (@{const_name Pair}, ty1) $ a $ b,
   | tr_topctx void_tail (tm as (a, A)) =
       if is_free_var a andalso is_free_var A then tm
       else
-        let val (a',A') = tr_stack void_tail (@{print} (a, A))
+        let val (a',A') = tr_stack void_tail (a, A)
         in (Const (@{const_name Pair}, dummyT) $ Free ("\<hh>", dummyT) $ a',
               Const (@{const_name NuTopCtx},dummyT) $ Free ("\<HH>", dummyT) $ A') end
 

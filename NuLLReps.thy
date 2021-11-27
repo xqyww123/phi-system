@@ -263,8 +263,7 @@ lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
     val term = ((stack_of_meta meta |> @{print} |> hd |> #2 |> mk)
       handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
         | ERROR _ => mk @{term \<open>\<nat>[32]\<close>}) |> @{print}
-    val ctx = NuSys.load_specthm meta ctx
-  in NuSys.auto_construct ctx term meta  end)
+  in (NuSys.auto_construct ctx term meta, ctx)  end)
 \<close>
 
 

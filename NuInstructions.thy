@@ -562,11 +562,11 @@ lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>proc[THEN mp, THEN mp, OF _ 
 
 fun fib where
   "fib 0 = 1" | "fib (Suc 0) = 1" | "fib (Suc (Suc n)) = fib n + fib (Suc n)"
-lemma [simp]: "(if i \<le> 1 then 1 else fib (i - 2) + fib (i - 1)) = fib i" by (cases i rule: fib.cases) auto
 
 (* int fib (int i) { if (i \<le> 1) return 1; else return fib (i-2) + fib (i-1); } *)
 rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
   \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> i 2 - Fib i 1 - Fib + \<medium_right_bracket>
+  \<bullet> cast_\<nu>app ie_\<nu>app \<open>fib i\<close> affirm by (cases i rule: fib.cases) auto
   finish
 
 

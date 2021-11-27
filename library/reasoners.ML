@@ -6,7 +6,7 @@ structure Nu_Reasoners : NU_REASONERS = struct
 open Thm NuBasics Term
 
 fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
-fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
+fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME (th, Seq.empty)))
 
 (** Tactics **)
 fun head_only tac th =
@@ -14,20 +14,19 @@ fun head_only tac th =
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
-  ((Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used") 1)
-    THEN Method.insert_tac ctx (Proof_Context.get_thms ctx "\<nu>current"
+         Method.insert_tac ctx (Proof_Context.get_thms ctx "\<nu>current"
                                   |> map (fn th => th RS @{thm CurrentConstruction_D})) 1
+    THEN Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used") 1
     THEN Method.insert_tac ctx (Proof_Context.get_thms ctx "\<glowing_star>") 1
-    THEN print_dbg
+    THEN print_dbg "1111"
     THEN Clasimp.auto_tac ctx
-    )
+    THEN print_dbg "1111"
 
 (*** Premise tac ***)
 val Premise_I = @{thm NuPrime.Premise_I}
 fun mk_premise_tac withdraw ctx th =
   if AutoLevel.get ctx >= 2 andalso can (major_prem_of #> dest_Trueprop #> dest_premise_tag) th
-  then (head_only (SOLVED' (K (HEADGOAL (resolve0_tac [Premise_I]) THEN raw_auto
-  ctx THEN print_dbg)) 1)
+  then (head_only (HEADGOAL (SOLVED' (K (raw_auto ctx THEN print_dbg "2222"))))
       ORELSE withdraw) th
   else Seq.empty
 val FailedPremise_I = @{thm FailedPremise_I} and FailedPremise_D = @{thm FailedPremise_D}

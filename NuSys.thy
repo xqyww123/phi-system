@@ -1493,7 +1493,7 @@ declare
       \<nu>application_method 2 20]
 
 (*lemmas apply_func[\<nu>application_method 3 70] = apply_proc[OF _ op_call]*)
-lemmas apply_func_conv[\<nu>application_method 3 100] = apply_proc_conv[OF _ _ op_call, rotated 1 1]
+lemmas apply_func_conv[\<nu>application_method 4 100] = apply_proc_conv[OF _ _ op_call, rotated 1 1, rotated 1 3]
 
 (* consts \<nu>Application_Rewrite :: bool
 setup_\<nu>application_method \<open>\<nu>Application_Rewrite\<close> 1000 \<open>PROP P &&& A = B\<close> | \<open>PROP P &&& (A \<equiv> B)\<close> = \<open>
