@@ -34,10 +34,17 @@ fun mk_let flag_push_back names sequent ctx =
       Proof_Context.add_assms (fn _ => fn As => (local_value_export (@{print} rule) lrep_terms As, I))
         (names ~~ asms |> map (fn (n,a) => ((n,[]), [(term_of a,[])]))) ctx
     val local_value_thms = map (snd #> hd) asm_thms
-    val push_local_values = map (fn th => th RS @{thm op_local_value}) local_value_thms
+
+    val push_local_values    = map (fn th => th RS @{thm op_local_value}) local_value_thms
     val (_,ctx) = Proof_Context.note_thmss ""
       (names ~~ push_local_values |> map (fn (n,th) =>
-        ((Binding.suffix_name "_\<nu>proc" n,[]), [([th],[])]))) ctx
+        ((Binding.suffix_name "_\<nu>app" n,[]), [([th],[])]))) ctx
+
+    val inhabit_local_values = map (fn th => th RS @{thm typing_inhabited}) local_value_thms
+    val exisiting_local_values = Proof_Context.get_thms ctx "\<nu>local_values"
+    val ctx = Proof_Context.put_thms true ("\<nu>local_values",
+                SOME (inhabit_local_values @ exisiting_local_values)) ctx
+
     val (sequent,ctx) = start_proc blk_name arg_nu ctx
   in
     if flag_push_back

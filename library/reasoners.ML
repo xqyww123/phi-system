@@ -14,13 +14,13 @@ fun head_only tac th =
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
-         Method.insert_tac ctx (Proof_Context.get_thms ctx "\<nu>current"
-                                  |> map (fn th => th RS @{thm CurrentConstruction_D})) 1
-    THEN Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used") 1
-    THEN Method.insert_tac ctx (Proof_Context.get_thms ctx "\<glowing_star>") 1
-    THEN print_dbg "1111"
+    Method.insert_tac ctx ((Proof_Context.get_thms ctx "\<nu>current"
+                            |> map (fn th => th RS @{thm CurrentConstruction_D}))
+                          @ Named_Theorems.get ctx "NuSys.used"
+                          @ Proof_Context.get_thms ctx "\<glowing_star>"
+                          @ Proof_Context.get_thms ctx "\<nu>local_values"
+                          ) 1
     THEN Clasimp.auto_tac ctx
-    THEN print_dbg "1111"
 
 (*** Premise tac ***)
 val Premise_I = @{thm NuPrime.Premise_I}

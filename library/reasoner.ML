@@ -64,7 +64,7 @@ fun call_tactics ctx tactics th =
           val tacs = (Logic.strip_assums_concl prem :: Logic.strip_assums_hyp prem)
                           |> maps (fn term =>
                               Cost_Net.retrieve tactics term
-                                |> map (debug "x22" ctx)
+                                (* |> map (debug "x22" ctx) *)
                                 |> map (apsnd (fn (r : reasoner) => #tactic r ctx th)))
                           |> sort (int_ord o apply2 fst)
                           (* |> map_filter (fn (c,seq) =>

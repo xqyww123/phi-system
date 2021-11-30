@@ -1,8 +1,7 @@
 signature NU_PROCEDURE = sig
   val procedure_kind : string
   val cast_kind : string
-  val proc_suffix : string
-  val cast_suffix : string
+  val app_suffix : string
   val compilation_suffix : string
   val define : Attrib.binding -> thm -> local_theory -> thm * local_theory
 end
@@ -10,8 +9,7 @@ end
 structure NuProcedure : NU_PROCEDURE = struct
 open NuBasics
 
-val proc_suffix = "_\<nu>proc"
-val cast_suffix = "_\<nu>cast"
+val app_suffix = "_\<nu>app"
 val compilation_suffix = "_\<nu>compilation"
 val procedure_kind = "\<nu>procedure"
 val cast_kind = "\<nu>cast"
@@ -41,7 +39,7 @@ fun define (binding,attrs) proc_th lthy =
     fun lambda v body = Abs (term_name v, fastype_of v, abstract_over (v,body))
     val f' = fold lambda vars f |> Logic.unvarify_types_global
     val def_binding = Binding.suffix_name compilation_suffix binding
-    val proc_binding = Binding.suffix_name proc_suffix binding
+    val proc_binding = Binding.suffix_name app_suffix binding
     fun rename def proc_th =
           (proc_th RS (def RS @{thm rename_func}))
       handle THM _ =>

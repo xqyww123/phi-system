@@ -31,28 +31,22 @@ rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[
   var ptr xs premises [used]: "length xs = n"
 thm qsort
   \<bullet> -- n 0 = if \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[size_t]\<close> 0
-  \<bullet> while
-  \<bullet> var i, j, ys in i, j heap "ptr \<R_arr_tail> ys" always 
+  \<bullet> while var i, j, ys in i, j heap "ptr \<R_arr_tail> ys" always 
     \<open>i \<le> j \<and> j \<le> n \<and> length ys = n \<and>
     (if j = n then 0 < i \<and> ys ! (i-1) = xs ! (n-1) else ys ! (n-1) = xs ! (n-1)) \<and>
-    (\<forall>k. k <i \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! (n-1) < ys ! k)\<close>
-  \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket>
-  \<bullet> \<medium_left_bracket> \<rightarrow> i,j ptr i \<up>\<rightarrow> i' ptr j \<up>-- j' pivot \<le> if
-  \<bullet> \<medium_left_bracket> ptr j i' \<down> ptr i j' \<down> n i 1 
-  \<bullet> + \<rightarrow> i1 drop i1 \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket>
-  \<bullet> n j 1 + \<rightarrow> j1 drop j1
-  \<bullet> \<medium_right_bracket>
+    (\<forall>k. k <i \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! (n-1) < ys ! k)\<close> 
+  \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket> \<medium_left_bracket> \<rightarrow> i, j ptr i \<up>\<rightarrow> i' ptr j \<up>-- j' pivot \<le> if \<medium_left_bracket> ptr j i' \<down> ptr i j' \<down> i 1 + \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket> j 1 + \<medium_right_bracket>
   have a1[used]: "j = n \<and> 0 < i" using used \<glowing_star> by auto
   \<bullet> drop 1 - \<rightarrow> i ptr i 
   \<bullet> split_array 
   \<bullet>  ptr n
   \<bullet> qsort
-  thm qsort_\<nu>proc
+  thm qsort_\<nu>app
   
   \<bullet> 
   \<bullet> xs2, i, j \<Longrightarrow> x[used] \<bullet> drop 1 - \<rightarrow> i i split \<bullet> i qsort
   \<nu>debug 
-  thm qsort_\<nu>proc
+  thm qsort_\<nu>app
 
 (*   \<bullet> \<Longrightarrow> precondition[used] \<bullet> \<rightarrow> (v,n) n 0 = if \<medium_left_bracket> \<bullet> $v \<medium_right_bracket> \<medium_left_bracket> \<bullet> $v \<open>0\<tycolon>\<nat>[32]\<close> \<up>\<rightarrow> pivot \<open>1\<tycolon>\<nat>[32]\<close> \<open>1\<tycolon>\<nat>[32]\<close>
   \<bullet> while xs' i j in \<open>((seg |+ ofs) \<R_arr_tail> xs', i, j)\<close> subj \<open>j \<noteq> n\<close>
@@ -82,7 +76,7 @@ proc add2: "(x \<tycolon> \<nat>[32]\<heavy_comma> y \<tycolon> \<nat>[32])" \<l
   \<bullet> x x y + +
   finish
 
-thm add2_\<nu>proc
+thm add2_\<nu>app
 
 
 
@@ -109,12 +103,12 @@ proc qsort: \<open> (seg |+ i) \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<hea
   requires "length xs = n"
   \<bullet> \<leftarrow> (v,n) pr recursion \<open>(\<lambda>x. case x of ((seg |+ i) \<R_arr_tail> xs, n) \<Rightarrow>
         { (seg |+ i) \<R_arr_tail> ys | ys. permuted xs ys \<and> sorted ys })\<close> \<open>\<^bold>s\<^bold>o\<^bold>m\<^bold>e (Array \<nat>[32])\<close>
-  \<medium_left_bracket> (g_\<nu>proc) \<nu>obtain seg i xs n  where [simp]: "x' = ((seg |+ i) \<R_arr_tail> xs, n)"
+  \<medium_left_bracket> (g_\<nu>app) \<nu>obtain seg i xs n  where [simp]: "x' = ((seg |+ i) \<R_arr_tail> xs, n)"
   by (metis memadr.exhaust object.exhaust old.prod.exhaust) \<bullet>
   \<nu>obtain seg i xs n  where B[simp]: "x' = ((seg |+ i) \<R_arr_tail> xs, n)"
 by (metis memadr.exhaust object.exhaust old.prod.exhaust) \<bullet>
   \<bullet> dpr \<rightarrow> (xs, n) n 0 = if 
-  \<nu>debug note g_\<nu>proc
+  \<nu>debug note g_\<nu>app
 
 ML \<open>Locale.get_locales @{theory}\<close>
 ML \<open>val ctx = Locale.init "NuPrime.ceq_lrep" @{theory}
@@ -132,13 +126,13 @@ fun fib :: "nat \<Rightarrow> nat"
   where "fib x = (if x = 0 then 1 else if x = 1 then 1 else fib (x-1) + fib (x-2))"
 
 proc fibx : "x \<tycolon> \<nat>[32]" \<longmapsto> "fib x \<tycolon> \<nat>\<^sup>r[32]"
-  \<bullet> x recursion fib \<open>\<nat>\<^sup>r[32]\<close> less_than \<medium_left_bracket> (g_\<nu>proc)
+  \<bullet> x recursion fib \<open>\<nat>\<^sup>r[32]\<close> less_than \<medium_left_bracket> (g_\<nu>app)
   \<bullet> \<rightarrow> x x 0 = if \<medium_left_bracket> \<bullet> \<open>1\<tycolon>\<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> (c0[used])
       \<bullet> x 1 = if \<medium_left_bracket> \<bullet> \<open>1\<tycolon>\<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> (c1[used]) \<bullet> x 1 - g \<rightarrow> f1 x 2 - g \<rightarrow> f2 f1 f2 + \<medium_right_bracket>
   \<medium_right_bracket> \<medium_right_bracket>
   finish
 
-  thm fibx_\<nu>proc
+  thm fibx_\<nu>app
 
 fun ackman :: "(nat \<times> nat) \<Rightarrow> nat"
   where "ackman (0,n) = Suc n"
@@ -148,7 +142,7 @@ fun ackman :: "(nat \<times> nat) \<Rightarrow> nat"
 thm begin_proc_ctx
 proc ackman : "(x \<tycolon> \<nat>[32], y \<tycolon> \<nat>[32])" \<longmapsto> "ackman (x,y) \<tycolon> \<nat>[32]" if cond: "ackman (x,y) < 2^32"
   \<bullet> x y pr cast where \<open>{xy. ackman xy < 2^32}\<close> affirm using cond by simp
-  \<bullet> recursion ackman \<open>\<nat>[32]\<close> \<open>less_than <*lex*> less_than\<close> \<medium_left_bracket> (g_\<nu>proc)
+  \<bullet> recursion ackman \<open>\<nat>[32]\<close> \<open>less_than <*lex*> less_than\<close> \<medium_left_bracket> (g_\<nu>app)
   \<nu>obtain m n where th1[simp]: "x' = (m,n)" by (cases x')
   \<bullet> cast E \<Longrightarrow> th2[used] \<bullet> dpr \<rightarrow> (m,n) m 0 = if \<medium_left_bracket> \<bullet> n 1 + \<medium_right_bracket> \<medium_left_bracket> \<bullet> m 1 -
   \<bullet> n 0 = if \<medium_left_bracket> \<bullet> 1 pr 
@@ -185,7 +179,7 @@ if A[used]:"x < 100" and [used]:"y < 100"
     \<nu>obtain z where c: "x < z" by auto
   finish
 
-thm add2_\<nu>proc
+thm add2_\<nu>app
 
 
 

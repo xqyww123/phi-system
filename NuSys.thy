@@ -1377,17 +1377,17 @@ definition op_depair :: "(('b::lrep) \<times> ('a::lrep)) \<times> ('r::stack) \
   where "op_depair h x = (case x of ((b,a),r) \<Rightarrow> Success h (a,b,r))"
 (* declare op_pair_def[\<nu>instr] op_depair_def[\<nu>instr] *)
 
-theorem pr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<cross_product> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
-theorem dpr_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<cross_product> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
+theorem pr_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<cross_product> B) \<brangle>" unfolding \<nu>def  op_pair_def by auto
+theorem dpr_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<cross_product> B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>" unfolding \<nu>def  op_depair_def by auto
 (*
 lemma pr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<cross_product>' B) \<flower> W \<brangle>"
-  unfolding AutoFusion_def by (rule call) (rule pr_\<nu>proc)
+  unfolding AutoFusion_def by (rule call) (rule pr_\<nu>app)
 lemma dpr_auto_schema: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c call op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<cross_product>' B) \<flower> W \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<flower> W \<brangle>"
-  unfolding AutoFusion_def by (rule call) (rule dpr_\<nu>proc)
+  unfolding AutoFusion_def by (rule call) (rule dpr_\<nu>app)
 lemma pr_auto_schema': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_pair \<blangle> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<longmapsto> R \<heavy_comma> (a,b) \<tycolon> (A \<cross_product>' B) \<brangle>"
-  unfolding AutoFusion_def by (rule pr_\<nu>proc)
+  unfolding AutoFusion_def by (rule pr_\<nu>app)
 lemma dpr_auto_schema': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R \<heavy_comma> (a,b) \<tycolon> (A \<cross_product>' B) \<longmapsto> R \<heavy_comma> a \<tycolon> A \<heavy_comma> b \<tycolon> B \<brangle>"
-  unfolding AutoFusion_def by (rule dpr_\<nu>proc)
+  unfolding AutoFusion_def by (rule dpr_\<nu>app)
 *)
 section \<open>Sugars\<close>
 

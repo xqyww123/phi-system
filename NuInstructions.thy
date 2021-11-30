@@ -23,7 +23,7 @@ subsection \<open>Basic sequential instructions\<close>
 subsubsection \<open>crash\<close>
 
 definition op_crash :: "('x::stack) \<longmapsto> ('y::stack)" where "op_crash _ = PartialCorrect"
-lemma crash_\<nu>proc[no_atp]:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
+lemma crash_\<nu>app[no_atp]:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
 
 
 subsubsection \<open>drop\<close>
@@ -31,7 +31,7 @@ subsubsection \<open>drop\<close>
 definition op_drop :: "('a::lrep) \<times> ('r::stack) \<longmapsto> 'r" where
   "op_drop x = (case x of (h,a,r) \<Rightarrow> Success (h,r))"
 declare op_drop_def[\<nu>instr]
-theorem drop_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> R\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+theorem drop_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> R\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding \<nu>def op_drop_def by (auto simp add: nu_exps)
 
 subsubsection \<open>duplication\<close>
@@ -39,7 +39,7 @@ subsubsection \<open>duplication\<close>
 definition op_dup :: "('a::lrep) \<times> ('r::stack) \<longmapsto> ('a \<times> 'a \<times> 'r)"
   where "op_dup x = (case x of (h,a,r) \<Rightarrow> Success (h, a, a, r))"
 declare op_dup_def[\<nu>instr]
-theorem dup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> X\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H\<brangle>"
+theorem dup_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> X\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H\<brangle>"
   unfolding \<nu>def op_dup_def by (auto simp add: nu_exps)
 
 
@@ -121,7 +121,7 @@ definition op_if :: " ('s::stack \<longmapsto> 't::stack) \<Rightarrow> ('s \<lo
   where "op_if brT brF s = (case s of (heap,c,r) \<Rightarrow> if c = 1 then brT (heap,r) else brF (heap,r))"
 declare op_if_def[\<nu>instr]
 
-theorem if_\<nu>proc:
+theorem if_\<nu>app:
   "(cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> X \<longmapsto> Y\<^sub>T \<brangle>)
     \<longrightarrow> SameNuTy Y\<^sub>T Y\<^sub>F
     \<longrightarrow> (\<not> cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> X \<longmapsto> Y\<^sub>F \<brangle>)
@@ -168,7 +168,7 @@ lemma SemDoWhile_deterministic2: " SemDoWhile body s x \<Longrightarrow> The ( S
 definition DoWhile :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<longmapsto> 'r" where
   "DoWhile f s = (if (\<exists>y. SemDoWhile f s y) then The (SemDoWhile f s) else PartialCorrect)"
 
-lemma "__DoWhile___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<heavy_comma>^ P x' \<tycolon> \<bool> \<brangle>)
+lemma "__DoWhile___\<nu>app": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<heavy_comma>^ P x' \<tycolon> \<bool> \<brangle>)
   \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c DoWhile body \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<and>\<^sup>s (\<not> P x') \<brangle>"
 (*  for X :: "(heap \<times> 'a::lrep, 'b) \<nu>" *)
   unfolding DoWhile_def Procedure_def Auto_def
@@ -179,14 +179,14 @@ lemma "__DoWhile___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>
   done
 
 
-lemma do_while_\<nu>proc:
+lemma do_while_\<nu>app:
   "Variant_Cast vars S S' \<longrightarrow>
   \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
   (\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> S' x \<longmapsto> \<exists>* x'. (S' x' \<heavy_comma>^ cond x' \<tycolon> \<bool>) \<brangle>) \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c DoWhile body \<blangle> S \<longmapsto> \<exists>* x'. S' x' \<and>\<^sup>s (\<not> cond x') \<brangle>"
   unfolding Variant_Cast_def Premise_def apply simp
-  using "__DoWhile___\<nu>proc"[of "cond" _ "S'", unfolded Premise_def] by blast
+  using "__DoWhile___\<nu>app"[of "cond" _ "S'", unfolded Premise_def] by blast
 
 
 subsubsection \<open>while\<close>
@@ -194,8 +194,8 @@ subsubsection \<open>while\<close>
 proc while: \<open>S'\<close> \<longmapsto> \<open>\<exists>* x. S x \<and>\<^sup>s (\<not> cond x)\<close>
   for S' :: " (heap \<times> 'b::stack) set"
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars S' S"
-    and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> S x \<longmapsto> \<exists>* x'. (S x'\<heavy_comma>^ cond x' \<tycolon> \<bool>)\<brangle>"
-    and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> S x \<longmapsto> \<exists>* x'. S x' \<brangle>"
+    and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> S x \<longmapsto> \<exists>* x'. (S x'\<heavy_comma>^ cond x' \<tycolon> \<bool>)\<brangle>"
+    and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> S x \<longmapsto> \<exists>* x'. S x' \<brangle>"
   \<bullet> Cond if \<medium_left_bracket> do_while x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
   finish
 
@@ -245,9 +245,9 @@ subsubsection \<open>constant\<close>
 
 definition op_const_int :: "('w::len) itself \<Rightarrow> ('w::len) word \<Rightarrow> ('r::stack) \<longmapsto> 'w word \<times> 'r"
   where "op_const_int _ c = (\<lambda>(heap,r). Success (heap,c,r))"
-theorem const_nat_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) c \<blangle> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R \<heavy_comma> unat c \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+theorem const_nat_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) c \<blangle> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R \<heavy_comma> unat c \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding \<nu>def op_const_int_def by (auto simp add: nu_exps)
-(* theorem const_nat_round_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (of_nat n) \<blangle> R \<longmapsto> R \<heavy_comma> n \<tycolon> \<nat>\<^sup>r['w] \<brangle>"
+(* theorem const_nat_round_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (of_nat n) \<blangle> R \<longmapsto> R \<heavy_comma> n \<tycolon> \<nat>\<^sup>r['w] \<brangle>"
   unfolding \<nu>def op_const_int_def by auto *)
 
 lemma [\<nu>intro]:
@@ -257,10 +257,10 @@ lemma [\<nu>intro]:
   \<comment> \<open>Only literal number could be constructed automatically\<close>
 lemma [\<nu>intro]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (0 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 0 \<blangle> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R \<heavy_comma> 0 \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
-  unfolding AutoConstruct_def using const_nat_\<nu>proc by (metis unat_0) 
+  unfolding AutoConstruct_def using const_nat_\<nu>app by (metis unat_0) 
 lemma [\<nu>intro]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t (1 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 1 \<blangle> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> 1 \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
-  unfolding AutoConstruct_def using const_nat_\<nu>proc by (metis unat_1)
+  unfolding AutoConstruct_def using const_nat_\<nu>app by (metis unat_1)
 
 lemma [\<nu>intro]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>
@@ -289,7 +289,7 @@ definition op_add :: "'a itself \<Rightarrow> ('a::len) word \<times> ('a::len) 
   where "op_add _ = (\<lambda>(h,a,b,r). Success (h,a+b, r))"
 declare op_add_def[\<nu>instr]
 
-theorem add_nat_\<nu>proc[\<nu>overload +]:
+theorem add_nat_\<nu>app[\<nu>overload +]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add TYPE('b) \<blangle> R\<heavy_comma> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> x + y \<tycolon> \<nat>['b]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding op_add_def Procedure_def by (auto simp add: of_nat_inverse nu_exps)
 
@@ -305,7 +305,7 @@ subsubsection \<open>subtraction\<close>
 definition op_sub :: "('a::len) itself \<Rightarrow> 'a word \<times> 'a word \<times> ('r::lrep) \<longmapsto> 'a word \<times> 'r"
   where "op_sub _ = (\<lambda>(h,a,b,r) \<Rightarrow> Success (h,b - a, r))"
 declare op_sub_def[\<nu>instr]
-theorem sub_nat_\<nu>proc[\<nu>overload -]:
+theorem sub_nat_\<nu>app[\<nu>overload -]:
     "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub TYPE('w::len) \<blangle> R\<heavy_comma> x \<tycolon> \<nat>['w] \<heavy_comma> y \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> x - y \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding \<nu>def op_sub_def by (auto simp add: nu_exps) (meson unat_sub_if_size)
   
@@ -314,13 +314,13 @@ subsubsection \<open>less\<close>
 definition op_lt :: " ('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<times> ('r::lrep) \<longmapsto> 1 word \<times> 'r"
   where "op_lt _ = (\<lambda>(h,a,b,r).  Success (h, (if  b < a then 1 else 0), r))"
 declare op_lt_def[\<nu>instr]
-theorem op_lt_\<nu>proc[\<nu>overload <]:
+theorem op_lt_\<nu>app[\<nu>overload <]:
     "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt TYPE('w::len) \<blangle> R\<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> (x < y) \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding \<nu>def op_lt_def by (auto simp add: word_less_nat_alt nu_exps)
 
 definition op_le :: " ('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<times> ('r::lrep) \<longmapsto> 1 word \<times> 'r "
   where "op_le _ = (\<lambda>(h,a,b,r).  Success (h, (if  b \<le> a then 1 else 0), r))"
-theorem op_le_\<nu>proc[\<nu>overload \<le>]:
+theorem op_le_\<nu>app[\<nu>overload \<le>]:
     "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le TYPE('w::len) \<blangle> R\<heavy_comma> x \<tycolon> \<nat>['w]\<heavy_comma> y \<tycolon> \<nat>['w]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> (x \<le> y) \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding \<nu>def op_le_def by (auto simp add: word_le_nat_alt nu_exps)
 
@@ -329,7 +329,7 @@ subsubsection \<open>bit-wise not\<close>
 definition op_not :: "('w::len) itself \<Rightarrow> 'w word \<times> ('r::stack) \<longmapsto> 'w word \<times> 'r"
   where "op_not len = (\<lambda>(h,x,r). Success (h,not x,r))"
 
-lemma boolean_not_\<nu>proc[\<nu>overload not]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not TYPE(1) \<blangle> R\<heavy_comma> x \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> \<not> x \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+lemma boolean_not_\<nu>app[\<nu>overload not]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not TYPE(1) \<blangle> R\<heavy_comma> x \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> \<not> x \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding Procedure_def op_not_def apply (auto simp add: lrep_exps nu_exps)
   by (metis even_take_bit_eq even_zero iszero_def odd_numeral one_neq_zero)
 
@@ -350,7 +350,7 @@ subsubsection \<open>op_constr_tuple\<close>
 definition op_constr_tuple :: "('a::field_list) \<times> ('r::stack) \<longmapsto> 'a tuple \<times> 'r"
   where "op_constr_tuple = (\<lambda>(h,a,r). Success (h, Tuple a, r))"
 
-theorem tup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_constr_tuple \<blangle> R \<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R \<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+theorem tup_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_constr_tuple \<blangle> R \<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R \<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace> \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding op_constr_tuple_def Procedure_def by (simp add: pair_forall nu_exps)
 
 subsubsection \<open>op_destr_tuple\<close>
@@ -358,7 +358,7 @@ subsubsection \<open>op_destr_tuple\<close>
 definition op_destr_tuple :: "('a::field_list) tuple \<times> ('r::stack) \<longmapsto> 'a \<times> 'r"
   where "op_destr_tuple s = (case s of (h,Tuple a, r) \<Rightarrow> Success (h,a,r))"
 
-theorem det_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_destr_tuple \<blangle> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
+theorem det_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_destr_tuple \<blangle> R\<heavy_comma> x \<tycolon> \<lbrace> X \<rbrace>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
   unfolding Procedure_def op_destr_tuple_def by (simp add: tuple_forall pair_forall nu_exps)
 
 subsection \<open>Field Index\<close>
@@ -476,7 +476,7 @@ definition op_alloc :: "('x::{zero,field}) itself \<Rightarrow> size_t word \<ti
 
 
       
-theorem alloc_array_\<nu>proc:
+theorem alloc_array_\<nu>app:
   "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
       \<blangle> R\<heavy_comma> n \<tycolon> \<nat>[size_t] \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H
         \<longmapsto> (\<exists>*seg. (R\<heavy_comma> (seg |+ 0) \<tycolon> Pointer \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Array N)) \<brangle>"
@@ -522,7 +522,7 @@ proc i_load_n[\<nu>overload "\<up>:"]:
   \<bullet> + \<up>: idx
   finish
 
-lemmas [ \<nu>overload "\<up>" ] = i_load_n_\<nu>proc[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
+lemmas [ \<nu>overload "\<up>" ] = i_load_n_\<nu>app[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
 
 
 subsubsection \<open>store\<close>
@@ -560,7 +560,7 @@ proc i_store_n[\<nu>overload "\<down>:"]:
   \<bullet> \<rightarrow> y + y \<down>: idx drop
   finish
 
-lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>proc[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
+lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>app[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
 
 
 fun fib where
@@ -569,7 +569,7 @@ fun fib where
 (* int fib (int i) { if (i \<le> 1) return 1; else return fib (i-2) + fib (i-1); } *)
 rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
   \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> i 2 - Fib i 1 - Fib + \<medium_right_bracket>
-  \<bullet> cast_\<nu>app ie_\<nu>app \<open>fib i\<close> affirm by (cases i rule: fib.cases) auto
+  \<bullet> cast ie \<open>fib i\<close> affirm by (cases i rule: fib.cases) auto
   finish
 
 

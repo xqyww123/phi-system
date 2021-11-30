@@ -84,7 +84,7 @@ val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 val v_lrep_var = "\<l>\<r>\<e>\<p>"
-val v_goal_name = "\<nu>goalaa"
+val v_goal_name = "\<nu>goal"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
 
@@ -150,6 +150,7 @@ fun gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process
       |> Seq.the_result "never fail"
       |> Proof.map_context (
           Proof_Context.put_thms false ("\<nu>current", SOME []) #>
+          Proof_Context.put_thms false ("\<nu>local_values", SOME []) #>
           Proof_Context.put_thms false ("\<glowing_star>", SOME []) )
       |> constr_process
   end
@@ -400,7 +401,7 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
               Const (@{const_name All}, dummyT) $ Abs("x", dummyT,
                 (Const (@{const_name Function}, dummyT) $ Free (func_name, dummyT) $ arg' $ ret')))
       in
-        (arg, ret, ((Binding.suffix_name "_\<nu>proc" binding,
+        (arg, ret, ((Binding.suffix_name "_\<nu>app" binding,
         []
           ), [(cond_G,[])]) :: conds)
       end
@@ -497,7 +498,7 @@ val begin_cast_cmd =
   let
     (* val pr_proc = @{thm pr_auto_schema'}
     val dpr_proc = @{thm dpr_auto_schema'} *)
-    val i_rec_proc = Proof_Context.get_thm ctx "NuInstructions.i_recursion_\<nu>proc"
+    val i_rec_proc = Proof_Context.get_thm ctx "NuInstructions.i_recursion_\<nu>app"
 
     val ((fixes,_), ctx_parse) = prep_decls prep_var rawfixes ctx
     val ((loop_vars, loop_vars_names'), ctx_parse) =
@@ -549,7 +550,7 @@ val begin_cast_cmd =
               | NONE => meta)
   in
     stat |> Proof.set_facts[meta]
-      |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>proc", [])] false 
+      |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>app", [])] false 
   end *)
 
 
@@ -667,7 +668,7 @@ fun gen_begin_block prep_attr bindings int stat =
   in
     stat
       |> internal_goal (print_results int) Proof_Context.mode_schematic false 
-          "\<nu>block" NONE after_qed []
+          "" NONE after_qed []
           (bindings ~~ (map (single o rpair []) prems))
           [(Binding.empty_atts, [(goal,[])])] |> #2
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
@@ -692,7 +693,7 @@ end
   let
     (* val pr_proc = @{thm pr_auto_schema'}
     val dpr_proc = @{thm dpr_auto_schema'} *)
-    val i_rec_proc = Proof_Context.get_thm ctx "NuInstructions.i_recursion_\<nu>proc"
+    val i_rec_proc = Proof_Context.get_thm ctx "NuInstructions.i_recursion_\<nu>app"
 
     val ((fixes,_), ctx_parse) = prep_decls prep_var rawfixes ctx
     val ((loop_vars, loop_vars_names'), ctx_parse) =
@@ -745,7 +746,7 @@ end
   in
     stat
       |-> NuBasics.set_nu_fact meta
-      |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>proc", [])] false 
+      |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>app", [])] false 
   end
 
 val begin_rec_proc_cmd = gen_begin_rec_proc Syntax.parse_term
