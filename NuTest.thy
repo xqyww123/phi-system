@@ -28,9 +28,8 @@ ML \<open>val th = Goal.init @{cterm "P \<Longrightarrow> Q \<Longrightarrow> P"
 
 rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_asterisk> ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
   \<longmapsto> \<open>(Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_asterisk> ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>[32])\<close>
-  var ptr xs h H premises [used]: "length xs = n"
-apply simp
-thm qsort_\<nu>proc
+  var ptr xs premises [used]: "length xs = n"
+thm qsort
   \<bullet> -- n 0 = if \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[size_t]\<close> 0
   \<bullet> while
   \<bullet> var i, j, ys in i, j heap "ptr \<R_arr_tail> ys" always 
@@ -43,10 +42,11 @@ thm qsort_\<nu>proc
   \<bullet> + \<rightarrow> i1 drop i1 \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket>
   \<bullet> n j 1 + \<rightarrow> j1 drop j1
   \<bullet> \<medium_right_bracket>
-  \<nu>have a1[used]: "j = n \<and> 0 < i" using used by auto
+  have a1[used]: "j = n \<and> 0 < i" using used \<glowing_star> by auto
   \<bullet> drop 1 - \<rightarrow> i ptr i 
-  \<bullet> split_array ptr n
-  \<bullet> qsor
+  \<bullet> split_array 
+  \<bullet>  ptr n
+  \<bullet> qsort
   thm qsort_\<nu>proc
   
   \<bullet> 

@@ -106,13 +106,6 @@ fun print_results int = Proof_Display.print_results int (Position.thread_data ()
     (goal,th)
   end *)
 
-fun init_registers ctx meta = meta
-  (* apply_proc_naive (
-      funpow (length (stack_of_meta meta) - 1) (fn th => th RS @{thm index_right_mapper})
-        @{thm index_here_mapper}
-      RS @{thm op_init_register})
-      (Raw_Simplifier.rewrite_rule ctx @{thms StackDelimiter_to_AndTy} meta |> @{print})
-    |> NuSys.accept_proc ctx *)
 val empty_facts_thm = @{thm NuPrime.empty_facts}
 
 fun prep_decls prep_var raw_vars ctxt =
@@ -166,6 +159,9 @@ fun gen_begin_proc prep_term prep_typ prep_var prep_Nu post_process binding =
     fun mk_Goal ctx_fixes arg_ret_conds =
       let
         val (arg, ret, preconds) = prep_Nu ctx_fixes arg_ret_conds
+        val ctx = fst ctx_fixes
+        val _ = debug_term ctx "aaa " arg
+        val _ = debug_term ctx "ret " ret
         val goal = mk_Trueprop
           (Const (@{const_name "Procedure"}, dummyT) $ Var (v_proc_var, dummyT) $ arg $ ret)
 
@@ -202,8 +198,8 @@ val begin_proc =
 val begin_proc_cmd =
       gen_begin_proc Syntax.parse_term Syntax.parse_typ Proof_Context.read_var
         (fn (ctx,_) => fn (arg,ret,conds) =>
-          (mk_repset (NuBasics.parse_arg_list false arg),
-           mk_repset (NuBasics.parse_arg_list false ret),
+          (NuBasics.parse_arg_list false arg,
+           NuBasics.parse_arg_list false ret,
            conds)
         ) (K I)
 
@@ -221,27 +217,20 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
 
         val arg = NuBasics.parse_arg_list true arg
         val ret = NuBasics.parse_arg_list true ret
-        val (arg_x, arg_Nu) = dest_nuTy arg
-        val (ret_x, ret_Nu) = dest_nuTy ret
-        val arg_pat = tuple_abs vars arg_x |> mk_cases_named origin_names
-        val ret_pat = tuple_abs vars ret_x |> mk_cases_named origin_names
         val x = Const (@{const_name tag}, dummyT) $
                   list_mk_binop_r @{const_name Pair} (map Free (var_names ~~ var_tys))
 
         val conds' = map (snd #> fst #> perhaps (try dest_Trueprop)) conds
-        val arg_Nu' =
-              mk_auto_tag (NuBasics.mk_binop @{const_name DownLift} (arg_Nu, arg_pat))
-                |> fold_rev (fn c => fn Nu =>
-                      mk_auto_tag (NuBasics.mk_binop @{const_name NuAddition} (Nu,c))) conds'
-                |> tuple_abs vars
-                |> mk_cases_named origin_names
-                |> (fn tm => tm $ Bound 0)
-        val ret_Nu' = ret_Nu
-                |> tuple_abs vars
-                |> mk_cases_named origin_names
-                |> (fn tm => tm $ Bound 0)
-        val arg' = mk_nuTy (Bound 0, arg_Nu') |> mk_repset
-        val ret' = mk_nuTy (ret_pat $ Bound 0, ret_Nu') |> mk_repset
+        val arg' = arg
+              |> fold_rev (fn c => fn Nu =>
+                    NuBasics.mk_binop @{const_name AdditionSet} (Nu,c)) conds'
+              |> tuple_abs vars
+              |> mk_cases_named origin_names
+              |> (fn tm => tm $ Bound 0)
+        val ret' = ret
+              |> tuple_abs vars
+              |> mk_cases_named origin_names
+              |> (fn tm => tm $ Bound 0)
 
         val goal = mk_Trueprop (
               Const (@{const_name All}, dummyT) $ Abs("x", dummyT,
@@ -254,6 +243,10 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
         fun constr_process stat =
           let
             (* simplify the proof goal, to expand all the auto Nu *)
+            val ctx = Proof.context_of stat
+            val simctx = Raw_Simplifier.clear_simpset ctx
+                  addsimps @{thms AdditionSet_simp_proc_arg AdditionSet_simp_func_arg}
+
             val stat = stat
               |> Proof.using_facts [] |> Proof.enter_backward (*|> Proof.begin_block*)
               |> Proof.refine (Method.Basic (fn ctx =>
@@ -263,8 +256,7 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
                   )))
               |> Seq.the_result "should never fail"
 
-            val ctx = Proof.context_of stat
-            val sequent = #goal (Proof.goal stat)
+            val sequent = #goal (Proof.goal stat) |> @{print}
             val goal = Thm.prems_of sequent |> hd
 
             val vars = strip_binder_vars @{const_name Pure.all} goal
@@ -278,7 +270,7 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
                 strip_binder_raw_body @{const_name Pure.all} goal)
               |> dest_Trueprop
               |> strip_binop_r @{const_name "HOL.implies"}
-              |> map mk_Trueprop
+              |> map mk_Trueprop |> map (debug_term ctx "1231 ")
             val (prems, goal) = (front goal, last goal)
 
             (* intro assumptions *)
@@ -288,11 +280,11 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
                       (Thm.implies_intr prem th RS @{thm impI})
                           |> Thm.assumption NONE 1
                           |> Seq.make_results |> Seq.the_result "should never fail"
-                  ) prems
+                  ) prems |> @{print}
             val assms = map (fn (tm,((b,attr),(_,pats))) =>
                                   ((b, elim_premise @ map (Attrib.attribute ctx) attr),
                                    [(tm,pats)]))
-                  (prems ~~ (((Binding.name func_name,[]),(dummy,[]))::conds))
+                  (prems ~~ (((Binding.name func_name,[]),(dummy,[]))::conds)) |> @{print}
             val (_,stat) = stat |> Proof.map_context_result (
                   Proof_Context.add_assms (fn _ => fn prems => (imp_export prems, I)) assms)
 

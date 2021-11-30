@@ -20,77 +20,55 @@ fun strip_abs_fixes (Abs (name,ty,body)) =
   | strip_abs_fixes _ = []
 
 
-fun gen_set_variables_tag vars stack_schema heap_schema always ctx sequent =
+fun gen_set_variables_tag prep_S vars always ctx sequent =
   let
     val ctx = Proof_Context.set_mode Proof_Context.mode_schematic ctx
                 |> Proof_Context.set_mode Proof_Context.mode_pattern
-    val Const (@{const_name Variant_Cast}, _)
-          $ (stack_typing as (Const (@{const_name typing}, _) $ stack_term $ stack_Nu))
-          $ (heap_typing as (Const (@{const_name typing}, _) $ heap_term $ heap_Nu))
-          $ _ $ _ $ _
-      = Thm.major_prem_of sequent |> dest_Trueprop
-    val heap_ty = fastype_of heap_term
-    val stack_ty = fastype_of stack_term
-    val stack = strip_binop_r "Product_Type.Pair" (stack_term |> @{print})
-    val heap  = strip_binop_r "Product_Type.Pair" heap_term
+    val Const (@{const_name Variant_Cast}, _) $ _ $ S $ _
+          = Thm.major_prem_of sequent |> dest_Trueprop
+    val S' = prep_S ctx S
+    val _ = debug_term ctx "aaaaaa " S'
 
-    val arity = length vars
     val names = map fst vars
     val ctx = Variable.declare_typ (mk_name_tylabels names) ctx
 
     val always = Option.map (Syntax.parse_term ctx #> tuple_abs vars #> mk_cases_named names) always
 
-    val stack_schema = rev (
-      case stack_schema of SOME sch => map (Syntax.parse_term ctx) sch
-        | _ => []) |> @{print}
-    val _ = if length stack_schema >= length stack then error "Insufficient stack elements" else ()
-    val stack_schema = (@{print} stack_schema) @ (drop (length stack_schema) stack |> @{print}
-                                      |> map (map_types (K dummyT))
-                                    (* We strip type denotations here in order to catch them when
-                                    * lambda-abstraction (since the type of lambda variable is also
-                                    * dummyT), and they can be infered latter by explicit
-                                    * type constraints. *))
-                          |> @{print}
-                          |> list_mk_binop_r @{const_name Pair} |> Type.constraint stack_ty
-                          |> tuple_abs vars |> mk_cases_named names
-    val stack_Nu = mk_auto_tag (Const (@{const_name DownLift}, dummyT) $ stack_Nu $ stack_schema)
-    val stack_Nu = case always of SOME tm =>
-              mk_auto_tag (Const (@{const_name NuRefine}, dummyT)
-                $ stack_Nu $ mk_monop @{const_name Collect} tm)
-          | NONE => stack_Nu
-    val _ = debug_term ctx "aaa " stack_Nu
+    val S' = tuple_abs vars S' |> mk_cases_named names
+    val S' = case always of SOME alw =>
+              Abs ("\<xx>", dummyT,
+                Const(@{const_name AdditionSet}, dummyT) $ (S' $ Bound 0)
+                  $ (Const (@{const_name Premise}, dummyT) $ (alw $ Bound 0)))
+          | NONE => S'
 
-    val heap_schema = rev(
-      case heap_schema of SOME sch => map (Syntax.parse_term ctx) sch
-        | _ => [])
-    val _ = if length heap_schema >= length heap then error "Insufficient heap elements" else ()
-    val heap_schema = heap_schema @ (drop (length heap_schema) heap |> map (map_types (K dummyT)))
-                          |> list_mk_binop_r @{const_name Pair} |> Type.constraint heap_ty
-                          |> tuple_abs vars |> mk_cases_named names 
-    val heap_Nu = mk_auto_tag (Const (@{const_name DownLift}, dummyT) $ heap_Nu $ heap_schema)
-
-    val var_tag = Const (@{const_name Variant_Cast}, dummyT)
-          $ stack_typing $ heap_typing $ dummy $ stack_Nu $ heap_Nu
-              |> mk_Trueprop 
-              |> Syntax.check_prop ctx
-    val var_tag = cterm_of ctx var_tag
+    val var_tag = Const (@{const_name Variant_Cast}, dummyT) $ dummy $ S $ S'
+                    |> mk_Trueprop
+                    |> Syntax.check_prop ctx |> cterm_of ctx
     val goal = Goal.init var_tag |> @{print}
                   |> SINGLE (REPEAT (HEADGOAL (resolve_tac ctx
                         @{thms HOL.refl case_prod_expn_I case_named_expn_I
-                               Variant_Cast_I Variant_Cast_I_always}))) |> @{print}
+                               Variant_Cast_I_always Variant_Cast_I})))
     val var_tag_th = (case goal of SOME concl => Goal.conclude concl
-                        | NONE => raise CTERM ("fail to solve", [var_tag])) |> @{print}
+                        | NONE => raise CTERM ("fail to solve", [var_tag]))
+                        |> @{print}
 
-    val forall = forall_expansion names ctx |> @{print}
-    val exNu = ExNu_expansion names ctx |> @{print}
+    val forall = forall_expansion names ctx
+    val exNu = ExNu_expansion names ctx
+    val simctx = Raw_Simplifier.clear_simpset ctx addsimprocs
+          [@{simproc named_forall_expansion}, @{simproc named_exSet_expansion},
+           @{simproc named_pureAll_expansion}]
+          addsimps @{thms NuPrime.named.case Product_Type.prod.case}
     val sequent = (var_tag_th RS sequent)
                   |> @{print}
                   |> schematic_var_expansion ctx
                   |> @{print}
                   |> Raw_Simplifier.rewrite_rule ctx (forall::exNu::
                     @{thms HOL.simp_thms[unfolded atomize_eq[symmetric]]
-                           Product_Type.prod.case[unfolded atomize_eq[symmetric]]})
-                  |> Simplifier.full_simplify ctx
+                           Product_Type.prod.case[unfolded atomize_eq[symmetric]]
+                           NuPrime.named.case[unfolded atomize_eq[symmetric]]
+                           AdditionSet_simp_proc_arg
+                     })
+                  |> @{print}
   in
     sequent
   end
@@ -101,32 +79,46 @@ fun variables_tag_pattern_match raw_vars stack_schema heap_schema always ctx seq
     val (new_var_names,ctx) =
       Proof_Context.add_fixes (map (fn (a,b,c) => (a, Option.map (Syntax.read_typ ctx) b, c)) raw_vars) ctx
     val vars = origin_var_names ~~ map (rpair dummyT) new_var_names
+
+    fun prep_S ctx S =
+      let
+        val stack_schema = rev (
+          case stack_schema of SOME sch => map (Syntax.parse_term ctx) sch
+            | _ => [])
+        val heap_schema = rev(
+          case heap_schema of SOME sch => map (Syntax.parse_term ctx) sch
+            | _ => [])
+
+        val Const (@{const_name Variant_Cast}, _) $ _ $ S $ _
+              = Thm.major_prem_of sequent |> dest_Trueprop
+        val (stack,heap) = dest_topctx' S
+
+        val stack' = stack_schema ~~ take (length stack_schema) stack
+              |> map (fn (sch, org) =>
+                  case dest_RepSet org of (x,T) =>
+                    mk_RepSet (Type.constraint (fastype_of x) sch, T))
+              |> (fn l => l @ drop (length stack_schema) stack)
+        val heap' = heap_schema ~~ take (length heap_schema) heap
+              |> map (fn (sch, org) =>
+                  case dest_RepSet org of (x,T) =>
+                    mk_RepSet (Type.constraint (fastype_of x) sch, T))
+              |> (fn l => l @ drop (length heap_schema) heap)
+      in
+        mk_binop @{const_name "NuTopCtx"}
+          (list_mk_binop_l @{const_name Stack_Delimiter} stack',
+           list_mk_binop_l @{const_name Heap_Divider}    heap' )
+      end
   in
-    gen_set_variables_tag vars stack_schema heap_schema always ctx sequent
+    gen_set_variables_tag prep_S vars always ctx sequent
   end
 
 fun variables_tag_terms raw_vars always ctx sequent =
   let
-    val vars = map (Syntax.parse_term ctx #> Syntax.check_term ctx
-                      #> term_name #> (fn name => (normlize_name name,(name,dummyT)) )) raw_vars
+    val vars = map (Syntax.parse_term ctx #> Syntax.check_term ctx #> debug_term ctx "qqqq "
+                      #> (fn tm => (normlize_name (term_name tm), (term_name tm, fastype_of tm)))
+                   ) raw_vars
   in
-    gen_set_variables_tag vars NONE NONE always ctx sequent
+    gen_set_variables_tag (K I) vars always ctx sequent
   end
-
-(* fun vars_subj subj ctx sequent =
-  let
-    val (sequent,aux) = elim_SPEC sequent
-    val Const (@{const_name Variants_Subj}, _) $ vars $ _ = Thm.sequent_prem_of sequent |> dest_Trueprop
-    val (new_var_names,ctx) = Proof_Context.add_fixes (strip_abs_fixes vars) ctx
-    val origin_var_names = strip_abs_names vars
-    val subj = Syntax.parse_term ctx subj
-                |> tuple_abs (origin_var_names ~~ map (rpair dummyT) new_var_names)
-    val var_subj = Const (@{const_name Variants_Subj}, dummyT) $ vars $ subj
-                    |> mk_Trueprop |> Syntax.check_prop ctx |> cterm_of ctx
-                    |> trivial |> (fn th => @{thm Variants_Subj_I} RS th) |> @{print}
-    val sequent = var_subj RS sequent
-  in
-    intro_SPEC (sequent, aux)
-  end *)
 
 end

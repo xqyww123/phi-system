@@ -54,26 +54,31 @@ fun dbg2 ctx term = (tracing (Syntax.string_of_term ctx term); term)
 fun call_tactics ctx tactics th =
   case Thm.prems_of th
     of prem :: _ =>
-        (Logic.strip_assums_concl prem :: Logic.strip_assums_hyp prem)
+        (* (Logic.strip_assums_concl prem :: Logic.strip_assums_hyp prem)
            |> maps (fn term =>
                Cost_Net.retrieve tactics term
                  |> map (debug "x22" ctx)
-                 |> map (apsnd (fn (r : reasoner) => #tactic r ctx th)))
+                 |> map (apsnd (fn (r : reasoner) => #tactic r ctx th))) *)
 
-        (* let
+        let
           val tacs = (Logic.strip_assums_concl prem :: Logic.strip_assums_hyp prem)
                           |> maps (fn term =>
                               Cost_Net.retrieve tactics term
                                 |> map (debug "x22" ctx)
                                 |> map (apsnd (fn (r : reasoner) => #tactic r ctx th)))
+                          |> sort (int_ord o apply2 fst)
                           (* |> map_filter (fn (c,seq) =>
                               Option.map (fn (t,s) => (c,Seq.cons t s))
                               (Seq.pull seq) *)
         in
-          case find_first (fn (c,_) => c <= ~10000) tacs
+          case get_first (fn (c,seq) =>
+              if c <= ~1000 then
+                Option.map (fn (t,_) => (c, Seq.single t)) (Seq.pull seq)
+              else NONE
+            ) tacs
             of SOME seq => [seq]
              | NONE => tacs
-        end *)
+        end
      | [] => raise Success th
 
 fun gen_reason ctx iter tactics (nprems,best_cost,best_stat) states =

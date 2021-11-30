@@ -51,9 +51,9 @@ signature NU_BASICS = sig
   val dest_CurrentConstruction_c : cterm -> cterm * cterm
   val dest_PendingConstruction : term -> term * term * term
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm
-  val dest_current_nu   : thm -> term * term
-  val dest_current_nu_c : thm -> cterm * cterm
-  val stack_of_meta   : thm -> term list
+  val dest_current_nu   : thm -> term
+  val dest_current_nu_c : thm -> cterm
+  val dest_topctx'   : term -> (term list (* stack *) * term list (* heap *))
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
   val current_block_var   : thm -> term
@@ -203,42 +203,16 @@ fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
 val dest_current_nu =
       Thm.prop_of #> perhaps (try dest_Trueprop)
         #> orelse_opt (try (dest_PendingConstruction #> #3)) (dest_CurrentConstruction #> #2)
-        #> dest_RepSet
 val dest_current_nu_c =
       Thm.cprop_of #> perhaps (try dest_Trueprop_c)
         #> orelse_opt (try (dest_PendingConstruction_c #> #3)) (dest_CurrentConstruction_c #> #2)
-        #> dest_RepSet_c
 
-fun strip_stack ret (Const (@{const_name "Pair"}, _) $ a $ b,
-                     Const (@{const_name "Stack_Delimiter"}, _) $ A $ B)
-      = strip_stack ((a,A)::ret) (b,B)
-  | strip_stack ret (a,A) = (a,A)::ret
-fun strip_stack_c (xs,TS) = (strip_binop_r_c @{const_name "Pair"} xs,
-                             strip_binop_r_c @{const_name "Stack_Delimiter"} TS)
+val dest_topctx = dest_binop @{const_name "NuTopCtx"}
+val dest_topctx_c = dest_binop_c @{const_name "NuTopCtx"}
 
-fun dest_topctx (Const (@{const_name "Pair"}, _) $ a $ b,
-                 Const (@{const_name "NuTopCtx"}, _) $ A $ B)
-      = ((a,A),(b,B))
-  | dest_topctx (x,T) = raise TERM ("dest_topctx", [x,T])
-fun dest_topctx_c (x,T) =
-  let
-    val _ = dest_topctx (term_of x, term_of T)
-    val (a,b) = Thm.dest_binop x
-    val (A,B) = Thm.dest_binop T
-  in
-    ((a,A),(b,B))
-  end
-
-val stack_of_meta = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
-  (dest_current_nu
-    #> apsnd (repeate (dest_binop @{const_name "NuAddition"} #> #1))
-    #> dest_topctx #> #2
-    #> strip_stack [] #> rev)
-val stack_of_meta_c = catch_th 0 "stack_of_meta: Not a CurrentConstruction"
-  (dest_current_nu_c
-    #> apsnd (repeate (dest_binop_c @{const_name "NuAddition"} #> #1))
-    #> dest_topctx_c #> #2
-    #> strip_stack_c)
+fun dest_topctx' tm = dest_topctx tm
+      |> apfst (strip_binop_l @{const_name Stack_Delimiter})
+      |> apsnd (strip_binop_l @{const_name Heap_Divider})
 
 val current_block_var_c =
   Thm.cprop_of
@@ -459,38 +433,51 @@ fun is_free_var' tm = is_Free tm orelse is_Var tm
 fun is_free_var tm = is_free_var' (Type.strip_constraints tm)
 in
 
-fun tr_stack void_tail (Const (@{const_name Pair}, ty1) $ a $ b,
-                        Const (@{const_name Stack_Delimiter},ty2) $ A $ B)
-    = (case tr_stack void_tail (b, B) of (b', B') =>
-        (Const (@{const_name Pair}, ty1) $ a $ b', Const (@{const_name Stack_Delimiter},ty2) $ A $ B'))
-  | tr_stack void_tail (ab as (a, A)) =
-      if is_free_var a andalso is_free_var A then ab else
-        (Const (@{const_name Pair}, dummyT) $ a
-            $ (if void_tail then @{term "()"} else Free ("\<rr>", dummyT)),
-          Const (@{const_name Stack_Delimiter},dummyT) $ A
-            $ (if void_tail then @{term NuVoid} else Free ("\<RR>", dummyT)))
-fun tr_heap (Const (@{const_name Pair}, ty1) $ a $ b, Const (@{const_name Heap_Delimiter},ty2) $ A $ B)
-    = (case tr_heap (b, B) of (b', B') =>
-        (Const (@{const_name Pair}, ty1) $ a $ b', Const (@{const_name Heap_Delimiter},ty2) $ A $ B'))
-  | tr_heap (ab as (a, A)) = if is_free_var a andalso is_free_var A then ab else
-        (Const (@{const_name Pair}, dummyT) $ a $ Free ("\<hh>", dummyT),
-          Const (@{const_name Heap_Delimiter},dummyT) $ A $ Free ("\<HH>", dummyT))
+fun tr_stack void_tail (Const (@{const_name Stack_Delimiter},_) $ A $ B)
+      = Const (@{const_name Stack_Delimiter},dummyT) $ tr_stack void_tail A $ B
+  | tr_stack void_tail (tm as (Const (@{const_name RepSet},_) $ _))
+      = Const (@{const_name Stack_Delimiter},dummyT)
+          $ (if void_tail then @{term Void} else Free ("\<RR>", dummyT)) $ tm
+  | tr_stack void_tail (Const ("_type_constraint_", ty) $ tm)
+      = Const ("_type_constraint_", ty) $ tr_stack void_tail tm
+  | tr_stack _ tm = tm
 
-fun tr_topctx void_tail (Const (@{const_name Pair}, ty1) $ a $ b,
-                         Const (@{const_name NuTopCtx},ty2) $ A $ B)
-    = let val (a',A') = tr_heap (a, A); val (b', B') = tr_stack void_tail (b,B)
-       in (Const (@{const_name Pair}, ty1) $ a' $ b', Const (@{const_name NuTopCtx},ty2) $ A' $ B') end
-  | tr_topctx void_tail (tm as (_, Const (@{const_name ExNu}, _) $ _)) = tm
-  | tr_topctx void_tail (tm as (a, A)) =
-      if is_free_var a andalso is_free_var A then tm
-      else
-        let val (a',A') = tr_stack void_tail (a, A)
-        in (Const (@{const_name Pair}, dummyT) $ Free ("\<hh>", dummyT) $ a',
-              Const (@{const_name NuTopCtx},dummyT) $ Free ("\<HH>", dummyT) $ A') end
+fun tr_heap (Const (@{const_name Heap_Divider},_) $ A $ B)
+      = Const (@{const_name Heap_Divider},dummyT) $ tr_heap A $ B
+  | tr_heap (tm as (Const (@{const_name RepSet},_) $ _))
+      = Const (@{const_name Heap_Divider},dummyT)
+          $ Free ("\<HH>", dummyT) $ tm
+  | tr_heap (Const ("_type_constraint_", ty) $ tm)
+      = Const ("_type_constraint_", ty) $ tr_heap tm
+  | tr_heap tm = tm
 
-fun tr_final tr tm = mk_nuTy (tr (dest_nuTy tm))
+fun tr_topctx void_tail (Const (@{const_name NuTopCtx},_) $ S $ H)
+      = Const (@{const_name NuTopCtx}, dummyT) $ tr_stack void_tail S $ tr_heap H
+          |> @{print}
+  | tr_topctx void_tail (tm as (Const (@{const_name Front_Stack},_) $ _ $ _))
+      = tm
+  | tr_topctx void_tail (Abs (name, _, body))
+      = Abs (name, dummyT, tr_topctx void_tail body)
+  | tr_topctx void_tail (Const (@{const_name ExSet}, _) $ body)
+      = Const (@{const_name ExSet}, dummyT) $ tr_topctx void_tail body
+  | tr_topctx void_tail (Const (@{const_name AdditionSet}, _) $ body $ P)
+      = Const (@{const_name AdditionSet}, dummyT) $ tr_topctx void_tail body $ P
+  | tr_topctx void_tail (Const ("_type_constraint_", ty) $ tm)
+      = Const ("_type_constraint_", ty) $ tr_topctx void_tail tm
+  | tr_topctx void_tail (tm as (Const (@{const_name Stack_Delimiter}, _) $ A $ B))
+      = Const (@{const_name NuTopCtx},dummyT) $ tr_stack void_tail tm
+          $ Free ("\<HH>", dummyT)
+  | tr_topctx void_tail (tm as (Const (@{const_name typing},_) $ _ $ _))
+      = Const (@{const_name NuTopCtx},dummyT)
+          $ tr_stack void_tail (mk_monop @{const_name RepSet} tm)
+          $ Free ("\<HH>", dummyT)
+  | tr_topctx void_tail (tm as (Const (@{const_name RepSet},_) $ _))
+      = Const (@{const_name NuTopCtx},dummyT)
+          $ tr_stack void_tail tm
+          $ Free ("\<HH>", dummyT)
+  | tr_topctx void_tail tm = tm
 
-fun parse_arg_list void_tail = tr_final (tr_topctx void_tail)
+val parse_arg_list = tr_topctx
 
 end
 end

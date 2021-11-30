@@ -12,10 +12,9 @@ fun eliminate_term ctxt xs thm =
   in
     if null bads then thm
     else let
-      val (X,Nu) = dest_current_nu thm
-      val Nu = list_mk_binder @{const_name ExNu} bads Nu
-      val X = list_mk_abstract bads X
-      val typing' = mk_RepSet (X,Nu) |> Syntax.check_term ctxt |> cterm_of ctxt
+      val typing' = dest_current_nu thm
+            |> list_mk_binder @{const_name ExSet} bads
+            |> Syntax.check_term ctxt |> cterm_of ctxt
     in
       NuSys.cast_completely ctxt typing' thm
     end
@@ -91,9 +90,9 @@ fun chooseV inst_names stat =
 
 fun auto_choose stat =
   let
-    val (_,Nu) = NuBasics.dest_current_nu (NuBasics.the_nu_fact stat)
-    val vars = NuHelp.strip_binder_vars @{const_name ExNu} Nu |> map fst
-                  |> map (Binding.name o NuBasics.normlize_name)
+    val vars = NuBasics.dest_current_nu (NuBasics.the_nu_fact stat |> @{print})
+          |> NuHelp.strip_binder_vars @{const_name ExSet}
+          |> map (Binding.name o NuBasics.normlize_name o fst)
   in
     chooseV vars stat
   end

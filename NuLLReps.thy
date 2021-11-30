@@ -260,7 +260,7 @@ lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
   let open NuBasics
     val num = Syntax.parse_term ctx num
     fun mk term = mk_nuTy (num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
-    val term = ((stack_of_meta meta |> @{print} |> hd |> #2 |> mk)
+    val term = ((dest_current_nu meta |> dest_topctx' |> #1 |> @{print} |> hd |> dest_RepSet |> #2 |> mk)
       handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
         | ERROR _ => mk @{term \<open>\<nat>[32]\<close>}) |> @{print}
   in (NuSys.auto_construct ctx term meta, ctx)  end)

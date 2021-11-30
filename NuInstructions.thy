@@ -23,7 +23,7 @@ subsection \<open>Basic sequential instructions\<close>
 subsubsection \<open>crash\<close>
 
 definition op_crash :: "('x::stack) \<longmapsto> ('y::stack)" where "op_crash _ = PartialCorrect"
-lemma crash_\<nu>proc[no_atp]:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> x \<tycolon> X \<longmapsto> y \<tycolon> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
+lemma crash_\<nu>proc[no_atp]:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<blangle> X \<longmapsto> Y \<brangle>" unfolding \<nu>def op_crash_def by auto
 
 
 subsubsection \<open>drop\<close>
@@ -39,7 +39,7 @@ subsubsection \<open>duplication\<close>
 definition op_dup :: "('a::lrep) \<times> ('r::stack) \<longmapsto> ('a \<times> 'a \<times> 'r)"
   where "op_dup x = (case x of (h,a,r) \<Rightarrow> Success (h, a, a, r))"
 declare op_dup_def[\<nu>instr]
-theorem dup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> x \<tycolon> X \<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H\<brangle>"
+theorem dup_\<nu>proc: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<blangle> R\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> R\<heavy_comma> X\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H\<brangle>"
   unfolding \<nu>def op_dup_def by (auto simp add: nu_exps)
 
 
@@ -57,9 +57,9 @@ lemma dpr_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_depair \<blangle> R
   unfolding \<nu>def  op_depair_def by (auto simp add: nu_exps)
 
 lemma hpr_\<nu>app: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<heavy_asterisk> h1 \<tycolon> H1 \<heavy_asterisk> h2 \<tycolon> H2 \<longmapsto> H \<heavy_asterisk> (h2,h1) \<tycolon> H2 \<^emph> H1"
-  unfolding Cast_def HeapDivNu_to_SepSet SepNu_to_SepSet by (simp add: SeparationSet_assoc)
+  unfolding Cast_def SepNu_to_SepSet Separation_assoc by blast
 lemma hdpr_\<nu>app: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<heavy_asterisk> (h2,h1) \<tycolon> H2 \<^emph> H1 \<longmapsto> H \<heavy_asterisk> h1 \<tycolon> H1 \<heavy_asterisk> h2 \<tycolon> H2"
-  unfolding Cast_def HeapDivNu_to_SepSet SepNu_to_SepSet by (simp add: SeparationSet_assoc)
+  unfolding Cast_def SepNu_to_SepSet Separation_assoc by blast
 
 (* \<nu>processor pair_auto_dest 30 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R\<heavy_comma> (a,b) \<tycolon> (A \<nuFusion>' B) \<flower> W)\<close> \<open>fn ctx => fn meta => Scan.succeed (fn _ =>
   meta |> NuBasics.apply_proc_naive @{thm dpr_auto_schema} |> NuSys.accept_proc ctx)\<close>
@@ -70,8 +70,8 @@ subsubsection \<open>let & local_value\<close>
 
 definition op_let :: " ('v::lrep \<Rightarrow> 's::stack \<longmapsto> 't::stack) \<Rightarrow> ('v \<times> 's \<longmapsto> 't)"
   where "op_let body = (\<lambda>(h,v,s). body v (h,s))"
-lemma op_let: " (\<And>p. p \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> x \<tycolon> X \<longmapsto> x' \<tycolon> X' \<brangle>) \<Longrightarrow>
-   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> x \<tycolon> X\<heavy_comma>^ a \<tycolon> A \<longmapsto> x' \<tycolon> X' \<brangle>"
+lemma op_let: " (\<And>p. p \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> X \<longmapsto> X' \<brangle>) \<Longrightarrow>
+   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> X\<heavy_comma>^ a \<tycolon> A \<longmapsto> X' \<brangle>"
   unfolding Procedure_def op_let_def by (auto simp add: nu_exps)
 
 definition op_local_value :: " 'v::lrep \<Rightarrow> 's::stack \<longmapsto> 'v \<times> 's "
@@ -120,19 +120,24 @@ subsubsection \<open>if\<close>
 definition op_if :: " ('s::stack \<longmapsto> 't::stack) \<Rightarrow> ('s \<longmapsto> 't) \<Rightarrow> (1 word \<times> 's) \<longmapsto> 't"
   where "op_if brT brF s = (case s of (heap,c,r) \<Rightarrow> if c = 1 then brT (heap,r) else brF (heap,r))"
 declare op_if_def[\<nu>instr]
-theorem if_\<nu>proc: "(cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> x \<tycolon> X \<longmapsto> y\<^sub>T \<tycolon> Y \<brangle>) \<longrightarrow> (\<not> cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> x \<tycolon> X \<longmapsto> y\<^sub>F \<tycolon> Y \<brangle>)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> x \<tycolon> X \<heavy_comma>^ cond \<tycolon> \<bool> \<longmapsto> (if cond then y\<^sub>T else y\<^sub>F) \<tycolon> Y \<brangle>"
+
+theorem if_\<nu>proc:
+  "(cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> X \<longmapsto> Y\<^sub>T \<brangle>)
+    \<longrightarrow> SameNuTy Y\<^sub>T Y\<^sub>F
+    \<longrightarrow> (\<not> cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> X \<longmapsto> Y\<^sub>F \<brangle>)
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> X \<heavy_comma>^ cond \<tycolon> \<bool> \<longmapsto> (if cond then Y\<^sub>T else Y\<^sub>F) \<brangle>"
   unfolding \<nu>def op_if_def by (auto simp add: nu_exps)
-text \<open>Despite the feasibility of divergence of \<nu>-types in the branch, i.e.
+(* text \<open>Despite the feasibility of divergence of \<nu>-types in the branch, i.e.
   \<^term>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> x \<tycolon> X \<heavy_comma>^ cond \<tycolon> \<bool> \<longmapsto> (if cond then y\<^sub>T else y\<^sub>F) \<tycolon> (if cond then Y\<^sub>T else Y\<^sub>F ) \<brangle>\<close>,
   from the design of the programming principles, considering the role of \<nu>-types which encodes the invariant properties,
-  we prohibit the divergence of \<nu>-types.\<close>
+  we prohibit the divergence of \<nu>-types.\<close> *)
 
 lemma [simp]: "(if P then \<tort_lbrace>x \<tycolon> X\<tort_rbrace> else \<tort_lbrace>y \<tycolon> Y\<tort_rbrace>) = \<tort_lbrace>(if P then x else y) \<tycolon> (if P then X else Y)\<tort_rbrace>" by simp
 lemma [simp]: "(if P then (a,b) else (a',b')) = ((if P then a else a'), (if P then b else b'))" by simp
 (* lemma AA: "(if P then A else B) = (\<lambda>x. if P then A x else B x)" by simp *)
-lemma [simp]: "(if P then (A <stack-div> B) else (A' <stack-div> B')) = ((if P then A else A') <stack-div> (if P then B else B'))" by simp
-lemma [simp]: "(if P then (A <heap-sep> B) else (A' <heap-sep> B')) = ((if P then A else A') <heap-sep> (if P then B else B'))" by simp
+lemma [simp]: "(if P then (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) else (S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H')) = ((if P then S else S')\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (if P then H else H'))" by simp
+lemma [simp]: "(if P then (A\<heavy_comma> B) else (A'\<heavy_comma> B')) = ((if P then A else A')\<heavy_comma> (if P then B else B'))" by simp
+lemma [simp]: "(if P then (A \<heavy_asterisk> B) else (A' \<heavy_asterisk> B')) = ((if P then A else A') \<heavy_asterisk> (if P then B else B'))" by simp
 (* lemma [simp]: "(if P then (A \<^bold>a\<^bold>n\<^bold>d B) else (A' \<^bold>a\<^bold>n\<^bold>d B')) = ((if P then A else A') \<^bold>a\<^bold>n\<^bold>d (if P then B else B'))"  by auto *)
 lemma [simp]: "(if P then Labelled name T else Labelled name' T') = Labelled name (if P then T else T')" unfolding Labelled_def by simp
 lemma [simp]: "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
@@ -163,41 +168,39 @@ lemma SemDoWhile_deterministic2: " SemDoWhile body s x \<Longrightarrow> The ( S
 definition DoWhile :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<longmapsto> 'r" where
   "DoWhile f s = (if (\<exists>y. SemDoWhile f s y) then The (SemDoWhile f s) else PartialCorrect)"
 
-lemma "__DoWhile___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> X <where> P \<longmapsto> \<exists>* x'. x' \<tycolon> X \<heavy_comma>^ x' \<in> P \<tycolon> \<bool> \<brangle>)
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c DoWhile body \<blangle> x \<tycolon> X <where> P \<longmapsto> \<exists>*x'. x' \<tycolon> X \<and>\<^sup>\<nu>' (x' \<notin> P) \<brangle>"
-  for X :: "(heap \<times> 'a::lrep, 'b) \<nu>"
+lemma "__DoWhile___\<nu>proc": "(\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<heavy_comma>^ P x' \<tycolon> \<bool> \<brangle>)
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c DoWhile body \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<and>\<^sup>s (\<not> P x') \<brangle>"
+(*  for X :: "(heap \<times> 'a::lrep, 'b) \<nu>" *)
   unfolding DoWhile_def Procedure_def Auto_def
   apply (auto simp add: SemDoWhile_deterministic2 simp add: nu_exps)
   subgoal for a b xa
-    apply (rotate_tac 1)
+    apply (rotate_tac 2)
     by (induct  body "(a, b)" xa arbitrary: a b x rule: SemDoWhile.induct) (auto 0 7 simp add: nu_exps)
   done
 
 
 lemma do_while_\<nu>proc:
-  "Variant_Cast (s \<tycolon> S) (h \<tycolon> H) vars S' H' \<longrightarrow>
+  "Variant_Cast vars S S' \<longrightarrow>
   \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
-  (\<forall>x. cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> x \<tycolon> S' \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H'
-          \<longmapsto> \<exists>\<^sup>\<nu> x'. (x' \<tycolon> S'\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H') \<brangle>) \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c DoWhile body \<blangle> s \<tycolon> S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H
-      \<longmapsto> \<exists>\<^sup>\<nu> x'. (x' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H') \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x') \<brangle>"
+  (\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> S' x \<longmapsto> \<exists>* x'. (S' x' \<heavy_comma>^ cond x' \<tycolon> \<bool>) \<brangle>) \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c DoWhile body \<blangle> S \<longmapsto> \<exists>* x'. S' x' \<and>\<^sup>s (\<not> cond x') \<brangle>"
   unfolding Variant_Cast_def Premise_def apply simp
-  using "__DoWhile___\<nu>proc"[of _ "(H' <top-ctx> S') <auto-down-lift> (\<lambda>x. (x,x))" "Collect cond",
-    simplified NuRefine_to_auto, simplified, unfolded Premise_def] by blast
+  using "__DoWhile___\<nu>proc"[of "cond" _ "S'", unfolded Premise_def] by blast
 
 
 subsubsection \<open>while\<close>
 
-proc while: \<open>s' \<tycolon> S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h' \<tycolon> H'\<close> \<longmapsto> \<open>\<exists>* x. (x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H) \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o (\<not> cond x)\<close>
-  requires [unfolded Variant_Cast_def, simp]: "Variant_Cast (s' \<tycolon> S') (h' \<tycolon> H') vars S H"
-    and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> cond x' \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H)\<brangle>"
-    and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> x \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x \<tycolon> H \<longmapsto> \<exists>* x'. (x' \<tycolon> S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p x' \<tycolon> H) \<brangle>"
+proc while: \<open>S'\<close> \<longmapsto> \<open>\<exists>* x. S x \<and>\<^sup>s (\<not> cond x)\<close>
+  for S' :: " (heap \<times> 'b::stack) set"
+  requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars S' S"
+    and Cond_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<blangle> S x \<longmapsto> \<exists>* x'. (S x'\<heavy_comma>^ cond x' \<tycolon> \<bool>)\<brangle>"
+    and Body_\<nu>proc: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<blangle> S x \<longmapsto> \<exists>* x'. S x' \<brangle>"
   \<bullet> Cond if \<medium_left_bracket> do_while x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
   finish
 
 
-  subsubsection \<open>recursion\<close>
+subsubsection \<open>recursion\<close>
 
 inductive SemRec :: "(('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y)) \<Rightarrow> heap \<times> 'x \<Rightarrow> 'y state \<Rightarrow> bool" where
   SemRec_I0: "(\<And>g. F g x = y) \<Longrightarrow> SemRec F x y"
@@ -225,9 +228,9 @@ definition op_recursion :: "(('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapst
   where "op_recursion F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
 lemma op_recursion:
-  "(\<And>g x'. (\<forall>x''. \<^bold>f\<^bold>u\<^bold>n\<^bold>c g \<blangle> x'' \<tycolon> X x'' \<longmapsto> f x'' \<tycolon> Y x'' \<brangle>) \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c F g \<blangle> x' \<tycolon> X x' \<longmapsto> f x' \<tycolon> Y x' \<brangle>) \<Longrightarrow>
-    (\<forall>x. \<^bold>f\<^bold>u\<^bold>n\<^bold>c op_recursion F \<blangle> x \<tycolon> X x \<longmapsto> f x \<tycolon> Y x \<brangle>)"
-  for X :: "'b \<Rightarrow> (heap \<times> 'a::lrep, 'b) \<nu>"
+  "(\<And>g x'. (\<forall>x''. \<^bold>f\<^bold>u\<^bold>n\<^bold>c g \<blangle> X x'' \<longmapsto> Y x'' \<brangle>) \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c F g \<blangle> X x' \<longmapsto> Y x' \<brangle>) \<Longrightarrow>
+    (\<forall>x. \<^bold>f\<^bold>u\<^bold>n\<^bold>c op_recursion F \<blangle> X x \<longmapsto> Y x \<brangle>)"
+  (* for X :: "'b \<Rightarrow> (heap \<times> 'a::lrep, 'b) \<nu>" *)
   unfolding op_recursion_def Procedure_def Function_def atomize_all
   apply (auto simp add: SemRec_deterministic2)
   subgoal for x a b xa apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
@@ -418,7 +421,7 @@ theorem op_shift_pointer_slice[ unfolded Separation_assoc, \<nu>overload split ]
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer LLTY('p) \<blangle> R\<heavy_comma> addr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> xs \<tycolon> Array T
       \<longmapsto> R\<heavy_comma> addr ||+ n \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> (addr \<R_arr_tail> take n xs \<tycolon> Array T \<heavy_asterisk> shift_addr addr n \<R_arr_tail> drop n xs \<tycolon> Array T) \<brangle>"
   for T :: "('p::field, 'x) \<nu>"
-  unfolding \<nu>def op_shift_pointer_def Array_def Heap_Delimiter_def apply (cases addr)
+  unfolding \<nu>def op_shift_pointer_def Array_def Heap_Divider_def apply (cases addr)
   apply (auto simp add: lrep_exps same_addr_offset_def raw_offset_of_def distrib_right nu_exps
         add.commute add.left_commute intro: heap_split_id)
   subgoal for x1 x2 aa h1 h2 b
@@ -478,7 +481,7 @@ theorem alloc_array_\<nu>proc:
       \<blangle> R\<heavy_comma> n \<tycolon> \<nat>[size_t] \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H
         \<longmapsto> (\<exists>*seg. (R\<heavy_comma> (seg |+ 0) \<tycolon> Pointer \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Array N)) \<brangle>"
   for N :: "('x::{zero,field},'b)\<nu>"
-  unfolding \<nu>def op_alloc_def Array_def Heap_Delimiter_def
+  unfolding \<nu>def op_alloc_def Array_def Heap_Divider_def
   apply (auto simp add: lrep_exps list_all2_conv_all_nth Let_def same_addr_offset_def nu_exps)
   apply (rule malloc_split, simp add: heap_assignN_eval)
   apply (auto simp add: heap_assignN_eval nu_exps) done
@@ -486,7 +489,7 @@ theorem alloc_array_\<nu>proc:
 proc alloc : \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H\<close> \<longmapsto> \<open>\<exists>*ptr. (R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> ptr \<R_arr_tail> zero \<tycolon> Ref T)\<close>
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T" and [\<nu>intro]: "\<nu>Zero T zero"
   have A[simp]: "replicate 1 zero = [zero]" by (simp add: One_nat_def)
-  \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> alloc_array T
+  \<bullet>\<open>1 \<tycolon> \<nat>[size_t]\<close> alloc_array T
   finish
 
 subsection \<open>Load & Store\<close>
@@ -507,9 +510,9 @@ theorem op_load[ \<nu>overload "\<up>:" ]:
   "FieldIndex field_index Y X gt mp \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load LLTY('x) field_index \<blangle> R\<heavy_comma> addr \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> x \<tycolon> Ref X \<longmapsto> R\<heavy_comma> gt x \<tycolon> Y\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> x \<tycolon> Ref X\<brangle> "
   for X :: "('x::field, 'c) \<nu>"
-  unfolding op_load_def Procedure_def FieldIndex_def \<nu>index_def Heap_Delimiter_def
+  unfolding op_load_def Procedure_def FieldIndex_def \<nu>index_def Heap_Divider_def
   by (cases field_index, cases addr)  (auto simp add: lrep_exps MemAddrState_def nu_exps split: option.split iff: addr_allocated_def)
-thm "\<up>:_\<nu>app"
+
 lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF FieldIndex_here, simplified]
 
 proc i_load_n[\<nu>overload "\<up>:"]:
@@ -536,7 +539,7 @@ theorem op_store[ \<nu>overload "\<down>:" ]:
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store LLTY('x) field_index
     \<blangle> R\<heavy_comma> addr \<tycolon> Pointer\<heavy_comma> y \<tycolon> Y\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> x \<tycolon> Ref X \<longmapsto> R \<heavy_comma> addr \<tycolon> Pointer \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> mp (\<lambda>_. y) x \<tycolon> Ref X\<brangle> "
   for X :: "('x::field, 'c) \<nu>"
-  unfolding op_store_def Procedure_def FieldIndex_def \<nu>index_def Heap_Delimiter_def Stack_Delimiter_def
+  unfolding op_store_def Procedure_def FieldIndex_def \<nu>index_def Heap_Divider_def Stack_Delimiter_def
   apply (cases field_index, cases addr)
   apply (auto simp add: lrep_exps Let_def nu_exps split: option.split iff: addr_allocated_def)
   subgoal premises prems for x1 x2 x1a x2a aa ofs b x2b h1 h2 proof -
