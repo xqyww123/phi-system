@@ -486,16 +486,16 @@ lemma [elim!,\<nu>elim]: "Inhabited (A \<heavy_asterisk> B) \<Longrightarrow> (I
 subsection \<open>Top Context\<close> \<comment> \<open>The pair of heap and stack\<close>
 
 definition NuTopCtx :: " 's :: stack set \<Rightarrow> heap set \<Rightarrow> (heap \<times> 's) set " (infix "<top-ctx>" 59)
-  where "(S <top-ctx> H) = {(h,s). Heap h \<and> h \<in> H \<and> s \<in> S}"
+  where "(S <top-ctx> H) = {(h,s). h \<in> H \<and> s \<in> S}"
 notation NuTopCtx ( "_ \<heavy_comma>/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _" [10,14] 13)
 
 translations "(s \<tycolon> S) <top-ctx> H" \<rightleftharpoons> "\<tort_lbrace>s \<tycolon> S\<tort_rbrace> <top-ctx> H"
   "S <top-ctx> (h \<tycolon> H)" \<rightleftharpoons> "S <top-ctx> \<tort_lbrace>h \<tycolon> H\<tort_rbrace>"
 
-lemma [nu_exps]: "(h,s) \<in> (S <top-ctx> H) \<longleftrightarrow> Heap h \<and> h \<in> H \<and> s \<in> S"
+lemma [nu_exps]: "(h,s) \<in> (S <top-ctx> H) \<longleftrightarrow> h \<in> H \<and> s \<in> S"
   unfolding NuTopCtx_def by simp
 lemma [elim!,\<nu>elim]: "Inhabited (S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<Longrightarrow> (Inhabited S \<Longrightarrow> Inhabited H \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: nu_exps) blast
+  unfolding Inhabited_def by (simp add: nu_exps)
 
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ph \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ps \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<longmapsto> (S'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H') \<^bold>w\<^bold>i\<^bold>t\<^bold>h Ph \<and> Ps"
@@ -577,6 +577,7 @@ subsection \<open>Existential Nu-set\<close>
 definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 10)
   where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
 notation ExSet (binder "\<exists>\<^sup>s" 10)
+translations "\<exists>* idts. x \<tycolon> T" \<rightleftharpoons> "\<exists>* idts. \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 
 lemma [simp]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
 
@@ -698,7 +699,7 @@ lemma [simp]: "( Ctx \<and>\<^sup>s P \<heavy_comma>^ T ) = ( (Ctx \<heavy_comma
   unfolding Auto_def by (auto simp add: nu_exps)
 
 lemma [simp]: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<and>\<^sup>s P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P"
-  unfolding CurrentConstruction_def Auto_def by (cases s) (auto 0 3 simp add: nu_exps)
+  unfolding CurrentConstruction_def Auto_def by (cases s) (auto 0 4 simp add: nu_exps)
 lemma [simp]: "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> (B \<and> C)" by simp
 
 
@@ -922,8 +923,7 @@ lemma [nu_exps]: "h \<nuLinkL> NuNothing \<nuLinkR> x \<longleftrightarrow> h = 
 lemma Separation_emptyL[simp]: "(Nothing \<heavy_asterisk> H) = H" and Separation_emptyR[simp]: "(H \<heavy_asterisk> Nothing) = H"
   unfolding Heap_Divider_def by (auto simp add: nu_exps)
 
-lemma [simp]: "(Nothing ^\<heavy_asterisk> C) = C"
-  unfolding Heap_Tail_def apply simp
+lemma [simp]: "(Nothing ^\<heavy_asterisk> C) = C" unfolding Heap_Tail_def by simp
 
 subsubsection \<open>Syntax & Auxiliary\<close>
 
@@ -1009,9 +1009,16 @@ lemma [simp,cast_simp]: "(H1 ^\<heavy_asterisk> (H2 ^\<heavy_asterisk> C)) = (H1
 theorem frama: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> H ^\<heavy_asterisk> A \<longmapsto> H ^\<heavy_asterisk> B \<brangle>"
   unfolding Procedure_def by simp
 
-lemma [\<nu>intro 30]:
+lemma [\<nu>intro 20]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Nothing ^\<heavy_asterisk> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   by simp
+
+lemma [\<nu>intro 1200]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Nothing ^\<heavy_asterisk> A" by (simp add: cast_id)
+
+
+lemma Heap'_Stack_Front: "Heap' (H \<heavy_comma>^ A) = (Heap' H \<heavy_comma>^ A)" by (auto simp add: nu_exps)
+lemma Heap'_ExSet: "Heap' (ExSet C) = ExSet (\<lambda>c. Heap' (C c))" by (auto simp add: nu_exps)
+lemma Heap'_Addition: "Heap' (A \<and>\<^sup>s P) = (Heap' A \<and>\<^sup>s P)" by (auto simp add: nu_exps)
 
 subsubsection \<open>Cast\<close>
 
@@ -1198,6 +1205,14 @@ lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> A' \<^
 lemma StackDelimiter_to_AndTy: " (A\<heavy_comma> B) \<equiv> (B \<^bold>a\<^bold>n\<^bold>d A) " unfolding Stack_Delimiter_def AndTy_def by simp
 *)
 
+subsubsection \<open>Other Reasoning Settings\<close>
+
+lemma [\<nu>intro 14000]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<R_arr_tail> x = a \<R_arr_tail> x' " unfolding Premise_def by simp
+lemma [\<nu>intro 13000]: "False \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<R_arr_tail> x = a' \<R_arr_tail> x' " unfolding Premise_def by simp
+  \<comment> \<open>For any other situation (when a is not alpha equivalent to a'), reasoning is pruned early.
+  The proof for \<^term>\<open>a = a'\<close> is always assigned to users, because maintaining the consistency of object identities
+    is so essential that users should always keep.\<close>
+
 subsection \<open>Cast\<close>
 
 lemma "cast": "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' "
@@ -1209,7 +1224,7 @@ lemma cast_\<nu>app: "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^b
   unfolding Cast_def Argument_def by (simp add: nu_exps) blast
 
 lemma cast_heap_\<nu>app:
-  "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> X \<longmapsto> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> x' \<tycolon> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> x \<tycolon> X \<longmapsto> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> x' \<tycolon> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Argument_def Heap_Divider_def by (simp add: nu_exps) blast
 
 lemma cast_whole_heap_\<nu>app:
@@ -1242,12 +1257,13 @@ lemma conversion: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold
 lemma [\<nu>intro 2000]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> f \<blangle> U \<longmapsto> V \<brangle>" unfolding Conversion_def by fast
 
 lemma cast_intro_frama:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<forall>H. \<^bold>c\<^bold>a\<^bold>s\<^bold>t H ^\<heavy_asterisk> U' \<longmapsto> H ^\<heavy_asterisk> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P "
-  unfolding Cast_def pair_forall by blast
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<forall>H. \<^bold>c\<^bold>a\<^bold>s\<^bold>t Heap' (H ^\<heavy_asterisk> U') \<longmapsto> Heap' (H ^\<heavy_asterisk> U) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P "
+  unfolding Cast_def pair_forall by simp blast
 
 lemma cast_dual_intro_frama:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l V \<longmapsto> V' \<Longrightarrow> \<forall>H. \<^bold>c\<^bold>a\<^bold>s\<^bold>t H ^\<heavy_asterisk> U' \<longmapsto> H ^\<heavy_asterisk> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H ^\<heavy_asterisk> V \<longmapsto> H ^\<heavy_asterisk> V' "
-  unfolding CastDual_def pair_forall by blast
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l V \<longmapsto> V' \<Longrightarrow>
+  \<forall>H. \<^bold>c\<^bold>a\<^bold>s\<^bold>t Heap' (H ^\<heavy_asterisk> U') \<longmapsto> Heap' (H ^\<heavy_asterisk> U) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Heap' (H ^\<heavy_asterisk> V) \<longmapsto> Heap' (H ^\<heavy_asterisk> V') "
+  unfolding CastDual_def pair_forall by simp blast
 
 lemma conversion_cast[\<nu>intro 30]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l V \<longmapsto> V' \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> f \<blangle> U' \<longmapsto> V'\<brangle>"
@@ -1308,6 +1324,9 @@ lemma [\<nu>intro]: "Arguments (A\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bo
 lemma [\<nu>intro]: "(\<And>c. Arguments (T c) (T' c) R arg) \<Longrightarrow> Arguments (ExSet T) (ExSet T') R arg"
   unfolding Arguments_def by (simp add: nu_exps) blast
 
+lemma [\<nu>intro]: "Arguments T T' R arg \<Longrightarrow> Arguments (T \<and>\<^sup>s P) (T' \<and>\<^sup>s P) R arg"
+  unfolding Arguments_def by (simp add: nu_exps) blast
+
 
 definition op_call :: " ('r1, 'a \<times> 'r2) argument_types \<Rightarrow> ('r3, 'b \<times> 'r2) argument_types \<Rightarrow> ('a \<longmapsto> 'b) \<Rightarrow> ('r1 \<longmapsto> 'r3)"
   where "op_call args rets f = (\<lambda>(h,r1). case assemble_arg args r1 of (a,r2) \<Rightarrow>
@@ -1315,7 +1334,7 @@ definition op_call :: " ('r1, 'a \<times> 'r2) argument_types \<Rightarrow> ('r3
         | PartialCorrect \<Rightarrow> PartialCorrect | Fail \<Rightarrow> Fail))"
 
 lemma Arguments_intro_frama:
-  "Arguments SH A R args \<Longrightarrow> \<forall>H. Arguments (H ^\<heavy_asterisk> SH) (H ^\<heavy_asterisk> A) R args"
+  "Arguments SH A R args \<Longrightarrow> \<forall>H. Arguments (Heap' (H ^\<heavy_asterisk> SH)) (Heap' (H ^\<heavy_asterisk> A)) R args"
   unfolding Arguments_def by (auto 0 3)
 
 lemma op_call:
@@ -1325,7 +1344,7 @@ lemma op_call:
    \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_call args rets f \<blangle> SH \<longmapsto> SH' \<brangle>"
   apply (drule_tac Arguments_intro_frama)+
   unfolding Procedure_def Function_def op_call_def Arguments_def
-  apply (auto simp add: pair_forall split: state.split prod.split)
+  apply (simp add: pair_forall split: state.split prod.split del: Heap'_expn)
   by (metis LooseStateTy_E fst_conv snd_conv state.inject state.simps)+
 
 
@@ -1345,6 +1364,7 @@ subsection \<open>Auto construct & destruct\<close>
 
 definition AutoConstruct :: " 'exp \<Rightarrow> ('a::lrep \<longmapsto> 'b::lrep) \<Rightarrow> (heap \<times> 'a) set \<Rightarrow> (heap \<times> 'b) set \<Rightarrow> bool "("\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t _/ \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<blangle>_/ \<longmapsto> _ \<brangle>)" [20,101,10,10] 100)
   where [\<nu>def]:"AutoConstruct exp f S T \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>"
+
 lemma AutoConstruct: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> AutoConstruct exp f S T \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)" for exp :: "'exp"
   unfolding AutoConstruct_def using apply_proc .
 
@@ -1679,10 +1699,14 @@ declare
   "cast"[OF _ cast_whole_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 70]
   "cast"[OF _ cast_whole_heap_\<nu>app[OF Argument_I, OF cast_heap_conversion],
       \<nu>application_method 2 20]
-
+thm apply_proc_conv_simple[\<nu>application_method 4 -3000]
+thm "cast"[OF _ cast_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 80]
+thm "cast"[\<nu>application_method 1 90]
+thm "cast"[OF _ cast_whole_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 70]
+thm "cast"[OF _ cast_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 80]
 (*lemmas apply_func[\<nu>application_method 3 70] = apply_proc[OF _ op_call]*)
-lemmas apply_func_conv[\<nu>application_method 6 -1999900]
-  = apply_proc_conv_simple[OF _ _ _ _ op_call, rotated 1 3, rotated 1 5]
+lemmas apply_func_conv[\<nu>application_method 6 -100]
+  = apply_proc_conv_simple[OF _ _ _ _ op_call, rotated 3 1, rotated 1 3]
 
 (* consts \<nu>Application_Rewrite :: bool
 setup_\<nu>application_method \<open>\<nu>Application_Rewrite\<close> 1000 \<open>PROP P &&& A = B\<close> | \<open>PROP P &&& (A \<equiv> B)\<close> = \<open>

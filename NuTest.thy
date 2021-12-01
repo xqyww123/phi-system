@@ -26,22 +26,23 @@ thm op_recursion
 
 ML \<open>val th = Goal.init @{cterm "P \<Longrightarrow> Q \<Longrightarrow> P"} |> Thm.eq_assumption 1\<close>
 
-rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_asterisk> ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>(Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p h \<tycolon> H \<heavy_asterisk> ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>[32])\<close>
-  var ptr xs premises [used]: "length xs = n"
-thm qsort
-  \<bullet> -- n 0 = if \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[size_t]\<close> 0
+rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
+  \<longmapsto> \<open>\<exists>*ys. (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys)\<close>
+  var ptr xs n premises [used]: "length xs = n"
+  \<bullet> -- n 0 = if  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[size_t]\<close> 0
   \<bullet> while var i, j, ys in i, j heap "ptr \<R_arr_tail> ys" always 
     \<open>i \<le> j \<and> j \<le> n \<and> length ys = n \<and>
     (if j = n then 0 < i \<and> ys ! (i-1) = xs ! (n-1) else ys ! (n-1) = xs ! (n-1)) \<and>
     (\<forall>k. k <i \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! (n-1) < ys ! k)\<close> 
   \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket> \<medium_left_bracket> \<rightarrow> i, j ptr i \<up>\<rightarrow> i' ptr j \<up>-- j' pivot \<le> if \<medium_left_bracket> ptr j i' \<down> ptr i j' \<down> i 1 + \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket> j 1 + \<medium_right_bracket>
   have a1[used]: "j = n \<and> 0 < i" using used \<glowing_star> by auto
-  \<bullet> drop 1 - \<rightarrow> i ptr i 
-  \<bullet> split_array 
-  \<bullet>  ptr n
+  \<bullet> drop -- i0 1 - \<rightarrow> i ptr i
+  \<bullet> split
+  \<bullet>  ptr i
   \<bullet> qsort
-  thm qsort_\<nu>app
+  \<bullet> n i0 -
+  
+  thm \<glowing_star>
   
   \<bullet> 
   \<bullet> xs2, i, j \<Longrightarrow> x[used] \<bullet> drop 1 - \<rightarrow> i i split \<bullet> i qsort

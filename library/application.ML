@@ -30,8 +30,7 @@ val expand_appliant =
   perhaps (try (fn th => th RS @{thm Intro_D})) #> (*normalize the cast rules*)
   perhaps (try (fn th => th RS @{thm Dest_D}))
 
-val thm_apply_proc = @{thm apply_proc}
-fun apply_proc_naive proc sequent = expand_appliant proc RS (sequent RS thm_apply_proc)
+fun apply_proc_naive proc sequent = expand_appliant proc RS (sequent RS @{thm apply_proc})
 
 type applicant_idx = int
 type cost = int

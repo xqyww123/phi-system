@@ -66,7 +66,8 @@ fun call_tactics ctx tactics th =
                           |> maps (fn term =>
                               Cost_Net.retrieve tactics term
                                 |> map (debug "x22" ctx)
-                                |> map (apsnd (fn (r : reasoner) => #tactic r ctx th)))
+                                |> map (apsnd (fn (r : reasoner) =>
+                                    Seq.make (fn () => Seq.pull (#tactic r ctx th)))))
                           |> sort (int_ord o apply2 fst)
                           (* |> map_filter (fn (c,seq) =>
                               Option.map (fn (t,s) => (c,Seq.cons t s))

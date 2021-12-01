@@ -299,18 +299,17 @@ fun rename_blk_var name meta =
   end
 
 
-fun auto_construct ctx term sequent =
+fun auto_construct ctx target sequent =
   let
-    val sequent = @{thm AutoConstruct}
-      |> Thm.instantiate ([((("'exp",0),["HOL.type"]),Thm.ctyp_of_cterm term)], [((("exp",0), Thm.typ_of_cterm term),term)])
-      |> (fn th => sequent RS th)
-      |> Goal.protect 1
-      |> Nu_Reasoner.reason ctx
+    val sequent = 
+      (sequent RS Drule.infer_instantiate ctx [(("exp",0),target)] @{thm AutoConstruct})
+          |> Goal.protect 1
+          |> Nu_Reasoner.reason ctx
   in case sequent of SOME sequent =>
         if Thm.no_prems sequent
         then Goal.conclude sequent
-        else raise TERM ("fail to construct", [Thm.term_of term])
-      | NONE => raise TERM ("fail to construct", [Thm.term_of term])
+        else raise CTERM ("fail to construct", [target])
+      | NONE => raise CTERM ("fail to construct", [target])
   end
 
 

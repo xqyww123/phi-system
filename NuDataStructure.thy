@@ -34,12 +34,17 @@ lemma [\<nu>overload D]:
     by (rule exI[of _ "drop len list"]) (auto simp add: min_absorb1 min_absorb2)
   done
 
-proc DynLst_new: \<open>R\<heavy_comma> buf_size \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H\<close> \<longmapsto> \<open>\<exists>*ptr. (R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> ptr \<R_arr_tail> [] \<tycolon> DynLst T)\<close>
+proc DynLst_new: \<open>R\<heavy_comma> buf_size \<tycolon> \<nat>[size_t]\<close> \<longmapsto> \<open>\<exists>*ptr. (R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> [] \<tycolon> DynLst T)\<close>
   requires \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T\<close>
         and [\<nu>intro]: \<open>\<nu>Zero T zero\<close>
   \<bullet> \<rightarrow> buf_size
-  \<bullet> alloc \<open>\<lbrace> \<nat>[size_t] \<cross_product> \<nat>[size_t] \<cross_product> Pointer \<rbrace>\<close>
-  \<bullet> buf_size \<down>: 2 buf_size alloc_array \<open>T\<close> -- ppptr \<down>: 3 DynLst_I
+  \<bullet> alloc
+  \<bullet> \<open>\<lbrace> \<nat>[size_t] \<cross_product> \<nat>[size_t] \<cross_product> Pointer \<rbrace>\<close>
+  \<bullet> buf_size \<down>: 2 buf_size
+  \<bullet>  alloc_array
+  \<bullet> \<open>T\<close>
+  \<bullet> -- ppptr
+    \<bullet> \<down>: 3 DynLst_I
   finish
 
 

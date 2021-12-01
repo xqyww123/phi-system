@@ -15,7 +15,7 @@ fun head_only tac th =
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
     Method.insert_tac ctx ((Proof_Context.get_thms ctx "\<nu>current"
-                            |> map (fn th => th RS @{thm CurrentConstruction_D}))
+                              |> map (fn th => th RS @{thm CurrentConstruction_D}))
                           @ Named_Theorems.get ctx "NuSys.used"
                           @ Proof_Context.get_thms ctx "\<glowing_star>"
                           @ Proof_Context.get_thms ctx "\<nu>local_values"

@@ -17,7 +17,7 @@ fun mk_let flag_push_back names sequent ctx =
     val blk_name = Variable.revert_fixed ctx blk_name
     val arity = length names
     val op_let = ntimes (arity - 1) (fn _ => fn th => th RS @{thm op_let}) @{thm op_let}
-    val sequent = NuSys.apply ctx [op_let] sequent |> @{print}
+    val sequent = NuSys.apply_proc_naive op_let sequent
     val prem = Thm.cprem_of sequent 1
     val lrep_tys = strip_binder_vars @{const_name Pure.all} (term_of prem) |> map #2
     val (lrep_names,ctx) = Proof_Context.add_fixes

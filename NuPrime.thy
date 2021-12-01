@@ -421,21 +421,26 @@ lemma [iff]: "{} \<perpendicular> S" and [iff]: "S \<perpendicular> {}" unfoldin
 
 
 definition Heap_Tail :: "heap set \<Rightarrow> (heap \<times> 'a::lrep) set \<Rightarrow> (heap \<times> 'a::lrep) set" ( "_/ ^\<heavy_asterisk> _" [13,14] 13)
-  where "(H ^\<heavy_asterisk> Ctx) = {(h,s). Heap h \<and> (\<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> h1 \<in> H \<and> (h2,s) \<in> Ctx) }"
+  where "(H ^\<heavy_asterisk> Ctx) = {(h,s). (\<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> h1 \<in> H \<and> (h2,s) \<in> Ctx) }"
 
 lemma Heap_Tail_E[elim]:
-  "(h,s) \<in> (H ^\<heavy_asterisk> Ctx) \<Longrightarrow> (\<And>h1 h2. h = h1 ++ h2 \<Longrightarrow> Heap (h1 ++ h2) \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> h1 \<in> H \<Longrightarrow> (h2,s) \<in> Ctx \<Longrightarrow> C) \<Longrightarrow> C "
+  "(h,s) \<in> (H ^\<heavy_asterisk> Ctx) \<Longrightarrow> (\<And>h1 h2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> h1 \<in> H \<Longrightarrow> (h2,s) \<in> Ctx \<Longrightarrow> C) \<Longrightarrow> C "
   unfolding Heap_Tail_def by simp blast
 
 lemma Heap_Tail_I[intro]:
-  "h1 \<in> H \<Longrightarrow> (h2,s) \<in> Ctx \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> Heap (h1 ++ h2) \<Longrightarrow> (h1 ++ h2, s) \<in> (H ^\<heavy_asterisk> Ctx)"
+  "h1 \<in> H \<Longrightarrow> (h2,s) \<in> Ctx \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> (h1 ++ h2, s) \<in> (H ^\<heavy_asterisk> Ctx)"
   unfolding Heap_Tail_def by simp blast
 
+subsubsection \<open>A slightly modified Heap predication\<close>
+
+definition Heap' :: "(heap \<times> 'a::lrep) set \<Rightarrow> (heap \<times> 'a::lrep) set" where "Heap' T = {(h,s). Heap h \<and> (h,s) \<in> T}"
+
+lemma Heap'_expn[simp]: "(h,s) \<in> Heap' T \<longleftrightarrow> Heap h \<and> (h,s) \<in> T" unfolding Heap'_def by simp
 
 subsubsection \<open>\<nu>-Procedure\<close>
 
 definition Procedure :: "('a \<longmapsto> 'b) \<Rightarrow> (heap \<times> 'a::lrep) set \<Rightarrow> (heap \<times> 'b::lrep) set \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
-  where [\<nu>def]:"Procedure f T U \<longleftrightarrow> (\<forall>a H. a \<in> (H ^\<heavy_asterisk> T) \<longrightarrow> f a \<in> \<S> (H ^\<heavy_asterisk> U))"
+  where [\<nu>def]:"Procedure f T U \<longleftrightarrow> (\<forall>a H. a \<in> Heap' (H ^\<heavy_asterisk> T) \<longrightarrow> f a \<in> \<S> Heap' (H ^\<heavy_asterisk> U))"
 
 translations "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
@@ -492,16 +497,16 @@ subsection \<open>Top-level Construction Structures\<close>
 
 subsubsection \<open>Construction Context & Code block\<close>
 
-definition CurrentConstruction :: " ('a::lrep) state \<Rightarrow> heap set \<Rightarrow> (heap \<times> 'a) set \<Rightarrow> bool " ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _  [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,11] 10)
-  where "CurrentConstruction s Heap_Remainder S \<longleftrightarrow> s \<in> \<S_S> (Heap_Remainder ^\<heavy_asterisk> S)"
+definition CurrentConstruction :: " ('a::lrep) state \<Rightarrow> heap set \<Rightarrow> (heap \<times> 'a) set \<Rightarrow> bool " ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,11] 10)
+  where "CurrentConstruction s Heap_Remainder S \<longleftrightarrow> s \<in> \<S_S> Heap' (Heap_Remainder ^\<heavy_asterisk> S)"
 definition PendingConstruction :: " (('a::lrep) \<longmapsto> ('b::lrep)) \<Rightarrow> 'a state \<Rightarrow> heap set \<Rightarrow> (heap \<times> 'b) set \<Rightarrow> bool "
-    ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _  [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,1000,5] 4)
-  where "PendingConstruction f s Heap_Remainder S \<longleftrightarrow> bind s f \<in> \<S> (Heap_Remainder ^\<heavy_asterisk> S)"
+    ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,1000,5] 4)
+  where "PendingConstruction f s Heap_Remainder S \<longleftrightarrow> bind s f \<in> \<S> Heap' (Heap_Remainder ^\<heavy_asterisk> S)"
 translations "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)" \<rightleftharpoons> "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
   "CONST PendingConstruction f s H (x \<tycolon> T)" \<rightleftharpoons> "CONST PendingConstruction f s H \<tort_lbrace> x \<tycolon> T\<tort_rbrace>"
 
 lemma CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarrow> Inhabited T"
-  unfolding CurrentConstruction_def Inhabited_def by (cases s) (auto 0 3)
+  unfolding CurrentConstruction_def Inhabited_def by (cases s) (auto 0 4)
 (* lemma [elim!,\<nu>elim]: "CurrentConstruction s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding CurrentConstruction_def by (cases s) auto *)
 

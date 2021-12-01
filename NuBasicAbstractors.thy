@@ -4,7 +4,7 @@ theory NuBasicAbstractors
 begin
 
 \<nu>overloads singular and plural
-\<nu>overloads split_cast
+\<nu>overloads split_cast and pop_cast
 
 text \<open>Basic \<nu>-abstractors\<close>
 
@@ -98,7 +98,7 @@ lemma [\<nu>intro]:
 
 
 lemma split_cast_Array'_\<nu>app[\<nu>overload split_cast]:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < length l \<Longrightarrow>
+  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n \<le> length l \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l \<tycolon> Array' T \<longmapsto> a \<R_arr_tail> take n l \<tycolon> Array' T \<heavy_asterisk> (a ||+ n) \<R_arr_tail> drop n l \<tycolon> Array' T"
   unfolding Cast_def Premise_def Heap_Divider_def apply (cases a) apply (auto simp add: nu_exps min_absorb2) 
   subgoal for base ofs v
@@ -175,15 +175,29 @@ lemma [\<nu>intro]:
   unfolding Heap_Cast_Goal_def  CastDual_def Cast_def
   using Array_cast_Array'[unfolded Cast_def] Array'_cast_Array[unfolded Cast_def] by blast
 
+lemma single_Array_is_Ref: "\<tort_lbrace>a \<R_arr_tail> [x] \<tycolon> Array T\<tort_rbrace> = \<tort_lbrace>a \<R_arr_tail> x \<tycolon> Ref T\<tort_rbrace>"
+  unfolding Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
+
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> [x] \<tycolon> Array T \<longmapsto> a \<R_arr_tail> x \<tycolon> Ref T"
   unfolding Cast_def Array_def by (cases a) (simp add: pred_option_def Ball_def)
 
-lemma [\<nu>overload split_cast]:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < length l \<Longrightarrow>
+lemma split_cast_Array_\<nu>app[\<nu>overload split_cast]:
+  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n \<le> length l \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l \<tycolon> Array T \<longmapsto> a \<R_arr_tail> take n l \<tycolon> Array T \<heavy_asterisk> (a ||+ n) \<R_arr_tail> drop n l \<tycolon> Array T"
   by (simp add: Array_to_Array'
       split_cast_Array'_\<nu>app[of n "map Some l" a T, simplified, simplified take_map drop_map])
 
+lemma pop_cast_Array'_\<nu>app[\<nu>overload pop_cast]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e l \<noteq> [] \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l \<tycolon> Array T \<longmapsto> (a ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> a \<R_arr_tail> hd l \<tycolon> Ref T"
+  unfolding Premise_def subgoal premises prems
+proof -
+  have t1: "1 \<le> length l"
+    by (metis One_nat_def Suc_leI length_greater_0_conv list.size(3) not_one_le_zero prems)
+  have t2: "take 1 l = [hd l]" by (simp add: take_Suc prems)
+  have t3: "drop 1 l = tl l" by (simp add: drop_Suc prems) 
+
+  thm split_cast_Array_\<nu>app[of 1 l, unfolded Premise_def ParamTag_def, simplified t1, simplified t2 t3]
+  thm One_nat_def Suc_le_eq length_greater_0_conv
 
 (* lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> a \<R_arr_tail> [x] \<tycolon> Array T"
   unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def) *)
