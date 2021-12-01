@@ -22,8 +22,8 @@ signature NU_REASONER = sig
   val attr_add_elim : int -> attribute
   val attr_del_elim : attribute
 
-  val reason' : Proof.context -> reasoner Cost_Net.T -> thm -> thm
-  val reason : Proof.context -> thm -> thm
+  val reason' : Proof.context -> reasoner Cost_Net.T -> thm -> thm option
+  val reason : Proof.context -> thm -> thm option
   val reason_s : Proof.context -> (cost * thm Seq.seq) list -> thm Seq.seq (* Note it only returns one
     theorem in the returned sequence, that the one succeeded first or of least cost. *)
   val reason_tac : Proof.context -> tactic
@@ -39,7 +39,8 @@ type cost = int
 type 'a generic_reasoner = {name: term, pattern: term list, tactic: 'a}
 type reasoner = (Proof.context -> tactic) generic_reasoner
 
-exception Success of thm
+exception Success  of thm
+exception Success' of cost * thm
 
 structure States = Heap (
   type elem = (cost * thm Seq.seq);
@@ -64,7 +65,7 @@ fun call_tactics ctx tactics th =
           val tacs = (Logic.strip_assums_concl prem :: Logic.strip_assums_hyp prem)
                           |> maps (fn term =>
                               Cost_Net.retrieve tactics term
-                                (* |> map (debug "x22" ctx) *)
+                                |> map (debug "x22" ctx)
                                 |> map (apsnd (fn (r : reasoner) => #tactic r ctx th)))
                           |> sort (int_ord o apply2 fst)
                           (* |> map_filter (fn (c,seq) =>
@@ -81,49 +82,42 @@ fun call_tactics ctx tactics th =
         end
      | [] => raise Success th
 
-fun gen_reason ctx iter tactics (nprems,best_cost,best_stat) states =
-  if States.is_empty states then best_stat else
+fun gen_reason ctx iter tactics (best_cost,best_stat) states =
+  if States.is_empty states then (best_cost,best_stat) else
   let
     val _ = if iter > 100 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
     val ((cost,seq),states) = States.min_elem states
   in
-    if best_cost <= cost - 1000000 then
-      gen_reason ctx iter tactics (nprems,best_cost,best_stat) states (*pruned early*)
-    else case Seq.pull seq
+    case Seq.pull seq
       of SOME (th,seq') =>
           (let
-            val nprems = if nprems < 0 then Thm.nprems_of th else nprems
-            val cost = if Thm.nprems_of th < nprems then cost - 1000000 else cost
             val _ = @{print} (cost, th)
-            val (nprems,best_cost,best_stat) =
-              if Thm.nprems_of th < nprems then (Thm.nprems_of th, cost, th)
-              else if cost < best_cost then (nprems,cost,th)
-              else (nprems,best_cost,best_stat)
+            val (best_cost,best_stat) =
+              if cost < best_cost then (cost,th)
+              else (best_cost,best_stat)
             val states = states
-                  |> fold (fn (c,seq'') => States.insert (cost+c, seq''))
+                  |> fold (fn (c,seq'') => States.insert (@{print} (cost+c), seq''))
                         (call_tactics ctx tactics th)
                   |> States.insert (cost, seq')
+                handle Success ret => raise Success' (cost, ret)
           in
-            gen_reason ctx (iter+1) tactics (nprems,best_cost,best_stat) states
+            gen_reason ctx (iter+1) tactics (best_cost,best_stat) states
           end)
-       | NONE => gen_reason ctx iter tactics (nprems,best_cost,best_stat) states
+       | NONE => gen_reason ctx iter tactics (best_cost,best_stat) states
   end
 
-fun gen_reason' ctx iter tactics (nprems,best_cost,best_stat) states =
-  gen_reason ctx iter tactics (nprems,best_cost,best_stat) states
-  handle Success th => th
+fun gen_reason' ctx iter tactics best states =
+  (case gen_reason ctx iter tactics best states of (cost,ret) =>
+    if cost <= 0 then SOME ret else NONE)
+  handle Success' (cost,ret) => SOME ret
 
 fun reason' ctx tactics thm =
-  gen_reason' ctx 0 tactics (Thm.nprems_of thm,0,thm) (States.insert (0, Seq.single thm) States.empty)
+  gen_reason' ctx 0 tactics (0,thm) (States.insert (0, Seq.single thm) States.empty)
 fun reason'_s ctx tactics seqs = Seq.make (fn () =>
-    let
-      val ret = gen_reason' ctx 0 tactics (~1,100000000,Drule.dummy_thm)
-                  (fold States.insert seqs States.empty)
-    in
-      if Thm.prop_of ret = Thm.prop_of Drule.dummy_thm
-      then NONE else SOME (ret, Seq.empty)
-    end
-  )
+      gen_reason' ctx 0 tactics (100000000,Drule.dummy_thm)
+        (fold States.insert seqs States.empty)
+      |> Option.map (rpair Seq.empty)
+    )
 
 fun reasoner_eq ({name,pattern,...}, {name=name',pattern=pattern',...}) =
   (name = name' andalso pattern = pattern')
@@ -142,7 +136,9 @@ fun add cost_reasoner = Tactics.map (Cost_Net.update cost_reasoner);
 fun del reasoner = Tactics.map (Cost_Net.remove reasoner);
 fun reason ctx = reason' ctx (Tactics.get (Context.Proof ctx))
 fun reason_s ctx = reason'_s ctx (Tactics.get (Context.Proof ctx))
-val reason_tac = Seq.single oo reason
+fun reason_tac ctx th = Seq.make (fn () =>
+    reason ctx th |> Option.map (rpair Seq.empty)
+  )
 
 fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
   let
@@ -165,7 +161,8 @@ fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword \<nu>reasoner} "define \<nu>reasoner"
-    (Parse.term -- (Parse.int >> ~) -- Parse.enum "|" Parse.term --| @{keyword =} -- Parse.ML_source
+    (Parse.term -- (Parse.int >> ~) --| Parse.$$$ "(" -- Parse.enum "|" Parse.term --| Parse.$$$ ")"
+        --| @{keyword =} -- Parse.ML_source
       >> setup_cmd)
 
 fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))

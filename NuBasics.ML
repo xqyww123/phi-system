@@ -47,10 +47,10 @@ signature NU_BASICS = sig
   val normlize_thm_of_names : thm -> thm
 
   (* val dest_andTy : term -> term * term *)
-  val dest_CurrentConstruction : term -> term * term
-  val dest_CurrentConstruction_c : cterm -> cterm * cterm
-  val dest_PendingConstruction : term -> term * term * term
-  val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm
+  val dest_CurrentConstruction : term -> term * term * term
+  val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm
+  val dest_PendingConstruction : term -> term * term * term * term
+  val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm
   val dest_current_nu   : thm -> term
   val dest_current_nu_c : thm -> cterm
   val dest_topctx'   : term -> (term list (* stack *) * term list (* heap *))
@@ -70,8 +70,6 @@ signature NU_BASICS = sig
   val dest_procedure_c : cterm -> cterm * cterm * cterm
   val dest_premise_tag  : term -> term
   val dest_premise_tag_c: cterm -> cterm
-  val dest_simplify_tag   : term -> term * term
-  val dest_simplify_tag_c : term -> cterm * cterm
 
   val mk_PropBlock : int -> thm -> thm
 
@@ -95,7 +93,6 @@ signature NU_BASICS = sig
   (* val intro_interal_fact : thm (* thm to be added *) -> thm (* fact collection *) -> (int * thm)
   val intro_interal_fact_spec : thm (* thm to be added *) -> thm (* specthm *)
   -> (int * thm) *)
-  val clean_user_facts : thm -> thm
 
   (* Transform every HOL part of the facts theorem, including star fact, every user fact, and every
   * internal fact. *)
@@ -184,13 +181,13 @@ fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 val mk_auto_tag = mk_monop @{const_name "Auto"}
 
 val dest_CurrentConstruction   =
-      perhaps (try dest_Trueprop) #> dest_binop @{const_name "CurrentConstruction"}
+      perhaps (try dest_Trueprop) #> dest_triop @{const_name "CurrentConstruction"}
 val dest_CurrentConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_binop_c @{const_name "CurrentConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "CurrentConstruction"}
 val dest_PendingConstruction   =
-      perhaps (try dest_Trueprop) #> dest_triop @{const_name "PendingConstruction"}
+      perhaps (try dest_Trueprop) #> dest_quadop @{const_name "PendingConstruction"}
 val dest_PendingConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "PendingConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "PendingConstruction"}
 
 fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
   handle TERM _ => ((dest_PendingConstruction c |> #2)
@@ -202,10 +199,10 @@ fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
 fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
 val dest_current_nu =
       Thm.prop_of #> perhaps (try dest_Trueprop)
-        #> orelse_opt (try (dest_PendingConstruction #> #3)) (dest_CurrentConstruction #> #2)
+        #> orelse_opt (try (dest_PendingConstruction #> #4)) (dest_CurrentConstruction #> #3)
 val dest_current_nu_c =
       Thm.cprop_of #> perhaps (try dest_Trueprop_c)
-        #> orelse_opt (try (dest_PendingConstruction_c #> #3)) (dest_CurrentConstruction_c #> #2)
+        #> orelse_opt (try (dest_PendingConstruction_c #> #4)) (dest_CurrentConstruction_c #> #3)
 
 val dest_topctx = dest_binop @{const_name "NuTopCtx"}
 val dest_topctx_c = dest_binop_c @{const_name "NuTopCtx"}
@@ -340,8 +337,6 @@ fun intro_interal_fact_spec A th =
   in
     (id, intro_SPEC (focus, facts'))
   end *)
-val clean_user_facts_thm = @{thm NuPrime.clean_user_facts}
-fun clean_user_facts th = th RS clean_user_facts_thm
 
 fun apply3 f (a,b,c) = (f a, f b, f c)
 fun holrule f th =
@@ -379,8 +374,6 @@ val dest_procedure_c = perhaps (try dest_Trueprop_c)
       handle TERM _ => dest_triop_c @{const_name "Procedure"} ctm)
 val dest_premise_tag  = dest_monop   @{const_name "NuPrime.Premise"} o perhaps (try dest_Trueprop)
 val dest_premise_tag_c= dest_monop_c @{const_name "NuPrime.Premise"} o perhaps (try dest_Trueprop_c)
-val dest_simplify_tag   = dest_binop   @{const_name "NuPrime.Simplify"}
-val dest_simplify_tag_c = dest_binop_c @{const_name "NuPrime.Simplify"}
 
 val vx = ("x",0) and va = ("'a",0)
 fun intro_param tm =
@@ -452,7 +445,7 @@ fun tr_heap (Const (@{const_name Heap_Divider},_) $ A $ B)
   | tr_heap tm = tm
 
 fun tr_topctx void_tail (Const (@{const_name NuTopCtx},_) $ S $ H)
-      = Const (@{const_name NuTopCtx}, dummyT) $ tr_stack void_tail S $ tr_heap H
+      = Const (@{const_name NuTopCtx}, dummyT) $ tr_stack void_tail S $ H
           |> @{print}
   | tr_topctx void_tail (tm as (Const (@{const_name Front_Stack},_) $ _ $ _))
       = tm
@@ -466,15 +459,15 @@ fun tr_topctx void_tail (Const (@{const_name NuTopCtx},_) $ S $ H)
       = Const ("_type_constraint_", ty) $ tr_topctx void_tail tm
   | tr_topctx void_tail (tm as (Const (@{const_name Stack_Delimiter}, _) $ A $ B))
       = Const (@{const_name NuTopCtx},dummyT) $ tr_stack void_tail tm
-          $ Free ("\<HH>", dummyT)
+          $ @{term Nothing}
   | tr_topctx void_tail (tm as (Const (@{const_name typing},_) $ _ $ _))
       = Const (@{const_name NuTopCtx},dummyT)
           $ tr_stack void_tail (mk_monop @{const_name RepSet} tm)
-          $ Free ("\<HH>", dummyT)
+          $ @{term Nothing}
   | tr_topctx void_tail (tm as (Const (@{const_name RepSet},_) $ _))
       = Const (@{const_name NuTopCtx},dummyT)
           $ tr_stack void_tail tm
-          $ Free ("\<HH>", dummyT)
+          $ @{term Nothing}
   | tr_topctx void_tail tm = tm
 
 val parse_arg_list = tr_topctx

@@ -110,11 +110,6 @@ fun different_tag th =
      | _ => Seq.empty
 
 
-(*** Simplify tag tac ***)
-fun simp_tag_tac ctx th =
-  case try (fn th => cprem_of th 1 |> dest_Trueprop_c |> dest_simplify_tag_c) th
-    of SOME (_,y) => ((Simplifier.rewrite ctx y RS @{thm Simplify_I}) RS th) |> Seq.single
-     | NONE => Seq.empty
 
 (*** auto resolve tac ***)
 fun SOLVED tac st =
@@ -122,9 +117,10 @@ fun SOLVED tac st =
   else (tac st |> Seq.filter (fn st' => Thm.nprems_of st' < Thm.nprems_of st));
 fun SOLVED_RULE rule fail th =
   if Thm.nprems_of th = 0 then th
-  else let val th' = rule th
-       in if Thm.nprems_of th' < Thm.nprems_of th then th'
-          else fail th' end
+  else (case rule th of SOME th' =>
+          if Thm.nprems_of th' < Thm.nprems_of th then th'
+          else fail th'
+        | NONE => fail th)
 
 fun REPEATX tac =
   let
@@ -140,43 +136,7 @@ fun REPEATX tac =
   in fn st => Seq.make (fn () => rep [] st) end;
 
 
-fun auto_resolve thms addtion ctx  =
-  let 
-    val (thms,prio,minor_thms) =
-      case thms of SOME (major, SOME (prio,minor)) => (major,prio,minor)
-       | SOME (major, NONE) => (major,[],[])
-       | NONE => (Named_Theorems.get ctx "NuPrime.\<nu>intro",
-                  Named_Theorems.get ctx "NuPrime.\<nu>intro0",
-                  Named_Theorems.get ctx "NuPrime.\<nu>intro'")
-    val thms = addtion @ thms
-    val lowest = Named_Theorems.get ctx "NuPrime.\<nu>intro''"
-  in SOLVED (REPEATX (
-      different_tag
-        ORELSE simp_tag_tac ctx
-        ORELSE print_dbg' (* TODO: support for debug printing *)
-        APPEND (HEADGOAL (resolve_tac ctx prio))
-        APPEND (HEADGOAL (resolve_tac ctx (@{print} thms)))
-        APPEND (premise_tac ctx)
-        APPEND resolve_tac ctx minor_thms 1
-        APPEND resolve_tac ctx lowest 1
-        ORELSE (fn th => Seq.make (fn () => (@{print} "END"; @{print} th; NONE)))
-    )) (* #> Seq.map fininsh_premise_hyps *)
-  end
-val auto_resolve0 = auto_resolve NONE []
-
-
-fun auto_resolve_rule' i major_minor addition ctx th =
-  if Thm.nprems_of th = 0 then th else
-  case Seq.pull (Goal.protect 1 th |> auto_resolve major_minor addition ctx)
-    of SOME (th', _) =>
-        Goal.conclude th' |> auto_resolve_rule' (i+1) major_minor addition ctx 
-     | NONE => (if i = 0 then raise ReasoningFail th else th)
-fun auto_resolve_rule sequent addition ctx th = auto_resolve_rule' 0 sequent addition ctx th
-val auto_resolve_rule0 = auto_resolve_rule NONE []
-
-
-
-  (** Basic Operations **)
+(** Basic Operations **)
 fun cast ctx desired_nu sequent =
   let
     val cast  = Drule.infer_instantiate ctx [(("T'",0),desired_nu)] @{thm "cast"}
@@ -231,7 +191,7 @@ fun export_codeblock cb sequent =
 
 fun accept_proc sequent ctx =
   let
-    val (f,s,_) = dest_PendingConstruction (Thm.prop_of sequent)
+    val (f,s,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
     val tyb = range_type (fastype_of f)
     val name = term_name s |> Variable.revert_fixed ctx
     val ([name],ctx) = Variable.add_fixes [name] ctx
@@ -285,12 +245,13 @@ fun set_param_cmd ctx term major =
      | NONE => set_param ctx (Syntax.parse_term ctx term) major
 
 
-fun export_start_proc cc sequent =
+fun finish_proc cc sequent =
   let
-    val (s',_) = dest_CurrentConstruction_c cc
+    val (s',H',_) = dest_CurrentConstruction_c cc
   in
     sequent
       |> Thm.implies_intr cc
+      |> Thm.forall_intr H'
       |> Thm.forall_intr s'
       |> (fn th => th COMP @{thm reassemble_proc_final})
   end
@@ -300,15 +261,15 @@ fun start_proc blk_name arg_nuTy ctx =
     val ty_a = (case typ_of_cterm arg_nuTy
                    of Type ("Set.set", [Type (@{type_name prod}, [_, ty])]) => ty
                     | _ => raise Fail "start_proc - argTy - not a set")
-    val ([blk_name],ctx) = Variable.add_fixes [blk_name] ctx
+    val ([blk_name, H],ctx) = Variable.add_fixes [blk_name, "\<HH>"] ctx
     val stat_var = Free (blk_name, mk_stateT ty_a) 
     val ctx = Variable.declare_constraints stat_var ctx
     val init = Const(@{const_name CurrentConstruction},
-                  fastype_of stat_var --> typ_of_cterm arg_nuTy --> boolT)
-               $ stat_var
+                  fastype_of stat_var --> @{typ "heap set"} --> typ_of_cterm arg_nuTy --> boolT)
+               $ stat_var $ Free (H, @{typ "heap set"})
     val init = Thm.apply @{cterm Trueprop} (Thm.apply (Thm.cterm_of ctx init) arg_nuTy)
     val ([init],ctx) = Assumption.add_assms
-          (fn _ => fn [cc] => (export_start_proc cc, I)) [init] ctx
+          (fn _ => fn [cc] => (finish_proc cc, I)) [init] ctx
   in
     (init,ctx)
   end
@@ -345,9 +306,11 @@ fun auto_construct ctx term sequent =
       |> (fn th => sequent RS th)
       |> Goal.protect 1
       |> Nu_Reasoner.reason ctx
-  in if Thm.no_prems sequent
-     then Goal.conclude sequent
-     else raise TERM ("fail to construct", [Thm.term_of term])
+  in case sequent of SOME sequent =>
+        if Thm.no_prems sequent
+        then Goal.conclude sequent
+        else raise TERM ("fail to construct", [Thm.term_of term])
+      | NONE => raise TERM ("fail to construct", [Thm.term_of term])
   end
 
 

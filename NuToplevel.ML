@@ -645,7 +645,7 @@ fun gen_begin_block prep_attr bindings int stat =
     val (proc,arg,ret) = dest_procedure goal
     val blk_name = block_name_of proc
     val level = current_block_depth specthm
-    val level_prefix = "L\<nu>'"^(Int.toString level)^"_"^blk_name
+    val blk_name = "L\<nu>'" ^ (Int.toString level) ^ "_" ^ blk_name
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
     val _ = debug_term ctx "aaaa " goal
     fun after_qed (ctx',[[th]]) stat =
@@ -675,7 +675,7 @@ fun gen_begin_block prep_attr bindings int stat =
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-      |> Proof.map_context_result (start_proc level_prefix (cterm_of ctx arg))
+      |> Proof.map_context_result (start_proc blk_name (cterm_of ctx arg))
       |-> NuBasics.set_nu_fact
       |> Proof.map_context (fn ctx => 
             Proof_Context.put_thms false ("\<nu>thesis",
