@@ -18,6 +18,7 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
       and "<conversion>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n"
       and "<auto>" = "\<^bold>a\<^bold>u\<^bold>t\<^bold>o"
       and "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
+      and "<solve>" = "\<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e"
       and "<construct>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t"
       and "by" = "\<^bold>b\<^bold>y"
       and "<simplify>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y"
@@ -325,16 +326,26 @@ lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" 
     the first parameter `?bit_width` will be specified first and then the "?value".\<close>
 lemma [elim!,\<nu>elim]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" by auto
 
-subsubsection \<open>Premise tag\<close>
+subsubsection \<open>Premise tag & Solve tag\<close>
 
 definition Premise :: "bool \<Rightarrow> bool" ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where [\<nu>def]:"Premise x = x"
-  \<comment> \<open>The tag represent a necessary premise that must be solved in a rule or procedure.
-    The automatic reasoning ties to solve it, and if fails, terminates the automatic reasoning.\<close>
+definition Solve :: "bool \<Rightarrow> bool" ("\<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e _" [27] 26) where [\<nu>def]:"Solve x = x"
+
+text \<open>Both the tags represent a necessary premise that must be solved in a rule or procedure.
+  On non-interactive mode, they behavior similarly.
+  Both of them are attempted by automatic reasoning at non-interactive mode, and if the proof fails,
+    the rule or procedure claiming that premise is gave up.
+  The difference is, on interactive mode, only the \<^const>\<open>Solve\<close> but not \<^const>\<open>Premise\<close> is attempted
+    by automatic solver, remaining \<^const>\<open>Premise\<close> unchanged and leaving to user. Also only the
+    failure of \<^const>\<open>Solve\<close> terminates that inference rule at interactive mode.\<close>
 
 lemma Premise_I[intro!]: "P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding Premise_def by simp
+lemma Solve_I[intro!]: "P \<Longrightarrow> \<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e P" unfolding Solve_def by simp
 lemma Premise_E: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> P" unfolding Premise_def by simp
-
+lemma Solve_E: "\<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e P \<Longrightarrow> P" unfolding Solve_def by simp
 lemma [elim!,\<nu>elim]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
+lemma [elim!,\<nu>elim]: "\<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Solve_def by simp
+
 lemma Premise_Irew: "(P \<Longrightarrow> C) \<equiv> Trueprop (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> C)" unfolding Premise_def atomize_imp .
 
 (* attribute_setup intro_premise = \<open>
@@ -360,6 +371,12 @@ definition Different :: " 'a \<Rightarrow> 'b \<Rightarrow> bool " where "Differ
   while the introduction rule `cast A \<longmapsto> B \<Longrightarrow> cast B \<longmapsto> C \<Longrightarrow> cast A \<longmapsto> C` causes loop if given `cast A \<longmapsto> A`,
   the rule `cast A \<longmapsto> B \<Longrightarrow> Different A B \<Longrightarrow> cast B \<longmapsto> C \<Longrightarrow> cast A \<longmapsto> C` will not.\<close>
 lemma Different_I: "Different A B" unfolding Different_def ..
+
+subsubsection \<open>Technical Tags\<close>
+
+datatype uniq_id = UNIQ_ID
+  \<comment> \<open>A technical tag that is during the exporting translated to a unique ID.
+    It is useful to generate unique name of anonymous functions.\<close>
 
 subsection \<open>Register and its collection\<close>
 
@@ -395,8 +412,8 @@ definition StrictStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a stat
 definition LooseStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a state set" ("\<S> _" [56] 55)
   where "\<S> T = {s. case s of Success x \<Rightarrow> x \<in> T | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
 
-lemma [iff]: "Success x \<in> \<S_S> T \<equiv> x \<in> T" and [iff]: "\<not> (Fail \<in> \<S_S> T)" and [iff]: "\<not> (PartialCorrect \<in> \<S_S> T)"
-  and [iff]: "Success x \<in> \<S> T \<equiv> x \<in> T" and [iff]: "\<not> (Fail \<in> \<S> T)" and [iff]: "(PartialCorrect \<in> \<S> T)"
+lemma [iff,\<nu>def]: "Success x \<in> \<S_S> T \<equiv> x \<in> T" and [iff]: "\<not> (Fail \<in> \<S_S> T)" and [iff]: "\<not> (PartialCorrect \<in> \<S_S> T)"
+  and [iff,\<nu>def]: "Success x \<in> \<S> T \<equiv> x \<in> T" and [iff]: "\<not> (Fail \<in> \<S> T)" and [iff,\<nu>def]: "(PartialCorrect \<in> \<S> T)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
 (* lemma [dest]: "s \<in> \<S_S> T \<Longrightarrow> Inhabited T" unfolding Inhabited_def by (cases s) auto *)
     \<comment>\<open>The inhabited property can be inferred from @{term StrictStateTy} only rather than @{term LooseStateTy}. \<close>
@@ -435,7 +452,7 @@ subsubsection \<open>A slightly modified Heap predication\<close>
 
 definition Heap' :: "(heap \<times> 'a::lrep) set \<Rightarrow> (heap \<times> 'a::lrep) set" where "Heap' T = {(h,s). Heap h \<and> (h,s) \<in> T}"
 
-lemma Heap'_expn[simp]: "(h,s) \<in> Heap' T \<longleftrightarrow> Heap h \<and> (h,s) \<in> T" unfolding Heap'_def by simp
+lemma Heap'_expn[simp,\<nu>def]: "(h,s) \<in> Heap' T \<longleftrightarrow> Heap h \<and> (h,s) \<in> T" unfolding Heap'_def by simp
 
 subsubsection \<open>\<nu>-Procedure\<close>
 
@@ -451,11 +468,26 @@ definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b 
 (* lemma [intro]: "(\<And>x h. x \<in> T h \<Longrightarrow> f x \<in> U h) \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle>" by auto *)
 (* lemma [simp]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> \<S> U \<brangle> \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> U \<brangle>" unfolding \<nu>def by fast  *)
 
-definition Function ("(2\<^bold>f\<^bold>u\<^bold>n\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100) where "Function = Procedure"
+subsubsection \<open>\<nu>-Function\<close>
+
+datatype ('a,'b) func (infix "\<longmapsto>\<^sub>f" 0) = func (dest_func: "'a \<longmapsto> 'b")
+
+lemma func_forall: "All P \<longleftrightarrow> (\<forall>f. P (func f))" by (metis func.exhaust)
+lemma func_ALL: "(\<And>f. PROP P f) \<equiv> (\<And>p. PROP P (func p))" proof
+  fix p assume "\<And>f. PROP P f" then show "PROP P (func p)" .
+next fix f assume "\<And>p. PROP P (func p)" from \<open>PROP P (func (dest_func f))\<close> show "PROP P f" by simp
+qed
+
+definition Function ("(2\<^bold>f\<^bold>u\<^bold>n\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
+  where "Function f = Procedure (dest_func f)"
+
 translations "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
   "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
 
-lemma Function_I: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> B \<brangle>" unfolding Function_def .
+definition def_func :: "uniq_id \<Rightarrow> 'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a \<longmapsto> 'b) \<Rightarrow> 'a \<longmapsto>\<^sub>f 'b" where "def_func _ _ _ = func"
+
+lemma Function_I: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c def_func UNIQ_ID TYPE('a::lrep) TYPE('b::lrep) f \<blangle> A \<longmapsto> B \<brangle>"
+  unfolding Function_def def_func_def by simp
 
 text \<open>One thing is, a \<^const>\<open>Procedure\<close> does not mean a low-level function in the target object,
   note the stack remainder, but only a logical procedure.

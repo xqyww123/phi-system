@@ -1,8 +1,52 @@
 theory NuTest
-  imports NuStd_Base NuInstructions "HOL-Library.Permutation"
+  imports NuStd_Base NuInstructions "HOL-Library.Permutation" "List_Index"
 begin
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
+
+declare [ [ML_print_depth = 100] ]
+
+declare find_index_le_size[simp]
+
+lemma AAA[intro]: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> xs ! i < x \<Longrightarrow> i < find_index ((\<le>) x) xs" 
+  unfolding sorted_iff_nth_mono
+  by (metis less_le_trans linorder_neqE_nat not_le find_index_property find_index_property)
+
+lemma BBB[intro]: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> x \<le> xs ! i \<Longrightarrow> find_index ((\<le>) x) xs \<le> i"
+  unfolding sorted_iff_nth_mono
+  by (metis less_le_trans linorder_neqE_nat not_le find_index_property find_index_property)
+
+proc bin_search: \<open>ptr \<tycolon> Pointer\<heavy_comma> len \<tycolon> \<nat>[size_t]\<heavy_comma> x \<tycolon> \<nat>['b::len]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b]\<close>
+  \<longmapsto> \<open>find_index (\<lambda>y. x \<le> y) xs \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b]\<close>
+    premises [used]: "length xs = len"
+      and A[used]: "sorted xs"
+  \<bullet> \<rightarrow> ptr, len, x
+  \<bullet> len 0 while var h l in h, l always \<open>l \<le> find_index (\<lambda>y. x \<le> y) xs \<and> find_index (\<lambda>y. x \<le> y) xs \<le> h \<and> h \<le> len\<close> 
+  \<bullet> \<medium_left_bracket> -- h, l l h < \<medium_right_bracket> 
+  \<bullet> \<medium_left_bracket> -- h, l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket>
+  have B[used]: "(h - l) div 2 + l < length xs" using \<glowing_star> used by auto
+  note AAA[OF A[unfolded Premise_def] B, used]
+(* xs ! ((h - l) div 2 + l) < x \<Longrightarrow> (h - l) div 2 + l + 1 \<le> find_index ((\<le>) x) xs) *)
+  \<bullet> \<medium_right_bracket>
+  thm \<glowing_star>
+
+term find_index
+
+
+term foldr
+term sort_key
+
+proc sel_sort: \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b::len]\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>['b]\<close>
+  premises [used]: "length xs = n"
+  \<bullet> \<rightarrow> ptr, n
+  \<bullet> n times var ys heap "ptr \<R_arr_tail> ys" \<open>\<lambda>i. take i ys = sort (take i xs)\<close> \<medium_left_bracket> \<rightarrow> i
+  \<bullet> ptr i 1 + \<up>
+  thm used
+
+
+
+
+declare perm_length[simp]
 
   proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x -1 \<tycolon> \<nat>[32]\<close>
     requires [used]: \<open>0 < x\<close>
@@ -17,6 +61,8 @@ thm "\<up>_\<nu>app"
 ML \<open>@{term "case x of (i,j,k) \<Rightarrow> f i j k"}\<close>
 term \<open>case_prod\<close>
 term perm
+term sorted
+thm perm_length
 thm Variant_Cast_I_always
 ML \<open>Seq.the_result\<close>
 declare [ [ML_print_depth = 100] ]
@@ -27,9 +73,21 @@ thm op_recursion
 ML \<open>val th = Goal.init @{cterm "P \<Longrightarrow> Q \<Longrightarrow> P"} |> Thm.eq_assumption 1\<close>
 
 rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>\<exists>*ys. (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys)\<close>
+  \<longmapsto> \<open>\<exists>*ys. (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys \<and> xs  <~~> ys)\<close>
   var ptr xs n premises [used]: "length xs = n"
-  \<bullet> -- n 0 = if  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot \<open>0 \<tycolon> \<nat>[size_t]\<close> 0
+  \<bullet> -- n 0 = if  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot 
+  \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in j heap "ptr \<R_arr_tail> ys"
+  \<bullet> \<open>\<lambda>i. j \<le> i \<and> length ys = n \<and>
+    (\<forall>k. k <j \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> xs ! (n-1) < ys ! k)\<close>
+  \<bullet> \<medium_left_bracket> \<rightarrow> j, i ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> i 1 + \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket> 
+  note Suc_eq_plus1[simp]
+  \<bullet> \<medium_right_bracket>
+  \<bullet> 
+  \<bullet>
+  thm used
+  \<bullet>\<rightarrow> i, j ptr i \<up>\<rightarrow> i' ptr j \<up>-- j' pivot \<le> if \<medium_left_bracket> ptr j i' \<down> ptr i j' \<down> i 1 + \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket> j 1 + \<medium_right_bracket>
+
+  \<bullet> 0
   \<bullet> while var i, j, ys in i, j heap "ptr \<R_arr_tail> ys" always 
     \<open>i \<le> j \<and> j \<le> n \<and> length ys = n \<and>
     (if j = n then 0 < i \<and> ys ! (i-1) = xs ! (n-1) else ys ! (n-1) = xs ! (n-1)) \<and>

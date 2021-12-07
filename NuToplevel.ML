@@ -55,10 +55,13 @@ signature NU_TOPLEVEL = sig
   val end_block_cmd : bool -> Proof.state -> Proof.state
   
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
+
+  val export_LLVM : (string * Position.T) option -> theory -> theory
 end
 
 structure NuToplevel : NU_TOPLEVEL = struct
 open NuHelp NuBasics Term HOLogic Thm NuSys
+
 type context = Proof.context
 type state = Proof.state
 val register_label_head = "\<upsilon>"
@@ -236,11 +239,13 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
         val goal = mk_Trueprop (
               Const (@{const_name All}, dummyT) $ Abs("x", dummyT,
                 (Const (@{const_name Function}, dummyT)
-                  $ (Const ("NuInstructions.op_recursion", dummyT) $ Var ((func_name,0), dummyT))
+                  $ (Const ("NuInstructions.op_recursion", dummyT)
+                      $ @{term UNIQ_ID} $ Const ("Pure.type", dummyT) $ Const ("Pure.type", dummyT)
+                      $ Var ((func_name,0), dummyT))
                   $ arg'
                   $ ret')))
 
-        val recursion_thm = Proof_Context.get_thm ctx "NuInstructions.op_recursion"
+        val recursion_thm = Proof_Context.get_thm ctx "NuStd_Base.op_recursion"
         fun constr_process stat =
           let
             (* simplify the proof goal, to expand all the auto Nu *)
@@ -276,12 +281,12 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
 
             (* intro assumptions *)
             fun imp_export prems sequent =
-              (sequent RS @{thm Function_I})
+              sequent
                 |> fold_rev (fn prem => fn th =>
                       (Thm.implies_intr prem th RS @{thm impI})
                           |> Thm.assumption NONE 1
                           |> Seq.make_results |> Seq.the_result "should never fail"
-                  ) prems |> @{print}
+                  ) prems
             val assms = map (fn (tm,((b,attr),(_,pats))) =>
                                   ((b, elim_premise @ map (Attrib.attribute ctx) attr),
                                    [(tm,pats)]))
@@ -687,6 +692,27 @@ val begin_block_cmd = gen_begin_block Attrib.attribute_cmd
 val begin_block = gen_begin_block (K I)
 end
 
+fun export_LLVM path thy =
+  let
+    fun eval code = ML_Context.exec (fn () =>
+                      ML_Context.eval_source ML_Compiler.flags (Input.string code))
+
+    fun prep_path (path,pos) =
+      let
+        val base = Path.expand (Resources.master_directory thy)
+        val path = File.full_path base (Path.explode path)
+        val _ = Position.report pos (Markup.path (Path.implode path));
+      in path end
+
+    val codegen =
+      case path of SOME P =>
+          eval ("NuCG.codegen NuCG_" ^ Context.theory_name thy ^ ".gen"
+                    ^ "(" ^ ML_Syntax.print_path (prep_path P) ^ ")" )
+        | _ => I
+  in 
+    thy |> Context.theory_map (eval (NuCompilation.compile thy |> (fn s => (tracing s; s))))
+        |> Context.theory_map codegen
+  end
 
 (* fun gen_begin_rec_proc prep_term prep_var
   binding arg_ret raw_loop_vars rawfixes includes precond int ctx =

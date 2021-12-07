@@ -9,7 +9,7 @@ begin
 text \<open>Semantic data representations\<close>
 
 declare pair_forall[lrep_exps] pair_exists[lrep_exps]
-
+(* declare llty_prod[\<nu>intro] *)
 
 section \<open>Memory address\<close>
 
@@ -85,7 +85,7 @@ qed
 subsection \<open>Instantiations for memptr\<close>
 
 instantiation memptr :: lrep begin
-definition llty_memptr :: " memptr itself \<Rightarrow> llty" where "llty_memptr _ = llty_pointer"
+definition llty_memptr :: " memptr itself \<Rightarrow> llty" where [\<nu>intro]: "llty_memptr _ = llty_pointer"
 definition deepize_memptr :: " memptr \<Rightarrow> deep_model"
   where "deepize_memptr ptr = DM_pointer (case_memptr (map_memaddr unat) ptr)"
 definition shallowize_memptr :: " deep_model \<Rightarrow> memptr "
@@ -217,7 +217,7 @@ section \<open>The integer data type\<close>
 subsection \<open>Lrep instantiations\<close>
 
 instantiation word :: (len) lrep begin
-definition llty_word :: "'a word itself \<Rightarrow> llty" where [simp]: "llty_word _ = llty_int LENGTH('a)"
+definition llty_word :: "'a word itself \<Rightarrow> llty" where [simp, \<nu>intro]: "llty_word _ = llty_int LENGTH('a)"
 definition deepize_word :: " 'a word \<Rightarrow> deep_model " where "deepize_word x = DM_int LENGTH('a) (unat x)"
 definition shallowize_word :: " deep_model \<Rightarrow> 'a word" where "shallowize_word x = (case x of DM_int _ n \<Rightarrow> of_nat n)"
 instance apply standard using deepize_word_def shallowize_word_def by auto
@@ -305,7 +305,7 @@ lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFus
 
 section \<open>Tuple\<close>
 
-datatype 'a tuple = Tuple "('a::field_list)"
+datatype 'a tuple = Tuple (dest_tuple: "('a::field_list)")
 
 lemma tuple_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>x. P (Tuple x))" by (metis tuple.exhaust) 
 lemma tuple_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>x. P (Tuple x))" by (metis tuple.exhaust) 
@@ -315,7 +315,7 @@ subsection \<open>Lrep instantiations\<close>
 subsubsection \<open>lrep\<close>
 
 instantiation tuple :: (field_list) lrep begin
-definition llty_tuple :: " 'a tuple itself \<Rightarrow> llty " where [simp]: "llty_tuple _ = llty_tup (llty TYPE('a))"
+definition llty_tuple :: " 'a tuple itself \<Rightarrow> llty " where [simp, \<nu>intro]: "llty_tuple _ = llty_tup (llty TYPE('a))"
 definition deepize_tuple :: " 'a tuple \<Rightarrow> deep_model " where "deepize_tuple x = DM_record (deepize (case_tuple id x))"
 definition shallowize_tuple :: " deep_model \<Rightarrow> 'a tuple " where "shallowize_tuple x = (case x of DM_record y \<Rightarrow> Tuple (shallowize y))"
 instance apply standard using shallowize_tuple_def deepize_tuple_def by (auto split: tuple.split)
@@ -359,12 +359,24 @@ lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \
 lemma [\<nu>intro]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
 lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
 
+subsubsection \<open>Index\<close>
+
+definition index_tuple :: "('a,'b,'x,'y) index \<Rightarrow> ('a::field_list tuple, 'b::field_list tuple, 'x, 'y) index"
+  where "index_tuple idx = (case idx of Index g m \<Rightarrow> Index (g o dest_tuple) (map_tuple o m))"
+
+lemma [\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_tuple idx \<blangle> X \<^bold>@ a \<tycolon> \<lbrace> A \<rbrace> \<brangle>"
+  unfolding \<nu>index_def index_tuple_def tuple_forall by (cases idx) (simp add: nu_exps)
+
+lemma [\<nu>intro]:
+    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_tuple idx \<blangle> X \<^bold>@ a \<tycolon> \<lbrace> A \<rbrace> \<longmapsto> Y \<^bold>@ b \<tycolon> \<lbrace> B \<rbrace> \<brangle>"
+  unfolding \<nu>index_def index_tuple_def tuple_forall by (cases idx) (simp add: nu_exps)
+
 section \<open>Function Pointer\<close>
 
 subsubsection \<open>lrep\<close>
 
 instantiation fun_addr ::  lrep begin
-definition llty_fun_addr :: " fun_addr itself \<Rightarrow> llty " where [simp]: "llty_fun_addr _ = Lty_fun_addr"
+definition llty_fun_addr :: " fun_addr itself \<Rightarrow> llty " where [simp, \<nu>intro]: "llty_fun_addr _ = Lty_fun_addr"
 definition deepize_fun_addr :: " fun_addr \<Rightarrow> deep_model " where "deepize_fun_addr = DM_fun_addr"
 definition shallowize_fun_addr :: " deep_model \<Rightarrow> fun_addr " where "shallowize_fun_addr x = (case x of DM_fun_addr y \<Rightarrow> y)"
 instance apply standard using shallowize_fun_addr_def deepize_fun_addr_def by auto

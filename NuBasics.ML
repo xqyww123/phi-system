@@ -396,6 +396,7 @@ fun dest_named (Type (@{type_name named}, [tys, names]))
 fun dest_named_only_names (Type (@{type_name named}, [_, names]))
       = dest_name_tylabels names
   | dest_named_only_names ty = raise TYPE ("dest_named", [ty], [])
+
 fun normlize_name name =
   if String.isSuffix "__" name then String.substring (name,0, size name - 2)
   else name

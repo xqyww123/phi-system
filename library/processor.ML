@@ -65,7 +65,7 @@ fun set_enabled v (Processor {binding, precedence, pattern, enabled, proc}) =
 
 structure Data = Generic_Data
 (
-  type T = processor Name_Space.table; (* key : the constant name, value: the definition *)
+  type T = processor Name_Space.table;
   val empty: T = Name_Space.empty_table "\<nu>processor";
   val extend = I;
   fun merge data : T = Name_Space.merge_tables data;

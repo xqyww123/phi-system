@@ -24,9 +24,9 @@ fun gen_set_variables_tag prep_S vars always ctx sequent =
   let
     val ctx = Proof_Context.set_mode Proof_Context.mode_schematic ctx
                 |> Proof_Context.set_mode Proof_Context.mode_pattern
-    val Const (@{const_name Variant_Cast}, _) $ _ $ S $ _
+    val Const (@{const_name Variant_Cast}, _) $ _ $ S $ H $ _ $ _
           = Thm.major_prem_of sequent |> dest_Trueprop
-    val S' = prep_S ctx S
+    val (S',H') = prep_S ctx (S,H)
     val _ = debug_term ctx "aaaaaa " S'
 
     val names = map fst vars
@@ -35,13 +35,14 @@ fun gen_set_variables_tag prep_S vars always ctx sequent =
     val always = Option.map (Syntax.parse_term ctx #> tuple_abs vars #> mk_cases_named names) always
 
     val S' = tuple_abs vars S' |> mk_cases_named names
+    val H' = tuple_abs vars H' |> mk_cases_named names
     val S' = case always of SOME alw =>
               Abs ("\<xx>", dummyT,
                 Const(@{const_name AdditionSet}, dummyT) $ (S' $ Bound 0)
                   $ (Const (@{const_name Premise}, dummyT) $ (alw $ Bound 0)))
           | NONE => S'
 
-    val var_tag = Const (@{const_name Variant_Cast}, dummyT) $ dummy $ S $ S'
+    val var_tag = Const (@{const_name Variant_Cast}, dummyT) $ dummy $ S $ H $ S' $ H'
                     |> mk_Trueprop
                     |> Syntax.check_prop ctx |> cterm_of ctx
     val goal = Goal.init var_tag |> @{print}
@@ -80,7 +81,7 @@ fun variables_tag_pattern_match raw_vars stack_schema heap_schema always ctx seq
       Proof_Context.add_fixes (map (fn (a,b,c) => (a, Option.map (Syntax.read_typ ctx) b, c)) raw_vars) ctx
     val vars = origin_var_names ~~ map (rpair dummyT) new_var_names
 
-    fun prep_S ctx S =
+    fun prep_S ctx (S,H) =
       let
         val stack_schema = rev (
           case stack_schema of SOME sch => map (Syntax.parse_term ctx) sch
@@ -89,24 +90,25 @@ fun variables_tag_pattern_match raw_vars stack_schema heap_schema always ctx seq
           case heap_schema of SOME sch => map (Syntax.parse_term ctx) sch
             | _ => [])
 
-        val Const (@{const_name Variant_Cast}, _) $ _ $ S $ _
-              = Thm.major_prem_of sequent |> dest_Trueprop
-        val (stack,heap) = dest_topctx' S
+        val (stack,heap) =
+            (strip_binop_l @{const_name Stack_Delimiter} S,
+             strip_binop_l @{const_name Heap_Divider} H)
 
         val stack' = stack_schema ~~ take (length stack_schema) stack
               |> map (fn (sch, org) =>
-                  case dest_RepSet org of (x,T) =>
-                    mk_RepSet (Type.constraint (fastype_of x) sch, T))
+                  case try dest_RepSet org
+                    of SOME (x,T) => mk_RepSet (Type.constraint (fastype_of x) sch, T)
+                     | NONE => sch)
               |> (fn l => l @ drop (length stack_schema) stack)
         val heap' = heap_schema ~~ take (length heap_schema) heap
               |> map (fn (sch, org) =>
-                  case dest_RepSet org of (x,T) =>
-                    mk_RepSet (Type.constraint (fastype_of x) sch, T))
+                  case try dest_RepSet org
+                    of SOME (x,T) => mk_RepSet (Type.constraint (fastype_of x) sch, T)
+                     | NONE => sch)
               |> (fn l => l @ drop (length heap_schema) heap)
       in
-        mk_binop @{const_name "NuTopCtx"}
-          (list_mk_binop_l @{const_name Stack_Delimiter} stack',
-           list_mk_binop_l @{const_name Heap_Divider}    heap' )
+        (list_mk_binop_l @{const_name Stack_Delimiter} stack',
+         list_mk_binop_l @{const_name Heap_Divider}    heap' )
       end
   in
     gen_set_variables_tag prep_S vars always ctx sequent
@@ -118,7 +120,6 @@ fun variables_tag_terms raw_vars always ctx sequent =
                       #> (fn tm => (normlize_name (term_name tm), (term_name tm, fastype_of tm)))
                    ) raw_vars
   in
-    gen_set_variables_tag (K I) vars always ctx sequent
-  end
+    gen_set_variables_tag (K I) vars always ctx sequent end
 
 end
