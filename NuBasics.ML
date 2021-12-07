@@ -113,7 +113,7 @@ structure NuBasics = struct
 open Thm Term HOLogic NuHelp
 exception NDBG of thm
 
-val nu_bind_name = "\<nu>"
+val nu_bind_name = "\<nu>this"
 fun the_nu_fact stat = Proof_Context.get_thm (Proof.context_of stat) nu_bind_name
 fun set_nu_fact th stat = stat
   |> Proof.set_facts [th]
@@ -319,7 +319,7 @@ fun user_facts_in_collection th =
     val (P,Q,S) = elim_FactCollection th
     val ths = elim_AndFacts Q |> map elim_Fact
   in
-    if same_const @{const_name "NoFact"} (prop_of P) then ths else ("\<glowing_star>",P)::ths
+    if same_const @{const_name "NoFact"} (prop_of P) then ths else ("\<nu>lemmata",P)::ths
   end
 val vA = (("A",0),propT) and vP = (("P",0),propT) and vQ = (("Q",0),propT) and vL = (("L",0),propT)
 (* fun intro_interal_fact A th =

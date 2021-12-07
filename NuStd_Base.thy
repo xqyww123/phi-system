@@ -492,8 +492,10 @@ lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF FieldIndex_here, simplifi
 proc i_load_n[\<nu>overload "\<up>:"]:
   \<open>a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>gt (xs ! i) \<tycolon> Y\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
-  requires [used]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs" and idx: "FieldIndex field_index Y X gt mp"
-  \<bullet> +\<up>: idx
+  requires [THEN Premise_E, useful]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs"
+      and idx: "FieldIndex field_index Y X gt mp"
+  obtain a' j where a: "a = (a' |+ j)" by (cases a)
+  \<bullet> unfold a +\<up>: idx fold a
   finish
 
 lemmas [ \<nu>overload "\<up>" ] = i_load_n_\<nu>app[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
@@ -524,8 +526,10 @@ lemmas [ \<nu>overload "\<down>" ] = op_store[THEN mp, OF FieldIndex_here, simpl
 proc i_store_n[\<nu>overload "\<down>:"]:
   \<open>R\<heavy_comma> a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> y \<tycolon> Y \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p a \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
-  requires [used]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs" and idx: "FieldIndex field_index Y X gt mp"
-  \<bullet> \<rightarrow> y + y \<down>: idx
+  requires [THEN Premise_E, useful]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs"
+    and idx: "FieldIndex field_index Y X gt mp"
+  obtain a' j where a: "a = (a' |+ j)" by (cases a) 
+  \<bullet> unfold a \<rightarrow> y + y \<down>: idx fold a
   finish
 
 lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>app[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
@@ -539,7 +543,7 @@ bundle xx = Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp] split_paired_All[s
 proc times: \<open>R'\<heavy_comma> n \<tycolon> \<nat>['b::len]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H'\<close> \<longmapsto> \<open>\<exists>*x. (R x\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x) \<and>\<^sup>s P x n\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars R' H' R H"
     and \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P\<close>
-    and [used]: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P vars 0\<close>
+    and [useful]: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P vars 0\<close>
     and Body: \<open>\<forall>x i. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < n \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x i \<longrightarrow>
       \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> R x\<heavy_comma> i \<tycolon> \<nat>['b]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x \<longmapsto> \<exists>*x'. ((R x'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x') \<and>\<^sup>s P x' (Suc i))\<brangle>\<close>
   \<bullet> \<rightarrow> n \<open>0 \<tycolon> \<nat>['b]\<close>
@@ -553,8 +557,10 @@ fun fib :: "nat \<Rightarrow> nat" where
 (* int fib (int i) { if (i \<le> 1) return 1; else return fib (i-2) + fib (i-1); } *)
 rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
   \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> i 2 - Fib i 1 - Fib + \<medium_right_bracket>
-  \<bullet> cast ie \<open>fib i\<close> affirm by (cases i rule: fib.cases) auto
+  \<bullet> goal
+  affirm by (cases i rule: fib.cases) auto
   finish
+
 
 proc Fib2: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close>
   \<bullet> \<rightarrow> i
@@ -576,88 +582,16 @@ ML_file \<open>codegen/Instructions.ML\<close>
 \<nu>export_llvm \<open>/tmp/xx.ll\<close>
 
 
-ML \<open>NuCompilation.compile @{theory} (tracing o String.concat)\<close>
-
-
-thm i_store_n_\<nu>app
-thm Fib2_\<nu>app
-thm times_\<nu>compilation
-thm while_\<nu>compilation
-ML \<open>~\<close>
-ML \<open>local open NuCG_NuInstructions in
-infixr 6 <*> <%>
-val (_,a) = NuStd_Base.Fib_gen fake
-val _ = print (tracing o String.concat) a
-end\<close>
-thm i_load_n_\<nu>compilation
-
-ML \<open>local open NuCG_NuInstructions in
-infixr 6 <*> <%>
-val _ = op_call (T_int 51 <%> T_int 52 <%> T_int 53 <%> T_nil) ( T_nil) (pair "hhhh") fake
-val a = op_store (T_int 51) (T_tup (T_int 51 <%> T_int 52)) [1] fake
-val _ = print (tracing o String.concat) a
-end\<close>
-ML \<open>funpow\<close>
-
-ML \<open>local open NuCG_NuInstructions in
-infixr 6 <*> <%>
-val a = (op_constr_tuple (T_int 51 <%> T_int 52 <%> T_int 53)
-  #> op_dup
-  #> op_get_tuple [1] (T_int 51 <%> T_int 52 <%> T_int 53)
-  #> op_set_tuple [1] (T_int 51 <%> T_int 52 <%> T_int 53) (T_int 66)
-  #> op_destr_tuple (T_int 51 <%> T_int 52 <%> T_int 53)) fake
-val _ = print (tracing o String.concat) a
-end\<close>
-ML \<open>local open NuCG in
-infixr 6 <*> <%>
-val c = T_nil <%> T_nil ::[]
-val a = NuCG_NuInstructions.op_do_while (T_int 33 <%> T_ptr <%> T_int 12 <%> T_nil ) (push (V 1)) fake
-val _ = print (tracing o String.concat) a
-end\<close>
-
-term itself
-ML \<open>structure NuCG_Groups = struct
-structure one_class = struct
-fun one _ = 1
-end
-end
-\<close>
-term "num.Bit0"
-term "len_of"
-thm len_bit1
-typ "2 Numeral_Type.bit0"
-typ "Numeral_Type.num1"
-ML \<open>val Type (a,b) = @{typ "(2)"}\<close>
-ML \<open>val Type(a,b) = @{typ "'a itself"}\<close>
-ML \<open>val a0_b = @{term "TYPE('a)"}\<close>
-thm instr_comp_def
-thm alloc_\<nu>compilation
-ML \<open>HashTable.hashMake\<close>
-
-
-
-
-
-
-ML_file \<open>library/compilation.ML\<close>
-ML \<open>String.concatWith\<close>
-ML \<open>NuCompilation.compile (Thm.prop_of @{thm Fib2_\<nu>compilation})\<close>
-ML \<open>String.fields (fn c => c = #".") "A.B.C." |> List.last\<close>
-ML \<open>@{term "TYPE(32)"}\<close>
-thm Fib2_\<nu>compilation
-
-
-
 proc split_array[\<nu>overload split]: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> l \<tycolon> Array T\<close>
   \<longmapsto> \<open>ptr ||+ n \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> take n l \<tycolon> Array T \<heavy_asterisk> (ptr ||+ n) \<R_arr_tail> drop n l \<tycolon> Array T\<close>
-  premises [used]: "n \<le> length l"
+  premises [useful]: "n \<le> length l"
   \<bullet> + split_cast n
   finish
 
 proc pop_array[\<nu>overload pop]: \<open>ptr \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> l \<tycolon> Array T\<close>
   \<longmapsto> \<open>ptr ||+ 1 \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (ptr ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> ptr \<R_arr_tail> hd l \<tycolon> Ref T \<close>
   premises A: "l \<noteq> []"
-  have [used]: "1 \<le> length l" by (meson Premise_def length_0_conv less_one not_le A)
+  have [useful]: "1 \<le> length l" by (meson Premise_def length_0_conv less_one not_le A)
   \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> +
 
 

@@ -64,31 +64,37 @@ lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Array' N \<Longrightarrow> 
   by (cases a) (auto simp add: lrep_exps pred_option_def list_all2_conv_all_nth)
 
 lemma Array'_to_Ref_\<nu>app:
- "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! i) \<noteq> None \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_asterisk> (a ||+ i) \<R_arr_tail> the (xs ! i) \<tycolon> Ref N"
+ "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m i \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! (i-j)) \<noteq> None \<Longrightarrow>
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ j) \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> (a |+ j) \<R_arr_tail> xs[ (i-j) := None] \<tycolon> Array' N \<heavy_asterisk> (a |+ i) \<R_arr_tail> the (xs ! (i-j)) \<tycolon> Ref N"
   unfolding Dest_def Cast_def Heap_Divider_def
-    apply (cases a) apply (auto simp add: nu_exps) apply (rule heap_split_by_addr_set[of _  _ "-{a ||+ i}"])
-    by (auto simp add: pred_option_def Ball_def nth_list_update)
+  apply (auto simp add: nu_exps) apply (rule heap_split_by_addr_set[of _  _ "-{a |+ i}"])
+  subgoal premises prems for y v proof -
+    define k where "k = i - j"
+    have i: "i = j + k" unfolding k_def using prems by simp
+    show ?thesis unfolding k_def[symmetric] unfolding i
+      using prems[unfolded k_def[symmetric], unfolded i]
+      by (auto  simp add: pred_option_def Ball_def nth_list_update)
+  qed done
 
 lemma [\<nu>intro]:
- "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! i) \<noteq> None \<Longrightarrow>
-  \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> (a ||+ i) \<R_arr_tail> the (xs ! i) \<tycolon> Ref N \<medium_right_bracket>\<medium_right_bracket> \<medium_right_bracket>\<medium_right_bracket>"
+ "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! (i-j)) \<noteq> None \<Longrightarrow>
+  \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ j) \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> (a |+ j) \<R_arr_tail> xs[ (i-j) := None] \<tycolon> Array' N \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> (a |+ i) \<R_arr_tail> the (xs ! (i-j)) \<tycolon> Ref N \<medium_right_bracket>\<medium_right_bracket> \<medium_right_bracket>\<medium_right_bracket>"
   unfolding Cast_def Heap_Cast_Goal_def
-  using Array'_to_Ref_\<nu>app[unfolded Cast_def] by blast
+  using Array'_to_Ref_\<nu>app[unfolded Cast_def ParamTag_def] by blast
 
 lemma Ref_to_Array':
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_asterisk> (a ||+ i) \<R_arr_tail> y \<tycolon> Ref N \<longmapsto> a \<R_arr_tail> xs[i := Some y] \<tycolon> Array' N"
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow>
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ j) \<R_arr_tail> xs[ i-j := None] \<tycolon> Array' N \<heavy_asterisk> (a |+ i) \<R_arr_tail> y \<tycolon> Ref N \<longmapsto> (a |+ j) \<R_arr_tail> xs[ i-j := Some y] \<tycolon> Array' N"
   unfolding Intro_def Cast_def Heap_Divider_def Heap_Cast_Goal_def
-  apply (cases a) apply (auto simp add: pred_option_def Ball_def nu_exps)
-  by (metis MemAddrState_add_I1 MemAddrState_add_I2 nth_list_update option.sel)
+  apply (auto simp add: pred_option_def Ball_def nu_exps)
+  by (metis MemAddrState_add_I1 MemAddrState_add_I2 le_add_diff_inverse nth_list_update nth_list_update_neq option.sel)
 
 lemma [\<nu>intro]:
- "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! i) \<noteq> None \<Longrightarrow>
-  \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> (a ||+ i) \<R_arr_tail> the (xs ! i) \<tycolon> Ref N \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h True
-      \<^bold>d\<^bold>u\<^bold>a\<^bold>l a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> (a ||+ i) \<R_arr_tail> y \<tycolon> Ref N \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> a \<R_arr_tail> xs[i := Some y] \<tycolon> Array' N \<medium_right_bracket>\<medium_right_bracket>"
+ "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! (i-j)) \<noteq> None \<Longrightarrow>
+  \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ j) \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> (a |+ j) \<R_arr_tail> xs[i-j := None] \<tycolon> Array' N \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> (a |+ i) \<R_arr_tail> the (xs ! (i-j)) \<tycolon> Ref N \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h True
+      \<^bold>d\<^bold>u\<^bold>a\<^bold>l (a |+ j) \<R_arr_tail> xs[i-j := None] \<tycolon> Array' N \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> (a |+ i) \<R_arr_tail> y \<tycolon> Ref N \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> (a |+ j) \<R_arr_tail> xs[i-j := Some y] \<tycolon> Array' N \<medium_right_bracket>\<medium_right_bracket>"
   unfolding Heap_Cast_Goal_def
-  by (blast intro: CastDual_I Ref_to_Array' Array'_to_Ref_\<nu>app)
+  by (meson Array'_to_Ref_\<nu>app CastDual_I ParamTag Ref_to_Array')
 
 (* lemma Ref_to_Array':
   "\<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H1 \<longmapsto> H2 \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> (a ||+ i) \<R_arr_tail> y \<tycolon> Ref N \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<medium_right_bracket>\<medium_right_bracket> \<Longrightarrow>
@@ -175,8 +181,8 @@ lemma [\<nu>intro]:
   unfolding Heap_Cast_Goal_def  CastDual_def Cast_def
   using Array_cast_Array'[unfolded Cast_def] Array'_cast_Array[unfolded Cast_def] by blast
 
-lemma single_Array_is_Ref: "\<tort_lbrace>a \<R_arr_tail> [x] \<tycolon> Array T\<tort_rbrace> = \<tort_lbrace>a \<R_arr_tail> x \<tycolon> Ref T\<tort_rbrace>"
-  unfolding Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
+(* lemma single_Array_is_Ref: "\<tort_lbrace>a \<R_arr_tail> [x] \<tycolon> Array T\<tort_rbrace> = \<tort_lbrace>a \<R_arr_tail> x \<tycolon> Ref T\<tort_rbrace>"
+  unfolding Array_def by (cases a) (auto simp add: pred_option_def Ball_def) *)
 
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> [x] \<tycolon> Array T \<longmapsto> a \<R_arr_tail> x \<tycolon> Ref T"
   unfolding Cast_def Array_def by (cases a) (simp add: pred_option_def Ball_def)
@@ -187,7 +193,7 @@ lemma split_cast_Array_\<nu>app[\<nu>overload split_cast]:
   by (simp add: Array_to_Array'
       split_cast_Array'_\<nu>app[of n "map Some l" a T, simplified, simplified take_map drop_map])
 
-lemma pop_cast_Array'_\<nu>app[\<nu>overload pop_cast]:
+(* lemma pop_cast_Array'_\<nu>app[\<nu>overload pop_cast]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e l \<noteq> [] \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l \<tycolon> Array T \<longmapsto> (a ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> a \<R_arr_tail> hd l \<tycolon> Ref T"
   unfolding Premise_def subgoal premises prems
 proof -
@@ -198,7 +204,7 @@ proof -
 
   thm split_cast_Array_\<nu>app[of 1 l, unfolded Premise_def ParamTag_def, simplified t1, simplified t2 t3]
   thm One_nat_def Suc_le_eq length_greater_0_conv
-
+*)
 (* lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> a \<R_arr_tail> [x] \<tycolon> Array T"
   unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def) *)
 

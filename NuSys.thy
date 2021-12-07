@@ -4,7 +4,8 @@ theory NuSys
   imports NuPrime
   keywords
     "proc" "rec_proc" "\<nu>cast" :: thy_goal_stmt
-  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" :: quasi_command
+  and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$"
+    "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" :: quasi_command
   and "\<bullet>" "affirm" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>reasoner" "setup_\<nu>application_method" :: thy_decl % "ML"
   and "\<nu>interface" "\<nu>export_llvm" "\<nu>overloads" :: thy_decl
@@ -21,7 +22,7 @@ subsection \<open>Preliminary constants and settings\<close>
 
 declare Product_Type.prod.case[\<nu>def]
 
-named_theorems used \<open>theorems that will be inserted in ANY proof environments,
+named_theorems useful \<open>theorems that will be inserted in ANY proof environments,
 which basically has the same effect as the using command.\<close>
   
 (* definition  FailedPremise :: "bool \<Rightarrow> bool" where "FailedPremise \<equiv> Premise"
@@ -336,9 +337,9 @@ abbreviation Cast_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bo
 
 subsection \<open>Case Analysis\<close>
 
-lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B x y \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = case_prod B (x,y)" by simp
-lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = case_named B (tag x)" by simp
-lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B a x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = case_object B (a \<R_arr_tail> x)" by simp
+lemma [\<nu>intro 1000]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B x y \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = case_prod B (x,y)" by simp
+lemma [\<nu>intro 1000]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = case_named B (tag x)" by simp
+lemma [\<nu>intro 1000]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B a x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = case_object B (a \<R_arr_tail> x)" by simp
 
 definition CaseSplit :: "bool \<Rightarrow> bool" where "CaseSplit x = x"
 lemma [elim!]: "CaseSplit x \<Longrightarrow> (x \<Longrightarrow> C) \<Longrightarrow> C" unfolding CaseSplit_def .
@@ -684,7 +685,7 @@ lemma [simp]: "p \<in> (T \<and>\<^sup>s P) \<longleftrightarrow> p \<in> T \<an
 
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> T \<longmapsto> (x \<tycolon> T) \<and>\<^sup>s P"
   unfolding Intro_def Cast_def Premise_def by (simp add: nu_exps)
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (P \<longrightarrow> Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<and>\<^sup>s Q \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<and>\<^sup>s Q \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Premise_def by (simp add: nu_exps)
 
 lemma AdditionSet_simp_proc_arg[simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<and>\<^sup>s P \<longmapsto> Y \<brangle> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> Y \<brangle>)"
@@ -915,6 +916,13 @@ lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longm
 (*lemma someI_\<nu>cast: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> X \<Longrightarrow> [h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<longmapsto> X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N)" unfolding Cast_def by auto
 lemma someE_\<nu>cast[\<nu>cast_overload E]: "[h] \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<tycolon> (\<^bold>s\<^bold>o\<^bold>m\<^bold>e N) \<longmapsto> (\<exists>*some. \<tort_lbrace>some \<tycolon> N \<tort_rbrace> \<addition> (some \<in> X))" unfolding Cast_def by auto *)
 
+
+subsection \<open>Protector\<close> \<comment> \<open>protecting from automatic transformations\<close>
+
+definition Protector :: " 'a \<Rightarrow> 'a " ("'( _ ')\<^sub>p\<^sub>r\<^sub>o\<^sub>t\<^sub>e\<^sub>c\<^sub>t\<^sub>e\<^sub>d") where "Protector x = x"
+
+lemma [\<nu>intro 1000]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Protector A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Protector_def .
+lemma [\<nu>intro 1000]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Protector B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Protector_def .
 
 section \<open>Mechanisms - II - Main Parts\<close>
 
@@ -1214,6 +1222,8 @@ lemma StackDelimiter_to_AndTy: " (A\<heavy_comma> B) \<equiv> (B \<^bold>a\<^bol
 subsubsection \<open>Other Reasoning Settings\<close>
 
 lemma [\<nu>intro 14000]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<R_arr_tail> x = a \<R_arr_tail> x' " unfolding Premise_def by simp
+
+(*TODO: this rule is too aggressive. Maybe a assumption based flag switch?*)
 lemma [\<nu>intro 13000]: "False \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<R_arr_tail> x = a' \<R_arr_tail> x' " unfolding Premise_def by simp
   \<comment> \<open>For any other situation (when a is not alpha equivalent to a'), reasoning is pruned early.
   The proof for \<^term>\<open>a = a'\<close> is always assigned to users, because maintaining the consistency of object identities
@@ -1707,12 +1717,7 @@ val _ =
 
 end
 \<close>
-ML \<open>fun using_master_directory ctxt =
-          File.full_path (Path.expand (Resources.master_directory (Proof_Context.theory_of ctxt))) o Path.explode;
-val x = using_master_directory @{context} "./aaa"
-val y = Resources.master_directory (Proof_Context.theory_of @{context})
-\<close>
-ML \<open>Path.explode "" |> Path.implode\<close>
+
 attribute_setup intro_forall = \<open>Scan.lift (Scan.repeat Args.var) >> (fn tms =>
   Thm.rule_attribute [] (fn ctx => fn th => 
     let open Thm
@@ -1816,7 +1821,8 @@ subsection \<open>Constructive\<close>
 \<nu>processor set_\<nu>current 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>
 \<open>fn ctx => fn sequent => Scan.succeed (fn _ =>
   let
-    val ctx = Proof_Context.put_thms true ("\<nu>current", SOME [sequent]) ctx
+    val thm = sequent RS @{thm CurrentConstruction_D}
+    val ctx = Proof_Context.put_thms true ("\<nu>current", SOME [thm]) ctx
   in
     raise Bypass (SOME(sequent, ctx))
   end)\<close>
@@ -1849,8 +1855,8 @@ subsection \<open>Simplifiers & Resonings\<close>
 \<open>fn ctx => fn sequent => Scan.succeed (fn _ =>
   let
     val de_premise = perhaps (try (fn th => th RS @{thm Premise_E}))
-    val facts = Proof_Context.get_thms ctx "\<glowing_star>"
-    val ctx = Proof_Context.put_thms true ("\<glowing_star>",
+    val facts = Proof_Context.get_thms ctx "\<nu>lemmata"
+    val ctx = Proof_Context.put_thms true ("\<nu>lemmata",
         SOME (de_premise (sequent RS @{thm conjunct2}) :: facts) ) ctx
   in
     (sequent RS @{thm conjunct1}, ctx)
@@ -1865,6 +1871,29 @@ subsection \<open>Simplifiers & Resonings\<close>
       else (sequent',ctx)
     | NONE => raise Bypass (SOME (sequent, ctx))
   end)\<close>
+
+\<nu>processor fold 1300 \<open>PROP P\<close> \<open>
+  fn ctxt => fn sequent => NuParse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
+    (Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent, ctxt)
+)\<close>
+
+\<nu>processor unfold 1300 \<open>PROP P\<close> \<open>
+  fn ctxt => fn sequent => NuParse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
+    (Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent, ctxt)
+)\<close>
+
+\<nu>processor vcg 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>
+  fn ctxt => fn sequent => Parse.$$$ "goal" >> (fn _ => fn _ =>
+    let
+      val goal = Proof_Context.get_thm ctxt "\<nu>thesis" |> Drule.dest_term
+      val (_,_,desired_nu) = NuBasics.dest_procedure_c goal
+      val ty = Thm.typ_of_cterm desired_nu
+      val prot = Const (\<^const_name>\<open>Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
+      val ctxt = AutoLevel.put 1 ctxt
+      val sequent = NuSys.cast ctxt (Thm.apply prot desired_nu) sequent
+    in (sequent, ctxt) end
+)\<close>
+
 
 subsection \<open>Literal operations\<close>
 

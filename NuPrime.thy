@@ -18,7 +18,6 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
       and "<conversion>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n"
       and "<auto>" = "\<^bold>a\<^bold>u\<^bold>t\<^bold>o"
       and "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
-      and "<solve>" = "\<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e"
       and "<construct>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t"
       and "by" = "\<^bold>b\<^bold>y"
       and "<simplify>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y"
@@ -326,25 +325,24 @@ lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" 
     the first parameter `?bit_width` will be specified first and then the "?value".\<close>
 lemma [elim!,\<nu>elim]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" by auto
 
-subsubsection \<open>Premise tag & Solve tag\<close>
+subsubsection \<open>Premise tag \<close>
 
 definition Premise :: "bool \<Rightarrow> bool" ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where [\<nu>def]:"Premise x = x"
-definition Solve :: "bool \<Rightarrow> bool" ("\<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e _" [27] 26) where [\<nu>def]:"Solve x = x"
 
-text \<open>Both the tags represent a necessary premise that must be solved in a rule or procedure.
-  On non-interactive mode, they behavior similarly.
-  Both of them are attempted by automatic reasoning at non-interactive mode, and if the proof fails,
-    the rule or procedure claiming that premise is gave up.
-  The difference is, on interactive mode, only the \<^const>\<open>Solve\<close> but not \<^const>\<open>Premise\<close> is attempted
-    by automatic solver, remaining \<^const>\<open>Premise\<close> unchanged and leaving to user. Also only the
-    failure of \<^const>\<open>Solve\<close> terminates that inference rule at interactive mode.\<close>
+text \<open>The tag represents a necessary premise that must be solved in a rule or a procedure.
+  On the fully auto-level (level 2), \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> is always attempted by automatic reasoning,
+    and if the proof fails, the rule or procedure claiming that premise is gave up.
+  The automatic solving may consumes a lot of time, and may also fail finally. In that case, one can set the
+    auto level down to semi-auto (level 1).
+  On the semi-auto, all \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> are never solved automatically but admitted to leave for user.
+  Since all \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> are admitted, not causing a proof failure so as to terminate a wrong inference
+  searching branch, multiple solution may be available. In that case, the reasoner returns the first reached
+  one according to the heuristic score, because the reasoner basically is a (heuristic-based) depth-first searching
+  algorithm for the purpose of performance. In this case, the settings of heuristic score is significant.\<close>
 
 lemma Premise_I[intro!]: "P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding Premise_def by simp
-lemma Solve_I[intro!]: "P \<Longrightarrow> \<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e P" unfolding Solve_def by simp
 lemma Premise_E: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma Solve_E: "\<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e P \<Longrightarrow> P" unfolding Solve_def by simp
 lemma [elim!,\<nu>elim]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
-lemma [elim!,\<nu>elim]: "\<^bold>s\<^bold>o\<^bold>l\<^bold>v\<^bold>e P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Solve_def by simp
 
 lemma Premise_Irew: "(P \<Longrightarrow> C) \<equiv> Trueprop (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> C)" unfolding Premise_def atomize_imp .
 

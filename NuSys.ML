@@ -31,7 +31,7 @@ signature NU_SYS = sig
   val conversion : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
   val conversion_completely : Proof.context -> cterm (*to*) -> thm (*from*) -> thm
         (* solve all the premises by Nu_Resonser, raising CastFail if failed *)
-  val cast : Proof.context -> cterm (*desired nu*) -> thm (*major*) -> thm
+  val cast : Proof.context -> cterm (*desired nu*) -> thm (*sequent*) -> thm
   val cast_completely : Proof.context -> cterm (*desired nu*) -> thm (*major*) -> thm
         (* solve all the premises by Nu_Resonser, raising CastFail if failed *)
 
@@ -66,7 +66,7 @@ exception ReasoningFail of thm
 
 val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
 fun hyp_export is_goal asms = (I,I)
-val curr_const_attrs = [Thm.declaration_attribute (Named_Theorems.add_thm "NuSys.used")]
+val curr_const_attrs = [Thm.declaration_attribute (Named_Theorems.add_thm "NuSys.useful")]
 fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
 fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
 
@@ -81,23 +81,8 @@ fun head_only tac th =
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctx =
-  ((Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.used") 1)
+  ((Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.useful") 1)
     THEN Clasimp.auto_tac ctx)
-
-(*** Premise tac ***)
-val Premise_I = @{thm NuPrime.Premise_I}
-fun mk_premise_tac withdraw ctx th =
-  if AutoLevel.get ctx >= 2 andalso can (major_prem_of #> dest_Trueprop #> dest_premise_tag) th
-  then (head_only (SOLVED' (K (HEADGOAL (resolve0_tac [Premise_I]) THEN raw_auto ctx)) 1)
-      ORELSE withdraw) th
-  else Seq.empty
-val FailedPremise_I = @{thm FailedPremise_I} and FailedPremise_D = @{thm FailedPremise_D}
-val withdrawable_premise_tac = mk_premise_tac (Seq.succeed o undisch o (fn x => FailedPremise_D RS x))
-val dest_failed_premise_tag = dest_Trueprop #> dest_monop @{const_name "FailedPremise"}
-val premise_tac = mk_premise_tac Seq.fail
-fun fininsh_premise_hyps th =
-  fold ((fn x => FailedPremise_I RS x) oo implies_intr)
-    (chyps_of th |> filter (can (dest_failed_premise_tag o term_of))) th
 
 (*** Different tag tac ***)
 fun different_tag th =
@@ -324,6 +309,6 @@ fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes a
       |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
             (map (pair Binding.empty_atts) gl)
       (* |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat)
-      * "NuSys.used") stat) *)
+      * "NuSys.useful") stat) *)
   end
 end

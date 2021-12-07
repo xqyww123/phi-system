@@ -8,29 +8,27 @@ declare [ [ML_print_depth = 100] ]
 
 declare find_index_le_size[simp]
 
-lemma AAA[intro]: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> xs ! i < x \<Longrightarrow> i < find_index ((\<le>) x) xs" 
+lemma find_index_sorted_le: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> xs ! i < x \<Longrightarrow> i < find_index ((\<le>) x) xs" 
+    and find_index_sorted_leq: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> x \<le> xs ! i \<Longrightarrow> find_index ((\<le>) x) xs \<le> i"
   unfolding sorted_iff_nth_mono
-  by (metis less_le_trans linorder_neqE_nat not_le find_index_property find_index_property)
+  by (metis less_le_trans linorder_neqE_nat not_le find_index_property find_index_property)+
 
-lemma BBB[intro]: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> x \<le> xs ! i \<Longrightarrow> find_index ((\<le>) x) xs \<le> i"
-  unfolding sorted_iff_nth_mono
-  by (metis less_le_trans linorder_neqE_nat not_le find_index_property find_index_property)
+lemmas find_index_sorted = find_index_sorted_le find_index_sorted_leq
+lemmas add1_le_eq = Suc_le_eq[unfolded Suc_eq_plus1]
 
 proc bin_search: \<open>ptr \<tycolon> Pointer\<heavy_comma> len \<tycolon> \<nat>[size_t]\<heavy_comma> x \<tycolon> \<nat>['b::len]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b]\<close>
   \<longmapsto> \<open>find_index (\<lambda>y. x \<le> y) xs \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b]\<close>
-    premises [used]: "length xs = len"
-      and A[used]: "sorted xs"
+    premises [useful]: "length xs = len"
+      and [useful]: "sorted xs"
   \<bullet> \<rightarrow> ptr, len, x
-  \<bullet> len 0 while var h l in h, l always \<open>l \<le> find_index (\<lambda>y. x \<le> y) xs \<and> find_index (\<lambda>y. x \<le> y) xs \<le> h \<and> h \<le> len\<close> 
-  \<bullet> \<medium_left_bracket> -- h, l l h < \<medium_right_bracket> 
+  \<bullet> len 0 while var h l in h, l
+     always \<open>l \<le> find_index (\<lambda>y. x \<le> y) xs \<and> find_index (\<lambda>y. x \<le> y) xs \<le> h \<and> h \<le> len\<close> 
+  \<bullet> \<medium_left_bracket> -- h, l l h < \<medium_right_bracket>
   \<bullet> \<medium_left_bracket> -- h, l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket>
-  have B[used]: "(h - l) div 2 + l < length xs" using \<glowing_star> used by auto
-  note AAA[OF A[unfolded Premise_def] B, used]
-(* xs ! ((h - l) div 2 + l) < x \<Longrightarrow> (h - l) div 2 + l + 1 \<le> find_index ((\<le>) x) xs) *)
-  \<bullet> \<medium_right_bracket>
-  thm \<glowing_star>
+  \<bullet> goal affirm using \<nu> by (auto simp add: add1_le_eq find_index_sorted)
+  \<bullet> \<medium_right_bracket> drop
+  finish
 
-term find_index
 
 
 term foldr
