@@ -14,6 +14,7 @@ abbrevs
   "!!" = "!!"
   and "<implies>" = "\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s"
   and "<argument>" = "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t"
+  and "<subj>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>j"
 begin
 
 section \<open>Prelude of the Prelude\<close>
@@ -32,6 +33,10 @@ lemma FailedPremise_D: "FailedPremise P \<Longrightarrow> \<^bold>p\<^bold>r\<^b
 attribute_setup rotated = \<open>Scan.lift (Scan.optional Parse.int 1 -- Scan.optional Parse.int 0) >>
   (fn (k,j) => Thm.rule_attribute [] (fn _ => Thm.permute_prems j k))\<close>
   \<open>Enhanced version of the Pure.rotated\<close>
+
+attribute_setup TRY_THEN = \<open>(Scan.lift (Scan.optional (Args.bracks Parse.nat) 1) -- Attrib.thm
+      >> (fn (i, B) => Thm.rule_attribute [B] (fn _ => fn A => A RSN (i, B) handle THM _ => A)))
+    \<close> "resolution with rule, and do nothing if fail"
 
 subsection \<open>Finalization Rewrites\<close>
 
@@ -494,7 +499,7 @@ subsection \<open>Top Context\<close> \<comment> \<open>The pair of heap and sta
 
 definition NuTopCtx :: " 's :: stack set \<Rightarrow> heap set \<Rightarrow> (heap \<times> 's) set " (infix "<top-ctx>" 59)
   where "(S <top-ctx> H) = {(h,s). h \<in> H \<and> s \<in> S}"
-notation NuTopCtx ( "_ \<heavy_comma>/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _" [10,14] 13)
+notation NuTopCtx ( "_ \<heavy_comma>/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _" [14,14] 13)
 
 translations "(s \<tycolon> S) <top-ctx> H" \<rightleftharpoons> "\<tort_lbrace>s \<tycolon> S\<tort_rbrace> <top-ctx> H"
   "S <top-ctx> (h \<tycolon> H)" \<rightleftharpoons> "S <top-ctx> \<tort_lbrace>h \<tycolon> H\<tort_rbrace>"
@@ -679,7 +684,8 @@ lemma AutoExTyp_strip: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\
 
 subsection \<open>Addition Nu-set : coheres true proposition\<close>
 
-definition AdditionSet :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<and>\<^sup>s" 35) where " (T \<and>\<^sup>s P) = {p. p \<in> T \<and> P}"
+definition AdditionSet :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<and>\<^sup>s" 13) where " (T \<and>\<^sup>s P) = {p. p \<in> T \<and> P}"
+notation AdditionSet (infixl \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>j\<close> 13)
 translations "(x \<tycolon> T) \<and>\<^sup>s P" \<rightleftharpoons> "\<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<and>\<^sup>s P"
 lemma [simp]: "p \<in> (T \<and>\<^sup>s P) \<longleftrightarrow> p \<in> T \<and> P" unfolding AdditionSet_def by simp
 
@@ -693,16 +699,16 @@ lemma AdditionSet_simp_proc_arg[simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \
   unfolding Auto_def Procedure_def Function_def by (auto 0 6 simp add: nu_exps)
 
 lemma [simp]: "(T \<and>\<^sup>s True) = T" unfolding Auto_def by (auto simp add: nu_exps)
-lemma [simp]: "(L \<heavy_comma> T \<and>\<^sup>s P) = ((L \<heavy_comma> T) \<and>\<^sup>s P)"
-    and [simp]: "(T \<and>\<^sup>s P\<heavy_comma> R) = ((T\<heavy_comma> R) \<and>\<^sup>s P)"
+lemma [simp]: "(L \<heavy_comma> (T \<and>\<^sup>s P)) = (L \<heavy_comma> T \<and>\<^sup>s P)"
+    and [simp]: "((T \<and>\<^sup>s P)\<heavy_comma> R) = (T\<heavy_comma> R \<and>\<^sup>s P)"
   unfolding Auto_def Stack_Delimiter_def by (auto simp add: nu_exps)
-lemma [simp]: "(L \<heavy_asterisk> (T \<and>\<^sup>s P)) = ((L \<heavy_asterisk> T) \<and>\<^sup>s P)"
-    and [simp]: "((T \<and>\<^sup>s P) \<heavy_asterisk> R) = ((T \<heavy_asterisk> R) \<and>\<^sup>s P)"
+lemma [simp]: "(L \<heavy_asterisk> (T \<and>\<^sup>s P)) = (L \<heavy_asterisk> T \<and>\<^sup>s P)"
+    and [simp]: "((T \<and>\<^sup>s P) \<heavy_asterisk> R) = (T \<heavy_asterisk> R \<and>\<^sup>s P)"
   unfolding Auto_def Heap_Divider_def by (auto simp add: nu_exps) blast+
-lemma [simp]: "(S \<and>\<^sup>s P \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) = ((S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<and>\<^sup>s P )"
-    and [simp]: "( S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<and>\<^sup>s P ) = ( (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<and>\<^sup>s P )"
+lemma [simp]: "((S \<and>\<^sup>s P) \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) = (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<^bold>s\<^bold>u\<^bold>b\<^bold>j P )"
+    and [simp]: "( S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (H \<and>\<^sup>s P) ) = (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<^bold>s\<^bold>u\<^bold>b\<^bold>j P )"
   unfolding Auto_def by (auto simp add: nu_exps)
-lemma [simp]: "( Ctx \<and>\<^sup>s P \<heavy_comma>^ T ) = ( (Ctx \<heavy_comma>^ T) \<and>\<^sup>s P ) "
+lemma [simp]: "( Ctx \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<heavy_comma>^ T ) = (Ctx \<heavy_comma>^ T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P ) "
   unfolding Auto_def by (auto simp add: nu_exps)
 
 lemma [simp]: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<and>\<^sup>s P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P"
@@ -921,6 +927,7 @@ subsection \<open>Protector\<close> \<comment> \<open>protecting from automatic 
 
 definition Protector :: " 'a \<Rightarrow> 'a " ("'( _ ')\<^sub>p\<^sub>r\<^sub>o\<^sub>t\<^sub>e\<^sub>c\<^sub>t\<^sub>e\<^sub>d") where "Protector x = x"
 
+lemma [cong]: "Protector A \<equiv> Protector A" by simp
 lemma [\<nu>intro 1000]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Protector A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Protector_def .
 lemma [\<nu>intro 1000]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Protector B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Protector_def .
 
@@ -1110,6 +1117,13 @@ lemma [\<nu>intro 1100]: \<comment> \<open>step the separation\<close>
   unfolding Cast_def CastDual_def Heap_Cast_Goal_def Intro_def Dest_def
   by (metis Heap_Divider_exps)
 
+lemma [\<nu>intro 1100]: \<comment> \<open>step the separation\<close>
+  "\<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H1 \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>d\<^bold>u\<^bold>a\<^bold>l H1\<^sub>m \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> X\<^sub>m \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>\<medium_right_bracket>
+    \<Longrightarrow> (P1 \<Longrightarrow> \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H1 \<longmapsto> H\<^sub>r \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> H2 \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>r\<^sub>m \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> H2\<^sub>m \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> H1\<^sub>m \<medium_right_bracket>\<medium_right_bracket>)
+    \<Longrightarrow> \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H\<^sub>r \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> H2 \<heavy_asterisk> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>r\<^sub>m \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> H2\<^sub>m \<heavy_asterisk> X\<^sub>m \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>\<medium_right_bracket>"
+  unfolding Cast_def CastDual_def Heap_Cast_Goal_def Intro_def Dest_def Separation_assoc
+  by (metis (full_types) Heap_Divider_exps)
+
 lemma [\<nu>intro 1100]: \<comment> \<open>tail the step\<close>
   "\<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> x \<tycolon> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>\<medium_right_bracket> \<Longrightarrow>
   \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket>\<medium_left_bracket> x \<tycolon> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket>\<medium_left_bracket> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>\<medium_right_bracket> "
@@ -1120,6 +1134,13 @@ lemma [\<nu>intro 1100]: \<comment> \<open>step the separation\<close>
   (P \<Longrightarrow> \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H1 \<longmapsto> \<medium_left_bracket>\<medium_left_bracket> H2 \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<medium_right_bracket>\<medium_right_bracket>) \<Longrightarrow>
   \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket>\<medium_left_bracket> H2 \<heavy_asterisk> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q \<medium_right_bracket>\<medium_right_bracket>"
   unfolding Cast_def CastDual_def Heap_Cast_Goal_def Intro_def Dest_def
+  by (metis Heap_Divider_exps)
+
+lemma [\<nu>intro 1100]: \<comment> \<open>step the separation\<close>
+  "\<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H1 \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>\<medium_right_bracket> \<Longrightarrow>
+  (P \<Longrightarrow> \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H1 \<longmapsto> H\<^sub>r \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> H2 \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<medium_right_bracket>\<medium_right_bracket>) \<Longrightarrow>
+  \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H\<^sub>r \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> H2 \<heavy_asterisk> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q \<medium_right_bracket>\<medium_right_bracket>"
+  unfolding Cast_def CastDual_def Heap_Cast_Goal_def Intro_def Dest_def Separation_assoc
   by (metis Heap_Divider_exps)
 
 lemma [\<nu>intro 1100]: \<comment> \<open>tail the step\<close>
@@ -1222,6 +1243,7 @@ lemma StackDelimiter_to_AndTy: " (A\<heavy_comma> B) \<equiv> (B \<^bold>a\<^bol
 subsubsection \<open>Other Reasoning Settings\<close>
 
 lemma [\<nu>intro 14000]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<R_arr_tail> x = a \<R_arr_tail> x' " unfolding Premise_def by simp
+(* lemma [\<nu>intro 13500]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<R_arr_tail> x = a' \<R_arr_tail> x' " unfolding Premise_def by simp *)
 
 (*TODO: this rule is too aggressive. Maybe a assumption based flag switch?*)
 lemma [\<nu>intro 13000]: "False \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<R_arr_tail> x = a' \<R_arr_tail> x' " unfolding Premise_def by simp
@@ -1248,9 +1270,9 @@ lemma cast_whole_heap_\<nu>app:
   unfolding Cast_def Argument_def by (simp add: nu_exps) blast
 
 lemma cast_heap_conversion:
-  "\<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H\<^sub>x \<longmapsto> H\<^sub>r \<heavy_asterisk> h \<tycolon> H \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>\<medium_right_bracket>
-  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t h \<tycolon> H \<longmapsto> h' \<tycolon> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H\<^sub>x \<longmapsto> H\<^sub>r \<heavy_asterisk> h' \<tycolon> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  "\<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H\<^sub>x \<longmapsto> H\<^sub>r \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> H \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>\<medium_right_bracket>
+  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H\<^sub>x \<longmapsto> H\<^sub>r \<heavy_asterisk> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Heap_Cast_Goal_def Heap_Divider_def by (simp add: nu_exps) blast
 
 (* theorem proc_cast': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A' \<longmapsto> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A' \<longmapsto> B' \<brangle>"
@@ -1329,18 +1351,18 @@ definition Arguments :: " (heap \<times> 'a) set \<Rightarrow> (heap \<times> 'b
   "Arguments A B R args \<longleftrightarrow> (\<forall>h a. (h,a) \<in> A \<longrightarrow> (h, fst (assemble_arg args a)) \<in> B \<and> snd (assemble_arg args a) \<in> R)
     \<and> (\<forall>h b r. (h,b) \<in> B \<and> r \<in> R \<longrightarrow> (h, dissemble_arg args (b,r)) \<in> A)"
 
-lemma [\<nu>intro]: "Arguments (R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) R no_argument"
+lemma Arguments_0[\<nu>intro]: "Arguments (R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) R no_argument"
   unfolding no_argument_def Arguments_def by (simp add: nu_exps)
 
-lemma [\<nu>intro]: "Arguments (A\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) (B\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) R args
+lemma Arguments_S[\<nu>intro]: "Arguments (A\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) (B\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) R args
   \<Longrightarrow> Arguments (A\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) (B\<heavy_comma> x \<tycolon> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) R (and_argument args TYPE('xp))"
   for X :: "('xp::lrep, 'x) \<nu>" unfolding and_argument_def Arguments_def
   by (cases args) (auto 0 3 split: prod.split simp add: nu_exps) 
 
-lemma [\<nu>intro]: "(\<And>c. Arguments (T c) (T' c) R arg) \<Longrightarrow> Arguments (ExSet T) (ExSet T') R arg"
+lemma Arguments_E[\<nu>intro]: "(\<And>c. Arguments (T c) (T' c) R arg) \<Longrightarrow> Arguments (ExSet T) (ExSet T') R arg"
   unfolding Arguments_def by (simp add: nu_exps) blast
 
-lemma [\<nu>intro]: "Arguments T T' R arg \<Longrightarrow> Arguments (T \<and>\<^sup>s P) (T' \<and>\<^sup>s P) R arg"
+lemma Arguments_P[\<nu>intro]: "Arguments T T' R arg \<Longrightarrow> Arguments (T \<and>\<^sup>s P) (T' \<and>\<^sup>s P) R arg"
   unfolding Arguments_def by (simp add: nu_exps) blast
 
 
@@ -1614,16 +1636,12 @@ lemma Prog_Interface_func:
 section \<open>Main implementation of the system\<close>
 
 ML_file NuBasics.ML
-(* ML_file "./general/binary_tree.ML" *)
-ML_file "./general/auto_level.ML"
-(* ML_file "./library/path.ML" *)
 ML_file \<open>library/application.ML\<close>
 ML_file "./library/general.ML"
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
 ML_file "./library/procedure.ML"
-(* ML_file "./library/exty.ML" *)
 ML_file NuSys.ML
 ML_file "./library/processors.ML"
 ML_file "./library/obtain.ML"
@@ -1693,7 +1711,9 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<bullet>\<close> "The \<nu>construction"
-    (fn toks => (Toplevel.proof (NuProcessor.powerful_process (toks @ [Token.eof])),
+    (fn toks => (
+      Toplevel.proof (Proof.map_context (Config.put Nu_Reasoner.auto_level 2) #>
+          NuProcessor.powerful_process (toks @ [Token.eof])),
       if hd toks |> Token.is_eof then [Token.eof] else []))
 
 val _ =
@@ -1734,18 +1754,14 @@ attribute_setup \<nu>application_method = \<open>Scan.lift (Parse.int -- (Parse.
 declare
   apply_proc[\<nu>application_method 1 100]
   apply_proc_conv_simple[\<nu>application_method 4 -3000]
-  "cast"[\<nu>application_method 1 90]
-  "cast"[OF _ cast_\<nu>app[OF Argument_I], \<nu>application_method 1 80]
-  "cast"[OF _ cast_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 80]
-  "cast"[OF _ cast_whole_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 70]
+  "cast"[\<nu>application_method 1 1100]
+  "cast"[OF _ cast_\<nu>app[OF Argument_I], \<nu>application_method 1 1080]
+  "cast"[OF _ cast_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 1080]
+  "cast"[OF _ cast_whole_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 1070]
   "cast"[OF _ cast_whole_heap_\<nu>app[OF Argument_I, OF cast_heap_conversion],
-      \<nu>application_method 2 20]
-thm apply_proc_conv_simple[\<nu>application_method 4 -3000]
-thm "cast"[OF _ cast_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 80]
-thm "cast"[\<nu>application_method 1 90]
-thm "cast"[OF _ cast_whole_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 70]
-thm "cast"[OF _ cast_heap_\<nu>app[OF Argument_I], \<nu>application_method 1 80]
-(*lemmas apply_func[\<nu>application_method 3 70] = apply_proc[OF _ op_call]*)
+      \<nu>application_method 2 1020]
+
+
 lemmas apply_func_conv[\<nu>application_method 6 -100]
   = apply_proc_conv_simple[OF _ _ _ _ op_call, rotated 3 1, rotated 1 3]
 
@@ -1779,9 +1795,8 @@ section \<open>Processors\<close>
 
 subsection \<open>Controls\<close>
 
-(* \<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn ctx => fn th => NuParse.auto_level_force #->
-  (fn auto_level' => NuProcessor.internal_process (AutoLevel.reduce auto_level' ctx) th #> (fn x => raise ProcessTerminated x)))\<close>
-*)
+\<nu>processor set_auto_level 10 \<open>PROP P\<close> \<open>(fn ctxt => fn sequent => NuParse.auto_level_force >>
+  (fn auto_level' => fn _ => (sequent, Config.put Nu_Reasoner.auto_level auto_level' ctxt)))\<close>
 
 \<nu>processor repeat 12 \<open>PROP P\<close> \<open>let
     fun repeat n f (th,ctx) =
@@ -1889,7 +1904,7 @@ subsection \<open>Simplifiers & Resonings\<close>
       val (_,_,desired_nu) = NuBasics.dest_procedure_c goal
       val ty = Thm.typ_of_cterm desired_nu
       val prot = Const (\<^const_name>\<open>Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
-      val ctxt = AutoLevel.put 1 ctxt
+      val ctxt = Config.put Nu_Reasoner.auto_level 1 ctxt
       val sequent = NuSys.cast ctxt (Thm.apply prot desired_nu) sequent
     in (sequent, ctxt) end
 )\<close>

@@ -492,7 +492,7 @@ lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF FieldIndex_here, simplifi
 proc i_load_n[\<nu>overload "\<up>:"]:
   \<open>a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>gt (xs ! i) \<tycolon> Y\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
-  requires [THEN Premise_E, useful]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs"
+  requires [useful]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs"
       and idx: "FieldIndex field_index Y X gt mp"
   obtain a' j where a: "a = (a' |+ j)" by (cases a)
   \<bullet> unfold a +\<up>: idx fold a
@@ -526,7 +526,7 @@ lemmas [ \<nu>overload "\<down>" ] = op_store[THEN mp, OF FieldIndex_here, simpl
 proc i_store_n[\<nu>overload "\<down>:"]:
   \<open>R\<heavy_comma> a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> y \<tycolon> Y \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p a \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
-  requires [THEN Premise_E, useful]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs"
+  requires [useful]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs"
     and idx: "FieldIndex field_index Y X gt mp"
   obtain a' j where a: "a = (a' |+ j)" by (cases a) 
   \<bullet> unfold a \<rightarrow> y + y \<down>: idx fold a
@@ -592,7 +592,8 @@ proc pop_array[\<nu>overload pop]: \<open>ptr \<tycolon> Pointer\<heavy_comma> \
   \<longmapsto> \<open>ptr ||+ 1 \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (ptr ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> ptr \<R_arr_tail> hd l \<tycolon> Ref T \<close>
   premises A: "l \<noteq> []"
   have [useful]: "1 \<le> length l" by (meson Premise_def length_0_conv less_one not_le A)
-  \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> +
+  \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> + pop_cast
+  finish
 
 
 end

@@ -31,27 +31,35 @@ type interface = {name: Binding.binding, thm: thm}
 
 (*All interfaces to be exported in *a* theory*)
 structure Interfaces = Theory_Data(
-  type T = interface Symtab.table;
+  type T = interface Symtab.table Symtab.table;
   val empty = Symtab.empty;
   val extend = I;
-  val merge = fst (*ignoring merging*)
+  val merge = Symtab.merge (K false)
 )
 
 (*All interfaces to be exported in *a* theory*)
 structure Procedures = Generic_Data(
-  type T = string list;
-  val empty = [];
+  type T = string list Symtab.table;
+  val empty = Symtab.empty;
   val extend = I;
-  val merge = fst (*ignoring merging*)
+  val merge = Symtab.merge (K false)
 )
 
-fun interfaces_of thy = Interfaces.get thy
-fun procedures_of thy = Procedures.get thy
+val thy_name_of_ctxt = Context.theory_long_name o Context.the_theory
+
+fun interfaces_of thy =
+  the_default Symtab.empty (Symtab.lookup (Interfaces.get thy) (Context.theory_long_name thy))
+fun procedures_of ctxt =
+  the_default [] (Symtab.lookup (Procedures.get ctxt) (thy_name_of_ctxt ctxt))
 fun compilation_thm_of thy name =
       Global_Theory.get_thm thy (suffix compilation_suffix name)
-fun add_interface intrf =
-      Interfaces.map (Symtab.insert (K false) (Binding.name_of (#name intrf), intrf))
-fun add_procedure name = Procedures.map (fn l => name :: l)
+fun add_interface intrf thy =
+  Interfaces.map (Symtab.map_default 
+    (Context.theory_long_name thy |> @{print}, Symtab.empty)
+    (Symtab.insert (K false) (Binding.name_of (#name intrf), intrf))) thy
+fun add_procedure name ctxt =
+  Procedures.map (Symtab.map_default (thy_name_of_ctxt ctxt, [])
+    (fn l => name :: l)) ctxt
 
 fun add_interface_command ((name,const),tys) thy =
   let
@@ -71,7 +79,7 @@ fun add_interface_command ((name,const),tys) thy =
     val const = if is_TFree ty orelse is_TVar ty
                 then Term.subst_atomic_types [(ty, @{typ void})] const (*set tail to void*)
                 else const
-    val const = Thm.cterm_of ctxt const |> Drule.mk_term
+    val const = Thm.cterm_of ctxt (Logic.varify_types_global const) |> Drule.mk_term
 
 
     val (ty_args,ty_rets) =

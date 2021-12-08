@@ -23,19 +23,22 @@ fun op_do_while_gen ty body = assign_label (fn L1 => assign_label (fn Lx => get_
   (*The phi nodes merge initial registers and results of the loop. Because the results are currently
   * unavailable, we count the number of phi nodes and reserve the indecies, and remembering
   * the initial registers S0, index count N0, output O0, enter the printing of body firstly. *)
-  #> counter I (fn N0 => subst S0 #> trunc_tail #> body #> br' L1 Lx #> put_bb Lx
+  #> counter I (fn N0 => subst S0 #> trunc_tail #> body #> br' L1 Lx #> get_bb (fn L1' => put_bb Lx
   (*After the body is printed, acquiring the final registers S1, index count N1, output O1,
   * we by resuming back to the initial state S0, N0, O0, generate those absent phi nodes. *)
   #> get_ssa (fn S1 => get_output (fn O1 => map_output (K O0)
-       #> counter (K N0) (fn N1 => map_ssa (K (S0 <*> S1 <*> Nil)) #> phi ty L0 L1 #> trunc_tail
+       #> counter (K N0) (fn N1 => map_ssa (K (S0 <*> S1 <*> Nil)) #> phi ty L0 L1' #> trunc_tail
   (*At last replenish the output of loop body O1 and return to final state N1, S1*)
-  #> map_output (fn O0' => O1 @ O0') #> counter (K N1) (K I) #> map_ssa (K S1))))))))))
+  #> map_output (fn O0' => O1 @ O0') #> counter (K N1) (K I) #> map_ssa (K S1)))))))))))
 
 fun op_recursion_gen name arg ret gen = def_func name arg ret (gen (pair name))
 
 (* Arithmetics *)
 fun pow x n y = if n = 0 then y else pow x (n-1) (x*y)
+val size_cap = pow 2 size_t 1
 fun op_const_int_gen b x = push (Literal (string_of_int x))
+fun op_const_size_t_gen x = if x >= size_cap then raise Fail "size_t: overflow"
+                            else push (Literal (string_of_int x))
 fun op_add_gen b = binop expr ("add i" ^ string_of_int b ^ " ")
 fun op_sub_gen b = binop expr ("sub i" ^ string_of_int b ^ " ")
 fun op_mul_gen b = binop expr ("mul i" ^ string_of_int b ^ " ")
@@ -48,9 +51,9 @@ fun op_eq_gen  b = binop expr ("icmp eq i"  ^ string_of_int b ^ " ")
 
 
 (* Tuple & Index *)
-val index_here = []
-fun index_right (i::r) = (i+1 :: r) | index_right [] = [1]
-fun index_left r = 0::r
+val index_here_gen = []
+fun index_right_gen (i::r) = (i+1 :: r) | index_right_gen [] = [1]
+fun index_left_gen r = 0::r
 
 
 (* Call *)

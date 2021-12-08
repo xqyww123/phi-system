@@ -4,8 +4,6 @@ begin
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
 
-declare [ [ML_print_depth = 100] ]
-
 declare find_index_le_size[simp]
 
 lemma find_index_sorted_le: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> xs ! i < x \<Longrightarrow> i < find_index ((\<le>) x) xs" 
@@ -29,81 +27,101 @@ proc bin_search: \<open>ptr \<tycolon> Pointer\<heavy_comma> len \<tycolon> \<na
   \<bullet> \<medium_right_bracket> drop
   finish
 
+proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x -1 \<tycolon> \<nat>[32]\<close>
+  requires [useful]: \<open>0 < x\<close>
+  \<bullet> 1 -
+  finish
+
+\<nu>interface bin_search = bin_search : \<open>32 word \<times> size_t word \<times> memptr \<times> void\<close> \<longmapsto> \<open>size_t word \<times> void\<close>
+
+thm bin_search_\<nu>app
+thm bin_search_\<nu>compilation
+thm while_\<nu>compilation
+
+ML \<open>@{keyword =}\<close>
+ML \<open>fun read_terms ctxt T =
+  map (Syntax.parse_term ctxt #> Type.constraint T #> @{print}) #> Syntax.check_terms ctxt;
+val prep_terms = read_terms
+val xx = read_terms @{context} dummyT ["x + y"]
+      fun prep_bind (raw_pats, t) ctxt1 =
+        let
+          val T = Term.fastype_of t;
+          val ctxt2 = Variable.declare_term t ctxt1;
+          val pats = prep_terms (Proof_Context.set_mode Proof_Context.mode_pattern ctxt2) T raw_pats |> @{print};
+          val binds = Proof_Context.simult_matches ctxt2 (t, pats);
+        in (binds, ctxt2) end;
+val yy = prep_bind (["?a + ?b"], @{term "x + x"}) @{context}
+\<close>
 
 
-term foldr
-term sort_key
-
-proc sel_sort: \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b::len]\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>['b]\<close>
+(* proc sel_sort: \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b::len]\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>['b]\<close>
   premises [used]: "length xs = n"
   \<bullet> \<rightarrow> ptr, n
   \<bullet> n times var ys heap "ptr \<R_arr_tail> ys" \<open>\<lambda>i. take i ys = sort (take i xs)\<close> \<medium_left_bracket> \<rightarrow> i
   \<bullet> ptr i 1 + \<up>
-  thm used
+  thm used *)
 
 
-
-
-declare perm_length[simp]
-
-  proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x -1 \<tycolon> \<nat>[32]\<close>
-    requires [used]: \<open>0 < x\<close>
-    \<bullet> 1 -
+proc swap:  \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> j \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
+  \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
+  premises [useful]: \<open>i < length xs\<close> and [useful]: \<open>j < length xs\<close>
+  \<bullet> \<rightarrow> ptr, i, j ptr i \<up>\<rightarrow> i' ptr j \<up> \<rightarrow> j' ptr i j' \<down> ptr j i' \<down>
   finish
-term sort
-lemma [simp]: "j + 1 = length xs \<Longrightarrow> length xs - 1 = j" by auto
-lemma [elim]: "a < b + 1 \<Longrightarrow> (a < b \<Longrightarrow> C) \<Longrightarrow> (a = b \<Longrightarrow> C) \<Longrightarrow> C" for a :: nat
-  by linarith
-declare nth_list_update[simp] not_le[simp]
-thm "\<up>_\<nu>app"
-ML \<open>@{term "case x of (i,j,k) \<Rightarrow> f i j k"}\<close>
-term \<open>case_prod\<close>
-term perm
-term sorted
-thm perm_length
-thm Variant_Cast_I_always
-ML \<open>Seq.the_result\<close>
-declare [ [ML_print_depth = 100] ]
-Variant_Cast_I
-ML \<open>@{term op_recursion}\<close>
-thm op_recursion
 
-ML \<open>val th = Goal.init @{cterm "P \<Longrightarrow> Q \<Longrightarrow> P"} |> Thm.eq_assumption 1\<close>
+proc partition: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
+  \<longmapsto> \<open>\<exists>*j ys. j \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]
+    \<^bold>s\<^bold>u\<^bold>b\<^bold>j j < length xs \<and> ys  <~~> xs \<and>
+      ys ! j = xs ! (n-1) \<and> (\<forall>k. k < j \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> xs ! (n-1) < ys ! k)\<close>
+  premises [useful]: \<open>length xs = n\<close> and [useful]: \<open>0 < n\<close>
+  note nth_list_update[simp] not_le[simp] perm_length[simp]
+  \<bullet> -- ptr, n 1 - \<up> \<rightarrow> pivot
+  \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in j heap "ptr \<R_arr_tail> ys"
+  \<bullet> \<open>\<lambda>i. j \<le> i \<and> ys <~~> xs \<and> (ys ! (n-1) = ?pivot) \<and>
+    (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ?pivot) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> ?pivot < ys ! k)\<close> \<medium_left_bracket>
+  \<bullet> \<rightarrow> j, i ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> j 1 + \<medium_right_bracket> \<medium_left_bracket> j \<medium_right_bracket> 
+  \<bullet> goal affirm using \<nu> by (auto simp add: less_Suc_eq intro!: perm_swap[THEN perm.trans])
+  \<bullet> \<medium_right_bracket>
+  have [useful]: "j < n" using \<nu> by linarith
+  \<bullet> \<rightarrow> j ptr j n 1 - swap j
+  \<bullet> goal affirm using \<nu> by (smt (z3) Suc_diff_1 Suc_leI diff_less leD length_list_update
+        less_numeral_extra(1) less_or_eq_imp_le mset_eq_perm mset_swap nat_neq_iff nth_list_update_eq
+         nth_list_update_neq perm_length)
+    (*Albeit it is long, but it is generated by sledgehammer fully-automatically!
+    Actually `auto intro!: perm_swap[THEN perm.trans]` should has been enough to solve this (just try this),
+    however I do not know why it is stuck at some silly condition.
+    Anyway since no one in those theorems relates to the \<nu>-system nor the low level representations,
+      the ugly proof here is basically another proof engineer problem irrelevant with \<nu>-system.*)
+  finish
 
 rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>\<exists>*ys. (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys \<and> xs  <~~> ys)\<close>
-  var ptr xs n premises [used]: "length xs = n"
-  \<bullet> -- n 0 = if  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> -- ptr n 1 - \<up> \<rightarrow> pivot 
-  \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in j heap "ptr \<R_arr_tail> ys"
-  \<bullet> \<open>\<lambda>i. j \<le> i \<and> length ys = n \<and>
-    (\<forall>k. k <j \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> xs ! (n-1) < ys ! k)\<close>
-  \<bullet> \<medium_left_bracket> \<rightarrow> j, i ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> i 1 + \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket> 
-  note Suc_eq_plus1[simp]
-  \<bullet> \<medium_right_bracket>
-  \<bullet> 
-  \<bullet>
-  thm used
-  \<bullet>\<rightarrow> i, j ptr i \<up>\<rightarrow> i' ptr j \<up>-- j' pivot \<le> if \<medium_left_bracket> ptr j i' \<down> ptr i j' \<down> i 1 + \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket> j 1 + \<medium_right_bracket>
-
-  \<bullet> 0
-  \<bullet> while var i, j, ys in i, j heap "ptr \<R_arr_tail> ys" always 
-    \<open>i \<le> j \<and> j \<le> n \<and> length ys = n \<and>
-    (if j = n then 0 < i \<and> ys ! (i-1) = xs ! (n-1) else ys ! (n-1) = xs ! (n-1)) \<and>
-    (\<forall>k. k <i \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! (n-1) < ys ! k)\<close> 
-  \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket> \<medium_left_bracket> \<rightarrow> i, j ptr i \<up>\<rightarrow> i' ptr j \<up>-- j' pivot \<le> if \<medium_left_bracket> ptr j i' \<down> ptr i j' \<down> i 1 + \<medium_right_bracket> \<medium_left_bracket> i \<medium_right_bracket> j 1 + \<medium_right_bracket>
-  have a1[used]: "j = n \<and> 0 < i" using used \<glowing_star> by auto
-  \<bullet> drop -- i0 1 - \<rightarrow> i ptr i
-  \<bullet> split
-  \<bullet>  ptr i
+  \<longmapsto> \<open>\<exists>*ys. (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys \<and> ys  <~~> xs)\<close>
+  var ptr xs n premises [useful]: "length xs = n"
+  note perm_length[simp]
+  \<bullet> -- ptr, n 0 = if  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> n partition \<rightarrow> j
+  \<bullet> ptr j split pop n 1 - j -
   \<bullet> qsort
-  \<bullet> n i0 -
-  
-  thm \<glowing_star>
-  
+  \<bullet> ptr j
+  \<bullet> qsort
+  \<bullet> push
+  \<bullet> merge
+  thm merge_cast_\<nu>app
+  thm \<nu>
   \<bullet> 
-  \<bullet> xs2, i, j \<Longrightarrow> x[used] \<bullet> drop 1 - \<rightarrow> i i split \<bullet> i qsort
-  \<nu>debug 
-  thm qsort_\<nu>app
+  thm Arguments_S[THEN this]
+  thm this[OF Arguments_S]
+  ML_val \<open>val ctx = @{context} |>
+ Config.put Pattern.unify_trace_failure true
+|> Config.put Unify.trace_types true
+val x = Thm.biresolution (SOME ctx) false [(false, @{thm Arguments_S})] 1 @{thm this}
+  |> Seq.pull\<close>
+  
+  ML_val \<open>@{thm Arguments_S} RS @{thm this}\<close>
+thm pop_\<nu>app
+  thm \<nu>
+
+ 
+  thm \<glowing_star>
+
 
 (*   \<bullet> \<Longrightarrow> precondition[used] \<bullet> \<rightarrow> (v,n) n 0 = if \<medium_left_bracket> \<bullet> $v \<medium_right_bracket> \<medium_left_bracket> \<bullet> $v \<open>0\<tycolon>\<nat>[32]\<close> \<up>\<rightarrow> pivot \<open>1\<tycolon>\<nat>[32]\<close> \<open>1\<tycolon>\<nat>[32]\<close>
   \<bullet> while xs' i j in \<open>((seg |+ ofs) \<R_arr_tail> xs', i, j)\<close> subj \<open>j \<noteq> n\<close>

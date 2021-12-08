@@ -4,7 +4,7 @@ theory NuBasicAbstractors
 begin
 
 \<nu>overloads singular and plural
-\<nu>overloads split_cast and pop_cast
+\<nu>overloads split_cast and merge and pop_cast and push
 
 text \<open>Basic \<nu>-abstractors\<close>
 
@@ -115,6 +115,19 @@ lemma split_cast_Array'_\<nu>app[\<nu>overload split_cast]:
     by simp
   done
 
+(*solve*)
+lemma merge_cast_Array'_2_\<nu>app:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n = length l1 \<Longrightarrow>
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a ||+ n) \<R_arr_tail> l2 \<tycolon> Array' T \<heavy_asterisk> a \<R_arr_tail> l1 \<tycolon> Array' T \<longmapsto> a \<R_arr_tail> l1 @ l2 \<tycolon> Array' T "
+  unfolding Cast_def Premise_def Heap_Divider_def apply (cases a)
+  apply (auto simp add: nu_exps min_absorb2 pred_option_def Ball_def nth_append)
+  by (smt (z3) MemAddrState_add_I1 add.assoc add.commute le_add_diff_inverse less_diff_conv2 not_le)
+
+lemma merge_cast_Array'_\<nu>app:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ofs' = ofs + length l1 \<Longrightarrow>
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (base |+ ofs') \<R_arr_tail> l2 \<tycolon> Array' T \<heavy_asterisk> (base |+ ofs) \<R_arr_tail> l1 \<tycolon> Array' T \<longmapsto> (base |+ ofs) \<R_arr_tail> l1 @ l2 \<tycolon> Array' T "
+  using merge_cast_Array'_2_\<nu>app[of _ _ "base |+ ofs", simplified] by blast
+
 (* lemma Array'_dual_Ref_\<nu>app [\<nu>intro]:
  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! i) \<noteq> None \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_asterisk> \<medium_left_bracket> (a ||+ i) \<R_arr_tail> the (xs ! i) \<tycolon> Ref N \<medium_right_bracket>
@@ -163,18 +176,18 @@ lemma Array'_cast_Array: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s
 lemma Array_cast_Array': "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N"
   unfolding Cast_def Dest_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
 
-lemma [\<nu>intro]:
+lemma [\<nu>intro -100000]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> a \<R_arr_tail> xs' \<tycolon> Array' N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow>
    \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs' = mapSome xs2 \<Longrightarrow>
    \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def using Array'_cast_Array[unfolded Cast_def] by blast
 
-lemma [\<nu>intro]:
+lemma [\<nu>intro -100000]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> mapSome xs \<tycolon> Array' N \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow>
    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def using Array_cast_Array'[unfolded Cast_def] by blast
 
-lemma [\<nu>intro]:
+lemma [\<nu>intro -100000]:
   "\<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> mapSome xs \<tycolon> Array' N \<longmapsto> H \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> X\<^sub>m \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> a \<R_arr_tail> xs'\<^sub>m \<tycolon> Array' N \<medium_right_bracket>\<medium_right_bracket> \<Longrightarrow>
    \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs'\<^sub>m = mapSome xs\<^sub>m \<Longrightarrow>
    \<medium_left_bracket>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> H \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> X \<medium_right_bracket>\<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m \<heavy_asterisk> \<medium_left_bracket>\<medium_left_bracket> X\<^sub>m \<medium_right_bracket>\<medium_right_bracket> \<longmapsto> a \<R_arr_tail> xs\<^sub>m \<tycolon> Array N \<medium_right_bracket>\<medium_right_bracket>"
@@ -193,9 +206,19 @@ lemma split_cast_Array_\<nu>app[\<nu>overload split_cast]:
   by (simp add: Array_to_Array'
       split_cast_Array'_\<nu>app[of n "map Some l" a T, simplified, simplified take_map drop_map])
 
-(* lemma pop_cast_Array'_\<nu>app[\<nu>overload pop_cast]:
+lemma pop_cast_Array'_\<nu>app[\<nu>overload pop_cast]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e l \<noteq> [] \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l \<tycolon> Array T \<longmapsto> (a ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> a \<R_arr_tail> hd l \<tycolon> Ref T"
-  unfolding Premise_def subgoal premises prems
+  unfolding Premise_def sorry 
+
+lemma push_Array'_2_\<nu>app[\<nu>overload push]:
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (a ||+ 1) \<R_arr_tail> l \<tycolon> Array T \<heavy_asterisk> a \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> a \<R_arr_tail> x # l \<tycolon> Array T"
+  unfolding Premise_def sorry 
+
+lemma push_Array'_\<nu>app[\<nu>overload push]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i' = i + 1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ i') \<R_arr_tail> l \<tycolon> Array T \<heavy_asterisk> (a |+ i) \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> (a |+ i) \<R_arr_tail> x # l \<tycolon> Array T"
+  unfolding Premise_def sorry
+
+  (*subgoal premises prems 
 proof -
   have t1: "1 \<le> length l"
     by (metis One_nat_def Suc_leI length_greater_0_conv list.size(3) not_one_le_zero prems)
@@ -205,6 +228,20 @@ proof -
   thm split_cast_Array_\<nu>app[of 1 l, unfolded Premise_def ParamTag_def, simplified t1, simplified t2 t3]
   thm One_nat_def Suc_le_eq length_greater_0_conv
 *)
+
+lemma merge_cast_Array_2_\<nu>app[\<nu>overload merge]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n = length l1 \<Longrightarrow>
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a ||+ n) \<R_arr_tail> l2 \<tycolon> Array T \<heavy_asterisk> a \<R_arr_tail> l1 \<tycolon> Array T \<longmapsto> a \<R_arr_tail> l1 @ l2 \<tycolon> Array T "
+  unfolding Array_to_Array' map_append
+  using merge_cast_Array'_2_\<nu>app[of _ "map Some l1", simplified] .
+
+lemma merge_cast_Array_\<nu>app[\<nu>overload merge]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ofs' = ofs + length l1 \<Longrightarrow>
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (base |+ ofs') \<R_arr_tail> l2 \<tycolon> Array T \<heavy_asterisk> (base |+ ofs) \<R_arr_tail> l1 \<tycolon> Array T \<longmapsto> (base |+ ofs) \<R_arr_tail> l1 @ l2 \<tycolon> Array T "
+  using merge_cast_Array_2_\<nu>app[of _ _ "base |+ ofs", simplified] by blast
+
+
+
 (* lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> a \<R_arr_tail> [x] \<tycolon> Array T"
   unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def) *)
 

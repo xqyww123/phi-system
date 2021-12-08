@@ -447,7 +447,6 @@ fun tr_heap (Const (@{const_name Heap_Divider},_) $ A $ B)
 
 fun tr_topctx void_tail (Const (@{const_name NuTopCtx},_) $ S $ H)
       = Const (@{const_name NuTopCtx}, dummyT) $ tr_stack void_tail S $ H
-          |> @{print}
   | tr_topctx void_tail (tm as (Const (@{const_name Front_Stack},_) $ _ $ _))
       = tm
   | tr_topctx void_tail (Abs (name, _, body))

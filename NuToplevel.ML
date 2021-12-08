@@ -142,6 +142,8 @@ fun gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctxt)
+    val preconds = preconds |> @{print} |> map (apfst (apsnd (fn attrs => 
+          @{attributes [TRY_THEN Premise_E]} @ attrs)))
     (* val (goal,th) = begin_proc ctx_parse (arg,ret)  *)
     val elems = [Element.Fixes fixes, Element.Assumes (map (apsnd single) preconds)]
     val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]
@@ -628,7 +630,7 @@ fun prove_prem int stat =
         (* val th = th RS @{thm NuPrime.Premise_I} *)
       in
         stat |> Proof.map_context_result
-                  (AutoLevel.put 0
+                  (Config.put Nu_Reasoner.auto_level 0
                     #> NuProcessor.process_no_input (th RS specthm))
              |-> NuBasics.set_nu_fact
       end

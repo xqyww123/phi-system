@@ -13,19 +13,19 @@ fun head_only tac th =
   if Thm.nprems_of th = 0
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
-fun raw_auto ctx =
-    Method.insert_tac ctx (Proof_Context.get_thms ctx "\<nu>current"
-                         @ Named_Theorems.get ctx "NuSys.useful"
-                         @ Proof_Context.get_thms ctx "\<nu>lemmata"
-                         @ Proof_Context.get_thms ctx "\<nu>local_values"
+fun raw_auto ctxt =
+    Method.insert_tac ctxt (Proof_Context.get_thms ctxt "\<nu>current"
+                         @ Named_Theorems.get ctxt "NuSys.useful"
+                         @ Proof_Context.get_thms ctxt "\<nu>lemmata"
+                         @ Proof_Context.get_thms ctxt "\<nu>local_values"
                           ) 1
-    THEN Clasimp.auto_tac ctx
+    THEN Clasimp.auto_tac ctxt
 
 (*** Premise tac ***)
-fun premise_tac ctx th =
-  if AutoLevel.get ctx >= 2 andalso
+fun premise_tac ctxt th =
+  if Config.get ctxt Nu_Reasoner.auto_level >= 2 andalso
      can (major_prem_of #> dest_Trueprop #> dest_premise_tag) th
-  then head_only (HEADGOAL (SOLVED' (K (raw_auto ctx THEN print_dbg "2222")))) th
+  then head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt THEN print_dbg "2222")))) th
   else Seq.empty
 
 

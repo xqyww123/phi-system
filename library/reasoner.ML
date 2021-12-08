@@ -4,6 +4,10 @@ signature NU_REASONER = sig
   type reasoner = (Proof.context -> tactic) generic_reasoner
   val reasoner_eq : ('a generic_reasoner * 'a generic_reasoner) -> bool
 
+  (* auto level: 2 - fully auto, 1 - paritally auto, 0 - fully manual *)
+  val auto_level : int Config.T
+  val reduce_auto_level : int -> Proof.context -> Proof.context
+
   exception Success of thm
   val add : cost * reasoner -> Context.generic -> Context.generic
   val del : reasoner -> Context.generic -> Context.generic
@@ -38,6 +42,10 @@ open NuHelp
 type cost = int
 type 'a generic_reasoner = {name: term, pattern: term list, tactic: 'a}
 type reasoner = (Proof.context -> tactic) generic_reasoner
+
+val auto_level = Config.declare_int ("\<nu>auto_level", @{here}) (K 2)
+fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
+
 
 exception Success  of thm
 exception Success' of cost * thm
@@ -97,7 +105,7 @@ fun gen_reason ctx iter tactics (best_cost,best_stat) states =
               if cost < best_cost then (cost,th)
               else (best_cost,best_stat)
             val states = states
-                  |> fold (fn (c,seq'') => States.insert (@{print} (cost+c), seq''))
+                  |> fold (fn (c,seq'') => States.insert (cost+c, seq''))
                         (call_tactics ctx tactics th)
                   |> States.insert (cost, seq')
                 handle Success ret => raise Success' (cost, ret)

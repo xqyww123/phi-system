@@ -141,6 +141,7 @@ abbreviation shift_addr :: " 'a::plus memaddr \<Rightarrow> 'a \<Rightarrow> 'a 
 lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base  |+ ofs))" by (metis memaddr.exhaust)
 lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base  |+ ofs))" by (metis memaddr.exhaust)
 
+lemma [simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (cases a) simp
 
 subsection \<open>Function table & Function pointer\<close>
 

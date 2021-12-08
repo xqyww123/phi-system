@@ -189,10 +189,13 @@ fun setup_cmd (((((binding,precedence),term),fixes),proc),comment) ctx =
     )
   end
 
-fun almost_safe f ctx = if AutoLevel.get ctx >= 1 then f ctx else raise Bypass NONE
-fun not_safe f ctx = if AutoLevel.get ctx >= 2 then f ctx else raise Bypass NONE
+fun almost_safe f ctx =
+      if Config.get ctx Nu_Reasoner.auto_level >= 1 then f ctx else raise Bypass NONE
+fun not_safe f ctx =
+      if Config.get ctx Nu_Reasoner.auto_level >= 2 then f ctx else raise Bypass NONE
 fun parse_auto_level proc ctx th =
-  NuParse.auto_level #-> (fn auto_level' => proc (AutoLevel.reduce auto_level' ctx) th)
+  NuParse.auto_level #-> (fn auto_level' =>
+    proc (Nu_Reasoner.reduce_auto_level auto_level' ctx) th)
 
 fun apply_attr ctx th attr =
   attr (Context.Proof ctx, th) |> #2 |> the
