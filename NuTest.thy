@@ -38,22 +38,6 @@ thm bin_search_\<nu>app
 thm bin_search_\<nu>compilation
 thm while_\<nu>compilation
 
-ML \<open>@{keyword =}\<close>
-ML \<open>fun read_terms ctxt T =
-  map (Syntax.parse_term ctxt #> Type.constraint T #> @{print}) #> Syntax.check_terms ctxt;
-val prep_terms = read_terms
-val xx = read_terms @{context} dummyT ["x + y"]
-      fun prep_bind (raw_pats, t) ctxt1 =
-        let
-          val T = Term.fastype_of t;
-          val ctxt2 = Variable.declare_term t ctxt1;
-          val pats = prep_terms (Proof_Context.set_mode Proof_Context.mode_pattern ctxt2) T raw_pats |> @{print};
-          val binds = Proof_Context.simult_matches ctxt2 (t, pats);
-        in (binds, ctxt2) end;
-val yy = prep_bind (["?a + ?b"], @{term "x + x"}) @{context}
-\<close>
-
-
 (* proc sel_sort: \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b::len]\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>['b]\<close>
   premises [used]: "length xs = n"
   \<bullet> \<rightarrow> ptr, n
