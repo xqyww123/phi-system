@@ -3,7 +3,6 @@ theory NuTest
 begin
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
-
 declare find_index_le_size[simp]
 
 lemma find_index_sorted_le: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> xs ! i < x \<Longrightarrow> i < find_index ((\<le>) x) xs" 
@@ -38,22 +37,6 @@ thm bin_search_\<nu>app
 thm bin_search_\<nu>compilation
 thm while_\<nu>compilation
 
-ML \<open>@{keyword =}\<close>
-ML \<open>fun read_terms ctxt T =
-  map (Syntax.parse_term ctxt #> Type.constraint T #> @{print}) #> Syntax.check_terms ctxt;
-val prep_terms = read_terms
-val xx = read_terms @{context} dummyT ["x + y"]
-      fun prep_bind (raw_pats, t) ctxt1 =
-        let
-          val T = Term.fastype_of t;
-          val ctxt2 = Variable.declare_term t ctxt1;
-          val pats = prep_terms (Proof_Context.set_mode Proof_Context.mode_pattern ctxt2) T raw_pats |> @{print};
-          val binds = Proof_Context.simult_matches ctxt2 (t, pats);
-        in (binds, ctxt2) end;
-val yy = prep_bind (["?a + ?b"], @{term "x + x"}) @{context}
-\<close>
-
-
 (* proc sel_sort: \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b::len]\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>['b]\<close>
   premises [used]: "length xs = n"
   \<bullet> \<rightarrow> ptr, n
@@ -71,7 +54,7 @@ proc swap:  \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> i \<tyco
 proc partition: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
   \<longmapsto> \<open>\<exists>*j ys. j \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]
     \<^bold>s\<^bold>u\<^bold>b\<^bold>j j < length xs \<and> ys  <~~> xs \<and>
-      ys ! j = xs ! (n-1) \<and> (\<forall>k. k < j \<longrightarrow> ys ! k \<le> xs ! (n-1)) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> xs ! (n-1) < ys ! k)\<close>
+      (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ys ! j) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> ys ! j < ys ! k)\<close>
   premises [useful]: \<open>length xs = n\<close> and [useful]: \<open>0 < n\<close>
   note nth_list_update[simp] not_le[simp] perm_length[simp]
   \<bullet> -- ptr, n 1 - \<up> \<rightarrow> pivot
@@ -95,16 +78,15 @@ proc partition: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[
 
 rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
   \<longmapsto> \<open>\<exists>*ys. (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys \<and> ys  <~~> xs)\<close>
-  var ptr xs n premises [useful]: "length xs = n"
+  var ptr xs n premises [useful]: "n = length xs"
   note perm_length[simp]
-  \<bullet> -- ptr, n 0 = if  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> n partition \<rightarrow> j
-  \<bullet> ptr j split pop n 1 - j -
-  \<bullet> qsort
-  \<bullet> ptr j
-  \<bullet> qsort
-  \<bullet> push
-  \<bullet> merge
-  thm merge_cast_\<nu>app
+  \<bullet> -- ptr, n 0 = if \<medium_left_bracket> drop \<medium_right_bracket> \<medium_left_bracket> n partition \<rightarrow> j
+  let ?pivot = "ys ! j" have [simp]: " hd (drop j ys) = ?pivot " using \<nu> by (metis hd_drop_conv_nth perm_length)
+  \<bullet> ptr j split pop n 1 - j - qsort ptr j qsort push merge
+  \<bullet> 
+  note [ [unify_trace_failure] ]
+  \<bullet> \<medium_right_bracket>
+  \<bullet> goal
   thm \<nu>
   \<bullet> 
   thm Arguments_S[THEN this]

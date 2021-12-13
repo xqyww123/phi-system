@@ -164,7 +164,7 @@ fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
           ML_Syntax.print_list ML_Syntax.print_term patterns
           ^ "), tactic=(let in ") @
           ML_Lex.read_source tactic_src @
-          ML_Lex.read (" end)}) )))"))
+          ML_Lex.read (" end):(Proof.context -> tactic)}) )))"))
     )
   end
 

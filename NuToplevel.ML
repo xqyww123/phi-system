@@ -109,8 +109,6 @@ fun print_results int = Proof_Display.print_results int (Position.thread_data ()
     (goal,th)
   end *)
 
-val empty_facts_thm = @{thm NuPrime.empty_facts}
-
 fun prep_decls prep_var raw_vars ctxt =
   let
     val (vars, ctxt') = fold_map prep_var raw_vars ctxt
@@ -132,7 +130,7 @@ fun gen_constr_envir prep_term prep_typ prep_var mk_Goal post_process
          (apfst (apsnd (map (Attrib.check_src ctxt))) #>
           apsnd (apfst (parse_term #> prep #> mk_Trueprop)
                   #> apsnd (map parse_term)))
-    val preconds = (map (prep_precond (mk_monop @{const_name Premise})) raw_prems
+    val preconds = (map (prep_precond (mk_monop @{const_abbrev Normal_Premise})) raw_prems
                     @ map (prep_precond I) raw_preconds)
 
     val (goal, constr_process, preconds) =
@@ -552,7 +550,7 @@ val begin_cast_cmd =
     val rec_func = map (perhaps_try dest_RepSet #> dest_nuTy #> #1) rets |> rev
           |> list_mk_binop_r "Product_Type.Pair"
           |> tuple_abs vars
-    val meta = Proof.the_fact stat
+    val sequent = Proof.the_fact stat
           (* |> funpow (arg_arity-1)
               (NuBasics.apply_proc_naive pr_proc #> NuSys.accept_proc ctxt) *)
           |> NuBasics.apply_proc_naive i_rec_proc
@@ -561,45 +559,46 @@ val begin_cast_cmd =
           |> NuSys.set_param ctxt cond
           |> NuSys.set_param ctxt rec_func
           |> NuSys.auto_resolve_rule NONE [] ctxt
-          |> (fn meta =>
+          |> (fn sequent =>
               case precond of SOME _ =>
-                elim_SPEC meta |> apfst (fn major =>
+                elim_SPEC sequent |> apfst (fn major =>
                     (Proof_Context.get_thm ctxt "precondition" RS @{thm StructuralTag_I}) RS major)
                   |> intro_SPEC
-              | NONE => meta)
+              | NONE => sequent)
   in
-    stat |> Proof.set_facts[meta]
+    stat |> Proof.set_facts[sequent]
       |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>app", [])] false 
   end *)
 
 
-fun RSNXX tha (i, thb) =
-  (case Seq.pull (biresolution NONE false [(false, tha)] i thb) of
+fun RSNXX ctxt tha (i, thb) =
+  (case Seq.pull (biresolution (SOME (Config.put Pattern.unify_trace_failure true ctxt)) false [(false, tha)] i thb) of
     SOME (th, _) => solve_constraints th
-  | _ => raise THM ("RSN: no unifiers", i, [tha, thb]));
-fun RSXX tha  thb = RSNXX tha (1,thb);
+  | _ => raise THM ("RSNXX: no unifiers", i, [tha, thb]));
+fun RSXX ctxt tha thb = RSNXX ctxt tha (1,thb);
 
 local
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
-fun gen_finish_proc prep_specthm qed int stat =
+fun gen_finish_proc qed int stat =
   let
-    val meta = NuBasics.the_nu_fact stat
+    val sequent = NuBasics.the_nu_fact stat
     val ctxt = Proof.context_of stat
     val goal = Proof_Context.get_thm ctxt "\<nu>thesis" |> Drule.dest_term
     val (_,_,desired_nu) = dest_procedure_c goal |> @{print}
     (* quick fix:
     val xa = term_of desired_nu |> auto_fusion_arity
-     val meta = funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctxt) meta
+     val sequent = funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctxt) sequent
       handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'}
-      #> accept_proc ctxt) meta *)
-    val meta = meta |> prep_specthm ctxt
+      #> accept_proc ctxt) sequent *)
+    val sequent = sequent
+          |> Local_Defs.unfold ctxt @{thms Implicit_Protector_def}
           (* |> Raw_Simplifier.rewrite_rule ctxt @{thms RegisterCollection_rew}
           * *)
-    val meta = NuSys.cast_completely ctxt desired_nu meta RS @{thm reassemble_proc_0}
+    val sequent = NuSys.cast_completely ctxt desired_nu sequent RS @{thm reassemble_proc_0}
     val end_tac = basic_method (fn ctxt' => fn prooof_stat => 
       Runtime.exn_trace (fn () =>
-      RSXX (
-        singleton (Proof_Context.export ctxt ctxt') meta
+      RSXX ctxt' (
+        singleton (Proof_Context.export ctxt ctxt') sequent
           (* |> conversion_completely ctxt' goal *)
       ) prooof_stat)
       handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
@@ -608,14 +607,14 @@ fun gen_finish_proc prep_specthm qed int stat =
       |> qed (SOME (end_tac, Position.no_range), false)
   end
 in
-val end_block_cmd = gen_finish_proc (K I) (*NuRegisters.delete_locale*) Proof.local_qed
+val end_block_cmd = gen_finish_proc Proof.local_qed
 
 (* fun gen_finish_proc' prep_specthm qed int stat =
-  let val meta = Proof.the_fact stat
-  in if current_block_depth meta > 1 then 
+  let val sequent = Proof.the_fact stat
+  in if current_block_depth sequent > 1 then 
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
     else gen_finish_proc prep_specthm qed int stat end *)
-val finish_proc_cmd = gen_finish_proc (K I) (*NuRegisters.delete_locale*) Proof.global_qed
+val finish_proc_cmd = gen_finish_proc Proof.global_qed
 end
 
 
@@ -648,7 +647,6 @@ local
 fun block_name_of (Var ((x,_),_)) = x
   | block_name_of _ = "block"
 val attr_useful = map (Attrib.attribute @{context}) @{attributes [useful]}
-val elim_premise_tag = perhaps (try (mk_Trueprop o dest_premise_tag))
 in
 
 fun gen_begin_block prep_attr bindings int stat =
@@ -773,7 +771,7 @@ fun export_LLVM path thy =
     val rec_func = map (perhaps_try dest_RepSet #> dest_nuTy #> #1) rets |> rev
           |> list_mk_binop_r "Product_Type.Pair"
           |> tuple_abs vars
-    val meta = Proof.the_fact stat
+    val sequent = Proof.the_fact stat
           (* |> funpow (arg_arity-1)
               (NuBasics.apply_proc_naive pr_proc #> NuSys.accept_proc ctxt) *)
           |> NuBasics.apply_proc_naive i_rec_proc
@@ -782,15 +780,15 @@ fun export_LLVM path thy =
           |> NuSys.set_param ctxt cond
           |> NuSys.set_param ctxt rec_func
           |> NuSys.auto_resolve_rule NONE [] ctxt
-          |> (fn meta =>
+          |> (fn sequent =>
               case precond of SOME _ =>
-                elim_SPEC meta |> apfst (fn major =>
+                elim_SPEC sequent |> apfst (fn major =>
                     (Proof_Context.get_thm ctxt "precondition" RS @{thm StructuralTag_I}) RS major)
                   |> intro_SPEC
-              | NONE => meta)
+              | NONE => sequent)
   in
     stat
-      |-> NuBasics.set_nu_fact meta
+      |-> NuBasics.set_nu_fact sequent
       |> begin_block [(#1 binding |> Binding.suffix_name "_\<nu>app", [])] false 
   end
 

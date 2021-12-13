@@ -39,7 +39,7 @@ fun gen_set_variables_tag prep_S vars always ctx sequent =
     val S' = case always of SOME alw =>
               Abs ("\<xx>", dummyT,
                 Const(@{const_name AdditionSet}, dummyT) $ (S' $ Bound 0)
-                  $ (Const (@{const_name Premise}, dummyT) $ (alw $ Bound 0)))
+                  $ (Const (@{const_abbrev Normal_Premise}, dummyT) $ (alw $ Bound 0)))
           | NONE => S'
 
     val var_tag = Const (@{const_name Variant_Cast}, dummyT) $ dummy $ S $ H $ S' $ H'
@@ -58,7 +58,7 @@ fun gen_set_variables_tag prep_S vars always ctx sequent =
     val simctx = Raw_Simplifier.clear_simpset ctx addsimprocs
           [@{simproc named_forall_expansion}, @{simproc named_exSet_expansion},
            @{simproc named_pureAll_expansion}]
-          addsimps @{thms NuPrime.named.case Product_Type.prod.case}
+          addsimps @{thms NuSys.named.case Product_Type.prod.case}
     val sequent = (var_tag_th RS sequent)
                   |> @{print}
                   |> schematic_var_expansion ctx
@@ -66,7 +66,7 @@ fun gen_set_variables_tag prep_S vars always ctx sequent =
                   |> Raw_Simplifier.rewrite_rule ctx (forall::exNu::
                     @{thms HOL.simp_thms[unfolded atomize_eq[symmetric]]
                            Product_Type.prod.case[unfolded atomize_eq[symmetric]]
-                           NuPrime.named.case[unfolded atomize_eq[symmetric]]
+                           NuSys.named.case[unfolded atomize_eq[symmetric]]
                            AdditionSet_simp_proc_arg
                      })
                   |> @{print}
