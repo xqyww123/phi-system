@@ -387,32 +387,28 @@ consts branch_convergence_setting :: mode
 abbreviation BrCon_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>b\<^bold>r\<^bold>a\<^bold>n\<^bold>c\<^bold>h] _ : _" [1000,27] 26)
   where "BrCon_Simplify \<equiv> Simplify branch_convergence_setting"
 
-lemma ExSet_if_simu: "(if P then (\<exists>*a. A a) else (\<exists>*a. B a)) = (\<exists>*a. if P then A a else B a)" by auto
-lemma ExSet_if_right: "(if P then A else (\<exists>*a. B a)) = (\<exists>*a. if P then A else B a)" by auto
-lemma ExSet_if_left: "(if P then (\<exists>*a. A a) else B) = (\<exists>*a. if P then A a else B)" by auto
+lemma ExSet_if_simu: "(if P then (\<exists>*a. A a) else (\<exists>*a. B a)) \<equiv> (\<exists>*a. if P then A a else B a)" unfolding atomize_eq by auto
+lemma ExSet_if_right: "(if P then A else (\<exists>*a. B a)) \<equiv> (\<exists>*a. if P then A else B a)" unfolding atomize_eq by auto
+lemma ExSet_if_left: "(if P then (\<exists>*a. A a) else B) \<equiv> (\<exists>*a. if P then A a else B)" unfolding atomize_eq by auto
 
-ML \<open>structure Nu_BrCon_Simplify = struct
-fun simp_ex _ ctxt tm =
-  (case Thm.term_of tm of (_ $ _ $ (Const(\<^const_name>\<open>ExSet\<close>,_) $ Abs (_,ty1,_))
-          $ (Const(\<^const_name>\<open>ExSet\<close>,_) $ Abs (_,ty2,_)))
-      => SOME (Conv.rewrs_conv (if ty1 = ty2 then @{thms ExSet_if_simu}
-              else @{thms ExSet_if_right ExSet_if_left}) tm)
-    | _ => SOME (Conv.rewrs_conv @{thms ExSet_if_right ExSet_if_left} tm))
-  handle CTERM _ => NONE
-val simp_ex_proc = Raw_Simplifier.cert_simproc \<^theory> "ExSet_if"
-    {lhss = [\<^term>\<open>if P then A else B\<close>], proc = simp_ex}
-end\<close>
+lemma Subj_simu: "(if P then A \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q else B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<equiv> ((if P then A else B) \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)" unfolding atomize_eq by auto
+lemma Subj_left: "(if P then A \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q else B) \<equiv> ((if P then A else B) \<^bold>s\<^bold>u\<^bold>b\<^bold>j (P \<longrightarrow> Q))" unfolding atomize_eq by auto
+lemma Subj_right: "(if P then A else B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<equiv> ((if P then A else B) \<^bold>s\<^bold>u\<^bold>b\<^bold>j (\<not>P \<longrightarrow> Q))" unfolding atomize_eq by auto
+
+ML_file \<open>library/branch_convergence.ML\<close>
+
 
 \<nu>reasoner \<open>BrCon_Simplify\<close> 1000 (\<open>BrCon_Simplify x y\<close>) = \<open>fn ctxt =>
-  let 
+  let open Nu_BrCon_Simplify
     val ctxt = Raw_Simplifier.clear_simpset ctxt
           addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>branch_convergence\<close>
-          addsimprocs [Nu_BrCon_Simplify.simp_ex_proc]
-  in HEADGOAL (simp_tac ctxt) THEN
+          addsimprocs [simp_ex_proc, simp_subj_proc]
+  in HEADGOAL (fn i => simp_tac ctxt i o @{print}) THEN
      HEADGOAL (resolve0_tac @{thms Simplify_I})
   end
 \<close>
 
+declare if_cancel[branch_convergence]
 lemma [branch_convergence]:
   "(if P then \<tort_lbrace>x \<tycolon> X\<tort_rbrace> else \<tort_lbrace>y \<tycolon> Y\<tort_rbrace>) = \<tort_lbrace>(if P then x else y) \<tycolon> (if P then X else Y)\<tort_rbrace>" by simp
 lemma [branch_convergence]:
@@ -592,7 +588,8 @@ subsection \<open>Arithmetic\<close>
 subsubsection \<open>Common\<close>
 
 theorem op_equal[\<nu>overload =]:
-  "\<nu>Equal N P eq \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a b \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal \<blangle> R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p Nothing \<longmapsto> R\<heavy_comma> eq a b \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p Nothing \<brangle>"
+  "\<nu>Equal N P eq \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a b
+  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal TYPE('a::{ceq,lrep}) \<blangle> R\<heavy_comma> a \<tycolon> N\<heavy_comma> b \<tycolon> N\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p Nothing \<longmapsto> R\<heavy_comma> eq a b \<tycolon> \<bool>\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p Nothing \<brangle>"
   unfolding \<nu>def op_equal_def by (auto 0 6 simp add: nu_exps)
 
 
@@ -888,8 +885,6 @@ ML_file \<open>codegen/NuLLReps.ML\<close>
 ML_file \<open>codegen/misc.ML\<close>
 ML_file \<open>codegen/Instructions.ML\<close>
 
-\<nu>export_llvm \<open>/tmp/xx.ll\<close>
-
 
 proc split_array[\<nu>overload split]: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> l \<tycolon> Array T\<close>
   \<longmapsto> \<open>ptr ||+ n \<tycolon> Pointer\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> take n l \<tycolon> Array T \<heavy_asterisk> (ptr ||+ n) \<R_arr_tail> drop n l \<tycolon> Array T\<close>
@@ -904,5 +899,6 @@ proc pop_array[\<nu>overload pop]: \<open>ptr \<tycolon> Pointer\<heavy_comma> \
   \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> + pop_cast
   finish
 
+\<nu>export_llvm \<open>/tmp/xx.ll\<close>
 
 end

@@ -5,7 +5,7 @@ theory NuSys
   keywords
     "proc" "rec_proc" "\<nu>cast" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$"
-    "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" :: quasi_command
+    "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" :: quasi_command
   and "\<bullet>" "affirm" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>reasoner" "setup_\<nu>application_method" :: thy_decl % "ML"
   and "\<nu>interface" "\<nu>export_llvm" "\<nu>overloads" :: thy_decl
@@ -185,23 +185,25 @@ text \<open>The tag represents a necessary premise that must be solved in a rule
   Two settings correspond two strategies in automatic reasoning.
   The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> is attempted by fully-powered automatic tactic, the @{method auto},
     which is however heavy and consumes a very long time sometimes,
-      so not suitable for e.g. decision switchers deciding whether the reasoning rule can be applied.
-  By contrast, \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is attempted by safer simplification tactic the @{method simp},
+    so not suitable for e.g. decisive switchers deciding whether the rule should be applied.
+  By contrast, \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is attempted by safer tactic the @{method simp},
     which generally terminates in a short time.
   The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> is only attempted automatically under the fully auto-level (level 2),
-    whereas in other cases the proof leaves for user. When the automatic solving consumes a lot of time,
-    users can set the auto level down to semi-auto (level 1) to solve it manually.
-  By contrast, \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is always attempted under any auto-level, because we trust the
-    simplification is a safe method.
+    whereas in other cases the proof leaves for user.
+    When the automatic solving consumes a lot of time, users can set the auto level down to
+    semi-auto (level 1) to prevent the automatic behavior and solve it manually.
+  By contrast, \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is always attempted under any auto-level, because we trust
+    the simplification is a safe method.
 
   Many reasoning rules or procedures depend on certain conditions to decide whether they can be applied,
-    e.g. asserting equality of addresses in cast rules of heap deciding whether the heap object is that object
-      intended to be cast. In those cases, conditions serving as `decision switchers` decide search of the reasoning.
-    Of the systematical function, they are essential and the same as the failure of the proof attempt towards them
-      which rejects a searching branch. When failure of @{method auto} often consumes a lot of time,
-    they are suitable to be marked by \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close>.
+    e.g. asserting equality of addresses in heap cast rules checking whether the heap object is that object
+      intended to be cast. In these cases, conditions serving as `decisive switchers` decide search of the reasoning.
+    Of the systematical function, they are essential
+      and the failure of the proof of them rejects (prunes) a searching branch.
+    When failure of @{method auto} often consumes a lot of time,
+      decisive switchers are suitable to be marked by \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close>.
 
-  The \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> more or less has a semantic of, the proof obligation intended to be solve by user
+  The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> more or less has a semantic of, the proof obligation intended to be solve by user
     (albeit most of times they are solved automatically), while \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is more systematic,
   deciding reasoning branches.\<close>
 
@@ -409,6 +411,7 @@ definition Implicit_Protector :: " 'a \<Rightarrow> 'a " ("\<^bold>'( _ \<^bold>
     after the construction. In future if the demand is seen, there may be an explicit protector
     declared explicitly by users and will not be stripped automatically.\<close>
 
+lemma [cong]: "\<^bold>( A \<^bold>) = \<^bold>( A \<^bold>)" ..
 lemma [\<nu>intro 1000]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<^bold>( A \<^bold>) \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Implicit_Protector_def .
 lemma [\<nu>intro 1000]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> \<^bold>( B \<^bold>) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Implicit_Protector_def .
 
@@ -711,18 +714,18 @@ lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longm
 
 subsection \<open>Subjection : coheres additional proposition\<close>
 
-definition AdditionSet :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<and>\<^sup>s" 13) where " (T \<and>\<^sup>s P) = {p. p \<in> T \<and> P}"
-notation AdditionSet (infixl \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>j\<close> 13)
+definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<and>\<^sup>s" 13) where " (T \<and>\<^sup>s P) = {p. p \<in> T \<and> P}"
+notation Subjection (infixl \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>j\<close> 13)
 translations "(x \<tycolon> T) \<and>\<^sup>s P" \<rightleftharpoons> "\<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<and>\<^sup>s P"
-lemma [simp]: "p \<in> (T \<and>\<^sup>s P) \<longleftrightarrow> p \<in> T \<and> P" unfolding AdditionSet_def by simp
+lemma [simp]: "p \<in> (T \<and>\<^sup>s P) \<longleftrightarrow> p \<in> T \<and> P" unfolding Subjection_def by simp
 
 lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> T \<longmapsto> (x \<tycolon> T) \<and>\<^sup>s P"
   unfolding Intro_def Cast_def Premise_def by (simp add: nu_exps)
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> T' \<and>\<^sup>s Q \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Premise_def by (simp add: nu_exps)
 
-lemma AdditionSet_simp_proc_arg[simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<and>\<^sup>s P \<longmapsto> Y \<brangle> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> Y \<brangle>)"
-  and AdditionSet_simp_func_arg[simp]: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<blangle> T \<and>\<^sup>s P \<longmapsto> Y \<brangle> = (P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<blangle> T \<longmapsto> Y \<brangle>)"
+lemma Subjection_simp_proc_arg[simp]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<and>\<^sup>s P \<longmapsto> Y \<brangle> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> Y \<brangle>)"
+  and Subjection_simp_func_arg[simp]: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<blangle> T \<and>\<^sup>s P \<longmapsto> Y \<brangle> = (P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<blangle> T \<longmapsto> Y \<brangle>)"
   unfolding Auto_def Procedure_def Function_def by (auto 0 6 simp add: nu_exps)
 
 lemma [simp]: "(T \<and>\<^sup>s True) = T" unfolding Auto_def by (auto simp add: nu_exps)
@@ -732,8 +735,8 @@ lemma [simp]: "(L \<heavy_comma> (T \<and>\<^sup>s P)) = (L \<heavy_comma> T \<a
 lemma [simp]: "(L \<heavy_asterisk> (T \<and>\<^sup>s P)) = (L \<heavy_asterisk> T \<and>\<^sup>s P)"
     and [simp]: "((T \<and>\<^sup>s P) \<heavy_asterisk> R) = (T \<heavy_asterisk> R \<and>\<^sup>s P)"
   unfolding Auto_def Heap_Divider_def by (auto simp add: nu_exps) blast+
-lemma [simp]: "((S \<and>\<^sup>s P) \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) = (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<^bold>s\<^bold>u\<^bold>b\<^bold>j P )"
-    and [simp]: "( S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (H \<and>\<^sup>s P) ) = (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<^bold>s\<^bold>u\<^bold>b\<^bold>j P )"
+lemma [simp]: "((S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) = (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<^bold>s\<^bold>u\<^bold>b\<^bold>j P )"
+    and [simp]: "( S \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (H \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) ) = (S\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<^bold>s\<^bold>u\<^bold>b\<^bold>j P )"
   unfolding Auto_def by (auto simp add: nu_exps)
 lemma [simp]: "( Ctx \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<heavy_comma>^ T ) = (Ctx \<heavy_comma>^ T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P ) "
   unfolding Auto_def by (auto simp add: nu_exps)
@@ -1890,7 +1893,7 @@ subsection \<open>Controls\<close>
 
 subsection \<open>Constructive\<close>
 
-\<nu>processor accept_proc 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta =>
+\<nu>processor accept_call 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta =>
   Scan.succeed (fn _ => NuSys.accept_proc meta ctx)\<close>
 
 \<nu>processor "apply" 9000 \<open>P\<close> \<open> fn ctx => fn meta => NuApplicant.parser >> (fn binding => fn _ =>
@@ -1926,6 +1929,10 @@ subsubsection \<open>Sub-procedure\<close>
 ) end\<close>
 
 subsubsection \<open>Existential elimination\<close>
+
+\<nu>processor existential_elimination 50 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet T\<close>
+  \<open>fn ctxt => fn sequent => Parse.$$$ "\<exists>" |-- Parse.list1 Parse.binding >> (fn insts => fn () =>
+      raise Process_State_Call' ((sequent,ctxt), NuObtain.choose insts))\<close>
 
 \<nu>processor auto_existential_elimination 50 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet T\<close>
   \<open>fn ctx => fn meta => Scan.succeed (fn () =>
@@ -1982,7 +1989,7 @@ subsection \<open>Simplifiers & Resonings\<close>
       val goal = Proof_Context.get_thm ctxt "\<nu>thesis" |> Drule.dest_term
       val (_,_,desired_nu) = NuBasics.dest_procedure_c goal
       val ty = Thm.typ_of_cterm desired_nu
-      val prot = Const (\<^const_name>\<open>Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
+      val prot = Const (\<^const_name>\<open>Implicit_Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
       val ctxt = Config.put Nu_Reasoner.auto_level 1 ctxt
       val sequent = NuSys.cast ctxt (Thm.apply prot desired_nu) sequent
     in (sequent, ctxt) end

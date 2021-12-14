@@ -325,8 +325,8 @@ fun tr_topctx void_tail (Const (@{const_name NuTopCtx},_) $ S $ H)
       = Abs (name, dummyT, tr_topctx void_tail body)
   | tr_topctx void_tail (Const (@{const_name ExSet}, _) $ body)
       = Const (@{const_name ExSet}, dummyT) $ tr_topctx void_tail body
-  | tr_topctx void_tail (Const (@{const_name AdditionSet}, _) $ body $ P)
-      = Const (@{const_name AdditionSet}, dummyT) $ tr_topctx void_tail body $ P
+  | tr_topctx void_tail (Const (@{const_name Subjection}, _) $ body $ P)
+      = Const (@{const_name Subjection}, dummyT) $ tr_topctx void_tail body $ P
   | tr_topctx void_tail (Const ("_type_constraint_", ty) $ tm)
       = Const ("_type_constraint_", ty) $ tr_topctx void_tail tm
   | tr_topctx void_tail (tm as (Const (@{const_name Stack_Delimiter}, _) $ A $ B))

@@ -239,7 +239,7 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
         val conds' = map (snd #> fst #> perhaps (try dest_Trueprop)) conds
         val arg' = arg
               |> fold_rev (fn c => fn Nu =>
-                    NuBasics.mk_binop @{const_name AdditionSet} (Nu,c)) conds'
+                    NuBasics.mk_binop @{const_name Subjection} (Nu,c)) conds'
               |> tuple_abs vars
               |> mk_cases_named origin_names
               |> (fn tm => tm $ Bound 0)
@@ -263,7 +263,7 @@ fun gen_begin_rec_proc prep_term prep_typ prep_var
             (* simplify the proof goal, to expand all the auto Nu *)
             val ctxt = Proof.context_of stat
             val simctx = Raw_Simplifier.clear_simpset ctxt
-                  addsimps @{thms AdditionSet_simp_proc_arg AdditionSet_simp_func_arg}
+                  addsimps @{thms Subjection_simp_proc_arg Subjection_simp_func_arg}
 
             val stat = stat
               |> Proof.using_facts [] |> Proof.enter_backward (*|> Proof.begin_block*)

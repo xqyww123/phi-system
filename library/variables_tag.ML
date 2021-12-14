@@ -38,7 +38,7 @@ fun gen_set_variables_tag prep_S vars always ctx sequent =
     val H' = tuple_abs vars H' |> mk_cases_named names
     val S' = case always of SOME alw =>
               Abs ("\<xx>", dummyT,
-                Const(@{const_name AdditionSet}, dummyT) $ (S' $ Bound 0)
+                Const(@{const_name Subjection}, dummyT) $ (S' $ Bound 0)
                   $ (Const (@{const_abbrev Normal_Premise}, dummyT) $ (alw $ Bound 0)))
           | NONE => S'
 
@@ -67,7 +67,7 @@ fun gen_set_variables_tag prep_S vars always ctx sequent =
                     @{thms HOL.simp_thms[unfolded atomize_eq[symmetric]]
                            Product_Type.prod.case[unfolded atomize_eq[symmetric]]
                            NuSys.named.case[unfolded atomize_eq[symmetric]]
-                           AdditionSet_simp_proc_arg
+                           Subjection_simp_proc_arg
                      })
                   |> @{print}
   in

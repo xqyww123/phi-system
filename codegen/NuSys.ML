@@ -47,7 +47,10 @@ fun op_xor_gen b = binop expr ("xor i" ^ string_of_int b ^ " ")
 fun op_not_gen b = op_const_int_gen b (pow 2 b 1 - 1) #> op_xor_gen b
 fun op_lt_gen  b = binop expr ("icmp ult i" ^ string_of_int b ^ " ")
 fun op_le_gen  b = binop expr ("icmp ule i" ^ string_of_int b ^ " ")
-fun op_eq_gen  b = binop expr ("icmp eq i"  ^ string_of_int b ^ " ")
+fun op_equal_gen (T as T_int _) = binop expr ("icmp eq " ^ tystr T ^ " ")
+  | op_equal_gen (T_tup T) = pop (fn X => op_dest_tup_gen T #> push X #> op_dest_tup_gen T)
+        #> binop'1 expr ("icmp eq ") T
+  | op_equal_gen T = binop'1 expr ("icmp eq ") T
 
 
 (* Tuple & Index *)

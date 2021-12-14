@@ -86,8 +86,8 @@ definition op_le :: " ('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<
 definition op_not :: "('w::len) itself \<Rightarrow> 'w word \<times> ('r::stack) \<longmapsto> 'w word \<times> 'r"
   where "op_not len = (\<lambda>(h,x,r). Success (h,not x,r))"
 
-definition op_equal :: " ('a::{ceq,lrep}) \<times> 'a \<times> ('r::stack) \<longmapsto> 1 word \<times> 'r"
-  where "op_equal = (\<lambda>(h,a,b,r). if ceqable h b a then Success (h,(if ceq b a then 1 else 0), r) else Fail)"
+definition op_equal :: " 'a itself \<Rightarrow> ('a::{ceq,lrep}) \<times> 'a \<times> ('r::stack) \<longmapsto> 1 word \<times> 'r"
+  where "op_equal _ = (\<lambda>(h,a,b,r). if ceqable h b a then Success (h,(if ceq b a then 1 else 0), r) else Fail)"
 
 
 section \<open>Tuple Operations\<close>
