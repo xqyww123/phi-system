@@ -82,9 +82,15 @@ fun add_interface_command ((name,const),tys) thy =
     val const = Thm.cterm_of ctxt (Logic.varify_types_global const) |> Drule.mk_term
 
 
+    fun modify_tail ty =
+      let
+        val tys = HOLogic.strip_tupleT ty
+      in
+        if last tys = @{typ void} then ty else HOLogic.mk_tupleT (tys @ [@{typ void}])
+      end
     val (ty_args,ty_rets) =
           the_default (TVar (("'a",0), @{sort lrep}), TVar (("'b",0), @{sort lrep}))
-                      (Option.map (apply2 (Syntax.parse_typ ctxt)) tys)
+                      (Option.map (apply2 (modify_tail o Syntax.parse_typ ctxt)) tys)
     val goal = mk_Trueprop (Const (@{const_name Prog_Interface}, dummyT)
                 $ NuBasics.mk_label (Binding.name_of name)
                 $ Logic.mk_type ty_args

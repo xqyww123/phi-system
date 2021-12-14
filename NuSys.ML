@@ -38,8 +38,10 @@ signature NU_SYS = sig
   val apply : Proof.context -> thm list -> thm -> thm
   val apply_proc_naive : thm (*proc*) -> thm (*meta or major*) -> thm
   val accept_proc : thm -> Proof.context -> thm * Proof.context
+
   val set_param : Proof.context -> term -> thm -> thm
   val set_param_cmd : Proof.context -> string -> thm -> thm
+  val set_label : string -> thm -> thm
 
   val start_proc : string (*blk name*) -> cterm -> Proof.context -> thm * Proof.context
   val rename_blk_var : string -> thm -> cterm (*renamed block*) * thm
@@ -203,32 +205,35 @@ fun apply ctx appliants major =
 val apply_proc_naive = NuApply.apply_proc_naive
 
 
-fun param_type major =
-  NuBasics.param_type major
+(*Param & Label*)
+fun param_type sequent =
+  NuBasics.param_type sequent
     |> map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty)
-  (* TODO: how to parse (check) the term of a desired type pattern? *)
-fun set_param ctx term major =
-  (term |> Type.constraint (param_type major)
-            (* TODO: how to parse (check) the term of a desired type pattern? *)
+  (* TODO: how to parse (check) the term of a desired type pattern
+  * (schematic type variable)? *)
+
+fun set_param ctx term sequent =
+  (term |> Type.constraint (param_type sequent)
         |> Syntax.check_term ctx |> Thm.cterm_of ctx |> NuBasics.intro_param)
-    RS major
-fun set_param_cmd ctx term major =
-  case try (dest_funT #> apfst dest_named) (param_type major)
+    RS sequent
+
+fun set_param_cmd ctx term sequent =
+  case try (dest_funT #> apfst dest_named) (param_type sequent)
     of SOME (name_and_tys, rng) =>
         let
           val fixes = map (fn (name,ty) =>
                 (Binding.name name, (if ty = dummyT then NONE else SOME ty), NoSyn)) name_and_tys
-     |> @{print}
           val (fixed_names, ctx) = Proof_Context.add_fixes fixes ctx
           val term = Syntax.parse_term ctx term
                       |> tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
                       |> @{print}
                       |> mk_monop @{const_name case_named}
         in
-          set_param ctx term major
+          set_param ctx term sequent
         end
-     | NONE => set_param ctx (Syntax.parse_term ctx term) major
+     | NONE => set_param ctx (Syntax.parse_term ctx term) sequent
 
+fun set_label name sequent = mk_label_thm name RS sequent
 
 fun finish_proc cc sequent =
   let

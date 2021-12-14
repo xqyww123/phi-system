@@ -12,12 +12,10 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
       and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
       and "<func>" = "\<^bold>f\<^bold>u\<^bold>n\<^bold>c"
       and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
-      and "<param>" = "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m"
       and ",," = "\<heavy_comma>"
       and "<cast>" = "\<^bold>c\<^bold>a\<^bold>s\<^bold>t"
       and "<conversion>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n"
       and "<auto>" = "\<^bold>a\<^bold>u\<^bold>t\<^bold>o"
-      and "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
       and "<construct>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t"
       and "by" = "\<^bold>b\<^bold>y"
       and "<simplify>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y"
@@ -290,69 +288,6 @@ definition \<nu>Equal :: "('a::{lrep,ceq}, 'b) \<nu> \<Rightarrow> ('b \<Rightar
 
 subsection \<open>Auxiliary tags\<close>
 
-subsubsection \<open>Label tag\<close>
-
-datatype label = LABEL_TAG "unit \<Rightarrow> unit"
-
-lemma [cong]: "LABEL_TAG x \<equiv> LABEL_TAG x"  using reflexive .
-lemma label_eq: "x = y" for x :: label by (cases x, cases y) auto
-
-syntax "_LABEL_" :: "idt \<Rightarrow> label" ("LABEL _" [0] 1000)
-translations "LABEL name" == "CONST LABEL_TAG (\<lambda>name. ())"
-
-subsubsection \<open>Name tag by type\<close>
-
-datatype ('x, 'name) named (infix "named" 30) = tag 'x
-
-text \<open>It is another name tag which tags names in type by free variables, e.g., \<^typ>\<open>(nat \<times> int) named ('name_i \<times> 'name_j)\<close>.
-  It is useful for the rewrite and expansion of quantification which retains name information of bound variables,
-    e.g. the transformation from \<^prop>\<open>\<forall>(x::(nat \<times> int) named ('i \<times> 'j)). P x\<close> to \<^prop>\<open>\<forall>(i::nat) (j::int). P (tag (i,j))\<close>\<close>
-
-lemma named_forall: "All P \<longleftrightarrow> (\<forall>x. P (tag x))" by (metis named.exhaust)
-lemma named_exists: "Ex P \<longleftrightarrow> (\<exists>x. P (tag x))" by (metis named.exhaust)
-lemma [simp]: "tag (case x of tag x \<Rightarrow> x) = x" by (cases x) simp
-lemma named_All: "(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (tag x))"
-proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
-next fix x :: "'a named 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
-qed
-
-
-subsubsection \<open>Parameter tag\<close>
-
-definition ParamTag :: " 'a \<Rightarrow> bool" ("\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m _" [1000] 26) where "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<equiv> True"
-lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" unfolding ParamTag_def using TrueI .
-  \<comment>\<open>A tag used to indicate a parameter should be specified during application. It retains the order of the parameters to be specified.
-  For example, "@{prop "\<And>bit_width value. \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m bit_width \<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m value \<Longrightarrow> P bit_wdith value"},
-    the first parameter `?bit_width` will be specified first and then the "?value".\<close>
-lemma [elim!,\<nu>elim]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" by auto
-
-subsubsection \<open>Premise tag \<close>
-
-definition Premise :: "bool \<Rightarrow> bool" ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where [\<nu>def]:"Premise x = x"
-
-text \<open>The tag represents a necessary premise that must be solved in a rule or a procedure.
-  On the fully auto-level (level 2), \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> is always attempted by automatic reasoning,
-    and if the proof fails, the rule or procedure claiming that premise is gave up.
-  The automatic solving may consumes a lot of time, and may also fail finally. In that case, one can set the
-    auto level down to semi-auto (level 1).
-  On the semi-auto, all \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> are never solved automatically but admitted to leave for user.
-  Since all \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> are admitted, not causing a proof failure so as to terminate a wrong inference
-  searching branch, multiple solution may be available. In that case, the reasoner returns the first reached
-  one according to the heuristic score, because the reasoner basically is a (heuristic-based) depth-first searching
-  algorithm for the purpose of performance. In this case, the settings of heuristic score is significant.\<close>
-
-lemma Premise_I[intro!]: "P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P" unfolding Premise_def by simp
-lemma Premise_E: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma [elim!,\<nu>elim]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
-
-lemma Premise_Irew: "(P \<Longrightarrow> C) \<equiv> Trueprop (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> C)" unfolding Premise_def atomize_imp .
-
-(* attribute_setup intro_premise = \<open>
-  Scan.succeed (Thm.rule_attribute [] (fn _ => fn th => th COMP @{thm Premise_I}))
-\<close>*)
-attribute_setup elim_premise = \<open>
-  Scan.succeed (Thm.rule_attribute [] (fn _ => fn th => th COMP @{thm Premise_E}))
-\<close>
 
 subsubsection \<open>Intro and Dest tag\<close>
 
@@ -571,7 +506,7 @@ attribute_setup show_codeblock_expression =  \<open>
 lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (prog arg) \<equiv> v"
   unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast *)
 
-subsubsection \<open>Contextual Fact\<close>
+(* subsubsection \<open>Contextual Fact\<close>
 
 definition Fact :: "label \<Rightarrow> bool \<Rightarrow> prop" where "Fact label P \<equiv>Trueprop P"
 syntax "Fact_sugar_" :: "idt \<Rightarrow> logic \<Rightarrow> prop" ("\<^item> _ : _" [5,0] 4)
@@ -618,11 +553,11 @@ lemma SpecTop_cong_major:
     unfolding SpecTop_def by auto
 (*lemma Specification_rule_aux: "(P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q) \<Longrightarrow> (Q \<Longrightarrow> Q') \<Longrightarrow> (P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q')"
     unfolding SpecTop_def  by presburger *)
-
+*)
 section \<open>Principal rules\<close>
 
 theorem apply_proc: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
-  unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def SpecTop_imp by (auto 0 5)
+  unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def by (auto 0 5)
 
 theorem accept_proc: "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> CodeBlock s' s f \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
   for s' :: "('b::stack) state"
@@ -651,7 +586,7 @@ theorem reassemble_proc_final:
   unfolding nop_def CodeBlock_def CurrentConstruction_def SpecTop_imp by (rule SpecTop_I) auto *)
 
 lemma rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<blangle> U \<longmapsto> \<R> \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U \<longmapsto> \<R> \<brangle>" by fast
-
+(*
 lemma name_star_fact:   
   "(PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop Q) (PROP L) (PROP S))
     \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP NoFact) (PROP Fact name Q and_fact PROP L) (PROP S))"
@@ -660,7 +595,7 @@ lemma declare_fact:
   "A \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
     \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP Fact name A and_fact PROP L) (PROP S))"
   unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
-
+*)
 
   section \<open>Supplementary structures and mechanisms for elementary functions\<close>
 

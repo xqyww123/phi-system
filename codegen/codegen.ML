@@ -57,6 +57,7 @@ signature NU_CG = sig
   val binop : ((ctxt -> ctxt) -> ctxt -> ctxt) -> string -> ctxt -> ctxt
   val monop' : ((ctxt -> ctxt) -> ctxt -> ctxt) -> string -> llty -> ctxt -> ctxt
   val binop' : ((ctxt -> ctxt) -> ctxt -> ctxt) -> string -> llty -> llty -> ctxt -> ctxt
+  val binop'1: ((ctxt -> ctxt) -> ctxt -> ctxt) -> string -> llty -> ctxt -> ctxt
 
   val trunc_tail : ctxt -> ctxt
   val mk_tail : ctxt -> ctxt
@@ -139,6 +140,7 @@ fun pop f (X <*> ssa,ot,c) = f X (ssa,ot,c) ;   fun push X (ssa, ot,c) = (X <*> 
 val pop_put = pop putv                      ;   fun pop_put' ty = pop (putv' ty)
 val pop_put2 = pop (fn A => pop_put #> put ", " #> putv A)
 fun pop_put2' t1 t2 = pop (fn A => pop_put' t1 #> put ", " #> putv' t2 A)
+fun pop_put2'1 ty = pop (fn A => pop_put' ty #> put ", " #> putv A)
 fun expr f = assign (fn i => put ("%" ^ string_of_int i ^ " = ") #> f #> push (Reg i))
 
 
@@ -175,6 +177,7 @@ fun monop head opr = fusion  (head (put opr #> pop_put)  #> put "\n")
 fun binop head opr = fusion2 (head (put opr #> pop_put2) #> put "\n")
 fun monop' head opr = fusion' (fn ty => head (put opr #> pop_put' ty) #> put "\n")
 fun binop' head opr = fusion2' (fn t1 => fn t2 => head (put opr #> pop_put2' t1 t2) #> put "\n")
+fun binop'1 head opr ty = fusion2'(fn ty=> fn _=> head (put opr #> pop_put2'1 ty) #> put "\n") ty ty
 
 
 (*Branch*)

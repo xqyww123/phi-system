@@ -1,5 +1,5 @@
 signature NU_OBTAIN = sig
-  val chooseV : binding list -> Proof.state -> Proof.state
+  val choose : binding list -> Proof.state -> Proof.state
   val auto_choose : Proof.state -> Proof.state
 end
 structure NuObtain : NU_OBTAIN = struct
@@ -63,11 +63,15 @@ fun trim_var_name name =
 val trim_var = dest_Free #> apfst trim_var_name #> Free
 in
 
-fun chooseV inst_names stat =
+fun choose inst_names stat =
   let open NuBasics NuHelp HOLogic Term
     val major = NuBasics.the_nu_fact stat |> @{print}
-    val _ = @{print} inst_names
     val ctx = Proof.context_of stat
+    fun map_name_result f b c =
+          (f (Binding.name_of b) c) |>> (fn s => Binding.map_name (K s) b)
+    val (inst_names,_) =
+      fold_map (map_name_result Name.variant) inst_names (Name.make_context [])
+    val _ = @{print} inst_names
     val major = Raw_Simplifier.rewrite_rule ctx @{thms ExTyp_strip} major |> @{print}
     val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder_raw "HOL.Ex"
     val var_tys = map snd vars
@@ -94,7 +98,7 @@ fun auto_choose stat =
           |> NuHelp.strip_binder_vars @{const_name ExSet}
           |> map (Binding.name o NuBasics.normlize_name o fst)
   in
-    chooseV vars stat
+    choose vars stat
   end
 
 end

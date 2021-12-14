@@ -68,35 +68,10 @@ signature NU_BASICS = sig
 
   val dest_procedure   : term -> term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm
-  val dest_premise_tag  : term -> term
-  val dest_premise_tag_c: cterm -> cterm
+  val dest_premise_tag  : term -> term * term
+  val dest_premise_tag_c: cterm -> cterm * cterm
 
   val mk_PropBlock : int -> thm -> thm
-
-  val dest_fact : term -> string * term
-  val dest_fact_c : cterm -> string * cterm
-  val name_of_Fact : thm -> string
-  val elim_Fact : thm -> string * thm
-  val intro_Fact : string * thm -> thm
-  val dest_AndFact : term -> term * term
-  val dest_AndFact_c : cterm -> cterm * cterm
-  val dest_AndFacts : term -> term list
-  val elim_AndFact : thm -> thm * thm
-  val intro_AndFact : thm * thm -> thm
-  val elim_AndFacts : thm -> thm list
-  val intro_AndFacts : thm list -> thm
-  val dest_FactCollection   : term -> term * term * term
-  val dest_FactCollection_c : cterm -> cterm * cterm * cterm
-  val elim_FactCollection : thm -> thm * thm * thm
-  val intro_FactCollection : thm * thm * thm -> thm
-  val user_facts_in_collection : thm -> (string * thm) list
-  (* val intro_interal_fact : thm (* thm to be added *) -> thm (* fact collection *) -> (int * thm)
-  val intro_interal_fact_spec : thm (* thm to be added *) -> thm (* specthm *)
-  -> (int * thm) *)
-
-  (* Transform every HOL part of the facts theorem, including star fact, every user fact, and every
-  * internal fact. *)
-  val holrule : (thm -> thm) -> thm -> thm
 
   val dest_Cast   : term -> term * term * term
   val dest_Cast_c : cterm -> cterm * cterm * cterm
@@ -157,6 +132,8 @@ fun dest_label tm =
 val label_c = @{cterm "LABEL name"}
 fun mk_label name = label_const $ Abs (name, unit_ty, unit_const)
 fun mk_label_c name = renamed_term (mk_label name) label_c
+fun mk_label_thm name = 
+  Thm.instantiate ([],[((("x",0),@{typ label}), mk_label_c name)]) @{thm LabelTag}
 fun mk_labelled name tm = Const(@{const_name Labelled}, dummyT) $ mk_label name $ tm
 fun mk_name_hint name tm = Const(@{const_name NameHint}, dummyT) $ mk_label name $ tm
 
@@ -247,113 +224,8 @@ fun disch_current_codeblock specthm =
 fun th1 MP th2 = Drule.comp_no_flatten (th1, 0) 1 th2
 fun rule MP_BY args = fold (fn arg => fn rule => arg MP rule) args rule
 
-val dest_fact   = dest_binop   @{const_name "Fact"} #> apfst dest_label
-val dest_fact_c = dest_binop_c @{const_name "Fact"} #> apfst (term_of #> dest_label)
-val vP = (("P",0), HOLogic.boolT) and v_label = (("label",0),label_ty)
-val Fact_D = @{thm NuPrime.Fact_D} and Fact_I = @{thm NuPrime.Fact_I}
-fun name_of_Fact th = th |> cprop_of |> dest_fact_c |> #1
-fun elim_Fact th =
-  let
-    val (name,P) = th |> cprop_of |> dest_fact_c
-  in
-    th |> Thm.implies_elim (Thm.instantiate ([],[(vP, P)]) Fact_D)
-       |> pair name
-  end
-fun intro_Fact (name,th) =
-  Thm.implies_elim
-    (Thm.instantiate ([],[(v_label, mk_label_c name), (vP, cprop_of th)]) Fact_I) th
-val dest_AndFact   = dest_binop   @{const_name "AndFact"}
-val dest_AndFact_c = dest_binop_c @{const_name "AndFact"}
-fun dest_AndFacts_impl ret tm =
-  if same_const @{const_name "NoFact"} tm then rev ret
-  else (case dest_AndFact tm of (a,b) => dest_AndFacts_impl (a::ret) b)
-val dest_AndFacts = dest_AndFacts_impl []
-val vP = (("P",0),propT) and vQ = (("Q",0),propT) and vS = (("S",0),propT)
-val AndFact_D1 = @{thm AndFact_D1}
-and AndFact_D2 = @{thm AndFact_D2}
-and AndFact_I = @{thm AndFact_I}
-val NoFact = @{thm NuPrime.NoFact}
-fun elim_AndFact th =
-  let
-    val (P, Q) = dest_AndFact_c (Thm.cprop_of th)
-      handle TERM (msg, _) => raise THM ((msg, 0, [th]));
-    val inst = Thm.instantiate ([], [(vP, P), (vQ, Q)]);
-  in
-   (Thm.implies_elim (inst AndFact_D1) th,
-    Thm.implies_elim (inst AndFact_D2) th)
-  end
-fun intro_AndFact (th1,th2) =
-  Drule.implies_elim_list
-    (Thm.instantiate ([],[(vP, cprop_of th1), (vQ, cprop_of th2)]) AndFact_I)
-    [th1,th2]
-fun elim_AndFacts_impl ret [] = ret
-  | elim_AndFacts_impl ret (th::r) = 
-      (case try elim_AndFact th of
-        NONE => 
-          if same_const @{const_name "NoFact"} (prop_of th)
-          then elim_AndFacts_impl ret r
-          else elim_AndFacts_impl (th::ret) r
-      | SOME (th1, th2) => elim_AndFacts_impl ret (th1::th2::r))
-val elim_AndFacts = rev o elim_AndFacts_impl [] o single
-fun intro_AndFacts l = fold_rev (fn th1 => fn th2 => intro_AndFact (th1,th2)) l NoFact
-val dest_FactCollection   = dest_triop   @{const_name "FactCollection"}
-val dest_FactCollection_c = dest_triop_c @{const_name "FactCollection"}
-val th_FactCollection_D1 = @{thm NuPrime.FactCollection_D1}
-and th_FactCollection_D2 = @{thm NuPrime.FactCollection_D2}
-and th_FactCollection_D3 = @{thm NuPrime.FactCollection_D3}
-and th_FactCollection_I  = @{thm NuPrime.FactCollection_I}
-fun elim_FactCollection th =
-  let
-    val (P,Q,S) = cprop_of th |> dest_FactCollection_c
-  in
-    (Thm.implies_elim (Thm.instantiate ([],[(vP,P),(vQ,Q),(vS,S)]) th_FactCollection_D1) th,
-     Thm.implies_elim (Thm.instantiate ([],[(vP,P),(vQ,Q),(vS,S)]) th_FactCollection_D2) th,
-     Thm.implies_elim (Thm.instantiate ([],[(vP,P),(vQ,Q),(vS,S)]) th_FactCollection_D3) th)
-  end
-fun intro_FactCollection (th1,th2,th3) =
-  Drule.implies_elim_list
-    (Thm.instantiate ([],[(vP, cprop_of th1), (vQ, cprop_of th2), (vS, cprop_of th3)])
-      th_FactCollection_I) [th1,th2,th3]
-fun user_facts_in_collection th =
-  let
-    val (P,Q,S) = elim_FactCollection th
-    val ths = elim_AndFacts Q |> map elim_Fact
-  in
-    if same_const @{const_name "NoFact"} (prop_of P) then ths else ("\<nu>lemmata",P)::ths
-  end
-val vA = (("A",0),propT) and vP = (("P",0),propT) and vQ = (("Q",0),propT) and vL = (("L",0),propT)
-(* fun intro_interal_fact A th =
-  let
-    val (Q,L,S) = cprop_of th |> dest_FactCollection_c
-    val intro_thm =
-      Thm.instantiate ([],[(vA, cprop_of A), (vQ,Q), (vL,L), (vS,S)]) intro_internal_fact_thm
-    val id = length (dest_AndFacts (term_of S))
-    val th = Thm.implies_elim (Thm.implies_elim intro_thm A) th
-  in (id,th) end
-fun intro_interal_fact_spec A th =
-  let
-    val (focus,facts) = elim_SPEC th
-    val (id,facts') = intro_interal_fact A facts
-  in
-    (id, intro_SPEC (focus, facts'))
-  end *)
 
-fun apply3 f (a,b,c) = (f a, f b, f c)
-fun holrule f th =
-  case prop_of th
-    of (Const (@{const_name "AndFact"},_) $ _ $ _) =>
-         elim_AndFact th |> apply2 (holrule f) |> intro_AndFact
-     | (Const (@{const_name "FactCollection"},_) $ _ $ _ $ _) =>
-         elim_FactCollection th |> apply3 (holrule f) |> intro_FactCollection
-     | (Const (@{const_name "Fact"},_) $ _ $ _) =>
-         elim_Fact th |> apsnd (holrule f) |> intro_Fact
-     | (Const (@{const_name "HOL.Trueprop"}, _) $ _) => f th
-     | (Const (@{const_name "Pure.imp"}, _) $ _ $ _) => f th
-     | (Const (@{const_name "NoFact"}, _)) => NoFact
-     | tm => raise TERM ("holrule", [tm])
-
-
-val thm_ParamTag = @{thm NuPrime.ParamTag}
+val thm_ParamTag = @{thm ParamTag}
 fun param_set_free_var_name ctx name thm =
   let
     val param_var as (_, param_ty) = prems_of thm |> hd |> dest_param |> dest_Var
@@ -372,8 +244,8 @@ val dest_procedure_c = perhaps (try dest_Trueprop_c)
   #> strip_binop_r_c @{const_name HOL.implies} #> last *)
   #> (fn ctm => dest_triop_c @{const_name "Function"} ctm
       handle TERM _ => dest_triop_c @{const_name "Procedure"} ctm)
-val dest_premise_tag  = dest_monop   @{const_name "NuPrime.Premise"} o perhaps (try dest_Trueprop)
-val dest_premise_tag_c= dest_monop_c @{const_name "NuPrime.Premise"} o perhaps (try dest_Trueprop_c)
+val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest_Trueprop)
+val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
 
 val vx = ("x",0) and va = ("'a",0)
 fun intro_param tm =
@@ -453,8 +325,8 @@ fun tr_topctx void_tail (Const (@{const_name NuTopCtx},_) $ S $ H)
       = Abs (name, dummyT, tr_topctx void_tail body)
   | tr_topctx void_tail (Const (@{const_name ExSet}, _) $ body)
       = Const (@{const_name ExSet}, dummyT) $ tr_topctx void_tail body
-  | tr_topctx void_tail (Const (@{const_name AdditionSet}, _) $ body $ P)
-      = Const (@{const_name AdditionSet}, dummyT) $ tr_topctx void_tail body $ P
+  | tr_topctx void_tail (Const (@{const_name Subjection}, _) $ body $ P)
+      = Const (@{const_name Subjection}, dummyT) $ tr_topctx void_tail body $ P
   | tr_topctx void_tail (Const ("_type_constraint_", ty) $ tm)
       = Const ("_type_constraint_", ty) $ tr_topctx void_tail tm
   | tr_topctx void_tail (tm as (Const (@{const_name Stack_Delimiter}, _) $ A $ B))
