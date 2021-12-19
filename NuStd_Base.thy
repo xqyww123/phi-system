@@ -801,8 +801,8 @@ lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF FieldIndex_here, simplifi
 proc i_load_n[\<nu>overload "\<up>:"]:
   \<open>a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>gt (xs ! i) \<tycolon> Y\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
-  requires [useful]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs"
-      and idx: "FieldIndex field_index Y X gt mp"
+  premises "i < length xs"
+  requires idx: "FieldIndex field_index Y X gt mp"
   obtain a' j where a: "a = (a' |+ j)" by (cases a)
   \<bullet> unfold a + \<up>: idx fold a
   finish
@@ -831,8 +831,8 @@ lemmas [ \<nu>overload "\<down>" ] = op_store[THEN mp, OF FieldIndex_here, simpl
 proc i_store_n[\<nu>overload "\<down>:"]:
   \<open>R\<heavy_comma> a \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> y \<tycolon> Y \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p a \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
-  requires [useful]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs"
-    and idx: "FieldIndex field_index Y X gt mp"
+  premises "i < length xs"
+  requires idx: "FieldIndex field_index Y X gt mp"
   obtain a' j where a: "a = (a' |+ j)" by (cases a) 
   \<bullet> unfold a \<rightarrow> y + y \<down>: idx fold a
   finish
@@ -848,35 +848,14 @@ bundle xx = Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp] split_paired_All[s
 
 proc times: \<open>R'\<heavy_comma> n \<tycolon> \<nat>['b::len]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H'\<close> \<longmapsto> \<open>\<exists>*x. (R x\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x) \<and>\<^sup>s P x n\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars R' H' R H"
-    and \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P\<close>
-    and [useful]: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P vars 0\<close>
-    and Body: \<open>\<forall>x i. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < n \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x i \<longrightarrow>
+  requires \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P\<close>
+  premises \<open>P vars 0\<close>
+  requires Body: \<open>\<forall>x i. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < n \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x i \<longrightarrow>
       \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> R x\<heavy_comma> i \<tycolon> \<nat>['b]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x \<longmapsto> \<exists>*x'. ((R x'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x') \<and>\<^sup>s P x' (Suc i))\<brangle>\<close>
   \<bullet> \<rightarrow> n \<open>0 \<tycolon> \<nat>['b]\<close>
   \<bullet> while var vars i in \<open>R vars\<close>, i heap \<open>H vars\<close> always \<open>i \<le> n \<and> P vars i\<close>
   \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket> \<medium_left_bracket> -- i Body i 1 + cast ie \<open>Suc i\<close> \<medium_right_bracket> drop
   finish
-
-fun fib :: "nat \<Rightarrow> nat" where
-  "fib 0 = 1" | "fib (Suc 0) = 1" | "fib (Suc (Suc n)) = fib n + fib (Suc n)"
-
-(* int fib (int i) { if (i \<le> 1) return 1; else return fib (i-2) + fib (i-1); } *)
-rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
-  \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> i 2 - Fib i 1 - Fib + \<medium_right_bracket>
-  \<bullet> goal
-  affirm by (cases i rule: fib.cases) auto
-  finish
-
-
-proc Fib2: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close>
-  \<bullet> \<rightarrow> i
-  \<bullet> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> 1
-  \<bullet> i times var y y' in y, y' \<open>\<lambda>i. y' = fib (Suc i) \<and> y = fib i\<close>
-  \<bullet> \<medium_left_bracket> drop \<rightarrow> y, y' y' y y' + \<medium_right_bracket> drop
-  finish
-
-\<nu>interface hhh = Fib
-\<nu>interface yyy = Fib2
 
 ML_file \<open>codegen/codegen.ML\<close>
 ML_file \<open>codegen/NuSys.ML\<close>

@@ -1759,31 +1759,36 @@ in
   (Parse.binding >> NuExTyp.set_simproc_cmd) *)
 
 val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
-val requires_statement = Scan.optional (Parse.$$$ "requires" |-- Parse.!!! statement1) [];
-val premises_statement = Scan.optional (Parse.$$$ "premises" |-- Parse.!!! statement1) [];
+val requires_statement = Parse.$$$ "requires" |-- Parse.!!! statement1;
+val premises_statement = Parse.$$$ "premises" |-- Parse.!!! statement1;
+val precond_statement = Scan.repeat ((premises_statement >> map (pair NuToplevel.Premise))
+                || (requires_statement >> map (pair NuToplevel.Requirement))) >> (flat o @{print});
 val requires_opt1 = Scan.option (Parse.$$$ "requires" |-- Parse.term);
+val where_statement = Scan.optional (Parse.$$$ "where" |--
+        Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
+val defines_statement = Scan.optional (Parse.$$$ "defines" |-- Parse.!!! statement1) [];
+val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
+           where_statement -- defines_statement  -- precond_statement;
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
-            -- (requires_statement -- premises_statement)) >>
-        (fn (((((b,arg),ret),fixes),includes),preconds) =>  
-            (begin_proc_cmd b arg ret fixes includes preconds)));
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- nu_statements) >>
+        (fn (((b,arg),ret),((((fixes,includes),lets),defs),preconds)) =>  
+            (begin_proc_cmd b arg ret fixes includes lets defs preconds)));
 
 val loop_variables = $$$ "var" |-- !!! vars;
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- loop_variables -- Parse.for_fixes
-            -- Scan.optional Parse_Spec.includes [] -- (requires_statement -- premises_statement)) >>
-        (fn ((((((b,arg),ret),vars),fixes),includes),preconds) =>  
-            (begin_rec_proc_cmd b arg ret (vars,fixes) includes preconds)));
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term
+        -- loop_variables -- nu_statements) >>
+        (fn ((((b,arg),ret),vars),((((fixes,includes),lets),defs),preconds)) =>  
+            (begin_rec_proc_cmd b arg ret (vars,fixes) includes lets defs preconds)));
 
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>\<nu>cast\<close> "begin a procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- option ($$$ "and" |-- Parse.term)
-            -- Parse.for_fixes -- Scan.optional Parse_Spec.includes []
-            -- (requires_statement -- premises_statement)) >>
-        (fn ((((((b,arg),ret),addtional_prop),fixes),includes),preconds) =>  
-            (begin_cast_cmd b arg ret addtional_prop fixes includes preconds)));
+    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>"
+            -- Parse.term -- option ($$$ "and" |-- Parse.term) -- nu_statements) >>
+        (fn ((((b,arg),ret),addtional_prop),((((fixes,includes),lets),defs),preconds)) =>
+            (begin_cast_cmd b arg ret addtional_prop fixes includes lets defs preconds)));
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>finish\<close> "Finish the procedure construction"
