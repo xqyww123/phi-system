@@ -2,31 +2,6 @@
 
 theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
   imports Main "HOL-Library.Monad_Syntax" NuHelpMath
-  abbrevs "<is>" = "\<^bold>i\<^bold>s"
-      and "as" = "\<^bold>a\<^bold>s"
-      and "<at>" = "\<^bold>a\<^bold>t"
-      and "<and>" = "\<^bold>a\<^bold>n\<^bold>d"
-      and "in" = "\<^bold>i\<^bold>n"
-      and "<with>" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"
-      and "<facts>" = "\<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s"
-      and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
-      and "<func>" = "\<^bold>f\<^bold>u\<^bold>n\<^bold>c"
-      and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
-      and ",," = "\<heavy_comma>"
-      and "<cast>" = "\<^bold>c\<^bold>a\<^bold>s\<^bold>t"
-      and "<conversion>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n"
-      and "<auto>" = "\<^bold>a\<^bold>u\<^bold>t\<^bold>o"
-      and "<construct>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t"
-      and "by" = "\<^bold>b\<^bold>y"
-      and "<simplify>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y"
-      and "<END>" = "\<^bold>E\<^bold>N\<^bold>D"
-      and "<heap>" = "\<^bold>h\<^bold>e\<^bold>a\<^bold>p"
-      and "<stack>" = "\<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k"
-      and "<dual>" = "\<^bold>d\<^bold>u\<^bold>a\<^bold>l"
-      and "<when>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>n"
-      and "<intro>" = "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o"
-      and "<dest>" = "\<^bold>d\<^bold>e\<^bold>s\<^bold>t"
-      and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
 begin
 
 text \<open>The fundamental theory for \<nu>-system\<close>
@@ -328,7 +303,15 @@ subsection \<open>Stack structure\<close>
 
 class stack = lrep
 
+text \<open>The \<^class>\<open>stack\<close> is an artificial constraint.
+  Though \<^class>\<open>stack\<close> is identical to \<^class>\<open>lrep\<close> in logic, most of types e.g. word, are only
+  instantiated to \<^class>\<open>lrep\<close> but no \<^class>\<open>stack\<close> deliberately, and only prod and void are
+  instantiated to stack by the instantiation (lrep,stack) :: stack and void::stack.
+  By this deliberate constraints, once a type of class stack, it must a recursive pair
+  ending with void.\<close>
+
 instantiation prod :: (lrep,stack) stack begin instance by standard end
+
 
 
 (* subsubsection \<open>Tag: End_of_Contextual_Stack\<close>

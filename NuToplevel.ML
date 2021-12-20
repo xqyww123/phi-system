@@ -349,8 +349,8 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         |> NuProcedure.define binding (
             th |> normlize_thm_of_names
                |> Simplifier.simplify lthy
-               |> repeate QuantExpansion.spec_retaining_name
-               |> repeate (fn th => th RS @{thm mp})
+               |> repeat QuantExpansion.spec_retaining_name
+               |> repeat (fn th => th RS @{thm mp})
             )
         |-> (fn th => fn lthy =>
               (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy

@@ -166,7 +166,7 @@ lemma [simp]:
   unfolding ceqable_memptr_def by simp
 definition ceq_memptr :: " memptr \<Rightarrow> memptr \<Rightarrow> bool" where [simp]: "ceq_memptr = (=)"
 instance proof
-  fix x y z :: " memptr" and h :: heap
+  fix x y z :: " memptr" and h :: "heap"
   show "ceqable h x y = ceqable h y x" by (cases x; cases y) auto
   show "ceqable h x x \<Longrightarrow> ceq x x" and "ceqable h x y \<Longrightarrow> ceq x y = ceq y x"
     and "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z" by auto+
@@ -336,7 +336,7 @@ definition ceq_tuple :: " 'a tuple \<Rightarrow> 'a tuple \<Rightarrow> bool " w
 lemma [simp]: "ceqable heap (Tuple a) (Tuple b) = ceqable heap a b" unfolding ceqable_tuple_def by simp
 lemma [simp]: "ceq (Tuple a) (Tuple b) = ceq a b" unfolding ceq_tuple_def by simp
 instance proof
-  fix x y z :: " 'a tuple" and h :: heap
+  fix x y z :: " 'a tuple" and h :: "heap"
   show "ceqable h x y = ceqable h y x" by (cases x; cases y) simp
   show "ceqable h x x \<Longrightarrow> ceq x x" by (cases x) auto
   show "ceqable h x y \<Longrightarrow> ceq x y = ceq y x" by (cases x; cases y) simp

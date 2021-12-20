@@ -3,7 +3,9 @@ structure TyCG_NuSys = struct val void = NuCG.T_nil end
 structure NuCG_NuSys = struct open NuCG infixr 6 <*> <%>
 
 (* Structural *)
-val op_dup_gen = pop (fn X => push X #> push X)
+fun idx_ssa [] X = X | idx_ssa [0] (X <*> _) = X | idx_ssa [0] X = X
+  | idx_ssa (i::l) (_ <*> R) = nth_ssa (i-1::l) R | idx_ssa (0::l) (X <*> _) = idx_ssa l X
+fun op_dup_gen idx = get_ssa (push o nth_ssa idx)
 val op_drop_gen = pop (K I)
 val op_let_gen = pop
 val op_local_value_gen = push
@@ -54,9 +56,9 @@ fun op_equal_gen (T as T_int _) = binop expr ("icmp eq " ^ tystr T ^ " ")
 
 
 (* Tuple & Index *)
-val index_here_gen = []
+val index_here_gen = []       ;       fun index_left_gen r = 0::r
 fun index_right_gen (i::r) = (i+1 :: r) | index_right_gen [] = [1]
-fun index_left_gen r = 0::r
+val index_tuple_gen = I
 
 
 (* Call *)

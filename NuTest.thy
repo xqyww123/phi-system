@@ -28,7 +28,7 @@ thm Fib_\<nu>compilation
 proc Fib2: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close>
   \<bullet> \<rightarrow> i
   \<bullet> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> 1
-  \<bullet> i times var y y' in y, y' \<open>\<lambda>i. y' = fib (Suc i) \<and> y = fib i\<close>
+  \<bullet> i times stack y, y' \<open>\<lambda>i. y' = fib (Suc i) \<and> y = fib i\<close>
   \<bullet> \<medium_left_bracket> drop \<rightarrow> y, y' y' y y' + \<medium_right_bracket> drop
   finish
 
@@ -48,7 +48,7 @@ proc bin_search: \<open>ptr \<tycolon> Pointer\<heavy_comma> len \<tycolon> \<na
   where ?index = "find_index (\<lambda>y. x \<le> y) xs"
   premises "length xs = len" and "sorted xs"
   \<bullet> \<rightarrow> ptr, len, x
-  \<bullet> len 0 while var h l in h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close> 
+  \<bullet> len 0 while stack h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close> 
   \<bullet> \<medium_left_bracket> -- h, l l h < \<medium_right_bracket>
   \<bullet> \<medium_left_bracket> -- h, l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket>
   \<bullet> goal affirm using \<nu> by (auto simp add: add1_le_eq find_index_sorted)
@@ -85,7 +85,7 @@ proc partition: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[
   premises \<open>length xs = n\<close> and \<open>0 < n\<close>
   note nth_list_update[simp] not_le[simp] perm_length[simp]
   \<bullet> -- ptr, n 1 - \<up> \<rightarrow> pivot
-  \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in j heap "ptr \<R_arr_tail> ys"
+  \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys stack j heap "ptr \<R_arr_tail> ys"
   \<bullet> \<open>\<lambda>i. j \<le> i \<and> ys <~~> xs \<and> (ys ! (n-1) = ?pivot) \<and>
     (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ?pivot) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> ?pivot < ys ! k)\<close> \<medium_left_bracket>
   \<bullet> \<rightarrow> j, i ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> j 1 + \<medium_right_bracket> \<medium_left_bracket> j \<medium_right_bracket> 

@@ -8,7 +8,7 @@ infix 0 MP MP_BY
 
 signature NU_BASICS = sig
   exception NDBG of thm
-  val repeate : ('a -> 'a) -> 'a -> 'a
+  val repeat : ('a -> 'a) -> 'a -> 'a
   val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
   val nu_bind_name : string
@@ -94,7 +94,7 @@ fun set_nu_fact th stat = stat
   |> Proof.set_facts [th]
   |> Proof.map_context (Proof_Context.put_thms false (nu_bind_name, SOME [th]));
 
-fun repeate f x = repeate f (f x) handle TERM _ => x | THM _ => x
+fun repeat f x = repeat f (f x) handle TERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
 val void_ty = Type(@{type_name "void"}, [])
@@ -289,9 +289,9 @@ fun normlize_thm_of_names th =
   Logic.strip_assums_concl #> perhaps (try dest_Trueprop) #> perhaps_try (dest_procedure #> #2)
   #> perhaps_try (dest_binop "NuPrime.Stack_Delimiter" #> #2)
   #> perhaps (try dest_RepSet) #> perhaps_try (dest_nuTy #> #2)
-  #> repeate (dest_binop "NuBasicAbstractors.NuRefine" #> #1)
-  #> repeate (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
-  #> repeate (dest_binop "NuBasicAbstractors.Schema" #> #1)
+  #> repeat (dest_binop "NuBasicAbstractors.NuRefine" #> #1)
+  #> repeat (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
+  #> repeat (dest_binop "NuBasicAbstractors.Schema" #> #1)
   #> strip_binop_r "NuLLReps.AutoFusion" #> length *)
 
 local

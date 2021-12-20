@@ -9,8 +9,8 @@ definition op_crash :: "('x::stack) \<longmapsto> ('y::stack)" where "op_crash _
 definition op_drop :: "('a::lrep) \<times> ('r::stack) \<longmapsto> 'r" where
   "op_drop x = (case x of (h,a,r) \<Rightarrow> Success (h,r))"
 
-definition op_dup :: "('a::lrep) \<times> ('r::stack) \<longmapsto> ('a \<times> 'a \<times> 'r)"
-  where "op_dup x = (case x of (h,a,r) \<Rightarrow> Success (h, a, a, r))"
+definition op_dup :: " ('r,'r,'x,'x) index \<Rightarrow> ('r::stack) \<longmapsto> ('x \<times> 'r)"
+  where "op_dup idx = (\<lambda>(h,r). Success (h, get_idx idx r, r))"
 
 definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<longmapsto> (('b \<times> 'a) \<times> 'r)"
   where "op_pair = (\<lambda>(h,a,b,r). Success (h,(b,a),r))"
@@ -107,8 +107,8 @@ definition op_set_tuple ::
 
 section \<open>Field Index\<close>
 
-definition index_enter_tup :: "(('a::field_list),('b::field_list),'x,'y) index \<Rightarrow> ('a tuple, 'b tuple, 'x, 'y) index"
-  where "index_enter_tup adr = (case adr of Index g m \<Rightarrow> Index (case_tuple g) (map_tuple o m))"
+definition index_tuple :: "(('a::field_list),('b::field_list),'x,'y) index \<Rightarrow> ('a tuple, 'b tuple, 'x, 'y) index"
+  where "index_tuple adr = (case adr of Index g m \<Rightarrow> Index (case_tuple g) (map_tuple o m))"
 
 section \<open>Memory & Pointer Operations\<close>
 

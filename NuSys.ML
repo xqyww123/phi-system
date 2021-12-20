@@ -292,7 +292,7 @@ fun rename_blk_var name meta =
 fun auto_construct ctx target sequent =
   let
     val sequent = 
-      (sequent RS Drule.infer_instantiate ctx [(("exp",0),target)] @{thm AutoConstruct})
+      (sequent RS Drule.infer_instantiate ctx [(("exp",0),target)] @{thm Make_by_proc})
           |> Goal.protect 1
           |> Nu_Reasoner.reason ctx
   in case sequent of SOME sequent =>

@@ -5,7 +5,7 @@ theory NuSys
   keywords
     "proc" "rec_proc" "\<nu>cast" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$"
-    "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" :: quasi_command
+    "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" "heap" "stack" :: quasi_command
   and "\<bullet>" "affirm" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>reasoner" "setup_\<nu>application_method" :: thy_decl % "ML"
   and "\<nu>interface" "\<nu>export_llvm" "\<nu>overloads" :: thy_decl
@@ -19,6 +19,33 @@ abbrevs
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
   and "<param>" = "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m"
   and "<label>" = "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l"
+  and "<index>" = "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x"
+      and "as" = "\<^bold>a\<^bold>s"
+      and "<at>" = "\<^bold>a\<^bold>t"
+      and "<and>" = "\<^bold>a\<^bold>n\<^bold>d"
+      and "in" = "\<^bold>i\<^bold>n"
+      and "<with>" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"
+      and "<facts>" = "\<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s"
+      and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
+      and "<func>" = "\<^bold>f\<^bold>u\<^bold>n\<^bold>c"
+      and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
+      and ",," = "\<heavy_comma>"
+      and "<cast>" = "\<^bold>c\<^bold>a\<^bold>s\<^bold>t"
+      and "<make>" = "\<^bold>m\<^bold>a\<^bold>k\<^bold>e"
+      and "<auto>" = "\<^bold>a\<^bold>u\<^bold>t\<^bold>o"
+      and "<construct>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t"
+      and "<by>" = "\<^bold>b\<^bold>y"
+      and "<simplify>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y"
+      and "<heap>" = "\<^bold>h\<^bold>e\<^bold>a\<^bold>p"
+      and "<stack>" = "\<^bold>s\<^bold>t\<^bold>a\<^bold>c\<^bold>k"
+      and "<dual>" = "\<^bold>d\<^bold>u\<^bold>a\<^bold>l"
+      and "<when>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>n"
+      and "<intro>" = "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o"
+      and "<dest>" = "\<^bold>d\<^bold>e\<^bold>s\<^bold>t"
+      and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
+  and "<get>" = "\<^bold>g\<^bold>e\<^bold>t"
+  and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
+  and "<field>" = "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d"
 begin
 
 section \<open>Prelude of the Prelude\<close>
@@ -415,6 +442,9 @@ lemma [cong]: "\<^bold>( A \<^bold>) = \<^bold>( A \<^bold>)" ..
 lemma [\<nu>intro 1000]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t \<^bold>( A \<^bold>) \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Implicit_Protector_def .
 lemma [\<nu>intro 1000]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> \<^bold>( B \<^bold>) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P" unfolding Implicit_Protector_def .
 
+definition Protector :: " 'a \<Rightarrow> 'a " ("\<^bold>'(\<^bold>'( _ \<^bold>')\<^bold>')") where "Protector x = x"
+
+lemma Protector_I: "P \<Longrightarrow> \<^bold>(\<^bold>(P\<^bold>)\<^bold>)" unfolding Protector_def .
 
 subsection \<open>Simplifier\<close>
 
@@ -513,7 +543,7 @@ lemma [simp]: "x = y" for x :: void by (cases x; cases y) fast
 
 subsubsection \<open>Settings\<close>
 
-instantiation void :: stack begin
+instantiation void :: "stack" begin
 definition llty_void :: "void itself \<Rightarrow> llty" where "llty_void _ = llty_nil"
 definition deepize_void :: "void \<Rightarrow> deep_model" where "deepize_void _ = DM_none"
 instance by standard auto 
@@ -1481,22 +1511,17 @@ lemma NuAddition_anti_auto: "(P \<Longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^
 lemma recursive_func_help_1: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> x \<tycolon> A \<and>\<^sup>\<nu>\<^sub>a\<^sub>u\<^sub>t\<^sub>o P \<longmapsto> B\<brangle> \<Longrightarrow> P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> x \<tycolon> A \<longmapsto> B \<brangle>"
   by (simp add: Premise_def)
 *)
+
 subsection \<open>Auto construct & destruct\<close>
 
-definition AutoConstruct :: " 'exp \<Rightarrow> ('a::lrep \<longmapsto> 'b::lrep) \<Rightarrow> (heap \<times> 'a) set \<Rightarrow> (heap \<times> 'b) set \<Rightarrow> bool "("\<^bold>c\<^bold>o\<^bold>n\<^bold>s\<^bold>t\<^bold>r\<^bold>u\<^bold>c\<^bold>t _/ \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<blangle>_/ \<longmapsto> _ \<brangle>)" [20,101,10,10] 100)
-  where [\<nu>def]:"AutoConstruct exp f S T \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>"
+definition MakeTag ::" 'exp \<Rightarrow> 'x \<Rightarrow> 'x " ("(\<^bold>m\<^bold>a\<^bold>k\<^bold>e _/ \<^bold>b\<^bold>y _)" [40,10] 9) where [\<nu>def]:"MakeTag exp x = x"
 
-lemma AutoConstruct: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> AutoConstruct exp f S T \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)" for exp :: "'exp"
-  unfolding AutoConstruct_def using apply_proc .
-
-translations "CONST AutoConstruct exp f (s \<tycolon> S) T" \<rightleftharpoons> "CONST AutoConstruct exp f \<tort_lbrace>s \<tycolon> S\<tort_rbrace> T"
-  "CONST AutoConstruct exp f S (t \<tycolon> T)" \<rightleftharpoons> "CONST AutoConstruct exp f S \<tort_lbrace>t \<tycolon> T\<tort_rbrace>"
-
-(* lemma [simp]: "(Inhabited A \<and> Inhabited B) \<or> (Inhabited A' \<and> Inhabited B')
-  \<Longrightarrow> (A\<heavy_comma>B) = (A'\<heavy_comma>B') \<longleftrightarrow> A = A' \<and> B = B'" unfolding Stack_Delimiter_def Inhabited_def by (auto simp add: times_eq_iff) 
-lemma  [elim]: "(A\<heavy_comma>B) = (A'\<heavy_comma>B') \<Longrightarrow> (A = {} \<or> B = {} \<Longrightarrow> A' = {} \<or> B' = {} \<Longrightarrow> C) \<Longrightarrow> (A = A' \<Longrightarrow> B = B' \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Stack_Delimiter_def by (auto simp add: times_eq_iff)
-*)
+lemma Make_by_proc:
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
+      \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e exp \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle>
+      \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
+  for exp :: "'exp"
+  unfolding MakeTag_def using apply_proc .
 
 
 subsection \<open>Index for Shallow Representation\<close>
@@ -1505,6 +1530,8 @@ text \<open>Indexes provide the function to access and map the addressed part in
   It is achieved by nested composition of address functions. For example "get_at (address_L (address_R address_here))"
   returns @{term b} for the pattern @{term "((a,b),c)"}, and "map_at (address_L (address_R address_here)) f"
   maps a @{term "((a,b),c)"} to @{term "((a, f b),c)"}\<close>
+
+subsubsection \<open>Definitions\<close>
 
 named_theorems \<nu>index_def
 
@@ -1525,6 +1552,13 @@ definition AdrMap :: " ('a,'b,'x,'y) index \<Rightarrow> 'x set \<Rightarrow> 'a
     (\<forall>f. (\<forall>a. a \<in> X \<longrightarrow> f a \<in> Y) \<longrightarrow> (\<forall>a. a \<in> A \<longrightarrow> map_idx idx f  a \<in> B))"
 declare Map_def[\<nu>index_def]
 
+definition FieldIndex
+    :: " ('a,'a,'ax,'ax) index \<Rightarrow> ('ax::lrep,'bx) \<nu> \<Rightarrow> ('a::lrep,'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'bx) \<Rightarrow> (('bx \<Rightarrow> 'bx) \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow>bool"
+    ("(2\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _/ \<^bold>@ _ \<brangle>/ \<^bold>g\<^bold>e\<^bold>t _/ \<^bold>m\<^bold>a\<^bold>p _)" [101,4,4,30,30] 29)
+  where [\<nu>index_def]: "FieldIndex idx X A gt mp
+      \<longleftrightarrow> (\<forall>a f. \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> \<tort_lbrace>gt a \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>a \<tycolon> A\<tort_rbrace> \<longmapsto> \<tort_lbrace>f (gt a) \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>mp f a \<tycolon> A\<tort_rbrace> \<brangle>)"
+
+
 translations "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> x \<tycolon> X \<^bold>@ A \<brangle>" \<rightleftharpoons> "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<^bold>@ A \<brangle>"
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle>" \<rightleftharpoons> "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ \<tort_lbrace> a \<tycolon> A\<tort_rbrace> \<brangle>"
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ B \<brangle>" \<rightleftharpoons> "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ \<tort_lbrace> a \<tycolon> A\<tort_rbrace>  \<longmapsto> Y \<^bold>@ B \<brangle>"
@@ -1533,25 +1567,147 @@ translations "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> x \<t
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A  \<longmapsto> Y \<^bold>@ \<tort_lbrace>b  \<tycolon> B\<tort_rbrace> \<brangle>"
 
 
-lemma index_here_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle>"
-  unfolding \<nu>index_def  index_here_def by auto
-lemma index_here_mapper[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<brangle>"
-  unfolding \<nu>index_def  index_here_def by auto
-lemma [\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ (a,r) \<tycolon> (A \<cross_product> R) \<brangle>"
+subsubsection \<open>Abstraction theorems\<close>
+
+lemma index_here_getter[\<nu>intro]:
+  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle>"
+  unfolding \<nu>index_def  index_here_def by simp
+lemma index_here_mapper[\<nu>intro]:
+  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<brangle>"
+  unfolding \<nu>index_def  index_here_def by simp
+lemma index_here_func[\<nu>intro]:
+  "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t id \<^bold>m\<^bold>a\<^bold>p id"
+  unfolding \<nu>index_def  index_here_def by simp
+
+
+lemma index_left_getter[\<nu>intro]:
+  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ R\<heavy_comma> A \<brangle>"
   unfolding \<nu>index_def index_left_def by (cases idx) (simp add: nu_exps)
-lemma [\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (l,a) \<tycolon> (L \<cross_product> A) \<brangle>"
-  unfolding \<nu>index_def index_right_def by (cases f) (simp add: nu_exps)
-lemma index_stack_getter[\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> R) \<brangle>"
-  unfolding \<nu>index_def index_right_def by (cases f) (simp add: nu_exps)
+lemma index_left_mapper[\<nu>intro]:
+  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ R\<heavy_comma> A \<longmapsto> Y \<^bold>@ R\<heavy_comma> B \<brangle>"
+  unfolding \<nu>index_def index_left_def by (cases idx) (simp add: nu_exps)
+
 lemma [\<nu>intro]:
-    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ (a,r) \<tycolon> (A \<cross_product> R) \<longmapsto> Y \<^bold>@ (b,r) \<tycolon> (B \<cross_product> R) \<brangle>"
+  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ (a,r) \<tycolon> (A \<cross_product> R) \<brangle>"
   unfolding \<nu>index_def index_left_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ (a,r) \<tycolon> (A \<cross_product> R) \<longmapsto> Y \<^bold>@ (b,r) \<tycolon> (B \<cross_product> R) \<brangle>"
+  unfolding \<nu>index_def index_left_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
+    \<Longrightarrow> \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ A \<cross_product> R \<brangle> \<^bold>g\<^bold>e\<^bold>t g o fst \<^bold>m\<^bold>a\<^bold>p apfst o m"
+  unfolding FieldIndex_def \<nu>index_def index_left_def by (cases idx) (simp add: nu_exps)
+
+lemma index_right_getter[\<nu>intro]:
+  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> R) \<brangle>"
+  unfolding \<nu>index_def index_right_def by (cases f) (simp add: nu_exps)
+lemma index_right_mapper[\<nu>intro]:
+    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> R) \<longmapsto> Y \<^bold>@ (B\<heavy_comma> R) \<brangle>"
+  unfolding \<nu>index_def index_right_def by (cases f) (simp add: nu_exps)
+
+lemma [\<nu>intro]:
+  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (l,a) \<tycolon> (L \<cross_product> A) \<brangle>"
+  unfolding \<nu>index_def index_right_def by (cases f) (simp add: nu_exps)
 lemma [\<nu>intro]:
     "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (l,a) \<tycolon> (L \<cross_product> A) \<longmapsto> Y \<^bold>@ (l,b) \<tycolon> (L \<cross_product> B) \<brangle>"
   unfolding \<nu>index_def index_right_def by (cases idx) (simp add: nu_exps)
-lemma index_stack_mapper[\<nu>intro]:
-    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> R) \<longmapsto> Y \<^bold>@ (B\<heavy_comma> R) \<brangle>"
-  unfolding \<nu>index_def index_right_def by (cases f) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
+    \<Longrightarrow> \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ R \<cross_product> A \<brangle> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
+  unfolding FieldIndex_def \<nu>index_def index_right_def by (cases idx) (simp add: nu_exps)
+
+subsubsection \<open>Constructors\<close>
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat) \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_here_def by simp
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat) \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_here_def by simp
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e [] \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_here_def by simp
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e [] \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_here_def by simp
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e [(0::nat)] \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_here_def by simp
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e [(0::nat)] \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_here_def by simp
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ A\<heavy_comma> T \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ A\<heavy_comma> T \<longmapsto> Y \<^bold>@ B\<heavy_comma> T \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ A\<heavy_comma> T \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ A\<heavy_comma> T \<longmapsto> Y \<^bold>@ B\<heavy_comma> T \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (t, a) \<tycolon> (T \<cross_product> A) \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (t,a) \<tycolon> (T \<cross_product> A) \<longmapsto> Y \<^bold>@ (t,b) \<tycolon> (T \<cross_product> B) \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
+    \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ R \<cross_product> A \<brangle> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
+  unfolding MakeTag_def FieldIndex_def \<nu>index_def index_right_def
+  by (cases idx) (simp add: nu_exps)
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (t, a) \<tycolon> (T \<cross_product> A) \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (t,a) \<tycolon> (T \<cross_product> A) \<longmapsto> Y \<^bold>@ (t,b) \<tycolon> (T \<cross_product> B) \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
+    \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ R \<cross_product> A \<brangle> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
+  unfolding MakeTag_def FieldIndex_def \<nu>index_def index_right_def
+  by (cases idx) (simp add: nu_exps)
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ L\<heavy_comma> A \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_left_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ T\<heavy_comma> A \<longmapsto> Y \<^bold>@ T\<heavy_comma> B \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_left_def by (cases idx) (simp add: nu_exps)
+
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ (a,t) \<tycolon> (A \<cross_product> L) \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_left_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B \<brangle> \<Longrightarrow>
+   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ (a,t) \<tycolon> (A \<cross_product> L) \<longmapsto> Y \<^bold>@ (b,t) \<tycolon> (B \<cross_product> L) \<brangle>"
+  unfolding \<nu>index_def  MakeTag_def index_left_def by (cases idx) (simp add: nu_exps)
+lemma [\<nu>intro]:
+  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
+    \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ A \<cross_product> R \<brangle> \<^bold>g\<^bold>e\<^bold>t g o fst \<^bold>m\<^bold>a\<^bold>p apfst o m"
+  unfolding FieldIndex_def \<nu>index_def index_left_def MakeTag_def
+  by (cases idx) (simp add: nu_exps)
+
 
 (*
 subsection \<open>Register\<close>
@@ -2038,14 +2194,25 @@ lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by
 ML_file_debug \<open>library/variables_tag.ML\<close>
 
 \<nu>processor vars_by_pattern 110 \<open>Variant_Cast vars S H S' H' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
-let open Parse Scan NuHelp NuBasics in
-  ($$$ "var" |-- list1 params -- option ($$$ "in" |-- list1 term) -- option ($$$ "heap" |-- list1 term) -- Scan.option ($$$ "always" |-- term))
-    >> (fn ((((vars, stack_schema), heap_schema)), always) => fn _ =>
-      (NuVariablesTag.variables_tag_pattern_match (flat vars) stack_schema heap_schema always ctx meta |> @{print}, ctx))
-||
-  (list1 term -- Scan.option ($$$ "always" |-- term) >> (fn (vars, always) => fn _ =>
-      (NuVariablesTag.variables_tag_terms vars always ctx meta, ctx)) )
-end\<close>
+let open Parse Scan NuHelp NuBasics 
+  fun pattern_match ((((vars, stack_schema), heap_schema)), always) _ =
+    (NuVariablesTag.variables_tag_pattern_match vars stack_schema heap_schema always ctx meta, ctx)
+  fun var_term (vars, always) _ =
+    (NuVariablesTag.variables_tag_terms vars always ctx meta, ctx)
+  val none = Scan.succeed []
+  val params = (list Parse.params) >> flat
+  val syn_pattern_match =
+    ($$$ "var" |-- params -- optional ($$$ "stack" |-- list1 term) [] -- optional ($$$ "heap" |-- list1 term) []
+        -- option ($$$ "always" |-- term))
+    >> (fn (v as ((((_, ssch), hsch)), _)) => if null ssch andalso null hsch then fail () else v)
+    >> pattern_match
+  val syn_nonvar =
+    (optional ($$$ "stack" |-- params) [] -- optional ($$$ "heap" |-- params) [] -- option ($$$ "always" |-- term))
+    >> apfst (fn (svars,hvars) =>
+        ((svars @ hvars, map (Binding.name_of o #1) svars), map (Binding.name_of o #1) hvars))
+    >> pattern_match
+  val syn_var_term = ($$$ "var" |-- list1 term -- Scan.option ($$$ "always" |-- term)) >> var_term
+in syn_pattern_match || syn_var_term || syn_nonvar end\<close>
 
 subsection \<open>Auto Reasoners\<close>
 

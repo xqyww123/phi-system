@@ -1,7 +1,7 @@
 signature NU_VARIABLES_TAG = sig
   val variables_tag_terms : string list -> string option -> Proof.context -> thm -> thm
   val variables_tag_pattern_match : (binding * string option * mixfix) list
-    -> string list option -> string list option -> string option -> Proof.context -> thm -> thm
+    -> string list -> string list -> string option -> Proof.context -> thm -> thm
 end
 structure NuVariablesTag : NU_VARIABLES_TAG = struct
 open NuHelp NuBasics QuantExpansion
@@ -84,12 +84,8 @@ fun variables_tag_pattern_match raw_vars stack_schema heap_schema always ctxt se
 
     fun prep_S ctxt (S,H) =
       let
-        val stack_schema = rev (
-          case stack_schema of SOME sch => map (Syntax.parse_term ctxt) sch
-            | _ => [])
-        val heap_schema = rev(
-          case heap_schema of SOME sch => map (Syntax.parse_term ctxt) sch
-            | _ => [])
+        val stack_schema = rev (map (Syntax.parse_term ctxt) stack_schema)
+        val heap_schema = rev (map (Syntax.parse_term ctxt) heap_schema)
 
         val (stack,heap) =
             (strip_binop_l @{const_name Stack_Delimiter} S,

@@ -24,9 +24,9 @@ structure NuApply : NU_APPLICATION = struct
 open NuHelp NuBasics
 
 val expand_appliant = 
-  repeate (fn th => th RS @{thm spec}) #>
-  repeate (fn th => th RS @{thm mp}) #>
-  repeate (fn th => th RS @{thm spec}) #>
+  repeat (fn th => th RS @{thm spec}) #>
+  repeat (fn th => th RS @{thm mp}) #>
+  repeat (fn th => th RS @{thm spec}) #>
   perhaps (try (fn th => th RS @{thm Intro_D})) #> (*normalize the cast rules*)
   perhaps (try (fn th => th RS @{thm Dest_D}))
 
