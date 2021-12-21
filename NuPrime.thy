@@ -128,9 +128,6 @@ datatype deep_model = DM_int nat nat | DM_pointer "nat memaddr" | DM_fusion deep
 subsection \<open>Memory & Heap\<close>
 
 datatype resource_key = MemAddress "nat memaddr" | ChainDB_key nat
-  \<comment> \<open>The write operation on address `addr` requires owning of resource `MemAddress addr`,
-    while the dispose of that memory on `addr` requires both owning of resource `MemAddress addr`
-      and `Dispose (MemAddress addr)`\<close>
 
 lemma resource_key_forall: "All P \<longleftrightarrow> (\<forall>addr. P (MemAddress addr)) \<and> (\<forall>n. P (ChainDB_key n))" by (metis resource_key.exhaust)
 lemma resource_key_exists: "Ex P \<longleftrightarrow> (\<exists>addr. P (MemAddress addr)) \<or> (\<exists>n. P (ChainDB_key n))" by (metis resource_key.exhaust)

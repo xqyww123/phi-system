@@ -439,8 +439,7 @@ declare op_if_def[\<nu>instr]
 lemma if_\<nu>app:
   "(cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> X \<longmapsto> Y\<^sub>T \<brangle>)
     \<longrightarrow> (\<not> cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> X \<longmapsto> Y\<^sub>F \<brangle>)
-    \<longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>b\<^bold>r\<^bold>a\<^bold>n\<^bold>c\<^bold>h] Y : (if cond then Y\<^sub>T else Y\<^sub>F)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if TYPE('y::stack) branch_true branch_false \<blangle> X \<heavy_comma>^ cond \<tycolon> \<bool> \<longmapsto> Y \<brangle>"
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if TYPE('y::stack) branch_true branch_false \<blangle> X \<heavy_comma>^ cond \<tycolon> \<bool> \<longmapsto> (if cond then Y\<^sub>T else Y\<^sub>F) \<brangle>"
   unfolding \<nu>def op_if_def by (auto simp add: nu_exps)
 
 (* text \<open>Despite the feasibility of divergence of \<nu>-types in the branch, i.e.
