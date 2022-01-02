@@ -39,6 +39,12 @@ inductive SemDoWhile :: "('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> hea
 | "f s = Fail \<Longrightarrow> SemDoWhile f s Fail"
 | "f s = Success (h,1,r) \<Longrightarrow> SemDoWhile f (h,r) s'' \<Longrightarrow> SemDoWhile f s s''"
 
+lemma "\<nexists> y. SemDoWhile (\<lambda>(h,r). Success (h,1,r)) (h,r) y"
+  apply rule apply (elim exE) subgoal for y 
+    apply (induct "(\<lambda>(h, r). Success (h, (1::1 word), (r::'a)))" "(h, r)" y rule: SemDoWhile.induct)
+       apply simp_all
+    done done
+
 definition op_do_while :: " 'r itself \<Rightarrow> ('r \<longmapsto> 1 word \<times> 'r) \<Rightarrow> 'r \<longmapsto> 'r" where
   "op_do_while _ f s = (if (\<exists>y. SemDoWhile f s y) then The (SemDoWhile f s) else PartialCorrect)"
 
@@ -46,11 +52,8 @@ inductive SemRec :: "(('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y))
   SemRec_I0: "(\<And>g. F g x = y) \<Longrightarrow> SemRec F x y"
 | SemRec_IS: "SemRec (F o F) x y \<Longrightarrow> SemRec F x y"
 
-definition op_recursion' :: "(('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y)) \<Rightarrow> 'x \<longmapsto> 'y"
-  where "op_recursion' F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
-
-definition op_recursion :: "uniq_id \<Rightarrow> 'x itself \<Rightarrow> 'y itself \<Rightarrow> (('x \<longmapsto>\<^sub>f 'y) \<Rightarrow> ('x \<longmapsto> 'y)) \<Rightarrow> 'x \<longmapsto>\<^sub>f 'y"
-  where "op_recursion _ _ _ F = func (op_recursion' (F o func))"
+definition op_recursion :: "uniq_id \<Rightarrow> 'x itself \<Rightarrow> 'y itself \<Rightarrow> (('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y)) \<Rightarrow> 'x \<longmapsto> 'y"
+  where "op_recursion _ _ _ F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
 section \<open>Arithmetic instructions\<close>
 
@@ -118,7 +121,7 @@ definition op_shift_pointer :: "'y::lrep itself \<Rightarrow> size_t word \<time
 
 definition "heap_assignN n v seg heap = (\<lambda>key. case key of MemAddress (seg' |+ ofs') \<Rightarrow>
       if seg' = seg \<and> ofs' < n then v else
-      if seg' = seg \<and> ofs' = n then Some DM_none else heap key | _ \<Rightarrow> heap key)"
+      if seg' = seg \<and> ofs' = n then Some DM_void else heap key | _ \<Rightarrow> heap key)"
 
 definition op_alloc :: "('x::{zero,field}) itself \<Rightarrow> size_t word \<times> ('r::stack) \<longmapsto> memptr \<times>'r"
   where "op_alloc _ s = (case s of (heap,n,r) \<Rightarrow>  let seg = malloc heap in

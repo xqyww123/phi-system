@@ -61,7 +61,7 @@ fun mk_let flag_push_back names sequent ctxt =
                     ctxt
 
     (*the successive sequent*)
-    val (sequent,ctxt) = start_proc blk_name arg_nu ctxt
+    val (sequent,ctxt) = start_proc NONE blk_name arg_nu ctxt
   in
     if flag_push_back
     then fold_rev (fn app => apfst (apply_proc_naive app) #-> accept_proc)

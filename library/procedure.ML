@@ -73,8 +73,7 @@ fun add_interface_command ((name,const),tys) thy =
     val const = Syntax.read_term_global thy const |> prep_const
     val ty = case fastype_of const
                of Type ("fun", [ty, _ ]) => ty
-                | Type (@{type_name func}, [ty, _ ]) => ty
-                | ty => raise TYPE ("bad type: neither a procedure nor a function", [ty], [const])
+                | ty => raise TYPE ("bad type: not a procedure", [ty], [const])
     val ty = HOLogic.strip_tupleT ty |> List.last
     val const = if is_TFree ty orelse is_TVar ty
                 then Term.subst_atomic_types [(ty, @{typ void})] const (*set tail to void*)
@@ -147,10 +146,7 @@ fun define (binding,attrs) proc_th lthy =
     val proc_binding = Binding.suffix_name app_suffix binding
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
-    fun rename def proc_th =
-          (proc_th RS (def RS @{thm rename_func}))
-      handle THM _ =>
-          (proc_th RS (def RS @{thm rename_proc}))
+    fun rename def proc_th = proc_th RS (def RS @{thm rename_proc})
 
     val (lthy, proc_th) =
       if Binding.is_empty binding then (lthy, proc_th)

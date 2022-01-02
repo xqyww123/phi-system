@@ -79,6 +79,9 @@ signature NU_BASICS = sig
   val intro_param : cterm -> thm
   val intro_param_name : string -> thm
 
+  val default_ty_R : typ
+  val tail_stack_ty : typ -> typ -> typ
+
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
   (* val auto_fusion_arity : term -> int *)
 
@@ -237,13 +240,11 @@ fun param_set_free_var_name ctx name thm =
 val dest_procedure   = perhaps (try dest_Trueprop)
   (* #> strip_binder @{const_name All} #> #2
   #> strip_binop_r @{const_name HOL.implies} #> last *)
-  #> (fn tm => dest_triop @{const_name "Function"} tm
-      handle TERM _ => dest_triop @{const_name "Procedure"} tm)
+  #> dest_triop @{const_name "Procedure"}
 val dest_procedure_c = perhaps (try dest_Trueprop_c)
   (* #> strip_binder_c @{const_name All} #> #2
   #> strip_binop_r_c @{const_name HOL.implies} #> last *)
-  #> (fn ctm => dest_triop_c @{const_name "Function"} ctm
-      handle TERM _ => dest_triop_c @{const_name "Procedure"} ctm)
+  #> dest_triop_c @{const_name "Procedure"}
 val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest_Trueprop)
 val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
 
@@ -293,6 +294,14 @@ fun normlize_thm_of_names th =
   #> repeat (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
   #> repeat (dest_binop "NuBasicAbstractors.Schema" #> #1)
   #> strip_binop_r "NuLLReps.AutoFusion" #> length *)
+
+(*default type remander*)
+val default_ty_R = TFree ("'\<RR>", [@{class "stack"}])
+(*translate tail of a stack type to `ty_R`, if it ends with void*)
+fun tail_stack_ty ty_R (Type (@{type_name prod}, [a, b])) =
+      Type (@{type_name prod}, [a, tail_stack_ty ty_R a])
+  | tail_stack_ty ty_R (Type (@{type_name void}, _)) = ty_R
+  | tail_stack_ty ty_R ty = ty
 
 local
 fun is_free_var' tm = is_Free tm orelse is_Var tm

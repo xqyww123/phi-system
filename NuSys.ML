@@ -43,7 +43,7 @@ signature NU_SYS = sig
   val set_param_cmd : Proof.context -> string -> thm -> thm
   val set_label : string -> thm -> thm
 
-  val start_proc : string (*blk name*) -> cterm -> Proof.context -> thm * Proof.context
+  val start_proc : typ option -> string (*blk name*) -> cterm -> Proof.context -> thm * Proof.context
   val rename_blk_var : string -> thm -> cterm (*renamed block*) * thm
         (* current old_name reulst in ...
         * ---------------------------------
@@ -246,17 +246,21 @@ fun finish_proc cc sequent =
       |> (fn th => th COMP @{thm reassemble_proc_final})
   end
 
-fun start_proc blk_name arg_nuTy ctx =
+
+fun start_proc ty_R blk_name arg_nuTy ctx =
   let
+    val ty_R = the_default default_ty_R ty_R
     val ty_a = (case typ_of_cterm arg_nuTy
                    of Type ("Set.set", [Type (@{type_name prod}, [_, ty])]) => ty
                     | _ => raise Fail "start_proc - argTy - not a set")
-    val ([blk_name, H],ctx) = Variable.add_fixes [blk_name, "\<HH>"] ctx
-    val stat_var = Free (blk_name, mk_stateT ty_a) 
+    val ([blk_name, RR],ctx) = Variable.add_fixes [blk_name, "\<RR>"] ctx
+    val stat_var = Free (blk_name, mk_stateT (tail_stack_ty ty_R ty_a))
     val ctx = Variable.declare_constraints stat_var ctx
     val init = Const(@{const_name CurrentConstruction},
-                  fastype_of stat_var --> @{typ "heap set"} --> typ_of_cterm arg_nuTy --> boolT)
-               $ stat_var $ Free (H, @{typ "heap set"})
+                  fastype_of stat_var --> @{typ "(heap \<times> stack) set"}
+                                      --> typ_of_cterm arg_nuTy
+                                      --> boolT)
+               $ stat_var $ Free (RR, @{typ "(heap \<times> stack) set"})
     val init = Thm.apply @{cterm Trueprop} (Thm.apply (Thm.cterm_of ctx init) arg_nuTy)
     val ([init],ctx) = Assumption.add_assms
           (fn _ => fn [cc] => (finish_proc cc, I)) [init] ctx

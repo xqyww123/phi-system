@@ -180,7 +180,7 @@ fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 fun intro_reasoner rule =
   {name = @{term \<nu>Intro_Rule} $ Thm.prop_of rule,
    pattern = [Thm.concl_of rule],
-   tactic = (fn ctx => HEADGOAL (Tactic.resolve0_tac [rule]))}
+   tactic = (fn ctx => HEADGOAL (Tactic.resolve_tac ctx [rule]))}
 fun elim_reasoner rule =
   {name = @{term \<nu>Elim_Rule} $ Thm.prop_of rule,
    pattern = [Thm.major_prem_of rule],

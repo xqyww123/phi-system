@@ -26,7 +26,7 @@ fun raw_auto ctxt =
 fun premise_tac ctxt th =
   if Config.get ctxt Nu_Reasoner.auto_level >= 2 andalso
      can (major_prem_of #> dest_Trueprop #> dest_premise_tag) th
-  then head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt THEN print_dbg "2222")))) th
+  then head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt)))) th
   else Seq.empty
 
 
