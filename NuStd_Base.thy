@@ -313,8 +313,15 @@ theorem drop_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_drop :: 'x::lre
   unfolding \<nu>def op_drop_def by (auto simp add: nu_exps)
 
 subsubsection \<open>duplication\<close>
-term op_dup
+
 declare op_dup_def[\<nu>instr]
+
+lemma dup_\<nu>app:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_dup :: 'x::lrep \<times> 'r::stack \<longmapsto> 'x \<times> 'x \<times> 'r) \<blangle> VAL X \<longmapsto> VAL X \<heavy_asterisk> VAL X\<brangle>"
+  for X :: "'x::lrep set"
+  unfolding \<nu>def op_dup_def by (simp add: nu_exps pair_forall)
+
+(*term op_dup
 lemma bring:
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ R \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_dup idx :: 'r::stack \<longmapsto> 'x::lrep \<times> 'r) \<blangle> R \<longmapsto> R\<heavy_asterisk> X\<brangle>"
   for X :: "'x::lrep set" and R :: "'r2::stack set"
@@ -322,7 +329,7 @@ lemma bring:
 
 lemmas "&_\<nu>app" = bring
 lemmas dup_\<nu>app = bring[OF index_left_getter, OF index_here_getter]
-
+*)
 
 subsubsection \<open>pair & de-pair\<close>
 
@@ -359,9 +366,9 @@ lemma op_local_value: "v \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<
 
 ML_file "library/local_value.ML"
 
-\<nu>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (R \<heavy_asterisk> VAL x \<tycolon> X)\<close> \<open>let open Parse in
+\<nu>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<close> \<open>let open Parse in
   fn ctx => fn sequent => (($$$ "\<rightarrow>" || $$$ "--") -- list1 binding) >> (fn (keyword,idts) => fn _ =>
-    Local_Value.mk_let (keyword = "--") (rev idts |> @{print}) sequent ctx
+    Local_Value.mk_let (keyword = "--") (rev idts) sequent ctx
 ) end\<close>
 
 
@@ -500,14 +507,11 @@ lemma do_while_\<nu>app:
 
 subsubsection \<open>while\<close>
 
-proc while: \<open>X'\<close> \<longmapsto> \<open>\<exists>* x. X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x\<close>
+proc while: \<open>X'\<close> :: "'s::stack" \<longmapsto> \<open>\<exists>* x. X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars X' X"
     and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<brangle>"
     and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<brangle>"
-  \<bullet> Cond
-  \<bullet> if
-  \<bullet> \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket>
-  \<bullet> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
+  \<bullet> Cond if \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
   finish
 
 
@@ -904,14 +908,16 @@ declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp] split_paired_All[simp]
 
 bundle xx = Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp] split_paired_All[simp]
 
-proc times: \<open>R'\<heavy_asterisk> n \<tycolon> \<nat>['b::len]\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H'\<close> \<longmapsto> \<open>\<exists>*x. (R x\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x) \<and>\<^sup>s P x n\<close>
-  requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars R' H' R H"
+proc times: \<open>R' \<heavy_asterisk> n \<tycolon> \<nat>['b::len]\<close> \<longmapsto> \<open>\<exists>*x. R x \<^bold>s\<^bold>u\<^bold>b\<^bold>j P x n\<close>
+  requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars R' R"
   requires \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P\<close>
   premises \<open>P vars 0\<close>
   requires Body: \<open>\<forall>x i. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < n \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x i \<longrightarrow>
-      \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> R x\<heavy_asterisk> i \<tycolon> \<nat>['b]\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x \<longmapsto> \<exists>*x'. ((R x'\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x') \<and>\<^sup>s P x' (Suc i))\<brangle>\<close>
-  \<bullet> \<rightarrow> n \<open>0 \<tycolon> \<nat>['b]\<close>
-  \<bullet> while var vars i stack \<open>R vars\<close>, i heap \<open>H vars\<close> always \<open>i \<le> n \<and> P vars i\<close>
+      \<^bold>p\<^bold>r\<^bold>o\<^bold>c (body :: 'b word \<times> '\<RR>::stack \<longmapsto> '\<RR>) \<blangle> R x \<heavy_asterisk> i \<tycolon> \<nat>['b] \<longmapsto> \<exists>*x'. R x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P x' (Suc i)\<brangle>\<close>
+  \<bullet> \<rightarrow> n
+  \<bullet> \<open>0 \<tycolon> \<nat>['b]\<close>
+  \<bullet> while 
+  \<bullet> var vars i in \<open>R vars\<close>, i always \<open>i \<le> n \<and> P vars i\<close>
   \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket> \<medium_left_bracket> -- i Body i 1 + cast ie \<open>Suc i\<close> \<medium_right_bracket> drop
   finish
 

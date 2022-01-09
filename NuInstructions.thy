@@ -9,8 +9,11 @@ definition op_crash :: "('x::stack) \<longmapsto> ('y::stack)" where "op_crash _
 definition op_drop :: "('a::lrep) \<times> ('r::stack) \<longmapsto> 'r" where
   "op_drop x = (case x of (h,a,r) \<Rightarrow> Success (h,r))"
 
-definition op_dup :: " ('r,'r,'x,'x) index \<Rightarrow> ('r::stack) \<longmapsto> ('x \<times> 'r)"
-  where "op_dup idx = (\<lambda>(h,r). Success (h, get_idx idx r, r))"
+(* definition op_dup :: " ('r,'r,'x,'x) index \<Rightarrow> ('r::stack) \<longmapsto> ('x \<times> 'r)"
+  where "op_dup idx = (\<lambda>(h,r). Success (h, get_idx idx r, r))" *)
+
+definition op_dup :: " ('x::lrep \<times> 'r::stack) \<longmapsto> ('x \<times> 'x \<times> 'r)"
+  where "op_dup = (\<lambda>(h,x,r). Success (h, x, x, r))"
 
 definition op_pair :: "('a::lrep) \<times> ('b::lrep) \<times> ('r::stack) \<longmapsto> (('b \<times> 'a) \<times> 'r)"
   where "op_pair = (\<lambda>(h,a,b,r). Success (h,(b,a),r))"

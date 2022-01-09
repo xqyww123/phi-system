@@ -43,7 +43,8 @@ signature NU_SYS = sig
   val set_param_cmd : Proof.context -> string -> thm -> thm
   val set_label : string -> thm -> thm
 
-  val start_proc : typ option -> string (*blk name*) -> cterm -> Proof.context -> thm * Proof.context
+  val start_proc : typ option (*concrete type of the stack*)
+        -> string (*blk name*) -> cterm -> Proof.context -> thm * Proof.context
   val rename_blk_var : string -> thm -> cterm (*renamed block*) * thm
         (* current old_name reulst in ...
         * ---------------------------------
@@ -247,17 +248,21 @@ fun finish_proc cc sequent =
   end
 
 
-fun start_proc ty_R blk_name arg_nuTy ctx =
+fun start_proc stack_ty blk_name arg_nuTy ctx =
   let
-    val ty_R = the_default default_ty_R ty_R
-    val arg_tys = strip_separations (term_of arg_nuTy)
-                    |> map_filter (try (
-                        dest_monop @{const_name Val_Ele}
-                          #> fastype_of
-                          #> dest_monop_ty "Set.set"
-                      ))
+    val stack_ty =
+      case stack_ty of SOME T => T
+         | NONE =>
+             strip_separations (term_of arg_nuTy)
+              |> map_filter (try (
+                  dest_monop @{const_name Val_Ele}
+                    #> fastype_of
+                    #> dest_monop_ty "Set.set"
+                ))
+              |> (fn L => L @ [default_ty_R])
+              |> HOLogic.mk_tupleT
     val ([blk_name, RR],ctx) = Variable.add_fixes [blk_name, "\<RR>"] ctx
-    val stat_var = Free (blk_name, mk_stateT (HOLogic.mk_tupleT (arg_tys @ [ty_R])))
+    val stat_var = Free (blk_name, mk_stateT stack_ty)
     val ctx = Variable.declare_constraints stat_var ctx
     val init = Const(@{const_name CurrentConstruction},
                   fastype_of stat_var --> @{typ "(heap \<times> stack) set"}

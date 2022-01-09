@@ -15,7 +15,6 @@ signature NU_BASICS = sig
   val the_nu_fact : Proof.state -> thm
   val set_nu_fact : thm -> Proof.state -> Proof.state
 
-  val void_ty : typ
   val mk_stateT : typ -> typ
   val dest_tynuset_c : ctyp -> ctyp
   val dest_typroc_c : ctyp -> ctyp * ctyp
@@ -96,7 +95,6 @@ fun set_nu_fact th stat = stat
 fun repeat f x = repeat f (f x) handle TERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
-val void_ty = Type(@{type_name "void"}, [])
 fun mk_stateT ty = Type(@{type_name "state"}, [ty])
 (* \<alpha> set *)
 val dest_tynuset_c = dest_ctyp0

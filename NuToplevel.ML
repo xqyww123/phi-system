@@ -13,8 +13,8 @@ signature NU_TOPLEVEL = sig
     (* Premise is automatically prefixed by @{term Premise} and added to
      * @{named_theorems useful}; Requirement is not. *)
   val begin_proc_cmd : Attrib.binding 
-        -> xstring (*argument*)
-        -> xstring (*return*)
+        -> xstring * xstring option (*argument and type*)
+        -> xstring * xstring option (*return and type*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
         -> (indexname list * string) list (*let patterns*)
@@ -22,8 +22,8 @@ signature NU_TOPLEVEL = sig
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> bool -> Proof.context -> Proof.state
   val begin_rec_proc_cmd : Attrib.binding 
-        -> xstring (*argument*)
-        -> xstring (*return*)
+        -> xstring * xstring option (*argument and type*)
+        -> xstring * xstring option (*return and type*)
         -> ((binding * string option * mixfix) list * (*variants*)
             (binding * string option * mixfix) list   (*for fixes*))
         -> (xstring * Position.T) list (*includes*)
@@ -32,8 +32,8 @@ signature NU_TOPLEVEL = sig
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> bool -> Proof.context -> Proof.state
   val begin_cast_cmd : Attrib.binding
-        -> xstring (*domain*)
-        -> xstring (*image*)
+        -> xstring * xstring option (*domain*)
+        -> xstring * xstring option (*image*)
         -> xstring option (*addtional_prop,   cast domain |--> image with additional_prop*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
@@ -148,9 +148,10 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
           prep_attrterm I c
     val preconds = map prep_precond raw_preconds
 
+    fun parse_arg (tm,ty) = (parse_term tm, Option.map parse_typ ty)
     val (goal, constr_process, preconds) =
           mk_Goal (ctx_parse,(fixes,var_names))
-                  (parse_term arg, parse_term ret, preconds)
+                  (parse_arg arg, parse_arg ret, preconds)
 
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
@@ -193,9 +194,9 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
     val prep_ctx = Variable.declare_typ default_ty_R
     fun mk_Goal ctx_fixes arg_ret_conds =
       let
-        val (arg, ret, preconds) = prep_Nu ctx_fixes arg_ret_conds
+        val ((arg,argT), (ret,retT), preconds) = prep_Nu ctx_fixes arg_ret_conds
         val ctxt = fst ctx_fixes
-        val _ = debug_term ctxt "aaa " arg
+        val _ = debug_term ctxt "arg " arg
         val _ = debug_term ctxt "ret " ret
         val goal = mk_Trueprop
           (Const (@{const_name "Procedure"}, dummyT) $ v_proc $ arg $ ret)
@@ -205,13 +206,14 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
             val ctxt = Proof.context_of stat
             val goal_proc = Thm.cprem_of (#goal (Proof.goal stat)) 1 |> Drule.strip_imp_concl
             val (_,Arg,_) = dest_procedure_c goal_proc
+            val argT = Option.map (Syntax.check_typ ctxt) (@{print} argT)
           in
             stat
               |> Proof.map_context (
                   Proof_Context.put_thms false ("\<nu>thesis",
                     SOME [Drule.mk_term goal_proc]))
               |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-              |> Proof.map_context_result (start_proc NONE (Binding.name_of (fst binding)) Arg)
+              |> Proof.map_context_result (start_proc argT (Binding.name_of (fst binding)) Arg)
               |-> NuBasics.set_nu_fact
           end
       in
@@ -234,7 +236,7 @@ val begin_proc =
 val begin_proc_cmd =
       gen_begin_proc Syntax.parse_term Syntax.parse_prop Syntax.parse_typ Proof_Context.read_var
         (fn (ctxt,_) => fn (arg,ret,conds) =>
-          (parse_arg arg, parse_arg ret, conds)
+          (apfst parse_arg arg, apfst parse_arg ret, conds)
         ) (K I)
 
 fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
@@ -242,7 +244,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
   let open QuantExpansion
     val prep_ctx = Variable.declare_typ default_ty_R
     val func_name = Binding.name_of binding
-    fun mk_Goal (ctxt,(fixes,fixed_names)) (arg,ret,conds) = 
+    fun mk_Goal (ctxt,(fixes,fixed_names)) ((arg,argT),(ret,retT),conds) = 
       let
         val origin_names = map (fn (n,_,_) => (Binding.name_of n)) raw_vars
         val var_names = take (length raw_vars) fixed_names
@@ -335,7 +337,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                   Proof_Context.put_thms false ("\<nu>thesis",
                     SOME [Drule.mk_term (cterm_of ctxt goal)]))
               |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-              |> Proof.map_context_result (start_proc NONE func_name Arg)
+              |> Proof.map_context_result (start_proc argT func_name Arg)
               |-> NuBasics.set_nu_fact
           end
             (* |> *)
@@ -365,7 +367,7 @@ val begin_rec_proc_cmd = gen_begin_rec_proc
 fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
       binding arg ret additional_prop =
   let
-    fun mk_Goal (ctxt,_) (arg, ret, preconds) =
+    fun mk_Goal (ctxt,_) ((arg,argT), (ret,retT), preconds) =
       let
         val arg = mk_repset arg
         val ret = mk_repset ret
@@ -481,8 +483,6 @@ fun prove_prem int stat =
   end
 
 local
-fun block_name_of (Var ((x,_),_)) = x
-  | block_name_of _ = "block"
 val attr_useful = map (Attrib.attribute @{context}) @{attributes [useful]}
 in
 
@@ -491,9 +491,10 @@ fun gen_begin_block prep_attr bindings int stat =
     val specthm = the_nu_fact stat
     val stat = stat |> begin_block
     val ctxt = context_of stat
+
     val (vars, goal) = prop_of specthm
-                          |> Logic.dest_implies |> #1
-                          |> dest_Trueprop |> strip_binder_raw @{const_name All}
+                        |> Logic.dest_implies |> #1
+                        |> dest_Trueprop |> strip_binder_raw @{const_name All}
     val (var_names, stat) = stat
           |> Proof.map_context_result (Proof_Context.add_fixes
               (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars))
@@ -502,11 +503,16 @@ fun gen_begin_block prep_attr bindings int stat =
     val prems_goal = strip_binop_r @{const_name implies} goal
     val (prems, goal) = (front prems_goal, last prems_goal)
     val (proc,arg,ret) = dest_procedure goal
-    val blk_name = block_name_of proc
+    
+    val Type ("fun", [Type (@{type_name prod}, [_, argTy]), _]) = fastype_of proc
+    val blk_name = case proc of (Var ((x,_),_)) => x
+                      | _ => "block"
     val level = current_block_depth specthm
     val blk_name = "L\<nu>'" ^ (Int.toString level) ^ "_" ^ blk_name
+    
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
     val _ = debug_term ctxt "aaaa " goal
+    
     fun after_qed (ctxt',[[th]]) stat =
       end_block stat |> (fn stat =>
         stat |> NuBasics.set_nu_fact (
@@ -518,6 +524,7 @@ fun gen_begin_block prep_attr bindings int stat =
                       ) COMP specthm)
                   end
           ))
+
     val delta = length prems - length bindings |> @{print}
     val _ = if delta < 0 then error "too much premise bindings" else  ()
     val bindings =
@@ -534,7 +541,8 @@ fun gen_begin_block prep_attr bindings int stat =
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-      |> Proof.map_context_result (start_proc NONE blk_name (cterm_of ctxt arg))
+
+      |> Proof.map_context_result (start_proc (SOME argTy) blk_name (cterm_of ctxt arg))
       |-> NuBasics.set_nu_fact
       |> Proof.map_context (fn ctxt => 
             Proof_Context.put_thms false ("\<nu>thesis",

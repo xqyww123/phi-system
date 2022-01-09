@@ -70,8 +70,8 @@ fun gen_general_expansion const thms ty names ctx =
       $ (Const (const, dummyT) $ P_term)
       $ mk_the_binder const P_term (map (rpair dummyT) names)
   |> debug_term ctx "aaaas "
-    val ctx = Proof_Context.set_mode Proof_Context.mode_schematic ctx addsimps thms
-    val quant = Syntax.check_prop ctx quant |> cterm_of ctx
+    val ctx = (Proof_Context.set_mode Proof_Context.mode_schematic ctx) addsimps thms
+    val quant = Syntax.check_prop ctx quant |> cterm_of ctx |> @{print}
     val quant = case Goal.init quant |> SINGLE (HEADGOAL (Simplifier.simp_tac ctx))
                    of SOME th => Goal.conclude th
                     | _ => raise CTERM ("fail to solve quantification-expansion", [quant])
@@ -83,13 +83,14 @@ val exists_expansion =
   gen_general_expansion @{const_name Ex} @{thms pair_exists named_exists} (SOME boolT)
 val pure_All_expansion =
   gen_general_expansion @{const_name Pure.all} @{thms pair_All named_All} (SOME propT)
-fun ExNu_expansion names ctx =
-  let
+val ExNu_expansion =
+  gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet} (SOME @{typ assn})
+  (*let
     val ([(ty_name,sort)], ctx) = Variable.invent_types [["HOL.type"]] ctx |> @{print}
   in
     gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet}
       (SOME (Type (@{type_name set}, [TVar ((ty_name,0),sort)]))) names ctx
-  end
+  end*)
 
 
 (* fun ExNu_expansion names ctx =
