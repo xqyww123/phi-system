@@ -98,8 +98,8 @@ section \<open>Tuple Operations\<close>
 definition cons_tup :: " 'a itself \<Rightarrow> ('a::field_list) \<times> ('r::stack) \<longmapsto> 'a tuple \<times> 'r"
   where "cons_tup _ = (\<lambda>(h,a,r). Success (h, Tuple a, r))"
 
-definition op_dest_tup :: "('a::field_list) tuple \<times> ('r::stack) \<longmapsto> 'a \<times> 'r"
-  where "op_dest_tup s = (case s of (h,Tuple a, r) \<Rightarrow> Success (h,a,r))"
+definition op_dest_tup :: " 'a itself \<Rightarrow> ('a::field_list) tuple \<times> ('r::stack) \<longmapsto> 'a \<times> 'r"
+  where "op_dest_tup _ s = (case s of (h,Tuple a, r) \<Rightarrow> Success (h,a,r))"
 
 definition op_get_tuple :: "('a tuple,'a tuple,'x,'x) index \<Rightarrow> 'a itself \<Rightarrow> 'a tuple \<times> ('r::stack) \<longmapsto> ('x::lrep) \<times> 'r"
   where "op_get_tuple idx _ = (\<lambda>(h,a,r). Success (h,get_idx idx a,r))"

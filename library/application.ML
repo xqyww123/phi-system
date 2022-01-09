@@ -58,7 +58,7 @@ fun application_reasoner (appl as {thm,applicant_idx}:application_thm) = {
   pattern = [applicant_pattern appl],
   tactic = (fn _ => fn applicants => fn major =>
     Seq.make (fn () =>
-        biresolution_N applicants (major RS thm) applicant_idx
+        biresolution_N (@{print} applicants) (@{print} (major RS thm)) applicant_idx
           |> Seq.map (fn th =>
                 Goal.protect (applicant_idx - 1) (solve_constraints th))
           |> Seq.pull

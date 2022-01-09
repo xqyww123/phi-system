@@ -97,25 +97,15 @@ val v_proc = Var (v_proc_var, v_proc_ty)
 val v_lrep_var = "\<l>\<r>\<e>\<p>"
 val v_goal_name = "\<nu>goal"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
-fun mk_raw_prod (a,b) = Const ("Product_Type.Pair", dummyT) $ a $ b
-
 val top_blk_name = "\<t>\<o>\<p>_\<b>\<l>\<o>\<c>\<k>"
 
-fun print_results int = Proof_Display.print_results int (Position.thread_data ())
+fun parse_arg (X as (Const (@{const_name "typing"}, _) $ _ $ _)) =
+      X |> mk_monop @{const_name "RepSet"}
+        |> mk_monop @{const_name "Ele"}
+  | parse_arg X = X
 
-(* fun begin_proc ctxt (arg,ret) =
-  let
-    (* val (arg,ret) = mk_raw_prod (arg,ret) |> Syntax.check_term ctxt |> dest_prod *)
-    val (argT,retT) = apply2 (type_of #> dest_Type #> #2 #> hd) (arg,ret)
-    val procT = argT --> mk_stateT retT
-    val goal = HOLogic.mk_Trueprop (
-          Const ("NuPrime.Procedure",
-                    (argT --> mk_stateT retT) --> mk_setT argT --> mk_setT retT --> boolT)
-          $ Var (v_proc_var, procT) $ arg $ ret)
-    val th = arg |> Thm.cterm_of ctxt |> start_proc ctxt top_blk_name
-  in
-    (goal,th)
-  end *)
+
+fun print_results int = Proof_Display.print_results int (Position.thread_data ())
 
 fun prep_decls prep_var raw_vars ctxt =
   let
@@ -244,9 +234,7 @@ val begin_proc =
 val begin_proc_cmd =
       gen_begin_proc Syntax.parse_term Syntax.parse_prop Syntax.parse_typ Proof_Context.read_var
         (fn (ctxt,_) => fn (arg,ret,conds) =>
-          (NuBasics.parse_arg_list false arg,
-           NuBasics.parse_arg_list false ret,
-           conds)
+          (parse_arg arg, parse_arg ret, conds)
         ) (K I)
 
 fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
@@ -262,8 +250,8 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                         |> map (fn (_,ty,_) => the_default dummyT ty)
         val vars = origin_names ~~ (map (rpair dummyT) var_names)
 
-        val arg = NuBasics.parse_arg_list true arg
-        val ret = NuBasics.parse_arg_list true ret
+        val arg = parse_arg arg
+        val ret = parse_arg ret
         val x = Const (@{const_name tag}, dummyT) $
                   list_mk_binop_r @{const_name Pair} (map Free (var_names ~~ var_tys))
 

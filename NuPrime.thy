@@ -23,14 +23,7 @@ subsection \<open>Syntax and Notations\<close>
 
 (* consts "ARBITRARY___" :: 'a ("\<cdots>") \<comment>\<open>merely a sugar for documenting\<close> *)
 
-definition PropBlock :: "prop \<Rightarrow> prop" ("\<medium_left_bracket> _ \<medium_right_bracket>" [0] 1000) where "PropBlock p \<equiv> p"
-  \<comment>\<open>The block of proposition has specific meaning in \<nu>-system.
-  @{prop "A \<Longrightarrow> B \<Longrightarrow> C"} represents an forward construction rule to finally construct @{term C}.
-  The construction rule could be high-order parametric, e.g. @{prop "A \<Longrightarrow> \<medium_left_bracket> B \<Longrightarrow> C \<Longrightarrow> D \<medium_right_bracket> \<Longrightarrow> E"},
-    and in those cases the high-order parameter is wrapped by @{term Pure.prop} to become an atomic
-    premise in order to disambiguate with the semantics of nested hypothesises.\<close>
-lemmas  PropBlock_I = PropBlock_def[THEN equal_elim_rule2]
-lemmas  PropBlock_D = PropBlock_def[THEN equal_elim_rule1]
+
 
 syntax
   "_linebreak_" :: "logic \<Rightarrow> logic" ("//\<zero_width_space>_" [3] 3)
@@ -292,7 +285,7 @@ subsection \<open>Register and its collection\<close>
 instantiation prod :: (lrep,lrep) lrep begin
 definition llty_prod :: "('a \<times> 'b) itself \<Rightarrow> llty" where "llty_prod _ = llty_fusion LLTY('a) LLTY('b)"
 definition deepize_prod :: " 'a \<times> 'b \<Rightarrow> value " where
-  [simp]: "deepize_prod = (\<lambda>(a,b). DM_fusion (deepize a) (deepize b))"
+  "deepize_prod = (\<lambda>(a,b). DM_fusion (deepize a) (deepize b))"
 definition shallowize_prod :: "value \<Rightarrow> 'a \<times> 'b" where
   "shallowize_prod x = (case x of DM_fusion a b \<Rightarrow> (shallowize a, shallowize b))"
 instance apply standard
@@ -374,68 +367,6 @@ definition stack_shallowize_stack :: " stack \<Rightarrow> stack " where [simp]:
 instance by standard (simp_all add: stack_bij_list)
 end
 
-(*definition stack_cat :: " ('a::stack) \<Rightarrow> ('b::stack) \<Rightarrow> ('c::stack) \<Rightarrow> bool " where
-  "stack_cat a b c \<longleftrightarrow> stack_to_list (deepize a) = stack_to_list (deepize b) @ stack_to_list (deepize c)"
-
-definition stack_cat' :: " ('a::stack) \<Rightarrow> ('b::stack) \<Rightarrow> value \<Rightarrow> bool " where
-  "stack_cat' a b c \<longleftrightarrow> stack_to_list (deepize a) = stack_to_list (deepize b) @ stack_to_list c \<and> is_stack c"
-
-definition stack_cat'' :: " stack \<Rightarrow> stack \<Rightarrow> stack \<Rightarrow> bool " where
-  "stack_cat'' a b c \<longleftrightarrow> values_of a = values_of b @ values_of c"
-
-lemma stack_cat'_eq: "stack_cat a b c \<longleftrightarrow> stack_cat' a b (deepize c)"
-  unfolding stack_cat_def stack_cat'_def by simp
-
-lemma stack_cat''_eq: "stack_cat' a b c \<longleftrightarrow> stack_cat'' (deepize a) (deepize b) c"
-  unfolding stack_cat'_def stack_cat''_def by simp
-
-lemma [simp]: "stack_cat' (x, r) (a, b) c \<longleftrightarrow> x = a \<and> stack_cat' r b c"
-  unfolding stack_cat'_def by (simp add: deepize_inj2)
-*
-lemma [simp]: "stack_cat'' (stack (a' # b')) (stack (a # b)) c \<longleftrightarrow> a' = a \<and> stack_cat'' (stack b') (stack b) c"
-  unfolding stack_cat''_def by simp
-
-lemma [simp]:
-  "stack_cat'' a (stack []) c \<longleftrightarrow> a = c"
-  "stack_cat'' a b (stack []) \<longleftrightarrow> a = b"
-  unfolding stack_cat''_def by simp_all
-*)
-(*lemma stack_cat'_eq: "stack_cat a b (shallowize c) \<longleftrightarrow> stack_cat' a b c" *)
-(*
-lemma stack_cat_deterministic:
-  "stack_cat a b c1 \<Longrightarrow> stack_cat a b c2 \<Longrightarrow> c1 = c2"
-  "stack_cat a b1 c \<Longrightarrow> stack_cat a b2 c \<Longrightarrow> b1 = b2"
-  "stack_cat a1 b c \<Longrightarrow> stack_cat a2 b c \<Longrightarrow> a1 = a2"
-  unfolding stack_cat_def
-  apply (metis deepize_inj same_append_eq stack_bij_list(2) stack_is_stack)
-  apply (metis deepize_inj append_same_eq stack_bij_list(2) stack_is_stack)
-  by (metis deepize_inj stack_bij_list(2) stack_is_stack) 
-
-lemma stack_cat'_deterministic:
-  "stack_cat' a b c1 \<Longrightarrow> stack_cat' a b c2 \<Longrightarrow> c1 = c2"
-  "stack_cat' a b1 c \<Longrightarrow> stack_cat' a b2 c \<Longrightarrow> b1 = b2"
-  "stack_cat' a1 b c \<Longrightarrow> stack_cat' a2 b c \<Longrightarrow> a1 = a2"
-  unfolding stack_cat'_def
-    apply (metis deepize_inj same_append_eq stack_bij_list(2) stack_is_stack)
-   apply (metis deepize_inj append_same_eq stack_bij_list(2) stack_is_stack)
-  by (metis deepize_inj stack_bij_list(2) stack_is_stack) 
-*
-lemma stack_cat''_deterministic:
-  "stack_cat'' a b c1 \<Longrightarrow> stack_cat'' a b c2 \<Longrightarrow> c1 = c2"
-  "stack_cat'' a b1 c \<Longrightarrow> stack_cat'' a b2 c \<Longrightarrow> b1 = b2"
-  "stack_cat'' a1 b c \<Longrightarrow> stack_cat'' a2 b c \<Longrightarrow> a1 = a2"
-  unfolding stack_cat''_def
-    apply (metis same_append_eq stack_bij_list(2))
-   apply (metis append_same_eq stack_bij_list(2))
-  by (metis deepize_inj stack_bij_list(2)) 
-*)
-
-
-(* subsubsection \<open>Tag: End_of_Contextual_Stack\<close>
-
-definition End_of_Contextual_Stack :: " 'a \<Rightarrow> 'a " ("\<^bold>E\<^bold>N\<^bold>D") where [\<nu>def]: "End_of_Contextual_Stack x = x" \<comment> \<open>A tag for printing sugar\<close>
-lemmas End_of_Contextual_Stack_rew = End_of_Contextual_Stack_def[THEN eq_reflection]
-lemma [elim,\<nu>elim]: "Inhabited (End_of_Contextual_Stack S) \<Longrightarrow> C \<Longrightarrow> C" . *)
 
 subsection \<open>The \<nu>-system VM and Procedure construction structures\<close>
 
@@ -449,6 +380,9 @@ definition LooseStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a state
 lemma StrictStateTy_expn[iff,\<nu>def]: "Success x \<in> \<S_S> T \<equiv> x \<in> T"  "\<not> (Fail \<in> \<S_S> T)"  "\<not> (PartialCorrect \<in> \<S_S> T)"
   and LooseStateTy_expn[iff,\<nu>def]: "Success x \<in> \<S> T \<equiv> x \<in> T"  "\<not> (Fail \<in> \<S> T)"  "(PartialCorrect \<in> \<S> T)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
+lemma LooseStateTy_expn' : "x \<in> \<S> T \<longleftrightarrow> x = PartialCorrect \<or> (\<exists>x'. x = Success x' \<and> x' \<in> T)"
+  by (cases x) simp_all
+
 (* lemma [dest]: "s \<in> \<S_S> T \<Longrightarrow> Inhabited T" unfolding Inhabited_def by (cases s) auto *)
     \<comment>\<open>The inhabited property can be inferred from @{term StrictStateTy} only rather than @{term LooseStateTy}. \<close>
 lemma StrictStateTy_elim[elim]: "s \<in> \<S_S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
@@ -491,7 +425,8 @@ lemma [simp]: "(h, s) \<in> Deepize' M \<longleftrightarrow> (h, shallowize s) \
 lemma Deepize'_expn: "(h, s) \<in> Deepize' M \<longleftrightarrow> (\<exists>s'. stack_deepize s' = s \<and> (h, s') \<in> M)"
   unfolding Deepize'_def image_iff Bex_def by auto
 
-lemma Shallowize'_expn: "(h, s) \<in> Shallowize' M \<longleftrightarrow> (h, stack_deepize s) \<in> M"
+lemma Shallowize'_expn[nu_exps]:
+  "(h, s) \<in> Shallowize' M \<longleftrightarrow> (h, stack_deepize s) \<in> M"
   unfolding Shallowize'_def by simp
 
 lemma Shallowize'_Deepize'[simp]: "Shallowize' (Deepize' S) = S "
@@ -504,41 +439,118 @@ lemma Deepize'_inj[simp]:
   "Deepize' A = Deepize' B \<longleftrightarrow> A = B"
   unfolding set_eq_iff Deepize'_expn pair_forall by force
 
+consts Ele :: " 'a set \<Rightarrow> (heap \<times> stack) set " ("ELE _" [17] 16)
+translations "ELE x \<tycolon> T" \<rightleftharpoons> "ELE \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 
-definition FrameSep'' :: "(heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set" ( "_/ \<heavy_comma>\<heavy_asterisk>'''' _" [13,14] 13)
-  where "(M \<heavy_comma>\<heavy_asterisk>'' T) = {(h,s). (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h1,s2) \<in> M \<and> (h2,s1) \<in> T) }"
+definition Val_Ele :: " 'a::lrep set \<Rightarrow> (heap \<times> stack) set " ("VAL _" [17] 16) where
+  "(VAL T) = { (Map.empty, stack [v]) | v. v \<in> deepize ` T } "
 
-definition FrameSep :: "(heap \<times> 'a::stack) set \<Rightarrow> (heap \<times> 'b::stack) set \<Rightarrow> (heap \<times> stack) set" ( "_/ \<heavy_comma>\<heavy_asterisk> _" [13,14] 13)
-  where "(M \<heavy_comma>\<heavy_asterisk> T) = (Deepize' M \<heavy_comma>\<heavy_asterisk>'' Deepize' T)"
+adhoc_overloading Ele Val_Ele
+translations "VAL x \<tycolon> T" => "VAL \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 
-lemma FrameSep''_expn:
-  "(h,s) \<in> (M \<heavy_comma>\<heavy_asterisk>'' T) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h1,s2) \<in> M \<and> (h2,s1) \<in> T)"
-  unfolding FrameSep''_def by simp
+lemma [nu_exps]:
+  "(h,s) \<in> (VAL V) \<longleftrightarrow> h = Map.empty \<and> (\<exists>v. s = stack [deepize v] \<and> v \<in> V)"
+  unfolding Val_Ele_def by simp blast
 
-lemma FrameSep_expn:
-  "(h,s) \<in> (M \<heavy_comma>\<heavy_asterisk> T) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2
+lemma [elim!,\<nu>elim]: "Inhabited (VAL T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (simp add: pair_exists nu_exps)
+
+(* lemma [\<nu>elim,elim!]: "Inhabited (SEle T) \<Longrightarrow> Inhabited T" unfolding Inhabited_def  *)
+
+definition Obj_Ele :: " heap set \<Rightarrow> (heap \<times> stack) set " ("OBJ _" [17] 16) where
+  "(OBJ T) = { (h, stack []) | h. h \<in> T } "
+
+adhoc_overloading Ele Obj_Ele
+translations "OBJ x \<tycolon> T" => "OBJ \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
+
+lemma [nu_exps]: "(h, s) \<in> (OBJ T) \<longleftrightarrow> s = stack [] \<and> h \<in> T"
+  unfolding Obj_Ele_def by simp
+
+lemma [nu_exps]: "(h, s) \<in> Shallowize' (OBJ T) \<longleftrightarrow> s = stack [] \<and> h \<in> T"
+  unfolding Obj_Ele_def Shallowize'_expn by simp
+
+lemma [elim!,\<nu>elim]: "Inhabited (OBJ T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (simp add: pair_exists nu_exps)
+
+
+definition Separation :: "(heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set" ( "_/ \<heavy_asterisk> _" [13,14] 13)
+  where "(T \<heavy_asterisk> U) = {(h,s). (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U) }"
+
+translations
+  "x \<tycolon> T \<heavy_asterisk> U" \<rightleftharpoons> "CONST Ele \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<heavy_asterisk> U"
+  "T \<heavy_asterisk> y \<tycolon> U" \<rightleftharpoons> "T \<heavy_asterisk> CONST Ele \<tort_lbrace>y \<tycolon> U\<tort_rbrace>"
+
+
+(* definition Separation :: "(heap \<times> 'a::stack) set \<Rightarrow> (heap \<times> 'b::stack) set \<Rightarrow> (heap \<times> stack) set" ( "_/ \<heavy_comma>\<heavy_asterisk> _" [13,14] 13)
+  where "(M \<heavy_comma>\<heavy_asterisk> T) = (Deepize' M \<heavy_comma>\<heavy_asterisk>'' Deepize' T)" *)
+
+lemma Separation_expn:
+  "(h,s) \<in> (T \<heavy_asterisk> U) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U)"
+  unfolding Separation_def by simp
+
+lemma Separation_expn_R:
+  "(h,s) \<in> (T \<heavy_asterisk> U) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h1,s2) \<in> T \<and> (h2,s1) \<in> U)"
+  unfolding Separation_def
+  by simp (metis disjoint_def disjoint_rewR map_add_comm) 
+
+lemma Separation_expn_V[nu_exps]:
+  "(h, stack (deepize v # r)) \<in> (R \<heavy_asterisk> VAL V) \<longleftrightarrow> ((h, stack r) \<in> R \<and> v \<in> V )"
+  unfolding Separation_def Shallowize'_expn
+  by (simp add: nu_exps) force
+
+lemma Separation_expn_V':
+  "(h, s) \<in> (R \<heavy_asterisk> VAL V) \<longleftrightarrow> (\<exists>v r. s = stack (deepize v # r) \<and> (h, stack r) \<in> R \<and> v \<in> V )"
+  unfolding Separation_def Shallowize'_expn
+  by (simp add: nu_exps) force
+
+lemma Separation_expn_O[nu_exps]:
+  "(h,s) \<in> (R \<heavy_asterisk> OBJ H) \<longleftrightarrow>
+  (\<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> (h2,s) \<in> Shallowize' R \<and> h1 \<in> H )"
+  unfolding Separation_def Shallowize'_expn
+  by (simp add: nu_exps)
+
+lemma Separation_expn_O_R:
+  "(h,s) \<in> (R \<heavy_asterisk> OBJ H) \<longleftrightarrow>
+  (\<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> (h1,s) \<in> Shallowize' R \<and> h2 \<in> H )"
+  unfolding Separation_def Shallowize'_expn
+  by (simp add: nu_exps) (metis disjoint_def disjoint_rewR map_add_comm)
+
+lemma [elim!,\<nu>elim]: "Inhabited (T \<heavy_asterisk> U) \<Longrightarrow> (Inhabited T \<Longrightarrow> Inhabited U \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (simp add: pair_exists nu_exps Separation_expn) blast
+
+(* lemma Separation_expn:
+  "(h,s) \<in> (M \<heavy_asterisk> T) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2
       \<and> s = stack_deepize s1 @\<^sub>s\<^sub>k stack_deepize s2 \<and> (h1,s2) \<in> M \<and> (h2,s1) \<in> T)"
-  unfolding FrameSep_def FrameSep''_expn Deepize'_expn by blast
+  unfolding Separation_def Separation''_expn Deepize'_expn by blast *)
 
-lemma FrameSep_absorb [simp]:
+(* lemma Separation_absorb [simp]:
   "(Deepize' M \<heavy_comma>\<heavy_asterisk> T) = (M \<heavy_comma>\<heavy_asterisk> T)"
   "(M \<heavy_comma>\<heavy_asterisk> Deepize' T) = (M \<heavy_comma>\<heavy_asterisk> T)"
-  unfolding FrameSep_def Deepize'_Deepize' by simp blast
+  unfolding Separation_def Deepize'_Deepize' by simp blast *)
 
-lemma FrameSep''_assoc: "(A \<heavy_comma>\<heavy_asterisk>'' (B \<heavy_comma>\<heavy_asterisk>'' C)) = (A \<heavy_comma>\<heavy_asterisk>'' B \<heavy_comma>\<heavy_asterisk>'' C)"
-  unfolding FrameSep''_def set_eq_iff pair_forall
-  apply auto subgoal for h1 s2 h1a h2a s1a s2a
-    apply (rule exI [of _ "h1 ++ h1a"], rule exI [of _ "h2a"], simp add: disjoint_def inf_sup_distrib1 inf_sup_distrib2)
+lemma Separation_assoc[simp]: "(A \<heavy_asterisk> (B \<heavy_asterisk> C)) = (A \<heavy_asterisk> B \<heavy_asterisk> C)"
+  unfolding Separation_def set_eq_iff pair_forall
+  apply auto subgoal for h2 s2 h1a h2a s1a s2a
+    apply (rule exI [where x = "h1a"], rule exI [where x = "h2a ++ h2"],
+          simp add: disjoint_def inf_sup_distrib1 inf_sup_distrib2)
     apply (rule exI [of _ s1a], rule exI [of _ "s2a @\<^sub>s\<^sub>k s2"], simp)
     apply blast done
-  subgoal for h2 s1 h1a h2a s1a s2a
-    apply (rule exI [of _ "h1a"], rule exI [of _ "h2a ++ h2"], simp add: disjoint_def inf_sup_distrib1 inf_sup_distrib2)
+  subgoal for h1 s1 h1a h2a s1a s2a
+    apply (rule exI [where x = "h1 ++ h1a"], rule exI [where x = "h2a"],
+          simp add: disjoint_def inf_sup_distrib1 inf_sup_distrib2)
     apply (rule exI [of _ "s1 @\<^sub>s\<^sub>k s1a"], simp, blast)
     done
   done
 
-lemma FrameSep_assoc[simp]: "(A \<heavy_comma>\<heavy_asterisk> (B \<heavy_comma>\<heavy_asterisk> C)) = (A \<heavy_comma>\<heavy_asterisk> B \<heavy_comma>\<heavy_asterisk> C)"
-  unfolding FrameSep_def using FrameSep''_assoc by simp
+lemma Separation_comm:
+  " (OBJ A \<heavy_asterisk> B) = (B \<heavy_asterisk> OBJ A) "
+  " (A' \<heavy_asterisk> OBJ B') = (OBJ B' \<heavy_asterisk> A') "
+  unfolding Separation_def set_eq_iff pair_forall
+  by (simp_all add: disjoint_def nu_exps) (blast dest: map_add_comm)+
+
+
+(* lemma Separation_assoc[simp]: "(A \<heavy_comma>\<heavy_asterisk> (B \<heavy_comma>\<heavy_asterisk> C)) = (A \<heavy_comma>\<heavy_asterisk> B \<heavy_comma>\<heavy_asterisk> C)"
+  unfolding Separation_def using Separation''_assoc by simp *)
 
 lemma shallowize_ex: "(\<exists>x::('c::lrep). P x) \<longleftrightarrow> (\<exists>x. P (shallowize x))"
   using deepize_inj by metis
@@ -550,43 +562,43 @@ lemma shallowize_all: "(\<forall>x::('c::lrep). P x) \<longleftrightarrow> (\<fo
 lemma shallowize_all': "TERM TYPE('c) \<Longrightarrow> (\<forall>x::('c::lrep). P x) \<longleftrightarrow> (\<forall>x. P (shallowize x))"
   using shallowize_all .
 
-(*lemma FrameSep''_eq: "(M \<heavy_comma>\<heavy_asterisk>' T) = Shallowize' (M \<heavy_comma>\<heavy_asterisk>'' Deepize' T)"
-  unfolding set_eq_iff Shallowize'_expn pair_forall FrameSep'_def FrameSep''_def stack_cat''_eq Deepize'_expn
+(*lemma Separation''_eq: "(M \<heavy_comma>\<heavy_asterisk>' T) = Shallowize' (M \<heavy_comma>\<heavy_asterisk>'' Deepize' T)"
+  unfolding set_eq_iff Shallowize'_expn pair_forall Separation'_def Separation''_def stack_cat''_eq Deepize'_expn
   by simp blast
 
-lemma FrameSep''_eq2: "Shallowize' (Deepize' A \<heavy_comma>\<heavy_asterisk>'' Deepize' B) = (A \<heavy_comma>\<heavy_asterisk> B)"
-  unfolding Shallowize'_def Deepize'_def FrameSep''_def FrameSep_def image_iff Bex_def stack_cat'_eq stack_cat''_eq
+lemma Separation''_eq2: "Shallowize' (Deepize' A \<heavy_comma>\<heavy_asterisk>'' Deepize' B) = (A \<heavy_comma>\<heavy_asterisk> B)"
+  unfolding Shallowize'_def Deepize'_def Separation''_def Separation_def image_iff Bex_def stack_cat'_eq stack_cat''_eq
   by simp blast
 *)
-(* lemma FrameSep_eq [simp]: "(M \<heavy_comma>\<heavy_asterisk>' T) = (Shallowize' M \<heavy_comma>\<heavy_asterisk> T)"
-  unfolding FrameSep'_def FrameSep_def set_eq_iff pair_forall stack_cat'_eq Shallowize'_expn *)
+(* lemma Separation_eq [simp]: "(M \<heavy_comma>\<heavy_asterisk>' T) = (Shallowize' M \<heavy_comma>\<heavy_asterisk> T)"
+  unfolding Separation'_def Separation_def set_eq_iff pair_forall stack_cat'_eq Shallowize'_expn *)
 
-(* lemma FrameSep_E[elim]:
+(* lemma Separation_E[elim]:
   "(h,s) \<in> (M \<heavy_comma>\<heavy_asterisk> T) \<Longrightarrow> (\<And>h1 h2 s1 s2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> stack_cat s s1 s2
       \<Longrightarrow> (h1,s2) \<in> M \<Longrightarrow> (h2,s1) \<in> T \<Longrightarrow> C) \<Longrightarrow> C "
-  unfolding FrameSep_def by simp blast *)
+  unfolding Separation_def by simp blast *)
 
-lemma FrameSep''_E[elim]:
-  "(h,s) \<in> (M \<heavy_comma>\<heavy_asterisk>'' T) \<Longrightarrow> (\<And>h1 h2 s1 s2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2
-      \<Longrightarrow> (h1,s2) \<in> M \<Longrightarrow> (h2,s1) \<in> T \<Longrightarrow> C) \<Longrightarrow> C "
-  unfolding FrameSep''_expn by simp blast
+lemma Separation_E[elim]:
+  "(h,s) \<in> (T \<heavy_asterisk> U) \<Longrightarrow> (\<And>h1 h2 s1 s2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2
+      \<Longrightarrow> (h2,s2) \<in> T \<Longrightarrow> (h1,s1) \<in> U \<Longrightarrow> C) \<Longrightarrow> C "
+  unfolding Separation_expn by simp blast
 
-lemma FrameSep_E[elim]:
+(* lemma Separation_E[elim]:
   "(h,s) \<in> (M \<heavy_comma>\<heavy_asterisk> T) \<Longrightarrow> (\<And>h1 h2 s1 s2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = stack_deepize s1 @\<^sub>s\<^sub>k stack_deepize s2
       \<Longrightarrow> (h1,s2) \<in> M \<Longrightarrow> (h2,s1) \<in> T \<Longrightarrow> C) \<Longrightarrow> C "
-  unfolding FrameSep_expn by simp blast
+  unfolding Separation_expn by simp blast *)
 
-lemma FrameSep_I[intro]:
-  "(h1,s2) \<in> M \<Longrightarrow> (h2,s1) \<in> T \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = stack_deepize s1 @\<^sub>s\<^sub>k stack_deepize s2 \<Longrightarrow> (h1 ++ h2, s) \<in> (M \<heavy_comma>\<heavy_asterisk> T)"
-  unfolding FrameSep_expn by simp blast
+lemma Separation_I[intro]:
+  "(h2,s2) \<in> T \<Longrightarrow> (h1,s1) \<in> U \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2 \<Longrightarrow> (h1 ++ h2, s) \<in> (T \<heavy_asterisk> U)"
+  unfolding Separation_expn by simp blast
 
-lemma FrameSep''_I[intro]:
+(* lemma Separation''_I[intro]:
   "(h1,s2) \<in> M \<Longrightarrow> (h2,s1) \<in> T \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2 \<Longrightarrow> (h1 ++ h2, s) \<in> (M \<heavy_comma>\<heavy_asterisk>'' T)"
-  unfolding FrameSep''_expn by simp blast
+  unfolding Separation''_expn by simp blast *)
 
 subsubsection \<open>Set style Heap predication\<close>
 
-definition Heap' :: "(heap \<times> 'a) set \<Rightarrow> (heap \<times> 'a) set"
+definition Heap' :: "(heap \<times> 's::stack) set \<Rightarrow> (heap \<times> 's::stack) set"
   where "Heap' T = {(h,s). Heap h \<and> (h,s) \<in> T}"
 
 lemma Heap'_expn[simp,\<nu>def]: "(h,s) \<in> Heap' T \<longleftrightarrow> Heap h \<and> (h,s) \<in> T"
@@ -597,12 +609,13 @@ subsubsection \<open>\<nu>-Procedure\<close>
 text \<open>An assertion identical to Hoare triple, in the language of \<nu>-type. 
   \<^const>\<open>Heap'\<close> and \<^const>\<open>Shallowize'\<close> are auxiliary usage.\<close>
 
-definition Procedure :: "('c::stack \<longmapsto> 'd::stack) \<Rightarrow> (heap \<times> 'a::stack) set \<Rightarrow> (heap \<times> 'b::stack) set \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
+definition Procedure :: "('c::stack \<longmapsto> 'd::stack) \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
   where [\<nu>def]:"Procedure f T U \<longleftrightarrow>
-      (\<forall>a M::(heap \<times> stack) set. a \<in> Heap' (Shallowize' (M \<heavy_comma>\<heavy_asterisk> T)) \<longrightarrow> f a \<in> \<S> Heap' (Shallowize' (M \<heavy_comma>\<heavy_asterisk> U)))"
+      (\<forall>a M::(heap \<times> stack) set. a \<in> Heap' (Shallowize' (M \<heavy_asterisk> T)) \<longrightarrow> f a \<in> \<S> Heap' (Shallowize' (M \<heavy_asterisk> U)))"
 
-translations "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
+translations
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> CONST Ele \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> CONST Ele \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
 
 definition Map :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<Rightarrow> 'b) set " where "Map A B = {f. \<forall>a. a \<in> A \<longrightarrow> f a \<in> B }"
 definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<blangle>(2 _/ \<longmapsto> _ )\<brangle>)" [101,2,2] 100)
@@ -671,14 +684,15 @@ subsection \<open>Top-level Construction Structures\<close>
 
 subsubsection \<open>Construction Context & Code block\<close>
 
-definition CurrentConstruction :: " ('a::stack) state \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> 'b::stack) set \<Rightarrow> bool "
+definition CurrentConstruction :: " ('a::stack) state \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> bool "
     ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,11] 10)
-  where "CurrentConstruction s R S \<longleftrightarrow> s \<in> \<S_S> Heap' (Shallowize' (R \<heavy_comma>\<heavy_asterisk> S))"
-definition PendingConstruction :: " (('a::stack) \<longmapsto> ('b::stack)) \<Rightarrow> 'a state \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> 'c::stack) set \<Rightarrow> bool "
+  where "CurrentConstruction s R S \<longleftrightarrow> s \<in> \<S_S> Heap' (Shallowize' (R \<heavy_asterisk> S))"
+definition PendingConstruction :: " (('a::stack) \<longmapsto> ('b::stack)) \<Rightarrow> 'a state \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> bool "
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,1000,5] 4)
-  where "PendingConstruction f s R S \<longleftrightarrow> bind s f \<in> \<S> Heap' (Shallowize' (R \<heavy_comma>\<heavy_asterisk> S))"
-translations "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)" \<rightleftharpoons> "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
-  "CONST PendingConstruction f s H (x \<tycolon> T)" \<rightleftharpoons> "CONST PendingConstruction f s H \<tort_lbrace> x \<tycolon> T\<tort_rbrace>"
+  where "PendingConstruction f s R S \<longleftrightarrow> bind s f \<in> \<S> Heap' (Shallowize' (R \<heavy_asterisk> S))"
+translations
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)" \<rightleftharpoons> "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n CONST Ele \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
+  "CONST PendingConstruction f s H (x \<tycolon> T)" \<rightleftharpoons> "CONST PendingConstruction f s H (CONST Ele \<tort_lbrace> x \<tycolon> T\<tort_rbrace>)"
 
 lemma CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (cases s) (auto 0 4 simp add: Shallowize'_expn)
@@ -765,7 +779,7 @@ lemma SpecTop_cong_major:
 *)
 section \<open>Principal rules\<close>
 
-theorem frame: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> M \<heavy_comma>\<heavy_asterisk> A \<longmapsto> M \<heavy_comma>\<heavy_asterisk> B \<brangle>"
+theorem frame: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> M \<heavy_asterisk> A \<longmapsto> M \<heavy_asterisk> B \<brangle>"
   unfolding Procedure_def by simp
 
 theorem apply_proc: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"

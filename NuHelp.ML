@@ -30,6 +30,7 @@ signature NU_HELP = sig
 
   val string_of_term_generic : Context.generic -> term -> string
 
+  val dest_monop_ty: string (* const name *) -> typ -> typ
   val dest_monop   : string (* const name *) -> term -> term
   val dest_monop_c : string (* const name *) -> cterm -> cterm
   val dest_binop   : string (* const name *) -> term -> term * term
@@ -131,6 +132,9 @@ fun UI_top_handler_global f c = UI_top_handler (Context.Theory c) f c
 
 fun same_const c (Const (c', _)) = (c = c')
   | same_const _ _ = false;
+fun dest_monop_ty c (T as Type (c', [ty])) =
+      if c = c' then ty else raise TYPE ("should be "^c, [T], [])
+  | dest_monop_ty c T = raise TYPE ("should be "^c, [T], [])
 fun dest_monop const (tm as Const (const', _) $ a) =
       if const' = const then a else raise TERM ("dest_monop "^const, [tm])
   | dest_monop const tm = raise TERM ("dest_monop "^const, [tm])

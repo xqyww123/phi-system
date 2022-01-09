@@ -23,7 +23,6 @@ signature NU_BASICS = sig
   val dest_param : term -> term
   val param_type : thm -> typ
   val dest_RepSet : term -> term * term
-  val dest_RepSet_c : cterm -> cterm * cterm
   val mk_RepSet : term * term -> term
   val dest_nuTy : term -> term * term
   val dest_nuTy_c : cterm -> cterm * cterm
@@ -38,6 +37,7 @@ signature NU_BASICS = sig
   val mk_labelled : string -> term -> term
   val mk_name_hint : string -> term -> term
   val mk_repset : term -> term
+  val dest_ELE : term -> term
   val mk_auto_tag : term -> term
   val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
   val mk_name_tylabels : string list -> typ (* ["i","j","k"] -> 'i \<times> 'j \<times> 'k *)
@@ -53,7 +53,6 @@ signature NU_BASICS = sig
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm
   val dest_current_nu   : thm -> term
   val dest_current_nu_c : thm -> cterm
-  val dest_topctx'   : term -> (term list (* stack *) * term list (* heap *))
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
   val current_block_var   : thm -> term
@@ -71,8 +70,6 @@ signature NU_BASICS = sig
   val dest_premise_tag  : term -> term * term
   val dest_premise_tag_c: cterm -> cterm * cterm
 
-  val mk_PropBlock : int -> thm -> thm
-
   val dest_Cast   : term -> term * term * term
   val dest_Cast_c : cterm -> cterm * cterm * cterm
 
@@ -81,11 +78,10 @@ signature NU_BASICS = sig
 
   val default_ty_R : typ
   val tail_stack_ty : typ -> typ -> typ
+  val strip_separations : term -> term list
 
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
   (* val auto_fusion_arity : term -> int *)
-
-  val parse_arg_list : bool (*void tail*) -> term -> term
 end
 structure NuBasics = struct
 open Thm Term HOLogic NuHelp
@@ -106,9 +102,6 @@ fun mk_stateT ty = Type(@{type_name "state"}, [ty])
 val dest_tynuset_c = dest_ctyp0
 (* heap \<times> \<alpha> |--> \<beta> set *)
 fun dest_typroc_c ty = (dest_ctyp1 (dest_ctyp0 ty), dest_ctyp0 (dest_ctyp1 ty))
-
-val thm_PropBlock_I = @{thm NuPrime.PropBlock_I}
-fun mk_PropBlock n th = Drule.comp_no_flatten (th, n) 1 thm_PropBlock_I
 
 fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
@@ -146,15 +139,24 @@ fun dest_labelled_opt tm =
   case try (dest_binop labelled_name) tm of
      SOME (v,tm) => (SOME (dest_label v), tm)
    | NONE => (NONE, tm)
-fun mk_repset (tm as (Const (@{const_name "RepSet"}, _) $ _)) = tm
-  | mk_repset tm = mk_monop @{const_name "RepSet"} tm
-val nuTy_name = @{const_name "typing"}
-val dest_nuTy = dest_binop nuTy_name
-val dest_nuTy_c = dest_binop_c nuTy_name
-val dest_RepSet = dest_monop @{const_name "RepSet"} #> dest_nuTy
-val dest_RepSet_c = dest_monop_c @{const_name "RepSet"} #> dest_nuTy_c
-val mk_nuTy = mk_binop nuTy_name
-val mk_RepSet = mk_nuTy #> mk_monop @{const_name "RepSet"}
+
+fun dest_ELE (Const (@{const_name Val_Ele}, _) $ X) = X
+  | dest_ELE (Const (@{const_name Obj_Ele}, _) $ X) = X
+  | dest_ELE (Const (@{const_name Ele}, _) $ X) = X
+  | dest_ELE X = X
+fun mk_repset (tm as (Const (@{const_name RepSet}, _) $ _)) = tm
+  | mk_repset tm = mk_monop @{const_name RepSet} tm
+val dest_repset = dest_ELE #> dest_monop @{const_name RepSet}
+
+val dest_nuTy = dest_binop @{const_name "typing"}
+val dest_nuTy_c = dest_binop_c @{const_name "typing"}
+val mk_nuTy = mk_binop @{const_name "typing"}
+val dest_RepSet = dest_ELE
+               #> dest_repset
+               #> dest_nuTy
+val mk_RepSet = mk_nuTy
+             #> mk_monop @{const_name "RepSet"}
+             #> mk_monop @{const_name "Ele"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 (* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
   | dest_andTy t = raise TERM ("bad AndTy", [t]); *)
@@ -184,12 +186,6 @@ val dest_current_nu_c =
       Thm.cprop_of #> perhaps (try dest_Trueprop_c)
         #> orelse_opt (try (dest_PendingConstruction_c #> #4)) (dest_CurrentConstruction_c #> #3)
 
-val dest_topctx = dest_binop @{const_name "NuTopCtx"}
-val dest_topctx_c = dest_binop_c @{const_name "NuTopCtx"}
-
-fun dest_topctx' tm = dest_topctx tm
-      |> apfst (strip_binop_l @{const_name Stack_Delimiter})
-      |> apsnd (strip_binop_l @{const_name Heap_Divider})
 
 val current_block_var_c =
   Thm.cprop_of
@@ -303,55 +299,10 @@ fun tail_stack_ty ty_R (Type (@{type_name prod}, [a, b])) =
   | tail_stack_ty ty_R (Type (@{type_name void}, _)) = ty_R
   | tail_stack_ty ty_R ty = ty
 
-local
-fun is_free_var' tm = is_Free tm orelse is_Var tm
-fun is_free_var tm = is_free_var' (Type.strip_constraints tm)
-in
+fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
+  | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
+  | strip_separations (Abs (_, _, T)) = strip_separations T
+  | strip_separations T = strip_binop_r @{const_name Separation} T
 
-fun tr_stack void_tail (Const (@{const_name Stack_Delimiter},_) $ A $ B)
-      = Const (@{const_name Stack_Delimiter},dummyT) $ tr_stack void_tail A $ B
-  | tr_stack void_tail (tm as (Const (@{const_name RepSet},_) $ _))
-      = Const (@{const_name Stack_Delimiter},dummyT)
-          $ (if void_tail then @{term Void} else Free ("\<RR>", dummyT)) $ tm
-  | tr_stack void_tail (Const ("_type_constraint_", ty) $ tm)
-      = Const ("_type_constraint_", ty) $ tr_stack void_tail tm
-  | tr_stack _ tm = tm
 
-fun tr_heap (Const (@{const_name Heap_Divider},_) $ A $ B)
-      = Const (@{const_name Heap_Divider},dummyT) $ tr_heap A $ B
-  | tr_heap (tm as (Const (@{const_name RepSet},_) $ _))
-      = Const (@{const_name Heap_Divider},dummyT)
-          $ Free ("\<HH>", dummyT) $ tm
-  | tr_heap (Const ("_type_constraint_", ty) $ tm)
-      = Const ("_type_constraint_", ty) $ tr_heap tm
-  | tr_heap tm = tm
-
-fun tr_topctx void_tail (Const (@{const_name NuTopCtx},_) $ S $ H)
-      = Const (@{const_name NuTopCtx}, dummyT) $ tr_stack void_tail S $ H
-  | tr_topctx void_tail (tm as (Const (@{const_name Front_Stack},_) $ _ $ _))
-      = tm
-  | tr_topctx void_tail (Abs (name, _, body))
-      = Abs (name, dummyT, tr_topctx void_tail body)
-  | tr_topctx void_tail (Const (@{const_name ExSet}, _) $ body)
-      = Const (@{const_name ExSet}, dummyT) $ tr_topctx void_tail body
-  | tr_topctx void_tail (Const (@{const_name Subjection}, _) $ body $ P)
-      = Const (@{const_name Subjection}, dummyT) $ tr_topctx void_tail body $ P
-  | tr_topctx void_tail (Const ("_type_constraint_", ty) $ tm)
-      = Const ("_type_constraint_", ty) $ tr_topctx void_tail tm
-  | tr_topctx void_tail (tm as (Const (@{const_name Stack_Delimiter}, _) $ A $ B))
-      = Const (@{const_name NuTopCtx},dummyT) $ tr_stack void_tail tm
-          $ @{term Nothing}
-  | tr_topctx void_tail (tm as (Const (@{const_name typing},_) $ _ $ _))
-      = Const (@{const_name NuTopCtx},dummyT)
-          $ tr_stack void_tail (mk_monop @{const_name RepSet} tm)
-          $ @{term Nothing}
-  | tr_topctx void_tail (tm as (Const (@{const_name RepSet},_) $ _))
-      = Const (@{const_name NuTopCtx},dummyT)
-          $ tr_stack void_tail tm
-          $ @{term Nothing}
-  | tr_topctx void_tail tm = tm
-
-val parse_arg_list = tr_topctx
-
-end
 end

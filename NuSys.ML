@@ -250,11 +250,14 @@ fun finish_proc cc sequent =
 fun start_proc ty_R blk_name arg_nuTy ctx =
   let
     val ty_R = the_default default_ty_R ty_R
-    val ty_a = (case typ_of_cterm arg_nuTy
-                   of Type ("Set.set", [Type (@{type_name prod}, [_, ty])]) => ty
-                    | _ => raise Fail "start_proc - argTy - not a set")
+    val arg_tys = strip_separations (term_of arg_nuTy)
+                    |> map_filter (try (
+                        dest_monop @{const_name Val_Ele}
+                          #> fastype_of
+                          #> dest_monop_ty "Set.set"
+                      ))
     val ([blk_name, RR],ctx) = Variable.add_fixes [blk_name, "\<RR>"] ctx
-    val stat_var = Free (blk_name, mk_stateT (tail_stack_ty ty_R ty_a))
+    val stat_var = Free (blk_name, mk_stateT (HOLogic.mk_tupleT (arg_tys @ [ty_R])))
     val ctx = Variable.declare_constraints stat_var ctx
     val init = Const(@{const_name CurrentConstruction},
                   fastype_of stat_var --> @{typ "(heap \<times> stack) set"}

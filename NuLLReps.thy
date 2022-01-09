@@ -86,9 +86,9 @@ subsection \<open>Instantiations for memptr\<close>
 
 instantiation memptr :: lrep begin
 definition llty_memptr :: " memptr itself \<Rightarrow> llty" where [\<nu>intro]: "llty_memptr _ = llty_pointer"
-definition deepize_memptr :: " memptr \<Rightarrow> deep_model"
+definition deepize_memptr :: " memptr \<Rightarrow> value"
   where "deepize_memptr ptr = DM_pointer (case_memptr (map_memaddr unat) ptr)"
-definition shallowize_memptr :: " deep_model \<Rightarrow> memptr "
+definition shallowize_memptr :: " value \<Rightarrow> memptr "
   where "shallowize_memptr dm = (case dm of DM_pointer addr \<Rightarrow> memptr (map_memaddr of_nat addr))"
 instance apply standard subgoal for x apply (cases x) subgoal for xa apply (cases xa)
       by (auto simp add: shallowize_memptr_def deepize_memptr_def) done done 
@@ -218,8 +218,8 @@ subsection \<open>Lrep instantiations\<close>
 
 instantiation word :: (len) lrep begin
 definition llty_word :: "'a word itself \<Rightarrow> llty" where [simp, \<nu>intro]: "llty_word _ = llty_int LENGTH('a)"
-definition deepize_word :: " 'a word \<Rightarrow> deep_model " where "deepize_word x = DM_int LENGTH('a) (unat x)"
-definition shallowize_word :: " deep_model \<Rightarrow> 'a word" where "shallowize_word x = (case x of DM_int _ n \<Rightarrow> of_nat n)"
+definition deepize_word :: " 'a word \<Rightarrow> value " where "deepize_word x = DM_int LENGTH('a) (unat x)"
+definition shallowize_word :: " value \<Rightarrow> 'a word" where "shallowize_word x = (case x of DM_int _ n \<Rightarrow> of_nat n)"
 instance apply standard using deepize_word_def shallowize_word_def by auto
 end
 
@@ -260,7 +260,9 @@ lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
   let open NuBasics
     val num = Syntax.parse_term ctx num
     fun mk term = mk_nuTy (num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
-    val term = ((dest_current_nu meta |> dest_topctx' |> #1 |> @{print} |> hd |> dest_RepSet |> #2 |> mk)
+    val term = (
+        (dest_current_nu meta |> strip_binop_r \<^const_name>\<open>Separation\<close>
+            |> hd |> dest_RepSet |> #2 |> mk)
       handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
         | ERROR _ => mk @{term \<open>\<nat>[32]\<close>}) |> @{print}
   in (NuSys.auto_construct ctx term meta, ctx)  end)
@@ -316,8 +318,8 @@ subsubsection \<open>lrep\<close>
 
 instantiation tuple :: (field_list) lrep begin
 definition llty_tuple :: " 'a tuple itself \<Rightarrow> llty " where [simp, \<nu>intro]: "llty_tuple _ = llty_tup (llty TYPE('a))"
-definition deepize_tuple :: " 'a tuple \<Rightarrow> deep_model " where "deepize_tuple x = DM_record (deepize (case_tuple id x))"
-definition shallowize_tuple :: " deep_model \<Rightarrow> 'a tuple " where "shallowize_tuple x = (case x of DM_record y \<Rightarrow> Tuple (shallowize y))"
+definition deepize_tuple :: " 'a tuple \<Rightarrow> value " where "deepize_tuple x = DM_record (deepize (case_tuple id x))"
+definition shallowize_tuple :: " value \<Rightarrow> 'a tuple " where "shallowize_tuple x = (case x of DM_record y \<Rightarrow> Tuple (shallowize y))"
 instance apply standard using shallowize_tuple_def deepize_tuple_def by (auto split: tuple.split)
 end
 
@@ -377,8 +379,8 @@ subsubsection \<open>lrep\<close>
 
 instantiation fun_addr ::  lrep begin
 definition llty_fun_addr :: " fun_addr itself \<Rightarrow> llty " where [simp, \<nu>intro]: "llty_fun_addr _ = Lty_fun_addr"
-definition deepize_fun_addr :: " fun_addr \<Rightarrow> deep_model " where "deepize_fun_addr = DM_fun_addr"
-definition shallowize_fun_addr :: " deep_model \<Rightarrow> fun_addr " where "shallowize_fun_addr x = (case x of DM_fun_addr y \<Rightarrow> y)"
+definition deepize_fun_addr :: " fun_addr \<Rightarrow> value " where "deepize_fun_addr = DM_fun_addr"
+definition shallowize_fun_addr :: " value \<Rightarrow> fun_addr " where "shallowize_fun_addr x = (case x of DM_fun_addr y \<Rightarrow> y)"
 instance apply standard using shallowize_fun_addr_def deepize_fun_addr_def by auto
 end
 
