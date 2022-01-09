@@ -489,23 +489,24 @@ declare Heap'_expn[simp]
 
 term Variant_Cast
 lemma do_while_\<nu>app:
-  "Variant_Cast vars S H S' H' \<longrightarrow>
+  "Variant_Cast vars X X' \<longrightarrow>
   \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
-  (\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> S' x\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H' x \<longmapsto> \<exists>* x'. S' x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<brangle>) \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack)  body \<blangle> S\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto> \<exists>* x'. S' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x' \<brangle>"
+  (\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X' x \<longmapsto> \<exists>* x'. X' x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<brangle>) \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack)  body \<blangle> X \<longmapsto> \<exists>* x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x' \<brangle>"
   unfolding Variant_Cast_def Premise_def apply simp
-  using "__DoWhile___\<nu>app"[of "cond" _ "(\<lambda>x. S' x\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H' x)", unfolded Premise_def, simplified] by blast
+  using "__DoWhile___\<nu>app"[of "cond" _ "X'", unfolded Premise_def, simplified] by blast
 
 
 subsubsection \<open>while\<close>
 
-proc while: \<open>S'\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H'\<close> \<longmapsto> \<open>\<exists>* x. (S x\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x) \<and>\<^sup>s (\<not> cond x)\<close>
-  for S' :: " 's::stack set"
-  requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars S' H' S H"
-    and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's \<longmapsto> 1 word \<times> 's) \<blangle> S x\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x \<longmapsto> \<exists>* x'. (S x'\<heavy_asterisk> cond x' \<tycolon> \<bool>\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x')\<brangle>"
-    and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<blangle> S x\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x \<longmapsto> \<exists>* x'. (S x'\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H x') \<brangle>"
-  \<bullet> Cond if \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket>
+proc while: \<open>X'\<close> \<longmapsto> \<open>\<exists>* x. X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x\<close>
+  requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars X' X"
+    and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<brangle>"
+    and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<brangle>"
+  \<bullet> Cond
+  \<bullet> if
+  \<bullet> \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket>
   \<bullet> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
   finish
 

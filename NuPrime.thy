@@ -370,6 +370,8 @@ end
 
 subsection \<open>The \<nu>-system VM and Procedure construction structures\<close>
 
+type_synonym assn = "(heap \<times> stack) set" \<comment> \<open>assertion\<close>
+
 subsubsection \<open>Types specifying states\<close>
 
 definition StrictStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a state set" ("\<S_S> _" [56] 55)
@@ -395,7 +397,7 @@ lemma LooseStateTy_upgrade: "s \<in> \<S> T \<Longrightarrow> s \<noteq> Partial
 lemma StrictStateTy_degrade: "s \<in> \<S_S> T \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
 lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> s \<in> \<S_S> T) \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
 
-subsubsection \<open>Frame Separator\<close>
+subsubsection \<open>Separator\<close>
 
 definition disjoint :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " (infixl "\<perpendicular>" 60) where "disjoint A B \<longleftrightarrow> (A \<inter> B = {})"
 lemma disjoint_rewL: "A \<perpendicular> B \<longleftrightarrow> (\<forall>x. x \<in> A \<longrightarrow> x \<notin> B)" unfolding disjoint_def by auto
@@ -411,8 +413,8 @@ definition Shallowize :: " value set \<Rightarrow> 'a::lrep set " where "Shallow
 lemma Shallowize_Deepize[simp]: "Shallowize (Deepize S) = S "
   unfolding Deepize_def Shallowize_def by (simp add: image_iff set_eq_iff)
 
-definition Deepize' :: " (heap \<times> 'a::stack) set \<Rightarrow> (heap \<times> stack) set " where "Deepize' S = apsnd stack_deepize ` S"
-definition Shallowize' :: " (heap \<times> stack) set \<Rightarrow> (heap \<times> 'a::stack) set " where "Shallowize' S = {(h,s). (h,stack_deepize s) \<in> S}"
+definition Deepize' :: " (heap \<times> 'a::stack) set \<Rightarrow> assn " where "Deepize' S = apsnd stack_deepize ` S"
+definition Shallowize' :: " assn \<Rightarrow> (heap \<times> 'a::stack) set " where "Shallowize' S = {(h,s). (h,stack_deepize s) \<in> S}"
 
 
 (*lemma [simp]: "(h, shallowize s) \<in> Shallowize' M \<longleftrightarrow> (h, s) \<in> M"
@@ -432,17 +434,17 @@ lemma Shallowize'_expn[nu_exps]:
 lemma Shallowize'_Deepize'[simp]: "Shallowize' (Deepize' S) = S "
   unfolding Deepize'_def Shallowize'_def by (simp add: image_iff pair_exists Bex_def set_eq_iff)
 
-lemma Deepize'_Deepize'[simp]: "Deepize' S = S" for S :: "(heap \<times> stack) set"
+lemma Deepize'_Deepize'[simp]: "Deepize' S = S" for S :: "assn"
   unfolding set_eq_iff pair_forall Deepize'_expn by simp
 
 lemma Deepize'_inj[simp]:
   "Deepize' A = Deepize' B \<longleftrightarrow> A = B"
   unfolding set_eq_iff Deepize'_expn pair_forall by force
 
-consts Ele :: " 'a set \<Rightarrow> (heap \<times> stack) set " ("ELE _" [17] 16)
+consts Ele :: " 'a set \<Rightarrow> assn " ("ELE _" [17] 16)
 translations "ELE x \<tycolon> T" \<rightleftharpoons> "ELE \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 
-definition Val_Ele :: " 'a::lrep set \<Rightarrow> (heap \<times> stack) set " ("VAL _" [17] 16) where
+definition Val_Ele :: " 'a::lrep set \<Rightarrow> assn " ("VAL _" [17] 16) where
   "(VAL T) = { (Map.empty, stack [v]) | v. v \<in> deepize ` T } "
 
 adhoc_overloading Ele Val_Ele
@@ -457,7 +459,7 @@ lemma [elim!,\<nu>elim]: "Inhabited (VAL T) \<Longrightarrow> (Inhabited T \<Lon
 
 (* lemma [\<nu>elim,elim!]: "Inhabited (SEle T) \<Longrightarrow> Inhabited T" unfolding Inhabited_def  *)
 
-definition Obj_Ele :: " heap set \<Rightarrow> (heap \<times> stack) set " ("OBJ _" [17] 16) where
+definition Obj_Ele :: " heap set \<Rightarrow> assn " ("OBJ _" [17] 16) where
   "(OBJ T) = { (h, stack []) | h. h \<in> T } "
 
 adhoc_overloading Ele Obj_Ele
@@ -473,7 +475,7 @@ lemma [elim!,\<nu>elim]: "Inhabited (OBJ T) \<Longrightarrow> (Inhabited T \<Lon
   unfolding Inhabited_def by (simp add: pair_exists nu_exps)
 
 
-definition Separation :: "(heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set" ( "_/ \<heavy_asterisk> _" [13,14] 13)
+definition Separation :: "assn \<Rightarrow> assn \<Rightarrow> assn" ( "_/ \<heavy_asterisk> _" [13,14] 13)
   where "(T \<heavy_asterisk> U) = {(h,s). (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U) }"
 
 translations
@@ -481,7 +483,7 @@ translations
   "T \<heavy_asterisk> y \<tycolon> U" \<rightleftharpoons> "T \<heavy_asterisk> CONST Ele \<tort_lbrace>y \<tycolon> U\<tort_rbrace>"
 
 
-(* definition Separation :: "(heap \<times> 'a::stack) set \<Rightarrow> (heap \<times> 'b::stack) set \<Rightarrow> (heap \<times> stack) set" ( "_/ \<heavy_comma>\<heavy_asterisk> _" [13,14] 13)
+(* definition Separation :: "(heap \<times> 'a::stack) set \<Rightarrow> (heap \<times> 'b::stack) set \<Rightarrow> assn" ( "_/ \<heavy_comma>\<heavy_asterisk> _" [13,14] 13)
   where "(M \<heavy_comma>\<heavy_asterisk> T) = (Deepize' M \<heavy_comma>\<heavy_asterisk>'' Deepize' T)" *)
 
 lemma Separation_expn:
@@ -609,9 +611,9 @@ subsubsection \<open>\<nu>-Procedure\<close>
 text \<open>An assertion identical to Hoare triple, in the language of \<nu>-type. 
   \<^const>\<open>Heap'\<close> and \<^const>\<open>Shallowize'\<close> are auxiliary usage.\<close>
 
-definition Procedure :: "('c::stack \<longmapsto> 'd::stack) \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
+definition Procedure :: "('c::stack \<longmapsto> 'd::stack) \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool" ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
   where [\<nu>def]:"Procedure f T U \<longleftrightarrow>
-      (\<forall>a M::(heap \<times> stack) set. a \<in> Heap' (Shallowize' (M \<heavy_asterisk> T)) \<longrightarrow> f a \<in> \<S> Heap' (Shallowize' (M \<heavy_asterisk> U)))"
+      (\<forall>a M::assn. a \<in> Heap' (Shallowize' (M \<heavy_asterisk> T)) \<longrightarrow> f a \<in> \<S> Heap' (Shallowize' (M \<heavy_asterisk> U)))"
 
 translations
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> CONST Ele \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
@@ -684,10 +686,10 @@ subsection \<open>Top-level Construction Structures\<close>
 
 subsubsection \<open>Construction Context & Code block\<close>
 
-definition CurrentConstruction :: " ('a::stack) state \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> bool "
+definition CurrentConstruction :: " ('a::stack) state \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool "
     ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,11] 10)
   where "CurrentConstruction s R S \<longleftrightarrow> s \<in> \<S_S> Heap' (Shallowize' (R \<heavy_asterisk> S))"
-definition PendingConstruction :: " (('a::stack) \<longmapsto> ('b::stack)) \<Rightarrow> 'a state \<Rightarrow> (heap \<times> stack) set \<Rightarrow> (heap \<times> stack) set \<Rightarrow> bool "
+definition PendingConstruction :: " (('a::stack) \<longmapsto> ('b::stack)) \<Rightarrow> 'a state \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool "
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,1000,5] 4)
   where "PendingConstruction f s R S \<longleftrightarrow> bind s f \<in> \<S> Heap' (Shallowize' (R \<heavy_asterisk> S))"
 translations

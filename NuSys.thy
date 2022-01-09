@@ -2248,7 +2248,7 @@ val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
            where_statement -- defines_statement  -- precond_statement;
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- nu_statements) >>
+    ((Parse_Spec.thm_name ":" -- Parse.term --| $$$ "\<longmapsto>" -- Parse.term -- nu_statements) >>
         (fn (((b,arg),ret),((((fixes,includes),lets),defs),preconds)) =>  
             (begin_proc_cmd b arg ret fixes includes lets defs preconds)));
 
@@ -2488,49 +2488,36 @@ section \<open>Mechanism III - Additional Parts\<close>
 
 subsection \<open>Variant Cast\<close>
 
-definition Variant_Cast :: " 'vars \<Rightarrow> 'stack set \<Rightarrow> heap set \<Rightarrow> ('vars \<Rightarrow> 'stack set) \<Rightarrow> ('vars \<Rightarrow> heap set) \<Rightarrow> bool "
-      ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t _ \<^bold>i\<^bold>n _\<heavy_comma>/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _/ \<longmapsto> _\<heavy_comma>/ \<^bold>h\<^bold>e\<^bold>a\<^bold>p _" )
-  where "Variant_Cast insts S H S' H' \<longleftrightarrow> S = S' insts \<and> H = H' insts"
+definition Variant_Cast :: " 'vars \<Rightarrow> assn \<Rightarrow> ('vars \<Rightarrow> assn) \<Rightarrow> bool " ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t _ \<^bold>i\<^bold>n _/ \<longmapsto> _" )
+  where "Variant_Cast insts X X' \<longleftrightarrow> X = X' insts"
 
-lemma Variant_Cast_I:
-  "S = S' vars \<Longrightarrow> H = H' vars \<Longrightarrow> Variant_Cast vars S H S' H' "
+lemma Variant_Cast_I: "X = X' vars \<Longrightarrow> Variant_Cast vars X X' "
   unfolding Variant_Cast_def by auto
 
 lemma Variant_Cast_I_always:
-  "S = S' vars \<Longrightarrow> H = H' vars \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always vars \<Longrightarrow>
-  Variant_Cast vars S H (\<lambda>vars. S' vars \<and>\<^sup>s always vars) H'"
+  "X = X' vars \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always vars \<Longrightarrow>
+  Variant_Cast vars X (\<lambda>vars. X' vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j always vars)"
   unfolding Variant_Cast_def Auto_def by (auto simp add: nu_exps)
-
-(*definition Variants_Quant_Tag :: " ('vars \<Rightarrow> unit) \<Rightarrow> 'a \<Rightarrow> 'a" ("<expand'_vars>")
-  where "Variants_Quant_Tag vars a = a"
-translations " <expand_vars> tag (x \<tycolon> T)" \<rightleftharpoons> "x \<tycolon> <expand_vars> tag T" *)
-
-(* definition Variants_Subj :: " ('vars \<Rightarrow> unit) \<Rightarrow> ('vars \<Rightarrow> bool) \<Rightarrow> bool" ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t\<^bold>s _ \<^bold>s\<^bold>u\<^bold>b\<^bold>j _")
-  where "Variants_Subj vars subj \<longleftrightarrow> True"
-lemma Variants_Subj_I: "Variants_Subj vars subj" unfolding Variants_Subj_def .. *)
 
 lemma case_prod_expn_I: "A = B x y \<Longrightarrow> A = case_prod B (x,y)" by simp
 lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by simp
 
 ML_file_debug \<open>library/variables_tag.ML\<close>
 
-\<nu>processor vars_by_pattern 110 \<open>Variant_Cast vars S H S' H' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
+\<nu>processor vars_by_pattern 110 \<open>Variant_Cast vars X X' \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn meta => 
 let open Parse Scan NuHelp NuBasics 
-  fun pattern_match ((((vars, stack_schema), heap_schema)), always) _ =
-    (NuVariablesTag.variables_tag_pattern_match vars stack_schema heap_schema always ctx meta, ctx)
+  fun pattern_match ((vars, pattern), always) _ =
+    (NuVariablesTag.variables_tag_pattern_match vars pattern always ctx meta, ctx)
   fun var_term (vars, always) _ =
     (NuVariablesTag.variables_tag_terms vars always ctx meta, ctx)
   val none = Scan.succeed []
   val params = (list Parse.params) >> flat
   val syn_pattern_match =
-    ($$$ "var" |-- params -- optional ($$$ "stack" |-- list1 term) [] -- optional ($$$ "heap" |-- list1 term) []
-        -- option ($$$ "always" |-- term))
-    >> (fn (v as ((((_, ssch), hsch)), _)) => if null ssch andalso null hsch then fail () else v)
+    ($$$ "var" |-- params --| $$$ "in" -- list1 term -- option ($$$ "always" |-- term))
     >> pattern_match
   val syn_nonvar =
-    (optional ($$$ "stack" |-- params) [] -- optional ($$$ "heap" |-- params) [] -- option ($$$ "always" |-- term))
-    >> apfst (fn (svars,hvars) =>
-        ((svars @ hvars, map (Binding.name_of o #1) svars), map (Binding.name_of o #1) hvars))
+    (params -- option ($$$ "always" |-- term))
+    >> apfst (fn vars => (vars, map (Binding.name_of o #1) vars))
     >> pattern_match
   val syn_var_term = ($$$ "var" |-- list1 term -- Scan.option ($$$ "always" |-- term)) >> var_term
 in syn_pattern_match || syn_var_term || syn_nonvar end\<close>

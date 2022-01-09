@@ -1,7 +1,7 @@
 signature NU_VARIABLES_TAG = sig
   val variables_tag_terms : string list -> string option -> Proof.context -> thm -> thm
   val variables_tag_pattern_match : (binding * string option * mixfix) list
-    -> string list -> string list -> string option -> Proof.context -> thm -> thm
+    -> string list -> string option -> Proof.context -> thm -> thm
 end
 structure NuVariablesTag : NU_VARIABLES_TAG = struct
 open NuHelp NuBasics QuantExpansion
@@ -20,31 +20,31 @@ fun strip_abs_fixes (Abs (name,ty,body)) =
   | strip_abs_fixes _ = []
 
 
-fun gen_set_variables_tag prep_S vars always ctxt sequent =
+fun gen_set_variables_tag prep_seps vars always ctxt sequent =
   let
-    val Const (@{const_name Variant_Cast}, _) $ _ $ S $ H $ _ $ _
+    val Const (@{const_name Variant_Cast}, _) $ _ $ X $ _
           = Thm.major_prem_of sequent |> dest_Trueprop
-    val (S',H') = prep_S ctxt (S,H)
+    val X' = prep_seps ctxt X
 
     val names = map fst vars
     val ctxt = Variable.declare_typ (mk_name_tylabels names) ctxt
 
-    val always = Option.map (Syntax.parse_term ctxt #> tuple_abs vars #> mk_cases_named names) always
+    val always = always
+          |> Option.map (Syntax.parse_term ctxt #> tuple_abs vars #> mk_cases_named names)
 
-    val S' = tuple_abs vars S' |> mk_cases_named names
-    val H' = tuple_abs vars H' |> mk_cases_named names
-    val S' = case always of SOME alw =>
+    val X' = tuple_abs vars X' |> mk_cases_named names
+    val X' = case always of SOME alw =>
               Abs ("\<xx>", dummyT,
-                Const(@{const_name Subjection}, dummyT) $ (S' $ Bound 0)
+                Const(@{const_name Subjection}, dummyT) $ (X' $ Bound 0)
                   $ (Const (@{const_abbrev Normal_Premise}, dummyT) $ (alw $ Bound 0)))
-          | NONE => S'
+             | NONE => X'
 
     val [var] = Variable.variant_frees ctxt [] [("Variant_Cast_vars", dummyT)]
-    val var_tag = Const (@{const_name Variant_Cast}, dummyT) $ Free var $ S $ H $ S' $ H'
+    val var_tag = Const (@{const_name Variant_Cast}, dummyT) $ Free var $ X $ X'
                     |> Syntax.check_term ctxt 
-    val var_tag = (case var_tag of (T0 $ Free(name,T1) $ T2 $ T3 $ T4 $T5) =>
-                    (T0 $ Var((name,0),T1) $ T2 $ T3 $ T4 $T5))
-                |> mk_Trueprop |> cterm_of ctxt
+    val var_tag = (case var_tag of (T0 $ Free(name,T1) $ T2 $ T3) =>
+                      (T0 $ Var((name,0),T1) $ T2 $ T3))
+                  |> mk_Trueprop |> cterm_of ctxt
 
     val goal = Goal.init var_tag |> @{print}
                   |> SINGLE (REPEAT (HEADGOAL (resolve_tac ctxt
@@ -75,40 +75,29 @@ fun gen_set_variables_tag prep_S vars always ctxt sequent =
     sequent
   end
 
-fun variables_tag_pattern_match raw_vars stack_schema heap_schema always ctxt sequent =
+fun variables_tag_pattern_match raw_vars pattern always ctxt sequent =
   let
     val origin_var_names = map (fn (x,_,_) => Binding.name_of x) raw_vars
     val (new_var_names,ctxt) =
       Proof_Context.add_fixes (map (fn (a,b,c) => (a, Option.map (Syntax.read_typ ctxt) b, c)) raw_vars) ctxt
     val vars = origin_var_names ~~ map (rpair dummyT) new_var_names
 
-    fun prep_S ctxt (S,H) =
+    fun prep_seps ctxt X =
       let
-        val stack_schema = rev (map (Syntax.parse_term ctxt) stack_schema)
-        val heap_schema = rev (map (Syntax.parse_term ctxt) heap_schema)
+        val pattern = rev (map (Syntax.parse_term ctxt) pattern)
+        val sep = strip_binop_l @{const_name Separation} X
 
-        val (stack,heap) =
-            (strip_binop_l @{const_name Stack_Delimiter} S,
-             strip_binop_l @{const_name Heap_Divider} H)
-
-        val stack' = stack_schema ~~ take (length stack_schema) stack
-              |> map (fn (sch, org) =>
+        val sep' = pattern ~~ take (length pattern) sep
+              |> map (fn (pat, org) => (*TODO: patter match here*)
                   case try dest_RepSet org
-                    of SOME (x,T) => mk_RepSet (Type.constraint (fastype_of x) sch, T)
-                     | NONE => sch)
-              |> (fn l => l @ drop (length stack_schema) stack)
-        val heap' = heap_schema ~~ take (length heap_schema) heap
-              |> map (fn (sch, org) =>
-                  case try dest_RepSet org
-                    of SOME (x,T) => mk_RepSet (Type.constraint (fastype_of x) sch, T)
-                     | NONE => sch)
-              |> (fn l => l @ drop (length heap_schema) heap)
+                    of SOME (x,T) => mk_RepSet (Type.constraint (fastype_of x) pat, T)
+                     | NONE => pat)
+              |> (fn l => l @ drop (length pattern) sep)
       in
-        (list_mk_binop_l @{const_name Stack_Delimiter} stack',
-         list_mk_binop_l @{const_name Heap_Divider}    heap' )
+        list_mk_binop_l @{const_name Separation} sep'
       end
   in
-    gen_set_variables_tag prep_S vars always ctxt sequent
+    gen_set_variables_tag prep_seps vars always ctxt sequent
   end
 
 fun variables_tag_terms raw_vars always ctxt sequent =

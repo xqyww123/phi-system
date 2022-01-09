@@ -302,7 +302,7 @@ fun tail_stack_ty ty_R (Type (@{type_name prod}, [a, b])) =
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
   | strip_separations (Abs (_, _, T)) = strip_separations T
-  | strip_separations T = strip_binop_r @{const_name Separation} T
+  | strip_separations T = strip_binop_l @{const_name Separation} T
 
 
 end
