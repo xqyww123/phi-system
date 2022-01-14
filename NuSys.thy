@@ -5,7 +5,8 @@ theory NuSys
   keywords
     "proc" "rec_proc" "\<nu>cast" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "cast" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$"
-    "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" "heap" "stack" :: quasi_command
+    "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" "heap" "stack"
+    "argument" "return" :: quasi_command
   and "\<bullet>" "affirm" :: prf_decl % "proof"
   and "\<nu>processor" "\<nu>reasoner" "setup_\<nu>application_method" :: thy_decl % "ML"
   and "\<nu>interface" "\<nu>export_llvm" "\<nu>overloads" :: thy_decl
@@ -1334,13 +1335,23 @@ lemma [\<nu>intro 2000]:
   unfolding cast_def Separation_empty .
 
 lemma [\<nu>intro 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> VAL T \<longmapsto> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t VAL T \<longmapsto> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 lemma [\<nu>intro 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> OBJ T \<longmapsto> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ T \<longmapsto> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  unfolding cast_def Separation_empty .
+
+lemma [\<nu>intro 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G"
+  unfolding cast_def Separation_empty .
+
+lemma [\<nu>intro 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 subsubsection \<open>Subjection\<close>
@@ -1361,6 +1372,23 @@ lemma [\<nu>intro 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> U\<^sub>m \<medium_right_bracket> \<longmapsto> T\<^sub>m \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> U\<^sub>m \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<medium_right_bracket> \<longmapsto> T\<^sub>m \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<medium_right_bracket>: G"
   unfolding cast_def by (simp add: nu_exps)
+
+subsubsection \<open>Protector\<close>
+
+lemma [\<nu>intro 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> U \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> \<^bold>( U \<^bold>) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  unfolding cast_def Implicit_Protector_def by (simp add: nu_exps)
+
+lemma [\<nu>intro 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> U \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l U' \<longmapsto> T' \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> \<^bold>( U \<^bold>) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l U' \<longmapsto> T' \<medium_right_bracket>: G"
+  unfolding cast_def Implicit_Protector_def by (simp add: nu_exps)
+
+lemma [\<nu>intro 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> U' \<medium_right_bracket> \<longmapsto> T' \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> \<^bold>( U' \<^bold>) \<medium_right_bracket> \<longmapsto> T' \<medium_right_bracket>: G"
+  unfolding cast_def Implicit_Protector_def by (simp add: nu_exps)
 
 
 subsubsection \<open>Existential\<close>
@@ -1692,22 +1720,33 @@ lemma "cast'": "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g 
 lemma cast_\<nu>app:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> x' \<tycolon> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> VAL x \<tycolon> X \<longmapsto> R \<heavy_asterisk> x' \<tycolon> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t y \<tycolon> Y \<longmapsto> y' \<tycolon> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> OBJ y \<tycolon> Y \<longmapsto> R \<heavy_asterisk> y' \<tycolon> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Cast_def Argument_def by (simp_all add: nu_exps Separation_expn) blast+
+  "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t VAL x \<tycolon> X \<longmapsto> XX \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> VAL x \<tycolon> X \<longmapsto> R \<heavy_asterisk> XX \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ y \<tycolon> Y \<longmapsto> YY \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> OBJ y \<tycolon> Y \<longmapsto> R \<heavy_asterisk> YY \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  unfolding Cast_def Argument_def
+  by (simp_all add: nu_exps Separation_expn) (metis append_Nil stack_inverse values_of_inverse)+
 
 lemma cast_whole_\<nu>app:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Argument_def by (simp add: nu_exps)
 
+
+lemma cast_conversion:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<medium_right_bracket>
+  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q"
+  unfolding cast_def by blast
+
+
+
 (*
 lemma cast_heap_\<nu>app:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> X \<longmapsto> x' \<tycolon> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> x \<tycolon> X \<longmapsto> R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> x' \<tycolon> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def Argument_def Heap_Divider_def by (simp add: nu_exps) blast
-
-lemma cast_heap_conversion:
+lemma cast_conversion:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H\<^sub>x \<longmapsto> H\<^sub>r \<heavy_asterisk> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>
   \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
   \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H\<^sub>x \<longmapsto> H\<^sub>r \<heavy_asterisk> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Cast_def Heap_Cast_Goal_def Heap_Divider_def by (simp add: nu_exps) blast
+  unfolding cast_def by (simp add: nu_exps) blast
 *)
 (* theorem proc_cast': "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A' \<longmapsto> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t B \<longmapsto> B' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A' \<longmapsto> B' \<brangle>"
   unfolding Procedure_def Cast_def by (auto 0 4) *)
@@ -1843,9 +1882,9 @@ lemma IntroFrameVar_Yes:
 
 \<nu>reasoner IntroFrameVar 1000 ("IntroFrameVar R S'' S' T'' T'") = \<open>fn ctxt => fn sequent =>
   let open NuBasics
-    val (Const (\<^const_name>\<open>IntroFrameVar\<close>, _) $ _ $ S'' $ _ $ _ $ _) =
+    val (Const (\<^const_name>\<open>IntroFrameVar\<close>, _) $ _ $ _ $ S' $ _ $ _) =
         major_prem_of sequent |> dest_Trueprop
-    val tail = strip_separations S'' |> last
+    val tail = strip_separations S' |> last |> @{print}
   in
     if is_Var tail andalso fastype_of tail = @{typ assn}
     then Seq.single (@{thm IntroFrameVar_No} RS sequent)
@@ -1962,12 +2001,12 @@ definition AdrMap :: " ('a,'b,'x,'y) index \<Rightarrow> 'x set \<Rightarrow> 'a
     (\<forall>f. (\<forall>a. a \<in> X \<longrightarrow> f a \<in> Y) \<longrightarrow> (\<forall>a. a \<in> A \<longrightarrow> map_idx idx f  a \<in> B))"
 declare Map_def[\<nu>index_def]
 
-definition FieldIndex
+(*definition FieldIndex
     :: " ('a,'a,'ax,'ax) index \<Rightarrow> ('ax::lrep,'bx) \<nu> \<Rightarrow> ('a::lrep,'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'bx) \<Rightarrow> (('bx \<Rightarrow> 'bx) \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow>bool"
     ("(2\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<blangle> _/ \<^bold>@ _ \<brangle>/ \<^bold>g\<^bold>e\<^bold>t _/ \<^bold>m\<^bold>a\<^bold>p _)" [101,4,4,30,30] 29)
   where [\<nu>index_def]: "FieldIndex idx X A gt mp
       \<longleftrightarrow> (\<forall>a f. \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> \<tort_lbrace>gt a \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>a \<tycolon> A\<tort_rbrace> \<longmapsto> \<tort_lbrace>f (gt a) \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>mp f a \<tycolon> A\<tort_rbrace> \<brangle>)"
-
+*)
 
 translations "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> x \<tycolon> X \<^bold>@ A \<brangle>" \<rightleftharpoons> "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> \<tort_lbrace>x \<tycolon> X\<tort_rbrace> \<^bold>@ A \<brangle>"
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle>" \<rightleftharpoons> "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ \<tort_lbrace> a \<tycolon> A\<tort_rbrace> \<brangle>"
@@ -1985,10 +2024,10 @@ lemma index_here_getter[\<nu>intro]:
 lemma index_here_mapper[\<nu>intro]:
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<brangle>"
   unfolding \<nu>index_def  index_here_def by simp
-lemma index_here_func[\<nu>intro]:
+(*lemma index_here_func[\<nu>intro]:
   "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<blangle> A \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t id \<^bold>m\<^bold>a\<^bold>p id"
   unfolding \<nu>index_def  index_here_def by simp
-
+*)
 
 (* lemma index_left_getter[\<nu>intro]:
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ R\<heavy_comma> A \<brangle>"
@@ -2003,11 +2042,11 @@ lemma [\<nu>intro]:
 lemma [\<nu>intro]:
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ (a,r) \<tycolon> (A \<cross_product> R) \<longmapsto> Y \<^bold>@ (b,r) \<tycolon> (B \<cross_product> R) \<brangle>"
   unfolding \<nu>index_def index_left_def by (cases idx) (simp add: nu_exps)
-lemma [\<nu>intro]:
+(*lemma [\<nu>intro]:
   "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
     \<Longrightarrow> \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ A \<cross_product> R \<brangle> \<^bold>g\<^bold>e\<^bold>t g o fst \<^bold>m\<^bold>a\<^bold>p apfst o m"
   unfolding FieldIndex_def \<nu>index_def index_left_def by (cases idx) (simp add: nu_exps)
-
+*)
 (* lemma index_right_getter[\<nu>intro]:
   "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<blangle> X \<^bold>@ (A\<heavy_comma> R) \<brangle>"
   unfolding \<nu>index_def index_right_def by (cases f) (simp add: nu_exps)
@@ -2021,11 +2060,11 @@ lemma [\<nu>intro]:
 lemma [\<nu>intro]:
     "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (l,a) \<tycolon> (L \<cross_product> A) \<longmapsto> Y \<^bold>@ (l,b) \<tycolon> (L \<cross_product> B) \<brangle>"
   unfolding \<nu>index_def index_right_def by (cases idx) (simp add: nu_exps)
-lemma [\<nu>intro]:
+(*lemma [\<nu>intro]:
   "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
     \<Longrightarrow> \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ R \<cross_product> A \<brangle> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
   unfolding FieldIndex_def \<nu>index_def index_right_def by (cases idx) (simp add: nu_exps)
-
+*)
 subsubsection \<open>Constructors\<close>
 
 lemma [\<nu>intro]:
@@ -2075,12 +2114,12 @@ lemma [\<nu>intro]:
   "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B \<brangle> \<Longrightarrow>
    \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (t,a) \<tycolon> (T \<cross_product> A) \<longmapsto> Y \<^bold>@ (t,b) \<tycolon> (T \<cross_product> B) \<brangle>"
   unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
-lemma [\<nu>intro]:
+(*lemma [\<nu>intro]:
   "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
     \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ R \<cross_product> A \<brangle> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
   unfolding MakeTag_def FieldIndex_def \<nu>index_def index_right_def
   by (cases idx) (simp add: nu_exps)
-
+*)
 lemma [\<nu>intro]:
   "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow>
    \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (t, a) \<tycolon> (T \<cross_product> A) \<brangle>"
@@ -2089,12 +2128,12 @@ lemma [\<nu>intro]:
   "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B \<brangle> \<Longrightarrow>
    \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ (t,a) \<tycolon> (T \<cross_product> A) \<longmapsto> Y \<^bold>@ (t,b) \<tycolon> (T \<cross_product> B) \<brangle>"
   unfolding \<nu>index_def  MakeTag_def index_right_def by (cases idx) (simp add: nu_exps)
-lemma [\<nu>intro]:
+(*lemma [\<nu>intro]:
   "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
     \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<blangle> X \<^bold>@ R \<cross_product> A \<brangle> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
   unfolding MakeTag_def FieldIndex_def \<nu>index_def index_right_def
   by (cases idx) (simp add: nu_exps)
-
+*)
 (* lemma [\<nu>intro]:
   "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<Longrightarrow>
    \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ L\<heavy_comma> A \<brangle>"
@@ -2112,12 +2151,12 @@ lemma [\<nu>intro]:
   "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B \<brangle> \<Longrightarrow>
    \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ (a,t) \<tycolon> (A \<cross_product> L) \<longmapsto> Y \<^bold>@ (b,t) \<tycolon> (B \<cross_product> L) \<brangle>"
   unfolding \<nu>index_def  MakeTag_def index_left_def by (cases idx) (simp add: nu_exps)
-lemma [\<nu>intro]:
+(*lemma [\<nu>intro]:
   "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
     \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<blangle> X \<^bold>@ A \<cross_product> R \<brangle> \<^bold>g\<^bold>e\<^bold>t g o fst \<^bold>m\<^bold>a\<^bold>p apfst o m"
   unfolding FieldIndex_def \<nu>index_def index_left_def MakeTag_def
   by (cases idx) (simp add: nu_exps)
-
+*)
 
 (*
 subsection \<open>Register\<close>
@@ -2401,9 +2440,23 @@ attribute_setup \<nu>application_method = \<open>Scan.lift (Parse.int -- (Parse.
 declare
   apply_proc[\<nu>application_method 1 100]
   apply_proc_conv[\<nu>application_method 3 -3000]
-  "cast"[unfolded Cast_Target_def, \<nu>application_method 1 1000]
-  "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(1)[OF Argument_I], \<nu>application_method 1 1000]
-  "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(2)[OF Argument_I], \<nu>application_method 1 1000]
+  "cast"[unfolded Cast_Target_def, \<nu>application_method 1 1100]
+  "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(1)[OF Argument_I], \<nu>application_method 1 1100]
+  "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(2)[OF Argument_I], \<nu>application_method 1 1100]
+  "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(3)[OF Argument_I], \<nu>application_method 1 1100]
+  "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(4)[OF Argument_I], \<nu>application_method 1 1100]
+  "cast"[unfolded Cast_Target_def, OF _ cast_conversion[OF _ cast_\<nu>app(1)[OF Argument_I]],
+      \<nu>application_method 2 1050]
+  "cast"[unfolded Cast_Target_def, OF _ cast_conversion[OF _ cast_\<nu>app(2)[OF Argument_I]],
+      \<nu>application_method 2 1050]
+  "cast"[unfolded Cast_Target_def, OF _ cast_conversion[OF _ cast_\<nu>app(3)[OF Argument_I]],
+      \<nu>application_method 2 1050]
+  "cast"[unfolded Cast_Target_def, OF _ cast_conversion[OF _ cast_\<nu>app(4)[OF Argument_I]],
+      \<nu>application_method 2 1050]
+
+
+thm "cast"[unfolded Cast_Target_def, OF _ cast_conversion[OF _ cast_\<nu>app(2)[OF Argument_I]],
+      \<nu>application_method 2 1050]
 
 (*  
   "cast"[OF _ cast_whole_heap_\<nu>app[OF Argument_I, OF cast_heap_conversion],

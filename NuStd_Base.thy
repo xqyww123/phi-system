@@ -444,6 +444,10 @@ lemma [branch_convergence]:
   "(if P then Labelled name T else Labelled name' T') = Labelled name (if P then T else T')" unfolding Labelled_def by simp
 lemma [branch_convergence]:
   "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
+lemma [branch_convergence]:
+  "(if P then VAL A else VAL B) = (VAL (if P then A else B))" by auto
+lemma [branch_convergence]:
+  "(if P then OBJ A else OBJ B) = (OBJ (if P then A else B))" by auto
 
 (*TODO: implement the simproc retaining name of bound variables*)
 
@@ -454,7 +458,8 @@ declare op_if_def[\<nu>instr]
 lemma if_\<nu>app:
   "(cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> X \<longmapsto> Y\<^sub>T \<brangle>)
     \<longrightarrow> (\<not> cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> X \<longmapsto> Y\<^sub>F \<brangle>)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if TYPE('y::stack) branch_true branch_false \<blangle> X \<heavy_asterisk> cond \<tycolon> \<bool> \<longmapsto> (if cond then Y\<^sub>T else Y\<^sub>F) \<brangle>"
+    \<longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>b\<^bold>r\<^bold>a\<^bold>n\<^bold>c\<^bold>h] Y : (if cond then Y\<^sub>T else Y\<^sub>F)
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if TYPE('y::stack) branch_true branch_false \<blangle> X \<heavy_asterisk> cond \<tycolon> \<bool> \<longmapsto> Y \<brangle>"
   unfolding \<nu>def op_if_def by (auto simp add: nu_exps)
 
 (* text \<open>Despite the feasibility of divergence of \<nu>-types in the branch, i.e.
@@ -509,6 +514,7 @@ subsubsection \<open>while\<close>
 
 proc while: \<open>X'\<close> :: "'s::stack" \<longmapsto> \<open>\<exists>* x. X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars X' X"
+    and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond"
     and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<brangle>"
     and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<brangle>"
   \<bullet> Cond if \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
@@ -656,6 +662,38 @@ lemma boolean_not_\<nu>app[\<nu>overload not]:
 
 subsection \<open>Field Index\<close>
 
+subsubsection \<open>Abstraction\<close>
+
+definition FieldIndex :: " ('a,'a,'ax,'ax) index \<Rightarrow> ('ax::lrep,'bx) \<nu> \<Rightarrow> ('a::lrep,'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'bx) \<Rightarrow> (('bx \<Rightarrow> 'bx) \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow>bool"
+  where "FieldIndex adr X A gt mp \<longleftrightarrow> (\<forall>a f. \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<blangle> \<tort_lbrace>gt a \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>a \<tycolon> A\<tort_rbrace> \<longmapsto> \<tort_lbrace>f (gt a) \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>mp f a \<tycolon> A\<tort_rbrace> \<brangle>)"
+
+lemma FieldIndex_here: "FieldIndex index_here X X id id"
+  unfolding FieldIndex_def \<nu>index_def index_here_def by auto
+lemma FieldIndex_left: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_left f) X (A \<cross_product> R) (gt o fst) (apfst o mp)"
+  unfolding FieldIndex_def \<nu>index_def index_left_def by (auto simp add: nu_exps)
+lemma FieldIndex_right: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_right f) X (R \<cross_product> A) (gt o snd) (apsnd o mp)"
+  unfolding FieldIndex_def \<nu>index_def index_right_def by (auto simp add: nu_exps)
+
+lemma FieldIndex_tupl: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_tuple f) X \<lbrace> A \<rbrace> gt mp"
+  unfolding FieldIndex_def \<nu>index_def index_tuple_def by (auto simp add: tuple_forall nu_exps)
+
+\<nu>processor field_index 110 \<open>FieldIndex f X \<lbrace> A \<rbrace> gt mp \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn major => Parse.nat >> (fn i => fn _ =>
+  let open NuBasics NuHelp
+    val arity = Logic.dest_implies (prop_of major) |> #1
+        |> dest_Trueprop |> dest_quinop \<^const_name>\<open>FieldIndex\<close> |> #3
+        |> dest_monop \<^const_name>\<open>NuTuple\<close> |> strip_binop_r \<^const_name>\<open>Fusion\<close> |> length
+    val path1 = funpow (i-1) (fn th => th RS @{thm FieldIndex_right})
+        (@{thm FieldIndex_here}
+              |> (fn th => if arity = i then th else th RS @{thm FieldIndex_left}))
+  in 
+    (path1 RS (@{thm FieldIndex_tupl} RS major), ctx)
+  end)\<close>
+
+
+
+(*  WORK IN PROGRESS
+subsection \<open>Field Index\<close>
+
 lemma [\<nu>intro]:
   "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ A \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
     \<Longrightarrow> \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_tuple idx \<blangle> X \<^bold>@ \<lbrace> A \<rbrace> \<brangle> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m"
@@ -722,7 +760,7 @@ Logic.dest_implies (prop_of sequent) |> #1
     (path1 RS (@{thm FieldIndex_tupl} RS major), ctx)
   end)\<close>
 
-
+*)
 subsection \<open>Tuple Operations\<close>
 
 subsubsection \<open>Construction & Destruction\<close>
@@ -848,18 +886,22 @@ subsubsection \<open>Load & Store\<close>
 
 abbreviation "list_map_at f i l \<equiv> list_update l i (f (l ! i))"
 
-lemma op_load[ \<nu>overload "\<up>:" ]:
-  "\<^bold>(\<^bold>( \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x field_index \<blangle> y \<tycolon> Y \<^bold>@ x \<tycolon> X \<brangle> \<^bold>)\<^bold>) \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load TYPE('y::field) TYPE('x) field_index
-    \<blangle> R\<heavy_asterisk> addr \<tycolon> Pointer\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> x \<tycolon> Ref X \<longmapsto> R\<heavy_asterisk> y \<tycolon> Y\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> addr \<R_arr_tail> x \<tycolon> Ref X\<brangle> "
-  for X :: "('x::field, 'c) \<nu>"
-  unfolding op_load_def Procedure_def \<nu>index_def Heap_Divider_def Protector_def
-  by (cases field_index, cases addr)  (auto simp add: lrep_exps MemAddrState_def nu_exps split: option.split iff: addr_allocated_def)
+term op_load
 
-lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF Protector_I, OF index_here_getter, simplified]
+lemma op_load[ \<nu>overload "\<up>:" ]:
+  "FieldIndex field_index Y X gt mp \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load TYPE('y::field) TYPE('x) field_index
+    \<blangle> addr \<R_arr_tail> x \<tycolon> Ref X \<heavy_asterisk> addr \<tycolon> Pointer \<longmapsto> addr \<R_arr_tail> x \<tycolon> Ref X \<heavy_asterisk> gt x \<tycolon> Y\<brangle> "
+  for X :: "('x::field, 'a) \<nu>" and Y :: "('y::field, 'b) \<nu>"
+  unfolding op_load_def Procedure_def \<nu>index_def Protector_def FieldIndex_def
+  by (cases field_index, cases addr)
+    (auto simp add: lrep_exps MemAddrState_def nu_exps disjoint_rewR split: option.split iff: addr_allocated_def)
+
+
+lemmas [ \<nu>overload "\<up>" ] = op_load[THEN mp, OF FieldIndex_here, simplified]
 
 proc i_load_n[\<nu>overload "\<up>:"]:
-  \<open>a \<tycolon> Pointer\<heavy_asterisk> i \<tycolon> \<nat>[size_t]\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>gt (xs ! i) \<tycolon> Y\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<heavy_asterisk> a \<R_arr_tail> xs \<tycolon> Array X\<close>
+  \<open>a \<R_arr_tail> xs \<tycolon> Array X \<heavy_asterisk> a \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t]\<close> \<longmapsto> \<open>a \<R_arr_tail> xs \<tycolon> Array X \<heavy_asterisk> gt (xs ! i) \<tycolon> Y\<close>
   for Y :: "('y::field, 'd) \<nu>"
   premises "i < length xs"
   requires idx: "FieldIndex field_index Y X gt mp"
@@ -872,15 +914,16 @@ lemmas [ \<nu>overload "\<up>" ] = i_load_n_\<nu>app[THEN mp, THEN mp, OF _ Fiel
 lemma op_store[ \<nu>overload "\<down>:" ]:
   "FieldIndex field_index Y X gt mp \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store TYPE('y::field) TYPE('x) field_index
-    \<blangle> R\<heavy_asterisk> addr \<tycolon> Pointer\<heavy_asterisk> y \<tycolon> Y\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p addr \<R_arr_tail> x \<tycolon> Ref X \<longmapsto> R \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p addr \<R_arr_tail> mp (\<lambda>_. y) x \<tycolon> Ref X\<brangle> "
+    \<blangle> addr \<R_arr_tail> x \<tycolon> Ref X \<heavy_asterisk> addr \<tycolon> Pointer \<heavy_asterisk> y \<tycolon> Y \<longmapsto> addr \<R_arr_tail> mp (\<lambda>_. y) x \<tycolon> Ref X\<brangle> "
   for X :: "('x::field, 'c) \<nu>"
-  unfolding op_store_def Procedure_def FieldIndex_def \<nu>index_def Heap_Divider_def Stack_Delimiter_def
+  unfolding op_store_def Procedure_def FieldIndex_def \<nu>index_def
   apply (cases field_index, cases addr)
   apply (auto simp add: lrep_exps Let_def nu_exps split: option.split iff: addr_allocated_def)
-  subgoal premises prems for x1 x2 x1a x2a aa ofs b x2b H h1 h2 proof -
-    have t1: "\<And>v. (h1 ++ h2)(MemAddress (x1a |+ x2a) \<mapsto> v) = h1 ++ (h2(MemAddress (x1a |+ x2a) \<mapsto> v))"
-      using prems disjoint_rewR by simp
-    have t2: "\<And>v.  dom (h2(MemAddress (x1a |+ x2a) \<mapsto> v)) = dom h2"
+  apply (meson MemAddrState_E addr_allocated_def disjoint_rewR domI)
+  subgoal premises prems for x1 x2 x1a x2a aa ofs b x2b M h1 h2 proof -
+    have t1: "\<And>v. (h1 ++ h2)(MemAddress (x1a |+ x2a) \<mapsto> v) = (h1(MemAddress (x1a |+ x2a) \<mapsto> v)) ++ h2"
+      using prems by (simp add: domIff map_add_upd_left)
+    have t2: "\<And>v.  dom (h1(MemAddress (x1a |+ x2a) \<mapsto> v)) = dom h1"
       using prems by auto
     show ?thesis apply (unfold t1, rule heap_split_id, unfold t2, simp add: prems)
       using prems by (auto simp add: nu_exps MemAddrState_def)
@@ -889,7 +932,7 @@ lemma op_store[ \<nu>overload "\<down>:" ]:
 lemmas [ \<nu>overload "\<down>" ] = op_store[THEN mp, OF FieldIndex_here, simplified]
 
 proc i_store_n[\<nu>overload "\<down>:"]:
-  \<open>R\<heavy_asterisk> a \<tycolon> Pointer\<heavy_asterisk> i \<tycolon> \<nat>[size_t]\<heavy_asterisk> y \<tycolon> Y \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p a \<R_arr_tail> xs \<tycolon> Array X\<close> \<longmapsto> \<open>R\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p a \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Array X\<close>
+  \<open>a \<R_arr_tail> xs \<tycolon> Array X \<heavy_asterisk> a \<tycolon> Pointer\<heavy_asterisk> i \<tycolon> \<nat>[size_t]\<heavy_asterisk> y \<tycolon> Y\<close> \<longmapsto> \<open>a \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
   premises "i < length xs"
   requires idx: "FieldIndex field_index Y X gt mp"
@@ -914,11 +957,10 @@ proc times: \<open>R' \<heavy_asterisk> n \<tycolon> \<nat>['b::len]\<close> \<l
   premises \<open>P vars 0\<close>
   requires Body: \<open>\<forall>x i. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < n \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x i \<longrightarrow>
       \<^bold>p\<^bold>r\<^bold>o\<^bold>c (body :: 'b word \<times> '\<RR>::stack \<longmapsto> '\<RR>) \<blangle> R x \<heavy_asterisk> i \<tycolon> \<nat>['b] \<longmapsto> \<exists>*x'. R x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P x' (Suc i)\<brangle>\<close>
-  \<bullet> \<rightarrow> n
-  \<bullet> \<open>0 \<tycolon> \<nat>['b]\<close>
-  \<bullet> while 
-  \<bullet> var vars i in \<open>R vars\<close>, i always \<open>i \<le> n \<and> P vars i\<close>
-  \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket> \<medium_left_bracket> -- i Body i 1 + cast ie \<open>Suc i\<close> \<medium_right_bracket> drop
+  \<bullet> \<rightarrow> n \<open>0 \<tycolon> \<nat>['b]\<close>
+  \<bullet> while  var vars i in \<open>R vars\<close>, i always \<open>i \<le> n \<and> P vars i\<close> \<open>i < n\<close>
+  \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> -- i Body i 1 + cast ie \<open>Suc i\<close> \<medium_right_bracket> drop
   finish
 
 ML_file \<open>codegen/codegen.ML\<close>
@@ -929,10 +971,13 @@ ML_file \<open>codegen/misc.ML\<close>
 ML_file \<open>codegen/Instructions.ML\<close>
 
 
-proc split_array[\<nu>overload split]: \<open>ptr \<tycolon> Pointer\<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> l \<tycolon> Array T\<close>
-  \<longmapsto> \<open>ptr ||+ n \<tycolon> Pointer\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> take n l \<tycolon> Array T \<heavy_asterisk> (ptr ||+ n) \<R_arr_tail> drop n l \<tycolon> Array T\<close>
+proc split_array[\<nu>overload split]:
+  argument \<open>ptr \<R_arr_tail> l \<tycolon> Array T \<heavy_asterisk> ptr \<tycolon> Pointer\<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
+  return \<open>ptr \<R_arr_tail> take n l \<tycolon> Array T \<heavy_asterisk> (ptr ||+ n) \<R_arr_tail> drop n l \<tycolon> Array T \<heavy_asterisk> ptr ||+ n \<tycolon> Pointer\<close>
   premises [useful]: "n \<le> length l"
-  \<bullet> + split_cast n
+  \<bullet> + 
+  \<bullet> split_cast
+  \<bullet> n
   finish
 
 proc pop_array[\<nu>overload pop]: \<open>ptr \<tycolon> Pointer\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> l \<tycolon> Array T\<close>

@@ -28,7 +28,7 @@ thm Fib_\<nu>compilation
 proc Fib2: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close>
   \<bullet> \<rightarrow> i
   \<bullet> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> 1
-  \<bullet> i times stack y, y' \<open>\<lambda>i. y' = fib (Suc i) \<and> y = fib i\<close>
+  \<bullet> i times y, y' \<open>\<lambda>i. y' = fib (Suc i) \<and> y = fib i\<close>
   \<bullet> \<medium_left_bracket> drop \<rightarrow> y, y' y' y y' + \<medium_right_bracket> drop
   finish
 
@@ -43,12 +43,13 @@ lemma find_index_sorted_le: "sorted xs \<Longrightarrow> i < length xs \<Longrig
 lemmas find_index_sorted = find_index_sorted_le find_index_sorted_leq
 lemmas add1_le_eq = Suc_le_eq[unfolded Suc_eq_plus1]
 
-proc bin_search: \<open>ptr \<tycolon> Pointer\<heavy_comma> len \<tycolon> \<nat>[size_t]\<heavy_comma> x \<tycolon> \<nat>['b::len]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b]\<close>
-  \<longmapsto> \<open>?index \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b]\<close>
+proc bin_search:
+  argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> len \<tycolon> \<nat>[size_t] \<heavy_asterisk> x \<tycolon> \<nat>['b::len]\<close>
+  return \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b] \<heavy_asterisk> ?index \<tycolon> \<nat>[size_t]\<close>
   where ?index = "find_index (\<lambda>y. x \<le> y) xs"
   premises "length xs = len" and "sorted xs"
   \<bullet> \<rightarrow> ptr, len, x
-  \<bullet> len 0 while stack h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close> 
+  \<bullet> len 0 while h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close> \<open>l < h\<close>
   \<bullet> \<medium_left_bracket> -- h, l l h < \<medium_right_bracket>
   \<bullet> \<medium_left_bracket> -- h, l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket>
   \<bullet> goal affirm using \<nu> by (auto simp add: add1_le_eq find_index_sorted)
@@ -64,7 +65,7 @@ thm bin_search_\<nu>app
 thm bin_search_\<nu>compilation
 thm while_\<nu>compilation
 
-(* proc sel_sort: \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b::len]\<close> \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>['b]\<close>
+(* proc sel_sort: \<open>R \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b::len]\<close> \<longmapsto> \<open>R \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> sort xs \<tycolon> Array \<nat>['b]\<close>
   premises [used]: "length xs = n"
   \<bullet> \<rightarrow> ptr, n
   \<bullet> n times var ys heap "ptr \<R_arr_tail> ys" \<open>\<lambda>i. take i ys = sort (take i xs)\<close> \<medium_left_bracket> \<rightarrow> i
@@ -72,14 +73,14 @@ thm while_\<nu>compilation
   thm used *)
 
 
-proc swap:  \<open>R\<heavy_comma> ptr \<tycolon> Pointer\<heavy_comma> i \<tycolon> \<nat>[size_t]\<heavy_comma> j \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
+proc swap:  \<open>R \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
+  \<longmapsto> \<open>R \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
   premises \<open>i < length xs\<close> and \<open>j < length xs\<close>
   \<bullet> \<rightarrow> ptr, i, j ptr i \<up>\<rightarrow> i' ptr j \<up> \<rightarrow> j' ptr i j' \<down> ptr j i' \<down>
   finish
 
-proc partition: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>\<exists>*j ys. j \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]
+proc partition: \<open>ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
+  \<longmapsto> \<open>\<exists>*j ys. j \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]
     \<^bold>s\<^bold>u\<^bold>b\<^bold>j j < length xs \<and> ys  <~~> xs \<and>
       (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ys ! j) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> ys ! j < ys ! k)\<close>
   premises \<open>length xs = n\<close> and \<open>0 < n\<close>
@@ -104,8 +105,8 @@ proc partition: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[
   finish
 
 
-rec_proc qsort: \<open>ptr \<tycolon> Pointer\<heavy_comma> n \<tycolon> \<nat>[size_t]\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>\<exists>*ys. (Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys \<and> ys  <~~> xs)\<close>
+rec_proc qsort: \<open>ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
+  \<longmapsto> \<open>\<exists>*ys. (Void \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys \<and> ys  <~~> xs)\<close>
   var ptr xs n
   premises "n = length xs"
   note perm_length[simp]
