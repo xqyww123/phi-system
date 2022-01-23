@@ -88,8 +88,10 @@ val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst
 
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
-val (v_proc_ty_A, v_proc_ty_B) =
-  (TVar ((("'\<nu>\<AA>",0), [@{class "stack"}])), TVar ((("'\<nu>\<BB>",0), [@{class "stack"}])))
+val v_proc_ty_A_iname = ("'\<nu>\<AA>",0)
+val v_proc_ty_B_iname = ("'\<nu>\<BB>",0)
+val v_proc_ty_A = TVar (v_proc_ty_A_iname, [@{class "stack"}])
+val v_proc_ty_B = TVar (v_proc_ty_B_iname, [@{class "stack"}])
 val v_proc_ty = @{typ "('a::stack) \<longmapsto> ('b::stack)"}
       |> Term.typ_subst_atomic [(@{typ "'a::stack"}, v_proc_ty_A),
                                 (@{typ "'b::stack"}, v_proc_ty_B)]
@@ -274,8 +276,8 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                 (Const (@{const_name Procedure}, dummyT)
                   $ (Const ("NuInstructions.op_recursion", dummyT)
                       $ @{term UNIQ_ID}
-                      $ Const ("Pure.type", v_proc_ty_A)
-                      $ Const ("Pure.type", v_proc_ty_B)
+                      $ Const ("Pure.type", itselfT v_proc_ty_A)
+                      $ Const ("Pure.type", itselfT v_proc_ty_B)
                       $ Var ((func_name,0), dummyT))
                   $ arg'
                   $ ret')))
@@ -311,8 +313,23 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                 strip_binder_raw_body @{const_name Pure.all} goal)
               |> dest_Trueprop
               |> strip_binop_r @{const_name "HOL.implies"}
-              |> map mk_Trueprop |> map (debug_term ctxt "1231 ")
+              |> map mk_Trueprop
+              |> map (debug_term ctxt "1231 ")
             val (prems, goal) = (front goal, last goal)
+
+            val (_,Arg,Ret) = dest_procedure goal
+            val arg_stack_ty = stack_ty_of_nu Arg |> @{print}
+            val ret_stack_ty = stack_ty_of_nu Ret |> @{print}
+            val inst_tvars = map_types (map_type_tvar (fn (i,c) =>
+                       if i = v_proc_ty_A_iname then arg_stack_ty
+                  else if i = v_proc_ty_B_iname then ret_stack_ty
+                  else TVar (i,c)))
+            val prems = map inst_tvars prems
+            val goal  = inst_tvars goal
+
+            val _ = debug_term ctxt "qqqq" goal
+
+            val Arg = Thm.cterm_of ctxt Arg |> @{print}
 
             (* intro assumptions *)
             fun imp_export prems sequent =
@@ -328,9 +345,6 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                   (prems ~~ (((Binding.name func_name,[]),(dummy,[]))::conds)) |> @{print}
             val (_,stat) = stat |> Proof.map_context_result (
                   Proof_Context.add_assms (fn _ => fn prems => (imp_export prems, I)) assms)
-
-            val (_,Arg,_) = dest_procedure goal
-            val Arg = Thm.cterm_of ctxt Arg
           in
             stat
               |> Proof.map_context (

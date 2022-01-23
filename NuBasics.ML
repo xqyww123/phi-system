@@ -76,8 +76,8 @@ signature NU_BASICS = sig
   val intro_param_name : string -> thm
 
   val default_ty_R : typ
-  val tail_stack_ty : typ -> typ -> typ
   val strip_separations : term -> term list
+  val stack_ty_of_nu : term (*nu-type*) -> typ
 
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
   (* val auto_fusion_arity : term -> int *)
@@ -292,15 +292,21 @@ fun normlize_thm_of_names th =
 (*default type remander*)
 val default_ty_R = TFree ("'\<RR>", [@{class "stack"}])
 (*translate tail of a stack type to `ty_R`, if it ends with void*)
-fun tail_stack_ty ty_R (Type (@{type_name prod}, [a, b])) =
-      Type (@{type_name prod}, [a, tail_stack_ty ty_R a])
-  | tail_stack_ty ty_R (Type (@{type_name void}, _)) = ty_R
-  | tail_stack_ty ty_R ty = ty
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
   | strip_separations (Abs (_, _, T)) = strip_separations T
   | strip_separations T = strip_binop_l @{const_name Separation} T
+
+fun stack_ty_of_nu arg_nuTy =
+  strip_separations arg_nuTy
+    |> map_filter (try (
+        dest_monop @{const_name Val_Ele}
+          #> fastype_of
+          #> dest_monop_ty "Set.set"
+      ))
+    |> (fn L => L @ [default_ty_R])
+    |> HOLogic.mk_tupleT
 
 
 end

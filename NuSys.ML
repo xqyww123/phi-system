@@ -250,17 +250,8 @@ fun finish_proc cc sequent =
 
 fun start_proc stack_ty blk_name arg_nuTy ctx =
   let
-    val stack_ty =
-      case stack_ty of SOME T => T
-         | NONE =>
-             strip_separations (term_of arg_nuTy)
-              |> map_filter (try (
-                  dest_monop @{const_name Val_Ele}
-                    #> fastype_of
-                    #> dest_monop_ty "Set.set"
-                ))
-              |> (fn L => L @ [default_ty_R])
-              |> HOLogic.mk_tupleT
+    val stack_ty = case stack_ty of SOME T => T
+                                  | NONE => stack_ty_of_nu (term_of arg_nuTy)
     val ([blk_name, RR],ctx) = Variable.add_fixes [blk_name, "\<RR>"] ctx
     val stat_var = Free (blk_name, mk_stateT stack_ty)
     val ctx = Variable.declare_constraints stat_var ctx

@@ -55,7 +55,7 @@ inductive SemRec :: "(('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y))
   SemRec_I0: "(\<And>g. F g x = y) \<Longrightarrow> SemRec F x y"
 | SemRec_IS: "SemRec (F o F) x y \<Longrightarrow> SemRec F x y"
 
-definition op_recursion :: "uniq_id \<Rightarrow> 'x itself \<Rightarrow> 'y itself \<Rightarrow> (('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y)) \<Rightarrow> 'x \<longmapsto> 'y"
+definition op_recursion :: "uniq_id \<Rightarrow> 'x::stack itself \<Rightarrow> 'y::stack itself \<Rightarrow> (('x \<longmapsto> 'y) \<Rightarrow> ('x \<longmapsto> 'y)) \<Rightarrow> 'x \<longmapsto> 'y"
   where "op_recursion _ _ _ F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
 section \<open>Arithmetic instructions\<close>

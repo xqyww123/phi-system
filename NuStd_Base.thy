@@ -117,15 +117,16 @@ lemma split_cast_Array'_\<nu>app[\<nu>overload split_cast]:
 (*solve*)
 lemma merge_cast_Array'_2_\<nu>app:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n = length l1 \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a ||+ n) \<R_arr_tail> l2 \<tycolon> Array' T \<heavy_asterisk> a \<R_arr_tail> l1 \<tycolon> Array' T \<longmapsto> OBJ a \<R_arr_tail> l1 @ l2 \<tycolon> Array' T "
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l1 \<tycolon> Array' T \<heavy_asterisk> (a ||+ n) \<R_arr_tail> l2 \<tycolon> Array' T \<longmapsto> OBJ a \<R_arr_tail> l1 @ l2 \<tycolon> Array' T "
   unfolding Cast_def Premise_def Separation_expn apply (cases a)
   apply (auto simp add: nu_exps min_absorb2 pred_option_def Ball_def nth_append)
-  apply (meson MemAddrState_add_I1)
-  by (smt (z3) MemAddrState_add_I2 ab_semigroup_add_class.add_ac(1) add.commute less_diff_conv2 linordered_semidom_class.add_diff_inverse not_le_imp_less)
+  apply (meson MemAddrState_add_I2)
+  by (metis MemAddrState_add_I1 add.assoc add_diff_inverse_nat nat_add_left_cancel_less)
+  
 
 lemma merge_cast_Array'_\<nu>app:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ofs' = ofs + length l1 \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (base |+ ofs') \<R_arr_tail> l2 \<tycolon> Array' T \<heavy_asterisk> (base |+ ofs) \<R_arr_tail> l1 \<tycolon> Array' T \<longmapsto> OBJ (base |+ ofs) \<R_arr_tail> l1 @ l2 \<tycolon> Array' T "
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (base |+ ofs) \<R_arr_tail> l1 \<tycolon> Array' T \<heavy_asterisk> (base |+ ofs') \<R_arr_tail> l2 \<tycolon> Array' T \<longmapsto> OBJ (base |+ ofs) \<R_arr_tail> l1 @ l2 \<tycolon> Array' T "
   using merge_cast_Array'_2_\<nu>app[of _ _ "base |+ ofs", simplified] by blast
 
 (* lemma Array'_dual_Ref_\<nu>app [\<nu>intro]:
@@ -169,7 +170,8 @@ lemma [simp]: "length (mapSome l) = length l" unfolding mapSome_def by auto
 lemma [simp]: "i < length l \<Longrightarrow> mapSome l ! i = Some (l ! i)" unfolding mapSome_def by auto
 lemma [simp]: "i < length l \<Longrightarrow> (mapSome l) [i := Some v] = mapSome (l [i:=v])" unfolding mapSome_def by (metis map_update)
 lemma [simp]: "i < length l \<Longrightarrow> the (mapSome l ! i) = l ! i" unfolding mapSome_def by auto
-
+lemma [simp]: "drop n (mapSome l) = mapSome (drop n l)" unfolding mapSome_def by (meson drop_map)
+lemma [simp]: "take n (mapSome l) = mapSome (take n l)" unfolding mapSome_def using take_map by blast 
 
 lemma Array'_cast_Array: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs' = mapSome xs2 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N"
   unfolding Cast_def Intro_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
@@ -231,13 +233,13 @@ proof -
 
 lemma merge_cast_Array_2_\<nu>app[\<nu>overload merge]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n = length l1 \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a ||+ n) \<R_arr_tail> l2 \<tycolon> Array T \<heavy_asterisk> a \<R_arr_tail> l1 \<tycolon> Array T \<longmapsto> OBJ a \<R_arr_tail> l1 @ l2 \<tycolon> Array T "
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l1 \<tycolon> Array T \<heavy_asterisk> (a ||+ n) \<R_arr_tail> l2 \<tycolon> Array T \<longmapsto> OBJ a \<R_arr_tail> l1 @ l2 \<tycolon> Array T "
   unfolding Array_to_Array' map_append
   using merge_cast_Array'_2_\<nu>app[of _ "map Some l1", simplified] .
 
 lemma merge_cast_Array_\<nu>app[\<nu>overload merge]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ofs' = ofs + length l1 \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (base |+ ofs') \<R_arr_tail> l2 \<tycolon> Array T \<heavy_asterisk> (base |+ ofs) \<R_arr_tail> l1 \<tycolon> Array T \<longmapsto> OBJ (base |+ ofs) \<R_arr_tail> l1 @ l2 \<tycolon> Array T "
+  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (base |+ ofs) \<R_arr_tail> l1 \<tycolon> Array T \<heavy_asterisk> (base |+ ofs') \<R_arr_tail> l2 \<tycolon> Array T \<longmapsto> OBJ (base |+ ofs) \<R_arr_tail> l1 @ l2 \<tycolon> Array T "
   using merge_cast_Array_2_\<nu>app[of _ _ "base |+ ofs", simplified] by blast
 
 
@@ -543,13 +545,22 @@ lemma SemRec_deterministic2: " SemRec body s x \<Longrightarrow> The ( SemRec bo
 
 
 declare Heap'_expn[simp del]
+
+lemma TERM_rew: "(TERM x \<Longrightarrow> PROP P) \<equiv> PROP P" proof
+  assume [OF \<open>TERM x\<close>]: "(TERM x \<Longrightarrow> PROP P)" then show "PROP P" .
+next assume "PROP P" "TERM x" then show "PROP P" by blast
+qed
+  
+
 lemma op_recursion:
-  "(\<And>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> X x'' \<longmapsto> Y x'' \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<blangle> X x' \<longmapsto> Y x' \<brangle>) \<Longrightarrow>
+  " (\<And>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> X x'' \<longmapsto> Y x'' \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<blangle> X x' \<longmapsto> Y x' \<brangle>) \<Longrightarrow>
     (\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion UNIQ_ID TYPE('x::stack) TYPE('y::stack) F \<blangle> X x \<longmapsto> Y x \<brangle>)"
-  (* for X :: "'b \<Rightarrow> (heap \<times> 'a::lrep, 'b) \<nu>" *)
-  unfolding op_recursion_def Procedure_def atomize_all
+
+  unfolding op_recursion_def Procedure_def atomize_all TERM_rew
   apply (auto simp add: SemRec_deterministic2)
-  subgoal for x a b xa apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
+  subgoal for x a b xa
+    apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
+
 declare Heap'_expn[simp]
 
 
@@ -906,7 +917,9 @@ proc i_load_n[\<nu>overload "\<up>:"]:
   premises "i < length xs"
   requires idx: "FieldIndex field_index Y X gt mp"
   obtain a' j where a: "a = (a' |+ j)" by (cases a)
-  \<bullet> unfold a + \<up>: idx fold a
+  \<bullet> unfold a + 
+  \<bullet> \<up>: 
+  \<bullet> idx fold a
   finish
 
 lemmas [ \<nu>overload "\<up>" ] = i_load_n_\<nu>app[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
@@ -975,13 +988,13 @@ proc split_array[\<nu>overload split]:
   argument \<open>ptr \<R_arr_tail> l \<tycolon> Array T \<heavy_asterisk> ptr \<tycolon> Pointer\<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
   return \<open>ptr \<R_arr_tail> take n l \<tycolon> Array T \<heavy_asterisk> (ptr ||+ n) \<R_arr_tail> drop n l \<tycolon> Array T \<heavy_asterisk> ptr ||+ n \<tycolon> Pointer\<close>
   premises [useful]: "n \<le> length l"
-  \<bullet> + 
+  \<bullet> +
   \<bullet> split_cast
   \<bullet> n
   finish
 
-proc pop_array[\<nu>overload pop]: \<open>ptr \<tycolon> Pointer\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> l \<tycolon> Array T\<close>
-  \<longmapsto> \<open>ptr ||+ 1 \<tycolon> Pointer\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p (ptr ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> ptr \<R_arr_tail> hd l \<tycolon> Ref T \<close>
+proc pop_array[\<nu>overload pop]: \<open>ptr \<R_arr_tail> l \<tycolon> Array T \<heavy_asterisk> ptr \<tycolon> Pointer\<close>
+  \<longmapsto> \<open>(ptr ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> ptr \<R_arr_tail> hd l \<tycolon> Ref T \<heavy_asterisk> ptr ||+ 1 \<tycolon> Pointer\<close>
   premises A: "l \<noteq> []"
   have [useful]: "1 \<le> length l" by (meson Premise_def length_0_conv less_one not_le A)
   \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> + pop_cast

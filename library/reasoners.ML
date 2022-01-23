@@ -20,7 +20,9 @@ fun head_only tac th =
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 fun raw_auto ctxt =
-    Method.insert_tac ctxt (aux_thms ctxt) 1 THEN Clasimp.auto_tac ctxt
+    Method.insert_tac ctxt (aux_thms ctxt) 1
+    THEN Clasimp.auto_tac ctxt
+    THEN print_dbg "22222" 
 
 (*** Premise tac ***)
 fun premise_tac ctxt th =

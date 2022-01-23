@@ -3,9 +3,7 @@ structure TyCG_NuSys = struct val void = NuCG.T_nil end
 structure NuCG_NuSys = struct open NuCG infixr 6 <*> <%>
 
 (* Structural *)
-fun idx_ssa [] X = X | idx_ssa [0] (X <*> _) = X | idx_ssa [0] X = X
-  | idx_ssa (i::l) (_ <*> R) = nth_ssa (i-1::l) R | idx_ssa (0::l) (X <*> _) = idx_ssa l X
-fun op_dup_gen idx = get_ssa (push o nth_ssa idx)
+val op_dup_gen = pop (fn X => push X #> push X)
 val op_drop_gen = pop (K I)
 val op_let_gen = pop
 val op_local_value_gen = push

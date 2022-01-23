@@ -17,10 +17,14 @@ proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x -1 \<t
 fun fib :: "nat \<Rightarrow> nat" where
   "fib 0 = 1" | "fib (Suc 0) = 1" | "fib (Suc (Suc n)) = fib n + fib (Suc n)"
 
+
 (* int fib (int i) { if (i \<le> 1) return 1; else return fib (i-2) + fib (i-1); } *)
   rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
-    \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket> i 2 - Fib i 1 - Fib + \<medium_right_bracket>
-    \<bullet> goal affirm by (cases i rule: fib.cases) auto
+    \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket>
+    \<bullet> i 2 - Fib \<rightarrow> f2
+    \<bullet> i 1 - Fib \<rightarrow> f1
+    \<bullet> f1 f2 +
+    \<bullet> \<medium_right_bracket> goal affirm by (cases i rule: fib.cases) auto
   finish
 
 thm Fib_\<nu>compilation
@@ -73,27 +77,29 @@ thm while_\<nu>compilation
   thm used *)
 
 
-proc swap:  \<open>R \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>R \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
+proc swap:  \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]\<close>
+  \<longmapsto> \<open>ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
   premises \<open>i < length xs\<close> and \<open>j < length xs\<close>
   \<bullet> \<rightarrow> ptr, i, j ptr i \<up>\<rightarrow> i' ptr j \<up> \<rightarrow> j' ptr i j' \<down> ptr j i' \<down>
   finish
 
-proc partition: \<open>ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>\<exists>*j ys. j \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]
+proc partition: \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
+  \<longmapsto> \<open>\<exists>*j ys. ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]
     \<^bold>s\<^bold>u\<^bold>b\<^bold>j j < length xs \<and> ys  <~~> xs \<and>
       (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ys ! j) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> ys ! j < ys ! k)\<close>
   premises \<open>length xs = n\<close> and \<open>0 < n\<close>
   note nth_list_update[simp] not_le[simp] perm_length[simp]
   \<bullet> -- ptr, n 1 - \<up> \<rightarrow> pivot
-  \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys stack j heap "ptr \<R_arr_tail> ys"
+  \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in "ptr \<R_arr_tail> ys", j
   \<bullet> \<open>\<lambda>i. j \<le> i \<and> ys <~~> xs \<and> (ys ! (n-1) = ?pivot) \<and>
     (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ?pivot) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> ?pivot < ys ! k)\<close> \<medium_left_bracket>
   \<bullet> \<rightarrow> j, i ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> j 1 + \<medium_right_bracket> \<medium_left_bracket> j \<medium_right_bracket> 
   \<bullet> goal affirm using \<nu> by (auto simp add: less_Suc_eq intro!: perm_swap[THEN perm.trans])
   \<bullet> \<medium_right_bracket>
   have [useful]: "j < n" using \<nu> by linarith
-  \<bullet> \<rightarrow> j ptr j n 1 - swap j
+  \<bullet> \<rightarrow> j ptr j n 1 - 
+  \<bullet> swap 
+  \<bullet> j
   \<bullet> goal affirm using \<nu> by (smt (z3) Suc_diff_1 Suc_leI diff_less leD length_list_update
         less_numeral_extra(1) less_or_eq_imp_le mset_eq_perm mset_swap nat_neq_iff nth_list_update_eq
          nth_list_update_neq perm_length)
@@ -105,15 +111,20 @@ proc partition: \<open>ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<n
   finish
 
 
-rec_proc qsort: \<open>ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t] \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
-  \<longmapsto> \<open>\<exists>*ys. (Void \<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32]) \<and>\<^sup>s (sorted ys \<and> ys  <~~> xs)\<close>
+rec_proc qsort: \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
+  \<longmapsto> \<open>\<exists>*ys. OBJ ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<^bold>s\<^bold>u\<^bold>b\<^bold>j sorted ys \<and> ys  <~~> xs\<close>
   var ptr xs n
   premises "n = length xs"
   note perm_length[simp]
 
-  \<bullet> -- ptr, n 0 = if \<medium_left_bracket> drop \<medium_right_bracket> \<medium_left_bracket> n partition \<rightarrow> j
+  \<bullet> -- ptr, n 0 = if \<medium_left_bracket> drop \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> n 
+  \<bullet> partition
+  \<bullet> \<rightarrow> j
   let ?pivot = "ys ! j" have a1[simp]: " hd (drop j ys) = ?pivot " using \<nu> by (metis hd_drop_conv_nth perm_length)
-  \<bullet> ptr j split pop n 1 - j - qsort \<exists>high ptr j qsort \<exists>low push merge
+  \<bullet> ptr j split pop n 1 - j - qsort \<exists>high
+  \<bullet> ptr j  qsort \<exists>low
+  \<bullet> push merge
 
   \<bullet> !! subj \<open>low @ ?pivot # high <~~> xs\<close> affirm using \<nu>
     by (metis (no_types, hide_lams) a1 append_take_drop_id cons_perm_eq drop_all_iff leD list.collapse 

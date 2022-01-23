@@ -1270,12 +1270,24 @@ lemma Cast_Reasoning_Init_Dual[no_atp]:
 
 subsubsection \<open>Identity Cast\<close>
 
-lemma [\<nu>intro 3000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>: G" unfolding cast_def by blast
+lemma cast_dual_fallback:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> Nothing \<heavy_asterisk> H\<^sub>m \<medium_right_bracket>: G"
+unfolding cast_def Separation_empty by blast+
 
-lemma [\<nu>intro 3000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> H \<medium_right_bracket> \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
-  unfolding cast_def Separation_empty by blast
+\<nu>reasoner Cast_Reasoning_Dual_Id 3000 ("\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Z \<longmapsto> Z2 \<medium_right_bracket>: G") = \<open>fn ctxt => fn sequent =>
+  let
+    val (_ $ (_ $ (Const (\<^const_name>\<open>CastDual\<close>, _) $ _ $ _ $ _ $ Z $ Z2) $ _))
+        = Thm.major_prem_of sequent
+    val Z = case Z of (Const (\<^const_name>\<open>Cast_Target\<close>,_) $ Z') => Z'
+        | (_ $ _ $ (Const (\<^const_name>\<open>Cast_Target\<close>,_) $ Z')) => Z'
+  in
+      if is_Var Z orelse Z aconv Z2
+      then resolve_tac ctxt @{thms cast_dual_fallback} 1 sequent
+      else Seq.empty
+  end\<close>
 
 lemma [\<nu>intro 3000]: "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H \<medium_right_bracket> \<medium_right_bracket>: G" and [\<nu>intro 3000]: "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> H \<medium_right_bracket> \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty by blast+
@@ -1405,7 +1417,7 @@ lemma [\<nu>intro 2000]:
 
 lemma [\<nu>intro 2000]:
   "(\<And>c. \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> U\<^sub>m c \<medium_right_bracket> \<longmapsto> T\<^sub>m c \<medium_right_bracket>: G) \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> ExSet U\<^sub>m \<medium_right_bracket> \<longmapsto> \<medium_left_bracket> ExSet T\<^sub>m \<medium_right_bracket> \<medium_right_bracket>: G"
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> ExSet U\<^sub>m \<medium_right_bracket> \<longmapsto> ExSet T\<^sub>m \<medium_right_bracket>: G"
   unfolding cast_def by (simp add: nu_exps) blast
 
 (* subsubsection \<open>Tailling\<close> \<comment> \<open>\<close>
@@ -1532,12 +1544,12 @@ lemma [\<nu>intro 100]: \<comment> \<open>step case 1\<close>
   " MUTEX_ASSERT G
     \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a\<^sub>m \<comment> \<open> if addresses are matched\<close>
     \<Longrightarrow> NEW_MUTEX G1
-    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> R1 \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> T \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>d\<^bold>u\<^bold>a\<^bold>l R1\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x\<^sub>m \<tycolon> T\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<medium_right_bracket>: G1 \<comment> \<open>do the dual cast\<close>
+    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> R1 \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> T \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>d\<^bold>u\<^bold>a\<^bold>l R1\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x\<^sub>m \<tycolon> T \<medium_right_bracket> \<longmapsto> R\<^sub>m \<medium_right_bracket>: G1 \<comment> \<open>do the dual cast\<close>
         \<comment> \<open>the condition requiring match of address here, is a fast maybe positive-false check \<close>
     \<Longrightarrow> MUTEX_SET G
     \<Longrightarrow> NEW_MUTEX G2
     \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R1 \<longmapsto> \<medium_left_bracket> R2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> R2\<^sub>m \<medium_right_bracket> \<longmapsto> R1\<^sub>m \<medium_right_bracket>: G2
-    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> \<medium_left_bracket> R2 \<heavy_asterisk> OBJ a \<R_arr_tail> x \<tycolon> T \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> R2\<^sub>m \<heavy_asterisk> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> T\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<medium_right_bracket>: G"
+    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> \<medium_left_bracket> R2 \<heavy_asterisk> OBJ a \<R_arr_tail> x \<tycolon> T \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> R2\<^sub>m \<heavy_asterisk> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> T \<medium_right_bracket> \<longmapsto> R\<^sub>m \<medium_right_bracket>: G"
   unfolding cast_def Premise_def by simp blast
 
 lemma [\<nu>intro 70]: \<comment> \<open>step case 2\<close>
@@ -1860,7 +1872,7 @@ definition IntroFrameVar :: "assn \<Rightarrow> assn \<Rightarrow> assn \<Righta
 
 text \<open>Currently we do not allow \<^term>\<open>(\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n fff \<blangle> S' \<longmapsto> T' \<brangle> \<long_dobule_mapsto> ggg \<blangle> S \<longmapsto> T\<brangle>)\<close>\<close>
 
-theorem apply_proc_conv:
+lemma apply_proc_conv:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
   \<Longrightarrow> IntroFrameVar R S'' S' T'' T'
   \<Longrightarrow> (\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> S'' \<longmapsto> T'' \<brangle> \<long_dobule_mapsto> f \<blangle> S \<longmapsto> T\<brangle>)
@@ -1868,6 +1880,18 @@ theorem apply_proc_conv:
   \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
   unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def Conversion_def IntroFrameVar_def
   by auto
+
+lemma apply_cast_conv:
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
+  \<Longrightarrow> IntroFrameVar R S'' S' T'' T'
+  \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold>d\<^bold>u\<^bold>a\<^bold>l T'' \<longmapsto> T \<medium_right_bracket>
+  \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t S' \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2
+  \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
+  unfolding  CurrentConstruction_def PendingConstruction_def cast_def IntroFrameVar_def
+  apply (cases blk)
+  apply (auto simp add: nu_exps)
+  by (smt (verit, del_insts) Separation_expn_R Shallowize'_expn)
+
 
 lemma IntroFrameVar_No:
   "IntroFrameVar Nothing S' S' T' T' "
@@ -2441,6 +2465,10 @@ declare
   apply_proc[\<nu>application_method 1 100]
   apply_proc_conv[\<nu>application_method 3 -3000]
   "cast"[unfolded Cast_Target_def, \<nu>application_method 1 1100]
+  apply_cast_conv[\<nu>application_method 3 1000]
+thm apply_cast_conv[\<nu>application_method 3 1000]
+
+thm
   "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(1)[OF Argument_I], \<nu>application_method 1 1100]
   "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(2)[OF Argument_I], \<nu>application_method 1 1100]
   "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(3)[OF Argument_I], \<nu>application_method 1 1100]
@@ -2454,6 +2482,8 @@ declare
   "cast"[unfolded Cast_Target_def, OF _ cast_conversion[OF _ cast_\<nu>app(4)[OF Argument_I]],
       \<nu>application_method 2 1050]
 
+thm "cast"[unfolded Cast_Target_def, \<nu>application_method 1 1100]
+thm "cast"[unfolded Cast_Target_def, OF _ cast_\<nu>app(1)[OF Argument_I], \<nu>application_method 1 1100]
 
 thm "cast"[unfolded Cast_Target_def, OF _ cast_conversion[OF _ cast_\<nu>app(2)[OF Argument_I]],
       \<nu>application_method 2 1050]
