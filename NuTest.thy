@@ -39,6 +39,7 @@ proc Fib2: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<t
 \<nu>interface hhh = Fib
 \<nu>interface yyy = Fib2
 
+
 lemma find_index_sorted_le: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> xs ! i < x \<Longrightarrow> i < find_index ((\<le>) x) xs" 
     and find_index_sorted_leq: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> x \<le> xs ! i \<Longrightarrow> find_index ((\<le>) x) xs \<le> i"
   unfolding sorted_iff_nth_mono
@@ -97,9 +98,7 @@ proc partition: \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_
   \<bullet> goal affirm using \<nu> by (auto simp add: less_Suc_eq intro!: perm_swap[THEN perm.trans])
   \<bullet> \<medium_right_bracket>
   have [useful]: "j < n" using \<nu> by linarith
-  \<bullet> \<rightarrow> j ptr j n 1 - 
-  \<bullet> swap 
-  \<bullet> j
+  \<bullet> \<rightarrow> j ptr j n 1 - swap j
   \<bullet> goal affirm using \<nu> by (smt (z3) Suc_diff_1 Suc_leI diff_less leD length_list_update
         less_numeral_extra(1) less_or_eq_imp_le mset_eq_perm mset_swap nat_neq_iff nth_list_update_eq
          nth_list_update_neq perm_length)
@@ -139,13 +138,162 @@ rec_proc qsort: \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_
 
 \<nu>interface my_qsort = qsort
 
-\<nu>export_llvm \<open>/tmp/aa.ll\<close> \<comment> \<open>The desired LLVM IR text is outputted to /tmp/aa.ll\<close>
 
-(*   \<bullet> \<Longrightarrow> precondition[used] \<bullet> \<rightarrow> (v,n) n 0 = if \<medium_left_bracket> \<bullet> $v \<medium_right_bracket> \<medium_left_bracket> \<bullet> $v \<open>0\<tycolon>\<nat>[32]\<close> \<up>\<rightarrow> pivot \<open>1\<tycolon>\<nat>[32]\<close> \<open>1\<tycolon>\<nat>[32]\<close>
-  \<bullet> while xs' i j in \<open>((seg |+ ofs) \<R_arr_tail> xs', i, j)\<close> subj \<open>j \<noteq> n\<close>
-      always \<open>0 < i \<and> i \<le> j \<and> j \<le> n \<and> length xs' = n \<and> xs' ! 0 = xs ! 0 \<and> (\<forall>k. k <i \<longrightarrow> xs' ! k \<le> xs ! 0) \<and> (\<forall>k. i \<le> k \<and> k < j \<longrightarrow> xs ! 0 < xs' ! k) \<close>
-  \<medium_left_bracket> \<bullet> \<Longrightarrow> x[used] \<bullet> \<rightarrow> (a,b,c) c n < $a b c pr^3 \<medium_right_bracket> \<medium_left_bracket> \<bullet> \<Longrightarrow> x[used] \<bullet> \<rightarrow> (xs,i,j) $xs j \<up>\<rightarrow> j' i \<up>\<rightarrow> i' \<rightarrow> xs
-  \<bullet> j' pivot \<le> if \<medium_left_bracket> \<bullet> $xs i' j \<Down> j' i \<Down> \<rightarrow> xs i 1 + \<rightarrow> i \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket> \<bullet> $xs i j 1 + pr^2 \<medium_right_bracket>
-  \<bullet> xs2, i, j \<Longrightarrow> x[used] \<bullet> drop 1 - \<rightarrow> i i \<up>0 \<Down>pivot i \<Down> *)
+
+definition "matches' a1 i1 a2 i2 n \<longleftrightarrow>
+    i1 + n \<le> length a1 \<and> i2 + n \<le> length a2 \<and> (\<forall>i. i < n \<longrightarrow> a1 ! (i1 + i) = a2 ! (i2 + i)) "
+
+definition "is_next p j n \<longleftrightarrow> n < j \<and> matches' p (j - n) p 0 n \<and> (\<forall> z. n < z \<and> z < j \<longrightarrow> \<not> (matches' p (j - z) p 0 z))"
+
+definition "kmp_table n ktab xs \<longleftrightarrow> (\<forall>j. 0 < j \<and> j < n \<longrightarrow> is_next xs j (ktab ! j))"
+
+lemma matches_empty[simp]:
+  "i1 \<le> length a1 \<Longrightarrow> i2 \<le> length a2 \<Longrightarrow> matches' a1 i1 a2 i2 0"
+ unfolding matches'_def by auto
+
+lemma matches'_right_extension:
+    "matches' a1 i1 a2 i2 n \<Longrightarrow> i1 + n + 1 \<le> length a1 \<Longrightarrow> i2 + n + 1 \<le> length a2 \<Longrightarrow>
+    a1 ! (i1 + n) = a2 ! (i2 + n) \<Longrightarrow> matches' a1 i1 a2 i2 (n + 1)"
+  unfolding matches'_def by (metis add.assoc add_le_imp_le_right discrete le_neq_implies_less)  
+
+lemma matches'_contradiction_at_first:
+    "0 < n \<Longrightarrow> a1 ! i1 \<noteq> a2 ! i2 \<Longrightarrow> \<not> (matches' a1 i1 a2 i2 n)"
+  using matches'_def by force
+
+lemma matches_contradiction_at_i :
+    "0 < n \<Longrightarrow> i < n \<Longrightarrow> a1 ! (i1 + i) \<noteq> a2 ! (i2 + i) \<Longrightarrow> \<not> matches' a1 i1 a2 i2 n"
+  using matches'_def by blast
+
+lemma matches_right_weakening:
+    "matches' a1 i1 a2 i2 n \<Longrightarrow> n' < n \<Longrightarrow> matches' a1 i1 a2 i2 n'"
+    unfolding matches'_def  by auto
+
+lemma matches_left_weakening:
+    "matches' a1 i1 a2 i2 (n + d) \<Longrightarrow> matches' a1 (i1 + d) a2 (i2 + d) n " 
+unfolding matches'_def by auto (metis add.commute add.left_commute nat_add_left_cancel_less)
+
+lemma matches'_sym:
+    "matches' a1 i1 a2 i2 n \<Longrightarrow> matches' a2 i2 a1 i1 n"
+    unfolding matches'_def by simp
+
+lemma matches_trans:
+    "matches' a1 i1 a2 i2 n \<Longrightarrow> matches' a2 i2 a3 i3 n \<Longrightarrow> matches' a1 i1 a3 i3 n"
+    unfolding matches'_def by simp
+
+lemma next_iteration:
+    "0 < j \<Longrightarrow> j < length p \<Longrightarrow>
+    j \<le> i \<Longrightarrow> i \<le> length a \<Longrightarrow>
+    matches' a (i - j) p 0 j \<Longrightarrow> is_next p j n \<Longrightarrow> matches' a (i - n) p 0 n"  
+  unfolding matches'_def is_next_def apply auto 
+  subgoal premises prems for ia proof -
+    from prems have A: "j + ia - n < j" by linarith 
+    from prems A show ?thesis using Nat.add_diff_assoc2 Nat.diff_diff_right by fastforce
+  qed done
+
+lemma next_is_maximal:
+    "0 < j \<Longrightarrow> j < length p \<Longrightarrow>
+    j \<le> i \<Longrightarrow> i \<le> length a \<Longrightarrow>
+    i - j < k \<and> k < i - n \<Longrightarrow>
+    matches' a (i - j) p 0 j \<Longrightarrow>
+    is_next p j n \<Longrightarrow> \<not> matches' a k p 0 (length p)"
+    unfolding is_next_def matches'_def apply auto
+    subgoal premises prems proof -
+      from prems(9)[THEN spec, of "i - k"] prems show ?thesis
+        by (smt (verit, ccfv_SIG) Nat.add_diff_assoc2 Nat.diff_diff_right add.commute add_diff_cancel_left' diff_le_self le_trans less_add_eq_less less_or_eq_imp_le less_trans ordered_cancel_comm_monoid_diff_class.diff_add)
+    qed done
+
+definition "first_occur p a r \<longleftrightarrow>
+    (r < length a \<longrightarrow> matches' a r p 0 (length p)) \<and> (\<forall>k < r. \<not> (matches' a k p 0 (length p)))"
+
+proc initnext: \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> px \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t]\<close>
+  \<longmapsto> \<open>\<exists>*pk ktab. px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> pk \<tycolon> Pointer
+    \<^bold>s\<^bold>u\<^bold>b\<^bold>j kmp_table nx ktab xs \<and> length ktab = nx\<close>
+  premises \<open>1 \<le> nx\<close> and \<open>length xs = nx\<close>
+    note  kmp_table_def[simp]
+  \<bullet> \<rightarrow> px, nx
+  \<bullet> nx alloc_array \<open>\<nat>[size_t]\<close> \<rightarrow> pk
+  \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> nx < if \<medium_left_bracket>
+  \<bullet> pk \<open>1\<tycolon>\<nat>[size_t]\<close> 0 \<down>
+  note is_next_def [simp] nth_list_update[simp]
+  \<bullet> \<open>1\<tycolon>\<nat>[size_t]\<close> 0 while var i j ktab in \<open>(c |+ 0) \<R_arr_tail> ktab\<close>, i, j
+    always \<open>j < i \<and> i < nx 
+    \<and> matches' xs (i - j) xs 0 j
+    \<and> (\<forall>z. j < z \<and> z < i \<longrightarrow> \<not>matches' xs (i - z) xs 0 (z + 1))
+    \<and> (\<forall>k. 0 < k \<and> k \<le> i \<longrightarrow> is_next xs k (ktab ! k))
+    \<and> length ktab = nx\<close> \<open>i < nx - 1\<close>
+  note is_next_def [simp del] nth_list_update[simp del]
+  \<bullet> \<medium_left_bracket> -- i, j i nx 1 - < \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> \<rightarrow> i, j px i \<up> px j \<up> = if
+  \<bullet> \<medium_left_bracket> i 1 + j 1 + -- i, j pk i j \<down>\<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> j 0 = if \<medium_left_bracket> i 1 + -- i pk i 0 \<down>j \<medium_right_bracket> \<medium_left_bracket> i pk j \<up> \<medium_right_bracket> \<medium_right_bracket>
+
+  have CC: "(\<forall>z. j + 1 < z \<and> z < i + 1 \<longrightarrow> \<not> matches' xs (i + 1 - z) xs 0 z)" using \<nu>
+    by (metis leI le_add_diff_inverse2 less_diff_conv less_diff_conv2 less_nat_zero_code nat_diff_split_asm ordered_cancel_comm_monoid_diff_class.diff_diff_right) 
+  have A1: "i + 1 < nx" using \<nu> by auto
+  have AA2: "\<And>k. k \<le> i + 1 \<longleftrightarrow> k \<le> i \<or> k = i + 1" by auto
+  \<bullet> goal affirm apply (elim TrueE, rule)
+    apply (cases "xs ! i = xs ! j") using \<nu> apply auto[1]
+    apply (smt (z3) Nat.le_diff_conv2 add_cancel_left_left le_add_diff_inverse2 less_imp_le less_trans matches'_right_extension \<nu>)
+    apply (metis (full_types) Nat.diff_diff_right add_lessD1 le_add_diff_inverse2 less_add_one less_diff_conv less_diff_conv2 less_one matches_right_weakening not_less \<nu>)
+    apply (smt (verit, ccfv_threshold) AA2 CC Nat.add_0_right Nat.diff_diff_right add.commute add_diff_cancel_right' dual_order.strict_iff_order is_next_def le_add_diff_inverse2 less_add_same_cancel2 less_diff_conv less_trans matches'_right_extension neq0_conv nth_list_update_eq nth_list_update_neq \<nu>)
+  apply (cases "j = 0") using \<nu> apply auto[1]
+  apply (metis CC One_nat_def Suc_leI add.commute add_diff_cancel_right' antisym_conv2 less_add_one matches'_contradiction_at_first matches_right_weakening plus_1_eq_Suc)
+  subgoal for k apply (cases "k = i + 1")
+    apply (smt (verit, ccfv_threshold) CC Suc_eq_plus1 Suc_leI add_diff_cancel_right' diff_diff_cancel diff_is_0_eq' is_next_def le_neq_implies_less le_trans less_imp_le matches'_contradiction_at_first matches_empty nth_list_update_eq zero_le_one)
+    by (metis AA2 nth_list_update_neq)
+ using \<nu> apply auto[1]
+  apply (meson is_next_def less_imp_le less_le_trans \<nu>)
+  apply (metis (no_types, lifting) \<nu> less_imp_le less_le_trans next_iteration) 
+  subgoal for z 
+    apply (cases "j < z") using \<nu>(1) apply blast apply (simp add: not_less)
+    apply (cases "z = j") using \<nu> apply (metis le0 le_add_diff_inverse2 less_add_one less_imp_le matches'_def plus_nat.add_0) 
+    subgoal premises prems proof -
+      from prems \<nu> have A: " is_next xs j (ktab ! j)" by (metis less_le less_nat_zero_code neq0_conv)
+      from \<nu> prems have X1: "z + (j - z) = j" "i - j + (j - z) = i - z" apply (meson le_add_diff_inverse) by (simp add: less_or_eq_imp_le prems(12) prems(4) le_add_diff_inverse) 
+      note X2 = matches_left_weakening[where n = z and d = \<open>j - z\<close>, simplified X1]
+      thm matches_left_weakening[where n = z and d = \<open>j - z\<close>, simplified X1]
+      from A[unfolded is_next_def] prems \<nu> show ?thesis
+        by (metis (no_types, lifting) X1(2) X2 add.left_neutral le_neq_implies_less less_add_one matches'_sym matches_right_weakening matches_trans)
+    qed done
+  done
+  \<bullet> \<medium_right_bracket> drop drop subj \<open>kmp_table nx ktab xs \<and> length ktab = nx\<close> \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> \<medium_right_bracket> 
+  \<bullet> pk
+  finish
+
+
+
+proc kmp: \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk>
+    px \<tycolon> Pointer \<heavy_asterisk> py \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t] \<heavy_asterisk> ny \<tycolon> \<nat>[size_t]\<close>
+  \<longmapsto> \<open>\<exists>*i x. x \<heavy_asterisk> px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk> i \<tycolon> \<nat>[size_t]
+   \<^bold>s\<^bold>u\<^bold>b\<^bold>j first_occur xs ys i\<close>
+  premises \<open>length xs = nx\<close> and \<open>length ys = ny\<close> and "1 \<le> nx"
+  \<bullet> \<rightarrow> px,py,nx,ny
+  \<bullet> px nx initnext \<rightarrow> pk
+  \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close>0 while var i j in i, j 
+    always \<open> j \<le> nx \<and> j \<le> i \<and> i \<le> ny
+      \<and> matches' ys (i - j) xs 0 j \<and>
+    (\<forall>k < i - j.  \<not> (matches' ys k xs 0 nx))\<close> \<open>i < ny \<and> j < nx\<close>
+  \<bullet> \<medium_left_bracket> -- i, j i ny < j nx < \<and> \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> \<rightarrow> i, j
+  \<bullet> py i \<up> px j \<up> = if
+  \<bullet> \<medium_left_bracket> i 1 + j 1 + \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> j 0 = if \<medium_left_bracket> i 1 + j \<medium_right_bracket> \<medium_left_bracket> i pk j \<up>\<medium_right_bracket> \<medium_right_bracket>
+  \<bullet> goal affirm using \<nu> apply auto
+  apply (metis One_nat_def Suc_eq_plus1 \<nu>lemmata \<open>i < ny \<and> j < nx\<close> add.right_neutral diff_zero discrete matches'_right_extension)
+  apply (metis Suc_eq_plus1 \<open>i < ny \<and> j < nx\<close> less_Suc_eq matches'_contradiction_at_first)
+  apply (metis add.commute add.right_neutral discrete le_add_diff_inverse2 matches'_right_extension \<nu>)
+  apply (simp add: is_next_def kmp_table_def matches'_def)
+  apply (meson dual_order.trans is_next_def kmp_table_def le_less \<nu>)
+  apply (metis kmp_table_def next_iteration \<nu>)
+  by (smt (verit, ccfv_threshold) \<nu> add.commute add.left_neutral diff_add_inverse kmp_table_def le0 le_Suc_ex linorder_neqE_nat matches'_def next_is_maximal) 
+  \<bullet> \<medium_right_bracket>
+  \<bullet> nx = if \<medium_left_bracket> nx - \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
+  \<bullet> goal affirm unfolding first_occur_def using \<nu> apply auto
+  by (metis add_mono_thms_linordered_field(2) antisym_conv1 dual_order.strict_trans1 less_diff_conv matches'_def) 
+finish
+
+
+\<nu>export_llvm \<open>/tmp/aa.ll\<close> \<comment> \<open>Output the desired LLVM IR text to /tmp/aa.ll\<close>
 
 end

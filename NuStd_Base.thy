@@ -210,26 +210,38 @@ lemma split_cast_Array_\<nu>app[\<nu>overload split_cast]:
 
 lemma pop_cast_Array'_\<nu>app[\<nu>overload pop_cast]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e l \<noteq> [] \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> l \<tycolon> Array T \<longmapsto> (a ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> a \<R_arr_tail> hd l \<tycolon> Ref T"
-  unfolding Premise_def sorry 
+  unfolding Premise_def cast_def
+  apply (cases a)
+  apply (auto simp add: nu_exps pair_forall Array_to_Array' neq_Nil_conv)
+  subgoal for x1 x2 y ys aa
+    apply (rule heap_split_by_set[where S = "{ MemAddress (x1 |+ x2) }"])
+    apply (auto)
+   apply (rule MemAddrState_restrict_I2)
+    apply (metis Suc_leI add.assoc le_less_Suc_eq le_less_trans le_refl nth_Cons_Suc plus_1_eq_Suc)
+    apply (metis less_add_one memaddr.inject not_add_less1 resource_key.inject(1) singletonD)
+    by (metis MemAddrState_restrict_I1 add.right_neutral insert_iff nth_Cons_0 zero_less_Suc)
+  done
+    
 
 lemma push_Array'_2_\<nu>app[\<nu>overload push]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (a ||+ 1) \<R_arr_tail> l \<tycolon> Array T \<heavy_asterisk> a \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> OBJ a \<R_arr_tail> x # l \<tycolon> Array T"
-  unfolding Premise_def sorry 
+  unfolding Premise_def cast_def
+  apply (cases a)
+  apply (auto simp add: nu_exps pair_forall Array_to_Array' neq_Nil_conv pred_option_def)
+  subgoal for x1 x2 h1 h2 i xa
+    apply (cases i) apply (simp_all add: Suc_eq_plus1) apply blast
+    by (metis MemAddrState_add_I2 add.commute add.left_commute)
+  done
 
 lemma push_Array'_\<nu>app[\<nu>overload push]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i' = i + 1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ i') \<R_arr_tail> l \<tycolon> Array T \<heavy_asterisk> (a |+ i) \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> OBJ (a |+ i) \<R_arr_tail> x # l \<tycolon> Array T"
-  unfolding Premise_def sorry
+  unfolding Premise_def cast_def
+  apply (auto simp add: nu_exps pair_forall Array_to_Array' neq_Nil_conv pred_option_def)
+  subgoal for h1 h2 ia xa
+    apply (cases ia) apply (simp_all add: Suc_eq_plus1) apply blast
+    by (metis MemAddrState_add_I2 Suc_eq_plus1 add.commute add_Suc_right)
+  done
 
-  (*subgoal premises prems 
-proof -
-  have t1: "1 \<le> length l"
-    by (metis One_nat_def Suc_leI length_greater_0_conv list.size(3) not_one_le_zero prems)
-  have t2: "take 1 l = [hd l]" by (simp add: take_Suc prems)
-  have t3: "drop 1 l = tl l" by (simp add: drop_Suc prems) 
-
-  thm split_cast_Array_\<nu>app[of 1 l, unfolded Premise_def ParamTag_def, simplified t1, simplified t2 t3]
-  thm One_nat_def Suc_le_eq length_greater_0_conv
-*)
 
 lemma merge_cast_Array_2_\<nu>app[\<nu>overload merge]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n = length l1 \<Longrightarrow>
@@ -605,7 +617,7 @@ lemma [\<nu>intro 1100]:
 
 subsection \<open>Arithmetic\<close>
 
-\<nu>overloads "+" and round_add and "<" and "\<le>" and "-" and "/" and "=" and "not"
+\<nu>overloads "+" and round_add and "<" and "\<le>" and "-" and "/" and "=" and "not" and "\<and>" and "\<or>"
 
 subsubsection \<open>Common\<close>
 
@@ -670,6 +682,14 @@ lemma boolean_not_\<nu>app[\<nu>overload not]:
     "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not TYPE(1) \<blangle> x \<tycolon> \<bool> \<longmapsto> \<not> x \<tycolon> \<bool> \<brangle>"
   unfolding Procedure_def op_not_def apply (auto simp add: lrep_exps nu_exps)
   by (metis even_take_bit_eq even_zero iszero_def odd_numeral one_neq_zero)
+
+lemma boolean_and_\<nu>app[\<nu>overload \<and>]:
+    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and TYPE(1) \<blangle> x \<tycolon> \<bool> \<heavy_asterisk> y \<tycolon> \<bool> \<longmapsto> x \<and> y \<tycolon> \<bool> \<brangle>"
+  unfolding Procedure_def op_and_def by (auto simp add: lrep_exps nu_exps)
+
+lemma boolean_or_\<nu>app[\<nu>overload \<or>]:
+    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or TYPE(1) \<blangle> x \<tycolon> \<bool> \<heavy_asterisk> y \<tycolon> \<bool> \<longmapsto> x \<or> y \<tycolon> \<bool> \<brangle>"
+  unfolding Procedure_def op_or_def by (auto simp add: lrep_exps nu_exps)
 
 subsection \<open>Field Index\<close>
 

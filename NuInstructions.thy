@@ -92,6 +92,12 @@ definition op_le :: " ('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<
 definition op_not :: "('w::len) itself \<Rightarrow> 'w word \<times> ('r::stack) \<longmapsto> 'w word \<times> 'r"
   where "op_not len = (\<lambda>(h,x,r). Success (h,not x,r))"
 
+definition op_and :: "('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<times> ('r::stack) \<longmapsto> 'w word \<times> 'r"
+  where "op_and len = (\<lambda>(h,y,x,r). Success (h,and x y,r))"
+
+definition op_or :: "('w::len) itself \<Rightarrow> 'w word \<times> 'w word \<times> ('r::stack) \<longmapsto> 'w word \<times> 'r"
+  where "op_or len = (\<lambda>(h,y,x,r). Success (h,or x y,r))"
+
 definition op_equal :: " 'a itself \<Rightarrow> ('a::{ceq,lrep}) \<times> 'a \<times> ('r::stack) \<longmapsto> 1 word \<times> 'r"
   where "op_equal _ = (\<lambda>(h,a,b,r). if ceqable h b a then Success (h,(if ceq b a then 1 else 0), r) else Fail)"
 

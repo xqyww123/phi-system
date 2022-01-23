@@ -31,8 +31,6 @@ fun op_do_while_gen ty body = assign_label (fn L1 => assign_label (fn Lx => get_
   (*At last replenish the output of loop body O1 and return to final state N1, S1*)
   #> map_output (fn O0' => O1 @ O0') #> counter (K N1) (K I) #> map_ssa (K S1)))))))))))
 
-fun op_recursion_gen name arg ret gen = def_func name arg ret (gen (pair name))
-
 (* Arithmetics *)
 fun pow x n y = if n = 0 then y else pow x (n-1) (x*y)
 val size_cap = pow 2 size_t 1
@@ -44,6 +42,8 @@ fun op_sub_gen b = binop expr ("sub i" ^ string_of_int b ^ " ")
 fun op_mul_gen b = binop expr ("mul i" ^ string_of_int b ^ " ")
 fun op_udiv_gen b= binop expr ("udiv i"^ string_of_int b ^ " ")
 fun op_xor_gen b = binop expr ("xor i" ^ string_of_int b ^ " ")
+fun op_and_gen b = binop expr ("and i" ^ string_of_int b ^ " ")
+fun op_or_gen  b = binop expr ("or i"  ^ string_of_int b ^ " ")
 fun op_not_gen b = op_const_int_gen b (pow 2 b 1 - 1) #> op_xor_gen b
 fun op_lt_gen  b = binop expr ("icmp ult i" ^ string_of_int b ^ " ")
 fun op_le_gen  b = binop expr ("icmp ule i" ^ string_of_int b ^ " ")
@@ -72,7 +72,8 @@ fun op_call_gen arg ret func =
     (put "call " #> putT ret #> put " @" #> func #-> put #> put "(" #> pop_arg arg #> put ")\n")
   #> (case ret of (_ <%> _ <%> _) => op_dest_tup_gen ret #> pop (map_ssa o catS) | _ => I)
 
-val func_wrap_gen = op_call_gen
+fun op_recursion_gen name arg ret gen =
+      op_call_gen arg ret (def_func name arg ret (gen (op_call_gen arg ret (pair name))))
 
 (* Memory *)
 fun GEP T idx = binop' (expr_idx idx) ("getelementptr " ^ tystr T ^ ", ") (T_PTR T) SizeT
