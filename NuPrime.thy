@@ -615,6 +615,7 @@ definition Procedure :: "('c::stack \<longmapsto> 'd::stack) \<Rightarrow> assn 
   where [\<nu>def]:"Procedure f T U \<longleftrightarrow>
       (\<forall>a M::assn. a \<in> Heap' (Shallowize' (M \<heavy_asterisk> T)) \<longrightarrow> f a \<in> \<S> Heap' (Shallowize' (M \<heavy_asterisk> U)))"
 
+
 translations
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> CONST Ele \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> CONST Ele \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"

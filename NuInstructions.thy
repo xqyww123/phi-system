@@ -149,6 +149,9 @@ definition op_store :: " 'x itself \<Rightarrow> 'a itself \<Rightarrow> ('a::lr
     case heap key of Some data \<Rightarrow>
       Success (heap(key \<mapsto> map_deepmodel (map_idx idx (\<lambda>_. x)) data), r) | _ \<Rightarrow> Fail))"
 
+definition op_free :: " memptr \<times> ('r::stack) \<longmapsto> 'r "
+  where "op_free s = (case s of (h,memptr (base |+ _),r) \<Rightarrow>
+    (Success (h |` (-{MemAddress (base |+ ofs) | ofs. True}), r)))"
 
 
 end

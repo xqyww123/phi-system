@@ -499,10 +499,30 @@ qed
 lemma SemDoWhile_deterministic2: " SemDoWhile body s x \<Longrightarrow> The ( SemDoWhile body s) = x"
   using SemDoWhile_deterministic by blast
 
+
+
+lemma "__DoWhile__rule":
+  "(\<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<heavy_asterisk> P x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<brangle>)
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<blangle> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<brangle>"
+  unfolding op_do_while_def Procedure_def Auto_def
+  apply (auto simp add: SemDoWhile_deterministic2 nu_exps pair_forall LooseStateTy_expn')
+  subgoal for a b x M c
+    apply (rotate_tac 1)
+    apply (induct  body "(a, b)" x arbitrary: a b c rule: SemDoWhile.induct)
+    apply (metis fst_conv snd_conv state.sel state.simps(5) zero_neq_one)
+    apply blast
+     apply (metis state.distinct(1) state.distinct(5))
+    apply (simp add: nu_exps pair_forall Heap'_expn)
+    by (metis fst_conv snd_conv state.distinct(3) state.sel)
+  done
+
+thm "__DoWhile__rule"[simplified]
+
 declare Heap'_expn[simp del]
+
 lemma "__DoWhile___\<nu>app":
-  "(\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<heavy_asterisk> P x' \<tycolon> \<bool> \<brangle>)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P x' \<brangle>"
+  "(\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X x \<longmapsto> X x' \<heavy_asterisk> P x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<brangle>)
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<blangle> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<brangle>"
 (*  for X :: "(heap \<times> 'a::lrep, 'b) \<nu>" *)
   unfolding op_do_while_def Procedure_def Auto_def
   apply (auto simp add: SemDoWhile_deterministic2 nu_exps pair_forall)
@@ -513,8 +533,18 @@ lemma "__DoWhile___\<nu>app":
   done
 declare Heap'_expn[simp]
 
-term Variant_Cast
+
 lemma do_while_\<nu>app:
+  "Variant_Cast vars X X' \<longrightarrow>
+  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
+  (\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X' x \<longmapsto> \<exists>* x'. X' x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<brangle>) \<longrightarrow>
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack)  body \<blangle> X \<longmapsto> \<exists>* x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x' \<brangle>"
+  unfolding Variant_Cast_def Premise_def apply simp
+  using "__DoWhile___\<nu>app"[of "cond" _ "X'", unfolded Premise_def, simplified] by blast
+
+
+lemma do_while_\<nu>app_old:
   "Variant_Cast vars X X' \<longrightarrow>
   \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
@@ -526,11 +556,11 @@ lemma do_while_\<nu>app:
 
 subsubsection \<open>while\<close>
 
-proc while: \<open>X'\<close> :: "'s::stack" \<longmapsto> \<open>\<exists>* x. X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x\<close>
+proc while: \<open>X'\<close> :: "'s::stack" \<longmapsto> \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars X' X"
     and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond"
-    and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<brangle>"
-    and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<blangle> X x \<longmapsto> \<exists>* x'. X x' \<brangle>"
+    and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<blangle> X x \<longmapsto> X x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True\<brangle>"
+    and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<blangle> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<brangle>"
   \<bullet> Cond if \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
   finish
 
@@ -893,7 +923,7 @@ lemma heap_assignN_eval: "v \<in> T \<Longrightarrow> i < n \<Longrightarrow> he
 theorem alloc_array_\<nu>app:
   "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
       \<blangle> n \<tycolon> \<nat>[size_t] 
-        \<longmapsto> \<exists>*seg. (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Array N \<heavy_asterisk> (seg |+ 0) \<tycolon> Pointer \<brangle>"
+        \<longmapsto> (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Array N \<heavy_asterisk> (seg |+ 0) \<tycolon> Pointer \<^bold>s\<^bold>u\<^bold>b\<^bold>j seg. True \<brangle>"
   for N :: "('x::{zero,field},'b)\<nu>"
   unfolding \<nu>def op_alloc_def Array_def
   apply (auto simp add: lrep_exps list_all2_conv_all_nth Let_def same_addr_offset_def nu_exps
@@ -904,7 +934,7 @@ theorem alloc_array_\<nu>app:
   done
 
 
-proc alloc : \<open>Nothing\<close> \<longmapsto> \<open>\<exists>*ptr. ptr \<R_arr_tail> zero \<tycolon> Ref T \<heavy_asterisk> ptr \<tycolon> Pointer\<close>
+proc alloc : \<open>Nothing\<close> \<longmapsto> \<open>ptr \<R_arr_tail> zero \<tycolon> Ref T \<heavy_asterisk> ptr \<tycolon> Pointer \<^bold>s\<^bold>u\<^bold>b\<^bold>j ptr. True\<close>
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T" and [\<nu>intro]: "\<nu>Zero T zero"
   have A[simp]: "replicate 1 zero = [zero]" by (simp add: One_nat_def)
   \<bullet>\<open>1 \<tycolon> \<nat>[size_t]\<close> alloc_array T
@@ -913,7 +943,7 @@ proc alloc : \<open>Nothing\<close> \<longmapsto> \<open>\<exists>*ptr. ptr \<R_
 
 subsubsection \<open>Load & Store\<close>
 
-\<nu>overloads \<up> and "\<up>:" and \<Up> and "\<Up>:" and \<down> and "\<down>:" and \<Down> and "\<Down>:"
+\<nu>overloads \<up> and "\<up>:" and \<Up> and "\<Up>:" and \<down> and "\<down>:" and \<Down> and "\<Down>:" and free
 
 abbreviation "list_map_at f i l \<equiv> list_update l i (f (l ! i))"
 
@@ -970,9 +1000,7 @@ proc i_store_n[\<nu>overload "\<down>:"]:
   premises "i < length xs"
   requires idx: "FieldIndex field_index Y X gt mp"
   obtain a' j where a: "a = (a' |+ j)" by (cases a) 
-  \<bullet> unfold a 
-  \<bullet> \<rightarrow> y
-  \<bullet> + y \<down>: idx fold a
+  \<bullet> unfold a  \<rightarrow> y + y \<down>: idx fold a
   finish
 
 lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>app[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
@@ -982,14 +1010,12 @@ section \<open>Misc\<close>
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp] split_paired_All[simp]
 
-bundle xx = Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp] split_paired_All[simp]
-
-proc times: \<open>R' \<heavy_asterisk> n \<tycolon> \<nat>['b::len]\<close> \<longmapsto> \<open>\<exists>*x. R x \<^bold>s\<^bold>u\<^bold>b\<^bold>j P x n\<close>
+proc times: \<open>R' \<heavy_asterisk> n \<tycolon> \<nat>['b::len]\<close> \<longmapsto> \<open>R x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x n\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars R' R"
   requires \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P\<close>
   premises \<open>P vars 0\<close>
   requires Body: \<open>\<forall>x i. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < n \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x i \<longrightarrow>
-      \<^bold>p\<^bold>r\<^bold>o\<^bold>c (body :: 'b word \<times> '\<RR>::stack \<longmapsto> '\<RR>) \<blangle> R x \<heavy_asterisk> i \<tycolon> \<nat>['b] \<longmapsto> \<exists>*x'. R x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P x' (Suc i)\<brangle>\<close>
+      \<^bold>p\<^bold>r\<^bold>o\<^bold>c (body :: 'b word \<times> '\<RR>::stack \<longmapsto> '\<RR>) \<blangle> R x \<heavy_asterisk> i \<tycolon> \<nat>['b] \<longmapsto> R x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. P x' (Suc i)\<brangle>\<close>
   \<bullet> \<rightarrow> n \<open>0 \<tycolon> \<nat>['b]\<close>
   \<bullet> while  var vars i in \<open>R vars\<close>, i always \<open>i \<le> n \<and> P vars i\<close> \<open>i < n\<close>
   \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket>

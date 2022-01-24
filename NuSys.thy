@@ -1282,7 +1282,6 @@ lemma [\<nu>intro 2000]:
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> Nothing \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
-
 subsubsection \<open>Pad Void Holes at left\<close> \<comment> \<open>to standardize\<close>
 
 lemma [\<nu>intro 2000]:
@@ -1742,80 +1741,6 @@ proof -
     unfolding cast_def \<nu>def by (simp add: nu_exps LooseStateTy_expn') meson
 qed
 
-(*
-theorem consequence:
-  assumes E1: "(R \<heavy_asterisk> U') = U'' "
-  assumes E2: "(R \<heavy_asterisk> V') = V'' "
-  assumes A: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l V \<longmapsto> V' "
-  shows "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> f \<blangle> U'' \<longmapsto> V'' \<brangle>"
-proof -
-  have cast_dual_intro_frame:
-    "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l V \<longmapsto> V' \<Longrightarrow>
-      \<forall>M. \<^bold>c\<^bold>a\<^bold>s\<^bold>t Heap' (Shallowize' (M \<heavy_asterisk> U')) \<longmapsto> Heap' (Shallowize' (M \<heavy_comma>\<heavy_asterisk> U)) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-          \<^bold>d\<^bold>u\<^bold>a\<^bold>l Heap' (Shallowize' (M \<heavy_asterisk> V)) \<longmapsto> Heap' (Shallowize' (M \<heavy_comma>\<heavy_asterisk> V')) "
-    unfolding CastDual_def pair_forall by (simp add: Shallowize'_expn) blast
-
-  show ?thesis
-    unfolding Conversion_def Procedure_def Cast_def CastDual_def Intro_def Dest_def FrameSep_def
-        E1[unfolded FrameSep_def, symmetric]
-        E2[unfolded FrameSep_def, symmetric]
-        FrameSep''_assoc
-    using A[THEN cast_dual_intro_frame, unfolded CastDual_def FrameSep_def]
-    by (smt (z3) LooseStateTy_E LooseStateTy_I LooseStateTy_introByStrict Deepize'_Deepize')
-qed
-
-text \<open>The consequence rule is not directly used in the system, but this
-  modified version with a heap placeholder helper\<close>
-lemma [\<nu>intro 30]:
-  assumes "(R ^\<heavy_comma> U') = Deepize' U'' "
-  assumes "(R ^\<heavy_comma> V') = Deepize' V'' "
-  assumes "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>c\<^bold>a\<^bold>s\<^bold>t] Ur : Hr ^\<heavy_asterisk> U "
-  assumes "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>c\<^bold>a\<^bold>s\<^bold>t] Vr : Hr ^\<heavy_asterisk> V "
-  assumes "\<^bold>c\<^bold>a\<^bold>s\<^bold>t U' \<longmapsto> Ur \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Vr \<longmapsto> V'"
-  shows "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> f \<blangle> U'' \<longmapsto> V''\<brangle>"
-proof -
-  have L1: "\<And>T. Deepize' (Hr ^\<heavy_asterisk> T) = ((Void \<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p Hr) \<heavy_comma>\<heavy_asterisk> T)"
-    unfolding set_eq_iff pair_forall Heap_Tail_def FrameSep_expn
-    by (simp add: nu_exps Deepize'_expn) blast
-  have L2: " \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U  \<longmapsto> V \<brangle>  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> Hr ^\<heavy_asterisk> U  \<longmapsto>  Hr ^\<heavy_asterisk> V \<brangle>"
-    unfolding Procedure_def FrameSep_def L1 FrameSep''_assoc
-    by fastforce
-  have L3: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> Hr ^\<heavy_asterisk> U \<longmapsto> Hr ^\<heavy_asterisk> V \<brangle> \<long_dobule_mapsto> f \<blangle> U'' \<longmapsto> V''\<brangle> \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> f \<blangle> U'' \<longmapsto> V''\<brangle>"
-    unfolding Conversion_def using L2 by blast
-
-  show ?thesis
-    apply (intro L3) using assms consequence by blast
-qed
-
-declare Separation_emptyL[\<nu>intro 1200]
-thm Separation_emptyL
-
-lemma [\<nu>intro]:
-  "(R ^\<heavy_comma> Void\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) = Deepize' (R\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H)"
-  unfolding set_eq_iff FrameSep_expn pair_forall Deepize'_expn
-  by (auto simp add: nu_exps)
-
-lemma [\<nu>intro]:
-  "(R ^\<heavy_comma> T'\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) = Deepize' (T\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) \<Longrightarrow>
-   (R ^\<heavy_comma> T'\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H) = Deepize' (T\<heavy_comma> X\<heavy_comma> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H)"
-  unfolding set_eq_iff FrameSep_expn pair_forall Deepize'_expn
-  by (auto simp add: nu_exps) (metis disjoint_empty empty_map_add map_add_empty dom_empty)
-
-lemma [\<nu>intro]:
-  "(R ^\<heavy_comma> T') = Deepize' T \<Longrightarrow>
-   (R ^\<heavy_comma> T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = Deepize' (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)"
-  unfolding set_eq_iff FrameSep_expn pair_forall Deepize'_expn
-  by (auto simp add: nu_exps) (metis disjoint_empty empty_map_add map_add_empty dom_empty)
-
-lemma [\<nu>intro]:
-  "(\<And>c. (R ^\<heavy_comma> T' c) = Deepize' (T c)) \<Longrightarrow>
-   (R ^\<heavy_comma> ExSet T') = Deepize' (ExSet T)"
-  unfolding set_eq_iff FrameSep_expn pair_forall Deepize'_expn
-  by (auto simp add: nu_exps) (metis disjoint_empty empty_map_add map_add_empty dom_empty)+
-
-(* lemma [\<nu>intro]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> U' \<longmapsto> U \<brangle> \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<blangle> U \<longmapsto> V \<brangle> \<long_dobule_mapsto> (g \<nuInstrComp> f) \<blangle> U' \<longmapsto> V\<brangle>"
-  unfolding Conversion_def using instr_comp by fast *)
-*)
 
 definition IntroFrameVar :: "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool" where
   "IntroFrameVar R S'' S' T'' T' \<longleftrightarrow> S'' = (R \<heavy_asterisk> S') \<and> T'' = (R \<heavy_asterisk> T') "

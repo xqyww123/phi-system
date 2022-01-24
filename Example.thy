@@ -282,8 +282,8 @@ proc initnext: \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_ast
 
 proc kmp: \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk>
     px \<tycolon> Pointer \<heavy_asterisk> py \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t] \<heavy_asterisk> ny \<tycolon> \<nat>[size_t]\<close>
-  \<longmapsto> \<open>x \<heavy_asterisk> px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk> i \<tycolon> \<nat>[size_t]
-   \<^bold>s\<^bold>u\<^bold>b\<^bold>j i x. first_occur xs ys i\<close>
+  \<longmapsto> \<open> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk> i \<tycolon> \<nat>[size_t]
+   \<^bold>s\<^bold>u\<^bold>b\<^bold>j i ktab pk. first_occur xs ys i \<and> kmp_table nx ktab xs\<close>
   premises \<open>length xs = nx\<close> and \<open>length ys = ny\<close> and "1 \<le> nx"
   \<bullet> \<rightarrow> px,py,nx,ny
   \<bullet> px nx initnext \<rightarrow> pk
