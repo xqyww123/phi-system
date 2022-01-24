@@ -1,5 +1,4 @@
 (*  Title:      NuHelp.ML
-    Author:     Qiyuan Xu
 
 Application-irrelevant basic tools.
 

@@ -1,4 +1,3 @@
-(* Author: Tobias Nipkow, with contributions from Dmitriy Traytel, Lukas Bulwahn, and Peter Lammich *)
 
 section \<open>Index-based manipulation of lists\<close>
 

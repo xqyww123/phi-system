@@ -1,5 +1,4 @@
 (*  Title:      NuBasics.ML
-    Author:     Qiyuan Xu
 
 Basic supports for the nu-system.
 

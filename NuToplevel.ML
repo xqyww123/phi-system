@@ -1,5 +1,4 @@
 (*  Title:      NuToplevel.ML
-    Author:     Qiyuan Xu
 
 The toplevel structure of the ν-system.
 
