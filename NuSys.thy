@@ -813,6 +813,10 @@ lemma [simp]: "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t
 lemma subj_\<nu>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<^bold>( T \<and>\<^sup>s P \<^bold>)"
   unfolding Cast_def Premise_def Implicit_Protector_def by simp
 
+translations
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> CONST Ele \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> B \<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> CONST Ele \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<brangle>"
+
 
 subsection \<open>Existential Nu-set\<close>
 
@@ -847,76 +851,21 @@ lemma generalize_\<nu>app:
     \<Longrightarrow> lambda_abstraction c (T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P c) name T \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T' \<longmapsto> \<^bold>( ExSet T \<^bold>) "
   unfolding Cast_def Implicit_Protector_def lambda_abstraction_def by (auto simp add: nu_exps)
 
+syntax
+  "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _ " [2,0,2] 2)
 
-(* subsection \<open>Existential Nu-type\<close>
+translations
+  " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P " \<rightleftharpoons> "\<exists>* idts. X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P"
+  " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P " <= " \<tort_lbrace> X \<tort_rbrace> \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P "
+  " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. CONST True " \<rightleftharpoons> "\<exists>* idts. X"
 
-definition ExNu :: " ('c \<Rightarrow> ('a,'b) \<nu>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<nu> "
-  where "ExNu N x = {p. (\<exists>c. p \<nuLinkL> N c \<nuLinkR> x c)}"
-lemma [simp]: "p \<nuLinkL> ExNu N \<nuLinkR> x \<longleftrightarrow> (\<exists>c. p \<nuLinkL> N c \<nuLinkR> x c)" unfolding ExNu_def Refining_def by simp
-
-
-abbreviation ExNu_sugar :: " ('c \<Rightarrow> ('a,'b) typing) \<Rightarrow> ('a, 'c \<Rightarrow> 'b) typing " (binder "\<exists>* " 10)
-  where "ExNu_sugar P \<equiv> (\<lambda>c. typing_img (P c)) \<tycolon> ExNu (\<lambda>c. typing_nu (P c))"
-syntax "_ExNu_print" :: "logic \<Rightarrow> logic \<Rightarrow> logic"
-
-translations "\<exists>* a b. P" \<rightleftharpoons> "\<exists>* a. (\<exists>*b. P)"
-  "\<exists>* c. x \<tycolon> T" => "(\<lambda>c. x) \<tycolon> CONST ExNu (\<lambda>c. T)"
-(*  "\<exists>* c. x \<tycolon> T" <= "(\<lambda>c. x) \<tycolon> CONST ExNu (\<lambda>c''''''. T)" (*TODO: print translation that alpha-convert the c''''' *)
-  "\<exists>* c. x c \<tycolon> T" <= "x \<tycolon> CONST ExNu (\<lambda>c. T)"
-  "CONST Pair a b" <= "(CONST Pair a) b"
-  "\<exists>* c. x \<tycolon> T c" <= "(\<lambda>c. x) \<tycolon> CONST ExNu T" *)
-
-notation ExNu_sugar (binder "\<exists>\<^sup>\<nu> " 10)
-
-lemma ExNu_cong: "(\<And>c. \<tort_lbrace>x c \<tycolon> T c\<tort_rbrace> \<equiv> \<tort_lbrace>x' c \<tycolon> T' c\<tort_rbrace>) \<Longrightarrow> \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<equiv> \<tort_lbrace> x' \<tycolon> ExNu T' \<tort_rbrace>"
-  unfolding atomize_eq RepSet_def ExNu_def Refining_def by simp
-
-simproc_setup ExNu_cong ("\<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace>") = \<open>K (NuSimpCong.simproc_qualifier @{thm ExNu_cong})\<close>
-
-lemma ExNu_pair: "\<tort_lbrace> x \<tycolon> ExNu T \<tort_rbrace> = \<tort_lbrace>\<exists>*c1 c2. x (c1,c2) \<tycolon> T (c1,c2) \<tort_rbrace>" by (auto simp add: nu_exps)
-lemma named_ExNu: "\<tort_lbrace> x \<tycolon> ExNu T \<tort_rbrace> = \<tort_lbrace>\<exists>*c. x (tag c) \<tycolon> T (tag c) \<tort_rbrace>" by (auto simp add: named_exists nu_exps)
-
-lemma [simp]: "p \<in> \<S>  \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<longleftrightarrow> (\<exists>z. p \<in> \<S>  \<tort_lbrace> x z \<tycolon> T z\<tort_rbrace> )" by (auto 4 3 simp add: nu_exps)
-lemma [simp]: "p \<in> \<S_S> \<tort_lbrace>x \<tycolon> ExNu T\<tort_rbrace> \<longleftrightarrow> (\<exists>z. p \<in> \<S_S> \<tort_lbrace>x z \<tycolon> T z\<tort_rbrace>)" by (auto 4 3 simp add: nu_exps)
-lemma [simp]: "\<tort_lbrace>x \<tycolon> ExNu T \<heavy_comma> y \<tycolon> R\<tort_rbrace> = \<tort_lbrace>\<exists>* c. x c \<tycolon> T c \<heavy_comma> y \<tycolon> R \<tort_rbrace>" unfolding Stack_Delimiter_def by (auto simp add: nu_exps)
-lemma [simp]: "\<tort_lbrace>y \<tycolon> L \<heavy_comma> x \<tycolon> ExNu T\<tort_rbrace> = \<tort_lbrace>\<exists>* c. y \<tycolon> L \<heavy_comma> x c \<tycolon> T c \<tort_rbrace>" unfolding Stack_Delimiter_def by (auto simp add: nu_exps)
-
-lemma ExTyp_strip: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> ExNu T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n x c \<tycolon> T c)"
-  unfolding CurrentConstruction_def by auto
-
-lemma ExTyp_I_\<nu>app[\<nu>intro 20]:
-  "\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o \<^bold>c\<^bold>a\<^bold>s\<^bold>t x c \<tycolon> T c \<longmapsto> (\<exists>*c. x c \<tycolon> T c)" unfolding Intro_def Cast_def by (simp add: nu_exps) blast
-lemma [\<nu>intro 200]: "(\<And>c. \<^bold>c\<^bold>a\<^bold>s\<^bold>t x c \<tycolon> T c \<longmapsto> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P c) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (\<exists>*c. x c \<tycolon> T c) \<longmapsto> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<exists>c. P c)"
-  unfolding Cast_def by (simp add: nu_exps) blast
+translations
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> CONST Ele \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P \<longmapsto> B \<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. Q \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> CONST Ele \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. Q \<brangle>"
 
 
-(* definition ExTyp :: "('a \<Rightarrow> 'b set) \<Rightarrow> 'b set" (binder "\<exists>* " 10)
-  where   "ExTyp T = {x. (\<exists>z. x \<in> T z)}"
-notation ExTyp (binder "\<exists>'' " 10)
-  \<comment> \<open>which represents there exists some \<nu>-images (or rarely abstractors) subject to the typing.
-    And then the image subjecting the typing could be fixed as a local variable by the \<nu>-obtain command. \<close>
-
-lemma [simp]: "x \<in> ExTyp T \<longleftrightarrow> (\<exists>z. x \<in> T z)" unfolding ExTyp_def  by auto
-lemma [simp]: "x \<in> \<S> (ExTyp T) \<longleftrightarrow> (\<exists>z. x \<in> \<S> (T z))" by (auto 4 3)
-lemma [simp]: "x \<in> \<S_S> (ExTyp T) \<longleftrightarrow> (\<exists>z. x \<in> \<S_S> (T z))" by (auto 4 3)
-lemma [simp]: "(ExTyp A \<heavy_comma> R) = (\<exists>* x. (A x \<heavy_comma> R))" by auto
-lemma [simp]: "(S\<heavy_comma> ExTyp T) = (\<exists>* z. (S \<heavy_comma> T z))" by auto
-lemma ExTyp_strip: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExTyp T)) \<equiv> (\<exists>x. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T x)"
-  unfolding CurrentConstruction_def by auto *)
-*)
-
-(* definition AutoExTyp :: "('a \<Rightarrow> 'b set) \<Rightarrow> 'b set" (binder "\<exists>*''" 10)
-  where "AutoExTyp T = {x. (\<exists>z. x \<in> (T z))}"
-
-lemma [simp]: "x \<in> (AutoExTyp T) \<equiv> (\<exists>z. x \<in> T z)" unfolding AutoExTyp_def by auto
-lemma [simp]: "(R\<heavy_comma> AutoExTyp T) = (\<exists>*' x. (R\<heavy_comma> T x))" unfolding AutoExTyp_def by auto
-lemma [simp]: "(AutoExTyp T\<heavy_comma> R) = (\<exists>*' x. (T x\<heavy_comma> R))" unfolding AutoExTyp_def by auto
-lemma [simp]: "(AutoExTyp T \<flower> R) = (\<exists>*' x. (T x \<flower> R))" unfolding AutoExTyp_def BinderNameTag_def by auto
-
-lemma [simp]: "AutoExTyp T = (\<exists>*' a b. T (a,b))" unfolding AutoExTyp_def by auto
-
-lemma AutoExTyp_strip: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (AutoExTyp T)) \<equiv> (\<exists>x. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T x)"
-  unfolding AutoExTyp_def CurrentConstruction_def by (rule eq_reflection) auto *)
+lemma " Union { S x |x. P x } = (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x) "
+  by (simp add: set_eq_iff nu_exps) blast
 
 
 subsection \<open>Identity\<close>
