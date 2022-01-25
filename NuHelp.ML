@@ -6,6 +6,7 @@ Application-irrelevant basic tools.
 
 signature NU_HELP = sig
   val debug_term : Proof.context -> string -> term -> term
+  val debug_term_global : theory -> string -> term -> term
   val last : 'a list -> 'a
   val front : 'a list -> 'a list
 
@@ -75,6 +76,7 @@ signature NU_HELP = sig
   val strip_implies_c : cterm -> cterm
   val tuple_abs : (string * (string * typ)) list -> term -> term
 
+  val mk_Trueprop : term -> term
   val dest_Trueprop_c : cterm -> cterm
   (*  Γ |- A ==> B
   * ---------------
@@ -98,8 +100,11 @@ signature NU_HELP = sig
 end
 structure NuHelp : NU_HELP = struct
 open Term Thm
-fun debug_term ctx prompt term =
-  (tracing (prompt ^ Syntax.string_of_term ctx term); term)
+
+fun debug_term ctxt prompt term =
+  (tracing (prompt ^ Syntax.string_of_term ctxt term); term)
+fun debug_term_global thy prompt term =
+  (tracing (prompt ^ Syntax.string_of_term_global thy term); term)
 
 fun last [] = raise Fail "last"
   | last [x] = x
@@ -113,12 +118,12 @@ exception NotFree of term
 exception Syntax of term
 
 fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global thy
-  | string_of_term_generic (Context.Proof ctx) = Syntax.string_of_term ctx
+  | string_of_term_generic (Context.Proof ctxt) = Syntax.string_of_term ctxt
 
 fun error s = Exn.reraise (ERROR s)
-fun UI_top_handler ctx f x =
+fun UI_top_handler ctxt f x =
   let
-    val term = string_of_term_generic ctx
+    val term = string_of_term_generic ctxt
   in
     f x
   handle 
@@ -191,6 +196,8 @@ fun dest_quinop_c const tm =
         val (f,a2) = Thm.dest_comb f
         val (f,a1) = Thm.dest_comb f
       in (a1,a2,a3,a4,a5) end
+fun mk_Trueprop (tm as (Const (@{const_name Trueprop}, _) $ _)) = tm
+  | mk_Trueprop tm = HOLogic.Trueprop $ tm
 val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
 fun mk_monop name arg = Const (name, Term.dummyT) $ arg
@@ -260,11 +267,11 @@ fun fix_frees pos frees =
           (free, Term.Free (new, Term.dest_Free free |> #2)))))
 
 
-fun free_to_fix_1 ctx (tm as Term.Free (name,ty)) =
-      (case Variable.lookup_fixed ctx name of SOME name' => Term.Free (name', ty) | _ => tm)
+fun free_to_fix_1 ctxt (tm as Term.Free (name,ty)) =
+      (case Variable.lookup_fixed ctxt name of SOME name' => Term.Free (name', ty) | _ => tm)
   | free_to_fix_1 _ tm = tm
 val free_to_var_ty = map_type_tfree (fn (name,sort) => TVar ((name,0),sort))
-fun free_to_fix ctx = Term.map_aterms (free_to_fix_1 ctx)
+fun free_to_fix ctxt = Term.map_aterms (free_to_fix_1 ctxt)
 val free_to_var = map_aterms (fn tm =>
       case tm of Free (name,ty) => Var ((name,0), free_to_var_ty ty)
          | Const (name,ty) => Const (name, free_to_var_ty ty)

@@ -72,12 +72,16 @@ proc bin_search:
   where ?index = "find_index (\<lambda>y. x \<le> y) xs"
   premises "length xs = len" and "sorted xs"
   \<bullet> \<rightarrow> ptr, len, x
-  \<bullet> len 0 while h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close> \<open>l < h\<close>
-      \<comment> \<open>the always clause indicates the invariant (the first term) and the loop condition (the second term)\<close>
-  \<bullet> \<medium_left_bracket> -- h, l l h < \<medium_right_bracket> \<comment> \<open>The loop condition\<close>
-  \<bullet> \<medium_left_bracket> -- h, l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket> \<medium_right_bracket> \<comment> \<open>The loop body\<close>
+  \<bullet> len 0 while h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close>
+      \<comment> \<open>the \<open>always\<close> clause indicates the invariant (the first term) and the loop condition (the second term)\<close>
+  \<bullet> \<medium_left_bracket> \<lambda>'(h, l) l h < \<medium_right_bracket> \<comment> \<open>The loop condition\<close>
+  \<bullet> \<medium_left_bracket> \<lambda>(h, l) h l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket> \<medium_right_bracket> \<comment> \<open>The loop body\<close>
   \<bullet> drop
   finish
+(* The command \<rightarrow> assigns and moves stack elements to local values,
+  and the command \<open>--\<close> assigns and loads back those stack elements from local values,
+  e.g. \<open>-- (x,y)\<close> is identical to \<open>\<rightarrow> (x,y) x y\<close>, and it loads x, y back after assigning them
+  to local values. The command \<open>\<lambda>\<close> is a syntax equivalent of \<open>\<rightarrow>\<close>, and \<open>\<lambda>'\<close> is that of \<open>--\<close>*)
 
 \<nu>interface bin_search = bin_search : \<open>32 word \<times> size_t word \<times> memptr\<close> \<longmapsto> \<open>size_t word\<close>
 
@@ -105,8 +109,8 @@ proc partition:
   \<bullet> -- ptr, n 1 - \<up> \<rightarrow> pivot
   \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in "ptr \<R_arr_tail> ys", j
   \<bullet> \<open>\<lambda>i. j \<le> i \<and> ys <~~> xs \<and> (ys ! (n-1) = ?pivot) \<and>
-    (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ?pivot) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> ?pivot < ys ! k)\<close> \<medium_left_bracket>
-  \<bullet> \<rightarrow> j, i ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> j 1 + \<medium_right_bracket> \<medium_left_bracket> j \<medium_right_bracket> 
+    (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ?pivot) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> ?pivot < ys ! k)\<close> \<medium_left_bracket> \<lambda>(j,i)
+  \<bullet> ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> j 1 + \<medium_right_bracket> \<medium_left_bracket> j \<medium_right_bracket> 
   \<bullet> goal affirm using \<nu> by (auto simp add: less_Suc_eq intro!: perm_swap[THEN perm.trans])
   \<bullet> \<medium_right_bracket>
   have [useful]: "j < n" using \<nu> by linarith
@@ -235,10 +239,10 @@ proc mk_kmp_table:
     \<and> matches' xs (i - j) xs 0 j
     \<and> (\<forall>z. j < z \<and> z < i \<longrightarrow> \<not>matches' xs (i - z) xs 0 (z + 1))
     \<and> (\<forall>k. 0 < k \<and> k \<le> i \<longrightarrow> is_next xs k (ktab ! k))
-    \<and> length ktab = nx\<close> \<open>i < nx - 1\<close>
+    \<and> length ktab = nx\<close>
   note is_next_def [simp del] nth_list_update[simp del]
-  \<bullet> \<medium_left_bracket> -- i, j i nx 1 - < \<medium_right_bracket>
-  \<bullet> \<medium_left_bracket> \<rightarrow> i, j px i \<up> px j \<up> = if
+  \<bullet> \<medium_left_bracket> \<lambda>'(i, j) i nx 1 - < \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> \<lambda>(i, j) px i \<up> px j \<up> = if
   \<bullet> \<medium_left_bracket> i 1 + j 1 + -- i, j pk i j \<down>\<medium_right_bracket>
   \<bullet> \<medium_left_bracket> j 0 = if \<medium_left_bracket> i 1 + -- i pk i 0 \<down>j \<medium_right_bracket> \<medium_left_bracket> i pk j \<up> \<medium_right_bracket> \<medium_right_bracket>
 
@@ -246,7 +250,7 @@ proc mk_kmp_table:
     by (metis leI le_add_diff_inverse2 less_diff_conv less_diff_conv2 less_nat_zero_code nat_diff_split_asm ordered_cancel_comm_monoid_diff_class.diff_diff_right) 
   have A1: "i + 1 < nx" using \<nu> by auto
   have AA2: "\<And>k. k \<le> i + 1 \<longleftrightarrow> k \<le> i \<or> k = i + 1" by auto
-  \<bullet> goal affirm apply (elim TrueE, rule)
+  \<bullet> goal affirm
     apply (cases "xs ! i = xs ! j") using \<nu> apply auto[1]
     apply (smt (z3) Nat.le_diff_conv2 add_cancel_left_left le_add_diff_inverse2 less_imp_le less_trans matches'_right_extension \<nu>)
     apply (metis (full_types) Nat.diff_diff_right add_lessD1 le_add_diff_inverse2 less_add_one less_diff_conv less_diff_conv2 less_one matches_right_weakening not_less \<nu>)
@@ -289,9 +293,9 @@ proc kmp:
   \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close>0 while var i j in i, j 
     always \<open> j \<le> nx \<and> j \<le> i \<and> i \<le> ny
       \<and> matches' ys (i - j) xs 0 j \<and>
-    (\<forall>k < i - j.  \<not> (matches' ys k xs 0 nx))\<close> \<open>i < ny \<and> j < nx\<close>
-  \<bullet> \<medium_left_bracket> -- i, j i ny < j nx < \<and> \<medium_right_bracket>
-  \<bullet> \<medium_left_bracket> \<rightarrow> i, j
+    (\<forall>k < i - j.  \<not> (matches' ys k xs 0 nx))\<close>
+  \<bullet> \<medium_left_bracket> \<lambda>'(i, j) i ny < j nx < \<and> \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> \<lambda>(i, j)
   \<bullet> py i \<up> px j \<up> = if
   \<bullet> \<medium_left_bracket> i 1 + j 1 + \<medium_right_bracket>
   \<bullet> \<medium_left_bracket> j 0 = if \<medium_left_bracket> i 1 + j \<medium_right_bracket> \<medium_left_bracket> i pk j \<up>\<medium_right_bracket> \<medium_right_bracket>

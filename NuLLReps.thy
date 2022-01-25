@@ -85,7 +85,7 @@ qed
 subsection \<open>Instantiations for memptr\<close>
 
 instantiation memptr :: lrep begin
-definition llty_memptr :: " memptr itself \<Rightarrow> llty" where [\<nu>intro]: "llty_memptr _ = llty_pointer"
+definition llty_memptr :: " memptr itself \<Rightarrow> llty" where "llty_memptr _ = llty_pointer"
 definition deepize_memptr :: " memptr \<Rightarrow> value"
   where "deepize_memptr ptr = DM_pointer (case_memptr (map_memaddr unat) ptr)"
 definition shallowize_memptr :: " value \<Rightarrow> memptr "
@@ -182,8 +182,10 @@ definition RawPointer :: "(memptr, raw_memaddr) \<nu>"
 
 lemma [nu_exps]: "memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_def by (simp add: RawPointer_def nu_exps)
 lemma [elim,\<nu>elim]: "addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Zero RawPointer (undefined |+ 0)" unfolding \<nu>Zero_def by (simp add: nu_exps)
-lemma [\<nu>intro]: "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps nu_exps)
+lemma [\<nu>reason on \<open>\<nu>Zero RawPointer ?x\<close>]:
+  "\<nu>Zero RawPointer (undefined |+ 0)" unfolding \<nu>Zero_def by (simp add: nu_exps)
+lemma [\<nu>reason on \<open>\<nu>Equal RawPointer ?c ?eq\<close>]:
+  "\<nu>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<nu>Equal_def by (simp add: lrep_exps nu_exps)
 
 subsubsection \<open>Pointer\<close>
 
@@ -193,9 +195,12 @@ definition Pointer :: "(memptr, nat memaddr) \<nu>"
 lemma [nu_exps]: "memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
   unfolding Refining_def by (simp add: Pointer_def)
 lemma [elim,\<nu>elim]: "addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<nu>intro]: "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
+lemma [\<nu>reason on \<open>\<nu>Equal Pointer ?c ?eq\<close>]:
+    "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
   unfolding \<nu>Equal_def using raw_offset_of_inj by (simp add: lrep_exps the_same_addr_def same_addr_offset_def nu_exps) blast
-lemma [\<nu>intro]: "\<nu>Zero Pointer (undefined |+ 0)" unfolding \<nu>Zero_def by (simp add: nu_exps same_addr_offset_def)
+lemma [\<nu>reason on \<open>\<nu>Zero Pointer ?x\<close>]:
+    "\<nu>Zero Pointer (undefined |+ 0)"
+  unfolding \<nu>Zero_def by (simp add: nu_exps same_addr_offset_def)
 
 
 subsubsection \<open>Casts\<close>
@@ -217,7 +222,7 @@ section \<open>The integer data type\<close>
 subsection \<open>Lrep instantiations\<close>
 
 instantiation word :: (len) lrep begin
-definition llty_word :: "'a word itself \<Rightarrow> llty" where [simp, \<nu>intro]: "llty_word _ = llty_int LENGTH('a)"
+definition llty_word :: "'a word itself \<Rightarrow> llty" where [simp, \<nu>reason]: "llty_word _ = llty_int LENGTH('a)"
 definition deepize_word :: " 'a word \<Rightarrow> value " where "deepize_word x = DM_int LENGTH('a) (unat x)"
 definition shallowize_word :: " value \<Rightarrow> 'a word" where "shallowize_word x = (case x of DM_int _ n \<Rightarrow> of_nat n)"
 instance apply standard using deepize_word_def shallowize_word_def by auto
@@ -244,16 +249,20 @@ translations "\<nat>['x]" == "CONST NuNat (TYPE('x))"
 lemma [nu_exps]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_def by (simp add: NuNat_def)
 lemma [elim!,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto simp add: nu_exps)
 
-lemma [\<nu>intro]: "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
+lemma [\<nu>reason on \<open>\<nu>Equal (NuNat ?b) ?c ?eq\<close>]:
+  "\<nu>Equal (NuNat b) (\<lambda>x y. True) (=)"
   unfolding \<nu>Equal_def by (auto simp add: unsigned_word_eqI nu_exps)
-lemma [\<nu>intro]: "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by (simp add: nu_exps)
+lemma [\<nu>reason on \<open>\<nu>Zero (NuNat ?b) ?zero\<close>]:
+  "\<nu>Zero (NuNat b) 0" unfolding \<nu>Zero_def by (simp add: nu_exps)
 
 definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where "NuNatRound _ x = {p. p = of_nat x}"
 syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
 translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))" 
 
 lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding Refining_def  by (simp add: NuNatRound_def)
-lemma [\<nu>intro]: "\<nu>Zero (NuNatRound b) 0" unfolding \<nu>Zero_def by simp
+lemma [\<nu>reason on \<open>\<nu>Zero (NuNatRound ?b) ?z\<close>]:
+    "\<nu>Zero (NuNatRound b) 0"
+  unfolding \<nu>Zero_def by simp
 
 
 \<nu>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
@@ -279,8 +288,13 @@ lemma [simp]: "p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfoldin
 lemma [elim,\<nu>elim]: " x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: nu_exps) (metis One_nat_def sint_ge sint_lt) 
 
-lemma [\<nu>intro]: "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)" unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
-lemma [\<nu>intro]: "\<nu>Zero (NuInt b) 0" unfolding \<nu>Zero_def by simp
+lemma [\<nu>reason on \<open>\<nu>Equal (NuInt b) ?c ?eq\<close>]:
+    "\<nu>Equal (NuInt b) (\<lambda>x y. True) (=)"
+  unfolding \<nu>Equal_def by (auto simp add: signed_word_eqI) 
+
+lemma [\<nu>reason on \<open>\<nu>Zero (NuInt ?b) ?x\<close>]:
+    "\<nu>Zero (NuInt b) 0"
+  unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Boolean\<close>
 
@@ -294,8 +308,8 @@ qed
 definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool x = {p. (p = 1) = x }"
 
 lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_def by (simp add: NuBool_def)
-lemma [\<nu>intro]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
-lemma [\<nu>intro]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
+lemma [\<nu>reason on \<open>\<nu>Equal \<bool> ?c ?eq\<close>]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
+lemma [\<nu>reason on \<open>\<nu>Zero NuBool ?z\<close>]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
 
 (* subsection \<open>Fusion \<nu>-abstraction\<close>
 
@@ -316,7 +330,7 @@ subsection \<open>Lrep instantiations\<close>
 subsubsection \<open>lrep\<close>
 
 instantiation tuple :: (field_list) lrep begin
-definition llty_tuple :: " 'a tuple itself \<Rightarrow> llty " where [simp, \<nu>intro]: "llty_tuple _ = llty_tup (llty TYPE('a))"
+definition llty_tuple :: " 'a tuple itself \<Rightarrow> llty " where [simp, \<nu>reason]: "llty_tuple _ = llty_tup (llty TYPE('a))"
 definition deepize_tuple :: " 'a tuple \<Rightarrow> value " where "deepize_tuple x = DM_record (deepize (case_tuple id x))"
 definition shallowize_tuple :: " value \<Rightarrow> 'a tuple " where "shallowize_tuple x = (case x of DM_record y \<Rightarrow> Tuple (shallowize y))"
 instance apply standard using shallowize_tuple_def deepize_tuple_def by (auto split: tuple.split)
@@ -357,18 +371,18 @@ definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b)
 lemma [simp]: "Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by (simp add: nu_exps)
 
-lemma [\<nu>intro]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
-lemma [\<nu>intro]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
+lemma [\<nu>reason]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp
+lemma [\<nu>reason]: "\<nu>Zero N z \<Longrightarrow> \<nu>Zero \<lbrace> N \<rbrace> z" unfolding \<nu>Zero_def by simp
 
 subsubsection \<open>Index\<close>
 
 definition index_tuple :: "('a,'b,'x,'y) index \<Rightarrow> ('a::field_list tuple, 'b::field_list tuple, 'x, 'y) index"
   where "index_tuple idx = (case idx of Index g m \<Rightarrow> Index (g o dest_tuple) (map_tuple o m))"
 
-lemma [\<nu>intro]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_tuple idx \<blangle> X \<^bold>@ a \<tycolon> \<lbrace> A \<rbrace> \<brangle>"
+lemma [\<nu>reason]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_tuple idx \<blangle> X \<^bold>@ a \<tycolon> \<lbrace> A \<rbrace> \<brangle>"
   unfolding \<nu>index_def index_tuple_def tuple_forall by (cases idx) (simp add: nu_exps)
 
-lemma [\<nu>intro]:
+lemma [\<nu>reason]:
     "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_tuple idx \<blangle> X \<^bold>@ a \<tycolon> \<lbrace> A \<rbrace> \<longmapsto> Y \<^bold>@ b \<tycolon> \<lbrace> B \<rbrace> \<brangle>"
   unfolding \<nu>index_def index_tuple_def tuple_forall by (cases idx) (simp add: nu_exps)
 
@@ -377,7 +391,7 @@ section \<open>Function Pointer\<close>
 subsubsection \<open>lrep\<close>
 
 instantiation fun_addr ::  lrep begin
-definition llty_fun_addr :: " fun_addr itself \<Rightarrow> llty " where [simp, \<nu>intro]: "llty_fun_addr _ = Lty_fun_addr"
+definition llty_fun_addr :: " fun_addr itself \<Rightarrow> llty " where [simp, \<nu>reason]: "llty_fun_addr _ = Lty_fun_addr"
 definition deepize_fun_addr :: " fun_addr \<Rightarrow> value " where "deepize_fun_addr = DM_fun_addr"
 definition shallowize_fun_addr :: " value \<Rightarrow> fun_addr " where "shallowize_fun_addr x = (case x of DM_fun_addr y \<Rightarrow> y)"
 instance apply standard using shallowize_fun_addr_def deepize_fun_addr_def by auto
