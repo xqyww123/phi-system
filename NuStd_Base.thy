@@ -1,7 +1,7 @@
 theory NuStd_Base
   imports NuSys NuBasicAbstractors NuInstructions
   keywords
-     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "always" "--" "\<rightarrow>" :: quasi_command
+     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "always" "--" "\<rightarrow>" "\<lambda>" "\<lambda>'" :: quasi_command
   abbrevs "|^" = "\<up>"
     and "||^" = "\<Up>"
     and "|v" = "\<down>"
@@ -380,9 +380,10 @@ lemma op_local_value: "v \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<
 
 ML_file "library/local_value.ML"
 
-\<nu>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<close> \<open>let open Parse in
-  fn ctx => fn sequent => (($$$ "\<rightarrow>" || $$$ "--") -- list1 binding) >> (fn (keyword,idts) => fn _ =>
-    Local_Value.mk_let (keyword = "--") (rev idts) sequent ctx
+\<nu>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<close> \<open>let open Parse Scan in
+  fn ctx => fn sequent => (($$$ "\<rightarrow>" || $$$ "--" || $$$ "\<lambda>" || $$$ "\<lambda>'") --| option ($$$ "(") -- list1 binding --| option ($$$ ")"))
+  >> (fn (keyword,idts) => fn _ =>
+    Local_Value.mk_let (keyword = "--" orelse keyword = "\<lambda>'") (rev idts) sequent ctx
 ) end\<close>
 
 
@@ -559,9 +560,11 @@ subsubsection \<open>while\<close>
 proc while: \<open>X'\<close> :: "'s::stack" \<longmapsto> \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars X' X"
     and "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond"
-    and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<blangle> X x \<longmapsto> X x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True\<brangle>"
+    and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<blangle> X x \<longmapsto> X x' \<heavy_asterisk> P \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. P = cond x'\<brangle>"
     and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<blangle> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<brangle>"
-  \<bullet> Cond if \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
+  \<bullet> Cond if \<medium_left_bracket> do_while var x' \<open>cond x'\<close> 
+  \<bullet> \<medium_left_bracket> Body Cond goal affirm using \<open>cond x'\<close>  by simp \<bullet> \<medium_right_bracket>
+  \<bullet> subj \<open>\<not> cond x'\<close> \<medium_right_bracket> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
   finish
 
 

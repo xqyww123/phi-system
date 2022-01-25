@@ -534,7 +534,7 @@ fun gen_begin_block prep_attr bindings int stat =
                   in ((singleton (Proof_Context.export ctxt' ctxt'') th
                         |> Drule.forall_intr_list (map (cterm_of ctxt'') vars')
                         |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
-                      ) COMP specthm)
+                      ) RS specthm)
                   end
           ))
 

@@ -47,6 +47,7 @@ abbrevs
   and "<get>" = "\<^bold>g\<^bold>e\<^bold>t"
   and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
   and "<field>" = "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d"
+  and "<VC>" = "\<^bold>V\<^bold>C"
 begin
 
 section \<open>Prelude of the Prelude\<close>
@@ -138,41 +139,38 @@ typedef mode = "UNIV :: nat set" .. \<comment> \<open>Technical and systematical
 
 consts MODE_NORMAL :: mode \<comment> \<open>A generically used tag of the semantic of `default, the most common`.\<close>
 consts MODE_SIMP :: mode \<comment> \<open>relating to simplifier or simplification\<close>
-
+consts MODE_VC :: mode \<comment> \<open>relating to verification condition\<close>
 
 subsubsection \<open>Premise tag \<close>
 
 definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where [\<nu>def]:"Premise _ x = x"
+
 abbreviation Normal_Premise ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where "Normal_Premise \<equiv> Premise MODE_NORMAL"
 abbreviation Simp_Premise ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m _" [27] 26) where "Simp_Premise \<equiv> Premise MODE_SIMP"
+abbreviation VC_Premise ("\<^bold>V\<^bold>C _" [27] 26) where "VC_Premise \<equiv> Premise MODE_VC"
 
-ML \<open>Method.check_name @{context} ("rule", Position.none)\<close>
+text \<open>
+  The tag represents a necessary premise that must be solved in a rule or a procedure.
+  Different mode correspond different strategies in automatic reasoning.
+  The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> represents a general proof obligation intended to be solved.
+  The \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> has a systematic sense, which serves as a side condition and
+    decides whether an inference rule should be applied.
+  The \<^term>\<open>\<^bold>V\<^bold>C P\<close> represents verification conditions.
 
-text \<open>The tag represents a necessary premise that must be solved in a rule or a procedure.
-  Two settings correspond two strategies in automatic reasoning.
+  Since \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> has a systematic sense, the proof of it is attempted by a safe and
+    simple tactic the @{method simp}, which terminates in a short time.
+
   The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> is attempted by fully-powered automatic tactic, the @{method auto},
-    which is however heavy and consumes a very long time sometimes,
-    so not suitable for e.g. decisive switchers deciding whether the rule should be applied.
-  By contrast, \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is attempted by safer tactic the @{method simp},
-    which generally terminates in a short time.
-  The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> is only attempted automatically under the fully auto-level (level 2),
-    whereas in other cases the proof leaves for user.
-    When the automatic solving consumes a lot of time, users can set the auto level down to
-    semi-auto (level 1) to prevent the automatic behavior and solve it manually.
-  By contrast, \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is always attempted under any auto-level, because we trust
-    the simplification is a safe method.
+    which is however heavy and consumes a long time sometimes.
+  When the automatic solving consumes a lot of time, users can set the auto level down to
+    semi-auto (level 1) to suppress the automatic behavior and solve it manually.
 
-  Many reasoning rules or procedures depend on certain conditions to decide whether they can be applied,
-    e.g. asserting equality of addresses in heap cast rules checking whether the heap object is that object
-      intended to be cast. In these cases, conditions serving as `decisive switchers` decide search of the reasoning.
-    Of the systematical function, they are essential
-      and the failure of the proof of them rejects (prunes) a searching branch.
-    When failure of @{method auto} often consumes a lot of time,
-      decisive switchers are suitable to be marked by \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close>.
-
-  The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> more or less has a semantic of, the proof obligation intended to be solve by user
-    (albeit most of times they are solved automatically), while \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is more systematic,
-  deciding reasoning branches.\<close>
+  When there is (at least) one \<^term>\<open>\<^bold>V\<^bold>C Q\<close> premises in the reasoning state (which is a Horn clause),
+    the behavior of \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> changes. The reasoner moves the \<^prop>\<open>P\<close> into \<^prop>\<open>Q\<close>,
+    i.e. \<^prop>\<open>\<^bold>V\<^bold>C P \<and> Q\<close>, (the latest / nearest \<^prop>\<open>Q\<close> when there are multiple \<^term>\<open>\<^bold>V\<^bold>C Q\<close>),
+    and the proof of P is delayed until Q. The \<^prop>\<open>\<^bold>V\<^bold>C P \<and> Q\<close> is also attempted
+    automatically by the @{method auto}.
+\<close>
 
 lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
 lemma Premise_E: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
