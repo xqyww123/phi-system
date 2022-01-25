@@ -502,8 +502,8 @@ lemma SemDoWhile_deterministic2: " SemDoWhile body s x \<Longrightarrow> The ( S
 
 
 lemma "__DoWhile__rule":
-  "(\<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<heavy_asterisk> P x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<brangle>)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<blangle> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<brangle>"
+  "(\<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and>P x \<longmapsto> X x' \<heavy_asterisk> P x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<brangle>)
+    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<blangle> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<and> \<not> P x' \<brangle>"
   unfolding op_do_while_def Procedure_def Auto_def
   apply (auto simp add: SemDoWhile_deterministic2 nu_exps pair_forall LooseStateTy_expn')
   subgoal for a b x M c

@@ -43,7 +43,7 @@ lemma find_index_append: "find_index P (xs @ ys) =
   (if \<exists>x\<in>set xs. P x then find_index P xs else size xs + find_index P ys)"
   by (induct xs) simp_all
   
-lemma find_index_le_size: "find_index P xs <= size xs"
+lemma find_index_le_size[simp]: "find_index P xs <= size xs"
 by(induct xs) simp_all
 
 lemma index_le_size: "index xs x <= size xs"
@@ -561,5 +561,10 @@ next
   then show ?case
     by (cases i) (auto simp add: set_remove_nth_subset rev_subsetD)
 qed
+
+lemma find_index_sorted_le[simp]: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> xs ! i < x \<Longrightarrow> i < find_index ((\<le>) x) xs" 
+    and find_index_sorted_leq[simp]: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> x \<le> xs ! i \<Longrightarrow> find_index ((\<le>) x) xs \<le> i"
+  unfolding sorted_iff_nth_mono
+  by (metis less_le_trans linorder_neqE_nat not_le find_index_property find_index_property)+
 
 end

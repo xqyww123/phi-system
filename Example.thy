@@ -21,11 +21,11 @@ text \<open>The command `\<bullet>`  leads a construction statement, and the con
     to see what the construction state respectively is in those two parts.\<close>
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
-declare find_index_le_size[simp]
+lemmas add1_le_eq[simp] = Suc_le_eq[unfolded Suc_eq_plus1]
 
 section\<open>Subtraction by 1\<close>
 
-proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x -1 \<tycolon> \<nat>[32]\<close>
+proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x - 1 \<tycolon> \<nat>[32]\<close>
   premises \<open>0 < x\<close>
   \<bullet> 1 -
   finish
@@ -36,15 +36,19 @@ fun fib :: "nat \<Rightarrow> nat" where
   "fib 0 = 1" | "fib (Suc 0) = 1" | "fib (Suc (Suc n)) = fib n + fib (Suc n)"
 
 (* int fib (int i) { if (i \<le> 1) return 1; else return fib (i-2) + fib (i-1); } *)
-  rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
-    \<bullet> -- i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket>
+rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close> var i
+    (* The (i \<tycolon> \<nat>\<^sup>r[32]) is the rounding abstraction which represents the integer \<open>i mod 2^32\<close>,
+        so we do not need to consider the arithmetic overflow *)
+    \<bullet> \<rightarrow> i
+    \<bullet> i 1 \<le> if \<medium_left_bracket> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> \<medium_right_bracket> \<medium_left_bracket>
     \<bullet> i 2 - Fib \<rightarrow> f2
     \<bullet> i 1 - Fib \<rightarrow> f1
     \<bullet> f1 f2 +
     \<bullet> \<medium_right_bracket> goal affirm by (cases i rule: fib.cases) auto
   finish
 
-thm Fib_\<nu>compilation
+thm Fib_\<nu>app \<comment> \<open>The specification theorem\<close>
+thm Fib_\<nu>compilation \<comment> \<open>The definition of the procedure\<close>
 
 proc Fib2: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close>
   \<bullet> \<rightarrow> i
@@ -54,18 +58,13 @@ proc Fib2: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<t
   \<bullet> \<medium_right_bracket> drop
   finish
 
-\<nu>interface my_fib = Fib
+\<nu>interface my_fib = Fib \<comment> \<open>To export the procedure Fib to an LLVM function with name my_fib.\<close>
 \<nu>interface my_fib2 = Fib2
 
+thm Fib_\<nu>app \<comment> \<open>The specification theorem\<close>
+thm Fib_\<nu>compilation \<comment> \<open>The definition of the procedure\<close>
 
 section\<open>Binary Search\<close>
-
-lemma find_index_sorted_le[simp]: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> xs ! i < x \<Longrightarrow> i < find_index ((\<le>) x) xs" 
-    and find_index_sorted_leq[simp]: "sorted xs \<Longrightarrow> i < length xs \<Longrightarrow> x \<le> xs ! i \<Longrightarrow> find_index ((\<le>) x) xs \<le> i"
-  unfolding sorted_iff_nth_mono
-  by (metis less_le_trans linorder_neqE_nat not_le find_index_property find_index_property)+
-
-lemmas add1_le_eq[simp] = Suc_le_eq[unfolded Suc_eq_plus1]
 
 proc bin_search:
   argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> len \<tycolon> \<nat>[size_t] \<heavy_asterisk> x \<tycolon> \<nat>['b::len]\<close>
@@ -74,34 +73,35 @@ proc bin_search:
   premises "length xs = len" and "sorted xs"
   \<bullet> \<rightarrow> ptr, len, x
   \<bullet> len 0 while h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close> \<open>l < h\<close>
-  \<bullet> \<medium_left_bracket> -- h, l l h < \<medium_right_bracket>
-  \<bullet> \<medium_left_bracket> -- h, l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket> \<medium_right_bracket>
+      \<comment> \<open>the always clause indicates the invariant (the first term) and the loop condition (the second term)\<close>
+  \<bullet> \<medium_left_bracket> -- h, l l h < \<medium_right_bracket> \<comment> \<open>The loop condition\<close>
+  \<bullet> \<medium_left_bracket> -- h, l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket> \<medium_right_bracket> \<comment> \<open>The loop body\<close>
   \<bullet> drop
   finish
 
-thm bin_search_\<nu>compilation
-
 \<nu>interface bin_search = bin_search : \<open>32 word \<times> size_t word \<times> memptr\<close> \<longmapsto> \<open>size_t word\<close>
 
-thm bin_search_\<nu>app
-thm bin_search_\<nu>compilation
-thm while_\<nu>compilation
+thm bin_search_\<nu>app \<comment> \<open>The specification theorem\<close>
+thm bin_search_\<nu>compilation \<comment> \<open>The definition of the procedure\<close>
 
 
 section\<open>Quick-sort\<close>
 
-proc swap:  \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]\<close>
-  \<longmapsto> \<open>ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
+proc swap:
+  argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]\<close>
+  return \<open>ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
   premises \<open>i < length xs\<close> and \<open>j < length xs\<close>
   \<bullet> \<rightarrow> ptr, i, j ptr i \<up>\<rightarrow> i' ptr j \<up> \<rightarrow> j' ptr i j' \<down> ptr j i' \<down>
   finish
 
-proc partition: \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
-  \<longmapsto> \<open>ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]
+proc partition:
+  argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
+  return \<open>ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]
     \<^bold>s\<^bold>u\<^bold>b\<^bold>j j ys. j < length xs \<and> ys  <~~> xs \<and>
       (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ys ! j) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> ys ! j < ys ! k)\<close>
   premises \<open>length xs = n\<close> and \<open>0 < n\<close>
   note nth_list_update[simp] not_le[simp] perm_length[simp]
+
   \<bullet> -- ptr, n 1 - \<up> \<rightarrow> pivot
   \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in "ptr \<R_arr_tail> ys", j
   \<bullet> \<open>\<lambda>i. j \<le> i \<and> ys <~~> xs \<and> (ys ! (n-1) = ?pivot) \<and>
@@ -115,35 +115,30 @@ proc partition: \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_
         less_numeral_extra(1) less_or_eq_imp_le mset_eq_perm mset_swap nat_neq_iff nth_list_update_eq
          nth_list_update_neq perm_length)
     (*Albeit it is long, it is generated by sledgehammer fully-automatically!
-    Actually `auto intro!: perm_swap[THEN perm.trans]` should has been enough to solve this (just try this),
-    however I do not know why it is stuck at some silly condition.
-    Anyway since no one in those theorems relates to the \<nu>-system nor the low level representations,
-      the ugly proof here is basically another proof engineer problem irrelevant with \<nu>-system.*)
+    Actually `auto intro!: perm_swap[THEN perm.trans]` should has been enough to solve this,
+    however I do not know why it is stuck at some simple condition.*)
   finish
 
 
-rec_proc qsort: \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
-  \<longmapsto> \<open>OBJ ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<^bold>s\<^bold>u\<^bold>b\<^bold>j ys. sorted ys \<and> ys  <~~> xs\<close>
+rec_proc qsort:
+  argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
+  return \<open>OBJ ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<^bold>s\<^bold>u\<^bold>b\<^bold>j ys. sorted ys \<and> ys  <~~> xs\<close>
   var ptr xs n
   premises "n = length xs"
   note perm_length[simp]
 
-  \<bullet> -- ptr, n 0 = if \<medium_left_bracket> drop \<medium_right_bracket>
-  \<bullet> \<medium_left_bracket> n 
-  \<bullet> partition
-  \<bullet> \<rightarrow> j
+  \<bullet> -- ptr, n 0 = if \<medium_left_bracket> drop \<medium_right_bracket> \<medium_left_bracket> n partition \<rightarrow> j
   let ?pivot = "ys ! j" have a1[simp]: " hd (drop j ys) = ?pivot " using \<nu> by (metis hd_drop_conv_nth perm_length)
+
   \<bullet> ptr j split pop n 1 - j - qsort \<exists>high
-  \<bullet> ptr j  qsort \<exists>low
+      \<comment> \<open>the annotation '\<exists>high' indicates the name of  the existential quantified variable to be instantiated\<close>
+  \<bullet> ptr j qsort \<exists>low
   \<bullet> push merge
 
-  \<bullet> !! subj \<open>low @ ?pivot # high <~~> xs\<close> affirm using \<nu>
-    by (metis (no_types, hide_lams) a1 append_take_drop_id cons_perm_eq drop_all_iff leD list.collapse 
-        perm.trans perm_append1 perm_append2 perm_length) \<comment> \<open>generated by Sledgehammer\<close>
-
-  \<bullet> !! subj \<open>sorted (low @ ?pivot # high)\<close> affirm unfolding sorted_append using \<nu>
-    by (auto simp add: perm_set_eq in_set_conv_nth nth_tl Suc_eq_plus1)
-      (metis add.left_commute add1_le_eq le_add2 le_less_trans less_diff_conv less_or_eq_imp_le)+
+  \<bullet> !! subj \<open>low @ ?pivot # high <~~> xs \<and> sorted (low @ ?pivot # high)\<close> affirm unfolding sorted_append using \<nu>
+  by (auto simp add: perm_set_eq in_set_conv_nth nth_tl Suc_eq_plus1)
+     (metis (no_types, hide_lams) \<nu>lemmata(1) a1 append_take_drop_id cons_perm_eq drop_all_iff dual_order.strict_trans1
+      list.collapse not_less_iff_gr_or_eq perm.trans perm_append1 perm_append2 perm_length add.left_commute add1_le_eq le_add2 le_less_trans less_diff_conv less_or_eq_imp_le)+
 
   \<bullet> \<medium_right_bracket>
   finish
@@ -223,11 +218,13 @@ definition "first_occur p a r \<longleftrightarrow>
 
 subsection\<open>Procedure Constructions\<close>
 
-proc initnext: \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> px \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t]\<close>
-  \<longmapsto> \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> pk \<tycolon> Pointer
+proc mk_kmp_table:
+  argument \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> px \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t]\<close>
+  return \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> pk \<tycolon> Pointer
     \<^bold>s\<^bold>u\<^bold>b\<^bold>j pk ktab. kmp_table nx ktab xs \<and> length ktab = nx\<close>
   premises \<open>1 \<le> nx\<close> and \<open>length xs = nx\<close>
-    note  kmp_table_def[simp]
+  note  kmp_table_def[simp]
+
   \<bullet> \<rightarrow> px, nx
   \<bullet> nx alloc_array \<open>\<nat>[size_t]\<close> \<rightarrow> pk
   \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> nx < if \<medium_left_bracket>
@@ -280,13 +277,15 @@ proc initnext: \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_ast
   finish
 
 
-proc kmp: \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk>
+proc kmp:
+  argument \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk>
     px \<tycolon> Pointer \<heavy_asterisk> py \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t] \<heavy_asterisk> ny \<tycolon> \<nat>[size_t]\<close>
-  \<longmapsto> \<open> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk> i \<tycolon> \<nat>[size_t]
-   \<^bold>s\<^bold>u\<^bold>b\<^bold>j i ktab pk. first_occur xs ys i \<and> kmp_table nx ktab xs\<close>
+  return \<open> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8]
+    \<^bold>s\<^bold>u\<^bold>b\<^bold>j i ktab pk. first_occur xs ys i \<and> kmp_table nx ktab xs\<close>
   premises \<open>length xs = nx\<close> and \<open>length ys = ny\<close> and "1 \<le> nx"
+
   \<bullet> \<rightarrow> px,py,nx,ny
-  \<bullet> px nx initnext \<rightarrow> pk
+  \<bullet> px nx mk_kmp_table \<rightarrow> pk
   \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close>0 while var i j in i, j 
     always \<open> j \<le> nx \<and> j \<le> i \<and> i \<le> ny
       \<and> matches' ys (i - j) xs 0 j \<and>
