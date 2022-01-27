@@ -240,7 +240,7 @@ subsection\<open>Procedure Constructions\<close>
 proc mk_kmp_table:
   argument \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> px \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t]\<close>
   return \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> pk \<tycolon> Pointer
-      \<^bold>s\<^bold>u\<^bold>b\<^bold>j pk ktab. kmp_table nx ktab xs \<and> length ktab = nx\<close>
+      \<^bold>s\<^bold>u\<^bold>b\<^bold>j pk ktab. kmp_table nx ktab xs \<and> length ktab = nx \<close>
   premises \<open>1 \<le> nx\<close> and \<open>length xs = nx\<close>
   note  kmp_table_def[simp]
 
@@ -249,7 +249,7 @@ proc mk_kmp_table:
   \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> nx < if \<medium_left_bracket>
   \<bullet> pk \<open>1\<tycolon>\<nat>[size_t]\<close> 0 \<down>
   note is_next_def [simp] nth_list_update[simp]
-  \<bullet> \<open>1\<tycolon>\<nat>[size_t]\<close> 0 while var i j ktab in \<open>(c |+ 0) \<R_arr_tail> ktab\<close>, i, j
+  \<bullet> \<open>1\<tycolon>\<nat>[size_t]\<close> 0 while var i j ktab in \<open>c \<R_arr_tail> ktab\<close>, i, j
     always \<open>j < i \<and> i < nx 
     \<and> matches' xs (i - j) xs 0 j
     \<and> (\<forall>z. j < z \<and> z < i \<longrightarrow> \<not>matches' xs (i - z) xs 0 (z + 1))
@@ -283,7 +283,7 @@ proc mk_kmp_table:
     apply (cases "z = j") using \<nu> apply (metis le0 le_add_diff_inverse2 less_add_one less_imp_le matches'_def plus_nat.add_0) 
     subgoal premises prems proof -
       from prems \<nu> have A: " is_next xs j (ktab ! j)" by (metis less_le less_nat_zero_code neq0_conv)
-      from \<nu> prems have X1: "z + (j - z) = j" "i - j + (j - z) = i - z" apply (meson le_add_diff_inverse) by (simp add: less_or_eq_imp_le prems(12) prems(4) le_add_diff_inverse) 
+      from \<nu> prems have X1: "z + (j - z) = j" "i - j + (j - z) = i - z" apply (meson le_add_diff_inverse) by (simp add: order.strict_implies_order prems(13) prems(5)) 
       note X2 = matches_left_weakening[where n = z and d = \<open>j - z\<close>, simplified X1]
       thm matches_left_weakening[where n = z and d = \<open>j - z\<close>, simplified X1]
       from A[unfolded is_next_def] prems \<nu> show ?thesis

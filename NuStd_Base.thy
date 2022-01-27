@@ -867,7 +867,7 @@ lemma heap_assignN_eval: "v \<in> T \<Longrightarrow> i < n \<Longrightarrow> he
 theorem alloc_array_\<nu>app:
   "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m N \<Longrightarrow> \<nu>Zero N zero \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc TYPE('x)
       \<blangle> n \<tycolon> \<nat>[size_t] 
-        \<longmapsto> (seg |+ 0) \<R_arr_tail> replicate n zero \<tycolon> Array N \<heavy_asterisk> (seg |+ 0) \<tycolon> Pointer \<^bold>s\<^bold>u\<^bold>b\<^bold>j seg. True \<brangle>"
+        \<longmapsto> ptr \<R_arr_tail> replicate n zero \<tycolon> Array N \<heavy_asterisk> ptr \<tycolon> Pointer \<^bold>s\<^bold>u\<^bold>b\<^bold>j ptr. addr_cap ptr n \<brangle>"
   for N :: "('x::{zero,field},'b)\<nu>"
   unfolding \<nu>def op_alloc_def Array_def
   apply (auto simp add: lrep_exps list_all2_conv_all_nth Let_def same_addr_offset_def nu_exps
@@ -878,7 +878,7 @@ theorem alloc_array_\<nu>app:
   done
 
 
-proc alloc : \<open>Void\<close> \<longmapsto> \<open>ptr \<R_arr_tail> zero \<tycolon> Ref T \<heavy_asterisk> ptr \<tycolon> Pointer \<^bold>s\<^bold>u\<^bold>b\<^bold>j ptr. True\<close>
+proc alloc : \<open>Void\<close> \<longmapsto> \<open>ptr \<R_arr_tail> zero \<tycolon> Ref T \<heavy_asterisk> ptr \<tycolon> Pointer \<^bold>s\<^bold>u\<^bold>b\<^bold>j ptr. addr_cap ptr 1\<close>
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T" and [\<nu>reason on ?any]: "\<nu>Zero T zero"
   have A[simp]: "replicate 1 zero = [zero]" by (simp add: One_nat_def)
   \<bullet>\<open>1 \<tycolon> \<nat>[size_t]\<close> alloc_array T
@@ -890,8 +890,6 @@ subsubsection \<open>Load & Store\<close>
 \<nu>overloads \<up> and "\<up>:" and \<Up> and "\<Up>:" and \<down> and "\<down>:" and \<Down> and "\<Down>:" and free
 
 abbreviation "list_map_at f i l \<equiv> list_update l i (f (l ! i))"
-
-term op_load
 
 lemma op_load[ \<nu>overload "\<up>:" ]:
   "FieldIndex field_index Y X gt mp \<longrightarrow>

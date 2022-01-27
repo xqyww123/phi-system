@@ -150,8 +150,8 @@ definition op_store :: " 'x itself \<Rightarrow> 'a itself \<Rightarrow> ('a::lr
       Success (heap(key \<mapsto> map_deepmodel (map_idx idx (\<lambda>_. x)) data), r) | _ \<Rightarrow> Fail))"
 
 definition op_free :: " memptr \<times> ('r::stack) \<longmapsto> 'r "
-  where "op_free s = (case s of (h,memptr (base |+ _),r) \<Rightarrow>
-    (Success (h |` (-{MemAddress (base |+ ofs) | ofs. True}), r)))"
+  where "op_free s = (case s of (h,memptr (base |+ ofs),r) \<Rightarrow>
+    (if ofs = 0 then Success (h |` (-{MemAddress (base |+ ofs) | ofs. True}), r) else Fail))"
 
 
 end

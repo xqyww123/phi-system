@@ -42,6 +42,9 @@ definition len_of_size_t :: "size_t itself \<Rightarrow> nat" where [simp]: "len
 instance apply standard using addrspace_capacity_L0 by auto
 end
 
+primrec addr_cap \<comment> \<open>The memory block starting at the address has length `len`\<close>
+  where "addr_cap (seg |+ ofs) len \<longleftrightarrow> ofs = 0 \<and> segment_len seg = len"
+
 definition "malloc h = (@x. \<forall>ofs. h (MemAddress (x |+ ofs)) = None)"
 
 lemma malloc: "Heap h \<Longrightarrow> h (MemAddress (malloc h |+ ofs)) = None"

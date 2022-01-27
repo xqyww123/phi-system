@@ -176,6 +176,10 @@ qed done
 lemma Heap_map_add: "Heap (h1 ++ h2) \<Longrightarrow> Heap h2"
   using Heap_subset map_le_map_add by blast
 
+lemma Heap_restrict[intro]: "Heap h \<Longrightarrow> Heap (h |` S)"
+  by (metis domIff map_le_def restrict_map_def Heap_subset)
+
+
 text \<open>The semantic framework follows a style of shallow embedding, where semantics for different type (e.g. integers, floats)
   are modelled by different Isabelle type. Model types are constrained by the base type class {\it lrep} and types representing
   objects that supports certain features are constrained by specific sub-classes which extend the base class {\it lrep} finally. \<close>
