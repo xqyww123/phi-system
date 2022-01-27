@@ -318,6 +318,7 @@ definition AutoFusion (infixr "\<nuFusion>''" 70)  where "AutoFusion = Fusion"
 lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion>' M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Cast_def AutoFusion_def . *)
 
+
 section \<open>Tuple\<close>
 
 datatype 'a tuple = Tuple (dest_tuple: "('a::field_list)")
@@ -386,7 +387,7 @@ lemma [\<nu>reason]:
     "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<blangle> X \<^bold>@ a \<tycolon> A \<longmapsto> Y \<^bold>@ b \<tycolon> B\<brangle> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_tuple idx \<blangle> X \<^bold>@ a \<tycolon> \<lbrace> A \<rbrace> \<longmapsto> Y \<^bold>@ b \<tycolon> \<lbrace> B \<rbrace> \<brangle>"
   unfolding \<nu>index_def index_tuple_def tuple_forall by (cases idx) (simp add: nu_exps)
 
-section \<open>Function Pointer\<close>
+(*section \<open>Function Pointer\<close>
 
 subsubsection \<open>lrep\<close>
 
@@ -427,6 +428,6 @@ definition op_func_pointer :: "('a \<longmapsto> 'b) \<Rightarrow> ('r :: stack)
 )"
 
 definition FunPtr :: "(heap \<times> 'ap::lrep,'ax) \<nu> \<Rightarrow> (heap \<times> 'bp::lrep,'bx) \<nu> \<Rightarrow> (fun_addr, 'ax \<longmapsto> 'bx) \<nu>"
-  where "FunPtr A B fx  = {faddr. (\<exists>fp. fun_table faddr = Some fp \<and> (\<forall>a b. \<^bold>p\<^bold>r\<^bold>o\<^bold>c fp \<blangle> a \<tycolon> A \<longmapsto> b \<tycolon> B \<brangle>))}"
+  where "FunPtr A B fx  = {faddr. (\<exists>fp. fun_table faddr = Some fp \<and> (\<forall>a b. \<^bold>p\<^bold>r\<^bold>o\<^bold>c fp \<blangle> a \<tycolon> A \<longmapsto> b \<tycolon> B \<brangle>))}" *)
 
 end

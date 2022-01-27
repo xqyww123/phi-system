@@ -601,16 +601,6 @@ instance by standard
 end
 
 
-subsubsection \<open>Abstractor\<close>
-
-definition Void :: " void set " where "Void = UNIV"
-text \<open>The name `void` coincides that, when a procedure has no input arguments,
-  the \<nu>-type for the input would exactly be @{term Void}. \<close>
-
-lemma [nu_exps]: "p \<in> Void" unfolding Void_def by simp
-lemma [elim!, \<nu>elim]: "Inhabited Void \<Longrightarrow> C \<Longrightarrow> C" by simp
-(*translations "a" <= "a \<^bold>a\<^bold>n\<^bold>d CONST Void"*)
-
 subsection \<open>Prod & the pair abstract structure\<close>
 
 instantiation prod :: (field, field_list) field_list begin instance by standard end
@@ -832,7 +822,7 @@ lemma [\<nu>intro]:
 subsubsection \<open>Stack Tail\<close>
 
 abbreviation Stack_Tail :: " 'a::stack set \<Rightarrow> (heap \<times> 's::stack) set \<Rightarrow> (heap \<times> stack) set" ( "_/ ^\<heavy_comma> _" [12,13] 12)
-  where "Stack_Tail R T \<equiv> ((R\<heavy_comma>\<^bold>h\<^bold>e\<^bold>a\<^bold>p Nothing) \<heavy_comma>\<heavy_asterisk> T)"
+  where "Stack_Tail R T \<equiv> ((R\<heavy_comma>\<^bold>h\<^bold>e\<^bold>a\<^bold>p Void) \<heavy_comma>\<heavy_asterisk> T)"
 *)
 
 subsection \<open>Subjection : coheres additional proposition\<close>
@@ -1080,17 +1070,13 @@ ML_file NuBasics.ML
 
 subsection \<open>Heap\<close>
 
-(* definition NuNothing :: "(heap, unit) \<nu>" where  "NuNothing x = {h. h = Map.empty}"
-consts Nothing_sugar :: " 'a_sugar " ("Nothing")
-translations "Nothing" \<rightleftharpoons> "() \<tycolon> CONST NuNothing"
-lemma [nu_exps]: "h \<nuLinkL> NuNothing \<nuLinkR> x \<longleftrightarrow> h = Map.empty" unfolding Refining_def NuNothing_def by simp *)
 
-definition Nothing :: "(heap \<times> stack) set" where "Nothing = { (Map.empty, stack []) }"
+definition Void :: "(heap \<times> stack) set" where "Void = { (Map.empty, stack []) }"
 
-lemma "(h,s) \<in> Nothing \<longleftrightarrow> h = Map.empty \<and> s = stack []" unfolding Nothing_def by simp
+lemma "(h,s) \<in> Void \<longleftrightarrow> h = Map.empty \<and> s = stack []" unfolding Void_def by simp
 
-lemma Separation_empty[iff]: "(Nothing \<heavy_asterisk> H) = H"  "(H \<heavy_asterisk> Nothing) = H"
-  unfolding Nothing_def set_eq_iff by (simp_all add: nu_exps Separation_expn)
+lemma Separation_empty[iff]: "(Void \<heavy_asterisk> H) = H"  "(H \<heavy_asterisk> Void) = H"
+  unfolding Void_def set_eq_iff by (simp_all add: nu_exps Separation_expn)
 
 
 subsubsection \<open>Syntax & Auxiliary\<close>
@@ -1175,13 +1161,13 @@ lemma [simp,cast_simp,\<nu>def]: "(H1 ^\<heavy_asterisk> (H2 ^\<heavy_asterisk> 
   apply clarify by (smt (verit) Heap_map_add dom_map_add inf_assoc inf_commute inf_sup_absorb inf_sup_distrib2 map_add_assoc map_add_comm)
 
 lemma [\<nu>intro 20]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Nothing ^\<heavy_asterisk> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Void ^\<heavy_asterisk> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   by simp
 
 lemma [\<nu>intro 1400]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Nothing ^\<heavy_asterisk> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h True \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing ^\<heavy_asterisk> B \<longmapsto> B" by (simp add: cast_dual_id)
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Void ^\<heavy_asterisk> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h True \<^bold>d\<^bold>u\<^bold>a\<^bold>l Void ^\<heavy_asterisk> B \<longmapsto> B" by (simp add: cast_dual_id)
 lemma [\<nu>intro 1200]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Nothing ^\<heavy_asterisk> A" by (simp add: cast_id)
+  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t A \<longmapsto> Void ^\<heavy_asterisk> A" by (simp add: cast_id)
 
 
 lemma Heap'_Stack_Front: "Heap' (H \<heavy_comma>^ A) = (Heap' H \<heavy_comma>^ A)" by (auto simp add: nu_exps)
@@ -1271,7 +1257,7 @@ lemma cast_dual_fallback:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> Nothing \<heavy_asterisk> H\<^sub>m \<medium_right_bracket>: G"
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> H' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Void \<heavy_asterisk> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> Void \<heavy_asterisk> H\<^sub>m \<medium_right_bracket>: G"
 unfolding cast_def Separation_empty by blast+
 
 \<nu>reasoner Cast_Reasoning_Dual_Id 3000 ("\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Z \<longmapsto> Z2 \<medium_right_bracket>: G") = \<open>fn ctxt => fn sequent =>
@@ -1289,7 +1275,7 @@ unfolding cast_def Separation_empty by blast+
 lemma [\<nu>reason 3000 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?H \<longmapsto> \<medium_left_bracket> ?H2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
       "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> H \<medium_right_bracket> \<medium_right_bracket>: G"
   and [\<nu>reason 3000 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?H \<longmapsto> ?R \<heavy_asterisk> \<medium_left_bracket> ?H2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
-      "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> H \<medium_right_bracket> \<medium_right_bracket>: G"
+      "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Void \<heavy_asterisk> \<medium_left_bracket> H \<medium_right_bracket> \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty by blast+
 
 (* lemma [\<nu>intro 40]: \<comment> \<open>outro\<close>
@@ -1300,7 +1286,7 @@ lemma [\<nu>reason 3000 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bo
     "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a' \<Longrightarrow> 
     \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> h \<tycolon> H \<longmapsto> H' \<heavy_asterisk> a' \<R_arr_tail> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> h \<tycolon> H \<longmapsto> H' \<heavy_asterisk> \<medium_left_bracket> a' \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>"
   and [\<nu>intro 70]:
-    "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> h \<tycolon> H \<longmapsto> a' \<R_arr_tail> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> h \<tycolon> H \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> a' \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>"*)
+    "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> h \<tycolon> H \<longmapsto> a' \<R_arr_tail> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> h \<tycolon> H \<longmapsto> Void \<heavy_asterisk> \<medium_left_bracket> a' \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>"*)
 (*  and [\<nu>intro 70]:
     "\<^bold>c\<^bold>a\<^bold>s\<^bold>t h \<tycolon> H \<longmapsto> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t h \<tycolon> H \<longmapsto> \<medium_left_bracket> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>" 
   unfolding Heap_Cast_Goal_def Separation_emptyL .*)
@@ -1310,58 +1296,58 @@ subsubsection \<open>Void Holes\<close> \<comment> \<open>eliminate Void holes g
 
 lemma [\<nu>reason 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<longmapsto> H\<^sub>m \<medium_right_bracket>: G
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> X \<heavy_asterisk> Nothing \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
+  \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> X \<heavy_asterisk> Void \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty  .
 
 lemma [\<nu>reason 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H'\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>: G
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H'\<^sub>m \<heavy_asterisk> Nothing \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
+  \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> H'\<^sub>m \<heavy_asterisk> Void \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty  .
 
 lemma [\<nu>reason 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<longmapsto> H\<^sub>m \<medium_right_bracket>: G
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> Nothing \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
+  \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> Void \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<longmapsto> H\<^sub>m \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty  .
 
 lemma [\<nu>reason 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> X \<heavy_asterisk> Nothing \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> X \<heavy_asterisk> Void \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 lemma [\<nu>reason 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> Nothing \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> Void \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 subsubsection \<open>Pad Void Holes at left\<close> \<comment> \<open>to standardize\<close>
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> Nothing \<heavy_asterisk> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> Void \<heavy_asterisk> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> Nothing \<heavy_asterisk> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> Void \<heavy_asterisk> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Void \<heavy_asterisk> VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Void \<heavy_asterisk> OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G \<Longrightarrow>
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Void \<heavy_asterisk> VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G \<Longrightarrow>
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t Void \<heavy_asterisk> OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l X' \<longmapsto> T' \<medium_right_bracket>: G"
   unfolding cast_def Separation_empty .
 
@@ -1434,12 +1420,12 @@ lemma [\<nu>reason 2000 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bo
 (* subsubsection \<open>Tailling\<close> \<comment> \<open>\<close>
 
 lemma [\<nu>intro 1100]: \<comment> \<open>tail the step\<close>
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket> \<Longrightarrow>
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Void \<heavy_asterisk> \<medium_left_bracket> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Void \<heavy_asterisk> \<medium_left_bracket> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket> \<Longrightarrow>
   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> VAL x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m \<longmapsto> H\<^sub>m \<medium_right_bracket> "
   unfolding Separation_emptyL Separation_emptyR .
 
 lemma [\<nu>intro 1100]: \<comment> \<open>tail the step\<close>
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Nothing \<heavy_asterisk> \<medium_left_bracket> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> \<medium_left_bracket> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket> \<Longrightarrow>
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> Void \<heavy_asterisk> \<medium_left_bracket> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Void \<heavy_asterisk> \<medium_left_bracket> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket> \<Longrightarrow>
   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H \<longmapsto> \<medium_left_bracket> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> H\<^sub>m \<medium_right_bracket> "
   unfolding Separation_emptyL Separation_emptyR .
 *)
@@ -1500,7 +1486,7 @@ lemma [\<nu>reason 70 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold
 lemma [\<nu>reason 10 on \<open>\<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ ?a \<R_arr_tail> ?x \<tycolon> ?T \<longmapsto> ?R''' \<heavy_asterisk> OBJ ?a' \<R_arr_tail> ?x' \<tycolon> ?T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a' \<Longrightarrow>
    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> x \<tycolon> T \<longmapsto> a' \<R_arr_tail> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow>
-   \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> x \<tycolon> T \<longmapsto> Nothing \<heavy_asterisk> OBJ a' \<R_arr_tail> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+   \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> x \<tycolon> T \<longmapsto> Void \<heavy_asterisk> OBJ a' \<R_arr_tail> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding cast_def pair_forall by (simp add: nu_exps)
 
 lemma [\<nu>reason 1200 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?R \<heavy_asterisk> VAL ?V \<longmapsto> ?R''' \<heavy_asterisk> \<medium_left_bracket> OBJ ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
@@ -1561,7 +1547,7 @@ lemma [\<nu>reason 1200
   unfolding Cast_Target_def Cast_Target2_def Separation_assoc[symmetric]
     Separation_comm(2)[of "VAL V" "\<tort_lbrace>a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m\<tort_rbrace>"]
   unfolding Separation_assoc
-  by (rule cast_dual_intro_frame_R[where M = Nothing, unfolded Separation_empty])
+  by (rule cast_dual_intro_frame_R[where M = Void, unfolded Separation_empty])
 *)
 
 lemma [\<nu>reason 30
@@ -1569,14 +1555,14 @@ lemma [\<nu>reason 30
   ]:
   "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a' \<Longrightarrow>
    \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> x \<tycolon> T \<longmapsto>  a' \<R_arr_tail> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<longmapsto> H\<^sub>m \<Longrightarrow>
-   \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> x \<tycolon> T \<longmapsto> Nothing \<heavy_asterisk> OBJ a' \<R_arr_tail> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<longmapsto> OBJ H\<^sub>m"
+   \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> x \<tycolon> T \<longmapsto> Void \<heavy_asterisk> OBJ a' \<R_arr_tail> x' \<tycolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Void \<heavy_asterisk> a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<longmapsto> OBJ H\<^sub>m"
   unfolding cast_def Separation_empty by (simp add: pair_forall nu_exps)
 
 lemma [\<nu>reason 10
     on \<open>\<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ ?H \<longmapsto> ?H' \<heavy_asterisk> OBJ ?a \<R_arr_tail> ?x \<tycolon> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R''' \<heavy_asterisk> OBJ ?X\<^sub>m \<longmapsto> ?R'''\<^sub>m\<close>
   ]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ H \<longmapsto> H' \<heavy_asterisk> OBJ a \<R_arr_tail> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow>
-   \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ H \<longmapsto> H' \<heavy_asterisk> OBJ a \<R_arr_tail> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Nothing \<heavy_asterisk> OBJ X\<^sub>m \<longmapsto> OBJ X\<^sub>m"
+   \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ H \<longmapsto> H' \<heavy_asterisk> OBJ a \<R_arr_tail> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l Void \<heavy_asterisk> OBJ X\<^sub>m \<longmapsto> OBJ X\<^sub>m"
   unfolding cast_def Separation_empty by blast
 
 
@@ -1709,7 +1695,7 @@ lemma [\<nu>intro 120]:
 
 
 
-(* lemma heap_put_this: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t Nothing \<heavy_asterisk> x \<tycolon> X \<longmapsto> x \<tycolon> X" unfolding Cast_def Separation_emptyL by simp
+(* lemma heap_put_this: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t Void \<heavy_asterisk> x \<tycolon> X \<longmapsto> x \<tycolon> X" unfolding Cast_def Separation_emptyL by simp
 lemma "\<^bold>c\<^bold>a\<^bold>s\<^bold>t s \<tycolon> S \<heavy_asterisk> x \<tycolon> X \<longmapsto> s' \<tycolon> S' \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t l \<tycolon> L \<heavy_asterisk> s \<tycolon> S \<heavy_asterisk> x \<tycolon> X \<longmapsto> l \<tycolon> L \<heavy_asterisk> s' \<tycolon> S' "
   unfolding Cast_def HeapDivNu_to_SepSet
   by (smt (verit, del_insts) SeparationSet_assoc SeparationSet_comm SeparationSet_def mem_Collect_eq)
@@ -1870,7 +1856,7 @@ lemma apply_cast_conv:
 
 
 lemma IntroFrameVar_No:
-  "IntroFrameVar Nothing S' S' T' T' "
+  "IntroFrameVar Void S' S' T' T' "
   unfolding IntroFrameVar_def by simp
 
 lemma IntroFrameVar_Yes:
@@ -2368,7 +2354,7 @@ subsubsection \<open>Separations Initialization\<close>
 
 lemma [\<nu>reason 1200]:
   "NEW_MUTEX G
-   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 \<heavy_asterisk> L2) (Nothing \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 \<heavy_asterisk> L2) (Void \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 \<heavy_asterisk> L2) R = X"
   unfolding Conv_def cast_def by force
 
@@ -2381,7 +2367,7 @@ lemma [\<nu>reason 1200 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P 
 
 lemma [\<nu>reason 1200 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (?R1 \<heavy_asterisk> VAL ?V1) (?N \<heavy_asterisk> \<medium_left_bracket> ?R2 \<heavy_asterisk> VAL ?V2 \<medium_right_bracket>) = ?X \<medium_right_bracket>: ?G\<close> ]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P V1 V2 = V
-   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P R1 (Nothing \<heavy_asterisk> \<medium_left_bracket> N \<heavy_asterisk> R2 \<medium_right_bracket>) = R \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P R1 (Void \<heavy_asterisk> \<medium_left_bracket> N \<heavy_asterisk> R2 \<medium_right_bracket>) = R \<medium_right_bracket>: G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (R1 \<heavy_asterisk> VAL V1) (N \<heavy_asterisk> \<medium_left_bracket> R2 \<heavy_asterisk> VAL V2 \<medium_right_bracket>) = (R \<heavy_asterisk> VAL V) \<medium_right_bracket>: G"
   unfolding Conv_def cast_def Merge_def by force
 
@@ -2406,12 +2392,12 @@ lemma [\<nu>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (OBJ 
   unfolding Conv_def Cast_Target_def Merge_def by force
 
 lemma [\<nu>reason 1200]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge (MergeNeg P) (N \<heavy_asterisk> R \<heavy_asterisk> VAL V2) (Nothing \<heavy_asterisk> \<medium_left_bracket> L \<heavy_asterisk> OBJ H1\<medium_right_bracket>) = X \<medium_right_bracket>: G
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge (MergeNeg P) (N \<heavy_asterisk> R \<heavy_asterisk> VAL V2) (Void \<heavy_asterisk> \<medium_left_bracket> L \<heavy_asterisk> OBJ H1\<medium_right_bracket>) = X \<medium_right_bracket>: G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<heavy_asterisk> OBJ H1) (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> VAL V2 \<medium_right_bracket>) = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def Merge_def MergeNeg_def by force
 
 lemma [\<nu>reason 1200]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (N \<heavy_asterisk> R) (Nothing \<heavy_asterisk> \<medium_left_bracket> L \<heavy_asterisk> OBJ H1\<medium_right_bracket>) = X \<medium_right_bracket>: G
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (N \<heavy_asterisk> R) (Void \<heavy_asterisk> \<medium_left_bracket> L \<heavy_asterisk> OBJ H1\<medium_right_bracket>) = X \<medium_right_bracket>: G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge (MergeNeg P) (L \<heavy_asterisk> OBJ H1) (N \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def Merge_def MergeNeg_def by force
 
@@ -2422,7 +2408,7 @@ lemma [\<nu>reason 100 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bol
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (OBJ H1) (OBJ H2) = H
    \<Longrightarrow> MUTEX_SET G \<comment> \<open>if success, trim all other branches on G\<close>
    \<Longrightarrow> NEW_MUTEX G2
-   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (Nothing \<heavy_asterisk> \<medium_left_bracket> N \<heavy_asterisk> R \<medium_right_bracket>) = X \<medium_right_bracket>: G2
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (Void \<heavy_asterisk> \<medium_left_bracket> N \<heavy_asterisk> R \<medium_right_bracket>) = X \<medium_right_bracket>: G2
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<heavy_asterisk> OBJ H1) (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> OBJ H2 \<medium_right_bracket>) = (X \<heavy_asterisk> H) \<medium_right_bracket>: G"
   unfolding Conv_def cast_def Merge_def by force
 
@@ -2447,29 +2433,29 @@ lemma [\<nu>reason 2000]:
 
 lemma [\<nu>reason 2200]:
   "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R1 \<heavy_asterisk> R2 \<medium_right_bracket>) = X \<medium_right_bracket>: G
-   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Nothing \<heavy_asterisk> (R1 \<heavy_asterisk> R2) \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Void \<heavy_asterisk> (R1 \<heavy_asterisk> R2) \<medium_right_bracket>) = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def by force
 
 
 subsubsection \<open>Padding Void\<close>
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (Nothing \<heavy_asterisk> OBJ L) R = X \<medium_right_bracket>: G
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (Void \<heavy_asterisk> OBJ L) R = X \<medium_right_bracket>: G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (OBJ L) R = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def by force
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (Nothing \<heavy_asterisk> VAL L) R = X \<medium_right_bracket>: G
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (Void \<heavy_asterisk> VAL L) R = X \<medium_right_bracket>: G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (VAL L) R = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def by force
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Nothing \<heavy_asterisk> VAL V \<medium_right_bracket>) = X \<medium_right_bracket>: G
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Void \<heavy_asterisk> VAL V \<medium_right_bracket>) = X \<medium_right_bracket>: G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> VAL V \<medium_right_bracket>) = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def by force
 
 lemma [\<nu>reason 2000]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Nothing \<heavy_asterisk> OBJ V \<medium_right_bracket>) = X \<medium_right_bracket>: G
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Void \<heavy_asterisk> OBJ V \<medium_right_bracket>) = X \<medium_right_bracket>: G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> OBJ V \<medium_right_bracket>) = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def by force
 
@@ -2477,18 +2463,18 @@ subsubsection \<open>Eliminate Void Hole\<close>
 
 lemma [\<nu>reason 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G
-   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> Nothing \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> Void \<medium_right_bracket>) = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def by force
 
 lemma [\<nu>reason 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L R = X \<medium_right_bracket>: G
-   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<heavy_asterisk> Nothing) R = X \<medium_right_bracket>: G"
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<heavy_asterisk> Void) R = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def by force
 
 subsubsection \<open>Termination\<close>
 
-lemma [\<nu>reason 2000 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P Nothing (Nothing \<heavy_asterisk> \<medium_left_bracket> Nothing \<medium_right_bracket>) = ?X'' \<medium_right_bracket>: ?G\<close>]:
-  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P Nothing (Nothing \<heavy_asterisk> \<medium_left_bracket> Nothing \<medium_right_bracket>) = Nothing \<medium_right_bracket>: G"
+lemma [\<nu>reason 2000 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P Void (Void \<heavy_asterisk> \<medium_left_bracket> Void \<medium_right_bracket>) = ?X'' \<medium_right_bracket>: ?G\<close>]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P Void (Void \<heavy_asterisk> \<medium_left_bracket> Void \<medium_right_bracket>) = Void \<medium_right_bracket>: G"
   unfolding Conv_def cast_def Merge_def by force
   
 

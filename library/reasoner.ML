@@ -1,17 +1,3 @@
-
-
-(*  Title:      Pure/pattern.ML
-    Author:     Tobias Nipkow, Christine Heinzelmann, and Stefan Berghofer, TU Muenchen
-
-Unification of Higher-Order Patterns.
-
-See also:
-Tobias Nipkow. Functional Unification of Higher-Order Patterns.
-In Proceedings of the 8th IEEE Symposium Logic in Computer Science, 1993.
-
-TODO: optimize red by special-casing it
-*)
-
 structure MY_Pattern =
 struct
 

@@ -323,7 +323,7 @@ subsubsection \<open>crash\<close>
 subsubsection \<open>drop\<close>
 
 declare op_drop_def[\<nu>instr]
-theorem drop_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_drop :: 'x::lrep \<times> 'r::stack \<longmapsto> 'r) \<blangle> VAL X \<longmapsto> Nothing \<brangle>"
+theorem drop_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_drop :: 'x::lrep \<times> 'r::stack \<longmapsto> 'r) \<blangle> VAL X \<longmapsto> Void \<brangle>"
   for X :: "'x::lrep set"
   unfolding \<nu>def op_drop_def by (auto simp add: nu_exps)
 
@@ -416,56 +416,6 @@ lemma sel_\<nu>app:
   for T :: "('a::lrep,'ax) \<nu>"
   unfolding Procedure_def op_sel_def by (auto simp add: nu_exps)
 
-subsubsection \<open>Branch Convergence\<close>
-
-named_theorems branch_convergence
-consts branch_convergence_setting :: mode
-
-abbreviation BrCon_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>b\<^bold>r\<^bold>a\<^bold>n\<^bold>c\<^bold>h] _ : _" [1000,27] 26)
-  where "BrCon_Simplify \<equiv> Simplify branch_convergence_setting"
-
-lemma ExSet_if_simu: "(if P then (\<exists>*a. A a) else (\<exists>*a. B a)) \<equiv> (\<exists>*a. if P then A a else B a)" unfolding atomize_eq by auto
-lemma ExSet_if_right: "(if P then A else (\<exists>*a. B a)) \<equiv> (\<exists>*a. if P then A else B a)"
-  unfolding atomize_eq by (simp add: set_eq_iff nu_exps)
-lemma ExSet_if_left: "(if P then (\<exists>*a. A a) else B) \<equiv> (\<exists>*a. if P then A a else B)"
-  unfolding atomize_eq by (simp add: set_eq_iff nu_exps)
-
-lemma Subj_simu: "(if P then A \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q else B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<equiv> ((if P then A else B) \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)" unfolding atomize_eq by auto
-lemma Subj_left: "(if P then A \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q else B) \<equiv> ((if P then A else B) \<^bold>s\<^bold>u\<^bold>b\<^bold>j (P \<longrightarrow> Q))" unfolding atomize_eq by auto
-lemma Subj_right: "(if P then A else B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<equiv> ((if P then A else B) \<^bold>s\<^bold>u\<^bold>b\<^bold>j (\<not>P \<longrightarrow> Q))" unfolding atomize_eq by auto
-
-ML_file \<open>library/branch_convergence.ML\<close>
-
-
-\<nu>reasoner \<open>BrCon_Simplify\<close> 1000 (\<open>BrCon_Simplify x y\<close>) = \<open>fn ctxt =>
-  let open Nu_BrCon_Simplify
-    val ctxt = Raw_Simplifier.clear_simpset ctxt
-          addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>branch_convergence\<close>
-          addsimprocs [simp_ex_proc, simp_subj_proc]
-  in HEADGOAL (fn i => simp_tac ctxt i o @{print}) THEN
-     HEADGOAL (resolve0_tac @{thms Simplify_I})
-  end
-\<close>
-
-declare if_cancel[branch_convergence]
-lemma [branch_convergence]:
-  "(if P then \<tort_lbrace>x \<tycolon> X\<tort_rbrace> else \<tort_lbrace>y \<tycolon> Y\<tort_rbrace>) = \<tort_lbrace>(if P then x else y) \<tycolon> (if P then X else Y)\<tort_rbrace>" by simp
-lemma [branch_convergence]:
-  "(if P then (a,b) else (a',b')) = ((if P then a else a'), (if P then b else b'))" by simp
-(* lemma AA: "(if P then A else B) = (\<lambda>x. if P then A x else B x)" by simp *)
-lemma [branch_convergence]:
-  "(if P then (A \<heavy_asterisk> B) else (A' \<heavy_asterisk> B')) = ((if P then A else A') \<heavy_asterisk> (if P then B else B'))" by simp
-(* lemma [simp]: "(if P then (A \<^bold>a\<^bold>n\<^bold>d B) else (A' \<^bold>a\<^bold>n\<^bold>d B')) = ((if P then A else A') \<^bold>a\<^bold>n\<^bold>d (if P then B else B'))"  by auto *)
-lemma [branch_convergence]:
-  "(if P then Labelled name T else Labelled name' T') = Labelled name (if P then T else T')" unfolding Labelled_def by simp
-lemma [branch_convergence]:
-  "(if P then a \<R_arr_tail> x else a \<R_arr_tail> x') = a \<R_arr_tail> (if P then x else x')" by auto
-lemma [branch_convergence]:
-  "(if P then VAL A else VAL B) = (VAL (if P then A else B))" by auto
-lemma [branch_convergence]:
-  "(if P then OBJ A else OBJ B) = (OBJ (if P then A else B))" by auto
-
-(*TODO: implement the simproc retaining name of bound variables*)
 
 subsubsection \<open>if\<close>
 
@@ -477,12 +427,6 @@ lemma if_\<nu>app:
     \<longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge cond Y\<^sub>T Y\<^sub>F = Y
     \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if TYPE('y::stack) branch_true branch_false \<blangle> X \<heavy_asterisk> cond \<tycolon> \<bool> \<longmapsto> Y \<brangle>"
   unfolding \<nu>def op_if_def Conv_def Merge_def by (auto simp add: nu_exps)
-
-(* text \<open>Despite the feasibility of divergence of \<nu>-types in the branch, i.e.
-  \<^term>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> x \<tycolon> X \<heavy_asterisk>^ cond \<tycolon> \<bool> \<longmapsto> (if cond then y\<^sub>T else y\<^sub>F) \<tycolon> (if cond then Y\<^sub>T else Y\<^sub>F ) \<brangle>\<close>,
-  from the design of the programming principles, considering the role of \<nu>-types which encodes the invariant properties,
-  we prohibit the divergence of \<nu>-types.\<close> *)
-
 
 
 subsubsection \<open>do while\<close>
@@ -500,7 +444,6 @@ qed
 
 lemma SemDoWhile_deterministic2: " SemDoWhile body s x \<Longrightarrow> The ( SemDoWhile body s) = x"
   using SemDoWhile_deterministic by blast
-
 
 
 lemma "__DoWhile__rule":
@@ -541,7 +484,7 @@ lemma do_while_\<nu>app:
   \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
   \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
   (\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<blangle> X' x \<longmapsto> \<exists>* x'. X' x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<brangle>) \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack)  body \<blangle> X \<longmapsto> \<exists>* x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x' \<brangle>"
+  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<blangle> X \<longmapsto> \<exists>* x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x' \<brangle>"
   unfolding Variant_Cast_def Premise_def apply simp
   using "__DoWhile___\<nu>app"[of "cond" _ "X'", unfolded Premise_def, simplified] by blast
 
@@ -559,42 +502,13 @@ lemma do_while_\<nu>app_old:
 subsubsection \<open>while\<close>
 
 
-ML \<open>
-val a = Proof_Context.read_term_pattern @{context} "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?R \<longmapsto> \<medium_left_bracket> ?R2 \<heavy_asterisk> VAL ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G "
-    |> Thm.cterm_of @{context}
-val b = Proof_Context.read_term_schematic @{context}
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t X (x'c::'a) \<heavy_asterisk> cond x'c \<tycolon> \<bool> \<longmapsto> \<medium_left_bracket> X (?c3::'a) \<heavy_asterisk> cond ?c3 \<tycolon> \<bool> \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G1"
-  |> Thm.cterm_of @{context}
-val z = Pattern.matches @{theory} (Thm.term_of a, Thm.term_of b)
-\<close>
-
 proc while: \<open>X'\<close> :: "'s::stack" \<longmapsto> \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
   requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars X' X"
     and Cond_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<blangle> X x \<longmapsto> X x' \<heavy_asterisk> cond x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True\<brangle>"
     and Body_\<nu>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<blangle> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<brangle>"
-  \<bullet> Cond if \<medium_left_bracket> do_while
-  \<bullet> var x' \<open>cond x'\<close>
-  \<bullet> \<medium_left_bracket> Body
-  \<bullet> Cond
-  note [ [unify_trace_failure] ]
-  \<bullet> \<medium_right_bracket>
-  \<bullet> subj \<open>\<not> cond x'\<close> 
-  \<bullet> \<medium_right_bracket>
-  \<bullet>\<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
+  \<bullet> Cond if \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket>
+  \<bullet> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
   finish
-
-
-notepad
-begin
-  fix g a X F P1 P2 Q C A B
-  assume C: "g a \<equiv> X"
-  assume B: "F (g a)"
-  ML_val \<open>(Conv.bottom_conv (K (Conv.try_conv (Conv.rewrs_conv @{thms C}))) @{context}) @{cterm "F (g a)"}\<close>
-  ML_val \<open>Conv.fconv_rule (Conv.top_sweep_conv (K (Conv.rewrs_conv @{thms C})) @{context}) @{thm B}\<close>
-  assume A: " (\<And>x y. P1 x \<Longrightarrow> P2 y \<Longrightarrow> Q x y) \<Longrightarrow> C \<Longrightarrow> A \<Longrightarrow> B "
-  ML_val \<open>Conv.gconv_rule (Conv.bottom_conv (K (Conv.try_conv (Conv.rewrs_conv @{thms atomize_imp atomize_all atomize_eq}))) @{context}) 1 @{thm A}
-  |> Conv.fconv_rule (Conv.rewrs_conv @{thms conj_imp[symmetric]})\<close>
-end
 
 subsubsection \<open>recursion\<close>
 
@@ -628,7 +542,6 @@ qed
 lemma op_recursion:
   " (\<And>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> X x'' \<longmapsto> Y x'' \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<blangle> X x' \<longmapsto> Y x' \<brangle>) \<Longrightarrow>
     (\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion UNIQ_ID TYPE('x::stack) TYPE('y::stack) F \<blangle> X x \<longmapsto> Y x \<brangle>)"
-
   unfolding op_recursion_def Procedure_def atomize_all TERM_rew
   apply (auto simp add: SemRec_deterministic2)
   subgoal for x a b xa
@@ -965,7 +878,7 @@ theorem alloc_array_\<nu>app:
   done
 
 
-proc alloc : \<open>Nothing\<close> \<longmapsto> \<open>ptr \<R_arr_tail> zero \<tycolon> Ref T \<heavy_asterisk> ptr \<tycolon> Pointer \<^bold>s\<^bold>u\<^bold>b\<^bold>j ptr. True\<close>
+proc alloc : \<open>Void\<close> \<longmapsto> \<open>ptr \<R_arr_tail> zero \<tycolon> Ref T \<heavy_asterisk> ptr \<tycolon> Pointer \<^bold>s\<^bold>u\<^bold>b\<^bold>j ptr. True\<close>
   requires "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T" and [\<nu>reason on ?any]: "\<nu>Zero T zero"
   have A[simp]: "replicate 1 zero = [zero]" by (simp add: One_nat_def)
   \<bullet>\<open>1 \<tycolon> \<nat>[size_t]\<close> alloc_array T
@@ -998,9 +911,7 @@ proc i_load_n[\<nu>overload "\<up>:"]:
   premises "i < length xs"
   requires idx: "FieldIndex field_index Y X gt mp"
   obtain a' j where a: "a = (a' |+ j)" by (cases a)
-  \<bullet> unfold a + 
-  \<bullet> \<up>: 
-  \<bullet> idx fold a
+  \<bullet> unfold a + \<up>: idx fold a
   finish
 
 lemmas [ \<nu>overload "\<up>" ] = i_load_n_\<nu>app[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
@@ -1031,12 +942,7 @@ proc i_store_n[\<nu>overload "\<down>:"]:
   premises "i < length xs"
   requires idx: "FieldIndex field_index Y X gt mp"
   obtain a' j where a: "a = (a' |+ j)" by (cases a) 
-  \<bullet> unfold a 
-  \<bullet> \<rightarrow> y
-  \<bullet> + y
-  \<bullet>\<down>: 
-  \<bullet> idx 
-  \<bullet>fold a
+  \<bullet> unfold a \<rightarrow> y + y \<down>: idx fold a
   finish
 
 lemmas [ \<nu>overload "\<down>" ] = i_store_n_\<nu>app[THEN mp, THEN mp, OF _ FieldIndex_here, unfolded atomize_imp, simplified]
@@ -1053,18 +959,10 @@ proc times: \<open>R' \<heavy_asterisk> n \<tycolon> \<nat>['b::len]\<close> \<l
   requires Body: \<open>\<forall>x i. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < n \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x i \<longrightarrow>
       \<^bold>p\<^bold>r\<^bold>o\<^bold>c (body :: 'b word \<times> '\<RR>::stack \<longmapsto> '\<RR>) \<blangle> R x \<heavy_asterisk> i \<tycolon> \<nat>['b] \<longmapsto> R x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. P x' (Suc i)\<brangle>\<close>
   \<bullet> \<rightarrow> n \<open>0 \<tycolon> \<nat>['b]\<close>
-  \<bullet> while  var vars i in \<open>R vars\<close>, i always \<open>i \<le> n \<and> P vars i\<close>
+  \<bullet> while var vars i in \<open>R vars\<close>, i always \<open>i \<le> n \<and> P vars i\<close>
   \<bullet> \<medium_left_bracket> dup n < \<medium_right_bracket>
   \<bullet> \<medium_left_bracket> -- i Body i 1 + cast ie \<open>Suc i\<close> \<medium_right_bracket> drop
   finish
-
-ML_file \<open>codegen/codegen.ML\<close>
-ML_file \<open>codegen/NuSys.ML\<close>
-ML_file \<open>codegen/NuPrime.ML\<close>
-ML_file \<open>codegen/NuLLReps.ML\<close>
-ML_file \<open>codegen/misc.ML\<close>
-ML_file \<open>codegen/Instructions.ML\<close>
-
 
 proc split_array[\<nu>overload split]:
   argument \<open>ptr \<R_arr_tail> l \<tycolon> Array T \<heavy_asterisk> ptr \<tycolon> Pointer\<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
@@ -1077,9 +975,19 @@ proc pop_array[\<nu>overload pop]: \<open>ptr \<R_arr_tail> l \<tycolon> Array T
   \<longmapsto> \<open>(ptr ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_asterisk> ptr \<R_arr_tail> hd l \<tycolon> Ref T \<heavy_asterisk> ptr ||+ 1 \<tycolon> Pointer\<close>
   premises A: "l \<noteq> []"
   have [useful]: "1 \<le> length l" by (meson Premise_def length_0_conv less_one not_le A)
-  \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> +
-  \<bullet> pop_cast
+  \<bullet> \<open>1 \<tycolon> \<nat>[size_t]\<close> + pop_cast
   finish
+
+
+section \<open>Codegen\<close>
+
+ML_file \<open>codegen/codegen.ML\<close>
+ML_file \<open>codegen/NuSys.ML\<close>
+ML_file \<open>codegen/NuPrime.ML\<close>
+ML_file \<open>codegen/NuLLReps.ML\<close>
+ML_file \<open>codegen/misc.ML\<close>
+ML_file \<open>codegen/Instructions.ML\<close>
+
 
 \<nu>export_llvm \<open>/tmp/xx.ll\<close>
 

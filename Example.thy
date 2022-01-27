@@ -12,8 +12,8 @@ text \<open>
   In this case, the set of \<nu>-types \<PP> and \<QQ> are of form \<^term>\<open>{ X x |x. P x }\<close> and \<^term>\<open>{ Y y |y. Q y }\<close>.
   Upon this, in the implementation we represent the Hoare triple "{ X x |x. P x } f { Y y |y. Q y }"
   by the proposition \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> Y y \<^bold>s\<^bold>u\<^bold>b\<^bold>j y. Q y \<brangle>\<close>.
-  For example, the random function that generates a 32-bits integer less than 10 can be specified by,
-  \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c rand \<blangle> Nothing \<longmapsto> x \<tycolon> \<nat>[32] \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. x < 10 \<brangle>\<close>.
+  For example, the function that generates a random 32-bits integer less than 10 can be specified by,
+  \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c rand \<blangle> Void \<longmapsto> x \<tycolon> \<nat>[32] \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. x < 10 \<brangle>\<close>.
 \<close>
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
@@ -76,8 +76,7 @@ proc bin_search:
   \<bullet> len 0 while h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close>
       \<comment> \<open>the \<open>always\<close> clause indicates the invariant\<close>
   \<bullet> \<medium_left_bracket> \<lambda>'(h, l) l h < \<medium_right_bracket> \<comment> \<open>The loop condition\<close>
-  \<bullet> \<medium_left_bracket> \<lambda>(h, l) h l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket> \<medium_right_bracket>
-  \<bullet> \<comment> \<open>The loop body\<close>
+  \<bullet> \<medium_left_bracket> \<lambda>(h, l) h l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket> \<medium_right_bracket> \<comment> \<open>The loop body\<close>
   \<bullet> drop
   finish
 (* The command \<rightarrow> assigns and moves stack elements to local values,
@@ -94,7 +93,7 @@ thm bin_search_\<nu>compilation \<comment> \<open>The definition of the procedur
 section\<open>Quick-sort\<close>
 
 proc swap:
-  argument \<open>ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t] \<heavy_asterisk> ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
+  argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]\<close>
   return \<open>ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
   premises \<open>i < length xs\<close> and \<open>j < length xs\<close>
   \<bullet> \<rightarrow> ptr, i, j ptr i \<up>\<rightarrow> i' ptr j \<up> \<rightarrow> j' ptr i j' \<down> ptr j i' \<down>
@@ -103,8 +102,8 @@ proc swap:
 proc partition:
   argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
   return \<open>ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]
-    \<^bold>s\<^bold>u\<^bold>b\<^bold>j j ys. j < length xs \<and> ys  <~~> xs \<and>
-      (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ys ! j) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> ys ! j < ys ! k)\<close>
+      \<^bold>s\<^bold>u\<^bold>b\<^bold>j j ys. j < length xs \<and> ys  <~~> xs \<and>
+          (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ys ! j) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> ys ! j < ys ! k)\<close>
   premises \<open>length xs = n\<close> and \<open>0 < n\<close>
   note nth_list_update[simp] not_le[simp] perm_length[simp]
 
@@ -227,7 +226,7 @@ subsection\<open>Procedure Constructions\<close>
 proc mk_kmp_table:
   argument \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> px \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t]\<close>
   return \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> pk \<tycolon> Pointer
-    \<^bold>s\<^bold>u\<^bold>b\<^bold>j pk ktab. kmp_table nx ktab xs \<and> length ktab = nx\<close>
+      \<^bold>s\<^bold>u\<^bold>b\<^bold>j pk ktab. kmp_table nx ktab xs \<and> length ktab = nx\<close>
   premises \<open>1 \<le> nx\<close> and \<open>length xs = nx\<close>
   note  kmp_table_def[simp]
 
@@ -297,8 +296,7 @@ proc kmp:
       \<and> matches' ys (i - j) xs 0 j \<and>
     (\<forall>k < i - j.  \<not> (matches' ys k xs 0 nx))\<close>
   \<bullet> \<medium_left_bracket> \<lambda>'(i, j) i ny < j nx < \<and> \<medium_right_bracket>
-  \<bullet> \<medium_left_bracket> \<lambda>(i, j)
-  \<bullet> py i \<up> px j \<up> = if
+  \<bullet> \<medium_left_bracket> \<lambda>(i, j) py i \<up> px j \<up> = if
   \<bullet> \<medium_left_bracket> i 1 + j 1 + \<medium_right_bracket>
   \<bullet> \<medium_left_bracket> j 0 = if \<medium_left_bracket> i 1 + j \<medium_right_bracket> \<medium_left_bracket> i pk j \<up>\<medium_right_bracket> \<medium_right_bracket>
   \<bullet> goal affirm using \<nu> apply auto
