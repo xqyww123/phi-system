@@ -275,7 +275,7 @@ lemma [\<nu>reason on \<open>\<nu>Zero (NuNatRound ?b) ?z\<close>]:
     val term = (
         (dest_current_nu meta |> strip_separations |> hd |> dest_RepSet |> #2 |> mk)
       handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
-        | ERROR _ => mk @{term \<open>\<nat>[32]\<close>}) |> @{print}
+        | ERROR _ => mk @{term \<open>\<nat>[32]\<close>})
   in (NuSys.auto_construct ctx term meta, ctx)  end)
 \<close>
 

@@ -21,10 +21,16 @@ lemmas add1_le_eq[simp] = Suc_le_eq[unfolded Suc_eq_plus1]
 
 section\<open>Subtraction by 1\<close>
 
+text \<open>There are some options to enable a verbose printing giving details about the intermediate
+  steps of the reasoning.\<close>
+(* declare [[\<nu>trace_reasoning, \<nu>trace_processing]] *)
+text \<open>And this version gives an even more verbose printing.\<close>
+(* declare [[\<nu>trace_reasoning, \<nu>trace_reasoning_candicates, \<nu>trace_processing, \<nu>trace_application]]  *)
+
 proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x - 1 \<tycolon> \<nat>[32]\<close>
   premises \<open>0 < x\<close>
   \<bullet> 1 -
-  finish
+finish
 
 text \<open>The command `\<bullet>`  leads a construction statement, and the construction state by this statement is printed.
   You can insert command `\<bullet>` at any intermediate place to split it into two statements,

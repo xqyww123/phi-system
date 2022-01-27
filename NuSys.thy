@@ -1870,7 +1870,7 @@ lemma IntroFrameVar_Yes:
   let open NuBasics
     val (Const (\<^const_name>\<open>IntroFrameVar\<close>, _) $ _ $ _ $ S' $ _ $ _) =
         major_prem_of sequent |> dest_Trueprop
-    val tail = strip_separations S' |> last |> @{print}
+    val tail = strip_separations S' |> last
   in
     if is_Var tail andalso fastype_of tail = @{typ assn}
     then Seq.single (@{thm IntroFrameVar_No} RS sequent)

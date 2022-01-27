@@ -373,6 +373,9 @@ signature NU_REASONER = sig
   type reasoner = (Proof.context -> tactic) generic_reasoner
   val reasoner_eq : ('a generic_reasoner * 'a generic_reasoner) -> bool
 
+  val trace : bool Config.T
+  val trace_candicates : bool Config.T
+
   (* auto level: 2 - fully auto, 1 - paritally auto, 0 - fully manual *)
   val auto_level : int Config.T
   val reduce_auto_level : int -> Proof.context -> Proof.context
@@ -415,6 +418,10 @@ type reasoner = (Proof.context -> tactic) generic_reasoner
 val auto_level = Config.declare_int ("\<nu>auto_level", @{here}) (K 2)
 fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
 
+val trace = Attrib.setup_config_bool \<^binding>\<open>\<nu>trace_reasoning\<close> (K false);
+val trace_candicates = Attrib.setup_config_bool \<^binding>\<open>\<nu>trace_reasoning_candicates\<close> (K false);
+
+
 
 exception Success  of thm
 exception Success' of cost * thm
@@ -425,30 +432,24 @@ structure States = Heap (
 )
 
 
-fun debug prompt ctx (c,(r : reasoner as {name,...})) =
-  (tracing (prompt ^ "  :  " ^ Syntax.string_of_term ctx name ^ "     " ^ string_of_int c); (c,r))
-fun dbg2 ctx term = (tracing (Syntax.string_of_term ctx term); term)
+fun debug ctxt (c,(r : reasoner as {name,...})) =
+  tracing ("reasoning candicates (" ^ string_of_int c ^ "):\n"
+              ^ Syntax.string_of_term ctxt name)
+fun dbg2 ctxt term = (tracing (Syntax.string_of_term ctxt term); term)
 
-fun call_tactics ctx tactics th =
+fun call_tactics ctxt tactics th =
   case Thm.prems_of th
     of prem :: _ =>
-        (* (Logic.strip_assums_concl prem :: Logic.strip_assums_hyp prem)
-           |> maps (fn term =>
-               Cost_Net.retrieve tactics term
-                 |> map (debug "x22" ctx)
-                 |> map (apsnd (fn (r : reasoner) => #tactic r ctx th))) *)
-
         let
           val tacs = (Logic.strip_assums_concl prem :: Logic.strip_assums_hyp prem)
-                          |> maps (fn term =>
-                              Cost_Net.retrieve tactics term
-                                |> map (debug "x22" ctx)
-                                |> map (apsnd (fn (r : reasoner) =>
-                                    Seq.make (fn () => Seq.pull (#tactic r ctx th)))))
-                          |> sort (int_ord o apply2 fst)
-                          (* |> map_filter (fn (c,seq) =>
-                              Option.map (fn (t,s) => (c,Seq.cons t s))
-                              (Seq.pull seq) *)
+                        |> maps (fn term =>
+                            Cost_Net.retrieve tactics term
+                              |> (if Config.get ctxt trace_candicates
+                                  then (fn rs => (List.app (debug ctxt) rs; rs))
+                                  else I)
+                              |> map (apsnd (fn (r : reasoner) =>
+                                  Seq.make (fn () => Seq.pull (#tactic r ctxt th)))))
+                        |> sort (int_ord o apply2 fst)
         in
           case get_first (fn (c,seq) =>
               if c <= ~1000 then
@@ -460,7 +461,7 @@ fun call_tactics ctx tactics th =
         end
      | [] => raise Success th
 
-fun gen_reason ctx iter tactics (best_cost,best_stat) states =
+fun gen_reason ctxt iter tactics (best_cost,best_stat) states =
   if States.is_empty states then (best_cost,best_stat) else
   let
     val _ = if iter > 100 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
@@ -469,30 +470,33 @@ fun gen_reason ctx iter tactics (best_cost,best_stat) states =
     case Seq.pull seq
       of SOME (th,seq') =>
           (let
-            val _ = @{print} (cost, th)
+            val _ = if Config.get ctxt trace
+                    then tracing ("\<nu>reasoning (score " ^ string_of_int (~cost)
+                      ^ "):\n" ^ Thm.string_of_thm ctxt th)
+                    else ()
             val (best_cost,best_stat) =
               if cost < best_cost then (cost,th)
               else (best_cost,best_stat)
             val states = states
                   |> fold (fn (c,seq'') => States.insert (cost+c, seq''))
-                        (call_tactics ctx tactics th)
+                        (call_tactics ctxt tactics th)
                   |> States.insert (cost, seq')
                 handle Success ret => raise Success' (cost, ret)
           in
-            gen_reason ctx (iter+1) tactics (best_cost,best_stat) states
+            gen_reason ctxt (iter+1) tactics (best_cost,best_stat) states
           end)
-       | NONE => gen_reason ctx iter tactics (best_cost,best_stat) states
+       | NONE => gen_reason ctxt iter tactics (best_cost,best_stat) states
   end
 
-fun gen_reason' ctx iter tactics best states =
-  (case gen_reason ctx iter tactics best states of (cost,ret) =>
+fun gen_reason' ctxt iter tactics best states =
+  (case gen_reason ctxt iter tactics best states of (cost,ret) =>
     if cost <= 0 then SOME ret else NONE)
   handle Success' (cost,ret) => SOME ret
 
-fun reason' ctx tactics thm =
-  gen_reason' ctx 0 tactics (0,thm) (States.insert (0, Seq.single thm) States.empty)
-fun reason'_s ctx tactics seqs = Seq.make (fn () =>
-      gen_reason' ctx 0 tactics (100000000,Drule.dummy_thm)
+fun reason' ctxt tactics thm =
+  gen_reason' ctxt 0 tactics (0,thm) (States.insert (0, Seq.single thm) States.empty)
+fun reason'_s ctxt tactics seqs = Seq.make (fn () =>
+      gen_reason' ctxt 0 tactics (100000000,Drule.dummy_thm)
         (fold States.insert seqs States.empty)
       |> Option.map (rpair Seq.empty)
     )
@@ -508,14 +512,14 @@ structure Tactics = Generic_Data (
   val merge : T * T -> T = Cost_Net.merge
 )
 
-fun reasoners ctx = Cost_Net.content (Tactics.get (Context.Proof ctx))
-fun reasoner_net ctx = Tactics.get (Context.Proof ctx)
+fun reasoners ctxt = Cost_Net.content (Tactics.get (Context.Proof ctxt))
+fun reasoner_net ctxt = Tactics.get (Context.Proof ctxt)
 fun add cost_reasoner = Tactics.map (Cost_Net.update cost_reasoner);
 fun del reasoner = Tactics.map (Cost_Net.remove reasoner);
-fun reason ctx = reason' ctx (Tactics.get (Context.Proof ctx))
-fun reason_s ctx = reason'_s ctx (Tactics.get (Context.Proof ctx))
-fun reason_tac ctx th = Seq.make (fn () =>
-    reason ctx th |> Option.map (rpair Seq.empty)
+fun reason ctxt = reason' ctxt (Tactics.get (Context.Proof ctxt))
+fun reason_s ctxt = reason'_s ctxt (Tactics.get (Context.Proof ctxt))
+fun reason_tac ctxt th = Seq.make (fn () =>
+    reason ctxt th |> Option.map (rpair Seq.empty)
   )
 
 fun setup_cmd (((name,cost),patterns),tactic_src) lthy =

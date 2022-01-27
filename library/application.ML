@@ -1,5 +1,7 @@
 signature NU_APPLICATION = sig
 
+  val trace : bool Config.T
+
   val apply_proc_naive : thm (*proc*) -> thm (*meta or major*) -> thm
 
   type cost = int
@@ -22,6 +24,8 @@ end
 
 structure NuApply : NU_APPLICATION = struct
 open NuHelp NuBasics
+
+val trace = Attrib.setup_config_bool \<^binding>\<open>\<nu>trace_application\<close> (K false);
 
 val expand_appliant = 
   repeat (fn th => th RS @{thm spec}) #>
@@ -56,13 +60,22 @@ fun biresolution_N thas thb i =
 fun application_reasoner (appl as {thm,applicant_idx}:application_thm) = {
   name = @{term \<nu>Application_Rule},
   pattern = [applicant_pattern appl],
-  tactic = (fn _ => fn applicants => fn major =>
+  tactic = (fn ctxt => fn applicants => fn major =>
     Seq.make (fn () =>
-        biresolution_N (@{print} applicants) (@{print} (major RS thm)) applicant_idx
+      let
+        val sequent = major RS thm
+        val _ = if Config.get ctxt trace
+                then tracing ("\<nu>application:\n"
+                  ^ Thm.string_of_thm ctxt sequent ^ "\n"
+                  ^ String.concatWith "\n" (map (Thm.string_of_thm ctxt) applicants))
+                else ()
+      in
+        biresolution_N applicants sequent applicant_idx
           |> Seq.map (fn th =>
                 Goal.protect (applicant_idx - 1) (solve_constraints th))
           |> Seq.pull
         handle THM _ => NONE
+      end
     ))
   }
 

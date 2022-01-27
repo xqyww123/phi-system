@@ -6,6 +6,9 @@ signature NU_PROCESSOR = sig
   exception Process_State_Call of Token.T list * (thm * Proof.context) * (Proof.state -> Proof.state)
   exception Process_State_Call' of (thm * Proof.context) * (Proof.state -> Proof.state)
   type proc = (Proof.context -> thm -> (unit -> thm * Proof.context) parser)
+
+  val trace : bool Config.T
+
   val define : binding -> int (*precedence*) -> term (*pattern*) -> proc -> local_theory -> local_theory
   (* val get : Proof.context -> string -> T option *)
   val defined : Context.generic -> string -> bool
@@ -46,6 +49,8 @@ exception ProcessFail of binding * (thm * Proof.context) * exn
 exception Process_State_Call of Token.T list * (thm * Proof.context) * (Proof.state -> Proof.state)
 exception Process_State_Call' of (thm * Proof.context) * (Proof.state -> Proof.state)
 
+val trace = Attrib.setup_config_bool \<^binding>\<open>\<nu>trace_processing\<close> (K false);
+
 type proc = Proof.context -> thm -> (unit -> thm * Proof.context) parser
 
 datatype processor = Processor of {
@@ -79,20 +84,20 @@ val list = Data.get #> Name_Space.dest_table
 val get = Data.get #> Name_Space.get
 fun wrap_attr proc =
   Parse.args >> (fn toks =>
-    Thm.rule_attribute [] (fn ctx => fn th =>
-      (proc (Context.proof_of ctx) th --| Scan.catch Parse.eof) toks
+    Thm.rule_attribute [] (fn ctxt => fn th =>
+      (proc (Context.proof_of ctxt) th --| Scan.catch Parse.eof) toks
               |> fst |> (fn f => f ()) |> fst))
 val wrap_attr = wrap_attr : proc -> attribute parser
-fun defined ctx name =
+fun defined ctxt name =
   let
-    val tab = Data.get ctx
+    val tab = Data.get ctxt
     val name = Name_Space.intern (Name_Space.space_of_table tab) name
   in
     Name_Space.defined tab name
   end
-fun get_attr ctx name =
+fun get_attr ctxt name =
   wrap_attr
-    (proc_of (Name_Space.check ctx (Data.get ctx) name |> snd))
+    (proc_of (Name_Space.check ctxt (Data.get ctxt) name |> snd))
 
 fun enable name =
       Data.map (Name_Space.map_table_entry name (set_enabled true))
@@ -102,63 +107,65 @@ fun disable name =
 exception Processed of ((thm * Proof.context) * Token.T list)
 fun eof_wrap parse [] = (fst (parse [Token.eof]), [])
   | eof_wrap parse toks = parse toks
-fun process_impl procs (th_ctx,toks) limit =
+fun process_impl procs (th_ctxt,toks) limit =
       let
-        val prop = prop_of (fst th_ctx)
-        val th_ctx = fold (fn (_, Processor {binding, pattern, enabled, proc,...}) => fn (th,ctx) =>
-          if not enabled then (th,ctx)
-          else if can (Pattern.match (Proof_Context.theory_of ctx) (pattern, prop))
+        val prop = prop_of (fst th_ctxt)
+        val th_ctxt = fold (fn (_, Processor {binding, pattern, enabled, proc,...}) => fn (th,ctxt) =>
+          if not enabled then (th,ctxt)
+          else if can (Pattern.match (Proof_Context.theory_of ctxt) (pattern, prop))
                         (Envir.type_env Envir.init, Envir.term_env Envir.init)
           then let
             val _ = if limit > 100 then error "too deep process" else ();
             val (execute,toks) =
-              eof_wrap (proc ctx th || (fn _ => raise Bypass NONE)) toks
-            val _ = tracing ("process: " ^ Binding.print binding)
+              eof_wrap (proc ctxt th || (fn _ => raise Bypass NONE)) toks
+            val _ = if Config.get ctxt trace
+                    then tracing ("\<nu>process: " ^ Binding.print binding)
+                    else ()
             in
             raise Processed (execute(), toks)
               handle Process_State_Call' (meta,f) =>
                   raise Process_State_Call (toks,meta,f)
-            end handle Bypass NONE => (th,ctx)
-              | Bypass (SOME th_ctx') => th_ctx'
+            end handle Bypass NONE => (th,ctxt)
+              | Bypass (SOME th_ctxt') => th_ctxt'
               | Processed th_ctx_toks => raise Processed th_ctx_toks
               | Process_State_Call arg => raise Process_State_Call arg
               | ProcessTerminated th_ctx_toks => raise ProcessTerminated th_ctx_toks
               | ex => (@{print} th; @{print} binding; Exn.reraise (@{print} ex))
             (* | ex => Exn.reraise (ProcessFail (binding,th,ex)) *)
-          else (th,ctx)) procs th_ctx
-      in (th_ctx,toks)
+          else (th,ctxt)) procs th_ctxt
+      in (th_ctxt,toks)
       end
       handle Processed th_ctx_toks => process_impl procs th_ctx_toks (limit + 1)
         | ProcessTerminated th_toks => th_toks
-        | NDBG th => ((th,snd th_ctx),[Token.eof])
+        | NDBG th => ((th,snd th_ctxt),[Token.eof])
 
-fun internal_process th ctx toks =
+fun internal_process th ctxt toks =
   Runtime.exn_trace (fn _ =>
   process_impl
-    (Data.get (Context.Proof ctx) |> Name_Space.dest_table |> sort (proc_ord o apply2 snd))
-    ((th,ctx),toks) 0)
+    (Data.get (Context.Proof ctxt) |> Name_Space.dest_table |> sort (proc_ord o apply2 snd))
+    ((th,ctxt),toks) 0)
 
-fun simple_process ctx th toks =
-  internal_process ctx th toks handle Process_State_Call (toks,th_ctx,f) => (th_ctx,toks)
+fun simple_process ctxt th toks =
+  internal_process ctxt th toks handle Process_State_Call (toks,th_ctxt,f) => (th_ctxt,toks)
 
 fun powerful_process toks stat =
   let
     val meta = the_nu_fact stat
   in
     stat
-      |> Proof.map_context_result (fn ctx =>
-            (internal_process meta ctx --| Scan.catch Parse.eof) toks
+      |> Proof.map_context_result (fn ctxt =>
+            (internal_process meta ctxt --| Scan.catch Parse.eof) toks
               |> #1
           )
       |-> NuBasics.set_nu_fact
-    handle Process_State_Call (toks,(meta,ctx),f) =>
-      powerful_process toks (stat |> Proof.map_context (K ctx)
+    handle Process_State_Call (toks,(meta,ctxt),f) =>
+      powerful_process toks (stat |> Proof.map_context (K ctxt)
                                   |> NuBasics.set_nu_fact meta
                                   |> f)
   end
 
-val process_attr = wrap_attr (fn ctx => fn th => simple_process th ctx #> apfst K)
-fun process_by_input tokens th ctx = simple_process th ctx (tokens @ [Token.eof]) |> #1
+val process_attr = wrap_attr (fn ctxt => fn th => simple_process th ctxt #> apfst K)
+fun process_by_input tokens th ctxt = simple_process th ctxt (tokens @ [Token.eof]) |> #1
 val process_no_input = process_by_input []
 
 
@@ -173,12 +180,12 @@ fun setup' binding precedence (term,fixes) proc (comment:string) lthy =
     define binding precedence term proc lthy
   end
 
-fun setup_cmd (((((binding,precedence),term),fixes),proc),comment) ctx =
+fun setup_cmd (((((binding,precedence),term),fixes),proc),comment) ctxt =
   let
-    val (_, ctx') = Proof_Context.add_fixes_cmd fixes ctx
-    val term = Syntax.read_prop ctx' term |> free_to_var
+    val (_, ctxt') = Proof_Context.add_fixes_cmd fixes ctxt
+    val term = Syntax.read_prop ctxt' term |> free_to_var
   in
-    ctx |> Context.proof_map (
+    ctxt |> Context.proof_map (
       ML_Context.expression (Input.pos_of proc)
         (ML_Lex.read
           ("Theory.local_setup (NuProcessor.setup (" ^
@@ -189,18 +196,18 @@ fun setup_cmd (((((binding,precedence),term),fixes),proc),comment) ctx =
     )
   end
 
-fun almost_safe f ctx =
-      if Config.get ctx Nu_Reasoner.auto_level >= 1 then f ctx else raise Bypass NONE
-fun not_safe f ctx =
-      if Config.get ctx Nu_Reasoner.auto_level >= 2 then f ctx else raise Bypass NONE
-fun parse_auto_level proc ctx th =
+fun almost_safe f ctxt =
+      if Config.get ctxt Nu_Reasoner.auto_level >= 1 then f ctxt else raise Bypass NONE
+fun not_safe f ctxt =
+      if Config.get ctxt Nu_Reasoner.auto_level >= 2 then f ctxt else raise Bypass NONE
+fun parse_auto_level proc ctxt th =
   NuParse.auto_level #-> (fn auto_level' =>
-    proc (Nu_Reasoner.reduce_auto_level auto_level' ctx) th)
+    proc (Nu_Reasoner.reduce_auto_level auto_level' ctxt) th)
 
-fun apply_attr ctx th attr =
-  attr (Context.Proof ctx, th) |> #2 |> the
+fun apply_attr ctxt th attr =
+  attr (Context.Proof ctxt, th) |> #2 |> the
 
-(* fun processor_parser (ctx,tokens) =
+(* fun processor_parser (ctxt,tokens) =
 val processor_attr = Scan.lift (Parse.named_position >> #1) --  *)
   
 end

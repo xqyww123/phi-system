@@ -32,13 +32,13 @@ fun head_only tac th =
 *   and consider situations more than equities. *)
 fun prep_prems ctxt =
   REPEAT_DETERM (SOMEGOAL (resolve_tac ctxt @{thms Premise_I conjI HOL.refl}))
-    THEN print_dbg "222221111" 
+    (* THEN print_dbg "222221111"  *)
 
 fun raw_auto ctxt =
     Method.insert_tac ctxt (aux_thms ctxt) 1
     THEN prep_prems ctxt
     THEN Clasimp.auto_tac ctxt
-    THEN print_dbg "22222" 
+ (* THEN print_dbg "22222"  *)
 
 
 (*** Premise tac ***)
@@ -60,7 +60,7 @@ fun premise_tac ctxt thm =
   let
     val idx = Thm.prems_of thm |> find_index (fn tm =>
           case tm of (_ $ (@{term Premise_Collect} $ _)) => true
-             | _ => false) |> @{print}
+                   | _ => false)
     val n = Thm.nprems_of thm
   in
     if idx = ~1 then premise_collect_tac ctxt thm
@@ -69,7 +69,6 @@ fun premise_tac ctxt thm =
       |> Thm.permute_prems 0 (~(idx-1))
       |> (fn thm' => if Thm.nprems_of thm' = n - 1 then thm'
                      else raise Fail "BUG!!!")
-      |> @{print}
       |> Seq.single
   end
 
