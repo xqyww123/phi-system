@@ -188,6 +188,8 @@ class lrep =  \<comment>\<open>The basic class for types modelling concrete obje
   fixes shallowize :: " value \<Rightarrow> 'a "
   assumes deepize_inj[simp]: " shallowize (deepize x) = x "
 
+lemma [simp]: "shallowize o deepize = id" by fastforce
+
 lemma deepize_inj2[simp]: "deepize a = deepize b \<longleftrightarrow> a = b"
   using deepize_inj by metis
 

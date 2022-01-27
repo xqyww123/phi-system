@@ -92,6 +92,20 @@ thm bin_search_\<nu>compilation \<comment> \<open>The definition of the procedur
 
 section\<open>Quick-sort\<close>
 
+text \<open>The order of separation cells may be different with the paper, but they are equivalent.
+  In this implementation, the stack together with the separation cell list is written from
+  left to right, where the bottom of the stack is at the left-most and the top is at the right-most,
+  and separation cells are left associative i.e. \<^term>\<open>(((C1 \<heavy_asterisk> C2) \<heavy_asterisk> C3) \<heavy_asterisk> C4)\<close>.
+  It is because this nature follows the left-to-right order of English writing and most of math.
+  Though the order of separations cells should not matter in logic, the VCG processes cells from
+  right to left, from the out-most C4 to the inner-most C1.
+  Stack elements are recommended to put at the right-most to let the VCG process those stack
+  elements first and then heap objects, because stack element cells are easier to be processed because
+  stack cells are ordered while heap cells are unordered, and the VCG does not need to permute
+  stack cells to attempt different possible matching solutions when converting cells of caller to
+  match cells of callee.
+   \<close>
+
 proc swap:
   argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]\<close>
   return \<open>ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>

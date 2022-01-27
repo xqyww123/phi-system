@@ -311,12 +311,69 @@ lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) 
 lemma [\<nu>reason on \<open>\<nu>Equal \<bool> ?c ?eq\<close>]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
 lemma [\<nu>reason on \<open>\<nu>Zero NuBool ?z\<close>]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
 
-(* subsection \<open>Fusion \<nu>-abstraction\<close>
 
+section \<open>Fix-length Array\<close>
 
-definition AutoFusion (infixr "\<nuFusion>''" 70)  where "AutoFusion = Fusion"
-lemma [\<nu>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> N \<nuFusion> M \<longmapsto> x' \<tycolon> N' \<nuFusion>' M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Cast_def AutoFusion_def . *)
+datatype ('a,'len::len) fixlen_array = fixlen_array (dest_fixlen_array: "('a::field) list")
+
+lemma fixlen_array_forall: "(All P) = (\<forall>l. P (fixlen_array l))" by (metis fixlen_array.exhaust) 
+lemma fixlen_array_exists: "(Ex P) = (\<exists>l. P (fixlen_array l))" by (metis fixlen_array.exhaust) 
+
+lemma fixlen_array_All: "(\<And>(x::('a::field, 'b::len) fixlen_array). PROP P x) \<equiv> (\<And>l. PROP P (fixlen_array l))" proof
+  fix l assume \<open>\<And>x. PROP P x\<close>  then show \<open>PROP P (fixlen_array l)\<close> .
+next fix x :: "('a::field, 'b::len) fixlen_array" assume \<open>\<And>l. PROP P (fixlen_array l)\<close>
+  from \<open>PROP P (fixlen_array (dest_fixlen_array x))\<close> show \<open>PROP P x\<close> by simp
+qed
+
+subsection \<open>Lrep instantiations\<close>
+
+subsubsection \<open>lrep\<close>
+
+instantiation fixlen_array :: (field,len) field begin
+
+definition llty_fixlen_array :: "('a,'b) fixlen_array itself \<Rightarrow> llty "
+  where [simp, \<nu>reason]: "llty_fixlen_array _ = llty_array (llty TYPE('a)) LENGTH('b)"
+definition deepize_fixlen_array :: " ('a,'b) fixlen_array \<Rightarrow> value "
+  where "deepize_fixlen_array x = DM_array (map deepize (dest_fixlen_array x))"
+definition shallowize_fixlen_array :: " value \<Rightarrow> ('a,'b) fixlen_array "
+  where "shallowize_fixlen_array x = (case x of DM_array l \<Rightarrow> fixlen_array (map shallowize l))"
+
+instance apply standard unfolding fixlen_array_All shallowize_fixlen_array_def deepize_fixlen_array_def by simp
+end
+
+subsubsection \<open>zero\<close>
+
+instantiation fixlen_array :: ("{zero,field}",len) zero begin
+definition zero_fixlen_array :: " ('a,'b) fixlen_array "
+  where [simp]: "zero_fixlen_array = fixlen_array (replicate LENGTH('b) 0)"
+instance by standard
+end
+
+subsubsection \<open>ceq\<close>
+
+instantiation fixlen_array :: ("{ceq,field}",len) ceq begin
+
+definition ceqable_fixlen_array :: " heap \<Rightarrow> ('a,'b) fixlen_array \<Rightarrow> ('a,'b) fixlen_array \<Rightarrow> bool "
+  where "ceqable_fixlen_array heap x y = list_all2 (ceqable heap) (dest_fixlen_array x) (dest_fixlen_array y)"
+definition ceq_fixlen_array :: " ('a,'b) fixlen_array \<Rightarrow> ('a,'b) fixlen_array \<Rightarrow> bool "
+  where "ceq_fixlen_array x y = list_all2 ceq (dest_fixlen_array x) (dest_fixlen_array y)"
+
+lemma [simp]: "ceqable heap (fixlen_array a) (fixlen_array b) = list_all2 (ceqable heap) a b"
+  unfolding ceqable_fixlen_array_def by simp
+lemma [simp]: "ceq (fixlen_array a) (fixlen_array b) = list_all2 ceq a b"
+  unfolding ceq_fixlen_array_def by simp
+
+instance proof
+  fix x y z :: "('a,'b) fixlen_array" and h :: "heap"
+  note list_all2_conv_all_nth[simp]
+  show "ceqable h x y = ceqable h y x" by (cases x; cases y; simp) metis
+  show "ceqable h x x \<Longrightarrow> ceq x x" by (cases x; simp) blast
+  show "ceqable h x y \<Longrightarrow> ceq x y = ceq y x" by (cases x; cases y; simp) (metis ceq_sym) 
+  show "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
+    by (cases x, cases y, cases z; simp) (metis ceq_trans)
+qed
+end
+
 
 
 section \<open>Tuple\<close>
