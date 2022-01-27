@@ -16,10 +16,6 @@ text \<open>
   \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c rand \<blangle> Nothing \<longmapsto> x \<tycolon> \<nat>[32] \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. x < 10 \<brangle>\<close>.
 \<close>
 
-text \<open>The command `\<bullet>`  leads a construction statement, and the construction state by this statement is printed.
-  You can insert command `\<bullet>` at any intermediate place to split it into two statements,
-    to see what the construction state respectively is in those two parts.\<close>
-
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
 lemmas add1_le_eq[simp] = Suc_le_eq[unfolded Suc_eq_plus1]
 
@@ -29,6 +25,10 @@ proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x - 1 \<
   premises \<open>0 < x\<close>
   \<bullet> 1 -
   finish
+
+text \<open>The command `\<bullet>`  leads a construction statement, and the construction state by this statement is printed.
+  You can insert command `\<bullet>` at any intermediate place to split it into two statements,
+    to see what the construction state respectively is in those two parts.\<close>
 
 section\<open>Fibonacci\<close>
 
@@ -44,7 +44,8 @@ rec_proc Fib: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i 
     \<bullet> i 2 - Fib \<rightarrow> f2
     \<bullet> i 1 - Fib \<rightarrow> f1
     \<bullet> f1 f2 +
-    \<bullet> \<medium_right_bracket> goal affirm by (cases i rule: fib.cases) auto
+    \<bullet> \<medium_right_bracket>
+    \<bullet> goal affirm by (cases i rule: fib.cases) auto
   finish
 
 thm Fib_\<nu>app \<comment> \<open>The specification theorem\<close>
@@ -53,7 +54,7 @@ thm Fib_\<nu>compilation \<comment> \<open>The definition of the procedure\<clos
 proc Fib2: \<open>i \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>fib i \<tycolon> \<nat>\<^sup>r[32]\<close>
   \<bullet> \<rightarrow> i
   \<bullet> \<open>1\<tycolon> \<nat>\<^sup>r[32]\<close> 1
-  \<bullet> i times y, y' \<open>\<lambda>i. y' = fib (Suc i) \<and> y = fib i\<close> \<medium_left_bracket> \<rightarrow> y, y', i 
+  \<bullet> i times y, y' \<open>\<lambda>i. y' = fib (Suc i) \<and> y = fib i\<close> \<medium_left_bracket> \<lambda>(y, y', i)
   \<bullet>   y' y y' + 
   \<bullet> \<medium_right_bracket> drop
   finish
@@ -67,15 +68,16 @@ thm Fib_\<nu>compilation \<comment> \<open>The definition of the procedure\<clos
 section\<open>Binary Search\<close>
 
 proc bin_search:
-  argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> len \<tycolon> \<nat>[size_t] \<heavy_asterisk> x \<tycolon> \<nat>['b::len]\<close>
-  return \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b] \<heavy_asterisk> ?index \<tycolon> \<nat>[size_t]\<close>
+  argument \<open>ptr \<tycolon> Pointer \<heavy_asterisk> len \<tycolon> \<nat>[size_t] \<heavy_asterisk> x \<tycolon> \<nat>['b::len] \<heavy_asterisk> ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b]\<close>
+  return \<open>?index \<tycolon> \<nat>[size_t] \<heavy_asterisk> ptr \<R_arr_tail> xs \<tycolon> Array \<nat>['b]\<close>
   where ?index = "find_index (\<lambda>y. x \<le> y) xs"
   premises "length xs = len" and "sorted xs"
   \<bullet> \<rightarrow> ptr, len, x
   \<bullet> len 0 while h, l always \<open>l \<le> ?index \<and> ?index \<le> h \<and> h \<le> len\<close>
-      \<comment> \<open>the \<open>always\<close> clause indicates the invariant (the first term) and the loop condition (the second term)\<close>
+      \<comment> \<open>the \<open>always\<close> clause indicates the invariant\<close>
   \<bullet> \<medium_left_bracket> \<lambda>'(h, l) l h < \<medium_right_bracket> \<comment> \<open>The loop condition\<close>
-  \<bullet> \<medium_left_bracket> \<lambda>(h, l) h l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket> \<medium_right_bracket> \<comment> \<open>The loop body\<close>
+  \<bullet> \<medium_left_bracket> \<lambda>(h, l) h l - 2 / l + \<rightarrow> m ptr m \<up> x < if \<medium_left_bracket> h m 1 + \<medium_right_bracket> \<medium_left_bracket> m l \<medium_right_bracket> \<medium_right_bracket>
+  \<bullet> \<comment> \<open>The loop body\<close>
   \<bullet> drop
   finish
 (* The command \<rightarrow> assigns and moves stack elements to local values,
@@ -92,7 +94,7 @@ thm bin_search_\<nu>compilation \<comment> \<open>The definition of the procedur
 section\<open>Quick-sort\<close>
 
 proc swap:
-  argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]\<close>
+  argument \<open>ptr \<tycolon> Pointer \<heavy_asterisk> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> j \<tycolon> \<nat>[size_t] \<heavy_asterisk> ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32]\<close>
   return \<open>ptr \<R_arr_tail> xs[i := xs ! j, j := xs ! i] \<tycolon> Array \<nat>[32]\<close>
   premises \<open>i < length xs\<close> and \<open>j < length xs\<close>
   \<bullet> \<rightarrow> ptr, i, j ptr i \<up>\<rightarrow> i' ptr j \<up> \<rightarrow> j' ptr i j' \<down> ptr j i' \<down>
@@ -110,7 +112,7 @@ proc partition:
   \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in "ptr \<R_arr_tail> ys", j
   \<bullet> \<open>\<lambda>i. j \<le> i \<and> ys <~~> xs \<and> (ys ! (n-1) = ?pivot) \<and>
     (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ?pivot) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> ?pivot < ys ! k)\<close> \<medium_left_bracket> \<lambda>(j,i)
-  \<bullet> ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> j 1 + \<medium_right_bracket> \<medium_left_bracket> j \<medium_right_bracket> 
+  \<bullet> ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> j 1 + \<medium_right_bracket> \<medium_left_bracket> j \<medium_right_bracket>
   \<bullet> goal affirm using \<nu> by (auto simp add: less_Suc_eq intro!: perm_swap[THEN perm.trans])
   \<bullet> \<medium_right_bracket>
   have [useful]: "j < n" using \<nu> by linarith

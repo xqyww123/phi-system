@@ -48,6 +48,7 @@ abbrevs
   and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
   and "<field>" = "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d"
   and "<premcollect>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t"
+  and "<conv>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v"
 begin
 
 section \<open>Prelude of the Prelude\<close>
@@ -448,9 +449,17 @@ definition Protector :: " 'a \<Rightarrow> 'a " ("\<^bold>'(\<^bold>'( _ \<^bold
 
 lemma Protector_I: "P \<Longrightarrow> \<^bold>(\<^bold>(P\<^bold>)\<^bold>)" unfolding Protector_def .
 
+subsection \<open>Converter\<close>
+
+definition Conv :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v _ = _" [51,51] 50)
+  where "Conv origin object \<longleftrightarrow> origin = object"
+
+text \<open>The forward reasoning towards certain object by certain decision procedure. \<close>
+
+
 subsection \<open>Simplifier\<close>
 
-definition Simplify :: " 'setting \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool "
+definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool "
   where "Simplify setting result origin \<longleftrightarrow> result = origin"
 
 lemma [cong]: "A = A' \<Longrightarrow> Simplify s x A = Simplify s x A' "
@@ -1365,9 +1374,21 @@ lemma [\<nu>reason 2000]:
   unfolding cast_def by (simp add: nu_exps) blast
 
 lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> R \<heavy_asterisk> U \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+   (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> R \<heavy_asterisk> (U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  unfolding cast_def by (simp add: nu_exps) blast
+
+lemma [\<nu>reason 2000]:
   "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> U \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l U\<^sub>m \<longmapsto> T\<^sub>m \<medium_right_bracket>: G \<Longrightarrow>
    (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
    \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l U\<^sub>m \<longmapsto> T\<^sub>m \<medium_right_bracket>: G"
+  unfolding cast_def by (simp add: nu_exps) blast
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> R \<heavy_asterisk> U \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l U\<^sub>m \<longmapsto> T\<^sub>m \<medium_right_bracket>: G \<Longrightarrow>
+   (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> \<medium_left_bracket> R \<heavy_asterisk> (U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l U\<^sub>m \<longmapsto> T\<^sub>m \<medium_right_bracket>: G"
   unfolding cast_def by (simp add: nu_exps) blast
 
 lemma [\<nu>reason 2000 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?T \<longmapsto> ?U \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<medium_left_bracket> ?U\<^sub>m \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q \<medium_right_bracket> \<longmapsto> ?T'''\<^sub>m \<medium_right_bracket>: ?G\<close>]:
@@ -1503,23 +1524,45 @@ lemma [\<nu>reason 100 on
     \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?R \<heavy_asterisk> OBJ ?H \<longmapsto> ?R''' \<heavy_asterisk> \<medium_left_bracket> OBJ ?a \<R_arr_tail> ?x \<tycolon> ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R''\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ ?a\<^sub>m \<R_arr_tail> ?x\<^sub>m \<tycolon> ?X\<^sub>m \<medium_right_bracket> \<longmapsto> ?R2''\<^sub>m \<medium_right_bracket>: ?G\<close>]:
   \<comment> \<open>search the immediate H first\<close>
   " MUTEX_ASSERT G
-    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ H \<longmapsto> H' \<heavy_asterisk> OBJ a \<R_arr_tail> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<heavy_asterisk> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<longmapsto> H\<^sub>m
+    \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ H \<longmapsto> H' \<heavy_asterisk> OBJ a \<R_arr_tail> x \<tycolon> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m \<heavy_asterisk> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<longmapsto> OBJ H\<^sub>m
     \<Longrightarrow> MUTEX_SET G
-    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> OBJ H \<longmapsto> R \<heavy_asterisk> H' \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R \<heavy_asterisk> H'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R \<heavy_asterisk> H\<^sub>m \<medium_right_bracket>: G"
+    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> OBJ H \<longmapsto> R \<heavy_asterisk> H' \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R \<heavy_asterisk> H'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R \<heavy_asterisk> OBJ H\<^sub>m \<medium_right_bracket>: G"
   unfolding cast_def  pair_forall
   by (smt (verit, ccfv_threshold) Separation_assoc Separation_comm(1) Separation_expn_R)
 
 lemma [\<nu>reason 70
-    on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?R \<heavy_asterisk> ?H \<longmapsto> ?R' \<heavy_asterisk> \<medium_left_bracket> OBJ ?a \<R_arr_tail> ?x \<tycolon> ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ ?a\<^sub>m \<R_arr_tail> ?x\<^sub>m \<tycolon> ?X\<^sub>m \<medium_right_bracket> \<longmapsto> ?R\<^sub>m \<medium_right_bracket>: ?G\<close>
+    on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?R \<heavy_asterisk> OBJ ?H \<longmapsto> ?R' \<heavy_asterisk> \<medium_left_bracket> OBJ ?a \<R_arr_tail> ?x \<tycolon> ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ ?a\<^sub>m \<R_arr_tail> ?x\<^sub>m \<tycolon> ?X\<^sub>m \<medium_right_bracket> \<longmapsto> ?R\<^sub>m \<medium_right_bracket>: ?G\<close>
   ]: \<comment> \<open>OR search the later cells, if hasn't succeeded.\<close>
   "MUTEX_ASSERT G
     \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> R' \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<medium_right_bracket>: G
-    \<Longrightarrow> MUTEX_SET G
-    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> H \<longmapsto> R' \<heavy_asterisk> H \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_asterisk> H \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<heavy_asterisk> H \<medium_right_bracket>: G"
+    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> OBJ H \<longmapsto> R' \<heavy_asterisk> OBJ H \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_asterisk> OBJ H \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<heavy_asterisk> OBJ H \<medium_right_bracket>: G"
   unfolding Cast_Target_def Cast_Target2_def Separation_assoc[symmetric]
-    Separation_comm(2)[of H "\<tort_lbrace>a \<R_arr_tail> x \<tycolon> X\<tort_rbrace>"] Separation_comm(2)[of H "\<tort_lbrace>a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m\<tort_rbrace>"]
+    Separation_comm(2)[of "OBJ H" "\<tort_lbrace>a \<R_arr_tail> x \<tycolon> X\<tort_rbrace>"] Separation_comm(2)[of "OBJ H" "\<tort_lbrace>a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m\<tort_rbrace>"]
   unfolding Separation_assoc
   by (rule cast_dual_intro_frame_R)
+
+lemma [\<nu>reason 1200
+    on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?R \<heavy_asterisk> VAL ?V \<longmapsto> ?R' \<heavy_asterisk> \<medium_left_bracket> OBJ ?a \<R_arr_tail> ?x \<tycolon> ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ ?a\<^sub>m \<R_arr_tail> ?x\<^sub>m \<tycolon> ?X\<^sub>m \<medium_right_bracket> \<longmapsto> ?R\<^sub>m \<medium_right_bracket>: ?G\<close>
+  ]: \<comment> \<open>OR search the later cells, if hasn't succeeded.\<close>
+  "MUTEX_ASSERT G
+    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> R' \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<medium_right_bracket>: G
+    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<heavy_asterisk> VAL V \<longmapsto> R' \<heavy_asterisk> VAL V \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_asterisk> VAL V \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<heavy_asterisk> VAL V \<medium_right_bracket>: G"
+  unfolding Cast_Target_def Cast_Target2_def Separation_assoc[symmetric]
+    Separation_comm(2)[of "VAL V" "\<tort_lbrace>a \<R_arr_tail> x \<tycolon> X\<tort_rbrace>"] Separation_comm(2)[of "VAL V" "\<tort_lbrace>a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m\<tort_rbrace>"]
+  unfolding Separation_assoc
+  using cast_dual_intro_frame_R by blast
+
+(* lemma [\<nu>reason 1200
+    on \<open>\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t ?R \<longmapsto> ?R' \<heavy_asterisk> \<medium_left_bracket> OBJ ?a \<R_arr_tail> ?x \<tycolon> ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R'\<^sub>m \<heavy_asterisk> VAL ?V \<heavy_asterisk> \<medium_left_bracket> OBJ ?a\<^sub>m \<R_arr_tail> ?x\<^sub>m \<tycolon> ?X\<^sub>m \<medium_right_bracket> \<longmapsto> ?R\<^sub>m \<medium_right_bracket>: ?G\<close>
+  ]: \<comment> \<open>OR search the later cells, if hasn't succeeded.\<close>
+  "MUTEX_ASSERT G
+    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> R' \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<medium_right_bracket>: G
+    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t R \<longmapsto> R' \<heavy_asterisk> \<medium_left_bracket> OBJ a \<R_arr_tail> x \<tycolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_asterisk> VAL V \<heavy_asterisk> \<medium_left_bracket> OBJ a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<heavy_asterisk> VAL V \<medium_right_bracket>: G"
+  unfolding Cast_Target_def Cast_Target2_def Separation_assoc[symmetric]
+    Separation_comm(2)[of "VAL V" "\<tort_lbrace>a\<^sub>m \<R_arr_tail> x\<^sub>m \<tycolon> X\<^sub>m\<tort_rbrace>"]
+  unfolding Separation_assoc
+  by (rule cast_dual_intro_frame_R[where M = Nothing, unfolded Separation_empty])
+*)
 
 lemma [\<nu>reason 30
      on \<open>\<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ ?a \<R_arr_tail> ?x \<tycolon> ?T \<longmapsto> ?R \<heavy_asterisk> OBJ ?a' \<R_arr_tail> ?x' \<tycolon> ?T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R2 \<heavy_asterisk> OBJ ?a\<^sub>m \<R_arr_tail> ?x\<^sub>m \<tycolon> ?X\<^sub>m \<longmapsto> ?H\<^sub>m\<close>
@@ -2236,6 +2279,219 @@ translations "P" <= "CONST AndFact P (CONST NoFact)"
 
 *)
 
+subsection \<open>Convergence Reasoning\<close>
+
+definition "Merge \<equiv> If"
+definition "MergeNeg \<equiv> Not"
+
+
+subsubsection \<open>Identity\<close>
+
+lemma [\<nu>reason 3000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v If ?P ?A ?A'' = ?X\<close>]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v If P A A = A"
+  unfolding Conv_def using if_cancel .
+
+lemma [\<nu>reason 3000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P ?A ?A'' = ?X\<close>]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P A A = A"
+  unfolding Conv_def Merge_def using if_cancel .
+
+subsubsection \<open>Fallback\<close>
+
+lemma [\<nu>reason 10 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v If ?P ?A ?B = ?X\<close>]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v If P A B = If P A B"
+  unfolding Conv_def ..
+
+text \<open>There is no fallback for \<^const>\<open>Merge\<close>. The Merge is not allowed to be fallback\<close>
+
+subsubsection \<open>Ad-hoc rules\<close>
+
+lemma [\<nu>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P \<tort_lbrace>?x \<tycolon> ?T1\<tort_rbrace> \<tort_lbrace>?y \<tycolon> ?T2\<tort_rbrace> = ?X\<close>]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v If P x y = z
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<tort_lbrace>y \<tycolon> T\<tort_rbrace> = \<tort_lbrace> z \<tycolon> T\<tort_rbrace>"
+  unfolding Conv_def Merge_def by force
+
+lemma [\<nu>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v If ?P (?a \<R_arr_tail> ?x) (?b \<R_arr_tail> ?y) = ?X\<close>]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v If P a b = aa
+  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v If P x y = z
+  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v If P (a \<R_arr_tail> x) (b \<R_arr_tail> y) = (aa \<R_arr_tail> z)"
+  unfolding Conv_def Merge_def by force
+
+lemma [\<nu>reason 3000]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P A B = X
+  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge (MergeNeg (MergeNeg P)) A B = X"
+  unfolding MergeNeg_def by simp
+
+lemma [\<nu>reason 2800]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v If P B A = X
+  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v If (MergeNeg P) A B = X"
+  unfolding MergeNeg_def by force
+
+
+subsubsection \<open>Subjection\<close>
+
+lemma [\<nu>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) = ?X\<close>]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v If P QL QR = Q
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L R = X
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL) (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR) = (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)"
+  unfolding Conv_def Merge_def by force
+
+lemma [\<nu>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) ?R = ?X\<close>]:
+  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L R = X
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R = (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q)"
+  unfolding Conv_def Merge_def by force
+
+lemma [\<nu>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) = ?X\<close>]:
+  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L R = X
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) = (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q)"
+  unfolding Conv_def Merge_def by force
+
+subsubsection \<open>Existential\<close>
+
+lemma [\<nu>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) = ?X\<close>]:
+  "(\<And>x. \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L x) (R x) = X x)
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (\<exists>* x. L x) (\<exists>* x. R x) = (\<exists>* x. X x)"
+  unfolding Conv_def Merge_def by (simp add: set_eq_iff nu_exps) force
+
+lemma [\<nu>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P ?L (\<exists>* x. ?R x) = ?X\<close>]:
+  "(\<And>x. \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (R x) = X x)
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P  L (\<exists>* x. R x) = (\<exists>* x. X x)"
+  unfolding Conv_def Merge_def by (simp add: set_eq_iff nu_exps) force
+
+lemma [\<nu>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (\<exists>* x. ?L x) ?R = ?X\<close>]:
+  "(\<And>x. \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L x) R = X x)
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (\<exists>* x. L x) R = (\<exists>* x. X x)"
+  unfolding Conv_def Merge_def by (simp add: set_eq_iff nu_exps) force
+
+subsubsection \<open>Separations Initialization\<close>
+
+lemma [\<nu>reason 1200]:
+  "NEW_MUTEX G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 \<heavy_asterisk> L2) (Nothing \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 \<heavy_asterisk> L2) R = X"
+  unfolding Conv_def cast_def by force
+
+subsubsection \<open>Value\<close>
+
+lemma [\<nu>reason 1200 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (VAL ?V1) (VAL ?V2) = ?X\<close>]: 
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P V1 V2 = V
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (VAL V1) (VAL V2) = (VAL V)"
+  unfolding Conv_def cast_def Merge_def by force
+
+lemma [\<nu>reason 1200 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (?R1 \<heavy_asterisk> VAL ?V1) (?N \<heavy_asterisk> \<medium_left_bracket> ?R2 \<heavy_asterisk> VAL ?V2 \<medium_right_bracket>) = ?X \<medium_right_bracket>: ?G\<close> ]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P V1 V2 = V
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P R1 (Nothing \<heavy_asterisk> \<medium_left_bracket> N \<heavy_asterisk> R2 \<medium_right_bracket>) = R \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (R1 \<heavy_asterisk> VAL V1) (N \<heavy_asterisk> \<medium_left_bracket> R2 \<heavy_asterisk> VAL V2 \<medium_right_bracket>) = (R \<heavy_asterisk> VAL V) \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def Merge_def by force
+
+lemma [\<nu>reason 1200]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (R1 \<heavy_asterisk> VAL V1) (N \<heavy_asterisk> OBJ H2 \<heavy_asterisk> \<medium_left_bracket> R2 \<medium_right_bracket>) = R \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (R1 \<heavy_asterisk> VAL V1) (N \<heavy_asterisk> \<medium_left_bracket> R2 \<heavy_asterisk> OBJ H2 \<medium_right_bracket>) = R \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def Merge_def using Separation_comm(2) by force
+
+subsubsection \<open>Object\<close>
+
+definition EqualAddress :: " heap set \<Rightarrow> heap set \<Rightarrow> bool "
+  where "EqualAddress _ _ = True"
+
+lemma [\<nu>reason]:
+  "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a1 = a2
+   \<Longrightarrow> EqualAddress \<tort_lbrace>a1 \<R_arr_tail> x1 \<tycolon> T1\<tort_rbrace> \<tort_lbrace>a2 \<R_arr_tail> x2 \<tycolon> T2\<tort_rbrace>"
+  unfolding EqualAddress_def ..
+
+lemma [\<nu>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (OBJ ?H1) (OBJ ?H2) = ?X\<close> ]:
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P H1 H2 = H
+  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (OBJ H1) (OBJ H2) = (OBJ H)"
+  unfolding Conv_def Cast_Target_def Merge_def by force
+
+lemma [\<nu>reason 1200]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge (MergeNeg P) (N \<heavy_asterisk> R \<heavy_asterisk> VAL V2) (Nothing \<heavy_asterisk> \<medium_left_bracket> L \<heavy_asterisk> OBJ H1\<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<heavy_asterisk> OBJ H1) (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> VAL V2 \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def Merge_def MergeNeg_def by force
+
+lemma [\<nu>reason 1200]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (N \<heavy_asterisk> R) (Nothing \<heavy_asterisk> \<medium_left_bracket> L \<heavy_asterisk> OBJ H1\<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge (MergeNeg P) (L \<heavy_asterisk> OBJ H1) (N \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def Merge_def MergeNeg_def by force
+
+lemma [\<nu>reason 100 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (?L \<heavy_asterisk> OBJ ?H1) (?N \<heavy_asterisk> \<medium_left_bracket> ?R \<heavy_asterisk> OBJ ?H2 \<medium_right_bracket>) = ?X''' \<medium_right_bracket>: ?G\<close>]:
+  \<comment> \<open>search the immediate element\<close>
+  "MUTEX_ASSERT G
+   \<Longrightarrow> EqualAddress H1 H2
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (OBJ H1) (OBJ H2) = H
+   \<Longrightarrow> MUTEX_SET G \<comment> \<open>if success, trim all other branches on G\<close>
+   \<Longrightarrow> NEW_MUTEX G2
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (Nothing \<heavy_asterisk> \<medium_left_bracket> N \<heavy_asterisk> R \<medium_right_bracket>) = X \<medium_right_bracket>: G2
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<heavy_asterisk> OBJ H1) (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> OBJ H2 \<medium_right_bracket>) = (X \<heavy_asterisk> H) \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def Merge_def by force
+
+lemma [\<nu>reason 70 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P ?L (?N \<heavy_asterisk> \<medium_left_bracket> ?R \<heavy_asterisk> OBJ ?H2 \<medium_right_bracket>) = ?X''' \<medium_right_bracket>: ?G\<close>]:
+  \<comment> \<open>search next\<close>
+  "MUTEX_ASSERT G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> OBJ H2 \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> OBJ H2 \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def using Separation_comm(2) by force
+
+subsubsection \<open>Unfold\<close>
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> R1 \<heavy_asterisk> R2 \<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> (R1 \<heavy_asterisk> R2) \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 \<heavy_asterisk> L2 \<heavy_asterisk> L3) R = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 \<heavy_asterisk> (L2 \<heavy_asterisk> L3)) R = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+lemma [\<nu>reason 2200]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R1 \<heavy_asterisk> R2 \<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Nothing \<heavy_asterisk> (R1 \<heavy_asterisk> R2) \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+
+subsubsection \<open>Padding Void\<close>
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (Nothing \<heavy_asterisk> OBJ L) R = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (OBJ L) R = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (Nothing \<heavy_asterisk> VAL L) R = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (VAL L) R = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Nothing \<heavy_asterisk> VAL V \<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> VAL V \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> Nothing \<heavy_asterisk> OBJ V \<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> OBJ V \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+subsubsection \<open>Eliminate Void Hole\<close>
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_asterisk> \<medium_left_bracket> R \<heavy_asterisk> Nothing \<medium_right_bracket>) = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+lemma [\<nu>reason 2000]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L R = X \<medium_right_bracket>: G
+   \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<heavy_asterisk> Nothing) R = X \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def by force
+
+subsubsection \<open>Termination\<close>
+
+lemma [\<nu>reason 2000 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P Nothing (Nothing \<heavy_asterisk> \<medium_left_bracket> Nothing \<medium_right_bracket>) = ?X'' \<medium_right_bracket>: ?G\<close>]:
+  "\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P Nothing (Nothing \<heavy_asterisk> \<medium_left_bracket> Nothing \<medium_right_bracket>) = Nothing \<medium_right_bracket>: G"
+  unfolding Conv_def cast_def Merge_def by force
+  
+
 subsection \<open>Convergence\<close>
 
 definition SameNuTy :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " where "SameNuTy A B = True"
@@ -2567,7 +2823,7 @@ subsection \<open>Simplifiers & Resonings\<close>
     (Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent, ctxt)
 )\<close>
 
-\<nu>processor vcg 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>
+\<nu>processor goal 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>
   fn ctxt => fn sequent => Parse.$$$ "goal" >> (fn _ => fn _ =>
     let
       val goal = Proof_Context.get_thm ctxt "\<nu>thesis" |> Drule.dest_term

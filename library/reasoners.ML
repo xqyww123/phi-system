@@ -22,6 +22,14 @@ fun head_only tac th =
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 
+(* TODO: 
+*   Because the `auto` tactic tackles those schematic variables badly,
+*   in this tactic, we split the conjection into multiple sub-goals,
+*   and for each sub-goal, we use HOL.refl to instantiate schematic variabls
+*   like ?Y in equities like "X a b = ?Y a b".
+*   However, this strategy is rather naive, and it considers equities one by one.
+*   A more idea strategy should guess those schematic variables as a whole,
+*   and consider situations more than equities. *)
 fun prep_prems ctxt =
   REPEAT_DETERM (SOMEGOAL (resolve_tac ctxt @{thms Premise_I conjI HOL.refl}))
     THEN print_dbg "222221111" 

@@ -562,14 +562,14 @@ fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 
 
 fun chk_pattern thy pat tac s =
-let
-  val _ = debug_term_global thy "UUU " pat
-  val conc = Logic.concl_of_goal (Thm.prop_of s) 1
-  val _ = debug_term_global thy "TTT " conc
-in
-  if MY_Pattern.matches thy (pat, conc) |> @{print}
-  then tac s else Seq.empty
-end
+  let
+    val conc = Logic.concl_of_goal (Thm.prop_of s) 1
+    (* val _ = debug_term_global thy "UUU " pat
+    val _ = debug_term_global thy "TTT " conc *)
+  in
+    if Pattern.matches thy (pat, conc) (* |> @{print} *)
+    then tac s else Seq.empty
+  end
 
 fun mk_pattern rule NONE = Thm.concl_of rule
   | mk_pattern rule (SOME pat) = NuHelp.mk_Trueprop pat

@@ -474,9 +474,9 @@ declare op_if_def[\<nu>instr]
 lemma if_\<nu>app:
   "(cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<blangle> X \<longmapsto> Y\<^sub>T \<brangle>)
     \<longrightarrow> (\<not> cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<blangle> X \<longmapsto> Y\<^sub>F \<brangle>)
-    \<longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>b\<^bold>r\<^bold>a\<^bold>n\<^bold>c\<^bold>h] Y : (if cond then Y\<^sub>T else Y\<^sub>F)
+    \<longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge cond Y\<^sub>T Y\<^sub>F = Y
     \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if TYPE('y::stack) branch_true branch_false \<blangle> X \<heavy_asterisk> cond \<tycolon> \<bool> \<longmapsto> Y \<brangle>"
-  unfolding \<nu>def op_if_def by (auto simp add: nu_exps)
+  unfolding \<nu>def op_if_def Conv_def Merge_def by (auto simp add: nu_exps)
 
 (* text \<open>Despite the feasibility of divergence of \<nu>-types in the branch, i.e.
   \<^term>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if branch_true branch_false \<blangle> x \<tycolon> X \<heavy_asterisk>^ cond \<tycolon> \<bool> \<longmapsto> (if cond then y\<^sub>T else y\<^sub>F) \<tycolon> (if cond then Y\<^sub>T else Y\<^sub>F ) \<brangle>\<close>,
