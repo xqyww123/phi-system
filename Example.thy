@@ -119,17 +119,19 @@ proc swap:
   \<bullet> \<rightarrow> ptr, i, j ptr i \<up>\<rightarrow> i' ptr j \<up> \<rightarrow> j' ptr i j' \<down> ptr j i' \<down>
   finish
 
+abbreviation "permuted x y \<equiv> x <~~> y"
+
 proc partition:
   argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
   return \<open>ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<heavy_asterisk> j \<tycolon> \<nat>[size_t]
-      \<^bold>s\<^bold>u\<^bold>b\<^bold>j j ys. j < length xs \<and> ys  <~~> xs \<and>
+      \<^bold>s\<^bold>u\<^bold>b\<^bold>j j ys. j < length xs \<and> permuted ys xs \<and>
           (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ys ! j) \<and> (\<forall>k. j < k \<and> k < n \<longrightarrow> ys ! j < ys ! k)\<close>
   premises \<open>length xs = n\<close> and \<open>0 < n\<close>
   note nth_list_update[simp] not_le[simp] perm_length[simp]
 
   \<bullet> -- ptr, n 1 - \<up> \<rightarrow> pivot
   \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close> n 1 - times var j, ys in "ptr \<R_arr_tail> ys", j
-  \<bullet> \<open>\<lambda>i. j \<le> i \<and> ys <~~> xs \<and> (ys ! (n-1) = ?pivot) \<and>
+  \<bullet> \<open>\<lambda>i. j \<le> i \<and> permuted ys xs \<and> (ys ! (n-1) = ?pivot) \<and>
     (\<forall>k. k < j \<longrightarrow> ys ! k \<le> ?pivot) \<and> (\<forall>k. j \<le> k \<and> k < i \<longrightarrow> ?pivot < ys ! k)\<close> \<medium_left_bracket> \<lambda>(j,i)
   \<bullet> ptr j \<up>\<rightarrow> j'  ptr i \<up> -- i' pivot \<le> if \<medium_left_bracket> ptr i j' \<down> ptr j i' \<down> j 1 + \<medium_right_bracket> \<medium_left_bracket> j \<medium_right_bracket>
   \<bullet> goal affirm using \<nu> by (auto simp add: less_Suc_eq intro!: perm_swap[THEN perm.trans])
@@ -147,7 +149,7 @@ proc partition:
 
 rec_proc qsort:
   argument \<open>ptr \<R_arr_tail> xs \<tycolon> Array \<nat>[32] \<heavy_asterisk> ptr \<tycolon> Pointer \<heavy_asterisk> n \<tycolon> \<nat>[size_t]\<close>
-  return \<open>OBJ ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<^bold>s\<^bold>u\<^bold>b\<^bold>j ys. sorted ys \<and> ys  <~~> xs\<close>
+  return \<open>ptr \<R_arr_tail> ys \<tycolon> Array \<nat>[32] \<^bold>s\<^bold>u\<^bold>b\<^bold>j ys. sorted ys \<and> permuted ys xs\<close>
   var ptr xs n
   premises "n = length xs"
   note perm_length[simp]
@@ -237,7 +239,7 @@ lemma next_is_maximal:
         by (smt (verit, ccfv_SIG) Nat.add_diff_assoc2 Nat.diff_diff_right add.commute add_diff_cancel_left' diff_le_self le_trans less_add_eq_less less_or_eq_imp_le less_trans ordered_cancel_comm_monoid_diff_class.diff_add)
     qed done
 
-definition "first_occur p a r \<longleftrightarrow>
+definition "first_substr p a r \<longleftrightarrow>
     (r < length a \<longrightarrow> matches' a r p 0 (length p)) \<and> (\<forall>k < r. \<not> (matches' a k p 0 (length p)))"
 
 
@@ -306,15 +308,15 @@ proc kmp:
   argument \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk>
     px \<tycolon> Pointer \<heavy_asterisk> py \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t] \<heavy_asterisk> ny \<tycolon> \<nat>[size_t]\<close>
   return \<open> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8]
-    \<^bold>s\<^bold>u\<^bold>b\<^bold>j i ktab pk. first_occur xs ys i \<and> kmp_table nx ktab xs\<close>
+    \<^bold>s\<^bold>u\<^bold>b\<^bold>j i ktab pk. first_substr xs ys i \<and> kmp_table nx ktab xs\<close>
   premises \<open>length xs = nx\<close> and \<open>length ys = ny\<close> and "1 \<le> nx"
 
   \<bullet> \<rightarrow> px,py,nx,ny
   \<bullet> px nx mk_kmp_table \<rightarrow> pk
   \<bullet> \<open>0 \<tycolon> \<nat>[size_t]\<close>0 while var i j in i, j 
     always \<open> j \<le> nx \<and> j \<le> i \<and> i \<le> ny
-      \<and> matches' ys (i - j) xs 0 j \<and>
-    (\<forall>k < i - j.  \<not> (matches' ys k xs 0 nx))\<close>
+      \<and> matches' ys (i - j) xs 0 j
+      \<and> (\<forall>k < i - j.  \<not> (matches' ys k xs 0 nx))\<close>
   \<bullet> \<medium_left_bracket> \<lambda>'(i, j) i ny < j nx < \<and> \<medium_right_bracket>
   \<bullet> \<medium_left_bracket> \<lambda>(i, j) py i \<up> px j \<up> = if
   \<bullet> \<medium_left_bracket> i 1 + j 1 + \<medium_right_bracket>
@@ -329,7 +331,7 @@ proc kmp:
   by (smt (verit, ccfv_threshold) \<nu> add.commute add.left_neutral diff_add_inverse kmp_table_def le0 le_Suc_ex linorder_neqE_nat matches'_def next_is_maximal) 
   \<bullet> \<medium_right_bracket>
   \<bullet> nx = if \<medium_left_bracket> nx - \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
-  \<bullet> goal affirm unfolding first_occur_def using \<nu> apply auto
+  \<bullet> goal affirm unfolding first_substr_def using \<nu> apply auto
   by (metis add_mono_thms_linordered_field(2) antisym_conv1 dual_order.strict_trans1 less_diff_conv matches'_def) 
 finish
 

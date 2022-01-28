@@ -46,13 +46,12 @@ fun gen_set_variables_tag prep_seps vars always ctxt sequent =
                       (T0 $ Var((name,0),T1) $ T2 $ T3))
                   |> mk_Trueprop |> cterm_of ctxt
 
-    val goal = Goal.init var_tag |> @{print}
+    val goal = Goal.init var_tag
                   |> SINGLE (REPEAT (HEADGOAL (resolve_tac ctxt
                         @{thms HOL.refl case_prod_expn_I case_named_expn_I
                                Variant_Cast_I_always Variant_Cast_I})))
     val var_tag_th = (case goal of SOME concl => Goal.conclude concl
                         | NONE => raise CTERM ("fail to solve", [var_tag]))
-                        |> @{print}
 
     val forall = forall_expansion names ctxt
     val exNu = ExNu_expansion names ctxt
@@ -61,16 +60,13 @@ fun gen_set_variables_tag prep_seps vars always ctxt sequent =
            @{simproc named_pureAll_expansion}]
           addsimps @{thms NuSys.named.case Product_Type.prod.case}
     val sequent = (var_tag_th RS sequent)
-                  |> @{print}
                   |> schematic_var_expansion ctxt
-                  |> @{print}
                   |> Raw_Simplifier.rewrite_rule ctxt (forall::exNu::
                     @{thms HOL.simp_thms[unfolded atomize_eq[symmetric]]
                            Product_Type.prod.case[unfolded atomize_eq[symmetric]]
                            NuSys.named.case[unfolded atomize_eq[symmetric]]
                            Subjection_simp_proc_arg
                      })
-                  |> @{print}
   in
     sequent
   end
@@ -102,7 +98,7 @@ fun variables_tag_pattern_match raw_vars pattern always ctxt sequent =
 
 fun variables_tag_terms raw_vars always ctxt sequent =
   let
-    val vars = map (Syntax.parse_term ctxt #> Syntax.check_term ctxt #> debug_term ctxt "qqqq "
+    val vars = map (Syntax.parse_term ctxt #> Syntax.check_term ctxt
                       #> (fn tm => (normlize_name (term_name tm), (term_name tm, fastype_of tm)))
                    ) raw_vars
   in

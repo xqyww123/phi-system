@@ -13,7 +13,7 @@ fun simplifier cong = almost_safe (fn ctx => fn sequent =>
     val ctx' = Raw_Simplifier.addsimps (ctx, simps)
     in (Simplifier.full_simplify ctx' sequent
         |> (fn th2 => if Thm.eq_thm_prop (sequent, th2) then raise Bypass NONE else th2)
-       , ctx) |> @{print}
+       , ctx)
     end))
 
 end

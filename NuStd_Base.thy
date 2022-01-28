@@ -1,5 +1,5 @@
 theory NuStd_Base
-  imports NuSys NuBasicAbstractors NuInstructions
+  imports NuSys NuInstructions
   keywords
      "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "always" "--" "\<rightarrow>" "\<lambda>" "\<lambda>'" :: quasi_command
   abbrevs "|^" = "\<up>"

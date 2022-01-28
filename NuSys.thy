@@ -298,7 +298,7 @@ lemma lambda_abstraction: "lambda_abstraction x (Y' x) name Y'"
 
 \<nu>reasoner lambda_abstraction 1000 ("lambda_abstraction x Y name Y'") = \<open>fn ctxt => fn sequent =>
   let
-    val _ $ (_ $ x $ Y $ (_ $ Abs (name,_,_)) $ Var Y'') = Thm.major_prem_of sequent |> @{print}
+    val _ $ (_ $ x $ Y $ (_ $ Abs (name,_,_)) $ Var Y'') = Thm.major_prem_of sequent
     val Y' = Abs(name, fastype_of x, abstract_over (x, Y))
             |> Thm.cterm_of ctxt
     val sequent = @{thm lambda_abstraction} RS Thm.instantiate ([],[(Y'',Y')]) sequent
@@ -533,7 +533,7 @@ fun parse_typing (Free (name, ty)) =
       in const $ (Const (\<^syntax_const>\<open>_constrain\<close>, ty) $ tmx $ markup)
         $ (Const (\<^syntax_const>\<open>_constrain\<close>, ty) $ tmty $ markup) end
   | parse_typing (tm as Const (\<^const_syntax>\<open>typing\<close>, _) $ _ $ _) = tm
-  | parse_typing tm = raise TERM ("should be a NuPrime.typing term", [@{print} tm])
+  | parse_typing tm = raise TERM ("should be a NuPrime.typing term", [tm])
 
 fun parse_typing_x tm = (case parse_typing tm of _ $ x $ _ => x)
 fun parse_typing_ty tm = (case parse_typing tm of _ $ _ $ ty => ty)
@@ -2514,7 +2514,6 @@ lemma Prog_Interface_func:
 section \<open>Main implementation of the system\<close>
 
 ML_file \<open>library/application.ML\<close>
-ML_file "./library/general.ML"
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
@@ -2691,8 +2690,7 @@ simproc_setup named_forall_expansion ("All (P :: 'a named 'names \<Rightarrow> b
   \<open>K (QuantExpansion.simproc_of QuantExpansion.forall_expansion)\<close>
 
 simproc_setup named_exSet_expansion ("ExSet (P :: 'a named 'names \<Rightarrow> 'b set)") =
-  \<open>K (fn ctx => fn cterms =>
-  @{print} (QuantExpansion.simproc_of QuantExpansion.ExNu_expansion ctx (@{print} cterms)))\<close>
+  \<open>K (fn ctx => fn cterms => QuantExpansion.simproc_of QuantExpansion.ExNu_expansion ctx cterms)\<close>
 
 simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a named 'names \<Rightarrow> prop)") =
   \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
@@ -2738,7 +2736,7 @@ subsection \<open>Constructive\<close>
     val ths = NuApplicant.applicant_thms ctx name
     val (ths,ctx) = fold_map (Thm.proof_attributes attrs) ths ctx
     val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
-    in case Seq.pull (Thm.biresolution NONE false (map (pair false) ths |> @{print}) 1 sequent)
+    in case Seq.pull (Thm.biresolution NONE false (map (pair false) ths) 1 sequent)
             of SOME (th, _) => (th,ctx)
               | _ => raise THM ("RSN: no unifiers", 1, sequent::ths) end)\<close>
 

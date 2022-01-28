@@ -186,7 +186,7 @@ fun dest_quadop_c const tm =
       in (a1,a2,a3,a4) end
 fun dest_quinop const (tm as Const (const', _) $ a $ b $ c $ d $ e) =
       if const' = const then (a,b,c,d,e) else raise TERM ("dest_quinop "^const, [tm] )
-  | dest_quinop const tm = raise TERM ("dest_quinop "^const, [tm |> @{print}])
+  | dest_quinop const tm = raise TERM ("dest_quinop "^const, [tm])
 fun dest_quinop_c const tm =
       let
         val _ = dest_quinop const (term_of tm)

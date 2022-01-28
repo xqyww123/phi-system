@@ -5,7 +5,7 @@ end
 structure NuObtain : NU_OBTAIN = struct
 fun eliminate_term ctxt xs thm =
   let open NuBasics
-    val tm = Thm.prop_of (@{print} thm)
+    val tm = Thm.prop_of thm
     val vs = map (dest_Free o Thm.term_of) xs;
     val bads = Term.fold_aterms (fn t as Free v =>
       if member (op =) vs v then insert (op aconv) t else I | _ => I) tm [];
@@ -22,7 +22,7 @@ fun eliminate_term ctxt xs thm =
 
 fun eliminate ctxt rule xs As thm =
   let
-    val thm = eliminate_term ctxt xs thm |> @{print};
+    val thm = eliminate_term ctxt xs thm
     val _ = Object_Logic.is_judgment ctxt (Thm.concl_of thm) orelse
       error "Conclusion in obtained context must be object-logic judgment"
 
@@ -65,14 +65,13 @@ in
 
 fun choose inst_names stat =
   let open NuBasics NuHelp HOLogic Term
-    val major = NuBasics.the_nu_fact stat |> @{print}
+    val major = NuBasics.the_nu_fact stat
     val ctx = Proof.context_of stat
     fun map_name_result f b c =
           (f (Binding.name_of b) c) |>> (fn s => Binding.map_name (K s) b)
     val (inst_names,_) =
       fold_map (map_name_result Name.variant) inst_names (Name.make_context [])
-    val _ = @{print} inst_names
-    val major = Raw_Simplifier.rewrite_rule ctx @{thms ExTyp_strip} major |> @{print}
+    val major = Raw_Simplifier.rewrite_rule ctx @{thms ExTyp_strip} major
     val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder_raw "HOL.Ex"
     val var_tys = map snd vars
     val (inst_names, stat) =
@@ -84,7 +83,7 @@ fun choose inst_names stat =
     val meta'_term = mk_Trueprop (subst_bounds (rev insts, body))
                         |> Thm.cterm_of ctx
     val meta' = Thm.assume  meta'_term
-    val rule = expand_exE ctx major |> @{print}
+    val rule = expand_exE ctx major
     val cinsts = map (Thm.cterm_of ctx) insts;
   in
     stat |> Proof.map_context
@@ -94,7 +93,7 @@ fun choose inst_names stat =
 
 fun auto_choose stat =
   let
-    val vars = NuBasics.dest_current_nu (NuBasics.the_nu_fact stat |> @{print})
+    val vars = NuBasics.dest_current_nu (NuBasics.the_nu_fact stat)
           |> NuHelp.strip_binder_vars @{const_name ExSet}
           |> map (Binding.name o NuBasics.normlize_name o fst)
   in

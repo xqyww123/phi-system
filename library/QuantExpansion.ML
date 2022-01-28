@@ -69,9 +69,8 @@ fun gen_general_expansion const thms ty names ctx =
     val quant = Const (@{const_name Pure.eq}, dummyT)
       $ (Const (const, dummyT) $ P_term)
       $ mk_the_binder const P_term (map (rpair dummyT) names)
-  |> debug_term ctx "aaaas "
     val ctx = (Proof_Context.set_mode Proof_Context.mode_schematic ctx) addsimps thms
-    val quant = Syntax.check_prop ctx quant |> cterm_of ctx |> @{print}
+    val quant = Syntax.check_prop ctx quant |> cterm_of ctx
     val quant = case Goal.init quant |> SINGLE (HEADGOAL (Simplifier.simp_tac ctx))
                    of SOME th => Goal.conclude th
                     | _ => raise CTERM ("fail to solve quantification-expansion", [quant])
@@ -86,7 +85,7 @@ val pure_All_expansion =
 val ExNu_expansion =
   gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet} (SOME @{typ assn})
   (*let
-    val ([(ty_name,sort)], ctx) = Variable.invent_types [["HOL.type"]] ctx |> @{print}
+    val ([(ty_name,sort)], ctx) = Variable.invent_types [["HOL.type"]] ctx
   in
     gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet}
       (SOME (Type (@{type_name set}, [TVar ((ty_name,0),sort)]))) names ctx
@@ -134,7 +133,6 @@ fun simproc_of expn ctx cterm =
   let
     val Const _ $ abst = term_of cterm
     val Type ("fun", [Type (@{type_name named}, [_, names]), _])  = fastype_of abst
-          |> @{print}
     val names = dest_name_tylabels names
   in
     SOME (expn names ctx)

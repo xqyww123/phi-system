@@ -7,8 +7,8 @@ structure Local_Value : LOCAL_VALUE = struct
 open NuHelp NuBasics NuSys
 
 fun local_value_export rule vars asms sequent =
-  ((fold_rev Thm.implies_intr asms sequent |> @{print})
-        |> Drule.forall_intr_list vars) COMP rule
+  (fold_rev Thm.implies_intr asms sequent
+      |> Drule.forall_intr_list vars) COMP rule
   handle e => Exn.reraise (@{print} e) 
 
 fun mk_let flag_push_back names sequent ctxt =

@@ -139,7 +139,7 @@ fun cast_completely ctx desired_nu major =
 val conversion_thm = @{thm conversion}
 fun conversion ctx to from =
   let
-    val (f ,U ,V ) = dest_procedure_c (cconcl_of from) |> @{print}
+    val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
     val (f',U',V') = dest_procedure_c to
     val (a,b) = dest_typroc_c (ctyp_of_cterm f) 
     val (c,d) = dest_typroc_c (ctyp_of_cterm f')
@@ -227,7 +227,6 @@ fun set_param_cmd ctx term sequent =
           val (fixed_names, ctx) = Proof_Context.add_fixes fixes ctx
           val term = Syntax.parse_term ctx term
                       |> tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
-                      |> @{print}
                       |> mk_monop @{const_name case_named}
         in
           set_param ctx term sequent

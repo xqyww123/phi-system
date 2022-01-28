@@ -55,7 +55,7 @@ fun compilation_thm_of thy name =
       Global_Theory.get_thm thy (suffix compilation_suffix name)
 fun add_interface intrf thy =
   Interfaces.map (Symtab.map_default 
-    (Context.theory_long_name thy |> @{print}, Symtab.empty)
+    (Context.theory_long_name thy, Symtab.empty)
     (Symtab.insert (K false) (Binding.name_of (#name intrf), intrf))) thy
 fun add_procedure name ctxt =
   Procedures.map (Symtab.map_default (thy_name_of_ctxt ctxt, [])
@@ -74,12 +74,11 @@ fun add_interface_command ((name,const),tys) thy =
     val ty = case fastype_of const
                of Type ("fun", [ty, _ ]) => ty
                 | ty => raise TYPE ("bad type: not a procedure", [ty], [const])
-    val ty = HOLogic.strip_tupleT ty |> @{print} |> List.last
+    val ty = HOLogic.strip_tupleT ty |> List.last
     val const = if is_TFree ty orelse is_TVar ty
                 then Term.subst_atomic_types [(ty, @{typ void})] const (*set tail to void*)
                 else const
     val const = Thm.cterm_of ctxt (Logic.varify_types_global const) |> Drule.mk_term
-                 |> @{print}
 
 
     fun modify_tail ty =
@@ -101,7 +100,6 @@ fun add_interface_command ((name,const),tys) thy =
 
     val thm = (const RS @{thm Prog_Interface_func})
           handle THM _ => const RS @{thm Prog_Interface_proc}
-    val _ = @{print} thm
     val thm = thm RS Thm.trivial (Thm.cterm_of ctxt goal)
 
 

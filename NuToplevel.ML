@@ -71,7 +71,7 @@ val eof_ctx_stack_name = "NuPrime.End_of_Contextual_Stack"
 fun mk_eof_ctx_stack tm = Const(eof_ctx_stack_name, dummyT) $ tm
 val mk_register_collection = I
 val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
-      if can dest_premise_tag (concl_of th |> @{print}) then th RS @{thm Premise_E} else th)]
+      if can dest_premise_tag (concl_of th) then th RS @{thm Premise_E} else th)]
 (* fun mk_register_collection tm = Const(@{const_name RegisterCollection},
 * dummyT) $ tm *)
 
@@ -103,7 +103,14 @@ val top_blk_name = "\<t>\<o>\<p>_\<b>\<l>\<o>\<c>\<k>"
 fun parse_arg (X as (Const (@{const_name "typing"}, _) $ _ $ _)) =
       X |> mk_monop @{const_name "RepSet"}
         |> mk_monop @{const_name "Ele"}
-  | parse_arg X = X
+  | parse_arg (X as (Const (@{const_name "RepSet"}, _) $ _)) =
+      X |> mk_monop @{const_name "Ele"}
+  | parse_arg (Abs (a,ty, X)) = Abs (a,ty, parse_arg X)
+  | parse_arg ((C as Const ("_type_constraint_", _)) $ X) = (C $ parse_arg X)
+  | parse_arg ((C as Const (@{const_name "ExSet"}, _)) $ X) = (C $ parse_arg X)
+  | parse_arg ((C as Const (@{const_name "Subjection"}, _)) $ X $ P) =
+      (C $ parse_arg X $ P)
+  | parse_arg X = @{print} X
 
 
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
@@ -197,8 +204,8 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
       let
         val ((arg,argT), (ret,retT), preconds) = prep_Nu ctx_fixes arg_ret_conds
         val ctxt = fst ctx_fixes
-        val _ = debug_term ctxt "arg " arg
-        val _ = debug_term ctxt "ret " ret
+        (*val _ = debug_term ctxt "arg " arg
+        val _ = debug_term ctxt "ret " ret*)
         val goal = mk_Trueprop
           (Const (@{const_name "Procedure"}, dummyT) $ v_proc $ arg $ ret)
 
@@ -207,7 +214,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
             val ctxt = Proof.context_of stat
             val goal_proc = Thm.cprem_of (#goal (Proof.goal stat)) 1 |> Drule.strip_imp_concl
             val (_,Arg,_) = dest_procedure_c goal_proc
-            val argT = Option.map (Syntax.check_typ ctxt) (@{print} argT)
+            val argT = Option.map (Syntax.check_typ ctxt) argT
           in
             stat
               |> Proof.map_context (
@@ -298,7 +305,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                   )))
               |> Seq.the_result "should never fail"
 
-            val sequent = #goal (Proof.goal stat) |> @{print}
+            val sequent = #goal (Proof.goal stat)
             val goal = Thm.prems_of sequent |> hd
 
             val vars = strip_binder_vars @{const_name Pure.all} goal
@@ -313,12 +320,11 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
               |> dest_Trueprop
               |> strip_binop_r @{const_name "HOL.implies"}
               |> map mk_Trueprop
-              |> map (debug_term ctxt "1231 ")
             val (prems, goal) = (front goal, last goal)
 
             val (_,Arg,Ret) = dest_procedure goal
-            val arg_stack_ty = stack_ty_of_nu Arg |> @{print}
-            val ret_stack_ty = stack_ty_of_nu Ret |> @{print}
+            val arg_stack_ty = stack_ty_of_nu Arg
+            val ret_stack_ty = stack_ty_of_nu Ret
             val inst_tvars = map_types (map_type_tvar (fn (i,c) =>
                        if i = v_proc_ty_A_iname then arg_stack_ty
                   else if i = v_proc_ty_B_iname then ret_stack_ty
@@ -326,9 +332,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
             val prems = map inst_tvars prems
             val goal  = inst_tvars goal
 
-            val _ = debug_term ctxt "qqqq" goal
-
-            val Arg = Thm.cterm_of ctxt Arg |> @{print}
+            val Arg = Thm.cterm_of ctxt Arg
 
             (* intro assumptions *)
             fun imp_export prems sequent =
@@ -341,7 +345,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
             val assms = map (fn (tm,((b,attr),(_,pats))) =>
                                   ((b, elim_premise @ map (Attrib.attribute ctxt) attr),
                                    [(tm,pats)]))
-                  (prems ~~ (((Binding.name func_name,[]),(dummy,[]))::conds)) |> @{print}
+                  (prems ~~ (((Binding.name func_name,[]),(dummy,[]))::conds))
             val (_,stat) = stat |> Proof.map_context_result (
                   Proof_Context.add_assms (fn _ => fn prems => (imp_export prems, I)) assms)
           in
@@ -436,7 +440,7 @@ fun gen_finish_proc qed int stat =
     val sequent = NuBasics.the_nu_fact stat
     val ctxt = Proof.context_of stat
     val goal = Proof_Context.get_thm ctxt "\<nu>thesis" |> Drule.dest_term
-    val (_,_,desired_nu) = dest_procedure_c goal |> @{print}
+    val (_,_,desired_nu) = dest_procedure_c goal
     (* quick fix:
     val xa = term_of desired_nu |> auto_fusion_arity
      val sequent = funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctxt) sequent
@@ -524,7 +528,6 @@ fun gen_begin_block prep_attr bindings int stat =
     val blk_name = "L\<nu>'" ^ (Int.toString level) ^ "_" ^ blk_name
     
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
-    val _ = debug_term ctxt "aaaa " goal
     
     fun after_qed (ctxt',[[th]]) stat =
       end_block stat |> (fn stat =>
@@ -538,7 +541,7 @@ fun gen_begin_block prep_attr bindings int stat =
                   end
           ))
 
-    val delta = length prems - length bindings |> @{print}
+    val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
     val bindings =
       ((map (apsnd (map (prep_attr ctxt))) bindings)
