@@ -30,9 +30,7 @@ val trace = Attrib.setup_config_bool \<^binding>\<open>\<nu>trace_application\<c
 val expand_appliant = 
   repeat (fn th => th RS @{thm spec}) #>
   repeat (fn th => th RS @{thm mp}) #>
-  repeat (fn th => th RS @{thm spec}) #>
-  perhaps (try (fn th => th RS @{thm Intro_D})) #> (*normalize the cast rules*)
-  perhaps (try (fn th => th RS @{thm Dest_D}))
+  repeat (fn th => th RS @{thm spec})
 
 fun apply_proc_naive proc sequent = expand_appliant proc RS (sequent RS @{thm apply_proc})
 

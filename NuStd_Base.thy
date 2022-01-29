@@ -65,7 +65,7 @@ lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Array' N \<Longrightarrow> 
 lemma Array'_to_Ref_\<nu>app:
  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m i \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! (i-j)) \<noteq> None \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ (a |+ j) \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> (a |+ j) \<R_arr_tail> xs[ (i-j) := None] \<tycolon> Array' N \<heavy_asterisk> (a |+ i) \<R_arr_tail> the (xs ! (i-j)) \<tycolon> Ref N"
-  unfolding Dest_def Cast_def Separation_expn pair_forall
+  unfolding Cast_def Separation_expn pair_forall
   apply (auto simp add: nu_exps) apply (rule heap_split_by_addr_set[of _  _ "{a |+ i}"])
   subgoal premises prems for y v proof -
     define k where "k = i - j"
@@ -84,7 +84,7 @@ lemma [\<nu>reason on ?any]:
 lemma Ref_to_Array':
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow>
   \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ j) \<R_arr_tail> xs[ i-j := None] \<tycolon> Array' N \<heavy_asterisk> (a |+ i) \<R_arr_tail> y \<tycolon> Ref N \<longmapsto> OBJ (a |+ j) \<R_arr_tail> xs[ i-j := Some y] \<tycolon> Array' N"
-  unfolding Intro_def Cast_def Separation_expn
+  unfolding Cast_def Separation_expn
   apply (auto simp add: pred_option_def Ball_def nu_exps)
   by (metis MemAddrState_add_I1 MemAddrState_add_I2 le_add_diff_inverse nth_list_update nth_list_update_neq option.sel)
 
@@ -174,9 +174,9 @@ lemma [simp]: "drop n (mapSome l) = mapSome (drop n l)" unfolding mapSome_def by
 lemma [simp]: "take n (mapSome l) = mapSome (take n l)" unfolding mapSome_def using take_map by blast 
 
 lemma Array'_cast_Array: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs' = mapSome xs2 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N"
-  unfolding Cast_def Intro_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
+  unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
 lemma Array_cast_Array': "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N"
-  unfolding Cast_def Dest_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
+  unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
 
 lemma [\<nu>reason]:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> a \<R_arr_tail> xs' \<tycolon> Array' N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow>
