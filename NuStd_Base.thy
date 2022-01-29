@@ -541,16 +541,11 @@ lemma SemRec_deterministic2: " SemRec body s x \<Longrightarrow> The ( SemRec bo
 
 declare Heap'_expn[simp del]
 
-lemma TERM_rew: "(TERM x \<Longrightarrow> PROP P) \<equiv> PROP P" proof
-  assume [OF \<open>TERM x\<close>]: "(TERM x \<Longrightarrow> PROP P)" then show "PROP P" .
-next assume "PROP P" "TERM x" then show "PROP P" by blast
-qed
-  
 
 lemma op_recursion:
   " (\<And>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> X x'' \<longmapsto> Y x'' \<brangle>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<blangle> X x' \<longmapsto> Y x' \<brangle>) \<Longrightarrow>
     (\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion UNIQ_ID TYPE('x::stack) TYPE('y::stack) F \<blangle> X x \<longmapsto> Y x \<brangle>)"
-  unfolding op_recursion_def Procedure_def atomize_all TERM_rew
+  unfolding op_recursion_def Procedure_def atomize_all
   apply (auto simp add: SemRec_deterministic2)
   subgoal for x a b xa
     apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
@@ -788,11 +783,7 @@ subsection \<open>Memory & Pointer Operations\<close>
 
 subsubsection \<open>Pointer Arithmetic\<close>
 
-(* theorem op_shift_pointer_raw[\<nu>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer ty \<blangle> R\<heavy_asterisk> addr \<tycolon> RawPointer\<heavy_asterisk> delta \<tycolon> Identity\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<longmapsto>
-      R\<heavy_asterisk> shift_addr addr (delta * of_nat (size_of ty)) \<tycolon> RawPointer\<heavy_asterisk> \<^bold>h\<^bold>e\<^bold>a\<^bold>p H \<brangle>"
-  unfolding \<nu>def op_shift_pointer_def by (cases addr) (simp add: lrep_exps) *)
-  
+
 theorem op_shift_pointer[\<nu>overload +]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e address_llty addr = LLTY('a::lrep) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e offset_of addr + delta \<le> address_len addr \<Longrightarrow>
   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_shift_pointer TYPE('a::lrep) \<blangle> R\<heavy_asterisk> addr \<tycolon> Pointer\<heavy_asterisk> delta \<tycolon> \<nat>[size_t] \<longmapsto>
@@ -814,16 +805,6 @@ theorem op_shift_pointer_slice[ unfolded SepNu_to_SepSet, \<nu>overload split ]:
     apply (rule heap_split_by_addr_set[of _ _ "- {(x1 |+ x2 + i) | i. i < n}"])
     apply (auto simp add: nu_exps) done
   done
-
-(*
-theorem op_slice_merge[\<nu>overload merge]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e shift_addr addr1 (length xs1) = addr2 \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<blangle> \<^bold>E\<^bold>N\<^bold>D R\<heavy_asterisk> addr1 \<R_arr_tail> xs1 \<tycolon> Slice T\<heavy_asterisk> addr2 \<R_arr_tail> xs2 \<tycolon> Slice T
-      \<longmapsto> \<^bold>E\<^bold>N\<^bold>D R\<heavy_asterisk> addr1 \<R_arr_tail> xs1 @ xs2 \<tycolon> Slice T \<brangle>"
-  unfolding \<nu>def op_drop_def apply (cases addr1; cases addr2)
-  apply (auto 0 0 simp add: lrep_exps nth_append)
-  by (metis add.assoc add_diff_inverse_nat diff_add_inverse diff_less_mono not_le
-*)
 
 
 subsubsection \<open>Allocation\<close>

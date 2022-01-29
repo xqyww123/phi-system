@@ -142,37 +142,22 @@ type_synonym ('a,'b) \<nu> = " 'b \<Rightarrow> 'a set "
 
 subsubsection \<open>Definitions\<close>
 
-datatype ('a,'b) typing = typing (typing_img: 'b ) (typing_nu: "('a,'b) \<nu>") ("_ \<tycolon> _" [18,18] 17) \<comment>\<open>shortcut keys "<ty>"\<close>
-primrec nu_of :: "('a,'b) typing \<Rightarrow> ('a,'b) \<nu>" where "nu_of (x \<tycolon> N) = N"
-primrec image_of :: "('a,'b) typing \<Rightarrow> 'b" where "image_of (x \<tycolon> N) = x"
-
-definition RepSet :: "('a,'b) typing \<Rightarrow> 'a set" ("\<tort_lbrace> _ \<tort_rbrace>" [10] ) where "\<tort_lbrace> ty \<tort_rbrace> = (case ty of (x \<tycolon> N) \<Rightarrow> N x)"
-definition Refining :: "'a \<Rightarrow> ('a,'b) \<nu> \<Rightarrow>  'b \<Rightarrow> bool" ("(_/ \<nuLinkL> _  \<nuLinkR>/ _)" [27,15,27] 26) \<comment>\<open>shortcut keys "--<" and ">--"\<close>
-  where  "(p \<nuLinkL> N \<nuLinkR> x) \<longleftrightarrow> p \<in> N x"
+definition \<nu>Type :: "'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> 'a set" (infix "\<tycolon>" 17) where " (x \<tycolon> T) = (T x)"
 definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
-abbreviation InhabitNu :: " 'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> bool" ("_ \<ratio> _" [18,18] 17)  \<comment>\<open>shortcut keys ":TY:"\<close>
-  where  " (x \<ratio> T) \<equiv> Inhabited \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
-text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete values,
-  e.g. @{prop " a_concrete_int32 \<in> \<tort_lbrace>(42::nat) \<tycolon> N 32\<tort_rbrace>"} and also "state \<in> State (\<tort_lbrace>42 \<tycolon> N\<tort_rbrace> \<times> \<tort_lbrace>24 \<tycolon> N\<tort_rbrace> \<times> \<cdots> )".
-  It constitutes basic elements in specification.
-  The @{prop "p \<nuLinkL> N \<nuLinkR> x"} as the abbreviation of $p \<in> (x \<tycolon> N)$ is an abstraction between concrete value @{term p} and
-  abstracted {\it image} @{term x} via the \<nu>-{\it abstractor} @{term N} which defines the abstraction relationship itself.
-  The next @{prop " x \<ratio> N"} is a proposition stating @{term x} is an image of abstractor @{term N} and therefore
-  the \<nu>-type @{term "x \<tycolon> N"} is inhabited. Basically it is used to derive implicated conditions of images,
-  e.g. @{prop "( 42 \<ratio> N 32) \<Longrightarrow> 42 < 2^32"}\<close>
 
-lemma [simp]: "p \<in> \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<longleftrightarrow> p \<nuLinkL> T \<nuLinkR> x" unfolding RepSet_def Refining_def by simp
-lemma typing_inhabited: "p \<nuLinkL> T \<nuLinkR> x \<Longrightarrow> x \<ratio> T" unfolding Refining_def Inhabited_def RepSet_def by simp blast
+abbreviation InhabitNu :: " 'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> bool" ("_ \<ratio> _" [18,18] 17)
+  where  " (x \<ratio> T) \<equiv> Inhabited (x \<tycolon> T)"
 
+lemma typing_inhabited: "p \<in> (x \<tycolon> T) \<Longrightarrow> x \<ratio> T" unfolding Inhabited_def \<nu>Type_def by blast
 
 subsubsection \<open>Properties\<close>
 
 definition \<nu>Zero :: "('a::{zero,lrep},'b) \<nu> \<Rightarrow> 'b \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> (0 \<nuLinkL> N \<nuLinkR> x )"
+  where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> 0 \<in> (x \<tycolon> N)"
 
 definition \<nu>Equal :: "('a::{lrep,ceq}, 'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Equal N can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 heap.
-    can_eq x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable heap p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
+    can_eq x1 x2 \<and> p1 \<in> (x1 \<tycolon> N) \<and> p2 \<in> (x2 \<tycolon> N) \<longrightarrow> ceqable heap p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
 
 
 section\<open>Structures for construction\<close>
@@ -320,13 +305,11 @@ lemma Deepize'_inj[simp]:
 subsubsection \<open>Stack Element and Heap Object\<close>
 
 consts Ele :: " 'a set \<Rightarrow> assn " ("ELE _" [17] 16)
-translations "ELE x \<tycolon> T" \<rightleftharpoons> "ELE \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 
 definition Val_Ele :: " 'a::lrep set \<Rightarrow> assn " ("VAL _" [17] 16) where
   "(VAL T) = { (Map.empty, stack [v]) | v. v \<in> deepize ` T } "
 
 adhoc_overloading Ele Val_Ele
-translations "VAL x \<tycolon> T" => "VAL \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 
 lemma [nu_exps]:
   "(h,s) \<in> (VAL V) \<longleftrightarrow> h = Map.empty \<and> (\<exists>v. s = stack [deepize v] \<and> v \<in> V)"
@@ -340,7 +323,6 @@ definition Obj_Ele :: " heap set \<Rightarrow> assn " ("OBJ _" [17] 16) where
   "(OBJ T) = { (h, stack []) | h. h \<in> T } "
 
 adhoc_overloading Ele Obj_Ele
-translations "OBJ x \<tycolon> T" => "OBJ \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 
 lemma [nu_exps]: "(h, s) \<in> (OBJ T) \<longleftrightarrow> s = stack [] \<and> h \<in> T"
   unfolding Obj_Ele_def by simp
@@ -365,8 +347,8 @@ definition Separation :: "assn \<Rightarrow> assn \<Rightarrow> assn" ( "_/ \<he
   where "(T \<heavy_asterisk> U) = {(h,s). (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U) }"
 
 translations
-  "x \<tycolon> T \<heavy_asterisk> U" \<rightleftharpoons> "CONST Ele \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<heavy_asterisk> U"
-  "T \<heavy_asterisk> y \<tycolon> U" \<rightleftharpoons> "T \<heavy_asterisk> CONST Ele \<tort_lbrace>y \<tycolon> U\<tort_rbrace>"
+  "x \<tycolon> T \<heavy_asterisk> U" \<rightleftharpoons> "CONST Ele (x \<tycolon> T) \<heavy_asterisk> U"
+  "T \<heavy_asterisk> y \<tycolon> U" \<rightleftharpoons> "T \<heavy_asterisk> CONST Ele (y \<tycolon> U)"
 
 lemma Separation_expn:
   "(h,s) \<in> (T \<heavy_asterisk> U) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U)"
@@ -462,8 +444,8 @@ definition Procedure :: "('c::stack \<longmapsto> 'd::stack) \<Rightarrow> assn 
 
 
 translations
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> CONST Ele \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> CONST Ele \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> CONST Ele (a \<tycolon> A) \<longmapsto> B \<brangle>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> CONST Ele (b \<tycolon> B) \<brangle>"
 
 definition Map :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<Rightarrow> 'b) set " where "Map A B = {f. \<forall>a. a \<in> A \<longrightarrow> f a \<in> B }"
 definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<blangle>(2 _/ \<longmapsto> _ )\<brangle>)" [101,2,2] 100)
@@ -496,8 +478,8 @@ definition PendingConstruction :: " (('a::stack) \<longmapsto> ('b::stack)) \<Ri
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,1000,5] 4)
   where "PendingConstruction f s R S \<longleftrightarrow> bind s f \<in> \<S> Heap' (Shallowize' (R \<heavy_asterisk> S))"
 translations
-  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)" \<rightleftharpoons> "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n CONST Ele \<tort_lbrace> x \<tycolon> T \<tort_rbrace>"
-  "CONST PendingConstruction f s H (x \<tycolon> T)" \<rightleftharpoons> "CONST PendingConstruction f s H (CONST Ele \<tort_lbrace> x \<tycolon> T\<tort_rbrace>)"
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (x \<tycolon> T)" \<rightleftharpoons> "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ELE x \<tycolon> T"
+  "CONST PendingConstruction f s H (x \<tycolon> T)" \<rightleftharpoons> "CONST PendingConstruction f s H (ELE x \<tycolon> T)"
 
 lemma CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (cases s) (auto 0 4 simp add: Shallowize'_expn)
