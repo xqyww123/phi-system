@@ -3,7 +3,6 @@ theory NuLLReps
   abbrevs "<own>" = "\<left_fish_tail>"
     and "<none>" = "\<down_fish_tail>"
     and "<object>" = "\<R_arr_tail>"
-    and "<pointer>"  = "\<TeardropAsterisk>"
 begin   
 
 text \<open>Semantic data representations\<close>

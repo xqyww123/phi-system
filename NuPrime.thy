@@ -1,17 +1,13 @@
 (* KEEP IT SIMPLE AND STUPID *)
 
 theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
-  imports Main "HOL-Library.Monad_Syntax" NuHelpMath
+  imports Main "HOL-Library.Adhoc_Overloading" NuHelpMath
 begin
 
 text \<open>The fundamental theory for \<nu>-system\<close>
 
 section Preliminary
 
-ML_file NuConfig.ML
-bundle show_more1 = [[show_hyps = true, show_types = true, show_sorts = true]]
-bundle show_more = [[show_hyps = true, show_types = true]]
-bundle show_hyps = [[show_hyps = true]]
 
 named_theorems \<nu>elim "\<nu>-type elimination rules"
 named_theorems \<nu>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
@@ -19,77 +15,6 @@ named_theorems \<nu>def \<open>primitive definitions used to unfold in proofs of
   and \<nu>post_construct and \<nu>auto_destruct
 named_theorems typing_expn "expansion theorems for abstractions" and lrep_exps and nu_exps
 
-subsection \<open>Syntax and Notations\<close>
-
-(* consts "ARBITRARY___" :: 'a ("\<cdots>") \<comment>\<open>merely a sugar for documenting\<close> *)
-
-
-
-syntax
-  "_linebreak_" :: "logic \<Rightarrow> logic" ("//\<zero_width_space>_" [3] 3)
-  "_linebreak_collection_" :: "logic \<Rightarrow> logic \<Rightarrow> logic"  ("_//\<invisible_separator>_" [4,3] 3)
-  (* "_is_" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("_ \<^bold>i\<^bold>s _" [5,5] 4)
-  "_in_" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("_ \<^bold>i\<^bold>n _" [5,5] 4)
-  "_as_" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("_ \<^bold>a\<^bold>s _" [5,5] 4) *)
-(* translations
-  "a \<^bold>a\<^bold>n\<^bold>d b \<^bold>a\<^bold>n\<^bold>d c" <= "(a \<^bold>a\<^bold>n\<^bold>d b) \<^bold>a\<^bold>n\<^bold>d c"
-  "_linebreak_collection_ a (_linebreak_collection_ b c)" <= "_linebreak_collection_ (_linebreak_collection_ a b) c" *)
-text \<open> `_pretty_and_` suppresses parentheses in the printing. For example, both the term
-  "1 and 2 and 3" and  "(1 and 2) and 3" are printed identically, as "1 and 2 and 3". 
-  It is useful to represent a collection of object which has some complicated inner structure
-    (e.g. a binary tree) that is not intended to be displayed to user.\<close>
-
-subsection \<open>Preliminary data structures and Auxiliary definition\<close>
-
-definition ProtectorI :: "'a \<Rightarrow> 'a" where "ProtectorI x = x"
-lemma [cong]: "ProtectorI X \<equiv> ProtectorI X" .
-
-definition WorkingProtector :: "'a \<Rightarrow> 'a" where "WorkingProtector x \<equiv> x"
-
-subsubsection \<open>Structures assembling propositions\<close>
-
-definition NoFact :: "prop" ("\<^bold>n\<^bold>o\<^bold>t\<^bold>h\<^bold>i\<^bold>n\<^bold>g") where "NoFact \<equiv> Trueprop True"
-lemma NoFact: "PROP NoFact" unfolding NoFact_def using TrueI .
-definition AndFact :: "prop \<Rightarrow> prop \<Rightarrow> prop" (infixr "and'_fact" 3) where "AndFact \<equiv> (&&&)"
-
-lemma AndFact_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP P and_fact PROP Q" unfolding AndFact_def using conjunctionI .
-lemma AndFact_D1: "PROP P and_fact PROP Q \<Longrightarrow> PROP P" unfolding AndFact_def using conjunctionD1 .
-lemma AndFact_D2: "PROP P and_fact PROP Q \<Longrightarrow> PROP Q" unfolding AndFact_def using conjunctionD2 .
-
-(* definition FactTree :: "prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop"
-  where "FactTree (PROP X) (PROP L) (PROP R) \<equiv> (PROP X &&& PROP L &&& PROP R)"
-lemma FactTree_imp: "(PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP C) \<equiv> (PROP X \<Longrightarrow> PROP L \<Longrightarrow> PROP R \<Longrightarrow> PROP C)"
-  unfolding FactTree_def conjunction_imp .
-lemma FactTree_X: "PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP X" unfolding FactTree_imp .
-lemma FactTree_L: "PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP L" unfolding FactTree_imp .
-lemma FactTree_R: "PROP FactTree (PROP X) (PROP L) (PROP R) \<Longrightarrow> PROP R" unfolding FactTree_imp .
-lemma FactTree_I: "PROP X \<Longrightarrow> PROP L \<Longrightarrow> PROP R \<Longrightarrow> PROP FactTree (PROP X) (PROP L) (PROP R)"
-  unfolding FactTree_def by (intro conjunctionI)
-translations "_pretty_and_ L (_pretty_and_ X R)" <= "CONST FactTree X L R" *)
-
-subsubsection \<open>The type representing ownership\<close>
-
-(* datatype zint = Gz | Gi int
-text\<open> Type @{typ zint} is used to represent ownership. @{term "Gi i"} represents
-  $2^{-i}$ part of the ownership, and @{term "Gi 0"} is the total. @{term Gz} represents
-  some ownership of unknown quantity. Any value of @{type zint} represents
-  some part (or the total) of ownership. The empty ownership is represented
-  by further structure like @{typ "zint option"} as @{term None}\<close>
-
-instantiation zint :: comm_monoid_add begin
-
-definition zero_zint_def[simp]: "0 = Gi 0"
-definition plus_zint_def: "a + b = (case (a,b) of
-    (Gi n, Gi m) \<Rightarrow> Gi (n + m)  | _ \<Rightarrow> Gz)"
-
-lemma [simp]:  "Gi n + Gi m = Gi (n + m)"  by (simp add: plus_zint_def)
-lemma [simp]:  "Gz + x = Gz" by (simp add: plus_zint_def)
-lemma [simp]:  "x + Gz = Gz" by (cases x,auto simp add: plus_zint_def)
-lemma [simp]: "x + Gi 0 = x" and [simp]: "Gi 0 + x = x" by (cases x; auto)+
-
-instance by standard ((simp add: plus_zint_def split: zint.splits)+)
-end  
-*)
 section\<open>Low representation for semantics\<close>
 
 subsection \<open>Memory Pointer\<close>
@@ -109,14 +34,14 @@ lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs.
 
 lemma [simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (cases a) simp
 
-subsection \<open>Function table & Function pointer\<close>
+(* subsection \<open>Function table & Function pointer\<close>
 
-typedef fun_addr = "UNIV :: nat set" ..
+typedef fun_addr = "UNIV :: nat set" .. *)
 
 subsection \<open>Deep Value Model\<close>
 
 datatype "value" = DM_int nat nat | DM_pointer "nat memaddr" | DM_fusion "value" "value"
-  | DM_record "value" | DM_array "value list" | DM_fun_addr fun_addr | DM_void
+  | DM_record "value" | DM_array "value list" | (* DM_fun_addr fun_addr | *) DM_void
 
 subsection \<open>Memory & Heap\<close>
 
@@ -143,14 +68,11 @@ declare state.split[split]
 
 type_synonym ('a,'b) proc = " (heap \<times> 'a) \<Rightarrow> 'b state" (infix "\<longmapsto>" 0)
 
-consts fun_table :: " fun_addr \<rightharpoonup> 'a \<longmapsto> 'b "
+(* consts fun_table :: " fun_addr \<rightharpoonup> 'a \<longmapsto> 'b "
 consts fun_addr_NULL :: fun_addr
 
 specification (fun_table)
-  fun_addr_NULL: "fun_table fun_addr_NULL = None" by auto
-
-
-
+  fun_addr_NULL: "fun_table fun_addr_NULL = None" by auto *)
 
 
 definition AvailableSegments :: "heap \<Rightarrow> msegment set"
@@ -220,8 +142,6 @@ type_synonym ('a,'b) \<nu> = " 'b \<Rightarrow> 'a set "
 
 subsubsection \<open>Definitions\<close>
 
-(* ceq : INF *)
-
 datatype ('a,'b) typing = typing (typing_img: 'b ) (typing_nu: "('a,'b) \<nu>") ("_ \<tycolon> _" [18,18] 17) \<comment>\<open>shortcut keys "<ty>"\<close>
 primrec nu_of :: "('a,'b) typing \<Rightarrow> ('a,'b) \<nu>" where "nu_of (x \<tycolon> N) = N"
 primrec image_of :: "('a,'b) typing \<Rightarrow> 'b" where "image_of (x \<tycolon> N) = x"
@@ -244,49 +164,20 @@ text \<open>The @{term "x \<tycolon> N"} is a predication specifying concrete va
 lemma [simp]: "p \<in> \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<longleftrightarrow> p \<nuLinkL> T \<nuLinkR> x" unfolding RepSet_def Refining_def by simp
 lemma typing_inhabited: "p \<nuLinkL> T \<nuLinkR> x \<Longrightarrow> x \<ratio> T" unfolding Refining_def Inhabited_def RepSet_def by simp blast
 
-(* lemma [elim!,\<nu>elim]: "Inhabited (U \<times> V) \<Longrightarrow> (Inhabited U \<Longrightarrow> Inhabited V \<Longrightarrow> PROP C) \<Longrightarrow> PROP C" unfolding Inhabited_def by auto *)
-(* lemma [intro]: "x \<in> S \<Longrightarrow> Inhabited S" unfolding Inhabited_def by auto 
-lemma Inhabited_E: "Inhabited S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by auto *)
-
 
 subsubsection \<open>Properties\<close>
 
 definition \<nu>Zero :: "('a::{zero,lrep},'b) \<nu> \<Rightarrow> 'b \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> (0 \<nuLinkL> N \<nuLinkR> x )"
+
 definition \<nu>Equal :: "('a::{lrep,ceq}, 'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Equal N can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 heap.
     can_eq x1 x2 \<and> (p1 \<nuLinkL> N \<nuLinkR> x1) \<and> (p2 \<nuLinkL> N \<nuLinkR> x2) \<longrightarrow> ceqable heap p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
 
 
-  section\<open>Structures for construction\<close>
+section\<open>Structures for construction\<close>
 
-subsection \<open>Auxiliary tags\<close>
-
-
-subsubsection \<open>Intro and Dest tag\<close>
-
-definition Intro :: " bool \<Rightarrow> bool " ("\<^bold>i\<^bold>n\<^bold>t\<^bold>r\<^bold>o _" [12] 11) where "Intro P = P"
-definition Dest :: " bool \<Rightarrow> bool " ("\<^bold>d\<^bold>e\<^bold>s\<^bold>t _" [12] 11) where "Dest P = P"
-
-lemma Intro_D: "Intro P \<Longrightarrow> P" unfolding Intro_def .
-lemma Dest_D: "Dest P \<Longrightarrow> P" unfolding Dest_def .
-
-subsubsection \<open>Different tag\<close>
-
-definition Different :: " 'a \<Rightarrow> 'b \<Rightarrow> bool " where "Different A B = True"
-  \<comment> \<open>A premise that solved by automatic reasoning only if the term expressions of A and B
-  are not alpha-equivalent. It is useful to break up the self-loop. For example,
-  while the introduction rule `cast A \<longmapsto> B \<Longrightarrow> cast B \<longmapsto> C \<Longrightarrow> cast A \<longmapsto> C` causes loop if given `cast A \<longmapsto> A`,
-  the rule `cast A \<longmapsto> B \<Longrightarrow> Different A B \<Longrightarrow> cast B \<longmapsto> C \<Longrightarrow> cast A \<longmapsto> C` will not.\<close>
-lemma Different_I: "Different A B" unfolding Different_def ..
-
-subsubsection \<open>Technical Tags\<close>
-
-datatype uniq_id = UNIQ_ID
-  \<comment> \<open>A technical tag that is during the exporting translated to a unique ID.
-    It is useful to generate unique name of anonymous functions.\<close>
-
-subsection \<open>Register and its collection\<close>
+subsection \<open>Stack structure\<close>
 
 instantiation prod :: (lrep,lrep) lrep begin
 definition llty_prod :: "('a \<times> 'b) itself \<Rightarrow> llty" where "llty_prod _ = llty_fusion LLTY('a) LLTY('b)"
@@ -299,8 +190,6 @@ instance apply standard
 end
 
 
-subsection \<open>Stack structure\<close>
-
 primrec is_stack :: "value \<Rightarrow> bool" where
   "is_stack (DM_fusion a b) \<longleftrightarrow> is_stack b"
 | "is_stack DM_void \<longleftrightarrow> True"
@@ -308,7 +197,7 @@ primrec is_stack :: "value \<Rightarrow> bool" where
 | "is_stack (DM_pointer _) \<longleftrightarrow> False"
 | "is_stack (DM_record _) \<longleftrightarrow> False"
 | "is_stack (DM_array _) \<longleftrightarrow> False"
-| "is_stack (DM_fun_addr _) \<longleftrightarrow> False"
+(* | "is_stack (DM_fun_addr _) \<longleftrightarrow> False" *)
 
 typedef stack = "UNIV :: value list set"
   morphisms values_of stack ..
@@ -327,7 +216,6 @@ abbreviation stack_cons (infixr "#\<^sub>s\<^sub>k" 65) where "(a #\<^sub>s\<^su
 lemma [simp]:
   "values_of a = values_of b @ values_of c \<longleftrightarrow> a = b @\<^sub>s\<^sub>k c"
   by (metis stack_inverse values_of_inverse)
-  
 
 
 class stack = lrep +
@@ -374,44 +262,34 @@ instance by standard (simp_all add: stack_bij_list)
 end
 
 
-subsection \<open>The \<nu>-system VM and Procedure construction structures\<close>
+subsection \<open>The \<nu>-System VM and Procedure construction structures\<close>
 
 type_synonym assn = "(heap \<times> stack) set" \<comment> \<open>assertion\<close>
 
 subsubsection \<open>Types specifying states\<close>
 
-definition StrictStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a state set" ("\<S_S> _" [56] 55)
-  where "\<S_S> T = {s. case s of Success x \<Rightarrow> x \<in> T | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
+definition StrictStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a state set" ("!\<S> _" [56] 55)
+  where "!\<S> T = {s. case s of Success x \<Rightarrow> x \<in> T | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
 definition LooseStateTy :: " (heap \<times> 'a::lrep) set \<Rightarrow> 'a state set" ("\<S> _" [56] 55)
   where "\<S> T = {s. case s of Success x \<Rightarrow> x \<in> T | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
 
-lemma StrictStateTy_expn[iff,\<nu>def]: "Success x \<in> \<S_S> T \<equiv> x \<in> T"  "\<not> (Fail \<in> \<S_S> T)"  "\<not> (PartialCorrect \<in> \<S_S> T)"
+lemma StrictStateTy_expn[iff,\<nu>def]: "Success x \<in> !\<S> T \<equiv> x \<in> T"  "\<not> (Fail \<in> !\<S> T)"  "\<not> (PartialCorrect \<in> !\<S> T)"
   and LooseStateTy_expn[iff,\<nu>def]: "Success x \<in> \<S> T \<equiv> x \<in> T"  "\<not> (Fail \<in> \<S> T)"  "(PartialCorrect \<in> \<S> T)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
 lemma LooseStateTy_expn' : "x \<in> \<S> T \<longleftrightarrow> x = PartialCorrect \<or> (\<exists>x'. x = Success x' \<and> x' \<in> T)"
   by (cases x) simp_all
 
-(* lemma [dest]: "s \<in> \<S_S> T \<Longrightarrow> Inhabited T" unfolding Inhabited_def by (cases s) auto *)
-    \<comment>\<open>The inhabited property can be inferred from @{term StrictStateTy} only rather than @{term LooseStateTy}. \<close>
-lemma StrictStateTy_elim[elim]: "s \<in> \<S_S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
-lemma StrictStateTy_intro[intro]: " x \<in> T \<Longrightarrow> Success x \<in> \<S_S> T" by simp
+lemma StrictStateTy_elim[elim]: "s \<in> !\<S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
+lemma StrictStateTy_intro[intro]: " x \<in> T \<Longrightarrow> Success x \<in> !\<S> T" by simp
 lemma LooseStateTy_E[elim]:
   "s \<in> \<S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> (s = PartialCorrect \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
 lemma LooseStateTy_I[intro]:
   " x \<in> T \<Longrightarrow> Success x \<in> \<S> T" and [intro]: "PartialCorrect \<in> \<S> T" by simp_all
-lemma LooseStateTy_upgrade: "s \<in> \<S> T \<Longrightarrow> s \<noteq> PartialCorrect \<Longrightarrow> s \<in> \<S_S> T" by (cases s) auto
-lemma StrictStateTy_degrade: "s \<in> \<S_S> T \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
-lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> s \<in> \<S_S> T) \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
+lemma LooseStateTy_upgrade: "s \<in> \<S> T \<Longrightarrow> s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T" by (cases s) auto
+lemma StrictStateTy_degrade: "s \<in> !\<S> T \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
+lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T) \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
 
-subsubsection \<open>Separator\<close>
-
-definition disjoint :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " (infixl "\<perpendicular>" 60) where "disjoint A B \<longleftrightarrow> (A \<inter> B = {})"
-lemma disjoint_rewL: "A \<perpendicular> B \<longleftrightarrow> (\<forall>x. x \<in> A \<longrightarrow> x \<notin> B)" unfolding disjoint_def by auto
-lemma disjoint_rewR: "A \<perpendicular> B \<longleftrightarrow> (\<forall>x. x \<in> B \<longrightarrow> x \<notin> A)" unfolding disjoint_def by auto
-lemma [elim]: "A \<perpendicular> B \<Longrightarrow> ((\<And>x. x \<in> A \<Longrightarrow> x \<in> B \<Longrightarrow> False) \<Longrightarrow> C) \<Longrightarrow> C" unfolding disjoint_def by auto
-
-lemma disjoint_empty [iff]: "{} \<perpendicular> S"  "S \<perpendicular> {}" unfolding disjoint_def by auto
-
+subsubsection \<open>Shallow model and Deep model\<close>
 
 definition Deepize :: " 'a::lrep set \<Rightarrow> value set " where "Deepize S = deepize ` S"
 definition Shallowize :: " value set \<Rightarrow> 'a::lrep set " where "Shallowize S = { p. deepize p \<in> S}"
@@ -421,14 +299,6 @@ lemma Shallowize_Deepize[simp]: "Shallowize (Deepize S) = S "
 
 definition Deepize' :: " (heap \<times> 'a::stack) set \<Rightarrow> assn " where "Deepize' S = apsnd stack_deepize ` S"
 definition Shallowize' :: " assn \<Rightarrow> (heap \<times> 'a::stack) set " where "Shallowize' S = {(h,s). (h,stack_deepize s) \<in> S}"
-
-
-(*lemma [simp]: "(h, shallowize s) \<in> Shallowize' M \<longleftrightarrow> (h, s) \<in> M"
-  unfolding Shallowize'_def image_iff Bex_def by auto 
-thm deepize_inj
-
-lemma [simp]: "(h, s) \<in> Deepize' M \<longleftrightarrow> (h, shallowize s) \<in> M"
-  unfolding Deepize'_def image_iff Bex_def apply auto using deepize_inj*)
 
 lemma Deepize'_expn: "(h, s) \<in> Deepize' M \<longleftrightarrow> (\<exists>s'. stack_deepize s' = s \<and> (h, s') \<in> M)"
   unfolding Deepize'_def image_iff Bex_def by auto
@@ -447,6 +317,8 @@ lemma Deepize'_inj[simp]:
   "Deepize' A = Deepize' B \<longleftrightarrow> A = B"
   unfolding set_eq_iff Deepize'_expn pair_forall by force
 
+subsubsection \<open>Stack Element and Heap Object\<close>
+
 consts Ele :: " 'a set \<Rightarrow> assn " ("ELE _" [17] 16)
 translations "ELE x \<tycolon> T" \<rightleftharpoons> "ELE \<tort_lbrace>x \<tycolon> T\<tort_rbrace>"
 
@@ -463,7 +335,6 @@ lemma [nu_exps]:
 lemma [elim!,\<nu>elim]: "Inhabited (VAL T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: pair_exists nu_exps)
 
-(* lemma [\<nu>elim,elim!]: "Inhabited (SEle T) \<Longrightarrow> Inhabited T" unfolding Inhabited_def  *)
 
 definition Obj_Ele :: " heap set \<Rightarrow> assn " ("OBJ _" [17] 16) where
   "(OBJ T) = { (h, stack []) | h. h \<in> T } "
@@ -481,16 +352,21 @@ lemma [elim!,\<nu>elim]: "Inhabited (OBJ T) \<Longrightarrow> (Inhabited T \<Lon
   unfolding Inhabited_def by (simp add: pair_exists nu_exps)
 
 
+subsubsection \<open>Separation\<close>
+
+definition disjoint :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " (infixl "\<perpendicular>" 60) where "disjoint A B \<longleftrightarrow> (A \<inter> B = {})"
+lemma disjoint_rewL: "A \<perpendicular> B \<longleftrightarrow> (\<forall>x. x \<in> A \<longrightarrow> x \<notin> B)" unfolding disjoint_def by auto
+lemma disjoint_rewR: "A \<perpendicular> B \<longleftrightarrow> (\<forall>x. x \<in> B \<longrightarrow> x \<notin> A)" unfolding disjoint_def by auto
+lemma [elim]: "A \<perpendicular> B \<Longrightarrow> ((\<And>x. x \<in> A \<Longrightarrow> x \<in> B \<Longrightarrow> False) \<Longrightarrow> C) \<Longrightarrow> C" unfolding disjoint_def by auto
+
+lemma disjoint_empty [iff]: "{} \<perpendicular> S"  "S \<perpendicular> {}" unfolding disjoint_def by auto
+
 definition Separation :: "assn \<Rightarrow> assn \<Rightarrow> assn" ( "_/ \<heavy_asterisk> _" [13,14] 13)
   where "(T \<heavy_asterisk> U) = {(h,s). (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U) }"
 
 translations
   "x \<tycolon> T \<heavy_asterisk> U" \<rightleftharpoons> "CONST Ele \<tort_lbrace>x \<tycolon> T\<tort_rbrace> \<heavy_asterisk> U"
   "T \<heavy_asterisk> y \<tycolon> U" \<rightleftharpoons> "T \<heavy_asterisk> CONST Ele \<tort_lbrace>y \<tycolon> U\<tort_rbrace>"
-
-
-(* definition Separation :: "(heap \<times> 'a::stack) set \<Rightarrow> (heap \<times> 'b::stack) set \<Rightarrow> assn" ( "_/ \<heavy_comma>\<heavy_asterisk> _" [13,14] 13)
-  where "(M \<heavy_comma>\<heavy_asterisk> T) = (Deepize' M \<heavy_comma>\<heavy_asterisk>'' Deepize' T)" *)
 
 lemma Separation_expn:
   "(h,s) \<in> (T \<heavy_asterisk> U) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U)"
@@ -526,15 +402,6 @@ lemma Separation_expn_O_R:
 lemma [elim!,\<nu>elim]: "Inhabited (T \<heavy_asterisk> U) \<Longrightarrow> (Inhabited T \<Longrightarrow> Inhabited U \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: pair_exists nu_exps Separation_expn) blast
 
-(* lemma Separation_expn:
-  "(h,s) \<in> (M \<heavy_asterisk> T) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2
-      \<and> s = stack_deepize s1 @\<^sub>s\<^sub>k stack_deepize s2 \<and> (h1,s2) \<in> M \<and> (h2,s1) \<in> T)"
-  unfolding Separation_def Separation''_expn Deepize'_expn by blast *)
-
-(* lemma Separation_absorb [simp]:
-  "(Deepize' M \<heavy_comma>\<heavy_asterisk> T) = (M \<heavy_comma>\<heavy_asterisk> T)"
-  "(M \<heavy_comma>\<heavy_asterisk> Deepize' T) = (M \<heavy_comma>\<heavy_asterisk> T)"
-  unfolding Separation_def Deepize'_Deepize' by simp blast *)
 
 lemma Separation_assoc[simp]: "(A \<heavy_asterisk> (B \<heavy_asterisk> C)) = (A \<heavy_asterisk> B \<heavy_asterisk> C)"
   unfolding Separation_def set_eq_iff pair_forall
@@ -556,10 +423,6 @@ lemma Separation_comm:
   unfolding Separation_def set_eq_iff pair_forall
   by (simp_all add: disjoint_def nu_exps) (blast dest: map_add_comm)+
 
-
-(* lemma Separation_assoc[simp]: "(A \<heavy_comma>\<heavy_asterisk> (B \<heavy_comma>\<heavy_asterisk> C)) = (A \<heavy_comma>\<heavy_asterisk> B \<heavy_comma>\<heavy_asterisk> C)"
-  unfolding Separation_def using Separation''_assoc by simp *)
-
 lemma shallowize_ex: "(\<exists>x::('c::lrep). P x) \<longleftrightarrow> (\<exists>x. P (shallowize x))"
   using deepize_inj by metis
 lemma shallowize_ex': "TERM TYPE('c) \<Longrightarrow> (\<exists>x::('c::lrep). P x) \<longleftrightarrow> (\<exists>x. P (shallowize x))"
@@ -570,39 +433,15 @@ lemma shallowize_all: "(\<forall>x::('c::lrep). P x) \<longleftrightarrow> (\<fo
 lemma shallowize_all': "TERM TYPE('c) \<Longrightarrow> (\<forall>x::('c::lrep). P x) \<longleftrightarrow> (\<forall>x. P (shallowize x))"
   using shallowize_all .
 
-(*lemma Separation''_eq: "(M \<heavy_comma>\<heavy_asterisk>' T) = Shallowize' (M \<heavy_comma>\<heavy_asterisk>'' Deepize' T)"
-  unfolding set_eq_iff Shallowize'_expn pair_forall Separation'_def Separation''_def stack_cat''_eq Deepize'_expn
-  by simp blast
-
-lemma Separation''_eq2: "Shallowize' (Deepize' A \<heavy_comma>\<heavy_asterisk>'' Deepize' B) = (A \<heavy_comma>\<heavy_asterisk> B)"
-  unfolding Shallowize'_def Deepize'_def Separation''_def Separation_def image_iff Bex_def stack_cat'_eq stack_cat''_eq
-  by simp blast
-*)
-(* lemma Separation_eq [simp]: "(M \<heavy_comma>\<heavy_asterisk>' T) = (Shallowize' M \<heavy_comma>\<heavy_asterisk> T)"
-  unfolding Separation'_def Separation_def set_eq_iff pair_forall stack_cat'_eq Shallowize'_expn *)
-
-(* lemma Separation_E[elim]:
-  "(h,s) \<in> (M \<heavy_comma>\<heavy_asterisk> T) \<Longrightarrow> (\<And>h1 h2 s1 s2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> stack_cat s s1 s2
-      \<Longrightarrow> (h1,s2) \<in> M \<Longrightarrow> (h2,s1) \<in> T \<Longrightarrow> C) \<Longrightarrow> C "
-  unfolding Separation_def by simp blast *)
 
 lemma Separation_E[elim]:
   "(h,s) \<in> (T \<heavy_asterisk> U) \<Longrightarrow> (\<And>h1 h2 s1 s2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2
       \<Longrightarrow> (h2,s2) \<in> T \<Longrightarrow> (h1,s1) \<in> U \<Longrightarrow> C) \<Longrightarrow> C "
   unfolding Separation_expn by simp blast
 
-(* lemma Separation_E[elim]:
-  "(h,s) \<in> (M \<heavy_comma>\<heavy_asterisk> T) \<Longrightarrow> (\<And>h1 h2 s1 s2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = stack_deepize s1 @\<^sub>s\<^sub>k stack_deepize s2
-      \<Longrightarrow> (h1,s2) \<in> M \<Longrightarrow> (h2,s1) \<in> T \<Longrightarrow> C) \<Longrightarrow> C "
-  unfolding Separation_expn by simp blast *)
-
 lemma Separation_I[intro]:
   "(h2,s2) \<in> T \<Longrightarrow> (h1,s1) \<in> U \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2 \<Longrightarrow> (h1 ++ h2, s) \<in> (T \<heavy_asterisk> U)"
   unfolding Separation_expn by simp blast
-
-(* lemma Separation''_I[intro]:
-  "(h1,s2) \<in> M \<Longrightarrow> (h2,s1) \<in> T \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2 \<Longrightarrow> (h1 ++ h2, s) \<in> (M \<heavy_comma>\<heavy_asterisk>'' T)"
-  unfolding Separation''_expn by simp blast *)
 
 subsubsection \<open>Set style Heap predication\<close>
 
@@ -629,63 +468,20 @@ translations
 definition Map :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<Rightarrow> 'b) set " where "Map A B = {f. \<forall>a. a \<in> A \<longrightarrow> f a \<in> B }"
 definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<blangle>(2 _/ \<longmapsto> _ )\<brangle>)" [101,2,2] 100)
   where [\<nu>def]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle> \<equiv> \<forall>a. a \<in> T \<longrightarrow> f a \<in> U"
-(* lemma [intro]: "(\<And>x h. x \<in> T h \<Longrightarrow> f x \<in> U h) \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> U \<brangle>" by auto *)
-(* lemma [simp]: "\<^bold>m\<^bold>a\<^bold>p f \<blangle> T \<longmapsto> \<S> U \<brangle> \<longleftrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> T \<longmapsto> U \<brangle>" unfolding \<nu>def by fast  *)
 
-(* subsubsection \<open>\<nu>-Function\<close>
 
-datatype ('a,'b) func (infix "\<longmapsto>\<^sub>f" 0) = func (dest_func: "'a \<longmapsto> 'b")
-
-lemma func_forall: "All P \<longleftrightarrow> (\<forall>f. P (func f))" by (metis func.exhaust)
-lemma func_ALL: "(\<And>f. PROP P f) \<equiv> (\<And>p. PROP P (func p))" proof
-  fix p assume "\<And>f. PROP P f" then show "PROP P (func p)" .
-next fix f assume "\<And>p. PROP P (func p)" from \<open>PROP P (func (dest_func f))\<close> show "PROP P f" by simp
-qed
-
-definition Function ("(2\<^bold>f\<^bold>u\<^bold>n\<^bold>c _/ \<blangle>(2 _/  \<longmapsto>  _ )\<brangle>)" [101,2,2] 100)
-  where "Function f = Procedure (dest_func f)"
-
-translations "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> a \<tycolon> A \<longmapsto> B \<brangle>" \<rightleftharpoons> "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> \<tort_lbrace> a \<tycolon> A \<tort_rbrace> \<longmapsto> B \<brangle>"
-  "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> b \<tycolon> B \<brangle>" \<rightleftharpoons> "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f \<blangle> A \<longmapsto> \<tort_lbrace> b \<tycolon> B \<tort_rbrace> \<brangle>"
-
-definition def_func :: "uniq_id \<Rightarrow> 'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a \<longmapsto> 'b) \<Rightarrow> 'a \<longmapsto>\<^sub>f 'b" where "def_func _ _ _ = func"
-
-lemma Function_I: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c def_func UNIQ_ID TYPE('a::stack) TYPE('b::stack) f \<blangle> A \<longmapsto> B \<brangle>"
-  unfolding Function_def def_func_def by simp
-
-text \<open>One thing is, a \<^const>\<open>Procedure\<close> does not mean a low-level function in the target object,
-  note the stack remainder, but only a logical procedure.
-  It is not necessarily complied to a low level function (an LLVM function),
-  but most of the time the call of it is inline-expanded.
-  Logically the presence of stack remainder prevents it to be regarded as a standalone function,
-  especially when representing function pointers and closures the remainder is cumbersome.
-  For this, \<^const>\<open>Function\<close> explicitly representing a standalone function is introduced
-  based on procedures whose stack remainder is always `void`
-    (but the heap remainder is retained because it accords the logic),
-  i.e. `func f \<blangle> void \<tycolon> Void\<heavy_comma> arg1 \<tycolon> Arg1\<heavy_comma> \<cdots> \<heavy_comma> <heap> heap_remainder \<tycolon> H\<heavy_comma> \<cdots>
-    \<longmapsto> void \<tycolon> Void\<heavy_comma> ret1 \<tycolon> Ret1\<heavy_comma> \<cdots>\<heavy_comma> <heap> heap_remainder \<tycolon> H\<heavy_comma> \<cdots> \<brangle>`.
-  The distinctions between Procedure and Function are, while both of them can be called and used directly in the
-  interactive programming (the difference is transparent when calling then),
-  \<^item> the stack remainder of a function is always void,
-  \<^item> only a function can have function pointers and closures relating it,
-  \<^item> only functions whose type is decided (without polymorphic variables)
-    can generate low-level functions in the target object (e.g. an obj file, or a DLL file).
-  \<^item> about internal implementation, the calling of a function is by a specific `op_call` instruction stating types of
-    arguments and return values, so it requires slightly more time and space to reason and represent the program.\<close>
-
-*)
 subsection \<open>Primitive operations and instructions required in the system\<close>
 
 subsubsection \<open>Elementary instructions\<close>
 
 definition bind :: " ('a::lrep) state \<Rightarrow> ( 'a \<longmapsto> 'b) \<Rightarrow> ('b::lrep) state " \<comment>\<open>monadic bind\<close>
   where "bind s f = (case s of Success x \<Rightarrow> f x | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
-definition instr_comp :: "(('a::lrep) \<longmapsto> ('b::lrep)) \<Rightarrow> ( 'b \<longmapsto> ('c::lrep)) \<Rightarrow> 'a \<longmapsto> 'c"  ("_ \<nuInstrComp>/ _" [75,76] 75) 
+definition instr_comp :: "(('a::lrep) \<longmapsto> ('b::lrep)) \<Rightarrow> ( 'b \<longmapsto> ('c::lrep)) \<Rightarrow> 'a \<longmapsto> 'c"  ("_ \<then>/ _" [75,76] 75) 
   where "instr_comp f g s = bind (f s) g"
 definition nop :: " ('a::lrep) \<longmapsto> 'a" where "nop = Success" \<comment>\<open>the instruction `no-operation`\<close>
 
 lemma nop_\<nu>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<blangle> T \<longmapsto> T \<brangle>" unfolding nop_def Procedure_def by auto
-lemma instr_comp[intro]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> B \<longmapsto> C \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<nuInstrComp> g) \<blangle> A \<longmapsto> C \<brangle>"
+lemma instr_comp[intro]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> B \<longmapsto> C \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<then> g) \<blangle> A \<longmapsto> C \<brangle>"
   unfolding instr_comp_def Procedure_def bind_def by (auto 0 4)
 
 
@@ -695,7 +491,7 @@ subsubsection \<open>Construction Context & Code block\<close>
 
 definition CurrentConstruction :: " ('a::stack) state \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool "
     ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,11] 10)
-  where "CurrentConstruction s R S \<longleftrightarrow> s \<in> \<S_S> Heap' (Shallowize' (R \<heavy_asterisk> S))"
+  where "CurrentConstruction s R S \<longleftrightarrow> s \<in> !\<S> Heap' (Shallowize' (R \<heavy_asterisk> S))"
 definition PendingConstruction :: " (('a::stack) \<longmapsto> ('b::stack)) \<Rightarrow> 'a state \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool "
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,1000,5] 4)
   where "PendingConstruction f s R S \<longleftrightarrow> bind s f \<in> \<S> Heap' (Shallowize' (R \<heavy_asterisk> S))"
@@ -705,135 +501,41 @@ translations
 
 lemma CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (cases s) (auto 0 4 simp add: Shallowize'_expn)
-(* lemma [elim!,\<nu>elim]: "CurrentConstruction s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding CurrentConstruction_def by (cases s) auto *)
+
 
 definition CodeBlock :: " ('a::lrep) state \<Rightarrow> ('b::lrep) state => ('b \<longmapsto> 'a) \<Rightarrow> bool" where
   CodeBlock_def: "CodeBlock stat arg prog \<longleftrightarrow> (bind arg prog = stat \<and> stat \<noteq> PartialCorrect)"
 syntax "_codeblock_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>)" [100,0,0] 3)
 syntax "_codeblock_" :: "idt \<Rightarrow> logic \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>" [100,0] 3)
 
-(* definition CodeBlock' :: " ('a::lrep) state \<Rightarrow> ('b::lrep) state => ('b \<longmapsto> 'a) \<Rightarrow> bool" where
-  CodeBlock'_def: "CodeBlock' stat arg prog \<longleftrightarrow> (bind arg prog = stat \<and> stat \<noteq> PartialCorrect)"
 
-lemma accept_proc'': "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> (\<And>s'. CodeBlock' s' s g \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)" *)
-  
+section \<open>Rules for the construction\<close>
 
-attribute_setup show_codeblock_expression =  \<open>
-  Scan.lift (Parse.$$$ "=" |-- ((Args.$$$ "false" >> K false) || (Args.$$$ "true" >> K true)) >>
-    (Thm.declaration_attribute o K o Config.put_generic NuConfig.show_codeblock_expression))\<close>
-(* print_translation \<open>
-  let
-    fun codeblock_print ctx [v,arg,ty,exp] =
-      if Config.get ctx NuConfig.show_codeblock_expression
-      then  Syntax.const \<^syntax_const>\<open>_codeblock_exp_\<close> $ v $ ty $ exp
-      else Syntax.const \<^syntax_const>\<open>_codeblock_\<close> $ v $ ty
-  in
-   [(\<^const_syntax>\<open>CodeBlock\<close>, codeblock_print)]
-  end
-\<close>*)
-
-(* lemma CodeBlock_unabbrev: "CodeBlock v arg ty prog \<Longrightarrow> (v \<equiv> ProtectorI (prog arg))"
-  unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast
-lemma CodeBlock_abbrev: "CodeBlock v arg ty prog \<Longrightarrow> ProtectorI (prog arg) \<equiv> v"
-  unfolding CodeBlock_def ProtectorI_def by (rule eq_reflection) fast *)
-
-(* subsubsection \<open>Contextual Fact\<close>
-
-definition Fact :: "label \<Rightarrow> bool \<Rightarrow> prop" where "Fact label P \<equiv>Trueprop P"
-syntax "Fact_sugar_" :: "idt \<Rightarrow> logic \<Rightarrow> prop" ("\<^item> _ : _" [5,0] 4)
-translations "Fact_sugar_ name P" == "CONST Fact (LABEL name) P"
-lemma Fact_I: "P \<Longrightarrow> PROP Fact label P" unfolding Fact_def .
-lemma Fact_D: "\<^item> name : P \<Longrightarrow> P" unfolding Fact_def .
-
-
-definition FactCollection :: "prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop"
-  where "FactCollection (PROP P) (PROP Q) (PROP S) \<equiv> (PROP P &&& PROP Q &&& PROP S)"
-    \<comment> \<open>P: star fact, Q: fact list, S: \<nu>current\<close>
-consts FactCollection_sugar :: "prop \<Rightarrow> prop \<Rightarrow> prop"  ("\<glowing_star> _/ \<^bold>a\<^bold>n\<^bold>d _" [4,3] 3)
-translations
-  "Q" <= " CONST FactCollection (CONST NoFact) Q S"
-  "CONST FactCollection_sugar P Q" <= "CONST FactCollection P Q S"
-lemma FactCollection_imp: " (PROP FactCollection (PROP P) (PROP Q) (PROP S) \<Longrightarrow> PROP R) \<equiv> (PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP S \<Longrightarrow> PROP R)"
-  unfolding FactCollection_def conjunction_imp by rule
-lemma FactCollection_I: "PROP P \<Longrightarrow> PROP Q \<Longrightarrow> PROP S \<Longrightarrow> PROP  FactCollection (PROP P) (PROP Q) (PROP S)"
-  unfolding FactCollection_def by (intro conjunctionI)
-lemma FactCollection_D1: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP P" unfolding FactCollection_imp .
-lemma FactCollection_D2: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP Q" unfolding FactCollection_imp .
-lemma FactCollection_D3: "PROP FactCollection (PROP P) (PROP Q) (PROP S) ==> PROP S" unfolding FactCollection_imp .
-
-lemma empty_facts: "PROP FactCollection (PROP NoFact) (PROP NoFact) (PROP NoFact)"
-  by ((rule FactCollection_I)?; (rule NoFact)?)
-
-subsubsection \<open>Top structure of the sequent\<close>
-
-definition SpecTop :: "prop \<Rightarrow> prop \<Rightarrow> prop" where SpecTop_def: "SpecTop \<equiv> (&&&)"
-\<comment>\<open> SpecTop focus lemmata
-  where the focus is the focused one or multiple HOL propositions intended to be constructed
-    the lemmata are several propositions served as auxiliary facts, e.g. post conditions.\<close>
-notation SpecTop ("SPEC'_TOP _ _")
-  and SpecTop ("_/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s:/ _ " [1,1] 0)
-lemma SpecTop_focus[dest]: "(PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L) \<Longrightarrow> PROP P" unfolding SpecTop_def conjunction_imp .
-lemma SpecTop_facts[dest]: "(PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L) \<Longrightarrow> PROP L" unfolding SpecTop_def conjunction_imp .
-lemma SpecTop_imp: "(PROP SpecTop (PROP P) (PROP L) \<Longrightarrow> PROP C) \<equiv> (PROP P \<Longrightarrow> PROP L \<Longrightarrow> PROP C)"
-  unfolding SpecTop_def conjunction_imp .
-lemma SpecTop_I: "PROP P \<Longrightarrow> PROP L \<Longrightarrow> PROP SpecTop (PROP P) (PROP L)" unfolding SpecTop_def using conjunctionI .
-
-lemma SpecTop_cong_major:
-  "(P \<equiv> P') \<Longrightarrow> (PROP Q \<equiv> PROP Q') \<Longrightarrow>
-  (P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S)) \<equiv> (P' \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))"
-    unfolding SpecTop_def by auto
-(*lemma Specification_rule_aux: "(P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q) \<Longrightarrow> (Q \<Longrightarrow> Q') \<Longrightarrow> (P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: Q')"
-    unfolding SpecTop_def  by presburger *)
-*)
-section \<open>Principal rules\<close>
-
-theorem frame: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> M \<heavy_asterisk> A \<longmapsto> M \<heavy_asterisk> B \<brangle>"
+lemma frame: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> A \<longmapsto> B \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> M \<heavy_asterisk> A \<longmapsto> M \<heavy_asterisk> B \<brangle>"
   unfolding Procedure_def by simp
 
-theorem apply_proc: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
+lemma apply_proc: "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> S \<longmapsto> T \<brangle> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
   unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def by (auto 0 5)
 
-theorem accept_proc: "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> CodeBlock s' s f \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+lemma accept_proc: "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> CodeBlock s' s f \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
   for s' :: "('b::stack) state"
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def
   by (simp add: LooseStateTy_upgrade)
 
-theorem reassemble_proc_0:
+lemma reassemble_proc_0:
   "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g nop \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def nop_def bind_def by (cases s) simp+
 
-theorem reassemble_proc:
-  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<nuInstrComp> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+lemma reassemble_proc:
+  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<then> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def instr_comp_def
   by force
 
-theorem reassemble_proc_final:
+lemma reassemble_proc_final:
   "(\<And>s H. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<blangle> S \<longmapsto> T \<brangle>"
   unfolding CurrentConstruction_def PendingConstruction_def Procedure_def bind_def pair_All
   by (metis StrictStateTy_intro state.simps(8))
 
-(* theorem start_block:
-  "((PROP X) \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L) \<Longrightarrow>
-      CodeBlock s a U nop \<Longrightarrow>
-      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP L)"
-  for U :: " (heap \<times> 'a::lrep) set" and V :: "(heap \<times> 'b::lrep) set" and s :: " 'a state" and a :: "heap \<times> 'a"
-  unfolding nop_def CodeBlock_def CurrentConstruction_def SpecTop_imp by (rule SpecTop_I) auto *)
-
 lemma rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<blangle> U \<longmapsto> \<R> \<brangle> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<blangle> U \<longmapsto> \<R> \<brangle>" by fast
-(*
-lemma name_star_fact:   
-  "(PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (Trueprop Q) (PROP L) (PROP S))
-    \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP NoFact) (PROP Fact name Q and_fact PROP L) (PROP S))"
-  unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
-lemma declare_fact:
-  "A \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP L) (PROP S))
-    \<Longrightarrow> (PROP P \<^bold>w\<^bold>i\<^bold>t\<^bold>h \<^bold>f\<^bold>a\<^bold>c\<^bold>t\<^bold>s: PROP FactCollection (PROP Q) (PROP Fact name A and_fact PROP L) (PROP S))"
-  unfolding SpecTop_imp FactCollection_imp by (intro SpecTop_I FactCollection_I TrueI Fact_I AndFact_I NoFact)
-*)
-
-  section \<open>Supplementary structures and mechanisms for elementary functions\<close>
-
-definition "SchemaTag x = x"
 
 end

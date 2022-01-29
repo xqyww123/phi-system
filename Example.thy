@@ -307,8 +307,8 @@ proc mk_kmp_table:
 proc kmp:
   argument \<open>px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8] \<heavy_asterisk>
     px \<tycolon> Pointer \<heavy_asterisk> py \<tycolon> Pointer \<heavy_asterisk> nx \<tycolon> \<nat>[size_t] \<heavy_asterisk> ny \<tycolon> \<nat>[size_t]\<close>
-  return \<open> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> pk \<R_arr_tail> ktab \<tycolon> Array \<nat>[size_t] \<heavy_asterisk> px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8]
-    \<^bold>s\<^bold>u\<^bold>b\<^bold>j i ktab pk. first_substr xs ys i \<and> kmp_table nx ktab xs\<close>
+  return \<open> i \<tycolon> \<nat>[size_t] \<heavy_asterisk> px \<R_arr_tail> xs \<tycolon> Array \<nat>[8] \<heavy_asterisk> py \<R_arr_tail> ys \<tycolon> Array \<nat>[8]
+    \<^bold>s\<^bold>u\<^bold>b\<^bold>j i. first_substr xs ys i\<close>
   premises \<open>length xs = nx\<close> and \<open>length ys = ny\<close> and "1 \<le> nx"
 
   \<bullet> \<rightarrow> px,py,nx,ny
@@ -331,6 +331,7 @@ proc kmp:
   by (smt (verit, ccfv_threshold) \<nu> add.commute add.left_neutral diff_add_inverse kmp_table_def le0 le_Suc_ex linorder_neqE_nat matches'_def next_is_maximal) 
   \<bullet> \<medium_right_bracket>
   \<bullet> nx = if \<medium_left_bracket> nx - \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>
+  \<bullet> drop_array
   \<bullet> goal affirm unfolding first_substr_def using \<nu> apply auto
   by (metis add_mono_thms_linordered_field(2) antisym_conv1 dual_order.strict_trans1 less_diff_conv matches'_def) 
 finish
@@ -339,6 +340,6 @@ section\<open>Ending\<close>
 
 text \<open>In the end, we output the desired LLVM IR.\<close>
 
-\<nu>export_llvm \<open>/tmp/aa.ll\<close> \<comment> \<open>Output the desired LLVM IR text to /tmp/aa.ll\<close>
+\<nu>export_llvm
 
 end

@@ -1,87 +1,22 @@
-\<TeardropAsterisk> code: 0x00273b    group: operator
-\<R_arr_tail>       code: 0x0021a3    group: arrow        abbrev: >->
-\<left_fish_tail>   code: 0x00297c    group: operator
-\<down_fish_tail>   code: 0x00297f    group: operator
-\<tort_lbrace>      code: 0x002772    group: punctuation  abbrev: [[
-\<tort_rbrace>      code: 0x002773    group: punctuation  abbrev: ]]
-\<white_circle_down_arrow>    code: 0x0029ec    group: operator   abbrev: <Ov>
-\<up_arrow_circle>            code: 0x0029bd    group: operator   abbrev: <O^>
-\<one'>      code: 0x01d7d9    group: digit
-\<asterisk_open_center> code: 0x00273C group: operator abbrev: <**>
+\<cross_product>    code: 0x002A2F    font: Symbola    group: operator     abbrev: <x>
+\<heavy_asterisk>   code: 0x002731    font: Symbola    group: punctuation  abbrev: <**>
+\<rtbrak>           code: 0x002998    font: Symbola    group: punctuation  abbrev: )]
+\<ltbrak>           code: 0x002997    font: Symbola    group: punctuation  abbrev: [(
+\<perpendicular>    code: 0x0027c2    font: Symbola    group: relation     abbrev: _|_
+\<R_arr_tail>       code: 0x0021a3    font: Symbola    group: arrow        abbrev: >->
+\<left_fish_tail>   code: 0x00297c    font: Symbola    group: operator
+\<down_fish_tail>   code: 0x00297f    font: Symbola    group: operator
+\<tort_lbrace>      code: 0x002772    font: Symbola    group: punctuation  abbrev: [[
+\<tort_rbrace>      code: 0x002773    font: Symbola    group: punctuation  abbrev: ]]
 \<long_dobule_mapsto>  code: 0x0027fe   group: arrow   abbrev: |==>
-\<glowing_star>    code: 0x01f31f   group: icon
-\<boxbar>          code: 0x00250B  font: Symbola  group: punctuation
-\<heavy_comma>     code: 0x00275F  font: Symbola  group: punctuation
-\<heavy_comma2>    code: 0x002760  font: Symbola  group: punctuation
 \<blangle>         code: 0x00276c   font: Symbola  group: punctuation abbrev: <<b
 \<brangle>         code: 0x00276d   font: Symbola  group: punctuation abbrev: >>b
-\<addition>         code: 0x002a51   font: Symbola  group: operator
-\<flower_R>        code: 0x01f659   font: Symbola  group: icon
-\<flower_L>        code: 0x01f65b   font: Symbola  group: icon
-\<flower>          code: 0x01f33c   group: icon
-\<combining_dot_above>   code: 0x000307  font: Symbola   group: punctuation  abbrev: ^.
 \<nuInstrComp>           code: 0x0022d7  font: Symbola
-\<medium_left_bracket>   code: 0x002774  font: Symbola    abbrev: {{
+\<medium_left_bracket>   code: 0x002774  font: Symbola   abbrev: {{
 \<medium_right_bracket>  code: 0x002775  font: Symbola   abbrev: }}
-\<invisible_separator>   code: 0x002063  font: Symbola
-\<zero_width_space> code: 0x00200B   font: Symbola
-\<ratio>     code: 0x002236   font: Symbola   group: operator     abbrev: <TY>
-\<tricolon>     code: 0x0002d0   font: Symbola   group: operator     abbrev: <tty>
-\<tycolon>     code: 0x002982   font: Symbola   group: operator     abbrev: <ty>
-\<nuPred>      code: 0x0027e1   font: Symbola   group: operator     abbrev: -<>-
-\<nuLinkL>     code: 0x002919   font: Symbola   group: punctuation  abbrev: --<
-\<nuLinkR>     code: 0x00291a   font: Symbola   group: punctuation  abbrev: >--
-\<nuRefine>    code: 0x00235c   font: Symbola   group: operator     abbrev: ~O_    
-\<nuFusion>    code: 0x00229b   font: Symbola   group: operator     abbrev: ~O*
-\<S_a>         code: 0x01d4ea     font: Symbola     abbrev: ~Sa
-\<S_b>         code: 0x01d4eb     font: Symbola     abbrev: ~Sb
-\<S_c>         code: 0x01d4ec     font: Symbola     abbrev: ~Sc
-\<S_d>         code: 0x01d4ed     font: Symbola     abbrev: ~Sd
-\<S_e>         code: 0x01d4ee     font: Symbola     abbrev: ~Se
-\<S_f>         code: 0x01d4ef     font: Symbola     abbrev: ~Sf
-\<S_g>         code: 0x01d4f0     font: Symbola     abbrev: ~Sg
-\<S_h>         code: 0x01d4f1     font: Symbola     abbrev: ~Sh
-\<S_i>         code: 0x01d4f2     font: Symbola     abbrev: ~Si
-\<S_j>         code: 0x01d4f3     font: Symbola     abbrev: ~Sj
-\<S_k>         code: 0x01d4f4     font: Symbola     abbrev: ~Sk
-\<S_l>         code: 0x01d4f5     font: Symbola     abbrev: ~Sl
-\<S_m>         code: 0x01d4f6     font: Symbola     abbrev: ~Sm
-\<S_n>         code: 0x01d4f7     font: Symbola     abbrev: ~Sn
-\<S_o>         code: 0x01d4f8     font: Symbola     abbrev: ~So
-\<S_p>         code: 0x01d4f9     font: Symbola     abbrev: ~Sp
-\<S_q>         code: 0x01d4fa     font: Symbola     abbrev: ~Sq
-\<S_r>         code: 0x01d4fb     font: Symbola     abbrev: ~Sr
-\<S_s>         code: 0x01d4fc     font: Symbola     abbrev: ~Ss
-\<S_t>         code: 0x01d4fd     font: Symbola     abbrev: ~St
-\<S_u>         code: 0x01d4fe     font: Symbola     abbrev: ~Su
-\<S_v>         code: 0x01d4ff     font: Symbola     abbrev: ~Sv
-\<S_w>         code: 0x01d500     font: Symbola     abbrev: ~Sw
-\<S_x>         code: 0x01d501     font: Symbola     abbrev: ~Sx
-\<S_y>         code: 0x01d502     font: Symbola     abbrev: ~Sy
-\<S_z>         code: 0x01d503     font: Symbola     abbrev: ~Sz
-\<S_A>         code: 0x01d4d0     font: Symbola     abbrev: ~SA
-\<S_B>         code: 0x01d4d1     font: Symbola     abbrev: ~SB
-\<S_C>         code: 0x01d4d2     font: Symbola     abbrev: ~SC
-\<S_D>         code: 0x01d4d3     font: Symbola     abbrev: ~SD
-\<S_E>         code: 0x01d4d4     font: Symbola     abbrev: ~SE
-\<S_F>         code: 0x01d4d5     font: Symbola     abbrev: ~SF
-\<S_G>         code: 0x01d4d6     font: Symbola     abbrev: ~SG
-\<S_H>         code: 0x01d4d7     font: Symbola     abbrev: ~SH
-\<S_I>         code: 0x01d4d8     font: Symbola     abbrev: ~SI
-\<S_J>         code: 0x01d4d9     font: Symbola     abbrev: ~SJ
-\<S_K>         code: 0x01d4da     font: Symbola     abbrev: ~SK
-\<S_L>         code: 0x01d4db     font: Symbola     abbrev: ~SL
-\<S_M>         code: 0x01d4dc     font: Symbola     abbrev: ~SM
-\<S_N>         code: 0x01d4dd     font: Symbola     abbrev: ~SN
-\<S_O>         code: 0x01d4de     font: Symbola     abbrev: ~SO
-\<S_P>         code: 0x01d4df     font: Symbola     abbrev: ~SP
-\<S_Q>         code: 0x01d4e0     font: Symbola     abbrev: ~SQ
-\<S_R>         code: 0x01d4e1     font: Symbola     abbrev: ~SR
-\<S_S>         code: 0x01d4e2     font: Symbola     abbrev: ~SS
-\<S_T>         code: 0x01d4e3     font: Symbola     abbrev: ~ST
-\<S_U>         code: 0x01d4e4     font: Symbola     abbrev: ~SU
-\<S_V>         code: 0x01d4e5     font: Symbola     abbrev: ~SV
-\<S_W>         code: 0x01d4e6     font: Symbola     abbrev: ~SW
-\<S_X>         code: 0x01d4e7     font: Symbola     abbrev: ~SX
-\<S_Y>         code: 0x01d4e8     font: Symbola     abbrev: ~SY
-\<S_Z>         code: 0x01d4e9     font: Symbola     abbrev: ~SZ
+\<ratio>        code: 0x002236   font: Symbola   group: operator     abbrev: <TY>
+\<tycolon>      code: 0x002982   font: Symbola   group: operator     abbrev: <ty>
+\<nuLinkL>      code: 0x002919   font: Symbola   group: punctuation  abbrev: --<
+\<nuLinkR>      code: 0x00291a   font: Symbola   group: punctuation  abbrev: >--
+\<nuRefine>     code: 0x00235c   font: Symbola   group: operator     abbrev: ~O_    
+\<nuFusion>     code: 0x00229b   font: Symbola   group: operator     abbrev: ~O*

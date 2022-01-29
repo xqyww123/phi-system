@@ -1,4 +1,5 @@
 # VIM
+*.ll
 *~
 *.swp
 *.swo

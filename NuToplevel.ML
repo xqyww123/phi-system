@@ -54,7 +54,7 @@ signature NU_TOPLEVEL = sig
   
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
 
-  val export_LLVM : (string * Position.T) option -> theory -> theory
+  val export_LLVM : theory -> theory
 end
 
 structure NuToplevel : NU_TOPLEVEL = struct
@@ -570,25 +570,19 @@ val begin_block_cmd = gen_begin_block Attrib.attribute_cmd
 val begin_block = gen_begin_block (K I)
 end
 
-fun export_LLVM path thy =
+fun export_LLVM thy =
   let
     fun eval code = ML_Context.exec (fn () =>
                       ML_Context.eval_source ML_Compiler.flags (Input.string code))
 
-    fun prep_path (path,pos) =
-      let
-        val base = Path.expand (Resources.master_directory thy)
-        val path = File.full_path base (Path.explode path)
-        val _ = Position.report pos (Markup.path (Path.implode path));
-      in path end
+    val base = Path.expand (Resources.master_directory thy)
+    val path = File.full_path base (Path.basic (Context.theory_name thy ^ ".ll"))
 
-    val codegen =
-      case path of SOME P =>
-          eval ("NuCG.codegen NuCG_" ^ Context.theory_name thy ^ ".gen"
-                    ^ "(" ^ ML_Syntax.print_path (prep_path P) ^ ")" )
-        | _ => I
+    val codegen = eval ("NuCG.codegen NuCG_" ^ Context.theory_name thy ^ ".gen"
+                    ^ "(" ^ ML_Syntax.print_path path ^ ")" )
+    val _ = tracing("generating LLVM IR: " ^ Path.print path)
   in 
-    thy |> Context.theory_map (eval (NuCompilation.compile thy |> (fn s => (tracing s; s))))
+    thy |> Context.theory_map (eval (NuCompilation.compile thy(* |> (fn s => (tracing s; s))*)))
         |> Context.theory_map codegen
   end
 
