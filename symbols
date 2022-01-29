@@ -18,5 +18,4 @@
 \<tycolon>      code: 0x002982   font: Symbola   group: operator     abbrev: <ty>
 \<nuLinkL>      code: 0x002919   font: Symbola   group: punctuation  abbrev: --<
 \<nuLinkR>      code: 0x00291a   font: Symbola   group: punctuation  abbrev: >--
-\<nuRefine>     code: 0x00235c   font: Symbola   group: operator     abbrev: ~O_    
 \<nuFusion>     code: 0x00229b   font: Symbola   group: operator     abbrev: ~O*

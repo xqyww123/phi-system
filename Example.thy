@@ -338,7 +338,7 @@ finish
 
 section\<open>Ending\<close>
 
-text \<open>In the end, we output the desired LLVM IR.\<close>
+text \<open>In the end, we output the desired LLVM IR. It is generated at \<open>./Example.ll\<close>\<close>
 
 \<nu>export_llvm
 
