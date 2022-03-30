@@ -54,8 +54,10 @@ fun mk_let flag_push_back names sequent ctxt =
                 SOME (inhabit_local_values @ exisiting_local_values)) ctxt
 
     (*declare term bindings*)
-    val imgs = map (#3 o dest_triop @{const_name Refining}
-                       o dest_Trueprop o Thm.prop_of) local_value_thms
+    val imgs = map (Thm.prop_of #> dest_Trueprop
+                      #> dest_binop @{const_name Set.member} #> #2
+                      #> dest_binop @{const_name "\<nu>Type"} #> #1
+                   ) local_value_thms
     val ctxt = fold Proof_Context.bind_term
                     (map (rpair 0 o Binding.name_of) names ~~ imgs)
                     ctxt

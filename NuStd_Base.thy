@@ -28,17 +28,18 @@ section \<open>\<nu>-Types\<close>
 subsection \<open>DeepModel\<close>
 
 definition DeepModel :: "('a::lrep, 'b) \<nu> \<Rightarrow> (value, 'b) \<nu>"
-  where "DeepModel T x = {p. shallowize p \<nuLinkL> T \<nuLinkR> x}"
+  where "DeepModel T x = {p. shallowize p \<in> (x \<tycolon> T) }"
 
-lemma [simp]: "deepize p \<nuLinkL> DeepModel T \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> T \<nuLinkR> x" unfolding DeepModel_def Refining_def by simp
+lemma [simp]: "deepize p \<in> (x \<tycolon> DeepModel T) \<longleftrightarrow> p \<in> (x \<tycolon> T) "
+  unfolding DeepModel_def \<nu>Type_def by simp
 
 subsection \<open>Ref\<close>
 
 definition Ref  :: "('a::field, 'b) \<nu> \<Rightarrow> (heap, nat memaddr \<R_arr_tail> 'b) \<nu>"
-  where "Ref T xx = {heap. (case xx of addr \<R_arr_tail> x \<Rightarrow> heap \<^bold>a\<^bold>t addr \<^bold>i\<^bold>s x \<tycolon> T)}"
+  where "Ref = (\<lambda>T xx. {heap. (case xx of addr \<R_arr_tail> x \<Rightarrow> (heap \<^bold>a\<^bold>t addr \<^bold>i\<^bold>s x \<tycolon> T))})"
 
-lemma [simp]: "heap \<nuLinkL> Ref T \<nuLinkR> addr \<R_arr_tail> x \<longleftrightarrow> (heap \<^bold>a\<^bold>t addr \<^bold>i\<^bold>s x \<tycolon> T)"
-  by (auto simp add: lrep_exps Ref_def Refining_def)
+lemma [simp]: "heap \<in> (addr \<R_arr_tail> x \<tycolon> Ref T) \<longleftrightarrow> (heap \<^bold>a\<^bold>t addr \<^bold>i\<^bold>s x \<tycolon> T)"
+  by (simp add: lrep_exps Ref_def \<nu>Type_def)
 lemma [elim]: " addr \<R_arr_tail> x \<ratio> Ref T \<Longrightarrow> (x \<ratio> T \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto simp add: MemAddrState_def)
 
 subsection \<open>Array'\<close>
@@ -48,18 +49,18 @@ definition Array' :: "('a::field, 'b) \<nu> \<Rightarrow> (heap, nat memaddr \<R
     (\<forall>i < length xs. pred_option (\<lambda>x. heap \<^bold>a\<^bold>t base |+ (ofs + i) \<^bold>i\<^bold>s x \<tycolon> N) (xs ! i)) \<and>
     ofs + length xs \<le> segment_len base \<and> segment_llty base = LLTY('a))}"
 
-lemma [simp]: "heap \<nuLinkL> Array' N \<nuLinkR> (base |+ ofs) \<R_arr_tail> xs \<longleftrightarrow>
+lemma [simp]: "heap \<in> ((base |+ ofs) \<R_arr_tail> xs \<tycolon> Array' N) \<longleftrightarrow>
     (ofs + length xs \<le> segment_len base \<and>
     segment_llty base = LLTY('a) \<and>
     (\<forall>i < length xs. pred_option (\<lambda>x. heap \<^bold>a\<^bold>t base |+ (ofs + i) \<^bold>i\<^bold>s x \<tycolon> N) (xs ! i))
 )" for N :: "('a::field, 'b) \<nu>"
-  by (auto simp add: lrep_exps Array'_def Refining_def)
+  by (auto simp add: lrep_exps Array'_def \<nu>Type_def)
 
 lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Array' N \<Longrightarrow> (
     (\<And>i. i < length xs \<Longrightarrow> pred_option (\<lambda>x. x \<ratio> N) (xs ! i)) \<Longrightarrow> offset_of a + length xs \<le> address_len a \<Longrightarrow> address_llty a = LLTY('a)
   \<Longrightarrow> C) \<Longrightarrow> C"
    for N :: "('a::field, 'b) \<nu>"
-  unfolding Inhabited_def[of "\<tort_lbrace>a \<R_arr_tail> xs \<tycolon> Array' N\<tort_rbrace>"]
+  unfolding Inhabited_def[of "a \<R_arr_tail> xs \<tycolon> Array' N"]
   by (cases a) (auto simp add: lrep_exps pred_option_def list_all2_conv_all_nth)
 
 lemma Array'_to_Ref_\<nu>app:
@@ -144,7 +145,7 @@ subsection \<open>Array\<close>
 definition Array :: "('a::field, 'b) \<nu> \<Rightarrow> (heap, nat memaddr \<R_arr_tail> 'b list) \<nu>"
   where "Array N = Array' N <down-lift> (map_object id (map Some)) "
 
-lemma Array_to_Array': "\<tort_lbrace>a \<R_arr_tail> l \<tycolon> Array T\<tort_rbrace> = \<tort_lbrace> a \<R_arr_tail> map Some l \<tycolon> Array' T \<tort_rbrace>"
+lemma Array_to_Array': "(a \<R_arr_tail> l \<tycolon> Array T) = (a \<R_arr_tail> map Some l \<tycolon> Array' T) "
   unfolding Array_def by auto
 (* lemma [simp]: "heap \<nuLinkL> Array N \<nuLinkR> (base |+ ofs) \<R_arr_tail> xs \<longleftrightarrow>
     (ofs + length xs \<le> segment_len base \<and>
@@ -157,7 +158,7 @@ lemma [elim,\<nu>elim]: "a \<R_arr_tail> xs \<ratio> Array N \<Longrightarrow> (
     (\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> offset_of a + length xs \<le> address_len a \<Longrightarrow> address_llty a = LLTY('a)
   \<Longrightarrow> C) \<Longrightarrow> C"
    for N :: "('a::field, 'b) \<nu>"
-  unfolding Inhabited_def[of "\<tort_lbrace>a \<R_arr_tail> xs \<tycolon> Array N\<tort_rbrace>"]
+  unfolding Inhabited_def[of "a \<R_arr_tail> xs \<tycolon> Array N"]
   unfolding Array_def
   by (cases a) (auto simp add: lrep_exps list_all2_conv_all_nth)
 
@@ -371,11 +372,11 @@ lemma hdpr_\<nu>app: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ (h1,h2) \<tycolon
 
 subsubsection \<open>let & local_value\<close>
 
-lemma op_let: " (\<And>p. p \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> R \<longmapsto> R' \<brangle>) \<Longrightarrow>
+lemma op_let: " (\<And>p. p \<in> (a \<tycolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<blangle> R \<longmapsto> R' \<brangle>) \<Longrightarrow>
    \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<blangle> R \<heavy_asterisk> VAL a \<tycolon> A \<longmapsto> R' \<brangle>"
   unfolding Procedure_def op_let_def by (auto simp add: nu_exps)
 
-lemma op_local_value: "v \<nuLinkL> A \<nuLinkR> a \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<blangle> R \<longmapsto> R \<heavy_asterisk> VAL a \<tycolon> A \<brangle>"
+lemma op_local_value: "v \<in> (a \<tycolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<blangle> R \<longmapsto> R \<heavy_asterisk> VAL a \<tycolon> A \<brangle>"
   unfolding Procedure_def op_local_value_def by (auto simp add: nu_exps)
 
 ML_file "library/local_value.ML"
@@ -653,7 +654,7 @@ subsection \<open>Field Index\<close>
 subsubsection \<open>Abstraction\<close>
 
 definition FieldIndex :: " ('a,'a,'ax,'ax) index \<Rightarrow> ('ax::lrep,'bx) \<nu> \<Rightarrow> ('a::lrep,'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'bx) \<Rightarrow> (('bx \<Rightarrow> 'bx) \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow>bool"
-  where "FieldIndex adr X A gt mp \<longleftrightarrow> (\<forall>a f. \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<blangle> \<tort_lbrace>gt a \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>a \<tycolon> A\<tort_rbrace> \<longmapsto> \<tort_lbrace>f (gt a) \<tycolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>mp f a \<tycolon> A\<tort_rbrace> \<brangle>)"
+  where "FieldIndex adr X A gt mp \<longleftrightarrow> (\<forall>a f. \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<blangle> gt a \<tycolon> X \<^bold>@ a \<tycolon> A \<longmapsto> f (gt a) \<tycolon> X \<^bold>@ mp f a \<tycolon> A \<brangle>)"
 
 lemma FieldIndex_here: "FieldIndex index_here X X id id"
   unfolding FieldIndex_def \<nu>index_def index_here_def by auto
@@ -901,7 +902,7 @@ lemma op_store[ \<nu>overload "\<down>:" ]:
 lemmas [ \<nu>overload "\<down>" ] = op_store[THEN mp, OF FieldIndex_here, simplified]
 
 proc i_store_n[\<nu>overload "\<down>:"]:
-  \<open>a \<R_arr_tail> xs \<tycolon> Array X \<heavy_asterisk> a \<tycolon> Pointer\<heavy_asterisk> i \<tycolon> \<nat>[size_t]\<heavy_asterisk> y \<tycolon> Y\<close> \<longmapsto> \<open>a \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Array X\<close>
+  \<open>a \<R_arr_tail> xs \<tycolon> Array X \<heavy_asterisk> a \<tycolon> Pointer\<heavy_asterisk> i \<tycolon> \<nat>[size_t]\<heavy_asterisk> y \<tycolon> Y\<close> \<longmapsto> \<open>ELE a \<R_arr_tail> xs[i := mp (\<lambda>_. y) (xs ! i)] \<tycolon> Array X\<close>
   for Y :: "('y::field, 'd) \<nu>"
   premises "i < length xs"
   requires idx: "FieldIndex field_index Y X gt mp"

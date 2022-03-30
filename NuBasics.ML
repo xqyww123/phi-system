@@ -34,7 +34,6 @@ signature NU_BASICS = sig
   val mk_label_c : string -> cterm
   val mk_labelled : string -> term -> term
   val mk_name_hint : string -> term -> term
-  val mk_repset : term -> term
   val dest_ELE : term -> term
   val mk_auto_tag : term -> term
   val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
@@ -141,18 +140,13 @@ fun dest_ELE (Const (@{const_name Val_Ele}, _) $ X) = X
   | dest_ELE (Const (@{const_name Obj_Ele}, _) $ X) = X
   | dest_ELE (Const (@{const_name Ele}, _) $ X) = X
   | dest_ELE X = X
-fun mk_repset (tm as (Const (@{const_name RepSet}, _) $ _)) = tm
-  | mk_repset tm = mk_monop @{const_name RepSet} tm
-val dest_repset = dest_ELE #> dest_monop @{const_name RepSet}
 
-val dest_nuTy = dest_binop @{const_name "typing"}
-val dest_nuTy_c = dest_binop_c @{const_name "typing"}
-val mk_nuTy = mk_binop @{const_name "typing"}
+val dest_nuTy = dest_ELE #> dest_binop @{const_name "\<nu>Type"}
+val dest_nuTy_c = dest_binop_c @{const_name "\<nu>Type"}
+val mk_nuTy = mk_binop @{const_name "\<nu>Type"}
 val dest_RepSet = dest_ELE
-               #> dest_repset
                #> dest_nuTy
 val mk_RepSet = mk_nuTy
-             #> mk_monop @{const_name "RepSet"}
              #> mk_monop @{const_name "Ele"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 (* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)

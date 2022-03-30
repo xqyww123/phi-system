@@ -182,7 +182,7 @@ subsubsection \<open>Raw Pointer\<close>
 definition RawPointer :: "(memptr, raw_memaddr) \<nu>"
   where "RawPointer x = { memptr i | i. i = x}"
 
-lemma [nu_exps]: "memptr i \<nuLinkL> RawPointer \<nuLinkR> i' \<longleftrightarrow> (i = i')" unfolding Refining_def by (simp add: RawPointer_def nu_exps)
+lemma [nu_exps]: "memptr i \<in> (i' \<tycolon> RawPointer) \<longleftrightarrow> (i = i')" by (simp add: \<nu>Type_def RawPointer_def nu_exps)
 lemma [elim,\<nu>elim]: "addr \<ratio> RawPointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma [\<nu>reason on \<open>\<nu>Zero RawPointer ?x\<close>]:
   "\<nu>Zero RawPointer (undefined |+ 0)" unfolding \<nu>Zero_def by (simp add: nu_exps)
@@ -194,8 +194,8 @@ subsubsection \<open>Pointer\<close>
 definition Pointer :: "(memptr, nat memaddr) \<nu>"
   where "Pointer x = { memptr raw | raw. the_same_addr raw x}"
 
-lemma [nu_exps]: "memptr raw \<nuLinkL> Pointer \<nuLinkR> addr \<longleftrightarrow> the_same_addr raw addr"
-  unfolding Refining_def by (simp add: Pointer_def)
+lemma [nu_exps]: "memptr raw \<in> (addr \<tycolon> Pointer) \<longleftrightarrow> the_same_addr raw addr"
+  unfolding \<nu>Type_def by (simp add: Pointer_def)
 lemma [elim,\<nu>elim]: "addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
 lemma [\<nu>reason on \<open>\<nu>Equal Pointer ?c ?eq\<close>]:
     "\<nu>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
@@ -248,7 +248,7 @@ definition NuNat :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" where 
 syntax "_NuNat_" :: "type \<Rightarrow> logic" (\<open>\<nat>'[_']\<close>)
 translations "\<nat>['x]" == "CONST NuNat (TYPE('x))" 
 
-lemma [nu_exps]: "p \<nuLinkL> NuNat b \<nuLinkR> x \<equiv> (unat p = x)" unfolding Refining_def by (simp add: NuNat_def)
+lemma [nu_exps]: "p \<in> (x \<tycolon> NuNat b) \<longleftrightarrow> (unat p = x)" unfolding \<nu>Type_def by (simp add: NuNat_def)
 lemma [elim!,\<nu>elim]: "x \<ratio> \<nat>['b::len] \<Longrightarrow> (x < 2^LENGTH('b) \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto simp add: nu_exps)
 
 lemma [\<nu>reason on \<open>\<nu>Equal (NuNat ?b) ?c ?eq\<close>]:
@@ -261,7 +261,7 @@ definition NuNatRound :: "('a::len) itself \<Rightarrow> ('a word, nat) \<nu>" w
 syntax "_NuNatRound_" :: "type \<Rightarrow> logic" (\<open>\<nat>\<^sup>r'[_']\<close>)
 translations "\<nat>\<^sup>r['x]" == "CONST NuNatRound (TYPE('x))" 
 
-lemma [simp]: "p \<nuLinkL> NuNatRound b \<nuLinkR> x \<equiv> (p = of_nat x)" unfolding Refining_def  by (simp add: NuNatRound_def)
+lemma [simp]: "p \<in> (x \<tycolon> NuNatRound b) \<longleftrightarrow> p = of_nat x" unfolding \<nu>Type_def  by (simp add: NuNatRound_def)
 lemma [\<nu>reason on \<open>\<nu>Zero (NuNatRound ?b) ?z\<close>]:
     "\<nu>Zero (NuNatRound b) 0"
   unfolding \<nu>Zero_def by simp
@@ -286,7 +286,7 @@ definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) \<nu>" where 
 syntax "_NuInt_" :: "type \<Rightarrow> logic" (\<open>\<int>'[_']\<close>)
 translations "\<int>['x]" == "CONST NuInt (TYPE('x))" 
 
-lemma [simp]: "p \<nuLinkL> NuInt b \<nuLinkR> x \<equiv> (sint p = x)" unfolding Refining_def by (simp add: NuInt_def)
+lemma [simp]: "p \<in> (x \<tycolon> NuInt b) \<longleftrightarrow> sint p = x " unfolding \<nu>Type_def by (simp add: NuInt_def)
 lemma [elim,\<nu>elim]: " x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: nu_exps) (metis One_nat_def sint_ge sint_lt) 
 
@@ -309,7 +309,7 @@ qed
 
 definition NuBool :: "(1 word, bool) \<nu>" ("\<bool>") where "NuBool x = {p. (p = 1) = x }"
 
-lemma [simp]: " p \<nuLinkL> \<bool> \<nuLinkR> x \<longleftrightarrow> (p = 1) = x" unfolding Refining_def by (simp add: NuBool_def)
+lemma [simp]: " p \<in> (x \<tycolon> \<bool>) \<longleftrightarrow> (p = 1) = x" unfolding \<nu>Type_def by (simp add: NuBool_def)
 lemma [\<nu>reason on \<open>\<nu>Equal \<bool> ?c ?eq\<close>]: "\<nu>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<nu>Equal_def by auto
 lemma [\<nu>reason on \<open>\<nu>Zero NuBool ?z\<close>]: "\<nu>Zero NuBool False" unfolding \<nu>Zero_def by simp
 
@@ -426,9 +426,10 @@ instantiation tuple :: (field_list) field_list begin instance by standard end
 
 subsection \<open>Nu abstraction - `NuTuple`\<close>
 
-definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b) \<nu>" ("\<lbrace> _ \<rbrace>") where "\<lbrace> N \<rbrace> x = { Tuple p | p. p \<nuLinkL> N \<nuLinkR> x}"
+definition NuTuple :: "(('a::field_list), 'b) \<nu> \<Rightarrow> ('a tuple, 'b) \<nu>" ("\<lbrace> _ \<rbrace>")
+  where "\<lbrace> N \<rbrace> x = { Tuple p | p. p \<in> (x \<tycolon> N) }"
 
-lemma [simp]: "Tuple p \<nuLinkL> \<lbrace> N \<rbrace> \<nuLinkR> x \<longleftrightarrow> p \<nuLinkL> N \<nuLinkR> x" by (simp add: lrep_exps NuTuple_def Refining_def)
+lemma [simp]: "Tuple p \<in> (x \<tycolon> \<lbrace> N \<rbrace>) \<longleftrightarrow> p \<in> (x \<tycolon> N) " by (simp add: lrep_exps NuTuple_def \<nu>Type_def)
 lemma [elim,\<nu>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by (simp add: nu_exps)
 
 lemma [\<nu>reason]: "\<nu>Equal N P eq \<Longrightarrow> \<nu>Equal \<lbrace> N \<rbrace> P eq" unfolding \<nu>Equal_def tuple_forall by simp

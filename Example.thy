@@ -27,7 +27,7 @@ text \<open>There are some options to enable a verbose printing giving details a
 text \<open>And this version gives an even more verbose printing.\<close>
 (* declare [[\<nu>trace_reasoning, \<nu>trace_reasoning_candicates, \<nu>trace_processing, \<nu>trace_application]]  *)
 
-proc sub1:  \<open>x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>x - 1 \<tycolon> \<nat>[32]\<close>
+proc sub1:  \<open>ELE x \<tycolon> \<nat>[32]\<close> \<longmapsto> \<open>ELE x - 1 \<tycolon> \<nat>[32]\<close>
   premises \<open>0 < x\<close>
   \<bullet> 1 -
 finish

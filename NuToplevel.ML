@@ -82,10 +82,6 @@ val stack_R = Free ("\<R>", @{typ "'\<R>::stack set"})
 val arg_stat_term_name = "\<ss>"
 
 
-val default_name = "v"
-val auto_name = dest_nuTy #> fst #> Type.strip_constraints #> dest_Free #> fst
-
-
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 val v_proc_ty_A_iname = ("'\<nu>\<AA>",0)
 val v_proc_ty_B_iname = ("'\<nu>\<BB>",0)
@@ -100,10 +96,7 @@ val v_goal_name = "\<nu>goal"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 val top_blk_name = "\<t>\<o>\<p>_\<b>\<l>\<o>\<c>\<k>"
 
-fun parse_arg (X as (Const (@{const_name "typing"}, _) $ _ $ _)) =
-      X |> mk_monop @{const_name "RepSet"}
-        |> mk_monop @{const_name "Ele"}
-  | parse_arg (X as (Const (@{const_name "RepSet"}, _) $ _)) =
+fun parse_arg (X as (Const (@{const_name "\<nu>Type"}, _) $ _ $ _)) =
       X |> mk_monop @{const_name "Ele"}
   | parse_arg (Abs (a,ty, X)) = Abs (a,ty, parse_arg X)
   | parse_arg ((C as Const ("_type_constraint_", _)) $ X) = (C $ parse_arg X)
@@ -386,8 +379,8 @@ fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
   let
     fun mk_Goal (ctxt,_) ((arg,argT), (ret,retT), preconds) =
       let
-        val arg = mk_repset arg
-        val ret = mk_repset ret
+        val arg = parse_arg arg
+        val ret = parse_arg ret
         val additional_prop = case additional_prop
                                 of SOME x => prep_term ctxt x
                                  | _ => @{term True}

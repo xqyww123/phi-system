@@ -84,36 +84,6 @@ val pure_All_expansion =
   gen_general_expansion @{const_name Pure.all} @{thms pair_All named_All} (SOME propT)
 val ExNu_expansion =
   gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet} (SOME @{typ assn})
-  (*let
-    val ([(ty_name,sort)], ctx) = Variable.invent_types [["HOL.type"]] ctx
-  in
-    gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet}
-      (SOME (Type (@{type_name set}, [TVar ((ty_name,0),sort)]))) names ctx
-  end*)
-
-
-(* fun ExNu_expansion names ctx =
-  let
-    val arity = length names
-    val ([T,X],ctx) = Variable.add_fixes ["\<TT>","\<xx>"] ctx
-    val tya = TVar(("'a",0), @{sort "type"})
-    val tyb = TVar(("'b",0), @{sort "type"})
-    val T_term = Var((T,0), abs_arg_ty names --> mk_Nu_ty (tya,tyb))
-    val X_term = Var((X,0), abs_arg_ty names --> tyb)
-    val expansion = Const (@{const_name Pure.eq}, dummyT)
-      $ mk_repset (mk_nuTy (X_term, mk_monop @{const_name ExSet} T_term))
-      $ mk_repset (mk_nuTy (
-          mk_the_binder "" X_term (map (rpair dummyT) names),
-          mk_the_binder @{const_name ExSet} T_term (map (rpair dummyT) names)
-      ))
-      
-    val ctx = (Proof_Context.set_mode Proof_Context.mode_schematic ctx)
-          addsimps @{thms ExSet_pair named_ExSet}
-    val expansion = Syntax.check_prop ctx expansion |> cterm_of ctx
-    val expansion = case Goal.init expansion |> SINGLE (HEADGOAL (Simplifier.simp_tac ctx))
-                   of SOME th => Goal.conclude th
-                    | _ => raise CTERM ("fail to solve \<exists>\<sup>\<nu>-expansion", [expansion])
-  in expansion end *)
 
 fun schematic_var_expansion ctx th =
   let

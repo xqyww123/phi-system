@@ -25,21 +25,18 @@ fun simproc_qualifier cong ctx cterm =
     fun norm_name name th =
       let
         val (Const (@{const_name Pure.eq}, x1) $ x2 $
-          (Const (@{const_name RepSet}, x3) $ (Const (@{const_name typing}, x4)
-            $ image $ (Const qualifier $ nu))))
+          (Const (@{const_name \<nu>Type}, x4) $ image $ (Const qualifier $ nu)))
           = Thm.prop_of th
         val image = case image of Abs (_, ty, body) => Abs (name, ty, body) | tm => tm
         val nu = case nu of Abs (_, ty, body) => Abs (name, ty, body) | tm => tm
         val renamed = (Const (@{const_name Pure.eq}, x1) $ x2 $
-          (Const (@{const_name RepSet}, x3) $ (Const (@{const_name typing}, x4)
-            $ image $ (Const qualifier $ nu))))
+          (Const (@{const_name \<nu>Type}, x4) $ image $ (Const qualifier $ nu)))
       in
         Thm.renamed_prop renamed th
       end
   in
     case Thm.term_of cterm
-      of (Const (@{const_name RepSet},_) $ (Const (@{const_name typing}, _)
-          $ _ $ (Const _ $ Abs (name, _, _))))
+      of (Const (@{const_name \<nu>Type}, _) $ _ $ (Const _ $ Abs (name, _, _)))
         => Option.map (norm_name name) (simproc cong ctx cterm) (* |> @{print} *)
       | _ => NONE
   end
