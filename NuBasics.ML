@@ -144,10 +144,8 @@ fun dest_ELE (Const (@{const_name Val_Ele}, _) $ X) = X
 val dest_nuTy = dest_ELE #> dest_binop @{const_name "\<nu>Type"}
 val dest_nuTy_c = dest_binop_c @{const_name "\<nu>Type"}
 val mk_nuTy = mk_binop @{const_name "\<nu>Type"}
-val dest_RepSet = dest_ELE
-               #> dest_nuTy
-val mk_RepSet = mk_nuTy
-             #> mk_monop @{const_name "Ele"}
+val dest_RepSet = dest_nuTy
+val mk_RepSet = mk_nuTy #> mk_monop @{const_name "Ele"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 (* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
   | dest_andTy t = raise TERM ("bad AndTy", [t]); *)

@@ -1,17 +1,17 @@
 (* KEEP IT SIMPLE AND STUPID *)
 
 theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
-  imports Main "HOL-Library.Word"
-    "HOL-Library.Adhoc_Overloading"
-    NoeMisc Resource_Algebra
-  keywords "value_model_space" :: thy_defn
-    and "type_model_space" :: thy_defn
+  imports Main "HOL-Library.Adhoc_Overloading"
+    NuHelpMath "HOL-Library.Word"
+  abbrevs
+    "<ty>" = "\<Ztypecolon>"
 begin
 
 text \<open>The fundamental theory for \<nu>-system\<close>
 
 section Preliminary
 
+print_locales
 
 named_theorems \<nu>elim "\<nu>-type elimination rules"
 named_theorems \<nu>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
@@ -21,95 +21,103 @@ named_theorems typing_expn "expansion theorems for abstractions" and lrep_exps a
 
 section\<open>Low representation for semantics\<close>
 
-subsection \<open>Models\<close>
+subsection \<open>Memory Pointer\<close>
 
-datatype segidx = Null | MSegment nat
+datatype msegment = Null (*address space*) nat | MSegment nat
+type_synonym addr_space = nat
+  \<comment> \<open>Address space is a notion of the LLVM. The space 0 is the main memory of the device.
+    Space other than 0 is specified depending on platform, which may represent addresses on remote devices like display card\<close>
 
-datatype 'offset memaddr = memaddr (segment_of: segidx) (offset_of: 'offset ) (infixl "|:" 60)
+datatype 'offset memaddr = memaddr (segment_of: msegment) (offset_of: 'offset ) (infixl "|+" 60)
 declare memaddr.sel[iff]
 
 abbreviation shift_addr :: " 'a::plus memaddr \<Rightarrow> 'a \<Rightarrow> 'a memaddr" (infixl "||+" 60)
   where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) addr"
-lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
-lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
+lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base  |+ ofs))" by (metis memaddr.exhaust)
+lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base  |+ ofs))" by (metis memaddr.exhaust)
 
 lemma [simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (cases a) simp
 
-ML \<open>
-val _ = StateSpace.define_statespace_command
-  \<^command_keyword>\<open>type_model_space\<close>
-  "extensible model of low level types"
-  ("HOL.type", \<^locale>\<open>project_inject\<close>, "TYP")
+(* subsection \<open>Function table & Function pointer\<close>
 
-val _ = StateSpace.define_statespace_command
-  \<^command_keyword>\<open>value_model_space\<close>
-  "extensible model of low level values"
-  ("Resource_Algebra.trivial_validity", \<^locale>\<open>project_inject\<close>, "VAL")
+typedef fun_addr = "UNIV :: nat set" .. *)
 
-\<close>
+subsection \<open>Value Model\<close>
 
-type_model_space std_typ =
-  T_int :: nat \<comment> \<open>int bits\<close>
-  T_pointer :: unit
-  T_tup :: 'self
-  T_array :: "'self \<times> nat"
-  T_nil :: unit
+type_synonym 'v mem = "nat memaddr \<rightharpoonup> 'v"
 
-value_model_space std_val =
-  V_int :: "nat \<times> nat"
-  V_pointer :: "nat memaddr"
-  V_record :: "'self list"
-  V_array :: "'self list"
-  V_void :: unit
+datatype resource_key = MemAddress "nat memaddr" | ChainDB_key nat | Val
 
-resource_space 'val std_res =
-  R_mem :: "nat memaddr \<Rightarrow> ('val :: trivial_validity) option"
-  R_stack :: "'val list"
+lemma resource_key_forall:
+  "All P \<longleftrightarrow> (\<forall>addr. P (MemAddress addr)) \<and> (\<forall>n. P (ChainDB_key n)) \<and> P Val"
+  by (metis resource_key.exhaust)
+  
+lemma resource_key_exists:
+  "Ex P \<longleftrightarrow> (\<exists>addr. P (MemAddress addr)) \<or> (\<exists>n. P (ChainDB_key n)) \<or> P Val"
+  by (metis resource_key.exhaust)
 
-fiction_space 'val std_fic =
-  F_mem_share :: "nat memaddr \<Rightarrow> ('val :: trivial_validity) owned"
+locale fiction =
+  fixes interp :: "'fiction::sep_algebra \<Rightarrow> 'sa::sep_algebra set"
+begin
 
-locale std =
-  std_typ where NAME_TYPE = "TYP_CONS_TYPE" and VALUE_TYPE = "TYP_REP_TYPE"
-+ std_val where NAME_TYPE = "VAL_CONS_TYPE" and VALUE_TYPE = "VAL_REP_TYPE"
-+ std_res where NAME_TYPE = "RES_CONS_TYPE" and VALUE_TYPE = "RES_REP_TYPE"
-    and RES_project_'val_Nat_nat_NuPrime_memaddr_fun = RES_project_'val_Nat_nat_NuPrime_memaddr_fun
-+ std_fic where NAME_TYPE = "FIC_CONS_TYPE" and VALUE_TYPE = "FIC_REP_TYPE"
-    and FIC_project_'val_Resource_Algebra_owned_Nat_nat_NuPrime_memaddr_fun = FIC_project_'val_Resource_Algebra_owned_Nat_nat_NuPrime_memaddr_fun
-for TYP_CONS_TYPE :: "'TYP_CONS itself"
-and TYP_REP_TYPE  :: "'TYP_REP itself"
-and VAL_CONS_TYPE :: "'VAL_CONS itself"
-and VAL_REP_TYPE  :: "('VAL_REP::discrete_ura) itself"
-and RES_CONS_TYPE :: "'RES_CONS itself"
-and RES_REP_TYPE  :: "('RES_REP::discrete_ura) itself"
-and RES_project_'val_Nat_nat_NuPrime_memaddr_fun :: "'RES_REP \<Rightarrow> nat memaddr \<Rightarrow> 'VAL_REP"
-and FIC_CONS_TYPE :: "'FIC_CONS itself"
-and FIC_REP_TYPE  :: "('FIC_REP::discrete_ura) itself"
-and FIC_project_'val_Resource_Algebra_owned_Nat_nat_NuPrime_memaddr_fun :: "'FIC_REP \<Rightarrow> nat memaddr \<Rightarrow> 'VAL_REP owned"
-
-
-
-subsection \<open>Memory & Heap\<close>
-
-(*datatype resource_key = MemAddress "nat memaddr" | ChainDB_key nat
-
-lemma resource_key_forall: "All P \<longleftrightarrow> (\<forall>addr. P (MemAddress addr)) \<and> (\<forall>n. P (ChainDB_key n))" by (metis resource_key.exhaust)
-lemma resource_key_exists: "Ex P \<longleftrightarrow> (\<exists>addr. P (MemAddress addr)) \<or> (\<exists>n. P (ChainDB_key n))" by (metis resource_key.exhaust)
-*)
-context std begin
-type_synonym logaddr = "nat memaddr"
-type_synonym comp = "value list ex option \<times> mem \<times> unit"
 end
 
-term finite
+interpretation id_fic: fiction "?x" .
 
-definition AvailableSegments :: "mem \<Rightarrow> segidx set"
-  where "AvailableSegments heap = {seg. \<forall>ofs. heap (MemAddress (seg |: ofs)) = None}"
+term id_fi
 
-definition Heap :: "mem \<Rightarrow> bool" where "Heap h \<longleftrightarrow> infinite (AvailableSegments h)"
+locale fractional_fiction =
+  fixes key_type :: "'k itself"
+  fixes value_type :: "'v itself"
+begin
+interpret fiction interp + SA_inj
+  for interp :: "('k \<rightharpoonup> 'v owned) \<Rightarrow> 'sa::sep_algebra set"
+end
+
+
+locale \<nu> =
+  fixes interp :: "'fiction::sep_algebra \<Rightarrow> 'sa::sep_algebra set"
+  fixes type_of :: "'v \<Rightarrow> 'ty"
+  fixes zero_of :: "'ty \<Rightarrow> 'v"
+  assumes "type_of (zero_of T) = T"
+  (* assumes prod_ty_homo[simp]:
+    "type_of (v1 * v2) = type_of v1 * type_of v2"
+  assumes prod_zero_homo[simp]:
+    "zero_of (t1 * t2) = " *)
+  fixes ceqable :: " ('sa::sep_algebra) \<Rightarrow> 'v \<Rightarrow> 'v \<Rightarrow> bool"
+    \<comment> \<open>Whether two values could be compared for equality. e.g. two INF cannot be compared; the dangling pointer also cannot\<close>
+  fixes ceq :: " 'sa \<Rightarrow> 'v \<Rightarrow> 'v \<Rightarrow> bool" \<comment> \<open>The equality of two values.
+    It is only valid when the two values could be compared, i.e., the @{term ceqable} for them is true.\<close>
+  assumes ceqable_sym[simp]: "ceqable h x y = ceqable h y x"
+  assumes ceq_refl[intro]: "ceqable h x x \<Longrightarrow> ceq h x x"
+  assumes ceq_sym[simp]: "ceqable h x y \<Longrightarrow> ceq h x y \<longleftrightarrow> ceq h y x"
+  assumes ceq_trans: "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z
+    \<Longrightarrow> ceq h x y \<Longrightarrow> ceq h y z \<Longrightarrow> ceq h x z"
+
+
+
+
+definition AvailableSegments :: "'v mem \<Rightarrow> msegment set"
+  where "AvailableSegments heap = {seg. \<forall>ofs. heap (seg |+ ofs) = None}"
+
+locale mem_\<nu> =
+   \<nu> where interp = interp and type_of = type_of
+         + SA_inj of_mem mem_of
+   for interp :: "'fiction::sep_algebra \<Rightarrow> 'sa::sep_algebra set"
+   and type_of :: "'v \<Rightarrow> 'ty"
+   and sa_type :: "'sa itself"
+   and of_mem :: "(nat memaddr \<rightharpoonup> 'v) \<Rightarrow> 'sa"
+   and mem_of :: "'sa \<Rightarrow> nat memaddr \<rightharpoonup> 'v"
+
+thm mem_\<nu>_def
+thm \<nu>_def
+(*  fixes of_mem :: "(nat memaddr \<rightharpoonup> 'v) \<Rightarrow> 'sa"
+  assumes mem_inj: "mem_of (of_mem m) = m"
+  assumes mem_infinite: "infinite (AvailableSegments (mem_of sa))" *)
+
 
 lemma [intro]: "Heap h \<Longrightarrow> Heap (h(k := v))" proof -
-  have "AvailableSegments h \<subseteq> {(case k of MemAddress (seg |: ofs) \<Rightarrow> seg)} \<union> (AvailableSegments (h(k := v)))"
+  have "AvailableSegments h \<subseteq> {(case k of MemAddress (seg |+ ofs) \<Rightarrow> seg)} \<union> (AvailableSegments (h(k := v)))"
     unfolding AvailableSegments_def by auto 
   then show "Heap h \<Longrightarrow> Heap (h(k := v))" 
     unfolding Heap_def using infinite_super by auto
@@ -132,12 +140,41 @@ lemma Heap_restrict[intro]: "Heap h \<Longrightarrow> Heap (h |` S)"
 
 
 
+locale word_\<nu> = \<nu> +
+  fixes word_type :: "nat \<Rightarrow> 'ty"
+  fixes to_word' :: "'v \<Rightarrow> nat \<comment> \<open>length\<close> \<times> nat \<comment> \<open>value\<close>"
+  fixes deep_word' :: "nat \<times> nat \<Rightarrow> 'v"
+  assumes word_value_inj': "\<And>x. to_word' (deep_word' x) = x"
+  assumes deep_word'_ty: "type_of (deep_word' (len, x)) = word_type len"
+  assumes zero_of_word': "zero_of (word_type len) = deep_word' (len, 0)"
+begin
+
+definition to_word :: "'v \<Rightarrow> ('len::len) word"
+  where "to_word v = (case to_word' v of (l,x) \<Rightarrow>
+    if LENGTH('len) = l then of_nat x else undefined)"
+
+definition deep_word :: "('len :: len) word \<Rightarrow> 'v"
+  where "deep_word x = deep_word' (LENGTH('len), unat x)"
+
+lemma [simp]: "to_word (deep_word x) = x"
+  unfolding to_word_def deep_word_def word_value_inj'
+  by simp
+
+lemma [simp]: "type_of (deep_word x) = word_type LENGTH('len)"
+  for x :: "'len::len word"
+  unfolding deep_word_def deep_word'_ty ..
+
+lemma [simp]: "zero_of (word_type LENGTH('len::len)) = deep_word (0::'len word)"
+  unfolding deep_word_def zero_of_word' by simp
+
+end
+
 
 
 
 subsection \<open>State Model\<close>
 
-datatype state = Success (dest_state: comp) | Fail | PartialCorrect
+datatype 'sa state = Success (sa_of: 'sa) | Fail | PartialCorrect
 text\<open> The basic state of the \<nu>-system virtual machine is represented by type "('a::lrep) state"}.
   The valid state `Success` essentially has two major form, one without registers and another one with them,
       \<^item> "StatOn (x1, x2, \<cdots>, xn, void)",
@@ -149,7 +186,7 @@ text\<open> The basic state of the \<nu>-system virtual machine is represented b
 
 declare state.split[split]
 
-type_synonym proc = "comp \<Rightarrow> state"
+type_synonym 'sa proc = " 'sa \<Rightarrow> 'sa state"
 
 (* consts fun_table :: " fun_addr \<rightharpoonup> 'a \<longmapsto> 'b "
 consts fun_addr_NULL :: fun_addr
@@ -160,59 +197,27 @@ specification (fun_table)
 
 
 
-text \<open>The semantic framework follows a style of shallow embedding, where semantics for different type (e.g. integers, floats)
-  are modelled by different Isabelle type. Model types are constrained by the base type class {\it lrep} and types representing
-  objects that supports certain features are constrained by specific sub-classes which extend the base class {\it lrep} finally. \<close>
-
-
-class lrep =  \<comment>\<open>The basic class for types modelling concrete objects\<close>
-  fixes llty :: " 'a itself \<Rightarrow> llty "
-  fixes deepize :: " 'a \<Rightarrow> value "
-  fixes shallowize :: " value \<Rightarrow> 'a "
-  assumes deepize_inj[simp]: " shallowize (deepize x) = x "
-
-lemma [simp]: "shallowize o deepize = id" by fastforce
-
-lemma deepize_inj2[simp]: "deepize a = deepize b \<longleftrightarrow> a = b"
-  using deepize_inj by metis
-
-abbreviation "map_deepmodel f x \<equiv> deepize (f (shallowize x))"
-
-syntax "_LLTY_" :: "type \<Rightarrow> logic" ("LLTY'(_')")
-translations  "LLTY('x)" == "CONST llty TYPE('x)"
-
-class ceq =  \<comment> \<open>equality comparison\<close>
-  fixes ceqable :: " heap \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool"
-    \<comment> \<open>Whether two values could be compared for equality. e.g. two INF cannot be compared; the dangling pointer also cannot\<close>
-  fixes ceq :: " 'a \<Rightarrow> 'a \<Rightarrow> bool" \<comment> \<open>The equality of two values.
-    It is only valid when the two values could be compared, i.e., the @{term ceqable} for them is true.\<close>
-  assumes ceqable_sym[simp]: "ceqable h x y = ceqable h y x"
-  assumes ceq_refl[intro]: "ceqable h x x \<Longrightarrow> ceq x x"
-  assumes ceq_sym[simp]: "ceqable h x y \<Longrightarrow> ceq x y \<longleftrightarrow> ceq y x"
-  assumes ceq_trans: "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z
-    \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
-
-
 subsection \<open>The \<nu>-type\<close>
 
-type_synonym ('a,'b) \<nu> = " 'b \<Rightarrow> 'a set "
+type_synonym ('c,'a) \<nu> = " 'a \<Rightarrow> 'c set "
 
 subsubsection \<open>Definitions\<close>
 
-definition \<nu>Type :: "'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> 'a set" (infix "\<tycolon>" 17) where " (x \<tycolon> T) = (T x)"
+definition \<nu>Type :: "'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> 'a set" (infix "\<Ztypecolon>" 17)
+  where " (x \<Ztypecolon> T) = (T x)"
 definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
 
 abbreviation InhabitNu :: " 'b \<Rightarrow> ('a,'b) \<nu> \<Rightarrow> bool" ("_ \<ratio> _" [18,18] 17)
-  where  " (x \<ratio> T) \<equiv> Inhabited (x \<tycolon> T)"
+  where  " (x \<ratio> T) \<equiv> Inhabited (x \<Ztypecolon> T)"
 
-lemma typing_inhabited: "p \<in> (x \<tycolon> T) \<Longrightarrow> x \<ratio> T" unfolding Inhabited_def \<nu>Type_def by blast
+lemma typing_inhabited: "p \<in> (x \<Ztypecolon> T) \<Longrightarrow> x \<ratio> T" unfolding Inhabited_def \<nu>Type_def by blast
 
 subsubsection \<open>Properties\<close>
 
-definition \<nu>Zero :: "('a::{zero,lrep},'b) \<nu> \<Rightarrow> 'b \<Rightarrow> bool"
-  where [\<nu>def]: "\<nu>Zero N x \<longleftrightarrow> 0 \<in> (x \<tycolon> N)"
+definition (in \<nu>) \<nu>Zero :: "'ty \<Rightarrow> ('v,'a) \<nu> \<Rightarrow> 'a \<Rightarrow> bool"
+  where [\<nu>def]: "\<nu>Zero ty N x \<longleftrightarrow> zero_of ty \<in> (x \<Ztypecolon> N)"
 
-definition \<nu>Equal :: "('a::{lrep,ceq}, 'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
+definition (in \<nu>) \<nu>Equal :: "'ty \<Rightarrow> ('a::{lrep,ceq}, 'b) \<nu> \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool"
   where [\<nu>def]: "\<nu>Equal N can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 heap.
     can_eq x1 x2 \<and> p1 \<in> (x1 \<tycolon> N) \<and> p2 \<in> (x2 \<tycolon> N) \<longrightarrow> ceqable heap p1 p2 \<and> (ceq p1 p2 = eq x1 x2))"
 
