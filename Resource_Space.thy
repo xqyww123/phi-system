@@ -11,8 +11,9 @@ datatype ('NAME,'REP,'T) Entry =
 hide_const (open) name project inject
 
 locale project_inject =
-  fixes entry :: "('NAME, 'REP::comm_monoid_mult, 'T::comm_monoid_mult) Entry"
-  assumes proj_inj[simp]: "Entry.project entry (Entry.inject entry x) = x"
+  inj: homo_mult \<open>Entry.inject entry\<close> + prj: homo_mult \<open>Entry.project entry\<close>
+  for entry :: "('NAME, 'REP::comm_monoid_mult, 'T::comm_monoid_mult) Entry"
++ assumes proj_inj[simp]: "Entry.project entry (Entry.inject entry x) = x"
 begin
 
 abbreviation "name \<equiv> Entry.name entry"
@@ -20,6 +21,12 @@ abbreviation "inject \<equiv> Entry.inject entry"
 abbreviation "project \<equiv> Entry.project entry"
 abbreviation "clean f \<equiv> f(name := 1)"
 abbreviation "get f \<equiv> project (f name)"
+
+lemmas inj_homo_mult[simp] = inj.homo_mult[symmetric]
+lemmas inj_homo_one = inj.homo_one
+lemmas prj_homo_mult[simp] = prj.homo_mult
+lemmas prj_homo_one = prj.homo_one
+
 end
 
 

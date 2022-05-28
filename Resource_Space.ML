@@ -17,24 +17,26 @@ signature RESOURCE_SPACE = sig
 
   val define_RES :
      (string * (string * Position.T)) ->
+     (xstring * Position.T) option ->
      (string * string option) list ->
      binding ->
      ((string * bool) * (string list * (bstring * Position.T) * (string * string) list)) list ->
      (string * string) list -> theory -> theory
   val define_RES_i :
      (string * (string * Position.T)) ->
+     (xstring * Position.T) option ->
      (string * string option) list ->
      binding ->
      ((string * bool) * (typ list * (bstring * Position.T) * (string * string) list)) list ->
      (string * typ) list -> theory -> theory
 
   val RES_decl :
-     ((((string * string option) list * binding) * (string * (bstring * Position.T))) *
+     ((((string * Position.T) option * ((string * string option) list * binding)) * (string * (bstring * Position.T))) *
        (((string * bool) * (string list * (bstring * Position.T) * (bstring * bstring) list)) list *
         (bstring * string) list)) parser
   val RES_decl' :
      (string * string) ->
-     ((((string * string option) list * binding) * (string * (bstring * Position.T))) *
+     ((((string * Position.T) option * ((string * string option) list * binding)) * (string * (bstring * Position.T))) *
        (((string * bool) * (string list * (bstring * Position.T) * (bstring * bstring) list)) list *
         (bstring * string) list)) parser
 
@@ -450,7 +452,7 @@ fun parent_components thy Sv (Ts, pname, renaming) =
 (* main stuff *)
 
 fun RES_definition Sv project_injectL
-                          args name_b parents parent_comps components thy =
+                   target args name_b parents parent_comps components thy =
   let
     val name = Binding.name_of name_b
     val pos = Binding.pos_of name_b
@@ -481,7 +483,10 @@ fun RES_definition Sv project_injectL
           map (fn (n,T) => (project_injectL,
                     ((n,false),(Expression.Positional
                          [SOME (Free (n, entryT T))]
-                    ,[])))) all_comps;
+                    ,[])))) all_comps
+    val locinsts =
+          case target of SOME t => (t,(("",false),(Expression.Positional [],[])))::locinsts
+                       | NONE => locinsts
     val locs = [(Binding.name typeN, SOME (Term.itselfT repT), NoSyn)] @
                maps (fn (n,T) => [(Binding.name n, NONE, NoSyn)]) all_comps @
                map (fn (N,Ty) => (Binding.name N, SOME Ty, NoSyn) ) TVARS
@@ -574,7 +579,7 @@ fun cert_typ ctxt raw_T env =
   in (T, env') end;
 
 fun gen_define_RES prep_typ (sort,project_injectL)
-                   args name_b parents comps thy =
+                   target args name_b parents comps thy =
   let (* - args distinct
          - only args may occur in comps and parent-instantiations
          - number of insts must match parent args
@@ -585,7 +590,11 @@ fun gen_define_RES prep_typ (sort,project_injectL)
       *)
     val _ = writeln ("Defining RES " ^ Binding.print name_b ^ " ...");
 
-    val ctxt = Proof_Context.init_global thy;
+    val target' = Option.map (Locale.check thy) target
+
+    val ctxt = case target' of SOME t => Locale.init t thy
+                             | NONE => Proof_Context.init_global thy
+
 
     fun add_parent (prefix, (Ts, pname, rs)) env =
       let
@@ -688,7 +697,7 @@ fun gen_define_RES prep_typ (sort,project_injectL)
                err_dup_types @ err_comp_in_parent @ err_value_keyword;
   in if null errs
      then thy |> RES_definition sort' project_injectL
-                                args' name_b parents' parent_comps comps'
+                                target' args' name_b parents' parent_comps comps'
      else error (cat_lines errs)
   end
   handle ERROR msg => cat_error msg ("Failed to define fiction space " ^ Binding.print name_b);
@@ -721,7 +730,7 @@ val parent =
 in
 
 fun RES_decl' (default_sort, default_locale) =
-  Parse.type_args_constrained -- Parse.binding --
+  Parse.opt_target -- (Parse.type_args_constrained -- Parse.binding) --
     Scan.optional (\<^keyword>\<open>::\<close> |-- (
       Parse.sort -- Scan.optional (\<^keyword>\<open>,\<close> |-- Parse.name_position) (default_locale, Position.none)
     )) (default_sort,(default_locale, Position.none)) --
@@ -733,8 +742,8 @@ fun RES_decl' (default_sort, default_locale) =
 
 fun define_RES_command kwd comment defaults_setting =
   Outer_Syntax.command kwd comment
-    (RES_decl' defaults_setting >> (fn (((args, name), sort_locale), (parents, comps)) =>
-      Toplevel.theory (define_RES sort_locale args name parents comps)));
+    (RES_decl' defaults_setting >> (fn (((target, (args, name)), sort_locale), (parents, comps)) =>
+      Toplevel.theory (define_RES sort_locale target args name parents comps)));
 
 val RES_decl = RES_decl' ("",project_injectL_default)
 val _ = define_RES_command

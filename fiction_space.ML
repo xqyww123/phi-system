@@ -6,7 +6,6 @@ signature FICTION_SPACE = sig
 val distinct_compsN : string
 val namesN : string
 val repN : string
-val resN : string
 val typeN : string
 val repTN : string
 val nameTN : string
@@ -17,7 +16,7 @@ val fields_locale_N : string
 
   val define_FIS_command :
         Outer_Syntax.command_keyword ->
-        string -> (string * string) * string -> unit
+        string -> string * string -> unit
 
 
   val namespace_definition :
@@ -27,27 +26,32 @@ val fields_locale_N : string
      string list -> string list -> theory -> theory
 
   val define_FIS :
-     ((string * string) * (string * Position.T)) ->
-     string list ->
-     binding ->
+     string * (string * Position.T) ->
+     (xstring * Position.T) option ->
+     (string * string option) list ->
+     binding -> string ->
      ((string * bool) * (string list * (bstring * Position.T) * (string * string) list)) list ->
      (string * string) list -> theory -> theory
   val define_FIS_i :
-     ((string * string) * (string * Position.T)) ->
-     string list ->
-     binding ->
+     string * (xstring * Position.T) ->
+     (xstring * Position.T) option ->
+     (string * string option) list ->
+     binding -> typ ->
      ((string * bool) * (typ list * (bstring * Position.T) * (string * string) list)) list ->
      (string * term) list -> theory -> theory
 
   val FIS_decl :
-     (((string list * binding) * ((string * string) * (bstring * Position.T))) *
+     ((((xstring * Position.T) option * ((string * string option) list * binding)) *
+          (string * (string * (bstring * Position.T)))) *
        (((string * bool) * (string list * (bstring * Position.T) * (bstring * bstring) list)) list *
         (bstring * string) list)) parser
   val FIS_decl' :
-     ((string * string) * string) ->
-     (((string list * binding) * ((string * string) * (bstring * Position.T))) *
-       (((string * bool) * (string list * (bstring * Position.T) * (bstring * bstring) list)) list *
-        (bstring * string) list)) parser
+        string * string ->
+        ((((string * Position.T) option *
+           ((string * string option) list * binding)) *
+          (string * (string * (string * Position.T)))) *
+         (((string * bool) * (string list * (string * Position.T) * (string * string) list)) list *
+        (string * string) list)) parser
 
 
   val neq_x_y : Proof.context -> term -> term -> thm option
@@ -78,7 +82,6 @@ val distinct_compsN = "distinct_names"
 val namesN = "_names"
 val fields_locale_N = "_fields"
 val repN = "'REP"
-val resN = "'RES"
 val typeN = "THE_TYPE"
 val repTN = "TYPE'REP"
 val nameTN = "TYPE'NAME"
@@ -96,7 +99,6 @@ val project_injectL_default = \<^locale>\<open>fictional_project_inject\<close>
 (* Misc *)
 
 fun repT S = TFree (repN, S)
-fun resT S = TFree (resN, S)
 fun entryT nameT repT T = Type(\<^type_name>\<open>Resource_Space.Entry\<close>, [nameT, repT, T])
 fun fictionT T resT = Type(\<^type_name>\<open>fiction\<close>, [T,resT])
 fun T_of_fic fic =
@@ -244,7 +246,7 @@ val get_silent = #silent o EntryData.get;
 (** FIS **)
 
 type FIS_info =
- {sorts: sort * sort, (* sort of representation, sort of resource *)
+ {sort: sort, (* sort of representation *)
   args: (string * sort) list, (* type arguments *)
   parents: (typ list * string * string option list) list,
             (* type instantiation, FIS name, component renamings *)
@@ -264,9 +266,9 @@ fun is_FIS context name =
 fun trace_FIS_data context =  
   tracing ("StateSpaceData: " ^ @{make_string} (FIS_Data.get context))
 
-fun add_FIS name Ss args parents components ctxt =
+fun add_FIS name Sv args parents components ctxt =
       FIS_Data.put
-        (Symtab.update_new (name, {sorts=Ss,args=args,parents=parents,
+        (Symtab.update_new (name, {sort=Sv,args=args,parents=parents,
                                    components=components})
                            (FIS_Data.get ctxt))
         ctxt;
@@ -444,13 +446,12 @@ fun add_declaration name decl thy =
   |> (fn lthy => Local_Theory.declaration {syntax = true, pervasive = false} (decl lthy) lthy)
   |> Local_Theory.exit_global;
 
-fun parent_sort thy pname (Sv,Sr) =
+fun parent_sort thy pname Sv =
   let
     val ctxt = Context.Theory thy;
-    val {sorts, parents, ...} = the (Symtab.lookup (FIS_Data.get ctxt) pname);
+    val {sort, parents, ...} = the (Symtab.lookup (FIS_Data.get ctxt) pname);
   in
-    fold (parent_sort thy o #2) parents (Sign.inter_sort thy (Sv, #1 sorts),
-                                         Sign.inter_sort thy (Sr, #2 sorts))
+    fold (parent_sort thy o #2) parents (Sign.inter_sort thy (Sv, sort))
   end
 
 fun parent_components thy Sv (Ts, pname, renaming) =
@@ -471,8 +472,8 @@ fun parent_components thy Sv (Ts, pname, renaming) =
 
 (* main stuff *)
 
-fun FIS_definition (rep_sort,res_sort) project_injectL
-                          args name_b parents parent_comps components thy =
+fun FIS_definition rep_sort project_injectL
+                   target args name_b resT parents parent_comps components thy =
   let
     val name = Binding.name_of name_b
     val pos = Binding.pos_of name_b
@@ -486,7 +487,6 @@ fun FIS_definition (rep_sort,res_sort) project_injectL
     (* val repN = singleton (Name.variant_list (repN :: arg_names)) "'self"; *)
     val nameN = singleton (Name.variant_list (repN :: arg_names)) "'name";
     val repT = repT rep_sort
-    val resT = resT res_sort
     val repTT = Term.itselfT repT
     val resTT = Term.itselfT resT
     val nameT = TFree (NAME_N, Sign.defaultS thy);
@@ -504,7 +504,7 @@ fun FIS_definition (rep_sort,res_sort) project_injectL
         (prefix,(Expression.Positional (SOME typeN :: rs),[])));
     val parents_expr = map parent_expr parents;
 
-    val locinsts =
+    val locinsts' =
           (\<^locale>\<open>fictional_space\<close>, (("",false),
                 (Expression.Positional [SOME INTERP],[]))) ::
           map (fn (n,T) => (project_injectL,
@@ -513,10 +513,19 @@ fun FIS_definition (rep_sort,res_sort) project_injectL
                           SOME (Free (n, entryT (T_of_fic T))),
                           SOME T]
                     ,[])))) all_comps;
-    val locs = (Binding.name typeN, SOME (Term.itselfT repT), NoSyn) ::
+    val locs' = (Binding.name typeN, SOME (Term.itselfT repT), NoSyn) ::
                (Binding.name INTERPRET_N, SOME INTERP_T, NoSyn) ::
                 maps (fn (n,T) => [(Binding.name n, NONE, NoSyn)]) all_comps @
                 map (fn (N,Ty) => (Binding.name N, SOME Ty, NoSyn) ) TVARS
+    val (locinsts,locs) =
+          case target of SOME t =>
+              let
+                val params = Locale.params_of thy (the target)
+              in
+                ((t,(("",false),(Expression.Positional (map (SOME o Free o fst) params),[])))::locinsts',
+                 map (fn ((N,T),M) => (Binding.name N, SOME T, M)) params @ locs')
+              end
+            | NONE => (locinsts',locs')
     val name_insts = map (fn (n,T) =>
           (n, Const (\<^const_name>\<open>Resource_Space.Entry.name\<close>, entryT (T_of_fic T) --> nameT)
                 $ Free (n, entryT (T_of_fic T)))) all_comps
@@ -566,7 +575,7 @@ fun FIS_definition (rep_sort,res_sort) project_injectL
            (Binding.suffix_name namesN name_b) nameT (parents_expr,[])
            (map fst parent_comps) (map fst components)
      |> Context.theory_map
-          (add_FIS full_name (rep_sort,res_sort) args (map snd parents) all_comps)
+          (add_FIS full_name rep_sort args (map snd parents) all_comps)
      |> add_locale (Binding.suffix_name fields_locale_N name_b) (locinsts,locs) []
      |> Proof_Context.theory_of
      |> fold interprete_parent_valuetypes parents
@@ -624,8 +633,8 @@ fun cert_term ctxt ty raw_T env =
     val env' = Term.add_tfrees Tm env;
   in (Tm, env') end;
 
-fun gen_define_FIS prep_typ prep_term (sorts,project_injectL)
-                   args name_b parents comps thy =
+fun gen_define_FIS prep_typ prep_term (sort,project_injectL)
+                   target args name_b resT parents comps thy =
   let (* - args distinct
          - only args may occur in comps and parent-instantiations
          - number of insts must match parent args
@@ -636,7 +645,10 @@ fun gen_define_FIS prep_typ prep_term (sorts,project_injectL)
       *)
     val _ = writeln ("Defining FIS " ^ Binding.print name_b ^ " ...");
 
-    val ctxt = Locale.init \<^locale>\<open>fiction\<close> thy;
+    val target' = Option.map (Locale.check thy) target
+
+    val ctxt = case target' of SOME t => Locale.init t thy
+                             | NONE => Proof_Context.init_global thy
 
     fun add_parent (prefix, (Ts, pname, rs)) env =
       let
@@ -680,19 +692,20 @@ fun gen_define_FIS prep_typ prep_term (sorts,project_injectL)
         else error (cat_lines (errs @ ["in parent FIS " ^ quote pname]))
       end;
 
-    val (parents',env) = fold_map add_parent parents [];
+    val args' = map (apsnd (Option.map (Syntax.read_sort ctxt) #> the_default (Sign.defaultS thy))) args
+    val (resT',env) = prep_typ ctxt resT args'
+    val (parents',env) = fold_map add_parent parents env;
     
     fun prep_sort S' S = if S = "" then S' else Syntax.read_sort ctxt S
-    val sorts' = fold (parent_sort thy o #2 o #2) parents'
-                  (apfst (prep_sort \<^sort>\<open>comm_monoid_mult\<close>)
-                    (apsnd (prep_sort \<^sort>\<open>comm_monoid_mult\<close>) sorts))
-    val env = (repN, #1 sorts')::(resN, #2 sorts')::env
+    val sort' = fold (parent_sort thy o #2 o #2) parents'
+                    (prep_sort \<^sort>\<open>comm_monoid_mult\<close> sort)
+    val env = (repN, sort')::env
     
-    val fictionT = Type(\<^type_name>\<open>fiction\<close>, [dummyT, resT (#2 sorts')])
+    val fictionT = Type(\<^type_name>\<open>fiction\<close>, [dummyT, resT'])
 
 
     val err_dup_args =
-         (case duplicates (op =) args of
+         (case duplicates (op =) (map fst args) of
             [] => []
           | dups => ["Duplicate type argument(s) " ^ commas dups]);
 
@@ -710,7 +723,7 @@ fun gen_define_FIS prep_typ prep_term (sorts,project_injectL)
     val (comps',env') = fold_map prep_comp comps env;
 
     val err_value_keyword =
-          if member (op =) args repN
+          if member (op =) (map fst args) repN
           then ["'self is a reserved keyword and cannot be a type parameter"]
           else []
       
@@ -720,13 +733,11 @@ fun gen_define_FIS prep_typ prep_term (sorts,project_injectL)
       
     val project_injectL = Locale.check thy project_injectL
 
-    val args' = map (fn x => (x, AList.lookup (op =) env x |> the_default (Sign.defaultS thy))) args;
-
 
     fun fst_eq ((x:string,_),(y,_)) = x = y;
     fun snd_eq ((_,t:term),(_,u)) = t = u;
 
-    val raw_parent_comps = maps (parent_components thy (#1 sorts') o snd) parents';
+    val raw_parent_comps = maps (parent_components thy sort' o snd) parents';
     fun check_type (n,T) =
           (case distinct (snd_eq) (filter (curry fst_eq (n,T)) raw_parent_comps) of
              []  => []
@@ -744,8 +755,8 @@ fun gen_define_FIS prep_typ prep_term (sorts,project_injectL)
     val errs = err_dup_args @ err_dup_components @ err_extra_frees @
                err_dup_types @ err_comp_in_parent @ err_value_keyword;
   in if null errs
-     then thy |> FIS_definition sorts' project_injectL
-                                args' name_b parents' parent_comps comps'
+     then thy |> FIS_definition sort' project_injectL
+                                target' args' name_b resT' parents' parent_comps comps'
      else error (cat_lines errs)
   end
   handle ERROR msg => cat_error msg ("Failed to define fiction space " ^ Binding.print name_b);
@@ -777,12 +788,13 @@ val parent =
 
 in
 
-fun FIS_decl' (default_sorts, default_locale) =
-  Parse.type_args -- Parse.binding --
-    Scan.optional (\<^keyword>\<open>::\<close> |-- (
-      Parse.sort --| \<^keyword>\<open>,\<close> -- Parse.sort
-        -- Scan.optional (\<^keyword>\<open>,\<close> |-- Parse.name_position) (default_locale, Position.none)
-    )) (default_sorts,(default_locale, Position.none)) --
+fun FIS_decl' (default_sort, default_locale) =
+  Parse.opt_target -- (Parse.type_args_constrained -- Parse.binding) --|
+  \<^keyword>\<open>::\<close> -- (
+    Parse.typ --
+    Scan.optional (Parse.sort --| \<^keyword>\<open>,\<close> -- Parse.name_position)
+      (default_sort, (default_locale, Position.none))
+  ) --
   (\<^keyword>\<open>=\<close> |--
     ((Scan.repeat1 comp >> pair []) ||
       (plus1_unless comp parent --
@@ -791,12 +803,12 @@ fun FIS_decl' (default_sorts, default_locale) =
 
 fun define_FIS_command kwd comment defaults_setting =
   Outer_Syntax.command kwd comment
-    (FIS_decl' defaults_setting >> (fn (((args, name), sort_locale), (parents, comps)) =>
-      Toplevel.theory (define_FIS sort_locale args name parents comps)));
+    (FIS_decl' defaults_setting >> (fn (((target, (args, name)), (resT, sort_locale)), (parents, comps)) =>
+      Toplevel.theory (define_FIS sort_locale target args name resT parents comps)));
 
-val FIS_decl = FIS_decl' (("",""),project_injectL_default)
+val FIS_decl = FIS_decl' ("",project_injectL_default)
 val _ = define_FIS_command
-   \<^command_keyword>\<open>fiction_space\<close> "define fiction space by locale" (("",""),project_injectL_default)
+   \<^command_keyword>\<open>fiction_space\<close> "define fiction space by locale" ("",project_injectL_default)
 
 
 end;

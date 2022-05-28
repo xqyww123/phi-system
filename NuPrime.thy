@@ -3,8 +3,6 @@
 theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
   imports Main "HOL-Library.Word"
     "HOL-Library.Adhoc_Overloading"
-    "Statespace/StateSpaceLocale"
-    "Statespace/StateSpaceSyntax"
     Fictional_Algebra
     "Virt_Datatype/Virtual_Datatype"
     Resource_Space
@@ -75,37 +73,57 @@ locale std_sem =
 + std_res where TYPE'val = \<open>TYPE('VAL)\<close> and TYPE'ty = \<open>TYPE('TY)\<close>
     and TYPE'NAME = \<open>TYPE('RES_N)\<close> and TYPE'REP = \<open>TYPE('RES::comm_monoid_mult)\<close>
   for TY_CONS_OF and VAL_CONS_OF
++ fixes TYPE'TY_N :: \<open>'TY_N itself\<close>
+    and TYPE'TY :: \<open>'TY itself\<close>
+    and TYPE'VAL_N :: \<open>'VAL_N itself\<close>
+    and TYPE'VAL :: \<open>'VAL itself\<close>
+    and TYPE'RES_N :: \<open>'RES_N itself\<close>
+    and TYPE'RES :: \<open>'RES itself\<close>
+begin
+
+definition "fiction_mem I = Fiction (\<lambda>x. { 1<R_mem := y> |y. y \<in> \<I> I x})"
+lemma fiction_mem_\<I>[simp]:
+  "\<I> (fiction_mem I) = (\<lambda>x. { 1<R_mem := y> |y. y \<in> \<I> I x})"
+  unfolding fiction_mem_def
+  by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def)
+
+definition "fiction_var I = Fiction (\<lambda>x. { 1<R_var := y> |y. y \<in> \<I> I x})"
+lemma fiction_var_\<I>[simp]:
+  "\<I> (fiction_var I) = (\<lambda>x. { 1<R_var := y> |y. y \<in> \<I> I x})"
+  unfolding fiction_var_def
+  by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def)
 
 
-print_locale std_res
-print_locale std_val
+definition "share_mem = fiction_mem (fiction.partialwise (
+              fiction.pointwise (fiction.optionwise fiction.share)))"
+definition "exclusive_var = fiction_var fiction.it"
 
-
-
-print_locale std_res
-
-context std_res begin
-definition "xx = id"
-term VALUE_TYPE
 end
 
-thm std_res.xx_def
 
-(* datatype val = V_int nat nat | V_pointer "nat memaddr" |
-  V_record "val list" | V_array "val list" | V_void *)
+fiction_space (in std_sem) std_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
+  mem :: share_mem
+  var :: exclusive_var
+
+locale std = std_fic
+  where TYPE'TY_N = \<open>TYPE('TY_N)\<close>
+    and TYPE'TY = \<open>TYPE('TY)\<close>
+    and TYPE'VAL_N = \<open>TYPE('VAL_N)\<close>
+    and TYPE'VAL = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
+    and TYPE'RES_N = \<open>TYPE('RES_N)\<close>
+    and TYPE'RES = \<open>TYPE('RES::comm_monoid_mult)\<close>
+    and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
+    and TYPE'REP = \<open>TYPE('FIC::comm_monoid_mult)\<close>
++ fixes TYPE'TY_N :: \<open>'TY_N itself\<close>
+    and TYPE'TY :: \<open>'TY itself\<close>
+    and TYPE'VAL_N :: \<open>'VAL_N itself\<close>
+    and TYPE'VAL :: \<open>'VAL itself\<close>
+    and TYPE'RES_N :: \<open>'RES_N itself\<close>
+    and TYPE'RES :: \<open>'RES itself\<close>
+    and TYPE'NAME :: \<open>'FIC_N itself\<close>
+    and TYPE'REP :: \<open>'FIC::comm_monoid_mult itself\<close>
 
 
-
-
-
-type_synonym 'v res = "(nat memaddr \<rightharpoonup> 'v) partial \<times> (varname \<rightharpoonup> 'v) partial\<times> unit"
-
-instantiation val :: nonsepable_semigroup begin
-definition sep_disj_val :: "val \<Rightarrow> val \<Rightarrow> bool"
-  where"sep_disj_val _ _ = False"
-definition "times_val (_::val) (_::val) = (undefined::val)"
-instance by standard (simp_all add: sep_disj_val_def)
-end
 
 
 subsection \<open>Resource Algebra\<close>

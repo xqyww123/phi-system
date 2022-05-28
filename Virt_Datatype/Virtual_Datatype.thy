@@ -21,21 +21,14 @@ locale project_inject =
   "virtual_datatype" CONS_OF
   for CONS_OF :: "'value \<Rightarrow> 'CONS"
 + fixes field :: "('CONS,'value,'a) Field"
-assumes cons_of': "CONS_OF (Field.inject field x) = Field.cons_of field"
-  and project_inject_cancel': "Field.project field (Field.inject field x) = x"
+assumes cons_of[simp]: "CONS_OF (Field.inject field x) = Field.cons_of field"
+  and dest_mk[simp]: "Field.project field (Field.inject field x) = x"
 begin
 
-definition "mk = Field.inject field"
-definition "dest = Field.project field"
-definition "cons = Field.cons_of field"
+abbreviation "mk \<equiv> Field.inject field"
+abbreviation "dest \<equiv> Field.project field"
+abbreviation "cons \<equiv> Field.cons_of field"
 definition "is_instance v \<longleftrightarrow> (\<exists>x. v = mk x)"
-
-lemma cons_of[simp]:
-  "CONS_OF (mk x) = cons"
-  unfolding mk_def cons_def using cons_of' .
-
-lemma dest_mk[simp]: "dest (mk x) = x"
-  unfolding mk_def dest_def using project_inject_cancel' .
 
 lemma dest_mk_id[simp]: "dest o mk = id"
   using dest_mk destr_contstr_comp_id by blast
@@ -55,13 +48,9 @@ lemma is_instance_cons[simp]: "is_instance v \<Longrightarrow> CONS_OF v = cons"
   using cons_of is_instance_def by force
 
 lemma is_instance_mk_dest[simp]: "is_instance v \<Longrightarrow> mk (dest v) = v"
-  using is_instance_def project_inject_cancel' by fastforce 
+  using is_instance_def dest_mk by fastforce 
 
 end
-
-term project_inject.cons
-
-hide_fact project_inject.cons_of' project_inject.project_inject_cancel'
 
 
 ML_file_debug \<open>Virtual_Datatype.ML\<close>

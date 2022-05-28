@@ -208,9 +208,11 @@ lemma times_fun: "(f * g) x = f x * g x"
   unfolding times_fun_def by simp
 
 instantiation "fun" :: (type,one) one begin
-definition [simp]: "one_fun (x::'a) = (1::'b)"
+definition "one_fun = (\<lambda>(x::'a). (1::'b))"
 instance ..
 end
+
+lemma one_fun[simp]: "1 x = 1" unfolding one_fun_def by simp
 
 instantiation "fun" :: (type, semigroup_mult) semigroup_mult begin
 instance apply standard
@@ -320,14 +322,29 @@ end
 
 subsubsection \<open>Set\<close>
 
+instantiation set :: (type) zero begin
+definition "zero_set = {}"
+instance ..
+end
+
 instantiation set :: (one) one begin
 definition "one_set = {1::'a}"
 instance ..
 end
 
+lemma set_in_1[simp]: "x \<in> 1 \<longleftrightarrow> x = 1"
+  unfolding one_set_def by simp
+
 instantiation set :: (times) times begin
 definition "times_set P Q = { x * y | x y. x \<in> P \<and> y \<in> Q }"
 instance ..
+end
+
+lemma [simp]: "{} * S = {}" "S * {} = {}"
+  unfolding times_set_def by simp_all
+
+instantiation set :: (times) mult_zero begin
+instance by standard (simp_all add: zero_set_def)
 end
 
 instantiation set :: (semigroup_mult) semigroup_mult begin
@@ -441,10 +458,10 @@ section \<open>Fictional Algebra\<close>
 
 subsection \<open>Algebra Structure\<close>
 
-definition Fictional :: "('a::one \<Rightarrow> 'b::comm_monoid_mult set) \<Rightarrow> bool"
+definition Fictional :: "('a::one \<Rightarrow> 'b::one set) \<Rightarrow> bool"
   where "Fictional \<I> \<longleftrightarrow> \<I> 1 = 1"
 
-typedef (overloaded) ('a::one,'b::comm_monoid_mult) fiction
+typedef (overloaded) ('a::one,'b::one) fiction
     = \<open>Collect (Fictional :: ('a \<Rightarrow> 'b set) \<Rightarrow> bool)\<close>
   morphisms \<I> Fiction
   by (rule exI[where x = \<open>\<lambda>_. 1\<close>]) (simp add: Fictional_def)
@@ -477,8 +494,16 @@ lemma fun_split:
   for f :: "'a \<Rightarrow> 'b::comm_monoid_mult"
   unfolding fun_def using fun'_split .
 
+definition "pointwise I = Fiction (\<lambda>f. {g. \<forall>x. g x \<in> \<I> I (f x) })"
+lemma pointwise_\<I>[simp]:
+  "\<I> (pointwise I) = (\<lambda>f. {g. \<forall>x. g x \<in> \<I> I (f x) })"
+  unfolding pointwise_def
+  by (rule Fiction_inverse) (auto simp add: Fictional_def one_fun_def fun_eq_iff)
+
+
 definition "pair I1 I2 = Fiction (\<lambda>(x,y). \<I> I1 x * \<I> I2 y) "
 lemma pair_\<I>[simp]: "\<I> (pair I1 I2) = (\<lambda>(x,y). \<I> I1 x * \<I> I2 y)"
+  for I1 :: "('a::one,'b::monoid_mult) fiction"
   unfolding pair_def by (rule Fiction_inverse) (simp add: Fictional_def one_prod_def)
 notation pair (infixl "\<bullet>" 50)
 
@@ -486,9 +511,26 @@ definition "option I = Fiction (case_option 1 I)"
 lemma option_\<I>[simp]: "\<I> (option I) = (case_option 1 I)"
   unfolding option_def by (rule Fiction_inverse) (simp add: Fictional_def)
 
+definition "optionwise I = Fiction (\<lambda>x. case x of Some x' \<Rightarrow> Some ` I x' | _ \<Rightarrow> {None})"
+lemma optionwise_\<I>[simp]:
+  "\<I> (optionwise I) = (\<lambda>x. case x of Some x' \<Rightarrow> Some ` I x' | _ \<Rightarrow> {None})"
+  unfolding optionwise_def
+  by (rule Fiction_inverse) (auto simp add: Fictional_def)
+
+
 definition "partial I = Fiction (case_partial (\<I> I) {})"
 lemma partial_\<I>[simp]: "\<I> (partial I) = case_partial (\<I> I) {}"
   unfolding partial_def by (rule Fiction_inverse) (simp add: Fictional_def one_partial_def)
+
+definition "defined I = Fiction (\<lambda>x. Fine ` \<I> I x)"
+lemma defined_\<I>[simp]: "\<I> (defined I) = (\<lambda>x. Fine ` \<I> I x)"
+  unfolding defined_def
+  by (rule Fiction_inverse) (auto simp add: Fictional_def one_partial_def)
+
+definition "partialwise I = fiction.partial (defined I)"
+lemma partialwise_\<I>[simp]: "\<I> (partialwise I) (Fine x) = { Fine y |y. y \<in> \<I> I x }"
+  unfolding partialwise_def by auto
+
 
 definition [simp]: "it' x = {x}"
 
@@ -496,16 +538,15 @@ definition "it = Fiction it'"
 lemma it_\<I>[simp]: "\<I> it = it'"
   unfolding it_def by (rule Fiction_inverse) (simp add: Fictional_def one_set_def)
 
-definition "share' s = (case s of w \<Znrres> v \<Rightarrow> if w = 1 then {v} else {})"
-lemma share'_\<I>[simp]: "share' (w \<Znrres> v) = (if w = 1 then {v} else {})"
-  unfolding share'_def by simp
+definition "share s = (case s of w \<Znrres> v \<Rightarrow> if w = 1 then {v} else {})"
+lemma share_\<I>[simp]: "share (w \<Znrres> v) = (if w = 1 then {v} else {})"
+  unfolding share_def by simp
 
-abbreviation "share \<equiv> partial (option share')"
 end
 
 
 lemmas [simp] = fiction.fun_\<I> fiction.fun'_\<I> fiction.option_\<I> fiction.partial_\<I>
-  fiction.it'_def fiction.it_\<I> fiction.share'_\<I>
+  fiction.it'_def fiction.it_\<I> fiction.share_\<I>
 
 lemma [simp]: "\<I> (fiction.fun I) (1(k:=v)) = \<I> I v" by simp
 
@@ -520,8 +561,7 @@ definition "Fic_Space f \<longleftrightarrow> finite (dom1 f)"
 end
 
 locale fictional_project_inject =
-  fictional_space INTERPRET + project_inject entry +
-  inj: homo_mult \<open>Entry.inject entry\<close> + prj: homo_mult \<open>Entry.project entry\<close>
+  fictional_space INTERPRET + project_inject entry
   for INTERPRET :: "'NAME \<Rightarrow> ('REP::comm_monoid_mult,'RES::comm_monoid_mult) fiction"
   and entry :: "('NAME,'REP,'T::comm_monoid_mult) Resource_Space.Entry"
 + fixes I :: "('T,'RES) fiction"
@@ -530,12 +570,6 @@ locale fictional_project_inject =
 begin
 
 abbreviation "m x \<equiv> 1(name := inject x)"
-
-lemmas inj_homo_mult[simp] = inj.homo_mult[symmetric]
-lemmas inj_homo_one = inj.homo_one
-lemmas prj_homo_mult[simp] = prj.homo_mult
-lemmas prj_homo_one = prj.homo_one
-
 
 lemma [simp]: "R * inject x * inject y = R * inject (x * y)"
   by (simp add: mult.assoc) 
