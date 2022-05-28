@@ -35,25 +35,25 @@ sig
 
   val define_statespace :
      (string * (string * Position.T) * string) ->
-     string list ->
+     (string * string option) list ->
      binding ->
      ((string * bool) * (string list * (bstring * Position.T) * (string * string) list)) list ->
      (string * string) list -> theory -> theory
   val define_statespace_i :
      string option ->
      (string * (string * Position.T) * string) ->
-     string list ->
+     (string * string option) list ->
      binding ->
      ((string * bool) * (typ list * (bstring * Position.T) * (string * string) list)) list ->
      (string * typ) list -> theory -> theory
 
   val statespace_decl :
-     (((string list * binding) * (string * (bstring * Position.T) * string)) *
+     ((((string * string option) list * binding) * (string * (bstring * Position.T) * string)) *
        (((string * bool) * (string list * (bstring * Position.T) * (bstring * bstring) list)) list *
         (bstring * string) list)) parser
   val statespace_decl' :
      (string * string * string) ->
-     (((string list * binding) * (string * (bstring * Position.T) * string)) *
+     ((((string * string option) list * binding) * (string * (bstring * Position.T) * string)) *
        (((string * bool) * (string list * (bstring * Position.T) * (bstring * bstring) list)) list *
         (bstring * string) list)) parser
 
@@ -650,13 +650,15 @@ fun gen_define_statespace prep_typ state_space (value_sort,project_injectL,Kd) a
         else error (cat_lines (errs @ ["in parent statespace " ^ quote pname]))
       end;
 
-    val (parents',env) = fold_map add_parent parents [];
+    val args' = map (apsnd (Option.map (Syntax.read_sort ctxt) #> the_default (Sign.defaultS thy))) args
+    val (parents',env) = fold_map add_parent parents args'
+
     val value_sort' = fold (parent_sort thy o #2 o #2) parents' 
               (if value_sort = "" then Sign.defaultS thy else Syntax.read_sort ctxt value_sort)
     val env = (valueN, value_sort')::env
 
     val err_dup_args =
-         (case duplicates (op =) args of
+         (case duplicates (op =) (map fst args) of
             [] => []
           | dups => ["Duplicate type argument(s) " ^ commas dups]);
 
@@ -674,7 +676,7 @@ fun gen_define_statespace prep_typ state_space (value_sort,project_injectL,Kd) a
     val (comps',env') = fold_map prep_comp comps env;
 
     val err_value_keyword =
-          if member (op =) args valueN
+          if member (op =) (map fst args) valueN
           then ["'self is a reserved keyword and cannot be a type parameter"]
           else []
       
@@ -683,8 +685,6 @@ fun gen_define_statespace prep_typ state_space (value_sort,project_injectL,Kd) a
     val err_extra_frees = []
       
     val project_injectL = Locale.check thy project_injectL
-
-    val args' = map (fn x => (x, AList.lookup (op =) env x |> the_default value_sort')) args;
 
 
     fun fst_eq ((x:string,_),(y,_)) = x = y;
@@ -814,7 +814,7 @@ val parent =
 in
 
 fun statespace_decl' (default_value_sort, default_locale, default_kind) =
-  Parse.type_args -- Parse.binding --
+  Parse.type_args_constrained -- Parse.binding --
     Scan.optional (\<^keyword>\<open>::\<close> |-- (
          Parse.sort >> rpair (default_locale, Position.none) >> rpair default_kind
       || \<^keyword>\<open>(\<close> |-- Parse.sort --| \<^keyword>\<open>,\<close> -- Parse.name_position --| \<^keyword>\<open>,\<close> -- Parse.string --| \<^keyword>\<open>)\<close>

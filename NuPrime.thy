@@ -3,7 +3,12 @@
 theory NuPrime \<comment> \<open>The Primary Theory of the \<nu>-System\<close>
   imports Main "HOL-Library.Word"
     "HOL-Library.Adhoc_Overloading"
-    NoeMisc Resource_Algebra
+    "Statespace/StateSpaceLocale"
+    "Statespace/StateSpaceSyntax"
+    Fictional_Algebra
+    "Virt_Datatype/Virtual_Datatype"
+    Resource_Space
+    NoeMisc
   keywords "value_model_space" :: thy_defn
     and "type_model_space" :: thy_defn
 begin
@@ -23,44 +28,89 @@ section\<open>Low representation for semantics\<close>
 
 subsection \<open>Models\<close>
 
-datatype segidx = Null | MSegment nat
-
-datatype 'offset memaddr = memaddr (segment_of: segidx) (offset_of: 'offset ) (infixl "|:" 60)
-declare memaddr.sel[iff]
-
-abbreviation shift_addr :: " 'a::plus memaddr \<Rightarrow> 'a \<Rightarrow> 'a memaddr" (infixl "||+" 60)
-  where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) addr"
-lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
-lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
-
-lemma [simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (cases a) simp
-
-ML \<open>
-val _ = StateSpace.define_statespace_command
-  \<^command_keyword>\<open>type_model_space\<close>
-  "extensible model of low level types"
-  ("HOL.type", \<^locale>\<open>project_inject\<close>, "TYP")
-
-val _ = StateSpace.define_statespace_command
-  \<^command_keyword>\<open>value_model_space\<close>
-  "extensible model of low level values"
-  ("Resource_Algebra.trivial_validity", \<^locale>\<open>project_inject\<close>, "VAL")
-
-\<close>
-
-type_model_space std_typ =
-  T_int :: nat \<comment> \<open>int bits\<close>
+virtual_datatype std_ty =
+  T_int :: nat
   T_pointer :: unit
   T_tup :: 'self
   T_array :: "'self \<times> nat"
   T_nil :: unit
 
-value_model_space std_val =
-  V_int :: "nat \<times> nat"
-  V_pointer :: "nat memaddr"
-  V_record :: "'self list"
-  V_array :: "'self list"
+(* datatype llty = T_int nat \<comment> \<open>int bits\<close> | T_pointer | T_tup llty
+  | T_array llty nat | T_nil *)
+
+
+datatype ('ty) segidx = Null | MSegment nat \<comment> \<open>nonce\<close> (layout_of: 'ty)
+declare segidx.map_id0[simp]
+
+datatype ('offset,'ty) memaddr = memaddr (segment_of: "'ty segidx") (offset_of: 'offset ) (infixl "|:" 60)
+declare memaddr.sel[iff]
+
+
+abbreviation shift_addr :: "('a::plus,'ty) memaddr \<Rightarrow> 'a \<Rightarrow> ('a,'ty) memaddr" (infixl "||+" 60)
+  where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) id addr"
+lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
+lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
+
+lemma mem_shift_shift[simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (cases a) simp
+
+virtual_datatype 'ty std_val :: nonsepable_semigroup =
+  V_int :: \<open>nat \<times> nat\<close>
+  V_pointer :: \<open>(nat, 'ty) memaddr\<close>
+  V_record :: \<open>'self list\<close>
+  V_array :: \<open>'self list\<close>
   V_void :: unit
+
+type_synonym 'v opstack = "'v list"
+type_synonym varname = nat
+
+resource_space ('val::nonsepable_semigroup,'ty) std_res =
+  R_mem :: \<open>((nat, 'ty) memaddr \<rightharpoonup> 'val) partial\<close>
+  R_var :: \<open>(varname \<rightharpoonup> 'val) partial\<close>
+
+
+locale std_sem =
+  std_ty  where CONS_OF = TY_CONS_OF and TYPE'NAME = \<open>TYPE('TY_N)\<close> and TYPE'REP = \<open>TYPE('TY)\<close>
++ std_val where CONS_OF = VAL_CONS_OF and TYPE'ty = \<open>TYPE('TY)\<close>
+    and TYPE'NAME = \<open>TYPE('VAL_N)\<close> and TYPE'REP = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
++ std_res where TYPE'val = \<open>TYPE('VAL)\<close> and TYPE'ty = \<open>TYPE('TY)\<close>
+    and TYPE'NAME = \<open>TYPE('RES_N)\<close> and TYPE'REP = \<open>TYPE('RES::comm_monoid_mult)\<close>
+  for TY_CONS_OF and VAL_CONS_OF
+
+
+print_locale std_res
+print_locale std_val
+
+
+
+print_locale std_res
+
+context std_res begin
+definition "xx = id"
+term VALUE_TYPE
+end
+
+thm std_res.xx_def
+
+(* datatype val = V_int nat nat | V_pointer "nat memaddr" |
+  V_record "val list" | V_array "val list" | V_void *)
+
+
+
+
+
+type_synonym 'v res = "(nat memaddr \<rightharpoonup> 'v) partial \<times> (varname \<rightharpoonup> 'v) partial\<times> unit"
+
+instantiation val :: nonsepable_semigroup begin
+definition sep_disj_val :: "val \<Rightarrow> val \<Rightarrow> bool"
+  where"sep_disj_val _ _ = False"
+definition "times_val (_::val) (_::val) = (undefined::val)"
+instance by standard (simp_all add: sep_disj_val_def)
+end
+
+
+subsection \<open>Resource Algebra\<close>
+
+
 
 resource_space 'val std_res =
   R_mem :: "nat memaddr \<Rightarrow> ('val :: trivial_validity) option"

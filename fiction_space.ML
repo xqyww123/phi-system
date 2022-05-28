@@ -1,50 +1,51 @@
 (* AUTHOR: Qiyuan Xu, 2022
  * Modified from state_space.ML written by Norbert Schirmer. *)
 
-signature VIRTUAL_DATATYPE = sig
-  val distinct_compsN : string
-  val consN : string
-  val valueN : string
-  val typeN : string
-  val valueTN : string
-  val nameTN : string
-  val CONS_N : string
-  val CONS_OF_N : string
-  val constructor_locale_N : string
-  val fields_locale_N : string
+signature FICTION_SPACE = sig
+
+val distinct_compsN : string
+val namesN : string
+val repN : string
+val resN : string
+val typeN : string
+val repTN : string
+val nameTN : string
+val NAME_N : string
+val INTERPRET_N : string
+val fields_locale_N : string
 
 
-  val define_VDT_command :
+  val define_FIS_command :
         Outer_Syntax.command_keyword ->
-        string -> string * string -> unit
+        string -> (string * string) * string -> unit
 
 
-  val cons_definition :
+  val namespace_definition :
      binding ->
      typ ->
      (xstring, string) Expression.expr * (binding * string option * mixfix) list ->
      string list -> string list -> theory -> theory
 
-  val define_VDT :
-     (string * (string * Position.T)) ->
-     (string * string option) list ->
+  val define_FIS :
+     ((string * string) * (string * Position.T)) ->
+     string list ->
      binding ->
      ((string * bool) * (string list * (bstring * Position.T) * (string * string) list)) list ->
      (string * string) list -> theory -> theory
-  val define_VDT_i :
-     (string * (string * Position.T)) ->
-     (string * string option) list ->
+  val define_FIS_i :
+     ((string * string) * (string * Position.T)) ->
+     string list ->
      binding ->
      ((string * bool) * (typ list * (bstring * Position.T) * (string * string) list)) list ->
-     (string * typ) list -> theory -> theory
+     (string * term) list -> theory -> theory
 
-  val VDT_decl :
-     ((((string * string option) list * binding) * (string * (bstring * Position.T))) *
+  val FIS_decl :
+     (((string list * binding) * ((string * string) * (bstring * Position.T))) *
        (((string * bool) * (string list * (bstring * Position.T) * (bstring * bstring) list)) list *
         (bstring * string) list)) parser
-  val VDT_decl' :
-     (string * string) ->
-     ((((string * string option) list * binding) * (string * (bstring * Position.T))) *
+  val FIS_decl' :
+     ((string * string) * string) ->
+     (((string list * binding) * ((string * string) * (bstring * Position.T))) *
        (((string * bool) * (string list * (bstring * Position.T) * (bstring * bstring) list)) list *
         (bstring * string) list)) parser
 
@@ -55,37 +56,38 @@ signature VIRTUAL_DATATYPE = sig
   val distinct_simproc : Simplifier.simproc
 
 
-  val is_VDT : Context.generic -> xstring -> bool
+  val is_FIS : Context.generic -> xstring -> bool
 
-  val get_comp' : Context.generic -> string -> (typ * string list) option
-  val get_comp : Context.generic -> string -> (typ * string) option (* legacy wrapper, eventually replace by primed version *)
-  val get_comps : Context.generic -> (typ * string list) Termtab.table
+  val get_comp' : Context.generic -> string -> (term * string list) option
+  val get_comp : Context.generic -> string -> (term * string) option (* legacy wrapper, eventually replace by primed version *)
+  val get_comps : Context.generic -> (term * string list) Termtab.table
 
   val get_silent : Context.generic -> bool
   val set_silent : bool -> Context.generic -> Context.generic
 
-  val trace_constructor_data: Context.generic -> unit
-  val trace_VDT_data: Context.generic -> unit
+  val trace_entry_data: Context.generic -> unit
+  val trace_FIS_data: Context.generic -> unit
 
 end
 
-structure Virtual_DataType : VIRTUAL_DATATYPE = struct
+structure Fiction_Space : FICTION_SPACE = struct
 
 (* Names *)
 
 val distinct_compsN = "distinct_names"
-val consN = "_cons"
-val valueN = "'self"
-val typeN = "THE_TYPE"
-val valueTN = "TYPE'REP"
-val nameTN = "TYPE'NAME"
-val CONS_N = "'CONS"
-val CONS_OF_N = "CONS_OF"
-val constructor_locale_N = "_cons"
+val namesN = "_names"
 val fields_locale_N = "_fields"
+val repN = "'REP"
+val resN = "'RES"
+val typeN = "THE_TYPE"
+val repTN = "TYPE'REP"
+val nameTN = "TYPE'NAME"
+val NAME_N = "'NAME"
+val INTERPRET_N = "INTERPRET"
 val TVAR_N = "TYPE"
 
-val project_injectL_default = \<^locale>\<open>project_inject\<close>
+
+val project_injectL_default = \<^locale>\<open>fictional_project_inject\<close>
 
 
 
@@ -93,11 +95,16 @@ val project_injectL_default = \<^locale>\<open>project_inject\<close>
 
 (* Misc *)
 
-fun valueT S = TFree (valueN, S)
-fun fieldT consT valueT T = Type(\<^type_name>\<open>Field\<close>, [consT, valueT, T])
+fun repT S = TFree (repN, S)
+fun resT S = TFree (resN, S)
+fun entryT nameT repT T = Type(\<^type_name>\<open>Resource_Space.Entry\<close>, [nameT, repT, T])
+fun fictionT T resT = Type(\<^type_name>\<open>fiction\<close>, [T,resT])
+fun T_of_fic fic =
+  case Term.type_of fic of Type(\<^type_name>\<open>fiction\<close>, [T,_]) => T
+    | _ => raise TYPE ("shoud be fiction", [Term.type_of fic], [fic])
 
 fun cons_name_of (Free (s,_)) = s
-  | cons_name_of (Const (\<^const_name>\<open>Field.cons_of\<close>, _) $ x) = Term.term_name x
+  | cons_name_of (Const (\<^const_name>\<open>Resource_Space.Entry.name\<close>, _) $ x) = Term.term_name x
   | cons_name_of t = raise TERM ("const_name_of", [t])
 
 fun comps_of_distinct_thm thm = Thm.prop_of thm
@@ -140,7 +147,7 @@ fun add_locale_cmd name expr elems thy =
 
 (*** Persistent Data ***)
 
-(** constructor_info **)
+(** entry_info **)
 
 (* distinct_thm *)
 
@@ -175,12 +182,12 @@ val join_distinctthm_tab = Symtab.join (fn name => fn (thms1, thms2) => join_dis
 
 (* declinfo_entry *)
 
-fun join_declinfo_entry name (T1:typ, names1:string list) (T2, names2) =
+fun join_declinfo_entry name (T1:term, names1:string list) (T2, names2) =
   let
     fun typ_info T names = @{make_string} T ^ " "  ^ Pretty.string_of (Pretty.str_list "(" ")" names);
   in
     if T1 = T2 then (T1, distinct (op =) (names1 @ names2))
-    else error ("constructor '" ^ name ^ "' disagrees on type:\n " ^ 
+    else error ("entry '" ^ name ^ "' disagrees on interpretation:\n " ^ 
         typ_info T1 names1 ^ " vs. "  ^ typ_info T2 names2) 
   end
 fun guess_name (Free (x,_)) = x
@@ -188,18 +195,18 @@ fun guess_name (Free (x,_)) = x
 
 val join_declinfo = Termtab.join (fn trm => uncurry (join_declinfo_entry (guess_name trm))) 
 
-(* ConstructorData *)
+(* EntryData *)
 
-type constructor_info =
- {declinfo: (typ * string list) Termtab.table, (* type, names of constructors of component  *)
+type entry_info =
+ {declinfo: (term * string list) Termtab.table, (* interpretation, names of component  *)
   distinctthm: thm list Symtab.table, (* minimal list of maximal distinctness-assumptions for a component name *)
   silent: bool
  };
 
 
-structure ConstructorData = Generic_Data
+structure EntryData = Generic_Data
 (
-  type T = constructor_info;
+  type T = entry_info;
   val empty = {declinfo = Termtab.empty, distinctthm = Symtab.empty, silent = false};
   fun merge
     ({declinfo=declinfo1, distinctthm=distinctthm1, silent=silent1},
@@ -209,63 +216,63 @@ structure ConstructorData = Generic_Data
      silent = silent1 andalso silent2 (* FIXME odd merge *)}
 );
 
-fun trace_constructor_data context =  
-  tracing ("ConstructorData: " ^ @{make_string} (ConstructorData.get context))
+fun trace_entry_data context =  
+  tracing ("EntryData: " ^ @{make_string} (EntryData.get context))
 
-fun make_constructor_data declinfo distinctthm silent =
+fun make_entry_data declinfo distinctthm silent =
      {declinfo=declinfo,distinctthm=distinctthm,silent=silent};
 
 
 fun update_declinfo (n,v) ctxt =
   let       
-    val {declinfo,distinctthm,silent} = ConstructorData.get ctxt;
+    val {declinfo,distinctthm,silent} = EntryData.get ctxt;
     val v = apsnd single v
-  in ConstructorData.put (make_constructor_data
+  in EntryData.put (make_entry_data
         (Termtab.map_default (n,v) (join_declinfo_entry (guess_name n) v) declinfo)
         distinctthm silent) ctxt
   end;
 
 fun set_silent silent ctxt =
-  let val {declinfo,distinctthm,...} = ConstructorData.get ctxt;
-  in ConstructorData.put
-      (make_constructor_data declinfo distinctthm silent) ctxt
+  let val {declinfo,distinctthm,...} = EntryData.get ctxt;
+  in EntryData.put
+      (make_entry_data declinfo distinctthm silent) ctxt
   end;
 
-val get_silent = #silent o ConstructorData.get;
+val get_silent = #silent o EntryData.get;
 
 
-(** VDT **)
+(** FIS **)
 
-type VDT_info =
- {value_sort: sort, (* sort of value type *)
+type FIS_info =
+ {sorts: sort * sort, (* sort of representation, sort of resource *)
   args: (string * sort) list, (* type arguments *)
   parents: (typ list * string * string option list) list,
-            (* type instantiation, VDT name, component renamings *)
-  components: (string * typ) list
+            (* type instantiation, FIS name, component renamings *)
+  components: (string * term) list
  };
 
-structure VDT_Data = Generic_Data
+structure FIS_Data = Generic_Data
 (
-  type T = VDT_info Symtab.table;
+  type T = FIS_info Symtab.table;
   val empty = Symtab.empty;
   fun merge data : T = Symtab.merge (K true) data;
 );
 
-fun is_VDT context name =
-  Symtab.defined (VDT_Data.get context) (Locale.intern (Context.theory_of context) name)
+fun is_FIS context name =
+  Symtab.defined (FIS_Data.get context) (Locale.intern (Context.theory_of context) name)
 
-fun trace_VDT_data context =  
-  tracing ("StateSpaceData: " ^ @{make_string} (VDT_Data.get context))
+fun trace_FIS_data context =  
+  tracing ("StateSpaceData: " ^ @{make_string} (FIS_Data.get context))
 
-fun add_VDT name Sv args parents components ctxt =
-      VDT_Data.put
-        (Symtab.update_new (name, {value_sort=Sv,args=args,parents=parents,
+fun add_FIS name Ss args parents components ctxt =
+      FIS_Data.put
+        (Symtab.update_new (name, {sorts=Ss,args=args,parents=parents,
                                    components=components})
-                           (VDT_Data.get ctxt))
+                           (FIS_Data.get ctxt))
         ctxt;
 
-fun get_VDT ctxt name =
-      Symtab.lookup (VDT_Data.get ctxt) name;
+fun get_FIS ctxt name =
+      Symtab.lookup (FIS_Data.get ctxt) name;
 
 
 
@@ -281,7 +288,7 @@ fun mk_free ctxt name =
   else (tracing ("variable not fixed or declared: " ^ name); NONE)
 
 
-fun get_dist_thm ctxt name = Symtab.lookup (#distinctthm (ConstructorData.get ctxt)) name
+fun get_dist_thm ctxt name = Symtab.lookup (#distinctthm (EntryData.get ctxt)) name
 
 fun get_dist_thm2 ctxt x y = 
  (let
@@ -307,7 +314,7 @@ fun get_comp' ctxt name =
   mk_free (Context.proof_of ctxt) name 
   |> Option.mapPartial (fn t => 
        let
-         val declinfo = #declinfo (ConstructorData.get ctxt)
+         val declinfo = #declinfo (EntryData.get ctxt)
        in 
          case Termtab.lookup declinfo t of
            NONE => (* during syntax phase, types of fixes might not yet be constrained completely *) 
@@ -319,7 +326,7 @@ fun get_comp' ctxt name =
 fun get_comp ctxt name =
  get_comp' ctxt name |> Option.map (apsnd (fn ns => if null ns then "" else hd ns)) 
 
-fun get_comps ctxt = #declinfo (ConstructorData.get ctxt)
+fun get_comps ctxt = #declinfo (EntryData.get ctxt)
 
 (*** Tactics ***)
 
@@ -344,7 +351,7 @@ val distinctNameSolver = mk_solver "distinctNameSolver" distinctTree_tac;
 
 val distinct_simproc =
   Simplifier.make_simproc \<^context> "StateSpace.distinct_simproc"
-   {lhss = [\<^term>\<open>Field.cons_of x = Field.cons_of y\<close>],
+   {lhss = [\<^term>\<open>Resource_Space.Entry.name x = Resource_Space.Entry.name y\<close>],
     proc = fn _ => fn ctxt => fn ct =>
       (case Thm.term_of ct of
         Const (\<^const_name>\<open>HOL.eq\<close>,_) $ x $ y =>
@@ -352,7 +359,7 @@ val distinct_simproc =
               (neq_x_y ctxt x y)
       | _ => NONE)};
 
-fun interprete_parent_constructor name dist_thm_name parent_expr thy =
+fun interprete_parent_entry name dist_thm_name parent_expr thy =
   let
     fun solve_tac ctxt = CSUBGOAL (fn (goal, i) =>
       let
@@ -372,7 +379,7 @@ fun interprete_parent_constructor name dist_thm_name parent_expr thy =
 
 (** define cons **)
 
-fun cons_definition name nameT parent_expr parent_comps new_comps thy =
+fun namespace_definition name nameT parent_expr parent_comps new_comps thy =
   let
     val pos = Binding.pos_of name
     val all_comps = parent_comps @ new_comps;
@@ -387,7 +394,7 @@ fun cons_definition name nameT parent_expr parent_comps new_comps thy =
         Context.Theory _ => context
       | Context.Proof ctxt =>
         let
-          val {declinfo,distinctthm=tt,silent} = ConstructorData.get context;
+          val {declinfo,distinctthm=tt,silent} = EntryData.get context;
           val all_names = comps_of_distinct_thm thm;
           fun upd name = Symtab.map_default (name, [thm]) (fn thms => insert_distinct_thm thm thms)
 
@@ -397,7 +404,7 @@ fun cons_definition name nameT parent_expr parent_comps new_comps thy =
               addsimprocs [distinct_simproc]
               |> Context_Position.restore_visible ctxt
               |> Context.Proof
-              |> ConstructorData.put {declinfo=declinfo,distinctthm=tt',silent=silent};
+              |> EntryData.put {declinfo=declinfo,distinctthm=tt',silent=silent};
         in context' end));
 
     val attr = Attrib.internal type_attr;
@@ -412,11 +419,11 @@ fun cons_definition name nameT parent_expr parent_comps new_comps thy =
     thy
     |> add_locale name ([], vars) [Element.Assumes [assume]]
     |> Proof_Context.theory_of
-    |> interprete_parent_constructor (Binding.name_of name) dist_thm_full_name parent_expr
+    |> interprete_parent_entry (Binding.name_of name) dist_thm_full_name parent_expr
   end;
 
 
-(** define VDT **)
+(** define FIS **)
 
 (* preliminary *)
 
@@ -437,12 +444,13 @@ fun add_declaration name decl thy =
   |> (fn lthy => Local_Theory.declaration {syntax = true, pervasive = false} (decl lthy) lthy)
   |> Local_Theory.exit_global;
 
-fun parent_sort thy pname Sv =
+fun parent_sort thy pname (Sv,Sr) =
   let
     val ctxt = Context.Theory thy;
-    val {value_sort, parents, ...} = the (Symtab.lookup (VDT_Data.get ctxt) pname);
+    val {sorts, parents, ...} = the (Symtab.lookup (FIS_Data.get ctxt) pname);
   in
-    fold (parent_sort thy o #2) parents (Sign.inter_sort thy (Sv,value_sort))
+    fold (parent_sort thy o #2) parents (Sign.inter_sort thy (Sv, #1 sorts),
+                                         Sign.inter_sort thy (Sr, #2 sorts))
   end
 
 fun parent_components thy Sv (Ts, pname, renaming) =
@@ -451,18 +459,19 @@ fun parent_components thy Sv (Ts, pname, renaming) =
     fun rename [] xs = xs
       | rename (NONE::rs)  (x::xs) = x::rename rs xs
       | rename (SOME r::rs) ((x,T)::xs) = (r,T)::rename rs xs;
-    val {value_sort, args, parents, components, ...} =
-                  the (Symtab.lookup (VDT_Data.get ctxt) pname);
-    val inst = (valueN, valueT Sv) :: (map fst args ~~ Ts);
-    val subst = Term.map_type_tfree (the o AList.lookup (op =) inst o fst);
+    val {args, parents, components, ...} =
+                  the (Symtab.lookup (FIS_Data.get ctxt) pname);
+    val inst = (repN, repT Sv) :: (map fst args ~~ Ts);
+    val subst = Term.map_type_tfree (fn (N,S) =>
+                    the_default (TFree (N,S)) (AList.lookup (op =) inst N));
     val parent_comps =
       maps (fn (Ts',n,rs) => parent_components thy Sv (map subst Ts', n, rs)) parents;
-    val all_comps = rename renaming (parent_comps @ map (apsnd subst) components);
+    val all_comps = rename renaming (parent_comps @ map (apsnd (Term.map_types subst)) components);
   in all_comps end;
 
 (* main stuff *)
 
-fun VDT_definition value_sort project_injectL
+fun FIS_definition (rep_sort,res_sort) project_injectL
                           args name_b parents parent_comps components thy =
   let
     val name = Binding.name_of name_b
@@ -474,48 +483,53 @@ fun VDT_definition value_sort project_injectL
 
     val arg_names = map fst args;
     (* 'self now is treated as a keyword so it doesn't need variant.*)
-    (* val valueN = singleton (Name.variant_list (valueN :: arg_names)) "'self"; *)
-    val nameN = singleton (Name.variant_list (valueN :: arg_names)) "'name";
-    val valueT = valueT value_sort
-    val valueTT = Term.itselfT valueT
-    val nameT = TFree (CONS_N, Sign.defaultS thy);
+    (* val repN = singleton (Name.variant_list (repN :: arg_names)) "'self"; *)
+    val nameN = singleton (Name.variant_list (repN :: arg_names)) "'name";
+    val repT = repT rep_sort
+    val resT = resT res_sort
+    val repTT = Term.itselfT repT
+    val resTT = Term.itselfT resT
+    val nameT = TFree (NAME_N, Sign.defaultS thy);
     val nameTT  = Term.itselfT nameT
-    val fieldT = fieldT nameT valueT
-    val cons_of = Free(CONS_OF_N, valueT --> nameT)
+    val entryT = entryT nameT repT
+    val domainT = nameT --> HOLogic.mk_setT repT
+    val INTERP_T = nameT --> fictionT repT resT
+    val INTERP = Free(INTERPRET_N, INTERP_T)
     val TYPE_TY = Free(nameTN, nameTT)
-    val VALUE_TY = Free(valueTN, valueTT)
+    val VALUE_TY = Free(repTN, repTT)
     val TVARS = map (fn (T,S) => (prefix TVAR_N T, Term.itselfT (TFree(T,S)))) args
 
     fun parent_expr (prefix, (_, n, rs)) =
-      (suffix constructor_locale_N n,
+      (suffix namesN n,
         (prefix,(Expression.Positional (SOME typeN :: rs),[])));
     val parents_expr = map parent_expr parents;
 
     val locinsts =
-          (\<^locale>\<open>virtual_datatype\<close>, (("",false),
-                (Expression.Positional [SOME cons_of],[]))) ::
+          (\<^locale>\<open>fictional_space\<close>, (("",false),
+                (Expression.Positional [SOME INTERP],[]))) ::
           map (fn (n,T) => (project_injectL,
                     ((n,false),(Expression.Positional
-                         [SOME cons_of,
-                          SOME (Free (n, fieldT T))]
-                    ,[])))) all_comps
-    val locs = (Binding.name typeN, SOME (Term.itselfT valueT), NoSyn) ::
-               (Binding.name CONS_OF_N, SOME (valueT --> nameT), NoSyn) ::
-               maps (fn (n,T) => [(Binding.name n, NONE, NoSyn)]) all_comps @
-               map (fn (N,Ty) => (Binding.name N, SOME Ty, NoSyn) ) TVARS
+                         [SOME INTERP,
+                          SOME (Free (n, entryT (T_of_fic T))),
+                          SOME T]
+                    ,[])))) all_comps;
+    val locs = (Binding.name typeN, SOME (Term.itselfT repT), NoSyn) ::
+               (Binding.name INTERPRET_N, SOME INTERP_T, NoSyn) ::
+                maps (fn (n,T) => [(Binding.name n, NONE, NoSyn)]) all_comps @
+                map (fn (N,Ty) => (Binding.name N, SOME Ty, NoSyn) ) TVARS
     val name_insts = map (fn (n,T) =>
-          (n, Const (\<^const_name>\<open>Field.cons_of\<close>, fieldT T --> nameT)
-                $ Free (n, fieldT T))) all_comps
+          (n, Const (\<^const_name>\<open>Resource_Space.Entry.name\<close>, entryT (T_of_fic T) --> nameT)
+                $ Free (n, entryT (T_of_fic T)))) all_comps
 
     fun interprete_parent_valuetypes (prefix, (Ts, pname, comps)) thy =
       let
         val {components,...} =
-             the (Symtab.lookup (VDT_Data.get (Context.Theory thy)) pname);
+             the (Symtab.lookup (FIS_Data.get (Context.Theory thy)) pname);
         val components' = map (uncurry the_default) (map fst components ~~ comps)
         val pars = components';
 
         val expr = ([(suffix fields_locale_N pname,
-                     (prefix, (Expression.Positional (map SOME (typeN::CONS_OF_N::pars)),[])))],[]);
+                     (prefix, (Expression.Positional (map SOME (typeN::INTERPRET_N::pars)),[])))],[]);
 (*        val (_, SOME intro) = Locale.intros_of thy (suffix fields_locale_N pname) |> @{print}
         val ax = Locale.axioms_of thy (suffix fields_locale_N full_name) |> @{print} *)
       in
@@ -536,7 +550,7 @@ fun VDT_definition value_sort project_injectL
       let
         fun upd_prf ctxt =
           let
-            fun upd (n,v) =
+            fun upd (n,(v:term * string)) =
               let
                 val nT = Proof_Context.infer_type (Local_Theory.target_of lthy) (n, dummyT)
               in Context.proof_map
@@ -548,16 +562,16 @@ fun VDT_definition value_sort project_injectL
       in Context.mapping I upd_prf ctxt end;
 
   in thy
-     |> cons_definition
-           (Binding.suffix_name constructor_locale_N name_b) nameT (parents_expr,[])
+     |> namespace_definition
+           (Binding.suffix_name namesN name_b) nameT (parents_expr,[])
            (map fst parent_comps) (map fst components)
      |> Context.theory_map
-          (add_VDT full_name value_sort args (map snd parents) all_comps)
+          (add_FIS full_name (rep_sort,res_sort) args (map snd parents) all_comps)
      |> add_locale (Binding.suffix_name fields_locale_N name_b) (locinsts,locs) []
      |> Proof_Context.theory_of
      |> fold interprete_parent_valuetypes parents
      |> add_locale name_b
-            (  [(suffix constructor_locale_N full_name,
+            (  [(suffix namesN full_name,
                   (("",false),
                    (Expression.Named ((typeN, TYPE_TY)::name_insts)
                    ,[]))),
@@ -565,14 +579,14 @@ fun VDT_definition value_sort project_injectL
                   (("",false),(Expression.Named [(typeN, VALUE_TY)], []))
                 )],
                [(Binding.name nameTN,  SOME nameTT,  NoSyn),
-                (Binding.name valueTN, SOME valueTT, NoSyn)])
+                (Binding.name repTN, SOME repTT, NoSyn)])
             []
      |> Proof_Context.theory_of
      |> fold interprete_parent parents
      |> add_declaration full_name (declare_declinfo components')
   end;
 
-(** preparation & wrapper for VDT **)
+(** preparation & wrapper for FIS **)
 
 (* prepare arguments *)
 
@@ -591,19 +605,38 @@ fun cert_typ ctxt raw_T env =
     val env' = Term.add_tfreesT T env;
   in (T, env') end;
 
-fun gen_define_VDT prep_typ (value_sort,project_injectL)
+fun read_term ctxt ty raw_T env =
+  let
+    val ctxt' = fold (Variable.declare_typ o TFree) env ctxt;
+    val T = Syntax.parse_term ctxt' raw_T
+              |> Type.constraint ty
+              |> Syntax.check_term ctxt'
+    val env' = Term.add_tfrees T env;
+  in (T, env') end;
+
+fun cert_term ctxt ty raw_T env =
+  let
+    val thy = Proof_Context.theory_of ctxt;
+    val (Tm,Ty,_) = Sign.certify_term thy (Type.constraint ty raw_T)
+    val _ = Type.no_tvars Ty
+      handle TYPE (msg, _, _) => error msg;
+    val Tm = Sign.no_vars ctxt Tm
+    val env' = Term.add_tfrees Tm env;
+  in (Tm, env') end;
+
+fun gen_define_FIS prep_typ prep_term (sorts,project_injectL)
                    args name_b parents comps thy =
   let (* - args distinct
          - only args may occur in comps and parent-instantiations
          - number of insts must match parent args
          - no duplicate renamings
-         - renaming should occur in constructor
+         - renaming should occur in entry
          -
          - self_sort: sort of the value type
       *)
-    val _ = writeln ("Defining VDT " ^ Binding.print name_b ^ " ...");
+    val _ = writeln ("Defining FIS " ^ Binding.print name_b ^ " ...");
 
-    val ctxt = Proof_Context.init_global thy;
+    val ctxt = Locale.init \<^locale>\<open>fiction\<close> thy;
 
     fun add_parent (prefix, (Ts, pname, rs)) env =
       let
@@ -615,17 +648,17 @@ fun gen_define_VDT prep_typ (value_sort,project_injectL)
         val full_pname = Locale.check thy pname;
         val quote = quote o fst
         val {args,components,...} =
-              (case get_VDT (Context.Theory thy) full_pname of
+              (case get_FIS (Context.Theory thy) full_pname of
                 SOME r => r
-               | NONE => error ("Undefined VDT " ^ quote pname));
+               | NONE => error ("Undefined FIS " ^ quote pname));
 
 
         val (Ts',env') = fold_map (prep_typ ctxt) Ts env
             handle ERROR msg => cat_error msg
-                    ("The error(s) above occurred in parent VDT specification "
+                    ("The error(s) above occurred in parent FIS specification "
                     ^ quote pname);
         val err_insts = if length args <> length Ts' then
-            ["number of type instantiation(s) does not match arguments of parent VDT "
+            ["number of type instantiation(s) does not match arguments of parent FIS "
               ^ quote pname]
             else [];
 
@@ -644,18 +677,22 @@ fun gen_define_VDT prep_typ (value_sort,project_injectL)
         val errs =err_insts @ err_dup_renamings @ err_rename_unknowns
       in
         if null errs then ((prefix', (Ts', full_pname, rs')), env')
-        else error (cat_lines (errs @ ["in parent VDT " ^ quote pname]))
+        else error (cat_lines (errs @ ["in parent FIS " ^ quote pname]))
       end;
 
-    val args' = map (apsnd (Option.map (Syntax.read_sort ctxt) #> the_default (Sign.defaultS thy))) args
+    val (parents',env) = fold_map add_parent parents [];
+    
+    fun prep_sort S' S = if S = "" then S' else Syntax.read_sort ctxt S
+    val sorts' = fold (parent_sort thy o #2 o #2) parents'
+                  (apfst (prep_sort \<^sort>\<open>comm_monoid_mult\<close>)
+                    (apsnd (prep_sort \<^sort>\<open>comm_monoid_mult\<close>) sorts))
+    val env = (repN, #1 sorts')::(resN, #2 sorts')::env
+    
+    val fictionT = Type(\<^type_name>\<open>fiction\<close>, [dummyT, resT (#2 sorts')])
 
-    val (parents',env) = fold_map add_parent parents args';
-    val value_sort' = fold (parent_sort thy o #2 o #2) parents' 
-              (if value_sort = "" then Sign.defaultS thy else Syntax.read_sort ctxt value_sort)
-    val env = (valueN, value_sort')::env
 
     val err_dup_args =
-         (case duplicates (op =) (map fst args) of
+         (case duplicates (op =) args of
             [] => []
           | dups => ["Duplicate type argument(s) " ^ commas dups]);
 
@@ -666,14 +703,14 @@ fun gen_define_VDT prep_typ (value_sort,project_injectL)
           | dups => ["Duplicate state-space components " ^ commas dups]);
 
     fun prep_comp (n,T) env =
-      let val (T', env') = prep_typ ctxt T env handle ERROR msg =>
+      let val (T', env') = prep_term ctxt fictionT T env handle ERROR msg =>
        cat_error msg ("The error(s) above occurred in component " ^ quote n)
       in ((n,T'), env') end;
 
     val (comps',env') = fold_map prep_comp comps env;
 
     val err_value_keyword =
-          if member (op =) (map fst args) valueN
+          if member (op =) args repN
           then ["'self is a reserved keyword and cannot be a type parameter"]
           else []
       
@@ -683,17 +720,19 @@ fun gen_define_VDT prep_typ (value_sort,project_injectL)
       
     val project_injectL = Locale.check thy project_injectL
 
+    val args' = map (fn x => (x, AList.lookup (op =) env x |> the_default (Sign.defaultS thy))) args;
+
 
     fun fst_eq ((x:string,_),(y,_)) = x = y;
-    fun snd_eq ((_,t:typ),(_,u)) = t = u;
+    fun snd_eq ((_,t:term),(_,u)) = t = u;
 
-    val raw_parent_comps = maps (parent_components thy value_sort' o snd) parents';
+    val raw_parent_comps = maps (parent_components thy (#1 sorts') o snd) parents';
     fun check_type (n,T) =
           (case distinct (snd_eq) (filter (curry fst_eq (n,T)) raw_parent_comps) of
              []  => []
            | [_] => []
-           | rs  => ["Different types for component " ^ quote n ^ ": " ^
-                commas (map (Syntax.string_of_typ ctxt o snd) rs)])
+           | rs  => ["Different interpretation for component " ^ quote n ^ ": " ^
+                commas (map (Syntax.string_of_term ctxt o snd) rs)])
 
     val err_dup_types = maps check_type (duplicates fst_eq raw_parent_comps)
 
@@ -705,14 +744,14 @@ fun gen_define_VDT prep_typ (value_sort,project_injectL)
     val errs = err_dup_args @ err_dup_components @ err_extra_frees @
                err_dup_types @ err_comp_in_parent @ err_value_keyword;
   in if null errs
-     then thy |> VDT_definition value_sort' project_injectL
-                                       args' name_b parents' parent_comps comps'
+     then thy |> FIS_definition sorts' project_injectL
+                                args' name_b parents' parent_comps comps'
      else error (cat_lines errs)
   end
-  handle ERROR msg => cat_error msg ("Failed to define VDT " ^ Binding.print name_b);
+  handle ERROR msg => cat_error msg ("Failed to define fiction space " ^ Binding.print name_b);
 
-val define_VDT = gen_define_VDT read_typ;
-val define_VDT_i = gen_define_VDT cert_typ;
+val define_FIS = gen_define_FIS read_typ read_term;
+val define_FIS_i = gen_define_FIS cert_typ cert_term;
 
 
 (*** outer syntax ***)
@@ -738,26 +777,26 @@ val parent =
 
 in
 
-fun VDT_decl' (default_value_sort, default_locale) =
-  Parse.type_args_constrained -- Parse.binding --
+fun FIS_decl' (default_sorts, default_locale) =
+  Parse.type_args -- Parse.binding --
     Scan.optional (\<^keyword>\<open>::\<close> |-- (
-         Parse.sort >> rpair (default_locale, Position.none)
-      || \<^keyword>\<open>(\<close> |-- Parse.sort --| \<^keyword>\<open>,\<close> -- Parse.name_position --| \<^keyword>\<open>)\<close>
-    )) (default_value_sort,(default_locale, Position.none)) --
+      Parse.sort --| \<^keyword>\<open>,\<close> -- Parse.sort
+        -- Scan.optional (\<^keyword>\<open>,\<close> |-- Parse.name_position) (default_locale, Position.none)
+    )) (default_sorts,(default_locale, Position.none)) --
   (\<^keyword>\<open>=\<close> |--
     ((Scan.repeat1 comp >> pair []) ||
       (plus1_unless comp parent --
         Scan.optional (\<^keyword>\<open>+\<close> |-- Parse.!!! (Scan.repeat1 comp)) [])));
 
 
-fun define_VDT_command kwd comment defaults_setting =
+fun define_FIS_command kwd comment defaults_setting =
   Outer_Syntax.command kwd comment
-    (VDT_decl' defaults_setting >> (fn (((args, name), sort_locale), (parents, comps)) =>
-      Toplevel.theory (define_VDT sort_locale args name parents comps)));
+    (FIS_decl' defaults_setting >> (fn (((args, name), sort_locale), (parents, comps)) =>
+      Toplevel.theory (define_FIS sort_locale args name parents comps)));
 
-val VDT_decl = VDT_decl' ("",project_injectL_default)
-val _ = define_VDT_command
-   \<^command_keyword>\<open>virtual_datatype\<close> "define virtual datatype as a locale context" ("",project_injectL_default)
+val FIS_decl = FIS_decl' (("",""),project_injectL_default)
+val _ = define_FIS_command
+   \<^command_keyword>\<open>fiction_space\<close> "define fiction space by locale" (("",""),project_injectL_default)
 
 
 end;

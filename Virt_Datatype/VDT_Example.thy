@@ -1,3 +1,5 @@
+(* AUTHOR: Qiyuan Xu, 2022 *)
+
 theory VDT_Example
   imports Virtual_Datatype
 begin
@@ -14,39 +16,44 @@ print_locale T1
 print_locale T1_cons
 print_locale T1_fields
 
+thm T1_cons_def
+
 context T1 begin
 
 text \<open>\<^typ>\<open>'value\<close> is a sort plus!\<close>
-term "mk_C1 a + mk_C2 b"
+term "C1.mk a + C2.mk b"
 
-lemma "dest_C1 (mk_C1 x) = x" by simp
+lemma "C1.dest (C1.mk x) = x" by simp
 
-lemma "mk_C1 x \<noteq> mk_C2 y" by simp
+ML \<open>@{term C1.cons}\<close>
 
-lemma "mk_C1 x = mk_C1 y \<longleftrightarrow> x = y" by rule simp_all
+lemma "C1.cons \<noteq> C2.cons" by simp
 
-lemma "mk_C1 x = mk_C1 y \<longleftrightarrow> x = y" by blast
+lemma "C1.mk x \<noteq> C2.mk y" by simp
 
-lemma "CONS_OF (mk_C1 x) = C1" by simp
+lemma "C1.mk x = C1.mk y \<longleftrightarrow> x = y" by simp
 
-lemma "C1.is_instance (mk_C1 x)" by simp
+lemma "CONS_OF (C1.mk x) = C1.cons" by simp
+
+lemma "C1.is_instance (C1.mk x)" by simp
 
 thm C1.is_instance_def
 
 (* TODO: a simp proc to automate this *)
-lemma "\<not> C1.is_instance (mk_C2 x)" unfolding C1.is_instance_def by simp
+lemma "\<not> C1.is_instance (C2.mk x)" unfolding C1.is_instance_def by simp
 
 end
 
 
 subsection \<open>Inheritance\<close>
+print_locale T1
 
 virtual_datatype T2 = T1 + xx: T1[C1=CC1] +
   C3 :: int
 
 virtual_datatype T3 = T2[C1=CC1,CC1=CCC1]
 
-definition (in T1) "trn vx = mk_C1 (if dest_C2 vx then 1 else 0)"
+definition (in T1) "trn vx = C1.mk (if C2.dest vx then 1 else 0)"
 
 context T2 begin
 thm trn_def
@@ -62,12 +69,12 @@ end
 
 subsection \<open>Recursion\<close>
 
-virtual_datatype TR =
+virtual_datatype 'a TR =
   R_NIL :: "unit"
-  R_CONS :: "nat \<times> 'self"
+  R_CONS :: "'a \<times> 'self"
 
 context TR begin
-definition "sth = mk_R_CONS (0, mk_R_CONS (1, mk_R_NIL ()))"
+definition "sth = R_CONS.mk (undefined, R_CONS.mk (undefined, R_NIL.mk ()))"
 end
 
 virtual_datatype Inconsistent =
@@ -82,12 +89,10 @@ text \<open>Though, the recursive virtual datatype is unverified in the locale,
 
 datatype my_cons = MY_R_NIL | MY_R_CONS
 
-interpretation interp1: TR MY_R_NIL MY_R_CONS
+interpretation interp1: TR
   "(\<lambda>l. case l of [] \<Rightarrow> MY_R_NIL | _ \<Rightarrow> MY_R_CONS)"
-  "(\<lambda>l. case l of [] \<Rightarrow> ())"
-  "(\<lambda>_. [])"
-  "(\<lambda>l. case l of (a#l') \<Rightarrow> (a,l'))"
-  "(\<lambda>(a,l'). a#l')"
+  \<open>Virtual_Datatype.Field MY_R_NIL (\<lambda>_. ()) (\<lambda>_. [])\<close>
+  \<open>Virtual_Datatype.Field MY_R_CONS (\<lambda>l. case l of (a#l') \<Rightarrow> (a,l')) (\<lambda>(a,l'). a#l')\<close>
   by unfold_locales (auto split: list.split unit.split)
   
 thm interp1.sth_def[simplified]
