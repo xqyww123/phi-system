@@ -75,7 +75,6 @@ signature NU_BASICS = sig
 
   val default_ty_R : typ
   val strip_separations : term -> term list
-  val stack_ty_of_nu : term (*nu-type*) -> typ
 
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
   (* val auto_fusion_arity : term -> int *)
@@ -84,7 +83,7 @@ structure NuBasics = struct
 open Thm Term HOLogic NuHelp
 exception NDBG of thm
 
-val nu_bind_name = "\<nu>this"
+val nu_bind_name = "\<phi>this"
 fun the_nu_fact stat = Proof_Context.get_thm (Proof.context_of stat) nu_bind_name
 fun set_nu_fact th stat = stat
   |> Proof.set_facts [th]
@@ -101,7 +100,7 @@ fun dest_typroc_c ty = (dest_ctyp1 (dest_ctyp0 ty), dest_ctyp0 (dest_ctyp1 ty))
 
 fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
-                                    | TERM _ => raise TERM (msg, [prop_of th])
+                                      | TERM _ => raise TERM (msg, [prop_of th])
 
 val dest_param = perhaps (try dest_Trueprop) #> dest_monop @{const_name "ParamTag"}
 val dest_param_c = dest_monop_c @{const_name "ParamTag"}
@@ -125,7 +124,7 @@ val label_c = @{cterm "LABEL name"}
 fun mk_label name = label_const $ Abs (name, unit_ty, unit_const)
 fun mk_label_c name = renamed_term (mk_label name) label_c
 fun mk_label_thm name = 
-  Thm.instantiate ([],[((("x",0),@{typ label}), mk_label_c name)]) @{thm LabelTag}
+  Thm.instantiate (TVars.empty, Vars.make [((("x",0),\<^typ>\<open>label\<close>), mk_label_c name)]) @{thm LabelTag}
 fun mk_labelled name tm = Const(@{const_name Labelled}, dummyT) $ mk_label name $ tm
 fun mk_name_hint name tm = Const(@{const_name NameHint}, dummyT) $ mk_label name $ tm
 
@@ -136,14 +135,14 @@ fun dest_labelled_opt tm =
      SOME (v,tm) => (SOME (dest_label v), tm)
    | NONE => (NONE, tm)
 
-fun dest_ELE (Const (@{const_name Val_Ele}, _) $ X) = X
-  | dest_ELE (Const (@{const_name Obj_Ele}, _) $ X) = X
+fun dest_ELE (Const (@{const_name std.Val_Ele}, _) $ X) = X
+  | dest_ELE (Const (@{const_name std.Obj_Ele}, _) $ X) = X
   | dest_ELE (Const (@{const_name Ele}, _) $ X) = X
   | dest_ELE X = X
 
-val dest_nuTy = dest_ELE #> dest_binop @{const_name "\<nu>Type"}
-val dest_nuTy_c = dest_binop_c @{const_name "\<nu>Type"}
-val mk_nuTy = mk_binop @{const_name "\<nu>Type"}
+val dest_nuTy = dest_ELE #> dest_binop @{const_name "\<phi>Type"}
+val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}
+val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
 val dest_RepSet = dest_nuTy
 val mk_RepSet = mk_nuTy #> mk_monop @{const_name "Ele"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
@@ -152,13 +151,13 @@ fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 val mk_auto_tag = mk_monop @{const_name "Auto"}
 
 val dest_CurrentConstruction   =
-      perhaps (try dest_Trueprop) #> dest_triop @{const_name "CurrentConstruction"}
+      perhaps (try dest_Trueprop) #> dest_triop @{const_name "std.CurrentConstruction"}
 val dest_CurrentConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "CurrentConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "std.CurrentConstruction"}
 val dest_PendingConstruction   =
-      perhaps (try dest_Trueprop) #> dest_quadop @{const_name "PendingConstruction"}
+      perhaps (try dest_Trueprop) #> dest_quadop @{const_name "std.PendingConstruction"}
 val dest_PendingConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "PendingConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "std.PendingConstruction"}
 
 fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
   handle TERM _ => ((dest_PendingConstruction c |> #2)
@@ -193,7 +192,7 @@ val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
 val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
 fun current_block_depth th =
   codeblocks_of th |> filter (dest_codeblock #> #1 #> term_name #>
-    (String.isPrefix "\<nu>hide_") #> not) |> length
+    (String.isPrefix "\<phi>hide_") #> not) |> length
 fun current_codeblock specthm =
   let
     val blk_var = current_block_var specthm
@@ -218,29 +217,29 @@ fun param_set_free_var_name ctx name thm =
   let
     val param_var as (_, param_ty) = prems_of thm |> hd |> dest_param |> dest_Var
   in
-    instantiate ([], [(param_var, cterm_of ctx (Free (name, param_ty)))]) thm
+    instantiate (TVars.empty, Vars.make [(param_var, cterm_of ctx (Free (name, param_ty)))]) thm
       |> (fn x => thm_ParamTag RS x)
   end
 
 val dest_procedure   = perhaps (try dest_Trueprop)
   (* #> strip_binder @{const_name All} #> #2
   #> strip_binop_r @{const_name HOL.implies} #> last *)
-  #> dest_triop @{const_name "Procedure"}
+  #> dest_triop @{const_name "std.Procedure"}
 val dest_procedure_c = perhaps (try dest_Trueprop_c)
   (* #> strip_binder_c @{const_name All} #> #2
   #> strip_binop_r_c @{const_name HOL.implies} #> last *)
-  #> dest_triop_c @{const_name "Procedure"}
+  #> dest_triop_c @{const_name "std.Procedure"}
 val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest_Trueprop)
 val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
 
 val vx = ("x",0) and va = ("'a",0)
 fun intro_param tm =
-  Thm.instantiate ([((("'a",0), ["HOL.type"]), ctyp_of_cterm tm)],
-                   [((("x",0), typ_of (ctyp_of_cterm tm)), tm)]) @{thm ParamTag}
+  Thm.instantiate (TVars.make [((("'a",0), ["HOL.type"]), ctyp_of_cterm tm)],
+                   Vars.make  [((("x",0), typ_of (ctyp_of_cterm tm)), tm)]) @{thm ParamTag}
 val intro_param_name = intro_param o mk_label_c
 
-val dest_Cast   = dest_triop   @{const_name "Cast"}
-val dest_Cast_c = dest_triop_c @{const_name "Cast"}
+val dest_Cast   = dest_triop   @{const_name "Subty"}
+val dest_Cast_c = dest_triop_c @{const_name "Subty"}
 
 
 fun trim_tylabel_name name = String.substring(name, 2, size name - 2)
@@ -261,14 +260,17 @@ fun normlize_name name =
 fun normlize_thm_of_names th =
   let
     val thy = Thm.theory_of_thm th
-    val insts = Thm.add_tvars th []
-                  |> map_filter (fn x => case typ_of x of TVar (tvar as ((name,_),["HOL.type"])) =>
-                      if String.isPrefix "'_" name
-                      then SOME (tvar, Thm.global_ctyp_of thy (TFree (name,["HOL.type"])))
-                      else NONE
-                                            | _ => NONE)
+    val insts = Thm.add_tvars th TVars.empty
+                  |> TVars.dest
+                  |> map_filter (fn (_,x) =>
+                      case typ_of x of TVar (tvar as ((name,_),["HOL.type"])) =>
+                        if String.isPrefix "'_" name
+                        then SOME (tvar, Thm.global_ctyp_of thy (TFree (name,["HOL.type"])))
+                        else NONE
+                      | _ => NONE)
+                  |> TVars.make
   in
-    Thm.instantiate (insts,[]) th
+    Thm.instantiate (insts, Vars.empty) th
   end
 
 (* val auto_fusion_arity =
@@ -281,23 +283,13 @@ fun normlize_thm_of_names th =
   #> strip_binop_r "NuLLReps.AutoFusion" #> length *)
 
 (*default type remander*)
-val default_ty_R = TFree ("'\<RR>", [@{class "stack"}])
+(* val default_ty_R = TFree ("'\<RR>", [@{class "stack"}]) *)
 (*translate tail of a stack type to `ty_R`, if it ends with void*)
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
   | strip_separations (Abs (_, _, T)) = strip_separations T
-  | strip_separations T = strip_binop_l @{const_name Separation} T
-
-fun stack_ty_of_nu arg_nuTy =
-  strip_separations arg_nuTy
-    |> map_filter (try (
-        dest_monop @{const_name Val_Ele}
-          #> fastype_of
-          #> dest_monop_ty "Set.set"
-      ))
-    |> (fn L => L @ [default_ty_R])
-    |> HOLogic.mk_tupleT
+  | strip_separations T = strip_binop_l @{const_name times} T
 
 
 end

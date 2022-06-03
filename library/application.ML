@@ -2,7 +2,7 @@ signature NU_APPLICATION = sig
 
   val trace : bool Config.T
 
-  val apply_proc_naive : thm (*proc*) -> thm (*meta or major*) -> thm
+  val apply_proc_naive : Proof.context -> thm (*proc*) -> thm (*meta or major*) -> thm
 
   type cost = int
   type application_thm = {
@@ -32,7 +32,8 @@ val expand_appliant =
   repeat (fn th => th RS @{thm mp}) #>
   repeat (fn th => th RS @{thm spec})
 
-fun apply_proc_naive proc sequent = expand_appliant proc RS (sequent RS @{thm apply_proc})
+fun apply_proc_naive ctxt proc sequent =
+  expand_appliant proc RS (sequent RS (Proof_Context.get_thm ctxt "local.\<phi>apply_proc"))
 
 type applicant_idx = int
 type cost = int
@@ -125,7 +126,7 @@ fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
   end
 
 val _ =
-  Outer_Syntax.local_theory @{command_keyword setup_\<nu>application_method}
+  Outer_Syntax.local_theory @{command_keyword setup_\<phi>application_method}
     "define \<nu>application_method"
     (Parse.term -- (Parse.int >> ~) -- Parse.enum "|" Parse.term --| @{keyword =} -- Parse.ML_source
       >> setup_cmd)

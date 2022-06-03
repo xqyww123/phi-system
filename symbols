@@ -1,9 +1,8 @@
-\<cross_product>    code: 0x002A2F    font: Symbola    group: operator     abbrev: <x>
+\<heavy_comma>      code: 0x00275F    font: Symbola    group: punctuation  abbrev: ,,
 \<heavy_asterisk>   code: 0x002731    font: Symbola    group: punctuation  abbrev: <**>
 \<rtbrak>           code: 0x002998    font: Symbola    group: punctuation  abbrev: )]
 \<ltbrak>           code: 0x002997    font: Symbola    group: punctuation  abbrev: [(
 \<perpendicular>    code: 0x0027c2    font: Symbola    group: relation     abbrev: _|_
-\<R_arr_tail>       code: 0x0021a3    font: Symbola    group: arrow        abbrev: >->
 \<left_fish_tail>   code: 0x00297c    font: Symbola    group: operator
 \<down_fish_tail>   code: 0x00297f    font: Symbola    group: operator
 \<tort_lbrace>      code: 0x002772    font: Symbola    group: punctuation  abbrev: [[
@@ -15,7 +14,6 @@
 \<medium_left_bracket>   code: 0x002774  font: Symbola   abbrev: {{
 \<medium_right_bracket>  code: 0x002775  font: Symbola   abbrev: }}
 \<ratio>        code: 0x002236   font: Symbola   group: operator     abbrev: <TY>
-\<tycolon>      code: 0x002982   font: Symbola   group: operator     abbrev: <ty>
 \<nuLinkL>      code: 0x002919   font: Symbola   group: punctuation  abbrev: --<
 \<nuLinkR>      code: 0x00291a   font: Symbola   group: punctuation  abbrev: >--
 \<nuFusion>     code: 0x00229b   font: Symbola   group: operator     abbrev: ~O*

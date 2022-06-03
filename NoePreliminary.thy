@@ -1,4 +1,4 @@
-theory NoeMisc
+theory NoePreliminary
   imports Main
 (*  abbrevs
     "<own>" = "\<Znrres>" *)
@@ -7,10 +7,23 @@ begin
 
 section \<open>Preliminary\<close>
 
-text \<open>Supplementary mathematical notions for the \<nu>-system\<close>
+paragraph \<open>Configurations\<close>
+
+named_theorems \<phi>elim "\<nu>-type elimination rules"
+named_theorems \<phi>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
+  (* and \<nu>address_def \<open>primitive definitions for unfolding in proofs for address\<close> *)
+  and \<nu>post_construct and \<nu>auto_destruct
+named_theorems typing_expn "expansion theorems for abstractions" and lrep_exps and \<phi>expns
+
+
+paragraph \<open>Mathematical Helpers and Settings\<close>
 
 notation rel_prod (infixr "\<times>\<^sub>r" 80)
 notation pred_prod (infixr "\<times>\<^sub>p" 80)
+
+lemma pair_exists: "Ex P \<longleftrightarrow> (\<exists>a b. P (a,b))" using split_paired_Ex .
+lemma pair_forall: "All P \<longleftrightarrow> (\<forall>a b. P (a,b))" using split_paired_All .
+lemmas pair_All = split_paired_all
 
 lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> PROP R)" by rule simp+
 
@@ -19,7 +32,7 @@ locale homo_mult =
   assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
     and homo_one[simp]: "\<phi> 1 = 1"
 
-
+definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
 
 
 (*

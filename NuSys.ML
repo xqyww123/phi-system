@@ -70,8 +70,8 @@ exception ReasoningFail of thm
 val aux_name = "that" and aux_name_raw = "\<nu>aux'raw"
 fun hyp_export is_goal asms = (I,I)
 val curr_const_attrs = [Thm.declaration_attribute (Named_Theorems.add_thm "NuSys.useful")]
-fun aux_facts ctx = Proof_Context.get_thms ctx aux_name
-fun aux_facts_raw ctx = Proof_Context.get_thm ctx aux_name_raw
+fun aux_facts ctxt = Proof_Context.get_thms ctxt aux_name
+fun aux_facts_raw ctxt = Proof_Context.get_thm ctxt aux_name_raw
 
 
 fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
@@ -83,9 +83,9 @@ fun head_only tac th =
   if nprems_of th = 0
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
-fun raw_auto ctx =
-  ((Method.insert_tac ctx (Named_Theorems.get ctx "NuSys.useful") 1)
-    THEN Clasimp.auto_tac ctx)
+fun raw_auto ctxt =
+  ((Method.insert_tac ctxt (Named_Theorems.get ctxt "NuSys.useful") 1)
+    THEN Clasimp.auto_tac ctxt)
 
 (*** Different tag tac ***)
 fun different_tag th =
@@ -125,20 +125,22 @@ fun REPEATX tac =
 
 
 (** Basic Operations **)
-fun cast ctx desired_nu sequent =
+fun cast ctxt desired_nu sequent =
   let
-    val cast  = Drule.infer_instantiate ctx [(("T'",0),desired_nu)] @{thm "cast"}
-    val cast' = Drule.infer_instantiate ctx [(("T'",0),desired_nu)] @{thm "cast'"}
+    val cast = Proof_Context.get_thm ctxt "local.\<phi>cast"
+    val cast' = Proof_Context.get_thm ctxt "local.\<phi>cast'"
+    val cast  = Drule.infer_instantiate ctxt [(("T'",0),desired_nu)] cast
+    val cast' = Drule.infer_instantiate ctxt [(("T'",0),desired_nu)] cast'
   in
     sequent RS cast' handle THM _ => sequent RS cast
   end
-fun cast_completely ctx desired_nu major =
-  cast ctx desired_nu major
-    |> SOLVED_RULE (Nu_Reasoner.reason ctx) (fn th => raise CastFail th)
+fun cast_completely ctxt desired_nu major =
+  cast ctxt desired_nu major
+    |> SOLVED_RULE (Nu_Reasoner.reason ctxt) (fn th => raise CastFail th)
 
-val conversion_thm = @{thm conversion}
-fun conversion ctx to from =
+fun conversion ctxt to from =
   let
+    val conversion_thm = Proof_Context.get_thm ctxt "local.\<phi>conversion"
     val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
     val (f',U',V') = dest_procedure_c to
     val (a,b) = dest_typroc_c (ctyp_of_cterm f) 
@@ -159,47 +161,49 @@ fun conversion ctx to from =
   in
     from RSN (2,rule)
   end
-fun conversion_completely ctx to from =
-  conversion ctx to from
+fun conversion_completely ctxt to from =
+  conversion ctxt to from
     |> Goal.protect 1
-    |> SOLVED_RULE (Nu_Reasoner.reason ctx) (fn th => raise CastFail th)
+    |> SOLVED_RULE (Nu_Reasoner.reason ctxt) (fn th => raise CastFail th)
     |> Goal.conclude
 
-fun export_codeblock cb sequent =
+fun export_codeblock ctxt cb sequent =
   let
+    val reassemble_proc = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc"
     val (s',_,_) = dest_codeblock_c cb
   in
     sequent
       |> Thm.implies_intr cb
       |> Thm.forall_intr s'
-      |> (fn th => th COMP @{thm reassemble_proc})
+      |> (fn th => th COMP reassemble_proc)
       (* |> Thm.assumption NONE 1
       |> Seq.make_results |> Seq.the_result "export_codeblock" *)
   end
 
-fun accept_proc sequent ctx =
+fun accept_proc sequent ctxt =
   let
     val (f,s,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
     val tyb = range_type (fastype_of f)
-    val name = term_name s |> Variable.revert_fixed ctx
-    val ([name],ctx) = Variable.add_fixes [name] ctx
+    val name = term_name s |> Variable.revert_fixed ctxt
+    val ([name],ctxt) = Variable.add_fixes [name] ctxt
     val s' = Free (name, tyb)
-    val ctx = Variable.declare_constraints s' ctx
-    val s' = Thm.cterm_of ctx s'
-    val accept_proc_thm = Drule.infer_instantiate ctx [(("s'",0),s')] @{thm accept_proc}
+    val ctxt = Variable.declare_constraints s' ctxt
+    val s' = Thm.cterm_of ctxt s'
+    val accept_proc_thm = Proof_Context.get_thm ctxt "local.\<phi>accept_proc"
+    val accept_proc_thm = Drule.infer_instantiate ctxt [(("s'",0),s')] accept_proc_thm
     val sequent = sequent RS accept_proc_thm
     val assm = Thm.cprem_of sequent 1
-    val ([cb],ctx) = Assumption.add_assms
-          (fn _ => fn [cb] => (export_codeblock cb, I)) [assm] ctx
+    val ([cb],ctxt) = Assumption.add_assms
+          (fn _ => fn [cb] => (export_codeblock cb, I)) [assm] ctxt
     val sequent = cb RS sequent
   in
-    (sequent,ctx)
+    (sequent,ctxt)
   end
 
 
-fun apply ctx appliants major =
-  NuApply.apply ctx appliants major
-    |> Nu_Reasoner.reason_s ctx
+fun apply ctxt appliants major =
+  NuApply.apply ctxt appliants major
+    |> Nu_Reasoner.reason_s ctxt
     |> (fn x => case Seq.pull x
                   of SOME (th,_) => perhaps (try Goal.conclude) th
                    | NONE => raise THM ("fail to apply", 0, major::appliants))
@@ -213,57 +217,58 @@ fun param_type sequent =
   (* TODO: how to parse (check) the term of a desired type pattern
   * (schematic type variable)? *)
 
-fun set_param ctx term sequent =
+fun set_param ctxt term sequent =
   (term |> Type.constraint (param_type sequent)
-        |> Syntax.check_term ctx |> Thm.cterm_of ctx |> NuBasics.intro_param)
+        |> Syntax.check_term ctxt |> Thm.cterm_of ctxt |> NuBasics.intro_param)
     RS sequent
 
-fun set_param_cmd ctx term sequent =
+fun set_param_cmd ctxt term sequent =
   case try (dest_funT #> apfst dest_named) (param_type sequent)
     of SOME (name_and_tys, rng) =>
         let
           val fixes = map (fn (name,ty) =>
                 (Binding.name name, (if ty = dummyT then NONE else SOME ty), NoSyn)) name_and_tys
-          val (fixed_names, ctx) = Proof_Context.add_fixes fixes ctx
-          val term = Syntax.parse_term ctx term
+          val (fixed_names, ctxt) = Proof_Context.add_fixes fixes ctxt
+          val term = Syntax.parse_term ctxt term
                       |> tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
                       |> mk_monop @{const_name case_named}
         in
-          set_param ctx term sequent
+          set_param ctxt term sequent
         end
-     | NONE => set_param ctx (Syntax.parse_term ctx term) sequent
+     | NONE => set_param ctxt (Syntax.parse_term ctxt term) sequent
 
 fun set_label name sequent = mk_label_thm name RS sequent
 
-fun finish_proc cc sequent =
+fun finish_proc ctxt cc sequent =
   let
+    val reassemble_proc_final = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_final"
     val (s',H',_) = dest_CurrentConstruction_c cc
   in
     sequent
       |> Thm.implies_intr cc
       |> Thm.forall_intr H'
       |> Thm.forall_intr s'
-      |> (fn th => th COMP @{thm reassemble_proc_final})
+      |> (fn th => th COMP reassemble_proc_final)
   end
 
 
-fun start_proc stack_ty blk_name arg_nuTy ctx =
+fun start_proc stack_ty blk_name arg_nuTy ctxt =
   let
     val stack_ty = case stack_ty of SOME T => T
                                   | NONE => stack_ty_of_nu (term_of arg_nuTy)
-    val ([blk_name, RR],ctx) = Variable.add_fixes [blk_name, "\<RR>"] ctx
+    val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
     val stat_var = Free (blk_name, mk_stateT stack_ty)
-    val ctx = Variable.declare_constraints stat_var ctx
-    val init = Const(@{const_name CurrentConstruction},
-                  fastype_of stat_var --> @{typ "(heap \<times> stack) set"}
+    val ctxt = Variable.declare_constraints stat_var ctxt
+    val init = Const("local.CurrentConstruction",
+                  fastype_of stat_var --> dummyT
                                       --> typ_of_cterm arg_nuTy
                                       --> boolT)
-               $ stat_var $ Free (RR, @{typ "(heap \<times> stack) set"})
-    val init = Thm.apply @{cterm Trueprop} (Thm.apply (Thm.cterm_of ctx init) arg_nuTy)
-    val ([init],ctx) = Assumption.add_assms
-          (fn _ => fn [cc] => (finish_proc cc, I)) [init] ctx
+               $ stat_var $ Free (RR, dummyT)
+    val init = Thm.apply @{cterm Trueprop} (Thm.apply (Thm.cterm_of ctxt init) arg_nuTy)
+    val ([init],ctxt) = Assumption.add_assms
+          (fn _ => fn [cc] => (finish_proc cc, I)) [init] ctxt
   in
-    (init,ctx)
+    (init,ctxt)
   end
 
 fun meta_eq_to_hol_eq th =
@@ -291,12 +296,13 @@ fun rename_blk_var name meta =
   end
 
 
-fun auto_construct ctx target sequent =
+fun auto_construct ctxt target sequent =
   let
+    val Make_by_proc = Proof_Context.get_thm ctxt "local.\<phi>Make_by_proc"
     val sequent = 
-      (sequent RS Drule.infer_instantiate ctx [(("exp",0),target)] @{thm Make_by_proc})
+      (sequent RS Drule.infer_instantiate ctxt [(("exp",0),target)] Make_by_proc)
           |> Goal.protect 1
-          |> Nu_Reasoner.reason ctx
+          |> Nu_Reasoner.reason ctxt
   in case sequent of SOME sequent =>
         if Thm.no_prems sequent
         then Goal.conclude sequent

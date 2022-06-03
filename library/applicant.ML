@@ -24,7 +24,7 @@ local open Parse Scan in
 val parser = position (short_ident || long_ident || sym_ident || keyword || string)
 
 val _ =
-  Outer_Syntax.local_theory @{command_keyword \<nu>overloads} "declare procedure overloads"
+  Outer_Syntax.local_theory @{command_keyword \<phi>overloads} "declare procedure overloads"
     (and_list1 (binding -- Scan.optional Parse.text "") >>
         (fold (fn (b,s) => declare_overloading b s #> #2)))
 

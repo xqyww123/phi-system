@@ -21,7 +21,7 @@ signature NU_HELP = sig
 
   val int_of_string : string -> int
   val dummy_c : cterm
-  val same_const : string (* const name *) -> term -> bool
+  val has_head : string (* const name *) -> term -> bool
   (* map all free terms and free types inside to variables *)
   val free_to_var_ty : typ -> typ
   val free_to_var : term -> term
@@ -58,7 +58,7 @@ signature NU_HELP = sig
   val list_mk_binop_r_ty  (* right associative *) : string (* type name *) -> typ list -> typ
   val list_mk_binop_r0 (* right associative *) : string (* const name *)
         -> term (* initial term *) -> term list -> term
-  val dest_binder    : string (*binder name*) -> term -> term * term
+  (*val dest_binder    : string (*binder name*) -> term -> term * term
   val dest_binder_c  : string (*binder name*) -> cterm -> cterm * cterm
   (* one wrapped by `BinderNameTag` *)
   val mk_abstract  : term (*var*) -> term (*body*) -> term
@@ -71,7 +71,7 @@ signature NU_HELP = sig
   val strip_binder_vars : string -> term -> (string * typ) list
   val strip_binder_raw_body : string -> term -> term (* term containing raw bounds! *)
   val strip_binder_raw : string -> term -> (string * typ) list * term
-  val list_mk_binder   : string -> term list -> term -> term
+  val list_mk_binder   : string -> term list -> term -> term *)
   val list_mk_abstract : term list -> term -> term
   val strip_implies_c : cterm -> cterm
   val tuple_abs : (string * (string * typ)) list -> term -> term
@@ -88,7 +88,7 @@ signature NU_HELP = sig
   *     Γ1 ∪ Γ2 |- A1 ==> A2 ==> ... ==> B
   * *)
   val implies_elim_with_prems : thm -> thm -> thm
-  val forall_intr_by_names : string list -> thm -> thm
+  (* val forall_intr_by_names : string list -> thm -> thm *)
   val open_schematic_term : term -> term
 
   val map_fixes : ('a -> 'b) ->
@@ -134,18 +134,22 @@ fun UI_top_handler ctxt f x =
 fun UI_top_handler_local  f c = UI_top_handler (Context.Proof  c) f c
 fun UI_top_handler_global f c = UI_top_handler (Context.Theory c) f c
 
-fun same_const c (Const (c', _)) = (c = c')
-  | same_const _ _ = false;
+fun has_head c (Const (c', _)) = (c = c')
+  | has_head c (h $ _) = has_head c h
+  | has_head _ _ = false
+
 fun dest_monop_ty c (T as Type (c', [ty])) =
       if c = c' then ty else raise TYPE ("should be "^c, [T], [])
   | dest_monop_ty c T = raise TYPE ("should be "^c, [T], [])
-fun dest_monop const (tm as Const (const', _) $ a) =
-      if const' = const then a else raise TERM ("dest_monop "^const, [tm])
+
+fun dest_monop const (tm as h $ a) =
+      if has_head const h then a else raise TERM ("dest_monop "^const, [tm])
   | dest_monop const tm = raise TERM ("dest_monop "^const, [tm])
 fun dest_monop_c const tm =
       (dest_monop const (term_of tm); Thm.dest_arg tm)
-fun dest_binop const (tm as Const (const', _) $ a $ b) =
-      if const' = const then (a,b) else raise TERM ("dest_binop "^const, [tm])
+
+fun dest_binop const (tm as h $ a $ b) =
+      if has_head const h then (a,b) else raise TERM ("dest_binop "^const, [tm])
   | dest_binop const tm = raise TERM ("dest_binop "^const, [tm])
 fun dest_binop_c const tm =
       (dest_binop const (term_of tm); Thm.dest_binop tm)
@@ -154,6 +158,7 @@ fun dest_binop_ty const (ty as Type (const', [a, b])) =
   | dest_binop_ty const ty = raise TYPE ("dest_binop_ty "^const, [ty], [])
 fun dest_binop_ty_c const ty = (dest_binop_ty const (typ_of ty);
       (dest_ctyp0 ty, dest_ctyp1 ty))
+
 fun strip_bin_r_assoc strip tm =
   case try strip tm of SOME (a,b) => a :: (strip_bin_r_assoc strip b) | _ => [tm]
 val strip_binop_r   = strip_bin_r_assoc o dest_binop
@@ -163,18 +168,20 @@ val strip_binop_ty_c = strip_bin_r_assoc o dest_binop_ty_c
 fun strip_bin_l_assoc strip tm =
   case try strip tm of SOME (a,b) => b :: (strip_bin_l_assoc strip a) | _ => [tm]
 val strip_binop_l = strip_bin_l_assoc o dest_binop
-fun dest_triop const (tm as Const (const', _) $ a $ b $ c) =
-      if const' = const then (a,b,c) else raise TERM ("dest_triop "^const, [tm] )
+
+fun dest_triop const (tm as h $ a $ b $ c) =
+      if has_head const h then (a,b,c) else raise TERM ("dest_triop "^const, [tm] )
   | dest_triop const tm = raise TERM ("dest_triop "^const, [tm])
 fun dest_triop_c const tm =
       let
         val _ = dest_triop const (term_of tm)
         val (f,a3) = Thm.dest_comb tm
         val (f,a2) = Thm.dest_comb f
-        val (f,a1) = Thm.dest_comb f
+        val (_,a1) = Thm.dest_comb f
       in (a1,a2,a3) end
-fun dest_quadop const (tm as Const (const', _) $ a $ b $ c $ d) =
-      if const' = const then (a,b,c,d) else raise TERM ("dest_quadop "^const, [tm] )
+
+fun dest_quadop const (tm as h $ a $ b $ c $ d) =
+      if has_head const h then (a,b,c,d) else raise TERM ("dest_quadop "^const, [tm] )
   | dest_quadop const tm = raise TERM ("dest_quadop "^const, [tm])
 fun dest_quadop_c const tm =
       let
@@ -182,10 +189,11 @@ fun dest_quadop_c const tm =
         val (f,a4) = Thm.dest_comb tm
         val (f,a3) = Thm.dest_comb f
         val (f,a2) = Thm.dest_comb f
-        val (f,a1) = Thm.dest_comb f
+        val (_,a1) = Thm.dest_comb f
       in (a1,a2,a3,a4) end
-fun dest_quinop const (tm as Const (const', _) $ a $ b $ c $ d $ e) =
-      if const' = const then (a,b,c,d,e) else raise TERM ("dest_quinop "^const, [tm] )
+
+fun dest_quinop const (tm as h $ a $ b $ c $ d $ e) =
+      if has_head const h then (a,b,c,d,e) else raise TERM ("dest_quinop "^const, [tm] )
   | dest_quinop const tm = raise TERM ("dest_quinop "^const, [tm])
 fun dest_quinop_c const tm =
       let
@@ -196,6 +204,7 @@ fun dest_quinop_c const tm =
         val (f,a2) = Thm.dest_comb f
         val (f,a1) = Thm.dest_comb f
       in (a1,a2,a3,a4,a5) end
+
 fun mk_Trueprop (tm as (Const (@{const_name Trueprop}, _) $ _)) = tm
   | mk_Trueprop tm = HOLogic.Trueprop $ tm
 val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
@@ -216,14 +225,14 @@ fun list_mk_binop_l _  [] = raise Empty
 fun list_mk_binop_l0 _  x0 [] = x0
   | list_mk_binop_l0 mk x0 (h::r) = mk_binop mk (list_mk_binop_l0 mk x0 r, h)
 
-fun dest_binder binder (tm as (Const (const,_) $ Abs (var,vty,body))) =
+(* fun dest_binder binder (tm as (Const (const,_) $ Abs (var,vty,body))) =
       if const = binder
       then Term.dest_abs (var,vty,body) |> apfst (fn var' => Free (var', vty))
       else raise TERM ("dest_binder "^binder, [tm])
   | dest_binder binder tm = raise TERM ("dest_binder "^binder, [tm])
 fun dest_binder_c binder = dest_monop_c binder #> dest_abs NONE
 val dest_binder_name_tag   = dest_binop   "NuPrime.BinderNameTag"
-val dest_binder_name_tag_c = dest_binop_c "NuPrime.BinderNameTag"
+val dest_binder_name_tag_c = dest_binop_c "NuPrime.BinderNameTag" *)
 fun mk_abstract (Free namty) body = absfree namty body
   | mk_abstract tm _ = raise TERM ("mk_abstract: should be a free variable", [tm])
 fun mk_binder binder var body = mk_monop binder (mk_abstract var body)
@@ -235,11 +244,12 @@ fun gen_strip_binder num dest tm =
      | NONE =>
         if num > 0 then raise Fail "strip_binder: insufficient binders"
         else ([],tm)
-fun strip_binder_n  n = gen_strip_binder n o dest_binder
+
+(* fun strip_binder_n  n = gen_strip_binder n o dest_binder
 fun strip_binder_nc n = gen_strip_binder n o dest_binder_c
 val strip_binder   = strip_binder_n ~1
 val strip_binder_c = strip_binder_nc ~1
-fun list_mk_binder binder = fold (mk_binder binder)
+fun list_mk_binder binder = fold (mk_binder binder) *)
 val list_mk_abstract = fold mk_abstract
 
 fun strip_binder_vars binder (Const (binder', _) $ Abs (name, ty, body))
@@ -277,14 +287,14 @@ val free_to_var = map_aterms (fn tm =>
          | Const (name,ty) => Const (name, free_to_var_ty ty)
          | Var (name,ty) => Var (name, free_to_var_ty ty))
 
-fun forall_intr_by_names names th =
+(* fun forall_intr_by_names names th =
   let
     val frees = Thm.add_frees th []
     val foralls = map (fn name =>
       find_first (fn x => (term_of x |> dest_Free |> #1) = name) frees |> the) names
   in
     fold Thm.forall_intr foralls th
-  end
+  end *)
 
 val dummy_c = cterm_of @{context} dummy_prop
 fun open_schematic_term tm = 

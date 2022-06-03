@@ -1,18 +1,15 @@
 theory Fictional_Algebra
-  imports Main HOL.Rat "Statespace/StateFun" Resource_Space
+  imports Main HOL.Rat "Statespace/StateFun"
+    NoePreliminary
   keywords "fiction_space" :: thy_decl
+    and "resource_space" :: thy_defn
+  abbrevs "!!" = "!!"
 begin
 
-section \<open>Separation Algebra & Commutative Monoid\<close>
-
-subsection \<open>Preliminary\<close>
-
-lemma pair_exists: "Ex P \<longleftrightarrow> (\<exists>a b. P (a,b))" using split_paired_Ex .
-lemma pair_forall: "All P \<longleftrightarrow> (\<forall>a b. P (a,b))" using split_paired_All .
-lemmas pair_All = split_paired_all
+section \<open>Algebras\<close>
 
 
-subsection \<open>Algebra Structure\<close>
+subsection \<open>Algebra Structures\<close>
 
 class ab_group_mult = inverse + comm_monoid_mult +
   assumes ab_left_inverse: "inverse a * a = 1"
@@ -84,10 +81,8 @@ end
 class nonsepable_semigroup = sep_disj +
   assumes nonsepable_disj[simp]: "\<not> x ## y"
 begin
-subclass sep_ab_semigroup
-  apply standard unfolding discrete_sep_disj discrete_mult by simp_all
-subclass cancl_sep_ab_semigroup
-  apply standard unfolding discrete_sep_disj discrete_mult by simp_all
+subclass sep_ab_semigroup by standard simp_all
+subclass cancl_sep_ab_semigroup by standard simp_all
 end
 
 (* class unital_mult = plus + one +
@@ -188,11 +183,11 @@ definition [simp]: "one_list = []"
 instance ..
 end
 
-instantiation list :: (semigroup_mult) semigroup_mult begin
+instantiation list :: (type) semigroup_mult begin
 instance by standard simp_all
 end
 
-instantiation list :: (monoid_mult) monoid_mult begin
+instantiation list :: (type) monoid_mult begin
 instance by standard simp_all
 end
 
@@ -340,8 +335,16 @@ definition "times_set P Q = { x * y | x y. x \<in> P \<and> y \<in> Q }"
 instance ..
 end
 
-lemma [simp]: "{} * S = {}" "S * {} = {}"
+lemma set_mult_zero[simp]: "{} * S = {}" "S * {} = {}"
   unfolding times_set_def by simp_all
+
+lemma set_mult_expn[\<phi>expns]:
+  \<open>uv \<in> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<in> S \<and> v \<in> T)\<close>
+  unfolding times_set_def by simp
+
+lemma set_mult_inhabited[\<phi>elim,elim!]:
+  \<open>Inhabited (S * T) \<Longrightarrow> (Inhabited S \<Longrightarrow> Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def times_set_def by simp
 
 instantiation set :: (times) mult_zero begin
 instance by standard (simp_all add: zero_set_def)
@@ -375,43 +378,52 @@ lemma "f ## g \<longleftrightarrow> dom f \<inter> dom g = {}" for f :: "'a \<ri
 
 subsubsection \<open>Partiality\<close>
 
-datatype 'a partial = Fine 'a | Undef
 
-instantiation partial :: (type) zero begin
-definition [simp]: "zero_partial = Undef"
+datatype 'a fine ("_ ?" [100] 101) = Fine (the_fine: 'a) | Undef
+notation the_fine ("!!_" [1000] 1000)
+
+hide_const pred_fine
+definition "pred_fine P x = (case x of Fine x' \<Rightarrow> P x' | _ \<Rightarrow> False)"
+lemma pred_fine[simp]:
+  "pred_fine P (Fine x') \<longleftrightarrow> P x'"  "\<not> pred_fine P Undef"
+  unfolding pred_fine_def by simp_all
+
+
+instantiation fine :: (type) zero begin
+definition [simp]: "zero_fine = Undef"
 instance ..
 end
 
-instantiation partial :: (one) one begin
-definition "one_partial = Fine 1"
+instantiation fine :: (one) one begin
+definition "one_fine = Fine 1"
 instance ..
 end
 
-instantiation partial :: (sep_disj) times begin
+instantiation fine :: (sep_disj) times begin
 
-definition "times_partial x y =
+definition "times_fine x y =
   (case x of Fine a \<Rightarrow> (case y of Fine b \<Rightarrow> if a ## b then Fine (a*b) else Undef
     | _ \<Rightarrow> Undef) | _ \<Rightarrow> Undef)"
 
-lemma times_partial[simp]:
+lemma times_fine[simp]:
   "Fine a * Fine b = (if a ## b then Fine (a*b) else Undef)"
   "Undef * a' = Undef" "a' * Undef = Undef"
-  unfolding times_partial_def by (cases a'; simp_all)+
+  unfolding times_fine_def by (cases a'; simp_all)+
 
 instance ..
 end
 
-instantiation partial :: (sep_disj) mult_zero begin
+instantiation fine :: (sep_disj) mult_zero begin
 instance by standard simp_all
 end
 
-instantiation partial :: (cancl_sep_ab_semigroup) ab_semigroup_mult begin
+instantiation fine :: (cancl_sep_ab_semigroup) ab_semigroup_mult begin
 instance apply (standard; case_tac a; simp; case_tac b; simp; case_tac c; simp)
   by (metis sep_disj_commuteI sep_disj_multD1 sep_disj_multI1 sep_mult_assoc sep_mult_commute)
 end
 
-instantiation partial :: (sep_algebra) comm_monoid_mult begin
-instance by standard (case_tac a; simp add: one_partial_def)
+instantiation fine :: (sep_algebra) comm_monoid_mult begin
+instance by standard (case_tac a; simp add: one_fine_def)
 end
 
 
@@ -454,9 +466,9 @@ end
 
 
 
-section \<open>Fictional Algebra\<close>
+subsection \<open>Fictional Algebra\<close>
 
-subsection \<open>Algebra Structure\<close>
+subsubsection \<open>Algebra Structure\<close>
 
 definition Fictional :: "('a::one \<Rightarrow> 'b::one set) \<Rightarrow> bool"
   where "Fictional \<I> \<longleftrightarrow> \<I> 1 = 1"
@@ -471,10 +483,14 @@ lemmas Fiction_inverse[simp] = Fiction_inverse[simplified]
 lemma Fiction_one[simp]: "\<I> I 1 = 1"
   using Fictional_def \<I> by blast
 
-subsection \<open>Instance\<close>
+
+
+subsubsection \<open>Instance\<close>
 
 locale fiction
 begin
+
+paragraph \<open>Function\<close>
 
 definition "fun' I = Fiction (\<lambda>f. prod (\<lambda>x. \<I> (I x) (f x)) (dom1 f))"
 lemma fun'_\<I>[simp]: "\<I> (fun' I) = (\<lambda>f. prod (\<lambda>x. \<I> (I x) (f x)) (dom1 f))"
@@ -501,11 +517,16 @@ lemma pointwise_\<I>[simp]:
   by (rule Fiction_inverse) (auto simp add: Fictional_def one_fun_def fun_eq_iff)
 
 
+paragraph \<open>Pair\<close>
+
 definition "pair I1 I2 = Fiction (\<lambda>(x,y). \<I> I1 x * \<I> I2 y) "
 lemma pair_\<I>[simp]: "\<I> (pair I1 I2) = (\<lambda>(x,y). \<I> I1 x * \<I> I2 y)"
   for I1 :: "('a::one,'b::monoid_mult) fiction"
   unfolding pair_def by (rule Fiction_inverse) (simp add: Fictional_def one_prod_def)
 notation pair (infixl "\<bullet>" 50)
+
+
+paragraph \<open>Option\<close>
 
 definition "option I = Fiction (case_option 1 I)"
 lemma option_\<I>[simp]: "\<I> (option I) = (case_option 1 I)"
@@ -518,25 +539,32 @@ lemma optionwise_\<I>[simp]:
   by (rule Fiction_inverse) (auto simp add: Fictional_def)
 
 
-definition "partial I = Fiction (case_partial (\<I> I) {})"
-lemma partial_\<I>[simp]: "\<I> (partial I) = case_partial (\<I> I) {}"
-  unfolding partial_def by (rule Fiction_inverse) (simp add: Fictional_def one_partial_def)
+paragraph \<open>Partiality\<close>
+
+definition "fine I = Fiction (case_fine (\<I> I) {})"
+lemma fine_\<I>[simp]: "\<I> (fine I) = case_fine (\<I> I) {}"
+  unfolding fine_def by (rule Fiction_inverse) (simp add: Fictional_def one_fine_def)
 
 definition "defined I = Fiction (\<lambda>x. Fine ` \<I> I x)"
 lemma defined_\<I>[simp]: "\<I> (defined I) = (\<lambda>x. Fine ` \<I> I x)"
   unfolding defined_def
-  by (rule Fiction_inverse) (auto simp add: Fictional_def one_partial_def)
+  by (rule Fiction_inverse) (auto simp add: Fictional_def one_fine_def)
 
-definition "partialwise I = fiction.partial (defined I)"
+definition "partialwise I = fiction.fine (defined I)"
 lemma partialwise_\<I>[simp]: "\<I> (partialwise I) (Fine x) = { Fine y |y. y \<in> \<I> I x }"
   unfolding partialwise_def by auto
 
+
+paragraph \<open>Exact Itself\<close>
 
 definition [simp]: "it' x = {x}"
 
 definition "it = Fiction it'"
 lemma it_\<I>[simp]: "\<I> it = it'"
   unfolding it_def by (rule Fiction_inverse) (simp add: Fictional_def one_set_def)
+
+
+paragraph \<open>Share by Fractional Ownership\<close>
 
 definition "share s = (case s of w \<Znrres> v \<Rightarrow> if w = 1 then {v} else {})"
 lemma share_\<I>[simp]: "share (w \<Znrres> v) = (if w = 1 then {v} else {})"
@@ -545,13 +573,57 @@ lemma share_\<I>[simp]: "share (w \<Znrres> v) = (if w = 1 then {v} else {})"
 end
 
 
-lemmas [simp] = fiction.fun_\<I> fiction.fun'_\<I> fiction.option_\<I> fiction.partial_\<I>
+lemmas [simp] = fiction.fun_\<I> fiction.fun'_\<I> fiction.option_\<I> fiction.fine_\<I>
   fiction.it'_def fiction.it_\<I> fiction.share_\<I>
 
 lemma [simp]: "\<I> (fiction.fun I) (1(k:=v)) = \<I> I v" by simp
 
 
-subsection \<open>Extensible Fiction Locale\<close>
+subsection \<open>Extensible Locales\<close>
+
+subsubsection \<open>Basic Project-Inject Structure\<close>
+
+datatype ('NAME,'REP,'T) Entry =
+  Entry (name: 'NAME) (project: "'REP \<Rightarrow> 'T") (inject: "'T \<Rightarrow> 'REP")
+
+hide_const (open) name project inject
+
+locale project_inject =
+  inj: homo_mult \<open>Entry.inject entry\<close> + prj: homo_mult \<open>Entry.project entry\<close>
+  for entry :: "('NAME, 'REP::comm_monoid_mult, 'T::comm_monoid_mult) Entry"
++ assumes proj_inj[simp]: "Entry.project entry (Entry.inject entry x) = x"
+begin
+
+abbreviation "name \<equiv> Entry.name entry"
+abbreviation "inject \<equiv> Entry.inject entry"
+abbreviation "project \<equiv> Entry.project entry"
+abbreviation "clean f \<equiv> f(name := 1)"
+abbreviation "get  f \<equiv> project (f name)"
+end
+
+ML_file_debug \<open>Resource_Space.ML\<close>
+
+
+paragraph \<open>Syntax\<close>
+
+syntax
+  "_entry_updbind" :: "'a \<Rightarrow> 'a \<Rightarrow> updbind"     ("(2_ #=/ _)")
+  "_fine_Update"  :: "'a \<Rightarrow> updbinds \<Rightarrow> 'a"  ("_/'((_)')\<^sub>?" [1000, 0] 900)
+
+definition "fine_fun_updt f x y \<equiv> map_fine (\<lambda>g. fun_upd g x y) f"
+lemma fine_fun_updt[simp]:
+  "fine_fun_updt (Fine f) x y = Fine (fun_upd f x y)"
+  "fine_fun_updt Undef x y = Undef"
+  unfolding fine_fun_updt_def by simp_all
+
+translations
+  "_fine_Update f (_updbinds b bs)" \<rightleftharpoons> "_fine_Update (_fine_Update f b) bs"
+  "f(x#=y)" => "f(CONST Entry.name x := CONST Entry.inject x y)"
+  "f(x:=y)\<^sub>?" \<rightleftharpoons> "CONST fine_fun_updt f x y"
+  "f(x#=y)\<^sub>?" => "f(CONST Entry.name x := CONST Entry.inject x y)\<^sub>?"
+
+
+subsubsection \<open>Fictional Space\<close>
 
 locale fictional_space =
   fixes INTERPRET :: "'NAME \<Rightarrow> ('REP::comm_monoid_mult,'RES::comm_monoid_mult) fiction"
@@ -561,15 +633,22 @@ definition "Fic_Space f \<longleftrightarrow> finite (dom1 f)"
 end
 
 locale fictional_project_inject =
-  fictional_space INTERPRET + project_inject entry
+  fictional_space INTERPRET + project_inject entry +
+  inj: homo_mult \<open>Entry.inject entry\<close> + prj: homo_mult \<open>Entry.project entry\<close>
   for INTERPRET :: "'NAME \<Rightarrow> ('REP::comm_monoid_mult,'RES::comm_monoid_mult) fiction"
-  and entry :: "('NAME,'REP,'T::comm_monoid_mult) Resource_Space.Entry"
+  and entry :: "('NAME,'REP,'T::comm_monoid_mult) Entry"
 + fixes I :: "('T,'RES) fiction"
   assumes proj_inj[simp]: "Entry.project entry (Entry.inject entry x) = x"
     and interpret_reduct[simp]: "\<I> (INTERPRET (Entry.name entry)) = \<I> I o Entry.project entry"
 begin
 
 abbreviation "m x \<equiv> 1(name := inject x)"
+
+lemmas inj_homo_mult[simp] = inj.homo_mult[symmetric]
+lemmas inj_homo_one = inj.homo_one
+lemmas prj_homo_mult[simp] = prj.homo_mult
+lemmas prj_homo_one = prj.homo_one
+
 
 lemma [simp]: "R * inject x * inject y = R * inject (x * y)"
   by (simp add: mult.assoc) 
@@ -600,5 +679,10 @@ end
 
 ML_file_debug \<open>fiction_space.ML\<close>
 
+
+subsubsection \<open>Finalization\<close>
+
+hide_const (open) Entry
+hide_type (open) Entry
 
 end

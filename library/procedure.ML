@@ -75,9 +75,10 @@ fun add_interface_command ((name,const),tys) thy =
                of Type ("fun", [ty, _ ]) => ty
                 | ty => raise TYPE ("bad type: not a procedure", [ty], [const])
     val ty = HOLogic.strip_tupleT ty |> List.last
-    val const = if is_TFree ty orelse is_TVar ty
-                then Term.subst_atomic_types [(ty, @{typ void})] const (*set tail to void*)
-                else const
+    (* TODO: FIX ME *)
+    (* val const = if is_TFree ty orelse is_TVar ty
+                then Term.subst_atomic_types [(ty, typ void)] const (*set tail to void*)
+                else const *)
     val const = Thm.cterm_of ctxt (Logic.varify_types_global const) |> Drule.mk_term
 
 
@@ -85,7 +86,7 @@ fun add_interface_command ((name,const),tys) thy =
       let
         val tys = HOLogic.strip_tupleT ty
       in
-        if last tys = @{typ void} then ty else HOLogic.mk_tupleT (tys @ [@{typ void}])
+        if last tys = typ void then ty else HOLogic.mk_tupleT (tys @ [typ void])
       end
     val (ty_args,ty_rets) =
           the_default (TVar (("'a",0), @{sort lrep}), TVar (("'b",0), @{sort lrep}))

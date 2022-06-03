@@ -415,11 +415,11 @@ type cost = int
 type 'a generic_reasoner = {name: term, pattern: term list, tactic: 'a}
 type reasoner = (Proof.context -> tactic) generic_reasoner
 
-val auto_level = Config.declare_int ("\<nu>auto_level", @{here}) (K 2)
+val auto_level = Config.declare_int ("\<phi>auto_level", @{here}) (K 2)
 fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
 
-val trace = Attrib.setup_config_bool \<^binding>\<open>\<nu>trace_reasoning\<close> (K false);
-val trace_candicates = Attrib.setup_config_bool \<^binding>\<open>\<nu>trace_reasoning_candicates\<close> (K false);
+val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning\<close> (K false);
+val trace_candicates = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning_candicates\<close> (K false);
 
 
 
@@ -471,7 +471,7 @@ fun gen_reason ctxt iter tactics (best_cost,best_stat) states =
       of SOME (th,seq') =>
           (let
             val _ = if Config.get ctxt trace
-                    then tracing ("\<nu>reasoning (score " ^ string_of_int (~cost)
+                    then tracing ("\<phi>reasoning (score " ^ string_of_int (~cost)
                       ^ "):\n" ^ Thm.string_of_thm ctxt th)
                     else ()
             val (best_cost,best_stat) =
@@ -542,7 +542,7 @@ fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
   end
 
 val _ =
-  Outer_Syntax.local_theory @{command_keyword \<nu>reasoner} "define \<nu>reasoner"
+  Outer_Syntax.local_theory @{command_keyword \<phi>reasoner} "define \<phi>reasoner"
     (Parse.term -- (Parse.int >> ~) --| Parse.$$$ "(" -- Parse.enum "|" Parse.term --| Parse.$$$ ")"
         --| @{keyword =} -- Parse.ML_source
       >> setup_cmd)
@@ -565,7 +565,7 @@ fun mk_pattern rule NONE = Thm.concl_of rule
   | mk_pattern rule (SOME pat) = NuHelp.mk_Trueprop pat
 
 fun intro_reasoner guard_pattern rule =
-  {name = @{term \<nu>Intro_Rule} $ Thm.prop_of rule,
+  {name = @{term \<phi>Intro_Rule} $ Thm.prop_of rule,
    pattern = [Thm.concl_of rule],
    tactic = (fn ctxt =>
       chk_pattern (Proof_Context.theory_of ctxt)
@@ -574,7 +574,7 @@ fun intro_reasoner guard_pattern rule =
     )
   }
 fun elim_reasoner rule =
-  {name = @{term \<nu>Elim_Rule} $ Thm.prop_of rule,
+  {name = @{term \<phi>Elim_Rule} $ Thm.prop_of rule,
    pattern = [Thm.major_prem_of rule],
    tactic = (fn ctxt => HEADGOAL (Tactic.eresolve_tac ctxt [rule]))}
 
