@@ -13,10 +13,13 @@ signature NU_BASICS = sig
   val nu_bind_name : string
   val the_nu_fact : Proof.state -> thm
   val set_nu_fact : thm -> Proof.state -> Proof.state
+  val get_types : Proof.context ->
+        {TY_N: typ, TY: typ, VAL_N: typ, VAL: typ, RES_N: typ, RES: typ, FIC_N: typ, FIC: typ}
 
-  val mk_stateT : typ -> typ
+  val mk_stateT : Proof.context -> typ
+  val mk_assnT : Proof.context -> typ
+  val mk_procT : Proof.context -> typ
   val dest_tynuset_c : ctyp -> ctyp
-  val dest_typroc_c : ctyp -> ctyp * ctyp
 
   val dest_param : term -> term
   val param_type : thm -> typ
@@ -89,14 +92,43 @@ fun set_nu_fact th stat = stat
   |> Proof.set_facts [th]
   |> Proof.map_context (Proof_Context.put_thms false (nu_bind_name, SOME [th]));
 
+fun get_types ctxt =
+  let
+    val SOME tys = Variable.default_type ctxt "TYPES"
+    val Type ("itself", [
+          Type (@{type_name prod}, [Type("fun", [TY_N, TY]),
+            Type (@{type_name prod}, [Type("fun", [VAL_N, VAL]),
+              Type (@{type_name prod}, [Type("fun", [RES_N, RES]),
+                Type ("fun", [FIC_N, FIC])])])])])
+        = tys
+  in
+    {TY_N=TY_N, TY=TY, VAL_N=VAL_N, VAL=VAL, RES_N=RES_N, RES=RES, FIC_N=FIC_N, FIC=FIC}
+  end
+
 fun repeat f x = repeat f (f x) handle TERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
-fun mk_stateT ty = Type(@{type_name "state"}, [ty])
+fun mk_stateT ctxt =
+  let
+    val {VAL,RES_N,RES,...} = get_types ctxt
+  in
+    Type(@{type_name "state"}, [VAL,RES_N,RES])
+  end
+fun mk_assnT ctxt =
+  let
+    val {VAL,FIC_N,FIC,...} = get_types ctxt
+  in
+    Type(@{type_abbrev "assn"}, [VAL,FIC_N,FIC])
+  end
+fun mk_procT ctxt =
+  let
+    val {VAL,RES_N,RES,...} = get_types ctxt
+  in
+    Type(@{type_abbrev "proc"}, [VAL,RES_N,RES])
+  end
 (* \<alpha> set *)
 val dest_tynuset_c = dest_ctyp0
 (* heap \<times> \<alpha> |--> \<beta> set *)
-fun dest_typroc_c ty = (dest_ctyp1 (dest_ctyp0 ty), dest_ctyp0 (dest_ctyp1 ty))
 
 fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
@@ -224,11 +256,11 @@ fun param_set_free_var_name ctx name thm =
 val dest_procedure   = perhaps (try dest_Trueprop)
   (* #> strip_binder @{const_name All} #> #2
   #> strip_binop_r @{const_name HOL.implies} #> last *)
-  #> dest_triop @{const_name "std.Procedure"}
+  #> dest_triop @{const_name "std.\<phi>Procedure"}
 val dest_procedure_c = perhaps (try dest_Trueprop_c)
   (* #> strip_binder_c @{const_name All} #> #2
   #> strip_binop_r_c @{const_name HOL.implies} #> last *)
-  #> dest_triop_c @{const_name "std.Procedure"}
+  #> dest_triop_c @{const_name "std.\<phi>Procedure"}
 val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest_Trueprop)
 val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
 

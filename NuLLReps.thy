@@ -1,5 +1,5 @@
 theory NuLLReps
-  imports NuPrime "HOL-Library.Word"
+  imports NuSys "HOL-Library.Word"
   abbrevs "<own>" = "\<left_fish_tail>"
     and "<none>" = "\<down_fish_tail>"
     and "<object>" = "\<R_arr_tail>"
@@ -16,44 +16,28 @@ subsection \<open>Integer\<close>
 
 subsubsection \<open>Natural Nmbers\<close>
 
-no_notation Nats ("\<nat>")
-
 paragraph \<open>Natural Number\<close>
 
-definition \<phi>Nat :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>")
-  where "\<nat> b x = (if x < 2^b then { V_int.mk (\<phi>word b x) } else {})"
+definition \<phi>Nat :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>[_]")
+  where "\<nat>[b] x = (if x < 2^b then { V_int.mk (\<phi>word b x) } else {})"
 
 lemma \<phi>Nat_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<nat> b) \<longleftrightarrow> (p = V_int.mk (\<phi>word b x)) \<and> x < 2^b"
+  "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (\<phi>word b x)) \<and> x < 2^b"
   unfolding \<phi>Type_def by (simp add: \<phi>Nat_def)
 
 lemma \<phi>Nat_elim[elim!,\<phi>elim]:
-  "Inhabited (x \<Ztypecolon> \<nat> b) \<Longrightarrow> (x < 2^b \<Longrightarrow> C) \<Longrightarrow> C"
+  "Inhabited (x \<Ztypecolon> \<nat>[b]) \<Longrightarrow> (x < 2^b \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (auto simp add: \<phi>expns)
 
-lemma [\<phi>reason on \<open>\<phi>Equal (NuNat ?b) ?c ?eq\<close>]:
-  "\<phi>Equal (\<nat> b) (\<lambda>x y. True) (=)"
+lemma [\<phi>reason on \<open>\<phi>Equal (\<nat>[?b]) ?c ?eq\<close>]:
+  "\<phi>Equal (\<nat>[b]) (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (auto simp add: unsigned_word_eqI \<phi>expns)
 
-lemma [\<phi>reason on \<open>\<phi>Zero (NuNat ?b) ?zero\<close>]:
-  "\<phi>Zero (T_int.mk b) (\<nat> b) 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) (\<nat>[?b]) ?zero\<close>]:
+  "\<phi>Zero (T_int.mk b) (\<nat>[b]) 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
-
-paragraph \<open>Rounded Natural Number\<close>
-
-definition \<phi>NatRound :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>\<^sup>r")
-  where "\<nat>\<^sup>r b x = { V_int.mk (\<phi>word b (x mod 2^b)) }"
-
-lemma \<phi>NatRound_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<nat>\<^sup>r b) \<longleftrightarrow> p = V_int.mk (\<phi>word b (x mod 2^b))"
-  unfolding \<phi>Type_def \<phi>NatRound_def by simp
-
-lemma [\<phi>reason on \<open>\<phi>Zero (NuNatRound ?b) ?z\<close>]:
-  "\<phi>Zero (T_int.mk b) (\<nat>\<^sup>r b) 0"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
-
-(*
-\<phi>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close> \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
+\<phi>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>
+  \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
   let open NuBasics
     val num = Syntax.parse_term ctx num
     fun mk term = mk_nuTy (num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
@@ -62,7 +46,80 @@ lemma [\<phi>reason on \<open>\<phi>Zero (NuNatRound ?b) ?z\<close>]:
       handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
         | ERROR _ => mk @{term \<open>\<nat>[32]\<close>})
   in (NuSys.auto_construct ctx term meta, ctx)  end)
-\<close> *)
+\<close>
+
+paragraph \<open>Rounded Natural Number\<close>
+
+definition \<phi>NatRound :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>\<^sup>r[_]")
+  where "\<nat>\<^sup>r[b] x = { V_int.mk (\<phi>word b (x mod 2^b)) }"
+
+lemma \<phi>NatRound_expn[\<phi>expns]:
+  "p \<in> (x \<Ztypecolon> \<nat>\<^sup>r[b]) \<longleftrightarrow> p = V_int.mk (\<phi>word b (x mod 2^b))"
+  unfolding \<phi>Type_def \<phi>NatRound_def by simp
+
+lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) \<nat>\<^sup>r[?b] ?z\<close>]:
+  "\<phi>Zero (T_int.mk b) (\<nat>\<^sup>r[b]) 0"
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+
+
+paragraph \<open>Integer in the normal sense\<close>
+
+
+definition \<phi>Int :: "nat \<Rightarrow> ('VAL, int) \<phi>" ("\<int>[_]")
+  where "\<phi>Int b x =(if x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0)
+                    then { V_int.mk (\<phi>word b (if x \<ge> 0 then nat x else nat (2^b + x))) }
+                    else {})"
+
+lemma \<phi>Int_expn[\<phi>expns]:
+  "p \<in> (x \<Ztypecolon> \<int>[b]) \<longleftrightarrow> p = V_int.mk (\<phi>word b (if x \<ge> 0 then nat x else nat (2^b + x)))
+                      \<and> x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0)"
+  unfolding \<phi>Type_def by (simp add: \<phi>Int_def)
+
+lemma \<phi>Int_inhabited[elim,\<phi>elim]:
+  "Inhabited (x \<Ztypecolon> \<int>[b]) \<Longrightarrow> (x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0) \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (simp add: \<phi>expns) 
+
+
+lemma [simp]: \<open>- (2^(b - 1)) \<le> x \<Longrightarrow> 0 \<le> 2 ^ b + x\<close> for x :: int
+  by (smt (verit, best) diff_le_self power_increasing_iff)
+
+lemma [\<phi>reason on \<open>\<phi>Equal \<int>[b] ?c ?eq\<close>]:
+    "\<phi>Equal \<int>[b] (\<lambda>x y. True) (=)"
+  unfolding \<phi>Equal_def by (cases b) (auto simp add: \<phi>expns eq_nat_nat_iff)
+
+lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) \<int>[?b] ?x\<close>]:
+    "\<phi>Zero (T_int.mk b) \<int>[b] 0"
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+
+
+paragraph \<open>Boolean\<close>
+
+(* lemma [simp]: "(x \<noteq> 1) = (x = 0)" for x :: "1 word" proof -
+  have "(UNIV:: 1 word set) = {0,1}" unfolding UNIV_word_eq_word_of_nat
+  using less_2_cases apply auto apply force
+  by (metis UNIV_I UNIV_word_eq_word_of_nat len_num1 power_one_right)
+  then show ?thesis  by auto
+qed *)
+
+definition \<phi>Bool :: "('VAL, bool) \<phi>" ("\<bool>")
+  where "\<bool> x = { V_int.mk (\<phi>word 1 (if x then 1 else 0)) }"
+
+lemma \<phi>Bool_expn[\<phi>expns]:
+  " p \<in> (x \<Ztypecolon> \<bool>) \<longleftrightarrow> p = V_int.mk (\<phi>word 1 (if x then 1 else 0))"
+  unfolding \<phi>Type_def \<phi>Bool_def by simp
+
+lemma \<phi>Bool_inhabited[\<phi>elim, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<bool>) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
+lemma \<phi>Bool_eqcmp[\<phi>reason on \<open>\<phi>Equal \<bool> ?c ?eq\<close>]:
+  "\<phi>Equal \<bool> (\<lambda>x y. True) (=)"
+  unfolding \<phi>Equal_def by (simp add: \<phi>expns)
+
+lemma \<phi>Bool_zero[\<phi>reason on \<open>\<phi>Zero \<bool> ?z\<close>]:
+  "\<phi>Zero (T_int.mk 1) \<bool> False"
+  unfolding \<phi>Zero_def by simp
+
+
 
 subsection \<open>Pointers\<close>
 
@@ -79,25 +136,98 @@ lemma RawPointer_inhabited[elim,\<phi>elim]:
   "Inhabited (p \<Ztypecolon> RawPointer) \<Longrightarrow> (Valid_Address p \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
-lemma
+lemma RawPointer_zero[\<phi>reason on \<open>\<phi>Zero (T_pointer.mk ()) RawPointer ?x\<close>]:
   "\<phi>Zero (T_pointer.mk ()) RawPointer (0 |: 0)"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_memaddr_def)
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_memaddr_def Valid_Segment_zero)
 
-lemma [\<phi>reason on \<open>\<phi>Zero RawPointer ?x\<close>]:
-  "\<phi>Zero RawPointer (undefined |+ 0)" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
-lemma [\<phi>reason on \<open>\<phi>Equal RawPointer ?c ?eq\<close>]:
-  "\<phi>Equal RawPointer (\<lambda>x y. segment_of x = segment_of y) (=)" unfolding \<phi>Equal_def by (simp add: lrep_exps \<phi>expns)
+lemma RawPointer_eqcmp[\<phi>reason on \<open>\<phi>Equal RawPointer ?c ?eq\<close>]:
+  "\<phi>Equal RawPointer (\<lambda>x y. memaddr.segment x = memaddr.segment y) (=)"
+  unfolding \<phi>Equal_def by (simp add: lrep_exps \<phi>expns)
+
+
+subsubsection \<open>Pointer\<close>
+
+
+definition (in std_sem) valid_logaddr :: "'TY logaddr \<Rightarrow> bool"
+  where "valid_logaddr addr \<longleftrightarrow>
+    Valid_Segment (memaddr.segment addr) \<and>
+    memaddr.segment addr \<noteq> Null \<and>
+    memaddr.offset addr \<le> segidx.len (memaddr.segment addr)"
+
+definition (in std_sem) raw_offset_of :: "'TY segidx \<Rightarrow> nat \<Rightarrow> size_t"
+  where "raw_offset_of seg i = of_nat (i * MemObj_Size (segidx.layout seg))"
+
+lemma raw_offset_of_0[simp]: "raw_offset_of seg 0 = 0" unfolding raw_offset_of_def by auto
+
+lemma (in std_sem) raw_offset_of_delta[simp]:
+  "raw_offset_of seg (ofs + unat delta) = raw_offset_of seg ofs + delta * word_of_nat (MemObj_Size (segidx.layout seg))"
+  unfolding raw_offset_of_def using distrib_right by auto
+
+lemma (in std_sem) raw_offset_of_inj:
+  "valid_logaddr (seg |: ofs1) \<Longrightarrow> valid_logaddr (seg |: ofs2) \<Longrightarrow>
+    0 < MemObj_Size (segidx.layout seg) \<Longrightarrow>
+    raw_offset_of seg ofs1 = raw_offset_of seg ofs2 \<Longrightarrow> ofs1 = ofs2"
+  unfolding raw_offset_of_def word_of_nat_eq_iff take_bit_nat_def valid_logaddr_def Valid_Segment_def
+  by (cases seg; simp)
+     (smt (verit, best) mod_less mult.commute mult_cancel2 nat_less_le nat_mult_le_cancel1 order.strict_trans1)
+
+lemma same_addr_offset_inj: "same_addr_offset seg p a1 \<and> same_addr_offset seg p a2 \<Longrightarrow> a1 = a2"
+  by (auto simp add: same_addr_offset_def raw_offset_of_def raw_offset_of_inj)
+lemma same_addr_offset_inj2: "same_addr_offset seg p1 a \<and> same_addr_offset seg p2 a \<Longrightarrow> p1 = p2"
+  by (auto simp add: same_addr_offset_def raw_offset_of_def raw_offset_of_inj)
+
+
+definition (in std_sem) same_addr_offset :: "'TY segidx \<Rightarrow> size_t \<Rightarrow> nat \<Rightarrow> bool"
+  where "same_addr_offset seg ofsp ofsx \<longleftrightarrow> valid_logaddr (seg |: ofsx) \<and> raw_offset_of seg ofsx = ofsp"
+definition the_same_addr :: "raw_memaddr \<Rightarrow> nat memaddr \<Rightarrow> bool"
+  where "the_same_addr addrp addrx \<equiv>
+    segment_of addrp = segment_of addrx
+    \<and> same_addr_offset (segment_of addrx)  (offset_of addrp) (offset_of addrx)"
+lemma [simp]: "the_same_addr (base |+ ofs) (base' |+ ofs') \<longleftrightarrow> base = base' \<and> same_addr_offset base' ofs ofs'"
+  unfolding the_same_addr_def by simp
+
+
+
+
+definition Pointer :: "('VAL, nat logaddr) \<phi>"
+  where "Pointer x = { memptr raw | raw. the_same_addr raw x}"
+
+lemma [\<phi>expns]: "memptr raw \<in> (addr \<tycolon> Pointer) \<longleftrightarrow> the_same_addr raw addr"
+  unfolding \<phi>Type_def by (simp add: Pointer_def)
+lemma [elim,\<phi>elim]: "addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
+lemma [\<phi>reason on \<open>\<phi>Equal Pointer ?c ?eq\<close>]:
+    "\<phi>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
+  unfolding \<phi>Equal_def using raw_offset_of_inj by (simp add: lrep_exps the_same_addr_def same_addr_offset_def \<phi>expns) blast
+lemma [\<phi>reason on \<open>\<phi>Zero Pointer ?x\<close>]:
+    "\<phi>Zero Pointer (undefined |+ 0)"
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns same_addr_offset_def)
 
 
 
 subsection \<open>Tuple Field\<close>
 
-definition \<phi>Field :: "('VAL, 'a) \<phi> \<Rightarrow> ('VAL, 'a) \<phi>"
+definition \<phi>Field :: "('VAL, 'a) \<phi> \<Rightarrow> ('VAL, 'a) \<phi>" ("\<clubsuit>")
   where "\<phi>Field T x = { V_tup.mk [v] |v. v \<in> T x }"
 
 lemma \<phi>Field_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Field T) \<longleftrightarrow> (\<exists>v. p = V_tup.mk [v] \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Field_def \<phi>Type_def by simp
+
+lemma \<phi>Field_inhabited[elim,\<phi>elim]:
+  \<open>Inhabited (x \<Ztypecolon> \<clubsuit> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma \<phi>Field_zero  [\<phi>reason on \<open>\<phi>Zero (T_tup.mk [?ty]) (\<phi>Field ?T) ?x\<close>]:
+  \<open>\<phi>Zero ty T x \<Longrightarrow> \<phi>Zero (T_tup.mk [ty]) (\<clubsuit> T) x \<close>
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+
+lemma \<phi>Field_zeros [\<phi>reason on \<open>\<phi>Zero (T_tup.mk [?ty]) (\<phi>Field ?T) ?x\<close>]:
+  \<open>\<phi>Zero ty T x
+    \<Longrightarrow> \<phi>Zero (T_tup.mk tys) (\<clubsuit> Ts) xs
+    \<Longrightarrow> \<phi>Zero (T_tup.mk (ty#tys)) (\<clubsuit> T \<^emph> \<clubsuit> Ts) (x,xs) \<close>
+  unfolding \<phi>Zero_def
+  by (simp add: \<phi>expns V_tup_mult) (metis Cons_eq_append_conv V_tup_mult)
+
 
 end
 
@@ -107,38 +237,6 @@ end
 
 
 
-subsubsection \<open>Integer\<close>
-
-definition NuInt :: "('a::len) itself \<Rightarrow> ('a word, int) \<phi>" where "NuInt _ x = {p. sint p = x}"
-syntax "_NuInt_" :: "type \<Rightarrow> logic" (\<open>\<int>'[_']\<close>)
-translations "\<int>['x]" == "CONST NuInt (TYPE('x))" 
-
-lemma [simp]: "p \<in> (x \<tycolon> NuInt b) \<longleftrightarrow> sint p = x " unfolding \<phi>Type_def by (simp add: NuInt_def)
-lemma [elim,\<phi>elim]: " x \<ratio> \<int>['b::len] \<Longrightarrow> (x < 2^(LENGTH('b) - 1) \<Longrightarrow> -(2^(LENGTH('b)-1)) \<le> x \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns) (metis One_nat_def sint_ge sint_lt) 
-
-lemma [\<phi>reason on \<open>\<phi>Equal (NuInt b) ?c ?eq\<close>]:
-    "\<phi>Equal (NuInt b) (\<lambda>x y. True) (=)"
-  unfolding \<phi>Equal_def by (auto simp add: signed_word_eqI) 
-
-lemma [\<phi>reason on \<open>\<phi>Zero (NuInt ?b) ?x\<close>]:
-    "\<phi>Zero (NuInt b) 0"
-  unfolding \<phi>Zero_def by simp
-
-subsubsection \<open>Boolean\<close>
-
-lemma [simp]: "(x \<noteq> 1) = (x = 0)" for x :: "1 word" proof -
-  have "(UNIV:: 1 word set) = {0,1}" unfolding UNIV_word_eq_word_of_nat
-  using less_2_cases apply auto apply force
-  by (metis UNIV_I UNIV_word_eq_word_of_nat len_num1 power_one_right)
-  then show ?thesis  by auto
-qed
-
-definition NuBool :: "(1 word, bool) \<phi>" ("\<bool>") where "NuBool x = {p. (p = 1) = x }"
-
-lemma [simp]: " p \<in> (x \<tycolon> \<bool>) \<longleftrightarrow> (p = 1) = x" unfolding \<phi>Type_def by (simp add: NuBool_def)
-lemma [\<phi>reason on \<open>\<phi>Equal \<bool> ?c ?eq\<close>]: "\<phi>Equal \<bool> (\<lambda>x y. True)  (=)" unfolding \<phi>Equal_def by auto
-lemma [\<phi>reason on \<open>\<phi>Zero NuBool ?z\<close>]: "\<phi>Zero NuBool False" unfolding \<phi>Zero_def by simp
 
 
 
@@ -219,39 +317,6 @@ instance by standard
 end
 
 
-abbreviation valid_memaddr :: "nat memaddr \<Rightarrow> bool"
-  where "valid_memaddr addr \<equiv> offset_of addr \<le> segment_len (segment_of addr)"
-definition raw_offset_of :: " msegment \<Rightarrow> nat \<Rightarrow> size_t word"
-  where "raw_offset_of seg i = of_nat (i * size_of (segment_llty seg))"
-lemma [simp]: "raw_offset_of seg 0 = 0" unfolding raw_offset_of_def by auto
-lemma [simp]: "raw_offset_of seg (ofs + unat delt) = raw_offset_of seg ofs + delt * word_of_nat (size_of (segment_llty seg))"
-  unfolding raw_offset_of_def using distrib_right by auto
-lemma raw_offset_of_inj:
-  "valid_memaddr (seg |+ ofs1) \<Longrightarrow> valid_memaddr (seg |+ ofs2) \<Longrightarrow>
-    raw_offset_of seg ofs1 = (raw_offset_of seg ofs2 :: size_t word) \<Longrightarrow> ofs1 = ofs2"
-  unfolding raw_offset_of_def word_of_nat_eq_iff take_bit_nat_def apply simp subgoal premises prems proof -
-    have "ofs1 * size_of (segment_llty seg) < 2 ^ addrspace_capacity"
-      using prems segment_len_valid2 size_of_L0
-      by (meson le_less_trans mult_le_mono1)
-    moreover have "ofs2 * size_of (segment_llty seg) < 2 ^ addrspace_capacity"
-      using prems segment_len_valid2 size_of_L0
-      by (meson le_less_trans mult_le_mono1) 
-    ultimately show "ofs1 = ofs2" using prems size_of_L0 addrspace_capacity_L0 by auto
-  qed done
-
-definition same_addr_offset :: "msegment \<Rightarrow> size_t word \<Rightarrow> nat \<Rightarrow> bool"
-  where "same_addr_offset seg ofsp ofsx \<longleftrightarrow> ofsx \<le> segment_len seg \<and> raw_offset_of seg ofsx = ofsp"
-definition the_same_addr :: "raw_memaddr \<Rightarrow> nat memaddr \<Rightarrow> bool"
-  where "the_same_addr addrp addrx \<equiv>
-    segment_of addrp = segment_of addrx
-    \<and> same_addr_offset (segment_of addrx)  (offset_of addrp) (offset_of addrx)"
-lemma [simp]: "the_same_addr (base |+ ofs) (base' |+ ofs') \<longleftrightarrow> base = base' \<and> same_addr_offset base' ofs ofs'"
-  unfolding the_same_addr_def by simp
-
-lemma same_addr_offset_inj: "same_addr_offset seg p a1 \<and> same_addr_offset seg p a2 \<Longrightarrow> a1 = a2"
-  by (auto simp add: same_addr_offset_def raw_offset_of_def raw_offset_of_inj)
-lemma same_addr_offset_inj2: "same_addr_offset seg p1 a \<and> same_addr_offset seg p2 a \<Longrightarrow> p1 = p2"
-  by (auto simp add: same_addr_offset_def raw_offset_of_def raw_offset_of_inj)
 
 consts logical_offset_of :: "msegment \<Rightarrow> size_t word \<Rightarrow> nat"
 specification (logical_offset_of)
@@ -292,21 +357,6 @@ end
 subsection \<open>\<phi>-abstraction\<close>
 
 
-subsubsection \<open>Pointer\<close>
-
-definition Pointer :: "(memptr, nat memaddr) \<phi>"
-  where "Pointer x = { memptr raw | raw. the_same_addr raw x}"
-
-lemma [\<phi>expns]: "memptr raw \<in> (addr \<tycolon> Pointer) \<longleftrightarrow> the_same_addr raw addr"
-  unfolding \<phi>Type_def by (simp add: Pointer_def)
-lemma [elim,\<phi>elim]: "addr \<ratio> Pointer \<Longrightarrow> C \<Longrightarrow> C" unfolding Inhabited_def by (simp add: lrep_exps)
-lemma [\<phi>reason on \<open>\<phi>Equal Pointer ?c ?eq\<close>]:
-    "\<phi>Equal Pointer (\<lambda>x y. segment_of x = segment_of y) (=)"
-  unfolding \<phi>Equal_def using raw_offset_of_inj by (simp add: lrep_exps the_same_addr_def same_addr_offset_def \<phi>expns) blast
-lemma [\<phi>reason on \<open>\<phi>Zero Pointer ?x\<close>]:
-    "\<phi>Zero Pointer (undefined |+ 0)"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns same_addr_offset_def)
-
 
 subsubsection \<open>Casts\<close>
 
@@ -322,127 +372,6 @@ lemma [\<phi>intro, freetyp_\<phi>cast]:
   unfolding Cast_def by (cases addr) (auto simp add: lrep_exps split: memaddr.split)
 *)
 
-
-section \<open>Fix-length Array\<close>
-
-datatype ('a,'len::len) fixlen_array = fixlen_array (dest_fixlen_array: "('a::field) list")
-
-lemma fixlen_array_forall: "(All P) = (\<forall>l. P (fixlen_array l))" by (metis fixlen_array.exhaust) 
-lemma fixlen_array_exists: "(Ex P) = (\<exists>l. P (fixlen_array l))" by (metis fixlen_array.exhaust) 
-
-lemma fixlen_array_All: "(\<And>(x::('a::field, 'b::len) fixlen_array). PROP P x) \<equiv> (\<And>l. PROP P (fixlen_array l))" proof
-  fix l assume \<open>\<And>x. PROP P x\<close>  then show \<open>PROP P (fixlen_array l)\<close> .
-next fix x :: "('a::field, 'b::len) fixlen_array" assume \<open>\<And>l. PROP P (fixlen_array l)\<close>
-  from \<open>PROP P (fixlen_array (dest_fixlen_array x))\<close> show \<open>PROP P x\<close> by simp
-qed
-
-subsection \<open>Lrep instantiations\<close>
-
-subsubsection \<open>lrep\<close>
-
-instantiation fixlen_array :: (field,len) field begin
-
-definition llty_fixlen_array :: "('a,'b) fixlen_array itself \<Rightarrow> llty "
-  where [simp, \<phi>reason]: "llty_fixlen_array _ = llty_array (llty TYPE('a)) LENGTH('b)"
-definition deepize_fixlen_array :: " ('a,'b) fixlen_array \<Rightarrow> value "
-  where "deepize_fixlen_array x = DM_array (map deepize (dest_fixlen_array x))"
-definition shallowize_fixlen_array :: " value \<Rightarrow> ('a,'b) fixlen_array "
-  where "shallowize_fixlen_array x = (case x of DM_array l \<Rightarrow> fixlen_array (map shallowize l))"
-
-instance apply standard unfolding fixlen_array_All shallowize_fixlen_array_def deepize_fixlen_array_def by simp
-end
-
-subsubsection \<open>zero\<close>
-
-instantiation fixlen_array :: ("{zero,field}",len) zero begin
-definition zero_fixlen_array :: " ('a,'b) fixlen_array "
-  where [simp]: "zero_fixlen_array = fixlen_array (replicate LENGTH('b) 0)"
-instance by standard
-end
-
-subsubsection \<open>ceq\<close>
-
-instantiation fixlen_array :: ("{ceq,field}",len) ceq begin
-
-definition ceqable_fixlen_array :: " heap \<Rightarrow> ('a,'b) fixlen_array \<Rightarrow> ('a,'b) fixlen_array \<Rightarrow> bool "
-  where "ceqable_fixlen_array heap x y = list_all2 (ceqable heap) (dest_fixlen_array x) (dest_fixlen_array y)"
-definition ceq_fixlen_array :: " ('a,'b) fixlen_array \<Rightarrow> ('a,'b) fixlen_array \<Rightarrow> bool "
-  where "ceq_fixlen_array x y = list_all2 ceq (dest_fixlen_array x) (dest_fixlen_array y)"
-
-lemma [simp]: "ceqable heap (fixlen_array a) (fixlen_array b) = list_all2 (ceqable heap) a b"
-  unfolding ceqable_fixlen_array_def by simp
-lemma [simp]: "ceq (fixlen_array a) (fixlen_array b) = list_all2 ceq a b"
-  unfolding ceq_fixlen_array_def by simp
-
-instance proof
-  fix x y z :: "('a,'b) fixlen_array" and h :: "heap"
-  note list_all2_conv_all_nth[simp]
-  show "ceqable h x y = ceqable h y x" by (cases x; cases y; simp) metis
-  show "ceqable h x x \<Longrightarrow> ceq x x" by (cases x; simp) blast
-  show "ceqable h x y \<Longrightarrow> ceq x y = ceq y x" by (cases x; cases y; simp) (metis ceq_sym) 
-  show "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z"
-    by (cases x, cases y, cases z; simp) (metis ceq_trans)
-qed
-end
-
-
-
-section \<open>Tuple\<close>
-
-datatype 'a tuple = Tuple (dest_tuple: "('a::field_list)")
-
-lemma tuple_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>x. P (Tuple x))" by (metis tuple.exhaust) 
-lemma tuple_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>x. P (Tuple x))" by (metis tuple.exhaust) 
-
-subsection \<open>Lrep instantiations\<close>
-
-subsubsection \<open>lrep\<close>
-
-instantiation tuple :: (field_list) lrep begin
-definition llty_tuple :: " 'a tuple itself \<Rightarrow> llty " where [simp, \<phi>reason]: "llty_tuple _ = llty_tup (llty TYPE('a))"
-definition deepize_tuple :: " 'a tuple \<Rightarrow> value " where "deepize_tuple x = DM_record (deepize (case_tuple id x))"
-definition shallowize_tuple :: " value \<Rightarrow> 'a tuple " where "shallowize_tuple x = (case x of DM_record y \<Rightarrow> Tuple (shallowize y))"
-instance apply standard using shallowize_tuple_def deepize_tuple_def by (auto split: tuple.split)
-end
-
-subsubsection \<open>zero\<close>
-
-instantiation tuple :: ("{zero,field_list}") zero begin
-definition zero_tuple :: " 'a tuple " where [simp]: "zero_tuple = Tuple 0"
-instance by standard
-end
-
-subsubsection \<open>ceq\<close>
-
-instantiation tuple :: ("{ceq,field_list}") ceq begin
-definition ceqable_tuple :: " heap \<Rightarrow> 'a tuple \<Rightarrow> 'a tuple \<Rightarrow> bool " where "ceqable_tuple heap = rel_tuple (ceqable heap)"
-definition ceq_tuple :: " 'a tuple \<Rightarrow> 'a tuple \<Rightarrow> bool " where "ceq_tuple = rel_tuple ceq"
-lemma [simp]: "ceqable heap (Tuple a) (Tuple b) = ceqable heap a b" unfolding ceqable_tuple_def by simp
-lemma [simp]: "ceq (Tuple a) (Tuple b) = ceq a b" unfolding ceq_tuple_def by simp
-instance proof
-  fix x y z :: " 'a tuple" and h :: "heap"
-  show "ceqable h x y = ceqable h y x" by (cases x; cases y) simp
-  show "ceqable h x x \<Longrightarrow> ceq x x" by (cases x) auto
-  show "ceqable h x y \<Longrightarrow> ceq x y = ceq y x" by (cases x; cases y) simp
-  show "ceqable h x y \<Longrightarrow> ceqable h y z \<Longrightarrow> ceqable h x z \<Longrightarrow> ceq x y \<Longrightarrow> ceq y z \<Longrightarrow> ceq x z" by (cases x, cases y, cases z) (simp, blast intro: ceq_trans)
-qed
-end
-
-subsubsection \<open>miscellaneous\<close>
-
-instantiation tuple :: (field_list) field begin instance by standard end
-instantiation tuple :: (field_list) field_list begin instance by standard end
-
-subsection \<open>Nu abstraction - `NuTuple`\<close>
-
-definition NuTuple :: "(('a::field_list), 'b) \<phi> \<Rightarrow> ('a tuple, 'b) \<phi>" ("\<lbrace> _ \<rbrace>")
-  where "\<lbrace> N \<rbrace> x = { Tuple p | p. p \<in> (x \<tycolon> N) }"
-
-lemma [simp]: "Tuple p \<in> (x \<tycolon> \<lbrace> N \<rbrace>) \<longleftrightarrow> p \<in> (x \<tycolon> N) " by (simp add: lrep_exps NuTuple_def \<phi>Type_def)
-lemma [elim,\<phi>elim]: "x \<ratio> \<lbrace> N \<rbrace> \<Longrightarrow> (x \<ratio> N \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def tuple_exists by (simp add: \<phi>expns)
-
-lemma [\<phi>reason]: "\<phi>Equal N P eq \<Longrightarrow> \<phi>Equal \<lbrace> N \<rbrace> P eq" unfolding \<phi>Equal_def tuple_forall by simp
-lemma [\<phi>reason]: "\<phi>Zero N z \<Longrightarrow> \<phi>Zero \<lbrace> N \<rbrace> z" unfolding \<phi>Zero_def by simp
 
 subsubsection \<open>Index\<close>
 

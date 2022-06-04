@@ -43,7 +43,6 @@ fun eliminate_nusys ctx rule xs As th =
 fun obtain_export ctxt rule xs _ As = (eliminate_nusys ctxt rule xs As, I)
 
 local
-val ExTy_strip = @{thm ExTyp_strip}
 fun expand_exE ctx th =
   (th RS @{thm exE}) |>
     Tactic.rule_by_tactic ctx (REPEAT (Tactic.eresolve_tac ctx [exE] 1))
@@ -71,7 +70,8 @@ fun choose inst_names stat =
           (f (Binding.name_of b) c) |>> (fn s => Binding.map_name (K s) b)
     val (inst_names,_) =
       fold_map (map_name_result Name.variant) inst_names (Name.make_context [])
-    val major = Raw_Simplifier.rewrite_rule ctx @{thms ExTyp_strip} major
+    val ExTyp_strip = Proof_Context.get_thm ctx "local.\<phi>ExTyp_strip"
+    val major = Raw_Simplifier.rewrite_rule ctx ExTyp_strip major
     val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder_raw "HOL.Ex"
     val var_tys = map snd vars
     val (inst_names, stat) =

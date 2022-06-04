@@ -12,16 +12,17 @@ signature NU_PROCEDURE = sig
   val procedures_of : Context.generic -> string list (*names*)
   val compilation_thm_of : theory -> string (*name*) -> thm
   val add_interface : interface -> theory -> theory
-  val add_interface_command : (Binding.binding * string) * (string * string) option -> theory -> theory
+  (* val add_interface_command : (Binding.binding * string) * (string * string)
+  * option -> theory -> theory *)
 end
 
 structure NuProcedure : NU_PROCEDURE = struct
 open NuBasics
 
-val app_suffix = "_\<nu>app"
-val compilation_suffix = "_\<nu>compilation"
-val procedure_kind = "\<nu>procedure"
-val cast_kind = "\<nu>cast"
+val app_suffix = "_\<phi>app"
+val compilation_suffix = "_\<phi>compilation"
+val procedure_kind = "\<phi>procedure"
+val cast_kind = "\<phi>cast"
 (* val compilation_thm = gen_get_thm compilation_suffix
 fun compilation_thm_of ctx tm = compilation_thm ctx (term_name tm,
   Position.none) *)
@@ -61,7 +62,7 @@ fun add_procedure name ctxt =
   Procedures.map (Symtab.map_default (thy_name_of_ctxt ctxt, [])
     (fn l => name :: l)) ctxt
 
-fun add_interface_command ((name,const),tys) thy =
+(* fun add_interface_command ((name,const),tys) thy =
   let
     val ctxt = Proof_Context.init_global thy
           |> Proof_Context.set_mode Proof_Context.mode_schematic
@@ -110,7 +111,7 @@ fun add_interface_command ((name,const),tys) thy =
   in
     add_interface {name = name, thm = thm} thy
   end
-
+  *)
 
 
 fun norm_def ctxt (m,n) def = let
@@ -147,7 +148,8 @@ fun define (binding,attrs) proc_th lthy =
     val proc_binding = Binding.suffix_name app_suffix binding
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
-    fun rename def proc_th = proc_th RS (def RS @{thm rename_proc})
+    val rename_proc = Proof_Context.get_thm lthy "locale.\<phi>rename_proc"
+    fun rename def proc_th = proc_th RS (def RS rename_proc)
 
     val (lthy, proc_th) =
       if Binding.is_empty binding then (lthy, proc_th)

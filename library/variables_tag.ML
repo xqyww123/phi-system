@@ -59,14 +59,15 @@ fun gen_set_variables_tag prep_seps vars always ctxt sequent =
           [@{simproc named_forall_expansion}, @{simproc named_exSet_expansion},
            @{simproc named_pureAll_expansion}]
           addsimps @{thms NuSys.named.case Product_Type.prod.case}
+    val Subjection_simp_proc_arg = Proof_Context.get_thm ctxt "local.Subjection_simp_proc_arg"
     val sequent = (var_tag_th RS sequent)
                   |> schematic_var_expansion ctxt
-                  |> Raw_Simplifier.rewrite_rule ctxt (forall::exNu::
-                    @{thms HOL.simp_thms[unfolded atomize_eq[symmetric]]
+                  |> Raw_Simplifier.rewrite_rule ctxt
+                      (forall::exNu::Subjection_simp_proc_arg::
+                        @{thms HOL.simp_thms[unfolded atomize_eq[symmetric]]
                            Product_Type.prod.case[unfolded atomize_eq[symmetric]]
                            NuSys.named.case[unfolded atomize_eq[symmetric]]
-                           Subjection_simp_proc_arg
-                     })
+                         })
   in
     sequent
   end
@@ -81,7 +82,7 @@ fun variables_tag_pattern_match raw_vars pattern always ctxt sequent =
     fun prep_seps ctxt X =
       let
         val pattern = rev (map (Syntax.parse_term ctxt) pattern)
-        val sep = strip_binop_l @{const_name Separation} X
+        val sep = strip_binop_l @{const_name times} X
 
         val sep' = pattern ~~ take (length pattern) sep
               |> map (fn (pat, org) => (*TODO: patter match here*)
@@ -90,7 +91,7 @@ fun variables_tag_pattern_match raw_vars pattern always ctxt sequent =
                      | NONE => pat)
               |> (fn l => l @ drop (length pattern) sep)
       in
-        list_mk_binop_l @{const_name Separation} sep'
+        list_mk_binop_l @{const_name times} sep'
       end
   in
     gen_set_variables_tag prep_seps vars always ctxt sequent

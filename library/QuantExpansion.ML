@@ -82,8 +82,8 @@ val exists_expansion =
   gen_general_expansion @{const_name Ex} @{thms pair_exists named_exists} (SOME boolT)
 val pure_All_expansion =
   gen_general_expansion @{const_name Pure.all} @{thms pair_All named_All} (SOME propT)
-val ExNu_expansion =
-  gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet} (SOME @{typ assn})
+fun ExNu_expansion names ctxt =
+  gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet} (SOME (mk_assnT ctxt)) names ctxt
 
 fun schematic_var_expansion ctx th =
   let
@@ -94,7 +94,7 @@ fun schematic_var_expansion ctx th =
                       (tm, mk_the_cases (Var (tm |> apsnd uncurry_ty)) names |> cterm_of ctx)
                     ))
   in
-    Thm.instantiate ([], insts) th
+    Thm.instantiate (TVars.empty, Vars.make insts) th
   end
 
 end
@@ -114,7 +114,8 @@ fun spec_retaining_name th =
     val Abs (name,_,_)
       = Thm.concl_of th |> dest_Trueprop |> dest_monop @{const_name All}
     val spec =
-      Thm.instantiate ([],[((("x",1), TVar (("'a",1),["HOL.type"])), Thm.var((name,0), cty_a))])
+      Thm.instantiate
+        (TVars.empty, Vars.make [((("x",1), TVar (("'a",1),["HOL.type"])), Thm.var((name,0), cty_a))])
         (Thm.incr_indexes 1 @{thm spec})
   in
     th RS spec

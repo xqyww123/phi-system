@@ -36,15 +36,14 @@ signature NU_SYS = sig
         (* solve all the premises by Nu_Resonser, raising CastFail if failed *)
 
   val apply : Proof.context -> thm list -> thm -> thm
-  val apply_proc_naive : thm (*proc*) -> thm (*meta or major*) -> thm
+  val apply_proc_naive : Proof.context -> thm (*proc*) -> thm (*meta or major*) -> thm
   val accept_proc : thm -> Proof.context -> thm * Proof.context
 
   val set_param : Proof.context -> term -> thm -> thm
   val set_param_cmd : Proof.context -> string -> thm -> thm
   val set_label : string -> thm -> thm
 
-  val start_proc : typ option (*concrete type of the stack*)
-        -> string (*blk name*) -> cterm -> Proof.context -> thm * Proof.context
+  val start_proc : string (*blk name*) -> cterm -> Proof.context -> thm * Proof.context
   val rename_blk_var : string -> thm -> cterm (*renamed block*) * thm
         (* current old_name reulst in ...
         * ---------------------------------
@@ -143,14 +142,8 @@ fun conversion ctxt to from =
     val conversion_thm = Proof_Context.get_thm ctxt "local.\<phi>conversion"
     val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
     val (f',U',V') = dest_procedure_c to
-    val (a,b) = dest_typroc_c (ctyp_of_cterm f) 
-    val (c,d) = dest_typroc_c (ctyp_of_cterm f')
     val rule = Thm.instantiate
-      ([((("'a",0),["NuPrime.lrep"]), a),
-        ((("'b",0),["NuPrime.lrep"]), b),
-        ((("'c",0),["NuPrime.lrep"]), c),
-        ((("'d",0),["NuPrime.lrep"]), d)
-       ],[
+      (TVars.empty, Vars.make[
         ((("f",0),  typ_of_cterm f),  f),
         ((("U",0),  typ_of_cterm U),  U),
         ((("V",0),  typ_of_cterm V),  V),
@@ -194,7 +187,7 @@ fun accept_proc sequent ctxt =
     val sequent = sequent RS accept_proc_thm
     val assm = Thm.cprem_of sequent 1
     val ([cb],ctxt) = Assumption.add_assms
-          (fn _ => fn [cb] => (export_codeblock cb, I)) [assm] ctxt
+          (fn _ => fn [cb] => (export_codeblock ctxt cb, I)) [assm] ctxt
     val sequent = cb RS sequent
   in
     (sequent,ctxt)
@@ -252,12 +245,10 @@ fun finish_proc ctxt cc sequent =
   end
 
 
-fun start_proc stack_ty blk_name arg_nuTy ctxt =
+fun start_proc blk_name arg_nuTy ctxt =
   let
-    val stack_ty = case stack_ty of SOME T => T
-                                  | NONE => stack_ty_of_nu (term_of arg_nuTy)
     val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
-    val stat_var = Free (blk_name, mk_stateT stack_ty)
+    val stat_var = Free (blk_name, mk_stateT ctxt)
     val ctxt = Variable.declare_constraints stat_var ctxt
     val init = Const("local.CurrentConstruction",
                   fastype_of stat_var --> dummyT
@@ -266,20 +257,9 @@ fun start_proc stack_ty blk_name arg_nuTy ctxt =
                $ stat_var $ Free (RR, dummyT)
     val init = Thm.apply @{cterm Trueprop} (Thm.apply (Thm.cterm_of ctxt init) arg_nuTy)
     val ([init],ctxt) = Assumption.add_assms
-          (fn _ => fn [cc] => (finish_proc cc, I)) [init] ctxt
+          (fn _ => fn [cc] => (finish_proc ctxt cc, I)) [init] ctxt
   in
     (init,ctxt)
-  end
-
-fun meta_eq_to_hol_eq th =
-  let
-    val (L,R) = cprop_of th |> Thm.dest_equals
-    val rule = Thm.instantiate
-          ([((("'a",0),["HOL.type"]),ctyp_of_cterm L)],
-           [((("A",0),typ_of_cterm L),L), ((("B",0),typ_of_cterm R),R)])
-              @{thm HOL.meta_eq_to_obj_eq}
-  in
-    Thm.implies_elim rule th
   end
 
 fun rename_blk_var name meta =

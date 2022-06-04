@@ -23,7 +23,7 @@ specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by auto
 subsubsection \<open>Type\<close>
 
 virtual_datatype std_ty =
-  T_int     :: nat
+  T_int     :: nat \<comment> \<open>in unit of bits\<close>
   T_pointer :: unit
   T_tup     :: \<open>'self list\<close>
   T_array   :: \<open>'self \<times> nat\<close>
@@ -86,22 +86,10 @@ end
 
 paragraph \<open>Memory Address\<close>
 
-datatype ('TY) segidx = Null | Segment nat \<comment> \<open>nonce\<close> 'TY nat
+datatype ('TY) segidx = Null | Segment nat \<comment> \<open>nonce\<close> (layout: 'TY) (len: nat)
 declare segidx.map_id0[simp]
 
-
-definition (in std_ty) \<open>segidx_layout s = (case s of Null \<Rightarrow> T_int.mk 8 | Segment _ ty _ \<Rightarrow> ty )\<close>
-  \<comment> \<open>\<close>
-lemma (in std_ty) segidx_layout[simp]:
-  \<open>segidx_layout Null = T_int.mk 8\<close> \<open>segidx_layout (Segment i ty n) = ty\<close>
-  unfolding segidx_layout_def by simp_all
-
-
-definition \<open>segidx_len s = (case s of Null \<Rightarrow> 1 | Segment _ _ n \<Rightarrow> n )\<close>
-
-lemma segidx_len[simp]:
-  \<open>segidx_len Null = 1\<close> \<open>segidx_len (Segment i ty n) = n\<close>
-  unfolding segidx_len_def by simp_all
+hide_const (open) layout len
 
 
 datatype ('offset,'TY) memaddr = memaddr (segment: "'TY segidx") (offset: 'offset ) (infixl "|:" 60)
@@ -136,6 +124,7 @@ end
 
 type_synonym size_t = \<open>addr_cap word\<close>
 type_synonym 'TY rawaddr = "(size_t, 'TY) memaddr"
+type_synonym 'TY logaddr = "(nat, 'TY) memaddr"
 
 
 paragraph \<open>Model\<close>
@@ -217,7 +206,7 @@ locale std_sem =
   for TY_CONS_OF and VAL_CONS_OF
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL) \<times> ('RES_N => 'RES)) itself\<close>
 
-  assumes V_tup_mult[simp]: \<open>V_tup.mk t1 * V_tup.mk t2 = V_tup.mk (t1 @ t2)\<close>
+  assumes V_tup_mult: \<open>V_tup.mk t1 * V_tup.mk t2 = V_tup.mk (t1 @ t2)\<close>
 
   fixes MemObj_Size :: \<open>'TY \<Rightarrow> nat\<close> \<comment> \<open>in size of bytes\<close>
     and Valid_Segment :: \<open>'TY segidx \<Rightarrow> bool\<close>
@@ -225,7 +214,10 @@ locale std_sem =
     \<comment> \<open>It may introduce a restriction: types like zero-element tuple and array must occupy at
       least 1 byte, which may affect the performance unnecessarily. However, since zero-element
       tuple and array are so special  \<close> *)
-  defines \<open>Valid_Segment seg \<equiv> MemObj_Size (segidx_layout seg) * segidx_len seg < 2^addrspace_bits\<close>
+  defines \<open>Valid_Segment seg \<equiv> (
+    case seg of Null \<Rightarrow> True
+              | Segment _ ty len \<Rightarrow> MemObj_Size ty * len < 2^addrspace_bits
+    )\<close>
 
   fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
   assumes WT_int[simp]: \<open>Well_Type (T_int.mk b)       = { V_int.mk (\<phi>word b x)    |b x. x < 2^b } \<close>
@@ -264,7 +256,8 @@ definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
 
 abbreviation \<open>Valid_Address p \<equiv> Valid_Segment (memaddr.segment p)\<close>
 
-
+lemma Valid_Segment_zero: \<open>Valid_Segment 0\<close>
+  unfolding Valid_Segment_def zero_segidx_def by simp
 
 
 
@@ -521,9 +514,9 @@ lemma Separation_I[intro]:
 
 subsection \<open>Hoare Triple\<close>
 
-definition (in std) Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool"
+definition (in std) \<phi>Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
-  where [\<phi>def]:"Procedure f T U \<longleftrightarrow>
+  where [\<phi>def]:"\<phi>Procedure f T U \<longleftrightarrow>
     (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> INTERP_COMP (R * U))"
 
 
@@ -534,10 +527,10 @@ definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b 
 
 paragraph \<open>Specifications for Elementary Monadic Construction\<close>
 
-lemma (in std) nop_\<phi>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<lbrace> T \<longmapsto> T \<rbrace>" unfolding nop_def Procedure_def by auto
+lemma (in std) nop_\<phi>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<lbrace> T \<longmapsto> T \<rbrace>" unfolding nop_def \<phi>Procedure_def by auto
 
 lemma (in std) instr_comp[intro]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> B \<longmapsto> C \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<then> g) \<lbrace> A \<longmapsto> C \<rbrace>"
-  unfolding instr_comp_def Procedure_def bind_def by (auto 0 4)
+  unfolding instr_comp_def \<phi>Procedure_def bind_def by (auto 0 4)
 
 
 section \<open>Programming Framework\<close>
@@ -570,12 +563,12 @@ context std begin
 
 lemma \<phi>frame:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> M * A \<longmapsto> M * B \<rbrace>"
-  unfolding Procedure_def
+  unfolding \<phi>Procedure_def
   by (metis (no_types, lifting) mult.assoc)
 
 lemma \<phi>apply_proc:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<rbrace> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
-  unfolding Procedure_def CurrentConstruction_def PendingConstruction_def bind_def by (auto 0 5)
+  unfolding \<phi>Procedure_def CurrentConstruction_def PendingConstruction_def bind_def by (auto 0 5)
 
 lemma \<phi>accept_proc:
   "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> CodeBlock s' s f \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
@@ -593,7 +586,7 @@ lemma \<phi>reassemble_proc:
 
 lemma \<phi>reassemble_proc_final:
   "(\<And>s H. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> S \<longmapsto> T \<rbrace>"
-  unfolding CurrentConstruction_def PendingConstruction_def Procedure_def bind_def pair_All
+  unfolding CurrentConstruction_def PendingConstruction_def \<phi>Procedure_def bind_def pair_All
   by (metis StrictStateTy_intro state.simps(8))
 
 lemma \<phi>rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<rbrace>" by fast
@@ -624,8 +617,8 @@ abbreviation (in std) COMMA
 translations
   "CONST std.COMMA S (y \<Ztypecolon> T)" \<rightleftharpoons> "CONST std.COMMA S (ELE y \<Ztypecolon> T)"
   "CONST std.COMMA (x \<Ztypecolon> T) S" \<rightleftharpoons> "CONST std.COMMA (ELE x \<Ztypecolon> T) S"
-  "CONST std.Procedure RV I f (a \<Ztypecolon> A) B" \<rightleftharpoons> "CONST std.Procedure RV I f (ELE a \<Ztypecolon> A) B"
-  "CONST std.Procedure RV I f A (b \<Ztypecolon> B)" \<rightleftharpoons> "CONST std.Procedure RV I f A (ELE b \<Ztypecolon> B)"
+  "CONST std.\<phi>Procedure RV I f (a \<Ztypecolon> A) B" \<rightleftharpoons> "CONST std.\<phi>Procedure RV I f (ELE a \<Ztypecolon> A) B"
+  "CONST std.\<phi>Procedure RV I f A (b \<Ztypecolon> B)" \<rightleftharpoons> "CONST std.\<phi>Procedure RV I f A (ELE b \<Ztypecolon> B)"
   "CONST std.CurrentConstruction RV I s R (x \<Ztypecolon> T)" \<rightleftharpoons> "CONST std.CurrentConstruction RV I s R (ELE (x \<Ztypecolon> T))"
   "CONST std.PendingConstruction RV I f s H (x \<Ztypecolon> T)" \<rightleftharpoons> "CONST std.PendingConstruction RV I f s H (ELE x \<Ztypecolon> T)"
 

@@ -67,11 +67,11 @@ signature NU_HELP = sig
         string -> term -> term list * term
   val strip_binder_nc : int -> string -> cterm -> cterm list * cterm
   val strip_binder   : string -> term -> term list * term
-  val strip_binder_c : string -> cterm -> cterm list * cterm
+  val strip_binder_c : string -> cterm -> cterm list * cterm *)
   val strip_binder_vars : string -> term -> (string * typ) list
   val strip_binder_raw_body : string -> term -> term (* term containing raw bounds! *)
   val strip_binder_raw : string -> term -> (string * typ) list * term
-  val list_mk_binder   : string -> term list -> term -> term *)
+  val list_mk_binder   : string -> term list -> term -> term
   val list_mk_abstract : term list -> term -> term
   val strip_implies_c : cterm -> cterm
   val tuple_abs : (string * (string * typ)) list -> term -> term
@@ -248,8 +248,8 @@ fun gen_strip_binder num dest tm =
 (* fun strip_binder_n  n = gen_strip_binder n o dest_binder
 fun strip_binder_nc n = gen_strip_binder n o dest_binder_c
 val strip_binder   = strip_binder_n ~1
-val strip_binder_c = strip_binder_nc ~1
-fun list_mk_binder binder = fold (mk_binder binder) *)
+val strip_binder_c = strip_binder_nc ~1 *)
+fun list_mk_binder binder = fold (mk_binder binder)
 val list_mk_abstract = fold mk_abstract
 
 fun strip_binder_vars binder (Const (binder', _) $ Abs (name, ty, body))

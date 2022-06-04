@@ -9,7 +9,7 @@ theory NuSys
     "argument" "return" "on" :: quasi_command
   and "\<bullet>" "affirm" :: prf_decl % "proof"
   and "\<phi>processor" "\<phi>reasoner" "setup_\<phi>application_method" :: thy_decl % "ML"
-  and "\<phi>interface" "\<phi>export_llvm" "\<phi>overloads" :: thy_decl
+  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
 abbrevs
   "!!" = "!!"
@@ -600,7 +600,7 @@ lemma [simp,cast_simp]: "(R * (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (R *
 lemma (in std) Subjection_simp_proc_arg[simp]:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> Y \<rbrace>)"
   (* and Subjection_simp_func_arg[simp]: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<and>\<^sup>s P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<longmapsto> Y \<rbrace>)" *)
-  unfolding Auto_def Procedure_def by (simp add: \<phi>expns) blast
+  unfolding Auto_def \<phi>Procedure_def by (simp add: \<phi>expns) blast
 
 lemma (in std) [simp]:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P"
@@ -614,8 +614,8 @@ lemma subj_\<phi>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrig
   unfolding Subty_def Premise_def Implicit_Protector_def by simp
 
 translations
-  "CONST std.Procedure RV I f (a \<Ztypecolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) B" \<rightleftharpoons> "CONST std.Procedure RV I f (ELE a \<Ztypecolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) B"
-  "CONST std.Procedure RV I f A (b \<Ztypecolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)" \<rightleftharpoons> "CONST std.Procedure RV I f A (ELE b \<Ztypecolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)"
+  "CONST std.\<phi>Procedure RV I f (a \<Ztypecolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) B" \<rightleftharpoons> "CONST std.\<phi>Procedure RV I f (ELE a \<Ztypecolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) B"
+  "CONST std.\<phi>Procedure RV I f A (b \<Ztypecolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)" \<rightleftharpoons> "CONST std.\<phi>Procedure RV I f A (ELE b \<Ztypecolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)"
 
 
 subsection \<open>Existential Nu-set\<close>
@@ -634,8 +634,8 @@ translations
   " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. CONST True " \<rightleftharpoons> "\<exists>* idts. X"
 
 translations
-  "CONST std.Procedure RV I f (a \<Ztypecolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P) B" \<rightleftharpoons> "CONST std.Procedure RV I f (ELE a \<Ztypecolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P) B"
-  "CONST std.Procedure RV I f A (b \<Ztypecolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. Q)" \<rightleftharpoons> "CONST std.Procedure RV I f A (ELE b \<Ztypecolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. Q)"
+  "CONST std.\<phi>Procedure RV I f (a \<Ztypecolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P) B" \<rightleftharpoons> "CONST std.\<phi>Procedure RV I f (ELE a \<Ztypecolon> A \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P) B"
+  "CONST std.\<phi>Procedure RV I f A (b \<Ztypecolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. Q)" \<rightleftharpoons> "CONST std.\<phi>Procedure RV I f A (ELE b \<Ztypecolon> B \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. Q)"
 
 text (in std)
  \<open>The set of \<phi>-type in an assertion like \<^term>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> T x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Q x \<rbrace>\<close> is represented
@@ -656,7 +656,7 @@ lemma (in std) [simp]: "(OBJ ExSet T) = (\<exists>*c. OBJ T c)" by (simp add: \<
 lemma [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: \<phi>expns set_eq_iff) blast
 lemma [simp,cast_simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
 
-lemma (in std) ExTyp_strip:
+lemma (in std) \<phi>ExTyp_strip:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExSet T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T c)"
   unfolding CurrentConstruction_def atomize_eq by (cases p, simp_all add: \<phi>expns pair_All) blast
 
@@ -1509,7 +1509,7 @@ lemma apply_proc_conv:
   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<rbrace>
   \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Conversion_def IntroFrameVar_def
-  using Procedure_def \<phi>frame by auto
+  using \<phi>Procedure_def \<phi>frame by auto
 
 lemma apply_cast_conv:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
@@ -1578,12 +1578,7 @@ lemma \<phi>Make_by_proc:
 
 end
 
-subsection \<open>Index for Shallow Representation\<close>
-
-text \<open>Indexes provide the function to access and map the addressed part in a nested structure (e.g. a nested pair @{term "(a,((b,c),d))"}.
-  It is achieved by nested composition of address functions. For example "get_at (address_L (address_R address_here))"
-  returns @{term b} for the pattern @{term "((a,b),c)"}, and "map_at (address_L (address_R address_here)) f"
-  maps a @{term "((a,b),c)"} to @{term "((a, f b),c)"}\<close>
+(* subsection \<open>Index of Member Field\<close>
 
 subsubsection \<open>Definitions\<close>
 
@@ -1716,7 +1711,7 @@ lemma [\<phi>reason]:
   unfolding FieldIndex_def \<phi>index_def index_left_def MakeTag_def
   by (cases idx) (simp add: \<phi>expns)
 *)
-
+*)
 
 subsection \<open>Structural Pairs\<close>
 
@@ -1963,7 +1958,7 @@ lemma [\<phi>reason 1000]: "SameNuTy A A" \<comment> \<open>The fallback\<close>
   unfolding SameNuTy_def ..
 
 
-subsection \<open>Program Interface\<close> \<comment> \<open>Interfaces exported to target LLVM module\<close>
+(* subsection \<open>Program Interface\<close> \<comment> \<open>Interfaces exported to target LLVM module\<close>
 
 definition Prog_Interface :: " label \<Rightarrow> 'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a::lrep  \<longmapsto> 'b::lrep) \<Rightarrow> bool"
   where "Prog_Interface _ args rets proc \<longleftrightarrow> True"
@@ -1974,36 +1969,23 @@ lemma Prog_Interface_proc: "TERM proc \<Longrightarrow> Prog_Interface name TYPE
 lemma Prog_Interface_func:
   "TERM f \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) f" 
   unfolding Prog_Interface_def ..
-
+*)
 
 section \<open>Main implementation of the system\<close>
-
-thm std.apply_proc
-
-context std begin
-thm "local.cast"
-thm Procedure_def
-term Procedure
-ML_val \<open>Syntax.parse_term \<^context> "local.Procedure"
-  \<close>
-ML_val \<open>\<^term>\<open>local.Procedure\<close>\<close>
-ML_val \<open>\<^const_abbrev>\<open>Procedure\<close>\<close>
-thm \<phi>Make_by_proc
-end
 
 ML_file \<open>library/application.ML\<close>
 
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
-(* ML_file "./library/procedure.ML" *)
+ML_file "./library/procedure.ML"
 
 
 ML_file NuSys.ML
 ML_file "./library/processors.ML"
 ML_file "./library/obtain.ML"
 ML_file "./library/QuantExpansion.ML"
-ML_file "./codegen/compilation.ML"
+(* ML_file "./codegen/compilation.ML" *)
 ML_file NuToplevel.ML
 
 section \<open>Attributes and Commands\<close>
@@ -2043,7 +2025,7 @@ val defines_statement = Scan.optional ($$$ "defines" |-- Parse.!!! statement1) [
 val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
            where_statement -- defines_statement  -- precond_statement;
 
-val arg = Parse.term -- Scan.option ($$$ "::" |-- Parse.typ)
+val arg = Parse.term
 val proc_head = Parse_Spec.thm_name ":" --
         ((arg --| $$$ "\<longmapsto>" -- arg) || ($$$ "argument" |-- arg --| $$$ "return" -- arg))
 
@@ -2092,14 +2074,14 @@ val _ =
           -- Parse.nat -- Parse.term -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
         >> NuProcessor.setup_cmd)
 
-val _ =
+(* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
       (Parse.binding --| $$$ "=" -- Parse.const -- option ($$$ ":" |-- Parse.typ --| $$$ "\<longmapsto>" -- Parse.typ)
         >> (Toplevel.theory o NuProcedure.add_interface_command))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>export_llvm\<close> "export LLVM target"
-      (Scan.succeed (Toplevel.theory (NuToplevel.export_LLVM)))
+      (Scan.succeed (Toplevel.theory (NuToplevel.export_LLVM))) *)
 
 end
 \<close>
@@ -2107,9 +2089,9 @@ end
 attribute_setup intro_forall = \<open>Scan.lift (Scan.repeat Args.var) >> (fn tms =>
   Thm.rule_attribute [] (fn ctx => fn th => 
     let open Thm
-    val vs = add_vars th []
-    val foralls = map (fn tm => case find_first (fn v => #1 (dest_Var (term_of v)) = tm) vs
-                  of SOME y => y | _ => error (#1 tm ^ " is not a var ")) tms
+    val vs = add_vars th Vars.empty |> Vars.dest
+    val foralls = map (fn tm => case find_first (fn (_,v) => #1 (dest_Var (term_of v)) = tm) vs
+                  of SOME (_,y) => y | _ => error (#1 tm ^ " is not a var ")) tms
     in Drule.forall_intr_list foralls th end)) \<close>
 
 subsection \<open>Application method\<close>
@@ -2117,14 +2099,13 @@ subsection \<open>Application method\<close>
 attribute_setup \<phi>application_method = \<open>Scan.lift (Parse.int -- (Parse.int >> ~)) >> (fn (idx,cost) =>
   Thm.declaration_attribute (fn th => NuApply.update (cost,{thm=th, applicant_idx = idx})))\<close>
 
-declare
-  apply_proc[\<phi>application_method 1 100]
+declare (in std)
+  \<phi>apply_proc[\<phi>application_method 1 100]
   apply_proc_conv[\<phi>application_method 3 -3000]
-  "cast"[unfolded Subty_Target_def, \<phi>application_method 1 1100]
+  "\<phi>cast"[unfolded Subty_Target_def, \<phi>application_method 1 1100]
   apply_cast_conv[\<phi>application_method 3 1000]
-thm apply_cast_conv[\<phi>application_method 3 1000]
 
-thm
+(* thm
   "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(1)[OF Argument_I], \<phi>application_method 1 1100]
   "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(2)[OF Argument_I], \<phi>application_method 1 1100]
   "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(3)[OF Argument_I], \<phi>application_method 1 1100]
@@ -2143,6 +2124,7 @@ thm "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(1)[OF Argument_I], \<p
 
 thm "cast"[unfolded Subty_Target_def, OF _ cast_conversion[OF _ cast_\<phi>app(2)[OF Argument_I]],
       \<phi>application_method 2 1050]
+*)
 
 (*  
   "cast"[OF _ cast_whole_heap_\<phi>app[OF Argument_I, OF cast_heap_conversion],
@@ -2177,6 +2159,8 @@ simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a named 'names \<Rightar
   \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
 
 section \<open>Processors\<close>
+
+context std begin
 
 subsection \<open>Controls\<close>
 
@@ -2307,20 +2291,22 @@ subsection \<open>Literal operations\<close>
   let val term = Syntax.read_term ctx term |> Thm.cterm_of ctx |> Simplifier.rewrite ctx |> Thm.rhs_of
   in (NuSys.auto_construct ctx term meta, ctx) end)\<close>
 
+end
+
 section \<open>Mechanism III - Additional Parts\<close>
 
-subsection \<open>Variant Subty\<close>
+subsection \<open>Variant Cast\<close>
 
-definition Variant_Subty :: " 'vars \<Rightarrow> assn \<Rightarrow> ('vars \<Rightarrow> assn) \<Rightarrow> bool " ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t _ \<^bold>i\<^bold>n _/ \<longmapsto> _" )
-  where "Variant_Subty insts X X' \<longleftrightarrow> X = X' insts"
+definition Variant_Cast :: "'vars \<Rightarrow> 'a set \<Rightarrow> ('vars \<Rightarrow> 'a set) \<Rightarrow> bool" ("\<^bold>v\<^bold>a\<^bold>r\<^bold>i\<^bold>a\<^bold>n\<^bold>t _ \<^bold>i\<^bold>n _/ \<longmapsto> _" )
+  where "Variant_Cast insts X X' \<longleftrightarrow> X = X' insts"
 
-lemma Variant_Subty_I: "X = X' vars \<Longrightarrow> Variant_Subty vars X X' "
-  unfolding Variant_Subty_def by auto
+lemma Variant_Cast_I: "X = X' vars \<Longrightarrow> Variant_Cast vars X X' "
+  unfolding Variant_Cast_def by auto
 
-lemma Variant_Subty_I_always:
+lemma Variant_Cast_I_always:
   "X = X' vars \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always vars \<Longrightarrow>
-  Variant_Subty vars X (\<lambda>vars. X' vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j always vars)"
-  unfolding Variant_Subty_def Auto_def by (auto simp add: \<phi>expns)
+  Variant_Cast vars X (\<lambda>vars. X' vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j always vars)"
+  unfolding Variant_Cast_def Auto_def by (auto simp add: \<phi>expns)
 
 lemma case_prod_expn_I: "A = B x y \<Longrightarrow> A = case_prod B (x,y)" by simp
 lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by simp
