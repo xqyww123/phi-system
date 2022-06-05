@@ -28,6 +28,13 @@ virtual_datatype std_ty =
   T_tup     :: \<open>'self list\<close>
   T_array   :: \<open>'self \<times> nat\<close>
 
+context std_ty begin
+abbreviation \<open>\<tau>Int \<equiv> T_int.mk\<close>
+abbreviation \<open>\<tau>Pointer \<equiv> T_pointer.mk ()\<close>
+abbreviation \<open>\<tau>Tuple \<equiv> T_tup.mk\<close>
+abbreviation \<open>\<tau>Array N T \<equiv> T_array.mk (T,N)\<close>
+end
+
 (* datatype llty = T_int nat \<comment> \<open>int bits\<close> | T_pointer | T_tup llty
   | T_array llty nat | T_nil *)
 
@@ -97,13 +104,6 @@ declare memaddr.sel[iff]
 
 hide_const (open) segment offset
 
-abbreviation shift_addr :: "('a::plus,'TY) memaddr \<Rightarrow> 'a \<Rightarrow> ('a,'TY) memaddr" (infixl "||+" 60)
-  where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) id addr"
-lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
-lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
-
-lemma mem_shift_shift[simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (cases a) simp
-
 instantiation segidx :: (type) zero begin
 definition "zero_segidx = Null"
 instance ..
@@ -123,8 +123,18 @@ instance apply standard using addrspace_bits_L0 by simp
 end
 
 type_synonym size_t = \<open>addr_cap word\<close>
-type_synonym 'TY rawaddr = "(size_t, 'TY) memaddr"
-type_synonym 'TY logaddr = "(nat, 'TY) memaddr"
+type_synonym 'TY rawaddr = "(nat list \<times> size_t, 'TY) memaddr"
+type_synonym 'TY logaddr = "(nat list, 'TY) memaddr"
+
+abbreviation shift_addr :: "'TY logaddr \<Rightarrow> nat \<Rightarrow> 'TY logaddr" (infixl "||+" 60)
+  where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) id addr"
+lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
+lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
+
+lemma mem_shift_shift[simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (cases a) simp
+
+
+
 
 
 paragraph \<open>Model\<close>
@@ -140,9 +150,9 @@ subsubsection \<open>Resource\<close>
 
 type_synonym 'v opstack = "'v list"
 type_synonym varname = nat
-type_synonym ('TY,'VAL) R_mem' = \<open>('TY rawaddr \<rightharpoonup> 'VAL)\<close>
+type_synonym ('TY,'VAL) R_mem' = \<open>('TY logaddr \<rightharpoonup> 'VAL)\<close>
 type_synonym ('TY,'VAL) R_mem = \<open>('TY,'VAL) R_mem' ?\<close>
-type_synonym ('TY,'VAL) R_var = \<open>('TY rawaddr \<rightharpoonup> 'VAL) ?\<close>
+type_synonym ('TY,'VAL) R_var = \<open>(string \<rightharpoonup> 'VAL) ?\<close>
 
 resource_space ('VAL::nonsepable_semigroup,'TY) std_res =
   R_mem :: \<open>('TY,'VAL) R_mem\<close>
@@ -210,6 +220,10 @@ locale std_sem =
 
   fixes MemObj_Size :: \<open>'TY \<Rightarrow> nat\<close> \<comment> \<open>in size of bytes\<close>
     and Valid_Segment :: \<open>'TY segidx \<Rightarrow> bool\<close>
+    and valid_idx_step :: \<open>'TY \<Rightarrow> nat \<Rightarrow> bool\<close>
+    and idx_step_type   :: \<open>nat \<Rightarrow> 'TY \<Rightarrow> 'TY\<close>
+    and idx_step_value  :: \<open>nat \<Rightarrow> 'VAL \<Rightarrow> 'VAL\<close>
+    and idx_step_offset :: \<open>'TY \<Rightarrow> nat \<Rightarrow> nat\<close>
 (*  assumes MemObj_Size_L0[simp]: \<open>0 < MemObj_Size x\<close>
     \<comment> \<open>It may introduce a restriction: types like zero-element tuple and array must occupy at
       least 1 byte, which may affect the performance unnecessarily. However, since zero-element
@@ -218,6 +232,13 @@ locale std_sem =
     case seg of Null \<Rightarrow> True
               | Segment _ ty len \<Rightarrow> MemObj_Size ty * len < 2^addrspace_bits
     )\<close>
+  assumes idx_step_type_tup  : \<open>i < length tys \<Longrightarrow> idx_step_type i (\<tau>Tuple tys) = tys!i \<close>
+    and   idx_step_type_arr  : \<open>i < N \<Longrightarrow> idx_step_type i (\<tau>Array N T) = T\<close>
+    and   valid_idx_step_tup : \<open>valid_idx_step (\<tau>Tuple tys) i \<longleftrightarrow> i < length tys\<close>
+    and   valid_idx_step_arr : \<open>valid_idx_step (\<tau>Array N T) i \<longleftrightarrow> i < N\<close>
+    and   idx_step_value_tup : \<open>idx_step_value i (V_tup.mk vs)   = vs!i\<close>
+    and   idx_step_value_arr : \<open>idx_step_value i (V_array.mk vs) = vs!i\<close>
+    and   idx_step_offset_arr: \<open>idx_step_offset (\<tau>Array N T) i = i * MemObj_Size T\<close>
 
   fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
   assumes WT_int[simp]: \<open>Well_Type (T_int.mk b)       = { V_int.mk (\<phi>word b x)    |b x. x < 2^b } \<close>
@@ -259,6 +280,28 @@ abbreviation \<open>Valid_Address p \<equiv> Valid_Segment (memaddr.segment p)\<
 lemma Valid_Segment_zero: \<open>Valid_Segment 0\<close>
   unfolding Valid_Segment_def zero_segidx_def by simp
 
+
+abbreviation \<open>index_value \<equiv> fold idx_step_value\<close>
+abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>
+
+primrec valid_index :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> bool\<close>
+  where \<open>valid_index T [] \<longleftrightarrow> True\<close>
+      | \<open>valid_index T (i#idx) \<longleftrightarrow> valid_idx_step T i \<and> valid_index (idx_step_type i T) idx\<close>
+
+primrec index_offset :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> nat\<close>
+  where \<open>index_offset T [] = 0\<close>
+      | \<open>index_offset T (i#idx) = index_offset (idx_step_type i T) idx + idx_step_offset T i\<close>
+
+definition valid_logaddr :: "'TY logaddr \<Rightarrow> bool"
+  where "valid_logaddr addr \<longleftrightarrow>
+    Valid_Segment (memaddr.segment addr) \<and>
+    memaddr.segment addr \<noteq> Null \<and>
+    valid_index (segidx.layout (memaddr.segment addr)) (memaddr.offset addr)"
+
+definition addr_refinement :: \<open>'TY logaddr \<Rightarrow> 'TY rawaddr \<Rightarrow> bool\<close>
+  where \<open>addr_refinement laddr raddr \<longleftrightarrow>
+    valid_logaddr laddr \<and>
+    index_offset (segidx.layout (memaddr.segment laddr)) (memaddr.offset laddr) = unat (memaddr.offset raddr)\<close>
 
 
 

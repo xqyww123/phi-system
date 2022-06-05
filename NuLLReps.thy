@@ -115,10 +115,9 @@ lemma \<phi>Bool_eqcmp[\<phi>reason on \<open>\<phi>Equal \<bool> ?c ?eq\<close>
   "\<phi>Equal \<bool> (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (simp add: \<phi>expns)
 
-lemma \<phi>Bool_zero[\<phi>reason on \<open>\<phi>Zero \<bool> ?z\<close>]:
-  "\<phi>Zero (T_int.mk 1) \<bool> False"
-  unfolding \<phi>Zero_def by simp
-
+lemma \<phi>Bool_zero[\<phi>reason on \<open>\<phi>Zero (\<tau>Int 1) \<bool> ?z\<close>]:
+  "\<phi>Zero (\<tau>Int 1) \<bool> False"
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
 
 subsection \<open>Pointers\<close>
