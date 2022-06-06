@@ -148,6 +148,11 @@ lemma times_prod[simp]: "(x1,x2) * (y1,y2) = (x1 * y1, x2 * y2)"
 instance ..
 end
 
+instantiation prod :: (zero, zero) zero begin
+definition "zero_prod = (0,0)"
+instance ..
+end
+
 instantiation prod :: (one, one) one begin
 definition "one_prod = (1,1)"
 instance ..
@@ -175,6 +180,11 @@ subsubsection \<open>List\<close>
 
 instantiation list :: (type) times begin
 definition [simp]: "times_list = (@)"
+instance ..
+end
+
+instantiation list :: (type) zero begin
+definition [simp]: "zero_list = []"
 instance ..
 end
 
@@ -598,8 +608,11 @@ abbreviation "name \<equiv> Entry.name entry"
 abbreviation "inject \<equiv> Entry.inject entry"
 abbreviation "project \<equiv> Entry.project entry"
 abbreviation "clean f \<equiv> f(name := 1)"
-abbreviation "get  f \<equiv> project (f name)"
+abbreviation "get f \<equiv> project (f name)"
+abbreviation "updt g f \<equiv> f(name := inject (g (get f)))"
+
 end
+
 
 ML_file_debug \<open>Resource_Space.ML\<close>
 
@@ -611,6 +624,7 @@ syntax
   "_fine_Update"  :: "'a \<Rightarrow> updbinds \<Rightarrow> 'a"  ("_/'((_)')\<^sub>?" [1000, 0] 900)
 
 definition "fine_fun_updt f x y \<equiv> map_fine (\<lambda>g. fun_upd g x y) f"
+
 lemma fine_fun_updt[simp]:
   "fine_fun_updt (Fine f) x y = Fine (fun_upd f x y)"
   "fine_fun_updt Undef x y = Undef"

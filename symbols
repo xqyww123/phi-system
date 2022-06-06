@@ -1,3 +1,4 @@
+\<black_diamond>    code: 0x0025C6    font: Symbola    group: operator
 \<heavy_comma>      code: 0x00275F    font: Symbola    group: punctuation  abbrev: ,,
 \<heavy_asterisk>   code: 0x002731    font: Symbola    group: punctuation  abbrev: <**>
 \<rtbrak>           code: 0x002998    font: Symbola    group: punctuation  abbrev: )]

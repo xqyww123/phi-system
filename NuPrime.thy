@@ -41,79 +41,7 @@ end
 
 subsubsection \<open>Value\<close>
 
-paragraph \<open>Integer\<close>
-
-datatype \<phi>word = \<phi>word (bits: nat) (val: nat)
-
-hide_const (open) bits val
-
-lemma \<phi>word_forall[lrep_exps]: \<open>All P \<longleftrightarrow> (\<forall>b v. P (\<phi>word b v))\<close> by (metis \<phi>word.exhaust)
-lemma \<phi>word_exists[lrep_exps]: \<open>Ex P \<longleftrightarrow> (\<exists>b v. P (\<phi>word b v))\<close> by (metis \<phi>word.exhaust)
-
-instantiation \<phi>word :: plus begin
-definition \<open>plus_\<phi>word a b = (case a of \<phi>word ba va \<Rightarrow> case b of \<phi>word bb vb \<Rightarrow>
-    if ba = bb then \<phi>word ba (va + vb) else undefined)\<close>
-lemma plus_\<phi>word[simp]: "\<phi>word b va + \<phi>word b vb = \<phi>word b (va+vb)"
-  unfolding plus_\<phi>word_def by simp
-instance ..
-end
-
-instantiation \<phi>word :: minus begin
-definition \<open>minus_\<phi>word a b = (case a of \<phi>word ba va \<Rightarrow> case b of \<phi>word bb vb \<Rightarrow>
-    if ba = bb then \<phi>word ba (va - vb) else undefined)\<close>
-lemma minus_\<phi>word[simp]: "\<phi>word b va - \<phi>word b vb = \<phi>word b (va-vb)"
-  unfolding minus_\<phi>word_def by simp
-instance ..
-end
-
-instantiation \<phi>word :: times begin
-definition \<open>times_\<phi>word a b = (case a of \<phi>word ba va \<Rightarrow> case b of \<phi>word bb vb \<Rightarrow>
-    if ba = bb then \<phi>word ba (va * vb) else undefined)\<close>
-lemma times_\<phi>word[simp]: "\<phi>word b va * \<phi>word b vb = \<phi>word b (va*vb)"
-  unfolding times_\<phi>word_def by simp
-instance ..
-end
-
-instantiation \<phi>word :: divide begin
-definition \<open>divide_\<phi>word a b = (case a of \<phi>word ba va \<Rightarrow> case b of \<phi>word bb vb \<Rightarrow>
-    if ba = bb then \<phi>word ba (va div vb) else undefined)\<close>
-lemma divide_\<phi>word[simp]: "\<phi>word b va div \<phi>word b vb = \<phi>word b (va div vb)"
-  unfolding divide_\<phi>word_def by simp
-instance ..
-end
-
-instantiation \<phi>word :: modulo begin
-definition \<open>modulo_\<phi>word a b = (case a of \<phi>word ba va \<Rightarrow> case b of \<phi>word bb vb \<Rightarrow>
-    if ba = bb then \<phi>word ba (va mod vb) else undefined)\<close>
-lemma modulo_\<phi>word[simp]: "\<phi>word b va mod \<phi>word b vb = \<phi>word b (va mod vb)"
-  unfolding modulo_\<phi>word_def by simp
-instance ..
-end
-
-
 paragraph \<open>Memory Address\<close>
-
-datatype ('TY) segidx = Null | Segment nat \<comment> \<open>nonce\<close> (layout: 'TY) (len: nat)
-declare segidx.map_id0[simp]
-
-hide_const (open) layout len
-
-
-datatype ('offset,'TY) memaddr = memaddr (segment: "'TY segidx") (offset: 'offset ) (infixl "|:" 60)
-declare memaddr.sel[iff]
-
-hide_const (open) segment offset
-
-instantiation segidx :: (type) zero begin
-definition "zero_segidx = Null"
-instance ..
-end
-
-instantiation memaddr :: (zero, type) zero begin
-definition "zero_memaddr = (0 |: 0)"
-instance ..
-end
-
 
 typedecl addr_cap
 
@@ -123,8 +51,31 @@ instance apply standard using addrspace_bits_L0 by simp
 end
 
 type_synonym size_t = \<open>addr_cap word\<close>
-type_synonym 'TY rawaddr = "(nat list \<times> size_t, 'TY) memaddr"
-type_synonym 'TY logaddr = "(nat list, 'TY) memaddr"
+
+
+datatype ('TY) segidx = Null | Segment nat \<comment> \<open>nonce\<close> (layout: 'TY)
+declare segidx.map_id0[simp]
+
+hide_const (open) layout
+
+datatype 'TY memaddr = memaddr (segment: "'TY segidx") (index: \<open>nat list\<close> ) (infixl "|:" 60)
+declare memaddr.sel[iff]
+hide_const (open) segment index
+
+type_synonym 'TY logaddr = "'TY memaddr" (* the index of logaddr is non empty *)
+type_synonym 'TY rawaddr = \<open>'TY logaddr \<times> size_t\<close>
+
+instantiation segidx :: (type) zero begin
+definition "zero_segidx = Null"
+instance ..
+end
+
+instantiation memaddr :: (type) zero begin
+definition "zero_memaddr = (0 |: 0)"
+instance ..
+end
+
+
 
 abbreviation shift_addr :: "'TY logaddr \<Rightarrow> nat \<Rightarrow> 'TY logaddr" (infixl "||+" 60)
   where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) id addr"
@@ -140,17 +91,23 @@ lemma mem_shift_shift[simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (ca
 paragraph \<open>Model\<close>
 
 virtual_datatype 'TY std_val :: nonsepable_semigroup =
-  V_int     :: \<open>\<phi>word\<close>
+  V_int     :: \<open>nat \<times> nat\<close>
   V_pointer :: \<open>'TY rawaddr\<close>
   V_tup     :: \<open>'self list\<close>
-  V_array   :: \<open>'self list\<close>
+  V_array   :: \<open>'TY \<times> 'self list\<close>
+
+virtual_datatype 'TY std_shared_val :: sep_algebra =
+  SV_int     :: \<open>nat \<times> nat share option\<close>
+  SV_pointer :: \<open>'TY rawaddr share option\<close>
+  SV_tup     :: \<open>'self list\<close>
+  SV_array   :: \<open>'TY \<times> 'self list\<close>
 
 
 subsubsection \<open>Resource\<close>
 
 type_synonym 'v opstack = "'v list"
 type_synonym varname = nat
-type_synonym ('TY,'VAL) R_mem' = \<open>('TY logaddr \<rightharpoonup> 'VAL)\<close>
+type_synonym ('TY,'VAL) R_mem' = \<open>('TY segidx \<rightharpoonup> 'VAL)\<close>
 type_synonym ('TY,'VAL) R_mem = \<open>('TY,'VAL) R_mem' ?\<close>
 type_synonym ('TY,'VAL) R_var = \<open>(string \<rightharpoonup> 'VAL) ?\<close>
 
@@ -161,12 +118,12 @@ resource_space ('VAL::nonsepable_semigroup,'TY) std_res =
 paragraph \<open>Valid Memory\<close>
 
 definition Available_Segments :: "('TY,'VAL) R_mem' \<Rightarrow> 'TY segidx set"
-  where "Available_Segments heap = {seg. \<forall>ofs. heap (seg |: ofs) = None}"
+  where "Available_Segments heap = {seg. heap seg = None}"
 
 definition Valid_Mem :: "('TY,'VAL) R_mem set"
   where "Valid_Mem = { Fine h |h. infinite (Available_Segments h) }"
 
-lemma 
+(* lemma 
   assumes A: "h \<in> Valid_Mem"
   shows GoodMem_upd[intro]: "h(k := v)\<^sub>? \<in> Valid_Mem"
 proof -
@@ -175,8 +132,8 @@ proof -
   have "Available_Segments h' \<subseteq> {(case k of (seg |: ofs) \<Rightarrow> seg)} \<union> (Available_Segments (h'(k := v)))"
     unfolding Available_Segments_def by auto 
   then show ?thesis
-    using Valid_Mem_def finite_subset h inf by fastforce
-qed
+    using Valid_Mem_def finite_subset h inf by fastforc
+qed *)
 
 (* lemma
   assumes S: "!! h' \<subseteq>\<^sub>m !! h"
@@ -201,7 +158,7 @@ lemma Heap_restrict[intro]: "Heap h \<Longrightarrow> Heap (h |` S)"
 
 subsection \<open>A Standard Semantics\<close>
 
-locale std_sem =
+locale std_sem_pre =
   std_ty  where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
             and TYPE'REP  = \<open>TYPE('TY)\<close>
@@ -217,48 +174,160 @@ locale std_sem =
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL) \<times> ('RES_N => 'RES)) itself\<close>
 
   assumes V_tup_mult: \<open>V_tup.mk t1 * V_tup.mk t2 = V_tup.mk (t1 @ t2)\<close>
-
   fixes MemObj_Size :: \<open>'TY \<Rightarrow> nat\<close> \<comment> \<open>in size of bytes\<close>
-    and Valid_Segment :: \<open>'TY segidx \<Rightarrow> bool\<close>
     and valid_idx_step :: \<open>'TY \<Rightarrow> nat \<Rightarrow> bool\<close>
     and idx_step_type   :: \<open>nat \<Rightarrow> 'TY \<Rightarrow> 'TY\<close>
     and idx_step_value  :: \<open>nat \<Rightarrow> 'VAL \<Rightarrow> 'VAL\<close>
+    and idx_step_mod_value :: \<open>nat \<Rightarrow> ('VAL \<Rightarrow> 'VAL) \<Rightarrow> 'VAL \<Rightarrow> 'VAL\<close>
     and idx_step_offset :: \<open>'TY \<Rightarrow> nat \<Rightarrow> nat\<close>
 (*  assumes MemObj_Size_L0[simp]: \<open>0 < MemObj_Size x\<close>
-    \<comment> \<open>It may introduce a restriction: types like zero-element tuple and array must occupy at
-      least 1 byte, which may affect the performance unnecessarily. However, since zero-element
-      tuple and array are so special  \<close> *)
-  defines \<open>Valid_Segment seg \<equiv> (
-    case seg of Null \<Rightarrow> True
-              | Segment _ ty len \<Rightarrow> MemObj_Size ty * len < 2^addrspace_bits
-    )\<close>
-  assumes idx_step_type_tup  : \<open>i < length tys \<Longrightarrow> idx_step_type i (\<tau>Tuple tys) = tys!i \<close>
+     *)
+  assumes memobj_size_arr    : \<open>MemObj_Size (\<tau>Array N T) = N * MemObj_Size T\<close>
+    and   memobj_size_step   : \<open>valid_idx_step T i \<Longrightarrow> MemObj_Size (idx_step_type i T) \<le> MemObj_Size T\<close>
+    and   idx_step_type_tup  : \<open>i < length tys \<Longrightarrow> idx_step_type i (\<tau>Tuple tys) = tys!i \<close>
     and   idx_step_type_arr  : \<open>i < N \<Longrightarrow> idx_step_type i (\<tau>Array N T) = T\<close>
     and   valid_idx_step_tup : \<open>valid_idx_step (\<tau>Tuple tys) i \<longleftrightarrow> i < length tys\<close>
     and   valid_idx_step_arr : \<open>valid_idx_step (\<tau>Array N T) i \<longleftrightarrow> i < N\<close>
     and   idx_step_value_tup : \<open>idx_step_value i (V_tup.mk vs)   = vs!i\<close>
-    and   idx_step_value_arr : \<open>idx_step_value i (V_array.mk vs) = vs!i\<close>
+    and   idx_step_value_arr : \<open>idx_step_value i (V_array.mk (T,vs)) = vs!i\<close>
+    and   idx_step_mod_value_tup : \<open>idx_step_mod_value i f (V_tup.mk vs)   = V_tup.mk   (vs[i := f (vs!i)])\<close>
+    and   idx_step_mod_value_arr : \<open>idx_step_mod_value i f (V_array.mk (T,vs)) = V_array.mk (T,vs[i := f (vs!i)])\<close>
     and   idx_step_offset_arr: \<open>idx_step_offset (\<tau>Array N T) i = i * MemObj_Size T\<close>
+    and   idx_step_offset_step:\<open>valid_idx_step T i \<Longrightarrow> idx_step_offset T i \<le> MemObj_Size T\<close>
+    and   idx_step_offset_inj: \<open>valid_idx_step T i \<Longrightarrow> valid_idx_step T j \<Longrightarrow> idx_step_offset T i = idx_step_offset T j \<Longrightarrow> i = j\<close>
+      \<comment> \<open>It may introduce a restriction: types like zero-element tuple and array must occupy at
+          least 1 byte, which may affect the performance unnecessarily. However, since zero-element
+          tuple and array are so special  \<close>
+begin
 
-  fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
-  assumes WT_int[simp]: \<open>Well_Type (T_int.mk b)       = { V_int.mk (\<phi>word b x)    |b x. x < 2^b } \<close>
-    and   WT_ptr[simp]: \<open>Well_Type (T_pointer.mk ())  = { V_pointer.mk (seg |: i) |seg i. Valid_Segment seg }\<close>
-    and   WT_tup[simp]: \<open>Well_Type (T_tup.mk ts)      = { V_tup.mk vs             |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
-    and   WT_arr[simp]: \<open>Well_Type (T_array.mk (t,n)) = { V_array.mk vs           |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
+abbreviation \<open>type_storable_in_mem T \<equiv> MemObj_Size T < 2^addrspace_bits\<close>
+
+definition \<open>Valid_Segment seg = (
+    case seg of Null \<Rightarrow> True
+              | Segment _ ty \<Rightarrow> type_storable_in_mem ty
+    )\<close>
+
+lemma Valid_Segment_zero: \<open>Valid_Segment 0\<close>
+  unfolding Valid_Segment_def zero_segidx_def by simp
+
+
+abbreviation \<open>index_value \<equiv> foldr idx_step_value\<close>
+abbreviation \<open>index_type  \<equiv> foldr idx_step_type\<close>
+abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close>
+
+primrec valid_index :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> bool\<close>
+  where \<open>valid_index T [] \<longleftrightarrow> True\<close>
+      | \<open>valid_index T (i#idx) \<longleftrightarrow> valid_index T idx \<and> valid_idx_step (index_type idx T) i\<close>
+
+definition valid_rawaddr :: \<open>'TY rawaddr \<Rightarrow> bool\<close>
+  where \<open>valid_rawaddr rawaddr \<longleftrightarrow> (
+    case rawaddr of (addr, _) \<Rightarrow>
+      Valid_Segment (memaddr.segment addr) \<and>
+      valid_index (segidx.layout (memaddr.segment addr)) (memaddr.index addr))\<close>
+
+definition valid_logaddr :: "'TY logaddr \<Rightarrow> bool"
+  where "valid_logaddr addr \<longleftrightarrow>
+    Valid_Segment (memaddr.segment addr) \<and>
+    (memaddr.segment addr = Null \<longleftrightarrow> memaddr.index addr = []) \<and>
+    valid_index (segidx.layout (memaddr.segment addr)) (memaddr.index addr)"
+
+lemma valid_rawaddr_0[simp]: \<open>valid_rawaddr (0 |: [], 0)\<close>
+  by (simp add: valid_rawaddr_def zero_prod_def Valid_Segment_def zero_memaddr_def zero_segidx_def)
+
+lemma valid_logaddr_0[simp]: \<open>valid_logaddr (0 |: [])\<close>
+  by (simp add: valid_logaddr_def zero_prod_def Valid_Segment_def zero_memaddr_def zero_segidx_def)
+
+abbreviation memaddr_type :: \<open>'TY logaddr \<Rightarrow> 'TY\<close>
+  where \<open>memaddr_type addr \<equiv> index_type (memaddr.index addr) (segidx.layout (memaddr.segment addr))\<close>
+
+
+lemma MemObj_Size_LE_idx:
+  \<open>valid_index T idx \<Longrightarrow> MemObj_Size (index_type idx T) \<le> MemObj_Size T\<close>
+  by (induct idx arbitrary: T; simp)  (meson memobj_size_step le_trans)
+
+lemma index_type_type_storable_in_mem:
+  \<open>type_storable_in_mem T \<Longrightarrow> valid_index T idx \<Longrightarrow> type_storable_in_mem (index_type idx T)\<close>
+  using MemObj_Size_LE_idx order.strict_trans1 by blast 
+
+definition addr_raw_offset :: \<open>'TY \<Rightarrow> nat \<Rightarrow> size_t\<close>
+  where \<open>addr_raw_offset T i = of_nat (idx_step_offset T i)\<close>
+
+lemma addr_raw_offset_inj:
+  \<open>type_storable_in_mem T
+    \<Longrightarrow> valid_idx_step T i \<Longrightarrow> valid_idx_step T j
+    \<Longrightarrow> addr_raw_offset T i = addr_raw_offset T j \<Longrightarrow> i = j\<close>
+  by (simp add: addr_raw_offset_def word_of_nat_eq_iff Valid_Segment_def take_bit_nat_def)
+     (metis idx_step_offset_inj idx_step_offset_step mod_less order_le_less_trans)
+
+definition \<open>addr_abst_offset T ofst = (@i. valid_idx_step T i \<and> addr_raw_offset T i = ofst) \<close>
+
+lemma addr_abst_raw_offset:
+ \<open>type_storable_in_mem T
+  \<Longrightarrow> valid_idx_step T i
+  \<Longrightarrow> addr_abst_offset T (addr_raw_offset T i) = i\<close>
+  unfolding addr_abst_offset_def using addr_raw_offset_inj by blast
+
+definition logaddr_to_raw :: \<open>'TY logaddr \<Rightarrow> 'TY rawaddr\<close>
+  where \<open>logaddr_to_raw addr =
+    (case addr of seg |: (i#idx) \<Rightarrow> (seg |: idx, addr_raw_offset (index_type idx (segidx.layout seg)) i)
+                | seg |: _ \<Rightarrow> (seg |: [], 0))\<close>
+
+definition rawaddr_to_log :: \<open>'TY rawaddr \<Rightarrow> 'TY logaddr\<close>
+  where \<open>rawaddr_to_log addr =
+    (case addr of (seg |: idx, ofst) \<Rightarrow>
+      if seg = Null then (Null |: [])
+      else (seg |: (addr_abst_offset (index_type idx (segidx.layout seg)) ofst) # idx))\<close>
+
+lemma logaddr_to_raw_segment[simp]:
+  \<open>memaddr.segment (fst (logaddr_to_raw addr)) = memaddr.segment addr\<close>
+  by (cases addr; case_tac x1; case_tac x2; simp add: logaddr_to_raw_def)
+
+lemma logaddr_to_raw_0[simp]:
+  \<open>logaddr_to_raw (0 |: []) = (0 |: [], 0)\<close>
+  unfolding logaddr_to_raw_def by simp
+
+lemma logaddr_to_raw_inj:
+  \<open>valid_logaddr addr \<Longrightarrow> rawaddr_to_log (logaddr_to_raw addr) = addr\<close>
+  by (cases addr, case_tac x2; case_tac x1;
+      simp add: valid_logaddr_def logaddr_to_raw_def rawaddr_to_log_def
+        addr_abst_raw_offset Valid_Segment_def index_type_type_storable_in_mem)
+
+end
+
+
+print_locale std_shared_val
+
+locale std_sem =
+  std_sem_pre where TYPES = TYPES
+(* + std_shared_val where TYPE'TY = \<open>TYPE('TY)\<close> *)
+  for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times> ('RES_N => 'RES::comm_monoid_mult)) itself\<close>
++ fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
+    and Typeof :: \<open>'VAL \<Rightarrow> 'TY\<close>
+  assumes WT_int[simp]: \<open>Well_Type (T_int.mk b)       = { V_int.mk (b,x) |b x. x < 2^b } \<close>
+    and   WT_ptr[simp]: \<open>Well_Type (T_pointer.mk ())  = { V_pointer.mk addr    |addr. valid_rawaddr addr }\<close>
+    and   WT_tup[simp]: \<open>Well_Type (T_tup.mk ts)      = { V_tup.mk vs          |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
+    and   WT_arr[simp]: \<open>Well_Type (T_array.mk (t,n)) = { V_array.mk (t,vs)    |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
+    and WT_Typeof[simp]: \<open>v \<in> Well_Type T \<Longrightarrow> Typeof v = T\<close>
+    and Tyof_int[simp]: \<open>Typeof (V_int.mk (b,x)) = \<tau>Int b\<close>
+    and Tyof_ptr[simp]: \<open>Typeof (V_pointer.mk rawaddr) = \<tau>Pointer\<close>
+    and Tyof_tup[simp]: \<open>Typeof (V_tup.mk vs) = \<tau>Tuple (map Typeof vs)\<close>
+    and Tyof_arr[simp]: \<open>Typeof (V_array.mk (t,vs)) = \<tau>Array (length vs) t\<close>
 
   fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES set\<close>
   assumes res_valid_mem: \<open>Resource_Validator R_mem.name = R_mem.inject ` Valid_Mem\<close>
     and   res_valid_var: \<open>Resource_Validator R_var.name = UNIV\<close>
 
-  fixes In_Mem :: \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'TY rawaddr \<Rightarrow> bool\<close>
-  defines \<open>In_Mem res addr \<equiv> addr \<in> dom !!(R_mem.get res)\<close>
+  fixes In_Mem :: \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'TY segidx \<Rightarrow> bool\<close>
+  defines \<open>In_Mem res seg \<equiv> seg \<in> dom !!(R_mem.get res)\<close>
 
   fixes Can_EqCompare
-  assumes can_eqcmp_ptr[simp]: "Can_EqCompare res (V_pointer.mk p1) (V_pointer.mk p2) \<longleftrightarrow> (memaddr.segment p1 = memaddr.segment p2) \<or> (In_Mem res p1 \<and> In_Mem res p2)"
-    and   can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (\<phi>word b1 x1)) (V_int.mk (\<phi>word b2 x2)) \<longleftrightarrow> b1 = b2"
+  assumes can_eqcmp_ptr[simp]: "Can_EqCompare res (V_pointer.mk rp1) (V_pointer.mk rp2) \<longleftrightarrow>
+              (memaddr.segment (fst rp1) = memaddr.segment (fst rp2)) \<or>
+              (In_Mem res (memaddr.segment (fst rp1)) \<and> In_Mem res (memaddr.segment (fst rp2)))"
+    and   can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (b1,x1)) (V_int.mk (b2,x2)) \<longleftrightarrow> b1 = b2"
     and   can_eqcmp_sym: "Can_EqCompare res A B \<longleftrightarrow> Can_EqCompare res B A"
   fixes EqCompare
-  assumes eqcmp_ptr[simp]: "EqCompare (V_pointer.mk p1) (V_pointer.mk p2) \<longleftrightarrow> p1 = p2"
+  assumes eqcmp_ptr[simp]: "EqCompare (V_pointer.mk rp1) (V_pointer.mk rp2) \<longleftrightarrow> rp1 = rp2"
     and   eqcmp_int[simp]: "EqCompare (V_int.mk i1) (V_int.mk i2) \<longleftrightarrow> i1 = i2"
 (*  and   eqcmp_refl:  "EqCompare A A"
     and   eqcmp_sym:   "EqCompare A B \<longleftrightarrow> EqCompare B A"
@@ -266,44 +335,14 @@ locale std_sem =
 
   fixes Zero :: \<open>'TY \<Rightarrow> 'VAL\<close>
   assumes zero_well_typ: "Zero T \<in> Well_Type T"
-    and   zero_int[simp]: \<open>Zero (T_int.mk b)      = V_int.mk (\<phi>word b 0)\<close>
+    and   zero_int[simp]: \<open>Zero (T_int.mk b)      = V_int.mk (b,0)\<close>
     and   zero_ptr[simp]: \<open>Zero (T_pointer.mk ()) = V_pointer.mk 0\<close>
     and   zero_tup[simp]: \<open>Zero (T_tup.mk Ts)     = V_tup.mk (map Zero Ts)\<close>
-    and   zero_arr[simp]: \<open>Zero (T_array.mk (T,N))= V_array.mk (replicate N (Zero T))\<close>
+    and   zero_arr[simp]: \<open>Zero (T_array.mk (T,N))= V_array.mk (T, replicate N (Zero T))\<close>
 
 begin
 
 definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
-
-abbreviation \<open>Valid_Address p \<equiv> Valid_Segment (memaddr.segment p)\<close>
-
-lemma Valid_Segment_zero: \<open>Valid_Segment 0\<close>
-  unfolding Valid_Segment_def zero_segidx_def by simp
-
-
-abbreviation \<open>index_value \<equiv> fold idx_step_value\<close>
-abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>
-
-primrec valid_index :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> bool\<close>
-  where \<open>valid_index T [] \<longleftrightarrow> True\<close>
-      | \<open>valid_index T (i#idx) \<longleftrightarrow> valid_idx_step T i \<and> valid_index (idx_step_type i T) idx\<close>
-
-primrec index_offset :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> nat\<close>
-  where \<open>index_offset T [] = 0\<close>
-      | \<open>index_offset T (i#idx) = index_offset (idx_step_type i T) idx + idx_step_offset T i\<close>
-
-definition valid_logaddr :: "'TY logaddr \<Rightarrow> bool"
-  where "valid_logaddr addr \<longleftrightarrow>
-    Valid_Segment (memaddr.segment addr) \<and>
-    memaddr.segment addr \<noteq> Null \<and>
-    valid_index (segidx.layout (memaddr.segment addr)) (memaddr.offset addr)"
-
-definition addr_refinement :: \<open>'TY logaddr \<Rightarrow> 'TY rawaddr \<Rightarrow> bool\<close>
-  where \<open>addr_refinement laddr raddr \<longleftrightarrow>
-    valid_logaddr laddr \<and>
-    index_offset (segidx.layout (memaddr.segment laddr)) (memaddr.offset laddr) = unat (memaddr.offset raddr)\<close>
-
-
 
 paragraph \<open>Basic fictions for resource elements\<close>
 

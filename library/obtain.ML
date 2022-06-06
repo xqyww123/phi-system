@@ -71,7 +71,7 @@ fun choose inst_names stat =
     val (inst_names,_) =
       fold_map (map_name_result Name.variant) inst_names (Name.make_context [])
     val ExTyp_strip = Proof_Context.get_thm ctx "local.\<phi>ExTyp_strip"
-    val major = Raw_Simplifier.rewrite_rule ctx ExTyp_strip major
+    val major = Raw_Simplifier.rewrite_rule ctx [ExTyp_strip] major
     val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder_raw "HOL.Ex"
     val var_tys = map snd vars
     val (inst_names, stat) =
