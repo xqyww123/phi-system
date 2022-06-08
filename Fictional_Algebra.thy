@@ -179,7 +179,7 @@ end
 subsubsection \<open>List\<close>
 
 instantiation list :: (type) times begin
-definition [simp]: "times_list = (@)"
+definition [simp]: "times_list a b = b @ a"
 instance ..
 end
 

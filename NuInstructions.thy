@@ -34,22 +34,22 @@ subsection \<open>Branches & Loops\<close>
 
 definition op_sel :: "('VAL,'RES_N,'RES) proc"
   where "op_sel = (\<lambda>(c#b#a#vs,res).
-    Success ((if \<phi>word.val (V_int.dest c) = 1 then a else b) # vs, res))"
+    Success ((if snd (V_int.dest c) = 1 then a else b) # vs, res))"
 
 definition op_if :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_if brT brF = (\<lambda>(c#vs,res).
-    if \<phi>word.val (V_int.dest c) = 1 then brT (vs,res) else brF (vs,res))"
+    if snd (V_int.dest c) = 1 then brT (vs,res) else brF (vs,res))"
 
 inductive SemDoWhile :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) comp \<Rightarrow> ('VAL,'RES_N,'RES) state \<Rightarrow> bool" where
-  "f s = Success (V_int.mk (\<phi>word 1 0) # vs, res) \<Longrightarrow> SemDoWhile f s (Success (vs,res))"
+  "f s = Success (V_int.mk (1,0) # vs, res) \<Longrightarrow> SemDoWhile f s (Success (vs,res))"
 | "f s = PartialCorrect \<Longrightarrow> SemDoWhile f s PartialCorrect"
 | "f s = Fail \<Longrightarrow> SemDoWhile f s Fail"
-| "f s = Success (V_int.mk (\<phi>word 1 1) # vs, res) \<Longrightarrow> SemDoWhile f (vs,res) s'' \<Longrightarrow> SemDoWhile f s s''"
+| "f s = Success (V_int.mk (1,1) # vs, res) \<Longrightarrow> SemDoWhile f (vs,res) s'' \<Longrightarrow> SemDoWhile f s s''"
 
-lemma "\<nexists> y. SemDoWhile (\<lambda>(vs,res). Success (V_int.mk (\<phi>word 1 1) # vs, res)) (vs,res) y"
+lemma "\<nexists> y. SemDoWhile (\<lambda>(vs,res). Success (V_int.mk (1,1) # vs, res)) (vs,res) y"
   apply rule apply (elim exE) subgoal for y 
     thm SemDoWhile.induct
-    apply (induct "(\<lambda>(vs,res). Success (V_int.mk (\<phi>word 1 1) # vs, (res::'RES_N \<Rightarrow> 'RES)))" "(vs, res)" y
+    apply (induct "(\<lambda>(vs,res). Success (V_int.mk (1,1) # vs, (res::'RES_N \<Rightarrow> 'RES)))" "(vs, res)" y
            rule: SemDoWhile.induct)
        apply simp_all
     done done
@@ -70,81 +70,81 @@ subsection \<open>Integer arithmetic\<close>
 
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_int bits const = (\<lambda>(vs,res).
-    if const < 2^bits then Success (V_int.mk (\<phi>word bits const) # vs,res) else Fail)"
+    if const < 2^bits then Success (V_int.mk (bits,const) # vs,res) else Fail)"
 
 definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = (\<lambda>(vs,res).
-    if c < 2 ^ addrspace_bits then Success (V_int.mk (\<phi>word addrspace_bits c) # vs, res)
+    if c < 2 ^ addrspace_bits then Success (V_int.mk (addrspace_bits,c) # vs, res)
     else PartialCorrect)"
   \<comment> \<open> `op_const_size_t` checks overflow during the compilation towards certain decided platform.  \<close>
 
 definition op_add :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_add bits = (\<lambda>(va#vb#vs, res).
-    case V_int.dest va of \<phi>word _ val_a \<Rightarrow>
-    case V_int.dest vb of \<phi>word _ val_b \<Rightarrow>
+    case V_int.dest va of (_, val_a) \<Rightarrow>
+    case V_int.dest vb of (_, val_b) \<Rightarrow>
       if va \<in> Well_Type (\<tau>Int bits) \<and> vb \<in> Well_Type (\<tau>Int bits)
-      then Success (V_int.mk (\<phi>word bits (val_a + val_b mod 2^bits)) # vs, res)
+      then Success (V_int.mk (bits, (val_a + val_b mod 2^bits)) # vs, res)
       else Fail)"
 
 definition op_sub :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_sub bits = (\<lambda>(va#vb#vs, res).
-    case V_int.dest va of \<phi>word _ val_a \<Rightarrow>
-    case V_int.dest vb of \<phi>word _ val_b \<Rightarrow>
+    case V_int.dest va of (_, val_a) \<Rightarrow>
+    case V_int.dest vb of (_, val_b) \<Rightarrow>
       if va \<in> Well_Type (\<tau>Int bits) \<and> vb \<in> Well_Type (\<tau>Int bits)
-      then Success (V_int.mk (\<phi>word bits (2^bits + val_b - val_a mod 2^bits)) # vs, res)
+      then Success (V_int.mk (bits, (2^bits + val_b - val_a mod 2^bits)) # vs, res)
       else Fail)"
 
 definition op_udiv :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_udiv bits = (\<lambda>(va#vb#vs, res).
-    case V_int.dest va of \<phi>word _ val_a \<Rightarrow>
-    case V_int.dest vb of \<phi>word _ val_b \<Rightarrow>
+    case V_int.dest va of (_, val_a) \<Rightarrow>
+    case V_int.dest vb of (_, val_b) \<Rightarrow>
       if va \<in> Well_Type (\<tau>Int bits) \<and> vb \<in> Well_Type (\<tau>Int bits)
-      then Success (V_int.mk (\<phi>word bits (val_b div val_a)) # vs, res)
+      then Success (V_int.mk (bits, (val_b div val_a)) # vs, res)
       else Fail)"
 
 definition op_lt :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_lt bits = (\<lambda>(va#vb#vs, res).
-    case V_int.dest va of \<phi>word _ val_a \<Rightarrow>
-    case V_int.dest vb of \<phi>word _ val_b \<Rightarrow>
+    case V_int.dest va of (_, val_a) \<Rightarrow>
+    case V_int.dest vb of (_, val_b) \<Rightarrow>
       if va \<in> Well_Type (\<tau>Int bits) \<and> vb \<in> Well_Type (\<tau>Int bits)
-      then Success (V_int.mk (\<phi>word 1 (if val_b < val_a then 1 else 0)) # vs, res)
+      then Success (V_int.mk (1, (if val_b < val_a then 1 else 0)) # vs, res)
       else Fail)"
 
 definition op_le :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_le bits = (\<lambda>(va#vb#vs, res).
-    case V_int.dest va of \<phi>word _ val_a \<Rightarrow>
-    case V_int.dest vb of \<phi>word _ val_b \<Rightarrow>
+    case V_int.dest va of (_, val_a) \<Rightarrow>
+    case V_int.dest vb of (_, val_b) \<Rightarrow>
       if va \<in> Well_Type (\<tau>Int bits) \<and> vb \<in> Well_Type (\<tau>Int bits)
-      then Success (V_int.mk (\<phi>word 1 (if val_b \<le> val_a then 1 else 0)) # vs, res)
+      then Success (V_int.mk (1, (if val_b \<le> val_a then 1 else 0)) # vs, res)
       else Fail)"
 
 definition op_not :: "('VAL,'RES_N,'RES) proc"
   where "op_not = (\<lambda>(v#vs, res).
-    case V_int.dest v of \<phi>word bits v' \<Rightarrow>
+    case V_int.dest v of (bits, v') \<Rightarrow>
       if v \<in> Well_Type (\<tau>Int 1)
-      then Success (V_int.mk (\<phi>word 1 (1 - v')) # vs, res)
+      then Success (V_int.mk (1, (1 - v')) # vs, res)
       else Fail)"
 
 definition op_and :: "('VAL,'RES_N,'RES) proc"
   where "op_and = (\<lambda>(va#vb#vs, res).
-    case V_int.dest va of \<phi>word bit_a val_a \<Rightarrow>
-    case V_int.dest vb of \<phi>word bit_b val_b \<Rightarrow>
+    case V_int.dest va of (bit_a, val_a) \<Rightarrow>
+    case V_int.dest vb of (bit_b, val_b) \<Rightarrow>
       if va \<in> Well_Type (\<tau>Int 1) \<and> vb \<in> Well_Type (\<tau>Int 1)
-      then Success (V_int.mk (\<phi>word 1 (val_a + val_b - 1)) # vs, res)
+      then Success (V_int.mk (1, (val_a + val_b - 1)) # vs, res)
       else Fail)"
 
 definition op_or :: "('VAL,'RES_N,'RES) proc"
   where "op_or = (\<lambda>(va#vb#vs, res).
-    case V_int.dest va of \<phi>word bit_a val_a \<Rightarrow>
-    case V_int.dest vb of \<phi>word bit_b val_b \<Rightarrow>
+    case V_int.dest va of (bit_a, val_a) \<Rightarrow>
+    case V_int.dest vb of (bit_b, val_b) \<Rightarrow>
       if va \<in> Well_Type (\<tau>Int 1) \<and> vb \<in> Well_Type (\<tau>Int 1)
-      then Success (V_int.mk (\<phi>word 1 (val_a + val_b)) # vs, res)
+      then Success (V_int.mk (1, (val_a + val_b)) # vs, res)
       else Fail)"
 
 definition op_equal :: "'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_equal T = (\<lambda>(va#vb#vs, res).
     if va \<in> Well_Type T \<and> vb \<in> Well_Type T \<and> Can_EqCompare res va vb
-    then Success (V_int.mk (\<phi>word 1 (if EqCompare va vb then 1 else 0)) # vs, res)
+    then Success (V_int.mk (1, (if EqCompare va vb then 1 else 0)) # vs, res)
     else Fail)"
 
 
@@ -179,13 +179,33 @@ definition op_set_tuple :: "nat list \<Rightarrow> 'TY \<Rightarrow> ('VAL,'RES_
 
 section \<open>Memory & Pointer Operations\<close>
 
-definition op_shift_pointer :: "('VAL,'RES_N,'RES) proc"
-  where "op_shift_pointer ty = (\<lambda>(delta#(addr,ofst)#vs, res) \<Rightarrow>
-    if valid_rawaddr (addr,ofst)
-    then Success ()
+definition op_get_element_pointer :: "'TY \<Rightarrow> nat list \<Rightarrow>('VAL,'RES_N,'RES) proc"
+  where \<open>op_get_element_pointer T idx = (\<lambda>(raddr#vs, res).
+    case V_pointer.dest raddr of seg |: ofst \<Rightarrow>
+      Success (V_pointer.mk (seg |: ofst + to_size_t (index_offset T idx)) # vs, res))\<close>
+
+definition op_add_pointer :: "('VAL,'RES_N,'RES) proc"
+  where "op_add_pointer = (\<lambda>(raddr1#raddr2#vs, res) \<Rightarrow>
+    case V_pointer.dest raddr1 of seg1 |: ofst1 \<Rightarrow>
+    case V_pointer.dest raddr2 of seg2 |: ofst2 \<Rightarrow>
+    if (seg1 = Null \<or> seg2 = Null)
+    then let seg = if seg1 = Null then seg2 else seg1
+          in Success (V_pointer.mk (seg |: ofst1 + ofst2) # vs, res)
     else Fail)"
 
-definition "heap_assignN n v seg heap = (\<lambda>key. case key of MemAddress (seg' |+ ofs') \<Rightarrow>
+
+definition op_load :: "'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_load TY = (\<lambda>(raddr'#vs, res) \<Rightarrow>
+    let raddr = V_pointer.dest raddr'
+      ; laddr = rawaddr_to_log TY raddr
+      ; mem = the_fine (R_mem.get res)
+     in if (\<exists>laddr'. valid_logaddr laddr' \<and> logaddr_type laddr' = TY \<and> logaddr_to_raw laddr' = raddr)
+           \<and> 0 < MemObj_Size TY
+           \<and> memaddr.segment laddr \<in> dom mem
+        then Success (sem_read_mem laddr res # vs,res)
+        else Fail)"
+
+(* definition "heap_assignN n v seg heap = (\<lambda>key. case key of MemAddress (seg' |+ ofs') \<Rightarrow>
       if seg' = seg \<and> ofs' < n then v else
       if seg' = seg \<and> ofs' = n then Some DM_void else heap key | _ \<Rightarrow> heap key)"
 
@@ -194,11 +214,6 @@ definition op_alloc :: "('x::{zero,field}) itself \<Rightarrow> size_t word \<ti
   if segment_len seg = unat n \<and> segment_llty seg = LLTY('x) then
     Success (heap_assignN (unat n) (Some (deepize (0 :: 'x))) seg heap, memptr (seg |+ 0), r)
   else PartialCorrect)"
-
-definition op_load :: " 'x itself \<Rightarrow> 'a itself \<Rightarrow> ('a::lrep,'a,'x,'x) index \<Rightarrow> memptr \<times> ('r::stack) \<longmapsto> 'x::field \<times>'r "
-  where "op_load _ _ idx s = (case s of (heap, memptr adr, r) \<Rightarrow>
-    (case heap (MemAddress (logical_addr_of adr)) of Some data \<Rightarrow>
-       Success (heap, get_idx idx (shallowize data), r) | _ \<Rightarrow> Fail))"
 
 definition op_store :: " 'x itself \<Rightarrow> 'a itself \<Rightarrow> ('a::lrep,'a,'x,'x) index \<Rightarrow> 'x::field \<times> memptr \<times> ('r::stack) \<longmapsto> 'r "
   where "op_store _ _ idx s = (case s of (heap, x, memptr addr, r) \<Rightarrow>
@@ -210,5 +225,8 @@ definition op_free :: " memptr \<times> ('r::stack) \<longmapsto> 'r "
   where "op_free s = (case s of (h,memptr (base |+ ofs),r) \<Rightarrow>
     (if ofs = 0 then Success (h |` (-{MemAddress (base |+ ofs) | ofs. True}), r) else Fail))"
 
+*)
+
+end
 
 end

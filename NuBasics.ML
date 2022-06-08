@@ -324,4 +324,8 @@ fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separati
   | strip_separations T = strip_binop_l @{const_name times} T
 
 
+
+
+
+
 end

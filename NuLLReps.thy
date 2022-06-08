@@ -19,10 +19,10 @@ subsubsection \<open>Natural Nmbers\<close>
 paragraph \<open>Natural Number\<close>
 
 definition \<phi>Nat :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>[_]")
-  where "\<nat>[b] x = (if x < 2^b then { V_int.mk (\<phi>word b x) } else {})"
+  where "\<nat>[b] x = (if x < 2^b then { V_int.mk (b,x) } else {})"
 
 lemma \<phi>Nat_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (\<phi>word b x)) \<and> x < 2^b"
+  "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (b,x)) \<and> x < 2^b"
   unfolding \<phi>Type_def by (simp add: \<phi>Nat_def)
 
 lemma \<phi>Nat_elim[elim!,\<phi>elim]:
@@ -51,10 +51,10 @@ lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) (\<nat>[?b]) ?zero\<close
 paragraph \<open>Rounded Natural Number\<close>
 
 definition \<phi>NatRound :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>\<^sup>r[_]")
-  where "\<nat>\<^sup>r[b] x = { V_int.mk (\<phi>word b (x mod 2^b)) }"
+  where "\<nat>\<^sup>r[b] x = { V_int.mk (b, (x mod 2^b)) }"
 
 lemma \<phi>NatRound_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<nat>\<^sup>r[b]) \<longleftrightarrow> p = V_int.mk (\<phi>word b (x mod 2^b))"
+  "p \<in> (x \<Ztypecolon> \<nat>\<^sup>r[b]) \<longleftrightarrow> p = V_int.mk (b, (x mod 2^b))"
   unfolding \<phi>Type_def \<phi>NatRound_def by simp
 
 lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) \<nat>\<^sup>r[?b] ?z\<close>]:
@@ -67,11 +67,11 @@ subsubsection \<open>Integer in the normal sense\<close>
 
 definition \<phi>Int :: "nat \<Rightarrow> ('VAL, int) \<phi>" ("\<int>[_]")
   where "\<phi>Int b x =(if x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0)
-                    then { V_int.mk (\<phi>word b (if x \<ge> 0 then nat x else nat (2^b + x))) }
+                    then { V_int.mk (b, (if x \<ge> 0 then nat x else nat (2^b + x))) }
                     else {})"
 
 lemma \<phi>Int_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<int>[b]) \<longleftrightarrow> p = V_int.mk (\<phi>word b (if x \<ge> 0 then nat x else nat (2^b + x)))
+  "p \<in> (x \<Ztypecolon> \<int>[b]) \<longleftrightarrow> p = V_int.mk (b, (if x \<ge> 0 then nat x else nat (2^b + x)))
                       \<and> x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0)"
   unfolding \<phi>Type_def by (simp add: \<phi>Int_def)
 
@@ -102,10 +102,10 @@ subsubsection \<open>Boolean\<close>
 qed *)
 
 definition \<phi>Bool :: "('VAL, bool) \<phi>" ("\<bool>")
-  where "\<bool> x = { V_int.mk (\<phi>word 1 (if x then 1 else 0)) }"
+  where "\<bool> x = { V_int.mk (1, (if x then 1 else 0)) }"
 
 lemma \<phi>Bool_expn[\<phi>expns]:
-  " p \<in> (x \<Ztypecolon> \<bool>) \<longleftrightarrow> p = V_int.mk (\<phi>word 1 (if x then 1 else 0))"
+  " p \<in> (x \<Ztypecolon> \<bool>) \<longleftrightarrow> p = V_int.mk (1, (if x then 1 else 0))"
   unfolding \<phi>Type_def \<phi>Bool_def by simp
 
 lemma \<phi>Bool_inhabited[\<phi>elim, elim!]:
@@ -136,36 +136,34 @@ lemma RawPointer_inhabited[elim,\<phi>elim]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma RawPointer_zero[\<phi>reason on \<open>\<phi>Zero (T_pointer.mk ()) RawPointer ?x\<close>]:
-  "\<phi>Zero \<tau>Pointer RawPointer (0 |: [], 0)"
+  "\<phi>Zero \<tau>Pointer RawPointer (0 |: 0)"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_prod_def zero_memaddr_def)
 
 lemma RawPointer_eqcmp[\<phi>reason on \<open>\<phi>Equal RawPointer ?c ?eq\<close>]:
-  "\<phi>Equal RawPointer (\<lambda>x y. memaddr.segment (fst x) = memaddr.segment (fst y)) (=)"
-  unfolding \<phi>Equal_def by (simp add: lrep_exps \<phi>expns)
+  "\<phi>Equal RawPointer (\<lambda>x y. x = 0 |: 0 \<or> y = 0 |: 0 \<or> memaddr.segment x = memaddr.segment y) (=)"
+  unfolding \<phi>Equal_def by (simp add: lrep_exps \<phi>expns zero_memaddr_def) blast
 
 
 subsubsection \<open>Pointer\<close>
 
-definition Pointer :: "('VAL, 'TY logaddr) \<phi>"
-  where "Pointer x = (if valid_logaddr x then { V_pointer.mk (logaddr_to_raw x) } else {})"
+definition Pointer :: "'TY \<Rightarrow> ('VAL, 'TY logaddr) \<phi>"
+  where "Pointer T x = (if valid_logaddr x \<and> x \<noteq> 0 \<and> logaddr_type x = T
+                        then { V_pointer.mk (logaddr_to_raw x) }
+                        else {})"
 
 lemma Pointer_expn[\<phi>expns]:
-  "v \<in> (addr \<Ztypecolon> Pointer) \<longleftrightarrow> v = V_pointer.mk (logaddr_to_raw addr) \<and> valid_logaddr addr"
+  "v \<in> (addr \<Ztypecolon> Pointer TY) \<longleftrightarrow>
+      v = V_pointer.mk (logaddr_to_raw addr) \<and> valid_logaddr addr \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY"
   unfolding \<phi>Type_def by (simp add: Pointer_def)
 
 lemma Pointer_inhabited[elim,\<phi>elim]:
-  "Inhabited (addr \<Ztypecolon> Pointer) \<Longrightarrow> (valid_logaddr addr \<Longrightarrow> C) \<Longrightarrow> C"
+  "Inhabited (addr \<Ztypecolon> Pointer TY) \<Longrightarrow> (valid_logaddr addr \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
-lemma Pointer_eqcmp[\<phi>reason on \<open>\<phi>Equal Pointer ?c ?eq\<close>]:
-    "\<phi>Equal Pointer (\<lambda>x y. memaddr.segment x = memaddr.segment y) (=)"
+lemma Pointer_eqcmp[\<phi>reason on \<open>\<phi>Equal (Pointer ?TY) ?c ?eq\<close>]:
+    "\<phi>Equal (Pointer TY) (\<lambda>x y. memaddr.segment x = memaddr.segment y \<and> 0 < MemObj_Size TY) (=)"
   unfolding \<phi>Equal_def
   by (simp add: \<phi>expns) (metis logaddr_to_raw_inj)
-
-lemma Pointer_zero[\<phi>reason on \<open>\<phi>Zero \<tau>Pointer Pointer ?x\<close>]:
-    "\<phi>Zero \<tau>Pointer Pointer (0 |: [])"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_prod_def zero_memaddr_def)
-
 
 
 subsection \<open>Tuple Field\<close>
@@ -194,11 +192,6 @@ lemma \<phi>Field_zeros [\<phi>reason on \<open>\<phi>Zero (T_tup.mk [?ty]) (\<p
 
 
 end
-
-
-
-
-
 
 
 
@@ -308,7 +301,7 @@ subsubsection \<open>miscellaneous\<close>
 instantiation fun_addr :: field begin instance by standard end
 instantiation fun_addr :: field_list begin instance by standard end
 
-subsubsection \<open>\<phi>-abstractor\<close>
+:lsubsubsection \<open>\<phi>-abstractor\<close>
 
 definition op_func_pointer :: "('a \<longmapsto> 'b) \<Rightarrow> ('r :: stack) \<longmapsto> (fun_addr \<times> 'r)"
   where "op_func_pointer f = (\<lambda>(h,r).
