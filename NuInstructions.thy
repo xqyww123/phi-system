@@ -4,11 +4,6 @@ begin
 
 subsection \<open>Basic sequential instructions\<close>
 
-syntax
-  "_list_pattern" :: \<open>pttrn \<Rightarrow> pttrn \<Rightarrow> pttrn\<close> (infixr "#" 65)
-
-translations "(\<lambda>h#l. body)" => "CONST case_list (CONST undefined) (\<lambda>h l. body)"
-
 
 context std_sem begin
 
@@ -18,16 +13,17 @@ definition op_drop :: "('VAL,'RES_N,'RES) proc" where
 definition op_dup :: "('VAL,'RES_N,'RES) proc"
   where "op_dup = (\<lambda>(v#vs,res). Success (v#v#vs,res))"
 
-definition op_assign_var :: "string \<Rightarrow> 'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_assign_var name' T = (\<lambda>(v#vs, res).
-    if v \<in> Well_Type T
+definition op_set_var :: "string \<Rightarrow> 'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_set_var name' T = (\<lambda>(v#vs, res).
+    if v \<in> Well_Type T \<and> pred_option1 (\<lambda>v. v \<in> Well_Type T) (!! (R_var.get res) name')
     then Success (vs, R_var.updt (map_fine (\<lambda>vars. vars(name' \<mapsto> v))) res)
     else Fail)"
 
 definition op_get_var :: "string \<Rightarrow> 'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_get_var name' T = (\<lambda>(vs, res).
-    let v = the (!! (R_var.get res) name')
-    in if v \<in> Well_Type T then Success (v # vs, res) else Fail)"
+    let v = !! (R_var.get res) name'
+    in if option_pred1 (\<lambda>v. v \<in> Well_Type T) v
+       then Success (the v # vs, res) else Fail)"
 
 
 subsection \<open>Branches & Loops\<close>
@@ -69,22 +65,19 @@ section \<open>Arithmetic instructions\<close>
 subsection \<open>Integer arithmetic\<close>
 
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_const_int bits const = (\<lambda>(vs,res).
-    if const < 2^bits then Success (V_int.mk (bits,const) # vs,res) else Fail)"
+  where "op_const_int bits const = \<phi>M_put_Val (V_int.mk (bits,const))"
 
 definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_const_size_t c = (\<lambda>(vs,res).
-    if c < 2 ^ addrspace_bits then Success (V_int.mk (addrspace_bits,c) # vs, res)
-    else PartialCorrect)"
+  where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
+                          \<ggreater> \<phi>M_put_Val (V_int.mk (addrspace_bits,c))"
   \<comment> \<open> `op_const_size_t` checks overflow during the compilation towards certain decided platform.  \<close>
 
 definition op_add :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_add bits = (\<lambda>(va#vb#vs, res).
-    case V_int.dest va of (_, val_a) \<Rightarrow>
-    case V_int.dest vb of (_, val_b) \<Rightarrow>
-      if va \<in> Well_Type (\<tau>Int bits) \<and> vb \<in> Well_Type (\<tau>Int bits)
-      then Success (V_int.mk (bits, (val_a + val_b mod 2^bits)) # vs, res)
-      else Fail)"
+  where "op_add bits =
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_b.
+      \<phi>M_put_Val (V_int.mk (bits, (val_a + val_b mod 2^bits)))
+  ))"
 
 definition op_sub :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_sub bits = (\<lambda>(va#vb#vs, res).

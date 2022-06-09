@@ -36,7 +36,8 @@ class cancl_sep_ab_semigroup = sep_ab_semigroup +
 
 class pre_sep_algebra = one + sep_ab_semigroup +
   assumes sep_disj_one [simp]: "x ## 1"
-  assumes sep_mult_one [simp]: "x * 1 = x"
+    and   sep_mult_one [simp]: "x * 1 = x"
+    and   sep_no_negative [simp]: \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
 begin
 
 lemma disjoint_zero_sym [simp]: "1 ## x"
@@ -90,7 +91,6 @@ end
     and unital_add_right[simp]: "x * 1 = x"
 
 subclass (in monoid_mult) unital_mult .. simp_all *)
-
 
 subsection \<open>Instances of Algebras\<close>
 
@@ -148,6 +148,13 @@ lemma times_prod[simp]: "(x1,x2) * (y1,y2) = (x1 * y1, x2 * y2)"
 instance ..
 end
 
+instantiation prod :: (plus, plus) plus begin
+definition "plus_prod = (\<lambda>(x1,x2) (y1,y2). (x1 + y1, x2 + y2))"
+lemma plus_prod[simp]: "(x1,x2) + (y1,y2) = (x1 + y1, x2 + y2)"
+  unfolding plus_prod_def by simp
+instance ..
+end
+
 instantiation prod :: (zero, zero) zero begin
 definition "zero_prod = (0,0)"
 instance ..
@@ -164,6 +171,14 @@ end
 
 instantiation prod :: (monoid_mult, monoid_mult) monoid_mult begin
 instance by standard (simp_all add: one_prod_def pair_All algebra_simps)
+end
+
+instantiation prod :: (no_inverse, no_inverse) no_inverse begin
+instance by (standard, simp add: one_prod_def times_prod_def split: prod.split) blast
+end
+
+instantiation prod :: (no_negative, no_negative) no_negative begin
+instance by (standard, simp add: zero_prod_def plus_prod_def split: prod.split) blast
 end
 
 instantiation prod :: (ab_semigroup_mult, ab_semigroup_mult) ab_semigroup_mult begin
@@ -193,6 +208,10 @@ definition [simp]: "one_list = []"
 instance ..
 end
 
+instantiation list :: (type) no_inverse begin
+instance by (standard, simp) blast
+end
+
 instantiation list :: (type) semigroup_mult begin
 instance by standard simp_all
 end
@@ -204,6 +223,11 @@ end
 
 subsubsection \<open>Function\<close>
 
+instantiation "fun" :: (type,plus) plus begin
+definition "plus_fun f g = (\<lambda>x. f x + g x)"
+instance ..
+end
+
 instantiation "fun" :: (type,times) times begin
 definition "times_fun f g = (\<lambda>x. f x * g x)"
 instance ..
@@ -212,12 +236,27 @@ end
 lemma times_fun: "(f * g) x = f x * g x"
   unfolding times_fun_def by simp
 
+instantiation "fun" :: (type,zero) zero begin
+definition "zero_fun = (\<lambda>(x::'a). (0::'b))"
+instance ..
+end
+
 instantiation "fun" :: (type,one) one begin
 definition "one_fun = (\<lambda>(x::'a). (1::'b))"
 instance ..
 end
 
 lemma one_fun[simp]: "1 x = 1" unfolding one_fun_def by simp
+lemma zero_fun[simp]: "0 x = 0" unfolding zero_fun_def by simp
+
+
+instantiation "fun" :: (type, no_inverse) no_inverse begin
+instance by (standard, simp add: one_fun_def times_fun_def fun_eq_iff, blast) 
+end
+
+instantiation "fun" :: (type, no_negative) no_negative begin
+instance by (standard, simp add: zero_fun_def plus_fun_def fun_eq_iff, blast) 
+end
 
 instantiation "fun" :: (type, semigroup_mult) semigroup_mult begin
 instance apply standard
@@ -233,7 +272,8 @@ instantiation "fun" :: (type,sep_algebra) sep_algebra begin
 instance apply standard
   apply (simp_all add: sep_disj_fun_def times_fun_def fun_eq_iff)
   using sep_disj_multD1 apply blast
-  using sep_disj_multI1 sep_disj_commute by blast
+  using sep_disj_multI1 sep_disj_commute apply blast
+  by blast
 end
 
 instantiation "fun" :: (type,comm_monoid_mult) comm_monoid_mult begin
@@ -309,8 +349,18 @@ qed
 
 subsubsection \<open>Unit\<close>
 
+instantiation unit :: plus begin
+definition [simp]: "plus_unit (f::unit) (g::unit) = ()"
+instance ..
+end
+
 instantiation unit :: times begin
 definition [simp]: "times_unit (f::unit) (g::unit) = ()"
+instance ..
+end
+
+instantiation unit :: zero begin
+definition [simp]: "zero_unit = ()"
 instance ..
 end
 
@@ -323,6 +373,13 @@ instantiation unit :: monoid_mult begin
 instance by standard simp_all
 end
 
+instantiation unit :: no_inverse begin
+instance by standard simp_all
+end
+
+instantiation unit :: no_negative begin
+instance by standard simp_all
+end
 
 
 subsubsection \<open>Set\<close>
@@ -358,6 +415,10 @@ lemma set_mult_inhabited[\<phi>elim,elim!]:
 
 instantiation set :: (times) mult_zero begin
 instance by standard (simp_all add: zero_set_def)
+end
+
+instantiation set :: (no_inverse) no_inverse begin
+instance by (standard, simp add: one_set_def times_set_def set_eq_iff) (metis no_inverse)
 end
 
 instantiation set :: (semigroup_mult) semigroup_mult begin
@@ -425,6 +486,10 @@ end
 
 instantiation fine :: (sep_disj) mult_zero begin
 instance by standard simp_all
+end
+
+instantiation fine :: (pre_sep_algebra) no_inverse begin
+instance by (standard, simp add: one_fine_def times_fine_def split: fine.split)
 end
 
 instantiation fine :: (cancl_sep_ab_semigroup) ab_semigroup_mult begin

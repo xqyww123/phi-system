@@ -193,7 +193,7 @@ locale std_sem_pre =
     and   valid_idx_step_arr : \<open>valid_idx_step (\<tau>Array N T) i \<longleftrightarrow> i < N\<close>
     and   idx_step_value_tup : \<open>idx_step_value i (V_tup.mk vs)   = vs!i\<close>
     and   idx_step_value_arr : \<open>idx_step_value i (V_array.mk (T,vs)) = vs!i\<close>
-    and   idx_step_mod_value_tup : \<open>idx_step_mod_value i f (V_tup.mk vs)   = V_tup.mk   (vs[i := f (vs!i)])\<close>
+    and   idx_step_mod_value_tup : \<open>idx_step_mod_value i f (V_tup.mk vs) = V_tup.mk (vs[i := f (vs!i)])\<close>
     and   idx_step_mod_value_arr : \<open>idx_step_mod_value i f (V_array.mk (T,vs)) = V_array.mk (T,vs[i := f (vs!i)])\<close>
     and   idx_step_offset_arr: \<open>idx_step_offset (\<tau>Array N T) i = i * MemObj_Size T\<close>
     and   idx_step_offset_size:\<open>valid_idx_step T i \<Longrightarrow> idx_step_offset T i + MemObj_Size (idx_step_type i T) \<le> MemObj_Size T\<close>
@@ -206,6 +206,8 @@ locale std_sem_pre =
           least 1 byte, which may affect the performance unnecessarily. However, since zero-element
           tuple and array are so special ...One thing: we do not support arbitrary-length array like [0 x nat] in LLVM? TODO \<close>
 begin
+
+paragraph \<open>Memory & Address\<close>
 
 abbreviation \<open>type_storable_in_mem T \<equiv> MemObj_Size T < 2^addrspace_bits\<close>
 
@@ -411,14 +413,13 @@ end
 
 locale std_sem =
   std_sem_pre where TYPES = TYPES
-(* + std_shared_val where TYPE'TY = \<open>TYPE('TY)\<close> *)
   for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times> ('RES_N => 'RES::comm_monoid_mult)) itself\<close>
 + fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
     and Typeof :: \<open>'VAL \<Rightarrow> 'TY\<close>
-  assumes WT_int[simp]: \<open>Well_Type (T_int.mk b)       = { V_int.mk (b,x)    |b x. x < 2^b } \<close>
-    and   WT_ptr[simp]: \<open>Well_Type (T_pointer.mk ())  = { V_pointer.mk addr |addr. valid_rawaddr addr }\<close>
-    and   WT_tup[simp]: \<open>Well_Type (T_tup.mk ts)      = { V_tup.mk vs       |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
-    and   WT_arr[simp]: \<open>Well_Type (T_array.mk (t,n)) = { V_array.mk (t,vs) |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
+  assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
+    and   WT_ptr[simp]: \<open>Well_Type \<tau>Pointer     = { V_pointer.mk addr |addr. valid_rawaddr addr }\<close>
+    and   WT_tup[simp]: \<open>Well_Type (\<tau>Tuple ts)  = { V_tup.mk vs       |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
+    and   WT_arr[simp]: \<open>Well_Type (\<tau>Array n t) = { V_array.mk (t,vs) |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
     and WT_Typeof[simp]: \<open>v \<in> Well_Type T \<Longrightarrow> Typeof v = T\<close>
     and Tyof_int[simp]: \<open>Typeof (V_int.mk (b,x)) = \<tau>Int b\<close>
     and Tyof_ptr[simp]: \<open>Typeof (V_pointer.mk rawaddr) = \<tau>Pointer\<close>
@@ -454,6 +455,22 @@ locale std_sem =
 
 begin
 
+abbreviation \<open>Valid_Type T \<equiv> Inhabited (Well_Type T)\<close>
+
+lemma Valid_Types[simp]:
+  \<open>Valid_Type (\<tau>Int n)\<close>
+  \<open>Valid_Type \<tau>Pointer\<close>
+  \<open>Valid_Type (\<tau>Array n T) \<longleftrightarrow> Valid_Type T\<close>
+  \<open>Valid_Type (\<tau>Tuple Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
+  unfolding Inhabited_def
+  apply (simp_all add: Valid_Segment_def  split: memaddr.split segidx.split)
+  using less_exp apply blast
+    apply (metis Valid_Segment_def segidx.case(2) valid_rawaddr_0)
+  apply rule using zero_well_typ apply blast
+   apply (elim exE) subgoal for p by (rule exI[where x=\<open>replicate n p\<close>], simp add: list_all_length)
+  apply rule apply (metis (mono_tags, lifting) list_all2_conv_all_nth list_all_length)
+  by (smt (verit) WT_tup mem_Collect_eq zero_well_typ)
+
 paragraph \<open>Resource Accessor\<close>
 
 definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
@@ -470,7 +487,72 @@ definition sem_write_mem :: \<open>'TY logaddr \<Rightarrow> 'VAL \<Rightarrow> 
        ; mem' = mem(seg \<mapsto> val')
       in res(R_mem #= Fine mem'))\<close>
 
+end
+
+
+subsubsection \<open>Pre-built Fiction\<close>
+
+locale pre_std_fic =
+  std_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
+               ('RES_N => 'RES::comm_monoid_mult))\<close>
+for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
+               ('RES_N => 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra) itself\<close>
+
++ fixes ShV_scale :: \<open>pos0rat \<Rightarrow> 'SHVAL \<Rightarrow> 'SHVAL\<close>
+    and ShV :: \<open>'VAL \<Rightarrow> 'SHVAL\<close>
+    and ShV_Val :: \<open>'SHVAL \<Rightarrow> 'VAL\<close>
+    and ShV_tup :: \<open>'SHVAL list \<Rightarrow> 'SHVAL\<close>
+    and ShV_array :: \<open>'TY \<times> 'SHVAL list \<Rightarrow> 'SHVAL\<close>
+    and ShV_Typeof :: \<open>'SHVAL \<Rightarrow> 'TY\<close>
+  defines \<open>ShV_Typeof sv \<equiv> Typeof (ShV_Val sv)\<close>
+
+assumes ShV_scale_1[simp]:    \<open>ShV_scale 1 sv = sv\<close>
+  and ShV_scale_0_left[simp]: \<open>ShV_scale 0 sv = 1\<close>
+  and ShV_scale_0_right[simp]:\<open>ShV_scale n 1 = 1\<close>
+  and ShV_scale_scale[simp]: \<open>ShV_scale n (ShV_scale m sv) = ShV_scale (n*m) sv\<close>
+  and ShV_scale_left_distrib [simp]: \<open>ShV_scale n sv * ShV_scale m sv = ShV_scale (n+m) sv\<close>
+  and ShV_scale_right_distrib[simp]: \<open>ShV_scale n sva * ShV_scale n svb = ShV_scale n (sva * svb)\<close>
+  and ShV_Val_scale[simp]:    \<open>ShV_Val (ShV_scale n sv) = ShV_Val sv\<close>
+  and ShV_Val_inj[simp]:      \<open>ShV_Val (ShV v) = v\<close>
+  and ShV_ind:  \<open>(\<And>n v. P (ShV_scale n (ShV v)))
+                 \<Longrightarrow> (\<And>sva svb. P sva \<Longrightarrow> P svb \<Longrightarrow> sva ## svb \<Longrightarrow> P (sva * svb))
+                 \<Longrightarrow> P sv\<close>
+  and ShV_scala_sep_disj[simp]: \<open>ShV_scale n sva ## ShV_scale m svb \<longleftrightarrow> n = 0 \<or> m = 0 \<or> sva ## svb\<close>
+  and ShV_sep_disj:\<open>ShV_scale n (ShV va) ## ShV_scale m (ShV vb)
+                      \<longleftrightarrow> n = 0 \<or> m = 0 \<or> (0 < n \<and> 0 < m \<and> n+m \<le> 1 \<and> va = vb)\<close>
+  and ShV_tup[simp]:     \<open>ShV (V_tup.mk vs) = ShV_tup (map ShV vs)\<close>
+  and ShV_Val_tup[simp]: \<open>ShV_Val (ShV_tup svs) = V_tup.mk (map ShV_Val svs)\<close>
+  and ShV_arr[simp]:     \<open>ShV (V_array.mk (T,vs)) = ShV_array (T, map ShV vs)\<close>
+  and ShV_Val_arr[simp]: \<open>ShV_Val (ShV_array (T,svs)) = V_array.mk (T, map ShV_Val svs)\<close>
+begin
+
+lemma ShV_disj_1: \<open>ShV va ## vb \<longleftrightarrow> vb = 1\<close>
+  apply (induct vb rule: ShV_ind)
+  using ShV_sep_disj[where n = 1, simplified]
+  apply fastforce
+  by (metis sep_add_zero_sym sep_disj_multD1 sep_disj_one)
+
+lemma ShV_not_1: \<open>ShV sv \<noteq> 1\<close>
+  by (metis (full_types) ShV_Val_inj ShV_disj_1 can_eqcmp_int disjoint_zero_sym one_neq_zero)
+
+lemma ShV_scale_n_1[simp]: \<open>0 \<le> n \<Longrightarrow> ShV_scale n 1 = 1\<close>
+  by (metis ShV_scale_0_left ShV_scale_scale mult_zero_right)
+
+lemma \<open>ShV_scale n sv = 1 \<longleftrightarrow> n = 0 \<or> sv = 1\<close>
+  apply (induct sv rule: ShV_ind)
+   apply (simp_all del: ShV_scale_right_distrib add: ShV_scale_right_distrib[symmetric])
+  apply (metis ShV_disj_1 ShV_scala_sep_disj ShV_scale_0_left mult_eq_0_iff)
+  by blast
+  
+
+
 paragraph \<open>Basic fictions for resource elements\<close>
+
+definition "fiction_ShV = Fiction (\<lambda>x. if x = 1 then {None} else { Some y |y. ShV y = x })"
+lemma fiction_ShV_\<I>[simp]:
+  "\<I> fiction_ShV = (\<lambda>x. if x = 1 then {None} else { Some y |y. ShV y = x })"
+  unfolding fiction_ShV_def
+  by (simp add: Fictional_def one_set_def)
 
 definition "fiction_mem I = Fiction (\<lambda>x. { 1(R_mem #= y) |y. y \<in> \<I> I x})"
 lemma fiction_mem_\<I>[simp]:
@@ -485,16 +567,17 @@ lemma fiction_var_\<I>[simp]:
   by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def)
 
 
-definition "share_mem = fiction_mem (fiction.partialwise (
-              fiction.pointwise (fiction.optionwise fiction.share)))"
+definition "share_mem = fiction_mem (fiction.defined (
+              fiction.pointwise (fiction.fine fiction_ShV)))"
 definition "exclusive_var = fiction_var fiction.it"
+
+
+
 
 end
 
 
-subsubsection \<open>Pre-built Fiction\<close>
-
-fiction_space (in std_sem) std_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
+fiction_space (in pre_std_fic) std_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
   mem :: share_mem
   var :: exclusive_var
 
@@ -504,10 +587,10 @@ subsubsection \<open>Standard Settings\<close>
 type_synonym ('VAL,'RES_N,'RES) comp = \<open>'VAL opstack \<times> ('RES_N \<Rightarrow> 'RES)\<close>
 
 locale std = std_fic
-  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult))\<close>
+  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra)\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
     and TYPE'REP = \<open>TYPE('FIC::comm_monoid_mult)\<close> 
-+ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
++ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC) \<times> 'SHVAL::sep_algebra) itself\<close>
 begin
 
 abbreviation "INTERP_RES fic \<equiv> Valid_Resource \<inter> \<I> INTERP fic"
@@ -545,19 +628,15 @@ declare state.split[split]
 type_synonym ('VAL,'RES_N,'RES) proc = "('VAL,'RES_N,'RES) comp \<Rightarrow> ('VAL,'RES_N,'RES) state"
 
 
-paragraph \<open>Elementary instructions\<close>
+paragraph \<open>Construction Elements\<close>
 
 definition bind :: " ('VAL,'RES_N,'RES) state \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) state " \<comment>\<open>monadic bind\<close>
   where "bind s f = (case s of Success x \<Rightarrow> f x | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
 
-definition instr_comp :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<then>/ _" [75,76] 75) 
+definition instr_comp :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<ggreater>/ _" [75,76] 75) 
   where "instr_comp f g s = bind (f s) g"
 
-definition nop :: "('VAL,'RES_N,'RES) proc" where "nop = Success" \<comment>\<open>the instruction `no-operation`\<close>
-
-
-
-
+definition SKIP :: "('VAL,'RES_N,'RES) proc" where "SKIP = Success" \<comment>\<open>the instruction `no-operation`\<close>
 
 section \<open>Specification Framework\<close>
 
@@ -733,14 +812,6 @@ definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b 
   where [\<phi>def]: "\<^bold>m\<^bold>a\<^bold>p f \<lbrace> T \<longmapsto> U \<rbrace> \<equiv> \<forall>a. a \<in> T \<longrightarrow> f a \<in> U"
 
 
-paragraph \<open>Specifications for Elementary Monadic Construction\<close>
-
-lemma (in std) nop_\<phi>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c nop \<lbrace> T \<longmapsto> T \<rbrace>" unfolding nop_def \<phi>Procedure_def by auto
-
-lemma (in std) instr_comp[intro]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> B \<longmapsto> C \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<then> g) \<lbrace> A \<longmapsto> C \<rbrace>"
-  unfolding instr_comp_def \<phi>Procedure_def bind_def by (auto 0 4)
-
-
 section \<open>Programming Framework\<close>
 
 subsection \<open>Base\<close>
@@ -765,14 +836,22 @@ lemma (in std) CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarro
   unfolding CurrentConstruction_def Inhabited_def by (cases s) (auto 0 4 simp add: \<phi>expns)
 
 
-paragraph \<open>Rules for Constructing Programs\<close>
-
 context std begin
+
+paragraph \<open>Hoare Rules\<close>
+
+lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c SKIP \<lbrace> T \<longmapsto> T \<rbrace>" unfolding SKIP_def \<phi>Procedure_def by auto
+
+lemma \<phi>SEQ: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> X \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> C \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<ggreater> g) \<lbrace> A \<longmapsto> C \<rbrace>"
+  unfolding instr_comp_def \<phi>Procedure_def bind_def by (auto 0 4)
+  
 
 lemma \<phi>frame:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> M * A \<longmapsto> M * B \<rbrace>"
   unfolding \<phi>Procedure_def
   by (metis (no_types, lifting) mult.assoc)
+
+paragraph \<open>Rules for Constructing Programs\<close>
 
 lemma \<phi>apply_proc:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<rbrace> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
@@ -784,11 +863,11 @@ lemma \<phi>accept_proc:
   by (simp add: LooseStateTy_upgrade)
 
 lemma \<phi>reassemble_proc_0:
-  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g nop \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
-  unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def nop_def bind_def by (cases s) simp+
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g SKIP \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def SKIP_def bind_def by (cases s) simp+
 
 lemma \<phi>reassemble_proc:
-  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<then> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def instr_comp_def
   by force
 

@@ -1,5 +1,5 @@
 theory NoePreliminary
-  imports Main
+  imports Main HOL.Rat
 (*  abbrevs
     "<own>" = "\<Znrres>" *)
 begin
@@ -27,12 +27,147 @@ lemmas pair_All = split_paired_all
 
 lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> PROP R)" by rule simp+
 
+definition \<open>pred_option1 P x \<longleftrightarrow> (case x of Some x' \<Rightarrow> P x' | None \<Rightarrow> False)\<close>
+lemma pred_option1[simp]:
+  \<open>pred_option1 P (Some x) \<longleftrightarrow> P x\<close>
+  \<open>\<not>pred_option1 P None\<close>
+  unfolding pred_option1_def by simp_all
+
 locale homo_mult =
   fixes \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
   assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
     and homo_one[simp]: "\<phi> 1 = 1"
 
 definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
+
+class no_inverse = times + one +
+  assumes no_inverse[simp]: \<open>a * b = 1 \<longleftrightarrow> a = 1 \<and> b = 1\<close>
+
+class no_negative = plus + zero +
+  assumes no_negative[simp]: \<open>a + b = 0 \<longleftrightarrow> a = 0 \<and> b = 0\<close>
+
+
+instantiation nat :: no_negative begin
+instance by standard simp
+end
+
+instantiation nat :: no_inverse begin
+instance by standard simp
+end
+
+
+subsection \<open>Non-negative Rational\<close>
+
+typedef pos0rat = \<open>{ n::rat. 0 \<le> n }\<close>
+  using zero_less_one by blast 
+
+setup_lifting type_definition_pos0rat
+
+instantiation pos0rat :: zero begin
+lift_definition zero_pos0rat :: pos0rat is 0 by simp
+instance ..
+end
+
+instantiation pos0rat :: one begin
+lift_definition one_pos0rat :: pos0rat is 1 by simp
+instance ..
+end
+
+instantiation pos0rat :: linorder begin
+lift_definition less_eq_pos0rat :: "pos0rat \<Rightarrow> pos0rat \<Rightarrow> bool" is "(\<le>)" .
+lift_definition less_pos0rat :: "pos0rat \<Rightarrow> pos0rat \<Rightarrow> bool" is "(<)" .
+instance proof
+  fix x y z :: pos0rat
+  show "(x < y) = (x \<le> y \<and> \<not> y \<le> x)" by transfer auto
+  show "x \<le> x" by transfer simp
+  show "x \<le> y \<Longrightarrow> y \<le> z \<Longrightarrow> x \<le> z" by transfer simp
+  show "x \<le> y \<Longrightarrow> y \<le> x \<Longrightarrow> x = y" by transfer simp
+  show "x \<le> y \<or> y \<le> x" by transfer auto
+qed
+end
+
+instantiation pos0rat :: linordered_comm_semiring_strict begin
+
+lift_definition plus_pos0rat :: "pos0rat \<Rightarrow> pos0rat \<Rightarrow> pos0rat" is "(+)" by simp
+lift_definition minus_pos0rat :: \<open>pos0rat \<Rightarrow> pos0rat \<Rightarrow> pos0rat\<close>
+  is \<open>\<lambda>x y. if y \<le> x then x - y else 0\<close> by simp
+lift_definition times_pos0rat :: "pos0rat \<Rightarrow> pos0rat \<Rightarrow> pos0rat" is "(*)" by simp
+
+lemma pos0rat_LE0[simp]: \<open>0 \<le> x\<close> for x :: pos0rat by transfer simp
+
+instance proof
+  fix a b c d :: pos0rat
+  show "a + b + c = a + (b + c)" by transfer simp
+  show "a + b = b + a" by transfer simp
+  show "0 + a = a" by transfer simp
+  show "a \<le> b \<Longrightarrow> c + a \<le> c + b" by transfer simp
+  show \<open>a + b - a = b\<close> by transfer simp
+  show \<open>a - b - c = a - (b + c)\<close> by transfer simp
+  show \<open>(a + b) * c = a * c + b * c\<close> by transfer (simp add: distrib_right)
+  show \<open>a * b * c = a * (b * c)\<close> by transfer simp
+  show \<open>a * b = b * a\<close> by transfer simp
+  show \<open>0 * a = 0\<close> by transfer simp
+  show \<open>a * 0 = 0\<close> by transfer simp
+  show \<open>a < b \<Longrightarrow> 0 < c \<Longrightarrow> c * a < c * b\<close> by transfer simp
+qed
+end
+
+instantiation pos0rat :: lattice begin
+lift_definition inf_pos0rat :: "pos0rat \<Rightarrow> pos0rat \<Rightarrow> pos0rat" is "inf"
+  by (simp add: inf_rat_def)
+lift_definition sup_pos0rat :: "pos0rat \<Rightarrow> pos0rat \<Rightarrow> pos0rat" is "sup"
+  using semilattice_sup_class.le_supI1 .
+  
+instance by (standard; transfer; simp)
+end
+
+lemma pos0rat_add_leD1[dest]: "a + b \<le> c \<Longrightarrow> a \<le> c"
+  and pos0rat_add_leD2[dest]: "a + b \<le> c \<Longrightarrow> b \<le> c"
+  for a :: pos0rat by (transfer, linarith)+
+
+lemma pos0rat_add_ltD1[dest]: "a + b < c \<Longrightarrow> a < c"
+  and pos0rat_add_ltD2[dest]: "a + b < c \<Longrightarrow> b < c"
+  for a :: pos0rat by (transfer, linarith)+
+
+instantiation pos0rat :: numeral begin
+instance ..
+end
+
+instantiation pos0rat :: comm_monoid_mult begin
+lift_definition inverse_pos0rat :: "pos0rat \<Rightarrow> pos0rat" is inverse by simp
+
+instance proof
+  fix a b c :: pos0rat
+  show "1 * a = a" by transfer simp
+qed
+end
+
+
+instantiation pos0rat :: linordered_semidom begin
+instance proof
+  fix a b c :: pos0rat
+  show \<open>(0::pos0rat) \<noteq> 1\<close> by transfer simp
+  show \<open>a * (b - c) = a * b - a * c\<close> apply transfer
+    using nle_le right_diff_distrib' by fastforce
+  show \<open>a \<noteq> 0 \<Longrightarrow> b \<noteq> 0 \<Longrightarrow> a * b \<noteq> 0\<close> by transfer simp
+  show \<open>(0::pos0rat) < 1\<close> by transfer simp
+  show \<open> b \<le> a \<Longrightarrow> a - b + b = a\<close> by transfer simp
+qed
+end
+
+instantiation pos0rat :: algebraic_semidom begin
+lift_definition divide_pos0rat :: "pos0rat \<Rightarrow> pos0rat \<Rightarrow> pos0rat" is "(/)" by simp
+instance proof
+  fix a b c :: pos0rat
+  show \<open>b \<noteq> 0 \<Longrightarrow> a * b div b = a\<close> apply transfer by simp
+  show \<open>a div 0 = 0\<close> apply transfer by simp
+qed
+end
+
+instantiation pos0rat :: no_negative begin
+instance by (standard, transfer) (simp add: add_nonneg_eq_0_iff)
+end
+
 
 
 (*
@@ -233,120 +368,7 @@ end
 
 (*subsubsection \<open>Fractional Ownership\<close>
 
-typedef ownership = \<open>{ ow::rat. 0 < ow }\<close>
-  using zero_less_one by blast 
 
-setup_lifting type_definition_ownership
-
-instantiation ownership :: one begin
-lift_definition one_ownership :: ownership is 1 by simp
-instance ..
-end
-
-instantiation ownership :: linorder begin
-lift_definition less_eq_ownership :: "ownership \<Rightarrow> ownership \<Rightarrow> bool" is "(\<le>)" .
-lift_definition less_ownership :: "ownership \<Rightarrow> ownership \<Rightarrow> bool" is "(<)" .
-instance proof
-  fix x y z :: ownership
-  show "(x < y) = (x \<le> y \<and> \<not> y \<le> x)" by transfer auto
-  show "x \<le> x" by transfer simp
-  show "x \<le> y \<Longrightarrow> y \<le> z \<Longrightarrow> x \<le> z" by transfer simp
-  show "x \<le> y \<Longrightarrow> y \<le> x \<Longrightarrow> x = y" by transfer simp
-  show "x \<le> y \<or> y \<le> x" by transfer auto
-qed
-end
-
-instantiation ownership :: strict_ordered_ab_semigroup_add begin
-
-lift_definition plus_ownership :: "ownership \<Rightarrow> ownership \<Rightarrow> ownership" is "(+)" by simp
-
-instance proof
-  fix a b c d :: ownership
-  show "a + b + c = a + (b + c)" by transfer simp
-  show "a + b = b + a" by transfer simp
-  show "a \<le> b \<Longrightarrow> c + a \<le> c + b" by transfer simp
-  show "a < b \<Longrightarrow> c < d \<Longrightarrow> a + c < b + d" by transfer simp
-qed
-end
-
-instantiation ownership :: lattice begin
-lift_definition inf_ownership :: "ownership \<Rightarrow> ownership \<Rightarrow> ownership" is "inf"
-  by (simp add: inf_rat_def)
-lift_definition sup_ownership :: "ownership \<Rightarrow> ownership \<Rightarrow> ownership" is "sup"
-  by (simp add: sup.strict_coboundedI2)
-  
-instance by (standard; transfer; simp)
-end
-
-lemma ownership_add_leD1[dest]: "a + b \<le> c \<Longrightarrow> a \<le> c"
-  and ownership_add_leD2[dest]: "a + b \<le> c \<Longrightarrow> b \<le> c"
-  for a :: ownership by (transfer, linarith)+
-
-lemma ownership_add_ltD1[dest]: "a + b < c \<Longrightarrow> a < c"
-  and ownership_add_ltD2[dest]: "a + b < c \<Longrightarrow> b < c"
-  for a :: ownership by (transfer, linarith)+
-
-instantiation ownership :: numeral begin
-instance ..
-end
-*
-instantiation ownership :: ab_group_mult begin
-lift_definition inverse_ownership :: "ownership \<Rightarrow> ownership" is inverse by simp
-lift_definition divide_ownership :: "ownership \<Rightarrow> ownership \<Rightarrow> ownership" is "(/)" by simp
-lift_definition times_ownership :: "ownership \<Rightarrow> ownership \<Rightarrow> ownership" is "( * )" by simp
-
-instance proof
-  fix a b c :: ownership
-  show "a * b * c = a * (b * c)" by transfer simp
-  show "a * b = b * a" by transfer simp
-  show "1 * a = a" by transfer simp
-  show "inverse a * a = 1" by transfer simp
-  show "a div b = a * inverse b" apply transfer
-    using divide_rat_def by blast
-qed
-end
-
-lemma "Abs_ownership (a + b) = Abs_ownership a + Abs_ownership b"
-  apply (rule plus_ownership.abs_eq[symmetric, unfolded eq_onp_def])
-  thm 
-  apply transfer
-
-lemma "Abs_ownership (numeral N) = numeral N"
-  apply (induct N)
-  apply (simp add: one_ownership.abs_eq)
-  apply (unfold numeral.simps numeral_add)
-  thm numeral.simps
-  thm numeral
-  
-
-lemma "of_nat n = Abs_ownership (of_nat n)"
-
-ML \<open>@{term "2"}\<close>
-
-print_locale semiring_0
-term of_rat
-term of_int
-thm of_rat_0
-term "(^^)"
-
-
-
-
-typ "'a::comm_ring"
-
-lemma "of_rat" by simp
-
-term "\<int>"
-
-declaration \<open>
-  K (Lin_Arith.add_inj_thms @{thms of_int_le_iff [THEN iffD2] of_int_eq_iff [THEN iffD2]}
-    (* not needed because x < (y::int) can be rewritten as x + 1 <= y: of_int_less_iff RS iffD2 *)
-  #> Lin_Arith.add_inj_const (\<^const_name>\<open>of_nat\<close>, \<^typ>\<open>nat \<Rightarrow> rat\<close>)
-  #> Lin_Arith.add_inj_const (\<^const_name>\<open>of_int\<close>, \<^typ>\<open>int \<Rightarrow> rat\<close>))
-\<close>
-
-
-lemma "1 / (2::rat) = 3 / 6" by simp
  *)
 
 end

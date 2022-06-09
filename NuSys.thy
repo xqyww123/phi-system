@@ -508,8 +508,8 @@ named_theorems final_proc_rewrite
   \<open>Rewrite the specification theorem in the end of the construction.
     Theorems should be a meta equition \<^term>\<open>\<equiv>\<close>.\<close>
 
-lemma [final_proc_rewrite]: "f \<then> nop \<equiv> f" and [final_proc_rewrite]: "nop \<then> f \<equiv> f"
-  unfolding instr_comp_def nop_def bind_def atomize_eq by auto
+lemma [final_proc_rewrite]: "f \<ggreater> SKIP \<equiv> f" and [final_proc_rewrite]: "SKIP \<ggreater> f \<equiv> f"
+  unfolding instr_comp_def SKIP_def bind_def atomize_eq by auto
 
 
 section \<open>Syntax\<close>
@@ -2364,5 +2364,49 @@ ML_file "library/reasoners.ML"
 \<phi>reasoner Normal_Premise 10 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close>) = \<open>Nu_Reasoners.premise_tac\<close>
 \<phi>reasoner Simp_Premise 10 (\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close>) = \<open>Nu_Reasoners.asm_simp_tac\<close>
 
+
+section \<open>Construction Elements\<close>
+
+context std_sem begin
+
+definition \<phi>M_assert :: \<open>bool \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Success s else Fail)\<close>
+
+definition \<phi>M_assume :: \<open>bool \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Success s else PartialCorrect)\<close>
+
+definition \<phi>M_get_Val :: \<open>('VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_get_Val F = (\<lambda>(vs,res). case vs of v#vs' \<Rightarrow> F v (vs',res) | _ \<Rightarrow> Fail)\<close>
+
+definition \<phi>M_put_Val :: \<open>'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_put_Val V = (\<lambda>(vs,res). Success (V#vs,res))\<close>
+
+definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'a) \<Rightarrow> ('a \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_getV TY VDT_dest F = \<phi>M_get_Val (\<lambda>v. \<phi>M_assert (v \<in> Well_Type TY) \<ggreater> F (VDT_dest v))\<close>
+
+end
+
+context std begin
+
+lemma \<phi>M_assert: \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_assert P \<lbrace> X \<longmapsto> X \<rbrace>\<close>
+  unfolding \<phi>Procedure_def \<phi>M_assert_def by (auto simp add: \<phi>expns Inhabited_def)
+
+lemma \<phi>M_assume: \<open>(P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
+  unfolding \<phi>Procedure_def \<phi>M_assume_def instr_comp_def bind_def by force
+
+lemma \<phi>M_get_Val: \<open>(\<And>v. v \<in> A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> X \<longmapsto> Y \<rbrace> ) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_Val F \<lbrace> X\<heavy_comma> VAL A \<longmapsto> Y \<rbrace>\<close>
+  unfolding \<phi>Procedure_def \<phi>M_get_Val_def by (auto simp add: \<phi>expns) blast
+
+lemma \<phi>M_getV: \<open>(\<And>v. v \<in> A \<Longrightarrow> v \<in> Well_Type TY)
+            \<Longrightarrow> (\<And>v. v \<in> A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> )
+            \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest F \<lbrace> X\<heavy_comma> VAL A \<longmapsto> Y \<rbrace>\<close>
+  unfolding \<phi>M_getV_def by (rule \<phi>M_get_Val, rule \<phi>SEQ[where X = X], rule \<phi>M_assert; blast)
+
+lemma \<phi>M_put_Val:
+  \<open>v \<in> A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_put_Val v \<lbrace> X \<longmapsto> X\<heavy_comma> VAL A \<rbrace>\<close>
+  unfolding \<phi>M_put_Val_def \<phi>Procedure_def
+  by (simp add: \<phi>expns) (metis append.left_neutral append_Cons) 
+
+end
 
 end
