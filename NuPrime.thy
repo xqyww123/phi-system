@@ -492,6 +492,64 @@ end
 
 subsubsection \<open>Pre-built Fiction\<close>
 
+definition push_map :: \<open>'a list \<Rightarrow> ('a list \<Rightarrow> 'b) \<Rightarrow> ('a list \<Rightarrow> 'b::one)\<close>
+  where \<open>push_map idx f = (\<lambda>x. if take (length idx) x = idx then f (drop (length idx) x) else 1 )\<close>
+
+lemma push_map_push_map:
+  \<open>push_map ia (push_map ib f) = push_map (ia@ib) f\<close>
+  unfolding push_map_def fun_eq_iff
+  by (smt (verit, ccfv_threshold) add.commute append_eq_append_conv append_eq_conv_conj drop_drop length_append take_add take_drop)
+
+lemma push_map_distrib_mult:
+  \<open>push_map idx f * push_map idx g = push_map idx (f * g)\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::monoid_mult\<close>
+  unfolding push_map_def fun_eq_iff times_fun_def by simp
+
+lemma push_map_mult_1[simp]:
+  \<open>push_map idx 1 = 1\<close>
+  unfolding push_map_def fun_eq_iff by simp
+
+lemma push_map_mult_nil[simp]:
+  \<open>push_map [] f = f\<close>
+  unfolding push_map_def fun_eq_iff by simp
+
+lemma share_push_map:
+  \<open>share n (push_map idx f) = push_map idx (share n f)\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b :: share_one\<close>
+  unfolding push_map_def fun_eq_iff share_fun_def by simp
+
+
+definition pull_map :: \<open>'a list \<Rightarrow> ('a list \<Rightarrow> 'b) \<Rightarrow> ('a list \<Rightarrow> 'b)\<close>
+  where \<open>pull_map idx f = (\<lambda>x. f (idx@x))\<close>
+
+lemma \<open>pull_map idx (push_map idx f) = f\<close>
+  unfolding pull_map_def push_map_def fun_eq_iff by simp
+
+
+
+locale pre_std_fic =
+  std_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
+               ('RES_N => 'RES::comm_monoid_mult))\<close>
+for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
+               ('RES_N => 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra) itself\<close>
+
++ fixes Mapof_Val :: \<open>'VAL \<Rightarrow> nat list \<Rightarrow> 'VAL\<close>
+assumes Mapof_Val_inj: \<open>Typeof Va = Typeof Vb \<Longrightarrow> Mapof_Val Va = Mapof_Val Vb \<Longrightarrow> Va = Vb\<close>
+(* assumes \<open>Mapof_Val (index_value idx V) = push_map idx\<close> *)
+begin
+
+definition \<open>Valof_Map TY M = (@V. Mapof_Val V = M \<and> Typeof V = TY)\<close>
+
+lemma Valof_Map:
+  \<open>Valof_Map (Typeof v) (Mapof_Val v) = v\<close>
+  unfolding Valof_Map_def using Mapof_Val_inj by blast
+
+definition \<open>Share_Mapof V = to_share o Mapof_Val V\<close>
+
+
+end
+
+
 locale pre_std_fic =
   std_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
                ('RES_N => 'RES::comm_monoid_mult))\<close>

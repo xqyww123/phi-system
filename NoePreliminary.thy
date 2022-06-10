@@ -46,6 +46,10 @@ class no_inverse = times + one +
 class no_negative = plus + zero +
   assumes no_negative[simp]: \<open>a + b = 0 \<longleftrightarrow> a = 0 \<and> b = 0\<close>
 
+class ab_group_mult = inverse + comm_monoid_mult +
+  assumes ab_left_inverse: "inverse a * a = 1"
+  assumes ab_diff_conv_add_uminus: "a / b = a * (inverse b)"
+
 
 instantiation nat :: no_negative begin
 instance by standard simp
@@ -56,12 +60,110 @@ instance by standard simp
 end
 
 
+subsection \<open>Positive Rational\<close>
+
+typedef posrat = \<open>{ n::rat. 0 < n }\<close>
+  morphisms rat_of_posrat posrat
+  using zero_less_one by blast
+
+setup_lifting type_definition_posrat
+
+lemmas rat_of_posrat = rat_of_posrat[simplified]
+lemmas posrat_inverse = posrat_inverse[simplified]
+
+declare rat_of_posrat_inverse[simp]
+
+instantiation posrat :: one begin
+lift_definition one_posrat :: posrat is 1 by simp
+instance ..
+end
+
+instantiation posrat :: linorder begin
+lift_definition less_eq_posrat :: "posrat \<Rightarrow> posrat \<Rightarrow> bool" is "(\<le>)" .
+lift_definition less_posrat :: "posrat \<Rightarrow> posrat \<Rightarrow> bool" is "(<)" .
+instance proof
+  fix x y z :: posrat
+  show "(x < y) = (x \<le> y \<and> \<not> y \<le> x)" by transfer auto
+  show "x \<le> x" by transfer simp
+  show "x \<le> y \<Longrightarrow> y \<le> z \<Longrightarrow> x \<le> z" by transfer simp
+  show "x \<le> y \<Longrightarrow> y \<le> x \<Longrightarrow> x = y" by transfer simp
+  show "x \<le> y \<or> y \<le> x" by transfer auto
+qed
+end
+
+instantiation posrat :: comm_semiring begin
+
+lift_definition plus_posrat :: "posrat \<Rightarrow> posrat \<Rightarrow> posrat" is "(+)" by simp
+lift_definition times_posrat :: "posrat \<Rightarrow> posrat \<Rightarrow> posrat" is "(*)" by simp
+
+instance proof
+  fix a b c :: posrat
+  show "a + b + c = a + (b + c)" by transfer simp
+  show "a + b = b + a" by transfer simp
+  show \<open>(a + b) * c = a * c + b * c\<close> by transfer (simp add: distrib_right)
+  show \<open>a * b * c = a * (b * c)\<close> by transfer simp
+  show \<open>a * b = b * a\<close> by transfer simp
+qed
+end
+
+instantiation posrat :: strict_ordered_ab_semigroup_add begin
+
+instance proof
+  fix a b c d :: posrat
+  show "a \<le> b \<Longrightarrow> c + a \<le> c + b" by transfer simp
+  show \<open>a < b \<Longrightarrow> c < d \<Longrightarrow> a + c < b + d\<close> by transfer simp
+qed
+end
+
+instantiation posrat :: lattice begin
+lift_definition inf_posrat :: "posrat \<Rightarrow> posrat \<Rightarrow> posrat" is "inf"
+  by (simp add: inf_rat_def)
+lift_definition sup_posrat :: "posrat \<Rightarrow> posrat \<Rightarrow> posrat" is "sup"
+  using semilattice_sup_class.less_supI2 .
+  
+instance by (standard; transfer; simp)
+end
+
+lemma posrat_add_leD1[dest]: "a + b \<le> c \<Longrightarrow> a \<le> c"
+  and posrat_add_leD2[dest]: "a + b \<le> c \<Longrightarrow> b \<le> c"
+  for a :: posrat by (transfer, linarith)+
+
+lemma posrat_add_ltD1[dest]: "a + b < c \<Longrightarrow> a < c"
+  and posrat_add_ltD2[dest]: "a + b < c \<Longrightarrow> b < c"
+  for a :: posrat by (transfer, linarith)+
+
+instantiation posrat :: numeral begin
+instance ..
+end
+
+instantiation posrat :: ab_group_mult begin
+
+lift_definition inverse_posrat :: "posrat \<Rightarrow> posrat" is inverse by simp
+lift_definition divide_posrat :: "posrat \<Rightarrow> posrat \<Rightarrow> posrat" is \<open>(div)\<close> by simp
+
+instance proof
+  fix a b :: posrat
+  show "1 * a = a" by transfer simp
+  show \<open>inverse a * a = 1\<close> by transfer simp
+  show \<open>a div b = a * inverse b\<close> apply transfer
+    using divide_inverse by blast
+qed
+end
+
+
+
 subsection \<open>Non-negative Rational\<close>
 
 typedef pos0rat = \<open>{ n::rat. 0 \<le> n }\<close>
-  using zero_less_one by blast 
+  morphisms rat_of_pos0rat pos0rat
+  using zero_less_one by blast
 
 setup_lifting type_definition_pos0rat
+
+lemmas rat_of_pos0rat = rat_of_pos0rat[simplified]
+lemmas pos0rat_inverse = pos0rat_inverse[simplified]
+
+declare rat_of_pos0rat_inverse[simp]
 
 instantiation pos0rat :: zero begin
 lift_definition zero_pos0rat :: pos0rat is 0 by simp
@@ -167,8 +269,6 @@ end
 instantiation pos0rat :: no_negative begin
 instance by (standard, transfer) (simp add: add_nonneg_eq_0_iff)
 end
-
-
 
 (*
 
