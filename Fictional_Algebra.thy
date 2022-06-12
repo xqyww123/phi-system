@@ -20,12 +20,12 @@ class sep_disj = times +
   fixes sep_disj :: "'a => 'a => bool" (infix "##" 60)
   assumes sep_disj_commuteI: "x ## y \<Longrightarrow> y ## x"
 begin
-lemma sep_disj_commute[simp]: "x ## y \<longleftrightarrow> y ## x"
+lemma sep_disj_commute: "x ## y \<longleftrightarrow> y ## x"
   by (blast intro: sep_disj_commuteI)
 end
 
 class sep_ab_semigroup = sep_disj +
-  assumes sep_mult_commute[simp]: "x ## y \<Longrightarrow> x * y = y * x"
+  assumes sep_mult_commute: "x ## y \<Longrightarrow> x * y = y * x"
   assumes sep_mult_assoc:
     "\<lbrakk> x ## y; y ## z; x ## z \<rbrakk> \<Longrightarrow> (x * y) * z = x * (y * z)"
 
@@ -33,21 +33,23 @@ class cancl_sep_ab_semigroup = sep_ab_semigroup +
   assumes sep_disj_multD1: "\<lbrakk> x ## y * z; y ## z \<rbrakk> \<Longrightarrow> x ## y"
   assumes sep_disj_multI1: "\<lbrakk> x ## y * z; y ## z \<rbrakk> \<Longrightarrow> x * y ##  z"
 
-
-class pre_sep_algebra = one + sep_ab_semigroup +
+class sep_disj_one = sep_disj + one +
   assumes sep_disj_one [simp]: "x ## 1"
-    and   sep_mult_one [simp]: "x * 1 = x"
+begin
+
+lemma sep_disj_one' [simp]: "1 ## x"
+  using local.sep_disj_one sep_disj_commute by blast
+
+end
+
+class pre_sep_algebra = sep_disj_one + sep_ab_semigroup +
+  assumes sep_mult_one [simp]: "x * 1 = x"
     and   sep_no_negative [simp]: \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
 begin
 
-lemma disjoint_zero_sym [simp]: "1 ## x"
-  using local.sep_disj_one sep_disj_commute by blast
-  
-
-lemma sep_add_zero_sym [simp]: "1 * x = x"
+lemma sep_mult_one' [simp]: "1 * x = x"
   by (metis local.sep_disj_one local.sep_mult_commute local.sep_mult_one)
   
-
 lemma sep_mult_left_commute[simp]:
   assumes a: "a ## b" "b ## c" "a ## c"
   shows "b * (a * c) = a * (b * c)" (is "?lhs = ?rhs")
@@ -96,17 +98,20 @@ class share_one = share + one +
   assumes share_right_one[simp]: \<open>share n 1 = 1\<close>
     and   share_left_0[simp]:    \<open>share 0 x = 1\<close>
 
+class share_one_eq_one_iff = share_one +
+  assumes share_one_eq_one_iff[simp]: \<open>n \<noteq> 0 \<Longrightarrow> share n x = 1 \<longleftrightarrow> x = 1\<close>
+
 class share_sep_disj = share + sep_disj +
-  assumes share_sep_disj_left_L0[simp]: \<open>0 \<noteq> n \<Longrightarrow> share n x ## y \<longleftrightarrow> x ## y\<close>
-    and   share_sep_disj_refl[simp]:  \<open>share n x ## share m x\<close>
+  assumes share_sep_disj_left_L0[simp]: \<open>n \<noteq> 0 \<Longrightarrow> share n x ## y \<longleftrightarrow> x ## y\<close>
+(*    and   share_sep_disj_refl[simp]:  \<open>n \<noteq> 0 \<Longrightarrow> m \<noteq> 0 \<Longrightarrow> share n x ## share m x\<close> *)
 begin
 
-lemma share_sep_disj_refl_1 [simp]:
-  \<open>x ## share m x\<close>  \<open>share m x ## x\<close>
-  by (metis share_left_one share_sep_disj_refl)+
+(* lemma share_sep_disj_refl_1 [simp]:
+  \<open>m \<noteq> 0 \<Longrightarrow> x ## share m x\<close>  \<open>m \<noteq> 0 \<Longrightarrow> share m x ## x\<close>
+  by (metis share_left_one share_sep_disj_refl)+ *)
   
 lemma share_sep_disj_right_L0[simp]: \<open>0 \<noteq> n \<Longrightarrow> x ## share n y \<longleftrightarrow> x ## y\<close>
-  using local.share_sep_disj_left_L0 by force
+  using local.share_sep_disj_left_L0 sep_disj_commute by force
 
 end
 
@@ -143,11 +148,18 @@ instantiation option :: (times) times begin
 definition "times_option x' y' =
   (case x' of Some x \<Rightarrow> (case y' of Some y \<Rightarrow> Some (x * y) | _ \<Rightarrow> x')
       | None \<Rightarrow> y')"
+
 lemma times_option[simp]:
   "Some x * Some y = Some (x * y)"
   "x' * None = x'"
   "None * x' = x'"
   by (cases x', simp_all add: times_option_def)+
+
+lemma times_option_not_none[simp]:
+  \<open>x * Some y \<noteq> None\<close>
+  \<open>Some y * x \<noteq> None\<close>
+  by (cases x; simp)+
+
 instance ..
 end
 
@@ -165,12 +177,19 @@ lemma sep_disj_option[simp]:
     "Some x ## Some y \<longleftrightarrow> x ## y"
     "None ## z" "z ## None"
   unfolding sep_disj_option_def by (cases z, simp_all)+
-instance by standard (case_tac x; case_tac y; simp)
+instance by standard (case_tac x; case_tac y; simp add: sep_disj_commute)
 
 end
 
+lemma sep_disj_option_nonsepable[simp]:
+  \<open>x ## Some y \<longleftrightarrow> x = None\<close> \<open>Some y ## x \<longleftrightarrow> x = None\<close>
+  for y :: \<open>'a :: nonsepable_semigroup\<close>
+  by (cases x; simp)+
+
 instantiation option :: (sep_ab_semigroup) sep_ab_semigroup begin
-instance by (standard; case_tac x; simp_all; case_tac y; simp_all; case_tac z; simp_all)
+instance by (standard; case_tac x; simp_all add: sep_disj_commute sep_mult_commute;
+             case_tac y; simp_all add: sep_disj_commute sep_mult_commute;
+             case_tac z; simp_all add: sep_disj_commute sep_mult_commute)
 end
 
 instantiation option :: (sep_ab_semigroup) pre_sep_algebra begin
@@ -198,7 +217,7 @@ lemma share_option_simps[simp]:
 instance by (standard; simp add: share_option_def; case_tac x; simp add: share_share)
 end
 
-instantiation option :: (share) share_one begin
+instantiation option :: (share) share_one_eq_one_iff begin
 instance by (standard; simp add: share_option_def; case_tac x; simp)
 end
 
@@ -340,11 +359,16 @@ end
 
 instantiation "fun" :: (type,sep_disj) sep_disj begin
 definition "sep_disj_fun m1 m2 = (\<forall>x. m1 x ## m2 x)"
-instance by standard (simp_all add: sep_disj_fun_def times_fun_def fun_eq_iff)
+instance by standard (simp_all add: sep_disj_fun_def times_fun_def fun_eq_iff
+                               add: sep_disj_commute sep_mult_commute)
 end
 
+lemma sep_disj_fun: \<open>(f ## g) \<Longrightarrow> f x ## g x\<close>
+  unfolding sep_disj_fun_def by blast
+
 instantiation "fun" :: (type,sep_ab_semigroup) sep_ab_semigroup begin
-instance by standard (simp_all add: sep_disj_fun_def times_fun_def fun_eq_iff)
+instance by standard (simp_all add: sep_disj_fun_def times_fun_def fun_eq_iff
+                               add: sep_disj_commute sep_mult_commute)
 end
 
 instantiation "fun" :: (type,pre_sep_algebra) pre_sep_algebra begin
@@ -388,48 +412,13 @@ lemma fun_1upd1[simp]:
   "1(k := 1) = 1"
   unfolding one_fun_def fun_upd_def by simp
 
-lemma fun_1upd_homo[simp]:
+lemma fun_1upd_homo:
     "1(k := x) * 1(k := y) = 1(k := x * y)" for x :: "'a::comm_monoid_mult"
   unfolding one_fun_def fun_upd_def times_fun_def
   by fastforce
 
 lemma [simp]: "NO_MATCH (a::'a) (1::'a::one) \<Longrightarrow> i \<noteq> k \<Longrightarrow> f(i := a, k := 1) = f(k := 1, i := a)"
   using fun_upd_twist .
-
-
-
-
-definition "dom1 f = {x. f x \<noteq> 1}"
-
-lemma dom1_1[simp]: "dom1 1 = {}"
-  unfolding dom1_def by simp
-
-lemma dom1_upd[simp]: "dom1 (f(x:=y)) = (if y = 1 then dom1 f - {x} else insert x (dom1 f))"
-  unfolding dom1_def by auto
-
-
-lemma "dom1 f = dom f"
-  by (metis dom1_def dom_def one_option_def)
-
-lemma one_updt_one[simp]: "1(a:=1) = 1" unfolding one_fun_def fun_upd_def by simp
-
-lemma [simp]: "x \<noteq> 1 \<Longrightarrow> f(k:=x) \<noteq> 1"
-  unfolding one_fun_def fun_upd_def fun_eq_iff by simp blast
-
-lemma [simp]: "1 o f = 1"
-  unfolding one_fun_def fun_eq_iff by simp
-
-lemma finite_dom1_mult1[simp]:
-  "finite (dom1 (f * 1(k:=v))) \<longleftrightarrow> finite (dom1 f)"
-  for f :: "'a \<Rightarrow> 'b :: comm_monoid_mult"
-proof -
-  have "dom1 (f * 1(k:=v)) = dom1 f \<or> dom1 (f * 1(k:=v)) = insert k (dom1 f)
-    \<or> dom1 (f * 1(k:=v)) = dom1 f - {k}"
-  for f :: "'a \<Rightarrow> 'b :: comm_monoid_mult"
-  unfolding dom1_def times_fun_def fun_upd_def set_eq_iff by simp
-  then show ?thesis
-    by (metis finite_Diff finite_insert infinite_remove)
-qed
 
 
 
@@ -442,6 +431,10 @@ instance by (standard; simp add: share_fun_def fun_eq_iff share_share)
 end
 
 instantiation "fun" :: (type,share_one) share_one begin
+instance by (standard; simp add: share_fun_def fun_eq_iff)
+end
+
+instantiation "fun" :: (type,share_one_eq_one_iff) share_one_eq_one_iff begin
 instance by (standard; simp add: share_fun_def fun_eq_iff)
 end
 
@@ -523,6 +516,9 @@ end
 lemma set_mult_zero[simp]: "{} * S = {}" "S * {} = {}"
   unfolding times_set_def by simp_all
 
+lemma set_mult_single: \<open>{A} * {B} = {A * B}\<close>
+  unfolding times_set_def set_eq_iff by simp
+
 lemma set_mult_expn[\<phi>expns]:
   \<open>uv \<in> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<in> S \<and> v \<in> T)\<close>
   unfolding times_set_def by simp
@@ -559,10 +555,63 @@ end
 
 subsubsection \<open>Partial Map\<close>
 
-lemma "f ## g \<longleftrightarrow> dom f \<inter> dom g = {}" for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
+lemma sep_disj_partial_map_disjoint:
+  "f ## g \<longleftrightarrow> dom f \<inter> dom g = {}"
+  for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
   unfolding sep_disj_fun_def sep_disj_option_def disjoint_iff
   by (metis (no_types, lifting) domIff nonsepable_disj option.case_eq_if)
 
+lemma sep_disj_partial_map_some_none:
+  \<open>f ## g \<Longrightarrow> g k = Some v \<Longrightarrow> f k = None\<close>
+  for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
+  using disjoint_iff sep_disj_partial_map_disjoint by fastforce
+
+lemma times_fun_map_add_right:
+  \<open>dom f \<inter> dom h = {} \<Longrightarrow> (f * g) ++ h = f * (g ++ h)\<close>
+  unfolding times_fun_def fun_eq_iff map_add_def
+  by (metis Int_iff domIff emptyE option.simps(4) times_option(3))
+
+paragraph \<open>dom1: Domain except one\<close>
+
+definition "dom1 f = {x. f x \<noteq> 1}"
+
+lemma dom1_1[simp]: "dom1 1 = {}"
+  unfolding dom1_def by simp
+
+lemma dom_1[simp]: "dom 1 = {}"
+  by (simp add: one_fun_def)
+
+lemma dom1_upd[simp]: "dom1 (f(x:=y)) = (if y = 1 then dom1 f - {x} else insert x (dom1 f))"
+  unfolding dom1_def by auto
+
+lemma dom1_dom: "dom1 f = dom f"
+  by (metis dom1_def dom_def one_option_def)
+
+lemma one_updt_one[simp]: "1(a:=1) = 1" unfolding one_fun_def fun_upd_def by simp
+
+lemma [simp]: "x \<noteq> 1 \<Longrightarrow> f(k:=x) \<noteq> 1"
+  unfolding one_fun_def fun_upd_def fun_eq_iff by simp blast
+
+lemma [simp]: "1 o f = 1"
+  unfolding one_fun_def fun_eq_iff by simp
+
+lemma finite_dom1_mult1[simp]:
+  "finite (dom1 (f * 1(k:=v))) \<longleftrightarrow> finite (dom1 f)"
+  for f :: "'a \<Rightarrow> 'b :: comm_monoid_mult"
+proof -
+  have "dom1 (f * 1(k:=v)) = dom1 f \<or> dom1 (f * 1(k:=v)) = insert k (dom1 f)
+    \<or> dom1 (f * 1(k:=v)) = dom1 f - {k}"
+  for f :: "'a \<Rightarrow> 'b :: comm_monoid_mult"
+  unfolding dom1_def times_fun_def fun_upd_def set_eq_iff by simp
+  then show ?thesis
+    by (metis finite_Diff finite_insert infinite_remove)
+qed
+
+lemma dom1_disjoint_sep_disj:
+  \<open>dom1 g \<inter> dom1 f = {} \<Longrightarrow> g ## f\<close>
+  for f :: \<open>'a \<Rightarrow> 'b::sep_disj_one\<close>
+  unfolding sep_disj_fun_def dom1_def set_eq_iff
+  by simp (metis sep_disj_one sep_disj_one')
 
 
 subsubsection \<open>Partiality\<close>
@@ -611,7 +660,9 @@ instance by (standard, simp add: one_fine_def times_fine_def split: fine.split)
 end
 
 instantiation fine :: (cancl_sep_ab_semigroup) ab_semigroup_mult begin
-instance apply (standard; case_tac a; simp; case_tac b; simp; case_tac c; simp)
+instance apply (standard; case_tac a; simp add: sep_disj_commute sep_mult_commute;
+                          case_tac b; simp add: sep_disj_commute sep_mult_commute;
+                          case_tac c; simp)
   by (metis sep_disj_commuteI sep_disj_multD1 sep_disj_multI1 sep_mult_assoc sep_mult_commute)
 end
 
@@ -619,11 +670,17 @@ instantiation fine :: (sep_algebra) comm_monoid_mult begin
 instance by standard (case_tac a; simp add: one_fine_def)
 end
 
+lemma mult_strip_fine_011:
+  \<open>NO_MATCH (Fine a'') a' \<Longrightarrow>
+   a' * Fine b = Fine c \<longleftrightarrow> (\<exists>a. a' = Fine a \<and> a ## b \<and> a * b = c)\<close>
+  by (cases a'; simp)
 
 
 subsubsection \<open>Fractional SA\<close>
 
-datatype 'a share = Share pos0rat 'a (infix "\<Znrres>" 55)
+datatype 'a share = Share pos0rat (val: 'a) (infix "\<Znrres>" 61)
+
+hide_const (open) val
 
 instantiation share :: (type) cancl_sep_ab_semigroup begin
 
@@ -637,10 +694,10 @@ lemma times_share[simp]:
 
 definition sep_disj_share :: "'a share \<Rightarrow> 'a share \<Rightarrow> bool" where
   "sep_disj_share x' y' \<longleftrightarrow> (case x' of n \<Znrres> x \<Rightarrow>
-    (case y' of m \<Znrres> y \<Rightarrow> x = y))"
+    (case y' of m \<Znrres> y \<Rightarrow> n \<noteq> 0 \<and> m \<noteq> 0 \<and> x = y))"
 
 lemma sep_disj_share[simp]:
-  "(n \<Znrres> x) ## (m \<Znrres> y) \<longleftrightarrow> x = y"
+  "(n \<Znrres> x) ## (m \<Znrres> y) \<longleftrightarrow> n \<noteq> 0 \<and> m \<noteq> 0 \<and> x = y"
   unfolding sep_disj_share_def by simp_all
 
 instance proof
@@ -657,7 +714,6 @@ instance proof
 qed
 end
 
-abbreviation \<open>to_share x \<equiv> Some (Share 1 x)\<close>
 
 instantiation share :: (type) share begin
 definition \<open>share_share n x = (case x of m \<Znrres> x' \<Rightarrow> (n*m) \<Znrres> x')\<close>
@@ -668,11 +724,70 @@ end
 
 instantiation share :: (type) share_semimodule_sep begin
 instance apply (standard; case_tac x)
-    apply (case_tac y, simp, blast)
+    apply (case_tac y, simp add: sep_disj_commute sep_mult_commute, blast)
     apply (simp add: distrib_right)
     apply (simp add: distrib_right)
     by (case_tac y; simp add: distrib_left)
 end
+
+
+paragraph \<open>Convert a function to sharing or back\<close>
+
+abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
+abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
+
+lemma strip_share_Share[simp]:
+  \<open>strip_share (map_option (Share n) x) = x\<close>
+  by (cases x; simp)
+
+lemma strip_share_share_funcomp[simp]:
+  \<open>strip_share o map_option (Share n) = id\<close>
+  \<open>strip_share o (map_option (Share n) o f) = f\<close>
+  by (simp add: fun_eq_iff)+
+
+lemma strip_share_fun_mult:
+ \<open>f ## g \<Longrightarrow> strip_share o (f * g) = (strip_share o f) ++ (strip_share o g)\<close>
+  unfolding fun_eq_iff times_fun map_add_def times_option_def
+        times_share_def comp_def sep_disj_fun_def sep_disj_share_def sep_disj_option_def
+  by (auto split: option.split share.split)
+     (metis option.simps(5) sep_disj_share sep_disj_share_def)
+
+lemma strip_share_share[simp]:
+  \<open>n \<noteq> 0 \<Longrightarrow> strip_share (share n x) = strip_share x\<close>
+  by (cases x; simp; case_tac a; simp)
+
+lemma strip_share_fun_share[simp]:
+  \<open>n \<noteq> 0 \<Longrightarrow> strip_share o share n f = strip_share o f\<close>
+  unfolding fun_eq_iff share_fun_def by simp
+
+
+interpretation to_share_homo_one: homo_one to_share
+  by standard simp
+
+lemma to_share_eq_1_iff[simp]:
+  \<open>to_share x = 1 \<longleftrightarrow> x = 1\<close> by simp
+
+lemma to_share_funcomp_eq_1_iff[simp]:
+  \<open>to_share o f = 1 \<longleftrightarrow> f = 1\<close> by (simp add: fun_eq_iff)
+
+lemma to_share_total_disjoint:
+  \<open>g ## (to_share o h) \<Longrightarrow>
+  to_share o f = g * (to_share o h) \<Longrightarrow> dom g \<inter> dom (to_share o h) = {}\<close>
+  unfolding fun_eq_iff times_fun times_share_def times_option_def
+      sep_disj_fun_def sep_disj_option_def sep_disj_share_def
+  apply auto
+  subgoal premises prems for x y z
+    using prems(1)[THEN spec[where x = x]]
+          prems(2)[THEN spec[where x = x]]
+          prems(3,4)
+    by (cases y, auto)
+  done
+
+lemma to_share_funcomp_map_add:
+  \<open>to_share o (f ++ g) = (to_share o f) ++ (to_share o g)\<close>
+  unfolding fun_eq_iff map_add_def by (auto split: option.split)
+
+
 
 subsection \<open>Fictional Algebra\<close>
 
@@ -684,7 +799,7 @@ definition Fictional :: "('a::one \<Rightarrow> 'b::one set) \<Rightarrow> bool"
 typedef (overloaded) ('a::one,'b::one) fiction
     = \<open>Collect (Fictional :: ('a \<Rightarrow> 'b set) \<Rightarrow> bool)\<close>
   morphisms \<I> Fiction
-  by (rule exI[where x = \<open>\<lambda>_. 1\<close>]) (simp add: Fictional_def)
+  by (rule exI[where x = \<open>\<lambda>_. 1\<close>]) (simp add:sep_mult_commute Fictional_def)
 
 lemmas Fiction_inverse[simp] = Fiction_inverse[simplified]
 
@@ -723,6 +838,13 @@ lemma pointwise_\<I>[simp]:
   "\<I> (pointwise I) = (\<lambda>f. {g. \<forall>x. g x \<in> \<I> I (f x) })"
   unfolding pointwise_def
   by (rule Fiction_inverse) (auto simp add: Fictional_def one_fun_def fun_eq_iff)
+
+definition "pointwise' I = Fiction (\<lambda>f. {g. \<forall>x. g x \<in> \<I> (I x) (f x) })"
+lemma pointwise'_\<I>[simp]:
+  "\<I> (pointwise' I) = (\<lambda>f. {g. \<forall>x. g x \<in> \<I> (I x) (f x) })"
+  unfolding pointwise'_def
+  by (rule Fiction_inverse) (auto simp add: Fictional_def one_fun_def fun_eq_iff)
+
 
 
 paragraph \<open>Pair\<close>
@@ -777,7 +899,7 @@ paragraph \<open>Share by Fractional Ownership\<close>
 
 
 lemmas [simp] = fiction.fun_\<I> fiction.fun'_\<I> fiction.option_\<I> fiction.fine_\<I>
-  fiction.it'_def fiction.it_\<I>
+  fiction.it'_def fiction.it_\<I> fiction.defined_\<I> fiction.pointwise'_\<I>
 
 lemma [simp]: "\<I> (fiction.fun I) (1(k:=v)) = \<I> I v" by simp
 
@@ -786,6 +908,11 @@ definition "fiction_share s = (case s of w \<Znrres> v \<Rightarrow> if w = 1 th
 
 lemma fiction_share_\<I>[simp]: "fiction_share (w \<Znrres> v) = (if w = 1 then {v} else {})"
   unfolding fiction_share_def by simp
+
+lemma In_ficion_fine [simp]:
+  \<open>x \<in> (case some_fine of Fine y \<Rightarrow> f y | Undef \<Rightarrow> {})
+        \<longleftrightarrow> (\<exists>y. some_fine = Fine y \<and> x \<in> f y)\<close>
+  by (cases some_fine; simp)
 
 
 subsection \<open>Extensible Locales\<close>
@@ -801,6 +928,8 @@ locale project_inject =
   inj: homo_mult \<open>Entry.inject entry\<close> + prj: homo_mult \<open>Entry.project entry\<close>
   for entry :: "('NAME, 'REP::comm_monoid_mult, 'T::comm_monoid_mult) Entry"
 + assumes proj_inj[simp]: "Entry.project entry (Entry.inject entry x) = x"
+    and   mult_in_dom:    \<open>a * b = Entry.inject entry c \<longleftrightarrow>
+                           (\<exists>a' b'. a = Entry.inject entry a' \<and> b = Entry.inject entry b' \<and> a' * b' = c)\<close>
 begin
 
 abbreviation "name \<equiv> Entry.name entry"
@@ -809,6 +938,28 @@ abbreviation "project \<equiv> Entry.project entry"
 abbreviation "clean f \<equiv> f(name := 1)"
 abbreviation "get f \<equiv> project (f name)"
 abbreviation "updt g f \<equiv> f(name := inject (g (get f)))"
+abbreviation "mk x \<equiv> 1(name := inject x)"
+
+lemma inject_inj[simp]:
+  \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
+  by (metis proj_inj)
+  
+lemma mk_homo_one[simp]: \<open>mk x = 1 \<longleftrightarrow> x = 1\<close>
+  by (metis fun_1upd1 fun_upd_eqD inj.homo_one proj_inj)
+lemma mk_homo_mult: \<open>mk (a * b) = mk a * mk b\<close> by (simp add: inj.homo_mult fun_1upd_homo)
+
+lemma inj_homo_one[simp]: \<open>inject x = 1 \<longleftrightarrow> x = 1\<close>
+  by (metis inj.homo_one proj_inj)
+
+lemmas proj_homo_one  = prj.homo_one
+lemmas proj_homo_mult = prj.homo_mult
+lemmas inj_homo_mult = inj.homo_mult
+
+lemmas split = fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP]
+
+lemma mult_strip_inject_011: \<open>NO_MATCH (inject a'') a' \<Longrightarrow>
+  a' * inject b = inject c \<longleftrightarrow> (\<exists>a. a' = inject a \<and> a * b = c)\<close>
+  by (metis mult_in_dom proj_inj)
 
 end
 
@@ -855,8 +1006,6 @@ locale fictional_project_inject =
     and interpret_reduct[simp]: "\<I> (INTERPRET (Entry.name entry)) = \<I> I o Entry.project entry"
 begin
 
-abbreviation "m x \<equiv> 1(name := inject x)"
-
 lemmas inj_homo_mult[simp] = inj.homo_mult[symmetric]
 lemmas inj_homo_one = inj.homo_one
 lemmas prj_homo_mult[simp] = prj.homo_mult
@@ -866,12 +1015,8 @@ lemmas prj_homo_one = prj.homo_one
 lemma [simp]: "R * inject x * inject y = R * inject (x * y)"
   by (simp add: mult.assoc) 
 
-lemma m_homo[simp]: "m x * m y = m (x * y)" by simp
-lemma m_1[simp]: "m 1 = 1" by simp
-lemma interp_m[simp]: "\<I> INTERP (m x) = \<I> I x"
-  unfolding INTERP_def by simp (metis Fiction_one prj_homo_one proj_inj)
-
-lemmas split = fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP]
+lemma interp_m[simp]: "\<I> INTERP (mk x) = \<I> I x"
+  unfolding INTERP_def by (simp add: sep_disj_commute sep_mult_commute)
 
 lemma interp_split:
   "Fic_Space f \<Longrightarrow>
@@ -879,13 +1024,18 @@ lemma interp_split:
   unfolding INTERP_def Fic_Space_def
   by (subst fiction.fun'_split[where ?f = f and ?k = name]) simp_all
 
-lemma Fic_Space_m[simp]: "Fic_Space (m x)"
+lemma interp_split':
+  "NO_MATCH (clean f') f \<Longrightarrow> Fic_Space f \<Longrightarrow>
+    \<I> INTERP f = \<I> INTERP (clean f) * \<I> I (project (f name))"
+  using interp_split .
+
+lemma Fic_Space_m[simp]: "Fic_Space (mk x)"
   unfolding Fic_Space_def by simp
 
 lemma Fic_Space_mc[simp]: "Fic_Space (clean f) \<longleftrightarrow> Fic_Space f"
   unfolding Fic_Space_def by simp
 
-lemma Fic_Space_mm[simp]: "Fic_Space (f * m x) \<longleftrightarrow> Fic_Space f"
+lemma Fic_Space_mm[simp]: "Fic_Space (f * mk x) \<longleftrightarrow> Fic_Space f"
   unfolding Fic_Space_def finite_dom1_mult1 times_fun by simp
 
 end

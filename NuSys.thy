@@ -48,6 +48,7 @@ abbrevs
   and "<premcollect>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t"
   and "<conv>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v"
   and ">->" = "\<Zinj>"
+  and "<;>" = "\<Zcomp>"
 begin
 
 section \<open>Prelude of the Prelude\<close>
@@ -166,8 +167,8 @@ text \<open>
 \<close>
 
 lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
-lemma Premise_E: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma [elim!,\<phi>elim]: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
+lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
+lemma Premise_E[elim!,\<phi>elim]: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
 lemma Premise_Irew: "(P \<Longrightarrow> C) \<equiv> Trueprop (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> C)" unfolding Premise_def atomize_imp .
 
@@ -525,6 +526,7 @@ datatype ('a, 'b) object (infixr "\<Zinj>" 60) = object (key_of_obj: 'a) (val_of
 adhoc_overloading key_of key_of_obj and val_of val_of_obj
 declare object.split[split]
 
+
 lemma object_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>a x. P (a \<Zinj> x))" by (metis object.exhaust)
 lemma object_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>a x. P (a \<Zinj> x))" by (metis object.exhaust)
 lemma object_All[lrep_exps]: "(\<And>x. PROP P x) \<equiv> (\<And>a b. PROP P (a \<Zinj> b))" 
@@ -536,8 +538,7 @@ qed
 
 section \<open>Elementary \<phi>-Types\<close>
 
-subsection \<open>Separation Conjecture on Pure Heap\<close>
-
+subsection \<open>Prod\<close>
 
 definition \<phi>Prod :: " ('concrete::times, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 70)
   where "A \<^emph> B = (\<lambda>(a,b). A a * B b)"
@@ -699,7 +700,26 @@ subsection \<open>Identity\<close>
 
 definition Identity :: " ('a,'a) \<phi> " where "Identity x = {x}"
 
-lemma [simp]: "p \<in> (x \<Ztypecolon> Identity) \<longleftrightarrow> p = x" unfolding \<phi>Type_def Identity_def by auto
+lemma Identity_expn[\<phi>expns]:
+  "p \<in> (x \<Ztypecolon> Identity) \<longleftrightarrow> p = x"
+  unfolding \<phi>Type_def Identity_def by auto
+
+lemma Identity_inhabited[elim!,\<phi>elim]:
+  \<open>Inhabited (x \<Ztypecolon> Identity) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
+
+subsection \<open>Stepwise Abstraction\<close>
+
+definition \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 75)
+  where \<open>\<phi>Composition T U = (\<lambda>x. (y \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j y. y \<in> U x))\<close>
+
+lemma \<phi>Composition_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>
+  unfolding \<phi>Composition_def \<phi>Type_def by (simp add: \<phi>expns)
+
+lemma \<phi>Composition_inhabited[elim,\<phi>elim]:
+  \<open>Inhabited (x \<Ztypecolon> T \<Zcomp> U) \<Longrightarrow> (\<And>y. Inhabited (x \<Ztypecolon> U) \<Longrightarrow> Inhabited (y \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
 
 subsection \<open>Refinement\<close>
@@ -2260,7 +2280,7 @@ subsection \<open>Simplifiers & Resonings\<close>
 \<phi>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P\<close>
 \<open>fn ctx => fn sequent => Scan.succeed (fn _ =>
   let
-    val de_premise = perhaps (try (fn th => th RS @{thm Premise_E}))
+    val de_premise = perhaps (try (fn th => th RS @{thm Premise_D}))
     val facts = Proof_Context.get_thms ctx "\<phi>lemmata"
     val ctx = Proof_Context.put_thms true ("\<phi>lemmata",
         SOME (de_premise (sequent RS @{thm conjunct2}) :: facts) ) ctx
@@ -2391,8 +2411,14 @@ context std begin
 lemma \<phi>M_assert: \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_assert P \<lbrace> X \<longmapsto> X \<rbrace>\<close>
   unfolding \<phi>Procedure_def \<phi>M_assert_def by (auto simp add: \<phi>expns Inhabited_def)
 
+lemma \<phi>M_assert': \<open>P \<Longrightarrow> Q (F args) \<Longrightarrow> Q ((\<phi>M_assert P \<ggreater> F) args)\<close>
+  unfolding \<phi>M_assert_def instr_comp_def bind_def by simp
+
 lemma \<phi>M_assume: \<open>(P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def \<phi>M_assume_def instr_comp_def bind_def by force
+
+lemma \<phi>M_tail_left: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
+lemma \<phi>M_tail_right: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> 1 \<heavy_comma> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
 
 lemma \<phi>M_get_Val: \<open>(\<And>v. v \<in> A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> X \<longmapsto> Y \<rbrace> ) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_Val F \<lbrace> X\<heavy_comma> VAL A \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def \<phi>M_get_Val_def by (auto simp add: \<phi>expns) blast

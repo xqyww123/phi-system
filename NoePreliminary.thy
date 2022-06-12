@@ -33,10 +33,25 @@ lemma pred_option1[simp]:
   \<open>\<not>pred_option1 P None\<close>
   unfolding pred_option1_def by simp_all
 
-locale homo_mult =
-  fixes \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
-  assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
-    and homo_one[simp]: "\<phi> 1 = 1"
+definition \<open>S_Assert P = (if P then UNIV else {})\<close>
+
+lemma In_S_Assert[simp]:
+  \<open>x \<in> S_Assert P \<longleftrightarrow> P\<close>
+  unfolding S_Assert_def by simp
+
+lemma fold_tail:
+  \<open>fold f (l @ [x]) = f x o fold f l\<close>
+  by (induct l; simp)
+
+
+locale homo_one =
+  fixes \<phi> :: " 'a::one \<Rightarrow> 'b::one "
+  assumes homo_one[simp]: "\<phi> 1 = 1"
+
+locale homo_mult = homo_one \<phi>
+  for \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
++ assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
+
 
 definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
 

@@ -71,7 +71,7 @@ val eof_ctx_stack_name = "NuPrime.End_of_Contextual_Stack"
 fun mk_eof_ctx_stack tm = Const(eof_ctx_stack_name, dummyT) $ tm
 val mk_register_collection = I
 val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
-      if can dest_premise_tag (concl_of th) then th RS @{thm Premise_E} else th)]
+      if can dest_premise_tag (concl_of th) then th RS @{thm Premise_D} else th)]
 (* fun mk_register_collection tm = Const(@{const_name RegisterCollection},
 * dummyT) $ tm *)
 
@@ -135,7 +135,7 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
     fun prep_precond (Premise, c) =
           prep_attrterm (mk_monop @{const_abbrev Normal_Premise}) c
             |> apfst (apsnd (fn attrs =>
-                  @{attributes [TRY_THEN Premise_E, useful]} @ attrs))
+                  @{attributes [TRY_THEN Premise_D, useful]} @ attrs))
       | prep_precond (Requirement, c) =
           prep_attrterm I c
     val preconds = map prep_precond raw_preconds

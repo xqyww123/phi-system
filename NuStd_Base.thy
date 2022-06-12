@@ -583,13 +583,17 @@ theorem op_equal[\<phi>overload =]:
 subsubsection \<open>Integer\<close>
 
 theorem add_nat_\<phi>app[\<phi>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^LENGTH('b::len) \<longrightarrow>
-    \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add TYPE('b) \<lbrace> x \<tycolon> \<nat>['b] \<heavy_comma> y \<tycolon> \<nat>['b] \<longmapsto> x + y \<tycolon> \<nat>['b] \<rbrace>"
-  unfolding op_add_def Procedure_def by (auto simp add: of_nat_inverse nu_exps)
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b \<longrightarrow>
+    \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b \<lbrace> x \<Ztypecolon> \<nat>[b] \<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x + y \<Ztypecolon> \<nat>[b] \<rbrace>"
+  unfolding op_add_def by (rule, elim Premise_E, rule \<phi>M_getV, simp add: \<phi>expns,
+      rule \<phi>M_tail_left, rule \<phi>M_getV, simp add: \<phi>expns, rule \<phi>M_tail_right,
+      rule \<phi>M_put_Val, simp add: \<phi>expns)
 
 theorem add_nat_round[\<phi>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add TYPE('b) \<lbrace> x \<tycolon> \<nat>\<^sup>r['b::len] \<heavy_comma> y \<tycolon> \<nat>\<^sup>r['b] \<longmapsto> (x + y) \<tycolon> \<nat>\<^sup>r['b] \<rbrace>"
-  unfolding op_add_def Procedure_def by (auto simp add: nu_exps)
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b \<lbrace> x \<Ztypecolon> \<nat>\<^sup>r[b] \<heavy_comma> y \<Ztypecolon> \<nat>\<^sup>r[b] \<longmapsto> (x + y) \<Ztypecolon> \<nat>\<^sup>r[b] \<rbrace>"
+  unfolding op_add_def by (rule \<phi>M_getV, simp_all add: \<phi>expns,
+      rule \<phi>M_tail_left, rule \<phi>M_getV, simp_all add: \<phi>expns,
+      rule \<phi>M_tail_right, rule \<phi>M_put_Val, simp add: \<phi>expns) presburger
 
 theorem sub_nat_\<phi>app[\<phi>overload -]:
     "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x \<longrightarrow>

@@ -77,6 +77,30 @@ instance ..
 end
 
 
+lemma infinite_UNIV_int [simp]: "\<not> finite (UNIV::int set)"
+proof
+  assume "finite (UNIV::int set)"
+  moreover have "inj (\<lambda>i::int. 2 * i)"
+    by (rule injI) simp
+  ultimately have "surj (\<lambda>i::int. 2 * i)"
+    by (rule finite_UNIV_inj_surj)
+  thm finite_UNIV_inj_surj
+  then obtain i :: int where "1 = 2 * i" by (rule surjE)
+  then show False by (simp add: pos_zmult_eq_1_iff)
+qed
+
+lemma segidx_infinite[simp]:
+  \<open>infinite (UNIV :: 'a segidx set)\<close>
+  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>(UNIV :: 'a segidx set)\<close>
+        and f = \<open>\<lambda>n. Segment n undefined\<close>]
+  by (meson infinite_UNIV_char_0 injI segidx.inject top_greatest)
+
+lemma segidx_infinite_TY:
+  \<open>infinite {a. segidx.layout a = TY}\<close>
+  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>{a. segidx.layout a = TY}\<close>
+        and f = \<open>\<lambda>n. Segment n TY\<close>]
+  using inj_def by fastforce
+
 
 abbreviation shift_addr :: "'TY logaddr \<Rightarrow> nat \<Rightarrow> 'TY logaddr" (infixl "||+" 60)
   where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) id addr"
@@ -110,19 +134,13 @@ type_synonym 'v opstack = "'v list"
 type_synonym varname = nat
 type_synonym ('TY,'VAL) R_mem' = \<open>('TY segidx \<rightharpoonup> 'VAL)\<close>
 type_synonym ('TY,'VAL) R_mem = \<open>('TY,'VAL) R_mem' ?\<close>
-type_synonym ('TY,'VAL) R_var = \<open>(string \<rightharpoonup> 'VAL) ?\<close>
+type_synonym ('TY,'VAL) R_var = \<open>(varname \<rightharpoonup> 'VAL) ?\<close>
 
 resource_space ('VAL::nonsepable_semigroup,'TY) std_res =
   R_mem :: \<open>('TY,'VAL) R_mem\<close>
   R_var :: \<open>('TY,'VAL) R_var\<close>
 
 paragraph \<open>Valid Memory\<close>
-
-definition Available_Segments :: "('TY,'VAL) R_mem' \<Rightarrow> 'TY segidx set"
-  where "Available_Segments heap = {seg. heap seg = None}"
-
-definition Valid_Mem :: "('TY,'VAL) R_mem set"
-  where "Valid_Mem = { Fine h |h. infinite (Available_Segments h) }"
 
 (* lemma 
   assumes A: "h \<in> Valid_Mem"
@@ -174,6 +192,10 @@ locale std_sem_pre =
   for TY_CONS_OF and VAL_CONS_OF
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL) \<times> ('RES_N => 'RES)) itself\<close>
 
+  fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
+    and Typeof :: \<open>'VAL \<Rightarrow> 'TY\<close>
+  assumes WT_Typeof[simp]: \<open>v \<in> Well_Type T \<Longrightarrow> Typeof v = T\<close>
+
   assumes V_tup_mult: \<open>V_tup.mk t1 * V_tup.mk t2 = V_tup.mk (t1 @ t2)\<close>
   fixes MemObj_Size :: \<open>'TY \<Rightarrow> nat\<close> \<comment> \<open>in size of bytes\<close>
     and valid_idx_step :: \<open>'TY \<Rightarrow> nat \<Rightarrow> bool\<close>
@@ -191,8 +213,18 @@ locale std_sem_pre =
     and   idx_step_type_arr  : \<open>i < N \<Longrightarrow> idx_step_type i (\<tau>Array N T) = T\<close>
     and   valid_idx_step_tup : \<open>valid_idx_step (\<tau>Tuple tys) i \<longleftrightarrow> i < length tys\<close>
     and   valid_idx_step_arr : \<open>valid_idx_step (\<tau>Array N T) i \<longleftrightarrow> i < N\<close>
+    and   idx_step_value_type: \<open>valid_idx_step (Typeof v) i \<Longrightarrow> Typeof (idx_step_value i v) = idx_step_type i (Typeof v)\<close>
+    and   idx_step_value_welltyp: \<open>valid_idx_step T i \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> idx_step_value i v \<in> Well_Type (idx_step_type i T)\<close>
     and   idx_step_value_tup : \<open>idx_step_value i (V_tup.mk vs)   = vs!i\<close>
     and   idx_step_value_arr : \<open>idx_step_value i (V_array.mk (T,vs)) = vs!i\<close>
+    and   idx_step_mod_value : \<open>valid_idx_step (Typeof v) i
+                            \<Longrightarrow> valid_idx_step (Typeof v) j
+                            \<Longrightarrow> idx_step_value i (idx_step_mod_value j f v) =
+                                  (if i = j then f (idx_step_value j v) else idx_step_value i v) \<close>
+    and   idx_step_mod_value_welltyp: \<open>valid_idx_step T i
+                                   \<Longrightarrow> v \<in> Well_Type T
+                                   \<Longrightarrow> f (idx_step_value i v) \<in> Well_Type (idx_step_type i T)
+                                   \<Longrightarrow> idx_step_mod_value i f v \<in> Well_Type T\<close>
     and   idx_step_mod_value_tup : \<open>idx_step_mod_value i f (V_tup.mk vs) = V_tup.mk (vs[i := f (vs!i)])\<close>
     and   idx_step_mod_value_arr : \<open>idx_step_mod_value i f (V_array.mk (T,vs)) = V_array.mk (T,vs[i := f (vs!i)])\<close>
     and   idx_step_offset_arr: \<open>idx_step_offset (\<tau>Array N T) i = i * MemObj_Size T\<close>
@@ -207,8 +239,6 @@ locale std_sem_pre =
           tuple and array are so special ...One thing: we do not support arbitrary-length array like [0 x nat] in LLVM? TODO \<close>
 begin
 
-paragraph \<open>Memory & Address\<close>
-
 abbreviation \<open>type_storable_in_mem T \<equiv> MemObj_Size T < 2^addrspace_bits\<close>
 
 definition \<open>Valid_Segment seg = (
@@ -219,29 +249,80 @@ definition \<open>Valid_Segment seg = (
 lemma Valid_Segment_zero[simp]: \<open>Valid_Segment 0\<close>
   unfolding Valid_Segment_def zero_segidx_def by simp
 
+definition Valid_Mem :: "('TY,'VAL) R_mem set"
+  where "Valid_Mem = { Fine h |h. finite (dom h)
+                                \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` Well_Type (segidx.layout seg))}"
 
-abbreviation \<open>index_value \<equiv> foldr idx_step_value\<close>
-abbreviation \<open>index_type  \<equiv> foldr idx_step_type\<close>
+lemma Valid_Mem_1[simp]: \<open>1 \<in> Valid_Mem\<close>
+  unfolding Valid_Mem_def one_fun_def one_fine_def by simp
+
+lemma Mem_freshness:
+  \<open>finite (dom f) \<Longrightarrow> \<exists>k. f k = None \<and> segidx.layout k = TY\<close>
+  unfolding dom_def
+  by (smt (verit, del_insts) Collect_mono finite_Collect_disjI finite_subset segidx_infinite_TY)
+  
+
+abbreviation \<open>index_value \<equiv> fold idx_step_value\<close>
+abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>
 abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close>
 
 primrec valid_index :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> bool\<close>
   where \<open>valid_index T [] \<longleftrightarrow> True\<close>
-      | \<open>valid_index T (i#idx) \<longleftrightarrow> valid_index T idx \<and> valid_idx_step (index_type idx T) i\<close>
+      | \<open>valid_index T (i#idx) \<longleftrightarrow> valid_idx_step T i \<and> valid_index (idx_step_type i T) idx\<close>
+
+lemma valid_index_tail[simp]:
+  \<open>valid_index T (idx@[i]) \<longleftrightarrow> valid_index T idx \<and> valid_idx_step (index_type idx T) i\<close>
+  by (induct idx arbitrary: T; simp)
 
 lemma index_type_measure:
   \<open>valid_index T idx \<Longrightarrow> idx \<noteq> [] \<Longrightarrow> type_measure (index_type idx T) < type_measure T\<close>
-  apply (induct idx; simp)
-  by (metis foldr.simps(1) id_apply order_less_trans std_sem_pre.idx_step_type_measure std_sem_pre_axioms)
+  apply (induct idx arbitrary: T; simp)
+  by (metis dual_order.strict_trans fold_simps(1) idx_step_type_measure)
 
-lemma valid_index_cat: \<open>valid_index T (a@b) \<Longrightarrow> valid_index T b \<and> valid_index (index_type b T) a\<close>
-  by (induct a arbitrary: b; simp)
+lemma valid_index_cat: \<open>valid_index T (a@b) \<Longrightarrow> valid_index T a \<and> valid_index (index_type a T) b\<close>
+  by (induct a arbitrary: T; simp)
 
-lemma valid_index_cons: \<open>valid_index T (a#b) \<Longrightarrow> valid_index T b \<and> valid_idx_step (index_type b T) a\<close>
-  using valid_index_cat[where a = \<open>[a]\<close>, simplified] by simp
+lemma valid_index_cons: \<open>valid_index T [i] \<longleftrightarrow> valid_idx_step T i\<close> by simp
+
+lemma index_value_type:
+  \<open>valid_index (Typeof v) idx \<Longrightarrow> Typeof (index_value idx v) = index_type idx (Typeof v)\<close>
+  by (induct idx arbitrary: v; simp add: idx_step_value_type)
+
+lemma index_value_welltyp:
+  \<open>valid_index T idx \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> index_value idx v \<in> Well_Type (index_type idx T)\<close>
+  apply (induct idx arbitrary: v T; simp)
+  using idx_step_value_welltyp
+  by blast
+
+lemma index_mod_value_welltyp:
+   \<open>valid_index T idx
+\<Longrightarrow> v \<in> Well_Type T
+\<Longrightarrow> f (index_value idx v) \<in> Well_Type (index_type idx T)
+\<Longrightarrow> index_mod_value idx f v \<in> Well_Type T\<close>
+  apply (induct idx arbitrary: T v; simp)
+  using idx_step_mod_value_welltyp idx_step_value_welltyp by blast
+
+
+lemma
+  \<open> valid_index (Typeof v) idx
+\<Longrightarrow> Typeof u = index_type idx (Typeof v)
+\<Longrightarrow> Typeof (index_mod_value idx (\<lambda>_. u) v) = Typeof v\<close>
+  apply (induct idx arbitrary: u v; auto simp add: idx_step_value_type[symmetric])
+  using idx_step_mod_value
+
+
 
 primrec index_offset :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> nat\<close>
   where \<open>index_offset T [] = 0\<close>
-      | \<open>index_offset T (i#idx) = index_offset T idx + idx_step_offset (index_type idx T) i\<close>
+      | \<open>index_offset T (i#idx) = idx_step_offset T i + index_offset (idx_step_type i T) idx\<close>
+
+lemma index_offset_tail[simp]:
+  \<open>index_offset T (idx@[i]) = index_offset T idx + idx_step_offset (index_type idx T) i\<close>
+  by (induct idx arbitrary: T; simp)
+
+
+f
+paragraph \<open>Address & Pointer\<close>
 
 abbreviation valid_rawaddr :: \<open>'TY rawaddr \<Rightarrow> bool\<close>
   where \<open>valid_rawaddr addr \<equiv> Valid_Segment (memaddr.segment addr)\<close>
@@ -262,11 +343,13 @@ abbreviation logaddr_type :: \<open>'TY logaddr \<Rightarrow> 'TY\<close>
   where \<open>logaddr_type addr \<equiv> index_type (memaddr.index addr) (segidx.layout (memaddr.segment addr))\<close>
 
 lemma MemObj_Size_LE_idx:
-  \<open>valid_index T (r@idx) \<Longrightarrow> MemObj_Size (index_type (r@idx) T) \<le> MemObj_Size (index_type idx T)\<close>
-  apply (induct r arbitrary: T idx; simp)
-  by (meson dual_order.trans memobj_size_step)
+  \<open>valid_index T (base@idx) \<Longrightarrow> MemObj_Size (index_type (base@idx) T) \<le> MemObj_Size (index_type base T)\<close>
+  apply (induct base arbitrary: T idx; simp)
+  subgoal for T idx apply (induct idx arbitrary: T; simp)
+    using memobj_size_step order.trans by blast
+  done
 
-lemmas MemObj_Size_LE_idx_0 = MemObj_Size_LE_idx[where idx = "[]", simplified]
+lemmas MemObj_Size_LE_idx_0 = MemObj_Size_LE_idx[where base = "[]", simplified]
 
 lemma index_type_type_storable_in_mem:
   \<open>type_storable_in_mem T \<Longrightarrow> valid_index T idx \<Longrightarrow> type_storable_in_mem (index_type idx T)\<close>
@@ -289,42 +372,45 @@ lemma valid_logaddr_rawaddr [simp]:
   unfolding valid_logaddr_def by simp 
 
 lemma index_offset_upper_bound:
-  \<open>valid_index T (idx@pre) \<Longrightarrow>
-   index_offset T (idx@pre) + MemObj_Size (index_type (idx@pre) T) \<le> index_offset T pre + MemObj_Size (index_type pre T)\<close>
-  apply (induct idx arbitrary: pre; simp)
+  \<open>valid_index T (base@idx) \<Longrightarrow>
+   index_offset T (base@idx) + MemObj_Size (index_type (base@idx) T) \<le> index_offset T base + MemObj_Size (index_type base T)\<close>
+  apply (induct idx arbitrary: base rule: rev_induct;
+         simp del: append_assoc add: append_assoc[symmetric] fold_tail)
   using idx_step_offset_size by fastforce
 
-lemmas index_offset_upper_bound_0 = index_offset_upper_bound[where pre = "[]", simplified]
+lemmas index_offset_upper_bound_0 = index_offset_upper_bound[where base = "[]", simplified]
 
 lemma index_offset_bound:
-  \<open>valid_index T (idx@pre) \<Longrightarrow>
-  index_offset T pre \<le> index_offset T (idx@pre) \<and> index_offset T (idx@pre) \<le> index_offset T pre + MemObj_Size (index_type pre T)\<close>
-  apply (induct idx arbitrary: pre; simp)
+  \<open>valid_index T (base@idx) \<Longrightarrow>
+  index_offset T base \<le> index_offset T (base@idx) \<and> index_offset T (base@idx) \<le> index_offset T base + MemObj_Size (index_type base T)\<close>
+  apply (induct idx arbitrary: base rule: rev_induct;
+         simp del: append_assoc add: append_assoc[symmetric] fold_tail)
   using idx_step_offset_size index_offset_upper_bound by fastforce
 
 lemma index_offset_bound_strict:
-  \<open>valid_index T (idx@pre) \<Longrightarrow> 0 < MemObj_Size (index_type (idx@pre) T) \<Longrightarrow>
-  index_offset T pre \<le> index_offset T (idx@pre) \<and> index_offset T (idx@pre) < index_offset T pre + MemObj_Size (index_type pre T)\<close>
-  apply (induct idx arbitrary: pre; simp)
+  \<open>valid_index T (base@idx) \<Longrightarrow> 0 < MemObj_Size (index_type (base@idx) T) \<Longrightarrow>
+  index_offset T base \<le> index_offset T (base@idx) \<and> index_offset T (base@idx) < index_offset T base + MemObj_Size (index_type base T)\<close>
+  apply (induct idx arbitrary: base rule: rev_induct;
+         simp del: append_assoc add: append_assoc[symmetric] fold_tail)
   using idx_step_offset_size index_offset_upper_bound by fastforce
 
 lemma index_type_idem:
   \<open>valid_index T idx \<Longrightarrow> index_type idx T = T \<longleftrightarrow> idx = []\<close>
   apply (cases idx; simp; rule)
   using index_type_measure
-  by (metis foldr.simps(1) id_apply idx_step_type_measure order_less_not_sym)
+  by (metis fold_simps(1) idx_step_type_measure order_less_not_sym)
 
 lemma
   assumes prems:
     \<open>valid_index T index1\<close>
     \<open>valid_index T index2\<close>
-    \<open>index_type index1 T = index_type index2 T\<close>
+    \<open>index_type index2 T = index_type index1 T\<close>
     \<open>0 < MemObj_Size (index_type index1 T)\<close>
   shows index_offset_inj:
     \<open>index_offset T index1 = index_offset T index2 \<longrightarrow> index1 = index2\<close>
 proof -
   consider (either_nil) \<open>index1 = [] \<or> index2 = []\<close>
-      | (both_notnil) \<open>index1 \<noteq> [] \<and> index2 \<noteq> []\<close>
+      |   (both_notnil) \<open>index1 \<noteq> [] \<and> index2 \<noteq> []\<close>
       by blast
   then show ?thesis
   proof cases
@@ -360,29 +446,49 @@ proof -
           \<Longrightarrow> \<exists>i. i < length idx1 \<and> i < length idx2 \<and> idx1 ! i \<noteq> idx2 ! i \<and> take i idx1 = take i idx2\<close>
          by (smt (verit, ccfv_threshold))
 
-       note t4 = t3[of \<open>rev index1\<close> \<open>rev index2\<close>, simplified, simplified take_rev rev_is_rev_conv]
+       note t4 = t3[of \<open>index1\<close> \<open>index2\<close>, simplified both_notnil, simplified]
          
 
-      have \<open>\<not>(\<exists>d. d@index1 = index2) \<and> \<not>(\<exists>d. d@index2 = index1)\<close>
-        using index_type_idem
-        by (metis append_self_conv2 foldr_append neq prems valid_index_cat)
-      then have \<open>\<not>(\<exists>d. rev index1 @ d = rev index2) \<and> \<not>(\<exists>d. rev index2 @ d = rev index1)\<close>
-        by (metis rev_append rev_rev_ident)
-      then have \<open>\<exists>pre i1 idx1 i2 idx2. index1 = idx1@i1#pre \<and> index2 = idx2@i2#pre \<and> i1 \<noteq> i2\<close>
+       have \<open>\<not>((\<exists>d. index1@d = index2) \<or> (\<exists>d. index2@d = index1))\<close>
+       proof
+         assume A: \<open>(\<exists>d. index1 @ d = index2) \<or> (\<exists>d. index2 @ d = index1)\<close>
+         then consider (L) \<open>\<exists>d. index1 @ d = index2\<close> |
+                       (R) \<open>(\<exists>d. index2 @ d = index1)\<close> by blast
+         then show False
+         proof cases
+           case L
+           then obtain d where D: \<open>index2 = index1@d\<close> by blast
+           then have \<open>valid_index (index_type index1 T) d\<close> using valid_index_cat prems by blast
+           note index_type_idem[OF this]
+           then have \<open>d = []\<close> using fold_append prems D by fastforce
+           then show False using neq D by blast
+         next
+           case R
+           then obtain d where D: \<open>index1 = index2@d\<close> by blast
+           then have \<open>valid_index (index_type index2 T) d\<close> using valid_index_cat prems by blast
+           note index_type_idem[OF this]
+           then have \<open>d = []\<close> using fold_append prems D by fastforce
+           then show False using neq D by blast
+         qed
+       qed
+      then have \<open>\<exists>base i1 idx1 i2 idx2. index1 = (base@[i1])@idx1 \<and> index2 = (base@[i2])@idx2 \<and> i1 \<noteq> i2\<close>
         using neq both_notnil t4
-        by (metis Suc_diff_Suc Suc_less_eq diff_less_Suc id_take_nth_drop rev_nth)
-      then obtain pre i1 idx1 i2 idx2 where
-        obt: \<open>index1 = idx1@i1#pre \<and> index2 = idx2@i2#pre \<and> i1 \<noteq> i2\<close>
+        by (metis append.assoc append_Cons append_Nil id_take_nth_drop)
+      then obtain base i1 idx1 i2 idx2 where
+        obt: \<open>(base@[i1])@idx1 = index1 \<and> (base@[i2])@idx2 = index2 \<and> i1 \<noteq> i2\<close>
         by blast
 
-      have \<open>valid_index T (idx1@i1#pre) \<Longrightarrow> valid_index T (idx2@i2#pre) \<Longrightarrow> i1 \<noteq> i2 \<Longrightarrow>
-          0 < MemObj_Size (index_type (idx1@i1#pre) T) \<Longrightarrow> 0 < MemObj_Size (index_type (idx2@i2#pre) T) \<Longrightarrow>
-          index_offset T (idx1@i1#pre) \<noteq> index_offset T (idx2@i2#pre)\<close>
-        apply simp
-        using index_offset_bound_strict[where pre = \<open>i1#pre\<close> and idx = idx1, simplified]
-              index_offset_bound_strict[where pre = \<open>i2#pre\<close> and idx = idx2, simplified]
-              idx_step_offset_disj
-        by (smt (verit, ccfv_SIG) ab_semigroup_add_class.add_ac(1) add_less_cancel_left dual_order.strict_trans2 nat_le_linear std_sem_pre.valid_index_cons std_sem_pre_axioms valid_index_cat)
+      have valid_idx_step_i1: \<open>valid_idx_step (index_type base T) i1\<close>
+        using prems valid_index_cat valid_index_cons obt by blast
+      have valid_idx_step_i2: \<open>valid_idx_step (index_type base T) i2\<close>
+        using prems valid_index_cat valid_index_cons obt by blast
+      have \<open>index_offset T index1 \<noteq> index_offset T index2\<close>
+        using index_offset_bound_strict[where base = \<open>base@[i1]\<close> and idx = idx1 and T = T,
+                                        simplified index_offset_tail obt prems fold_tail]
+              index_offset_bound_strict[where base = \<open>base@[i2]\<close> and idx = idx2 and T = T,
+                                        simplified index_offset_tail obt prems fold_tail]
+              idx_step_offset_disj[where T = \<open>index_type base T\<close> and i = i1 and j = i2]
+        by (smt (verit, ccfv_SIG) comp_def group_cancel.add1 idx_step_offset_disj nat_add_left_cancel_less nat_le_linear obt order.strict_trans1 valid_idx_step_i1 valid_idx_step_i2)
       then show ?goal
         using obt prems by presburger
     qed
@@ -402,7 +508,7 @@ lemma logaddr_to_raw_inj:
 
 definition \<open>rawaddr_to_log T raddr = (@laddr. logaddr_to_raw laddr = raddr \<and> logaddr_type laddr = T \<and> valid_logaddr laddr)\<close>
 
-lemma rawaddr_to_log:
+lemma rawaddr_to_log[simp]:
   \<open>valid_logaddr addr \<Longrightarrow> 0 < MemObj_Size (logaddr_type addr)
     \<Longrightarrow> rawaddr_to_log (logaddr_type addr) (logaddr_to_raw addr) = addr\<close>
   unfolding rawaddr_to_log_def
@@ -414,21 +520,18 @@ end
 locale std_sem =
   std_sem_pre where TYPES = TYPES
   for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times> ('RES_N => 'RES::comm_monoid_mult)) itself\<close>
-+ fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
-    and Typeof :: \<open>'VAL \<Rightarrow> 'TY\<close>
-  assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
++ assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
     and   WT_ptr[simp]: \<open>Well_Type \<tau>Pointer     = { V_pointer.mk addr |addr. valid_rawaddr addr }\<close>
     and   WT_tup[simp]: \<open>Well_Type (\<tau>Tuple ts)  = { V_tup.mk vs       |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
     and   WT_arr[simp]: \<open>Well_Type (\<tau>Array n t) = { V_array.mk (t,vs) |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
-    and WT_Typeof[simp]: \<open>v \<in> Well_Type T \<Longrightarrow> Typeof v = T\<close>
-    and Tyof_int[simp]: \<open>Typeof (V_int.mk (b,x)) = \<tau>Int b\<close>
-    and Tyof_ptr[simp]: \<open>Typeof (V_pointer.mk rawaddr) = \<tau>Pointer\<close>
-    and Tyof_tup[simp]: \<open>Typeof (V_tup.mk vs) = \<tau>Tuple (map Typeof vs)\<close>
-    and Tyof_arr[simp]: \<open>Typeof (V_array.mk (t,vs)) = \<tau>Array (length vs) t\<close>
+(*    and Tyof_int[simp]: \<open>Typeof v = \<tau>Int b \<longleftrightarrow> (\<exists>x. v = V_int.mk (b,x))\<close>
+    and Tyof_ptr[simp]: \<open>Typeof v = \<tau>Pointer \<longleftrightarrow> (\<exists>rawaddr. v = V_pointer.mk rawaddr)\<close>
+    and Tyof_tup[simp]: \<open>Typeof v = \<tau>Tuple (map Typeof vs) \<longleftrightarrow> (\<exists>vs. v = V_tup.mk vs)\<close>
+    and Tyof_arr[simp]: \<open>Typeof v = \<tau>Array N t \<longleftrightarrow> (\<exists>vs. v = V_array.mk (t,vs) \<and> length vs = N)\<close> *)
 
   fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES set\<close>
   assumes res_valid_mem: \<open>Resource_Validator R_mem.name = R_mem.inject ` Valid_Mem\<close>
-    and   res_valid_var: \<open>Resource_Validator R_var.name = UNIV\<close>
+    and   res_valid_var: \<open>Resource_Validator R_var.name = {R_var.inject (Fine vars) |vars. finite (dom vars)}\<close>
 
   fixes In_Mem :: \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'TY segidx \<Rightarrow> bool\<close>
   defines \<open>In_Mem res seg \<equiv> seg \<in> dom !!(R_mem.get res)\<close>
@@ -452,7 +555,7 @@ locale std_sem =
     and   zero_ptr[simp]: \<open>Zero (T_pointer.mk ()) = V_pointer.mk 0\<close>
     and   zero_tup[simp]: \<open>Zero (T_tup.mk Ts)     = V_tup.mk (map Zero Ts)\<close>
     and   zero_arr[simp]: \<open>Zero (T_array.mk (T,N))= V_array.mk (T, replicate N (Zero T))\<close>
-
+(*TODO: not all value has zero!!*)
 begin
 
 abbreviation \<open>Valid_Type T \<equiv> Inhabited (Well_Type T)\<close>
@@ -465,11 +568,13 @@ lemma Valid_Types[simp]:
   unfolding Inhabited_def
   apply (simp_all add: Valid_Segment_def  split: memaddr.split segidx.split)
   using less_exp apply blast
-    apply (metis Valid_Segment_def segidx.case(2) valid_rawaddr_0)
+  apply (metis Valid_Segment_def segidx.case(2) valid_rawaddr_0)
   apply rule using zero_well_typ apply blast
    apply (elim exE) subgoal for p by (rule exI[where x=\<open>replicate n p\<close>], simp add: list_all_length)
   apply rule apply (metis (mono_tags, lifting) list_all2_conv_all_nth list_all_length)
   by (smt (verit) WT_tup mem_Collect_eq zero_well_typ)
+
+
 
 paragraph \<open>Resource Accessor\<close>
 
@@ -492,6 +597,8 @@ end
 
 subsubsection \<open>Pre-built Fiction\<close>
 
+paragraph \<open>Push a map to a location\<close>
+
 definition push_map :: \<open>'a list \<Rightarrow> ('a list \<Rightarrow> 'b) \<Rightarrow> ('a list \<Rightarrow> 'b::one)\<close>
   where \<open>push_map idx f = (\<lambda>x. if take (length idx) x = idx then f (drop (length idx) x) else 1 )\<close>
 
@@ -505,9 +612,13 @@ lemma push_map_distrib_mult:
   for f :: \<open>'a list \<Rightarrow> 'b::monoid_mult\<close>
   unfolding push_map_def fun_eq_iff times_fun_def by simp
 
+lemma push_map_distrib_map_add:
+  \<open>push_map idx (f ++ g) = push_map idx f ++ push_map idx g\<close>
+  unfolding push_map_def fun_eq_iff map_add_def by simp
+
 lemma push_map_mult_1[simp]:
-  \<open>push_map idx 1 = 1\<close>
-  unfolding push_map_def fun_eq_iff by simp
+  \<open>push_map idx f = 1 \<longleftrightarrow> f = 1\<close>
+  unfolding push_map_def fun_eq_iff by simp (metis append_eq_conv_conj)
 
 lemma push_map_mult_nil[simp]:
   \<open>push_map [] f = f\<close>
@@ -518,13 +629,92 @@ lemma share_push_map:
   for f :: \<open>'a list \<Rightarrow> 'b :: share_one\<close>
   unfolding push_map_def fun_eq_iff share_fun_def by simp
 
+lemma (in homo_one) push_map_homo:
+  \<open>\<phi> o (push_map idx f) = push_map idx (\<phi> o f)\<close>
+  unfolding push_map_def fun_eq_iff by simp
+
+lemma push_map_to_share:
+  \<open>push_map idx (to_share o f) = to_share o (push_map idx f)\<close>
+  unfolding push_map_def fun_eq_iff by simp
+
+lemma push_map_dom_eq:
+  \<open>dom (push_map idx f) = dom (push_map idx g) \<longleftrightarrow> dom f = dom g\<close>
+  unfolding dom_def fun_eq_iff push_map_def set_eq_iff apply simp
+  by (metis (full_types) append_eq_conv_conj)
+
+
+paragraph \<open>Pull a map at a location\<close>
 
 definition pull_map :: \<open>'a list \<Rightarrow> ('a list \<Rightarrow> 'b) \<Rightarrow> ('a list \<Rightarrow> 'b)\<close>
   where \<open>pull_map idx f = (\<lambda>x. f (idx@x))\<close>
 
-lemma \<open>pull_map idx (push_map idx f) = f\<close>
+lemma pull_push_map[simp]:
+  \<open>pull_map idx (push_map idx f) = f\<close>
   unfolding pull_map_def push_map_def fun_eq_iff by simp
 
+lemma push_pull_map:
+  \<open>push_map idx (pull_map idx f) \<subseteq>\<^sub>m f\<close>
+  unfolding pull_map_def push_map_def map_le_def dom_def
+  by simp (metis append_take_drop_id)
+
+lemma pull_map_1[simp]:
+  \<open>pull_map idx 1 = 1\<close> 
+  unfolding pull_map_def fun_eq_iff by simp
+
+lemma pull_map_0[simp]:
+  \<open>pull_map idx 0 = 0\<close>
+  unfolding pull_map_def fun_eq_iff by simp
+
+lemma pull_map_nil[simp]:
+  \<open>pull_map [] f = f\<close>
+  unfolding pull_map_def fun_eq_iff by simp
+
+lemma pull_map_pull_map[simp]:
+  \<open>pull_map a (pull_map b f) = pull_map (b@a) f\<close>
+  unfolding pull_map_def fun_eq_iff by simp
+
+lemma pull_map_cons:
+  \<open>pull_map a (pull_map [b] f) = pull_map (b#a) f\<close>
+  unfolding pull_map_def fun_eq_iff by simp
+
+lemma pull_map_funcomp:
+  \<open>\<phi> 1 = 1 \<Longrightarrow> \<phi> o (pull_map idx f) = pull_map idx (\<phi> o f)\<close>
+  unfolding pull_map_def fun_eq_iff by simp
+
+lemma pull_map_homo_mult:
+  \<open>pull_map idx (f * g) = pull_map idx f * pull_map idx g\<close>
+  unfolding pull_map_def fun_eq_iff
+  by (simp add: times_fun)
+
+lemma pull_map_to_share:
+  \<open>pull_map idx (to_share o f) = to_share o (pull_map idx f)\<close>
+  unfolding pull_map_def fun_eq_iff by simp
+
+lemma pull_map_share:
+  \<open>pull_map idx (share n f) = share n (pull_map idx f)\<close>
+  unfolding pull_map_def fun_eq_iff share_fun_def by simp
+
+lemma pull_map_sep_disj[simp]:
+  \<open>f ## g \<Longrightarrow> pull_map idx f ## pull_map idx g\<close>
+  unfolding pull_map_def sep_disj_fun_def by simp
+
+
+paragraph \<open>Tree Node\<close>
+
+definition node :: \<open>(nat list \<Rightarrow> 'b) list \<Rightarrow> nat list \<Rightarrow> 'b::one\<close>
+  where \<open>node L = (\<lambda>idx. case idx of i#idx' \<Rightarrow> (if i < length L then (L!i) idx' else 1) | _ \<Rightarrow> 1)\<close>
+
+lemma share_node:
+  \<open>share n (node L) = node (map (share n) L)\<close>
+  for L :: \<open>(nat list \<Rightarrow> 'a::share_one) list\<close>
+  unfolding node_def fun_eq_iff by (simp add: share_fun_def split: list.split)
+
+lemma pull_map_node:
+  \<open>pull_map (i#idx) (node L) = (if i < length L then pull_map idx (L!i) else 1)\<close>
+  unfolding node_def pull_map_def fun_eq_iff by simp
+
+
+
 
 
 locale pre_std_fic =
@@ -533,84 +723,119 @@ locale pre_std_fic =
 for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
                ('RES_N => 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra) itself\<close>
 
-+ fixes Mapof_Val :: \<open>'VAL \<Rightarrow> nat list \<Rightarrow> 'VAL\<close>
++ fixes Mapof_Val :: \<open>'VAL \<Rightarrow> nat list \<rightharpoonup> 'VAL\<close>
 assumes Mapof_Val_inj: \<open>Typeof Va = Typeof Vb \<Longrightarrow> Mapof_Val Va = Mapof_Val Vb \<Longrightarrow> Va = Vb\<close>
-(* assumes \<open>Mapof_Val (index_value idx V) = push_map idx\<close> *)
+  and   Mapof_Val_same_dom: \<open>Typeof Va = Typeof Vb \<Longrightarrow> dom (Mapof_Val Va) = dom (Mapof_Val Vb)\<close>
+  and   Mapof_not_1[simp]: \<open>Mapof_Val V \<noteq> 1\<close>
+  and   Mapof_Val_pull_step: \<open>valid_idx_step (Typeof V) i
+                          \<Longrightarrow> pull_map [i] (Mapof_Val V) = Mapof_Val (idx_step_value i V)\<close>
+  and   Mapof_Val_mod_step: \<open>valid_idx_step (Typeof v) i
+                         \<Longrightarrow> Mapof_Val (idx_step_mod_value i f v) = Mapof_Val v ++ push_map [i] (Mapof_Val (f (idx_step_value i v)))\<close>
+  and   Mapof_Val_tup: \<open>Mapof_Val (V_tup.mk vs) = node (map Mapof_Val vs)\<close>
+  and   Mapof_Val_arr: \<open>Mapof_Val (V_array.mk (T,vs)) = node (map Mapof_Val vs)\<close>
 begin
 
-definition \<open>Valof_Map TY M = (@V. Mapof_Val V = M \<and> Typeof V = TY)\<close>
+lemma Mapof_Val_pull:
+  \<open>valid_index (Typeof V) idx \<Longrightarrow> pull_map idx (Mapof_Val V) = Mapof_Val (index_value idx V)\<close>
+  apply (induct idx arbitrary: V; simp)
+  using Mapof_Val_pull_step
+  by (metis idx_step_value_type pull_map_cons)
 
-lemma Valof_Map:
-  \<open>Valof_Map (Typeof v) (Mapof_Val v) = v\<close>
-  unfolding Valof_Map_def using Mapof_Val_inj by blast
+lemma total_Mapof_disjoint:
+   \<open>g ## (push_map idx (to_share \<circ> h))
+\<Longrightarrow> to_share \<circ> f = g * (push_map idx (to_share \<circ> h))
+\<Longrightarrow> dom g \<inter> dom (push_map idx (to_share \<circ> h)) = {}\<close>
+  using to_share_total_disjoint push_map_to_share by metis
 
-definition \<open>Share_Mapof V = to_share o Mapof_Val V\<close>
+lemma map_add_subsumed_dom:
+  \<open>dom f \<subseteq> dom g \<Longrightarrow> f ++ g = g\<close>
+  unfolding map_add_def dom_def subset_eq fun_eq_iff apply simp
+  by (metis option.case_eq_if option.collapse option.simps(3))
+
+lemma Mapof_Val_mod:
+  \<open> valid_index (Typeof v) idx
+\<Longrightarrow> Typeof u = index_type idx (Typeof v)
+\<Longrightarrow> Mapof_Val (index_mod_value idx (\<lambda>_. u) v) = Mapof_Val v ++ push_map idx (Mapof_Val u)\<close>
+  apply (induct idx arbitrary: u v; simp add: idx_step_value_type[symmetric] Mapof_Val_mod_step)
+  using Mapof_Val_same_dom map_add_subsumed_dom apply (metis order_refl)
+  by clarify (simp add: idx_step_value_type[symmetric] push_map_distrib_map_add
+                        Mapof_Val_pull_step[symmetric] push_pull_map map_add_subsumed2
+                        push_map_push_map)
+
+lemma Mapof_Val_modify_fiction:
+   \<open>valid_index (Typeof v) idx
+\<Longrightarrow> Typeof u  = index_type idx (Typeof v)
+\<Longrightarrow> Typeof u' = index_type idx (Typeof v)
+\<Longrightarrow> g ## (push_map idx (to_share \<circ> Mapof_Val u))
+\<Longrightarrow> to_share \<circ> (Mapof_Val v) = g * (push_map idx (to_share \<circ> Mapof_Val u))
+\<Longrightarrow> to_share \<circ> (Mapof_Val (index_mod_value idx (\<lambda>_. u') v)) = g * (push_map idx (to_share \<circ> Mapof_Val u'))\<close>
+  apply (simp add: Mapof_Val_mod to_share_funcomp_map_add push_map_to_share
+      times_fun_map_add_right total_Mapof_disjoint[simplified push_map_to_share]
+      Mapof_Val_same_dom push_map_dom_eq)
+  subgoal premises prems proof -
+    have \<open>dom g \<inter> dom (to_share \<circ> push_map idx (Mapof_Val u)) = {}\<close>
+      using prems to_share_total_disjoint by blast
+    moreover have t1:
+      \<open>dom (to_share \<circ> push_map idx (Mapof_Val u)) = dom (to_share \<circ> push_map idx (Mapof_Val u'))\<close>
+      using prems by (simp add: Mapof_Val_same_dom push_map_dom_eq)
+    ultimately have \<open>dom g \<inter> dom (to_share \<circ> push_map idx (Mapof_Val u')) = {}\<close> by simp
+    note [simp] = times_fun_map_add_right[OF this]
+    show ?thesis by simp (metis t1 map_add_subsumed_dom order_eq_refl)
+  qed
+  done
+(* lemma pull_map_share_Mapof_not_eq_1[simp]:
+  \<open>valid_index (Typeof v) idx \<Longrightarrow> pull_map idx (share n (to_share \<circ> Mapof_Val v)) = 1 \<longleftrightarrow> n = 0\<close>
+  by (cases \<open>n = 0\<close>; simp add: pull_map_share pull_map_to_share Mapof_Val_pull)
+*)
+
+definition \<open>dom_Mapof T = dom (Mapof_Val (@v. Typeof v = T))\<close>
+
+lemma map_add_restrict_itself [simp]: \<open>(f ++ g) |` dom g = g\<close>
+  unfolding fun_eq_iff restrict_map_def map_add_def
+  by (simp add: domIff option.case_eq_if)
+
+lemma Mapof_Val_inj_plus:
+  \<open>Typeof Va = Typeof Vb \<Longrightarrow> f ++ Mapof_Val Va = f ++ Mapof_Val Vb \<Longrightarrow> Va = Vb\<close>
+proof (rule Mapof_Val_inj, assumption)
+  assume tyeq: \<open>Typeof Va = Typeof Vb\<close>
+     and feq:  \<open>f ++ Mapof_Val Va = f ++ Mapof_Val Vb\<close>
+  then have \<open>(f ++ Mapof_Val Va) |` dom (Mapof_Val Va) = (f ++ Mapof_Val Vb) |` dom (Mapof_Val Vb)\<close>
+    using Mapof_Val_same_dom by metis 
+  note this [simplified]
+  then show \<open>Mapof_Val Va = Mapof_Val Vb\<close> .
+qed
+
+definition \<open>Mapof_Val' v' = (case v' of Some v \<Rightarrow> Mapof_Val v | _ \<Rightarrow> 1)\<close>
+
+lemma Mapof_Val'_inj:
+  \<open>rel_option (\<lambda> va vb. Typeof va = Typeof vb) Va Vb \<Longrightarrow> Mapof_Val' Va = Mapof_Val' Vb \<Longrightarrow> Va = Vb\<close>
+  unfolding Mapof_Val'_def by (cases Va; cases Vb; simp add: Mapof_Val_inj)
+
+definition \<open>Valof_Map TY M = (@V. (\<exists>f. f ++ Mapof_Val V = M) \<and> Typeof V = TY)\<close>
+
+lemma Valof_Map_append[simp]:
+  \<open>Valof_Map (Typeof v) (f ++ Mapof_Val v) = v\<close>
+  unfolding Valof_Map_def
+  using someI[where P=\<open>\<lambda>V. (\<exists>fa. fa ++ Mapof_Val V = f ++ Mapof_Val v) \<and> Typeof V = Typeof v\<close> and x=v, simplified]
+        Mapof_Val_inj_plus
+  by (metis (no_types, lifting) Mapof_Val_same_dom map_add_restrict_itself) 
+
+lemmas Valof_Map[simp] = Valof_Map_append[where f = \<open>Map.empty\<close>, simplified]
 
 
-end
 
 
-locale pre_std_fic =
-  std_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
-               ('RES_N => 'RES::comm_monoid_mult))\<close>
-for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
-               ('RES_N => 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra) itself\<close>
 
-+ fixes ShV_scale :: \<open>pos0rat \<Rightarrow> 'SHVAL \<Rightarrow> 'SHVAL\<close>
-    and ShV :: \<open>'VAL \<Rightarrow> 'SHVAL\<close>
-    and ShV_Val :: \<open>'SHVAL \<Rightarrow> 'VAL\<close>
-    and ShV_tup :: \<open>'SHVAL list \<Rightarrow> 'SHVAL\<close>
-    and ShV_array :: \<open>'TY \<times> 'SHVAL list \<Rightarrow> 'SHVAL\<close>
-    and ShV_Typeof :: \<open>'SHVAL \<Rightarrow> 'TY\<close>
-  defines \<open>ShV_Typeof sv \<equiv> Typeof (ShV_Val sv)\<close>
 
-assumes ShV_scale_1[simp]:    \<open>ShV_scale 1 sv = sv\<close>
-  and ShV_scale_0_left[simp]: \<open>ShV_scale 0 sv = 1\<close>
-  and ShV_scale_0_right[simp]:\<open>ShV_scale n 1 = 1\<close>
-  and ShV_scale_scale[simp]: \<open>ShV_scale n (ShV_scale m sv) = ShV_scale (n*m) sv\<close>
-  and ShV_scale_left_distrib [simp]: \<open>ShV_scale n sv * ShV_scale m sv = ShV_scale (n+m) sv\<close>
-  and ShV_scale_right_distrib[simp]: \<open>ShV_scale n sva * ShV_scale n svb = ShV_scale n (sva * svb)\<close>
-  and ShV_Val_scale[simp]:    \<open>ShV_Val (ShV_scale n sv) = ShV_Val sv\<close>
-  and ShV_Val_inj[simp]:      \<open>ShV_Val (ShV v) = v\<close>
-  and ShV_ind:  \<open>(\<And>n v. P (ShV_scale n (ShV v)))
-                 \<Longrightarrow> (\<And>sva svb. P sva \<Longrightarrow> P svb \<Longrightarrow> sva ## svb \<Longrightarrow> P (sva * svb))
-                 \<Longrightarrow> P sv\<close>
-  and ShV_scala_sep_disj[simp]: \<open>ShV_scale n sva ## ShV_scale m svb \<longleftrightarrow> n = 0 \<or> m = 0 \<or> sva ## svb\<close>
-  and ShV_sep_disj:\<open>ShV_scale n (ShV va) ## ShV_scale m (ShV vb)
-                      \<longleftrightarrow> n = 0 \<or> m = 0 \<or> (0 < n \<and> 0 < m \<and> n+m \<le> 1 \<and> va = vb)\<close>
-  and ShV_tup[simp]:     \<open>ShV (V_tup.mk vs) = ShV_tup (map ShV vs)\<close>
-  and ShV_Val_tup[simp]: \<open>ShV_Val (ShV_tup svs) = V_tup.mk (map ShV_Val svs)\<close>
-  and ShV_arr[simp]:     \<open>ShV (V_array.mk (T,vs)) = ShV_array (T, map ShV vs)\<close>
-  and ShV_Val_arr[simp]: \<open>ShV_Val (ShV_array (T,svs)) = V_array.mk (T, map ShV_Val svs)\<close>
-begin
+definition \<open>share_val_fiction TY =
+      Fiction (\<lambda>m. if m = 1 then {None} else {Some v |v. v \<in> Well_Type TY \<and> to_share o Mapof_Val v = m})\<close>
 
-lemma ShV_disj_1: \<open>ShV va ## vb \<longleftrightarrow> vb = 1\<close>
-  apply (induct vb rule: ShV_ind)
-  using ShV_sep_disj[where n = 1, simplified]
-  apply fastforce
-  by (metis sep_add_zero_sym sep_disj_multD1 sep_disj_one)
-
-lemma ShV_not_1: \<open>ShV sv \<noteq> 1\<close>
-  by (metis (full_types) ShV_Val_inj ShV_disj_1 can_eqcmp_int disjoint_zero_sym one_neq_zero)
-
-lemma ShV_scale_n_1[simp]: \<open>0 \<le> n \<Longrightarrow> ShV_scale n 1 = 1\<close>
-  by (metis ShV_scale_0_left ShV_scale_scale mult_zero_right)
-
-lemma \<open>ShV_scale n sv = 1 \<longleftrightarrow> n = 0 \<or> sv = 1\<close>
-  apply (induct sv rule: ShV_ind)
-   apply (simp_all del: ShV_scale_right_distrib add: ShV_scale_right_distrib[symmetric])
-  apply (metis ShV_disj_1 ShV_scala_sep_disj ShV_scale_0_left mult_eq_0_iff)
-  by blast
-  
+lemma share_val_fiction[simp]:
+  \<open>\<I> (share_val_fiction TY) = (\<lambda>m. if m = 1 then {None} else {Some v |v. v \<in> Well_Type TY \<and> to_share o Mapof_Val v = m})\<close>
+  unfolding share_val_fiction_def by (rule Fiction_inverse) (simp add: Fictional_def one_set_def)
 
 
 paragraph \<open>Basic fictions for resource elements\<close>
-
-definition "fiction_ShV = Fiction (\<lambda>x. if x = 1 then {None} else { Some y |y. ShV y = x })"
-lemma fiction_ShV_\<I>[simp]:
-  "\<I> fiction_ShV = (\<lambda>x. if x = 1 then {None} else { Some y |y. ShV y = x })"
-  unfolding fiction_ShV_def
-  by (simp add: Fictional_def one_set_def)
 
 definition "fiction_mem I = Fiction (\<lambda>x. { 1(R_mem #= y) |y. y \<in> \<I> I x})"
 lemma fiction_mem_\<I>[simp]:
@@ -626,18 +851,16 @@ lemma fiction_var_\<I>[simp]:
 
 
 definition "share_mem = fiction_mem (fiction.defined (
-              fiction.pointwise (fiction.fine fiction_ShV)))"
+              fiction.pointwise' (\<lambda>seg. fiction.fine (share_val_fiction (segidx.layout seg)))))"
+
 definition "exclusive_var = fiction_var fiction.it"
-
-
-
 
 end
 
 
 fiction_space (in pre_std_fic) std_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
-  mem :: share_mem
-  var :: exclusive_var
+  FIC_mem :: share_mem
+  FIC_var :: exclusive_var
 
 
 subsubsection \<open>Standard Settings\<close>
@@ -651,15 +874,86 @@ locale std = std_fic
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC) \<times> 'SHVAL::sep_algebra) itself\<close>
 begin
 
-abbreviation "INTERP_RES fic \<equiv> Valid_Resource \<inter> \<I> INTERP fic"
+abbreviation "INTERP_RES fic \<equiv> Valid_Resource \<inter> S_Assert (Fic_Space fic) \<inter> \<I> INTERP fic"
 
 definition INTERP_COMP :: \<open>('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'RES_N,'RES) comp set\<close>
   where "INTERP_COMP T = { (s,res) |s res fic. (s,fic) \<in> T \<and> res \<in> INTERP_RES fic }"
 
-
 lemma INTERP_COMP[\<phi>expns]:
   \<open>(s,res) \<in> INTERP_COMP T \<longleftrightarrow> (\<exists>fic. (s,fic) \<in> T \<and> res \<in> INTERP_RES fic)\<close>
   unfolding INTERP_COMP_def by simp
+
+
+
+
+thm FIC_var.interp_split[unfolded exclusive_var_def, simplified]
+term INTERP
+term R_var.mk
+
+lemma FIC_var_split: \<open>Fic_Space fic \<Longrightarrow>
+    \<I> INTERP (fic * FIC_var.mk vars) = \<I> INTERP fic * {R_var.mk vars}\<close>
+  apply (subst FIC_var.interp_split; simp add: exclusive_var_def R_var.mk_homo_mult)
+  by (subst FIC_var.interp_split[where f = fic]; simp add: exclusive_var_def
+      set_mult_single[symmetric] mult.assoc)
+
+lemma R_var_valid_split: \<open>res \<in> Valid_Resource \<longleftrightarrow>
+    R_var.clean res \<in> Valid_Resource \<and> (\<exists>vars. res R_var.name = R_var.inject (Fine vars) \<and> finite (dom vars))\<close>
+  by (subst R_var.split, simp add: Valid_Resource_def times_fun_def res_valid_var one_fine_def) blast
+
+lemma R_var_valid_split':
+   \<open>NO_MATCH (R_var.clean res') res \<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow>
+    R_var.clean res \<in> Valid_Resource \<and> (\<exists>vars. res R_var.name = R_var.inject (Fine vars) \<and> finite (dom vars))\<close>
+  using R_var_valid_split .
+
+lemma R_mem_valid_split: \<open>res \<in> Valid_Resource \<longleftrightarrow>
+    R_mem.clean res \<in> Valid_Resource \<and> (\<exists>m. res R_mem.name = R_mem.inject m \<and> m \<in> Valid_Mem)\<close>
+  by (subst R_mem.split, simp add: Valid_Resource_def times_fun_def res_valid_mem image_iff) blast
+
+lemma R_mem_valid_split': \<open>NO_MATCH (R_mem.clean res') res \<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow>
+    R_mem.clean res \<in> Valid_Resource \<and> (\<exists>m. res R_mem.name = R_mem.inject m \<and> m \<in> Valid_Mem)\<close>
+  using R_mem_valid_split .
+
+
+term  FIC_mem.mk
+term to_share
+bundle x = [[simp_debug, simp_trace]]
+
+(*
+lemma \<open>Fic_Space fic \<Longrightarrow>
+      res \<in> INTERP_RES (fic * FIC_mem.mk (1(seg := Fine (push_map idx (to_share o Mapof_Val val)))))
+  \<longrightarrow> (\<exists>m v. R_mem.get res = Fine m \<and> m seg = Some v \<and> v \<in> Well_Type (segidx.layout seg) \<and> index_value idx v = val)\<close>
+
+ 
+lemma \<open>Fic_Space fic \<Longrightarrow> n \<noteq> 0 \<Longrightarrow>
+      res \<in> INTERP_RES (fic * FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val val))))))
+  \<longrightarrow> (\<exists>m v. R_mem.get res = Fine m \<and> m seg = Some v \<and> v \<in> Well_Type (segidx.layout seg) \<and> index_value idx v = val)\<close>
+  apply (subst FIC_mem.interp_split; simp add: share_mem_def times_set_def)
+  apply (subst R_mem_valid_split)
+  apply (auto simp add: R_mem.proj_homo_mult Valid_Mem_def R_mem.mult_strip_inject_011
+                        mult_strip_fine_011 times_fun[where x = seg] )
+  subgoal premises prems for remain_res mem remain proof -
+    note [simp] = mult_strip_fine_011 times_fun[where x = seg]
+    have \<open>remain seg ## mem seg\<close> using \<open>remain ## mem\<close> by (simp add: sep_disj_fun_def) 
+    show ?thesis
+      apply (insert \<open>\<forall>x. \<exists>y. _\<close>[THEN spec[where x = seg], simplified]
+                    \<open>remain seg ## mem seg\<close>
+                    \<open>\<forall>seg \<in> dom _. _\<close>[unfolded Ball_def, THEN spec[where x= seg], simplified])
+      apply (auto simp add: share_val_fiction \<open>n \<noteq> 0\<close>)
+      subgoal premises prems2 for other_part Val proof -
+        let \<open>?lhs = ?rhs\<close> = \<open>to_share \<circ> Mapof_Val Val = other_part * push_map idx (share n (to_share \<circ> Mapof_Val val))\<close>
+        from \<open>?lhs = ?rhs\<close> have \<open>strip_share o pull_map idx ?lhs = strip_share o pull_map idx ?rhs\<close> by fastforce
+        note this[simplified pull_map_to_share Mapof_Val_pull strip_share_share_funcomp
+                             pull_map_homo_mult pull_push_map]
+        thm prems2
+        term Valof_Map
+
+  thm times_fun[where x = seg]
+  thm R_mem.split
+
+*)
+
+  term R_mem.get
+
 
 definition "View_Shift u v \<longleftrightarrow> INTERP_RES u \<subseteq> INTERP_RES v "
 
@@ -902,7 +1196,7 @@ lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c SKIP \<lbra
 
 lemma \<phi>SEQ: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> X \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> C \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<ggreater> g) \<lbrace> A \<longmapsto> C \<rbrace>"
   unfolding instr_comp_def \<phi>Procedure_def bind_def by (auto 0 4)
-  
+
 
 lemma \<phi>frame:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> M * A \<longmapsto> M * B \<rbrace>"

@@ -147,21 +147,23 @@ lemma RawPointer_eqcmp[\<phi>reason on \<open>\<phi>Equal RawPointer ?c ?eq\<clo
 subsubsection \<open>Pointer\<close>
 
 definition Pointer :: "'TY \<Rightarrow> ('VAL, 'TY logaddr) \<phi>"
-  where "Pointer T x = (if valid_logaddr x \<and> x \<noteq> 0 \<and> logaddr_type x = T
+  where "Pointer TY x = (if valid_logaddr x \<and> x \<noteq> 0 \<and> logaddr_type x = TY \<and> 0 < MemObj_Size TY
                         then { V_pointer.mk (logaddr_to_raw x) }
                         else {})"
 
 lemma Pointer_expn[\<phi>expns]:
   "v \<in> (addr \<Ztypecolon> Pointer TY) \<longleftrightarrow>
-      v = V_pointer.mk (logaddr_to_raw addr) \<and> valid_logaddr addr \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY"
+      v = V_pointer.mk (logaddr_to_raw addr) \<and> valid_logaddr addr
+    \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY \<and> 0 < MemObj_Size TY"
   unfolding \<phi>Type_def by (simp add: Pointer_def)
 
 lemma Pointer_inhabited[elim,\<phi>elim]:
-  "Inhabited (addr \<Ztypecolon> Pointer TY) \<Longrightarrow> (valid_logaddr addr \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY \<Longrightarrow> C) \<Longrightarrow> C"
+  "Inhabited (addr \<Ztypecolon> Pointer TY) \<Longrightarrow>
+      (valid_logaddr addr \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY \<and> 0 < MemObj_Size TY \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma Pointer_eqcmp[\<phi>reason on \<open>\<phi>Equal (Pointer ?TY) ?c ?eq\<close>]:
-    "\<phi>Equal (Pointer TY) (\<lambda>x y. memaddr.segment x = memaddr.segment y \<and> 0 < MemObj_Size TY) (=)"
+    "\<phi>Equal (Pointer TY) (\<lambda>x y. memaddr.segment x = memaddr.segment y) (=)"
   unfolding \<phi>Equal_def
   by (simp add: \<phi>expns) (metis logaddr_to_raw_inj)
 
@@ -191,12 +193,38 @@ lemma \<phi>Field_zeros [\<phi>reason on \<open>\<phi>Zero (T_tup.mk [?ty]) (\<p
   by (simp add: \<phi>expns V_tup_mult) (metis Cons_eq_append_conv V_tup_mult)
 
 
+
+
+
+subsection \<open>Variable\<close>
+
+
+definition Var :: \<open>varname \<Rightarrow> 'VAL \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
+  where \<open>Var vname val = {FIC_var.mk (Fine (1(vname \<mapsto> val)))} \<close>
+
+lemma Var_expn[\<phi>expns]:
+  \<open>fic \<in> (val \<Ztypecolon> Var vname) \<longleftrightarrow> fic = FIC_var.mk (Fine (1(vname \<mapsto> val)))\<close>
+  unfolding Var_def \<phi>Type_def by simp
+
+
+subsection \<open>Memory Object\<close>
+
+definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
+  where \<open>Ref T x' = (case x' of (seg |: idx) \<Zinj> (n \<Znrres> x) \<Rightarrow>
+    if n \<noteq> 0 \<and> valid_index (segidx.layout seg) idx then
+    { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))
+          |v. v \<in> Well_Type (logaddr_type (seg |: idx)) \<and> v \<in> (x \<Ztypecolon> T) }
+    else {})\<close>
+
+lemma Ref_expn[\<phi>expns]:
+  \<open>fic \<in> ((seg |: idx) \<Zinj> (n \<Znrres> v) \<Ztypecolon> Ref Identity)
+    \<longleftrightarrow> n \<noteq> 0 \<and> valid_index (segidx.layout seg) idx
+        \<and> v \<in> Well_Type (logaddr_type (seg |: idx))
+        \<and> fic = FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))\<close>
+  unfolding Ref_def \<phi>Type_def by (simp add: Identity_def) blast
+
+
 end
-
-
-
-
-
 
 
 
