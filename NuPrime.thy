@@ -193,8 +193,6 @@ locale std_sem_pre =
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL) \<times> ('RES_N => 'RES)) itself\<close>
 
   fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
-    and Typeof :: \<open>'VAL \<Rightarrow> 'TY\<close>
-  assumes WT_Typeof[simp]: \<open>v \<in> Well_Type T \<Longrightarrow> Typeof v = T\<close>
 
   assumes V_tup_mult: \<open>V_tup.mk t1 * V_tup.mk t2 = V_tup.mk (t1 @ t2)\<close>
   fixes MemObj_Size :: \<open>'TY \<Rightarrow> nat\<close> \<comment> \<open>in size of bytes\<close>
@@ -213,12 +211,12 @@ locale std_sem_pre =
     and   idx_step_type_arr  : \<open>i < N \<Longrightarrow> idx_step_type i (\<tau>Array N T) = T\<close>
     and   valid_idx_step_tup : \<open>valid_idx_step (\<tau>Tuple tys) i \<longleftrightarrow> i < length tys\<close>
     and   valid_idx_step_arr : \<open>valid_idx_step (\<tau>Array N T) i \<longleftrightarrow> i < N\<close>
-    and   idx_step_value_type: \<open>valid_idx_step (Typeof v) i \<Longrightarrow> Typeof (idx_step_value i v) = idx_step_type i (Typeof v)\<close>
     and   idx_step_value_welltyp: \<open>valid_idx_step T i \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> idx_step_value i v \<in> Well_Type (idx_step_type i T)\<close>
     and   idx_step_value_tup : \<open>idx_step_value i (V_tup.mk vs)   = vs!i\<close>
     and   idx_step_value_arr : \<open>idx_step_value i (V_array.mk (T,vs)) = vs!i\<close>
-    and   idx_step_mod_value : \<open>valid_idx_step (Typeof v) i
-                            \<Longrightarrow> valid_idx_step (Typeof v) j
+    and   idx_step_mod_value : \<open>valid_idx_step T i
+                            \<Longrightarrow> valid_idx_step T j
+                            \<Longrightarrow> v \<in> Well_Type T
                             \<Longrightarrow> idx_step_value i (idx_step_mod_value j f v) =
                                   (if i = j then f (idx_step_value j v) else idx_step_value i v) \<close>
     and   idx_step_mod_value_welltyp: \<open>valid_idx_step T i
@@ -284,10 +282,6 @@ lemma valid_index_cat: \<open>valid_index T (a@b) \<Longrightarrow> valid_index 
 
 lemma valid_index_cons: \<open>valid_index T [i] \<longleftrightarrow> valid_idx_step T i\<close> by simp
 
-lemma index_value_type:
-  \<open>valid_index (Typeof v) idx \<Longrightarrow> Typeof (index_value idx v) = index_type idx (Typeof v)\<close>
-  by (induct idx arbitrary: v; simp add: idx_step_value_type)
-
 lemma index_value_welltyp:
   \<open>valid_index T idx \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> index_value idx v \<in> Well_Type (index_type idx T)\<close>
   apply (induct idx arbitrary: v T; simp)
@@ -303,12 +297,6 @@ lemma index_mod_value_welltyp:
   using idx_step_mod_value_welltyp idx_step_value_welltyp by blast
 
 
-lemma
-  \<open> valid_index (Typeof v) idx
-\<Longrightarrow> Typeof u = index_type idx (Typeof v)
-\<Longrightarrow> Typeof (index_mod_value idx (\<lambda>_. u) v) = Typeof v\<close>
-  apply (induct idx arbitrary: u v; auto simp add: idx_step_value_type[symmetric])
-  using idx_step_mod_value
 
 
 
@@ -724,22 +712,22 @@ for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepa
                ('RES_N => 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra) itself\<close>
 
 + fixes Mapof_Val :: \<open>'VAL \<Rightarrow> nat list \<rightharpoonup> 'VAL\<close>
-assumes Mapof_Val_inj: \<open>Typeof Va = Typeof Vb \<Longrightarrow> Mapof_Val Va = Mapof_Val Vb \<Longrightarrow> Va = Vb\<close>
-  and   Mapof_Val_same_dom: \<open>Typeof Va = Typeof Vb \<Longrightarrow> dom (Mapof_Val Va) = dom (Mapof_Val Vb)\<close>
+assumes Mapof_Val_inj: \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> Mapof_Val Va = Mapof_Val Vb \<Longrightarrow> Va = Vb\<close>
+  and   Mapof_Val_same_dom: \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> dom (Mapof_Val Va) = dom (Mapof_Val Vb)\<close>
   and   Mapof_not_1[simp]: \<open>Mapof_Val V \<noteq> 1\<close>
-  and   Mapof_Val_pull_step: \<open>valid_idx_step (Typeof V) i
+  and   Mapof_Val_pull_step: \<open>valid_idx_step T i \<Longrightarrow> V \<in> Well_Type T
                           \<Longrightarrow> pull_map [i] (Mapof_Val V) = Mapof_Val (idx_step_value i V)\<close>
-  and   Mapof_Val_mod_step: \<open>valid_idx_step (Typeof v) i
+  and   Mapof_Val_mod_step: \<open>valid_idx_step T i \<Longrightarrow> v \<in> Well_Type T
                          \<Longrightarrow> Mapof_Val (idx_step_mod_value i f v) = Mapof_Val v ++ push_map [i] (Mapof_Val (f (idx_step_value i v)))\<close>
   and   Mapof_Val_tup: \<open>Mapof_Val (V_tup.mk vs) = node (map Mapof_Val vs)\<close>
   and   Mapof_Val_arr: \<open>Mapof_Val (V_array.mk (T,vs)) = node (map Mapof_Val vs)\<close>
 begin
 
 lemma Mapof_Val_pull:
-  \<open>valid_index (Typeof V) idx \<Longrightarrow> pull_map idx (Mapof_Val V) = Mapof_Val (index_value idx V)\<close>
-  apply (induct idx arbitrary: V; simp)
+  \<open>valid_index T idx \<Longrightarrow> V \<in> Well_Type T \<Longrightarrow> pull_map idx (Mapof_Val V) = Mapof_Val (index_value idx V)\<close>
+  apply (induct idx arbitrary: V T; simp)
   using Mapof_Val_pull_step
-  by (metis idx_step_value_type pull_map_cons)
+  by (metis idx_step_value_welltyp pull_map_cons)
 
 lemma total_Mapof_disjoint:
    \<open>g ## (push_map idx (to_share \<circ> h))
@@ -753,19 +741,21 @@ lemma map_add_subsumed_dom:
   by (metis option.case_eq_if option.collapse option.simps(3))
 
 lemma Mapof_Val_mod:
-  \<open> valid_index (Typeof v) idx
-\<Longrightarrow> Typeof u = index_type idx (Typeof v)
+  \<open> valid_index T idx
+\<Longrightarrow> v \<in> Well_Type T
+\<Longrightarrow> u \<in> Well_Type (index_type idx T)
 \<Longrightarrow> Mapof_Val (index_mod_value idx (\<lambda>_. u) v) = Mapof_Val v ++ push_map idx (Mapof_Val u)\<close>
-  apply (induct idx arbitrary: u v; simp add: idx_step_value_type[symmetric] Mapof_Val_mod_step)
+  apply (induct idx arbitrary: u v T; simp)
   using Mapof_Val_same_dom map_add_subsumed_dom apply (metis order_refl)
-  by clarify (simp add: idx_step_value_type[symmetric] push_map_distrib_map_add
+  by clarify (simp add: idx_step_value_welltyp Mapof_Val_mod_step  push_map_distrib_map_add
                         Mapof_Val_pull_step[symmetric] push_pull_map map_add_subsumed2
                         push_map_push_map)
 
 lemma Mapof_Val_modify_fiction:
-   \<open>valid_index (Typeof v) idx
-\<Longrightarrow> Typeof u  = index_type idx (Typeof v)
-\<Longrightarrow> Typeof u' = index_type idx (Typeof v)
+   \<open>valid_index T idx
+\<Longrightarrow> v \<in> Well_Type T
+\<Longrightarrow> u \<in> Well_Type (index_type idx T)
+\<Longrightarrow> u'\<in> Well_Type (index_type idx T)
 \<Longrightarrow> g ## (push_map idx (to_share \<circ> Mapof_Val u))
 \<Longrightarrow> to_share \<circ> (Mapof_Val v) = g * (push_map idx (to_share \<circ> Mapof_Val u))
 \<Longrightarrow> to_share \<circ> (Mapof_Val (index_mod_value idx (\<lambda>_. u') v)) = g * (push_map idx (to_share \<circ> Mapof_Val u'))\<close>
@@ -777,7 +767,7 @@ lemma Mapof_Val_modify_fiction:
       using prems to_share_total_disjoint by blast
     moreover have t1:
       \<open>dom (to_share \<circ> push_map idx (Mapof_Val u)) = dom (to_share \<circ> push_map idx (Mapof_Val u'))\<close>
-      using prems by (simp add: Mapof_Val_same_dom push_map_dom_eq)
+      using prems by (metis Mapof_Val_same_dom dom_map_option_comp push_map_dom_eq)
     ultimately have \<open>dom g \<inter> dom (to_share \<circ> push_map idx (Mapof_Val u')) = {}\<close> by simp
     note [simp] = times_fun_map_add_right[OF this]
     show ?thesis by simp (metis t1 map_add_subsumed_dom order_eq_refl)
@@ -788,41 +778,33 @@ lemma Mapof_Val_modify_fiction:
   by (cases \<open>n = 0\<close>; simp add: pull_map_share pull_map_to_share Mapof_Val_pull)
 *)
 
-definition \<open>dom_Mapof T = dom (Mapof_Val (@v. Typeof v = T))\<close>
 
 lemma map_add_restrict_itself [simp]: \<open>(f ++ g) |` dom g = g\<close>
   unfolding fun_eq_iff restrict_map_def map_add_def
   by (simp add: domIff option.case_eq_if)
 
 lemma Mapof_Val_inj_plus:
-  \<open>Typeof Va = Typeof Vb \<Longrightarrow> f ++ Mapof_Val Va = f ++ Mapof_Val Vb \<Longrightarrow> Va = Vb\<close>
+  \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> f ++ Mapof_Val Va = f ++ Mapof_Val Vb \<Longrightarrow> Va = Vb\<close>
 proof (rule Mapof_Val_inj, assumption)
-  assume tyeq: \<open>Typeof Va = Typeof Vb\<close>
-     and feq:  \<open>f ++ Mapof_Val Va = f ++ Mapof_Val Vb\<close>
+  assume tyA: \<open>Va \<in> Well_Type T\<close>
+     and tyB: \<open>Vb \<in> Well_Type T\<close>
+     and feq: \<open>f ++ Mapof_Val Va = f ++ Mapof_Val Vb\<close>
   then have \<open>(f ++ Mapof_Val Va) |` dom (Mapof_Val Va) = (f ++ Mapof_Val Vb) |` dom (Mapof_Val Vb)\<close>
     using Mapof_Val_same_dom by metis 
   note this [simplified]
   then show \<open>Mapof_Val Va = Mapof_Val Vb\<close> .
 qed
 
-definition \<open>Mapof_Val' v' = (case v' of Some v \<Rightarrow> Mapof_Val v | _ \<Rightarrow> 1)\<close>
-
-lemma Mapof_Val'_inj:
-  \<open>rel_option (\<lambda> va vb. Typeof va = Typeof vb) Va Vb \<Longrightarrow> Mapof_Val' Va = Mapof_Val' Vb \<Longrightarrow> Va = Vb\<close>
-  unfolding Mapof_Val'_def by (cases Va; cases Vb; simp add: Mapof_Val_inj)
-
-definition \<open>Valof_Map TY M = (@V. (\<exists>f. f ++ Mapof_Val V = M) \<and> Typeof V = TY)\<close>
+definition \<open>Valof_Map TY M = (@V. (\<exists>f. f ++ Mapof_Val V = M) \<and> V \<in> Well_Type TY)\<close>
 
 lemma Valof_Map_append[simp]:
-  \<open>Valof_Map (Typeof v) (f ++ Mapof_Val v) = v\<close>
+  \<open>v \<in> Well_Type T \<Longrightarrow> Valof_Map T (f ++ Mapof_Val v) = v\<close>
   unfolding Valof_Map_def
-  using someI[where P=\<open>\<lambda>V. (\<exists>fa. fa ++ Mapof_Val V = f ++ Mapof_Val v) \<and> Typeof V = Typeof v\<close> and x=v, simplified]
+  using someI[where P=\<open>\<lambda>V. (\<exists>fa. fa ++ Mapof_Val V = f ++ Mapof_Val v) \<and> V \<in> Well_Type T\<close> and x=v, simplified]
         Mapof_Val_inj_plus
   by (metis (no_types, lifting) Mapof_Val_same_dom map_add_restrict_itself) 
 
 lemmas Valof_Map[simp] = Valof_Map_append[where f = \<open>Map.empty\<close>, simplified]
-
-
 
 
 
@@ -913,10 +895,6 @@ lemma R_mem_valid_split': \<open>NO_MATCH (R_mem.clean res') res \<Longrightarro
     R_mem.clean res \<in> Valid_Resource \<and> (\<exists>m. res R_mem.name = R_mem.inject m \<and> m \<in> Valid_Mem)\<close>
   using R_mem_valid_split .
 
-
-term  FIC_mem.mk
-term to_share
-bundle x = [[simp_debug, simp_trace]]
 
 (*
 lemma \<open>Fic_Space fic \<Longrightarrow>

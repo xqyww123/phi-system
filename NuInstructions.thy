@@ -95,25 +95,24 @@ lemma (in std) \<phi>M_get_mem:
        apply (auto simp add: times_fun)[1]
 
       subgoal premises prems2 for sh' v' proof -
-        have [simp]: \<open>valid_index (Typeof v') idx\<close>
-          by (simp add: \<open>valid_index (segidx.layout seg) idx\<close> \<open>Typeof v' = segidx.layout seg\<close>)
+        have [simp]: \<open>valid_index (segidx.layout seg) idx\<close>
+          by (simp add: \<open>valid_index (segidx.layout seg) idx\<close> \<open>v' \<in> Well_Type (segidx.layout seg)\<close>)
         note t2[simp] = this[THEN Mapof_Val_pull]
 
         have t3[simp]: \<open>pull_map idx sh' ## share n (to_share \<circ> Mapof_Val v)\<close>
           using \<open>sh' ## push_map idx _\<close> by (metis pull_map_sep_disj pull_push_map)
-        have t5: \<open>Typeof (index_value idx v') = Typeof v\<close>
-          using \<open>v \<in> Well_Type (index_type idx (segidx.layout seg))\<close>
-              index_value_type
-          by (metis WT_Typeof \<open>valid_index (Typeof v') idx\<close> \<open>Typeof v' = segidx.layout seg\<close>)
+        have t5: \<open>index_value idx v' \<in> Well_Type (index_type idx (segidx.layout seg))\<close>
+          using index_value_welltyp \<open>valid_index (segidx.layout seg) idx\<close>
+                  \<open>v' \<in> Well_Type (segidx.layout seg)\<close> by blast
 
         let \<open>?lhs = ?rhs\<close> = \<open>to_share \<circ> Mapof_Val v' = sh' * push_map idx (share n (to_share \<circ> Mapof_Val v))\<close>
         from \<open>?lhs = ?rhs\<close> have \<open>pull_map idx ?lhs = pull_map idx ?rhs\<close> by fastforce
         note this[simplified pull_map_to_share pull_map_homo_mult pull_push_map t2]
         then have \<open>Mapof_Val (index_value idx v') = (strip_share \<circ> pull_map idx sh') ++ (Mapof_Val v)\<close>
-          by (metis strip_share_fun_mult strip_share_share_funcomp(2) t3 strip_share_fun_share \<open>n \<noteq> 0\<close> strip_share_share_funcomp)
+          by (metis prems(5) prems2(6) strip_share_fun_mult strip_share_fun_share strip_share_share_funcomp(2) t2 t3)
         then have txx: \<open>index_value idx v' = v\<close>
           using Valof_Map_append Valof_Map t5
-          by (metis Valof_Map_append Valof_Map)
+          by (metis prems(7))
 
         show ?thesis by (subst txx) standard
       qed
@@ -139,22 +138,40 @@ lemma (in std) op_store_mem:
          rule \<phi>SEQ, rule \<phi>M_assert, standard, rule \<phi>M_get_mem)
   unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
   apply (auto simp add: \<phi>expns FIC_mem.interp_split' R_mem_valid_split' share_mem_def
-                        R_mem.mult_in_dom)
+                        R_mem.mult_in_dom )
   subgoal premises prems for seg idx vals R fic res mem mem_remain'
   proof -
     show ?thesis
       using \<open>\<forall>_. \<exists>_. _ \<and> mem _ \<in> _\<close>[THEN spec[where x=seg]] \<open>mem_remain' * Fine mem \<in> Valid_Mem\<close>
       apply (auto simp add: mult_strip_fine_011 prems Valid_Mem_def times_fun
-                            sep_disj_partial_map_some_none)
+                            sep_disj_partial_map_some_none times_fine)
       subgoal premises prems2 for fic_mR mem_R val
       proof -
+        have [simp]: \<open>seg \<in> dom mem\<close> using \<open>mem seg = Some val\<close> by blast
+        have [simp]: \<open>\<And>any. mem_R ## mem(seg := any)\<close> using \<open>mem_R ## _\<close> \<open>mem seg = Some val\<close>
+          by (smt (verit, best) fun_upd_apply sep_disj_commuteI sep_disj_fun_def sep_disj_option(3) sep_disj_partial_map_some_none) sorry
+      have \<open>fic_mR ## push_map idx (to_share \<circ> Mapof_Val u)\<close>
+
         show ?thesis
           apply (rule exI[where x=\<open>fic * FIC_mem.mk (1(seg := Fine (push_map idx (to_share \<circ> Mapof_Val u))))\<close>])
-          apply (auto simp add: prems inj_image_mem_iff index_mod_value_welltyp)
-          apply (rule index_mod_value_welltyp, simp add: prems)
-          using index_mod_value_welltyp
-          apply (rule exI[where x=fic], simp add: prems)
-  
+          apply (auto simp add: prems prems2 inj_image_mem_iff index_mod_value_welltyp
+                                FIC_mem.interp_split' R_mem.times_fun_upd sep_disj_partial_map_upd
+                                times_set_def times_fine'[symmetric] R_mem.mk_homo_mult)
+          apply (fold \<open>mem_remain' = Fine mem_R\<close>,
+                 fold \<open>res R_mem.name = R_mem.inject mem_remain'\<close>,
+                 fold mult.assoc,
+                 fold R_mem.split)
+          apply (rule exI[where x=\<open>res\<close>])
+          apply (rule exI[where x=\<open>R_mem.mk (Fine (mem(seg \<mapsto> index_mod_value idx (\<lambda>_. u) val)))\<close>])
+          apply (simp add: prems share_mem_def)
+          apply (rule exI[where x = \<open>Fine (mem(seg \<mapsto> index_mod_value idx (\<lambda>_. u) val))\<close>])
+          apply (auto simp add: mult_strip_fine_011 times_fun inj_image_mem_iff prems2 times_fine)
+          apply clarsimp
+          apply (subst inj_image_mem_iff, simp, subst mem_Collect_eq, rule)
+          apply (rule exI[where x=])
+          thm inj_image_mem_iff
+
+
           thm Mapof_Val_modify_fiction
           thm prems
           thm prems2
@@ -207,7 +224,7 @@ lemma (in std) \<phi>M_get_var:
   unfolding \<phi>Procedure_def \<phi>M_get_var_def \<phi>M_get_res_entry_def \<phi>M_get_res_def
   apply (simp add: \<phi>expns R_var.prj.homo_mult )
   apply (subst R_var_valid_split)
-  apply (auto simp add: \<phi>expns FIC_var_split times_set_def R_var.mult_in_dom mult_strip_fine_011)
+  apply (auto simp add: \<phi>expns FIC_var_split times_set_def R_var.mult_in_dom mult_strip_fine_011 times_fine)
   subgoal premises prems for vals R fic res vars
   proof -
     note [simp] = \<open>vars ## 1(vname \<mapsto> v)\<close> [THEN sep_disj_fun[where x=vname], simplified]
@@ -220,7 +237,7 @@ lemma (in std) \<phi>M_get_var:
              rule exI[where x=\<open>fic * FIC_var.mk (Fine (1(vname \<mapsto> v)))\<close>])
       using prems apply (auto simp add: FIC_var_split times_set_def)
       apply (subst R_var_valid_split)
-      apply (auto simp add: R_var.inj_homo_mult[symmetric])
+      apply (auto simp add: R_var.inj_homo_mult[symmetric] times_fine)
       done
   qed
   done
@@ -241,7 +258,7 @@ lemma (in std) \<phi>M_set_var:
       apply (rule exI[where x=\<open>fic * FIC_var.mk (Fine (1(vname \<mapsto> u))) \<close>])
       apply (auto simp add: R_var_valid_split' FIC_var_split times_set_def prems)
       apply (rule exI[where x = res])
-      by (auto simp add: fun_eq_iff times_fun prems R_var.inj_homo_mult[symmetric])
+      by (auto simp add: fun_eq_iff times_fun prems R_var.inj_homo_mult[symmetric] times_fine)
   qed
   done
 

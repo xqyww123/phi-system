@@ -232,6 +232,9 @@ instance apply standard
    by (case_tac x; case_tac y; simp add: share_option_def share_sep_right_distrib_0)
 end
 
+instantiation option :: (times) no_inverse begin
+instance by (standard, case_tac a; case_tac b; simp)
+end
 
 subsubsection \<open>Product\<close>
 
@@ -566,10 +569,17 @@ lemma sep_disj_partial_map_some_none:
   for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
   using disjoint_iff sep_disj_partial_map_disjoint by fastforce
 
+lemma sep_disj_partial_map_upd:
+  \<open>f ## g \<Longrightarrow> k \<in> dom g \<Longrightarrow> (f * g)(k := v) = (f * g(k:=v))\<close>
+  for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
+  unfolding sep_disj_partial_map_disjoint fun_upd_def times_fun fun_eq_iff
+  by simp (metis disjoint_iff domIff times_option(3))
+
 lemma times_fun_map_add_right:
   \<open>dom f \<inter> dom h = {} \<Longrightarrow> (f * g) ++ h = f * (g ++ h)\<close>
   unfolding times_fun_def fun_eq_iff map_add_def
-  by (metis Int_iff domIff emptyE option.simps(4) times_option(3))
+  by (simp add: disjoint_iff domIff option.case_eq_if times_option_def)
+  
 
 paragraph \<open>dom1: Domain except one\<close>
 
@@ -620,6 +630,9 @@ subsubsection \<open>Partiality\<close>
 datatype 'a fine ("_ ?" [100] 101) = Fine (the_fine: 'a) | Undef
 notation the_fine ("!!_" [1000] 1000)
 
+lemma Fine_inject[simp]: \<open>inj Fine\<close>
+  by (meson fine.inject injI)
+
 hide_const pred_fine
 definition "pred_fine P x = (case x of Fine x' \<Rightarrow> P x' | _ \<Rightarrow> False)"
 lemma pred_fine[simp]:
@@ -643,37 +656,41 @@ definition "times_fine x y =
   (case x of Fine a \<Rightarrow> (case y of Fine b \<Rightarrow> if a ## b then Fine (a*b) else Undef
     | _ \<Rightarrow> Undef) | _ \<Rightarrow> Undef)"
 
-lemma times_fine[simp]:
+lemma times_fine:
   "Fine a * Fine b = (if a ## b then Fine (a*b) else Undef)"
   "Undef * a' = Undef" "a' * Undef = Undef"
   unfolding times_fine_def by (cases a'; simp_all)+
+
+lemma times_fine':
+  \<open>a ## b \<Longrightarrow> Fine a * Fine b = Fine (a*b)\<close>
+  using times_fine by simp
 
 instance ..
 end
 
 instantiation fine :: (sep_disj) mult_zero begin
-instance by standard simp_all
+instance by standard (simp_all add: times_fine)
 end
 
 instantiation fine :: (pre_sep_algebra) no_inverse begin
-instance by (standard, simp add: one_fine_def times_fine_def split: fine.split)
+instance by (standard, simp add: times_fine one_fine_def times_fine_def split: fine.split)
 end
 
 instantiation fine :: (cancl_sep_ab_semigroup) ab_semigroup_mult begin
-instance apply (standard; case_tac a; simp add: sep_disj_commute sep_mult_commute;
-                          case_tac b; simp add: sep_disj_commute sep_mult_commute;
-                          case_tac c; simp)
+instance apply (standard; case_tac a; simp add: sep_disj_commute sep_mult_commute times_fine;
+                          case_tac b; simp add: sep_disj_commute sep_mult_commute times_fine;
+                          case_tac c; simp add: times_fine)
   by (metis sep_disj_commuteI sep_disj_multD1 sep_disj_multI1 sep_mult_assoc sep_mult_commute)
 end
 
 instantiation fine :: (sep_algebra) comm_monoid_mult begin
-instance by standard (case_tac a; simp add: one_fine_def)
+instance by standard (case_tac a; simp add: one_fine_def times_fine)
 end
 
 lemma mult_strip_fine_011:
   \<open>NO_MATCH (Fine a'') a' \<Longrightarrow>
    a' * Fine b = Fine c \<longleftrightarrow> (\<exists>a. a' = Fine a \<and> a ## b \<and> a * b = c)\<close>
-  by (cases a'; simp)
+  by (cases a'; simp add: times_fine)
 
 
 subsubsection \<open>Fractional SA\<close>
@@ -960,6 +977,10 @@ lemmas split = fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP]
 lemma mult_strip_inject_011: \<open>NO_MATCH (inject a'') a' \<Longrightarrow>
   a' * inject b = inject c \<longleftrightarrow> (\<exists>a. a' = inject a \<and> a * b = c)\<close>
   by (metis mult_in_dom proj_inj)
+
+lemma times_fun_upd:
+  \<open>(R * mk x)(name := inject y) = (clean R * mk y)\<close>
+  unfolding times_fun_def fun_upd_def fun_eq_iff by simp
 
 end
 
