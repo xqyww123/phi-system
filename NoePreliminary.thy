@@ -88,6 +88,15 @@ lemmas posrat_inverse = posrat_inverse[simplified]
 
 declare rat_of_posrat_inverse[simp]
 
+class to_posrat =
+  fixes to_posrat :: \<open>'a \<Rightarrow> posrat\<close>
+
+instantiation posrat :: to_posrat begin
+definition [simp]: \<open>to_posrat_posrat = (id :: posrat \<Rightarrow> posrat)\<close>
+instance ..
+end
+
+
 instantiation posrat :: one begin
 lift_definition one_posrat :: posrat is 1 by simp
 instance ..
@@ -179,6 +188,29 @@ lemmas rat_of_pos0rat = rat_of_pos0rat[simplified]
 lemmas pos0rat_inverse = pos0rat_inverse[simplified]
 
 declare rat_of_pos0rat_inverse[simp]
+
+class to_pos0rat =
+  fixes to_pos0rat :: \<open>'a \<Rightarrow> pos0rat\<close>
+
+instantiation pos0rat :: to_pos0rat begin
+definition [simp]: \<open>to_pos0rat_pos0rat = (id :: pos0rat \<Rightarrow> pos0rat)\<close>
+instance ..
+end
+
+instantiation posrat :: to_pos0rat begin
+definition \<open>to_pos0rat_posrat x = pos0rat (rat_of_posrat x)\<close>
+instance ..
+end
+
+instantiation pos0rat :: to_posrat begin
+definition \<open>to_posrat_pos0rat x = posrat (rat_of_pos0rat x)\<close>
+instance ..
+end
+
+lemma to_posrat_to_pos0rat[simp]: \<open>to_posrat (to_pos0rat x) = x\<close> for x :: posrat
+  unfolding to_posrat_pos0rat_def to_pos0rat_posrat_def
+  by (metis NoePreliminary.pos0rat_inverse NoePreliminary.rat_of_posrat less_le_not_le rat_of_posrat_inverse)
+
 
 instantiation pos0rat :: zero begin
 lift_definition zero_pos0rat :: pos0rat is 0 by simp
@@ -284,6 +316,17 @@ end
 instantiation pos0rat :: no_negative begin
 instance by (standard, transfer) (simp add: add_nonneg_eq_0_iff)
 end
+
+lemma to_posrat_1_pos0rat[simp]:
+  \<open>to_posrat (1::pos0rat) = 1\<close>
+  unfolding to_posrat_pos0rat_def
+  by (simp add: one_pos0rat.rep_eq one_posrat_def) 
+
+lemma to_posrat_mult_homo_pos0rat:
+  \<open>x \<noteq> 0 \<Longrightarrow> y \<noteq> 0 \<Longrightarrow> to_posrat (x * y) = to_posrat x * to_posrat y\<close>
+  for x :: pos0rat
+  unfolding to_posrat_pos0rat_def
+  by transfer (simp add: posrat_inverse times_posrat_def)
 
 (*
 

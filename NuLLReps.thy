@@ -21,6 +21,8 @@ paragraph \<open>Natural Number\<close>
 definition \<phi>Nat :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>[_]")
   where "\<nat>[b] x = (if x < 2^b then { V_int.mk (b,x) } else {})"
 
+abbreviation \<open>Size \<equiv> \<nat>[addrspace_bits]\<close>
+
 lemma \<phi>Nat_expn[\<phi>expns]:
   "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (b,x)) \<and> x < 2^b"
   unfolding \<phi>Type_def by (simp add: \<phi>Nat_def)
@@ -28,6 +30,10 @@ lemma \<phi>Nat_expn[\<phi>expns]:
 lemma \<phi>Nat_elim[elim!,\<phi>elim]:
   "Inhabited (x \<Ztypecolon> \<nat>[b]) \<Longrightarrow> (x < 2^b \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (auto simp add: \<phi>expns)
+
+lemma \<phi>Nat_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<nat>[?b]) ?ty\<close>]:
+  \<open>\<phi>SemType (x \<Ztypecolon> \<nat>[b]) (\<tau>Int b)\<close>
+  unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns)
 
 lemma [\<phi>reason on \<open>\<phi>Equal (\<nat>[?b]) ?c ?eq\<close>]:
   "\<phi>Equal (\<nat>[b]) (\<lambda>x y. True) (=)"
@@ -61,6 +67,9 @@ lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) \<nat>\<^sup>r[?b] ?z\<cl
   "\<phi>Zero (T_int.mk b) (\<nat>\<^sup>r[b]) 0"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
+lemma \<phi>NatRound_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<nat>\<^sup>r[?b]) ?ty\<close>]:
+  \<open>\<phi>SemType (x \<Ztypecolon> \<nat>\<^sup>r[b]) (\<tau>Int b)\<close>
+  unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns)
 
 subsubsection \<open>Integer in the normal sense\<close>
 
@@ -91,6 +100,12 @@ lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) \<int>[?b] ?x\<close>]:
     "\<phi>Zero (T_int.mk b) \<int>[b] 0"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
+lemma \<phi>Int_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<int>[?b]) ?ty\<close>]:
+  \<open>\<phi>SemType (x \<Ztypecolon> \<int>[b]) (\<tau>Int b)\<close>
+  unfolding \<phi>SemType_def subset_iff
+  by (simp add: \<phi>expns) (smt (verit, ccfv_SIG) diff_le_self power_increasing_iff)
+
+
 
 subsubsection \<open>Boolean\<close>
 
@@ -119,6 +134,11 @@ lemma \<phi>Bool_zero[\<phi>reason on \<open>\<phi>Zero (\<tau>Int 1) \<bool> ?z
   "\<phi>Zero (\<tau>Int 1) \<bool> False"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
+lemma \<phi>Bool_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<bool>) ?ty\<close>]:
+  \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) (\<tau>Int 1)\<close>
+  unfolding \<phi>SemType_def subset_iff
+  by (simp add: \<phi>expns)
+
 
 subsection \<open>Pointers\<close>
 
@@ -136,13 +156,17 @@ lemma RawPointer_inhabited[elim,\<phi>elim]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma RawPointer_zero[\<phi>reason on \<open>\<phi>Zero (T_pointer.mk ()) RawPointer ?x\<close>]:
-  "\<phi>Zero \<tau>Pointer RawPointer (0 |: 0)"
+  "\<phi>Zero \<tau>Pointer RawPointer (Null |: 0)"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_prod_def zero_memaddr_def)
 
 lemma RawPointer_eqcmp[\<phi>reason on \<open>\<phi>Equal RawPointer ?c ?eq\<close>]:
   "\<phi>Equal RawPointer (\<lambda>x y. x = 0 |: 0 \<or> y = 0 |: 0 \<or> memaddr.segment x = memaddr.segment y) (=)"
   unfolding \<phi>Equal_def by (simp add: lrep_exps \<phi>expns zero_memaddr_def) blast
 
+lemma RawPointer_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> RawPointer) ?ty\<close>]:
+  \<open>\<phi>SemType (x \<Ztypecolon> RawPointer) \<tau>Pointer\<close>
+  unfolding \<phi>SemType_def subset_iff
+  by (simp add: \<phi>expns)
 
 subsubsection \<open>Pointer\<close>
 
@@ -167,6 +191,59 @@ lemma Pointer_eqcmp[\<phi>reason on \<open>\<phi>Equal (Pointer ?TY) ?c ?eq\<clo
   unfolding \<phi>Equal_def
   by (simp add: \<phi>expns) (metis logaddr_to_raw_inj)
 
+lemma Pointer_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Pointer ?TY) ?ty\<close>]:
+  \<open>\<phi>SemType (x \<Ztypecolon> Pointer TY) \<tau>Pointer\<close>
+  unfolding \<phi>SemType_def subset_iff
+  by (simp add: \<phi>expns valid_logaddr_def)
+
+subsubsection \<open>Slice Pointer\<close>
+
+text \<open>A limitation of the ordinary Pointer is that it cannot point to the end of an array,
+  because there is no object at all at the end. To address this, there is a slice pointer which
+  can range over a piece of the array including the end.\<close>
+
+definition SlicePtr :: "'TY \<Rightarrow> ('VAL, 'TY logaddr \<times> nat \<times> nat) \<phi>"
+  where "SlicePtr TY = (\<lambda>(base,i,len).
+    if valid_logaddr base \<and> base \<noteq> 0 \<and> (\<exists>N. logaddr_type base = \<tau>Array N TY \<and> len \<le> N)
+        \<and> 0 < MemObj_Size TY \<and> i \<le> len
+    then { V_pointer.mk (logaddr_to_raw base ||+ of_nat (i * MemObj_Size TY)) }
+    else {})"
+
+lemma SlicePtr_expn[\<phi>expns]:
+  \<open>v \<in> ((base, i, len) \<Ztypecolon> SlicePtr TY) \<longleftrightarrow>
+      valid_logaddr base \<and> base \<noteq> 0
+      \<and> (\<exists>N. logaddr_type base = \<tau>Array N TY \<and> len \<le> N)
+      \<and> 0 < MemObj_Size TY \<and> i \<le> len
+      \<and> v = V_pointer.mk (logaddr_to_raw base ||+ of_nat (i * MemObj_Size TY))\<close>
+  unfolding SlicePtr_def \<phi>Type_def by simp blast
+
+lemma SlicePtr_inhabited[\<phi>elim,elim!]:
+  \<open>Inhabited ((base, i, len) \<Ztypecolon> SlicePtr TY)
+\<Longrightarrow> (\<And>N. valid_logaddr base \<Longrightarrow> base \<noteq> 0 \<Longrightarrow> logaddr_type base = \<tau>Array N TY \<Longrightarrow> len \<le> N
+          \<Longrightarrow> 0 < MemObj_Size TY \<Longrightarrow> i \<le> len \<Longrightarrow> C)
+\<Longrightarrow> C\<close>
+  unfolding Inhabited_def SlicePtr_expn by simp blast
+
+lemma SlicePtr_eqcmp[\<phi>reason on \<open>\<phi>Equal (SlicePtr ?TY) ?c ?eq\<close>]:
+    "\<phi>Equal (SlicePtr TY) (\<lambda>x y. fst x = fst y) (\<lambda>(_,i1,_) (_,i2,_). i1 = i2)"
+  unfolding \<phi>Equal_def
+  apply (clarsimp simp add: \<phi>expns word_of_nat_eq_iff take_bit_nat_def simp del: of_nat_mult)
+  subgoal premises for addr i1 n1 i2 N n2 proof -
+    note logaddr_storable_in_mem[OF \<open>valid_logaddr addr\<close> \<open>addr \<noteq> 0\<close>,
+            unfolded \<open>logaddr_type addr = \<tau>Array N TY\<close>, unfolded memobj_size_arr]
+    then have \<open>i1 * MemObj_Size TY < 2 ^ addrspace_bits\<close>
+          and \<open>i2 * MemObj_Size TY < 2 ^ addrspace_bits\<close>
+      by (meson \<open>i1 \<le> n1\<close> \<open>n1 \<le> N\<close> \<open>i2 \<le> n2\<close> \<open>n2 \<le> N\<close> dual_order.strict_trans2 mult_le_mono1)+
+    then show ?thesis
+      using \<open>0 < MemObj_Size TY\<close> by fastforce 
+  qed
+  done
+
+lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> SlicePtr ?TY) ?ty\<close>]:
+  \<open>\<phi>SemType (x \<Ztypecolon> SlicePtr TY) \<tau>Pointer\<close>
+  unfolding \<phi>SemType_def subset_iff
+  by (cases x, simp add: \<phi>expns valid_logaddr_def)
+
 
 subsection \<open>Tuple Field\<close>
 
@@ -187,12 +264,52 @@ lemma \<phi>Field_zero  [\<phi>reason on \<open>\<phi>Zero (T_tup.mk [?ty]) (\<p
 
 lemma \<phi>Field_zeros [\<phi>reason on \<open>\<phi>Zero (T_tup.mk [?ty]) (\<phi>Field ?T) ?x\<close>]:
   \<open>\<phi>Zero ty T x
-    \<Longrightarrow> \<phi>Zero (T_tup.mk tys) (\<clubsuit> Ts) xs
-    \<Longrightarrow> \<phi>Zero (T_tup.mk (ty#tys)) (\<clubsuit> T \<^emph> \<clubsuit> Ts) (x,xs) \<close>
+    \<Longrightarrow> \<phi>Zero (T_tup.mk tys) Ts xs
+    \<Longrightarrow> \<phi>Zero (T_tup.mk (ty#tys)) (\<clubsuit> T \<^emph> Ts) (x,xs) \<close>
   unfolding \<phi>Zero_def
-  by (simp add: \<phi>expns V_tup_mult) (metis Cons_eq_append_conv V_tup_mult)
+  by (simp add: \<phi>expns V_tup_mult_cons) blast
+
+lemma \<phi>Field_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<clubsuit> ?T) ?ty\<close>]:
+  \<open>\<phi>SemType (x \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<clubsuit> T) (\<tau>Tuple [TY])\<close>
+  unfolding \<phi>SemType_def subset_iff
+  by (clarsimp simp add: \<phi>expns)
+
+lemma \<phi>Field_semtsy[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<clubsuit> ?T \<^emph> ?Ts) ?ty\<close>]:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (\<tau>Tuple TYs)
+\<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<clubsuit> T \<^emph> Ts)) (\<tau>Tuple (TY#TYs))\<close>
+  unfolding \<phi>SemType_def subset_iff
+  apply (clarsimp simp add: \<phi>expns)
+  by (metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
 
 
+subsection \<open>Array\<close>
+
+definition Array :: "nat \<Rightarrow> ('VAL, 'a) \<phi> \<Rightarrow> ('VAL, 'a list) \<phi>"
+  where \<open>Array N T = (\<lambda>l. { V_array.mk (TY,vs) |TY vs.
+    length l = N \<and> list_all2 (\<lambda>v x. v \<in> (x \<Ztypecolon> T)) vs l \<and> \<phi>\<phi>SemType T TY \<and> (\<exists>x. Inhabited (x \<Ztypecolon> T)) })\<close>
+
+lemma Array_expns[\<phi>expns]:
+  \<open>v \<in> (l \<Ztypecolon> Array N T) \<longleftrightarrow>
+    (\<exists> TY vs. length l = N \<and> v = V_array.mk (TY,vs) \<and> list_all2 (\<lambda>v x. v \<in> (x \<Ztypecolon> T)) vs l
+        \<and> \<phi>\<phi>SemType T TY \<and> (\<exists>x. Inhabited (x \<Ztypecolon> T)))\<close>
+  unfolding Array_def \<phi>Type_def by simp blast
+
+lemma Array_inhabited[\<phi>elim, elim]:
+  \<open> Inhabited (l \<Ztypecolon> Array N T)
+\<Longrightarrow> (length l = N \<Longrightarrow>(\<And>i. i < length l \<Longrightarrow> Inhabited (l!i \<Ztypecolon> T)) \<Longrightarrow> C)
+\<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth) blast
+
+lemma Array_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Array ?N ?T) ?ty\<close>]:
+  \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY) \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (\<tau>Array N TY)\<close>
+  apply (clarsimp simp add: \<phi>expns list_all_length list_all2_conv_all_nth \<phi>SemType_def subset_iff
+          Inhabited_def)
+  using Well_Type_unique by blast
+  
+lemma Array_zero[\<phi>reason on \<open>\<phi>Zero (\<tau>Array ?N ?TY) (Array ?N ?T) ?x\<close>]:
+  \<open>\<phi>Zero TY T zero \<Longrightarrow> \<phi>\<phi>SemType T TY \<Longrightarrow> \<phi>Zero (\<tau>Array N TY) (Array N T) (replicate N zero)\<close>
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns list_all2_conv_all_nth Inhabited_def; blast)
 
 
 
@@ -211,17 +328,27 @@ subsection \<open>Memory Object\<close>
 
 definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
   where \<open>Ref T x' = (case x' of (seg |: idx) \<Zinj> (n \<Znrres> x) \<Rightarrow>
-    if n \<noteq> 0 \<and> valid_index (segidx.layout seg) idx then
+    if 0 < n \<and> valid_index (segidx.layout seg) idx then
     { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))
           |v. v \<in> Well_Type (logaddr_type (seg |: idx)) \<and> v \<in> (x \<Ztypecolon> T) }
     else {})\<close>
 
 lemma Ref_expn[\<phi>expns]:
   \<open>fic \<in> ((seg |: idx) \<Zinj> (n \<Znrres> v) \<Ztypecolon> Ref Identity)
-    \<longleftrightarrow> n \<noteq> 0 \<and> valid_index (segidx.layout seg) idx
+    \<longleftrightarrow> 0 < n \<and> valid_index (segidx.layout seg) idx
         \<and> v \<in> Well_Type (logaddr_type (seg |: idx))
         \<and> fic = FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))\<close>
   unfolding Ref_def \<phi>Type_def by (simp add: Identity_def) blast
+
+(*
+definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share option list) \<phi>\<close>
+  where \<open>Slice T x' = (case x' of (seg |: i#idx) \<Zinj> l \<Rightarrow>
+    if valid_index (segidx.layout seg) idx
+     \<and> (\<exists>N TY. index_type idx (segidx.layout seg) = \<tau>Array N TY \<and> i + length l \<le> N)
+    then let 
+    { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))
+          |v. v \<in> Well_Type (logaddr_type (seg |: idx)) \<and> v \<in> (x \<Ztypecolon> T) }
+    else {} | _ \<Rightarrow> {})\<close> *)
 
 
 end

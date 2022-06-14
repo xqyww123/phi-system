@@ -60,6 +60,20 @@ definition op_store_mem :: "'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
     \<phi>M_get_mem seg idx (\<lambda>_.
     \<phi>M_set_res_entry R_mem.updt (\<lambda>f. f(seg := map_option (index_mod_value idx (\<lambda>_. v)) (f seg))))))"
 
+definition op_free_mem :: "('VAL,'RES_N,'RES) proc"
+  where "op_free_mem =
+    \<phi>M_getV \<tau>Pointer V_pointer.dest (\<lambda>ptr. case ptr of (seg |: ofst) \<Rightarrow>
+    \<phi>M_assert (ofst = 0) \<ggreater>
+    \<phi>M_set_res_entry R_mem.updt (\<lambda>f. f(seg := None)))"
+
+definition op_alloc_mem :: "'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_alloc_mem TY' =
+    \<phi>M_getV (\<tau>Int addrspace_bits) V_int.dest (\<lambda>(_, n).
+    \<phi>M_set_res_entry R_mem.updt (\<lambda>f.
+    let TY = \<tau>Array n TY'
+      ; addr = (@addr. f addr = None \<and> segidx.layout addr = TY)
+     in f(addr := Some (Zero TY))))"
+
 
 lemma (in std) \<phi>M_get_logptr:
   \<open>(valid_logaddr addr \<Longrightarrow>
@@ -71,6 +85,8 @@ lemma (in std) \<phi>M_get_logptr:
   unfolding \<phi>M_get_logptr_def
   by (rule \<phi>M_getV, simp add: \<phi>expns valid_logaddr_def,
         auto simp add: \<phi>expns)
+
+declare (in std) fiction_mem_\<I>[simp]
 
 lemma (in std) \<phi>M_get_mem:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> (seg |: idx) \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity \<longmapsto> Y \<rbrace>
@@ -89,7 +105,7 @@ lemma (in std) \<phi>M_get_mem:
     from \<open>mem' ## mem\<close> have t1: \<open>mem' seg ## mem seg\<close> by (simp add: sep_disj_fun) 
     show ?thesis
       using \<open>\<forall>_. \<exists>_. _ = Fine _ \<and> _ \<in> _\<close>[THEN spec[where x=seg]] t1 \<open>valid_index (segidx.layout seg) idx\<close>
-        apply (auto simp add: \<open>n \<noteq> 0\<close>)
+        apply (auto simp add: \<open>0 < n\<close>)
       apply (rule \<phi>M_assert')
       using \<open>\<forall>_ \<in> dom _. _\<close>[unfolded Ball_def, THEN spec[where x=seg]]
        apply (auto simp add: times_fun)[1]
@@ -120,6 +136,7 @@ lemma (in std) \<phi>M_get_mem:
   qed
   done
 
+
 lemma (in std) op_load_mem:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_mem TY
@@ -149,9 +166,13 @@ lemma (in std) op_store_mem:
       proof -
         have [simp]: \<open>seg \<in> dom mem\<close> using \<open>mem seg = Some val\<close> by blast
         have [simp]: \<open>\<And>any. mem_R ## mem(seg := any)\<close> using \<open>mem_R ## _\<close> \<open>mem seg = Some val\<close>
-          by (smt (verit, best) fun_upd_apply sep_disj_commuteI sep_disj_fun_def sep_disj_option(3) sep_disj_partial_map_some_none) sorry
-      have \<open>fic_mR ## push_map idx (to_share \<circ> Mapof_Val u)\<close>
-
+          by (smt (verit, best) fun_upd_apply sep_disj_commuteI sep_disj_fun_def sep_disj_option(3) sep_disj_partial_map_some_none)
+      have t1: \<open>dom (push_map idx (to_share \<circ> Mapof_Val u)) = dom (push_map idx (to_share \<circ> Mapof_Val v))\<close>
+        by simp (meson Mapof_Val_same_dom \<open>u \<in> Well_Type _\<close> \<open>v \<in> Well_Type _\<close>)
+      have t2: \<open>fic_mR ## push_map idx (to_share \<circ> Mapof_Val u)\<close>
+        using total_Mapof_disjoint dom1_disjoint_sep_disj dom1_dom t1
+        by (metis \<open>fic_mR ## _\<close> \<open>to_share \<circ> Mapof_Val val = _\<close>)
+        
         show ?thesis
           apply (rule exI[where x=\<open>fic * FIC_mem.mk (1(seg := Fine (push_map idx (to_share \<circ> Mapof_Val u))))\<close>])
           apply (auto simp add: prems prems2 inj_image_mem_iff index_mod_value_welltyp
@@ -163,36 +184,132 @@ lemma (in std) op_store_mem:
                  fold R_mem.split)
           apply (rule exI[where x=\<open>res\<close>])
           apply (rule exI[where x=\<open>R_mem.mk (Fine (mem(seg \<mapsto> index_mod_value idx (\<lambda>_. u) val)))\<close>])
-          apply (simp add: prems share_mem_def)
-          apply (rule exI[where x = \<open>Fine (mem(seg \<mapsto> index_mod_value idx (\<lambda>_. u) val))\<close>])
-          apply (auto simp add: mult_strip_fine_011 times_fun inj_image_mem_iff prems2 times_fine)
-          apply clarsimp
-          apply (subst inj_image_mem_iff, simp, subst mem_Collect_eq, rule)
-          apply (rule exI[where x=])
-          thm inj_image_mem_iff
+          apply (simp add: prems share_mem_def )
+          apply (auto simp add: mult_strip_fine_011 times_fun inj_image_mem_iff prems2 times_fine t2)
+          apply (rule exI[where x =\<open>fic_mR * push_map idx (to_share \<circ> Mapof_Val u)\<close>],
+              simp add: Mapof_Val_modify_fiction[of \<open>segidx.layout seg\<close> idx val v u fic_mR]
+                        prems2 prems index_mod_value_welltyp)
+          subgoal for x
+            using \<open>\<forall>_. \<exists>y. _\<close>[THEN spec[where x=x]] apply clarsimp apply (case_tac \<open>y=1\<close>; simp)
+          subgoal for y by (rule exI[where x=y], simp)
+          done
+        done
+    qed
+    done
+  qed
+  done
+
+declare (in std) fiction_mem_\<I>[simp del]
+
+thm op_alloc_mem_def
+ML \<open>@{term "{f x |x. P x}"}\<close>
+
+lemma (in std) fiction_mem_\<I>':
+  \<open> Rmem \<in> \<I> (fiction_mem (fiction.defined I)) fic
+\<longleftrightarrow> (\<exists>mem. Rmem = R_mem.mk (Fine mem) \<and> mem \<in> \<I> I fic)\<close>
+  unfolding fiction_mem_\<I> by clarsimp blast
+
+lemma (in std) fiction_mem_\<I>'':
+  \<open> Rmem R_mem.name = R_mem.inject (Fine mem)
+\<Longrightarrow> Rmem \<in> \<I> (fiction_mem (fiction.defined I)) fic
+\<longleftrightarrow> Rmem = R_mem.mk (Fine mem) \<and> mem \<in> \<I> I fic\<close>
+  unfolding fiction_mem_\<I>' by auto
+
+lemma (in std) fiction_mem_\<I>_simp:
+  \<open> R_mem.mk (Fine mem) \<in> \<I> (fiction_mem (fiction.defined I)) fic
+\<longleftrightarrow> mem \<in> \<I> I fic\<close>
+  unfolding fiction_mem_\<I>' by simp
 
 
-          thm Mapof_Val_modify_fiction
-          thm prems
-          thm prems2
 
 
-
-        from \<open>to_share \<circ> Mapof_Val val = _\<close>
-        have \<open>to_share \<circ> Mapof_Val (index_value idx val) = pull_map idx fic_mR * (to_share \<circ> Mapof_Val v)\<close>
-          by (metis Mapof_Val_pull \<open>valid_index (segidx.layout seg) idx\<close>
-                    \<open>Typeof val = segidx.layout seg\<close> pull_map_homo_mult pull_map_to_share pull_push_map)
-        then have \<open>Mapof_Val (index_value idx val) = (strip_share \<circ> pull_map idx fic_mR) ++ (Mapof_Val v)\<close>
-          by (metis prems2(5) pull_map_sep_disj pull_push_map strip_share_fun_mult strip_share_share_funcomp(2))
-        then have \<open>val = v\<close>
-      thm prems2(5)
-
-  thm  Valid_Mem_def
-  thm FIC_mem.interp_split' R_mem_valid_split' share_mem_def
-                R_mem.mult_in_dom Valid_Mem_def times_fun
-                mult_strip_fine_011
+lemma (in std) share_mem_in_dom:
+  \<open> mem \<in> \<I> share_mem' fic
+\<Longrightarrow> seg \<notin> dom mem
+\<Longrightarrow> seg \<notin> dom1 fic\<close>
+  unfolding share_mem'_def
+  by (simp add: domIff dom1_def one_fine_def)
+     (smt (verit, ccfv_SIG) mem_Collect_eq option.distinct(1))
 
 
+lemma (in std) share_mem'_mono:
+  \<open> x \<in> \<I> share_mem' fx
+\<Longrightarrow> y \<in> \<I> share_mem' fy
+\<Longrightarrow> dom1 fx \<inter> dom1 fy = {}
+\<Longrightarrow> x * y \<in> \<I> share_mem' (fx * fy)\<close>
+  unfolding share_mem'_def set_eq_iff
+  apply clarsimp
+  subgoal premises prems for k
+    using prems[THEN spec[where x=k]]
+  apply (clarsimp simp add: times_fun dom1_def one_fine_def)
+    subgoal for fx' fy'
+      apply (cases \<open>fx' = 1\<close>; cases \<open>fy' = 1\<close>; clarsimp simp add: times_fine)
+      using Mapof_not_1 to_share_funcomp_eq_1_iff by blast+
+    done
+  done
+
+lemma (in std)
+  \<open>mem \<in> \<I> share_mem' (fic * 1(seg := Fine (to_share \<circ> Mapof_Val v)))
+\<Longrightarrow> mem(seg := None) \<in> \<I> share_mem' fic\<close>
+  unfolding share_mem'_def
+  apply (auto simp add: times_fun)
+  subgoal premises prem proof -
+    show ?thesis
+      using prem[THEN spec[where x=seg]]
+      apply (clarsimp simp add: mult_strip_fine_011)  
+
+      typ \<open>'a::cancel_\<close>
+
+lemma (in std) op_alloc_mem:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_mem TY \<lbrace> n \<Ztypecolon> Size \<longmapsto> (seg |: []) \<Zinj> 1 \<Znrres> (Zero (\<tau>Array n TY)) \<Ztypecolon> Ref Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j seg. True\<rbrace>\<close>
+  unfolding op_alloc_mem_def
+  apply (rule \<phi>M_tail_left, rule \<phi>M_getV; simp add: \<phi>expns)
+  unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
+  apply (auto simp add: \<phi>expns FIC_mem.interp_split' R_mem_valid_split' times_fun dom_mult
+                        R_mem.mult_in_dom Valid_Mem_def mult_strip_fine_011 mult_strip_fine_001
+                        fiction_mem_\<I>'' share_mem_def')
+  subgoal premises prems for vals R fic res mem' mem
+  proof -
+    note [simp] = times_fun dom_mult
+    have t0: \<open>finite (dom (mem' * mem))\<close> using prems by simp
+    note t1 = Mem_freshness[OF t0, of \<open>\<tau>Array n TY\<close>, THEN someI_ex, simplified]
+    let ?seg = \<open>(SOME x. mem' x = None \<and> mem x = None \<and> segidx.layout x = \<tau>Array n TY)\<close>
+    have t2'[simp]: \<open>mem' ?seg = None \<and> mem ?seg = None\<close> using t1 by blast
+    have t2'': \<open>?seg \<notin> dom mem\<close> by force
+    have t6: \<open>\<And>any. R_mem.clean res * R_mem.mk (Fine ((mem' * mem)(?seg := any)))
+                  = res * (R_mem.mk (Fine (mem * 1(?seg := any))))\<close>
+      unfolding fun_upd_def fun_eq_iff
+      apply (simp add: prems R_mem.inj_homo_mult[symmetric] times_fine fun_eq_iff sep_disj_fun_def)
+      by (simp add: \<open>mem' ## mem\<close> sep_disj_fun)
+
+    show ?thesis
+      apply (rule exI[where x = \<open>fic * FIC_mem.mk
+                  (1(?seg := Fine (to_share \<circ> Mapof_Val (V_array.mk (TY, replicate n (Zero TY))))))\<close>])
+      apply (auto simp add: prems inj_image_mem_iff t1 list_all_length zero_well_typ
+                            FIC_mem.interp_split' R_mem.times_fun_upd sep_disj_partial_map_upd
+                            times_set_def times_fine'[symmetric] R_mem.mk_homo_mult)
+       apply (rule exI[where x=\<open>?seg\<close>], rule exI[where x=fic], simp add: prems t1 list_all_length zero_well_typ)
+      apply (unfold t6)
+      apply (rule exI[where x=\<open>res\<close>])
+      apply (rule exI[where x=\<open>R_mem.mk (Fine (mem * 1(?seg \<mapsto> V_array.mk (TY, replicate n (Zero TY)))))\<close>])
+      using \<open>res \<in> \<I> INTERP (FIC_mem.clean fic)\<close>
+      apply (clarsimp simp add: prems share_mem_def' fiction_mem_\<I>_simp)
+      apply (rule share_mem'_mono, simp add: prems)
+      apply (clarsimp simp add: share_mem'_def t1 list_all_length zero_well_typ one_fine_def)
+      by (clarsimp simp add: set_eq_iff share_mem_in_dom[OF \<open>mem \<in> \<I> share_mem' (FIC_mem.get fic)\<close> t2''])
+  qed
+  done
+
+
+lemma (in std) op_free_mem:
+   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_mem \<lbrace> (seg |: []) \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> (seg |: 0) \<Ztypecolon> RawPointer \<longmapsto> 1\<rbrace>\<close>
+  unfolding op_free_mem_def
+  apply (rule \<phi>M_getV; simp add: \<phi>expns)
+  apply (rule \<phi>SEQ, rule \<phi>M_assert, rule)
+  unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
+  apply (auto simp add: \<phi>expns FIC_mem.interp_split' R_mem_valid_split' times_fun dom_mult
+                        R_mem.mult_in_dom Valid_Mem_def mult_strip_fine_011 mult_strip_fine_001
+                        fiction_mem_\<I>'' share_mem_def' )
 
 
 definition \<phi>M_get_var :: "varname \<Rightarrow> 'TY \<Rightarrow> ('VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"

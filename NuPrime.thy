@@ -29,10 +29,20 @@ virtual_datatype std_ty =
   T_array   :: \<open>'self \<times> nat\<close>
 
 context std_ty begin
+
 abbreviation \<open>\<tau>Int \<equiv> T_int.mk\<close>
 abbreviation \<open>\<tau>Pointer \<equiv> T_pointer.mk ()\<close>
 abbreviation \<open>\<tau>Tuple \<equiv> T_tup.mk\<close>
 abbreviation \<open>\<tau>Array N T \<equiv> T_array.mk (T,N)\<close>
+
+definition \<open>length_\<tau>Array T = (@N. \<exists>any. T = \<tau>Array N any)\<close>
+abbreviation \<open>is_\<tau>Array T t \<equiv> (\<exists>N. t = \<tau>Array N T)\<close>
+
+lemma length_\<tau>Array[simp]:
+  \<open>length_\<tau>Array (\<tau>Array N T) = N\<close>
+  unfolding length_\<tau>Array_def
+  by blast
+
 end
 
 (* datatype llty = T_int nat \<comment> \<open>int bits\<close> | T_pointer | T_tup llty
@@ -67,7 +77,7 @@ type_synonym 'TY logaddr = "(nat list, 'TY) memaddr" (* the index of logaddr is 
 type_synonym 'TY rawaddr = \<open>(size_t, 'TY) memaddr\<close>
 
 instantiation segidx :: (type) zero begin
-definition "zero_segidx = Null"
+definition [simp]: "zero_segidx = Null"
 instance ..
 end
 
@@ -102,13 +112,23 @@ lemma segidx_infinite_TY:
   using inj_def by fastforce
 
 
-abbreviation shift_addr :: "'TY logaddr \<Rightarrow> nat \<Rightarrow> 'TY logaddr" (infixl "||+" 60)
+abbreviation shift_addr :: "('idx,'TY) memaddr \<Rightarrow> ('idx::monoid_add) \<Rightarrow> ('idx,'TY) memaddr" (infixl "||+" 60)
   where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) id addr"
-lemma memaddr_forall[lrep_exps]: "All P \<longleftrightarrow> (\<forall>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
-lemma memaddr_exists[lrep_exps]: "Ex P \<longleftrightarrow> (\<exists>base ofs. P (base |: ofs))" by (metis memaddr.exhaust)
 
-lemma mem_shift_shift[simp]: "a ||+ i ||+ j = a ||+ (i + j)" for i :: nat by (cases a) simp
+lemma mem_shift_shift[simp]: "a ||+ i ||+ j = a ||+ (i + j)" by (cases a) (simp add: add.assoc)
 
+lemma memaddr_segment_shift[simp]:
+  \<open>memaddr.segment (a ||+ i) = memaddr.segment a\<close>
+  by (cases a, simp)
+
+lemma memaddr_index_shift[simp]:
+  \<open>memaddr.index (a ||+ i) = memaddr.index a + i\<close>
+  by (cases a, simp)
+
+lemma mem_shift_add_cancel[simp]:
+  \<open>(a ||+ i) = (a ||+ j) \<longleftrightarrow> i = j\<close>
+  for i :: \<open>'a::{monoid_add,cancel_semigroup_add}\<close>
+  by (cases a, simp)
 
 
 
@@ -192,9 +212,10 @@ locale std_sem_pre =
   for TY_CONS_OF and VAL_CONS_OF
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL) \<times> ('RES_N => 'RES)) itself\<close>
 
-  fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
+fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
+assumes Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
 
-  assumes V_tup_mult: \<open>V_tup.mk t1 * V_tup.mk t2 = V_tup.mk (t1 @ t2)\<close>
+assumes V_tup_mult: \<open>V_tup.mk t1 * V_tup.mk t2 = V_tup.mk (t1 @ t2)\<close>
   fixes MemObj_Size :: \<open>'TY \<Rightarrow> nat\<close> \<comment> \<open>in size of bytes\<close>
     and valid_idx_step :: \<open>'TY \<Rightarrow> nat \<Rightarrow> bool\<close>
     and idx_step_type   :: \<open>nat \<Rightarrow> 'TY \<Rightarrow> 'TY\<close>
@@ -208,7 +229,7 @@ locale std_sem_pre =
     and   memobj_size_step   : \<open>valid_idx_step T i \<Longrightarrow> MemObj_Size (idx_step_type i T) \<le> MemObj_Size T\<close>
     and   idx_step_type_measure: \<open>valid_idx_step T i \<Longrightarrow> type_measure (idx_step_type i T) < type_measure T\<close>
     and   idx_step_type_tup  : \<open>i < length tys \<Longrightarrow> idx_step_type i (\<tau>Tuple tys) = tys!i \<close>
-    and   idx_step_type_arr  : \<open>i < N \<Longrightarrow> idx_step_type i (\<tau>Array N T) = T\<close>
+    and   idx_step_type_arr  : \<open>i \<le> N \<Longrightarrow> idx_step_type i (\<tau>Array N T) = T\<close>
     and   valid_idx_step_tup : \<open>valid_idx_step (\<tau>Tuple tys) i \<longleftrightarrow> i < length tys\<close>
     and   valid_idx_step_arr : \<open>valid_idx_step (\<tau>Array N T) i \<longleftrightarrow> i < N\<close>
     and   idx_step_value_welltyp: \<open>valid_idx_step T i \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> idx_step_value i v \<in> Well_Type (idx_step_type i T)\<close>
@@ -237,6 +258,14 @@ locale std_sem_pre =
           tuple and array are so special ...One thing: we do not support arbitrary-length array like [0 x nat] in LLVM? TODO \<close>
 begin
 
+lemma V_tup_mult_cons:
+  \<open>NO_MATCH vs ([]::'VAL list) \<Longrightarrow> V_tup.mk (v#vs) = V_tup.mk [v] * V_tup.mk vs\<close>
+  using V_tup_mult by simp
+
+lemma Well_Type_unique:
+  \<open>v \<in> Well_Type ta \<Longrightarrow> v \<in> Well_Type tb \<Longrightarrow> ta = tb\<close>
+  using Well_Type_disjoint by blast
+
 abbreviation \<open>type_storable_in_mem T \<equiv> MemObj_Size T < 2^addrspace_bits\<close>
 
 definition \<open>Valid_Segment seg = (
@@ -244,7 +273,7 @@ definition \<open>Valid_Segment seg = (
               | Segment _ ty \<Rightarrow> type_storable_in_mem ty
     )\<close>
 
-lemma Valid_Segment_zero[simp]: \<open>Valid_Segment 0\<close>
+lemma Valid_Segment_zero[simp]: \<open>Valid_Segment Null\<close>
   unfolding Valid_Segment_def zero_segidx_def by simp
 
 definition Valid_Mem :: "('TY,'VAL) R_mem set"
@@ -298,8 +327,6 @@ lemma index_mod_value_welltyp:
 
 
 
-
-
 primrec index_offset :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> nat\<close>
   where \<open>index_offset T [] = 0\<close>
       | \<open>index_offset T (i#idx) = idx_step_offset T i + index_offset (idx_step_type i T) idx\<close>
@@ -307,57 +334,6 @@ primrec index_offset :: \<open>'TY \<Rightarrow> nat list \<Rightarrow> nat\<clo
 lemma index_offset_tail[simp]:
   \<open>index_offset T (idx@[i]) = index_offset T idx + idx_step_offset (index_type idx T) i\<close>
   by (induct idx arbitrary: T; simp)
-
-
-f
-paragraph \<open>Address & Pointer\<close>
-
-abbreviation valid_rawaddr :: \<open>'TY rawaddr \<Rightarrow> bool\<close>
-  where \<open>valid_rawaddr addr \<equiv> Valid_Segment (memaddr.segment addr)\<close>
-
-definition valid_logaddr :: "'TY logaddr \<Rightarrow> bool"
-  where "valid_logaddr addr \<longleftrightarrow>
-    Valid_Segment (memaddr.segment addr) \<and>
-    (memaddr.segment addr = Null \<longleftrightarrow> memaddr.index addr = []) \<and>
-    valid_index (segidx.layout (memaddr.segment addr)) (memaddr.index addr)"
-
-lemma valid_rawaddr_0[simp]: \<open>valid_rawaddr (0 |: 0)\<close>
-  by (simp add: zero_prod_def Valid_Segment_def zero_memaddr_def zero_segidx_def)
-
-lemma valid_logaddr_0[simp]: \<open>valid_logaddr (0 |: [])\<close>
-  by (simp add: valid_logaddr_def zero_prod_def Valid_Segment_def zero_memaddr_def zero_segidx_def)
-
-abbreviation logaddr_type :: \<open>'TY logaddr \<Rightarrow> 'TY\<close>
-  where \<open>logaddr_type addr \<equiv> index_type (memaddr.index addr) (segidx.layout (memaddr.segment addr))\<close>
-
-lemma MemObj_Size_LE_idx:
-  \<open>valid_index T (base@idx) \<Longrightarrow> MemObj_Size (index_type (base@idx) T) \<le> MemObj_Size (index_type base T)\<close>
-  apply (induct base arbitrary: T idx; simp)
-  subgoal for T idx apply (induct idx arbitrary: T; simp)
-    using memobj_size_step order.trans by blast
-  done
-
-lemmas MemObj_Size_LE_idx_0 = MemObj_Size_LE_idx[where base = "[]", simplified]
-
-lemma index_type_type_storable_in_mem:
-  \<open>type_storable_in_mem T \<Longrightarrow> valid_index T idx \<Longrightarrow> type_storable_in_mem (index_type idx T)\<close>
-  using MemObj_Size_LE_idx_0 order.strict_trans1 by blast 
-
-definition logaddr_to_raw :: \<open>'TY logaddr \<Rightarrow> 'TY rawaddr\<close>
-  where \<open>logaddr_to_raw addr =
-    (case addr of seg |: idx \<Rightarrow> seg |: to_size_t (index_offset (segidx.layout seg) idx))\<close>
-
-lemma logaddr_to_raw_0[simp]:
-  \<open>logaddr_to_raw (0 |: []) = (0 |: 0)\<close>
-  unfolding logaddr_to_raw_def by simp
-
-lemma logaddr_to_raw_segment[simp]:
-  \<open>memaddr.segment (logaddr_to_raw addr) = memaddr.segment addr\<close>
-  unfolding logaddr_to_raw_def by (cases addr) simp
-
-lemma valid_logaddr_rawaddr [simp]:
-  \<open>valid_logaddr addr \<Longrightarrow> valid_rawaddr (logaddr_to_raw addr)\<close>
-  unfolding valid_logaddr_def by simp 
 
 lemma index_offset_upper_bound:
   \<open>valid_index T (base@idx) \<Longrightarrow>
@@ -386,7 +362,68 @@ lemma index_type_idem:
   \<open>valid_index T idx \<Longrightarrow> index_type idx T = T \<longleftrightarrow> idx = []\<close>
   apply (cases idx; simp; rule)
   using index_type_measure
-  by (metis fold_simps(1) idx_step_type_measure order_less_not_sym)
+  by (metis fold_simps(2) list.discI order_less_irrefl valid_index.simps(2))
+
+
+
+
+
+paragraph \<open>Address & Pointer\<close>
+
+abbreviation valid_rawaddr :: \<open>'TY rawaddr \<Rightarrow> bool\<close>
+  where \<open>valid_rawaddr addr \<equiv> Valid_Segment (memaddr.segment addr)\<close>
+
+definition valid_logaddr :: "'TY logaddr \<Rightarrow> bool"
+  where "valid_logaddr addr \<longleftrightarrow>
+    Valid_Segment (memaddr.segment addr) \<and>
+    (memaddr.segment addr = Null \<longrightarrow> memaddr.index addr = []) \<and>
+    valid_index (segidx.layout (memaddr.segment addr)) (memaddr.index addr)"
+
+lemma valid_rawaddr_0[simp]: \<open>valid_rawaddr (0 |: 0)\<close>
+  by (simp add: zero_prod_def Valid_Segment_def zero_memaddr_def zero_segidx_def)
+
+lemma valid_logaddr_0[simp]: \<open>valid_logaddr (0 |: [])\<close>
+  by (simp add: valid_logaddr_def zero_prod_def Valid_Segment_def zero_memaddr_def zero_segidx_def)
+
+abbreviation logaddr_type :: \<open>'TY logaddr \<Rightarrow> 'TY\<close>
+  where \<open>logaddr_type addr \<equiv> index_type (memaddr.index addr) (segidx.layout (memaddr.segment addr))\<close>
+
+lemma MemObj_Size_LE_idx:
+  \<open>valid_index T (base@idx) \<Longrightarrow> MemObj_Size (index_type (base@idx) T) \<le> MemObj_Size (index_type base T)\<close>
+  apply (induct base arbitrary: T idx; simp)
+  subgoal for T idx apply (induct idx arbitrary: T; simp)
+    using memobj_size_step order.trans by blast
+  done
+
+lemmas MemObj_Size_LE_idx_0 = MemObj_Size_LE_idx[where base = "[]", simplified]
+
+lemma index_type_type_storable_in_mem:
+  \<open>type_storable_in_mem T \<Longrightarrow> valid_index T idx \<Longrightarrow> type_storable_in_mem (index_type idx T)\<close>
+  using MemObj_Size_LE_idx_0 order.strict_trans1 by blast 
+
+lemma logaddr_storable_in_mem:
+  \<open>valid_logaddr addr \<Longrightarrow> addr \<noteq> 0 \<Longrightarrow> type_storable_in_mem (logaddr_type addr)\<close>
+  unfolding valid_logaddr_def Valid_Segment_def zero_memaddr_def
+  apply (cases addr; simp)
+  subgoal for seg idx by (cases seg; simp add: index_type_type_storable_in_mem)
+  done
+
+definition logaddr_to_raw :: \<open>'TY logaddr \<Rightarrow> 'TY rawaddr\<close>
+  where \<open>logaddr_to_raw addr =
+    (case addr of seg |: idx \<Rightarrow> seg |: to_size_t (index_offset (segidx.layout seg) idx))\<close>
+
+lemma logaddr_to_raw_0[simp]:
+  \<open>logaddr_to_raw (0 |: []) = (0 |: 0)\<close>
+  unfolding logaddr_to_raw_def by simp
+
+lemma logaddr_to_raw_segment[simp]:
+  \<open>memaddr.segment (logaddr_to_raw addr) = memaddr.segment addr\<close>
+  unfolding logaddr_to_raw_def by (cases addr) simp
+
+lemma valid_logaddr_rawaddr [simp]:
+  \<open>valid_logaddr addr \<Longrightarrow> valid_rawaddr (logaddr_to_raw addr)\<close>
+  unfolding valid_logaddr_def by simp 
+
 
 lemma
   assumes prems:
@@ -447,15 +484,13 @@ proof -
            case L
            then obtain d where D: \<open>index2 = index1@d\<close> by blast
            then have \<open>valid_index (index_type index1 T) d\<close> using valid_index_cat prems by blast
-           note index_type_idem[OF this]
-           then have \<open>d = []\<close> using fold_append prems D by fastforce
+           then have \<open>d = []\<close> using fold_append prems D by (simp add: index_type_idem)
            then show False using neq D by blast
          next
            case R
            then obtain d where D: \<open>index1 = index2@d\<close> by blast
            then have \<open>valid_index (index_type index2 T) d\<close> using valid_index_cat prems by blast
-           note index_type_idem[OF this]
-           then have \<open>d = []\<close> using fold_append prems D by fastforce
+           then have \<open>d = []\<close> using fold_append prems D by (metis comp_def index_type_idem) 
            then show False using neq D by blast
          qed
        qed
@@ -625,7 +660,7 @@ lemma push_map_to_share:
   \<open>push_map idx (to_share o f) = to_share o (push_map idx f)\<close>
   unfolding push_map_def fun_eq_iff by simp
 
-lemma push_map_dom_eq:
+lemma push_map_dom_eq[simp]:
   \<open>dom (push_map idx f) = dom (push_map idx g) \<longleftrightarrow> dom f = dom g\<close>
   unfolding dom_def fun_eq_iff push_map_def set_eq_iff apply simp
   by (metis (full_types) append_eq_conv_conj)
@@ -723,6 +758,7 @@ assumes Mapof_Val_inj: \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> We
   and   Mapof_Val_arr: \<open>Mapof_Val (V_array.mk (T,vs)) = node (map Mapof_Val vs)\<close>
 begin
 
+
 lemma Mapof_Val_pull:
   \<open>valid_index T idx \<Longrightarrow> V \<in> Well_Type T \<Longrightarrow> pull_map idx (Mapof_Val V) = Mapof_Val (index_value idx V)\<close>
   apply (induct idx arbitrary: V T; simp)
@@ -768,7 +804,7 @@ lemma Mapof_Val_modify_fiction:
     moreover have t1:
       \<open>dom (to_share \<circ> push_map idx (Mapof_Val u)) = dom (to_share \<circ> push_map idx (Mapof_Val u'))\<close>
       using prems by (metis Mapof_Val_same_dom dom_map_option_comp push_map_dom_eq)
-    ultimately have \<open>dom g \<inter> dom (to_share \<circ> push_map idx (Mapof_Val u')) = {}\<close> by simp
+    ultimately have \<open>dom g \<inter> dom (to_share \<circ> push_map idx (Mapof_Val u')) = {}\<close> by metis
     note [simp] = times_fun_map_add_right[OF this]
     show ?thesis by simp (metis t1 map_add_subsumed_dom order_eq_refl)
   qed
@@ -820,7 +856,7 @@ lemma share_val_fiction[simp]:
 paragraph \<open>Basic fictions for resource elements\<close>
 
 definition "fiction_mem I = Fiction (\<lambda>x. { 1(R_mem #= y) |y. y \<in> \<I> I x})"
-lemma fiction_mem_\<I>[simp]:
+lemma fiction_mem_\<I>:
   "\<I> (fiction_mem I) = (\<lambda>x. { 1(R_mem #= y) |y. y \<in> \<I> I x})"
   unfolding fiction_mem_def
   by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def)
@@ -832,10 +868,19 @@ lemma fiction_var_\<I>[simp]:
   by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def)
 
 
+definition "share_mem' = 
+              fiction.pointwise' (\<lambda>seg. fiction.fine (share_val_fiction (segidx.layout seg)))"
+
 definition "share_mem = fiction_mem (fiction.defined (
               fiction.pointwise' (\<lambda>seg. fiction.fine (share_val_fiction (segidx.layout seg)))))"
 
+lemma share_mem_def':
+  \<open>share_mem = fiction_mem (fiction.defined share_mem')\<close>
+  unfolding share_mem_def share_mem'_def ..
+
 definition "exclusive_var = fiction_var fiction.it"
+
+
 
 end
 
@@ -852,7 +897,7 @@ type_synonym ('VAL,'RES_N,'RES) comp = \<open>'VAL opstack \<times> ('RES_N \<Ri
 locale std = std_fic
   where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra)\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
-    and TYPE'REP = \<open>TYPE('FIC::comm_monoid_mult)\<close> 
+    and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC) \<times> 'SHVAL::sep_algebra) itself\<close>
 begin
 
@@ -865,6 +910,20 @@ lemma INTERP_COMP[\<phi>expns]:
   \<open>(s,res) \<in> INTERP_COMP T \<longleftrightarrow> (\<exists>fic. (s,fic) \<in> T \<and> res \<in> INTERP_RES fic)\<close>
   unfolding INTERP_COMP_def by simp
 
+
+
+lemma INTERP_mono:
+  \<open> Fic_Space fic
+\<Longrightarrow> Fic_Space x
+\<Longrightarrow> dom1 res \<inter> dom1 p = {}
+\<Longrightarrow> dom1 fic \<inter> dom1 x = {}
+\<Longrightarrow> res \<in> \<I> INTERP fic
+\<Longrightarrow> p \<in> \<I> INTERP x
+\<Longrightarrow> res * p \<in> \<I> INTERP (fic * x)\<close>
+  unfolding INTERP_def Fic_Space_def
+  apply (simp add: dom1_mult_disjoint times_fun prod.union_disjoint
+                   disjoint_dom1_eq_1[of fic x])
+  using times_set_I by blast
 
 
 
@@ -1260,6 +1319,12 @@ ML \<open>Theory.setup (Sign.add_trrules (let open Ast
 subsubsection \<open>Properties\<close>
 
 context std_sem begin
+
+definition \<phi>SemType :: "'VAL set \<Rightarrow> 'TY \<Rightarrow> bool"
+  where [\<phi>def]: \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
+
+abbreviation \<phi>\<phi>SemType :: "('VAL, 'a) \<phi> \<Rightarrow> 'TY \<Rightarrow> bool"
+  where \<open>\<phi>\<phi>SemType T TY \<equiv> (\<forall>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
 
 definition \<phi>Zero :: "'TY \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
   where [\<phi>def]: "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> (x \<Ztypecolon> T)"
