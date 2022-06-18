@@ -14,6 +14,8 @@ context std begin
 
 subsection \<open>Integer\<close>
 
+\<phi>overloads nat and int
+
 subsubsection \<open>Natural Nmbers\<close>
 
 paragraph \<open>Natural Number\<close>
@@ -27,7 +29,7 @@ lemma \<phi>Nat_expn[\<phi>expns]:
   "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (b,x)) \<and> x < 2^b"
   unfolding \<phi>Type_def by (simp add: \<phi>Nat_def)
 
-lemma \<phi>Nat_elim[elim!,\<phi>elim]:
+lemma \<phi>Nat_elim[elim!,\<phi>reason_elim!]:
   "Inhabited (x \<Ztypecolon> \<nat>[b]) \<Longrightarrow> (x < 2^b \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (auto simp add: \<phi>expns)
 
@@ -43,15 +45,17 @@ lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) (\<nat>[?b]) ?zero\<close
   "\<phi>Zero (T_int.mk b) (\<nat>[b]) 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
 \<phi>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>
-  \<open>fn ctx => fn meta => Parse.number >> (fn num => fn _ =>
+  \<open>fn (ctxt, sequent) => Parse.number >> (fn num => fn _ =>
   let open NuBasics
-    val num = Syntax.parse_term ctx num
-    fun mk term = mk_nuTy (num, term) |> Syntax.check_term ctx |> Thm.cterm_of ctx
+    val num = Syntax.parse_term ctxt num
+    fun mk term = mk_nuTy (num, term)
+                    |> Syntax.check_term ctxt
+                    |> Thm.cterm_of ctxt
     val term = (
-        (dest_current_nu meta |> strip_separations |> hd |> dest_RepSet |> #2 |> mk)
-      handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
-        | ERROR _ => mk @{term \<open>\<nat>[32]\<close>})
-  in (NuSys.auto_construct ctx term meta, ctx)  end)
+          (dest_current_nu sequent |> strip_separations |> hd |> dest_RepSet |> #2 |> mk)
+        handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
+             | ERROR _ => mk @{term \<open>\<nat>[32]\<close>})
+  in NuSys.auto_construct term (ctxt, sequent)  end)
 \<close>
 
 paragraph \<open>Rounded Natural Number\<close>
@@ -84,7 +88,7 @@ lemma \<phi>Int_expn[\<phi>expns]:
                       \<and> x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0)"
   unfolding \<phi>Type_def by (simp add: \<phi>Int_def)
 
-lemma \<phi>Int_inhabited[elim,\<phi>elim]:
+lemma \<phi>Int_inhabited[elim!,\<phi>reason_elim!]:
   "Inhabited (x \<Ztypecolon> \<int>[b]) \<Longrightarrow> (x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0) \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns) 
 
@@ -106,6 +110,18 @@ lemma \<phi>Int_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<i
   by (simp add: \<phi>expns) (smt (verit, ccfv_SIG) diff_le_self power_increasing_iff)
 
 
+subsubsection \<open>Subtyping\<close>
+
+lemma subty_Z_N[\<phi>overload nat]: 
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> \<int>[b] \<longmapsto> nat x \<Ztypecolon> \<nat>[b]"
+  unfolding Subty_def Premise_def apply (simp add: \<phi>expns del: One_nat_def)
+  by (smt (verit, del_insts) diff_less less_numeral_extra(1) power_strict_increasing_iff)
+
+lemma subty_N_Z[\<phi>overload int]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(b - 1) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> \<nat>[b] \<longmapsto> int x \<Ztypecolon> \<int>[b]"
+  unfolding Subty_def Premise_def apply (simp add: \<phi>expns del: One_nat_def)
+  by (metis less_one linorder_le_cases neg_0_le_iff_le not_exp_less_eq_0_int of_nat_0_le_iff order_trans power_0)
+
 
 subsubsection \<open>Boolean\<close>
 
@@ -123,7 +139,7 @@ lemma \<phi>Bool_expn[\<phi>expns]:
   " p \<in> (x \<Ztypecolon> \<bool>) \<longleftrightarrow> p = V_int.mk (1, (if x then 1 else 0))"
   unfolding \<phi>Type_def \<phi>Bool_def by simp
 
-lemma \<phi>Bool_inhabited[\<phi>elim, elim!]:
+lemma \<phi>Bool_inhabited[\<phi>reason_elim, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<bool>) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 lemma \<phi>Bool_eqcmp[\<phi>reason on \<open>\<phi>Equal \<bool> ?c ?eq\<close>]:
@@ -151,7 +167,7 @@ lemma RawPointer_expn[\<phi>expns]:
   "v \<in> (p \<Ztypecolon> RawPointer) \<longleftrightarrow> v = V_pointer.mk p \<and> valid_rawaddr p"
   by (simp add: \<phi>Type_def RawPointer_def \<phi>expns)
 
-lemma RawPointer_inhabited[elim,\<phi>elim]:
+lemma RawPointer_inhabited[elim!,\<phi>reason_elim!]:
   "Inhabited (p \<Ztypecolon> RawPointer) \<Longrightarrow> (valid_rawaddr p \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -181,7 +197,7 @@ lemma Pointer_expn[\<phi>expns]:
     \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY \<and> 0 < MemObj_Size TY"
   unfolding \<phi>Type_def by (simp add: Pointer_def)
 
-lemma Pointer_inhabited[elim,\<phi>elim]:
+lemma Pointer_inhabited[elim!,\<phi>reason_elim!]:
   "Inhabited (addr \<Ztypecolon> Pointer TY) \<Longrightarrow>
       (valid_logaddr addr \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY \<and> 0 < MemObj_Size TY \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
@@ -217,7 +233,7 @@ lemma SlicePtr_expn[\<phi>expns]:
       \<and> v = V_pointer.mk (logaddr_to_raw base ||+ of_nat (i * MemObj_Size TY))\<close>
   unfolding SlicePtr_def \<phi>Type_def by simp blast
 
-lemma SlicePtr_inhabited[\<phi>elim,elim!]:
+lemma SlicePtr_inhabited[\<phi>reason_elim!,elim!]:
   \<open>Inhabited ((base, i, len) \<Ztypecolon> SlicePtr TY)
 \<Longrightarrow> (\<And>N. valid_logaddr base \<Longrightarrow> base \<noteq> 0 \<Longrightarrow> logaddr_type base = \<tau>Array N TY \<Longrightarrow> len \<le> N
           \<Longrightarrow> 0 < MemObj_Size TY \<Longrightarrow> i \<le> len \<Longrightarrow> C)
@@ -245,7 +261,18 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
   by (cases x, simp add: \<phi>expns valid_logaddr_def)
 
 
-subsection \<open>Tuple Field\<close>
+subsection \<open>Tuple\<close>
+
+subsubsection \<open>Empty Tuple\<close>
+
+definition EmptyTuple :: \<open>('VAL, unit) \<phi>\<close>
+  where \<open>EmptyTuple x = { V_tup.mk [] }\<close>
+
+lemma EmptyTuple_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> EmptyTuple) \<longleftrightarrow> p = V_tup.mk []\<close>
+  unfolding EmptyTuple_def \<phi>Type_def by simp
+
+subsubsection \<open>Field\<close>
 
 definition \<phi>Field :: "('VAL, 'a) \<phi> \<Rightarrow> ('VAL, 'a) \<phi>" ("\<clubsuit>")
   where "\<phi>Field T x = { V_tup.mk [v] |v. v \<in> T x }"
@@ -254,9 +281,14 @@ lemma \<phi>Field_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Field T) \<longleftrightarrow> (\<exists>v. p = V_tup.mk [v] \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Field_def \<phi>Type_def by simp
 
-lemma \<phi>Field_inhabited[elim,\<phi>elim]:
+lemma \<phi>Field_inhabited[elim!,\<phi>reason_elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<clubsuit> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma EmptyTuple_reduce[simp]:
+  \<open>((a,()) \<Ztypecolon> \<clubsuit> T \<^emph> EmptyTuple) = (a \<Ztypecolon> \<clubsuit> T)\<close>
+  unfolding set_eq_iff apply (simp add: \<phi>expns V_tup_mult)
+  by (metis V_tup_mult append.left_neutral append_Cons)
 
 lemma \<phi>Field_zero  [\<phi>reason on \<open>\<phi>Zero (T_tup.mk [?ty]) (\<phi>Field ?T) ?x\<close>]:
   \<open>\<phi>Zero ty T x \<Longrightarrow> \<phi>Zero (T_tup.mk [ty]) (\<clubsuit> T) x \<close>
@@ -282,6 +314,34 @@ lemma \<phi>Field_semtsy[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> 
   apply (clarsimp simp add: \<phi>expns)
   by (metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
 
+subsubsection \<open>Helpers\<close>
+
+definition \<open>\<phi>Is_Tuple T x = { V_tup.mk vs |vs. V_tup.mk vs \<in> (x \<Ztypecolon> T) }\<close>
+
+lemma \<phi>Is_Tuple_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Is_Tuple T) \<longleftrightarrow> (\<exists>vs. p = V_tup.mk vs \<and> V_tup.mk vs \<in> (x \<Ztypecolon> T))\<close>
+  unfolding \<phi>Is_Tuple_def \<phi>Type_def by simp
+
+lemma \<phi>Is_Tuple_\<phi>Is_Tuple[simp]:
+  \<open>\<phi>Is_Tuple (\<phi>Is_Tuple T) = \<phi>Is_Tuple T\<close>
+  unfolding \<phi>Is_Tuple_def fun_eq_iff set_eq_iff \<phi>Type_def by simp
+
+
+lemma (in std) \<phi>Is_Tuple_\<phi>Is_Tuple_more[simp]:
+  \<open>\<phi>Is_Tuple (\<clubsuit> A \<^emph> \<phi>Is_Tuple B) = (\<clubsuit> A \<^emph> \<phi>Is_Tuple B)\<close>
+  apply (rule \<phi>Type_eqI)
+  apply (clarsimp simp add: \<phi>expns, rule; clarify)
+  by (metis V_tup_mult)
+
+lemma (in std) \<phi>Is_Tuple_Field[simp]:
+  \<open>\<phi>Is_Tuple (\<clubsuit> A) = \<clubsuit> A\<close>
+  by (rule \<phi>Type_eqI, clarsimp simp add: \<phi>expns, rule; clarify; blast)
+
+lemma (in std) \<phi>Is_Tuple_EmptyTuple[simp]:
+  \<open>\<phi>Is_Tuple EmptyTuple = EmptyTuple\<close>
+  by (rule \<phi>Type_eqI, clarsimp simp add: \<phi>expns)
+
+
 
 subsection \<open>Array\<close>
 
@@ -295,7 +355,7 @@ lemma Array_expns[\<phi>expns]:
         \<and> \<phi>\<phi>SemType T TY \<and> (\<exists>x. Inhabited (x \<Ztypecolon> T)))\<close>
   unfolding Array_def \<phi>Type_def by simp blast
 
-lemma Array_inhabited[\<phi>elim, elim]:
+lemma Array_inhabited[\<phi>reason_elim!, elim!]:
   \<open> Inhabited (l \<Ztypecolon> Array N T)
 \<Longrightarrow> (length l = N \<Longrightarrow>(\<And>i. i < length l \<Longrightarrow> Inhabited (l!i \<Ztypecolon> T)) \<Longrightarrow> C)
 \<Longrightarrow> C\<close>
@@ -312,16 +372,116 @@ lemma Array_zero[\<phi>reason on \<open>\<phi>Zero (\<tau>Array ?N ?TY) (Array ?
   unfolding \<phi>Zero_def by (simp add: \<phi>expns list_all2_conv_all_nth Inhabited_def; blast)
 
 
+subsection \<open>Index to Fields of Structures\<close>
+
+definition \<phi>Index_getter :: \<open>nat list \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> ('VAL,'b) \<phi> \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
+  where \<open>\<phi>Index_getter idx T U g \<longleftrightarrow> index_value idx \<in> (g \<Ztypecolon> T \<Rrightarrow> U)\<close>
+
+definition \<phi>Index_mapper :: \<open>nat list \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> ('VAL,'b) \<phi> \<Rightarrow> (('b \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> bool\<close>
+  where \<open>\<phi>Index_mapper idx T U f \<longleftrightarrow> (\<forall>g g'. g \<in> (g' \<Ztypecolon> U \<Rrightarrow> U) \<longrightarrow> index_mod_value idx g \<in> (f g' \<Ztypecolon> T \<Rrightarrow> T))\<close>
+
+
+lemma idx_step_value_V_tup_suc:
+  \<open>idx_step_value (Suc i) (V_tup.mk (va # vs)) = idx_step_value i (V_tup.mk vs)\<close>
+  by (simp add: idx_step_value_tup)
+
+lemma idx_step_mod_value_V_tup_suc:
+  \<open>idx_step_mod_value (Suc i) g (V_tup.mk (va # vs)) = V_tup.mk [va] * idx_step_mod_value i g (V_tup.mk vs)\<close>
+  by (metis NO_MATCH_I V_tup_mult_cons idx_step_mod_value_tup list_update_code(3) nth_Cons_Suc)
+  
+
+
+
+lemma (in std) \<phi>Index_getter_tup_suc:
+  \<open> \<phi>Index_getter (i # idx) X Y f
+\<Longrightarrow> \<phi>Index_getter (Suc i # idx) (\<clubsuit> T \<^emph> \<phi>Is_Tuple X) Y (f o snd)\<close>
+  unfolding \<phi>Index_getter_def
+  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_V_tup_suc)
+
+lemma (in std) \<phi>Index_getter_tup_0:
+  \<open> \<phi>Index_getter idx X Y f
+\<Longrightarrow> \<phi>Index_getter (0 # idx) (\<clubsuit> X) Y f\<close>
+  unfolding \<phi>Index_getter_def
+  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
+
+lemma (in std) \<phi>Index_getter_tup_0r:
+  \<open> \<phi>Index_getter idx X Y f
+\<Longrightarrow> \<phi>Index_getter (0 # idx) (\<clubsuit> X \<^emph> \<phi>Is_Tuple R) Y (f o fst)\<close>
+  unfolding \<phi>Index_getter_def
+  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
+
+lemma (in std) \<phi>Index_getter_arr:
+  \<open> \<phi>Index_getter idx X Y f
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < N
+\<Longrightarrow> \<phi>Index_getter (i # idx) (Array N X) Y (\<lambda>l. f (l!i))\<close>
+  unfolding \<phi>Index_getter_def Premise_def
+  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_arr list_all2_conv_all_nth)
+
+
+
+lemma (in std) \<phi>Index_mapper_tup_suc:
+  \<open> \<phi>Index_mapper (i # idx) X Y f
+\<Longrightarrow> \<phi>Index_mapper (Suc i # idx) (\<clubsuit> T \<^emph> \<phi>Is_Tuple X) Y (apsnd o f)\<close>
+  unfolding \<phi>Index_mapper_def
+  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_V_tup_suc)
+  by (metis idx_step_mod_value_tup)
+
+lemma (in std) \<phi>Index_mapper_tup_0:
+  \<open> \<phi>Index_mapper idx X Y f
+\<Longrightarrow> \<phi>Index_mapper (0 # idx) (\<clubsuit> X) Y f\<close>
+  unfolding \<phi>Index_mapper_def
+  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
+
+lemma (in std) \<phi>Index_mapper_tup_0r:
+  \<open> \<phi>Index_mapper idx X Y f
+\<Longrightarrow> \<phi>Index_mapper (0 # idx) (\<clubsuit> X \<^emph> \<phi>Is_Tuple X) Y (apfst o f)\<close>
+  unfolding \<phi>Index_mapper_def
+  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
+  by (metis V_tup_mult append.left_neutral append_Cons)
+
+lemma (in std) \<phi>Index_mapper_arr:
+  \<open> \<phi>Index_mapper idx X Y f
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < N
+\<Longrightarrow> \<phi>Index_mapper (i # idx) (Array N X) Y (\<lambda>g l. l[i := f g (l!i)])\<close>
+  unfolding \<phi>Index_mapper_def Premise_def
+  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_arr list_all2_conv_all_nth)
+  by (metis nth_list_update)
+
+
 
 subsection \<open>Variable\<close>
 
 
-definition Var :: \<open>varname \<Rightarrow> 'VAL \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
-  where \<open>Var vname val = {FIC_var.mk (Fine (1(vname \<mapsto> val)))} \<close>
+definition Var :: \<open>varname \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
+  where \<open>Var vname T x = {FIC_var.mk (Fine (1(vname \<mapsto> val))) |val. val \<in> (x \<Ztypecolon> T)} \<close>
 
 lemma Var_expn[\<phi>expns]:
-  \<open>fic \<in> (val \<Ztypecolon> Var vname) \<longleftrightarrow> fic = FIC_var.mk (Fine (1(vname \<mapsto> val)))\<close>
+  \<open>fic \<in> (x \<Ztypecolon> Var vname T) \<longleftrightarrow> (\<exists>val. fic = FIC_var.mk (Fine (1(vname \<mapsto> val))) \<and> val \<in> (x \<Ztypecolon> T))\<close>
   unfolding Var_def \<phi>Type_def by simp
+
+lemma Var_inhabited[\<phi>reason_elim!,elim!]:
+  \<open>Inhabited (x \<Ztypecolon> Var vname T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma Var_subty:
+  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> Var vname T \<longmapsto> x' \<Ztypecolon> Var vname T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Subty_def by (simp add: \<phi>expns, blast)
+
+lemma Var_cast_\<phi>app[\<phi>overload cast]: 
+  \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ x \<Ztypecolon> Var vname T \<longmapsto> OBJ x' \<Ztypecolon> Var vname T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  apply (rule cast_obj_\<phi>app)
+  unfolding Argument_def
+  using Var_subty .
+
+lemma Var_ExTyp[simp]:
+  \<open>(x \<Ztypecolon> Var vname (ExTyp T)) = (\<exists>*a. x a \<Ztypecolon> Var vname (T a))\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns, blast)
+
+lemma Var_SubjTyp[simp]:
+  \<open>(x \<Ztypecolon> Var vname (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (x \<Ztypecolon> Var vname T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns, blast)
 
 
 subsection \<open>Memory Object\<close>

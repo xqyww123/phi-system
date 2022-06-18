@@ -2,7 +2,9 @@ signature NU_OBTAIN = sig
   val choose : binding list -> Proof.state -> Proof.state
   val auto_choose : Proof.state -> Proof.state
 end
+
 structure NuObtain : NU_OBTAIN = struct
+
 fun eliminate_term ctxt xs thm =
   let open NuBasics
     val tm = Thm.prop_of thm
@@ -16,7 +18,7 @@ fun eliminate_term ctxt xs thm =
             |> list_mk_binder @{const_name ExSet} bads
             |> Syntax.check_term ctxt |> cterm_of ctxt
     in
-      NuSys.cast_completely ctxt typing' thm
+      NuSys.cast_completely typing' (ctxt,thm) |> snd
     end
   end;
 

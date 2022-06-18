@@ -14,7 +14,7 @@ signature NU_APPLICATION = sig
 
   val update : (cost * application_thm) -> Context.generic -> Context.generic
   val update' : (cost * reasoner) -> Context.generic -> Context.generic
-  val apply : Proof.context -> thm list (*applicant*) -> thm (*major theorem*)
+  val apply : Proof.context -> thm list (*applicant*) -> thm (*sequent*)
         -> (cost * thm Seq.seq) list
   val content : Context.generic -> (cost * reasoner) list
 
@@ -25,7 +25,7 @@ end
 structure NuApply : NU_APPLICATION = struct
 open NuHelp NuBasics
 
-val trace = Attrib.setup_config_bool \<^binding>\<open>\<nu>trace_application\<close> (K false);
+val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_application\<close> (K false);
 
 val expand_appliant = 
   repeat (fn th => th RS @{thm spec}) #>
@@ -53,25 +53,33 @@ fun applicant_pattern ({thm,applicant_idx}:application_thm) =
           |> Logic.mk_conjunction 
   end
 
-fun biresolution_N thas thb i =
-  biresolution NONE false (map (pair false) thas) i thb
+fun biresolution_N ctxt thas thb i =
+  biresolution (SOME ctxt) false (map (pair false) thas) i thb
 
 fun application_reasoner (appl as {thm,applicant_idx}:application_thm) = {
-  name = @{term \<nu>Application_Rule},
+  name = @{term \<phi>Application_Rule},
   pattern = [applicant_pattern appl],
   tactic = (fn ctxt => fn applicants => fn major =>
     Seq.make (fn () =>
       let
         val sequent = major RS thm
         val _ = if Config.get ctxt trace
-                then tracing ("\<nu>application:\n"
-                  ^ Thm.string_of_thm ctxt sequent ^ "\n"
-                  ^ String.concatWith "\n" (map (Thm.string_of_thm ctxt) applicants))
+                then tracing ("\<phi>application''\nmethod: "
+                  ^ Thm.string_of_thm ctxt thm ^ "\napplicants: "
+                  ^ String.concatWith "\n \<bullet>" (map (Thm.string_of_thm ctxt) applicants))
                 else ()
       in
-        biresolution_N applicants sequent applicant_idx
+        biresolution_N ctxt applicants sequent applicant_idx
           |> Seq.map (fn th =>
-                Goal.protect (applicant_idx - 1) (solve_constraints th))
+              let
+                val _ = if Config.get ctxt trace
+                        then tracing ("\<phi>application\nmethod: "
+                          ^ Thm.string_of_thm ctxt thm ^ "\nsequent: "
+                          ^ Thm.string_of_thm ctxt th)
+                        else ()
+              in
+                Goal.protect (applicant_idx - 1) (solve_constraints th)
+              end)
           |> Seq.pull
         handle THM _ => NONE
       end
@@ -102,6 +110,7 @@ fun apply ctx applicants major =
     (* val _ = List.app (tracing o Syntax.string_of_term ctx) patterns *)
   in
     fold (fn pat => fn l => (Cost_Net.retrieve apthms pat) @ l) patterns []
+      |> distinct (fn ((_,a),(_,b)) => Nu_Reasoner.reasoner_eq (a,b))
       |> map (apsnd (fn r => #tactic r ctx applicants major))
   end
 
@@ -127,7 +136,7 @@ fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword setup_\<phi>application_method}
-    "define \<nu>application_method"
+    "define \<phi>application_method"
     (Parse.term -- (Parse.int >> ~) -- Parse.enum "|" Parse.term --| @{keyword =} -- Parse.ML_source
       >> setup_cmd)
 

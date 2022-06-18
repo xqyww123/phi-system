@@ -3,18 +3,24 @@ signature NU_REASONERS = sig
   val premise_tac : Proof.context -> thm -> thm Seq.seq
   val asm_simp_tac : Proof.context -> thm -> thm Seq.seq
   val single_return : tactic -> tactic
+  val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
 end
 
 structure Nu_Reasoners : NU_REASONERS = struct
 open Thm NuBasics Term
 
+fun wrap tac (ctxt,thm) = tac ctxt thm |> Seq.map (pair ctxt)
+
 fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME (th, Seq.empty)))
 
-fun aux_thms ctxt = Proof_Context.get_thms ctxt "\<nu>current"
-                  @ Named_Theorems.get ctxt "NuSys.useful"
-                  @ Proof_Context.get_thms ctxt "\<nu>lemmata"
-                  @ Proof_Context.get_thms ctxt "\<nu>local_values"
+fun get_thms ctxt name =
+  case Proof_Context.lookup_fact ctxt name of SOME {thms,...} => thms
+                                            | NONE => []
+
+fun aux_thms ctxt = Named_Theorems.get ctxt \<^named_theorems>\<open>useful\<close>
+                  @ Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
+                  @ Proof_Context.get_thms ctxt "\<phi>implifcation"
 
 (** Tactics **)
 fun head_only tac th =
@@ -35,8 +41,8 @@ fun prep_prems ctxt =
     (* THEN print_dbg "222221111"  *)
 
 fun raw_auto ctxt =
-    Method.insert_tac ctxt (aux_thms ctxt) 1
-    THEN prep_prems ctxt
+    Method.insert_tac ctxt (aux_thms ctxt |> @{print}) 1
+THEN print_dbg "22222"
     THEN Clasimp.auto_tac ctxt
  (* THEN print_dbg "22222"  *)
 

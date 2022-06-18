@@ -86,11 +86,51 @@ structure NuBasics = struct
 open Thm Term HOLogic NuHelp
 exception NDBG of thm
 
-val nu_bind_name = "\<phi>this"
-fun the_nu_fact stat = Proof_Context.get_thm (Proof.context_of stat) nu_bind_name
-fun set_nu_fact th stat = stat
-  |> Proof.set_facts [th]
-  |> Proof.map_context (Proof_Context.put_thms false (nu_bind_name, SOME [th]));
+structure Programming_Sequent = Proof_Data (
+  type T = (thm * thm list lazy) option;
+  val init = (K NONE)
+)
+
+fun the_programming_sequent' ctxt =
+  case Programming_Sequent.get ctxt of SOME (thm, _) => thm
+                                     | _ => error("Not in the \<phi> programming environment")
+
+val the_nu_fact = the_programming_sequent' o Proof.context_of
+
+fun the_programming_implication ctxt sequent =
+  let
+    val CurrentConstruction_mk_elim_rule = Proof_Context.get_thm ctxt "local.CurrentConstruction_mk_elim_rule"
+    val stat = (sequent RS CurrentConstruction_mk_elim_rule)
+                  |> pair ctxt |> Nu_Reasoner.reason
+  in case stat of SOME (_, result) => [result]
+                | _ => []
+  end
+
+fun set_programming_sequent' sequent ctxt =
+  Programming_Sequent.put (SOME (sequent, Lazy.lazy (fn () => the_programming_implication ctxt sequent))) ctxt
+
+fun set_nu_fact sequent stat = stat
+  |> Proof.set_facts [sequent]
+  |> Proof.map_context (set_programming_sequent' sequent);
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>this\<close>,
+          (fn genric =>
+              case genric
+              of Context.Theory _ => []
+               | Context.Proof ctxt =>
+                   (case Programming_Sequent.get ctxt
+                      of SOME (sequent, _) => [sequent]
+                       | _ => []))))
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implifcation\<close>,
+          (fn genric =>
+              case genric
+              of Context.Theory _ => []
+               | Context.Proof ctxt =>
+                   (case Programming_Sequent.get ctxt
+                      of SOME (_, imp) => Lazy.force imp
+                       | _ => []))))
+
 
 fun get_types ctxt =
   let
@@ -99,7 +139,7 @@ fun get_types ctxt =
           Type (@{type_name prod}, [Type("fun", [TY_N, TY]),
             Type (@{type_name prod}, [Type("fun", [VAL_N, VAL]),
               Type (@{type_name prod}, [Type("fun", [RES_N, RES]),
-                Type ("fun", [FIC_N, FIC])])])])])
+                Type (@{type_name prod}, [Type("fun", [FIC_N, FIC]), _])])])])])
         = tys
   in
     {TY_N=TY_N, TY=TY, VAL_N=VAL_N, VAL=VAL, RES_N=RES_N, RES=RES, FIC_N=FIC_N, FIC=FIC}
@@ -217,9 +257,9 @@ val current_block_var =
     #> perhaps (try Logic.strip_assums_concl)
     #> perhaps (try dest_Trueprop)
     #> block_var_of_Constuction
-val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_triop @{const_name "NuPrime.CodeBlock"}
+val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_triop @{const_name "CodeBlock"}
 val codeblock_name   = dest_codeblock #> #1 #> term_name
-val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "NuPrime.CodeBlock"}
+val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "CodeBlock"}
 val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
 val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
 fun current_block_depth th =

@@ -9,7 +9,6 @@ section \<open>Preliminary\<close>
 
 paragraph \<open>Configurations\<close>
 
-named_theorems \<phi>elim "\<nu>-type elimination rules"
 named_theorems \<phi>def \<open>primitive definitions used to unfold in proofs of primitive instructions.\<close>
   (* and \<nu>address_def \<open>primitive definitions for unfolding in proofs for address\<close> *)
   and \<nu>post_construct and \<nu>auto_destruct

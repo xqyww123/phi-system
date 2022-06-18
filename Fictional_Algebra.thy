@@ -15,6 +15,8 @@ class ab_group_mult = inverse + comm_monoid_mult +
   assumes ab_left_inverse: "inverse a * a = 1"
   assumes ab_diff_conv_add_uminus: "a / b = a * (inverse b)"
 
+class semigroup_mult_left_cancel = semigroup_mult +
+  assumes semigroup_mult_left_cancel: \<open>a * c = b * c \<longleftrightarrow> a = b\<close>
 
 class sep_disj = times +
   fixes sep_disj :: "'a => 'a => bool" (infix "##" 60)
@@ -299,7 +301,7 @@ end
 subsubsection \<open>List\<close>
 
 instantiation list :: (type) times begin
-definition [simp]: "times_list a b = b @ a"
+definition "times_list a b = b @ a"
 instance ..
 end
 
@@ -314,15 +316,15 @@ instance ..
 end
 
 instantiation list :: (type) no_inverse begin
-instance by (standard, simp) blast
+instance by (standard, simp add: times_list_def) blast
 end
 
 instantiation list :: (type) semigroup_mult begin
-instance by standard simp_all
+instance by standard (simp_all add: times_list_def)
 end
 
 instantiation list :: (type) monoid_mult begin
-instance by standard simp_all
+instance by standard (simp_all add: times_list_def)
 end
 
 
@@ -568,6 +570,14 @@ end
 
 
 subsubsection \<open>Partial Map\<close>
+
+lemma one_partial_map: \<open>1 = Map.empty\<close>
+  unfolding one_fun_def one_option_def ..
+
+lemma sep_disj_partial_map_del:
+  \<open>f ## g \<Longrightarrow> f ## g(k := None)\<close>
+  unfolding sep_disj_fun_def sep_disj_option_def
+  by (metis fun_upd_apply option.case_eq_if)
 
 lemma sep_disj_partial_map_disjoint:
   "f ## g \<longleftrightarrow> dom f \<inter> dom g = {}"

@@ -94,7 +94,7 @@ fun parse_arg (X as (Const (@{const_name "\<phi>Type"}, _) $ _ $ _)) =
   | parse_arg ((C as Const (@{const_name "ExSet"}, _)) $ X) = (C $ parse_arg X)
   | parse_arg ((C as Const (@{const_name "Subjection"}, _)) $ X $ P) =
       (C $ parse_arg X $ P)
-  | parse_arg X = @{print} X
+  | parse_arg X = X
 
 
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
@@ -167,9 +167,7 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
                  fold Proof_Context.bind_term (map (apsnd (Syntax.check_term ctxt)) lets) ctxt
              in
                bind_lets #>
-               Proof_Context.put_thms false ("\<phi>current", SOME []) #>
-               Proof_Context.put_thms false ("\<phi>local_values", SOME []) #>
-               Proof_Context.put_thms false ("\<phi>lemmata", SOME []) #>
+               Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>) #>
                Proof_Context.add_thms_dynamic (Binding.make ("\<phi>'",pos), (
                  fetch ["\<phi>current", "\<phi>local_values", "\<phi>lemmata", "useful"]
                )) #> snd #>
@@ -204,7 +202,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
                   Proof_Context.put_thms false ("\<phi>thesis",
                     SOME [Drule.mk_term goal_proc]))
               |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-              |> Proof.map_context_result (start_proc (Binding.name_of (fst binding)) Arg)
+              |> Proof.map_context_result (start_proc (Binding.name_of (fst binding)) Arg #> swap)
               |-> NuBasics.set_nu_fact
           end
       in
@@ -328,7 +326,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                   Proof_Context.put_thms false ("\<phi>thesis",
                     SOME [Drule.mk_term (cterm_of ctxt goal)]))
               |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-              |> Proof.map_context_result (start_proc func_name Arg)
+              |> Proof.map_context_result (start_proc func_name Arg #> swap)
               |-> NuBasics.set_nu_fact
           end
             (* |> *)
@@ -415,17 +413,12 @@ fun gen_finish_proc qed int stat =
     val ctxt = Proof.context_of stat
     val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
     val (_,_,desired_nu) = dest_procedure_c goal
-    (* quick fix:
-    val xa = term_of desired_nu |> auto_fusion_arity
-     val sequent = funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema} #> accept_proc ctxt) sequent
-      handle THM _ => funpow (xa - 1) (apply_proc_naive @{thm pr_auto_schema'}
-      #> accept_proc ctxt) sequent *)
     val sequent = sequent
           |> Local_Defs.unfold ctxt @{thms Implicit_Protector_def}
           (* |> Raw_Simplifier.rewrite_rule ctxt @{thms RegisterCollection_rew}
           * *)
     val reassemble_proc_0 = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_0"
-    val sequent = NuSys.cast_completely ctxt desired_nu sequent RS reassemble_proc_0
+    val sequent = (NuSys.cast_completely desired_nu (ctxt,sequent) |> snd) RS reassemble_proc_0
     val end_tac = basic_method (fn ctxt' => fn prooof_stat => 
       Runtime.exn_trace (fn () =>
       RSXX ctxt' (
@@ -461,7 +454,8 @@ fun prove_prem int stat =
       in
         stat |> Proof.map_context_result
                   (Config.put Nu_Reasoner.auto_level 0
-                    #> NuProcessor.process_no_input (th RS specthm))
+                    #> (fn ctxt => NuProcessor.process_no_input (ctxt, th RS specthm))
+                    #> swap)
              |-> NuBasics.set_nu_fact
       end
   in
@@ -532,7 +526,7 @@ fun gen_begin_block prep_attr bindings int stat =
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
-      |> Proof.map_context_result (start_proc blk_name (cterm_of ctxt arg))
+      |> Proof.map_context_result (start_proc blk_name (cterm_of ctxt arg) #> swap)
       |-> NuBasics.set_nu_fact
       |> Proof.map_context (fn ctxt => 
             Proof_Context.put_thms false ("\<phi>thesis",

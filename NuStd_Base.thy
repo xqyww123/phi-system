@@ -22,6 +22,8 @@ declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[s
 
 section \<open>\<phi>-Types\<close>
 
+(*
+
 subsection \<open>Ref\<close>
 
 definition Ref  :: "('a::field, 'b) \<phi> \<Rightarrow> (heap, nat memaddr \<R_arr_tail> 'b) \<phi>"
@@ -257,52 +259,7 @@ lemma drop_array_\<phi>app:
   "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N
   \<^bold>d\<^bold>u\<^bold>a\<^bold>l a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N \<^bold>w\<^bold>h\<^bold>e\<^bold>n xs' = mapSome xs2"
   unfolding Cast_def CastDual_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def) *)
-
-
-subsection \<open>Numbers\<close>
-
-\<phi>overloads nat and int
-
-lemma unat_nat: assumes a0:"0 < x" and a1:"sint (xa::('a::len) word) = x"
-  shows "unat xa = nat x"
-proof-
-  have a00:"0 < sint xa"
-    by (simp add: a0 a1)
-  then have "bit xa (LENGTH('a) - Suc 0)  = False"
-    using bit_last_iff by force  
-  moreover have "signed_take_bit (LENGTH('a) - Suc 0) xa = xa"
-    by (metis scast_id signed_scast_eq) 
-  moreover have "sint xa =  signed_take_bit (LENGTH('a) - Suc 0) (uint xa)"using sint_uint by auto
-  ultimately have "uint xa = sint xa"
-    using bit_uint_iff signed_take_bit_eq_if_positive uint_take_bit_eq 
-    by metis 
-  then show ?thesis using a0 a1 by auto
-qed
-
-
-lemma [\<phi>overload nat]: 
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<int>['bits::len] \<longmapsto> nat x \<tycolon> \<nat>['bits]"
-  unfolding Cast_def Premise_def apply (simp add: lrep_exps nu_exps) using unat_nat  by auto
-
-lemma sint_int: assumes a0:"x < 2 ^ (LENGTH('bits::len) - Suc 0)" and a1:"unat (xa::'bits word) = x"
-  shows "sint xa = int x"
-proof-
-  have a00:"unat xa <  2 ^ (LENGTH('bits) - Suc 0)"
-    by (simp add: a0 a1)  
-  then have "bit xa (LENGTH('bits) - Suc 0)  = False"
-    apply transfer apply auto  
-    by (metis bit_take_bit_iff decr_length_less_iff linorder_not_le 
-        order_less_irrefl take_bit_int_eq_self_iff take_bit_nonnegative) 
-  moreover have "sint xa =  signed_take_bit (LENGTH('bits) - Suc 0) (uint xa)"using sint_uint by auto
-  ultimately have "uint xa = sint xa"
-    using bit_uint_iff signed_take_bit_eq_if_positive uint_take_bit_eq 
-    by (metis scast_id signed_of_int  word_of_int_uint)     
-  then show ?thesis using a0 a1 by auto
-qed
-
-lemma [\<phi>overload int]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(LENGTH('bits) - 1) \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t x \<tycolon> \<nat>['bits::len] \<longmapsto> int x \<tycolon> \<int>['bits]"
-  unfolding Cast_def Premise_def apply (simp add: lrep_exps nu_exps)
-  by (simp add: sint_int One_nat_def) 
+*)
 
 
 section \<open>Procedures and Operations\<close>
@@ -311,35 +268,6 @@ context std begin
 
 subsection \<open>Basic sequential instructions\<close>
 
-subsubsection \<open>crash\<close>
-
-(* lemma crash_\<phi>app[no_atp]:  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_crash \<lbrace> X \<longmapsto> Y \<rbrace>" unfolding \<phi>def op_crash_def by auto *)
-
-subsubsection \<open>drop\<close>
-
-declare op_drop_def[\<phi>instr]
-
-theorem drop_\<phi>app: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<lbrace> VAL X \<longmapsto> 1 \<rbrace>"
-  unfolding \<phi>def op_drop_def by (auto simp add: \<phi>expns) blast
-
-subsubsection \<open>duplication\<close>
-
-declare op_dup_def[\<phi>instr]
-
-lemma dup_\<phi>app:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<lbrace> VAL X \<longmapsto> VAL X \<heavy_comma> VAL X\<rbrace> "
-  unfolding \<phi>def op_dup_def
-  by (auto simp add: \<phi>expns) (metis append.left_neutral append_Cons mult.right_neutral)
-
-(*term op_dup
-lemma bring:
-  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ R \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_dup idx :: 'r::stack \<longmapsto> 'x::lrep \<times> 'r) \<lbrace> R \<longmapsto> R\<heavy_comma> X\<rbrace>"
-  for X :: "'x::lrep set" and R :: "'r2::stack set"
-  unfolding \<phi>def op_dup_def \<phi>index_def by (auto simp add: nu_exps)
-
-lemmas "&_\<phi>app" = bring
-lemmas dup_\<phi>app = bring[OF index_left_getter, OF index_here_getter]
-*)
 
 subsubsection \<open>let & local_value\<close>
 
@@ -349,8 +277,6 @@ lemma op_let: " (\<And>p. p \<in> (a \<tycolon> A) \<Longrightarrow> \<^bold>p\<
 
 lemma op_local_value: "v \<in> (a \<tycolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<lbrace> R \<longmapsto> R \<heavy_comma> VAL a \<tycolon> A \<rbrace>"
   unfolding Procedure_def op_local_value_def by (auto simp add: nu_exps)
-
-ML_file "library/local_value.ML"
 
 \<phi>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<close> \<open>let open Parse Scan in
   fn ctx => fn sequent => (($$$ "\<rightarrow>" || $$$ "--" || $$$ "\<lambda>" || $$$ "\<lambda>'") --| option ($$$ "(") -- list1 binding --| option ($$$ ")"))

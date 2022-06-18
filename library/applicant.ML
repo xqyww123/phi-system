@@ -8,16 +8,16 @@ end
 structure NuApplicant : NU_APPLICANT = struct
 
 fun applicant_thms ctx (name,pos) =
-  Proof_Context.get_fact ctx (Facts.Named ((suffix "_\<nu>app" name, pos), NONE))
+  Proof_Context.get_fact ctx (Facts.Named ((suffix "_\<phi>app" name, pos), NONE))
   handle _ =>
   (Proof_Context.get_fact ctx (Facts.Named ((name, pos), NONE))
   handle _ =>
-  Proof_Context.get_fact ctx (Facts.Named ((suffix "_\<nu>proc" name, pos), NONE)))
+  Proof_Context.get_fact ctx (Facts.Named ((suffix "_\<phi>proc" name, pos), NONE)))
 
-val declare_overloading = Named_Theorems.declare o Binding.suffix_name "_\<nu>app"
+val declare_overloading = Named_Theorems.declare o Binding.suffix_name "_\<phi>app"
 fun overload th (name,pos) ctx =
   Named_Theorems.add_thm (Named_Theorems.check (Context.proof_of ctx)
-    (suffix "_\<nu>app" name, pos)) th ctx
+    (suffix "_\<phi>app" name, pos)) th ctx
 
 local open Parse Scan in
 
