@@ -53,7 +53,6 @@ signature NU_TOPLEVEL = sig
   val end_block_cmd : bool -> Proof.state -> Proof.state
   
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
-
   (*val export_LLVM : theory -> theory *)
 end
 
@@ -167,13 +166,7 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
                  fold Proof_Context.bind_term (map (apsnd (Syntax.check_term ctxt)) lets) ctxt
              in
                bind_lets #>
-               Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>) #>
-               Proof_Context.add_thms_dynamic (Binding.make ("\<phi>'",pos), (
-                 fetch ["\<phi>current", "\<phi>local_values", "\<phi>lemmata", "useful"]
-               )) #> snd #>
-               Proof_Context.add_thms_dynamic (Binding.make ("\<phi>",pos), (
-                 fetch ["\<phi>lemmata", "useful"]
-               )) #> snd
+               Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)
              end)
          |> constr_process
   end
@@ -187,7 +180,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
         val ctxt = fst ctx_fixes
         (*val _ = debug_term ctxt "arg " arg
         val _ = debug_term ctxt "ret " ret*)
-        val v_proc = Var (v_proc_var, mk_procT ctxt)
+        val v_proc = Var (v_proc_var, PhiSyntax.mk_procT ctxt)
         val goal = mk_Trueprop
           (Const ("local.\<phi>Procedure", dummyT) $ v_proc $ arg $ ret)
 
@@ -195,7 +188,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
           let
             val ctxt = Proof.context_of stat
             val goal_proc = Thm.cprem_of (#goal (Proof.goal stat)) 1 |> Drule.strip_imp_concl
-            val (_,Arg,_) = dest_procedure_c goal_proc
+            val (_,Arg,_) = PhiSyntax.dest_procedure_c goal_proc
           in
             stat
               |> Proof.map_context (
@@ -249,7 +242,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         val conds' = map (snd #> fst #> perhaps (try dest_Trueprop)) conds
         val arg' = arg
               |> fold_rev (fn c => fn Nu =>
-                    NuBasics.mk_binop @{const_name Subjection} (Nu,c)) conds'
+                    NuHelp.mk_binop @{const_name Subjection} (Nu,c)) conds'
               |> tuple_abs vars
               |> mk_cases_named origin_names
               |> (fn tm => tm $ Bound 0)
@@ -303,7 +296,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
               |> map mk_Trueprop
             val (prems, goal) = (front goal, last goal)
 
-            val (_,Arg,Ret) = dest_procedure goal
+            val (_,Arg,Ret) = PhiSyntax.dest_procedure goal
             val Arg = Thm.cterm_of ctxt Arg
 
             (* intro assumptions *)
@@ -412,7 +405,7 @@ fun gen_finish_proc qed int stat =
     val sequent = NuBasics.the_nu_fact stat
     val ctxt = Proof.context_of stat
     val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
-    val (_,_,desired_nu) = dest_procedure_c goal
+    val (_,_,desired_nu) = PhiSyntax.dest_procedure_c goal
     val sequent = sequent
           |> Local_Defs.unfold ctxt @{thms Implicit_Protector_def}
           (* |> Raw_Simplifier.rewrite_rule ctxt @{thms RegisterCollection_rew}
@@ -488,11 +481,11 @@ fun gen_begin_block prep_attr bindings int stat =
     val goal = subst_bounds (rev vars, goal)
     val prems_goal = strip_binop_r @{const_name implies} goal
     val (prems, goal) = (front prems_goal, last prems_goal)
-    val (proc,arg,ret) = dest_procedure goal
+    val (proc,arg,ret) = PhiSyntax.dest_procedure goal
     
     val blk_name = case proc of (Var ((x,_),_)) => x
                       | _ => "block"
-    val level = current_block_depth specthm
+    val level = PhiSyntax.current_block_depth specthm
     val blk_name = "L\<phi>'" ^ (Int.toString level) ^ "_" ^ blk_name
     
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)

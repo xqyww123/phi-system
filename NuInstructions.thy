@@ -597,26 +597,23 @@ term \<open>local.CurrentConstruction\<close>
 
 thm cast_simp
 
-declare [ [unify_trace_failure, \<phi>trace_reasoning_candicates] ]
+declare [ [unify_trace_failure, \<phi>trace_reasoning_candicates, \<phi>trace_processing] ]
 (*
 ML \<open>Theory.local_setup (Config.put Proof_Context.debug true
       #> Config.put Proof_Context.verbose true)\<close>
 *)
+thm \<phi>lemmata
+
+print_methods
+
 proc op_get_var:
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
-  requires [useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  thm \<phi>this_imp
-thm \<phi>this_imp
-  \<bullet> cast
-  \<bullet> to_Identity
-thm \<phi>this_imp
-  \<bullet> \<exists>v
-  thm \<phi>current
-  thm useful
-thm \<phi>this_imp
-  \<bullet> op_get_var''
-  
+  requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  ;; cast to_Identity \<exists>v
+  ;; op_get_var'' affirm using \<phi> A[unfolded \<phi>SemType_def subset_iff] by blast
+  ;; cast_val
+  thm cast_simp
   thm \<phi>
   thm cast_\<phi>app
 

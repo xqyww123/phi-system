@@ -23,7 +23,7 @@ signature NU_APPLICATION = sig
 end
 
 structure NuApply : NU_APPLICATION = struct
-open NuHelp NuBasics
+open NuHelp
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_application\<close> (K false);
 
@@ -53,8 +53,9 @@ fun applicant_pattern ({thm,applicant_idx}:application_thm) =
           |> Logic.mk_conjunction 
   end
 
-fun biresolution_N ctxt thas thb i =
-  biresolution (SOME ctxt) false (map (pair false) thas) i thb
+fun RLN_with_ctxt ctxt thas thb i =
+  Thm.biresolution (SOME ctxt) false (map (pair false) thas) i thb
+    |> Seq.map Thm.solve_constraints
 
 fun application_reasoner (appl as {thm,applicant_idx}:application_thm) = {
   name = @{term \<phi>Application_Rule},
@@ -69,7 +70,7 @@ fun application_reasoner (appl as {thm,applicant_idx}:application_thm) = {
                   ^ String.concatWith "\n \<bullet>" (map (Thm.string_of_thm ctxt) applicants))
                 else ()
       in
-        biresolution_N ctxt applicants sequent applicant_idx
+        RLN_with_ctxt ctxt applicants sequent applicant_idx
           |> Seq.map (fn th =>
               let
                 val _ = if Config.get ctxt trace
@@ -78,7 +79,7 @@ fun application_reasoner (appl as {thm,applicant_idx}:application_thm) = {
                           ^ Thm.string_of_thm ctxt th)
                         else ()
               in
-                Goal.protect (applicant_idx - 1) (solve_constraints th)
+                Goal.protect (applicant_idx - 1) th
               end)
           |> Seq.pull
         handle THM _ => NONE

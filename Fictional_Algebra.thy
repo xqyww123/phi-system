@@ -539,7 +539,7 @@ lemma set_mult_expn[\<phi>expns]:
   \<open>uv \<in> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<in> S \<and> v \<in> T)\<close>
   unfolding times_set_def by simp
 
-lemma set_mult_inhabited[\<phi>elim,elim!]:
+lemma set_mult_inhabited[elim!]:
   \<open>Inhabited (S * T) \<Longrightarrow> (Inhabited S \<Longrightarrow> Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def times_set_def by simp
 

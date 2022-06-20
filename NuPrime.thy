@@ -1207,7 +1207,7 @@ lemma \<phi>SEQ: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapst
   unfolding instr_comp_def \<phi>Procedure_def bind_def by (auto 0 4)
 
 lemma \<phi>frame:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> M * A \<longmapsto> M * B \<rbrace>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> R * B \<rbrace>"
   unfolding \<phi>Procedure_def
   by (metis (no_types, lifting) mult.assoc)
 

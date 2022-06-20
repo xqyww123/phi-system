@@ -3,6 +3,8 @@ signature NU_PROCEDURE = sig
   val cast_kind : string
   val app_suffix : string
   val compilation_suffix : string
+  val not_define_new_const : bool Config.T
+
   val define : Attrib.binding -> thm -> local_theory -> thm * local_theory
 
   type interface = {name: Binding.binding, thm: thm}
@@ -113,62 +115,65 @@ fun add_procedure name ctxt =
   end
   *)
 
+val not_define_new_const = Attrib.setup_config_bool \<^binding>\<open>\<phi>not_define_new_const\<close> (K false);
 
 fun norm_def ctxt (m,n) def = let
-  val vars = strip_abs_vars (Logic.dest_equals (concl_of def) |> #2)
+  val vars = strip_abs_vars (Logic.dest_equals (Thm.concl_of def) |> #2)
   val ty_vars = take m vars
-        |> map (fn (_, ty) => cterm_of ctxt (Const ("Pure.type", ty)))
+        |> map (fn (_, ty) => Thm.cterm_of ctxt (Const ("Pure.type", ty)))
   val normal_vars = take n (drop m vars)
-        |> map (fn (name,ty) => Thm.var ((name,0), ctyp_of ctxt ty))
+        |> map (fn (name,ty) => Thm.var ((name,0), Thm.ctyp_of ctxt ty))
   in
     fold (fn a => fn b => Thm.combination b a)
-            (map reflexive (ty_vars @ normal_vars)) def
+            (map Thm.reflexive (ty_vars @ normal_vars)) def
   end
 
-fun define (binding,attrs) proc_th lthy =
+fun define (binding,attrs) sequent lthy =
   let
-    val proc_th = proc_th
+    val sequent = sequent
           |> Raw_Simplifier.rewrite_rule lthy
               (Proof_Context.get_thms lthy @{named_theorems final_proc_rewrite})
           |> Drule.zero_var_indexes
-    val (f,U,V) = Thm.concl_of proc_th |> dest_procedure 
+    val (f,U,V) = Thm.concl_of sequent |> PhiSyntax.dest_procedure 
 
     (*all variables in the procedure body*)
     val vars = fold_aterms (fn Var v => insert (op =) (Var v)
-                             | Free v => insert (op =) (Free v)
                              | _ => I) f []
-    fun lambda v body = Abs (term_name v, fastype_of v, abstract_over (v,body))
+    val tvars = Term.add_tvars f []
+    fun lambda v body = Abs (Term.term_name v, fastype_of v, abstract_over (v,body))
     (*then f' is the standard form of a definition*)
-    val f' = fold lambda vars f |> Logic.unvarify_types_global
-    val tvars = add_tfrees f' []
-    val f' = fold (fn v => fn x => Abs ("_", Type ("itself", [TFree v]), x)) tvars f'
+    val f' = fold lambda vars f
+          |> map_types (map_type_tvar (fn ((vname,0),sort) => TFree (vname,sort)))
+          |> fold (fn ((vname,0),sort) => fn x =>
+                  Abs ("_", Type ("itself", [TFree (vname,sort)]), x)) tvars
     val arity = (length tvars, length vars)
 
     val def_binding = Binding.suffix_name compilation_suffix binding
     val proc_binding = Binding.suffix_name app_suffix binding
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
-    val rename_proc = Proof_Context.get_thm lthy "locale.\<phi>rename_proc"
+    val rename_proc = Proof_Context.get_thm lthy "local.\<phi>rename_proc"
     fun rename def proc_th = proc_th RS (def RS rename_proc)
 
-    val (lthy, proc_th) =
-      if Binding.is_empty binding then (lthy, proc_th)
+    val (lthy, sequent) =
+      if Binding.is_empty binding orelse Config.get lthy not_define_new_const
+      then (lthy, sequent)
       else lthy
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
             |-> (fn (tm,(_,def)) => 
                   Local_Theory.background_theory (Context.theory_map
                                       (add_procedure (Binding.name_of binding)))
-                  #> rpair (rename (norm_def lthy arity def) proc_th))
+                  #> rpair (rename (norm_def lthy arity def) sequent))
 
-    val proc_th = proc_th
+    val sequent = sequent
           |> Raw_Simplifier.rewrite_rule lthy @{thms atomize_imp}
           (* |> Raw_Simplifier.rewrite_rule lthy
               (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
           |> Raw_Simplifier.rewrite_rule lthy
               (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2") *)
   in lthy |> Local_Theory.notes_kind procedure_kind
-                [((proc_binding,attrs), [([proc_th],[])])]
-          |> apfst (fn [(_,[proc_th])] => proc_th)
+                [((proc_binding,attrs), [([sequent],[])])]
+          |> apfst (fn [(_,[sequent])] => sequent)
   end
 
 end

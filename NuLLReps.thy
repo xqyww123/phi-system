@@ -44,15 +44,15 @@ lemma [\<phi>reason on \<open>\<phi>Equal (\<nat>[?b]) ?c ?eq\<close>]:
 lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) (\<nat>[?b]) ?zero\<close>]:
   "\<phi>Zero (T_int.mk b) (\<nat>[b]) 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
-\<phi>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T\<close>
+\<phi>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>
   \<open>fn (ctxt, sequent) => Parse.number >> (fn num => fn _ =>
-  let open NuBasics
+  let open NuBasics PhiSyntax
     val num = Syntax.parse_term ctxt num
     fun mk term = mk_nuTy (num, term)
                     |> Syntax.check_term ctxt
                     |> Thm.cterm_of ctxt
     val term = (
-          (dest_current_nu sequent |> strip_separations |> hd |> dest_RepSet |> #2 |> mk)
+          (dest_current_nu sequent |> strip_separations |> hd |> dest_nuTy |> #2 |> mk)
         handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
              | ERROR _ => mk @{term \<open>\<nat>[32]\<close>})
   in NuSys.auto_construct term (ctxt, sequent)  end)
@@ -112,12 +112,12 @@ lemma \<phi>Int_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<i
 
 subsubsection \<open>Subtyping\<close>
 
-lemma subty_Z_N[\<phi>overload nat]: 
+lemma subty_Z_N[\<phi>overload nat on \<open>?x \<Ztypecolon> \<int>[?b]\<close>]: 
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> \<int>[b] \<longmapsto> nat x \<Ztypecolon> \<nat>[b]"
   unfolding Subty_def Premise_def apply (simp add: \<phi>expns del: One_nat_def)
   by (smt (verit, del_insts) diff_less less_numeral_extra(1) power_strict_increasing_iff)
 
-lemma subty_N_Z[\<phi>overload int]:
+lemma subty_N_Z[\<phi>overload int on \<open>?x \<Ztypecolon> \<int>[?b]\<close>]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(b - 1) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> \<nat>[b] \<longmapsto> int x \<Ztypecolon> \<int>[b]"
   unfolding Subty_def Premise_def apply (simp add: \<phi>expns del: One_nat_def)
   by (metis less_one linorder_le_cases neg_0_le_iff_le not_exp_less_eq_0_int of_nat_0_le_iff order_trans power_0)
@@ -468,7 +468,7 @@ lemma Var_subty:
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> Var vname T \<longmapsto> x' \<Ztypecolon> Var vname T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding Subty_def by (simp add: \<phi>expns, blast)
 
-lemma Var_cast_\<phi>app[\<phi>overload cast]: 
+lemma Var_cast_\<phi>app[\<phi>overload cast on \<open>OBJ ?x \<Ztypecolon> Var ?var ?T\<close>]: 
   \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ x \<Ztypecolon> Var vname T \<longmapsto> OBJ x' \<Ztypecolon> Var vname T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   apply (rule cast_obj_\<phi>app)
@@ -483,6 +483,16 @@ lemma Var_SubjTyp[simp]:
   \<open>(x \<Ztypecolon> Var vname (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (x \<Ztypecolon> Var vname T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns, blast)
 
+lemmas (in std) [\<phi>overload to_Identity on \<open>OBJ ?x \<Ztypecolon> Var ?var ?T\<close>]
+  = Var_cast_\<phi>app[OF Argument_I[OF to_Identity_origin_\<phi>app]]
+
+lemma [\<phi>reason 110 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> OBJ ?H \<longmapsto> ?R''' * \<medium_left_bracket> OBJ ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
+  " MUTEX_ASSERT G
+  \<Longrightarrow> MUTEX_SET G
+  \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> OBJ x \<Ztypecolon> Var var T \<longmapsto> R\<heavy_comma> \<medium_left_bracket> OBJ x' \<Ztypecolon> Var var T' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  unfolding cast_def
+  by (simp add: \<phi>expns times_list_def, blast)
 
 subsection \<open>Memory Object\<close>
 

@@ -23,7 +23,7 @@ fun strip_abs_fixes (Abs (name,ty,body)) =
 fun gen_set_variables_tag prep_seps vars always ctxt sequent =
   let
     val Const (@{const_name Variant_Cast}, _) $ _ $ X $ _
-          = Thm.major_prem_of sequent |> dest_Trueprop
+          = Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
     val X' = prep_seps ctxt X
 
     val names = map fst vars
@@ -44,7 +44,7 @@ fun gen_set_variables_tag prep_seps vars always ctxt sequent =
                     |> Syntax.check_term ctxt 
     val var_tag = (case var_tag of (T0 $ Free(name,T1) $ T2 $ T3) =>
                       (T0 $ Var((name,0),T1) $ T2 $ T3))
-                  |> mk_Trueprop |> cterm_of ctxt
+                  |> mk_Trueprop |> Thm.cterm_of ctxt
 
     val goal = Goal.init var_tag
                   |> SINGLE (REPEAT (HEADGOAL (resolve_tac ctxt
@@ -86,8 +86,8 @@ fun variables_tag_pattern_match raw_vars pattern always ctxt sequent =
 
         val sep' = pattern ~~ take (length pattern) sep
               |> map (fn (pat, org) => (*TODO: patter match here*)
-                  case try dest_RepSet org
-                    of SOME (x,T) => mk_RepSet (Type.constraint (fastype_of x) pat, T)
+                  case try PhiSyntax.dest_nuTy org
+                    of SOME (x,T) => PhiSyntax.mk_nuTy (Type.constraint (fastype_of x) pat, T)
                      | NONE => pat)
               |> (fn l => l @ drop (length pattern) sep)
       in
@@ -99,9 +99,11 @@ fun variables_tag_pattern_match raw_vars pattern always ctxt sequent =
 
 fun variables_tag_terms raw_vars always ctxt sequent =
   let
-    val vars = map (Syntax.parse_term ctxt #> Syntax.check_term ctxt
-                      #> (fn tm => (normlize_name (term_name tm), (term_name tm, fastype_of tm)))
-                   ) raw_vars
+    val vars = map (
+            Syntax.parse_term ctxt
+         #> Syntax.check_term ctxt
+         #> (fn tm => (normlize_name (Term.term_name tm), (Term.term_name tm, fastype_of tm)))
+       ) raw_vars
   in
     gen_set_variables_tag (K I) vars always ctxt sequent end
 

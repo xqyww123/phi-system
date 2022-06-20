@@ -102,38 +102,36 @@ fun debug ctxt (c,(r : reasoner as {name,...})) =
 fun dbg2 ctxt term = (tracing (Syntax.string_of_term ctxt term); term)
 
 fun call_tactics ctxt tactics th =
-  case Thm.prems_of th
-    of _ :: _ =>
-        let
-          val prop = Thm.prop_of th
-          val tacs = ((conclusion_tag $ Logic.concl_of_goal prop 1)
-                      :: map (fn t => premise_tag $ t) (Logic.prems_of_goal prop 1))
-                      |> maps (fn term =>
-                          Cost_Net.retrieve tactics term
-                            |> filter (exists (fn pat =>
-                                  Pattern.matches (Proof_Context.theory_of ctxt) (pat,term)
-                                ) o #pattern o snd)
-                            |> (if Config.get ctxt trace_candicates
-                                then (fn rs => (List.app (debug ctxt) rs; rs))
-                                else I)
-                            |> map (apsnd (fn (r : reasoner) =>
-                                Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))))
-                      |> sort (int_ord o apply2 fst)
-        in
-          case get_first (fn (c,seq) =>
-              if c <= ~1000000 then
-                case Seq.chop 2 seq
-                  of ([_,_], _) => error("Global cut returns more than one result.")
-                   | ([x],_) => raise Global_Cut x
-                   | _ => NONE
-              else if c <= ~1000 then
-                Option.map (fn (s,s') => (c, Seq.cons s s')) (Seq.pull seq)
-              else NONE
-            ) tacs
-            of SOME seq => [seq]
-             | NONE => tacs
-        end
-     | [] => raise Success (ctxt, th)
+  if Thm.no_prems th
+  then raise Success (ctxt, th)
+  else let
+    val prop = Thm.prop_of th
+    val tacs = ((conclusion_tag $ Logic.concl_of_goal prop 1)
+                :: map (fn t => premise_tag $ t) (Logic.prems_of_goal prop 1))
+                |> maps (fn term =>
+                    Cost_Net.retrieve tactics term
+                      |> filter (exists (fn pat =>
+                            Pattern.matches (Proof_Context.theory_of ctxt) (pat,term)
+                          ) o #pattern o snd)
+                      |> (if Config.get ctxt trace_candicates
+                          then (fn rs => (List.app (debug ctxt) rs; rs))
+                          else I)
+                      |> map (apsnd (fn (r : reasoner) =>
+                          Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))))
+                |> sort (int_ord o apply2 fst)
+  in
+    case get_first (fn (c,seq) =>
+        if c <= ~1000000 then
+          case Seq.pull seq
+            of SOME (x,_) => raise Global_Cut x
+             | _ => NONE
+        else if c <= ~1000 then
+          Option.map (fn (s,s') => (c, Seq.cons s s')) (Seq.pull seq)
+        else NONE
+      ) tacs
+      of SOME seq => [seq]
+       | NONE => tacs
+  end
 
 fun gen_reason trace iter tactics result states =
   if States.is_empty states then result else
@@ -276,6 +274,7 @@ fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 
 fun intro_reasoner pattern rule =
   let
+    val rule = Thm.trim_context rule
     val pat = conclusion_tag $ (case pattern of SOME pat => pat
                                               | _ => Thm.concl_of rule)
   in {name = @{term \<phi>Intro_Rule} $ Thm.prop_of rule,
@@ -286,6 +285,7 @@ fun intro_reasoner pattern rule =
 
 fun elim_reasoner pattern rule =
   let
+    val rule = Thm.trim_context rule
     val pat = premise_tag $ (case pattern of SOME pat => pat
                                            | _ => Thm.major_prem_of rule)
   in {name = @{term \<phi>Elim_Rule} $ Thm.prop_of rule,

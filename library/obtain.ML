@@ -6,7 +6,7 @@ end
 structure NuObtain : NU_OBTAIN = struct
 
 fun eliminate_term ctxt xs thm =
-  let open NuBasics
+  let open NuBasics PhiSyntax NuHelp
     val tm = Thm.prop_of thm
     val vs = map (dest_Free o Thm.term_of) xs;
     val bads = Term.fold_aterms (fn t as Free v =>
@@ -16,7 +16,7 @@ fun eliminate_term ctxt xs thm =
     else let
       val typing' = dest_current_nu thm
             |> list_mk_binder @{const_name ExSet} bads
-            |> Syntax.check_term ctxt |> cterm_of ctxt
+            |> Syntax.check_term ctxt |> Thm.cterm_of ctxt
     in
       NuSys.cast_completely typing' (ctxt,thm) |> snd
     end
@@ -74,7 +74,7 @@ fun choose inst_names stat =
       fold_map (map_name_result Name.variant) inst_names (Name.make_context [])
     val ExTyp_strip = Proof_Context.get_thm ctx "local.\<phi>ExTyp_strip"
     val major = Raw_Simplifier.rewrite_rule ctx [ExTyp_strip] major
-    val (vars,body) = prop_of major |> dest_Trueprop |> strip_binder_raw "HOL.Ex"
+    val (vars,body) = Thm.prop_of major |> dest_Trueprop |> strip_binder_raw "HOL.Ex"
     val var_tys = map snd vars
     val (inst_names, stat) =
           Proof.map_context_result (Proof_Context.add_fixes
@@ -95,7 +95,7 @@ fun choose inst_names stat =
 
 fun auto_choose stat =
   let
-    val vars = NuBasics.dest_current_nu (NuBasics.the_nu_fact stat)
+    val vars = PhiSyntax.dest_current_nu (NuBasics.the_nu_fact stat)
           |> NuHelp.strip_binder_vars @{const_name ExSet}
           |> map (Binding.name o NuBasics.normlize_name o fst)
   in

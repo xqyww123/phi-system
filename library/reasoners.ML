@@ -20,7 +20,6 @@ fun get_thms ctxt name =
 
 fun aux_thms ctxt = Named_Theorems.get ctxt \<^named_theorems>\<open>useful\<close>
                   @ Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
-                  @ Proof_Context.get_thms ctxt "\<phi>implifcation"
 
 (** Tactics **)
 fun head_only tac th =
@@ -42,6 +41,7 @@ fun prep_prems ctxt =
 
 fun raw_auto ctxt =
     Method.insert_tac ctxt (aux_thms ctxt |> @{print}) 1
+    THEN resolve_tac ctxt (Proof_Context.get_thms ctxt "\<phi>implication") 1
 THEN print_dbg "22222"
     THEN Clasimp.auto_tac ctxt
  (* THEN print_dbg "22222"  *)
@@ -50,7 +50,7 @@ THEN print_dbg "22222"
 (*** Premise tac ***)
 fun premise_collect_tac ctxt th =
   if Config.get ctxt Nu_Reasoner.auto_level >= 2 andalso
-     can (major_prem_of #> dest_Trueprop #> dest_premise_tag) th
+     can (major_prem_of #> HOLogic.dest_Trueprop #> dest_premise_tag) th
   then head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt)))) th
   else Seq.empty
 

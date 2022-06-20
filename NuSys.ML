@@ -132,7 +132,7 @@ fun cast_completely desired_nu stat =
     |> SOLVED_RULE Nu_Reasoner.reason (fn (_,thm) => raise CastFail thm)
 
 fun conversion to (ctxt,from) =
-  let
+  let open PhiSyntax
     val conversion_thm = Proof_Context.get_thm ctxt "local.\<phi>conversion"
     val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
     val (f',U',V') = dest_procedure_c to
@@ -155,7 +155,7 @@ fun conversion_completely to from =
     |> apsnd (Goal.conclude)
 
 fun export_codeblock ctxt cb sequent =
-  let
+  let open PhiSyntax
     val reassemble_proc = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc"
     val (s',_,_) = dest_codeblock_c cb
   in
@@ -168,7 +168,7 @@ fun export_codeblock ctxt cb sequent =
   end
 
 fun accept_proc (ctxt,sequent) =
-  let
+  let open PhiSyntax
     val (f,s,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
     val tyb = range_type (fastype_of f)
     val name = term_name s |> Variable.revert_fixed ctxt
@@ -221,8 +221,8 @@ fun set_param_cmd term (ctxt,sequent) =
                 (Binding.name name, (if ty = dummyT then NONE else SOME ty), NoSyn)) name_and_tys
           val (fixed_names, ctxt) = Proof_Context.add_fixes fixes ctxt
           val term = Syntax.parse_term ctxt term
-                      |> tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
-                      |> mk_monop @{const_name case_named}
+                      |> NuHelp.tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
+                      |> NuHelp.mk_monop @{const_name case_named}
         in
           set_param term (ctxt,sequent)
         end
@@ -231,7 +231,7 @@ fun set_param_cmd term (ctxt,sequent) =
 fun set_label name (ctxt,sequent) = (ctxt, mk_label_thm name RS sequent)
 
 fun finish_proc cc (ctxt,sequent) =
-  let
+  let open PhiSyntax
     val reassemble_proc_final = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_final"
     val (s',H',_) = dest_CurrentConstruction_c cc
   in
@@ -245,14 +245,14 @@ fun finish_proc cc (ctxt,sequent) =
 
 
 fun start_proc blk_name arg_nuTy ctxt =
-  let
+  let open PhiSyntax
     val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
     val stat_var = Free (blk_name, mk_stateT ctxt)
     val ctxt = Variable.declare_constraints stat_var ctxt
     val init = Const("local.CurrentConstruction",
                   fastype_of stat_var --> dummyT
                                       --> typ_of_cterm arg_nuTy
-                                      --> boolT)
+                                      --> \<^typ>\<open>bool\<close>)
                $ stat_var $ Free (RR, dummyT)
     val init = Thm.cterm_of ctxt (Syntax.check_term ctxt init)
     val init = Thm.apply @{cterm Trueprop} (Thm.apply init arg_nuTy)
@@ -263,7 +263,7 @@ fun start_proc blk_name arg_nuTy ctxt =
   end
 
 fun rename_blk_var name (ctxt,meta) =
-  let
+  let open PhiSyntax
     val codeblock = current_codeblock meta
     val (s,_,_) = dest_codeblock_c codeblock
     val thy = Thm.theory_of_thm meta
@@ -272,7 +272,7 @@ fun rename_blk_var name (ctxt,meta) =
                 |> forall_intr s |> forall_elim s'
                 (* |> forall_intr a |> forall_elim a' *)
   in
-    (cprem_of meta 1, (ctxt, undisch meta))
+    (cprem_of meta 1, (ctxt, NuHelp.undisch meta))
   end
 
 

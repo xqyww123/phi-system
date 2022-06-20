@@ -9,6 +9,8 @@ signature NU_HELP = sig
   val debug_term_global : theory -> string -> term -> term
   val last : 'a list -> 'a
   val front : 'a list -> 'a list
+  val repeat : ('a -> 'a) -> 'a -> 'a
+  val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
   type state = Proof.state
 
@@ -27,6 +29,8 @@ signature NU_HELP = sig
   val free_to_var : term -> term
   (* map all Free term to the Fixed term if the name is fixed.*)
   val free_to_fix : Proof.context -> term -> term
+
+  val headgoal : thm -> term
 
   val string_of_term_generic : Context.generic -> term -> string
 
@@ -112,6 +116,15 @@ fun last [] = raise Fail "last"
 fun front [] = raise Fail "front"
   | front [x] = []
   | front (h::ls) = h :: front ls
+
+fun repeat f x = repeat f (f x) handle TERM _ => x | THM _ => x
+fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
+fun ntimes n f x = ntimes_i 0 n f x
+
+fun headgoal thm =
+  if Thm.no_prems thm
+  then Thm.prop_of thm
+  else Logic.concl_of_goal (Thm.prop_of thm) 1
 
 type state = Proof.state
 exception NotFree of term

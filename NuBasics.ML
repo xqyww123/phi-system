@@ -7,28 +7,14 @@ infix 0 MP MP_BY
 
 signature NU_BASICS = sig
   exception NDBG of thm
-  val repeat : ('a -> 'a) -> 'a -> 'a
-  val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
-  val nu_bind_name : string
   val the_nu_fact : Proof.state -> thm
   val set_nu_fact : thm -> Proof.state -> Proof.state
-  val get_types : Proof.context ->
-        {TY_N: typ, TY: typ, VAL_N: typ, VAL: typ, RES_N: typ, RES: typ, FIC_N: typ, FIC: typ}
+  val set_programming_sequent' : thm -> Proof.context -> Proof.context
 
-  val mk_stateT : Proof.context -> typ
-  val mk_assnT : Proof.context -> typ
-  val mk_procT : Proof.context -> typ
-  val dest_tynuset_c : ctyp -> ctyp
 
   val dest_param : term -> term
   val param_type : thm -> typ
-  val dest_RepSet : term -> term * term
-  val mk_RepSet : term * term -> term
-  val dest_nuTy : term -> term * term
-  val dest_nuTy_c : cterm -> cterm * cterm
-  val mk_nuTy : term * term -> term
-  val mk_Nu_ty : typ * typ -> typ
   val dest_labelled_opt : term -> string option * term (* Labelled name, x -> (name,x) *)
   val label_ty : typ
   val label_cty : ctyp
@@ -37,36 +23,18 @@ signature NU_BASICS = sig
   val mk_label_c : string -> cterm
   val mk_labelled : string -> term -> term
   val mk_name_hint : string -> term -> term
-  val dest_ELE : term -> term
+  val mk_label_thm : string -> thm
+
   val mk_auto_tag : term -> term
   val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
   val mk_name_tylabels : string list -> typ (* ["i","j","k"] -> 'i \<times> 'j \<times> 'k *)
   val dest_named : typ -> (string * typ) list
-  val dest_named_only_names : typ -> (string * typ) list
+  val dest_named_only_names : typ -> string list
   val normlize_name : string -> string
   val normlize_thm_of_names : thm -> thm
 
   (* val dest_andTy : term -> term * term *)
-  val dest_CurrentConstruction : term -> term * term * term
-  val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm
-  val dest_PendingConstruction : term -> term * term * term * term
-  val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm
-  val dest_current_nu   : thm -> term
-  val dest_current_nu_c : thm -> cterm
-  val block_var_of_Constuction : term  -> term
-  val block_var_of_Constuction_c : cterm  -> cterm
-  val current_block_var   : thm -> term
-  val current_block_var_c : thm -> cterm
-  val current_block_depth : thm -> int
-  val dest_codeblock   : term -> term * term * term
-  val dest_codeblock_c : cterm -> cterm * cterm * cterm
-  val codeblock_name   : term -> string
-  val codeblocks_of   : thm -> term list
-  val codeblocks_of_c : thm -> cterm list
-  val current_codeblock : thm -> cterm
 
-  val dest_procedure   : term -> term * term * term
-  val dest_procedure_c : cterm -> cterm * cterm * cterm
   val dest_premise_tag  : term -> term * term
   val dest_premise_tag_c: cterm -> cterm * cterm
 
@@ -76,99 +44,100 @@ signature NU_BASICS = sig
   val intro_param : cterm -> thm
   val intro_param_name : string -> thm
 
-  val default_ty_R : typ
-  val strip_separations : term -> term list
-
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
   (* val auto_fusion_arity : term -> int *)
 end
-structure NuBasics = struct
+structure NuBasics : NU_BASICS = struct
 open Thm Term HOLogic NuHelp
 exception NDBG of thm
 
 structure Programming_Sequent = Proof_Data (
-  type T = (thm * thm list lazy) option;
+  type T = (thm (*sequent*)
+          * thm (*the latest construction*)
+          * thm list lazy (*implication*)
+          ) option;
   val init = (K NONE)
 )
 
+fun err_bad_env () = error("Not in the \<phi> programming environment")
+
+fun the_construction' ctxt =
+  case Programming_Sequent.get ctxt of SOME (_,thm, _) => thm
+                                     | _ => err_bad_env ()
+
+val the_construction = the_construction' o Proof.context_of
+
 fun the_programming_sequent' ctxt =
-  case Programming_Sequent.get ctxt of SOME (thm, _) => thm
-                                     | _ => error("Not in the \<phi> programming environment")
+  case Programming_Sequent.get ctxt of SOME (thm, _, _) => thm
+                                     | _ => err_bad_env ()
 
 val the_nu_fact = the_programming_sequent' o Proof.context_of
 
-fun the_programming_implication ctxt sequent =
+fun the_implication' ctxt =
+  case Programming_Sequent.get ctxt of SOME (_, _, imp) => Lazy.force imp
+                                     | _ => err_bad_env ()
+
+fun reason_programming_implication ctxt sequent =
   let
-    val CurrentConstruction_mk_elim_rule = Proof_Context.get_thm ctxt "local.CurrentConstruction_mk_elim_rule"
+    val CurrentConstruction_mk_elim_rule =
+            Proof_Context.get_thm ctxt "local.CurrentConstruction_mk_elim_rule"
     val stat = (sequent RS CurrentConstruction_mk_elim_rule)
-                  |> pair ctxt |> Nu_Reasoner.reason
-  in case stat of SOME (_, result) => [result]
-                | _ => []
+                  |> pair ctxt |> SOME
+               handle THM _ => NONE
+  in case Option.mapPartial Nu_Reasoner.reason stat
+       of SOME (_, result) => [result]
+        | _ => []
   end
 
 fun set_programming_sequent' sequent ctxt =
-  Programming_Sequent.put (SOME (sequent, Lazy.lazy (fn () => the_programming_implication ctxt sequent))) ctxt
+  let
+    val is_construction =
+          case Thm.prop_of sequent
+            of \<^const>\<open>Trueprop\<close> $ P => NuHelp.has_head \<^const_name>\<open>std.CurrentConstruction\<close> P
+             | _ => false
+    fun put data = Programming_Sequent.put (SOME data) ctxt
+  in
+    if is_construction
+    then put (sequent, sequent, Lazy.lazy (fn () => reason_programming_implication ctxt sequent))
+    else
+      case Programming_Sequent.get ctxt
+        of SOME (_, construction, implication) => put (sequent, construction, implication)
+         | NONE => put (sequent, sequent, Lazy.value [])
+  end
+  
 
 fun set_nu_fact sequent stat = stat
   |> Proof.set_facts [sequent]
   |> Proof.map_context (set_programming_sequent' sequent);
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>this\<close>,
+          fn genric =>
+              case genric
+              of Context.Theory _ => err_bad_env ()
+               | Context.Proof ctxt => [the_programming_sequent' ctxt]))
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>construction\<close>,
+          fn genric =>
+              case genric
+              of Context.Theory _ => err_bad_env ()
+               | Context.Proof ctxt => [the_construction' ctxt]))
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication\<close>,
+          fn genric =>
+              case genric
+              of Context.Theory _ => []
+               | Context.Proof ctxt => the_implication' ctxt))
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>\<close>,
           (fn genric =>
               case genric
               of Context.Theory _ => []
                | Context.Proof ctxt =>
-                   (case Programming_Sequent.get ctxt
-                      of SOME (sequent, _) => [sequent]
-                       | _ => []))))
+                   ( Proof_Context.get_thms ctxt "\<phi>implication"
+                   @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
+                   @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>useful\<close>)
+          )))
 
-val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implifcation\<close>,
-          (fn genric =>
-              case genric
-              of Context.Theory _ => []
-               | Context.Proof ctxt =>
-                   (case Programming_Sequent.get ctxt
-                      of SOME (_, imp) => Lazy.force imp
-                       | _ => []))))
-
-
-fun get_types ctxt =
-  let
-    val SOME tys = Variable.default_type ctxt "TYPES"
-    val Type ("itself", [
-          Type (@{type_name prod}, [Type("fun", [TY_N, TY]),
-            Type (@{type_name prod}, [Type("fun", [VAL_N, VAL]),
-              Type (@{type_name prod}, [Type("fun", [RES_N, RES]),
-                Type (@{type_name prod}, [Type("fun", [FIC_N, FIC]), _])])])])])
-        = tys
-  in
-    {TY_N=TY_N, TY=TY, VAL_N=VAL_N, VAL=VAL, RES_N=RES_N, RES=RES, FIC_N=FIC_N, FIC=FIC}
-  end
-
-fun repeat f x = repeat f (f x) handle TERM _ => x | THM _ => x
-fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
-fun ntimes n f x = ntimes_i 0 n f x
-fun mk_stateT ctxt =
-  let
-    val {VAL,RES_N,RES,...} = get_types ctxt
-  in
-    Type(@{type_name "state"}, [VAL,RES_N,RES])
-  end
-fun mk_assnT ctxt =
-  let
-    val {VAL,FIC_N,FIC,...} = get_types ctxt
-  in
-    Type(@{type_abbrev "assn"}, [VAL,FIC_N,FIC])
-  end
-fun mk_procT ctxt =
-  let
-    val {VAL,RES_N,RES,...} = get_types ctxt
-  in
-    Type(@{type_abbrev "proc"}, [VAL,RES_N,RES])
-  end
-(* \<alpha> set *)
-val dest_tynuset_c = dest_ctyp0
-(* heap \<times> \<alpha> |--> \<beta> set *)
 
 fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
@@ -207,81 +176,11 @@ fun dest_labelled_opt tm =
      SOME (v,tm) => (SOME (dest_label v), tm)
    | NONE => (NONE, tm)
 
-fun dest_ELE (Const (@{const_name std.Val_Ele}, _) $ X) = X
-  | dest_ELE (Const (@{const_name std.Obj_Ele}, _) $ X) = X
-  | dest_ELE (Const (@{const_name Ele}, _) $ X) = X
-  | dest_ELE X = X
 
-val dest_nuTy = dest_ELE #> dest_binop @{const_name "\<phi>Type"}
-val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}
-val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
-val dest_RepSet = dest_nuTy
-val mk_RepSet = mk_nuTy #> mk_monop @{const_name "Ele"}
-fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
-(* fun dest_andTy (Const (@{const_name "AndTy"}, _) $ t1 $ t2) = (t1, t2)
-  | dest_andTy t = raise TERM ("bad AndTy", [t]); *)
+
 val mk_auto_tag = mk_monop @{const_name "Auto"}
 
-val dest_CurrentConstruction   =
-      perhaps (try dest_Trueprop) #> dest_triop @{const_name "std.CurrentConstruction"}
-val dest_CurrentConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "std.CurrentConstruction"}
-val dest_PendingConstruction   =
-      perhaps (try dest_Trueprop) #> dest_quadop @{const_name "std.PendingConstruction"}
-val dest_PendingConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "std.PendingConstruction"}
 
-fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
-  handle TERM _ => ((dest_PendingConstruction c |> #2)
-  handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [c]))
-fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
-  handle TERM _ => ((dest_PendingConstruction_c c |> #2)
-  handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
-
-fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
-val dest_current_nu =
-      Thm.prop_of #> perhaps (try dest_Trueprop)
-        #> orelse_opt (try (dest_PendingConstruction #> #4)) (dest_CurrentConstruction #> #3)
-val dest_current_nu_c =
-      Thm.cprop_of #> perhaps (try dest_Trueprop_c)
-        #> orelse_opt (try (dest_PendingConstruction_c #> #4)) (dest_CurrentConstruction_c #> #3)
-
-
-val current_block_var_c =
-  Thm.cprop_of
-    #> perhaps (try strip_implies_c)
-    #> perhaps (try dest_Trueprop_c)
-    #> block_var_of_Constuction_c
-val current_block_var =
-  Thm.prop_of
-    #> perhaps (try Logic.strip_assums_concl)
-    #> perhaps (try dest_Trueprop)
-    #> block_var_of_Constuction
-val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_triop @{const_name "CodeBlock"}
-val codeblock_name   = dest_codeblock #> #1 #> term_name
-val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "CodeBlock"}
-val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
-val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
-fun current_block_depth th =
-  codeblocks_of th |> filter (dest_codeblock #> #1 #> term_name #>
-    (String.isPrefix "\<phi>hide_") #> not) |> length
-fun current_codeblock specthm =
-  let
-    val blk_var = current_block_var specthm
-  in
-    chyps_of specthm
-  |> find_first (fn hy => (term_of hy |> try (dest_codeblock #> #1)) = SOME blk_var)
-  |> Option.valOf
-  end
-fun disch_codeblock cb th =
-  implies_intr cb th |> forall_intr (dest_codeblock_c cb |> #1)
-fun undisch_codeblock cb_var = Thm.forall_elim cb_var #> undisch
-fun disch_current_codeblock specthm =
-  disch_codeblock (current_codeblock specthm) specthm
-
-
-fun th1 MP th2 = Drule.comp_no_flatten (th1, 0) 1 th2
-fun rule MP_BY args = fold (fn arg => fn rule => arg MP rule) args rule
 
 
 val thm_ParamTag = @{thm ParamTag}
@@ -293,16 +192,6 @@ fun param_set_free_var_name ctx name thm =
       |> (fn x => thm_ParamTag RS x)
   end
 
-val dest_procedure   = perhaps (try dest_Trueprop)
-  (* #> strip_binder @{const_name All} #> #2
-  #> strip_binop_r @{const_name HOL.implies} #> last *)
-  #> dest_triop @{const_name "std.\<phi>Procedure"}
-val dest_procedure_c = perhaps (try dest_Trueprop_c)
-  (* #> strip_binder_c @{const_name All} #> #2
-  #> strip_binop_r_c @{const_name HOL.implies} #> last *)
-  #> dest_triop_c @{const_name "std.\<phi>Procedure"}
-val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest_Trueprop)
-val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
 
 val vx = ("x",0) and va = ("'a",0)
 fun intro_param tm =
@@ -325,6 +214,10 @@ fun dest_named (Type (@{type_name named}, [tys, names]))
 fun dest_named_only_names (Type (@{type_name named}, [_, names]))
       = dest_name_tylabels names
   | dest_named_only_names ty = raise TYPE ("dest_named", [ty], [])
+
+val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest_Trueprop)
+val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
+
 
 fun normlize_name name =
   if String.isSuffix "__" name then String.substring (name,0, size name - 2)
@@ -358,10 +251,6 @@ fun normlize_thm_of_names th =
 (* val default_ty_R = TFree ("'\<RR>", [@{class "stack"}]) *)
 (*translate tail of a stack type to `ty_R`, if it ends with void*)
 
-fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
-  | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
-  | strip_separations (Abs (_, _, T)) = strip_separations T
-  | strip_separations T = strip_binop_l @{const_name times} T
 
 
 

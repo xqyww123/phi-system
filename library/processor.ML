@@ -111,10 +111,9 @@ fun eof_wrap parse [] = (fst (parse [Token.eof]), [])
 
 fun process_impl procs (stat,toks) limit =
       let
-        val prop = prop_of (snd stat)
+        val prop = Thm.prop_of (snd stat)
         val stat' = fold (fn (_, Processor {binding, pattern, proc,...}) => fn (ctxt,sequent) =>
-          if can (Pattern.match (Proof_Context.theory_of ctxt) (pattern, prop))
-                        (Envir.type_env Envir.init, Envir.term_env Envir.init)
+          if Pattern.matches (Proof_Context.theory_of ctxt) (pattern, prop)
           then let
             val _ = if limit > 100 then error "too deep process" else ();
             val (execute,toks) =
@@ -171,27 +170,30 @@ val process_no_input = process_by_input []
 
 
 
+val read_prop_pattern = Syntax.read_prop o Proof_Context.set_mode Proof_Context.mode_pattern
+
 fun setup binding precedence term proc (comment:string) =
   define binding precedence term proc
-fun setup' binding precedence (term,fixes) proc (comment:string) lthy =
+
+fun setup' binding precedence (raw_term,fixes) proc (comment:string) lthy =
   let
     val (_, lthy') = Proof_Context.add_fixes_cmd fixes lthy
-    val term = Syntax.read_prop lthy' term |> free_to_var
+    val prop = read_prop_pattern lthy' raw_term
   in
-    define binding precedence term proc lthy
+    define binding precedence prop proc lthy
   end
 
-fun setup_cmd (((((binding,precedence),term),fixes),proc),comment) ctxt =
+fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) ctxt =
   let
     val (_, ctxt') = Proof_Context.add_fixes_cmd fixes ctxt
-    val term = Syntax.read_prop ctxt' term |> free_to_var
+    val prop = read_prop_pattern ctxt' raw_term
   in
     ctxt |> Context.proof_map (
       ML_Context.expression (Input.pos_of proc)
         (ML_Lex.read
           ("Theory.local_setup (NuProcessor.setup (" ^
           ML_Syntax.make_binding binding ^ ") (" ^ ML_Syntax.print_int precedence ^ ") ("
-          ^ ML_Syntax.print_term term ^ ") (let open NuProcessor NuProcessors in ") @
+          ^ ML_Syntax.print_term prop ^ ") (let open NuProcessor NuProcessors in ") @
           ML_Lex.read_source proc @
           ML_Lex.read (" end) " ^ ML_Syntax.print_string comment ^ ")"))
     )

@@ -14,6 +14,16 @@ named_theorems \<phi>def \<open>primitive definitions used to unfold in proofs o
   and \<nu>post_construct and \<nu>auto_destruct
 named_theorems typing_expn "expansion theorems for abstractions" and lrep_exps and \<phi>expns
 
+setup \<open>
+let
+  fun read_prop_pat ctxt = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt)
+  val prop_pattern = Scan.peek (Args.named_term o read_prop_pat o Context.proof_of)
+in
+   ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
+    (Args.term_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
+#> ML_Antiquotation.inline_embedded \<^binding>\<open>prop_pattern\<close>
+    (prop_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
+end\<close>
 
 paragraph \<open>Mathematical Helpers and Settings\<close>
 

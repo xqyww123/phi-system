@@ -1,0 +1,166 @@
+signature PHI_SYNTAX = sig
+
+  val get_types : Proof.context ->
+        {TY_N: typ, TY: typ, VAL_N: typ, VAL: typ, RES_N: typ, RES: typ, FIC_N: typ, FIC: typ}
+
+  val mk_stateT : Proof.context -> typ
+  val mk_assnT : Proof.context -> typ
+  val mk_procT : Proof.context -> typ
+
+  val dest_nuTy : term -> term * term
+  val dest_nuTy_c : cterm -> cterm * cterm
+  val mk_nuTy : term * term -> term
+  val mk_Nu_ty : typ * typ -> typ
+  val dest_ELE : term -> term
+
+  val dest_CurrentConstruction : term -> term * term * term
+  val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm
+  val dest_PendingConstruction : term -> term * term * term * term
+  val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm
+  val dest_current_nu   : thm -> term
+  val dest_current_nu_c : thm -> cterm
+
+  val block_var_of_Constuction : term  -> term
+  val block_var_of_Constuction_c : cterm  -> cterm
+  val current_block_var   : thm -> term
+  val current_block_var_c : thm -> cterm
+  val current_block_depth : thm -> int
+  val dest_codeblock   : term -> term * term * term
+  val dest_codeblock_c : cterm -> cterm * cterm * cterm
+  val codeblock_name   : term -> string
+  val codeblocks_of   : thm -> term list
+  val codeblocks_of_c : thm -> cterm list
+  val current_codeblock : thm -> cterm
+
+  val dest_procedure   : term -> term * term * term
+  val dest_procedure_c : cterm -> cterm * cterm * cterm
+
+  val strip_separations : term -> term list
+end
+
+structure PhiSyntax : PHI_SYNTAX = struct
+open Thm Term HOLogic NuHelp
+
+fun get_types ctxt =
+  let
+    val SOME tys = Variable.default_type ctxt "TYPES"
+    val Type ("itself", [
+          Type (@{type_name prod}, [Type("fun", [TY_N, TY]),
+            Type (@{type_name prod}, [Type("fun", [VAL_N, VAL]),
+              Type (@{type_name prod}, [Type("fun", [RES_N, RES]),
+                Type (@{type_name prod}, [Type("fun", [FIC_N, FIC]), _])])])])])
+        = tys
+  in
+    {TY_N=TY_N, TY=TY, VAL_N=VAL_N, VAL=VAL, RES_N=RES_N, RES=RES, FIC_N=FIC_N, FIC=FIC}
+  end
+
+
+fun mk_stateT ctxt =
+  let
+    val {VAL,RES_N,RES,...} = get_types ctxt
+  in
+    Type(@{type_name "state"}, [VAL,RES_N,RES])
+  end
+
+fun mk_assnT ctxt =
+  let
+    val {VAL,FIC_N,FIC,...} = get_types ctxt
+  in
+    Type(@{type_abbrev "assn"}, [VAL,FIC_N,FIC])
+  end
+
+fun mk_procT ctxt =
+  let
+    val {VAL,RES_N,RES,...} = get_types ctxt
+  in
+    Type(@{type_abbrev "proc"}, [VAL,RES_N,RES])
+  end
+
+
+fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
+fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
+                                      | TERM _ => raise TERM (msg, [prop_of th])
+
+
+fun dest_ELE (Const (@{const_name std.Val_Ele}, _) $ X) = X
+  | dest_ELE (Const (@{const_name std.Obj_Ele}, _) $ X) = X
+  | dest_ELE (Const (@{const_name Ele}, _) $ X) = X
+  | dest_ELE X = X
+
+val dest_nuTy = dest_ELE #> dest_binop @{const_name "\<phi>Type"}
+val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}
+val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
+fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
+
+val dest_CurrentConstruction   =
+      perhaps (try dest_Trueprop) #> dest_triop @{const_name "std.CurrentConstruction"}
+val dest_CurrentConstruction_c =
+      perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "std.CurrentConstruction"}
+val dest_PendingConstruction   =
+      perhaps (try dest_Trueprop) #> dest_quadop @{const_name "std.PendingConstruction"}
+val dest_PendingConstruction_c =
+      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "std.PendingConstruction"}
+
+fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
+  handle TERM _ => ((dest_PendingConstruction c |> #2)
+  handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [c]))
+fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
+  handle TERM _ => ((dest_PendingConstruction_c c |> #2)
+  handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
+
+fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
+val dest_current_nu =
+      Thm.prop_of #> perhaps (try dest_Trueprop)
+        #> orelse_opt (try (dest_PendingConstruction #> #4)) (dest_CurrentConstruction #> #3)
+val dest_current_nu_c =
+      Thm.cprop_of #> perhaps (try dest_Trueprop_c)
+        #> orelse_opt (try (dest_PendingConstruction_c #> #4)) (dest_CurrentConstruction_c #> #3)
+
+val current_block_var_c =
+  Thm.cprop_of
+    #> perhaps (try strip_implies_c)
+    #> perhaps (try dest_Trueprop_c)
+    #> block_var_of_Constuction_c
+val current_block_var =
+  Thm.prop_of
+    #> perhaps (try Logic.strip_assums_concl)
+    #> perhaps (try dest_Trueprop)
+    #> block_var_of_Constuction
+val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_triop @{const_name "CodeBlock"}
+val codeblock_name   = dest_codeblock #> #1 #> term_name
+val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "CodeBlock"}
+val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
+val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
+fun current_block_depth th =
+  codeblocks_of th |> filter (dest_codeblock #> #1 #> term_name #>
+    (String.isPrefix "\<phi>hide_") #> not) |> length
+fun current_codeblock specthm =
+  let
+    val blk_var = current_block_var specthm
+  in
+    chyps_of specthm
+  |> find_first (fn hy => (term_of hy |> try (dest_codeblock #> #1)) = SOME blk_var)
+  |> Option.valOf
+  end
+fun disch_codeblock cb th =
+  implies_intr cb th |> forall_intr (dest_codeblock_c cb |> #1)
+fun undisch_codeblock cb_var = Thm.forall_elim cb_var #> undisch
+fun disch_current_codeblock specthm =
+  disch_codeblock (current_codeblock specthm) specthm
+
+
+val dest_procedure   = perhaps (try dest_Trueprop)
+  (* #> strip_binder @{const_name All} #> #2
+  #> strip_binop_r @{const_name HOL.implies} #> last *)
+  #> dest_triop @{const_name "std.\<phi>Procedure"}
+val dest_procedure_c = perhaps (try dest_Trueprop_c)
+  (* #> strip_binder_c @{const_name All} #> #2
+  #> strip_binop_r_c @{const_name HOL.implies} #> last *)
+  #> dest_triop_c @{const_name "std.\<phi>Procedure"}
+
+fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
+  | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
+  | strip_separations (Abs (_, _, T)) = strip_separations T
+  | strip_separations T = strip_binop_l @{const_name times} T
+
+end
