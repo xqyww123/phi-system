@@ -1,8 +1,14 @@
 signature NU_APPLICATION = sig
 
-  val trace : bool Config.T
+  val apply_proc_naive : thm (*proc*) -> context_state -> context_state
 
-  val apply_proc_naive : Proof.context -> thm (*proc*) -> thm (*meta or major*) -> thm
+  val start_reasoning: context_state -> context_state Seq.seq
+  val success_application : context_state -> context_state Seq.seq
+
+  val try_apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state option
+  val apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state
+
+(*   val trace : bool Config.T
 
   type cost = int
   type application_thm = {
@@ -14,26 +20,103 @@ signature NU_APPLICATION = sig
 
   val update : (cost * application_thm) -> Context.generic -> Context.generic
   val update' : (cost * reasoner) -> Context.generic -> Context.generic
-  val apply : Proof.context -> thm list (*applicant*) -> thm (*sequent*)
-        -> (cost * thm Seq.seq) list
+  
   val content : Context.generic -> (cost * reasoner) list
 
   val setup_cmd : ((string (*name term*) * cost) * string list (*pattern terms*)) * Input.source (* tactic source*)
-        -> local_theory -> local_theory
+        -> local_theory -> local_theory *)
 end
 
 structure NuApply : NU_APPLICATION = struct
 open NuHelp
-
-val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_application\<close> (K false);
 
 val expand_appliant = 
   repeat (fn th => th RS @{thm spec}) #>
   repeat (fn th => th RS @{thm mp}) #>
   repeat (fn th => th RS @{thm spec})
 
-fun apply_proc_naive ctxt proc sequent =
-  expand_appliant proc RS (sequent RS (Proof_Context.get_thm ctxt "local.\<phi>apply_proc"))
+fun apply_proc_naive proc (ctxt,sequent) =
+  (ctxt, expand_appliant proc RS (sequent RS (Proof_Context.get_thm ctxt "local.\<phi>apply_proc")))
+
+val empty_var = Synchronized.var "\<phi>applicant_ctxt" [] : thm list Synchronized.var
+
+structure AppContext = Proof_Data (
+  type T = thm list (*successful application*) Synchronized.var
+  val init = K empty_var
+)
+
+val bad_rule_msg =
+  "The reasoning of application finishes without invoking \<phi>Application_Success.\n"^
+  "Some application rule must be wrong."^
+  "A correct application rule should have proposition \<phi>Application_Success in its premises, "^
+  "marking the sequent behind this premise is the result of the application."
+
+fun app_equivalent ctxt (thm1, thm2) =
+  let
+    val goal = Goal.init (Thm.mk_binop \<^cterm>\<open>(\<equiv>)::prop \<Rightarrow> prop \<Rightarrow> prop\<close>
+                  (Thm.cprop_of thm1) (Thm.cprop_of thm2))
+  in
+    is_some (Seq.pull (SOLVED' (Simplifier.simp_tac ctxt) 1 goal))
+  end
+
+fun start_reasoning (ctxt,sequent) =
+  let
+    val (app,state,result) = dest_triop_c \<^const_name>\<open>\<phi>Application\<close> (Thm.cprem_of sequent 1)
+    val sequent' = @{thm \<phi>application_start_reasoning}
+          |> Drule.infer_instantiate ctxt
+                [(("Apps",0), app),
+                 (("State",0), state),
+                 (("Result",0), result)]
+    val successful_app = Synchronized.var "\<phi>applicant_ctxt" []
+    val ctxt' = AppContext.put successful_app ctxt
+    val _ = case Nu_Reasoner.reason (ctxt', sequent')
+              of SOME _ => error bad_rule_msg
+               | NONE => ()
+  in
+    case Synchronized.value successful_app
+          |> distinct (app_equivalent ctxt)
+      of thms as (_ :: _ :: _) =>
+        (warning ("Failed application in \n"^Thm.string_of_thm ctxt sequent^
+          "\nThere are more than one available applications that are not trivially equivalent:\n"^
+          String.concatWith "\n" (map (fn t=> "\<bullet> "^Thm.string_of_thm ctxt t) thms)^
+          "\nThe system cannot determine which one to be applied. You may modify the code to be more specific.");
+         Seq.empty)
+       | [result] =>
+            let val result' = Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>Application_normalize} result
+            in Seq.single (ctxt, Goal.conclude result' RS sequent) end
+       | [] =>
+        (warning ("Failed application in \n"^Thm.string_of_thm ctxt sequent^
+          "\nNo available applications are found.");
+         Seq.empty)
+  end
+
+fun success_application (ctxt,sequent) =
+  let
+    val sequent' = @{thm \<phi>application_success} RS sequent
+    val _ = Synchronized.change (AppContext.get ctxt)
+                (fn thms => sequent' :: thms)
+  in
+    Seq.empty
+  end
+
+fun try_apply applicants (ctxt,sequent) =
+  let
+    val apps = applicants
+                |> map (Conv.fconv_rule (Object_Logic.atomize ctxt))
+                |> foldl1 (fn (a,b) => @{thm conjI} OF [a,b]) 
+    val sequent' = @{thm \<phi>application} OF [apps, sequent]
+  in
+    Nu_Reasoner.reason (ctxt,sequent')
+      |> Option.map (apsnd (Goal.conclude))
+  end
+
+fun apply applicants stat =
+  case try_apply applicants stat
+    of SOME stat' => stat'
+     | NONE => raise THM ("Application Fail", 0, (snd stat)::applicants)
+
+(*
+val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_application\<close> (K false);
 
 type applicant_idx = int
 type cost = int
@@ -140,6 +223,6 @@ val _ =
     "define \<phi>application_method"
     (Parse.term -- (Parse.int >> ~) -- Parse.enum "|" Parse.term --| @{keyword =} -- Parse.ML_source
       >> setup_cmd)
-
+*)
 end
 

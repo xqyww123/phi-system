@@ -6,37 +6,10 @@ signature NU_SYS = sig
   val raw_auto : Proof.context -> tactic
 
   (** Basic Operations **)
-
-  (*
-    `conversion` tries to convert the procedure theorem to the given form.
-      By @{thm NuPrime.conversion}, it generates a @{term Conversion} premise intended to be solved
-      by `auto_resolve`
-    `cast` operations solves the first premise by `auto_resolve0`. Several proof obligation that cannot
-      be solved automatically will be charged as premises in the result theorem.
-          Γ |- cast_premise ==> P
-      ---------------------------------
-          Γ |- Premise Q1 ==> Premise Q2 ==> ... ==> P
-      where @{term "Premise Q1, Premise Q2"} are proof obligations of the cast.
-
-    In the cast proving, the unsolved premise marked with @{term Premise} tag is considered as
-    accecptable proof obligations intented to be solved by users (or by automatic provers if it
-    succeeds),
-    while any other unsolved premises are considered as failures of the casting or conversion, which
-    raise a CastFail exception.
-
-    Also note, in the `auto_resolve0` and also `premise_tac`, only premises tagged with @{term
-    Premise} will be tried to be solved automatically, while any other permises will not
-    be touched by automatic provers.
-  *)
-  val conversion : cterm (*to*) -> context_state (*from*) -> context_state
-  val conversion_completely : cterm (*to*) -> context_state (*from*) -> context_state
-        (* solve all the premises by Nu_Resonser, raising CastFail if failed *)
   val cast : cterm (*desired nu*) -> context_state (*sequent*) -> context_state
   val cast_completely : cterm (*desired nu*) -> context_state (*major*) -> context_state
         (* solve all the premises by Nu_Resonser, raising CastFail if failed *)
 
-  val apply : thm list -> context_state -> context_state
-  val apply_proc_naive : thm (*proc*) -> context_state (*meta or major*) -> context_state
   val accept_proc : context_state -> context_state
 
   val set_param : term -> context_state -> context_state
@@ -119,8 +92,8 @@ fun REPEATX tac =
 
 fun cast desired_nu (ctxt,sequent) =
   let
-    val cast = Proof_Context.get_thm ctxt "local.\<phi>cast"
-    val cast' = Proof_Context.get_thm ctxt "local.\<phi>cast'"
+    val cast = Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
+    val cast' = Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'"
     val cast  = Drule.infer_instantiate ctxt [(("T'",0),desired_nu)] cast
     val cast' = Drule.infer_instantiate ctxt [(("T'",0),desired_nu)] cast'
   in
@@ -130,29 +103,6 @@ fun cast desired_nu (ctxt,sequent) =
 fun cast_completely desired_nu stat =
   cast desired_nu stat
     |> SOLVED_RULE Nu_Reasoner.reason (fn (_,thm) => raise CastFail thm)
-
-fun conversion to (ctxt,from) =
-  let open PhiSyntax
-    val conversion_thm = Proof_Context.get_thm ctxt "local.\<phi>conversion"
-    val (f ,U ,V ) = dest_procedure_c (cconcl_of from)
-    val (f',U',V') = dest_procedure_c to
-    val rule = Thm.instantiate
-      (TVars.empty, Vars.make[
-        ((("f",0),  typ_of_cterm f),  f),
-        ((("U",0),  typ_of_cterm U),  U),
-        ((("V",0),  typ_of_cterm V),  V),
-        ((("f'",0), typ_of_cterm f'), f'),
-        ((("U'",0), typ_of_cterm U'), U'),
-        ((("V'",0), typ_of_cterm V'), V')])
-      conversion_thm
-  in
-    (ctxt, from RSN (2,rule))
-  end
-fun conversion_completely to from =
-  conversion to from
-    |> apsnd (Goal.protect 1)
-    |> SOLVED_RULE Nu_Reasoner.reason (fn (_,thm) => raise CastFail thm)
-    |> apsnd (Goal.conclude)
 
 fun export_codeblock ctxt cb sequent =
   let open PhiSyntax
@@ -186,19 +136,6 @@ fun accept_proc (ctxt,sequent) =
   in
     (ctxt,sequent)
   end
-
-
-fun apply appliants (ctxt,sequent) =
-  NuApply.apply ctxt appliants sequent
-    |> map (apsnd (Seq.map (pair ctxt)))
-    |> Nu_Reasoner.reason_s ctxt
-    |> (fn x => case Seq.pull x
-                  of SOME ((ctxt',thm),_) => (ctxt', perhaps (try Goal.conclude) thm)
-                   | NONE => raise THM ("fail to apply", 0, sequent::appliants))
-
-fun apply_proc_naive appliants (ctxt,sequent)
-  = (ctxt,NuApply.apply_proc_naive ctxt appliants sequent)
-
 
 (*Param & Label*)
 fun param_type sequent =

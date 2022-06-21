@@ -77,7 +77,7 @@ type cost = int
 type 'a generic_reasoner = {name: term, pattern: term list, tactic: 'a}
 type reasoner = (context_state -> context_state Seq.seq) generic_reasoner
 
-val auto_level = Config.declare_int ("\<phi>auto_level", @{here}) (K 2)
+val auto_level = Attrib.setup_config_int \<^binding>\<open>\<phi>auto_level\<close> (K 2)
 fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning\<close> (K false);
@@ -88,7 +88,8 @@ val premise_tag = Free("Premise", \<^typ>\<open>prop \<Rightarrow> prop\<close>)
 
 
 exception Success  of context_state
-exception Global_Cut  of context_state
+exception Global_Cut of context_state
+exception Local_Cut of (cost * context_state Seq.seq)
 
 structure States = Heap (
   type elem = (cost * context_state Seq.seq);
@@ -115,22 +116,22 @@ fun call_tactics ctxt tactics th =
                           ) o #pattern o snd)
                       |> (if Config.get ctxt trace_candicates
                           then (fn rs => (List.app (debug ctxt) rs; rs))
-                          else I)
-                      |> map (apsnd (fn (r : reasoner) =>
-                          Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))))
+                          else I))
                 |> sort (int_ord o apply2 fst)
   in
-    case get_first (fn (c,seq) =>
-        if c <= ~1000000 then
-          case Seq.pull seq
-            of SOME (x,_) => raise Global_Cut x
-             | _ => NONE
-        else if c <= ~1000 then
-          Option.map (fn (s,s') => (c, Seq.cons s s')) (Seq.pull seq)
-        else NONE
-      ) tacs
-      of SOME seq => [seq]
-       | NONE => tacs
+    tacs 
+      |> map_filter (fn (cost, r : reasoner) =>
+          if cost <= ~1000000 then
+            case Seq.pull (#tactic r (ctxt,th))
+              of SOME (x,_) => raise Global_Cut x
+               | _ => NONE
+          else if cost <= ~1000 then
+            case Seq.pull (#tactic r (ctxt,th))
+              of SOME (x,s) => raise Local_Cut (cost, Seq.cons x s)
+               | _ => NONE
+          else SOME (cost, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
+        )
+    handle Local_Cut ret => [ret]
   end
 
 fun gen_reason trace iter tactics result states =

@@ -468,9 +468,9 @@ lemma Var_subty:
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> Var vname T \<longmapsto> x' \<Ztypecolon> Var vname T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding Subty_def by (simp add: \<phi>expns, blast)
 
-lemma Var_cast_\<phi>app[\<phi>overload cast on \<open>OBJ ?x \<Ztypecolon> Var ?var ?T\<close>]: 
+lemma Var_cast_\<phi>app[\<phi>overload cast]: 
   \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ x \<Ztypecolon> Var vname T \<longmapsto> OBJ x' \<Ztypecolon> Var vname T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e FIX OBJ x \<Ztypecolon> Var vname T \<longmapsto> OBJ x' \<Ztypecolon> Var vname T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   apply (rule cast_obj_\<phi>app)
   unfolding Argument_def
   using Var_subty .
@@ -483,16 +483,71 @@ lemma Var_SubjTyp[simp]:
   \<open>(x \<Ztypecolon> Var vname (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (x \<Ztypecolon> Var vname T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns, blast)
 
-lemmas (in std) [\<phi>overload to_Identity on \<open>OBJ ?x \<Ztypecolon> Var ?var ?T\<close>]
-  = Var_cast_\<phi>app[OF Argument_I[OF to_Identity_origin_\<phi>app]]
-
 lemma [\<phi>reason 110 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> OBJ ?H \<longmapsto> ?R''' * \<medium_left_bracket> OBJ ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
-  " MUTEX_ASSERT G
-  \<Longrightarrow> MUTEX_SET G
-  \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> OBJ x \<Ztypecolon> Var var T \<longmapsto> R\<heavy_comma> \<medium_left_bracket> OBJ x' \<Ztypecolon> Var var T' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  " CHK_SUBGOAL G
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> OBJ x \<Ztypecolon> Var var T \<longmapsto> R\<heavy_comma> \<medium_left_bracket> OBJ x' \<Ztypecolon> Var var T' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def
   by (simp add: \<phi>expns times_list_def, blast)
+
+
+subsubsection \<open>Application Methods for Subtyping\<close>
+
+lemma [\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?x \<Ztypecolon> ?T \<longmapsto> ?Y \<Ztypecolon> ?U \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P)
+            (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n OBJ ?x \<Ztypecolon> Var ?var ?T) ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Success
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x \<Ztypecolon> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n OBJ x \<Ztypecolon> Var var T)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n OBJ x \<Ztypecolon> Var var U) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] by metis
+
+lemma [\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?x' \<Ztypecolon> ?T' \<longmapsto> ?y \<Ztypecolon> ?U \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P)
+            (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n OBJ ?x \<Ztypecolon> Var ?var ?T) ?Result
+\<close>]:
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> PROP \<phi>Application_Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x' \<Ztypecolon> T' \<longmapsto> y \<Ztypecolon> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n OBJ x \<Ztypecolon> Var var T)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n OBJ y \<Ztypecolon> Var var U) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] by metis
+
+
+lemma [\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?x \<Ztypecolon> ?T \<longmapsto> ?y \<Ztypecolon> ?U \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P)
+          (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R\<heavy_comma> OBJ ?x \<Ztypecolon> Var ?var ?T) ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Success
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> OBJ x \<Ztypecolon> Var var T)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> OBJ y \<Ztypecolon> Var var U) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] \<phi>cast_intro_frame by metis
+
+
+lemma [\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?x' \<Ztypecolon> ?T' \<longmapsto> ?y \<Ztypecolon> ?U \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R\<heavy_comma> OBJ ?x \<Ztypecolon> Var ?var ?T) ?Result
+\<close>]:
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> PROP \<phi>Application_Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x' \<Ztypecolon> T' \<longmapsto> y \<Ztypecolon> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> OBJ x \<Ztypecolon> Var var T)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> OBJ y \<Ztypecolon> Var var U) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] \<phi>cast_intro_frame by metis
+
+
 
 subsection \<open>Memory Object\<close>
 

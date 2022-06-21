@@ -1,5 +1,3 @@
-(* FIX ME: I have tried the best but the sidekick won't work right. Isabelle is not quite flexible in
-  outer syntax and it is already the best hack can be given. *)
 theory NuSys
   imports NuPrime "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools"
   keywords
@@ -8,7 +6,7 @@ theory NuSys
     "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" "heap" "stack"
     "argument" "return" "on" "affirm" :: quasi_command
   and ";;" :: prf_decl % "proof"
-  and "\<phi>processor" "\<phi>reasoner" "\<phi>reasoner_ML" "setup_\<phi>application_method" :: thy_decl % "ML"
+  and "\<phi>processor" "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
   and "finish" :: "qed" % "proof"
 abbrevs
@@ -130,10 +128,10 @@ lemma \<phi>Type_eqI:
 paragraph \<open>Syntax\<close>
 
 abbreviation (in std) COMMA
-  :: \<open>('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set\<close> (infixl "\<heavy_comma>" 15)
+  :: \<open>('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set\<close> (infixl "\<heavy_comma>" 14)
   where \<open>COMMA \<equiv> (*)\<close>
 
-ML \<open>Theory.setup (Sign.add_trrules (let open Ast 
+setup \<open>(Sign.add_trrules (let open Ast 
       fun nuty x y = Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable x, Variable y]
       fun wrap_ele tm = Appl [Constant \<^const_syntax>\<open>Ele\<close>, tm]
       fun wrap_nuty x y = wrap_ele (nuty x y)
@@ -248,28 +246,16 @@ subsubsection \<open>Overload\<close>
 
 ML_file \<open>library/applicant.ML\<close>
 
+attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 NuApplicant.parser) >> (fn bindings => 
+  Thm.declaration_attribute (fn th => fold (NuApplicant.overload th) bindings))\<close>
+
 \<phi>overloads D \<open>Destructive subtyping rules\<close>
 \<phi>overloads cast \<open>Invoke subtyping on the internal content\<close>
-
-local_setup (in std) \<open>
-let open PhiSyntax NuApplicant
-  val setup =
-      add_elements_extractor
-        (\<^prop_pattern>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>,
-         dest_CurrentConstruction #> #3 #> strip_separations)
-   #> add_elements_extractor
-        (\<^prop_pattern>\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>,
-         dest_PendingConstruction #> #4 #> strip_separations)
- in
-   Local_Theory.background_theory (Context.theory_map setup)
- end\<close>
 
 subsubsection \<open>\<phi> Reasoner\<close>
 
 definition "\<phi>Intro_Rule x = x"
 definition "\<phi>Elim_Rule x = x"
-definition "\<phi>Application_Rule x = x"
-
 
 ML_file_debug \<open>library/reasoner.ML\<close>
 
@@ -368,7 +354,7 @@ text \<open>
 
 lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
 lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma Premise_E[\<phi>reason_elim!, elim!]: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
+lemma Premise_E[elim!]: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
 lemma Premise_Irew: "(P \<Longrightarrow> C) \<equiv> Trueprop (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> C)" unfolding Premise_def atomize_imp .
 
@@ -550,6 +536,27 @@ lemma NO_MATCH_I: "NO_MATCH A B" unfolding NO_MATCH_def ..
 end\<close>
 
 
+subsubsection \<open>Fix\<close>
+
+definition Fix :: \<open>'a set \<Rightarrow> 'a set\<close> ("FIX _" [16] 15) where [simp]: \<open>Fix S = S\<close>
+
+text (in std) \<open>During the subtyping reasoning, \<^term>\<open>FIX OBJ S\<close> annotates the reasoner
+  do not attempt to permute objects to solve the subtyping. It means the order is sensitive
+  and fixed. For example, a cast may apply only on the first object,
+  after user rotates the target to the first.\<close>
+
+translations "FIX (x \<Ztypecolon> T)" \<rightleftharpoons> "FIX ELE (x \<Ztypecolon> T)"
+
+
+subsubsection \<open>Cut\<close>
+
+definition \<r>Cut :: bool where \<open>\<r>Cut = True\<close>
+
+lemma [iff, \<phi>reason!]: \<open>\<r>Cut\<close> unfolding \<r>Cut_def ..
+
+text \<open>It triggers a (global) reasoning cut, representing some achievement has been reached,
+  and the following reasoning should start from this. The reasoner also returns
+  the latest cut point, when not all premises are solved.\<close>
 
 subsection \<open>Subtype & View Shift\<close>
 
@@ -564,15 +571,6 @@ translations "(\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A
 definition (in std) Viewshft :: \<open> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool \<Rightarrow> bool \<close>
   ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w\<^bold>'_\<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
   where \<open>(\<^bold>v\<^bold>i\<^bold>e\<^bold>w\<^bold>_\<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P) \<longleftrightarrow> (\<forall>v. v \<in> A \<longrightarrow> (\<exists>u. View_Shift v u \<and> u \<in> B \<and> P))\<close>
-
-setup \<open>
-let open PhiSyntax NuApplicant
-  val setup = add_elements_extractor
-        (\<^prop_pattern>\<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?S \<longmapsto> ?S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>,
-         fn (Const (\<^const_name>\<open>Subty\<close>, _) $ S $ _ $ _) => [S])
-in
-   Context.theory_map setup
-end\<close>
 
 
 paragraph \<open>Applications\<close>
@@ -609,25 +607,28 @@ lemma \<phi>cast_intro_frame_R:
   "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e U' * R \<longmapsto> U * R \<^bold>w\<^bold>i\<^bold>t\<^bold>h P "
   unfolding Subty_def pair_forall times_set_def by blast
 
+lemma [\<phi>reason 2000]:
+  \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> FIX Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Fix_def .
 
 lemma (in std) "\<phi>cast":
-  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket> \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
   unfolding CurrentConstruction_def Subty_Target_def Subty_def
   by (cases blk, simp_all add: pair_All \<phi>expns) blast
 
-lemma (in std) \<phi>cast':
-  "\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T')"
-  unfolding Subty_Target_def Subty_def PendingConstruction_def bind_def
-  by (cases blk, auto simp add: \<phi>expns LooseStateTy_expn') blast+
+lemma (in std) "\<phi>cast_P":
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T') \<and> P"
+  unfolding CurrentConstruction_def Subty_Target_def Subty_def
+  by (cases blk, simp_all add: pair_All \<phi>expns) blast
 
-lemma (in std) cast_val_\<phi>app[\<phi>overload cast on \<open>VAL _\<close>]:
+lemma (in std) cast_val_\<phi>app[\<phi>overload cast]:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e (VAL X) \<longmapsto> VAL X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Subty_def Argument_def
   by (simp_all add: \<phi>expns, blast)
 
 lemma (in std) cast_obj_\<phi>app:
-  "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e (OBJ Y) \<longmapsto> OBJ Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Subty_def Argument_def
+  "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e (FIX OBJ Y) \<longmapsto> OBJ Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  unfolding Subty_def Argument_def Fix_def
   by (simp_all add: \<phi>expns, blast)
 
 lemma (in std) cast_vals_\<phi>app:
@@ -646,12 +647,11 @@ lemma cast_whole_\<phi>app:
   unfolding Subty_def Argument_def by (simp add: \<phi>expns)
 
 
-  lemma cast_conversion:
+lemma cast_conversion:
   "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q \<medium_right_bracket>
   \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
   \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q"
   unfolding Subty_Target_def Subty_def by blast
-
 
 
 (* lemma dual_cast_fallback[\<phi>intro']: "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A \<longmapsto> B) \<and> (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e C \<longmapsto> C)" unfolding Subty_def by fast *)
@@ -719,14 +719,45 @@ lemma [\<phi>reason 2000]:
   \<open>Matches X A \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> (Y <matches> A) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding TyMatches_def .
 
-subsubsection \<open>Fix\<close>
 
-definition Fix :: \<open>'a set \<Rightarrow> 'a set\<close> ("FIX _" [18] 17) where \<open>Fix S = S\<close>
+subsubsection \<open>Subgoal Environment\<close>
 
-text (in std) \<open>During the subtyping reasoning, \<^term>\<open>OBJ FIX S\<close> annotates the reasoner
-  do not attempt to permute objects to solve the subtyping. It means the order is sensitive
-  and fixed. For example, a cast may apply only on the first object,
-  after user rotates the target to the first.\<close>
+typedef "subgoal" = "UNIV :: nat set" ..
+
+consts TOP_GOAL :: "subgoal"
+
+definition SUBGOAL :: "subgoal \<Rightarrow> subgoal \<Rightarrow> bool" where "SUBGOAL ROOT NEW_GOAL = True"
+definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
+  where "CHK_SUBGOAL X = True"
+definition SOLVE_SUBGOAL :: "subgoal \<Rightarrow> bool" where "SOLVE_SUBGOAL X = True"
+
+text \<open>The three tags provides a hierarchical subgoal environment.
+  \<^prop>\<open>SUBGOAL ROOT NEW_GOAL\<close> creates a new unique subgoal \<^term>\<open>NEW_GOAL\<close> under \<^term>\<open>ROOT\<close>.
+    \<^term>\<open>NEW_GOAL\<close> should be a schematic variable to be instantiated by the reasoner.
+  \<^prop>\<open>SOLVE_SUBGOAL GOAL\<close> marks the GOAL and all its subgoals solved.
+  \<^prop>\<open>CHK_SUBGOAL GOAL\<close> checks whether the GOAL is marked solved. If it is,
+    this proposition is rejected to be solved by the reasoner, causing any search path
+    assuming this proposition terminates. Therefore, no additional searches
+    assuming this proposition will continue once the subgoal is solved.
+
+  Once \<^term>\<open>GOAL\<close> is marked solved. Later \<^prop>\<open>SOLVE_SUBGOAL GOAL\<close> only succeeds on the
+    search path which marks this goal. Any branch irrelevant with the point of
+    the marking cannot mark the \<^term>\<open>GOAL\<close> again, and \<^prop>\<open>SOLVE_SUBGOAL GOAL\<close>
+    fails for them, causing those branches terminate.
+
+  The \<^term>\<open>TOP_GOAL\<close> can never be marked solved.\<close>
+
+lemma SUBGOAL_I[iff]: "SUBGOAL ROOT NEWGOAL" unfolding SUBGOAL_def ..
+lemma CHK_SUBGOAL_I[iff]: "CHK_SUBGOAL X" unfolding CHK_SUBGOAL_def ..
+lemma SOLVE_SUBGOAL_I[iff]: "SOLVE_SUBGOAL X" unfolding SOLVE_SUBGOAL_def ..
+
+ML_file \<open>library/Subgoal_Env.ML\<close>
+
+\<phi>reasoner_ML SUBGOAL 2000 (conclusion \<open>SUBGOAL ?ROOT ?NEWGOAL\<close>) = \<open>Subgoal_Env.subgoal\<close>
+\<phi>reasoner_ML CHK_SUBGOAL 2000 (conclusion \<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal\<close>
+\<phi>reasoner_ML SOLVE_SUBGOAL 9999 (conclusion \<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal\<close>
+
+definition Subty_Target2 :: " 'a \<Rightarrow> subgoal \<Rightarrow> 'a "  ("\<medium_left_bracket> _ \<medium_right_bracket>: _" [2,1000] 100) where "\<medium_left_bracket> x \<medium_right_bracket>: _ = x"
 
 
 subsection \<open>Simplifier & Rewriter\<close>
@@ -757,25 +788,6 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 \<close> *)
 
 
-subsubsection \<open>Subty Simplifier\<close>
-
-named_theorems cast_simp
-consts cast_simp_setting :: mode
-
-abbreviation Subty_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e] _ : _" [1000,10] 9)
-  where "Subty_Simplify \<equiv> Simplify cast_simp_setting"
-
-\<phi>reasoner Subty_Simplify 1000 (conclusion \<open>Subty_Simplify ?x ?y\<close>)
-  = ((simp only: cast_simp)?, rule Simplify_I)
-
-(*\<open>fn ctx =>
-  let val ctx = Raw_Simplifier.clear_simpset ctx
-          addsimps Named_Theorems.get ctx \<^named_theorems>\<open>cast_simp\<close>
-  in HEADGOAL (simp_tac ctx) THEN
-     HEADGOAL (resolve0_tac @{thms Simplify_I})
-  end
-\<close>*)
-
 subsubsection \<open>Finalization Rewrites\<close>
 
 named_theorems final_proc_rewrite
@@ -786,6 +798,247 @@ lemma [final_proc_rewrite,simp]: "f \<ggreater> SKIP \<equiv> f"
   and [final_proc_rewrite,simp]: "SKIP \<ggreater> f \<equiv> f"
   unfolding instr_comp_def bind_def atomize_eq fun_eq_iff by simp+
 
+
+subsection \<open>Tags - Part III\<close>
+
+subsubsection \<open>Introduce Frame Variable\<close>
+
+named_theorems frame_var_rewrs \<open>Rewriting rules to normalize after inserting the frame variable\<close>
+
+declare mult.assoc[symmetric, frame_var_rewrs]
+
+consts frame_var_rewrs :: mode
+
+\<phi>reasoner Subty_Simplify 2000 (conclusion \<open>Simplify frame_var_rewrs ?x ?y\<close>)
+  = ((simp only: frame_var_rewrs)?, rule Simplify_I)
+
+
+context std begin
+
+definition IntroFrameVar ::
+  "('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn
+\<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool" where
+  "IntroFrameVar R S' S T' T \<longleftrightarrow> S' = (R * S) \<and> T' = (R * T) "
+
+lemma IntroFrameVar_No:
+  "IntroFrameVar Void S S T T "
+  unfolding IntroFrameVar_def by simp
+
+lemma IntroFrameVar_Yes:
+  "Simplify frame_var_rewrs S' (R * S) \<Longrightarrow>
+   Simplify frame_var_rewrs T' (R * T) \<Longrightarrow>
+   IntroFrameVar R S' S T' T "
+  unfolding IntroFrameVar_def by blast
+
+\<phi>reasoner_ML IntroFrameVar 1000 (conclusion "IntroFrameVar ?R ?S' ?S ?T' ?T") =
+\<open>fn (ctxt, sequent) =>
+  let
+    val (Const (\<^const_name>\<open>std.IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
+        Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
+    val tail = PhiSyntax.strip_separations S |> NuHelp.last
+  in
+    if is_Var tail andalso fastype_of tail = \<^typ>\<open>('VAR,'FIC_N,'FIC)assn\<close>
+    then Seq.single (ctxt, @{thm IntroFrameVar_No} RS sequent)
+    else Seq.single (ctxt, @{thm IntroFrameVar_Yes} RS sequent)
+  end\<close>
+
+end
+
+
+
+subsection \<open>Application\<close> \<comment> \<open>of procedures, subtypings, and any other things\<close>
+
+definition \<phi>Application :: \<open>bool \<Rightarrow> bool \<Rightarrow> prop \<Rightarrow> prop\<close> ("_/ \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _/ \<^bold>\<Rightarrow> _")
+  where \<open>\<phi>Application Applicants State Result \<equiv> (State \<Longrightarrow> Applicants \<Longrightarrow> PROP Result)\<close>
+
+definition \<phi>Application_Method :: \<open>bool \<Rightarrow> bool \<Rightarrow> prop \<Rightarrow> prop\<close>
+  where \<open>\<phi>Application_Method \<equiv> \<phi>Application\<close>
+
+definition \<phi>Application_Success :: "prop"
+  where \<open>\<phi>Application_Success \<equiv> Trueprop True\<close>
+
+(* lemma \<phi>Application_Method_cong[cong]:
+  \<open> App1 \<equiv> App2 \<Longrightarrow> Stat1 \<equiv> Stat2 \<Longrightarrow> Res1 \<equiv> Res2
+\<Longrightarrow> \<phi>Application_Method App1 Stat1 Res1 \<equiv> \<phi>Application_Method App2 Stat2 Res2\<close>
+  unfolding \<phi>Application_Method *)
+
+
+lemma \<phi>Application_normalize:
+  \<open>(P \<Longrightarrow> Apps \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s State \<^bold>\<Rightarrow> (PROP Result))
+ \<equiv> Apps \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s State \<^bold>\<Rightarrow> (P \<Longrightarrow> PROP Result)\<close>
+  unfolding \<phi>Application_def ..
+
+lemma \<phi>application_start_reasoning:
+  \<open> PROP \<phi>Application_Method Apps State (PROP Result)
+\<Longrightarrow> PROP Pure.prop (Apps \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s State \<^bold>\<Rightarrow> (PROP Result))\<close>
+  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def .
+
+lemma \<phi>application:
+  \<open>Apps \<Longrightarrow> State \<Longrightarrow> (Apps \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s State \<^bold>\<Rightarrow> (PROP Result)) \<Longrightarrow> PROP Pure.prop Result\<close>
+  unfolding \<phi>Application_def Pure.prop_def .
+
+lemma \<phi>application_success:
+  \<open>PROP \<phi>Application_Success\<close>
+  unfolding \<phi>Application_Success_def ..
+
+ML_file \<open>library/application.ML\<close>
+
+\<phi>reasoner_ML \<phi>Application 2000 (conclusion \<open>?App \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?State \<^bold>\<Rightarrow> (PROP ?Result)\<close>) =
+  \<open>NuApply.start_reasoning\<close>
+
+\<phi>reasoner_ML \<phi>Application_Success 2000 (conclusion \<open>PROP \<phi>Application_Success\<close>) =
+  \<open>NuApply.success_application\<close>
+
+
+paragraph \<open>Common Rules of Application Methods\<close>
+
+lemma [\<phi>reason on \<open>
+  PROP \<phi>Application_Method (?App \<and> ?Apps) ?State ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Method  App State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application_Method (App \<and> Apps) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def conj_imp .
+
+lemma [\<phi>reason on \<open>
+  PROP \<phi>Application_Method (?App \<and> ?Apps) ?State ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Method  Apps State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application_Method (App \<and> Apps) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def conj_imp .
+
+lemma [\<phi>reason 1200 on \<open>
+  PROP \<phi>Application_Method (?Prem \<longrightarrow> ?App) ?State ?Result
+\<close>]:
+  \<open> (Prem \<Longrightarrow> PROP \<phi>Application_Method  App State (PROP Result))
+\<Longrightarrow> PROP \<phi>Application_Method (Prem \<longrightarrow> App) State (Prem \<Longrightarrow> PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def imp_implication
+  subgoal premises prems using prems(1)[OF prems(4) prems(2) prems(3)[OF prems(4)]] . done
+
+lemma [\<phi>reason 1200 on \<open>
+  PROP \<phi>Application_Method (All ?App) ?State ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Method (App x) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application_Method (All App) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def imp_implication
+  subgoal premises prems using prems(1)[OF prems(2) prems(3)[THEN spec[where x=x]]] . done
+
+
+paragraph \<open>Application Methods\<close>
+
+context std begin
+
+subparagraph \<open>Subtyping methods\<close>
+
+lemma \<phi>apply_subtyping_fast[\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?S \<longmapsto> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P) (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S) ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Success
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" .
+
+
+lemma \<phi>apply_subtyping_fully[\<phi>reason on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?S' \<longmapsto> ?T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P) (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S) ?Result
+\<close>]:
+  "IntroFrameVar R S'' S' T T'
+\<Longrightarrow> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> \<medium_left_bracket> S'' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>: G
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> PROP \<phi>Application_Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S' \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P))"
+  unfolding IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
+    Subty_Target2_def Subty_Target_def Subty_Target_def
+  using "\<phi>cast_P" \<phi>cast_intro_frame
+  by (metis (no_types, lifting))
+
+
+lemma [\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?S \<longmapsto> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P) (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n VAL ?S) ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Success
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n VAL S)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n VAL T) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" cast_val_\<phi>app[unfolded Argument_def] by blast
+
+lemma [\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?S' \<longmapsto> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P) (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n VAL ?S) ?Result
+\<close>]:
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> PROP \<phi>Application_Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S' \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n VAL S)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n VAL T) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" cast_val_\<phi>app[unfolded Argument_def] by blast
+
+
+lemma [\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?S \<longmapsto> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P) (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R\<heavy_comma> VAL ?S) ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Success
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL S)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL T) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" cast_val_\<phi>app[unfolded Argument_def] \<phi>cast_intro_frame by blast
+
+lemma [\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?S' \<longmapsto> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P) (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R\<heavy_comma> VAL ?S) ?Result
+\<close>]:
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> PROP \<phi>Application_Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S' \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL S)
+      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL T) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using "\<phi>cast_P" cast_val_\<phi>app[unfolded Argument_def] \<phi>cast_intro_frame by metis
+
+
+
+subparagraph \<open>Procedure methods\<close>
+
+lemma apply_proc_fast[\<phi>reason 2000 on \<open>
+  PROP \<phi>Application_Method (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S \<longmapsto> ?T \<rbrace>) (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S) ?Result
+\<close>]:
+  \<open> PROP \<phi>Application_Success
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<rbrace>)
+      (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
+      (Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def
+  using \<phi>apply_proc .
+
+
+lemma \<phi>apply_proc_fully[\<phi>reason on
+    \<open>PROP \<phi>Application_Method (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S' \<longmapsto> ?T' \<rbrace>) (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S) ?Result\<close>
+]:
+  \<open> IntroFrameVar R S'' S' T T'
+\<Longrightarrow> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> \<medium_left_bracket> S'' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> PROP \<phi>Application_Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<rbrace>)
+    (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
+    (Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def IntroFrameVar_def
+    Subty_Target2_def Subty_Target_def
+  using "\<phi>cast" \<phi>apply_proc \<phi>frame[where R=R] by meson
+
+end
 
 subsection \<open>Synthesis\<close>
 
@@ -857,7 +1110,7 @@ lemma (in std) [simp]: "(VAL (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (VAL 
 lemma (in std) [simp]: "(OBJ (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (OBJ S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff)
 
 
-lemma [simp,cast_simp]: "(R * (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (R * T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)"
+lemma [simp,frame_var_rewrs]: "(R * (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (R * T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)"
   by (simp add: set_eq_iff \<phi>expns) blast
 
 (* declare split_paired_All[simp del] split_paired_Ex[simp del] *)
@@ -953,7 +1206,7 @@ lemma (in std_sem) [simp]: "p \<in> !\<S> (ExSet T) \<longleftrightarrow> (\<exi
 lemma (in std) [simp]: "(VAL ExSet T) = (\<exists>*c. VAL T c)" by (simp add: \<phi>expns set_eq_iff) blast
 lemma (in std) [simp]: "(OBJ ExSet T) = (\<exists>*c. OBJ T c)" by (simp add: \<phi>expns set_eq_iff)
 lemma [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: \<phi>expns set_eq_iff) blast
-lemma [simp,cast_simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
+lemma [simp,frame_var_rewrs]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
 
 lemma ExSet_ExSet[simp]:
   \<open>(X a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a b. P a b \<and> Q b)\<close>
@@ -1031,8 +1284,6 @@ lemma ExTyp_inhabited[elim!, \<phi>reason_elim!]:
 
 subsubsection \<open>Identity\<close>
 
-\<phi>overloads to_Identity
-
 definition Identity :: " ('a,'a) \<phi> " where "Identity x = {x}"
 
 lemma Identity_expn[\<phi>expns]:
@@ -1046,12 +1297,9 @@ lemma Identity_E[\<phi>reason on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^b
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e v \<Ztypecolon> Identity \<longmapsto> x \<Ztypecolon> T\<close>
   unfolding Subty_def by (simp add: \<phi>expns)
 
-lemma to_Identity_origin_\<phi>app[\<phi>overload to_Identity on \<open>?x \<Ztypecolon> ?T\<close>]:
+lemma to_Identity_\<phi>app:
   \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> (v \<Ztypecolon> Identity \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j v. v \<in> (x \<Ztypecolon> T))\<close>
   unfolding Subty_def by (simp add: \<phi>expns)
-
-lemmas (in std) [\<phi>overload to_Identity on \<open>VAL ?x \<Ztypecolon> ?T\<close>]
-  = cast_val_\<phi>app[OF Argument_I[OF to_Identity_origin_\<phi>app]]
 
 lemma from_Identity_\<phi>app:
   \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> X \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e v \<Ztypecolon> Identity \<longmapsto> X\<close>
@@ -1090,7 +1338,7 @@ lemma [\<phi>reason]:
   "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> M \<longmapsto> x' \<Ztypecolon> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x' \<in> S \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> M \<longmapsto> x' \<Ztypecolon> M' <where> S \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Subty_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 30 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?x \<Ztypecolon> ?T <where> ?S \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P''\<close>, \<phi>overload D on \<open>?x \<Ztypecolon> ?T <where> ?S\<close>]:
+lemma [\<phi>reason 30 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?x \<Ztypecolon> ?T <where> ?S \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P''\<close>, \<phi>overload D]:
   "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
     \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T <where> S \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> x \<in> S"
   unfolding Subty_def by (simp add: \<phi>expns) blast
@@ -1248,36 +1496,24 @@ lemma MemAddrState_add_I1[intro]: " h1 \<^bold>a\<^bold>t a \<^bold>i\<^bold>s T
 
 *)
 
-declare mult.assoc[symmetric, cast_simp]
-
 subsection \<open>General Tools\<close>
 
-subsubsection \<open>Reasoning Mutex\<close>
+lemma (in std) "_\<phi>cast_internal_rule_":
+  " \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<medium_left_bracket> T' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>: TOP_GOAL
+\<Longrightarrow> \<r>Cut
+\<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
+  unfolding CurrentConstruction_def Subty_Target_def Subty_def Subty_Target2_def
+  by (cases blk, simp_all add: pair_All \<phi>expns) blast
 
-text \<open>A mutex representing a subgoal in the reasoning.
-    Once a subgoal \<^term>\<open>G\<close> is solved, the mutex \<^term>\<open>G\<close> is set, so that other branches
-      solving the same goal is trimmed.
-TODO\<close>
+lemma (in std) "_\<phi>cast_internal_rule_'":
+  " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<medium_left_bracket> T' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>: TOP_GOAL
+\<Longrightarrow> \<r>Cut
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
+  unfolding Subty_Target_def Subty_def PendingConstruction_def bind_def Subty_Target2_def
+  by (cases blk, auto simp add: \<phi>expns LooseStateTy_expn') blast+
 
-typedef reason_mutex = "UNIV :: nat set" ..
-
-definition NEW_MUTEX :: "reason_mutex \<Rightarrow> bool" where "NEW_MUTEX X = True"
-definition MUTEX_ASSERT :: "reason_mutex \<Rightarrow> bool" where "MUTEX_ASSERT X = True"
-definition MUTEX_SET :: "reason_mutex \<Rightarrow> bool" where "MUTEX_SET X = True"
-
-lemma [elim!]: "NEW_MUTEX X \<Longrightarrow> C \<Longrightarrow> C" .
-lemma [elim!]: "MUTEX_ASSERT X \<Longrightarrow> C \<Longrightarrow> C" .
-lemma [elim!]: "MUTEX_SET X \<Longrightarrow> C \<Longrightarrow> C" .
-
-lemma [simp, \<phi>reason]: "NEW_MUTEX X" unfolding NEW_MUTEX_def ..
-lemma [simp, \<phi>reason]: "MUTEX_ASSERT X" unfolding MUTEX_ASSERT_def ..
-lemma [simp, \<phi>reason]: "MUTEX_SET X" unfolding MUTEX_SET_def ..
-
-text \<open>Once a mutex is set, any \<^prop>\<open>MUTEX_ASSERT X\<close> will fail in the reasoning.\<close>
-
-paragraph \<open>Technical Tags\<close>
-
-definition Subty_Target2 :: " 'a \<Rightarrow> reason_mutex \<Rightarrow> 'a "  ("\<medium_left_bracket> _ \<medium_right_bracket>: _" [2,1000] 100) where "\<medium_left_bracket> x \<medium_right_bracket>: _ = x"
 
 
 subsubsection \<open>Case Analysis\<close>
@@ -1336,16 +1572,6 @@ lemmas cast_def = Subty_Target_def Subty_Target2_def Subty_def
 (* lemma [\<phi>intro 1000]:
   "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e L * H \<longmapsto> L * H \<^bold>d\<^bold>u\<^bold>a\<^bold>l L * h\<^sub>m \<Ztypecolon> \<medium_left_bracket> H\<^sub>m \<medium_right_bracket> \<longmapsto> L * h\<^sub>m \<Ztypecolon> H\<^sub>m \<medium_right_bracket>"
   unfolding Heap_Subty_Goal_def using cast_dual_id . *)
-
-subsubsection \<open>Initialization\<close>
-
-lemma [\<phi>reason 2000]:
-  "NEW_MUTEX G \<Longrightarrow>
-  \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> \<medium_left_bracket> Y \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-  MUTEX_SET G \<Longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True \<Longrightarrow>
-  \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>"
-  unfolding cast_def .
 
 subsubsection \<open>Identity Subty\<close>
 
@@ -1452,51 +1678,48 @@ subsubsection \<open>Value\<close>
 
 
 lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> (OBJ ?H) \<longmapsto> ?R''' \<heavy_comma> \<medium_left_bracket> VAL ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
-  "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R' \<heavy_comma> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<heavy_comma> (OBJ H) \<longmapsto> R' \<heavy_comma> (OBJ H) \<heavy_comma> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G "
+  " \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R' \<heavy_comma> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<heavy_comma> (OBJ H) \<longmapsto> R' \<heavy_comma> (OBJ H) \<heavy_comma> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G "
   unfolding cast_def pair_forall
   by (simp add: \<phi>expns times_list_def) metis
 
 lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> (VAL ?V) \<longmapsto> ?R''' \<heavy_comma> \<medium_left_bracket> VAL ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
   " \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e V \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<heavy_comma> (VAL V) \<longmapsto> R \<heavy_comma> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<heavy_comma> (VAL V) \<longmapsto> R \<heavy_comma> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def pair_forall
   by (simp add: \<phi>expns times_list_def) metis
 
 lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<longmapsto> \<medium_left_bracket> ?R2 \<heavy_comma> (VAL ?X) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
   " \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R1 \<heavy_comma> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<medium_right_bracket>: G
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R1 \<longmapsto> \<medium_left_bracket> R2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2  \<medium_right_bracket>: G
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<medium_left_bracket> R2 \<heavy_comma> (VAL X) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<medium_right_bracket>: G"
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R1 \<longmapsto> \<medium_left_bracket> R2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2  \<medium_right_bracket>: G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<medium_left_bracket> R2 \<heavy_comma> (VAL X) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<medium_right_bracket>: G"
   unfolding cast_def pair_forall
   by (simp add: \<phi>expns) metis
+
+lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<longmapsto> \<medium_left_bracket> ?R2 \<heavy_comma> (VAL ?X) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
+  " \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R1 \<heavy_comma> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<medium_right_bracket>: G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R1 \<longmapsto> \<medium_left_bracket> R2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2  \<medium_right_bracket>: G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<medium_left_bracket> R2 \<heavy_comma> (VAL X) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<medium_right_bracket>: G"
+  unfolding cast_def pair_forall
+  by (simp add: \<phi>expns) metis
+
 
 subsubsection \<open>Object\<close>
 
 lemma [\<phi>reason 100 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> OBJ ?H \<longmapsto> ?R''' * \<medium_left_bracket> OBJ ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
-  " MUTEX_ASSERT G
+  " CHK_SUBGOAL G
   \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ H \<longmapsto> H'\<heavy_comma> OBJ X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-  \<Longrightarrow> MUTEX_SET G
   \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> OBJ H \<longmapsto> R\<heavy_comma> H'\<heavy_comma> \<medium_left_bracket> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def
   by (simp add: \<phi>expns times_list_def del: split_paired_All split_paired_Ex)  (metis mult.assoc)
 
 
 lemma [\<phi>reason 70 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> OBJ ?H \<longmapsto> ?R''' \<heavy_comma> \<medium_left_bracket> OBJ ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
-  " MUTEX_ASSERT G
+  " CHK_SUBGOAL G
   \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R' \<heavy_comma> \<medium_left_bracket> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G
-  \<Longrightarrow> MUTEX_SET G
   \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<heavy_comma> OBJ H \<longmapsto> R' \<heavy_comma> OBJ H \<heavy_comma> \<medium_left_bracket> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G "
   unfolding cast_def pair_forall
   by (simp add: \<phi>expns times_list_def) (metis fun_mult_norm mult.commute)
-
-lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> OBJ FIX ?H \<longmapsto> ?R''' * \<medium_left_bracket> OBJ FIX ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
-  " MUTEX_ASSERT G
-  \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ H \<longmapsto> H'\<heavy_comma> OBJ X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-  \<Longrightarrow> MUTEX_SET G
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> OBJ FIX H \<longmapsto> R\<heavy_comma> H'\<heavy_comma> \<medium_left_bracket> OBJ FIX X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
-  unfolding cast_def Fix_def
-  by (simp add: \<phi>expns times_list_def del: split_paired_All split_paired_Ex)  (metis mult.assoc)
-
 
 lemma [\<phi>reason 10 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ ?a \<Zinj> ?x \<Ztypecolon> ?T \<longmapsto> ?R''' \<heavy_comma> OBJ ?a' \<Zinj> ?x' \<Ztypecolon> ?T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a' \<Longrightarrow>
@@ -1511,10 +1734,11 @@ lemma [\<phi>reason 1200 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^b
   by (simp add: \<phi>expns times_list_def) metis 
 
 lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<longmapsto> \<medium_left_bracket> ?R2 \<heavy_comma> OBJ ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
-  " NEW_MUTEX G2 \<Longrightarrow> \<comment> \<open>make a new subgoal \<close>
-   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R1 \<heavy_comma> \<medium_left_bracket> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<medium_right_bracket>: G2 \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R1 \<longmapsto> \<medium_left_bracket> R2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<medium_left_bracket> R2 \<heavy_comma> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<medium_right_bracket>: G"
+  " SUBGOAL G G2 \<comment> \<open>make a new subgoal \<close>
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R1 \<heavy_comma> \<medium_left_bracket> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<medium_right_bracket>: G2
+\<Longrightarrow> SOLVE_SUBGOAL G2
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R1 \<longmapsto> \<medium_left_bracket> R2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<medium_right_bracket>: G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<medium_left_bracket> R2 \<heavy_comma> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<medium_right_bracket>: G"
   unfolding cast_def pair_forall
   by (simp add: \<phi>expns) blast
 
@@ -1522,7 +1746,7 @@ lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^b
 (* lemma [\<phi>reason 1200
     on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<longmapsto> ?R' \<heavy_comma> \<medium_left_bracket> OBJ ?a \<Zinj> ?x \<Ztypecolon> ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R'\<^sub>m \<heavy_comma> VAL ?V \<heavy_comma> \<medium_left_bracket> OBJ ?a\<^sub>m \<Zinj> ?x\<^sub>m \<Ztypecolon> ?X\<^sub>m \<medium_right_bracket> \<longmapsto> ?R\<^sub>m \<medium_right_bracket>: ?G\<close>
   ]: \<comment> \<open>OR search the later cells, if hasn't succeeded.\<close>
-  "MUTEX_ASSERT G
+  "CHK_SUBGOAL G
     \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R' \<heavy_comma> \<medium_left_bracket> OBJ a \<Zinj> x \<Ztypecolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_comma> \<medium_left_bracket> OBJ a\<^sub>m \<Zinj> x\<^sub>m \<Ztypecolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<medium_right_bracket>: G
     \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> R' \<heavy_comma> \<medium_left_bracket> OBJ a \<Zinj> x \<Ztypecolon> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_comma> VAL V \<heavy_comma> \<medium_left_bracket> OBJ a\<^sub>m \<Zinj> x\<^sub>m \<Ztypecolon> X\<^sub>m \<medium_right_bracket> \<longmapsto> R\<^sub>m \<heavy_comma> VAL V \<medium_right_bracket>: G"
   unfolding Subty_Target_def Subty_Target2_def Separation_assoc[symmetric]
@@ -1532,6 +1756,23 @@ lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^b
 *)
 
 text \<open>step cases when the reasoner faces an object argument \<^term>\<open>OBJ a \<Zinj> x \<Ztypecolon> T\<close>\<close>
+
+subsubsection \<open>Ordered\<close>
+
+lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R\<heavy_comma> VAL ?Y \<longmapsto> \<medium_left_bracket> ?R2 \<heavy_comma> (FIX VAL ?X) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
+  " \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<medium_left_bracket> R2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<medium_right_bracket>: G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> VAL Y \<longmapsto> \<medium_left_bracket> R2 \<heavy_comma> FIX VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<medium_right_bracket>: G"
+  unfolding cast_def pair_forall
+  by (simp add: \<phi>expns) metis
+
+lemma [\<phi>reason 2000 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> OBJ ?Y \<longmapsto> \<medium_left_bracket> ?R2\<heavy_comma> FIX OBJ ?X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
+  " \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<medium_left_bracket> R2 \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<medium_right_bracket>: G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> OBJ Y \<longmapsto> \<medium_left_bracket> R2\<heavy_comma> FIX OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> P2 \<medium_right_bracket>: G"
+  unfolding cast_def Fix_def
+  by (simp add: \<phi>expns times_list_def) blast
+
 
 subsubsection \<open>Plainize\<close>
 
@@ -1640,116 +1881,6 @@ lemma [\<phi>intro 13000]: "False \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\
 *)
 
 
-
-
-
-subsection \<open>Conversion\<close> (*depreciated*)
-
-context std begin
-
-(*definition Conversion ::
-     "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set \<Rightarrow>
-      ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set \<Rightarrow> bool"
-    ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>)/ \<longmapsto> _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>)" [101,2,2,101,2,2] 100)
-    where [\<phi>def]: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<lbrace> U \<longmapsto> V \<rbrace> \<longmapsto> g \<lbrace> U' \<longmapsto> V' \<rbrace> \<longleftrightarrow>( \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> V \<rbrace> \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> U' \<longmapsto> V' \<rbrace> )"
-
-lemma \<phi>conversion:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<lbrace> U \<longmapsto> V \<rbrace> \<longmapsto> f' \<lbrace> U' \<longmapsto> V' \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> V \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U' \<longmapsto> V' \<rbrace>"
-  unfolding Conversion_def by blast
-
-lemma [\<phi>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n ?f \<lbrace> ?U \<longmapsto> ?V \<rbrace> \<longmapsto> ?f'' \<lbrace> ?U'' \<longmapsto> ?V'' \<rbrace>\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<lbrace> U \<longmapsto> V \<rbrace> \<longmapsto> f \<lbrace> U \<longmapsto> V \<rbrace>" unfolding Conversion_def by blast
-
-lemma [\<phi>reason 0 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n ?f \<lbrace> ?U \<longmapsto> ?V \<rbrace> \<longmapsto> ?f'' \<lbrace> ?U' \<longmapsto> ?V' \<rbrace>\<close>]:
-  assumes A: "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold>d\<^bold>u\<^bold>a\<^bold>l V \<longmapsto> V' \<medium_right_bracket>" 
-  shows "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<lbrace> U \<longmapsto> V \<rbrace> \<longmapsto> f \<lbrace> U' \<longmapsto> V' \<rbrace>"
-proof -
-  from A[unfolded Subty_Target_def]
-  have B: "\<forall>M. \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e INTERP_COMP (M * U') \<longmapsto> INTERP_COMP (M * U) \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold>d\<^bold>u\<^bold>a\<^bold>l INTERP_COMP (M * V) \<longmapsto> INTERP_COMP (M * V') "
-    unfolding Subty_def SubtyDual_def pair_forall by (simp add: \<phi>expns) blast
-  then show ?thesis
-    unfolding cast_def \<phi>def by (metis LooseStateTy_expn')
-qed
-
-
-lemma [\<phi>reason 0 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n ?f \<lbrace> ?U \<longmapsto> ?V \<rbrace> \<longmapsto> ?f'' \<lbrace> ?U' \<longmapsto> ?V' \<rbrace>\<close>]:
-  assumes A: "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>" 
-  shows "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<lbrace> U \<longmapsto> V \<rbrace> \<longmapsto> f \<lbrace> U' \<longmapsto> V' \<rbrace>"
-proof -
-  from A[unfolded Subty_Target_def]
-  have B: "\<forall>M. \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e INTERP_COMP (M * U') \<longmapsto> INTERP_COMP (M * U) \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold>d\<^bold>u\<^bold>a\<^bold>l INTERP_COMP (M * V) \<longmapsto> INTERP_COMP (M * V') "
-    unfolding Subty_def SubtyDual_def pair_forall by (simp add: \<phi>expns) blast
-  then show ?thesis
-    unfolding cast_def \<phi>def by (metis LooseStateTy_expn')
-qed*)
-
-
-definition IntroFrameVar ::
-  "('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn
-\<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool" where
-  "IntroFrameVar R S'' S' T'' T' \<longleftrightarrow> S'' = (R * S') \<and> T'' = (R * T') "
-
-
-lemma \<phi>apply_proc_cast:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
-  \<Longrightarrow> IntroFrameVar R S'' S' T T'
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<rbrace>
-  \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
-  unfolding IntroFrameVar_def
-  using "\<phi>cast" \<phi>apply_proc \<phi>frame[where R=R] by blast
-
-lemma \<phi>apply_cast_cast:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
-  \<Longrightarrow> IntroFrameVar R S'' S' T T'
-  \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>
-  \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S' \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2
-  \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
-  unfolding CurrentConstruction_def PendingConstruction_def cast_def IntroFrameVar_def
-  apply (cases blk)
-  apply (auto simp add: \<phi>expns)
-  by metis
-
-lemma IntroFrameVar_No:
-  "IntroFrameVar 1 S' S' T' T' "
-  unfolding IntroFrameVar_def by simp
-
-lemma IntroFrameVar_Yes:
-  "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e] S'' : R * S' \<Longrightarrow>
-   \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e] T'' : R * T' \<Longrightarrow>
-   IntroFrameVar R S'' S' T'' T' "
-  unfolding IntroFrameVar_def by blast
-
-
-\<phi>reasoner_ML IntroFrameVar 1000 (conclusion "IntroFrameVar ?R ?S'' ?S' ?T'' ?T'") =
-\<open>fn (ctxt, sequent) =>
-  let
-    val (Const (\<^const_name>\<open>std.IntroFrameVar\<close>, _) $ _ $ _ $ S' $ _ $ _) =
-        Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = PhiSyntax.strip_separations S' |> NuHelp.last
-  in
-    if is_Var tail andalso fastype_of tail = \<^typ>\<open>('VAR,'FIC_N,'FIC)assn\<close>
-    then Seq.single (ctxt, @{thm IntroFrameVar_No} RS sequent)
-    else Seq.single (ctxt, @{thm IntroFrameVar_Yes} RS sequent)
-  end\<close>
-
-
-(* theorem apply_proc_conv_complex:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
-  \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e] S'' : Hr ^* S'
-  \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e] T'' : Hr ^* T'
-  \<Longrightarrow> (\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<lbrace> S'' \<longmapsto> T'' \<rbrace> \<longmapsto> g \<lbrace> S \<longmapsto> T\<rbrace>)
-  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<rbrace>
-  \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)"
-  using apply_proc_conv .
-
-lemma conversion_trans: "\<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n g \<lbrace> Xg \<longmapsto> Yg \<rbrace> \<longmapsto> h \<lbrace> Xh \<longmapsto> Yh \<rbrace>
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<lbrace> Xf \<longmapsto> Yf \<rbrace> \<longmapsto> g \<lbrace> Xg \<longmapsto> Yg \<rbrace>
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v\<^bold>e\<^bold>r\<^bold>s\<^bold>i\<^bold>o\<^bold>n f \<lbrace> Xf \<longmapsto> Yf\<rbrace> \<longmapsto> h \<lbrace> Xh \<longmapsto> Yh \<rbrace>"
-  unfolding Conversion_def by blast *)
-
-end
-
 subsection \<open>Auto construct & destruct\<close>
 
 context std begin
@@ -1765,140 +1896,6 @@ lemma \<phi>Make_by_proc:
 
 end
 
-(* subsection \<open>Index of Member Field\<close>
-
-subsubsection \<open>Definitions\<close>
-
-named_theorems \<phi>index_def
-
-datatype ('a,'b,'x,'y) index = Index (get_idx: "'a \<Rightarrow> 'x") (map_idx: "('x \<Rightarrow> 'y) \<Rightarrow> 'a \<Rightarrow> 'b")
-declare  index.split[split] Map'_def[\<phi>index_def]
-
-definition index_here :: "('a,'b,'a,'b) index" where "index_here = Index id id"
-definition index_left :: "('a,'b,'x,'y) index \<Rightarrow> ('a \<times> 'r, 'b \<times> 'r, 'x, 'y) index"
-  where "index_left adr = (case adr of Index g m \<Rightarrow> Index (g \<circ> fst) (apfst o m))"
-definition index_right :: "('a,'b,'x,'y) index \<Rightarrow> ('l \<times> 'a, 'l \<times> 'b, 'x, 'y) index"
-  where "index_right adr = (case adr of Index g m \<Rightarrow> Index (g \<circ> snd) (apsnd o m))"
-
-
-definition AdrGet :: " ('a,'b,'x,'y) index \<Rightarrow> 'x set \<Rightarrow> 'a set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<lbrace> _ \<^bold>@ _ \<rbrace>)" [101,4,4] 100)
-  where [\<phi>index_def]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x adr \<lbrace> X \<^bold>@ A \<rbrace> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_idx adr \<lbrace> A \<longmapsto> X \<rbrace>"
-definition AdrMap :: " ('a,'b,'x,'y) index \<Rightarrow> 'x set \<Rightarrow> 'a set \<Rightarrow> 'y set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<lbrace> _ \<^bold>@ _ \<longmapsto> _ \<^bold>@ _ \<rbrace>)" [101,4,4,4,4] 100)
-  where [\<phi>index_def]: "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ A \<longmapsto> Y \<^bold>@ B \<rbrace> \<longleftrightarrow> \<^bold>m\<^bold>a\<^bold>p get_idx idx \<lbrace> A \<longmapsto> X \<rbrace> \<and>
-    (\<forall>f. (\<forall>a. a \<in> X \<longrightarrow> f a \<in> Y) \<longrightarrow> (\<forall>a. a \<in> A \<longrightarrow> map_idx idx f  a \<in> B))"
-declare Map_def[\<phi>index_def]
-
-(*definition FieldIndex
-    :: " ('a,'a,'ax,'ax) index \<Rightarrow> ('ax::lrep,'bx) \<phi> \<Rightarrow> ('a::lrep,'b) \<phi> \<Rightarrow> ('b \<Rightarrow> 'bx) \<Rightarrow> (('bx \<Rightarrow> 'bx) \<Rightarrow> 'b \<Rightarrow> 'b) \<Rightarrow>bool"
-    ("(2\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x _/ \<lbrace> _/ \<^bold>@ _ \<rbrace>/ \<^bold>g\<^bold>e\<^bold>t _/ \<^bold>m\<^bold>a\<^bold>p _)" [101,4,4,30,30] 29)
-  where [\<phi>index_def]: "FieldIndex idx X A gt mp
-      \<longleftrightarrow> (\<forall>a f. \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> \<tort_lbrace>gt a \<Ztypecolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>a \<Ztypecolon> A\<tort_rbrace> \<longmapsto> \<tort_lbrace>f (gt a) \<Ztypecolon> X\<tort_rbrace> \<^bold>@ \<tort_lbrace>mp f a \<Ztypecolon> A\<tort_rbrace> \<rbrace>)"
-*)
-
-subsubsection \<open>Abstraction theorems\<close>
-
-lemma index_here_getter[\<phi>reason]:
-  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_@{thmhere \<lbrace> A \<^bold>@ A \<rbrace>"
-  unfolding \<phi>index_def  index_here_def by simp
-lemma index_here_mapper[\<phi>reason]:
-  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<lbrace> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<rbrace>"
-  unfolding \<phi>index_def  index_here_def by simp
-(*lemma index_here_func[\<phi>intro]:
-  "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<lbrace> A \<^bold>@ A \<rbrace> \<^bold>g\<^bold>e\<^bold>t id \<^bold>m\<^bold>a\<^bold>p id"
-  unfolding \<phi>index_def  index_here_def by simp
-*)
-
-
-lemma [\<phi>reason]:
-  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<rbrace> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<lbrace> X \<^bold>@ (a,r) \<Ztypecolon> (A \<cross_product> R) \<rbrace>"
-  unfolding \<phi>index_def index_left_def by (cases idx) (simp add: \<phi>expns)
-lemma [\<phi>reason]:
-  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<longmapsto> Y \<^bold>@ b \<Ztypecolon> B\<rbrace> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<lbrace> X \<^bold>@ (a,r) \<Ztypecolon> (A \<cross_product> R) \<longmapsto> Y \<^bold>@ (b,r) \<Ztypecolon> (B \<cross_product> R) \<rbrace>"
-  unfolding \<phi>index_def index_left_def by (cases idx) (simp add: \<phi>expns)
-(*lemma [\<phi>intro]:
-  "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ A \<rbrace> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
-    \<Longrightarrow> \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<lbrace> X \<^bold>@ A \<cross_product> R \<rbrace> \<^bold>g\<^bold>e\<^bold>t g o fst \<^bold>m\<^bold>a\<^bold>p apfst o m"
-  unfolding FieldIndex_def \<phi>index_def index_left_def by (cases idx) (simp add: \<phi>expns)
-*)
-
-lemma [\<phi>reason]:
-  "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x f \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<rbrace> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right f \<lbrace> X \<^bold>@ (l,a) \<Ztypecolon> (L \<cross_product> A) \<rbrace>"
-  unfolding \<phi>index_def index_right_def by (cases f) (simp add: \<phi>expns)
-lemma [\<phi>reason]:
-    "\<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<longmapsto> Y \<^bold>@ b \<Ztypecolon> B\<rbrace> \<Longrightarrow> \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<lbrace> X \<^bold>@ (l,a) \<Ztypecolon> (L \<cross_product> A) \<longmapsto> Y \<^bold>@ (l,b) \<Ztypecolon> (L \<cross_product> B) \<rbrace>"
-  unfolding \<phi>index_def index_right_def by (cases idx) (simp add: \<phi>expns)
-(*lemma [\<phi>intro]:
-  "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ A \<rbrace> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
-    \<Longrightarrow> \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<lbrace> X \<^bold>@ R \<cross_product> A \<rbrace> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
-  unfolding FieldIndex_def \<phi>index_def index_right_def by (cases idx) (simp add: \<phi>expns)
-*)
-subsubsection \<open>Constructors\<close>
-
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat) \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<lbrace> A \<^bold>@ A \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_here_def by simp
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat) \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<lbrace> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_here_def by simp
-
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e [] \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<lbrace> A \<^bold>@ A \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_here_def by simp
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e [] \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<lbrace> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_here_def by simp
-
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e [(0::nat)] \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<lbrace> A \<^bold>@ A \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_here_def by simp
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e [(0::nat)] \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_here \<lbrace> A \<^bold>@ A \<longmapsto> B \<^bold>@ B \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_here_def by simp
-
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<rbrace> \<Longrightarrow>
-   \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<lbrace> X \<^bold>@ (t, a) \<Ztypecolon> (T \<cross_product> A) \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_right_def by (cases idx) (simp add: \<phi>expns)
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<longmapsto> Y \<^bold>@ b \<Ztypecolon> B \<rbrace> \<Longrightarrow>
-   \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<lbrace> X \<^bold>@ (t,a) \<Ztypecolon> (T \<cross_product> A) \<longmapsto> Y \<^bold>@ (t,b) \<Ztypecolon> (T \<cross_product> B) \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_right_def by (cases idx) (simp add: \<phi>expns)
-(*lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ A \<rbrace> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
-    \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e Suc i \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<lbrace> X \<^bold>@ R \<cross_product> A \<rbrace> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
-  unfolding MakeTag_def FieldIndex_def \<phi>index_def index_right_def
-  by (cases idx) (simp add: \<phi>expns)
-*)
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<rbrace> \<Longrightarrow>
-   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<lbrace> X \<^bold>@ (t, a) \<Ztypecolon> (T \<cross_product> A) \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_right_def by (cases idx) (simp add: \<phi>expns)
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<longmapsto> Y \<^bold>@ b \<Ztypecolon> B \<rbrace> \<Longrightarrow>
-   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<lbrace> X \<^bold>@ (t,a) \<Ztypecolon> (T \<cross_product> A) \<longmapsto> Y \<^bold>@ (t,b) \<Ztypecolon> (T \<cross_product> B) \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_right_def by (cases idx) (simp add: \<phi>expns)
-(*lemma [\<phi>intro]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e i#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ A \<rbrace> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
-    \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e (Suc i)#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_right idx \<lbrace> X \<^bold>@ R \<cross_product> A \<rbrace> \<^bold>g\<^bold>e\<^bold>t g o snd \<^bold>m\<^bold>a\<^bold>p apsnd o m"
-  unfolding MakeTag_def FieldIndex_def \<phi>index_def index_right_def
-  by (cases idx) (simp add: \<phi>expns)
-*)
-
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<rbrace> \<Longrightarrow>
-   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<lbrace> X \<^bold>@ (a,t) \<Ztypecolon> (A \<cross_product> L) \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_left_def by (cases idx) (simp add: \<phi>expns)
-lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ a \<Ztypecolon> A \<longmapsto> Y \<^bold>@ b \<Ztypecolon> B \<rbrace> \<Longrightarrow>
-   \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<lbrace> X \<^bold>@ (a,t) \<Ztypecolon> (A \<cross_product> L) \<longmapsto> Y \<^bold>@ (b,t) \<Ztypecolon> (B \<cross_product> L) \<rbrace>"
-  unfolding \<phi>index_def  MakeTag_def index_left_def by (cases idx) (simp add: \<phi>expns)
-(*lemma [\<phi>reason]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x idx \<lbrace> X \<^bold>@ A \<rbrace> \<^bold>g\<^bold>e\<^bold>t g \<^bold>m\<^bold>a\<^bold>p m
-    \<Longrightarrow> \<^bold>m\<^bold>a\<^bold>k\<^bold>e (0::nat)#l \<^bold>b\<^bold>y \<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d \<^bold>i\<^bold>n\<^bold>d\<^bold>e\<^bold>x index_left idx \<lbrace> X \<^bold>@ A \<cross_product> R \<rbrace> \<^bold>g\<^bold>e\<^bold>t g o fst \<^bold>m\<^bold>a\<^bold>p apfst o m"
-  unfolding FieldIndex_def \<phi>index_def index_left_def MakeTag_def
-  by (cases idx) (simp add: \<phi>expns)
-*)
-*)
 
 subsection \<open>Structural Pairs\<close> (*depreciated*)
 
@@ -1994,7 +1991,7 @@ lemma [\<phi>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P
 subsubsection \<open>Separations Initialization\<close>
 
 lemma [\<phi>reason 1200]:
-  "NEW_MUTEX G
+  "SUBGOAL TOP_GOAL G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 * L2) (1 * \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L1 * L2) R = X"
   for X :: \<open>'a::monoid_mult set\<close>
@@ -2049,18 +2046,18 @@ lemma (in std) [\<phi>reason 1200]:
 
 lemma (in std) [\<phi>reason 100 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P (?L \<heavy_comma> OBJ ?H1) (?N \<heavy_comma> \<medium_left_bracket> ?R \<heavy_comma> OBJ ?H2 \<medium_right_bracket>) = ?X''' \<medium_right_bracket>: ?G\<close>]:
   \<comment> \<open>search the immediate element\<close>
-  "MUTEX_ASSERT G
+  "CHK_SUBGOAL G
    \<Longrightarrow> EqualAddress H1 H2
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (OBJ H1) (OBJ H2) = H
-   \<Longrightarrow> MUTEX_SET G \<comment> \<open>if success, trim all other branches on G\<close>
-   \<Longrightarrow> NEW_MUTEX G2
+   \<Longrightarrow> SOLVE_SUBGOAL G \<comment> \<open>if success, trim all other branches on G\<close>
+   \<Longrightarrow> SUBGOAL G G2
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (1 \<heavy_comma> \<medium_left_bracket> N \<heavy_comma> R \<medium_right_bracket>) = X \<medium_right_bracket>: G2
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P (L \<heavy_comma> OBJ H1) (N \<heavy_comma> \<medium_left_bracket> R \<heavy_comma> OBJ H2 \<medium_right_bracket>) = (X \<heavy_comma> H) \<medium_right_bracket>: G"
   unfolding Conv_def cast_def Merge_def mult_1_left by (metis mult.assoc)
 
 lemma (in std) [\<phi>reason 70 on \<open>\<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge ?P ?L (?N \<heavy_comma> \<medium_left_bracket> ?R \<heavy_comma> OBJ ?H2 \<medium_right_bracket>) = ?X''' \<medium_right_bracket>: ?G\<close>]:
   \<comment> \<open>search next\<close>
-  "MUTEX_ASSERT G
+  "CHK_SUBGOAL G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_comma> OBJ H2 \<heavy_comma> \<medium_left_bracket> R \<medium_right_bracket>) = X \<medium_right_bracket>: G
    \<Longrightarrow> \<medium_left_bracket> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge P L (N \<heavy_comma> \<medium_left_bracket> R \<heavy_comma> OBJ H2 \<medium_right_bracket>) = X \<medium_right_bracket>: G"
   unfolding Conv_def cast_def by (metis mult.assoc OBJ_comm)
@@ -2143,7 +2140,6 @@ section \<open>Implementation of the Language\<close>
 
 subsection \<open>ML codes\<close>
 
-ML_file \<open>library/application.ML\<close>
 
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
@@ -2258,59 +2254,6 @@ attribute_setup intro_forall = \<open>Scan.lift (Scan.repeat Args.var) >> (fn tm
 
 subsection \<open>Elements of the Language\<close>
 
-subsubsection \<open>Methods of Application\<close>
-
-attribute_setup \<phi>application_method = \<open>Scan.lift (Parse.int -- (Parse.int >> ~)) >> (fn (idx,cost) =>
-  Thm.declaration_attribute (fn th => NuApply.update (cost,{thm=th, applicant_idx = idx})))\<close>
-
-declare (in std)
-  \<phi>apply_proc[\<phi>application_method 1 100]
-  \<phi>apply_proc_cast[\<phi>application_method 3 -3000]
-  "\<phi>cast"[unfolded Subty_Target_def, \<phi>application_method 1 1100]
-  \<phi>apply_cast_cast[\<phi>application_method 3 1000]
-
-(* thm
-  "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(1)[OF Argument_I], \<phi>application_method 1 1100]
-  "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(2)[OF Argument_I], \<phi>application_method 1 1100]
-  "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(3)[OF Argument_I], \<phi>application_method 1 1100]
-  "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(4)[OF Argument_I], \<phi>application_method 1 1100]
-  "cast"[unfolded Subty_Target_def, OF _ cast_conversion[OF _ cast_\<phi>app(1)[OF Argument_I]],
-      \<phi>application_method 2 1050]
-  "cast"[unfolded Subty_Target_def, OF _ cast_conversion[OF _ cast_\<phi>app(2)[OF Argument_I]],
-      \<phi>application_method 2 1050]
-  "cast"[unfolded Subty_Target_def, OF _ cast_conversion[OF _ cast_\<phi>app(3)[OF Argument_I]],
-      \<phi>application_method 2 1050]
-  "cast"[unfolded Subty_Target_def, OF _ cast_conversion[OF _ cast_\<phi>app(4)[OF Argument_I]],
-      \<phi>application_method 2 1050]
-
-thm "cast"[unfolded Subty_Target_def, \<phi>application_method 1 1100]
-thm "cast"[unfolded Subty_Target_def, OF _ cast_\<phi>app(1)[OF Argument_I], \<phi>application_method 1 1100]
-
-thm "cast"[unfolded Subty_Target_def, OF _ cast_conversion[OF _ cast_\<phi>app(2)[OF Argument_I]],
-      \<phi>application_method 2 1050]
-*)
-
-(*  
-  "cast"[OF _ cast_whole_heap_\<phi>app[OF Argument_I, OF cast_heap_conversion],
-      \<phi>application_method 2 1020]*)
-
-(* lemmas apply_func_conv[\<phi>application_method 6 -100]
-  = apply_proc_conv_simple[OF _ _ _ _ op_call, rotated 3 1, rotated 1 3] *)
-
-(* consts \<phi>Application_Rewrite :: bool
-setup_\<phi>application_method \<open>\<phi>Application_Rewrite\<close> 1000 \<open>PROP P &&& A = B\<close> | \<open>PROP P &&& (A \<equiv> B)\<close> = \<open>
-  fn ctx => fn applicants => fn major =>
-    let
-      fun is_simprule (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)) = true
-          | is_simprule (Const (\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _) = true
-          | is_simprule _ = false
-      val applicants = List.filter (is_simprule o Thm.concl_of) applicants
-    in
-      if null applicants then Seq.empty else Seq.make (fn () =>
-        SOME (Simplifier.simplify (Raw_Simplifier.clear_simpset ctx addsimps applicants) major, Seq.empty))
-    end
-\<close>*)
-
 context std begin
 
 subsubsection \<open>Controls\<close>
@@ -2333,7 +2276,7 @@ subsubsection \<open>Constructive\<close>
   Scan.succeed (fn _ => NuSys.accept_proc stat)\<close>
 
 \<phi>processor "apply" 9000 \<open>?P\<close> \<open> fn (ctxt,sequent) => NuApplicant.parser >> (fn xnames => fn _ =>
-  (NuSys.apply (NuApplicant.appliable_thms ctxt sequent xnames) (ctxt, sequent)))\<close>
+  (NuApply.apply (NuApplicant.applicant_thms ctxt xnames) (ctxt, sequent)))\<close>
 
 \<phi>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P \<Longrightarrow> PROP ?Q\<close> \<open>fn stat => Parse.term >> (fn term => fn _ =>
   NuSys.set_param_cmd term stat)\<close>
@@ -2345,7 +2288,7 @@ subsubsection \<open>Constructive\<close>
   \<open>fn (ctxt, sequent) => (NuApplicant.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
     let open NuBasics
     val attrs = map (Attrib.attribute_cmd ctxt o Attrib.check_src ctxt) attrs
-    val apps = NuApplicant.appliable_thms ctxt sequent name
+    val apps = NuApplicant.applicant_thms ctxt name
     val (apps,ctxt) = fold_map (Thm.proof_attributes attrs) apps ctxt
     val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
     in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
@@ -2420,7 +2363,7 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
     (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
 )\<close>
 
-\<phi>processor goal 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close> \<open>
+(* \<phi>processor goal 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close> \<open>
   fn (ctxt, sequent) => Parse.$$$ "goal" >> (fn _ => fn _ =>
     let
       val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
@@ -2429,7 +2372,7 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
       val prot = Const (\<^const_name>\<open>Implicit_Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
       val ctxt = Config.put Nu_Reasoner.auto_level 1 ctxt
     in NuSys.cast (Thm.apply prot desired_nu) (ctxt,sequent) end
-)\<close>
+)\<close> *)
 
 end
 

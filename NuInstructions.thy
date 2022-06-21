@@ -606,16 +606,16 @@ thm \<phi>lemmata
 
 print_methods
 
+declare [ [\<phi>not_define_new_const] ]
+
+named_theorems xxx
+
 proc op_get_var:
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
-  requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  ;; cast to_Identity \<exists>v
-  ;; op_get_var'' affirm using \<phi> A[unfolded \<phi>SemType_def subset_iff] by blast
-  ;; cast_val
-  thm cast_simp
-  thm \<phi>
-  thm cast_\<phi>app
+  requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  ;; to_Identity \<exists>v op_get_var''
+  finish
 
 
 lemma (in std) op_set_var:

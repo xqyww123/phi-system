@@ -35,6 +35,7 @@ lemma pair_forall: "All P \<longleftrightarrow> (\<forall>a b. P (a,b))" using s
 lemmas pair_All = split_paired_all
 
 lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> PROP R)" by rule simp+
+lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
 
 definition \<open>pred_option1 P x \<longleftrightarrow> (case x of Some x' \<Rightarrow> P x' | None \<Rightarrow> False)\<close>
 lemma pred_option1[simp]:

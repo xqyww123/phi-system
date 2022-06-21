@@ -416,7 +416,6 @@ fun gen_finish_proc qed int stat =
       Runtime.exn_trace (fn () =>
       RSXX ctxt' (
         singleton (Proof_Context.export ctxt ctxt') sequent
-          (* |> conversion_completely ctxt' goal *)
       ) prooof_stat)
       handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
   in
@@ -443,11 +442,13 @@ fun prove_prem int stat =
     fun after_qed (ctxt',[[th]]) stat =
       let
         val [th] = Proof_Context.export ctxt' (context_of stat) [th]
+        val original_auto_level = Config.get (Proof.context_of stat) Nu_Reasoner.auto_level
         (* val th = th RS @{thm NuPrime.Premise_I} *)
       in
         stat |> Proof.map_context_result
                   (Config.put Nu_Reasoner.auto_level 0
                     #> (fn ctxt => NuProcessor.process_no_input (ctxt, th RS specthm))
+                    #> apfst (Config.put Nu_Reasoner.auto_level original_auto_level)
                     #> swap)
              |-> NuBasics.set_nu_fact
       end
