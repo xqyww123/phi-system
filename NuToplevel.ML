@@ -154,9 +154,6 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
   in
     ctxt |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
               includes elems concls int
-         |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
-               Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
-         |> Seq.the_result "never fail"
          |> Proof.map_context (
              let
                fun fetch names ctxt =
@@ -185,17 +182,17 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
 
         fun constr_process stat =
           let
-            val ctxt = Proof.context_of stat
+            (*val ctxt = Proof.context_of stat *)
             val goal_proc = Thm.cprem_of (#goal (Proof.goal stat)) 1 |> Drule.strip_imp_concl
-            val (_,Arg,_) = PhiSyntax.dest_procedure_c goal_proc
+            (* val (_,Arg,_) = PhiSyntax.dest_procedure_c goal_proc *)
           in
             stat
               |> Proof.map_context (
                   Proof_Context.put_thms false ("\<phi>thesis",
                     SOME [Drule.mk_term goal_proc]))
-              |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
+              (* |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
               |> Proof.map_context_result (start_proc (Binding.name_of (fst binding)) Arg #> swap)
-              |-> NuBasics.set_nu_fact
+              |-> NuBasics.set_nu_fact *)
           end
       in
         (goal, constr_process, preconds)
@@ -317,9 +314,9 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
               |> Proof.map_context (
                   Proof_Context.put_thms false ("\<phi>thesis",
                     SOME [Drule.mk_term (cterm_of ctxt goal)]))
-              |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
+              (* |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
               |> Proof.map_context_result (start_proc func_name Arg #> swap)
-              |-> NuBasics.set_nu_fact
+              |-> NuBasics.set_nu_fact *)
           end
             (* |> *)
       in
@@ -371,7 +368,8 @@ fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
                   Proof_Context.add_assms Assumption.assume_export
                       [(Binding.empty_atts, [(sequent_term,[])])]) stat
           in
-            NuBasics.set_nu_fact sequent stat
+            (*NuBasics.set_nu_fact sequent*)
+            stat
           end
       in
         (goal, constr_process, preconds)
@@ -419,14 +417,14 @@ fun gen_finish_proc qed int =
       val sequent' = sequent RS reassemble_proc_0
       val end_tac = basic_method (fn ctxt' => fn prooof_stat => 
         Runtime.exn_trace (fn () =>
-          RSXX ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent) prooof_stat)
+          RSXX ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent') prooof_stat)
         handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
      in
       stat
         |> Proof.set_facts [] 
         |> qed (SOME (end_tac, Position.no_range), false)
-     end)
-        [] []
+     end) [] []
+   #> snd
 
 in
 val end_block_cmd = gen_finish_proc Proof.local_qed
@@ -474,11 +472,15 @@ in
 
 fun gen_begin_block prep_attr bindings int stat =
   let open Proof
-    val specthm = the_nu_fact stat
-    val stat = stat |> begin_block
     val ctxt = context_of stat
+    val is_top = not (NuBasics.under_programming_environ ctxt)
+    val sequent = if is_top
+                  then #goal (Proof.raw_goal stat)
+                  else the_nu_fact stat
+    val stat = (if is_top then enter_forward (assert_backward stat) else stat)
+                  |> begin_block
 
-    val (vars, goal) = prop_of specthm
+    val (vars, goal) = prop_of sequent
                         |> Logic.dest_implies |> #1
                         |> dest_Trueprop |> strip_binder_raw @{const_name All}
     val (var_names, stat) = stat
@@ -492,22 +494,28 @@ fun gen_begin_block prep_attr bindings int stat =
     
     val blk_name = case proc of (Var ((x,_),_)) => x
                       | _ => "block"
-    val level = PhiSyntax.current_block_depth specthm
+    val level = PhiSyntax.current_block_depth sequent
     val blk_name = "L\<phi>'" ^ (Int.toString level) ^ "_" ^ blk_name
     
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
     
     fun after_qed (ctxt',[[th]]) stat =
       end_block stat |> (fn stat =>
-        stat |> NuBasics.set_nu_fact (
-                  let val ctxt'' = context_of stat
-                    val vars' = Variable.export_terms ctxt' ctxt'' vars
-                  in ((singleton (Proof_Context.export ctxt' ctxt'') th
-                        |> Drule.forall_intr_list (map (cterm_of ctxt'') vars')
-                        |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
-                      ) RS specthm)
-                  end
-          ))
+          let val ctxt'' = context_of stat
+              val vars' = Variable.export_terms ctxt' ctxt'' vars
+              fun gen_sequent sequent = 
+                    (singleton (Proof_Context.export ctxt' ctxt'') th
+                      |> Drule.forall_intr_list (map (cterm_of ctxt'') vars')
+                      |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
+                    ) RS sequent
+          in if is_top
+             then stat
+                    |> enter_backward
+                    |> apply (Method.Basic (fn _ => Method.SIMPLE_METHOD (Seq.single o gen_sequent)),
+                              Position.no_range)
+                    |> Seq.the_result "never fail"
+             else NuBasics.set_nu_fact (gen_sequent sequent) stat
+          end)
 
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()

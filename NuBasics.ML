@@ -8,6 +8,7 @@ infix 0 MP MP_BY
 signature NU_BASICS = sig
   exception NDBG of thm
 
+  val under_programming_environ : Proof.context -> bool
   val the_programming_sequent' : Proof.context -> thm
   val the_nu_fact : Proof.state -> thm
   val set_nu_fact : thm -> Proof.state -> Proof.state
@@ -67,6 +68,8 @@ fun the_construction' ctxt =
                                      | _ => err_bad_env ()
 
 val the_construction = the_construction' o Proof.context_of
+
+val under_programming_environ = is_some o Programming_Sequent.get
 
 fun the_programming_sequent' ctxt =
   case Programming_Sequent.get ctxt of SOME (thm, _, _) => thm

@@ -18,7 +18,7 @@ fun eliminate_term ctxt xs thm =
             |> list_mk_binder @{const_name ExSet} bads
             |> Syntax.check_term ctxt |> Thm.cterm_of ctxt
     in
-      NuSys.cast_completely typing' (ctxt,thm) |> snd
+      NuSys.cast typing' (ctxt,thm) |> snd
     end
   end;
 

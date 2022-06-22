@@ -5,7 +5,7 @@ theory NuSys
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$"
     "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" "heap" "stack"
     "argument" "return" "on" "affirm" :: quasi_command
-  and ";;" "finish" :: prf_decl % "proof"
+  and ";;" "\<medium_left_bracket>" "\<medium_right_bracket>" :: prf_decl % "proof"
   and "\<phi>processor" "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
 abbrevs
@@ -95,7 +95,7 @@ lemma \<phi>reassemble_proc_0:
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def by (cases s) simp+
 
 lemma \<phi>reassemble_proc:
-  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def instr_comp_def
   by force
 
@@ -2243,15 +2243,21 @@ val _ =
             (begin_cast_cmd b arg ret addtional_prop fixes includes lets defs preconds)));
 
 val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>finish\<close> "Finish the procedure construction"
-    (Scan.succeed (Toplevel.proof' NuToplevel.finish_proc_cmd))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "The \<phi>construction"
+  Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
     (fn toks => (
       Toplevel.proof (Proof.map_context (Config.put Nu_Reasoner.auto_level 2) #>
           NuProcessor.powerful_process (toks @ [Token.eof])),
       if hd toks |> Token.is_eof then [Token.eof] else []))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
+   (optional (\<^keyword>\<open>premises\<close> |-- and_list (binding -- opt_attribs)) []
+>> (fn prems => Toplevel.proof' (NuToplevel.begin_block_cmd prems)))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
+    (Scan.succeed (Toplevel.proof' NuToplevel.end_block_cmd))
+
 
 val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
@@ -2323,20 +2329,6 @@ subsubsection \<open>Constructive\<close>
     in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
          of SOME (th, _) => (ctxt,th)
           | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
-
-
-\<phi>processor begin_sub_procedure 7000 (\<open>PROP ?Q\<close>)
-\<open>let open Parse Scan in fn stat =>
-  \<^keyword>\<open>\<medium_left_bracket>\<close> |-- optional (\<^keyword>\<open>premises\<close> |-- and_list (binding -- opt_attribs)) []
->> (fn prems => fn () =>
-  raise Process_State_Call' (stat, NuToplevel.begin_block_cmd prems true)
-) end\<close>
-
-\<phi>processor end_sub_procedure 7000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
-\<open>let open Parse Scan in fn stat =>
-  \<^keyword>\<open>\<medium_right_bracket>\<close> >> (fn x => fn () =>
-  raise Process_State_Call' (stat, NuToplevel.end_block_cmd true)
-) end\<close>
 
 
 \<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)

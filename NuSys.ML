@@ -239,7 +239,6 @@ fun auto_construct target (ctxt,sequent) =
 
 fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
   let open Proof
-    val specthm = the_nu_fact stat
     fun after_qed ctxthms stat =
       stat |> end_block 
            |> after_qed' ctxthms
@@ -269,8 +268,8 @@ fun obligation_proof print_results mode strict_asm kind before_qed after_qed fix
        in after_qed sequent' stat
       end
   in
-    setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes
-       (map (fn t=> [(t,[])]) oblgs)
+    Proof.internal_goal print_results mode strict_asm kind before_qed after_qed' fixes assumes
+       (map (fn t=> (Binding.empty_atts,[(HOLogic.mk_Trueprop t,[])])) oblgs)
   end
   
 
