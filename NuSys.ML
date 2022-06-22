@@ -1,14 +1,12 @@
 (* The Signature *)
 signature NU_SYS = sig
   (** Tactics **)
-  exception CastFail of thm
+  exception CastFail of cterm * thm
   exception ReasoningFail of thm
   val raw_auto : Proof.context -> tactic
 
   (** Basic Operations **)
   val cast : cterm (*desired nu*) -> context_state (*sequent*) -> context_state
-  val cast_completely : cterm (*desired nu*) -> context_state (*major*) -> context_state
-        (* solve all the premises by Nu_Resonser, raising CastFail if failed *)
 
   val accept_proc : context_state -> context_state
 
@@ -31,12 +29,18 @@ signature NU_SYS = sig
         -> (Thm.binding * (term * term list) list) list (*premis*)
         -> (term * term list) list list (*no binding is allowed*)
         -> Proof.state -> thm list * Proof.state
+  val obligation_proof :  (Proof.context -> (string * string) * (string * thm list) list -> unit)
+        -> Proof_Context.mode -> bool -> string -> Method.text option
+        -> (thm -> Proof.state -> Proof.state)
+        -> (binding * typ option * mixfix) list
+        -> (Thm.binding * (term * term list) list) list
+        -> thm -> Proof.state -> thm list * Proof.state
 end
 
 (* The Structure *)
 structure NuSys : NU_SYS = struct
 open Thm NuBasics Term
-exception CastFail of thm
+exception CastFail of cterm * thm
 exception ReasoningFail of thm
 
 val aux_name = "that" and aux_name_raw = "\<phi>aux'raw"
@@ -96,13 +100,17 @@ fun cast desired_nu (ctxt,sequent) =
     val cast' = Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'"
     val cast  = Drule.infer_instantiate ctxt [(("T'",0),desired_nu)] cast
     val cast' = Drule.infer_instantiate ctxt [(("T'",0),desired_nu)] cast'
-  in
-    (ctxt, (sequent RS cast' handle THM _ => sequent RS cast))
-  end
-
-fun cast_completely desired_nu stat =
-  cast desired_nu stat
-    |> SOLVED_RULE Nu_Reasoner.reason (fn (_,thm) => raise CastFail thm)
+    val (ctxt', sequent') =
+          case Nu_Reasoner.reason (ctxt, (sequent RS cast' handle THM _ => sequent RS cast))
+            of SOME ret => ret
+             | NONE => raise CastFail (desired_nu, sequent)
+    val _ = case Thm.prop_of sequent'
+              of (\<^const>\<open>Pure.prop\<close> $ _) => ()
+               | (\<^const>\<open>Pure.imp\<close>
+                    $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ _))
+                    $ (\<^const>\<open>Pure.prop\<close> $ _)) => ()
+               | _ => raise CastFail (desired_nu, sequent)
+  in (ctxt',sequent') end
 
 fun export_codeblock ctxt cb sequent =
   let open PhiSyntax
@@ -242,4 +250,28 @@ fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes a
       (* |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat)
       * "NuSys.useful") stat) *)
   end
+
+fun obligations_of (\<^const>\<open>Pure.prop\<close> $ _) = []
+  | obligations_of (\<^const>\<open>Pure.imp\<close>
+                    $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ G))
+                    $ P) = G :: obligations_of P
+  | obligations_of X = raise TERM ("NuSys.obligations_of", [X])
+
+fun obligation_proof print_results mode strict_asm kind before_qed after_qed fixes assumes sequent =
+  let
+    val oblgs = obligations_of (Thm.prop_of sequent)
+    fun after_qed' (ctxt, thmss) stat =
+      let
+        val ctxt' = Proof.context_of stat
+        val thms = Proof_Context.export ctxt ctxt' (flat thmss)
+        val sequent' = fold (fn x => fn s => x RS (@{thm Premise_I} RS s)) thms sequent
+                        |> Goal.conclude
+       in after_qed sequent' stat
+      end
+  in
+    setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes
+       (map (fn t=> [(t,[])]) oblgs)
+  end
+  
+
 end

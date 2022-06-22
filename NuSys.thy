@@ -5,10 +5,9 @@ theory NuSys
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$"
     "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" "heap" "stack"
     "argument" "return" "on" "affirm" :: quasi_command
-  and ";;" :: prf_decl % "proof"
+  and ";;" "finish" :: prf_decl % "proof"
   and "\<phi>processor" "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
-  and "finish" :: "qed" % "proof"
 abbrevs
   "!!" = "!!"
   and "<implies>" = "\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s"
@@ -43,7 +42,7 @@ abbrevs
   and "<get>" = "\<^bold>g\<^bold>e\<^bold>t"
   and "<map>" = "\<^bold>m\<^bold>a\<^bold>p"
   and "<field>" = "\<^bold>f\<^bold>i\<^bold>e\<^bold>l\<^bold>d"
-  and "<premcollect>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t"
+  and "<obligation>" = "\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n"
   and "<conv>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v"
   and ">->" = "\<Zinj>"
   and "<;>" = "\<Zcomp>"
@@ -96,7 +95,7 @@ lemma \<phi>reassemble_proc_0:
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def by (cases s) simp+
 
 lemma \<phi>reassemble_proc:
-  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T)) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def instr_comp_def
   by force
 
@@ -321,7 +320,7 @@ definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where [\<phi>
 
 abbreviation Normal_Premise ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where "Normal_Premise \<equiv> Premise MODE_NORMAL"
 abbreviation Simp_Premise ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m _" [27] 26) where "Simp_Premise \<equiv> Premise MODE_SIMP"
-abbreviation Premise_Collect ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t _" [27] 26) where "Premise_Collect \<equiv> Premise MODE_COLLECT"
+abbreviation Proof_Obligation ("\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n _" [27] 26) where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
 abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>expn_Premise \<equiv> Premise MODE_\<phi>EXPN\<close>
 
 text \<open>
@@ -340,13 +339,13 @@ text \<open>
     light-weight strategies to attack the goal, like `clarsimp'. Many reasoning rules use
     this strategy because the time-consuming computation is not affordable during the automatic process.
 
-  The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t P\<close> is interesting. Once it is presented in a Horn clause, proofs of
+  The \<^term>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P\<close> is interesting. Once it is presented in a Horn clause, proofs of
     any \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P'\<close> before this tag are delayed until the proof of this tag.
-  In fact, proof obligations (\<^prop>\<open>P'\<close>) are moved into \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t P\<close> to be \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t P \<and> P'\<close>
+  In fact, proof obligations (\<^prop>\<open>P'\<close>) are moved into \<^term>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P\<close> to be \<^term>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P \<and> P'\<close>
     by using conjuncture.
   This strategy is useful when \<^prop>\<open>P'\<close> has undetermined schematic variables while those
     variables can be determined by later automatic reasoning (by the reasoning of later subgoals in
-    the Horn clause but early than the \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t P\<close> tag).
+    the Horn clause but early than the \<^term>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P\<close> tag).
 
   When the automatic solving consumes a lot of time, users can set the auto level down to
     semi-auto (level 1) to suppress the automatic behavior and solve it manually. (TODO: by which command?)
@@ -375,11 +374,6 @@ lemma contract_premise_imp:
 lemma contract_premise_all:
   "(\<And>x. Premise mode (P x)) \<equiv> Trueprop (\<forall>x. Premise mode (P x)) "
   unfolding Premise_def atomize_all .
-
-lemma contract_premcollect:
-  "(\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t Q \<Longrightarrow> PROP C) \<equiv> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t P \<and> Q \<Longrightarrow> PROP C)"
-  unfolding Premise_def atomize_imp conj_imp .
-
 
 lemma Premise_refl[\<phi>reason 2000 on \<open>Premise ?mode (?x = ?x)\<close>]:
   "Premise mode (x = x)"
@@ -557,6 +551,18 @@ lemma [iff, \<phi>reason!]: \<open>\<r>Cut\<close> unfolding \<r>Cut_def ..
 text \<open>It triggers a (global) reasoning cut, representing some achievement has been reached,
   and the following reasoning should start from this. The reasoner also returns
   the latest cut point, when not all premises are solved.\<close>
+
+subsubsection \<open>Success\<close>
+
+definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
+
+lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
+
+text \<open>Terminates the reasoning successfully and immediately\<close>
+
+\<phi>reasoner_ML \<r>Success 10000 (conclusion \<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
+  raise Nu_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
+
 
 subsection \<open>Subtype & View Shift\<close>
 
@@ -745,7 +751,7 @@ text \<open>The three tags provides a hierarchical subgoal environment.
     the marking cannot mark the \<^term>\<open>GOAL\<close> again, and \<^prop>\<open>SOLVE_SUBGOAL GOAL\<close>
     fails for them, causing those branches terminate.
 
-  The \<^term>\<open>TOP_GOAL\<close> can never be marked solved.\<close>
+  The \<^term>\<open>TOP_GOAL\<close> can never be solved.\<close>
 
 lemma SUBGOAL_I[iff]: "SUBGOAL ROOT NEWGOAL" unfolding SUBGOAL_def ..
 lemma CHK_SUBGOAL_I[iff]: "CHK_SUBGOAL X" unfolding CHK_SUBGOAL_def ..
@@ -948,7 +954,7 @@ lemma \<phi>apply_subtyping_fully[\<phi>reason on \<open>
 \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> \<medium_left_bracket> S'' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>: G
 \<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> PROP \<phi>Application_Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S' \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
       (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P))"
@@ -975,7 +981,7 @@ lemma [\<phi>reason 2000 on \<open>
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
 \<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> PROP \<phi>Application_Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S' \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
       (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n VAL S)
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n VAL T) \<and> P))\<close>
@@ -1000,7 +1006,7 @@ lemma [\<phi>reason 2000 on \<open>
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
 \<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> PROP \<phi>Application_Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S' \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
       (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL S)
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL T) \<and> P))\<close>
@@ -1030,7 +1036,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason on
 \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S \<longmapsto> \<medium_left_bracket> S'' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G
 \<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> PROP \<phi>Application_Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t True
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<rbrace>)
     (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
     (Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T))\<close>
@@ -1501,17 +1507,19 @@ subsection \<open>General Tools\<close>
 lemma (in std) "_\<phi>cast_internal_rule_":
   " \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T
 \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<medium_left_bracket> T' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>: TOP_GOAL
-\<Longrightarrow> \<r>Cut
-\<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
-  unfolding CurrentConstruction_def Subty_Target_def Subty_def Subty_Target2_def
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> PROP Pure.prop (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'))"
+  unfolding CurrentConstruction_def Subty_Target_def Subty_def Subty_Target2_def Pure.prop_def
   by (cases blk, simp_all add: pair_All \<phi>expns) blast
 
 lemma (in std) "_\<phi>cast_internal_rule_'":
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T
 \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<medium_left_bracket> T' \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<medium_right_bracket>: TOP_GOAL
-\<Longrightarrow> \<r>Cut
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
-  unfolding Subty_Target_def Subty_def PendingConstruction_def bind_def Subty_Target2_def
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> PROP Pure.prop(Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'))"
+  unfolding Subty_Target_def Subty_def PendingConstruction_def bind_def Subty_Target2_def Pure.prop_def
   by (cases blk, auto simp add: \<phi>expns LooseStateTy_expn') blast+
 
 
@@ -1557,6 +1565,26 @@ lemma [\<phi>reason 2000]: "SameNuTy A A' \<Longrightarrow> SameNuTy (A \<^bold>
 
 lemma [\<phi>reason 1000]: "SameNuTy A A" \<comment> \<open>The fallback\<close>
   unfolding SameNuTy_def ..
+
+
+subsubsection \<open>Extract Proof Obligation\<close>
+
+lemma contract_obligations:
+  "(\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q \<Longrightarrow> PROP C) \<equiv> (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P \<and> Q \<Longrightarrow> PROP C)"
+  unfolding Premise_def atomize_imp conj_imp .
+
+lemma contract_premcollect_1:
+  \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close>
+  unfolding Premise_def .
+
+ML_file "library/reasoners.ML"
+
+\<phi>reasoner_ML Normal_Premise 10 (conclusion \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P\<close>)
+  = \<open>Nu_Reasoners.wrap Nu_Reasoners.premise_tac\<close>
+\<phi>reasoner  Simp_Premise 10 (conclusion \<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m ?P\<close>)
+  = (rule Premise_I; simp; fail)
+\<phi>reasoner \<phi>expn_Premise 10 (conclusion \<open><\<phi>expn> ?P\<close>)
+  = (rule Premise_I; simp add: \<phi>expns)
 
 
 
@@ -2216,7 +2244,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>finish\<close> "Finish the procedure construction"
-    (Scan.succeed (Toplevel.end_proof NuToplevel.finish_proc_cmd))
+    (Scan.succeed (Toplevel.proof' NuToplevel.finish_proc_cmd))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "The \<phi>construction"
@@ -2228,7 +2256,8 @@ val _ =
 val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
-          -- Parse.nat -- Parse.term -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
+          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
+          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
         >> NuProcessor.setup_cmd)
 
 (* val _ =
@@ -2258,10 +2287,10 @@ context std begin
 
 subsubsection \<open>Controls\<close>
 
-\<phi>processor set_auto_level 10 \<open>PROP ?P\<close> \<open>(fn (ctxt, sequent) => NuParse.auto_level_force >>
+\<phi>processor set_auto_level 10 (\<open>PROP ?P\<close>) \<open>(fn (ctxt, sequent) => NuParse.auto_level_force >>
   (fn auto_level' => fn _ => (Config.put Nu_Reasoner.auto_level auto_level' ctxt, sequent)))\<close>
 
-\<phi>processor repeat 12 \<open>PROP ?P\<close> \<open>let
+\<phi>processor repeat 12 (\<open>PROP ?P\<close>) \<open>let
   in fn (ctxt, sequent) =>
     Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*") >> (fn (tok,n) => fn () =>
         (case Int.fromString n of SOME n => funpow n | _ => error ("should be a number: "^n))
@@ -2272,19 +2301,19 @@ subsubsection \<open>Controls\<close>
 
 subsubsection \<open>Constructive\<close>
 
-\<phi>processor accept_call 300 \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close> \<open>fn stat =>
+\<phi>processor accept_call 300 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>) \<open>fn stat =>
   Scan.succeed (fn _ => NuSys.accept_proc stat)\<close>
 
-\<phi>processor "apply" 9000 \<open>?P\<close> \<open> fn (ctxt,sequent) => NuApplicant.parser >> (fn xnames => fn _ =>
+\<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => NuApplicant.parser >> (fn xnames => fn _ =>
   (NuApply.apply (NuApplicant.applicant_thms ctxt xnames) (ctxt, sequent)))\<close>
 
-\<phi>processor set_param 5000 \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P \<Longrightarrow> PROP ?Q\<close> \<open>fn stat => Parse.term >> (fn term => fn _ =>
+\<phi>processor set_param 5000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
   NuSys.set_param_cmd term stat)\<close>
 
-\<phi>processor set_label 5000 \<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP ?Q\<close> \<open>fn stat => Parse.name >> (fn name => fn _ =>
+\<phi>processor set_label 5000 (\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>
   NuSys.set_label name stat)\<close>
 
-\<phi>processor rule 7100 \<open>?P \<Longrightarrow> PROP ?Q\<close>
+\<phi>processor rule 7100 (\<open>?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt, sequent) => (NuApplicant.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
     let open NuBasics
     val attrs = map (Attrib.attribute_cmd ctxt o Attrib.check_src ctxt) attrs
@@ -2296,34 +2325,34 @@ subsubsection \<open>Constructive\<close>
           | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
 
 
-\<phi>processor begin_sub_procedure 7000 \<open>PROP ?Q\<close>
+\<phi>processor begin_sub_procedure 7000 (\<open>PROP ?Q\<close>)
 \<open>let open Parse Scan in fn stat =>
   \<^keyword>\<open>\<medium_left_bracket>\<close> |-- optional (\<^keyword>\<open>premises\<close> |-- and_list (binding -- opt_attribs)) []
 >> (fn prems => fn () =>
   raise Process_State_Call' (stat, NuToplevel.begin_block_cmd prems true)
 ) end\<close>
 
-\<phi>processor end_sub_procedure 7000 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>
+\<phi>processor end_sub_procedure 7000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
 \<open>let open Parse Scan in fn stat =>
   \<^keyword>\<open>\<medium_right_bracket>\<close> >> (fn x => fn () =>
   raise Process_State_Call' (stat, NuToplevel.end_block_cmd true)
 ) end\<close>
 
 
-\<phi>processor existential_elimination 50 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>
+\<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
   \<open>fn stat => \<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding >> (fn insts => fn () =>
       raise Process_State_Call' (stat, NuObtain.choose insts))\<close>
 
 subsubsection \<open>Simplifiers & Reasoners\<close>
 
-\<phi>processor enter_proof 900 \<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>
+\<phi>processor enter_proof 900 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
       raise Process_State_Call' (stat, snd o NuToplevel.prove_prem false))\<close>
 
-\<phi>processor \<phi>simplifier 40 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>  \<open>NuProcessors.simplifier []\<close>
+\<phi>processor \<phi>simplifier 40 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>NuProcessors.simplifier []\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
-\<phi>processor move_fact 50 \<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T) \<and> ?P\<close>
+\<phi>processor move_fact 50 (\<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T) \<and> ?P\<close>)
 \<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
   let
     val (_,ctxt') = Proof_Context.note_thms ""
@@ -2335,7 +2364,7 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
 
 (* Any simplification should finish before priority 100, or else
  *  this processor will be triggered unnecessarily frequently.*)
-\<phi>processor set_\<phi>this 100 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>
+\<phi>processor set_\<phi>this 100 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
 \<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
   let
     val ctxt' = NuBasics.set_programming_sequent' sequent ctxt
@@ -2343,22 +2372,29 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
     raise Bypass (SOME(ctxt', sequent))
   end)\<close>
 
-\<phi>processor \<phi>reason 1000 \<open>PROP ?P \<Longrightarrow> PROP ?Q\<close> \<open>fn (ctxt,sequent) => Scan.succeed (fn _ =>
+\<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
+\<open>fn (ctxt,sequent) => Scan.succeed (fn _ =>
   let open NuBasics
     val stat' = Nu_Reasoner.reason (ctxt,sequent)
   in case stat' of SOME (ctxt',sequent') =>
        if Thm.prop_of sequent' = Thm.prop_of sequent
        then raise Bypass (SOME (ctxt,sequent))
        else (ctxt',sequent')
-     | NONE => raise Bypass (SOME (ctxt,sequent))
+     | NONE => raise Bypass NONE
   end)\<close>
 
-\<phi>processor fold 1300 \<open>PROP ?P\<close> \<open>
+\<phi>processor naive_obligation_solver 9000 (\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close>)
+  \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
+     case Seq.pull (Nu_Reasoners.naive_obligation_solver ctxt sequent)
+       of SOME (ret, _) => (ctxt, ret)
+        | NONE => raise Bypass NONE)\<close>
+
+\<phi>processor fold 1300 (\<open>PROP ?P\<close>) \<open>
   fn (ctxt, sequent) => NuParse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (ctxt, Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent)
 )\<close>
 
-\<phi>processor unfold 1300 \<open>PROP ?P\<close> \<open>
+\<phi>processor unfold 1300 (\<open>PROP ?P\<close>) \<open>
   fn (ctxt, sequent) => NuParse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
 )\<close>
@@ -2394,7 +2430,7 @@ subsubsection \<open>Literal operations\<close>
 
 context std begin
 
-\<phi>processor literal_constructor 9500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>
+\<phi>processor literal_constructor 9500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
 \<open>fn (ctxt, meta) => Parse.cartouche >> (fn term => fn _ =>
   let val term = Syntax.read_term ctxt term
                     |> Thm.cterm_of ctxt
@@ -2424,7 +2460,7 @@ lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by
 
 ML_file_debug \<open>library/variables_tag.ML\<close>
 
-\<phi>processor vars_by_pattern 110 \<open>Variant_Cast ?vars ?X ?X' \<Longrightarrow> PROP ?P\<close>
+\<phi>processor vars_by_pattern 110 (\<open>Variant_Cast ?vars ?X ?X' \<Longrightarrow> PROP ?P\<close>)
 \<open>fn (ctxt, sequent) => 
 let open Parse Scan NuHelp NuBasics 
   fun pattern_match ((vars, pattern), always) _ =
@@ -2442,19 +2478,6 @@ let open Parse Scan NuHelp NuBasics
     >> pattern_match
   val syn_var_term = ($$$ "var" |-- list1 term -- Scan.option ($$$ "always" |-- term)) >> var_term
 in syn_pattern_match || syn_var_term || syn_nonvar end\<close>
-
-subsection \<open>Reasoners\<close>
-
-ML_file "library/reasoners.ML"
-
-\<phi>reasoner_ML Premise_Collect 10 (conclusion \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>c\<^bold>o\<^bold>l\<^bold>l\<^bold>e\<^bold>c\<^bold>t ?P\<close>)
-  = \<open>Nu_Reasoners.wrap Nu_Reasoners.premise_collect_tac\<close>
-\<phi>reasoner_ML Normal_Premise 10 (conclusion \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P\<close>)
-  = \<open>Nu_Reasoners.wrap Nu_Reasoners.premise_tac\<close>
-\<phi>reasoner  Simp_Premise 10 (conclusion \<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m ?P\<close>)
-  = (rule Premise_I; simp; fail)
-\<phi>reasoner \<phi>expn_Premise 10 (conclusion \<open><\<phi>expn> ?P\<close>)
-  = (rule Premise_I; simp add: \<phi>expns)
 
 (*  \<open>Nu_Reasoners.wrap (fn ctxt => Nu_Reasoners.asm_simp_tac (ctxt addsimps Proof_Context.get_thms ctxt "\<phi>expns"))\<close> *)
 

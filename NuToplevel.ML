@@ -47,7 +47,6 @@ signature NU_TOPLEVEL = sig
         -> (xstring * Position.T) list (*includes*)
         -> xstring option (*pre-conditions*)
         -> bool -> Proof.context -> Proof.state *)
-  val finish_proc_cmd : bool -> Proof.state -> Proof.context
   val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
   val end_block_cmd : bool -> Proof.state -> Proof.state
@@ -400,28 +399,35 @@ fun RSXX ctxt tha thb = RSNXX ctxt tha (1,thb);
 
 local
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
-fun gen_finish_proc qed int stat =
-  let
-    val sequent = NuBasics.the_nu_fact stat
-    val ctxt = Proof.context_of stat
-    val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
-    val (_,_,desired_nu) = PhiSyntax.dest_procedure_c goal
-    val sequent = sequent
-          |> Local_Defs.unfold ctxt @{thms Implicit_Protector_def}
-          (* |> Raw_Simplifier.rewrite_rule ctxt @{thms RegisterCollection_rew}
-          * *)
-    val reassemble_proc_0 = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_0"
-    val sequent = (NuSys.cast_completely desired_nu (ctxt,sequent) |> snd) RS reassemble_proc_0
-    val end_tac = basic_method (fn ctxt' => fn prooof_stat => 
-      Runtime.exn_trace (fn () =>
-      RSXX ctxt' (
-        singleton (Proof_Context.export ctxt ctxt') sequent
-      ) prooof_stat)
-      handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
-  in
-    stat |> Proof.set_facts [] 
-      |> qed (SOME (end_tac, Position.no_range), false)
-  end
+fun gen_finish_proc qed int =
+  Proof.map_context_result (fn ctxt =>
+    let
+      val sequent = NuBasics.the_programming_sequent' ctxt
+      val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
+      val (_,_,desired_nu) = PhiSyntax.dest_procedure_c goal
+      val sequent = sequent
+            |> Local_Defs.unfold ctxt @{thms Implicit_Protector_def}
+    in
+      NuSys.cast desired_nu (ctxt,sequent) |> swap
+    end
+  )
+  #-> NuSys.obligation_proof (print_results int) Proof_Context.mode_default false "" NONE
+        (fn sequent => fn stat =>
+    let
+      val ctxt = Proof.context_of stat
+      val reassemble_proc_0 = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_0"
+      val sequent' = sequent RS reassemble_proc_0
+      val end_tac = basic_method (fn ctxt' => fn prooof_stat => 
+        Runtime.exn_trace (fn () =>
+          RSXX ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent) prooof_stat)
+        handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
+     in
+      stat
+        |> Proof.set_facts [] 
+        |> qed (SOME (end_tac, Position.no_range), false)
+     end)
+        [] []
+
 in
 val end_block_cmd = gen_finish_proc Proof.local_qed
 
@@ -430,7 +436,7 @@ val end_block_cmd = gen_finish_proc Proof.local_qed
   in if current_block_depth sequent > 1 then 
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
     else gen_finish_proc prep_specthm qed int stat end *)
-val finish_proc_cmd = gen_finish_proc Proof.global_qed
+val finish_proc_cmd = gen_finish_proc Proof.local_qed
 end
 
 

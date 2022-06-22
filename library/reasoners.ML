@@ -1,5 +1,5 @@
 signature NU_REASONERS = sig
-  val premise_collect_tac : Proof.context -> thm -> thm Seq.seq
+  val naive_obligation_solver : Proof.context -> thm -> thm Seq.seq
   val premise_tac : Proof.context -> thm -> thm Seq.seq
   val asm_simp_tac : Proof.context -> thm -> thm Seq.seq
   val single_return : tactic -> tactic
@@ -48,30 +48,31 @@ THEN print_dbg "22222"
 
 
 (*** Premise tac ***)
-fun premise_collect_tac ctxt th =
+fun naive_obligation_solver ctxt th =
   if Config.get ctxt Nu_Reasoner.auto_level >= 2 andalso
      can (major_prem_of #> HOLogic.dest_Trueprop #> dest_premise_tag) th
   then head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt)))) th
   else Seq.empty
 
-fun contract_premcollect ctxt = let open Conv in
+fun contract_obligations ctxt = let open Conv in
   gconv_rule (bottom_conv (K (try_conv (rewrs_conv
     @{thms contract_premise_true
            contract_premise_imp contract_premise_all
      }))) ctxt) 1
-  #> fconv_rule (rewr_conv @{thm contract_premcollect})
+  #> fconv_rule (rewr_conv @{thm contract_obligations})
 end
 
 fun premise_tac ctxt thm =
   let
     val idx = Thm.prems_of thm |> find_index (fn tm =>
-          case tm of (_ $ (@{term Premise_Collect} $ _)) => true
+          case tm of (_ $ (@{term Proof_Obligation} $ _)) => true
                    | _ => false)
     val n = Thm.nprems_of thm
   in
-    if idx = ~1 then premise_collect_tac ctxt thm
+    if idx = ~1
+    then Seq.empty
     else Thm.permute_prems 1 (idx-1) thm
-      |> contract_premcollect ctxt
+      |> contract_obligations ctxt
       |> Thm.permute_prems 0 (~(idx-1))
       |> (fn thm' => if Thm.nprems_of thm' = n - 1 then thm'
                      else raise Fail "BUG!!!")

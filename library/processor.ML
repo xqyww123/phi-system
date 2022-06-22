@@ -9,11 +9,11 @@ signature NU_PROCESSOR = sig
 
   val trace : bool Config.T
 
-  val define : binding -> int (*precedence*) -> term (*pattern*) -> proc -> local_theory -> local_theory
+  val define : binding -> int (*precedence*) -> term (*pattern*) list -> proc -> local_theory -> local_theory
   (* val get : Proof.context -> string -> T option *)
   val defined : Context.generic -> string -> bool
   val get_attr : Context.generic -> xstring * Position.T -> attribute parser
-  val list : Context.generic -> (binding * term (*pattern*)) list
+  val list : Context.generic -> (binding * term (*pattern*) list) list
   val internal_process : context_state -> context_state parser
   val simple_process   : context_state -> context_state parser
   val powerful_process : Token.T list -> Proof.state -> Proof.state
@@ -28,12 +28,12 @@ signature NU_PROCESSOR = sig
   val apply_attr : attribute -> context_state -> context_state
   val parse_auto_level : proc -> proc
 
-  val setup : binding -> int (*precedence*) -> term (*pattern*) -> proc ->
+  val setup : binding -> int (*precedence*) -> term (*pattern*) list -> proc ->
         string (*comment*) -> local_theory -> local_theory
   val setup' : binding -> int (*precedence*) ->
-        (string (*pattern*) * (binding * string option * mixfix) list) -> proc ->
+        (string (*pattern*) list * (binding * string option * mixfix) list) -> proc ->
         string (*comment*) -> local_theory -> local_theory
-  val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string (*pattern*))
+  val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string (*pattern*) list)
         * (binding * string option * mixfix) list)
         * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
 end
@@ -55,7 +55,7 @@ type proc = context_state -> (unit -> context_state) parser
 datatype processor = Processor of {
               binding : binding,
               precedence : int,
-              pattern : term,
+              pattern : term list,
               proc : proc
             }
 
@@ -113,7 +113,7 @@ fun process_impl procs (stat,toks) limit =
       let
         val prop = Thm.prop_of (snd stat)
         val stat' = fold (fn (_, Processor {binding, pattern, proc,...}) => fn (ctxt,sequent) =>
-          if Pattern.matches (Proof_Context.theory_of ctxt) (pattern, prop)
+          if exists (fn pat => Pattern.matches (Proof_Context.theory_of ctxt) (pat, prop)) pattern
           then let
             val _ = if limit > 100 then error "too deep process" else ();
             val (execute,toks) =
@@ -170,7 +170,7 @@ val process_no_input = process_by_input []
 
 
 
-val read_prop_pattern = Syntax.read_prop o Proof_Context.set_mode Proof_Context.mode_pattern
+val read_prop_pattern = Syntax.read_props o Proof_Context.set_mode Proof_Context.mode_pattern
 
 fun setup binding precedence term proc (comment:string) =
   define binding precedence term proc
@@ -193,7 +193,7 @@ fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) ctxt =
         (ML_Lex.read
           ("Theory.local_setup (NuProcessor.setup (" ^
           ML_Syntax.make_binding binding ^ ") (" ^ ML_Syntax.print_int precedence ^ ") ("
-          ^ ML_Syntax.print_term prop ^ ") (let open NuProcessor NuProcessors in ") @
+          ^ ML_Syntax.print_list ML_Syntax.print_term prop ^ ") (let open NuProcessor NuProcessors in ") @
           ML_Lex.read_source proc @
           ML_Lex.read (" end) " ^ ML_Syntax.print_string comment ^ ")"))
     )

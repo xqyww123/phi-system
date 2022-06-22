@@ -614,7 +614,7 @@ proc op_get_var:
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
   requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  ;; to_Identity \<exists>v op_get_var''
+  ;; to_Identity ;; \<exists>v ;; op_get_var''
   finish
 
 

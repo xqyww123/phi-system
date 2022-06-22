@@ -8,6 +8,7 @@ infix 0 MP MP_BY
 signature NU_BASICS = sig
   exception NDBG of thm
 
+  val the_programming_sequent' : Proof.context -> thm
   val the_nu_fact : Proof.state -> thm
   val set_nu_fact : thm -> Proof.state -> Proof.state
   val set_programming_sequent' : thm -> Proof.context -> Proof.context

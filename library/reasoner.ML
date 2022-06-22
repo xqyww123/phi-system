@@ -237,7 +237,6 @@ fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
     val patterns = split_list patterns
                       |> apsnd (Syntax.read_props ctxt)
                       |> (op ~~) |> map (fn (prem, pat) => (if prem then premise_tag else conclusion_tag) $ pat)
-                      |> map free_to_var
   in
     lthy |> Context.proof_map (
       ML_Context.expression (Input.pos_of tactic_src)
