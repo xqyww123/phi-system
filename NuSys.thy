@@ -127,7 +127,7 @@ lemma \<phi>Type_eqI:
 paragraph \<open>Syntax\<close>
 
 abbreviation (in std) COMMA
-  :: \<open>('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set\<close> (infixl "\<heavy_comma>" 14)
+  :: \<open>('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'FIC_N,'FIC) comp set\<close> (infixl "\<heavy_comma>" 13)
   where \<open>COMMA \<equiv> (*)\<close>
 
 setup \<open>(Sign.add_trrules (let open Ast 
@@ -190,7 +190,7 @@ lemma Subjection_expn[\<phi>expns]:
   "p \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> p \<in> T \<and> P"
   unfolding Subjection_def by simp
 
-section \<open>Elements of the Reasoning and the Programming\<close>
+section \<open>Features of the Reasoning and the Programming\<close>
 
 subsection \<open>Preliminary\<close>
 
@@ -532,7 +532,7 @@ end\<close>
 
 subsubsection \<open>Fix\<close>
 
-definition Fix :: \<open>'a set \<Rightarrow> 'a set\<close> ("FIX _" [16] 15) where [simp]: \<open>Fix S = S\<close>
+definition Fix :: \<open>'a set \<Rightarrow> 'a set\<close> ("FIX _" [16] 15) where [iff]: \<open>Fix S = S\<close>
 
 text (in std) \<open>During the subtyping reasoning, \<^term>\<open>FIX OBJ S\<close> annotates the reasoner
   do not attempt to permute objects to solve the subtyping. It means the order is sensitive
@@ -552,6 +552,7 @@ text \<open>It triggers a (global) reasoning cut, representing some achievement 
   and the following reasoning should start from this. The reasoner also returns
   the latest cut point, when not all premises are solved.\<close>
 
+
 subsubsection \<open>Success\<close>
 
 definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
@@ -562,6 +563,24 @@ text \<open>Terminates the reasoning successfully and immediately\<close>
 
 \<phi>reasoner_ML \<r>Success 10000 (conclusion \<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
   raise Nu_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
+
+
+subsubsection \<open>Synthesis\<close>
+
+definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
+
+text (in std) \<open>\<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> notes the procedure f is a one that can
+  be used to synthesis Z.\<close>
+
+translations "SYNTHESIS (x \<Ztypecolon> T)" \<rightleftharpoons> "SYNTHESIS ELE (x \<Ztypecolon> T)"
+
+lemma (in std) "__\<phi>synthesis__":
+  " (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> S2\<heavy_comma> X \<rbrace>
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S2\<heavy_comma> X)"
+  using \<phi>apply_proc .
 
 
 subsection \<open>Subtype & View Shift\<close>
@@ -1043,15 +1062,6 @@ lemma \<phi>apply_proc_fully[\<phi>reason on
   unfolding \<phi>Application_Method_def \<phi>Application_def IntroFrameVar_def
     Subty_Target2_def Subty_Target_def
   using "\<phi>cast" \<phi>apply_proc \<phi>frame[where R=R] by meson
-
-end
-
-subsection \<open>Synthesis\<close>
-
-context std begin
-
-definition \<phi>Synthesis ("(2\<^bold>s\<^bold>y\<^bold>n\<^bold>t\<^bold>h\<^bold>e\<^bold>s\<^bold>i\<^bold>s _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
-  where \<open>\<phi>Synthesis = \<phi>Procedure\<close>
 
 end
 
@@ -2330,6 +2340,17 @@ subsubsection \<open>Constructive\<close>
          of SOME (th, _) => (ctxt,th)
           | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
 
+\<phi>processor synthesis 8000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>)
+  \<open>fn (ctxt, sequent) => Parse.group (fn () => "term") (Parse.cartouche || Parse.number)
+>> (fn raw_term => fn () =>
+  let
+    val term = (Const (\<^const_name>\<open>Synthesis\<close>, Term.dummyT) $ Syntax.parse_term ctxt raw_term)
+                  |> Syntax.check_term ctxt
+                  |> Thm.cterm_of ctxt
+    val synthesis = Proof_Context.get_thm ctxt "local.__\<phi>synthesis__"
+                  |> Drule.infer_instantiate ctxt [(("X",0), term)]
+   in (ctxt, sequent RS synthesis)
+  end)\<close>
 
 \<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
   \<open>fn stat => \<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding >> (fn insts => fn () =>
@@ -2375,7 +2396,7 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
      | NONE => raise Bypass NONE
   end)\<close>
 
-\<phi>processor naive_obligation_solver 9000 (\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close>)
+\<phi>processor naive_obligation_solver 8000 (\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
      case Seq.pull (Nu_Reasoners.naive_obligation_solver ctxt sequent)
        of SOME (ret, _) => (ctxt, ret)

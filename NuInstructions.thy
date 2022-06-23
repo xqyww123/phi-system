@@ -31,10 +31,14 @@ subsubsection \<open>Integer arithmetic\<close>
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_int bits const = \<phi>M_put_Val (V_int.mk (bits,const))"
 
-lemma (in std) op_const_int:
+lemma (in std) op_const_int_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> Void \<longmapsto> n \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
-  unfolding op_const_int_def Premise_def
+  unfolding op_const_int_def Premise_def Synthesis_def
   by \<phi>reason
+
+lemma (in std) [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> \<nat>[?b] \<rbrace>\<close>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
+  unfolding Synthesis_def using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
 
 definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
@@ -45,6 +49,10 @@ lemma (in std) op_const_size_t:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> Void \<longmapsto> n \<Ztypecolon> Size \<rbrace>\<close>
   unfolding op_const_size_t_def Premise_def
   by \<phi>reason
+
+lemma (in std) [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> Size \<rbrace>\<close>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> Size \<rbrace>\<close>
+  unfolding Synthesis_def using op_const_size_t[THEN \<phi>frame, simplified] .
 
 definition op_add :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_add bits =
@@ -57,6 +65,13 @@ lemma (in std) op_add:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_add_def Premise_def
   by \<phi>reason
+
+(* lemma (in std)
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c left  \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c right \<lbrace> R2 \<longmapsto> R3\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (left \<ggreater> right \<ggreater> op_add b) \<lbrace> R1 \<longmapsto> R3\<heavy_comma> SYNTHESIS x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
+  apply (\<phi>reason, assumption) *)
 
 definition op_sub :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_sub bits =
@@ -593,38 +608,40 @@ declare [ [ML_exception_trace, Pure.ML_exception_debugger, ML_source_trace] ]
 
 context std begin
 
-term \<open>local.CurrentConstruction\<close>
-
-thm cast_simp
-
 declare [ [unify_trace_failure, \<phi>trace_reasoning_candicates, \<phi>trace_processing] ]
 (*
 ML \<open>Theory.local_setup (Config.put Proof_Context.debug true
       #> Config.put Proof_Context.verbose true)\<close>
 *)
-thm \<phi>lemmata
-
-print_methods
 
 declare [ [\<phi>not_define_new_const] ]
 
-named_theorems xxx
+
 
 proc op_get_var:
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
   requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  ;; to_Identity ;; \<exists>v ;; op_get_var''
-  finish
+  \<medium_left_bracket>
+  ;; \<open>VAL 0 \<Ztypecolon> \<nat>[23]\<close>
+  ;; to_Identity \<exists>v op_get_var''
+  \<medium_right_bracket> using \<phi> by simp .
 
-
-lemma (in std) op_set_var:
+lemma op_set_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var vname TY \<lbrace> v \<Ztypecolon> Var vname\<heavy_comma> u \<Ztypecolon> Identity \<longmapsto> u \<Ztypecolon> Var vname \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var vname TY \<lbrace> v \<Ztypecolon> Var vname Identity\<heavy_comma> u \<Ztypecolon> Identity \<longmapsto> u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
   unfolding op_set_var_def Premise_def
   by (rule \<phi>M_get_Val, rule \<phi>M_get_var, assumption,
       rule \<phi>SEQ, rule \<phi>M_assert, simp_all add: \<phi>expns, rule \<phi>M_set_var)
+
+proc op_set_var:
+  argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> T\<close>
+  return   \<open>y \<Ztypecolon> Var var T\<close>
+  requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  \<medium_left_bracket>
+  ;; to_Identity \<exists>v
+  \<medium_right_bracket> using \<phi> by simp .
 
 lemma (in std) op_var_scope':
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY

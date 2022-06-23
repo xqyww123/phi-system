@@ -44,20 +44,6 @@ lemma [\<phi>reason on \<open>\<phi>Equal (\<nat>[?b]) ?c ?eq\<close>]:
 lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) (\<nat>[?b]) ?zero\<close>]:
   "\<phi>Zero (T_int.mk b) (\<nat>[b]) 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
-\<phi>processor literal_number 9500\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>
-  \<open>fn (ctxt, sequent) => Parse.number >> (fn num => fn _ =>
-  let open NuBasics PhiSyntax
-    val num = Syntax.parse_term ctxt num
-    fun mk term = mk_nuTy (num, term)
-                    |> Syntax.check_term ctxt
-                    |> Thm.cterm_of ctxt
-    val term = (
-          (dest_current_nu sequent |> strip_separations |> hd |> dest_nuTy |> #2 |> mk)
-        handle TERM _ => mk @{term \<open>\<nat>[32]\<close>}
-             | ERROR _ => mk @{term \<open>\<nat>[32]\<close>})
-  in NuSys.auto_construct term (ctxt, sequent)  end)
-\<close>
-
 paragraph \<open>Rounded Natural Number\<close>
 
 definition \<phi>NatRound :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>\<^sup>r[_]")
