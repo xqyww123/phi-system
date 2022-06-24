@@ -114,7 +114,11 @@ fun cast desired_nu (ctxt,sequent) =
 
 fun export_codeblock ctxt cb sequent =
   let open PhiSyntax
-    val reassemble_proc = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc"
+    val (f,_,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
+    val reassemble_proc = Proof_Context.get_thm ctxt
+          (case f of Const (\<^const_name>\<open>std.EMPTY_PROC\<close>, _)
+                => "local.\<phi>reassemble_proc_00"
+            | _ => "local.\<phi>reassemble_proc")
     val (s',_,_) = dest_codeblock_c cb
   in
     sequent

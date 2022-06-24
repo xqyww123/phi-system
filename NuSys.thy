@@ -4,7 +4,7 @@ theory NuSys
     "proc" "rec_proc" "\<phi>cast" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "requires" "\<Longleftarrow>" "\<Longleftarrow>'" "$"
     "var" "always"  "\<medium_left_bracket>" "\<medium_right_bracket>" "\<Longrightarrow>" "goal" "\<exists>" "heap" "stack"
-    "argument" "return" "on" "affirm" :: quasi_command
+    "argument" "return" "on" "affirm" "no" :: quasi_command
   and ";;" "\<medium_left_bracket>" "\<medium_right_bracket>" :: prf_decl % "proof"
   and "\<phi>processor" "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
@@ -90,14 +90,22 @@ lemma \<phi>accept_proc:
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def
   by (simp add: LooseStateTy_upgrade)
 
+definition \<open>EMPTY_PROC = SKIP\<close>
+
 lemma \<phi>reassemble_proc_0:
-  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g SKIP \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
-  unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def by (cases s) simp+
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g EMPTY_PROC \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def EMPTY_PROC_def
+  by (cases s) simp+
 
 lemma \<phi>reassemble_proc:
   "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> g) \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
   unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def instr_comp_def
   by force
+
+lemma \<phi>reassemble_proc_00:
+  "(\<And>s'. CodeBlock s' s f \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g EMPTY_PROC \<^bold>o\<^bold>n s' [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T"
+  unfolding EMPTY_PROC_def using proc_bind_SKIP \<phi>reassemble_proc
+  by metis
 
 lemma \<phi>reassemble_proc_final:
   "(\<And>s H. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> S \<longmapsto> T \<rbrace>"
@@ -262,10 +270,11 @@ attribute_setup \<phi>reason =
 \<open>let open Args Scan Parse 
   fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
-  val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
+  val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
 in
   (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K ~2000000) || optional (Parse.int >> ~) ~100))
-      -- option (lift ($$$ "on") |-- prop_pattern)
+      -- (optional (lift ($$$ "on") |-- prop_pattern) []
+       -- optional (lift ($$$ "if" |-- $$$ "no") |-- prop_pattern) [])
         >> Nu_Reasoner.attr_add_intro)
   || (lift del >> K Nu_Reasoner.attr_del_intro)
 end\<close>
@@ -276,10 +285,11 @@ attribute_setup \<phi>reason_elim =
 \<open>let open Args Scan Parse
   fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
-  val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
+  val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
 in
   (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K ~2000000) || optional (Parse.int >> ~) ~100))
-      -- option (lift ($$$ "on") |-- prop_pattern)
+      -- (optional (lift ($$$ "on") |-- prop_pattern) []
+       -- optional (lift ($$$ "no") |-- prop_pattern) [])
         >> Nu_Reasoner.attr_add_elim)
   || (lift del >> K Nu_Reasoner.attr_del_elim)
 end\<close>
@@ -288,7 +298,7 @@ end\<close>
 
 method_setup \<phi>reason = \<open>let open Scan Parse in
   Method.sections [
-    Args.add >> K (Method.modifier (Nu_Reasoner.attr_add_intro (~100,NONE)) \<^here>),
+    Args.add >> K (Method.modifier (Nu_Reasoner.attr_add_intro (~100,([],[]))) \<^here>),
     Args.del >> K (Method.modifier  Nu_Reasoner.attr_del_intro \<^here>)
 ] >> (fn irules => fn ctxt => fn ths => Nu_Reasoner.reason_tac ctxt)
 end\<close>
@@ -565,24 +575,6 @@ text \<open>Terminates the reasoning successfully and immediately\<close>
   raise Nu_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
 
 
-subsubsection \<open>Synthesis\<close>
-
-definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
-
-text (in std) \<open>\<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> notes the procedure f is a one that can
-  be used to synthesis Z.\<close>
-
-translations "SYNTHESIS (x \<Ztypecolon> T)" \<rightleftharpoons> "SYNTHESIS ELE (x \<Ztypecolon> T)"
-
-lemma (in std) "__\<phi>synthesis__":
-  " (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> S2\<heavy_comma> X \<rbrace>
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S2\<heavy_comma> X)"
-  using \<phi>apply_proc .
-
-
 subsection \<open>Subtype & View Shift\<close>
 
 paragraph \<open>Definitions\<close>
@@ -819,10 +811,7 @@ named_theorems final_proc_rewrite
   \<open>Rewrite the specification theorem in the end of the construction.
     Theorems should be a meta equition \<^term>\<open>\<equiv>\<close>.\<close>
 
-lemma [final_proc_rewrite,simp]: "f \<ggreater> SKIP \<equiv> f"
-  and [final_proc_rewrite,simp]: "SKIP \<ggreater> f \<equiv> f"
-  unfolding instr_comp_def bind_def atomize_eq fun_eq_iff by simp+
-
+declare proc_bind_SKIP[final_proc_rewrite]
 
 subsection \<open>Tags - Part III\<close>
 
@@ -871,6 +860,26 @@ end
 
 
 
+subsection \<open>Synthesis\<close>
+
+definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
+
+text (in std) \<open>\<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> notes the procedure f is a one that can
+  be used to synthesis Z.\<close>
+
+translations "SYNTHESIS (x \<Ztypecolon> T)" \<rightleftharpoons> "SYNTHESIS ELE (x \<Ztypecolon> T)"
+
+lemma (in std) "__\<phi>synthesis__":
+  " (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1)
+\<Longrightarrow> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X \<rbrace> \<medium_right_bracket>: G
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S2\<heavy_comma> X)"
+  unfolding Synthesis_def Subty_Target2_def
+  using \<phi>apply_proc .
+
+
 subsection \<open>Application\<close> \<comment> \<open>of procedures, subtypings, and any other things\<close>
 
 definition \<phi>Application :: \<open>bool \<Rightarrow> bool \<Rightarrow> prop \<Rightarrow> prop\<close> ("_/ \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _/ \<^bold>\<Rightarrow> _")
@@ -895,8 +904,8 @@ lemma \<phi>Application_normalize:
 
 lemma \<phi>application_start_reasoning:
   \<open> PROP \<phi>Application_Method Apps State (PROP Result)
-\<Longrightarrow> PROP Pure.prop (Apps \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s State \<^bold>\<Rightarrow> (PROP Result))\<close>
-  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def .
+\<Longrightarrow> Apps \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s State \<^bold>\<Rightarrow> (PROP Result)\<close>
+  unfolding \<phi>Application_def \<phi>Application_Method_def .
 
 lemma \<phi>application:
   \<open>Apps \<Longrightarrow> State \<Longrightarrow> (Apps \<^bold>a\<^bold>p\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s State \<^bold>\<Rightarrow> (PROP Result)) \<Longrightarrow> PROP Pure.prop Result\<close>
@@ -1649,25 +1658,16 @@ lemma [\<phi>reason 2000]:
 
 subsubsection \<open>Pad 1 Holes at left\<close> \<comment> \<open>to standardize\<close>
 
-lemma [\<phi>reason 2000]:
-  "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e H \<longmapsto> \<medium_left_bracket> 1 \<heavy_comma> (VAL X) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e H \<longmapsto> \<medium_left_bracket> VAL X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+lemma [\<phi>reason 2000 if no \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?H \<longmapsto> \<medium_left_bracket> (?X1 \<heavy_comma> ?X2) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
+  "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e H \<longmapsto> \<medium_left_bracket> 1 \<heavy_comma> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e H \<longmapsto> \<medium_left_bracket> X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def mult_1_left .
 
-lemma [\<phi>reason 2000]:
-  "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e H \<longmapsto> \<medium_left_bracket> 1 \<heavy_comma> (OBJ X) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e H \<longmapsto> \<medium_left_bracket> OBJ X \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+lemma [\<phi>reason 2000 if no \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?Y1 \<heavy_comma> ?Y2 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<medium_right_bracket>: ?G\<close>]:
+  "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e 1 \<heavy_comma> Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def mult_1_left .
 
-lemma [\<phi>reason 2000]:
-  "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e 1 \<heavy_comma> (VAL T) \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e VAL T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
-  unfolding cast_def mult_1_left .
-
-lemma [\<phi>reason 2000]:
-  "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e 1 \<heavy_comma> (OBJ T) \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
-   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ T \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
-  unfolding cast_def mult_1_left .
 
 subsubsection \<open>Subjection\<close>
 
@@ -1683,6 +1683,11 @@ lemma [\<phi>reason 2000]:
    \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<medium_left_bracket> R * (U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def by (simp add: \<phi>expns)
 
+lemma [\<phi>reason 2500]:
+  "(Q \<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G) \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  unfolding cast_def by (simp add: \<phi>expns) blast
+
 
 subsubsection \<open>Protector\<close>
 
@@ -1697,6 +1702,11 @@ subsubsection \<open>Existential\<close>
 lemma [\<phi>reason 2000]:
   "\<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<medium_left_bracket> U c \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G \<Longrightarrow>
    \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<medium_left_bracket> ExSet U \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
+  unfolding cast_def by (simp add: \<phi>expns) blast
+
+lemma [\<phi>reason 2500]:
+  "(\<And>x. \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T x \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G) \<Longrightarrow>
+   \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ExSet T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<medium_right_bracket>: G"
   unfolding cast_def by (simp add: \<phi>expns) blast
 
 (* subsubsection \<open>Tailling\<close> \<comment> \<open>\<close>
@@ -2329,7 +2339,7 @@ subsubsection \<open>Constructive\<close>
 \<phi>processor set_label 5000 (\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>
   NuSys.set_label name stat)\<close>
 
-\<phi>processor rule 7100 (\<open>?P \<Longrightarrow> PROP ?Q\<close>)
+\<phi>processor rule 9000 (\<open>?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt, sequent) => (NuApplicant.parser -- Parse.opt_attribs) >> (fn (name,attrs) => fn _ =>
     let open NuBasics
     val attrs = map (Attrib.attribute_cmd ctxt o Attrib.check_src ctxt) attrs
@@ -2341,15 +2351,26 @@ subsubsection \<open>Constructive\<close>
           | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
 
 \<phi>processor synthesis 8000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>)
-  \<open>fn (ctxt, sequent) => Parse.group (fn () => "term") (Parse.cartouche || Parse.number)
+  \<open>fn (ctxt, sequent) => Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number))
 >> (fn raw_term => fn () =>
   let
-    val term = (Const (\<^const_name>\<open>Synthesis\<close>, Term.dummyT) $ Syntax.parse_term ctxt raw_term)
-                  |> Syntax.check_term ctxt
+    val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
+    fun add_ele tm = Const (\<^const_name>\<open>Ele\<close>, dummyT) $ tm
+    fun chk_term' (\<^typ>\<open>('VAL,'FIC_N,'FIC) assn\<close>) tm = tm
+      | chk_term' _ (tm as (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) = add_ele tm
+      | chk_term' (Type(\<^type_name>\<open>set\<close>, [_])) tm = add_ele tm
+      | chk_term' _ tm = \<^term>\<open>Val_Ele\<close> $ (Const (\<^const_name>\<open>\<phi>Type\<close>, dummyT) $ tm $ Term.dummy)
+    fun chk_term tm = chk_term' (Term.fastype_of tm) tm
+    val term = Syntax.parse_term ctxt_parser raw_term
+                  |> Syntax.check_term ctxt_parser
+                  |> chk_term |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
     val synthesis = Proof_Context.get_thm ctxt "local.__\<phi>synthesis__"
                   |> Drule.infer_instantiate ctxt [(("X",0), term)]
-   in (ctxt, sequent RS synthesis)
+   in
+    case Nu_Reasoner.reason (ctxt, sequent RS synthesis)
+      of SOME ret => ret
+       | NONE => error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
   end)\<close>
 
 \<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)

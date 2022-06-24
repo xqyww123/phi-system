@@ -414,7 +414,10 @@ fun gen_finish_proc qed int =
     let
       val ctxt = Proof.context_of stat
       val reassemble_proc_0 = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_0"
-      val sequent' = sequent RS reassemble_proc_0
+      val sequent' =
+            if can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
+            then sequent RS reassemble_proc_0
+            else sequent
       val end_tac = basic_method (fn ctxt' => fn prooof_stat => 
         Runtime.exn_trace (fn () =>
           RSXX ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent') prooof_stat)
@@ -474,6 +477,14 @@ fun gen_begin_block prep_attr bindings int stat =
   let open Proof
     val ctxt = context_of stat
     val is_top = not (NuBasics.under_programming_environ ctxt)
+    val stat =
+          if is_top
+          then stat
+                |> Proof.apply (Method.Basic (fn ctxt =>
+                                    Method.SIMPLE_METHOD (HEADGOAL (Object_Logic.full_atomize_tac ctxt))),
+                                Position.no_range)
+                |> Seq.the_result "cannot atomize the first subgoal"
+          else stat
     val sequent = if is_top
                   then #goal (Proof.raw_goal stat)
                   else the_nu_fact stat

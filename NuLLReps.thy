@@ -477,6 +477,17 @@ lemma [\<phi>reason 110 on \<open>\<medium_left_bracket> \<^bold>s\<^bold>u\<^bo
   by (simp add: \<phi>expns times_list_def, blast)
 
 
+subsubsection \<open>Synthesis Rules\<close>
+
+lemma [\<phi>reason on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Var ?var ?T \<rbrace> \<medium_right_bracket>: ?G\<close>]:
+  \<open> SUBGOAL G G'
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S1 \<longmapsto> S2\<heavy_comma> \<medium_left_bracket> OBJ x \<Ztypecolon> Var var T \<medium_right_bracket> \<medium_right_bracket>: G'
+\<Longrightarrow> SOLVE_SUBGOAL G'
+\<Longrightarrow> \<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c SKIP \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> Var var T \<rbrace> \<medium_right_bracket>: G\<close>
+  unfolding Subty_Target2_def Subty_Target_def Synthesis_def
+  using "\<phi>cast" \<phi>reassemble_proc_0 \<phi>reassemble_proc_final by blast
+
+
 subsubsection \<open>Application Methods for Subtyping\<close>
 
 lemma [\<phi>reason 2000 on \<open>

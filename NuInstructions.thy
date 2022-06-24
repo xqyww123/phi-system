@@ -36,9 +36,21 @@ lemma (in std) op_const_int_\<phi>app:
   unfolding op_const_int_def Premise_def Synthesis_def
   by \<phi>reason
 
-lemma (in std) [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> \<nat>[?b] \<rbrace>\<close>]:
-  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
-  unfolding Synthesis_def using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
+lemma (in std) [\<phi>reason on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> \<nat>[?b] \<rbrace> \<medium_right_bracket>: ?G\<close>]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b
+\<Longrightarrow> \<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[b] \<rbrace> \<medium_right_bracket>: G\<close>
+  unfolding Synthesis_def Subty_Target2_def
+  using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
+
+lemma (in std) [
+    \<phi>reason 10 on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL (?n::?'t::numeral) \<Ztypecolon> ?T \<rbrace> \<medium_right_bracket>: ?G\<close>,
+    \<phi>reason 10 on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL 0 \<Ztypecolon> ?T \<rbrace> \<medium_right_bracket>: ?G\<close>,
+    \<phi>reason 10 on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL 1 \<Ztypecolon> ?T \<rbrace> \<medium_right_bracket>: ?G\<close>
+]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^32
+\<Longrightarrow> \<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int 32 n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[32] \<rbrace> \<medium_right_bracket>: G\<close>
+  unfolding Synthesis_def Subty_Target2_def
+  using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
 
 definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
@@ -50,9 +62,10 @@ lemma (in std) op_const_size_t:
   unfolding op_const_size_t_def Premise_def
   by \<phi>reason
 
-lemma (in std) [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> Size \<rbrace>\<close>]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> Size \<rbrace>\<close>
-  unfolding Synthesis_def using op_const_size_t[THEN \<phi>frame, simplified] .
+lemma (in std) [\<phi>reason on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> Size \<rbrace> \<medium_right_bracket>: ?G\<close>]:
+  \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> Size \<rbrace> \<medium_right_bracket>: G\<close>
+  unfolding Synthesis_def Subty_Target2_def
+  using op_const_size_t[THEN \<phi>frame, simplified] .
 
 definition op_add :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_add bits =
@@ -170,7 +183,6 @@ definition op_equal :: "'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
     \<phi>M_put_Val (V_int.mk (1, (if EqCompare v u then 1 else 0)))
 ))"
 
-declare [ [\<phi>trace_reasoning, \<phi>trace_reasoning_candicates] ]
 
 lemma (in std) op_equal:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
@@ -604,11 +616,9 @@ lemma (in std) op_get_var''_\<phi>app:
   by (rule \<phi>M_get_var, assumption, rule \<phi>M_put_Val, simp add: \<phi>expns)
 end
 
-declare [ [ML_exception_trace, Pure.ML_exception_debugger, ML_source_trace] ]
 
 context std begin
 
-declare [ [unify_trace_failure, \<phi>trace_reasoning_candicates, \<phi>trace_processing] ]
 (*
 ML \<open>Theory.local_setup (Config.put Proof_Context.debug true
       #> Config.put Proof_Context.verbose true)\<close>
@@ -616,14 +626,11 @@ ML \<open>Theory.local_setup (Config.put Proof_Context.debug true
 
 declare [ [\<phi>not_define_new_const] ]
 
-
-
 proc op_get_var:
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
   requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   \<medium_left_bracket>
-  ;; \<open>VAL 0 \<Ztypecolon> \<nat>[23]\<close>
   ;; to_Identity \<exists>v op_get_var''
   \<medium_right_bracket> using \<phi> by simp .
 
@@ -638,14 +645,16 @@ lemma op_set_var''_\<phi>app:
 proc op_set_var:
   argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> T\<close>
   return   \<open>y \<Ztypecolon> Var var T\<close>
-  requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>\<phi>SemType T TY\<close>
   \<medium_left_bracket>
   ;; to_Identity \<exists>v
+  ;; \<open>_ \<Ztypecolon> Var var _\<close> to_Identity \<exists>u
+  ;; op_set_var''
   \<medium_right_bracket> using \<phi> by simp .
 
 lemma (in std) op_var_scope':
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname \<longmapsto> Y \<rbrace> )
+    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace> )
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F \<lbrace> X\<heavy_comma> v \<Ztypecolon> Identity \<longmapsto> Y \<rbrace>\<close>
   unfolding op_var_scope'_def Premise_def
   apply (rule \<phi>M_get_Val)
@@ -676,7 +685,7 @@ lemma (in std) op_var_scope':
   done
 
 lemma (in std) op_free_var:
-   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_var vname \<lbrace> v \<Ztypecolon> Var vname \<longmapsto> 1 \<rbrace>\<close>
+   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_var vname \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> 1 \<rbrace>\<close>
   unfolding op_free_var_def \<phi>Procedure_def \<phi>M_set_res_entry_def
   apply (auto simp add: \<phi>expns R_var_valid_split' R_var.prj.homo_mult FIC_var_split
                         R_var.mult_in_dom mult_strip_fine_011 times_list_def)
@@ -693,17 +702,49 @@ lemma (in std) op_free_var:
   qed
   done
 
-lemma (in std) op_var_scope:
+lemma (in std) op_var_scope''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname \<longmapsto> Y\<heavy_comma> v \<Ztypecolon> Var vname \<rbrace> )
+    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y\<heavy_comma> u \<Ztypecolon> Var vname Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j u. True \<rbrace> )
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TY F \<lbrace> X\<heavy_comma> v \<Ztypecolon> Identity \<longmapsto> Y \<rbrace>\<close>
   unfolding Premise_def op_var_scope_def
-  by (rule op_var_scope', simp add: Premise_def,
-      rule \<phi>SEQ, assumption, rule \<phi>M_tail_right_right, rule \<phi>frame, rule op_free_var)
+  apply (rule op_var_scope', simp add: Premise_def,
+      rule \<phi>SEQ, assumption)
+  \<medium_left_bracket> ;; \<exists>u op_free_var \<medium_right_bracket> .. .
 
+proc op_var_scope:
+  argument \<open>X\<heavy_comma> x \<Ztypecolon> T\<close>
+  return   \<open>Y\<close>
+  requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>\<phi>SemType T TY\<close>
+    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T \<rbrace>\<close>
+  \<medium_left_bracket>
+  ;; to_Identity \<exists>v op_var_scope'' \<medium_left_bracket> ;; BLK to_Identity \<medium_right_bracket> ..
+  \<medium_right_bracket> .. .
+
+lemma "__\<phi>op_var_scope__":
+  \<open>(\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y \<heavy_comma> x \<Ztypecolon> Var var T \<rbrace>)
+\<Longrightarrow> \<phi>\<phi>SemType T TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TY F \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> T) \<longmapsto> Y \<rbrace>\<close>
+  using op_var_scope_\<phi>app
+  by (smt (verit, del_insts) OBJ_comm mult.assoc)
+
+lemma "__\<phi>op_var_scope__0":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<rbrace>\<close>
+  by fastforce
 
 ML_file_debug "library/local_value.ML"
 
+\<phi>processor assign_variable 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
+  fn (ctxt,sequent) => ((\<^keyword>\<open>\<rightarrow>\<close> |-- Parse.list1 Parse.binding)
+>> (fn vars => fn () => Local_Value.mk_var_scope vars (ctxt,sequent)))
+\<close>
+
+declare [ [\<phi>trace_reasoning]]
+
+proc ff:
+  argument \<open>x \<Ztypecolon> \<nat>[32]\<heavy_comma> y \<Ztypecolon> \<nat>[32]\<heavy_comma> z \<Ztypecolon> \<nat>[32]\<close>
+  return \<open>y \<Ztypecolon> \<nat>[32]\<heavy_comma> x \<Ztypecolon> \<nat>[32]\<close>
+  \<medium_left_bracket> ;; \<rightarrow> x, y, z
 
 
 subsection \<open>Branches & Loops\<close>

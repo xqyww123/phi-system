@@ -83,7 +83,7 @@ fun start_reasoning (ctxt,sequent) =
          Seq.empty)
        | [result] =>
             let val result' = Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>Application_normalize} result
-            in Seq.single (ctxt, Goal.conclude result' RS sequent) end
+            in Seq.single (ctxt, result' RS sequent) end
        | [] =>
         (warning ("Failed application in \n"^Thm.string_of_thm ctxt sequent^
           "\nNo available applications are found.");

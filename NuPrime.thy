@@ -1026,6 +1026,9 @@ definition instr_comp :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RE
 
 abbreviation SKIP :: "('VAL,'RES_N,'RES) proc" where "SKIP \<equiv> Success" \<comment>\<open>the instruction `no-operation`\<close>
 
+lemma proc_bind_SKIP[simp]: "f \<ggreater> SKIP \<equiv> f" "SKIP \<ggreater> f \<equiv> f"
+  unfolding instr_comp_def bind_def atomize_eq fun_eq_iff by simp+
+
 section \<open>Specification Framework\<close>
 
 type_synonym ('VAL,'RES_N,'RES) assn = "('VAL,'RES_N,'RES) comp set" \<comment> \<open>assertion\<close>
