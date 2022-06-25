@@ -153,10 +153,14 @@ virtual_datatype 'TY std_shared_val :: sep_algebra =
 subsubsection \<open>Resource\<close>
 
 type_synonym 'v opstack = "'v list"
-type_synonym varname = nat
+typedef varname = \<open>UNIV::nat set\<close> ..
 type_synonym ('TY,'VAL) R_mem' = \<open>('TY segidx \<rightharpoonup> 'VAL)\<close>
 type_synonym ('TY,'VAL) R_mem = \<open>('TY,'VAL) R_mem' ?\<close>
 type_synonym ('TY,'VAL) R_var = \<open>(varname \<rightharpoonup> 'VAL) ?\<close>
+
+lemma infinite_varname:
+  \<open>infinite (UNIV::varname set)\<close>
+  by (metis (mono_tags, opaque_lifting) Rep_varname_cases UNIV_I finite_imageI infinite_UNIV_char_0 surj_def)
 
 resource_space ('VAL::nonsepable_semigroup,'TY) std_res =
   R_mem :: \<open>('TY,'VAL) R_mem\<close>
@@ -997,6 +1001,7 @@ lemma \<open>Fic_Space fic \<Longrightarrow> n \<noteq> 0 \<Longrightarrow>
 definition "View_Shift u v \<longleftrightarrow> INTERP_RES u \<subseteq> INTERP_RES v "
 
 end
+
 
 (* type_synonym logaddr = "nat memaddr" *)
 

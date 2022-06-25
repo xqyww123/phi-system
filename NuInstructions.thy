@@ -36,20 +36,20 @@ lemma (in std) op_const_int_\<phi>app:
   unfolding op_const_int_def Premise_def Synthesis_def
   by \<phi>reason
 
-lemma (in std) [\<phi>reason on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> \<nat>[?b] \<rbrace> \<medium_right_bracket>: ?G\<close>]:
+lemma (in std) [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b
-\<Longrightarrow> \<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[b] \<rbrace> \<medium_right_bracket>: G\<close>
-  unfolding Synthesis_def Subty_Target2_def
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_def GOAL_CTXT_def
   using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
 
 lemma (in std) [
-    \<phi>reason 10 on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL (?n::?'t::numeral) \<Ztypecolon> ?T \<rbrace> \<medium_right_bracket>: ?G\<close>,
-    \<phi>reason 10 on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL 0 \<Ztypecolon> ?T \<rbrace> \<medium_right_bracket>: ?G\<close>,
-    \<phi>reason 10 on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL 1 \<Ztypecolon> ?T \<rbrace> \<medium_right_bracket>: ?G\<close>
+    \<phi>reason 10 on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL (?n::?'t::numeral) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>,
+    \<phi>reason 10 on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL 0 \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>,
+    \<phi>reason 10 on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS VAL 1 \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^32
-\<Longrightarrow> \<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int 32 n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[32] \<rbrace> \<medium_right_bracket>: G\<close>
-  unfolding Synthesis_def Subty_Target2_def
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int 32 n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[32] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_def GOAL_CTXT_def
   using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
 
 definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
@@ -62,9 +62,9 @@ lemma (in std) op_const_size_t:
   unfolding op_const_size_t_def Premise_def
   by \<phi>reason
 
-lemma (in std) [\<phi>reason on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> Size \<rbrace> \<medium_right_bracket>: ?G\<close>]:
-  \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> Size \<rbrace> \<medium_right_bracket>: G\<close>
-  unfolding Synthesis_def Subty_Target2_def
+lemma (in std) [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS ?n \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_def GOAL_CTXT_def
   using op_const_size_t[THEN \<phi>frame, simplified] .
 
 definition op_add :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
@@ -617,22 +617,55 @@ lemma (in std) op_get_var''_\<phi>app:
 end
 
 
-context std begin
+syntax "__var__" :: "idt \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>r _" [1000] 999)
 
-(*
-ML \<open>Theory.local_setup (Config.put Proof_Context.debug true
-      #> Config.put Proof_Context.verbose true)\<close>
-*)
+parse_ast_translation \<open>
+  let open Ast
+    fun mk_Var name =
+      Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>,
+        Appl [Variable "Var", name, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>]]
+   in [(\<^syntax_const>\<open>__var__\<close>, fn ctxt => fn [name] => mk_Var name)]
+  end
+\<close>
+
+
+syntax "__get_var__" :: "idt \<Rightarrow> logic" ("$_" [1000] 999)
+consts "get_var____\<phi>" :: "varname \<Rightarrow> 'b"
+
+translations "$x" => "CONST get_var____\<phi> x"
+
+definition Variable_of :: \<open>'a \<Rightarrow> varname \<Rightarrow> 'a\<close> (infix "<val-of-var>" 22)
+  where [iff]: \<open>(S <val-of-var> V) = S\<close>
+
+definition Set_Variable :: \<open>varname \<Rightarrow> 'a \<Rightarrow> 'a\<close> ("$_ := _" [1000, 51] 50)
+  where \<open>($x := y) = y\<close>
+
+
+ML_file_debug "library/local_value.ML"
+
+
+context std begin
 
 declare [ [\<phi>not_define_new_const] ]
 
 proc op_get_var:
+  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
-  requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   \<medium_left_bracket>
   ;; to_Identity \<exists>v op_get_var''
   \<medium_right_bracket> using \<phi> by simp .
+
+lemma [\<phi>reason on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ?x <val-of-var> ?var \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> SUBGOAL G G2
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y\<heavy_comma> \<medium_left_bracket> OBJ x \<Ztypecolon> Var var T \<medium_right_bracket> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
+\<Longrightarrow> SOLVE_SUBGOAL G2
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> X \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> SYNTHESIS x <val-of-var> var \<Ztypecolon> T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Variable_of_def Synthesis_def Subty_Target2_def Subty_Target_def
+  using op_get_var_\<phi>app[THEN mp, THEN \<phi>frame, folded mult.assoc] \<phi>CONSEQ_left
+  by fastforce
+
 
 lemma op_set_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
@@ -643,14 +676,27 @@ lemma op_set_var''_\<phi>app:
       rule \<phi>SEQ, rule \<phi>M_assert, simp_all add: \<phi>expns, rule \<phi>M_set_var)
 
 proc op_set_var:
-  argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> T\<close>
-  return   \<open>y \<Ztypecolon> Var var T\<close>
-  requires [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>\<phi>SemType T TY\<close>
+  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+  argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> U\<close>
+  return   \<open>y \<Ztypecolon> Var var U\<close>
   \<medium_left_bracket>
   ;; to_Identity \<exists>v
-  ;; \<open>_ \<Ztypecolon> Var var _\<close> to_Identity \<exists>u
+  ;; \<open>\<^bold>v\<^bold>a\<^bold>r var\<close> to_Identity \<exists>u
   ;; op_set_var''
   \<medium_right_bracket> using \<phi> by simp .
+
+
+lemma [\<phi>reason on \<open>\<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ?x <val-of-var> ?var \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> SUBGOAL G G2
+\<Longrightarrow> \<medium_left_bracket> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y\<heavy_comma> \<medium_left_bracket> OBJ x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> U \<medium_right_bracket> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
+\<Longrightarrow> SOLVE_SUBGOAL G2
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<medium_left_bracket> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var var TY \<lbrace> X \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> SYNTHESIS ($var := y) \<Ztypecolon> U \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Variable_of_def Synthesis_def Subty_Target2_def Subty_Target_def
+  using op_get_var_\<phi>app[THEN mp, THEN \<phi>frame, folded mult.assoc] \<phi>CONSEQ_left
+  by fastforc
+
 
 lemma (in std) op_var_scope':
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
@@ -665,7 +711,7 @@ lemma (in std) op_var_scope':
                         R_var.mult_in_dom mult_strip_fine_011 times_list_def)
   subgoal premises prems for res R valR ficR valX ficX vars
   proof -
-    note t1 = finite_map_freshness[OF \<open>finite (dom vars)\<close>, OF infinite_UNIV_nat]
+    note t1 = finite_map_freshness[OF \<open>finite (dom vars)\<close>, OF infinite_varname]
     have t2[simp]: \<open>vars ## 1(SOME fic. vars fic = None \<mapsto> v)\<close>
       unfolding sep_disj_fun_def by simp (meson someI t1)
     have t3[simp]: \<open>vars (SOME vname. vars vname = None) = None\<close>
@@ -732,19 +778,16 @@ lemma "__\<phi>op_var_scope__0":
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<rbrace>\<close>
   by fastforce
 
-ML_file_debug "library/local_value.ML"
-
 \<phi>processor assign_variable 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
   fn (ctxt,sequent) => ((\<^keyword>\<open>\<rightarrow>\<close> |-- Parse.list1 Parse.binding)
 >> (fn vars => fn () => Local_Value.mk_var_scope vars (ctxt,sequent)))
 \<close>
 
-declare [ [\<phi>trace_reasoning]]
-
 proc ff:
   argument \<open>x \<Ztypecolon> \<nat>[32]\<heavy_comma> y \<Ztypecolon> \<nat>[32]\<heavy_comma> z \<Ztypecolon> \<nat>[32]\<close>
-  return \<open>y \<Ztypecolon> \<nat>[32]\<heavy_comma> x \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket> ;; \<rightarrow> x, y, z
+  return \<open>x \<Ztypecolon> \<nat>[32]\<close>
+  \<medium_left_bracket> ;; \<rightarrow> z, y, x
+  ;; \<open>$x\<close> \<medium_right_bracket> .. .
 
 
 subsection \<open>Branches & Loops\<close>

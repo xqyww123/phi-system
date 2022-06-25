@@ -2,6 +2,7 @@ signature PHI_SYNTAX = sig
 
   val get_types : Proof.context ->
         {TY_N: typ, TY: typ, VAL_N: typ, VAL: typ, RES_N: typ, RES: typ, FIC_N: typ, FIC: typ}
+  val get_assn_typ : Proof.context -> typ
 
   val mk_stateT : Proof.context -> typ
   val mk_assnT : Proof.context -> typ
@@ -35,6 +36,9 @@ signature PHI_SYNTAX = sig
   val dest_procedure   : term -> term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm
 
+  val dest_destined_phityp   : term -> term
+  val dest_destined_phityp_c : cterm -> cterm
+
   val strip_separations : term -> term list
 end
 
@@ -53,6 +57,11 @@ fun get_types ctxt =
   in
     {TY_N=TY_N, TY=TY, VAL_N=VAL_N, VAL=VAL, RES_N=RES_N, RES=RES, FIC_N=FIC_N, FIC=FIC}
   end
+
+fun get_assn_typ ctxt =
+  let val {VAL,FIC_N,FIC,...} = get_types ctxt
+   in Type (\<^type_name>\<open>set\<close>, [Type (\<^type_name>\<open>prod\<close>,
+        [Type (\<^type_name>\<open>list\<close>, [VAL]), Type("fun", [FIC_N, FIC])])]) end
 
 
 fun mk_stateT ctxt =
@@ -150,13 +159,28 @@ fun disch_current_codeblock specthm =
 
 
 val dest_procedure   = perhaps (try dest_Trueprop)
-  (* #> strip_binder @{const_name All} #> #2
-  #> strip_binop_r @{const_name HOL.implies} #> last *)
   #> dest_triop @{const_name "std.\<phi>Procedure"}
 val dest_procedure_c = perhaps (try dest_Trueprop_c)
-  (* #> strip_binder_c @{const_name All} #> #2
-  #> strip_binop_r_c @{const_name HOL.implies} #> last *)
   #> dest_triop_c @{const_name "std.\<phi>Procedure"}
+
+val dest_subtyping   = perhaps (try dest_Trueprop)
+  #> dest_triop @{const_name "Subty"}
+val dest_subtyping_c = perhaps (try dest_Trueprop_c)
+  #> dest_triop_c @{const_name "Subty"}
+
+
+fun dest_destined_phityp term =
+  case try dest_procedure term
+    of SOME (_,_,ty) => ty | _ => 
+  case try dest_subtyping term
+    of SOME (_,ty,_) => ty | _ => raise TERM ("dest_destined_phityp", [term])
+
+fun dest_destined_phityp_c term =
+  case try dest_procedure_c term
+    of SOME (_,_,ty) => ty | _ => 
+  case try dest_subtyping_c term
+    of SOME (_,ty,_) => ty | _ => raise CTERM ("dest_destined_phityp", [term])
+
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T

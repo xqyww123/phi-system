@@ -102,9 +102,10 @@ fun success_application (ctxt,sequent) =
 fun try_apply applicants (ctxt,sequent) =
   let
     val apps = applicants
-                |> map (Conv.fconv_rule (Object_Logic.atomize ctxt))
-                |> foldl1 (fn (a,b) => @{thm conjI} OF [a,b]) 
-    val sequent' = @{thm \<phi>application} OF [apps, sequent]
+                |> foldl1 (fn (a,b) =>
+                      Drule.comp_no_flatten (b,0) 1 (
+                      Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
+    val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
   in
     Nu_Reasoner.reason (ctxt,sequent')
       |> Option.map (apsnd (Goal.conclude))

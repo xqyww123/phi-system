@@ -11,6 +11,11 @@ signature NU_TOPLEVEL = sig
   datatype cond_kind = Premise | Requirement
     (* Premise is automatically prefixed by @{term Premise} and added to
      * @{named_theorems useful}; Requirement is not. *)
+  val register_Block_End_Hook : (context_state -> context_state) -> Proof.context -> Proof.context
+
+  val put_thesis : cterm -> Proof.context -> Proof.context
+  val get_thesis : Proof.context -> cterm
+
   val begin_proc_cmd : Attrib.binding 
         -> xstring (*argument*)
         -> xstring (*return*)
@@ -93,6 +98,12 @@ fun parse_arg (X as (Const (@{const_name "\<phi>Type"}, _) $ _ $ _)) =
   | parse_arg ((C as Const (@{const_name "Subjection"}, _)) $ X $ P) =
       (C $ parse_arg X $ P)
   | parse_arg X = X
+
+
+fun put_thesis thesis = 
+      Proof_Context.put_thms false ("\<phi>thesis", SOME [Drule.mk_term thesis])
+fun get_thesis ctxt =
+      Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
 
 
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
@@ -187,9 +198,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
             (* val (_,Arg,_) = PhiSyntax.dest_procedure_c goal_proc *)
           in
             stat
-              |> Proof.map_context (
-                  Proof_Context.put_thms false ("\<phi>thesis",
-                    SOME [Drule.mk_term goal_proc]))
+              |> Proof.map_context (put_thesis goal_proc)
               (* |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
               |> Proof.map_context_result (start_proc (Binding.name_of (fst binding)) Arg #> swap)
               |-> NuBasics.set_nu_fact *)
@@ -311,9 +320,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                   Proof_Context.add_assms (fn _ => fn prems => (imp_export prems, I)) assms)
           in
             stat
-              |> Proof.map_context (
-                  Proof_Context.put_thms false ("\<phi>thesis",
-                    SOME [Drule.mk_term (cterm_of ctxt goal)]))
+              |> Proof.map_context (put_thesis (cterm_of ctxt goal))
               (* |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
               |> Proof.map_context_result (start_proc func_name Arg #> swap)
               |-> NuBasics.set_nu_fact *)
@@ -388,6 +395,15 @@ val begin_cast_cmd =
 
 
 
+structure Block_End_Hook = Proof_Data (
+  type T = (context_state -> context_state) list
+  val init = K []
+)
+
+fun register_Block_End_Hook hook = Block_End_Hook.map (fn L => hook::L)
+fun invoke_Block_End_Hook (ctxt,sequent) =
+  fold (fn hook => fn stat => hook stat) (Block_End_Hook.get ctxt) (ctxt,sequent)
+
 
 fun RSNXX ctxt tha (i, thb) =
   (case Seq.pull (biresolution (SOME (Config.put Pattern.unify_trace_failure true ctxt)) false [(false, tha)] i thb) of
@@ -401,12 +417,10 @@ fun gen_finish_proc qed int =
   Proof.map_context_result (fn ctxt =>
     let
       val sequent = NuBasics.the_programming_sequent' ctxt
-      val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
-      val (_,_,desired_nu) = PhiSyntax.dest_procedure_c goal
-      val sequent = sequent
-            |> Local_Defs.unfold ctxt @{thms Implicit_Protector_def}
+      val goal = get_thesis ctxt
+      val desired_nu = PhiSyntax.dest_destined_phityp_c goal
     in
-      NuSys.cast desired_nu (ctxt,sequent) |> swap
+      NuSys.cast desired_nu (invoke_Block_End_Hook (ctxt,sequent)) |> swap
     end
   )
   #-> NuSys.obligation_proof (print_results int) Proof_Context.mode_default false "" NONE
@@ -485,9 +499,12 @@ fun gen_begin_block prep_attr bindings int stat =
                                 Position.no_range)
                 |> Seq.the_result "cannot atomize the first subgoal"
           else stat
-    val sequent = if is_top
-                  then #goal (Proof.raw_goal stat)
-                  else the_nu_fact stat
+    val sequent =
+          if is_top
+          then #goal (Proof.raw_goal stat)
+          else the_nu_fact stat
+                |> Conv.fconv_rule (Conv.prems_conv 1 (Conv.repeat_changed_conv
+                      (Object_Logic.atomize ctxt)))
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)
                   |> begin_block
 

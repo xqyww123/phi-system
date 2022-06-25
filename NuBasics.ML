@@ -61,11 +61,11 @@ structure Programming_Sequent = Proof_Data (
   val init = (K NONE)
 )
 
-fun err_bad_env () = error("Not in the \<phi> programming environment")
+fun err_bad_env () = warning("Not in the \<phi> programming environment")
 
 fun the_construction' ctxt =
   case Programming_Sequent.get ctxt of SOME (_,thm, _) => thm
-                                     | _ => err_bad_env ()
+                                     | _ => (err_bad_env (); Drule.dummy_thm)
 
 val the_construction = the_construction' o Proof.context_of
 
@@ -73,13 +73,13 @@ val under_programming_environ = is_some o Programming_Sequent.get
 
 fun the_programming_sequent' ctxt =
   case Programming_Sequent.get ctxt of SOME (thm, _, _) => thm
-                                     | _ => err_bad_env ()
+                                     | _ => (err_bad_env (); Drule.dummy_thm)
 
 val the_nu_fact = the_programming_sequent' o Proof.context_of
 
 fun the_implication' ctxt =
   case Programming_Sequent.get ctxt of SOME (_, _, imp) => Lazy.force imp
-                                     | _ => err_bad_env ()
+                                     | _ => (err_bad_env (); [])
 
 fun reason_programming_implication ctxt sequent =
   let
@@ -117,13 +117,13 @@ fun set_nu_fact sequent stat = stat
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>this\<close>,
           fn genric =>
               case genric
-              of Context.Theory _ => err_bad_env ()
+              of Context.Theory _ => (err_bad_env (); [])
                | Context.Proof ctxt => [the_programming_sequent' ctxt]))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>construction\<close>,
           fn genric =>
               case genric
-              of Context.Theory _ => err_bad_env ()
+              of Context.Theory _ => (err_bad_env (); [])
                | Context.Proof ctxt => [the_construction' ctxt]))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication\<close>,
