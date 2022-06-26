@@ -153,7 +153,10 @@ fun define (binding,attrs) sequent lthy =
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
     val rename_proc = Proof_Context.get_thm lthy "local.\<phi>rename_proc"
-    fun rename def proc_th = proc_th RS (def RS rename_proc)
+    val rename_proc' = Proof_Context.get_thm lthy "local.\<phi>rename_proc_with_goal"
+    fun rename def proc_th =
+          (proc_th RS (def RS rename_proc))
+          handle THM _ => (proc_th RS (def RS rename_proc'))
 
     val (lthy, sequent) =
       if Binding.is_empty binding orelse Config.get lthy not_define_new_const

@@ -157,10 +157,12 @@ fun undisch_codeblock cb_var = Thm.forall_elim cb_var #> undisch
 fun disch_current_codeblock specthm =
   disch_codeblock (current_codeblock specthm) specthm
 
+val dest_goal_ctxt   = dest_binop   "NuSys.GOAL_CTXT" #> #1
+val dest_goal_ctxt_c = dest_binop_c "NuSys.GOAL_CTXT" #> #1
 
-val dest_procedure   = perhaps (try dest_Trueprop)
+val dest_procedure   = perhaps (try dest_Trueprop) #> perhaps (try dest_goal_ctxt)
   #> dest_triop @{const_name "std.\<phi>Procedure"}
-val dest_procedure_c = perhaps (try dest_Trueprop_c)
+val dest_procedure_c = perhaps (try dest_Trueprop_c) #> perhaps (try dest_goal_ctxt_c)
   #> dest_triop_c @{const_name "std.\<phi>Procedure"}
 
 val dest_subtyping   = perhaps (try dest_Trueprop)

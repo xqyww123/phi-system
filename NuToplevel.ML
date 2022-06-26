@@ -24,6 +24,7 @@ signature NU_TOPLEVEL = sig
         -> (indexname list * string) list (*let patterns*)
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
+        -> string option
         -> bool -> Proof.context -> Proof.state
   val begin_rec_proc_cmd : Attrib.binding 
         -> xstring (*argument*)
@@ -34,6 +35,7 @@ signature NU_TOPLEVEL = sig
         -> (indexname list * string) list (*let patterns*)
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
+        -> string option
         -> bool -> Proof.context -> Proof.state
   val begin_cast_cmd : Attrib.binding
         -> xstring (*domain*)
@@ -44,6 +46,7 @@ signature NU_TOPLEVEL = sig
         -> (indexname list * string) list (*let patterns*)
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
+        -> string option
         -> bool -> Proof.context -> Proof.state
   (* val begin_rec_proc_cmd : Attrib.binding 
         -> xstring (*argument and return*)
@@ -120,7 +123,7 @@ fun prep_decls prep_var raw_vars ctxt =
 datatype cond_kind = Premise | Requirement
 
 fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post_process
-      binding arg ret rawfixes includes raw_lets raw_defines raw_preconds int ctxt =
+      binding arg ret rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt int ctxt =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes (prep_ctx ctxt)
     val binding = binding |> apsnd (map (Attrib.check_src ctxt))
@@ -149,9 +152,14 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
           prep_attrterm I c
     val preconds = map prep_precond raw_preconds
 
-    val (goal, constr_process, preconds) =
+    val (goal', constr_process, preconds) =
           mk_Goal (ctx_parse,(fixes,var_names))
                   (parse_term arg, parse_term ret, preconds)
+
+    val goal = case raw_goal_ctxt of NONE => goal'
+                 | SOME G => Const (\<^const_name>\<open>GOAL_CTXT\<close>, dummyT)
+                              $ HOLogic.dest_Trueprop goal'
+                              $ parse_term G
 
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
@@ -494,9 +502,10 @@ fun gen_begin_block prep_attr bindings int stat =
     val stat =
           if is_top
           then stat
-                |> Proof.apply (Method.Basic (fn ctxt =>
-                                    Method.SIMPLE_METHOD (HEADGOAL (Object_Logic.full_atomize_tac ctxt))),
-                                Position.no_range)
+                |> Proof.apply (Method.Basic (fn ctxt => Method.SIMPLE_METHOD (
+                                    TRY (HEADGOAL (Raw_Simplifier.rewrite_goal_tac ctxt @{thms GOAL_CTXT_def}))
+                                    THEN HEADGOAL (Object_Logic.full_atomize_tac ctxt)
+                               )), Position.no_range)
                 |> Seq.the_result "cannot atomize the first subgoal"
           else stat
     val sequent =

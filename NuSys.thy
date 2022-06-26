@@ -608,7 +608,7 @@ paragraph \<open>Applications\<close>
 lemma cast_id[\<phi>reason 2000 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?A \<longmapsto> ?B \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A \<longmapsto> A" unfolding Subty_def by fast
 
-lemma cast_id_ty[\<phi>reason 2200 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?x \<Ztypecolon> ?T \<longmapsto> ?y \<Ztypecolon> ?T\<close>]:
+lemma cast_id_ty[\<phi>reason 30 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?x \<Ztypecolon> ?T \<longmapsto> ?y \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = y \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> T" unfolding Subty_def by fast
 
 (* abbreviation SimpleSubty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e _ \<longmapsto> _)" [2,14] 13)
@@ -783,6 +783,10 @@ ML_file \<open>library/Subgoal_Env.ML\<close>
 definition GOAL_CTXT :: "bool \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
   where [iff]: "GOAL_CTXT x _ \<equiv> Trueprop x"
 
+lemma (in std) \<phi>rename_proc_with_goal:
+  \<open>f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding GOAL_CTXT_def using \<phi>rename_proc .
+
 
 subsection \<open>Simplifier & Rewriter\<close>
 
@@ -865,6 +869,19 @@ lemma IntroFrameVar_Yes:
 
 end
 
+subsubsection \<open>Constrain at Most One Solution when Reasoning A Proposition\<close>
+
+definition Unique_Solution :: \<open>bool \<Rightarrow> bool\<close>
+  where [iff]: \<open>Unique_Solution P \<longleftrightarrow> P\<close>
+
+definition Meet_A_Solution :: bool
+  where [iff]: \<open>Meet_A_Solution \<longleftrightarrow> True\<close>
+
+lemma start_unique_solution_reasoning:
+  \<open> P
+\<Longrightarrow> Meet_A_Solution
+\<Longrightarrow> Unique_Solution P\<close>
+  unfolding Unique_Solution_def .
 
 
 subsection \<open>Synthesis\<close>
@@ -876,16 +893,46 @@ text (in std) \<open>\<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbr
 
 translations "SYNTHESIS (x \<Ztypecolon> T)" \<rightleftharpoons> "SYNTHESIS ELE (x \<Ztypecolon> T)"
 
+definition (in std) Synthesis_Parse :: \<open>'a \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool\<close>
+  where \<open>Synthesis_Parse input parsed \<longleftrightarrow> True\<close>
+
 lemma (in std) "__\<phi>synthesis__":
   " (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1)
 \<Longrightarrow> SUBGOAL TOP_GOAL G
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Synthesis_Parse X X'
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S2\<heavy_comma> X)"
+\<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S2\<heavy_comma> X')"
   unfolding Synthesis_def GOAL_CTXT_def
   using \<phi>apply_proc .
 
+(*TODO: constraints for unique solution of Synthesis_Parse*)
+
+subsubsection \<open>Parse the Term to be Synthesised\<close>
+
+context std begin
+
+lemma [\<phi>reason 9999 on \<open>Synthesis_Parse (?X'::('VAL,'FIC_N,'FIC)assn) ?X\<close>]:
+  \<open>Synthesis_Parse X X\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason 2000 on \<open>Synthesis_Parse (?X::'VAL set) ?Y\<close>]:
+  \<open>Synthesis_Parse X (VAL X)\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason 2000 on \<open>Synthesis_Parse (?X::('FIC_N \<Rightarrow> 'FIC) set) ?Y\<close>]:
+  \<open>Synthesis_Parse X (OBJ X)\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason 30 
+    on \<open>Synthesis_Parse ?x ?Y\<close>
+    if no \<open>Synthesis_Parse (?x \<Ztypecolon> ?T) ?Y\<close>
+          \<open>Synthesis_Parse (?x::('VAL,'FIC_N,'FIC) assn) ?Y\<close>]:
+  \<open>Synthesis_Parse x (VAL x \<Ztypecolon> X)\<close>
+  unfolding Synthesis_Parse_def ..
+
+end
 
 subsection \<open>Application\<close> \<comment> \<open>of procedures, subtypings, and any other things\<close>
 
@@ -982,6 +1029,13 @@ lemma [\<phi>reason 1200 on \<open>
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (All App)) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def \<phi>Application_Method_def imp_implication
   subgoal premises prems using prems(1)[OF prems(2) prems(3)[THEN spec[where x=x]]] . .
+
+
+lemma [\<phi>reason 1200]:
+  \<open> PROP \<phi>Application_Method (Trueprop App) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application_Method (App \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def GOAL_CTXT_def
+  subgoal premises prems using prems(1)[OF prems(2) prems(3)] . .
 
 
 paragraph \<open>Application Methods\<close>
@@ -1495,6 +1549,25 @@ lemma "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztype
 (* lemma "\<phi>Equal (N <up-lift> f) can_eq eq \<longleftrightarrow> \<phi>Equal N (inv_imagep can_eq f) (inv_imagep eq f)"
   unfolding \<phi>Equal_def by (auto 0 6) *)
 
+subsubsection \<open>Representative Type Tagging\<close>
+
+definition (in std) Of_Type :: \<open>('VAL,'a) \<phi> \<Rightarrow> 'TY \<Rightarrow> ('VAL,'a) \<phi>\<close> (infix "<of-type>" 23)
+  where \<open>(T <of-type> TY) = (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j \<phi>\<phi>SemType T TY)\<close>
+
+
+lemma (in std) [\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> T <of-type> TY) \<longleftrightarrow> p \<in> (x \<Ztypecolon> T) \<and> \<phi>\<phi>SemType T TY\<close>
+  unfolding Of_Type_def by (simp add: \<phi>expns)
+
+lemma (in std) [\<phi>reason_elim, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> T <of-type> TY) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY) \<Longrightarrow> C) \<Longrightarrow> C \<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma (in std) [\<phi>reason]:
+  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<phi>\<phi>SemType U TY
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> U <of-type> TY \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Subty_def by (simp add: \<phi>expns)
 
 
 section \<open>Reasoning\<close>
@@ -1556,7 +1629,7 @@ lemma MemAddrState_add_I1[intro]: " h1 \<^bold>a\<^bold>t a \<^bold>i\<^bold>s T
 
 *)
 
-subsection \<open>General Tools\<close>
+subsection \<open>General Rules & Tools\<close>
 
 lemma (in std) "_\<phi>cast_internal_rule_":
   " \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T
@@ -1576,6 +1649,18 @@ lemma (in std) "_\<phi>cast_internal_rule_'":
   unfolding FOCUS_TAG_def Subty_def PendingConstruction_def bind_def GOAL_CTXT_def Pure.prop_def
   by (cases blk, auto simp add: \<phi>expns LooseStateTy_expn') blast+
 
+
+subsubsection \<open>General Rules\<close>
+
+lemma (in std) [\<phi>reason 2000 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e VAL ?X \<longmapsto> VAL ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e VAL X \<longmapsto> VAL Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Subty_def by (simp add: \<phi>expns, blast)
+
+lemma (in std) [\<phi>reason 2000 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ ?X \<longmapsto> OBJ ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e OBJ X \<longmapsto> OBJ Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Subty_def by (simp add: \<phi>expns, blast)
 
 
 subsubsection \<open>Case Analysis\<close>
@@ -1848,20 +1933,19 @@ text \<open>step cases when the reasoner faces an object argument \<^term>\<open
 
 subsubsection \<open>Ordered\<close>
 
-lemma [\<phi>reason 2000 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R\<heavy_comma> VAL ?Y \<longmapsto> \<blangle> ?R2 \<heavy_comma> (FIX VAL ?X) \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 2000 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R\<heavy_comma> ?Y \<longmapsto> \<blangle> ?R2 \<heavy_comma> (FIX ?X) \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   " \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<blangle> R2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> VAL Y \<longmapsto> \<blangle> R2 \<heavy_comma> FIX VAL X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> Y \<longmapsto> \<blangle> R2 \<heavy_comma> FIX X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding cast_def pair_forall
   by (simp add: \<phi>expns) metis
 
-lemma [\<phi>reason 2000 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> OBJ ?Y \<longmapsto> \<blangle> ?R2\<heavy_comma> FIX OBJ ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  " \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<blangle> R2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R\<heavy_comma> OBJ Y \<longmapsto> \<blangle> R2\<heavy_comma> FIX OBJ X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> P2 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding cast_def Fix_def
-  by (simp add: \<phi>expns times_list_def) blast
+subsubsection \<open>Synthesis\<close>
 
+lemma [\<phi>reason 2000 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<longmapsto> \<blangle> ?R2 \<heavy_comma> SYNTHESIS ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  " \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<blangle> R2 \<heavy_comma> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<longmapsto> \<blangle> R2 \<heavy_comma> SYNTHESIS X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+  unfolding Synthesis_def .
 
 subsubsection \<open>Plainize\<close>
 
@@ -2272,8 +2356,9 @@ val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.ter
 val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
         Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
 val defines_statement = Scan.optional ($$$ "defines" |-- Parse.!!! statement1) [];
+val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
 val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
-           where_statement -- defines_statement  -- precond_statement;
+           where_statement -- defines_statement  -- precond_statement -- goal;
 
 val arg = Parse.term
 val arg_ret = (\<^keyword>\<open>argument\<close> |-- arg --| \<^keyword>\<open>return\<close> -- arg)
@@ -2286,21 +2371,21 @@ in
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
     ((Parse_Spec.thm_name ":" -- nu_statements -- arg_ret) >>
-        (fn ((b,((((fixes,includes),lets),defs),preconds)), (arg,ret)) =>  
-            (begin_proc_cmd b arg ret fixes includes lets defs preconds)));
+        (fn ((b,(((((fixes,includes),lets),defs),preconds),G)), (arg,ret)) =>  
+            (begin_proc_cmd b arg ret fixes includes lets defs preconds G)));
 
 val loop_variables = $$$ "var" |-- !!! vars;
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
     ((Parse_Spec.thm_name ":" -- loop_variables -- nu_statements -- arg_ret) >>
-        (fn (((b,vars),((((fixes,includes),lets),defs),preconds)), (arg,ret)) =>  
-            (begin_rec_proc_cmd b arg ret (vars,fixes) includes lets defs preconds)));
+        (fn (((b,vars),(((((fixes,includes),lets),defs),preconds),G)), (arg,ret)) =>  
+            (begin_rec_proc_cmd b arg ret (vars,fixes) includes lets defs preconds G)));
 
 (* val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>\<phi>cast\<close> "begin a procedure construction"
     ((Parse_Spec.thm_name ":" -- option ($$$ "and" |-- Parse.term) -- nu_statements - arg_ret) >>
-        (fn ((b,((((fixes,includes),lets),defs),preconds)), (arg,ret)) =>
-            (begin_cast_cmd b arg ret fixes includes lets defs preconds))); *)
+        (fn ((b,(((((fixes,includes),lets),defs),preconds),G)), (arg,ret)) =>
+            (begin_cast_cmd b arg ret fixes includes lets defs preconds G))); *)
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
@@ -2398,15 +2483,8 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
   let
     val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
                         |> Config.put phi_synthesis_parsing true
-    fun add_ele tm = Const (\<^const_name>\<open>Ele\<close>, dummyT) $ tm
-    fun chk_term' (\<^typ>\<open>('VAL,'FIC_N,'FIC) assn\<close>) tm = tm
-      | chk_term' _ (tm as (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) = add_ele tm
-      | chk_term' (Type(\<^type_name>\<open>set\<close>, [_])) tm = add_ele tm
-      | chk_term' _ tm = \<^term>\<open>Val_Ele\<close> $ (Const (\<^const_name>\<open>\<phi>Type\<close>, dummyT) $ tm $ Term.dummy)
-    fun chk_term tm = chk_term' (Term.fastype_of tm) tm
     val term = Syntax.parse_term ctxt_parser raw_term
                   |> Syntax.check_term ctxt_parser
-                  |> chk_term |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
     val synthesis = Proof_Context.get_thm ctxt "local.__\<phi>synthesis__"
                   |> Drule.infer_instantiate ctxt [(("X",0), term)]
