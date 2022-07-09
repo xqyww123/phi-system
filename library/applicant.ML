@@ -1,15 +1,19 @@
 signature NU_APPLICANT = sig
-  val applicant_thms : Proof.context -> (string * Position.T) -> thm list
+  val applicant_thms : Proof.context -> (Facts.ref * Token.src list) -> thm list
   val declare_overloading : binding -> string (*comment*) -> local_theory -> string * local_theory
   val overload : thm -> (string * Position.T) -> Context.generic -> Context.generic
-  val parser : (string * Position.T) parser
+  val parser : (Facts.ref * Token.src list) parser
+  val name_position : (string * Position.T) parser
 end
 
 structure NuApplicant : NU_APPLICANT = struct
 
-fun applicant_thms ctxt (name,pos) =
-  Proof_Context.get_fact ctxt (Facts.Named ((suffix "_\<phi>app" name, pos), NONE))
-  handle ERROR _ => Proof_Context.get_fact ctxt (Facts.Named ((name, pos), NONE))
+fun suffix_fact suf (Facts.Fact thm) = Facts.Fact thm
+  | suffix_fact suf (Facts.Named ((name,pos),int)) = Facts.Named ((suffix suf name,pos),int)
+
+fun applicant_thms ctxt fact =
+  Attrib.eval_thms ctxt [apfst (suffix_fact "_\<phi>app") fact]
+  handle ERROR _ => Attrib.eval_thms ctxt [fact]
 
 val declare_overloading = Named_Theorems.declare o Binding.suffix_name "_\<phi>app"
 fun overload th (name,pos) ctx =
@@ -18,7 +22,15 @@ fun overload th (name,pos) ctx =
 
 local open Parse Scan in
 
-val parser = position (short_ident || long_ident || sym_ident || keyword || string)
+val name =
+  group (fn () => "name")
+    (short_ident || long_ident || sym_ident || keyword || string)
+
+val name_position = input name >> Input.source_content
+
+val parser =
+  $$$ "[" |-- attribs --| $$$ "]" >> pair (Facts.named "") ||
+  (name_position -- Scan.option thm_sel >> Facts.Named) -- opt_attribs;
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword \<phi>overloads} "declare procedure overloads"

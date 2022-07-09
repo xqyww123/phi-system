@@ -40,10 +40,13 @@ fun prep_prems ctxt =
     (* THEN print_dbg "222221111"  *)
 
 fun raw_auto ctxt =
-    Method.insert_tac ctxt (aux_thms ctxt |> @{print}) 1
-    THEN resolve_tac ctxt (Proof_Context.get_thms ctxt "\<phi>implication") 1
-THEN print_dbg "22222"
-    THEN Clasimp.auto_tac ctxt
+  let
+    val imp = Proof_Context.get_thms ctxt "\<phi>implication"
+  in Method.insert_tac ctxt (aux_thms ctxt |> @{print}) 1
+     THEN (if null imp then all_tac else resolve_tac ctxt imp 1)
+     THEN print_dbg "22222"
+     THEN Clasimp.auto_tac ctxt
+  end
  (* THEN print_dbg "22222"  *)
 
 
@@ -64,16 +67,16 @@ end
 
 fun premise_tac ctxt thm =
   let
-    val idx = Thm.prems_of thm |> find_index (fn tm =>
+    val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
           case tm of (_ $ (@{term Proof_Obligation} $ _)) => true
                    | _ => false)
     val n = Thm.nprems_of thm
   in
     if idx = ~1
     then Seq.empty
-    else Thm.permute_prems 1 (idx-1) thm
+    else Thm.permute_prems 1 idx thm
       |> contract_obligations ctxt
-      |> Thm.permute_prems 0 (~(idx-1))
+      |> Thm.permute_prems 0 (~idx)
       |> (fn thm' => if Thm.nprems_of thm' = n - 1 then thm'
                      else raise Fail "BUG!!!")
       |> Seq.single

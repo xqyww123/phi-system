@@ -9,6 +9,7 @@ signature NU_BASICS = sig
   exception NDBG of thm
 
   val under_programming_environ : Proof.context -> bool
+  val the_construction : Proof.context -> thm
   val the_programming_sequent' : Proof.context -> thm
   val the_nu_fact : Proof.state -> thm
   val set_nu_fact : thm -> Proof.state -> Proof.state
@@ -28,13 +29,8 @@ signature NU_BASICS = sig
   val mk_label_thm : string -> thm
 
   val mk_auto_tag : term -> term
-  val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
-  val mk_name_tylabels : string list -> typ (* ["i","j","k"] -> 'i \<times> 'j \<times> 'k *)
-  val dest_named : typ -> (string * typ) list
-  val dest_named_only_names : typ -> string list
   val normlize_name : string -> string
   val normlize_thm_of_names : thm -> thm
-
   (* val dest_andTy : term -> term * term *)
 
   val dest_premise_tag  : term -> term * term
@@ -63,11 +59,9 @@ structure Programming_Sequent = Proof_Data (
 
 fun err_bad_env () = warning("Not in the \<phi> programming environment")
 
-fun the_construction' ctxt =
+fun the_construction ctxt =
   case Programming_Sequent.get ctxt of SOME (_,thm, _) => thm
                                      | _ => (err_bad_env (); Drule.dummy_thm)
-
-val the_construction = the_construction' o Proof.context_of
 
 val under_programming_environ = is_some o Programming_Sequent.get
 
@@ -124,7 +118,7 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>co
           fn genric =>
               case genric
               of Context.Theory _ => (err_bad_env (); [])
-               | Context.Proof ctxt => [the_construction' ctxt]))
+               | Context.Proof ctxt => [the_construction ctxt]))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication\<close>,
           fn genric =>
@@ -207,17 +201,6 @@ val dest_Cast   = dest_triop   @{const_name "Subty"}
 val dest_Cast_c = dest_triop_c @{const_name "Subty"}
 
 
-fun trim_tylabel_name name = String.substring(name, 2, size name - 2)
-fun dest_name_tylabel (TFree (name,_)) = trim_tylabel_name name
-  | dest_name_tylabel (TVar ((name,_),_)) = trim_tylabel_name name
-val dest_name_tylabels = HOLogic.strip_tupleT #> map dest_name_tylabel
-fun mk_name_tylabels names = HOLogic.mk_tupleT (map (fn x => TFree ("'_"^x, ["HOL.type"])) names)
-fun dest_named (Type (@{type_name named}, [tys, names]))
-      = dest_name_tylabels names ~~ HOLogic.strip_tupleT tys
-  | dest_named ty = raise TYPE ("dest_named", [ty], [])
-fun dest_named_only_names (Type (@{type_name named}, [_, names]))
-      = dest_name_tylabels names
-  | dest_named_only_names ty = raise TYPE ("dest_named", [ty], [])
 
 val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest_Trueprop)
 val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)

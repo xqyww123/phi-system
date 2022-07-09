@@ -57,7 +57,7 @@ signature NU_TOPLEVEL = sig
         -> bool -> Proof.context -> Proof.state *)
   val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
-  val end_block_cmd : bool -> Proof.state -> Proof.state
+  val end_block_cmd : Phi_Generalization.generic -> bool -> Proof.state -> Proof.state
   
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
   (*val export_LLVM : theory -> theory *)
@@ -217,7 +217,8 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
 
     fun post_process' binding int lthy th =
       lthy
-        |> NuProcedure.define binding (post_process lthy th)
+        |> NuProcedure.define binding (post_process lthy
+            (Raw_Simplifier.rewrite_rule lthy @{thms final_proc_rewrite} th))
         |-> (fn th => fn lthy =>
               (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
                   (("\<phi>procedure", ""), [("", [th])]); lthy))
@@ -419,16 +420,28 @@ fun RSNXX ctxt tha (i, thb) =
   | _ => raise THM ("RSNXX: no unifiers", i, [tha, thb]));
 fun RSXX ctxt tha thb = RSNXX ctxt tha (1,thb);
 
+
 local
+
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
-fun gen_finish_proc qed int =
+
+fun gen_finish_proc qed genz int =
   Proof.map_context_result (fn ctxt =>
     let
       val sequent = NuBasics.the_programming_sequent' ctxt
       val goal = get_thesis ctxt
       val desired_nu = PhiSyntax.dest_destined_phityp_c goal
     in
-      NuSys.cast desired_nu (invoke_Block_End_Hook (ctxt,sequent)) |> swap
+      (ctxt,sequent)
+        |> invoke_Block_End_Hook
+        |> (case genz
+              of Phi_Generalization.None => I
+             | _ => NuSys.cast (#3 (PhiSyntax.dest_CurrentConstruction (Thm.prop_of sequent))
+                                |> Phi_Generalization.generalize_cmd genz ctxt
+                                |> Syntax.check_term ctxt
+                                |> Thm.cterm_of ctxt))
+        |> NuSys.cast desired_nu
+        |> swap
     end
   )
   #-> NuSys.obligation_proof (print_results int) Proof_Context.mode_default false "" NONE

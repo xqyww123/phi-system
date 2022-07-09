@@ -18,12 +18,20 @@ setup \<open>
 let
   fun read_prop_pat ctxt = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt)
   val prop_pattern = Scan.peek (Args.named_term o read_prop_pat o Context.proof_of)
+
+  val basic_entity = Document_Output.antiquotation_pretty_source_embedded
+  fun pretty_term_style ctxt (style, t) =
+    Document_Output.pretty_term ctxt (style t);
+
 in
    ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
     (Args.term_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
 #> ML_Antiquotation.inline_embedded \<^binding>\<open>prop_pattern\<close>
     (prop_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
+#> basic_entity \<^binding>\<open>schematic_term\<close> (Term_Style.parse -- Args.term_pattern) pretty_term_style
+#> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop_pattern) pretty_term_style
 end\<close>
+
 
 paragraph \<open>Mathematical Helpers and Settings\<close>
 

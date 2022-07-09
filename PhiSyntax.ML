@@ -54,6 +54,7 @@ fun get_types ctxt =
               Type (@{type_name prod}, [Type("fun", [RES_N, RES]),
                 Type (@{type_name prod}, [Type("fun", [FIC_N, FIC]), _])])])])])
         = tys
+        handle BIND => error ("Corrupted TYPES entry!")
   in
     {TY_N=TY_N, TY=TY, VAL_N=VAL_N, VAL=VAL, RES_N=RES_N, RES=RES, FIC_N=FIC_N, FIC=FIC}
   end

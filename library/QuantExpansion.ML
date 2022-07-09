@@ -8,7 +8,7 @@ signature QUANT_EXPANSION = sig
   val schematic_var_expansion : string list -> Proof.context -> thm
 end
 structure QuantExpansion (* : QUANT_EXPANSION *) = struct
-open NuHelp NuBasics
+open NuHelp NuBasics PhiSyntax
 
 fun mk_cases_named names tm = Const (@{const_name case_named},
       (dummyT --> dummyT) --> Type (@{type_name named}, [dummyT, mk_name_tylabels names]) --> dummyT) $ tm

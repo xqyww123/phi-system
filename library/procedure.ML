@@ -128,11 +128,9 @@ fun norm_def ctxt (m,n) def = let
             (map Thm.reflexive (ty_vars @ normal_vars)) def
   end
 
-fun define (binding,attrs) sequent lthy =
+fun gen_define (binding,attrs) sequent lthy =
   let
     val sequent = sequent
-          |> Raw_Simplifier.rewrite_rule lthy
-              (Proof_Context.get_thms lthy @{named_theorems final_proc_rewrite})
           |> Drule.zero_var_indexes
     val (f,U,V) = Thm.concl_of sequent |> PhiSyntax.dest_procedure 
 
@@ -148,8 +146,10 @@ fun define (binding,attrs) sequent lthy =
                   Abs ("_", Type ("itself", [TFree (vname,sort)]), x)) tvars
     val arity = (length tvars, length vars)
 
-    val def_binding = Binding.suffix_name compilation_suffix binding
-    val proc_binding = Binding.suffix_name app_suffix binding
+    val (def_binding,proc_binding) = if Binding.is_empty binding
+                                     then (binding,binding)
+                                     else (Binding.suffix_name compilation_suffix binding
+                                          ,Binding.suffix_name app_suffix binding)
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
     val rename_proc = Proof_Context.get_thm lthy "local.\<phi>rename_proc"
@@ -168,9 +168,9 @@ fun define (binding,attrs) sequent lthy =
                                       (add_procedure (Binding.name_of binding)))
                   #> rpair (rename (norm_def lthy arity def) sequent))
 
-    val sequent = sequent
+    (*val sequent = sequent
           |> Raw_Simplifier.rewrite_rule lthy @{thms atomize_imp}
-          (* |> Raw_Simplifier.rewrite_rule lthy
+          |> Raw_Simplifier.rewrite_rule lthy
               (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
           |> Raw_Simplifier.rewrite_rule lthy
               (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2") *)
@@ -178,5 +178,8 @@ fun define (binding,attrs) sequent lthy =
                 [((proc_binding,attrs), [([sequent],[])])]
           |> apfst (fn [(_,[sequent])] => sequent)
   end
+
+fun define binding =
+  if Binding.is_empty_atts binding then pair else gen_define binding
 
 end

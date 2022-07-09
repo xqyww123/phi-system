@@ -1,7 +1,7 @@
 theory NuStd_Base
   imports NuSys NuInstructions NuLLReps
   keywords
-     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "subj" "always" "--" "\<rightarrow>" "\<lambda>" "\<lambda>'" :: quasi_command
+     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "always" "--" "\<rightarrow>" "\<lambda>" "\<lambda>'" :: quasi_command
   abbrevs "|^" = "\<up>"
     and "||^" = "\<Up>"
     and "|v" = "\<down>"
@@ -13,6 +13,8 @@ theory NuStd_Base
     and "<some>" = "\<^bold>s\<^bold>o\<^bold>m\<^bold>e"
 begin
 
+chapter \<open>Standard Base Library\<close>
+
 section \<open>Preliminary\<close>
 
 \<phi>overloads singular and plural
@@ -20,246 +22,439 @@ section \<open>Preliminary\<close>
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
 
-section \<open>\<phi>-Types\<close>
 
-(*
+section \<open>Basic Operations\<close>
 
-subsection \<open>Ref\<close>
+subsection \<open>Manipulation of the Op-Stack\<close>
 
-definition Ref  :: "('a::field, 'b) \<phi> \<Rightarrow> (heap, nat memaddr \<R_arr_tail> 'b) \<phi>"
-  where "Ref = (\<lambda>T xx. {heap. (case xx of addr \<R_arr_tail> x \<Rightarrow> (heap \<^bold>a\<^bold>t addr \<^bold>i\<^bold>s x \<tycolon> T))})"
+lemma (in std) op_drop:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<lbrace> VAL X \<longmapsto> Void \<rbrace>\<close>
+  unfolding op_drop_def by \<phi>reason
 
-lemma [simp]: "heap \<in> (addr \<R_arr_tail> x \<tycolon> Ref T) \<longleftrightarrow> (heap \<^bold>a\<^bold>t addr \<^bold>i\<^bold>s x \<tycolon> T)"
-  by (simp add: lrep_exps Ref_def \<phi>Type_def)
-lemma [elim]: " addr \<R_arr_tail> x \<ratio> Ref T \<Longrightarrow> (x \<ratio> T \<Longrightarrow> C) \<Longrightarrow> C" unfolding Inhabited_def by (auto simp add: MemAddrState_def)
+subsection \<open>Variable\<close>
 
-subsection \<open>Array'\<close>
+subsubsection \<open>Syntax\<close>
 
-definition Array' :: "('a::field, 'b) \<phi> \<Rightarrow> (heap, nat memaddr \<R_arr_tail> 'b option list) \<phi>"
-  where "Array' N x' = {heap. (case x' of (base |+ ofs) \<R_arr_tail> xs \<Rightarrow>
-    (\<forall>i < length xs. pred_option (\<lambda>x. heap \<^bold>a\<^bold>t base |+ (ofs + i) \<^bold>i\<^bold>s x \<tycolon> N) (xs ! i)) \<and>
-    ofs + length xs \<le> segment_len base \<and> segment_llty base = LLTY('a))}"
+syntax "__var__" :: "idt \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>r _" [1000] 999)
 
-lemma [simp]: "heap \<in> ((base |+ ofs) \<R_arr_tail> xs \<tycolon> Array' N) \<longleftrightarrow>
-    (ofs + length xs \<le> segment_len base \<and>
-    segment_llty base = LLTY('a) \<and>
-    (\<forall>i < length xs. pred_option (\<lambda>x. heap \<^bold>a\<^bold>t base |+ (ofs + i) \<^bold>i\<^bold>s x \<tycolon> N) (xs ! i))
-)" for N :: "('a::field, 'b) \<phi>"
-  by (auto simp add: lrep_exps Array'_def \<phi>Type_def)
+parse_ast_translation \<open>
+  let open Ast
+    fun mk_Var name =
+      Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>,
+        Appl [Variable "Var", name, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>]]
+   in [(\<^syntax_const>\<open>__var__\<close>, fn ctxt => fn [name] => mk_Var name)]
+  end
+\<close>
 
-lemma [elim,\<phi>elim]: "a \<R_arr_tail> xs \<ratio> Array' N \<Longrightarrow> (
-    (\<And>i. i < length xs \<Longrightarrow> pred_option (\<lambda>x. x \<ratio> N) (xs ! i)) \<Longrightarrow> offset_of a + length xs \<le> address_len a \<Longrightarrow> address_llty a = LLTY('a)
-  \<Longrightarrow> C) \<Longrightarrow> C"
-   for N :: "('a::field, 'b) \<phi>"
-  unfolding Inhabited_def[of "a \<R_arr_tail> xs \<tycolon> Array' N"]
-  by (cases a) (auto simp add: lrep_exps pred_option_def list_all2_conv_all_nth)
+syntax "__get_var__" :: "idt \<Rightarrow> logic" ("$_" [1000] 999)
+consts "get_var____\<phi>" :: "varname \<Rightarrow> 'b"
 
-lemma Array'_to_Ref_\<phi>app:
- "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m i \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! (i-j)) \<noteq> None \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ (a |+ j) \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> (a |+ j) \<R_arr_tail> xs[ (i-j) := None] \<tycolon> Array' N \<heavy_comma> (a |+ i) \<R_arr_tail> the (xs ! (i-j)) \<tycolon> Ref N"
-  unfolding Cast_def Separation_expn pair_forall
-  apply (auto simp add: nu_exps) apply (rule heap_split_by_addr_set[of _  _ "{a |+ i}"])
-  subgoal premises prems for y v proof -
-    define k where "k = i - j"
-    have i: "i = j + k" unfolding k_def using prems by simp
-    show ?thesis unfolding k_def[symmetric] unfolding i
-      using prems[unfolded k_def[symmetric], unfolded i]
-      by (auto  simp add: pred_option_def Ball_def nth_list_update)
-  qed done
+translations "$x" => "CONST get_var____\<phi> x"
 
-lemma [\<phi>reason on ?any]:
- "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! (i-j)) \<noteq> None \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ (a |+ j) \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> (a |+ j) \<R_arr_tail> xs[ (i-j) := None] \<tycolon> Array' N \<heavy_comma> (a |+ i) \<R_arr_tail> the (xs ! (i-j)) \<tycolon> Ref N"
-  unfolding cast_def
-  using Array'_to_Ref_\<phi>app[unfolded Cast_def ParamTag_def] by blast
+definition Variable_of :: \<open>'a \<Rightarrow> varname \<Rightarrow> 'a\<close> (infix "<val-of-var>" 22)
+  where [iff]: \<open>(S <val-of-var> V) = S\<close>
 
-lemma Ref_to_Array':
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ j) \<R_arr_tail> xs[ i-j := None] \<tycolon> Array' N \<heavy_comma> (a |+ i) \<R_arr_tail> y \<tycolon> Ref N \<longmapsto> OBJ (a |+ j) \<R_arr_tail> xs[ i-j := Some y] \<tycolon> Array' N"
-  unfolding Cast_def Separation_expn
-  apply (auto simp add: pred_option_def Ball_def nu_exps)
-  by (metis MemAddrState_add_I1 MemAddrState_add_I2 le_add_diff_inverse nth_list_update nth_list_update_neq option.sel)
+definition Set_Variable :: \<open>varname \<Rightarrow> 'a \<Rightarrow> 'a\<close> ("$_ := _" [1000, 51] 50)
+  where [iff]: \<open>($x := y) = y\<close>
 
-lemma [\<phi>reason on ?any]:
- "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e j \<le> i \<and> i < j + length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! (i-j)) \<noteq> None \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ (a |+ j) \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> (a |+ j) \<R_arr_tail> xs[i-j := None] \<tycolon> Array' N \<heavy_comma> (a |+ i) \<R_arr_tail> the (xs ! (i-j)) \<tycolon> Ref N \<^bold>w\<^bold>i\<^bold>t\<^bold>h True
-    \<^bold>d\<^bold>u\<^bold>a\<^bold>l (a |+ j) \<R_arr_tail> xs[i-j := None] \<tycolon> Array' N \<heavy_comma> (a |+ i) \<R_arr_tail> y \<tycolon> Ref N \<longmapsto> OBJ (a |+ j) \<R_arr_tail> xs[i-j := Some y] \<tycolon> Array' N"
-  by (meson Array'_to_Ref_\<phi>app CastDual_I ParamTag Ref_to_Array')
+lemma (in std) [\<phi>reason 2000 on \<open>Synthesis_Parse (?var::varname) ?Y\<close>]:
+  \<open>Synthesis_Parse var (OBJ x \<Ztypecolon> Var var T)\<close>
+  unfolding Synthesis_Parse_def ..
 
-(* lemma Ref_to_Array':
-  "\<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H1 \<longmapsto> H2 \<heavy_comma> \<medium_left_bracket> (a ||+ i) \<R_arr_tail> y \<tycolon> Ref N \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<medium_right_bracket> \<Longrightarrow>
-  \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H2 \<longmapsto> H3 \<heavy_comma> \<medium_left_bracket> a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<medium_right_bracket> \<Longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow>
-  \<medium_left_bracket> \<^bold>c\<^bold>a\<^bold>s\<^bold>t H1  \<longmapsto> H3 \<heavy_comma> \<medium_left_bracket> a \<R_arr_tail> xs[i := Some y] \<tycolon> Array' N \<medium_right_bracket> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<medium_right_bracket>" *)
+subsubsection \<open>Operations\<close>
+
+ML_file_debug "library/local_value.ML"
+
+context std begin
+
+paragraph \<open>Get Variable\<close>
+
+declare [ [\<phi>not_define_new_const] ]
+
+proc op_get_var:
+  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  argument \<open>x \<Ztypecolon> Var vname T\<close>
+  return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
+  \<medium_left_bracket>
+  ;; to_Identity \<exists>v op_get_var''
+  \<medium_right_bracket> using \<phi> by simp .
+
+lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ?x <val-of-var> ?var \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> SUBGOAL G G2
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y\<heavy_comma> \<blangle> OBJ x \<Ztypecolon> Var var T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
+\<Longrightarrow> SOLVE_SUBGOAL G2
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> X \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> SYNTHESIS x <val-of-var> var \<Ztypecolon> T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Variable_of_def Synthesis_def GOAL_CTXT_def FOCUS_TAG_def
+  using op_get_var_\<phi>app[THEN \<phi>frame, folded mult.assoc] \<phi>CONSEQ_left
+  by fastforce
 
 
-lemma split_cast_Array'_\<phi>app[\<phi>overload split_cast]:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n \<le> length l \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> l \<tycolon> Array' T \<longmapsto> a \<R_arr_tail> take n l \<tycolon> Array' T \<heavy_comma> (a ||+ n) \<R_arr_tail> drop n l \<tycolon> Array' T"
-  unfolding Cast_def Premise_def Separation_expn
-    apply (cases a) apply (auto simp add: nu_exps min_absorb2) 
-  subgoal for base ofs v
-    apply (rule heap_split_by_set[of _ _ "-{ MemAddress (base |+ ofs + i) | i. i < n}"])
-    apply (auto simp add: pred_option_def Ball_def split: option.split)
-    apply (rule MemAddrState_restrict_I2)
-     apply (metis add.assoc add.commute less_diff_conv)
-    by simp
-  done
 
-(*solve*)
-lemma merge_cast_Array'_2_\<phi>app:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n = length l1 \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l1 \<tycolon> Array' T \<heavy_comma> (a ||+ n) \<R_arr_tail> l2 \<tycolon> Array' T \<longmapsto> OBJ a \<R_arr_tail> l1 @ l2 \<tycolon> Array' T "
-  unfolding Cast_def Premise_def Separation_expn apply (cases a)
-  apply (auto simp add: nu_exps min_absorb2 pred_option_def Ball_def nth_append)
-  apply (meson MemAddrState_add_I2)
-  by (metis MemAddrState_add_I1 add.assoc add_diff_inverse_nat nat_add_left_cancel_less)
-  
+paragraph \<open>Set Variable\<close>
 
-lemma merge_cast_Array'_\<phi>app:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ofs' = ofs + length l1 \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (base |+ ofs) \<R_arr_tail> l1 \<tycolon> Array' T \<heavy_comma> (base |+ ofs') \<R_arr_tail> l2 \<tycolon> Array' T \<longmapsto> OBJ (base |+ ofs) \<R_arr_tail> l1 @ l2 \<tycolon> Array' T "
-  using merge_cast_Array'_2_\<phi>app[of _ _ "base |+ ofs", simplified] by blast
+proc op_set_var:
+  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+  argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> U\<close>
+  return   \<open>y \<Ztypecolon> Var var U\<close>
+  \<medium_left_bracket>
+  ;; to_Identity \<exists>v
+  ;; \<open>var\<close> to_Identity \<exists>u
+  ;; op_set_var''
+  \<medium_right_bracket> using \<phi> by simp .
 
-(* lemma Array'_dual_Ref_\<phi>app [\<phi>intro]:
- "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < length xs \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (xs ! i) \<noteq> None \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_comma> \<medium_left_bracket> (a ||+ i) \<R_arr_tail> the (xs ! i) \<tycolon> Ref N \<medium_right_bracket>
-  \<^bold>d\<^bold>u\<^bold>a\<^bold>l a \<R_arr_tail> xs[i := None] \<tycolon> Array' N \<heavy_comma> \<medium_left_bracket> (a ||+ i) \<R_arr_tail> y \<tycolon> Ref N \<medium_right_bracket> \<longmapsto> a \<R_arr_tail> xs[i := Some y] \<tycolon> Array' N"
-  unfolding CastDual_def Heap_Cast_Goal_def apply (simp add: Array'_to_Ref_\<phi>app)
-  unfolding Cast_def apply (cases a) apply (auto simp add: pred_option_def Ball_def)
-  by (metis MemAddrState_add_I1 MemAddrState_add_I2 nth_list_update option.sel)
-*)
+proc op_set_var__synthesis[
+  \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ($?var := ?y) \<Ztypecolon> ?U \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> X1\<heavy_comma> SYNTHESIS VAL y \<Ztypecolon> U \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<close>
+  and      \<open>SUBGOAL G G2\<close>
+  and S[unfolded GOAL_CTXT_def FOCUS_TAG_def]:
+        \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X1\<heavy_comma> VAL y \<Ztypecolon> U \<longmapsto> \<blangle> Y\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma> VAL y \<Ztypecolon> U \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2\<close>
+  and   \<open>SOLVE_SUBGOAL G2\<close>
+  and [\<phi>reason on \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  and [\<phi>reason on \<open>\<phi>SemType (y \<Ztypecolon> U) ?TY\<close>]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+ goal G
+argument \<open>X\<close>
+return   \<open>Y\<heavy_comma> y \<Ztypecolon> Var var U \<heavy_comma> SYNTHESIS ($var := y) \<Ztypecolon> U\<close>
+  \<medium_left_bracket> ;; G S op_set_var op_get_var \<medium_right_bracket> unfolding Set_Variable_def by simp .
 
 
-subsection \<open>Array\<close>
 
-definition Array :: "('a::field, 'b) \<phi> \<Rightarrow> (heap, nat memaddr \<R_arr_tail> 'b list) \<phi>"
-  where "Array N = Array' N <down-lift> (map_object id (map Some)) "
+paragraph \<open>Declare New Variables\<close>
 
-lemma Array_to_Array': "(a \<R_arr_tail> l \<tycolon> Array T) = (a \<R_arr_tail> map Some l \<tycolon> Array' T) "
-  unfolding Array_def by auto
-(* lemma [simp]: "heap \<nuLinkL> Array N \<nuLinkR> (base |+ ofs) \<R_arr_tail> xs \<longleftrightarrow>
-    (ofs + length xs \<le> segment_len base \<and>
-    segment_llty base = LLTY('a) \<and>
-    (\<forall>i < length xs. heap \<^bold>a\<^bold>t base |+ (ofs + i) \<^bold>i\<^bold>s xs ! i \<tycolon> N)
-)" for N :: "('a::field, 'b) \<phi>"
-  by (auto simp add: lrep_exps Array_def) *)
-  
-lemma [elim,\<phi>elim]: "a \<R_arr_tail> xs \<ratio> Array N \<Longrightarrow> (
-    (\<And>i. i < length xs \<Longrightarrow> xs ! i \<ratio> N) \<Longrightarrow> offset_of a + length xs \<le> address_len a \<Longrightarrow> address_llty a = LLTY('a)
-  \<Longrightarrow> C) \<Longrightarrow> C"
-   for N :: "('a::field, 'b) \<phi>"
-  unfolding Inhabited_def[of "a \<R_arr_tail> xs \<tycolon> Array N"]
-  unfolding Array_def
-  by (cases a) (auto simp add: lrep_exps list_all2_conv_all_nth)
+proc op_var_scope:
+  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>\<close>
+  argument \<open>X\<heavy_comma> x \<Ztypecolon> T\<close>
+  return   \<open>Y\<close>
+  \<medium_left_bracket>
+  ;; to_Identity \<exists>v op_var_scope'' \<medium_left_bracket> ;; BLK to_Identity \<medium_right_bracket> ..
+  \<medium_right_bracket> .. .
 
-(* lemma [THEN cast_trans, simplified, \<phi>intro 50]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> map Some xs \<tycolon> Array' N"
-  unfolding Cast_def Array_def by (cases a) auto *)
+lemma "__\<phi>op_var_scope__":
+  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>)
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TY F \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> T) \<longmapsto> Y \<rbrace>\<close>
+  using op_var_scope_\<phi>app
+  by (smt (z3) OBJ_comm mult.assoc)
 
-definition mapSome :: " 'a list \<Rightarrow> 'a option list " where "mapSome = map Some"
-lemma [simp]: "length (mapSome l) = length l" unfolding mapSome_def by auto
-lemma [simp]: "i < length l \<Longrightarrow> mapSome l ! i = Some (l ! i)" unfolding mapSome_def by auto
-lemma [simp]: "i < length l \<Longrightarrow> (mapSome l) [i := Some v] = mapSome (l [i:=v])" unfolding mapSome_def by (metis map_update)
-lemma [simp]: "i < length l \<Longrightarrow> the (mapSome l ! i) = l ! i" unfolding mapSome_def by auto
-lemma [simp]: "drop n (mapSome l) = mapSome (drop n l)" unfolding mapSome_def by (meson drop_map)
-lemma [simp]: "take n (mapSome l) = mapSome (take n l)" unfolding mapSome_def using take_map by blast 
-
-lemma Array'_cast_Array: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs' = mapSome xs2 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N"
-  unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
-lemma Array_cast_Array': "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N"
-  unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def)
-
-lemma [\<phi>reason]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> a \<R_arr_tail> xs' \<tycolon> Array' N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow>
-   \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs' = mapSome xs2 \<Longrightarrow>
-   \<^bold>c\<^bold>a\<^bold>s\<^bold>t T \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Cast_def using Array'_cast_Array[unfolded Cast_def] by blast
-
-lemma [\<phi>reason]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> mapSome xs \<tycolon> Array' N \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow>
-   \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Cast_def using Array_cast_Array'[unfolded Cast_def] by blast
-
-lemma [\<phi>reason on ?any]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> mapSome xs \<tycolon> Array' N \<longmapsto> H \<heavy_comma> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m \<heavy_comma> X\<^sub>m \<longmapsto> OBJ a \<R_arr_tail> xs'\<^sub>m \<tycolon> Array' N \<Longrightarrow>
-   \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e xs'\<^sub>m = mapSome xs\<^sub>m \<Longrightarrow>
-   \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> H \<heavy_comma> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m \<heavy_comma> X\<^sub>m \<longmapsto> OBJ a \<R_arr_tail> xs\<^sub>m \<tycolon> Array N"
-  unfolding  CastDual_def Cast_def
-  by (simp add: Array_to_Array' Premise_def mapSome_def)
-
-(* lemma single_Array_is_Ref: "\<tort_lbrace>a \<R_arr_tail> [x] \<tycolon> Array T\<tort_rbrace> = \<tort_lbrace>a \<R_arr_tail> x \<tycolon> Ref T\<tort_rbrace>"
-  unfolding Array_def by (cases a) (auto simp add: pred_option_def Ball_def) *)
-
-lemma [\<phi>reason on \<open>\<^bold>c\<^bold>a\<^bold>s\<^bold>t ?a \<R_arr_tail> [?x] \<tycolon> Array ?T \<longmapsto> ?a \<R_arr_tail> ?x \<tycolon> Ref ?T'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> [x] \<tycolon> Array T \<longmapsto> a \<R_arr_tail> x \<tycolon> Ref T"
-  unfolding Cast_def Array_def by (cases a) (simp add: pred_option_def Ball_def)
-
-lemma split_cast_Array_\<phi>app[\<phi>overload split_cast]:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m n \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n \<le> length l \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> l \<tycolon> Array T \<longmapsto> a \<R_arr_tail> take n l \<tycolon> Array T \<heavy_comma> (a ||+ n) \<R_arr_tail> drop n l \<tycolon> Array T"
-  by (simp add: Array_to_Array'
-      split_cast_Array'_\<phi>app[of n "map Some l" a T, simplified, simplified take_map drop_map])
-
-lemma pop_cast_Array'_\<phi>app[\<phi>overload pop_cast]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e l \<noteq> [] \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t OBJ a \<R_arr_tail> l \<tycolon> Array T \<longmapsto> (a ||+ 1) \<R_arr_tail> tl l \<tycolon> Array T \<heavy_comma> a \<R_arr_tail> hd l \<tycolon> Ref T"
-  unfolding Premise_def cast_def
-  apply (cases a)
-  apply (auto simp add: nu_exps pair_forall Array_to_Array' neq_Nil_conv)
-  subgoal for x1 x2 y ys aa
-    apply (rule heap_split_by_set[where S = "{ MemAddress (x1 |+ x2) }"])
-    apply (auto)
-   apply (rule MemAddrState_restrict_I2)
-    apply (metis Suc_leI add.assoc le_less_Suc_eq le_less_trans le_refl nth_Cons_Suc plus_1_eq_Suc)
-    apply (metis less_add_one memaddr.inject not_add_less1 resource_key.inject(1) singletonD)
-    by (metis MemAddrState_restrict_I1 add.right_neutral insert_iff nth_Cons_0 zero_less_Suc)
-  done
-    
-
-lemma push_Array'_2_\<phi>app[\<phi>overload push]:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t (a ||+ 1) \<R_arr_tail> l \<tycolon> Array T \<heavy_comma> a \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> OBJ a \<R_arr_tail> x # l \<tycolon> Array T"
-  unfolding Premise_def cast_def
-  apply (cases a)
-  apply (auto simp add: nu_exps pair_forall Array_to_Array' neq_Nil_conv pred_option_def)
-  subgoal for x1 x2 h1 h2 i xa
-    apply (cases i) apply (simp_all add: Suc_eq_plus1) apply blast
-    by (metis MemAddrState_add_I2 add.commute add.left_commute)
-  done
-
-lemma push_Array'_\<phi>app[\<phi>overload push]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i' = i + 1 \<Longrightarrow> \<^bold>c\<^bold>a\<^bold>s\<^bold>t (a |+ i') \<R_arr_tail> l \<tycolon> Array T \<heavy_comma> (a |+ i) \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> OBJ (a |+ i) \<R_arr_tail> x # l \<tycolon> Array T"
-  unfolding Premise_def cast_def
-  apply (auto simp add: nu_exps pair_forall Array_to_Array' neq_Nil_conv pred_option_def)
-  subgoal for h1 h2 ia xa
-    apply (cases ia) apply (simp_all add: Suc_eq_plus1) apply blast
-    by (metis MemAddrState_add_I2 Suc_eq_plus1 add.commute add_Suc_right)
-  done
+lemma "__\<phi>op_set_var__":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> Var var U\<heavy_comma> X \<longmapsto> Z \<rbrace>
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY \<ggreater> g) \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> U) \<longmapsto> Z \<rbrace>\<close>
+  using \<phi>SEQ[OF op_set_var_\<phi>app[THEN \<phi>frame, THEN \<phi>frame], where R2=X,
+             unfolded OBJ_comm[where S=X], folded mult.assoc[where c=X],
+             folded mult.assoc[where a=X]] .
 
 
-lemma merge_cast_Array_2_\<phi>app[\<phi>overload merge]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n = length l1 \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> l1 \<tycolon> Array T \<heavy_comma> (a ||+ n) \<R_arr_tail> l2 \<tycolon> Array T \<longmapsto> OBJ a \<R_arr_tail> l1 @ l2 \<tycolon> Array T "
-  unfolding Array_to_Array' map_append
-  using merge_cast_Array'_2_\<phi>app[of _ "map Some l1", simplified] .
+lemma "__\<phi>op_var_scope__0":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<rbrace>\<close>
+  by fastforce
 
-lemma merge_cast_Array_\<phi>app[\<phi>overload merge]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ofs' = ofs + length l1 \<Longrightarrow>
-  \<^bold>c\<^bold>a\<^bold>s\<^bold>t (base |+ ofs) \<R_arr_tail> l1 \<tycolon> Array T \<heavy_comma> (base |+ ofs') \<R_arr_tail> l2 \<tycolon> Array T \<longmapsto> OBJ (base |+ ofs) \<R_arr_tail> l1 @ l2 \<tycolon> Array T "
-  using merge_cast_Array_2_\<phi>app[of _ _ "base |+ ofs", simplified] by blast
+\<phi>processor assign_variable 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
+  fn (ctxt,sequent) => ((\<^keyword>\<open>\<rightarrow>\<close> |-- Parse.list1 Parse.binding)
+>> (fn vars => fn () =>
+  raise NuProcessor.Terminate_Process (Local_Value.mk_var_scope vars (ctxt,sequent), I)))
+\<close>
 
-lemma drop_array_\<phi>app:
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t px \<R_arr_tail> xs \<tycolon> Array T \<heavy_comma> p \<R_arr_tail> ys \<tycolon> Array U \<longmapsto> OBJ px \<R_arr_tail> xs \<tycolon> Array T"
-  unfolding Cast_def apply (cases px, cases p) apply (simp add: nu_exps lrep_exps Array_def)
-  by (meson MemAddrState_add_I2)
+declare [ [\<phi>not_define_new_const = false] ]
 
-(* lemma [\<phi>intro]: "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> x \<tycolon> Ref T \<longmapsto> a \<R_arr_tail> [x] \<tycolon> Array T"
-  unfolding Cast_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def) *)
 
-(* lemma [THEN cast_dual_trans, \<phi>intro]: 
-  "\<^bold>c\<^bold>a\<^bold>s\<^bold>t a \<R_arr_tail> xs \<tycolon> Array N \<longmapsto> a \<R_arr_tail> mapSome xs \<tycolon> Array' N
-  \<^bold>d\<^bold>u\<^bold>a\<^bold>l a \<R_arr_tail> xs' \<tycolon> Array' N \<longmapsto> a \<R_arr_tail> xs2 \<tycolon> Array N \<^bold>w\<^bold>h\<^bold>e\<^bold>n xs' = mapSome xs2"
-  unfolding Cast_def CastDual_def Array_def by (cases a) (auto simp add: pred_option_def Ball_def) *)
-*)
+subsection \<open>Arithmetic Operations\<close>
+
+\<phi>overloads "+" and "-" and "*" and "/" and "<" and "\<le>" and ">" and "\<ge>" and "=" and "\<not>"
+  and "\<and>" and "\<or>"
+
+subsubsection \<open>Preliminary\<close>
+
+declare [[\<phi>not_define_new_const]]
+
+proc \<phi>__stack_value:
+  assumes [\<phi>reason on \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
+  argument \<open>X\<heavy_comma> VAL x \<Ztypecolon> T\<close>
+  return   \<open>Y\<heavy_comma> x \<Ztypecolon> T\<close>
+  \<medium_left_bracket> ;; \<rightarrow> t ;; F \<open>$t\<close> \<medium_right_bracket> .. .
+
+declare [[\<phi>not_define_new_const=false]]
+
+subsubsection \<open>Boolean Arithmetic\<close>
+
+paragraph \<open>Not\<close>
+
+lemma (in std) op_not[\<phi>overload \<not>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not \<lbrace> x \<Ztypecolon> \<bool> \<longmapsto> \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_not_def
+  by \<phi>reason
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R1\<heavy_comma> SYNTHESIS VAL \<not>?b \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS b \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R1\<heavy_comma> SYNTHESIS VAL \<not>b \<Ztypecolon> \<bool>\<close>
+  \<medium_left_bracket> ;; F1 \<not> \<medium_right_bracket> .. .
+
+paragraph \<open>And\<close>
+
+lemma (in std) op_and[\<phi>overload \<and>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and \<lbrace> a \<Ztypecolon> \<bool>\<heavy_comma> b \<Ztypecolon> \<bool> \<longmapsto> a \<and> b \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_and_def
+  by \<phi>reason
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<and> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<and> y) \<Ztypecolon> \<bool>\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; \<and> \<medium_right_bracket> .. .
+
+paragraph \<open>Or\<close>
+
+lemma (in std) op_or[\<phi>overload \<or>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or \<lbrace> a \<Ztypecolon> \<bool>\<heavy_comma> b \<Ztypecolon> \<bool> \<longmapsto> a \<or> b \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_or_def
+  by \<phi>reason
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<or> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<or> y) \<Ztypecolon> \<bool>\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; \<or> \<medium_right_bracket> .. .
+
+
+subsubsection \<open>Constant Integer\<close>
+
+lemma (in std) op_const_int_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> Void \<longmapsto> n \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
+  unfolding op_const_int_def Premise_def Synthesis_def
+  by \<phi>reason
+
+lemma (in std) [\<phi>reason 1200
+    on \<open>Synthesis_Parse (numeral ?n::nat) ?X\<close>
+       \<open>Synthesis_Parse (0::nat) ?X\<close>
+]:
+  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>[32]) X
+\<Longrightarrow> Synthesis_Parse n X\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma (in std) [\<phi>reason
+    on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS numeral ?n \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 1 \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 0 \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_def GOAL_CTXT_def
+  using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
+
+lemma (in std) op_const_size_t:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> Void \<longmapsto> n \<Ztypecolon> Size \<rbrace>\<close>
+  unfolding op_const_size_t_def Premise_def
+  by \<phi>reason
+
+lemma (in std) [\<phi>reason 1200
+    on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS (numeral ?n) \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 0 \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 1 \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_def GOAL_CTXT_def
+  using op_const_size_t[THEN \<phi>frame, simplified] .
+
+
+subsubsection \<open>Integer Arithmetic\<close>
+
+paragraph \<open>Addition\<close>
+
+lemma (in std) op_add[\<phi>overload +]:
+  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
+  unfolding op_add_def Premise_def
+  by \<phi>reason
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x + ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  premises \<open>x + y < 2 ^ b\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x + y) \<Ztypecolon> \<nat>[b]\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; + \<medium_right_bracket> .. .
+
+
+paragraph \<open>Subtraction\<close>
+
+lemma (in std) op_sub[\<phi>overload -]:
+  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x - y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
+  unfolding op_sub_def Premise_def
+  apply \<phi>reason
+  apply (simp add: \<phi>expns)
+  by (metis Nat.add_diff_assoc2 add.commute less_imp_diff_less mod_add_self2 mod_less)
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x - ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  premises \<open>y \<le> x\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x - y) \<Ztypecolon> \<nat>[b]\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; - \<medium_right_bracket> .. .
+
+
+paragraph \<open>Division\<close>
+
+lemma (in std) op_udiv[\<phi>overload /]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x div y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
+  unfolding op_udiv_def Premise_def
+  apply \<phi>reason apply (simp add: \<phi>expns)
+  using div_le_dividend le_less_trans by blast
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x div ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x div y) \<Ztypecolon> \<nat>[b]\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; / \<medium_right_bracket> .. .
+
+
+paragraph \<open>Less Than\<close>
+
+lemma (in std) op_lt[\<phi>overload <]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_lt_def
+  by \<phi>reason
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x < ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x < y) \<Ztypecolon> \<bool>\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; < \<medium_right_bracket> .. .
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x > ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x > y) \<Ztypecolon> \<bool>\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; < \<medium_right_bracket> .. .
+
+paragraph \<open>Less Equal\<close>
+
+lemma (in std) op_le[\<phi>overload \<le>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_le_def
+  by \<phi>reason
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<le> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<le> y) \<Ztypecolon> \<bool>\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; \<le> \<medium_right_bracket> .. .
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<ge> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<ge> y) \<Ztypecolon> \<bool>\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; \<le> \<medium_right_bracket> .. .
+
+
+subsubsection \<open>General Arithmetic\<close>
+
+paragraph \<open>Equal\<close>
+
+lemma (in std) op_equal_\<phi>app[\<phi>overload =]:
+  \<open> \<phi>SemType (a \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (b \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Equal T can_eq eq
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e can_eq a b
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal TY \<lbrace> a \<Ztypecolon> T\<heavy_comma> b \<Ztypecolon> T \<longmapsto> eq a b \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_equal_def
+  apply \<phi>reason
+    apply (simp add: \<phi>SemType_def subset_iff)
+   apply \<phi>reason
+    apply (simp add: \<phi>SemType_def subset_iff)
+apply (unfold \<phi>Equal_def Premise_def, simp)
+  by \<phi>reason
+
+
+proc [
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x = ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS VAL y \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL x \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes [\<phi>reason on \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+    and   [\<phi>reason on \<open>\<phi>SemType (y \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
+    and   [\<phi>reason on \<open>\<phi>Equal T ?can_eq ?eq\<close>]: \<open>\<phi>Equal T can_eq (=)\<close>
+  premises \<open>can_eq x y\<close>
+  goal G
+  argument \<open>R\<close>
+  return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x = y) \<Ztypecolon> \<bool>\<close>
+  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; = \<medium_right_bracket> .. .
+
+
+
+end
+
+
+subsection \<open>Branches & Loops\<close>
+
+context std begin
+
+lemma op_sel_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sel \<lbrace> VAL A\<heavy_comma> VAL B\<heavy_comma> c \<Ztypecolon> \<bool> \<longmapsto> VAL (if c then A else B) \<rbrace>\<close>
+  unfolding op_sel_def
+  by \<phi>reason
+
+lemma branch_\<phi>app:
+  \<open> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace>)
+\<Longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace>)
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge C Y\<^sub>T Y\<^sub>F = Y
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if br\<^sub>T br\<^sub>F \<lbrace> X\<heavy_comma> C \<Ztypecolon> \<bool> \<longmapsto> Y  \<rbrace>\<close>
+  unfolding op_if_def Premise_def Conv_def Merge_def
+  by \<phi>reason (simp add: \<phi>expns)+
+
+proc "if":
+  assumes C: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c cond \<lbrace> X \<longmapsto> X1\<heavy_comma> C \<Ztypecolon> \<bool> \<rbrace>\<close>
+      and brT: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace>\<close>
+      and brF: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace>\<close>
+      and [\<phi>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge C Y\<^sub>T Y\<^sub>F = ?Y\<close>]: \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge C Y\<^sub>T Y\<^sub>F = Y\<close>
+  argument \<open>X\<close>
+  return \<open>Y\<close>
+  \<medium_left_bracket> ;; C branch brT brF \<medium_right_bracket> .. .
+
+end
 
 
 section \<open>Procedures and Operations\<close>
@@ -268,123 +463,131 @@ context std begin
 
 subsection \<open>Basic sequential instructions\<close>
 
-
-subsubsection \<open>let & local_value\<close>
-
-lemma op_let: " (\<And>p. p \<in> (a \<tycolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body p \<lbrace> R \<longmapsto> R' \<rbrace>) \<Longrightarrow>
-   \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_let body \<lbrace> R \<heavy_comma> VAL a \<tycolon> A \<longmapsto> R' \<rbrace>"
-  unfolding Procedure_def op_let_def by (auto simp add: nu_exps)
-
-lemma op_local_value: "v \<in> (a \<tycolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_local_value v \<lbrace> R \<longmapsto> R \<heavy_comma> VAL a \<tycolon> A \<rbrace>"
-  unfolding Procedure_def op_local_value_def by (auto simp add: nu_exps)
-
-\<phi>processor let_local_value 500 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<close> \<open>let open Parse Scan in
-  fn ctx => fn sequent => (($$$ "\<rightarrow>" || $$$ "--" || $$$ "\<lambda>" || $$$ "\<lambda>'") --| option ($$$ "(") -- list1 binding --| option ($$$ ")"))
-  >> (fn (keyword,idts) => fn _ =>
-    Local_Value.mk_let (keyword = "--" orelse keyword = "\<lambda>'") (rev idts) sequent ctx
-) end\<close>
-
-
-subsubsection \<open>function call\<close>
-  \<comment> \<open>A function is the program function in the ordinary meaning that called by pushing stack frame, rarely inline
-    (whereas a procedure is generally inline), which is a procedure of \<^term>\<open>Void\<close> as its stack remainder so that
-    it can only access its arguments and never the stack remainder.
-    A function always corresponds an LLVM function, whereas other ordinary procedures are totally inline at the calling place generally
-      except some cases of optimization.
-    Only a function but no other ordinary procedure locates at a decided address in memory during the runtime,
-    so that has function pointers to it, and therefore can be indirectly called by the pointer. \<close>
-
-
-
-(* definition strip_end_tail :: " ('a::lrep \<times> void \<longmapsto> ('b::lrep \<times> void)) \<Rightarrow> 'a \<times> ('r::stack) \<longmapsto> ('b \<times> 'r)"
-  where "strip_end_tail f s = (case s of (a,r) \<Rightarrow> bind (f (a,void)) (\<lambda>(b,_). StatOn (b,r)))"
-lemma strip_end_tail: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> A \<longmapsto> \<^bold>E\<^bold>N\<^bold>D\<heavy_comma> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c strip_end_tail f \<lbrace> R\<heavy_comma> A \<longmapsto> R\<heavy_comma> B \<rbrace>"
-  unfolding strip_end_tail_def Procedure_def bind_def by (auto 4 4)
-*)
-
-
-subsection \<open>Branches & Loops\<close>
-
-subsubsection \<open>sel\<close>
-
-declare op_sel_def[\<phi>instr]
-
-lemma sel_\<phi>app:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sel \<lbrace> VAL a \<Ztypecolon> T\<heavy_comma> b \<Ztypecolon> T\<heavy_comma> c \<Ztypecolon> \<bool> \<longmapsto> (if c then a else b) \<Ztypecolon> T \<rbrace> "
-  unfolding \<phi>Procedure_def op_sel_def
-  by (auto simp add: \<phi>expns) (metis append.left_neutral append_Cons)+
-
-
-subsubsection \<open>if\<close>
-
-declare op_if_def[\<phi>instr]
-
-lemma "__if_rule__":
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c cond \<lbrace> X \<longmapsto> X \<heavy_comma> P \<Ztypecolon> \<bool> \<rbrace>
-    \<longrightarrow>\<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<lbrace> X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y\<^sub>T \<rbrace>
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<lbrace> X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P \<longmapsto> Y\<^sub>F \<rbrace>
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (cond \<then> op_if branch_true branch_false) \<lbrace> X \<longmapsto> If P Y\<^sub>T Y\<^sub>F \<rbrace>"
-  unfolding \<phi>def op_if_def Conv_def Merge_def instr_comp_def bind_def
-  by (auto simp add: \<phi>expns pair_forall split: list.split)
-
-
-lemma if_\<phi>app:
-  "(cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_true \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace>)
-    \<longrightarrow> (\<not> cond \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c branch_false \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace>)
-    \<longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge cond Y\<^sub>T Y\<^sub>F = Y
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if TYPE('y::stack) branch_true branch_false \<lbrace> X \<heavy_comma> cond \<tycolon> \<bool> \<longmapsto> Y \<rbrace>"
-  unfolding \<phi>def op_if_def Conv_def Merge_def by (auto simp add: nu_exps)
-
-
 subsubsection \<open>do while\<close>
 
-lemma SemDoWhile_deterministic:
-  assumes "SemDoWhile c s s1"
-      and "SemDoWhile c s s2"
-    shows "s1 = s2"
-proof -
-  have "SemDoWhile c s s1 \<Longrightarrow> (\<forall>s2. SemDoWhile c s s2 \<longrightarrow> s1 = s2)"
-    by (induct rule: SemDoWhile.induct) (subst SemDoWhile.simps, simp)+
-  thus ?thesis
-    using assms by simp
-qed
-
-lemma SemDoWhile_deterministic2: " SemDoWhile body s x \<Longrightarrow> The ( SemDoWhile body s) = x"
-  using SemDoWhile_deterministic by blast
 
 
-lemma "__DoWhile__rule":
-  "(\<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and>P x \<longmapsto> X x' \<heavy_comma> P x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<rbrace>)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<and> \<not> P x' \<rbrace>"
-  unfolding op_do_while_def Procedure_def Auto_def
-  apply (auto simp add: SemDoWhile_deterministic2 nu_exps pair_forall LooseStateTy_expn')
-  subgoal for a b x M c
+
+lemma (in std) "__DoWhile__rule_\<phi>app":
+  " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<heavy_comma> P x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<and> \<not> P x' \<rbrace>"
+  unfolding op_do_while_def \<phi>Procedure_def
+  apply (simp add: SemDoWhile_deterministic2 \<phi>expns pair_forall LooseStateTy_expn')
+  apply (rule allI impI conjI)+
+  apply (elim exE)
+  apply (simp add: SemDoWhile_deterministic2)
+  subgoal for val res R s fic
     apply (rotate_tac 1)
-    apply (induct  body "(a, b)" x arbitrary: a b c rule: SemDoWhile.induct)
-    apply (metis fst_conv snd_conv state.sel state.simps(5) zero_neq_one)
-    apply blast
-     apply (metis state.distinct(1) state.distinct(5))
-    apply (simp add: nu_exps pair_forall Heap'_expn)
-    by (metis fst_conv snd_conv state.distinct(3) state.sel)
-  done
+    apply (induct body "(val, res)" s arbitrary: val res fic rule: SemDoWhile.induct)
+      apply (simp add: \<phi>expns times_list_def)
+    subgoal premises prems for f val' res' val res fic
+        apply (insert \<open>\<forall>_. _\<close>[THEN spec[where x=val], THEN spec[where x=res], THEN spec[where x=R],
+              simplified \<open>f (val, res) = _\<close>, simplified, unfolded imp_ex,
+              THEN spec[where x=fic], THEN mp, OF \<open>_ \<and> _\<close>])
+        by fastforce
+      apply (simp add: \<phi>expns times_list_def)
+      apply (simp add: \<phi>expns times_list_def)
+      subgoal premises prems for f val res fic
+        apply (insert \<open>\<forall>_. _\<close>[THEN spec[where x=val], THEN spec[where x=res], THEN spec[where x=R],
+              simplified \<open>f (val, res) = _\<close>, simplified])
+        using prems(2) by blast
+      apply (simp add: \<phi>expns times_list_def)
+      subgoal premises prems for f val' res' s'' val res fic
+        apply (insert \<open>\<forall>_. _\<close>[THEN spec[where x=val], THEN spec[where x=res], THEN spec[where x=R],
+              simplified \<open>f (val, res) = _\<close>, simplified, unfolded imp_ex,
+              THEN spec[where x=fic], THEN mp, OF \<open>_ \<and> _\<close>])
+        using prems(3) by fastforce
+      . .
 
-thm "__DoWhile__rule"[simplified]
+declare [[\<phi>not_define_new_const]]
 
-declare Heap'_expn[simp del]
 
-lemma "__DoWhile___\<phi>app":
-  "(\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<longmapsto> X x' \<heavy_comma> P x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<rbrace>)
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<rbrace>"
-(*  for X :: "(heap \<times> 'a::lrep, 'b) \<phi>" *)
-  unfolding op_do_while_def Procedure_def Auto_def
-  apply (auto simp add: SemDoWhile_deterministic2 nu_exps pair_forall)
-  subgoal for a b xa H
-    apply (rotate_tac 2)
-    by (induct  body "(a, b)" xa arbitrary: a b x rule: SemDoWhile.induct)
-        (auto 0 7 simp add: nu_exps pair_forall Heap'_expn)
-  done
-declare Heap'_expn[simp]
 
+
+definition Function_over :: \<open>('a,'b) \<phi> \<Rightarrow> 'c \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<phi>\<close> (infix "<func-over>" 40)
+  where \<open>(T <func-over> x) = (\<lambda>f. f x \<Ztypecolon> T)\<close>
+
+abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
+
+lemma Function_over_expn[\<phi>expns]:
+  \<open>p \<in> (f \<Ztypecolon> T <func-over> x) \<longleftrightarrow> p \<in> (f x \<Ztypecolon> T)\<close>
+  unfolding Function_over_def \<phi>Type_def by simp
+
+lemma [\<phi>reason 2000]:
+  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> fx \<Ztypecolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> f \<Ztypecolon> T <func-over> x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Subty_def lambda_abstraction_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 2000]:
+  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e f x \<Ztypecolon> T \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e f \<Ztypecolon> T <func-over> x \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Subty_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200 on \<open>Synthesis_Parse ?input (VAL ?f \<Ztypecolon> ?T <func-over> ?x)\<close>]:
+  \<open> Synthesis_Parse input (VAL fx \<Ztypecolon> T)
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> Synthesis_Parse input (VAL f \<Ztypecolon> T <func-over> x)\<close>
+  unfolding Synthesis_Parse_def ..
+
+
+
+proc (in std) do_while:
+assumes V: \<open>Variant_Cast vars X X'\<close>
+    and \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond\<close>
+premises X[useful]: \<open>cond vars\<close>
+assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X' x \<longmapsto> \<exists>*x'. X' x'\<heavy_comma> cond x' \<Ztypecolon> \<bool> \<rbrace>\<close>
+argument \<open>X\<close>
+return   \<open>X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> cond x'\<close>
+\<medium_left_bracket> ;; unfold V[unfolded Variant_Cast_def]
+  ;; "__DoWhile__rule"[where I=\<open>\<lambda>_. True\<close>, where P=cond, simplified]
+  \<medium_left_bracket> ;; \<exists>x B \<medium_right_bracket> ..
+  ;; \<medium_right_bracket> .. .
+
+proc while:
+  assumes V: "Variant_Cast vars X' X"
+    and C: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<lbrace> X x \<longmapsto> X x\<heavy_comma> cond \<Ztypecolon> Predicate_About x \<rbrace>"
+    and B: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<rbrace>"
+  argument \<open>X'\<close>
+  return \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
+  \<medium_left_bracket> ;; unfold V[unfolded Variant_Cast_def]
+    ;; C
+    ;; branch \<medium_left_bracket> ;; do_while var vars \<open>cond vars\<close> \<medium_left_bracket> ;; B \<exists>vars' C \<medium_right_bracket> .. \<medium_right_bracket> ..
+              \<medium_left_bracket> \<medium_right_bracket> var vars subj \<open>\<not> cond vars\<close> using \<phi> by simp
+  \<medium_right_bracket> .. .
+
+
+declare [[\<phi>not_define_new_const=false]]
+
+proc
+  argument \<open>x \<Ztypecolon> \<nat>[32]\<close>
+  return \<open>x - 1 \<Ztypecolon> \<nat>[32]\<close>
+  \<medium_left_bracket> (* command `;;` leads a statement. It is technically required. *)
+    ;; \<rightarrow> varx (*assign the value x to a variable named varx*)
+    ;; if \<open>0 < $varx\<close> \<medium_left_bracket> ;; \<open>$varx - 1\<close> \<medium_right_bracket> by standard
+                      \<medium_left_bracket> ;; \<open>0::nat\<close> \<medium_right_bracket> by standard
+    (* the cartouche like \<open>0 < $varx\<close> invokes a synthesis process
+       to make that value automatically *)
+  \<medium_right_bracket> by simp .
+
+
+
+proc
+  premises \<open>x < 10\<close>
+  argument \<open>x \<Ztypecolon> \<nat>[20]\<close>
+  return \<open>10 \<Ztypecolon> \<nat>[20]\<close>
+  \<medium_left_bracket> ;; \<rightarrow> v
+  note [[\<phi>trace_processing]]
+  ;; while var x
+  \<medium_left_bracket> ;; \<open>$v < 10\<close> \<medium_right_bracket> using \<phi> by simp
+  \<medium_left_bracket> ;; \<open>$v+1\<close> \<rightarrow> v \<medium_right_bracket> using \<phi> by simp
+  ;; \<exists>y
+  have [simp]: \<open>y = 10\<close> using \<phi> by simp
+  ;;
+  thm \<phi>
+
+
+thm do_while'_\<phi>compilation
 
 lemma do_while_\<phi>app:
   "Variant_Cast vars X X' \<longrightarrow>

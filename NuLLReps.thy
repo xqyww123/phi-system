@@ -98,12 +98,12 @@ lemma \<phi>Int_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<i
 
 subsubsection \<open>Subtyping\<close>
 
-lemma subty_Z_N[\<phi>overload nat on \<open>?x \<Ztypecolon> \<int>[?b]\<close>]: 
+lemma subty_Z_N[\<phi>overload nat]: 
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> \<int>[b] \<longmapsto> nat x \<Ztypecolon> \<nat>[b]"
   unfolding Subty_def Premise_def apply (simp add: \<phi>expns del: One_nat_def)
   by (smt (verit, del_insts) diff_less less_numeral_extra(1) power_strict_increasing_iff)
 
-lemma subty_N_Z[\<phi>overload int on \<open>?x \<Ztypecolon> \<int>[?b]\<close>]:
+lemma subty_N_Z[\<phi>overload int]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(b - 1) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> \<nat>[b] \<longmapsto> int x \<Ztypecolon> \<int>[b]"
   unfolding Subty_def Premise_def apply (simp add: \<phi>expns del: One_nat_def)
   by (metis less_one linorder_le_cases neg_0_le_iff_le not_exp_less_eq_0_int of_nat_0_le_iff order_trans power_0)
@@ -469,6 +469,10 @@ lemma Var_SubjTyp[simp]:
   \<open>(x \<Ztypecolon> Var vname (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (x \<Ztypecolon> Var vname T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns, blast)
 
+lemma [\<phi>reason 1200 on \<open>EqualAddress (?xa \<Ztypecolon> Var ?va ?Ta) (?xb \<Ztypecolon> Var ?vb ?Tb)\<close>]:
+  \<open>EqualAddress (xa \<Ztypecolon> Var var Ta) (xb \<Ztypecolon> Var var Tb)\<close>
+  unfolding EqualAddress_def ..
+
 lemma [\<phi>reason 110 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R \<heavy_comma> OBJ ?H \<longmapsto> ?R''' * \<blangle> OBJ ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> x' \<Ztypecolon> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
@@ -483,10 +487,10 @@ lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> 
   \<open> SUBGOAL G G'
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e S1 \<longmapsto> S2\<heavy_comma> \<blangle> OBJ x \<Ztypecolon> Var var T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G'
 \<Longrightarrow> SOLVE_SUBGOAL G'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c SKIP \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> Var var T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c EMPTY_PROC \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> Var var T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def FOCUS_TAG_def Synthesis_def
   using "\<phi>cast" \<phi>reassemble_proc_0 \<phi>reassemble_proc_final
-  by (metis EMPTY_PROC_def)
+  by metis
 
 
 subsubsection \<open>Application Methods for Subtyping\<close>

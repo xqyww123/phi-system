@@ -105,10 +105,10 @@ fun cast desired_nu (ctxt,sequent) =
             of SOME ret => ret
              | NONE => raise CastFail (desired_nu, sequent)
     val _ = case Thm.prop_of sequent'
-              of (\<^const>\<open>Pure.prop\<close> $ _) => ()
+              of (\<^const>\<open>Trueprop\<close> $ _) => ()
                | (\<^const>\<open>Pure.imp\<close>
                     $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ _))
-                    $ (\<^const>\<open>Pure.prop\<close> $ _)) => ()
+                    $ (\<^const>\<open>Trueprop\<close> $ _)) => ()
                | _ => raise CastFail (desired_nu, sequent)
   in (ctxt',sequent') end
 
@@ -116,7 +116,7 @@ fun export_codeblock ctxt cb sequent =
   let open PhiSyntax
     val (f,_,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
     val reassemble_proc = Proof_Context.get_thm ctxt
-          (case f of Const (\<^const_name>\<open>std.EMPTY_PROC\<close>, _)
+          (case f of Const (\<^const_name>\<open>EMPTY_PROC\<close>, _)
                 => "local.\<phi>reassemble_proc_00"
             | _ => "local.\<phi>reassemble_proc")
     val (s',_,_) = dest_codeblock_c cb
@@ -163,7 +163,7 @@ fun set_param term (ctxt,sequent) =
       RS sequent)
 
 fun set_param_cmd term (ctxt,sequent) =
-  case try (dest_funT #> apfst dest_named) (param_type sequent)
+  case try (dest_funT #> apfst PhiSyntax.dest_named) (param_type sequent)
     of SOME (name_and_tys, rng) =>
         let
           val fixes = map (fn (name,ty) =>
@@ -254,11 +254,10 @@ fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes a
       * "NuSys.useful") stat) *)
   end
 
-fun obligations_of (\<^const>\<open>Pure.prop\<close> $ _) = []
-  | obligations_of (\<^const>\<open>Pure.imp\<close>
+fun obligations_of (\<^const>\<open>Pure.imp\<close>
                     $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ G))
                     $ P) = G :: obligations_of P
-  | obligations_of X = raise TERM ("NuSys.obligations_of", [X])
+  | obligations_of _ = []
 
 fun obligation_proof print_results mode strict_asm kind before_qed after_qed fixes assumes sequent =
   let
@@ -268,7 +267,6 @@ fun obligation_proof print_results mode strict_asm kind before_qed after_qed fix
         val ctxt' = Proof.context_of stat
         val thms = Proof_Context.export ctxt ctxt' (flat thmss)
         val sequent' = fold (fn x => fn s => x RS (@{thm Premise_I} RS s)) thms sequent
-                        |> Goal.conclude
        in after_qed sequent' stat
       end
   in

@@ -1,9 +1,10 @@
-signature NU_VARIABLES_TAG = sig
-  val variables_tag_terms : string list -> string option -> Proof.context -> thm -> thm
-  val variables_tag_pattern_match : (binding * string option * mixfix) list
+signature NU_VARIABLE_FACTOR = sig
+  val vary_by_parts : string list -> string option -> Proof.context -> thm -> thm
+  val vary_by_pattern_match : (binding * string option * mixfix) list
     -> string list -> string option -> Proof.context -> thm -> thm
 end
-structure NuVariablesTag : NU_VARIABLES_TAG = struct
+
+structure Nu_Variable_Factor : NU_VARIABLE_FACTOR = struct
 open NuHelp NuBasics QuantExpansion
 
 (* TODO: replace all dummyT and Syntax.check_term by decided types.*)
@@ -30,13 +31,15 @@ fun gen_set_variables_tag prep_seps vars always ctxt sequent =
     val ctxt = Variable.declare_typ (mk_name_tylabels names) ctxt
 
     val always = always
-          |> Option.map (Syntax.parse_term ctxt #> tuple_abs vars #> mk_cases_named names)
+          |> Option.map (Syntax.parse_term ctxt
+                      #> tuple_abs (map (apsnd (apsnd (K dummyT))) vars)
+                      #> mk_cases_named names)
 
     val X' = tuple_abs vars X' |> mk_cases_named names
     val X' = case always of SOME alw =>
               Abs ("\<xx>", dummyT,
                 Const(@{const_name Subjection}, dummyT) $ (X' $ Bound 0)
-                  $ (Const (@{const_abbrev Normal_Premise}, dummyT) $ (alw $ Bound 0)))
+                  $ (alw $ Bound 0))
              | NONE => X'
 
     val [var] = Variable.variant_frees ctxt [] [("Variant_Cast_vars", dummyT)]
@@ -70,9 +73,10 @@ fun gen_set_variables_tag prep_seps vars always ctxt sequent =
                          })
   in
     sequent
+      |> Thm.solve_constraints
   end
 
-fun variables_tag_pattern_match raw_vars pattern always ctxt sequent =
+fun vary_by_pattern_match raw_vars pattern always ctxt sequent =
   let
     val origin_var_names = map (fn (x,_,_) => Binding.name_of x) raw_vars
     val (new_var_names,ctxt) =
@@ -97,7 +101,7 @@ fun variables_tag_pattern_match raw_vars pattern always ctxt sequent =
     gen_set_variables_tag prep_seps vars always ctxt sequent
   end
 
-fun variables_tag_terms raw_vars always ctxt sequent =
+fun vary_by_parts raw_vars always ctxt sequent =
   let
     val vars = map (
             Syntax.parse_term ctxt

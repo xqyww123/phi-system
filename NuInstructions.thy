@@ -12,18 +12,6 @@ definition op_drop :: "('VAL,'RES_N,'RES) proc" where
   "op_drop = \<phi>M_get_Val (\<lambda>_. Success)"
 
 
-lemma (in std) op_drop:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_drop \<lbrace> VAL X \<longmapsto> Void \<rbrace>\<close>
-  unfolding op_drop_def by \<phi>reason
-
-definition op_dup :: "('VAL,'RES_N,'RES) proc"
-  where "op_dup = \<phi>M_get_Val (\<lambda>v. \<phi>M_put_Val v \<ggreater> \<phi>M_put_Val v)"
-
-lemma (in std) op_dup:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dup \<lbrace> VAL X \<longmapsto> VAL X\<heavy_comma> VAL X \<rbrace>\<close>
-  unfolding op_dup_def by \<phi>reason
-
-
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Integer arithmetic\<close>
@@ -31,48 +19,10 @@ subsubsection \<open>Integer arithmetic\<close>
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_int bits const = \<phi>M_put_Val (V_int.mk (bits,const))"
 
-lemma (in std) op_const_int_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> Void \<longmapsto> n \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
-  unfolding op_const_int_def Premise_def Synthesis_def
-  by \<phi>reason
-
-lemma (in std) [\<phi>reason 1200
-    on \<open>Synthesis_Parse (numeral ?n::nat) ?X\<close>
-       \<open>Synthesis_Parse (0::nat) ?X\<close>
-]:
-  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>[32]) X
-\<Longrightarrow> Synthesis_Parse n X\<close>
-  unfolding Synthesis_Parse_def ..
-
-lemma (in std) [\<phi>reason
-    on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS numeral ?n \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 1 \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 0 \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_def GOAL_CTXT_def
-  using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
-
-
 definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
                           \<ggreater> \<phi>M_put_Val (V_int.mk (addrspace_bits,c))"
   \<comment> \<open> `op_const_size_t` checks the overflow during the compilation towards certain decided platform.  \<close>
-
-lemma (in std) op_const_size_t:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> Void \<longmapsto> n \<Ztypecolon> Size \<rbrace>\<close>
-  unfolding op_const_size_t_def Premise_def
-  by \<phi>reason
-
-lemma (in std) [\<phi>reason 1200
-    on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS (numeral ?n) \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 0 \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 1 \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_def GOAL_CTXT_def
-  using op_const_size_t[THEN \<phi>frame, simplified] .
 
 definition op_add :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_add bits =
@@ -80,11 +30,6 @@ definition op_add :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_b.
       \<phi>M_put_Val (V_int.mk (bits, ((val_a + val_b) mod 2^bits)))
   ))"
-
-lemma (in std) op_add:
-  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
-  unfolding op_add_def Premise_def
-  by \<phi>reason
 
 (* lemma (in std)
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c left  \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>
@@ -100,26 +45,12 @@ definition op_sub :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
       \<phi>M_put_Val (V_int.mk (bits, ((2^bits + val_b - val_a) mod 2^bits)))
   ))"
 
-lemma (in std) op_sub:
-  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x - y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
-  unfolding op_sub_def Premise_def
-  apply \<phi>reason
-  apply (simp add: \<phi>expns)
-  by (metis Nat.add_diff_assoc2 add.commute less_imp_diff_less mod_add_self2 mod_less)
-
-
 definition op_udiv :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_udiv bits =
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_a.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_b.
       \<phi>M_put_Val (V_int.mk (bits, (val_b div val_a)))
   ))"
-
-lemma (in std) op_udiv:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x div y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
-  unfolding op_udiv_def Premise_def
-  apply \<phi>reason apply (simp add: \<phi>expns)
-  using div_le_dividend le_less_trans by blast
 
 definition op_lt :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_lt bits =
@@ -128,10 +59,6 @@ definition op_lt :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
       \<phi>M_put_Val (V_int.mk (1, (if val_b < val_a then 1 else 0)))
   ))"
 
-lemma (in std) op_lt:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
-  unfolding op_lt_def
-  by \<phi>reason
 
 definition op_le :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_le bits =
@@ -140,21 +67,12 @@ definition op_le :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
       \<phi>M_put_Val (V_int.mk (1, (if val_b \<le> val_a then 1 else 0)))
   ))"
 
-lemma (in std) op_le:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le b \<lbrace> x \<Ztypecolon> \<nat>[b]\<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
-  unfolding op_le_def
-  by \<phi>reason
 
 definition op_not :: "('VAL,'RES_N,'RES) proc"
   where "op_not =
     \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) (\<lambda>v.
     \<phi>M_put_Val (V_int.mk (1, 1 - v))
   )"
-
-lemma (in std) op_not:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not \<lbrace> x \<Ztypecolon> \<bool> \<longmapsto> \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
-  unfolding op_not_def
-  by \<phi>reason
 
 definition op_and :: "('VAL,'RES_N,'RES) proc"
   where "op_and =
@@ -163,22 +81,12 @@ definition op_and :: "('VAL,'RES_N,'RES) proc"
     \<phi>M_put_Val (V_int.mk (1, v+u-1))
   ))"
 
-lemma (in std) op_and:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and \<lbrace> a \<Ztypecolon> \<bool>\<heavy_comma> b \<Ztypecolon> \<bool> \<longmapsto> a \<and> b \<Ztypecolon> \<bool> \<rbrace>\<close>
-  unfolding op_and_def
-  by \<phi>reason
-
 definition op_or :: "('VAL,'RES_N,'RES) proc"
   where "op_or =
     \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) (\<lambda>v.
     \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) (\<lambda>u.
     \<phi>M_put_Val (V_int.mk (1, min 1 (v+u)))
   ))"
-
-lemma (in std) op_or:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or \<lbrace> a \<Ztypecolon> \<bool>\<heavy_comma> b \<Ztypecolon> \<bool> \<longmapsto> a \<or> b \<Ztypecolon> \<bool> \<rbrace>\<close>
-  unfolding op_or_def
-  by \<phi>reason
 
 definition op_equal :: "'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_equal TY =
@@ -189,20 +97,6 @@ definition op_equal :: "'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
     (\<lambda>(vs,res). \<phi>M_assert (Can_EqCompare res v u) (vs,res)) \<ggreater>
     \<phi>M_put_Val (V_int.mk (1, (if EqCompare v u then 1 else 0)))
 ))"
-
-
-lemma (in std) op_equal:
-  \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
-\<Longrightarrow> \<phi>Equal T can_eq eq
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e can_eq a b
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal TY \<lbrace> a \<Ztypecolon> T\<heavy_comma> b \<Ztypecolon> T \<longmapsto> eq a b \<Ztypecolon> \<bool> \<rbrace>\<close>
-  unfolding op_equal_def
-  apply \<phi>reason
-    apply (simp add: \<phi>SemType_def subset_iff)
-   apply \<phi>reason
-    apply (simp add: \<phi>SemType_def subset_iff)
-apply (unfold \<phi>Equal_def Premise_def, simp)
-  by \<phi>reason
 
 
 subsubsection \<open>Address / Pointer\<close>
@@ -623,97 +517,13 @@ lemma (in std) op_get_var''_\<phi>app:
   by (rule \<phi>M_get_var, assumption, rule \<phi>M_put_Val, simp add: \<phi>expns)
 end
 
-
-syntax "__var__" :: "idt \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>r _" [1000] 999)
-
-parse_ast_translation \<open>
-  let open Ast
-    fun mk_Var name =
-      Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>,
-        Appl [Variable "Var", name, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>]]
-   in [(\<^syntax_const>\<open>__var__\<close>, fn ctxt => fn [name] => mk_Var name)]
-  end
-\<close>
-
-
-syntax "__get_var__" :: "idt \<Rightarrow> logic" ("$_" [1000] 999)
-consts "get_var____\<phi>" :: "varname \<Rightarrow> 'b"
-
-translations "$x" => "CONST get_var____\<phi> x"
-
-definition Variable_of :: \<open>'a \<Rightarrow> varname \<Rightarrow> 'a\<close> (infix "<val-of-var>" 22)
-  where [iff]: \<open>(S <val-of-var> V) = S\<close>
-
-definition Set_Variable :: \<open>varname \<Rightarrow> 'a \<Rightarrow> 'a\<close> ("$_ := _" [1000, 51] 50)
-  where [iff]: \<open>($x := y) = y\<close>
-
-lemma (in std) [\<phi>reason 2000 on \<open>Synthesis_Parse (?var::varname) ?Y\<close>]:
-  \<open>Synthesis_Parse var (OBJ x \<Ztypecolon> Var var T)\<close>
-  unfolding Synthesis_Parse_def ..
-
-
-ML_file_debug "library/local_value.ML"
-
-
-context std begin
-
-declare [ [\<phi>not_define_new_const] ]
-
-proc op_get_var:
-  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  argument \<open>x \<Ztypecolon> Var vname T\<close>
-  return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
-  \<medium_left_bracket>
-  ;; to_Identity \<exists>v op_get_var''
-  \<medium_right_bracket> using \<phi> by simp .
-
-lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ?x <val-of-var> ?var \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<open> SUBGOAL G G2
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y\<heavy_comma> \<blangle> OBJ x \<Ztypecolon> Var var T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
-\<Longrightarrow> SOLVE_SUBGOAL G2
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> X \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> SYNTHESIS x <val-of-var> var \<Ztypecolon> T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Variable_of_def Synthesis_def GOAL_CTXT_def FOCUS_TAG_def
-  using op_get_var_\<phi>app[THEN mp, THEN \<phi>frame, folded mult.assoc] \<phi>CONSEQ_left
-  by fastforce
-
-
-lemma op_set_var''_\<phi>app:
+lemma (in std) op_set_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var vname TY \<lbrace> v \<Ztypecolon> Var vname Identity\<heavy_comma> u \<Ztypecolon> Identity \<longmapsto> u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
   unfolding op_set_var_def Premise_def
   by (rule \<phi>M_get_Val, rule \<phi>M_get_var, assumption,
       rule \<phi>SEQ, rule \<phi>M_assert, simp_all add: \<phi>expns, rule \<phi>M_set_var)
-
-proc op_set_var:
-  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
-  argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> U\<close>
-  return   \<open>y \<Ztypecolon> Var var U\<close>
-  \<medium_left_bracket>
-  ;; to_Identity \<exists>v
-  ;; \<open>var\<close> to_Identity \<exists>u
-  ;; op_set_var''
-  \<medium_right_bracket> using \<phi> by simp .
-
-
-
-proc op_set_var__synthesis[
-  \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ($?var := ?y) \<Ztypecolon> ?U \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-]:
-assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> X1\<heavy_comma> SYNTHESIS VAL y \<Ztypecolon> U \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<close>
-  and      \<open>SUBGOAL G G2\<close>
-  and S[unfolded GOAL_CTXT_def FOCUS_TAG_def]:
-        \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X1\<heavy_comma> VAL y \<Ztypecolon> U \<longmapsto> \<blangle> Y\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma> VAL y \<Ztypecolon> U \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2\<close>
-  and   \<open>SOLVE_SUBGOAL G2\<close>
-  and [\<phi>reason on \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  and [\<phi>reason on \<open>\<phi>SemType (y \<Ztypecolon> U) ?TY\<close>]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
- goal G
-argument \<open>X\<close>
-return   \<open>Y\<heavy_comma> y \<Ztypecolon> Var var U \<heavy_comma> SYNTHESIS ($var := y) \<Ztypecolon> U\<close>
-  \<medium_left_bracket> ;; G S op_set_var op_get_var \<medium_right_bracket> unfolding Set_Variable_def by simp .
-
 
 
 lemma (in std) op_var_scope':
@@ -775,44 +585,24 @@ lemma (in std) op_var_scope''_\<phi>app:
       rule \<phi>SEQ, assumption)
   \<medium_left_bracket> ;; \<exists>u op_free_var \<medium_right_bracket> .. .
 
-proc op_var_scope:
-  assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>\<close>
-  argument \<open>X\<heavy_comma> x \<Ztypecolon> T\<close>
-  return   \<open>Y\<close>
-  \<medium_left_bracket>
-  ;; to_Identity \<exists>v op_var_scope'' \<medium_left_bracket> ;; BLK to_Identity \<medium_right_bracket> ..
-  \<medium_right_bracket> .. .
 
-lemma "__\<phi>op_var_scope__":
-  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>)
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TY F \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> T) \<longmapsto> Y \<rbrace>\<close>
-  using op_var_scope_\<phi>app
-  by (smt (z3) OBJ_comm mult.assoc)
 
-lemma "__\<phi>op_var_scope__0":
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<rbrace>\<close>
-  by fastforce
 
-\<phi>processor assign_variable 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
-  fn (ctxt,sequent) => ((\<^keyword>\<open>\<rightarrow>\<close> |-- Parse.list1 Parse.binding)
->> (fn vars => fn () => Local_Value.mk_var_scope vars (ctxt,sequent)))
-\<close>
 
-  
+context std begin
 
-proc ff:
-  argument \<open>x \<Ztypecolon> \<nat>[32]\<heavy_comma> y \<Ztypecolon> \<nat>[32]\<heavy_comma> z \<Ztypecolon> \<nat>[32]\<close>
-  return \<open>y \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket> ;; \<rightarrow> z, y, x
-note [ [\<phi>trace_reasoning, \<phi>trace_reasoning_candicates] ]
-  ;; \<open>$x := $y\<close>
-  \<medium_right_bracket> .. .
+
+
+
+
+
+
+
 
 
 subsection \<open>Branches & Loops\<close>
+
+paragraph \<open>Non-Branching Selection\<close>
 
 definition op_sel :: "('VAL,'RES_N,'RES) proc"
   where "op_sel =
@@ -821,15 +611,14 @@ definition op_sel :: "('VAL,'RES_N,'RES) proc"
     \<phi>M_get_Val (\<lambda>a.
     \<phi>M_put_Val (if snd c = 1 then a else b))))"
 
-lemma (in std) op_sel:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sel \<lbrace> VAL A\<heavy_comma> VAL B\<heavy_comma> c \<Ztypecolon> \<bool> \<longmapsto> VAL (if c then A else B) \<rbrace>\<close>
-  unfolding op_sel_def
-  by \<phi>reason
+paragraph \<open>Branch\<close>
 
 definition op_if :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_if brT brF =
     \<phi>M_getV (\<tau>Int 1) V_int.dest (\<lambda>c.
     if snd c = 1 then brT else brF)"
+
+paragraph \<open>While Loop\<close>
 
 inductive SemDoWhile :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) comp \<Rightarrow> ('VAL,'RES_N,'RES) state \<Rightarrow> bool" where
   "f s = Success (V_int.mk (1,0) # vs, res) \<Longrightarrow> SemDoWhile f s (Success (vs,res))"
@@ -847,6 +636,23 @@ lemma "\<nexists> y. SemDoWhile (\<lambda>(vs,res). Success (V_int.mk (1,1) # vs
 
 definition op_do_while :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc" where
   "op_do_while f s = (if (\<exists>y. SemDoWhile f s y) then The (SemDoWhile f s) else PartialCorrect)"
+
+lemma SemDoWhile_deterministic:
+  assumes "SemDoWhile c s s1"
+      and "SemDoWhile c s s2"
+    shows "s1 = s2"
+proof -
+  have "SemDoWhile c s s1 \<Longrightarrow> (\<forall>s2. SemDoWhile c s s2 \<longrightarrow> s1 = s2)"
+    by (induct rule: SemDoWhile.induct) (subst SemDoWhile.simps, simp)+
+  thus ?thesis
+    using assms by simp
+qed
+
+lemma SemDoWhile_deterministic2: " SemDoWhile body s x \<Longrightarrow> The ( SemDoWhile body s) = x"
+  using SemDoWhile_deterministic by blast
+
+
+paragraph \<open>Recursion\<close>
 
 inductive SemRec :: "(('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) comp \<Rightarrow> ('VAL,'RES_N,'RES) state \<Rightarrow> bool" where
   SemRec_I0: "(\<And>g. F g x = y) \<Longrightarrow> SemRec F x y"
@@ -904,7 +710,7 @@ lemma (in std) op_cons_tup_cons:
   unfolding cons_tup_cons
   apply \<phi>reason apply (rule \<phi>frame, assumption)
   apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
-  apply \<phi>reason by blast
+  apply \<phi>reason apply (simp add: \<phi>expns) by blast
 
 
 subsubsection \<open>Destruct Tuple\<close>
@@ -972,7 +778,7 @@ lemma (in std) op_get_element:
 \<Longrightarrow> \<phi>Index_getter idx X Y f
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_element idx TY \<lbrace> VAL x \<Ztypecolon> X \<longmapsto> VAL f x \<Ztypecolon> Y \<rbrace> \<close>
   unfolding op_get_element_def \<phi>Index_getter_def Premise_def
-  apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff) apply assumption
+  apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
   by \<phi>reason
 
 lemma (in std) op_set_element:

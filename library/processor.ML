@@ -1,10 +1,9 @@
 signature NU_PROCESSOR = sig
   type binding = Binding.binding
   exception Bypass of context_state option
-  exception ProcessTerminated of context_state * Token.T list
+  exception Terminate_Process of context_state * (Proof.state -> Proof.state)
   exception ProcessFail of binding * context_state * exn
-  exception Process_State_Call of Token.T list * context_state * (Proof.state -> Proof.state)
-  exception Process_State_Call' of context_state * (Proof.state -> Proof.state)
+  exception Process_State_Call of context_state * (Proof.state -> Proof.state)
   type proc = (context_state -> (unit -> context_state) parser)
 
   val trace : bool Config.T
@@ -43,10 +42,11 @@ open Thm NuBasics
 
 exception Bypass of context_state option
 type binding = Binding.binding
-exception ProcessTerminated of context_state * Token.T list
+exception Terminate_Process  of context_state * (Proof.state -> Proof.state)
+exception Terminate_Process' of Token.T list * context_state * (Proof.state -> Proof.state)
 exception ProcessFail of binding * context_state * exn
-exception Process_State_Call of Token.T list * context_state * (Proof.state -> Proof.state)
-exception Process_State_Call' of context_state * (Proof.state -> Proof.state)
+exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
+exception Process_State_Call of context_state * (Proof.state -> Proof.state)
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_processing\<close> (K false);
 
@@ -123,20 +123,18 @@ fun process_impl procs (stat,toks) limit =
                     else ()
             in
             raise Processed (execute(), toks)
-              handle Process_State_Call' (meta,f) =>
-                  raise Process_State_Call (toks,meta,f)
+              handle Process_State_Call (meta,f) => raise Process_State_Call' (toks,meta,f)
+                   | Terminate_Process (stat,f) => raise Terminate_Process' (toks,stat,f)
             end handle Bypass NONE => (ctxt,sequent)
               | Bypass (SOME stat') => stat'
               | Processed stat_toks => raise Processed stat_toks
-              | Process_State_Call arg => raise Process_State_Call arg
-              | ProcessTerminated stat_toks => raise ProcessTerminated stat_toks
+              | Process_State_Call' arg => raise Process_State_Call' arg
               | ex => (@{print} (ctxt,sequent); @{print} binding; Exn.reraise (@{print} ex))
             (* | ex => Exn.reraise (ProcessFail (binding,th,ex)) *)
           else (ctxt,sequent)) procs stat
       in (stat',toks)
       end
       handle Processed stat_toks => process_impl procs stat_toks (limit + 1)
-        | ProcessTerminated stat_toks => stat_toks
         | NDBG sequent => ((fst stat, sequent),[Token.eof])
 
 fun internal_process (ctxt,sequent) toks =
@@ -146,7 +144,9 @@ fun internal_process (ctxt,sequent) toks =
     ((ctxt,sequent),toks) 0)
 
 fun simple_process stat toks =
-  internal_process stat toks handle Process_State_Call (toks,stat,f) => (stat,toks)
+  internal_process stat toks
+  handle Process_State_Call' (toks,stat,f) => (stat,toks)
+       | Terminate_Process'  (toks,stat,f) => (stat,toks)
 
 fun powerful_process toks stat =
   let
@@ -158,10 +158,15 @@ fun powerful_process toks stat =
               |> (fn ((ctxt,sequent),_) => (sequent,ctxt))
           )
       |-> NuBasics.set_nu_fact
-    handle Process_State_Call (toks,(ctxt,sequent),f) =>
-      powerful_process toks (stat |> Proof.map_context (K ctxt)
-                                  |> NuBasics.set_nu_fact sequent
-                                  |> f)
+    handle Process_State_Call' (toks,(ctxt,sequent),f) =>
+              powerful_process toks (stat |> Proof.map_context (K ctxt)
+                                          |> NuBasics.set_nu_fact sequent
+                                          |> f)
+         | Terminate_Process' (toks,(ctxt,sequent),f) =>
+              (Scan.catch Parse.eof toks;
+               stat |> Proof.map_context (K ctxt)
+                    |> NuBasics.set_nu_fact sequent
+                    |> f)
   end
 
 val process_attr = wrap_attr (fn stat => simple_process stat #> apfst K)
