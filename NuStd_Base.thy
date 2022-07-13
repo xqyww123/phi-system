@@ -82,12 +82,13 @@ proc op_get_var:
 lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ?x <val-of-var> ?var \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> SUBGOAL G G2
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y\<heavy_comma> \<blangle> OBJ x \<Ztypecolon> Var var T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<blangle> Y' \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
 \<Longrightarrow> SOLVE_SUBGOAL G2
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> X \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> SYNTHESIS x <val-of-var> var \<Ztypecolon> T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> X \<longmapsto> Y' \<heavy_comma> SYNTHESIS x <val-of-var> var \<Ztypecolon> T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Variable_of_def Synthesis_def GOAL_CTXT_def FOCUS_TAG_def
   using op_get_var_\<phi>app[THEN \<phi>frame, folded mult.assoc] \<phi>CONSEQ_left
-  by fastforce
+  by (smt (z3) \<phi>CONSEQ_right \<phi>cast_intro_frame_R)
 
 
 
@@ -99,10 +100,10 @@ proc op_set_var:
   argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> U\<close>
   return   \<open>y \<Ztypecolon> Var var U\<close>
   \<medium_left_bracket>
-  ;; to_Identity \<exists>v
-  ;; \<open>var\<close> to_Identity \<exists>u
-  ;; op_set_var''
-  \<medium_right_bracket> using \<phi> by simp .
+    to_Identity \<exists>v
+    \<open>var\<close> to_Identity \<exists>u
+    op_set_var''
+  \<medium_right_bracket>. .
 
 proc op_set_var__synthesis[
   \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ($?var := ?y) \<Ztypecolon> ?U \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -117,7 +118,7 @@ assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapst
  goal G
 argument \<open>X\<close>
 return   \<open>Y\<heavy_comma> y \<Ztypecolon> Var var U \<heavy_comma> SYNTHESIS ($var := y) \<Ztypecolon> U\<close>
-  \<medium_left_bracket> ;; G S op_set_var op_get_var \<medium_right_bracket> unfolding Set_Variable_def by simp .
+  \<medium_left_bracket> G S op_set_var op_get_var \<medium_right_bracket> unfolding Set_Variable_def by simp .
 
 
 
@@ -128,9 +129,7 @@ proc op_var_scope:
     and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>\<close>
   argument \<open>X\<heavy_comma> x \<Ztypecolon> T\<close>
   return   \<open>Y\<close>
-  \<medium_left_bracket>
-  ;; to_Identity \<exists>v op_var_scope'' \<medium_left_bracket> ;; BLK to_Identity \<medium_right_bracket> ..
-  \<medium_right_bracket> .. .
+  \<medium_left_bracket> to_Identity \<exists>v op_var_scope'' \<medium_left_bracket> BLK to_Identity \<medium_right_bracket>. \<medium_right_bracket>. .
 
 lemma "__\<phi>op_var_scope__":
   \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>)
@@ -177,7 +176,7 @@ proc \<phi>__stack_value:
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
   argument \<open>X\<heavy_comma> VAL x \<Ztypecolon> T\<close>
   return   \<open>Y\<heavy_comma> x \<Ztypecolon> T\<close>
-  \<medium_left_bracket> ;; \<rightarrow> t ;; F \<open>$t\<close> \<medium_right_bracket> .. .
+  \<medium_left_bracket> \<rightarrow> t ;; F \<open>$t\<close> \<medium_right_bracket>. .
 
 declare [[\<phi>not_define_new_const=false]]
 
@@ -197,7 +196,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R1\<heavy_comma> SYNTHESIS VAL \<not>b \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> ;; F1 \<not> \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<not> \<medium_right_bracket>. .
 
 paragraph \<open>And\<close>
 
@@ -214,7 +213,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<and> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; \<and> \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<and> \<medium_right_bracket> .. .
 
 paragraph \<open>Or\<close>
 
@@ -231,7 +230,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<or> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; \<or> \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<or> \<medium_right_bracket>. .
 
 
 subsubsection \<open>Constant Integer\<close>
@@ -292,7 +291,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x + y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; + \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. + \<medium_right_bracket>. .
 
 
 paragraph \<open>Subtraction\<close>
@@ -313,7 +312,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x - y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; - \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. - \<medium_right_bracket>. .
 
 
 paragraph \<open>Division\<close>
@@ -332,7 +331,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x div y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; / \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. / \<medium_right_bracket>. .
 
 
 paragraph \<open>Less Than\<close>
@@ -350,7 +349,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x < y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; < \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. < \<medium_right_bracket>. .
 
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x > ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -360,7 +359,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x > y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; < \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. < \<medium_right_bracket>. .
 
 paragraph \<open>Less Equal\<close>
 
@@ -377,7 +376,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<le> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; \<le> \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<le> \<medium_right_bracket>. .
 
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<ge> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -387,7 +386,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<ge> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; \<le> \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<le> \<medium_right_bracket>. .
 
 
 subsubsection \<open>General Arithmetic\<close>
@@ -421,7 +420,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x = y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> ;; F1 \<phi>__stack_value \<medium_left_bracket> ;; F2 \<medium_right_bracket> .. ;; = \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. = \<medium_right_bracket>. .
 
 
 
@@ -452,7 +451,7 @@ proc "if":
       and [\<phi>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge C Y\<^sub>T Y\<^sub>F = ?Y\<close>]: \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge C Y\<^sub>T Y\<^sub>F = Y\<close>
   argument \<open>X\<close>
   return \<open>Y\<close>
-  \<medium_left_bracket> ;; C branch brT brF \<medium_right_bracket> .. .
+  \<medium_left_bracket> C branch brT brF \<medium_right_bracket>. .
 
 end
 
@@ -461,12 +460,9 @@ section \<open>Procedures and Operations\<close>
 
 context std begin
 
-subsection \<open>Basic sequential instructions\<close>
+subsection \<open>Control Flow\<close>
 
-subsubsection \<open>do while\<close>
-
-
-
+subsubsection \<open>Loops\<close>
 
 lemma (in std) "__DoWhile__rule_\<phi>app":
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<heavy_comma> P x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<rbrace>
@@ -501,37 +497,6 @@ lemma (in std) "__DoWhile__rule_\<phi>app":
 
 declare [[\<phi>not_define_new_const]]
 
-
-
-
-definition Function_over :: \<open>('a,'b) \<phi> \<Rightarrow> 'c \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<phi>\<close> (infix "<func-over>" 40)
-  where \<open>(T <func-over> x) = (\<lambda>f. f x \<Ztypecolon> T)\<close>
-
-abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
-
-lemma Function_over_expn[\<phi>expns]:
-  \<open>p \<in> (f \<Ztypecolon> T <func-over> x) \<longleftrightarrow> p \<in> (f x \<Ztypecolon> T)\<close>
-  unfolding Function_over_def \<phi>Type_def by simp
-
-lemma [\<phi>reason 2000]:
-  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> fx \<Ztypecolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> lambda_abstraction x fx f
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> f \<Ztypecolon> T <func-over> x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
-  unfolding Subty_def lambda_abstraction_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 2000]:
-  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e f x \<Ztypecolon> T \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e f \<Ztypecolon> T <func-over> x \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
-  unfolding Subty_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200 on \<open>Synthesis_Parse ?input (VAL ?f \<Ztypecolon> ?T <func-over> ?x)\<close>]:
-  \<open> Synthesis_Parse input (VAL fx \<Ztypecolon> T)
-\<Longrightarrow> lambda_abstraction x fx f
-\<Longrightarrow> Synthesis_Parse input (VAL f \<Ztypecolon> T <func-over> x)\<close>
-  unfolding Synthesis_Parse_def ..
-
-
-
 proc (in std) do_while:
 assumes V: \<open>Variant_Cast vars X X'\<close>
     and \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond\<close>
@@ -539,10 +504,13 @@ premises X[useful]: \<open>cond vars\<close>
 assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X' x \<longmapsto> \<exists>*x'. X' x'\<heavy_comma> cond x' \<Ztypecolon> \<bool> \<rbrace>\<close>
 argument \<open>X\<close>
 return   \<open>X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> cond x'\<close>
-\<medium_left_bracket> ;; unfold V[unfolded Variant_Cast_def]
-  ;; "__DoWhile__rule"[where I=\<open>\<lambda>_. True\<close>, where P=cond, simplified]
-  \<medium_left_bracket> ;; \<exists>x B \<medium_right_bracket> ..
-  ;; \<medium_right_bracket> .. .
+  \<medium_left_bracket> unfold V[unfolded Variant_Cast_def]
+    "__DoWhile__rule"[where I=\<open>\<lambda>_. True\<close>, where P=cond, simplified]
+    \<medium_left_bracket> B \<medium_right_bracket>.
+  !! \<medium_right_bracket>. .
+
+declare [[\<phi>not_define_new_const=false]]
+
 
 proc while:
   assumes V: "Variant_Cast vars X' X"
@@ -550,25 +518,25 @@ proc while:
     and B: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<rbrace>"
   argument \<open>X'\<close>
   return \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
-  \<medium_left_bracket> ;; unfold V[unfolded Variant_Cast_def]
-    ;; C
-    ;; branch \<medium_left_bracket> ;; do_while var vars \<open>cond vars\<close> \<medium_left_bracket> ;; B \<exists>vars' C \<medium_right_bracket> .. \<medium_right_bracket> ..
-              \<medium_left_bracket> \<medium_right_bracket> var vars subj \<open>\<not> cond vars\<close> using \<phi> by simp
-  \<medium_right_bracket> .. .
+  \<medium_left_bracket> unfold V[unfolded Variant_Cast_def]
+    C
+    branch \<medium_left_bracket> do_while  vars \<open>cond vars\<close> \<medium_left_bracket> B \<exists>vars' C \<medium_right_bracket>. \<medium_right_bracket>.
+           \<medium_left_bracket> \<medium_right_bracket> var vars subj \<open>\<not> cond vars\<close> using \<phi> by simp
+  \<medium_right_bracket>. .
 
 
-declare [[\<phi>not_define_new_const=false]]
+(*Example*)
 
 proc
   argument \<open>x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>x - 1 \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket> (* command `;;` leads a statement. It is technically required. *)
-    ;; \<rightarrow> varx (*assign the value x to a variable named varx*)
-    ;; if \<open>0 < $varx\<close> \<medium_left_bracket> ;; \<open>$varx - 1\<close> \<medium_right_bracket> by standard
-                      \<medium_left_bracket> ;; \<open>0::nat\<close> \<medium_right_bracket> by standard
+  \<medium_left_bracket>  \<rightarrow> varx ;; (*assign the value x to a variable named varx*)
+               (* command `;;` leads a statement, or ends the previous statement. *)
+     if \<open>0 < $varx\<close> \<medium_left_bracket> \<open>$varx - 1\<close> \<medium_right_bracket>.
+                    \<medium_left_bracket> \<open>0::nat\<close> \<medium_right_bracket>.
     (* the cartouche like \<open>0 < $varx\<close> invokes a synthesis process
        to make that value automatically *)
-  \<medium_right_bracket> by simp .
+  \<medium_right_bracket>. .
 
 
 
@@ -576,49 +544,14 @@ proc
   premises \<open>x < 10\<close>
   argument \<open>x \<Ztypecolon> \<nat>[20]\<close>
   return \<open>10 \<Ztypecolon> \<nat>[20]\<close>
-  \<medium_left_bracket> ;; \<rightarrow> v
-  note [[\<phi>trace_processing]]
-  ;; while var x
-  \<medium_left_bracket> ;; \<open>$v < 10\<close> \<medium_right_bracket> using \<phi> by simp
-  \<medium_left_bracket> ;; \<open>$v+1\<close> \<rightarrow> v \<medium_right_bracket> using \<phi> by simp
-  ;; \<exists>y
-  have [simp]: \<open>y = 10\<close> using \<phi> by simp
-  ;;
-  thm \<phi>
+  \<medium_left_bracket> \<rightarrow> v ;;
+    while x, y in \<open>OBJ x \<Ztypecolon> _\<close> always \<open>x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
+    \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>.
+    \<medium_left_bracket> \<open>$v+1\<close> \<rightarrow> v \<medium_right_bracket>. ;; (* this ;; leads an empty statement which does nothing except simplification *)
+    have [simp]: \<open>x = 10\<close> using \<phi> by simp ;;
+    \<open>$v\<close>
+  \<medium_right_bracket>. .
 
-
-thm do_while'_\<phi>compilation
-
-lemma do_while_\<phi>app:
-  "Variant_Cast vars X X' \<longrightarrow>
-  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
-  (\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X' x \<longmapsto> \<exists>* x'. X' x' \<heavy_comma> cond x' \<tycolon> \<bool> \<rbrace>) \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack) body \<lbrace> X \<longmapsto> \<exists>* x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x' \<rbrace>"
-  unfolding Variant_Cast_def Premise_def apply simp
-  using "__DoWhile___\<phi>app"[of "cond" _ "X'", unfolded Premise_def, simplified] by blast
-
-
-lemma do_while_\<phi>app_old:
-  "Variant_Cast vars X X' \<longrightarrow>
-  \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond vars \<longrightarrow>
-  (\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X' x \<longmapsto> \<exists>* x'. X' x' \<heavy_comma> cond x' \<tycolon> \<bool> \<rbrace>) \<longrightarrow>
-  \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while TYPE('a::stack)  body \<lbrace> X \<longmapsto> \<exists>* x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> cond x' \<rbrace>"
-  unfolding Variant_Cast_def Premise_def apply simp
-  using "__DoWhile___\<phi>app"[of "cond" _ "X'", unfolded Premise_def, simplified] by blast
-
-
-subsubsection \<open>while\<close>
-
-
-proc while: \<open>X'\<close> :: "'s::stack" \<longmapsto> \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
-  requires [unfolded Variant_Cast_def, simp]: "Variant_Cast vars X' X"
-    and Cond_\<phi>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Cond :: 's::stack \<longmapsto> 1 word \<times> 's) \<lbrace> X x \<longmapsto> X x' \<heavy_comma> cond x' \<tycolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True\<rbrace>"
-    and Body_\<phi>app: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (Body :: 's \<longmapsto> 's) \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<rbrace>"
-  \<bullet> Cond if \<medium_left_bracket> do_while var x' \<open>cond x'\<close> \<medium_left_bracket> Body Cond \<medium_right_bracket> subj \<open>\<not> cond x'\<close> \<medium_right_bracket>
-  \<bullet> \<medium_left_bracket> generalize \<open>x'\<close> x' \<open>\<lambda>x'. \<not> cond x'\<close> \<medium_right_bracket>
-  finish
 
 subsubsection \<open>recursion\<close>
 
@@ -641,18 +574,63 @@ lemma SemRec_deterministic2: " SemRec body s x \<Longrightarrow> The ( SemRec bo
   using SemRec_deterministic by blast
 
 
-declare Heap'_expn[simp del]
 
+definition \<phi>SemTypes :: \<open>('VAL,'FIC_N,'FIC) assn \<Rightarrow> 'TY list \<Rightarrow> bool\<close>
+  where \<open>\<phi>SemTypes S TYs \<longleftrightarrow> (fst ` S) \<subseteq> Collect (list_all2 (\<lambda>t x. x \<in> Well_Type t) TYs)\<close>
 
-lemma op_recursion:
-  " (\<And>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X x'' \<longmapsto> Y x'' \<rbrace>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<lbrace> X x' \<longmapsto> Y x' \<rbrace>) \<Longrightarrow>
-    (\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion UNIQ_ID TYPE('x::stack) TYPE('y::stack) F \<lbrace> X x \<longmapsto> Y x \<rbrace>)"
-  unfolding op_recursion_def Procedure_def atomize_all
+lemma [\<phi>reason 1200]:
+  \<open>\<phi>SemTypes (OBJ X) []\<close>
+  unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def
+  by (auto simp add: \<phi>expns times_list_def)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>SemTypes R TYs
+\<Longrightarrow> \<phi>SemTypes (R\<heavy_comma> OBJ X) TYs\<close>
+  unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def
+  by (auto simp add: \<phi>expns times_list_def)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>SemType X TY
+\<Longrightarrow> \<phi>SemTypes (VAL X) [TY]\<close>
+  unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def \<phi>SemType_def
+  by (auto simp add: \<phi>expns times_list_def)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>SemType X TY
+\<Longrightarrow> \<phi>SemTypes R TYs
+\<Longrightarrow> \<phi>SemTypes (R\<heavy_comma> VAL X) (TY # TYs)\<close>
+  unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def \<phi>SemType_def
+  by (auto simp add: \<phi>expns times_list_def)
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>x. \<phi>SemTypes (S x) TYs)
+\<Longrightarrow> \<phi>SemTypes (ExSet S) TYs\<close>
+  unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def \<phi>SemType_def
+  by (auto simp add: \<phi>expns times_list_def)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>SemTypes S TYs
+\<Longrightarrow> \<phi>SemTypes (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) TYs\<close>
+  unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def \<phi>SemType_def
+  by (auto simp add: \<phi>expns times_list_def)
+
+ML \<open>@{term op_recursion}\<close>
+
+lemma "__op_recursion__":
+  " (\<And>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X x'' \<longmapsto> Y x'' \<rbrace>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<lbrace> X x' \<longmapsto> Y x' \<rbrace>)
+\<Longrightarrow> (\<And>x. \<phi>SemTypes (X x) TXs)
+\<Longrightarrow> (\<And>x. \<phi>SemTypes (Y x) TYs)
+\<Longrightarrow> \<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion TXs TYs F \<lbrace> X x \<longmapsto> Y x \<rbrace>"
+  unfolding op_recursion_def \<phi>Procedure_def atomize_all
   apply (auto simp add: SemRec_deterministic2)
-  subgoal for x a b xa
-    apply (rotate_tac 1) apply (induct rule:  SemRec.induct) by (auto 0 6) done
+  subgoal for x a b xa R
+    apply (rotate_tac 3) apply (induct rule:  SemRec.induct) by (auto 0 6) .
 
-declare Heap'_expn[simp]
+
+rec_proc dec:
+  var i
+  argument \<open>i \<Ztypecolon> \<nat>[b]\<close>
+  return \<open>0 \<Ztypecolon> \<nat>[b]\<close>
 
 
 subsection \<open>Constant Pushing\<close>
@@ -771,7 +749,7 @@ lemma FieldIndex_right: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (in
 lemma FieldIndex_tupl: "FieldIndex f X A gt mp \<Longrightarrow> FieldIndex (index_tuple f) X \<lbrace> A \<rbrace> gt mp"
   unfolding FieldIndex_def \<phi>index_def index_tuple_def by (auto simp add: tuple_forall nu_exps)
 
-\<phi>processor field_index 110 \<open>FieldIndex f X \<lbrace> A \<rbrace> gt mp \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn major => Parse.nat >> (fn i => fn _ =>
+\<phi>processor field_index 5000 \<open>FieldIndex f X \<lbrace> A \<rbrace> gt mp \<Longrightarrow> PROP P\<close> \<open>fn ctx => fn major => Parse.nat >> (fn i => fn _ =>
   let open NuBasics NuHelp
     val arity = Logic.dest_implies (prop_of major) |> #1
         |> dest_Trueprop |> dest_quinop \<^const_name>\<open>FieldIndex\<close> |> #3

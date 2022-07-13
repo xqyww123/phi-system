@@ -141,6 +141,8 @@ lemma \<phi>Bool_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns)
 
+abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
+
 
 subsection \<open>Pointers\<close>
 

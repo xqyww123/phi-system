@@ -3,7 +3,8 @@ signature NU_PROCESSOR = sig
   exception Bypass of context_state option
   exception Terminate_Process of context_state * (Proof.state -> Proof.state)
   exception ProcessFail of binding * context_state * exn
-  exception Process_State_Call of context_state * (Proof.state -> Proof.state)
+  exception Process_State_Call  of context_state * (Proof.state -> Proof.state)
+  exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
   type proc = (context_state -> (unit -> context_state) parser)
 
   val trace : bool Config.T
@@ -16,6 +17,8 @@ signature NU_PROCESSOR = sig
   val internal_process : context_state -> context_state parser
   val simple_process   : context_state -> context_state parser
   val powerful_process : Token.T list -> Proof.state -> Proof.state
+  val powerful_process_p : (Proof.state -> Proof.state) parser
+  val powerful_process_p_inert : (Proof.state -> Proof.state) parser
   val process_by_input : Token.T list -> context_state -> context_state
   val process_no_input : context_state -> context_state
   val process_attr : attribute parser
@@ -168,6 +171,19 @@ fun powerful_process toks stat =
                     |> NuBasics.set_nu_fact sequent
                     |> f)
   end
+
+fun powerful_process_p toks =
+      (Proof.map_context (Config.put Nu_Reasoner.auto_level 2) #>
+          powerful_process (toks @ [Token.eof])
+      ,if hd toks |> Token.is_eof then [Token.eof] else [])
+
+fun powerful_process_p_inert toks =
+      (if hd toks |> Token.is_eof
+        then I
+        else Proof.map_context (Config.put Nu_Reasoner.auto_level 2)
+          #> powerful_process (toks @ [Token.eof])
+      ,if hd toks |> Token.is_eof then [Token.eof] else [])
+
 
 val process_attr = wrap_attr (fn stat => simple_process stat #> apfst K)
 fun process_by_input tokens stat = simple_process stat (tokens @ [Token.eof]) |> #1

@@ -5,7 +5,7 @@ theory NuSys
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
     "var" "always" "\<Longrightarrow>" "goal" "\<exists>" "heap" "stack"
     "argument" "return" "on" "affirm" "no" :: quasi_command
-  and ";;" "\<medium_left_bracket>" "\<medium_right_bracket>" :: prf_decl % "proof"
+  and ";;" "\<medium_left_bracket>" "\<medium_right_bracket>" "\<medium_right_bracket>." :: prf_decl % "proof"
   and "\<phi>processor" "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
 abbrevs
@@ -202,13 +202,15 @@ subsubsection \<open>Elementary\<close>
 definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 13)
   where " (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = {p. p \<in> T \<and> P}"
 
+lemma Subjection_expn[\<phi>expns]:
+  "p \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> p \<in> T \<and> P"
+  unfolding Subjection_def by simp
+
 definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 10)
   where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
 notation ExSet (binder "\<exists>\<^sup>s" 10)
 
-lemma Subjection_expn[\<phi>expns]:
-  "p \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> p \<in> T \<and> P"
-  unfolding Subjection_def by simp
+
 
 section \<open>Features of the Reasoning and the Programming\<close>
 
@@ -329,6 +331,194 @@ lemma (in std) [\<phi>reason_elim!, elim!]:
   \<open>Inhabited Void \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 
+
+
+subsubsection \<open>Subjection : coheres additional proposition\<close>
+
+paragraph \<open>Assertion Level\<close>
+
+lemma Subjection_inhabited[elim!,\<phi>reason_elim!]:
+  \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason]: "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
+  unfolding Subty_def Premise_def by (simp add: \<phi>expns)
+
+lemma [simp]: "(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j True) = T" unfolding Auto_def by (auto simp add: \<phi>expns)
+lemma (in std) [simp]: "(VAL (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (VAL S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff) blast
+lemma (in std) [simp]: "(OBJ (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (OBJ S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff)
+
+
+lemma [simp,frame_var_rewrs]: "(R * (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (R * T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)"
+  by (simp add: set_eq_iff \<phi>expns) blast
+
+(* declare split_paired_All[simp del] split_paired_Ex[simp del] *)
+
+lemma (in std) Subjection_simp_proc_arg[simp]:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> Y \<rbrace>)"
+  (* and Subjection_simp_func_arg[simp]: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<and>\<^sup>s P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<longmapsto> Y \<rbrace>)" *)
+  unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
+
+lemma (in std) [simp]:
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P"
+  unfolding CurrentConstruction_def by (cases s, simp_all add: \<phi>expns pair_All) blast
+
+lemma (in std) [simp]:
+  "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> (B \<and> C)"
+  by simp
+
+lemma subj_\<phi>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<^bold>( T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<^bold>)"
+  unfolding Subty_def Premise_def Implicit_Protector_def by simp
+
+
+ML \<open>Theory.setup (Sign.add_trrules (let open Ast 
+      fun nuty x y = Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable x, Variable y]
+      fun wrap_ele tm = Appl [Constant \<^const_syntax>\<open>Ele\<close>, tm]
+      fun wrap_nuty x y = wrap_ele (nuty x y)
+      fun subj x = Appl [Constant \<^const_syntax>\<open>Subjection\<close>, x, Variable "P"]
+    in [
+      Syntax.Parse_Print_Rule (
+        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", subj (nuty "x" "T"), Variable "U"],
+        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", subj (wrap_nuty "x" "T"), Variable "U"]),
+      Syntax.Parse_Print_Rule (
+        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", Variable "U", subj (nuty "x" "T")],
+        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", Variable "U", subj (wrap_nuty "x" "T")])
+  ] end))\<close>
+
+
+paragraph \<open>\<phi>-Type Level\<close>
+
+definition SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 25)
+  where \<open> (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<lambda>x. x \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<close>
+
+lemma SubjectionTY_expn[\<phi>programming_simps, \<phi>expns]:
+  \<open>(x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (x \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  unfolding set_eq_iff SubjectionTY_def \<phi>Type_def by simp
+
+lemma SubjectionTY_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding SubjectionTY_expn using Subjection_inhabited .
+
+
+
+subsubsection \<open>Existential Nu-set\<close>
+
+
+paragraph \<open>Assertion Level\<close>
+
+lemma [\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
+
+syntax
+  "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _" [2,0,3] 2)
+
+translations
+  " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P " \<rightleftharpoons> "\<exists>* idts. X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P"
+  " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. CONST True " \<rightleftharpoons> "\<exists>* idts. X"
+
+
+ML \<open>Theory.setup (Sign.add_trrules (let open Ast 
+      fun nuty x y = Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable x, Variable y]
+      fun wrap_ele tm = Appl [Constant \<^const_syntax>\<open>Ele\<close>, tm]
+      fun wrap_nuty x y = wrap_ele (nuty x y)
+      fun subj x = Appl [Constant \<^syntax_const>\<open>_SetcomprNu\<close>, x, Variable "idts", Variable "P"]
+    in [
+      Syntax.Parse_Print_Rule (
+        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", subj (nuty "x" "T"), Variable "U"],
+        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", subj (wrap_nuty "x" "T"), Variable "U"]),
+      Syntax.Parse_Print_Rule (
+        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", Variable "U", subj (nuty "x" "T")],
+        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", Variable "U", subj (wrap_nuty "x" "T")])
+  ] end))\<close>
+
+text (in std)
+ \<open>The set of \<phi>-type in an assertion like \<^term>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> T x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Q x \<rbrace>\<close> is represented
+  by \<^const>\<open>ExSet\<close> and we show a \<phi>-type \<^term>\<open>S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x\<close> represents actually all concrete values that
+  belongs to \<^term>\<open>S\<close> a set of \<phi>-types (i.e. the union of \<^term>\<open>S\<close>) by following lemma\<close>
+
+lemma " Union { S x |x. P x } = (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x) "
+  by (simp add: set_eq_iff \<phi>expns) blast
+
+
+lemma ExSet_pair: "ExSet T = (\<exists>*c1 c2. T (c1,c2) )" by (auto simp add: \<phi>expns)
+lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists \<phi>expns)
+
+lemma (in std_sem) [simp]: "p \<in> \<S>  (ExSet T) \<longleftrightarrow> (\<exists>z. p \<in> \<S>  (T z) )" by (cases p, simp_all add: \<phi>expns set_eq_iff)
+lemma (in std_sem) [simp]: "p \<in> !\<S> (ExSet T) \<longleftrightarrow> (\<exists>z. p \<in> !\<S> (T z) )" by (cases p, simp_all add: \<phi>expns set_eq_iff)
+lemma (in std) [simp]: "(VAL ExSet T) = (\<exists>*c. VAL T c)" by (simp add: \<phi>expns set_eq_iff) blast
+lemma (in std) [simp]: "(OBJ ExSet T) = (\<exists>*c. OBJ T c)" by (simp add: \<phi>expns set_eq_iff)
+lemma [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: \<phi>expns set_eq_iff) blast
+lemma [simp,frame_var_rewrs]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
+
+lemma ExSet_ExSet[simp]:
+  \<open>(X a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a b. P a b \<and> Q b)\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns, blast)
+
+lemma ExSet_SubjSet[simp]:
+  \<open>(X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j P b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. P b \<and> Q b)\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
+
+lemma (in std) \<phi>ExTyp_strip:
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExSet T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T c)"
+  unfolding CurrentConstruction_def atomize_eq by (cases p, simp_all add: \<phi>expns pair_All) blast
+
+lemma [\<phi>reason 200]: "(\<And>c. \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T c \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P c) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e (ExSet T) \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<exists>c. P c)"
+  unfolding Subty_def by (simp add: \<phi>expns) blast
+
+lemma ExTyp_I_\<phi>app: "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T c \<longmapsto> (\<exists>*c. T c)"
+  unfolding Subty_def by (simp add: \<phi>expns) blast
+
+paragraph \<open>\<phi>-Type Level\<close>
+
+definition ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
+  where \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
+
+syntax
+  "_SetcomprPhiTy" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _ " [2,0,2] 2)
+  "_SetcomprPhiTy'" :: "logic \<Rightarrow> idts \<Rightarrow> logic \<Rightarrow> logic"
+
+parse_ast_translation \<open>
+  let open Ast
+    fun idts_to_abs x (Appl [Constant "_idts", a, b]) = Appl [Constant "_abs", a, idts_to_abs x b]
+      | idts_to_abs x c = Appl [Constant "_abs", c, x]
+    fun parse_SetcomprPhiTy ctxt [Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, x, T],idts,P] =
+          Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
+                idts_to_abs x idts,
+                Appl [Constant "\<^const>NuSys.ExTyp_binder", idts,
+                      (case P of (Appl [Constant "_constrain", Variable "True", _]) => T
+                               | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, T, P])]]
+      | parse_SetcomprPhiTy ctxt [X,idts,P] =
+          Appl [Constant "\<^const>NuSys.ExTyp_binder", idts,
+                (case P of (Appl [Constant "_constrain", Variable "True", _]) => X
+                         | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
+  in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
+\<close>
+
+(* TODO
+term \<open>x \<Ztypecolon> (X a) \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j a b c. P a\<close>
+
+translations
+  " _SetcomprPhiTy' x idts X" <= "x \<Ztypecolon> (\<exists>\<phi> idts. X)"
+
+print_ast_translation \<open>
+  [(\<^syntax_const>\<open>_SetcomprPhiTy'\<close>, (fn _ => fn x => hd (@{print} x)))]
+\<close>
+
+term \<open>x \<Ztypecolon> (X a) \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j a b c. P a\<close>
+
+*)
+
+lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
+  \<open>(x \<Ztypecolon> ExTyp T) = (\<exists>*a. x a \<Ztypecolon> T a)\<close>
+  unfolding set_eq_iff ExTyp_def \<phi>Type_def by (simp add: \<phi>expns)
+
+lemma ExTyp_inhabited[elim!, \<phi>reason_elim!]:
+  \<open>Inhabited (x \<Ztypecolon> ExTyp T) \<Longrightarrow> (Inhabited (\<exists>*a. x a \<Ztypecolon> T a) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding ExTyp_expn .
+
+
+
+
 subsection \<open>Tags - Part I\<close>
 
 
@@ -403,7 +593,7 @@ lemma contract_premise_imp:
   unfolding Premise_def atomize_imp .
 
 lemma contract_premise_all:
-  "(\<And>x. Premise mode (P x)) \<equiv> Trueprop (\<forall>x. Premise mode (P x)) "
+  "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
   unfolding Premise_def atomize_all .
 
 lemma Premise_refl[\<phi>reason 2000 on \<open>Premise ?mode (?x = ?x)\<close>]:
@@ -430,41 +620,6 @@ lemma label_eq: "x = y" for x :: label by (cases x, cases y) auto
 
 syntax "_LABEL_" :: "idt \<Rightarrow> label" ("LABEL _" [0] 1000)
 translations "LABEL name" == "CONST LABEL_TAG (\<lambda>name. ())"
-
-
-subsubsection \<open>Name tag by type\<close>
-
-datatype ('x, 'name) named (infix "<named>" 30) = tag 'x
-
-syntax "__named__" :: \<open>logic \<Rightarrow> tuple_args \<Rightarrow> logic\<close> (infix "<<named>>" 25)
-
-
-ML_file \<open>library/name_by_type.ML\<close>
-
-text (in std) \<open>It is a tool to annotate names on a term, e.g. \<^term>\<open>x <<named>> a, b\<close>.
-  The name tag is useful in lambda abstraction (including quantification) because the
-  name of an abstraction variable is not preserved in many transformation especially
-  simplifications. The name can be useful in the deductive programming, e.g. universally
-  quantified variables in a sub-procedure like
-    \<^prop>\<open>\<forall>x y. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> VAL x \<Ztypecolon> T\<heavy_comma> VAL y \<Ztypecolon> U \<longmapsto> any \<rbrace> \<Longrightarrow> any'\<close>.
-  When starting to write the sub-procedure f by command `\<medium_left_bracket>', \<phi>-system fixes variables x and y
-    with the name of x and y. The name of x and y then are significant for programming.
-  To preserve the name, we use \<^typ>\<open>'any <named> '\<phi>name_x \<times> '\<phi>name_y\<close>,
-    \<^prop>\<open>\<forall>(x :: 'any <named> '\<phi>name_x). sth\<close>.
-  We use free type variable to annotate it because it is most stable. No transformation
-    changes the name of a free type variable.
-
-  This feature is mostly used in Variable Extraction (see ???).\<close>
-
-
-lemma named_forall: "All P \<longleftrightarrow> (\<forall>x. P (tag x))" by (metis named.exhaust)
-lemma named_exists: "Ex P \<longleftrightarrow> (\<exists>x. P (tag x))" by (metis named.exhaust)
-lemma [simp]: "tag (case x of tag x \<Rightarrow> x) = x" by (cases x) simp
-lemma named_All: "(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (tag x))"
-proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
-next fix x :: "'a <named> 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
-qed
-
 
 subsubsection \<open>Parameter Input\<close>
 
@@ -512,69 +667,6 @@ subsubsection \<open>Hidden name hint\<close> (*depreciated*)
 
 definition NameHint :: "label \<Rightarrow> 'a \<Rightarrow> 'a" where "NameHint name x = x" \<comment>\<open>name tag\<close>
 translations "X" <= "CONST NameHint name X"
-
-
-subsubsection \<open>Rename \<lambda>-Abstraction\<close>
-
-definition rename_abstraction :: \<open>'\<phi>name_name itself \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool\<close>
-  where \<open>rename_abstraction name origin_abs named_abs \<longleftrightarrow> (origin_abs = named_abs)\<close>
-
-lemma rename_abstraction:
-  \<open>rename_abstraction name X X\<close>
-  unfolding rename_abstraction_def ..
-
-\<phi>reasoner_ML rename_abstraction 1100 (conclusion "rename_abstraction TYPE(?'name) ?Y ?Y'") =
-\<open>fn (ctxt, sequent) =>
-  case Thm.major_prem_of sequent
-    of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>rename_abstraction\<close>, _)
-                $ (Const (\<^const_name>\<open>Pure.type\<close>, Type(\<^type_name>\<open>itself\<close>, [name'])))
-                $ Abs(_,ty,body)
-                $ Var Y'') =>
-      let
-        val name = case PhiSyntax.dest_name_tylabels name'
-                     of [x] => x
-                      | _ => raise TYPE ("only one name is expected", [name'], [])
-        val Y' = Abs(name, ty, body) |> Thm.cterm_of ctxt
-        val sequent = @{thm rename_abstraction} RS Thm.instantiate (TVars.empty, Vars.make [(Y'',Y')]) sequent
-      in
-        Seq.single (ctxt, sequent)
-      end
-     | term => raise THM ("Bad shape of rename_abstraction antecedent", 0, [sequent])
-\<close>
-
-
-subsubsection \<open>\<lambda>-Abstraction Tag\<close>
-
-definition "lambda_abstraction" :: " 'a \<Rightarrow> 'b \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool "
-  where "lambda_abstraction x Y Y' \<longleftrightarrow> Y' x = Y"
-
-lemma lambda_abstraction: "lambda_abstraction x (Y' x) Y'"
-  unfolding lambda_abstraction_def ..
-
-lemma [\<phi>reason 1200 on \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
-  \<open> lambda_abstraction y fx f1
-\<Longrightarrow> lambda_abstraction x f1 f2
-\<Longrightarrow> lambda_abstraction (x,y) fx (case_prod f2)\<close>
-  unfolding lambda_abstraction_def by simp
-
-\<phi>reasoner_ML lambda_abstraction 1100 (conclusion "lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
-  case Thm.major_prem_of sequent
-    of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ Var Y'') =>
-      let
-        val Y' = Abs("", fastype_of x, abstract_over (x, Y)) |> Thm.cterm_of ctxt
-        val sequent = @{thm lambda_abstraction} RS Thm.instantiate (TVars.empty, Vars.make [(Y'',Y')]) sequent
-      in
-        Seq.single (ctxt, sequent)
-      end
-     | \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ _ $ _ $ _) =>
-        Seq.single (ctxt, @{thm lambda_abstraction} RS sequent)
-\<close>
-
-lemma [\<phi>reason 1200 on \<open>lambda_abstraction (tag ?x) ?fx ?f\<close>]:
-  \<open> lambda_abstraction x fx f
-\<Longrightarrow> rename_abstraction TYPE('name) f f'
-\<Longrightarrow> lambda_abstraction (tag x :: 'any <named> 'name) fx (case_named f')\<close>
-  unfolding lambda_abstraction_def rename_abstraction_def by simp
 
 
 
@@ -944,15 +1036,133 @@ lemma start_unique_solution_reasoning:
 \<Longrightarrow> Unique_Solution P\<close>
   unfolding Unique_Solution_def .
 
+subsubsection \<open>Name tag by type\<close>
+
+datatype ('x, 'name) named (infix "<named>" 30) = tag 'x
+
+syntax "__named__" :: \<open>logic \<Rightarrow> tuple_args \<Rightarrow> logic\<close> (infix "<<named>>" 25)
+
+
+ML_file \<open>library/name_by_type.ML\<close>
+
+text (in std) \<open>It is a tool to annotate names on a term, e.g. \<^term>\<open>x <<named>> a, b\<close>.
+  The name tag is useful in lambda abstraction (including quantification) because the
+  name of an abstraction variable is not preserved in many transformation especially
+  simplifications. The name can be useful in the deductive programming, e.g. universally
+  quantified variables in a sub-procedure like
+    \<^prop>\<open>\<forall>x y. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> VAL x \<Ztypecolon> T\<heavy_comma> VAL y \<Ztypecolon> U \<longmapsto> any \<rbrace> \<Longrightarrow> any'\<close>.
+  When starting to write the sub-procedure f by command `\<medium_left_bracket>', \<phi>-system fixes variables x and y
+    with the name of x and y. The name of x and y then are significant for programming.
+  To preserve the name, we use \<^typ>\<open>'any <named> '\<phi>name_x \<times> '\<phi>name_y\<close>,
+    \<^prop>\<open>\<forall>(x :: 'any <named> '\<phi>name_x). sth\<close>.
+  We use free type variable to annotate it because it is most stable. No transformation
+    changes the name of a free type variable.
+
+  This feature is mostly used in Variable Extraction (see ???).\<close>
+
+
+lemma named_forall: "All P \<longleftrightarrow> (\<forall>x. P (tag x))" by (metis named.exhaust)
+lemma named_exists: "Ex P \<longleftrightarrow> (\<exists>x. P (tag x))" by (metis named.exhaust)
+lemma [simp]: "tag (case x of tag x \<Rightarrow> x) = x" by (cases x) simp
+lemma named_All: "(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (tag x))"
+proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
+next fix x :: "'a <named> 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
+qed
+
+ML_file "./library/QuantExpansion.ML"
+
+named_theorems named_expansion \<open>Rewriting rules expanding named quantification.\<close>
+
+
+subsubsection \<open>Rename \<lambda>-Abstraction\<close>
+
+definition rename_abstraction :: \<open>'\<phi>name_name itself \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>rename_abstraction name origin_abs named_abs \<longleftrightarrow> (origin_abs = named_abs)\<close>
+
+lemma rename_abstraction:
+  \<open>rename_abstraction name X X\<close>
+  unfolding rename_abstraction_def ..
+
+\<phi>reasoner_ML rename_abstraction 1100 (conclusion "rename_abstraction TYPE(?'name) ?Y ?Y'") =
+\<open>fn (ctxt, sequent) =>
+  case Thm.major_prem_of sequent
+    of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>rename_abstraction\<close>, _)
+                $ (Const (\<^const_name>\<open>Pure.type\<close>, Type(\<^type_name>\<open>itself\<close>, [name'])))
+                $ Abs(_,ty,body)
+                $ Var Y'') =>
+      let
+        val name = case PhiSyntax.dest_name_tylabels name'
+                     of [x] => x
+                      | _ => raise TYPE ("only one name is expected", [name'], [])
+        val Y' = Abs(name, ty, body) |> Thm.cterm_of ctxt
+        val sequent = @{thm rename_abstraction} RS Thm.instantiate (TVars.empty, Vars.make [(Y'',Y')]) sequent
+      in
+        Seq.single (ctxt, sequent)
+      end
+     | term => raise THM ("Bad shape of rename_abstraction antecedent", 0, [sequent])
+\<close>
+
+
+subsubsection \<open>\<lambda>-Abstraction Tag\<close>
+
+definition "lambda_abstraction" :: " 'a \<Rightarrow> 'b \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool "
+  where "lambda_abstraction x Y Y' \<longleftrightarrow> Y' x = Y"
+
+lemma lambda_abstraction: "lambda_abstraction x (Y' x) Y'"
+  unfolding lambda_abstraction_def ..
+
+lemma [\<phi>reason 1200 on \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
+  \<open> lambda_abstraction y fx f1
+\<Longrightarrow> lambda_abstraction x f1 f2
+\<Longrightarrow> lambda_abstraction (x,y) fx (case_prod f2)\<close>
+  unfolding lambda_abstraction_def by simp
+
+\<phi>reasoner_ML lambda_abstraction 1100 (conclusion "lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
+  case Thm.major_prem_of sequent
+    of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ Var Y'') =>
+      let
+        val Y' = Abs("", fastype_of x, abstract_over (x, Y)) |> Thm.cterm_of ctxt
+        val sequent = @{thm lambda_abstraction} RS Thm.instantiate (TVars.empty, Vars.make [(Y'',Y')]) sequent
+      in
+        Seq.single (ctxt, sequent)
+      end
+     | \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ _ $ _ $ _) =>
+        Seq.single (ctxt, @{thm lambda_abstraction} RS sequent)
+\<close>
+
+lemma [\<phi>reason 1200 on \<open>lambda_abstraction (tag ?x) ?fx ?f\<close>]:
+  \<open> lambda_abstraction x fx f
+\<Longrightarrow> rename_abstraction TYPE('name) f f'
+\<Longrightarrow> lambda_abstraction (tag x :: 'any <named> 'name) fx (case_named f')\<close>
+  unfolding lambda_abstraction_def rename_abstraction_def by simp
+
+
+
 
 subsection \<open>Synthesis\<close>
 
-definition Synthesis :: \<open>'a \<Rightarrow> 'a\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
+definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
 
-text (in std) \<open>\<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> notes the procedure f is a one that can
-  be used to synthesis Z.\<close>
+text (in std) \<open>
+  SYNTHESIS tags a part of the post \<phi>-type of a triple, representing this part is synthesised
+    by the procedure of this triple. The procedure generates some values (or state) that meet
+    the assertion tagged by SYNTHESIS.
+  For example, \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> represents the procedure f generates
+    something that meets Z.
+
+  During the reasoning, if a SYNTHESIS tags occurs in an antecedent, particularly in the post \<phi>-type,
+    like \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y\<heavy_comma> SYNTHESIS Z \<rbrace> \<Longrightarrow> C\<close>, it represents the reasoner needs to find
+    some f that generates something meeting Z.
+
+  Therefore, reasoning rules having the conclusion tagged by SYNTHESIS (in its post-type),
+    like \<^prop>\<open>A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close>, tell procedure f can generate what meets Z.
+\<close>
 
 translations "SYNTHESIS (x \<Ztypecolon> T)" \<rightleftharpoons> "SYNTHESIS ELE (x \<Ztypecolon> T)"
+
+
+
+subsubsection \<open>Parse the Term to be Synthesised\<close>
 
 definition (in std) Synthesis_Parse :: \<open>'a \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool\<close>
   where \<open>Synthesis_Parse input parsed \<longleftrightarrow> True\<close>
@@ -968,62 +1178,6 @@ text (in std) \<open>The system synthesises a program whose output meets the ass
 
   By disabling \<phi>_synthesis_parsing to disable this feature.\<close>
 
-lemma (in std) "__\<phi>synthesis__":
-  " (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1)
-\<Longrightarrow> SUBGOAL TOP_GOAL G
-\<Longrightarrow> Synthesis_Parse X X'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S2\<heavy_comma> X'"
-  unfolding Synthesis_def GOAL_CTXT_def
-  using \<phi>apply_proc .
-
-lemma (in std) "__\<phi>synthesis__antecedent":
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> Synthesis_Parse X X'
-\<Longrightarrow> SYNTHESIS P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> P\<close>
-  unfolding Synthesis_def GOAL_CTXT_def .
-
-(* lemma (in std) "__\<phi>synthesis__proc":
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> Synthesis_Parse X X'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS X' \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> X' \<rbrace>\<close>
-  unfolding Synthesis_def GOAL_CTXT_def . *)
-
-(*TODO: constraints for unique solution of Synthesis_Parse*)
-
-subsubsection \<open>Rules to solve an antecedent by synthesis\<close>
-
-lemma (in std) [\<phi>reason 1400]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS X \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> SYNTHESIS \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS X \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_def .
-
-lemma (in std) [\<phi>reason 1200]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS X \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> SYNTHESIS \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> X \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_def .
-
-lemma (in std) [\<phi>reason 1200]:
-  \<open> (\<And>x. SYNTHESIS P x \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)
-\<Longrightarrow> SYNTHESIS (All P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_def GOAL_CTXT_def ..
-
-lemma (in std) [\<phi>reason 1200]:
-  \<open> (P \<Longrightarrow> SYNTHESIS Q \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)
-\<Longrightarrow> SYNTHESIS (P \<longrightarrow> Q) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_def GOAL_CTXT_def ..
-
-
-
-subsubsection \<open>Parse the Term to be Synthesised\<close>
 
 context std begin
 
@@ -1047,6 +1201,75 @@ lemma [\<phi>reason 30
   unfolding Synthesis_Parse_def ..
 
 end
+
+
+
+subsubsection \<open>Synthesis Operations\<close>
+
+text (in std) \<open>
+  There are two sort of synthesis operations. The usual one, given by "__\<phi>synthesis__",
+    tells how to synthesis user-inputted X' on antecedent-free
+    sequent \<^prop>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1\<close>
+  Another sort of operations works on antecedented sequents \<^prop>\<open>Q \<Longrightarrow> C\<close>.
+    It tells, given user input X, by what way to synthesis something meeting X to solve this
+    antecedent Q.
+\<close>
+
+
+lemma (in std) "__\<phi>synthesis__":
+  " \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1
+\<Longrightarrow> SUBGOAL TOP_GOAL G
+\<Longrightarrow> Synthesis_Parse X X'
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S2\<heavy_comma> X'"
+  unfolding Synthesis_def GOAL_CTXT_def
+  using \<phi>apply_proc .
+
+definition \<open>Synthesis_by X Q = Q\<close>
+
+lemma (in std) "__\<phi>synthesis__antecedent":
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> Synthesis_by X Q  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> Q\<close>
+  unfolding Synthesis_by_def GOAL_CTXT_def .
+
+text \<open>And there are rules telling how to synthesis the Q by the X in detail\<close>
+
+subparagraph \<open>Rules to solve an antecedent by synthesis\<close>
+
+lemma (in std) [\<phi>reason 1400]:
+  \<open> Synthesis_Parse X X'
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS X' \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Synthesis_by X (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS X' \<rbrace>) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_by_def .
+
+lemma (in std) [\<phi>reason 1200]:
+  \<open> Synthesis_Parse X X'
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS X' \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Synthesis_by X (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> R2\<heavy_comma> X' \<rbrace>) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_by_def Synthesis_def .
+
+lemma (in std) [\<phi>reason 1200]:
+  \<open> (\<And>x. Synthesis_by X (P x) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)
+\<Longrightarrow> Synthesis_by X (All P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_by_def GOAL_CTXT_def ..
+
+lemma (in std) [\<phi>reason 1200]:
+  \<open> (P \<Longrightarrow> Synthesis_by X Q \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)
+\<Longrightarrow> Synthesis_by X (P \<longrightarrow> Q) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Synthesis_by_def GOAL_CTXT_def ..
+
+
+subsubsection \<open>General Synthesis Rules\<close>
+
+lemma (in std) [\<phi>reason 1200]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL f x \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL (case_named f (tag x)) \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P\<close>
+  by simp
 
 
 
@@ -1322,190 +1545,6 @@ lemma heap_split_by_addr_set: "P (h |` (MemAddress ` S)) (h |` (- (MemAddress ` 
   using heap_split_by_set .*)
 
 
-
-
-subsubsection \<open>Subjection : coheres additional proposition\<close>
-
-paragraph \<open>Assertion Level\<close>
-
-lemma Subjection_inhabited[elim!,\<phi>reason_elim!]:
-  \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason]: "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
-  unfolding Subty_def Premise_def by (simp add: \<phi>expns)
-
-lemma [simp]: "(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j True) = T" unfolding Auto_def by (auto simp add: \<phi>expns)
-lemma (in std) [simp]: "(VAL (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (VAL S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff) blast
-lemma (in std) [simp]: "(OBJ (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (OBJ S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff)
-
-
-lemma [simp,frame_var_rewrs]: "(R * (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (R * T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)"
-  by (simp add: set_eq_iff \<phi>expns) blast
-
-(* declare split_paired_All[simp del] split_paired_Ex[simp del] *)
-
-lemma (in std) Subjection_simp_proc_arg[simp]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> Y \<rbrace>)"
-  (* and Subjection_simp_func_arg[simp]: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<and>\<^sup>s P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<longmapsto> Y \<rbrace>)" *)
-  unfolding Auto_def \<phi>Procedure_def by (simp add: \<phi>expns) blast
-
-lemma (in std) [simp]:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P"
-  unfolding CurrentConstruction_def Auto_def by (cases s, simp_all add: \<phi>expns pair_All) blast
-
-lemma (in std) [simp]:
-  "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> (B \<and> C)"
-  by simp
-
-lemma subj_\<phi>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T \<longmapsto> \<^bold>( T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<^bold>)"
-  unfolding Subty_def Premise_def Implicit_Protector_def by simp
-
-
-ML \<open>Theory.setup (Sign.add_trrules (let open Ast 
-      fun nuty x y = Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable x, Variable y]
-      fun wrap_ele tm = Appl [Constant \<^const_syntax>\<open>Ele\<close>, tm]
-      fun wrap_nuty x y = wrap_ele (nuty x y)
-      fun subj x = Appl [Constant \<^const_syntax>\<open>Subjection\<close>, x, Variable "P"]
-    in [
-      Syntax.Parse_Print_Rule (
-        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", subj (nuty "x" "T"), Variable "U"],
-        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", subj (wrap_nuty "x" "T"), Variable "U"]),
-      Syntax.Parse_Print_Rule (
-        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", Variable "U", subj (nuty "x" "T")],
-        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", Variable "U", subj (wrap_nuty "x" "T")])
-  ] end))\<close>
-
-
-paragraph \<open>\<phi>-Type Level\<close>
-
-definition SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 25)
-  where \<open> (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<lambda>x. x \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<close>
-
-lemma SubjectionTY_expn[\<phi>programming_simps, \<phi>expns]:
-  \<open>(x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (x \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  unfolding set_eq_iff SubjectionTY_def \<phi>Type_def by simp
-
-lemma SubjectionTY_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding SubjectionTY_expn using Subjection_inhabited .
-
-
-subsubsection \<open>Existential Nu-set\<close>
-
-paragraph \<open>Assertion Level\<close>
-
-lemma [\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
-
-syntax
-  "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _" [2,0,3] 2)
-
-translations
-  " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P " \<rightleftharpoons> "\<exists>* idts. X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P"
-  " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. CONST True " \<rightleftharpoons> "\<exists>* idts. X"
-
-
-ML \<open>Theory.setup (Sign.add_trrules (let open Ast 
-      fun nuty x y = Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable x, Variable y]
-      fun wrap_ele tm = Appl [Constant \<^const_syntax>\<open>Ele\<close>, tm]
-      fun wrap_nuty x y = wrap_ele (nuty x y)
-      fun subj x = Appl [Constant \<^syntax_const>\<open>_SetcomprNu\<close>, x, Variable "idts", Variable "P"]
-    in [
-      Syntax.Parse_Print_Rule (
-        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", subj (nuty "x" "T"), Variable "U"],
-        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", subj (wrap_nuty "x" "T"), Variable "U"]),
-      Syntax.Parse_Print_Rule (
-        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", Variable "U", subj (nuty "x" "T")],
-        Appl [Constant "\<^const>local.\<phi>Procedure", Variable "f", Variable "U", subj (wrap_nuty "x" "T")])
-  ] end))\<close>
-
-text (in std)
- \<open>The set of \<phi>-type in an assertion like \<^term>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> T x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Q x \<rbrace>\<close> is represented
-  by \<^const>\<open>ExSet\<close> and we show a \<phi>-type \<^term>\<open>S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x\<close> represents actually all concrete values that
-  belongs to \<^term>\<open>S\<close> a set of \<phi>-types (i.e. the union of \<^term>\<open>S\<close>) by following lemma\<close>
-
-lemma " Union { S x |x. P x } = (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x) "
-  by (simp add: set_eq_iff \<phi>expns) blast
-
-
-lemma ExSet_pair: "ExSet T = (\<exists>*c1 c2. T (c1,c2) )" by (auto simp add: \<phi>expns)
-lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists \<phi>expns)
-
-lemma (in std_sem) [simp]: "p \<in> \<S>  (ExSet T) \<longleftrightarrow> (\<exists>z. p \<in> \<S>  (T z) )" by (cases p, simp_all add: \<phi>expns set_eq_iff)
-lemma (in std_sem) [simp]: "p \<in> !\<S> (ExSet T) \<longleftrightarrow> (\<exists>z. p \<in> !\<S> (T z) )" by (cases p, simp_all add: \<phi>expns set_eq_iff)
-lemma (in std) [simp]: "(VAL ExSet T) = (\<exists>*c. VAL T c)" by (simp add: \<phi>expns set_eq_iff) blast
-lemma (in std) [simp]: "(OBJ ExSet T) = (\<exists>*c. OBJ T c)" by (simp add: \<phi>expns set_eq_iff)
-lemma [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: \<phi>expns set_eq_iff) blast
-lemma [simp,frame_var_rewrs]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
-
-lemma ExSet_ExSet[simp]:
-  \<open>(X a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a b. P a b \<and> Q b)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns, blast)
-
-lemma ExSet_SubjSet[simp]:
-  \<open>(X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j P b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. P b \<and> Q b)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-
-lemma (in std) \<phi>ExTyp_strip:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExSet T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T c)"
-  unfolding CurrentConstruction_def atomize_eq by (cases p, simp_all add: \<phi>expns pair_All) blast
-
-lemma [\<phi>reason 200]: "(\<And>c. \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T c \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P c) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e (ExSet T) \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<exists>c. P c)"
-  unfolding Subty_def by (simp add: \<phi>expns) blast
-
-lemma ExTyp_I_\<phi>app: "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T c \<longmapsto> (\<exists>*c. T c)"
-  unfolding Subty_def by (simp add: \<phi>expns) blast
-
-paragraph \<open>\<phi>-Type Level\<close>
-
-definition ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
-  where \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
-
-syntax
-  "_SetcomprPhiTy" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _ " [2,0,2] 2)
-  "_SetcomprPhiTy'" :: "logic \<Rightarrow> idts \<Rightarrow> logic \<Rightarrow> logic"
-
-parse_ast_translation \<open>
-  let open Ast
-    fun idts_to_abs x (Appl [Constant "_idts", a, b]) = Appl [Constant "_abs", a, idts_to_abs x b]
-      | idts_to_abs x c = Appl [Constant "_abs", c, x]
-    fun parse_SetcomprPhiTy ctxt [Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, x, T],idts,P] =
-          Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
-                idts_to_abs x idts,
-                Appl [Constant "\<^const>NuSys.ExTyp_binder", idts,
-                      (case P of (Appl [Constant "_constrain", Variable "True", _]) => T
-                               | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, T, P])]]
-      | parse_SetcomprPhiTy ctxt [X,idts,P] =
-          Appl [Constant "\<^const>NuSys.ExTyp_binder", idts,
-                (case P of (Appl [Constant "_constrain", Variable "True", _]) => X
-                         | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
-  in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
-\<close>
-
-(* TODO
-term \<open>x \<Ztypecolon> (X a) \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j a b c. P a\<close>
-
-translations
-  " _SetcomprPhiTy' x idts X" <= "x \<Ztypecolon> (\<exists>\<phi> idts. X)"
-
-print_ast_translation \<open>
-  [(\<^syntax_const>\<open>_SetcomprPhiTy'\<close>, (fn _ => fn x => hd (@{print} x)))]
-\<close>
-
-term \<open>x \<Ztypecolon> (X a) \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j a b c. P a\<close>
-
-*)
-
-lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
-  \<open>(x \<Ztypecolon> ExTyp T) = (\<exists>*a. x a \<Ztypecolon> T a)\<close>
-  unfolding set_eq_iff ExTyp_def \<phi>Type_def by (simp add: \<phi>expns)
-
-lemma ExTyp_inhabited[elim!, \<phi>reason_elim!]:
-  \<open>Inhabited (x \<Ztypecolon> ExTyp T) \<Longrightarrow> (Inhabited (\<exists>*a. x a \<Ztypecolon> T a) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding ExTyp_expn .
-
-
 subsubsection \<open>Identity\<close>
 
 definition Identity :: " ('a,'a) \<phi> " where "Identity x = {x}"
@@ -1678,6 +1717,58 @@ lemma (in std) [\<phi>reason]:
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> U <of-type> TY \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding Subty_def by (simp add: \<phi>expns)
+
+subsubsection \<open>Misc.\<close>
+
+definition Function_over :: \<open>('a,'b) \<phi> \<Rightarrow> 'c \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<phi>\<close> (infix "<func-over>" 40)
+  where \<open>(T <func-over> x) = (\<lambda>f. f x \<Ztypecolon> T)\<close>
+
+text \<open>\<^term>\<open>f \<Ztypecolon> T <func-over> x\<close> constrains the abstract object f is a function about x.
+  It seems redundant considering \<^term>\<open>f x \<Ztypecolon> T\<close>. Nonetheless, it is useful when given some
+    pattern \<^schematic_term>\<open>?f x \<Ztypecolon> T\<close> and trying to match it by some \<^term>\<open>g x \<Ztypecolon> T\<close>.
+  Note such match has multiple solutions (e.g. \<^term>\<open>f = g\<close> or \<^term>\<open>f = (\<lambda>_. g x)\<close>), so
+    the usual reasoning cannot determine which solution should be chosen.
+  By contrast, \<^term>\<open>f \<Ztypecolon> T <func-over> x\<close> has specially designed sub-typing rule converting
+    from \<^term>\<open>fx \<Ztypecolon> T\<close>,
+
+\<^prop>\<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> fx \<Ztypecolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> f \<Ztypecolon> T <func-over> x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>,
+
+    which using \<^term>\<open>lambda_abstraction\<close>, always abstracts any occurrences of x in fx exhaustively, e.g.
+    always resulting in \<^term>\<open>f = g\<close> instead of \<^term>\<open>f = (\<lambda>_. g x)\<close>\<close>
+
+lemma Function_over_expn[\<phi>expns]:
+  \<open>(f \<Ztypecolon> T <func-over> x) = (f x \<Ztypecolon> T)\<close>
+  unfolding Function_over_def \<phi>Type_def by simp
+
+lemma Function_over_case_named[simp]:
+  \<open>(case_named f \<Ztypecolon> T <func-over> tag x) = (f \<Ztypecolon> T <func-over> x)\<close>
+  by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 2000]:
+  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> fx \<Ztypecolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e Y \<longmapsto> f \<Ztypecolon> T <func-over> x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Subty_def lambda_abstraction_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 2000]:
+  \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e f x \<Ztypecolon> T \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e f \<Ztypecolon> T <func-over> x \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Subty_def by (simp add: \<phi>expns)
+
+lemma (in std) [\<phi>reason 1200 on \<open>Synthesis_Parse ?input (VAL ?f \<Ztypecolon> ?T <func-over> ?x)\<close>]:
+  \<open> Synthesis_Parse input (VAL fx \<Ztypecolon> T)
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> Synthesis_Parse input (VAL f \<Ztypecolon> T <func-over> x)\<close>
+  unfolding Synthesis_Parse_def ..
+
+
+lemma (in std) [\<phi>reason 1200]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL f x \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL f \<Ztypecolon> T <func-over> x \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P\<close>
+  unfolding Synthesis_def lambda_abstraction_def by (simp add: \<phi>expns)
+
 
 
 section \<open>Reasoning\<close>
@@ -2434,7 +2525,6 @@ ML_file "./library/procedure.ML"
 ML_file NuSys.ML
 ML_file "./library/processors.ML"
 ML_file "./library/obtain.ML"
-ML_file "./library/QuantExpansion.ML"
 ML_file "./library/generalization.ML"
 (* ML_file "./codegen/compilation.ML" *)
 ML_file NuToplevel.ML
@@ -2451,6 +2541,7 @@ attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_p
     (fn (name,(ctx,toks)) => Scan.lift (NuProcessor.get_attr ctx name) (ctx,toks))
   || Scan.lift NuProcessor.process_attr\<close>
   \<open>Evaluate the \<phi>-system process or the process of the given processor on the target theorem\<close>
+
 
 ML \<open>
 
@@ -2501,20 +2592,29 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (fn toks => (
-      Toplevel.proof (Proof.map_context (Config.put Nu_Reasoner.auto_level 2) #>
-          NuProcessor.powerful_process (toks @ [Token.eof])),
-      if hd toks |> Token.is_eof then [Token.eof] else []))
+    (NuProcessor.powerful_process_p >> Toplevel.proof)
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
-   (optional (\<^keyword>\<open>premises\<close> |-- and_list (binding -- opt_attribs)) []
->> (fn prems => Toplevel.proof' (NuToplevel.begin_block_cmd prems)))
+   (((optional (\<^keyword>\<open>premises\<close> |-- and_list (binding -- opt_attribs)) []
+      >> NuToplevel.begin_block_cmd)
+   -- NuProcessor.powerful_process_p_inert)
+   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
     (Phi_Generalization.syntax >> (Toplevel.proof' o NuToplevel.end_block_cmd))
 
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
+    (((Phi_Generalization.syntax >> (fn genric => fn int =>
+        NuToplevel.end_block_cmd genric int
+    #> (fn s => Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>") s)
+    #> Proof.local_future_terminal_proof
+          ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
+          ,NONE)))
+   -- NuProcessor.powerful_process_p_inert)
+   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
@@ -2546,12 +2646,20 @@ attribute_setup intro_forall = \<open>Scan.lift (Scan.repeat Args.var) >> (fn tm
 
 subsection \<open>Elements of the Language\<close>
 
+text \<open>Convention of priorities:
+  \<^item> Simplifications and Conversions for canonical forms < 1000
+  \<^item> Reasoning Antecedents = 1000
+  \<^item> General Application not bound on specific pattern or keyword : 9000~9999
+\<close>
+
 context std begin
 
 subsubsection \<open>Controls\<close>
 
 \<phi>processor set_auto_level 10 (\<open>PROP ?P\<close>) \<open>(fn (ctxt, sequent) => NuParse.auto_level_force >>
   (fn auto_level' => fn _ => (Config.put Nu_Reasoner.auto_level auto_level' ctxt, sequent)))\<close>
+  \<open>Note the declared auto-level is only valid during the current statement.
+   In the next statement, the auto-level will be reset to the default fully-automated level.\<close>
 
 \<phi>processor repeat 12 (\<open>PROP ?P\<close>) \<open>let
   in fn (ctxt, sequent) =>
@@ -2564,7 +2672,7 @@ subsubsection \<open>Controls\<close>
 
 subsubsection \<open>Constructive\<close>
 
-\<phi>processor accept_call 300 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>) \<open>fn stat =>
+\<phi>processor accept_call 500 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>) \<open>fn stat =>
   Scan.succeed (fn _ => NuSys.accept_proc stat)\<close>
 
 \<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => NuApplicant.parser >> (fn xnames => fn _ =>
@@ -2609,19 +2717,25 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
   end)\<close>
 
 \<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
-  \<open>fn stat => \<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding >> (fn insts => fn () =>
-      raise Process_State_Call (stat, NuObtain.choose insts))\<close>
+  \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
+      raise Process_State_Call' (toks, stat, NuObtain.choose insts), []))\<close>
+
+\<phi>processor implicit_existential_elimination 800 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
+  \<open>fn stat => Scan.succeed (fn () =>
+      if Config.get (#1 stat) Nu_Reasoner.auto_level >= 2
+      then raise Process_State_Call (stat, NuObtain.auto_choose)
+      else raise Bypass NONE)\<close>
 
 subsubsection \<open>Simplifiers & Reasoners\<close>
 
-\<phi>processor enter_proof 900 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
+\<phi>processor enter_proof 5000 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
       raise Terminate_Process (stat, snd o NuToplevel.prove_prem false))\<close>
 
-\<phi>processor \<phi>simplifier 40 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>NuProcessors.simplifier []\<close>
+\<phi>processor \<phi>simplifier 100 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>NuProcessors.simplifier []\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
-\<phi>processor move_fact 50 (\<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T) \<and> ?P\<close>)
+\<phi>processor move_fact 200 (\<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T) \<and> ?P\<close>)
 \<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
   let
     val (_,ctxt') = Proof_Context.note_thms ""
@@ -2633,7 +2747,7 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
 
 (* Any simplification should finish before priority 100, or else
  *  this processor will be triggered unnecessarily frequently.*)
-\<phi>processor set_\<phi>this 100 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
+\<phi>processor set_\<phi>this 999 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
 \<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
   let
     val ctxt' = NuBasics.set_programming_sequent' sequent ctxt
@@ -2660,12 +2774,12 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
        of SOME (ret, _) => (ctxt, ret)
         | NONE => raise Bypass NONE)\<close>
 
-\<phi>processor fold 1300 (\<open>PROP ?P\<close>) \<open>
+\<phi>processor fold 2000 (\<open>PROP ?P\<close>) \<open>
   fn (ctxt, sequent) => NuParse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (ctxt, Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent)
 )\<close>
 
-\<phi>processor unfold 1300 (\<open>PROP ?P\<close>) \<open>
+\<phi>processor unfold 2000 (\<open>PROP ?P\<close>) \<open>
   fn (ctxt, sequent) => NuParse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
 )\<close>
@@ -2694,22 +2808,9 @@ simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow
 simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
   \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
 
+lemmas [unfolded atomize_eq[symmetric], named_expansion] =
+  HOL.simp_thms Product_Type.prod.case NuSys.named.case Function_over_case_named
 
-
-
-subsubsection \<open>Literal operations\<close>
-
-context std begin
-
-\<phi>processor literal_constructor 9500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
-\<open>fn (ctxt, meta) => Parse.cartouche >> (fn term => fn _ =>
-  let val term = Syntax.read_term ctxt term
-                    |> Thm.cterm_of ctxt
-                    |> Simplifier.rewrite ctxt
-                    |> Thm.rhs_of
-  in NuSys.auto_construct term (ctxt, meta) end)\<close>
-
-end
 
 section \<open>Mechanism III - Additional Parts\<close>
 
@@ -2731,24 +2832,20 @@ lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by
 
 ML_file_debug \<open>library/variables_tag.ML\<close>
 
-\<phi>processor vars_by_pattern 110 (\<open>Variant_Cast ?vars ?X ?X' \<Longrightarrow> PROP ?P\<close>)
+\<phi>processor vars_by_pattern 3000 (\<open>Variant_Cast ?vars ?X ?X' \<Longrightarrow> PROP ?P\<close>)
 \<open>fn (ctxt, sequent) => 
 let open Parse Scan NuHelp NuBasics
   fun pattern_match ((vars, pattern), always) _ =
-    (ctxt, Nu_Variable_Factor.vary_by_pattern_match vars pattern always ctxt sequent)
+    (ctxt, Nu_Variable_Factor.vary_by_pattern vars pattern always ctxt sequent)
   fun var_term (vars, always) _ =
     (ctxt, Nu_Variable_Factor.vary_by_parts vars always ctxt sequent)
   val none = Scan.succeed []
   val params = (list Parse.params) >> flat
   val syn_pattern_match =
-    ($$$ "var" |-- params --| $$$ "in" -- list1 term -- option ($$$ "always" |-- term))
+    (params --| $$$ "in" -- term -- option ($$$ "always" |-- term))
     >> pattern_match
-  val syn_nonvar =
-    (params -- option ($$$ "subj" |-- term))
-    >> apfst (fn vars => if null vars then fail ([],[]) else (vars, map (Binding.name_of o #1) vars))
-    >> pattern_match
-  val syn_var_term = ($$$ "var" |-- list1 term -- Scan.option ($$$ "always" |-- term)) >> var_term
-in syn_pattern_match || syn_var_term || syn_nonvar end\<close>
+  val syn_var_term = (list1 term -- Scan.option ($$$ "always" |-- term)) >> var_term
+in syn_pattern_match || syn_var_term end\<close>
 
 (*  \<open>Nu_Reasoners.wrap (fn ctxt => Nu_Reasoners.asm_simp_tac (ctxt addsimps Proof_Context.get_thms ctxt "\<phi>expns"))\<close> *)
 

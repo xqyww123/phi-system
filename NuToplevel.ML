@@ -240,8 +240,9 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
   let open QuantExpansion
     val prep_ctx = I
     val func_name = Binding.name_of binding
-    fun mk_Goal (ctxt,(fixes,fixed_names)) (arg,ret,conds) = 
+    fun mk_Goal (ctxt',(fixes,fixed_names)) (arg,ret,conds) = 
       let
+        val ([tArg,tRet], ctxt) = Variable.variant_fixes ["\<tau>Arg", "\<tau>Ret"] ctxt'
         val origin_names = map (fn (n,_,_) => (Binding.name_of n)) raw_vars
         val var_names = take (length raw_vars) fixed_names
         val var_tys = take (length raw_vars) fixes
@@ -250,8 +251,6 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
 
         val arg = parse_arg arg
         val ret = parse_arg ret
-        val x = Const (@{const_name tag}, dummyT) $
-                  list_mk_binop_r @{const_name Pair} (map Free (var_names ~~ var_tys))
 
         val conds' = map (snd #> fst #> perhaps (try dest_Trueprop)) conds
         val arg' = arg
@@ -268,29 +267,33 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         val goal = mk_Trueprop (
               Const (@{const_name All}, dummyT) $ Abs("x", dummyT,
                 (Const ("local.\<phi>Procedure", dummyT)
-                  $ (Const ("NuInstructions.op_recursion", dummyT)
-                      $ @{term UNIQ_ID}
+                  $ (Const ("local.op_recursion", dummyT)
+                      $ Var ((tArg,0), dummyT)
+                      $ Var ((tRet,0), dummyT)
                       $ Var ((func_name,0), dummyT))
                   $ arg'
                   $ ret')))
 
-        val recursion_thm = Proof_Context.get_thm ctxt "NuStd_Base.op_recursion"
-        fun constr_process stat =
+        val recursion_thm = Proof_Context.get_thm ctxt "local.__op_recursion__"
+        fun constr_process stat' =
           let
             (* simplify the proof goal, to expand all the auto Nu *)
-            val ctxt = Proof.context_of stat
+            val ctxt = Proof.context_of stat'
             val Subjection_simp_proc_arg =
                     Proof_Context.get_thm ctxt "local.Subjection_simp_proc_arg"
             val simctx = Raw_Simplifier.clear_simpset ctxt
                               addsimps [Subjection_simp_proc_arg]
 
-            val stat = stat
+            val forall = pure_All_expansion origin_names ctxt
+            val stat = stat'
               |> Proof.using_facts [] |> Proof.enter_backward (*|> Proof.begin_block*)
               |> Proof.refine (Method.Basic (fn ctxt =>
                   Method.SIMPLE_METHOD (
                     HEADGOAL (resolve_tac ctxt [recursion_thm]) THEN
-                    HEADGOAL (Simplifier.simp_tac ctxt)
+                    HEADGOAL (Raw_Simplifier.rewrite_goals_tac ctxt
+                        (forall::Named_Theorems.get ctxt @{named_theorems named_expansion}))
                   )))
+              |> Proof.refine (Method.CONTEXT_METHOD (K NU_Reasoner.reason_tac))
               |> Seq.the_result "should never fail"
 
             val sequent = #goal (Proof.goal stat)

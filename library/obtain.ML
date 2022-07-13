@@ -93,11 +93,19 @@ fun choose inst_names stat =
          |> NuBasics.set_nu_fact meta'
   end
 
+fun normlize_name name =
+  if String.isSuffix "__" name then String.substring (name,0, size name - 2)
+  else name
+
 fun auto_choose stat =
   let
     val vars = PhiSyntax.dest_current_nu (NuBasics.the_nu_fact stat)
           |> NuHelp.strip_binder_vars @{const_name ExSet}
-          |> map (Binding.name o NuBasics.normlize_name o fst)
+          |> map (Binding.name o normlize_name o fst)
+     val _ = tracing ("Fixed existential variables "
+                      ^ String.concatWith ", " (map Binding.print vars)
+                      ^ " implicitly. You may want use '!!' to disable this automatic behavior, "
+                      ^ "or '\<exists> <names>' to fix them by explicit names.")
   in
     choose vars stat
   end

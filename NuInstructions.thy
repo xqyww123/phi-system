@@ -658,10 +658,10 @@ inductive SemRec :: "(('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) p
   SemRec_I0: "(\<And>g. F g x = y) \<Longrightarrow> SemRec F x y"
 | SemRec_IS: "SemRec (F o F) x y \<Longrightarrow> SemRec F x y"
 
-definition op_recursion :: "'TY \<Rightarrow> 'TY \<Rightarrow> (('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+definition op_recursion :: "'TY list \<Rightarrow> 'TY list \<Rightarrow> (('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_recursion _ _ F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
-
+ML \<open>Syntax.parse_term \<^context> "_"\<close>
 
 subsection \<open>Tuple Operations\<close>
 

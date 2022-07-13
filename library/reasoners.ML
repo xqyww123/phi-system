@@ -57,12 +57,12 @@ fun naive_obligation_solver ctxt th =
   then head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt)))) th
   else Seq.empty
 
-fun contract_obligations ctxt = let open Conv in
+fun contract_obligations ctxt thm = let open Conv in
   gconv_rule (bottom_conv (K (try_conv (rewrs_conv
     @{thms contract_premise_true
            contract_premise_imp contract_premise_all
-     }))) ctxt) 1
-  #> fconv_rule (rewr_conv @{thm contract_obligations})
+     }))) ctxt) 1 thm
+  |> fconv_rule (rewr_conv @{thm contract_obligations})
 end
 
 fun premise_tac ctxt thm =
