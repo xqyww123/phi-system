@@ -281,57 +281,59 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
             val ctxt = Proof.context_of stat'
             val Subjection_simp_proc_arg =
                     Proof_Context.get_thm ctxt "local.Subjection_simp_proc_arg"
-            val simctx = Raw_Simplifier.clear_simpset ctxt
-                              addsimps [Subjection_simp_proc_arg]
 
-            val forall = pure_All_expansion origin_names ctxt
+            val All = pure_All_expansion origin_names ctxt
+            val forall = forall_expansion origin_names ctxt
             val stat = stat'
               |> Proof.using_facts [] |> Proof.enter_backward (*|> Proof.begin_block*)
               |> Proof.refine (Method.Basic (fn ctxt =>
                   Method.SIMPLE_METHOD (
                     HEADGOAL (resolve_tac ctxt [recursion_thm]) THEN
-                    HEADGOAL (Raw_Simplifier.rewrite_goals_tac ctxt
-                        (forall::Named_Theorems.get ctxt @{named_theorems named_expansion}))
+                    Raw_Simplifier.rewrite_goals_tac ctxt
+                        (All::forall::Named_Theorems.get ctxt @{named_theorems named_expansion})
                   )))
-              |> Proof.refine (Method.CONTEXT_METHOD (K NU_Reasoner.reason_tac))
+              |> Seq.the_result "should never fail"
+              |> Proof.refine (Method.Basic (fn ctxt =>
+                    Method.CONTEXT_METHOD (K (Nu_Reasoner.reason_tac ctxt))))
+              |> Seq.the_result "should never fail"
+              |> Proof.refine (Method.Basic (fn ctxt =>
+                    Method.SIMPLE_METHOD (HEADGOAL (rewrite_goal_tac ctxt [Subjection_simp_proc_arg]))))
               |> Seq.the_result "should never fail"
 
             val sequent = #goal (Proof.goal stat)
-            val goal = Thm.prems_of sequent |> hd
+            val goal' = Thm.cprem_of sequent 1 |> Thm.term_of |> dest_Trueprop
 
-            val vars = strip_binder_vars @{const_name Pure.all} goal
-            val (var_names,stat) = stat
-              |> Proof.map_context_result (Proof_Context.add_fixes
-                  (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars))
-            val vars = map (Free o apsnd snd) (var_names ~~ vars)
+            val vars = strip_binder_vars @{const_name All} goal'
+            val (var_names,_) = Proof_Context.add_fixes
+                  (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars)
+                  (Proof.context_of stat)
+            val vars' = map (Free o apsnd snd) (var_names ~~ vars)
 
-            val goal =
-              subst_bounds (rev vars,
-                strip_binder_raw_body @{const_name Pure.all} goal)
-              |> dest_Trueprop
+            val prems_goal =
+              subst_bounds (rev vars',
+                strip_binder_raw_body @{const_name All} goal')
               |> strip_binop_r @{const_name "HOL.implies"}
               |> map mk_Trueprop
-            val (prems, goal) = (front goal, last goal)
+            val (prems, goal) = (front prems_goal, last prems_goal)
 
-            val (_,Arg,Ret) = PhiSyntax.dest_procedure goal
-            val Arg = Thm.cterm_of ctxt Arg
-
-            (* intro assumptions *)
-            fun imp_export prems sequent =
-              sequent
-                |> fold_rev (fn prem => fn th =>
-                      (Thm.implies_intr prem th RS @{thm impI})
-                          |> Thm.assumption NONE 1
-                          |> Seq.make_results |> Seq.the_result "should never fail"
-                  ) prems
             val assms = map (fn (tm,((b,attr),(_,pats))) =>
-                                  ((b, elim_premise @ map (Attrib.attribute ctxt) attr),
+                                 ((b, elim_premise @ map (Attrib.attribute ctxt) attr),
                                    [(tm,pats)]))
                   (prems ~~ (((Binding.name func_name,[]),(dummy,[]))::conds))
-            val (_,stat) = stat |> Proof.map_context_result (
-                  Proof_Context.add_assms (fn _ => fn prems => (imp_export prems, I)) assms)
+
+
+            fun after_qed (ctxt,[[th]]) =
+                  I
+            
           in
             stat
+              |> Proof.enter_forward
+|> @{print}
+              |> Proof.internal_goal (K (K ())) Proof_Context.mode_schematic false "" NONE after_qed
+                    (map (fn (name,ty) => (Binding.name name, SOME ty, NoSyn)) vars)
+                    assms [(Binding.empty_atts, [(goal,[])])]
+|> @{print}
+              |> #2
               |> Proof.map_context (put_thesis (cterm_of ctxt goal))
               (* |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
               |> Proof.map_context_result (start_proc func_name Arg #> swap)
@@ -345,9 +347,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
     fun post_process' binding int lthy th =
       lthy
         |> NuProcedure.define binding (
-            th |> normlize_thm_of_names
-               |> Simplifier.simplify lthy
-               |> repeat QuantExpansion.spec_retaining_name
+            th |> repeat QuantExpansion.spec_retaining_name
                |> repeat (fn th => th RS @{thm mp})
             )
         |-> (fn th => fn lthy =>
@@ -418,7 +418,7 @@ fun invoke_Block_End_Hook (ctxt,sequent) =
 
 
 fun RSNXX ctxt tha (i, thb) =
-  (case Seq.pull (biresolution (SOME (Config.put Pattern.unify_trace_failure true ctxt)) false [(false, tha)] i thb) of
+  (case Seq.pull (biresolution (SOME ctxt) false [(false, tha)] i thb) of
     SOME (th, _) => solve_constraints th
   | _ => raise THM ("RSNXX: no unifiers", i, [tha, thb]));
 fun RSXX ctxt tha thb = RSNXX ctxt tha (1,thb);
@@ -457,8 +457,7 @@ fun gen_finish_proc qed genz int =
             then sequent RS reassemble_proc_0
             else sequent
       val end_tac = basic_method (fn ctxt' => fn prooof_stat => 
-        Runtime.exn_trace (fn () =>
-          RSXX ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent') prooof_stat)
+            RSXX ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent') prooof_stat
         handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
      in
       stat

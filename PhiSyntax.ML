@@ -1,4 +1,5 @@
 signature PHI_SYNTAX = sig
+include PHI_SYNTAX
 
   val get_types : Proof.context ->
         {TY_N: typ, TY: typ, VAL_N: typ, VAL: typ, RES_N: typ, RES: typ, FIC_N: typ, FIC: typ}
@@ -43,7 +44,7 @@ signature PHI_SYNTAX = sig
 end
 
 structure PhiSyntax : PHI_SYNTAX = struct
-open Thm Term HOLogic NuHelp
+open Thm Term HOLogic NuHelp PhiSyntax
 
 fun get_types ctxt =
   let
@@ -158,8 +159,8 @@ fun undisch_codeblock cb_var = Thm.forall_elim cb_var #> undisch
 fun disch_current_codeblock specthm =
   disch_codeblock (current_codeblock specthm) specthm
 
-val dest_goal_ctxt   = dest_binop   "NuSys.GOAL_CTXT" #> #1
-val dest_goal_ctxt_c = dest_binop_c "NuSys.GOAL_CTXT" #> #1
+val dest_goal_ctxt   = dest_binop   \<^const_name>\<open>GOAL_CTXT\<close> #> #1
+val dest_goal_ctxt_c = dest_binop_c \<^const_name>\<open>GOAL_CTXT\<close> #> #1
 
 val dest_procedure   = perhaps (try dest_Trueprop) #> perhaps (try dest_goal_ctxt)
   #> dest_triop @{const_name "std.\<phi>Procedure"}

@@ -1,6 +1,4 @@
 signature PHI_SYNTAX = sig
-include PHI_SYNTAX
-
   val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
   val mk_name_tylabels : string list -> typ (* ["i","j","k"] -> 'i \<times> 'j \<times> 'k *)
   val mk_name_tag_ast : (Ast.ast * string list) -> Ast.ast
@@ -49,10 +47,8 @@ fun dest_named_only_names (Type (@{type_name named}, [_, names]))
       = dest_name_tylabels names
   | dest_named_only_names ty = raise TYPE ("dest_named", [ty], [])
 
-open PhiSyntax
-
 val _ = Theory.setup (Sign.parse_ast_translation (
-  [(\<^syntax_const>\<open>__named__\<close>, (fn ctxt => fn [term,name] =>
+  [(\<^syntax_const>\<open>__named__\<close>, (fn _ => fn [term,name] =>
       mk_name_tag_ast (term, strip_tupargs name)))]
 ))
 

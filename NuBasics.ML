@@ -28,11 +28,6 @@ signature NU_BASICS = sig
   val mk_name_hint : string -> term -> term
   val mk_label_thm : string -> thm
 
-  val mk_auto_tag : term -> term
-  val normlize_name : string -> string
-  val normlize_thm_of_names : thm -> thm
-  (* val dest_andTy : term -> term * term *)
-
   val dest_premise_tag  : term -> term * term
   val dest_premise_tag_c: cterm -> cterm * cterm
 
@@ -176,9 +171,6 @@ fun dest_labelled_opt tm =
 
 
 
-val mk_auto_tag = mk_monop @{const_name "Auto"}
-
-
 
 
 val thm_ParamTag = @{thm ParamTag}
@@ -206,24 +198,6 @@ val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest
 val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
 
 
-fun normlize_name name =
-  if String.isSuffix "__" name then String.substring (name,0, size name - 2)
-  else name
-fun normlize_thm_of_names th =
-  let
-    val thy = Thm.theory_of_thm th
-    val insts = Thm.add_tvars th TVars.empty
-                  |> TVars.dest
-                  |> map_filter (fn (_,x) =>
-                      case typ_of x of TVar (tvar as ((name,_),["HOL.type"])) =>
-                        if String.isPrefix "'_" name
-                        then SOME (tvar, Thm.global_ctyp_of thy (TFree (name,["HOL.type"])))
-                        else NONE
-                      | _ => NONE)
-                  |> TVars.make
-  in
-    Thm.instantiate (insts, Vars.empty) th
-  end
 
 (* val auto_fusion_arity =
   Logic.strip_assums_concl #> perhaps (try dest_Trueprop) #> perhaps_try (dest_procedure #> #2)

@@ -171,7 +171,7 @@ subsubsection \<open>Preliminary\<close>
 
 declare [[\<phi>not_define_new_const]]
 
-proc \<phi>__stack_value:
+proc \<phi>__steal_value:
   assumes [\<phi>reason on \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
   argument \<open>X\<heavy_comma> VAL x \<Ztypecolon> T\<close>
@@ -213,7 +213,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<and> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<and> \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<and> \<medium_right_bracket> .. .
 
 paragraph \<open>Or\<close>
 
@@ -230,7 +230,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<or> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<or> \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<or> \<medium_right_bracket>. .
 
 
 subsubsection \<open>Constant Integer\<close>
@@ -291,7 +291,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x + y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. + \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. + \<medium_right_bracket>. .
 
 
 paragraph \<open>Subtraction\<close>
@@ -312,7 +312,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x - y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. - \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. - \<medium_right_bracket>. .
 
 
 paragraph \<open>Division\<close>
@@ -331,7 +331,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x div y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. / \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. / \<medium_right_bracket>. .
 
 
 paragraph \<open>Less Than\<close>
@@ -349,7 +349,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x < y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. < \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. < \<medium_right_bracket>. .
 
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x > ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -359,7 +359,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x > y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. < \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. < \<medium_right_bracket>. .
 
 paragraph \<open>Less Equal\<close>
 
@@ -376,7 +376,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<le> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<le> \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<le> \<medium_right_bracket>. .
 
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<ge> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -386,7 +386,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<ge> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<le> \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<le> \<medium_right_bracket>. .
 
 
 subsubsection \<open>General Arithmetic\<close>
@@ -420,7 +420,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x = y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__stack_value \<medium_left_bracket> F2 \<medium_right_bracket>. = \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. = \<medium_right_bracket>. .
 
 
 
@@ -545,7 +545,7 @@ proc
   argument \<open>x \<Ztypecolon> \<nat>[20]\<close>
   return \<open>10 \<Ztypecolon> \<nat>[20]\<close>
   \<medium_left_bracket> \<rightarrow> v ;;
-    while x, y in \<open>OBJ x \<Ztypecolon> _\<close> always \<open>x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
+    while x invar \<open>x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
     \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>.
     \<medium_left_bracket> \<open>$v+1\<close> \<rightarrow> v \<medium_right_bracket>. ;; (* this ;; leads an empty statement which does nothing except simplification *)
     have [simp]: \<open>x = 10\<close> using \<phi> by simp ;;
@@ -578,7 +578,7 @@ lemma SemRec_deterministic2: " SemRec body s x \<Longrightarrow> The ( SemRec bo
 definition \<phi>SemTypes :: \<open>('VAL,'FIC_N,'FIC) assn \<Rightarrow> 'TY list \<Rightarrow> bool\<close>
   where \<open>\<phi>SemTypes S TYs \<longleftrightarrow> (fst ` S) \<subseteq> Collect (list_all2 (\<lambda>t x. x \<in> Well_Type t) TYs)\<close>
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1200 on \<open>\<phi>SemTypes (OBJ ?X) ?TYs\<close>]:
   \<open>\<phi>SemTypes (OBJ X) []\<close>
   unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def
   by (auto simp add: \<phi>expns times_list_def)
@@ -589,7 +589,7 @@ lemma [\<phi>reason 1200]:
   unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def
   by (auto simp add: \<phi>expns times_list_def)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1200 on \<open>\<phi>SemTypes (VAL ?X) ?TYs\<close>]:
   \<open> \<phi>SemType X TY
 \<Longrightarrow> \<phi>SemTypes (VAL X) [TY]\<close>
   unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def \<phi>SemType_def
@@ -617,9 +617,10 @@ lemma [\<phi>reason 1200]:
 ML \<open>@{term op_recursion}\<close>
 
 lemma "__op_recursion__":
-  " (\<And>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X x'' \<longmapsto> Y x'' \<rbrace>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<lbrace> X x' \<longmapsto> Y x' \<rbrace>)
-\<Longrightarrow> (\<And>x. \<phi>SemTypes (X x) TXs)
+  " (\<And>x. \<phi>SemTypes (X x) TXs)
 \<Longrightarrow> (\<And>x. \<phi>SemTypes (Y x) TYs)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<forall>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X x'' \<longmapsto> Y x'' \<rbrace>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<lbrace> X x' \<longmapsto> Y x' \<rbrace>)
 \<Longrightarrow> \<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion TXs TYs F \<lbrace> X x \<longmapsto> Y x \<rbrace>"
   unfolding op_recursion_def \<phi>Procedure_def atomize_all
   apply (auto simp add: SemRec_deterministic2)
@@ -628,14 +629,25 @@ lemma "__op_recursion__":
 
 
 rec_proc dec:
-  var i
+  var i j
+  premises A: \<open>0 \<le> i\<close>
+  premises B: \<open>0 \<le> j\<close>
   argument \<open>i \<Ztypecolon> \<nat>[b]\<close>
   return \<open>0 \<Ztypecolon> \<nat>[b]\<close>
-
+  thm dec
+  ML_val \<open>@{Isar.goal}\<close>
+  \<medium_left_bracket> \<rightarrow> vi ;;
+    if \<open>0 < $vi\<close> \<medium_left_bracket> \<open>$vi - 1\<close> dec \<medium_right_bracket>.
+                 \<medium_left_bracket> \<open>$vi\<close> is 0 \<medium_right_bracket>. ;;
+                 \<medium_right_bracket>.
+                 ML_val \<open>@{Isar.goal}\<close>
+                 .
+                 
 
 subsection \<open>Constant Pushing\<close>
 
 subsubsection \<open>Integer\<close>
+
 
 lemma [\<phi>reason on ?any]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>

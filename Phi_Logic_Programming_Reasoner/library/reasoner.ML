@@ -72,7 +72,6 @@ signature NU_REASONER = sig
 end
 
 structure Nu_Reasoner : NU_REASONER = struct
-open NuHelp
 
 type cost = int
 type 'a generic_reasoner = {name: term, pattern: term list, not_match: term list, tactic: 'a}
