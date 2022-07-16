@@ -49,6 +49,7 @@ signature NU_HELP = sig
   val dest_quinop_c : string (* const name *) -> cterm -> cterm * cterm * cterm * cterm * cterm
   val strip_binop_r   (* right associative *) : string (* const name *) -> term -> term list
   val strip_binop_r_c (* right associative *) : string (* const name *) -> cterm -> cterm list
+  val strip_binop_r_last (* right associative *) : string (* const name *) -> term -> term
   val strip_binop_ty   (* right associative *) : string (* const name *) -> typ -> typ list
   val strip_binop_ty_c (* right associative *) : string (* const name *) -> ctyp -> ctyp list
   val strip_binop_l (* left associative *) : string (* const name *) -> term -> term list
@@ -174,7 +175,11 @@ fun dest_binop_ty_c const ty = (dest_binop_ty const (typ_of ty);
 
 fun strip_bin_r_assoc strip tm =
   case try strip tm of SOME (a,b) => a :: (strip_bin_r_assoc strip b) | _ => [tm]
+fun strip_bin_r_assoc_last strip tm =
+  case try strip tm of SOME (a,b) => strip_bin_r_assoc_last strip b | _ => tm
+
 val strip_binop_r   = strip_bin_r_assoc o dest_binop
+val strip_binop_r_last = strip_bin_r_assoc_last o dest_binop
 val strip_binop_r_c = strip_bin_r_assoc o dest_binop_c
 val strip_binop_ty   = strip_bin_r_assoc o dest_binop_ty
 val strip_binop_ty_c = strip_bin_r_assoc o dest_binop_ty_c

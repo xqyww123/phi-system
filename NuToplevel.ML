@@ -122,7 +122,113 @@ fun prep_decls prep_var raw_vars ctxt =
 
 datatype cond_kind = Premise | Requirement
 
-fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post_process
+
+
+
+
+
+type working_mode = {
+  domain: Proof.context -> term -> bool,
+  desired_phi: term (*term of the current sequent*) -> term,
+  desired_phi_c: cterm (*term of the current sequent*) -> cterm,
+  end_block: (Proof.context * Proof.context) -> thm (*solution*) -> thm (*goal*) -> thm (*goal'*),
+  end_proof: Proof.context -> thm (*solution*) -> thm (*goal*) -> thm (*goal'*)
+}
+
+structure Working_Modes = Generic_Data(
+  type T = working_mode Symtab.table
+  val empty = Symtab.empty
+  val merge = Symtab.merge (K false)
+)
+
+fun working_mode_on ctxt goal =
+      Symtab.get_first (fn (_,mode) => if #domain mode ctxt goal then SOME mode else NONE)
+        (Working_Modes.get (Context.Proof ctxt))
+fun working_mode_on1 ctxt goal =
+      case working_mode_on ctxt goal of SOME x => x
+         | NONE => error ("Do not know how to handle goal " ^ Syntax.string_of_term ctxt goal)
+
+fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
+
+fun strip_forall_implies btys (\<^const>\<open>Trueprop\<close> $ x) = strip_forall_implies btys x
+  | strip_forall_implies btys (Const (\<^const_name>\<open>All\<close>, _) $ Abs (_,ty,x))
+      = strip_forall_implies (ty::btys) x
+  | strip_forall_implies btys (Const (\<^const_name>\<open>implies\<close>, _) $ _ $ x)
+      = strip_forall_implies btys x
+  | strip_forall_implies btys x = (btys,x)
+
+fun abstract_bound_over (j, body) =
+  let
+    fun abs i lev tm =
+      if Bound i aconv tm then Bound lev
+      else
+        (case tm of
+          Abs (a, T, t) => Abs (a, T, abs (i+1) (lev + 1) t)
+        | t $ u =>
+            (abs i lev t $ (abs i lev u handle Same.SAME => u)
+              handle Same.SAME => t $ abs i lev u)
+        | _ => raise Same.SAME);
+  in abs j 0 body handle Same.SAME => body end;
+
+
+
+val procedure : working_mode = 
+  let
+    val desired_phi = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction))
+           (#3 o PhiSyntax.dest_procedure)
+    val desired_phi_c = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction_c))
+           (#3 o PhiSyntax.dest_procedure_c)
+    fun my_abstract_over _ (v as Free (name,ty)) body =
+          Abs (name, ty, abstract_over (v,body))
+      | my_abstract_over btys (Bound i) body =
+          Abs ("", nth btys i, abstract_bound_over (i,body))
+      | my_abstract_over _ v body =
+          Abs ("", fastype_of v, abstract_over (v,body))
+    fun exaustive_abst solution goal =
+      let
+        val thy = Thm.theory_of_thm solution
+        val (_, (fg,_,_)) = Thm.major_prem_of goal
+              |> strip_forall_implies []
+              |> apsnd PhiSyntax.dest_procedure
+        val (btys, (fs,_,_)) = Thm.concl_of solution
+              |> strip_forall_implies []
+              |> apsnd PhiSyntax.dest_procedure
+      in case Term.strip_comb fg of (Var v, args) =>
+           Thm.instantiate (TVars.empty,
+                             Vars.make [(v, Thm.global_cterm_of thy
+                                                    (fold (my_abstract_over btys) args fs))]) goal
+           | _ => goal
+      end
+    fun initial_reassemble ctxt sequent =
+          if can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
+          then sequent RS Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_0"
+          else sequent
+  in {
+    domain = (K (can PhiSyntax.dest_procedure)),
+    desired_phi = desired_phi,
+    desired_phi_c = desired_phi_c,
+    end_proof = (fn _ => fn solution => fn goal => solution RS exaustive_abst solution goal),
+    end_block = (fn (ctxt,ctxt') => fn solution => fn goal =>
+        let
+          val solution' = singleton (Proof_Context.export ctxt ctxt') (initial_reassemble ctxt solution)
+        in
+          solution' RS exaustive_abst solution' goal
+        end
+        handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
+} end
+
+val _ = Theory.setup (Context.theory_map
+            (Working_Modes.map (Symtab.update_new ("procedure", procedure))))
+
+
+
+
+
+
+
+
+
+fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
       binding arg ret rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt int ctxt =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes (prep_ctx ctxt)
@@ -152,8 +258,8 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
           prep_attrterm I c
     val preconds = map prep_precond raw_preconds
 
-    val (goal', constr_process, preconds) =
-          mk_Goal (ctx_parse,(fixes,var_names))
+    val (goal', constr_process, post_process, fixes', preconds') =
+          mk_Goal (ctx_parse,fixes,var_names)
                   (parse_term arg, parse_term ret, preconds)
 
     val goal = case raw_goal_ctxt of NONE => goal'
@@ -165,9 +271,9 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
     val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
     val includes = includes |> map (Bundle.check ctxt)
     (* val (goal,th) = begin_proc ctx_parse (arg,ret)  *)
-    val elems = [Element.Fixes fixes,
+    val elems = [Element.Fixes fixes',
                  Element.Defines defines,
-                 Element.Assumes (map (apsnd single) preconds)]
+                 Element.Assumes (map (apsnd single) preconds')]
     val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]
     fun after_qed [[th]] lthy = post_process binding int lthy th
   in
@@ -189,10 +295,9 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post
 fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process binding =
   let
     val prep_ctx = I
-    fun mk_Goal ctx_fixes arg_ret_conds =
+    fun mk_Goal (ctxt,fixes,_) arg_ret_conds =
       let
-        val (arg, ret, preconds) = prep_Nu ctx_fixes arg_ret_conds
-        val ctxt = fst ctx_fixes
+        val (arg, ret, preconds) = prep_Nu ctxt arg_ret_conds
         (*val _ = debug_term ctxt "arg " arg
         val _ = debug_term ctxt "ret " ret*)
         val v_proc = Var (v_proc_var, PhiSyntax.mk_procT ctxt)
@@ -201,37 +306,32 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
 
         fun constr_process stat =
           let
-            (*val ctxt = Proof.context_of stat *)
-            val goal_proc = Thm.cprem_of (#goal (Proof.goal stat)) 1 |> Drule.strip_imp_concl
-            (* val (_,Arg,_) = PhiSyntax.dest_procedure_c goal_proc *)
+            val goal_proc = Thm.cprem_of (#goal (Proof.goal stat)) 1
+                         |> Drule.strip_imp_concl
           in
             stat
               |> Proof.map_context (put_thesis goal_proc)
-              (* |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-              |> Proof.map_context_result (start_proc (Binding.name_of (fst binding)) Arg #> swap)
-              |-> NuBasics.set_nu_fact *)
-          end
-      in
-        (goal, constr_process, preconds)
-      end
 
-    fun post_process' binding int lthy th =
-      lthy
-        |> NuProcedure.define binding (post_process lthy
-            (Raw_Simplifier.rewrite_rule lthy @{thms final_proc_rewrite} th))
-        |-> (fn th => fn lthy =>
-              (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
-                  (("\<phi>procedure", ""), [("", [th])]); lthy))
+          end
+        fun post_process' binding int lthy th =
+          lthy
+            |> NuProcedure.define binding (post_process lthy
+                (Raw_Simplifier.rewrite_rule lthy @{thms final_proc_rewrite} th))
+            |-> (fn th => fn lthy =>
+                  (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
+                    (("\<phi>procedure", ""), [("", [th])]); lthy))
+      in
+        (goal, constr_process, post_process', fixes, preconds)
+      end
   in
-    gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx
-      mk_Goal post_process' binding
+    gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal binding
   end
     
 val begin_proc =
       gen_begin_proc (K I) (K I) (K I) Proof_Context.cert_var (K I) (K I)
 val begin_proc_cmd =
       gen_begin_proc Syntax.parse_term Syntax.parse_prop Syntax.parse_typ Proof_Context.read_var
-        (fn (ctxt,_) => fn (arg,ret,conds) =>
+        (fn ctxt => fn (arg,ret,conds) =>
           (parse_arg arg, parse_arg ret, conds)
         ) (K I)
 
@@ -240,13 +340,13 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
   let open QuantExpansion
     val prep_ctx = I
     val func_name = Binding.name_of binding
-    fun mk_Goal (ctxt',(fixes,fixed_names)) (arg,ret,conds) = 
+    fun mk_Goal (ctxt,fixes,fixed_names) (arg,ret,conds) = 
       let
-        val ([tArg,tRet], ctxt) = Variable.variant_fixes ["\<tau>Arg", "\<tau>Ret"] ctxt'
+        val ([tArg,tRet], ctxt') =
+                Variable.variant_fixes ["\<tau>Arg", "\<tau>Ret"]
+                  (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
         val origin_names = map (fn (n,_,_) => (Binding.name_of n)) raw_vars
         val var_names = take (length raw_vars) fixed_names
-        val var_tys = take (length raw_vars) fixes
-                        |> map (fn (_,ty,_) => the_default dummyT ty)
         val vars = origin_names ~~ (map (rpair dummyT) var_names)
 
         val arg = parse_arg arg
@@ -264,7 +364,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
               |> mk_cases_named origin_names
               |> (fn tm => tm $ Bound 0)
 
-        val goal = mk_Trueprop (
+        val goal0 = mk_Trueprop (
               Const (@{const_name All}, dummyT) $ Abs("x", dummyT,
                 (Const ("local.\<phi>Procedure", dummyT)
                   $ (Const ("local.op_recursion", dummyT)
@@ -273,88 +373,79 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                       $ Var ((func_name,0), dummyT))
                   $ arg'
                   $ ret')))
+        val other_frees = Term.add_frees goal0 []
+                       |> filter_out (fn (v,_) => exists (fn u => v = u) fixed_names)
+        val (_,ctxt'') = Proof_Context.add_fixes
+                            (map (fn (nam,_) => (Binding.name nam, NONE, NoSyn)) other_frees)
+                            ctxt'
+              
 
-        val recursion_thm = Proof_Context.get_thm ctxt "local.__op_recursion__"
-        fun constr_process stat' =
+        val All = pure_All_expansion origin_names ctxt''
+        val forall = forall_expansion origin_names ctxt''
+        val recursion_thm = Proof_Context.get_thm ctxt'' "local.__op_recursion__"
+        val Subjection_simp_proc_arg =
+              Proof_Context.get_thm ctxt'' "local.Subjection_simp_proc_arg"
+        val (_,proof0) = goal0
+            |> Syntax.check_term ctxt'' |> Thm.cterm_of ctxt''
+            |> Goal.init
+            |> (HEADGOAL (resolve_tac ctxt'' [recursion_thm])
+                THEN (Raw_Simplifier.rewrite_rule ctxt'' (*it is very ugly here!*)
+                       (All::forall::Subjection_simp_proc_arg::
+                        Named_Theorems.get ctxt'' @{named_theorems named_expansion})
+                      #> Seq.single))
+            |> Seq.maps (Nu_Reasoner.reason_tac ctxt'' o pair ctxt'')
+            |> Seq.the_result "fail to reason sematic type of the procedure."
+
+        val goal' = Thm.cprem_of proof0 1 |> Thm.term_of |> dest_Trueprop
+        
+        val vars' = strip_binder_vars @{const_name All} goal'
+        val vars'_fix = map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars'
+        val (var_names',ctxt''') = Proof_Context.add_fixes (take 1 vars'_fix) ctxt''
+                                    |> apfst (fn vn => vn @ map fst (drop 1 vars'))
+        val vars'' = map (apsnd snd) (var_names' ~~ vars')
+
+        val prems_goal =
+          subst_bounds (rev (map Free vars''),
+            strip_binder_raw_body @{const_name All} goal')
+          |> strip_binop_r @{const_name "HOL.implies"}
+          |> map mk_Trueprop
+        val (prems, goal) = (front prems_goal, last prems_goal)
+
+        val conds' = ((Binding.name func_name,[]),(hd prems,[])) ::
+              (map (fn (tm,(b,(_,is))) => (b,(tm,is))) (tl prems ~~ conds))
+
+        fun constr_process stat =
           let
-            (* simplify the proof goal, to expand all the auto Nu *)
-            val ctxt = Proof.context_of stat'
-            val Subjection_simp_proc_arg =
-                    Proof_Context.get_thm ctxt "local.Subjection_simp_proc_arg"
-
-            val All = pure_All_expansion origin_names ctxt
-            val forall = forall_expansion origin_names ctxt
-            val stat = stat'
-              |> Proof.using_facts [] |> Proof.enter_backward (*|> Proof.begin_block*)
-              |> Proof.refine (Method.Basic (fn ctxt =>
-                  Method.SIMPLE_METHOD (
-                    HEADGOAL (resolve_tac ctxt [recursion_thm]) THEN
-                    Raw_Simplifier.rewrite_goals_tac ctxt
-                        (All::forall::Named_Theorems.get ctxt @{named_theorems named_expansion})
-                  )))
-              |> Seq.the_result "should never fail"
-              |> Proof.refine (Method.Basic (fn ctxt =>
-                    Method.CONTEXT_METHOD (K (Nu_Reasoner.reason_tac ctxt))))
-              |> Seq.the_result "should never fail"
-              |> Proof.refine (Method.Basic (fn ctxt =>
-                    Method.SIMPLE_METHOD (HEADGOAL (rewrite_goal_tac ctxt [Subjection_simp_proc_arg]))))
-              |> Seq.the_result "should never fail"
-
-            val sequent = #goal (Proof.goal stat)
-            val goal' = Thm.cprem_of sequent 1 |> Thm.term_of |> dest_Trueprop
-
-            val vars = strip_binder_vars @{const_name All} goal'
-            val (var_names,_) = Proof_Context.add_fixes
-                  (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars)
-                  (Proof.context_of stat)
-            val vars' = map (Free o apsnd snd) (var_names ~~ vars)
-
-            val prems_goal =
-              subst_bounds (rev vars',
-                strip_binder_raw_body @{const_name All} goal')
-              |> strip_binop_r @{const_name "HOL.implies"}
-              |> map mk_Trueprop
-            val (prems, goal) = (front prems_goal, last prems_goal)
-
-            val assms = map (fn (tm,((b,attr),(_,pats))) =>
-                                 ((b, elim_premise @ map (Attrib.attribute ctxt) attr),
-                                   [(tm,pats)]))
-                  (prems ~~ (((Binding.name func_name,[]),(dummy,[]))::conds))
-
-
-            fun after_qed (ctxt,[[th]]) =
-                  I
-            
+            val goal_proc = Thm.cprem_of (#goal (Proof.goal stat)) 1
+                         |> Drule.strip_imp_concl
           in
             stat
-              |> Proof.enter_forward
-|> @{print}
-              |> Proof.internal_goal (K (K ())) Proof_Context.mode_schematic false "" NONE after_qed
-                    (map (fn (name,ty) => (Binding.name name, SOME ty, NoSyn)) vars)
-                    assms [(Binding.empty_atts, [(goal,[])])]
-|> @{print}
-              |> #2
-              |> Proof.map_context (put_thesis (cterm_of ctxt goal))
-              (* |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
-              |> Proof.map_context_result (start_proc func_name Arg #> swap)
-              |-> NuBasics.set_nu_fact *)
-          end
-            (* |> *)
-      in
-        (goal, constr_process, [])
-      end
+              |> Proof.map_context (put_thesis goal_proc)
 
-    fun post_process' binding int lthy th =
-      lthy
-        |> NuProcedure.define binding (
-            th |> repeat QuantExpansion.spec_retaining_name
-               |> repeat (fn th => th RS @{thm mp})
-            )
-        |-> (fn th => fn lthy =>
-              (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
-                  (("\<phi>procedure", ""), [("", [th])]); lthy))
+          end
+        fun post_process' binding int lthy th =
+          lthy
+            |> NuProcedure.define binding (
+                th |> Drule.forall_intr_list
+                        (map ( Thm.cterm_of lthy
+                             o map_types (map_type_tvar (fn ((name,_),s) => TVar ((name,0),s)))
+                             o map_aterms (fn (Var ((name,_),ty)) => Var ((name,0),ty) | x => x)
+                             o Morphism.term (Proof_Context.export_morphism ctxt''' lthy)
+                             o Free) vars'')
+                   |> Conv.fconv_rule (Conv.repeat_changed_conv (Object_Logic.atomize lthy))
+                   |> (fn sol => #end_proof procedure lthy sol
+                                    (singleton (Proof_Context.export ctxt''' lthy) proof0))
+                   |> Goal.conclude
+                   |> Object_Logic.rulify lthy
+               )
+            |-> (fn th => fn lthy =>
+                   (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
+                      (("\<phi>procedure", ""), [("", [th])]); lthy))
+      in
+        (goal, constr_process, post_process', vars'_fix @ drop (length raw_vars) fixes, conds')
+      end
   in
-    gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal post_process'
+    gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
         (binding,attr) raw_arg raw_ret (raw_vars @ raw_fixes)
   end
 
@@ -364,7 +455,7 @@ val begin_rec_proc_cmd = gen_begin_rec_proc
 fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
       binding arg ret additional_prop =
   let
-    fun mk_Goal (ctxt,_) (arg, ret, preconds) =
+    fun mk_Goal (ctxt,fixes,_) (arg, ret, preconds) =
       let
         val arg = parse_arg arg
         val ret = parse_arg ret
@@ -390,15 +481,14 @@ fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
             (*NuBasics.set_nu_fact sequent*)
             stat
           end
-      in
-        (goal, constr_process, preconds)
-      end
-    fun post_process binding int lthy th =
+        fun post_process binding int lthy th =
           (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
             (("\<phi>cast", ""), [("", [th])]); lthy)
+      in
+        (goal, constr_process, post_process, fixes, preconds)
+      end
   in
-    gen_constr_envir prep_term prep_prop prep_typ prep_var I mk_Goal post_process
-      binding arg ret
+    gen_constr_envir prep_term prep_prop prep_typ prep_var I mk_Goal binding arg ret
   end
 
 val begin_cast_cmd =
@@ -424,48 +514,50 @@ fun RSNXX ctxt tha (i, thb) =
 fun RSXX ctxt tha thb = RSNXX ctxt tha (1,thb);
 
 
+
+
+
+
+
 local
 
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
 
-fun gen_finish_proc qed genz int =
-  Proof.map_context_result (fn ctxt =>
-    let
-      val sequent = NuBasics.the_programming_sequent' ctxt
-      val goal = get_thesis ctxt
-      val desired_nu = PhiSyntax.dest_destined_phityp_c goal
-    in
-      (ctxt,sequent)
-        |> invoke_Block_End_Hook
-        |> (case genz
-              of Phi_Generalization.None => I
-             | _ => NuSys.cast (#3 (PhiSyntax.dest_CurrentConstruction (Thm.prop_of sequent))
-                                |> Phi_Generalization.generalize_cmd genz ctxt
-                                |> Syntax.check_term ctxt
-                                |> Thm.cterm_of ctxt))
-        |> NuSys.cast desired_nu
-        |> swap
-    end
-  )
-  #-> NuSys.obligation_proof (print_results int) Proof_Context.mode_default false "" NONE
-        (fn sequent => fn stat =>
-    let
-      val ctxt = Proof.context_of stat
-      val reassemble_proc_0 = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_0"
-      val sequent' =
-            if can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
-            then sequent RS reassemble_proc_0
-            else sequent
-      val end_tac = basic_method (fn ctxt' => fn prooof_stat => 
-            RSXX ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent') prooof_stat
-        handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
-     in
-      stat
-        |> Proof.set_facts [] 
-        |> qed (SOME (end_tac, Position.no_range), false)
-     end) [] []
-   #> snd
-
+fun gen_finish_proc qed genz int stat =
+  let
+    val ctxt_ = Proof.context_of stat
+    val goal = get_thesis ctxt_
+    val mode = working_mode_on1 ctxt_ (Thm.term_of goal)
+  in stat |>
+    Proof.map_context_result (fn ctxt =>
+      let
+        val sequent = NuBasics.the_programming_sequent' ctxt
+        val desired_nu = #desired_phi_c mode goal
+      in
+        (ctxt,sequent)
+          |> invoke_Block_End_Hook
+          |> (case genz
+                of Phi_Generalization.None => I
+              | _ => NuSys.cast (#desired_phi mode (Thm.prop_of sequent)
+                                  |> Phi_Generalization.generalize_cmd genz ctxt
+                                  |> Syntax.check_term ctxt
+                                  |> Thm.cterm_of ctxt))
+          |> NuSys.cast desired_nu
+          |> swap
+      end
+    )
+    |-> NuSys.obligation_proof (print_results int) Proof_Context.mode_default false "" NONE
+          (fn sequent => fn stat =>
+      let
+        val ctxt = Proof.context_of stat
+        val end_tac = basic_method (fn ctxt' => #end_block mode (ctxt,ctxt') sequent)
+       in
+        stat
+          |> Proof.set_facts [] 
+          |> qed (SOME (end_tac, Position.no_range), false)
+       end) [] []
+     |> snd
+  end
 in
 val end_block_cmd = gen_finish_proc Proof.local_qed
 
@@ -506,6 +598,7 @@ fun prove_prem int stat =
             )
   end
 
+
 local
 val attr_useful = map (Attrib.attribute @{context}) @{attributes [useful]}
 in
@@ -513,6 +606,7 @@ in
 fun gen_begin_block prep_attr bindings int stat =
   let open Proof
     val ctxt = context_of stat
+
     val is_top = not (NuBasics.under_programming_environ ctxt)
     val stat =
           if is_top
@@ -527,8 +621,8 @@ fun gen_begin_block prep_attr bindings int stat =
           if is_top
           then #goal (Proof.raw_goal stat)
           else the_nu_fact stat
-                |> Conv.fconv_rule (Conv.prems_conv 1 (Conv.repeat_changed_conv
-                      (Object_Logic.atomize ctxt)))
+                  |> Conv.fconv_rule (Conv.prems_conv 1 (Conv.repeat_changed_conv
+                          (Object_Logic.atomize ctxt)))
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)
                   |> begin_block
 
@@ -543,6 +637,8 @@ fun gen_begin_block prep_attr bindings int stat =
     val prems_goal = strip_binop_r @{const_name implies} goal
     val (prems, goal) = (front prems_goal, last prems_goal)
     val (proc,arg,ret) = PhiSyntax.dest_procedure goal
+
+    val mode = working_mode_on1 ctxt goal
     
     val blk_name = case proc of (Var ((x,_),_)) => x
                       | _ => "block"
@@ -555,11 +651,12 @@ fun gen_begin_block prep_attr bindings int stat =
       end_block stat |> (fn stat =>
           let val ctxt'' = context_of stat
               val vars' = Variable.export_terms ctxt' ctxt'' vars
-              fun gen_sequent sequent = 
-                    (singleton (Proof_Context.export ctxt' ctxt'') th
-                      |> Drule.forall_intr_list (map (cterm_of ctxt'') vars')
-                      |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
-                    ) RS sequent
+              fun gen_sequent sequent =
+                    #end_proof mode ctxt''
+                      (singleton (Proof_Context.export ctxt' ctxt'') th
+                        |> Drule.forall_intr_list (map (cterm_of ctxt'') vars')
+                        |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all})
+                      sequent
           in if is_top
              then stat
                     |> enter_backward

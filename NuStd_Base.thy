@@ -634,14 +634,11 @@ rec_proc dec:
   premises B: \<open>0 \<le> j\<close>
   argument \<open>i \<Ztypecolon> \<nat>[b]\<close>
   return \<open>0 \<Ztypecolon> \<nat>[b]\<close>
-  thm dec
-  ML_val \<open>@{Isar.goal}\<close>
   \<medium_left_bracket> \<rightarrow> vi ;;
     if \<open>0 < $vi\<close> \<medium_left_bracket> \<open>$vi - 1\<close> dec \<medium_right_bracket>.
                  \<medium_left_bracket> \<open>$vi\<close> is 0 \<medium_right_bracket>. ;;
-                 \<medium_right_bracket>.
-                 ML_val \<open>@{Isar.goal}\<close>
-                 .
+                 \<medium_right_bracket>. .
+
                  
 
 subsection \<open>Constant Pushing\<close>

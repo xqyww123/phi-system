@@ -128,11 +128,15 @@ fun norm_def ctxt (m,n) def = let
             (map Thm.reflexive (ty_vars @ normal_vars)) def
   end
 
+fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = concl_of x
+  | concl_of (\<^const>\<open>Pure.imp\<close> $ _ $ x) = concl_of x
+  | concl_of x = x
+
 fun gen_define (binding,attrs) sequent lthy =
   let
     val sequent = sequent
           |> Drule.zero_var_indexes
-    val (f,U,V) = Thm.concl_of sequent |> PhiSyntax.dest_procedure 
+    val (f,U,V) = Thm.concl_of sequent |> concl_of |> PhiSyntax.dest_procedure 
 
     (*all variables in the procedure body*)
     val vars = fold_aterms (fn Var v => insert (op =) (Var v)
