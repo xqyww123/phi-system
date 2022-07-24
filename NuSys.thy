@@ -2417,16 +2417,8 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
     val term = Syntax.parse_term ctxt_parser raw_term
                   |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
-    val mode_constr = can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
-    val synthesis = Proof_Context.get_thm ctxt  (if mode_constr then "local.__\<phi>synthesis__"
-                                                                else "local.__\<phi>synthesis__antecedent")
-                  |> Drule.infer_instantiate ctxt [(("X",0), term)]
-                  |> (fn rule => if mode_constr then sequent RS rule
-                                                else rule RS sequent)
    in
-    case Nu_Reasoner.reason (ctxt, synthesis)
-      of SOME ret => ret
-       | NONE => error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
+    NuToplevel.synthesis term (ctxt, sequent)
   end)\<close>
 
 \<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
@@ -2522,7 +2514,7 @@ simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a <named> 'names \<Right
   \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
 
 lemmas [unfolded atomize_eq[symmetric], named_expansion] =
-  HOL.simp_thms Product_Type.prod.case NuSys.named.case Function_over_case_named
+  Product_Type.prod.case NuSys.named.case Function_over_case_named
 
 
 section \<open>Mechanism III - Additional Parts\<close>

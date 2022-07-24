@@ -1,7 +1,7 @@
 theory NuStd_Base
   imports NuSys NuInstructions NuLLReps
   keywords
-     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "always" "--" "\<rightarrow>" "\<lambda>" "\<lambda>'" :: quasi_command
+     "\<up>:" "\<Up>:" "\<down>:" "\<Down>:" "always" "--" "\<rightarrow>" "\<lambda>" "\<lambda>'" "$" :: quasi_command
   abbrevs "|^" = "\<up>"
     and "||^" = "\<Up>"
     and "|v" = "\<down>"
@@ -61,6 +61,20 @@ lemma (in std) [\<phi>reason 2000 on \<open>Synthesis_Parse (?var::varname) ?Y\<
   \<open>Synthesis_Parse var (OBJ x \<Ztypecolon> Var var T)\<close>
   unfolding Synthesis_Parse_def ..
 
+
+\<phi>processor (in std) get_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
+  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.term >> (fn var => fn () =>
+    let
+      val ctxt_parse = Config.put phi_synthesis_parsing true ctxt
+      val term = Const(\<^const_name>\<open>get_var____\<phi>\<close>, dummyT) $ Syntax.parse_term ctxt_parse var
+                  |> Syntax.check_term ctxt_parse
+                  |> Thm.cterm_of ctxt
+    in
+      NuToplevel.synthesis term (ctxt,sequent)
+    end)
+\<close>
+
+
 subsubsection \<open>Operations\<close>
 
 ML_file_debug "library/local_value.ML"
@@ -76,8 +90,8 @@ proc op_get_var:
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> x \<Ztypecolon> T\<close>
   \<medium_left_bracket>
-  ;; to_Identity \<exists>v op_get_var''
-  \<medium_right_bracket> using \<phi> by simp .
+    to_Identity op_get_var''
+  \<medium_right_bracket>. .
 
 lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ?x <val-of-var> ?var \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> SUBGOAL G G2
@@ -100,8 +114,8 @@ proc op_set_var:
   argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> U\<close>
   return   \<open>y \<Ztypecolon> Var var U\<close>
   \<medium_left_bracket>
-    to_Identity \<exists>v
-    \<open>var\<close> to_Identity \<exists>u
+    to_Identity
+    \<open>var\<close> to_Identity
     op_set_var''
   \<medium_right_bracket>. .
 
@@ -129,7 +143,7 @@ proc op_var_scope:
     and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>\<close>
   argument \<open>X\<heavy_comma> x \<Ztypecolon> T\<close>
   return   \<open>Y\<close>
-  \<medium_left_bracket> to_Identity \<exists>v op_var_scope'' \<medium_left_bracket> BLK to_Identity \<medium_right_bracket>. \<medium_right_bracket>. .
+  \<medium_left_bracket> to_Identity op_var_scope'' \<medium_left_bracket> BLK to_Identity \<medium_right_bracket>. \<medium_right_bracket>. .
 
 lemma "__\<phi>op_var_scope__":
   \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>)
@@ -176,7 +190,7 @@ proc \<phi>__steal_value:
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
   argument \<open>X\<heavy_comma> VAL x \<Ztypecolon> T\<close>
   return   \<open>Y\<heavy_comma> x \<Ztypecolon> T\<close>
-  \<medium_left_bracket> \<rightarrow> t ;; F \<open>$t\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> \<rightarrow> t;; F $t \<medium_right_bracket>. .
 
 declare [[\<phi>not_define_new_const=false]]
 
@@ -213,7 +227,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<and> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<and> \<medium_right_bracket> .. .
+  \<medium_left_bracket> F1 \<rightarrow> y ;; F2 $y \<and> \<medium_right_bracket> .. .
 
 paragraph \<open>Or\<close>
 
@@ -230,7 +244,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<or> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<or> \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> y;; F2 $y \<or> \<medium_right_bracket>. .
 
 
 subsubsection \<open>Constant Integer\<close>
@@ -285,13 +299,13 @@ lemma (in std) op_add[\<phi>overload +]:
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x + ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   premises \<open>x + y < 2 ^ b\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x + y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. + \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y + \<medium_right_bracket>. .
 
 
 paragraph \<open>Subtraction\<close>
@@ -306,13 +320,13 @@ lemma (in std) op_sub[\<phi>overload -]:
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x - ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   premises \<open>y \<le> x\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x - y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. - \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y - \<medium_right_bracket>. .
 
 
 paragraph \<open>Division\<close>
@@ -326,12 +340,12 @@ lemma (in std) op_udiv[\<phi>overload /]:
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x div ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x div y) \<Ztypecolon> \<nat>[b]\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. / \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y / \<medium_right_bracket>. .
 
 
 paragraph \<open>Less Than\<close>
@@ -344,12 +358,12 @@ lemma (in std) op_lt[\<phi>overload <]:
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x < ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x < y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. < \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y ;; $x $y < \<medium_right_bracket>. .
 
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x > ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -359,7 +373,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x > y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. < \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> y;; F2 $y < \<medium_right_bracket>. .
 
 paragraph \<open>Less Equal\<close>
 
@@ -371,12 +385,12 @@ lemma (in std) op_le[\<phi>overload \<le>]:
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<le> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<le> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<le> \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y \<le> \<medium_right_bracket>. .
 
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<ge> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -386,7 +400,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<ge> y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. \<le> \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> x;; F2 $x \<le> \<medium_right_bracket>. .
 
 
 subsubsection \<open>General Arithmetic\<close>
@@ -411,8 +425,8 @@ apply (unfold \<phi>Equal_def Premise_def, simp)
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x = ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS VAL y \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL x \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS VAL x \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL y \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   assumes [\<phi>reason on \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason on \<open>\<phi>SemType (y \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason on \<open>\<phi>Equal T ?can_eq ?eq\<close>]: \<open>\<phi>Equal T can_eq (=)\<close>
@@ -420,7 +434,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x = y) \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<phi>__steal_value \<medium_left_bracket> F2 \<medium_right_bracket>. = \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y = \<medium_right_bracket>. .
 
 
 
@@ -505,9 +519,8 @@ assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bo
 argument \<open>X\<close>
 return   \<open>X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> cond x'\<close>
   \<medium_left_bracket> unfold V[unfolded Variant_Cast_def]
-    "__DoWhile__rule"[where I=\<open>\<lambda>_. True\<close>, where P=cond, simplified]
-    \<medium_left_bracket> B \<medium_right_bracket>.
-  !! \<medium_right_bracket>. .
+    "__DoWhile__rule"[where I=\<open>\<lambda>_. True\<close>, where P=cond, simplified] \<medium_left_bracket> B \<medium_right_bracket>.
+  \<medium_right_bracket>. .
 
 declare [[\<phi>not_define_new_const=false]]
 
@@ -549,7 +562,7 @@ proc
     \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>.
     \<medium_left_bracket> \<open>$v+1\<close> \<rightarrow> v \<medium_right_bracket>. ;; (* this ;; leads an empty statement which does nothing except simplification *)
     have [simp]: \<open>x = 10\<close> using \<phi> by simp ;;
-    \<open>$v\<close>
+    $v
   \<medium_right_bracket>. .
 
 
@@ -614,8 +627,6 @@ lemma [\<phi>reason 1200]:
   unfolding \<phi>SemTypes_def subset_iff image_iff Bex_def \<phi>SemType_def
   by (auto simp add: \<phi>expns times_list_def)
 
-ML \<open>@{term op_recursion}\<close>
-
 lemma "__op_recursion__":
   " (\<And>x. \<phi>SemTypes (X x) TXs)
 \<Longrightarrow> (\<And>x. \<phi>SemTypes (Y x) TYs)
@@ -629,117 +640,16 @@ lemma "__op_recursion__":
 
 
 rec_proc dec:
-  var i j
+  var i
   premises A: \<open>0 \<le> i\<close>
-  premises B: \<open>0 \<le> j\<close>
   argument \<open>i \<Ztypecolon> \<nat>[b]\<close>
   return \<open>0 \<Ztypecolon> \<nat>[b]\<close>
   \<medium_left_bracket> \<rightarrow> vi ;;
     if \<open>0 < $vi\<close> \<medium_left_bracket> \<open>$vi - 1\<close> dec \<medium_right_bracket>.
-                 \<medium_left_bracket> \<open>$vi\<close> is 0 \<medium_right_bracket>. ;;
-                 \<medium_right_bracket>. .
-
-                 
-
-subsection \<open>Constant Pushing\<close>
-
-subsubsection \<open>Integer\<close>
+                 \<medium_left_bracket> $vi is 0 \<medium_right_bracket>.
+  \<medium_right_bracket>. .
 
 
-lemma [\<phi>reason on ?any]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>
-   \<^bold>m\<^bold>a\<^bold>k\<^bold>e ((numeral x) \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (numeral x) \<lbrace> R \<longmapsto> R \<heavy_comma> (numeral x) \<tycolon> \<nat>['w] \<rbrace>"
-  unfolding op_const_int_def \<phi>def by (auto simp add: nu_exps) (metis mod_if unat_bintrunc unat_numeral)
-  \<comment> \<open>Only literal number could be constructed automatically\<close>
-
-lemma [\<phi>reason on ?any]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e (0 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 0 \<lbrace> R \<longmapsto> R \<heavy_comma> 0 \<tycolon> \<nat>['w] \<rbrace>"
-  unfolding MakeTag_def \<phi>def op_const_int_def by (auto simp add: nu_exps)
-
-lemma [\<phi>reason on ?any]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e (1 \<tycolon> \<nat>['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 1 \<lbrace> R \<longmapsto> R \<heavy_comma> 1 \<tycolon> \<nat>['w] \<rbrace>"
-  unfolding MakeTag_def \<phi>def op_const_int_def by (auto simp add: nu_exps)
-
-lemma [\<phi>reason on ?any]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (numeral x :: nat) < 2^LENGTH('w) \<Longrightarrow>
-   \<^bold>m\<^bold>a\<^bold>k\<^bold>e ((numeral x) \<tycolon> \<nat>\<^sup>r['w])
-   \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) (numeral x) \<lbrace> R \<longmapsto> R \<heavy_comma> (numeral x) \<tycolon> \<nat>\<^sup>r['w] \<rbrace>"
-  unfolding op_const_int_def \<phi>def by (auto simp add: nu_exps)
-
-lemma [\<phi>reason on ?any]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e (0 \<tycolon> \<nat>\<^sup>r['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 0 \<lbrace> R \<longmapsto> R \<heavy_comma> 0 \<tycolon> \<nat>\<^sup>r['w] \<rbrace>"
-  unfolding op_const_int_def \<phi>def by (auto simp add: nu_exps)
-
-lemma [\<phi>reason on ?any]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e (1 \<tycolon> \<nat>\<^sup>r['w]) \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int TYPE('w::len) 1 \<lbrace> R \<longmapsto> R \<heavy_comma> 1 \<tycolon> \<nat>\<^sup>r['w] \<rbrace>"
-  unfolding op_const_int_def \<phi>def by (auto simp add: nu_exps)
-
-
-lemma [\<phi>reason 1100 on ?any]:
-  "\<^bold>m\<^bold>a\<^bold>k\<^bold>e ((numeral x) \<tycolon> \<nat>[size_t])
-   \<^bold>b\<^bold>y \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t (numeral x) \<lbrace> R \<longmapsto> R \<heavy_comma> (numeral x) \<tycolon> \<nat>[size_t] \<rbrace>"
-  unfolding op_const_size_t_def \<phi>def by (auto simp add: nu_exps nat_take_bit_eq take_bit_nat_eq_self_iff)
-
-
-subsection \<open>Arithmetic\<close>
-
-\<phi>overloads "+" and round_add and "<" and "\<le>" and "-" and "/" and "=" and "not" and "\<and>" and "\<or>"
-
-subsubsection \<open>Common\<close>
-
-term op_equal
-
-theorem op_equal[\<phi>overload =]:
-  "\<phi>Equal N P eq \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P a b
-  \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_equal TYPE('a::{ceq,lrep}) :: 'a \<times> 'a \<times> 'r::stack \<longmapsto> 1 word \<times> 'r ) \<lbrace> a \<tycolon> N \<heavy_comma> b \<tycolon> N \<longmapsto> eq a b \<tycolon> \<bool> \<rbrace>"
-  for N :: "('a::{ceq,lrep},'ax) \<phi>"
-  unfolding \<phi>def op_equal_def by (auto 0 6 simp add: nu_exps)
-
-
-subsubsection \<open>Integer\<close>
-
-theorem add_nat_\<phi>app[\<phi>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b \<longrightarrow>
-    \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b \<lbrace> x \<Ztypecolon> \<nat>[b] \<heavy_comma> y \<Ztypecolon> \<nat>[b] \<longmapsto> x + y \<Ztypecolon> \<nat>[b] \<rbrace>"
-  unfolding op_add_def by (rule, elim Premise_E, rule \<phi>M_getV, simp add: \<phi>expns,
-      rule \<phi>M_tail_left, rule \<phi>M_getV, simp add: \<phi>expns, rule \<phi>M_tail_right,
-      rule \<phi>M_put_Val, simp add: \<phi>expns)
-
-theorem add_nat_round[\<phi>overload +]:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b \<lbrace> x \<Ztypecolon> \<nat>\<^sup>r[b] \<heavy_comma> y \<Ztypecolon> \<nat>\<^sup>r[b] \<longmapsto> (x + y) \<Ztypecolon> \<nat>\<^sup>r[b] \<rbrace>"
-  unfolding op_add_def by (rule \<phi>M_getV, simp_all add: \<phi>expns,
-      rule \<phi>M_tail_left, rule \<phi>M_getV, simp_all add: \<phi>expns,
-      rule \<phi>M_tail_right, rule \<phi>M_put_Val, simp add: \<phi>expns) presburger
-
-theorem sub_nat_\<phi>app[\<phi>overload -]:
-    "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x \<longrightarrow>
-    \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub TYPE('w::len) \<lbrace> x \<tycolon> \<nat>['w] \<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> x - y \<tycolon> \<nat>['w] \<rbrace>"
-  unfolding \<phi>def op_sub_def by (auto simp add: nu_exps) (meson unat_sub_if_size)
-
-theorem udiv_nat_\<phi>app[\<phi>overload /]:
-    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv TYPE('w::len) \<lbrace> x \<tycolon> \<nat>['w] \<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> x div y \<tycolon> \<nat>['w] \<rbrace>"
-  unfolding \<phi>def op_udiv_def by (auto simp add: nu_exps) (meson unat_div)
-
-theorem op_lt_\<phi>app[\<phi>overload <]:
-    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt TYPE('w::len) \<lbrace> x \<tycolon> \<nat>['w] \<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> (x < y) \<tycolon> \<bool> \<rbrace>"
-  unfolding \<phi>def op_lt_def by (auto simp add: word_less_nat_alt nu_exps)
-
-theorem op_le_\<phi>app[\<phi>overload \<le>]:
-    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le TYPE('w::len) \<lbrace> x \<tycolon> \<nat>['w] \<heavy_comma> y \<tycolon> \<nat>['w] \<longmapsto> (x \<le> y) \<tycolon> \<bool> \<rbrace>"
-  unfolding \<phi>def op_le_def by (auto simp add: word_le_nat_alt nu_exps)
-
-lemma boolean_not_\<phi>app[\<phi>overload not]:
-    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not TYPE(1) \<lbrace> x \<tycolon> \<bool> \<longmapsto> \<not> x \<tycolon> \<bool> \<rbrace>"
-  unfolding Procedure_def op_not_def apply (auto simp add: lrep_exps nu_exps)
-  by (metis even_take_bit_eq even_zero iszero_def odd_numeral one_neq_zero)
-
-lemma boolean_and_\<phi>app[\<phi>overload \<and>]:
-    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and TYPE(1) \<lbrace> x \<tycolon> \<bool> \<heavy_comma> y \<tycolon> \<bool> \<longmapsto> x \<and> y \<tycolon> \<bool> \<rbrace>"
-  unfolding Procedure_def op_and_def by (auto simp add: lrep_exps nu_exps)
-
-lemma boolean_or_\<phi>app[\<phi>overload \<or>]:
-    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or TYPE(1) \<lbrace> x \<tycolon> \<bool> \<heavy_comma> y \<tycolon> \<bool> \<longmapsto> x \<or> y \<tycolon> \<bool> \<rbrace>"
-  unfolding Procedure_def op_or_def by (auto simp add: lrep_exps nu_exps)
 
 subsection \<open>Field Index\<close>
 
