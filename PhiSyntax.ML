@@ -17,8 +17,8 @@ include PHI_SYNTAX
 
   val dest_CurrentConstruction : term -> term * term * term
   val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm
-  val dest_PendingConstruction : term -> term * term * term * term
-  val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm
+  val dest_PendingConstruction : term -> term * term * term * term * term
+  val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm * cterm
   val dest_current_nu   : thm -> term
   val dest_current_nu_c : thm -> cterm
 
@@ -27,18 +27,21 @@ include PHI_SYNTAX
   val current_block_var   : thm -> term
   val current_block_var_c : thm -> cterm
   val current_block_depth : thm -> int
-  val dest_codeblock   : term -> term * term * term
-  val dest_codeblock_c : cterm -> cterm * cterm * cterm
+  val dest_codeblock   : term -> term * term * term * term * term
+  val dest_codeblock_c : cterm -> cterm * cterm * cterm * cterm * cterm
   val codeblock_name   : term -> string
   val codeblocks_of   : thm -> term list
   val codeblocks_of_c : thm -> cterm list
   val current_codeblock : thm -> cterm
 
-  val dest_procedure   : term -> term * term * term
-  val dest_procedure_c : cterm -> cterm * cterm * cterm
+  val dest_procedure   : term -> term * term * term * term
+  val dest_procedure_c : cterm -> cterm * cterm * cterm * cterm
 
   val dest_destined_phityp   : term -> term
   val dest_destined_phityp_c : cterm -> cterm
+
+  val dest_subtyping   : term  -> term * term * term
+  val dest_subtyping_c : cterm -> cterm * cterm * cterm
 
   val strip_separations : term -> term list
 end
@@ -108,9 +111,9 @@ val dest_CurrentConstruction   =
 val dest_CurrentConstruction_c =
       perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "std.CurrentConstruction"}
 val dest_PendingConstruction   =
-      perhaps (try dest_Trueprop) #> dest_quadop @{const_name "std.PendingConstruction"}
+      perhaps (try dest_Trueprop) #> dest_quinop @{const_name "std.PendingConstruction"}
 val dest_PendingConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "std.PendingConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "std.PendingConstruction"}
 
 fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
   handle TERM _ => ((dest_PendingConstruction c |> #2)
@@ -137,9 +140,9 @@ val current_block_var =
     #> perhaps (try Logic.strip_assums_concl)
     #> perhaps (try dest_Trueprop)
     #> block_var_of_Constuction
-val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_triop @{const_name "CodeBlock"}
+val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_quinop @{const_name "std.CodeBlock"}
 val codeblock_name   = dest_codeblock #> #1 #> term_name
-val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "CodeBlock"}
+val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "std.CodeBlock"}
 val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
 val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
 fun current_block_depth th =
@@ -163,9 +166,9 @@ val dest_goal_ctxt   = dest_binop   \<^const_name>\<open>GOAL_CTXT\<close> #> #1
 val dest_goal_ctxt_c = dest_binop_c \<^const_name>\<open>GOAL_CTXT\<close> #> #1
 
 val dest_procedure   = perhaps (try dest_Trueprop) #> perhaps (try dest_goal_ctxt)
-  #> dest_triop @{const_name "std.\<phi>Procedure"}
+  #> dest_quadop @{const_name "std.\<phi>Procedure"}
 val dest_procedure_c = perhaps (try dest_Trueprop_c) #> perhaps (try dest_goal_ctxt_c)
-  #> dest_triop_c @{const_name "std.\<phi>Procedure"}
+  #> dest_quadop_c @{const_name "std.\<phi>Procedure"}
 
 val dest_subtyping   = perhaps (try dest_Trueprop)
   #> dest_triop @{const_name "Subty"}
@@ -175,13 +178,13 @@ val dest_subtyping_c = perhaps (try dest_Trueprop_c)
 
 fun dest_destined_phityp term =
   case try dest_procedure term
-    of SOME (_,_,ty) => ty | _ => 
+    of SOME (_,_,ty,_) => ty | _ => 
   case try dest_subtyping term
     of SOME (_,ty,_) => ty | _ => raise TERM ("dest_destined_phityp", [term])
 
 fun dest_destined_phityp_c term =
   case try dest_procedure_c term
-    of SOME (_,_,ty) => ty | _ => 
+    of SOME (_,_,ty,_) => ty | _ => 
   case try dest_subtyping_c term
     of SOME (_,ty,_) => ty | _ => raise CTERM ("dest_destined_phityp", [term])
 

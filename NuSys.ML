@@ -114,12 +114,12 @@ fun cast desired_nu (ctxt,sequent) =
 
 fun export_codeblock ctxt cb sequent =
   let open PhiSyntax
-    val (f,_,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
+    val (f,_,_,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
     val reassemble_proc = Proof_Context.get_thm ctxt
           (case f of Const (\<^const_name>\<open>EMPTY_PROC\<close>, _)
                 => "local.\<phi>reassemble_proc_00"
             | _ => "local.\<phi>reassemble_proc")
-    val (s',_,_) = dest_codeblock_c cb
+    val (s',_,_,_,_) = dest_codeblock_c cb
   in
     sequent
       |> Thm.implies_intr cb
@@ -131,7 +131,7 @@ fun export_codeblock ctxt cb sequent =
 
 fun accept_proc (ctxt,sequent) =
   let open PhiSyntax
-    val (f,s,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
+    val (f,s,_,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
     val tyb = range_type (fastype_of f)
     val name = term_name s |> Variable.revert_fixed ctxt
     val ([name],ctxt) = Variable.add_fixes [name] ctxt
@@ -140,13 +140,12 @@ fun accept_proc (ctxt,sequent) =
     val s' = Thm.cterm_of ctxt s'
     val accept_proc_thm = Proof_Context.get_thm ctxt "local.\<phi>accept_proc"
     val accept_proc_thm = Drule.infer_instantiate ctxt [(("s'",0),s')] accept_proc_thm
-    val sequent = sequent RS accept_proc_thm
-    val assm = Thm.cprem_of sequent 1
+    val sequent' = sequent RS accept_proc_thm
+    val assm = Thm.cprem_of sequent' 1
     val ([cb],ctxt) = Assumption.add_assms
           (fn _ => fn [cb] => (export_codeblock ctxt cb, I)) [assm] ctxt
-    val sequent = cb RS sequent
   in
-    (ctxt,sequent)
+    (ctxt, cb RS sequent')
   end
 
 (*Param & Label*)
@@ -214,7 +213,7 @@ fun start_proc blk_name arg_nuTy ctxt =
 fun rename_blk_var name (ctxt,meta) =
   let open PhiSyntax
     val codeblock = current_codeblock meta
-    val (s,_,_) = dest_codeblock_c codeblock
+    val (s,_,_,_,_) = dest_codeblock_c codeblock
     val thy = Thm.theory_of_thm meta
     val s' = Thm.global_cterm_of thy (Free (name, typ_of_cterm s))
     val meta = meta |> implies_intr codeblock

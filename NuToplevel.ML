@@ -19,6 +19,7 @@ signature NU_TOPLEVEL = sig
   val begin_proc_cmd : Attrib.binding 
         -> xstring (*argument*)
         -> xstring (*return*)
+        -> xstring option (*throws*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
         -> (indexname list * string) list (*let patterns*)
@@ -29,6 +30,7 @@ signature NU_TOPLEVEL = sig
   val begin_rec_proc_cmd : Attrib.binding 
         -> xstring (*argument*)
         -> xstring (*return*)
+        -> xstring option (*throws*)
         -> ((binding * string option * mixfix) list * (*variants*)
             (binding * string option * mixfix) list   (*for fixes*))
         -> (xstring * Position.T) list (*includes*)
@@ -130,8 +132,8 @@ datatype cond_kind = Premise | Requirement
 
 type working_mode = {
   domain: Proof.context -> term -> bool,
-  desired_phi: term (*term of the current sequent*) -> term,
-  desired_phi_c: cterm (*term of the current sequent*) -> cterm,
+  destined_phi: term (*term of the current sequent*) -> term,
+  destined_phi_c: cterm (*term of the current sequent*) -> cterm,
   end_block: (Proof.context * Proof.context) -> thm (*solution*) -> thm (*goal*) -> thm (*goal'*),
   end_proof: Proof.context -> thm (*solution*) -> thm (*goal*) -> thm (*goal'*)
 }
@@ -151,69 +153,53 @@ fun working_mode_on1 ctxt goal =
 
 fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
 
-fun strip_forall_implies btys (\<^const>\<open>Trueprop\<close> $ x) = strip_forall_implies btys x
-  | strip_forall_implies btys (Const (\<^const_name>\<open>All\<close>, _) $ Abs (_,ty,x))
-      = strip_forall_implies (ty::btys) x
-  | strip_forall_implies btys (Const (\<^const_name>\<open>implies\<close>, _) $ _ $ x)
-      = strip_forall_implies btys x
-  | strip_forall_implies btys x = (btys,x)
+fun comp_no_flatten_matched (th, n) i rule =
+  (case distinct Thm.eq_thm (Seq.list_of
+      (Thm.bicompose NONE {flatten = false, match = true, incremented = true}
+        (false, th, n) i rule)) of
+    [th'] => Thm.solve_constraints th'
+  | [] => raise THM ("comp_no_flatten", i, [th, rule])
+  | _ => raise THM ("comp_no_flatten: unique result expected", i, [th, rule]));
 
-fun abstract_bound_over (j, body) =
+fun mk_Application_Conv th1' th2 =
   let
-    fun abs i lev tm =
-      if Bound i aconv tm then Bound lev
-      else
-        (case tm of
-          Abs (a, T, t) => Abs (a, T, abs (i+1) (lev + 1) t)
-        | t $ u =>
-            (abs i lev t $ (abs i lev u handle Same.SAME => u)
-              handle Same.SAME => t $ abs i lev u)
-        | _ => raise Same.SAME);
-  in abs j 0 body handle Same.SAME => body end;
-
-
+    val th1 = Drule.incr_indexes th2 th1'
+  in Thm.instantiate (TVars.empty, Vars.make [
+              ((("P",0), \<^typ>\<open>prop\<close>), Thm.cprop_of th1),
+              ((("Q",0), \<^typ>\<open>prop\<close>), Thm.cprem_of th2 1)
+          ]) @{thm \<phi>Application_Conv}
+     |> (fn th => comp_no_flatten_matched (implies_elim th th1, Thm.nprems_of th1 + 1) 1 th2)
+  end
 
 val procedure : working_mode = 
   let
-    val desired_phi = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction))
+    val destined_phi = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction))
            (#3 o PhiSyntax.dest_procedure)
-    val desired_phi_c = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction_c))
+    val destined_phi_c = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction_c))
            (#3 o PhiSyntax.dest_procedure_c)
-    fun my_abstract_over _ (v as Free (name,ty)) body =
-          Abs (name, ty, abstract_over (v,body))
-      | my_abstract_over btys (Bound i) body =
-          Abs ("", nth btys i, abstract_bound_over (i,body))
-      | my_abstract_over _ v body =
-          Abs ("", fastype_of v, abstract_over (v,body))
-    fun exaustive_abst solution goal =
-      let
-        val thy = Thm.theory_of_thm solution
-        val (_, (fg,_,_)) = Thm.major_prem_of goal
-              |> strip_forall_implies []
-              |> apsnd PhiSyntax.dest_procedure
-        val (btys, (fs,_,_)) = Thm.concl_of solution
-              |> strip_forall_implies []
-              |> apsnd PhiSyntax.dest_procedure
-      in case Term.strip_comb fg of (Var v, args) =>
-           Thm.instantiate (TVars.empty,
-                             Vars.make [(v, Thm.global_cterm_of thy
-                                                    (fold (my_abstract_over btys) args fs))]) goal
-           | _ => goal
-      end
     fun initial_reassemble ctxt sequent =
           if can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
           then sequent RS Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_0"
           else sequent
   in {
     domain = (K (can PhiSyntax.dest_procedure)),
-    desired_phi = desired_phi,
-    desired_phi_c = desired_phi_c,
-    end_proof = (fn _ => fn solution => fn goal => solution RS exaustive_abst solution goal),
+    destined_phi = destined_phi,
+    destined_phi_c = destined_phi_c,
+    end_proof = (fn ctxt => fn solution => fn goal =>
+        (ctxt, mk_Application_Conv solution goal)
+          |> Nu_Reasoner.reason
+          |> (fn SOME (_, ret) => ret
+               | NONE => error("Fail to end the block. "^
+                   "You may turn on \<phi>trace_reasoning to debug where the reasoning fails."))),
     end_block = (fn (ctxt,ctxt') => fn solution => fn goal =>
         let
           val solution' = singleton (Proof_Context.export ctxt ctxt') (initial_reassemble ctxt solution)
         in
-          solution' RS exaustive_abst solution' goal
+          (ctxt', mk_Application_Conv solution' goal)
+            |> Nu_Reasoner.reason
+            |> (fn SOME (_, ret) => ret
+                 | NONE => error("Fail to end the block. "^
+                     "You may turn on \<phi>trace_reasoning to debug where the reasoning fails."))
         end
         handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
 } end
@@ -230,7 +216,7 @@ val _ = Theory.setup (Context.theory_map
 
 
 fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
-      binding arg ret rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt int ctxt =
+      binding arg ret throws rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt int ctxt =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes (prep_ctx ctxt)
     val binding = binding |> apsnd (map (Attrib.check_src ctxt))
@@ -261,7 +247,10 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
 
     val (goal', constr_process, post_process, fixes', preconds') =
           mk_Goal (ctx_parse,fixes,var_names)
-                  (parse_term arg, parse_term ret, preconds)
+                  (parse_term arg,
+                   parse_term ret,
+                   (case throws of SOME thr => parse_term thr | NONE => Term.dummy),
+                   preconds)
 
     val goal = case raw_goal_ctxt of NONE => goal'
                  | SOME G => Const (\<^const_name>\<open>GOAL_CTXT\<close>, dummyT)
@@ -296,14 +285,17 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
 fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process binding =
   let
     val prep_ctx = I
-    fun mk_Goal (ctxt,fixes,_) arg_ret_conds =
+    fun mk_Goal (ctxt,fixes,_) arg_ret_throws_conds =
       let
-        val (arg, ret, preconds) = prep_Nu ctxt arg_ret_conds
+        val (arg, ret, throws', preconds) = prep_Nu ctxt arg_ret_throws_conds
         (*val _ = debug_term ctxt "arg " arg
         val _ = debug_term ctxt "ret " ret*)
         val v_proc = Var (v_proc_var, PhiSyntax.mk_procT ctxt)
+        val throws = if throws' = Term.dummy
+                     then Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT)
+                     else throws'
         val goal = mk_Trueprop
-          (Const ("local.\<phi>Procedure", dummyT) $ v_proc $ arg $ ret)
+          (Const ("local.\<phi>Procedure", dummyT) $ v_proc $ arg $ ret $ throws)
 
         fun constr_process stat =
           let
@@ -332,16 +324,16 @@ val begin_proc =
       gen_begin_proc (K I) (K I) (K I) Proof_Context.cert_var (K I) (K I)
 val begin_proc_cmd =
       gen_begin_proc Syntax.parse_term Syntax.parse_prop Syntax.parse_typ Proof_Context.read_var
-        (fn ctxt => fn (arg,ret,conds) =>
-          (parse_arg arg, parse_arg ret, conds)
+        (fn ctxt => fn (arg,ret,throws,conds) =>
+          (parse_arg arg, parse_arg ret, parse_arg throws, conds)
         ) (K I)
 
 fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
-        (binding,attr) raw_arg raw_ret (raw_vars, raw_fixes) =
+        (binding,attr) raw_arg raw_ret raw_throw (raw_vars, raw_fixes) =
   let open QuantExpansion
     val prep_ctx = I
     val func_name = Binding.name_of binding
-    fun mk_Goal (ctxt,fixes,fixed_names) (arg,ret,conds) = 
+    fun mk_Goal (ctxt,fixes,fixed_names) (raw_arg,raw_ret,raw_throws,conds) = 
       let
         val ([tArg,tRet], ctxt') =
                 Variable.variant_fixes ["\<tau>Arg", "\<tau>Ret"]
@@ -350,8 +342,9 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         val var_names = take (length raw_vars) fixed_names
         val vars = origin_names ~~ (map (rpair dummyT) var_names)
 
-        val arg = parse_arg arg
-        val ret = parse_arg ret
+        val arg = parse_arg raw_arg
+        val ret = parse_arg raw_ret
+        val throws = parse_arg raw_throws
 
         val conds' = map (snd #> fst #> perhaps (try dest_Trueprop)) conds
         val arg' = arg
@@ -364,6 +357,12 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
               |> tuple_abs vars
               |> mk_cases_named origin_names
               |> (fn tm => tm $ Bound 0)
+        val throws' = (if throws = Term.dummy
+                       then Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT)
+                       else throws)
+              |> tuple_abs vars
+              |> mk_cases_named origin_names
+              |> (fn tm => tm $ Bound 0)
 
         val goal0 = mk_Trueprop (
               Const (@{const_name All}, dummyT) $ Abs("x", dummyT,
@@ -373,7 +372,8 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                       $ Var ((tRet,0), dummyT)
                       $ Var ((func_name,0), dummyT))
                   $ arg'
-                  $ ret')))
+                  $ ret'
+                  $ throws')))
         val other_frees = Term.add_frees goal0 []
                        |> filter_out (fn (v,_) => exists (fn u => v = u) fixed_names)
         val (_,ctxt'') = Proof_Context.add_fixes
@@ -447,7 +447,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
       end
   in
     gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
-        (binding,attr) raw_arg raw_ret (raw_vars @ raw_fixes)
+        (binding,attr) raw_arg raw_ret raw_throw (raw_vars @ raw_fixes)
   end
 
 val begin_rec_proc_cmd = gen_begin_rec_proc
@@ -456,7 +456,7 @@ val begin_rec_proc_cmd = gen_begin_rec_proc
 fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
       binding arg ret additional_prop =
   let
-    fun mk_Goal (ctxt,fixes,_) (arg, ret, preconds) =
+    fun mk_Goal (ctxt,fixes,_) (arg, ret, _, preconds) =
       let
         val arg = parse_arg arg
         val ret = parse_arg ret
@@ -489,7 +489,7 @@ fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
         (goal, constr_process, post_process, fixes, preconds)
       end
   in
-    gen_constr_envir prep_term prep_prop prep_typ prep_var I mk_Goal binding arg ret
+    gen_constr_envir prep_term prep_prop prep_typ prep_var I mk_Goal binding arg ret NONE
   end
 
 val begin_cast_cmd =
@@ -533,13 +533,13 @@ fun gen_finish_proc qed genz int stat =
     Proof.map_context_result (fn ctxt =>
       let
         val sequent = NuBasics.the_programming_sequent' ctxt
-        val desired_nu = #desired_phi_c mode goal
+        val desired_nu = #destined_phi_c mode goal
       in
         (ctxt,sequent)
           |> invoke_Block_End_Hook
           |> (case genz
                 of Phi_Generalization.None => I
-              | _ => NuSys.cast (#desired_phi mode (Thm.prop_of sequent)
+              | _ => NuSys.cast (#destined_phi mode (Thm.prop_of sequent)
                                   |> Phi_Generalization.generalize_cmd genz ctxt
                                   |> Syntax.check_term ctxt
                                   |> Thm.cterm_of ctxt))
@@ -653,7 +653,7 @@ fun gen_begin_block prep_attr bindings int stat =
     val goal = subst_bounds (rev vars, goal)
     val prems_goal = strip_binop_r @{const_name implies} goal
     val (prems, goal) = (front prems_goal, last prems_goal)
-    val (proc,arg,ret) = PhiSyntax.dest_procedure goal
+    val (proc,arg,ret,_) = PhiSyntax.dest_procedure goal
 
     val mode = working_mode_on1 ctxt goal
     
@@ -686,7 +686,9 @@ fun gen_begin_block prep_attr bindings int stat =
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
     val bindings =
-      ((map (apsnd (map (prep_attr ctxt))) bindings)
+      ((map (apsnd (map (prep_attr ctxt))
+          #> apfst (fn x => if Binding.name_of x = "_" then Binding.empty else x)
+            ) bindings)
           @ (List.tabulate (delta, K (Binding.empty, attr_useful))))
         |> map (apsnd (fn x => elim_premise @ x))
   in

@@ -917,9 +917,12 @@ lemma INTERP_COMP[\<phi>expns]:
   \<open>(s,res) \<in> INTERP_COMP T \<longleftrightarrow> (\<exists>fic. (s,fic) \<in> T \<and> res \<in> INTERP_RES fic)\<close>
   unfolding INTERP_COMP_def by simp
 
-lemma INTERP_COMP_subset[intro]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_COMP A \<subseteq> INTERP_COMP B\<close>
+lemma INTERP_COMP_subset[intro, simp]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_COMP A \<subseteq> INTERP_COMP B\<close>
   unfolding INTERP_COMP_def subset_iff by simp blast
 
+lemma INTERP_COMP_empty[intro, simp]:
+  \<open>S = {} \<Longrightarrow> INTERP_COMP S = {}\<close>
+  unfolding INTERP_COMP_def set_eq_iff by simp
 
 lemma INTERP_mono:
   \<open> Fic_Space fic
@@ -1232,7 +1235,7 @@ lemma Separation_I[intro]:
 
 *)
 
-subsection \<open>Hoare Triple\<close>
+subsection \<open>Assertion\<close>
 
 context std begin
 
@@ -1242,9 +1245,9 @@ definition \<phi>Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'FIC_
     (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> (INTERP_COMP (R * U)) (INTERP_COMP (R * E)))"
 
 abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
-  where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U {}\<close>
+  where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
 
-paragraph \<open>Hoare Rules\<close>
+subsubsection \<open>Essential Hoare Rules\<close>
 
 lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c SKIP \<lbrace> T \<longmapsto> T \<rbrace>" unfolding \<phi>Procedure_def by simp
 
@@ -1259,13 +1262,9 @@ lemma \<phi>frame:
   unfolding \<phi>Procedure_def
   by (metis (no_types, lifting) mult.assoc)
 
-
-lemma times_set_subset[intro]:
-  \<open>B \<subseteq> B' \<Longrightarrow> A * B \<subseteq> A * B'\<close>
-  \<open>B \<subseteq> B' \<Longrightarrow> B * A \<subseteq> B' * A\<close>
-  unfolding subset_iff times_set_def by simp_all blast+
-
-
+lemma \<phi>frame0:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> R * B \<rbrace>"
+  using \<phi>frame[where E=0, simplified] .
 
 lemma \<phi>CONSEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
@@ -1275,8 +1274,8 @@ lemma \<phi>CONSEQ:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
   unfolding \<phi>Procedure_def
   by simp (meson INTERP_COMP_subset LooseStateTy_subset subset_iff times_set_subset)
-
 end
+
 
 (* definition Map :: " 'a set \<Rightarrow> 'b set \<Rightarrow> ('a \<Rightarrow> 'b) set " where "Map A B = {f. \<forall>a. a \<in> A \<longrightarrow> f a \<in> B }"
 definition Map' :: "('a \<Rightarrow> 'b) \<Rightarrow> 'a set \<Rightarrow> 'b set \<Rightarrow> bool" ("(2\<^bold>m\<^bold>a\<^bold>p _/ \<lbrace>(2 _/ \<longmapsto> _ )\<rbrace>)" [101,2,2] 100)

@@ -136,7 +136,7 @@ fun gen_define (binding,attrs) sequent lthy =
   let
     val sequent = sequent
           |> Drule.zero_var_indexes
-    val (f,U,V) = Thm.concl_of sequent |> concl_of |> PhiSyntax.dest_procedure 
+    val (f,_,_,_) = Thm.concl_of sequent |> concl_of |> PhiSyntax.dest_procedure 
 
     (*all variables in the procedure body*)
     val vars = fold_aterms (fn Var v => insert (op =) (Var v)

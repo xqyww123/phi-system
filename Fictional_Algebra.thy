@@ -529,7 +529,7 @@ lemma times_set_I:
   \<open>x \<in> P \<Longrightarrow> y \<in> Q \<Longrightarrow> x * y \<in> P * Q\<close>
   unfolding times_set_def by simp blast
 
-lemma set_mult_zero[simp]: "{} * S = {}" "S * {} = {}"
+lemma set_mult_zero[iff]: "{} * S = {}" "S * {} = {}"
   unfolding times_set_def by simp_all
 
 lemma set_mult_single: \<open>{A} * {B} = {A * B}\<close>
@@ -542,6 +542,11 @@ lemma set_mult_expn[\<phi>expns]:
 lemma set_mult_inhabited[elim!]:
   \<open>Inhabited (S * T) \<Longrightarrow> (Inhabited S \<Longrightarrow> Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def times_set_def by simp
+
+lemma times_set_subset[intro, simp]:
+  \<open>B \<subseteq> B' \<Longrightarrow> A * B \<subseteq> A * B'\<close>
+  \<open>B \<subseteq> B' \<Longrightarrow> B * A \<subseteq> B' * A\<close>
+  unfolding subset_iff times_set_def by simp_all blast+
 
 instantiation set :: (times) mult_zero begin
 instance by standard (simp_all add: zero_set_def)
@@ -568,6 +573,29 @@ instance apply standard
   using mult.commute by blast
 end
 
+instantiation set :: (type) comm_monoid_add begin
+definition \<open>plus_set = union\<close>
+instance by standard (auto simp add: plus_set_def zero_set_def)
+end
+
+instantiation set :: (semigroup_mult) semiring_0 begin
+instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
+end
+
+instantiation set :: (monoid_mult) semiring_1 begin
+instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
+end
+
+instantiation set :: (ab_semigroup_mult) comm_semiring_0 begin
+instance apply standard
+  apply (simp add: zero_set_def plus_set_def times_set_def)
+  using mult.commute apply blast
+  by (simp add: distrib_right)
+end
+
+instantiation set :: (comm_monoid_mult) comm_semiring_1 begin
+instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
+end
 
 subsubsection \<open>Partial Map\<close>
 

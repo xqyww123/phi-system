@@ -528,8 +528,8 @@ lemma (in std) op_set_var''_\<phi>app:
 
 lemma (in std) op_var_scope':
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace> )
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F \<lbrace> X\<heavy_comma> v \<Ztypecolon> Identity \<longmapsto> Y \<rbrace>\<close>
+    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
+    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F \<lbrace> X\<heavy_comma> v \<Ztypecolon> Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding op_var_scope'_def Premise_def
   apply (rule \<phi>M_get_Val)
   unfolding \<phi>Procedure_def
@@ -578,21 +578,18 @@ lemma (in std) op_free_var:
 
 lemma (in std) op_var_scope''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y\<heavy_comma> u \<Ztypecolon> Var vname Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j u. True \<rbrace> )
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TY F \<lbrace> X\<heavy_comma> v \<Ztypecolon> Identity \<longmapsto> Y \<rbrace>\<close>
+    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y\<heavy_comma> u \<Ztypecolon> Var vname Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j u. True \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
+    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TY F \<lbrace> X\<heavy_comma> v \<Ztypecolon> Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding Premise_def op_var_scope_def
   apply (rule op_var_scope', simp add: Premise_def,
       rule \<phi>SEQ, assumption)
-  \<medium_left_bracket> ;; \<exists>u op_free_var \<medium_right_bracket> .. .
+  \<medium_left_bracket> \<exists>u op_free_var thm \<phi>thesis \<medium_right_bracket>. .
 
 
 
 
 
 context std begin
-
-
-
 
 
 
@@ -661,7 +658,6 @@ inductive SemRec :: "(('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) p
 definition op_recursion :: "'TY list \<Rightarrow> 'TY list \<Rightarrow> (('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_recursion _ _ F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
-ML \<open>Syntax.parse_term \<^context> "_"\<close>
 
 subsection \<open>Tuple Operations\<close>
 
@@ -708,7 +704,7 @@ lemma (in std) op_cons_tup_cons:
 \<Longrightarrow> \<phi>SemType (a \<Ztypecolon> A) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c cons_tup (TY#TYs) \<lbrace> VAL a \<Ztypecolon> A\<heavy_comma> X \<longmapsto> VAL (a,y) \<Ztypecolon> (\<clubsuit> A \<^emph> Y) \<rbrace>\<close>
   unfolding cons_tup_cons
-  apply \<phi>reason apply (rule \<phi>frame, assumption)
+  apply \<phi>reason apply (rule \<phi>frame0, assumption)
   apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
   apply \<phi>reason apply (simp add: \<phi>expns) by blast
 
@@ -751,7 +747,7 @@ lemma (in std) op_dest_tup_cons:
   apply \<phi>reason apply (clarsimp simp add: \<phi>SemType_def subset_iff V_tup_mult \<phi>expns)
   apply \<phi>reason apply (clarsimp simp add: \<phi>SemType_def subset_iff V_tup_mult \<phi>expns, assumption)
   apply \<phi>reason apply (clarsimp simp add: \<phi>SemType_def subset_iff V_tup_mult \<phi>expns, assumption)
-  by (rule \<phi>frame, assumption)
+  by (rule \<phi>frame0, assumption)
 
 
 

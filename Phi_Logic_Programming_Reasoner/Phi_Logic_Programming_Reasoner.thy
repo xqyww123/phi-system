@@ -264,6 +264,7 @@ subsubsection \<open>Subgoal\<close>
 typedef "subgoal" = "UNIV :: nat set" ..
 
 consts TOP_GOAL :: "subgoal"
+consts NO_GOAL :: "subgoal"
 
 definition SUBGOAL :: "subgoal \<Rightarrow> subgoal \<Rightarrow> bool" where "SUBGOAL ROOT NEW_GOAL = True"
 definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
@@ -294,16 +295,19 @@ ML_file \<open>library/Subgoal_Env.ML\<close>
 
 \<phi>reasoner_ML SUBGOAL 2000 (conclusion \<open>SUBGOAL ?ROOT ?NEWGOAL\<close>) = \<open>Subgoal_Env.subgoal\<close>
 \<phi>reasoner_ML CHK_SUBGOAL 2000 (conclusion \<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal\<close>
-\<phi>reasoner_ML SOLVE_SUBGOAL 9999 (conclusion \<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal\<close>
+\<phi>reasoner_ML SOLVE_SUBGOAL 9900 (conclusion \<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal\<close>
+
+lemma [\<phi>reason 3000]: \<open>CHK_SUBGOAL   NO_GOAL\<close> using CHK_SUBGOAL_I   .
+lemma [\<phi>reason 9999]: \<open>SOLVE_SUBGOAL NO_GOAL\<close> using SOLVE_SUBGOAL_I .
+
 
 definition GOAL_CTXT :: "bool \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
   where [iff]: "GOAL_CTXT x _ \<equiv> Trueprop x"
 
 
-
 subsection \<open>Simplification & Rewrite\<close>
 
-definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool "
+definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[_] _ : _" [10,1000,10] 9)
   where "Simplify setting result origin \<longleftrightarrow> result = origin"
 
 lemma [cong]: "A = A' \<Longrightarrow> Simplify s x A = Simplify s x A' "

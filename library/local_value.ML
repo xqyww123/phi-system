@@ -68,20 +68,20 @@ fun mk_var_scope names''' (ctxt,sequent) =
 
     val vterms = map (fn name => Thm.cterm_of ctxt (Free (name, \<^typ>\<open>varname\<close>))) vnames
     val prem' = fold (fn v => fn prem => Drule.beta_conv (Thm.dest_arg prem) v) vterms prem
-    val (_,arg_phi,ret_phi) = dest_procedure_c prem'
+    val (_,arg_phi,ret_phi,E) = dest_procedure_c prem'
 
     val ([], ctxt) =
       Proof_Context.add_assms (fn _ => fn [] => (local_value_export sequent' vterms, I)) [] ctxt
 
     val goal = NuToplevel.get_thesis ctxt
     val (trueprop, goal_term) = Thm.dest_comb goal
-    val (goal_F_arg,goal_ret) = Thm.dest_comb goal_term
+    val ((goal_F_arg,goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
     fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
       | left_most X = X
     val ret_phi' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) ret_phi
     val Var R = left_most (Thm.term_of ret_phi')
     val goal_ret' = Thm.instantiate_cterm (TVars.empty, Vars.make [(R,goal_ret)]) ret_phi'
-    val goal' = Thm.apply trueprop (Thm.apply goal_F_arg goal_ret')
+    val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E)
     val ctxt = NuToplevel.put_thesis goal' ctxt
   in
     start_proc blk_name arg_phi ctxt
