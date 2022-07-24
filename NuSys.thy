@@ -69,17 +69,26 @@ definition CodeBlock :: "('VAL,'RES_N,'RES) state \<Rightarrow> ('VAL,'RES_N,'RE
 syntax "_codeblock_" :: "idt \<Rightarrow> logic \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>" [100,0] 3) *)
 
 definition (in std)
-  CurrentConstruction :: " ('VAL,'RES_N,'RES) state \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool "
-    ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,11] 10)
-  where "CurrentConstruction s R S \<longleftrightarrow> s \<in> !\<S> INTERP_COMP (R * S)"
+  CurrentConstruction :: " ('VAL,'RES_N,'RES) state
+                        \<Rightarrow> ('VAL,'FIC_N,'FIC) assn
+                        \<Rightarrow> ('VAL,'FIC_N,'FIC) assn
+                        \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool "
+    ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,11,11] 10)
+  where "CurrentConstruction s R S E \<longleftrightarrow> s \<in> !\<S> (INTERP_COMP (R * S)) (INTERP_COMP (R * E))"
 
 definition (in std)
-  PendingConstruction :: " ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) state \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool "
-    ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n/ _" [1000,1000,1000,5] 4)
-    where "PendingConstruction f s R S \<longleftrightarrow> bind s f \<in> \<S> INTERP_COMP (R * S)"
+  PendingConstruction :: " ('VAL,'RES_N,'RES) proc
+                        \<Rightarrow> ('VAL,'RES_N,'RES) state
+                        \<Rightarrow> ('VAL,'FIC_N,'FIC) assn
+                        \<Rightarrow> ('VAL,'FIC_N,'FIC) assn
+                        \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool "
+    ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
+    where "PendingConstruction f s R S E \<longleftrightarrow> bind s f \<in> \<S> (INTERP_COMP (R * S)) (INTERP_COMP (R * E))"
 
-lemma (in std) CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarrow> Inhabited T"
-  unfolding CurrentConstruction_def Inhabited_def by (cases s) (auto 0 4 simp add: \<phi>expns)
+lemma (in std) CurrentConstruction_D: "CurrentConstruction s H T E \<Longrightarrow> Inhabited T"
+  unfolding CurrentConstruction_def Inhabited_def apply (cases s) apply simp
+     apply (auto 0 4 simp add: \<phi>expns)[1]
+apply (auto 0 4 simp add: \<phi>expns)[1]
 
 lemma (in std) CurrentConstruction_mk_elim_rule:
   "CurrentConstruction s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
