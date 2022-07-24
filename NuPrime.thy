@@ -8,6 +8,7 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<phi>-System\<close>
     Fictional_Algebra
     "Virt_Datatype/Virtual_Datatype"
   abbrevs "<:>" = "\<Ztypecolon>"
+    and "<throws>" = "\<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s"
 begin
 
 chapter \<open>Semantics & Specification Framework --- Base of the Programming Language\<close>
@@ -916,6 +917,8 @@ lemma INTERP_COMP[\<phi>expns]:
   \<open>(s,res) \<in> INTERP_COMP T \<longleftrightarrow> (\<exists>fic. (s,fic) \<in> T \<and> res \<in> INTERP_RES fic)\<close>
   unfolding INTERP_COMP_def by simp
 
+lemma INTERP_COMP_subset[intro]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_COMP A \<subseteq> INTERP_COMP B\<close>
+  unfolding INTERP_COMP_def subset_iff by simp blast
 
 
 lemma INTERP_mono:
@@ -932,10 +935,6 @@ lemma INTERP_mono:
   using times_set_I by blast
 
 
-
-thm FIC_var.interp_split[unfolded exclusive_var_def, simplified]
-term INTERP
-term R_var.mk
 
 lemma FIC_var_split: \<open>Fic_Space fic \<Longrightarrow>
     \<I> INTERP (fic * FIC_var.mk vars) = \<I> INTERP fic * {R_var.mk vars}\<close>
@@ -995,8 +994,6 @@ lemma \<open>Fic_Space fic \<Longrightarrow> n \<noteq> 0 \<Longrightarrow>
 
 *)
 
-  term R_mem.get
-
 
 definition "View_Shift u v \<longleftrightarrow> INTERP_RES u \<subseteq> INTERP_RES v "
 
@@ -1008,7 +1005,10 @@ end
 
 subsection \<open>Monadic Formalization\<close>
 
-datatype ('VAL,'RES_N,'RES) state = Success (dest_state: "('VAL,'RES_N,'RES) comp") | Fail | PartialCorrect
+datatype ('VAL,'RES_N,'RES) state =
+      Success (dest_state: "('VAL,'RES_N,'RES) comp")
+    | Exception (dest_state: "('VAL,'RES_N,'RES) comp")
+    | Fail | PartialCorrect
 
 text\<open> The basic state of the \<phi>-system virtual machine is represented by type "('a::lrep) state"}.
   The valid state `Success` essentially has two major form, one without registers and another one with them,
@@ -1024,7 +1024,8 @@ declare state.split[split]
 type_synonym ('VAL,'RES_N,'RES) proc = "('VAL,'RES_N,'RES) comp \<Rightarrow> ('VAL,'RES_N,'RES) state"
 
 definition bind :: " ('VAL,'RES_N,'RES) state \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) state " \<comment>\<open>monadic bind\<close>
-  where "bind s f = (case s of Success x \<Rightarrow> f x | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
+  where "bind s f = (case s of Success x \<Rightarrow> f x | Exception x \<Rightarrow> Exception x
+                             | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
 
 definition instr_comp :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<ggreater>/ _" [75,76] 75) 
   where "instr_comp f g s = bind (f s) g"
@@ -1044,26 +1045,59 @@ subsubsection \<open>Predicates for Total Correctness & Partial Correctness\<clo
 
 context std_sem begin
 
-definition StrictStateTy :: "('VAL,'RES_N,'RES) comp set \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("!\<S> _" [56] 55)
-  where "!\<S> T = {s. case s of Success x \<Rightarrow> x \<in> T | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
-definition LooseStateTy :: "('VAL,'RES_N,'RES) comp set \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("\<S> _" [56] 55)
-  where "\<S> T = {s. case s of Success x \<Rightarrow> x \<in> T | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
+definition StrictStateTy :: "('VAL,'RES_N,'RES) comp set
+                          \<Rightarrow> ('VAL,'RES_N,'RES) comp set
+                          \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("!\<S>")
+  where "!\<S> T E = {s. case s of Success x \<Rightarrow> x \<in> T | Exception x \<Rightarrow> x \<in> E
+                              | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
+definition LooseStateTy  :: "('VAL,'RES_N,'RES) comp set
+                          \<Rightarrow> ('VAL,'RES_N,'RES) comp set
+                          \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("\<S>")
+  where  "\<S> T E = {s. case s of Success x \<Rightarrow> x \<in> T | Exception x \<Rightarrow> x \<in> E
+                              | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
 
-lemma StrictStateTy_expn[iff,\<phi>def]: "Success x \<in> !\<S> T \<equiv> x \<in> T"  "\<not> (Fail \<in> !\<S> T)"  "\<not> (PartialCorrect \<in> !\<S> T)"
-  and LooseStateTy_expn[iff,\<phi>def]: "Success x \<in> \<S> T \<equiv> x \<in> T"  "\<not> (Fail \<in> \<S> T)"  "(PartialCorrect \<in> \<S> T)"
+lemma StrictStateTy_expn[iff,\<phi>def]:
+        "Success x \<in> !\<S> T E \<equiv> x \<in> T" "Exception x \<in> !\<S> T E \<equiv> x \<in> E"
+        "\<not> (Fail \<in> !\<S> T E)"  "\<not> (PartialCorrect \<in> !\<S> T E)"
+  and LooseStateTy_expn[iff,\<phi>def]:
+        "Success x \<in> \<S> T E \<equiv> x \<in> T" "Exception x \<in> \<S> T E \<equiv> x \<in> E"
+        "\<not> (Fail \<in> \<S> T E)"  "(PartialCorrect \<in> \<S> T E)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
-lemma LooseStateTy_expn' : "x \<in> \<S> T \<longleftrightarrow> x = PartialCorrect \<or> (\<exists>x'. x = Success x' \<and> x' \<in> T)"
+lemma LooseStateTy_expn' :
+    "x \<in> \<S> T E \<longleftrightarrow> x = PartialCorrect \<or> (\<exists>x'. x = Success x' \<and> x' \<in> T) \<or> (\<exists>x'. x = Exception x' \<and> x' \<in> E)"
   by (cases x) simp_all
 
-lemma StrictStateTy_elim[elim]: "s \<in> !\<S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
-lemma StrictStateTy_intro[intro]: " x \<in> T \<Longrightarrow> Success x \<in> !\<S> T" by simp
+lemma StrictStateTy_elim[elim]:
+    "s \<in> !\<S> T E
+\<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C)
+\<Longrightarrow> (\<And>x. s = Exception x \<Longrightarrow> x \<in> E \<Longrightarrow> C)
+\<Longrightarrow> C" by (cases s) auto
+lemma StrictStateTy_intro[intro]:
+    " x \<in> T \<Longrightarrow> Success x \<in> !\<S> T E"
+    " x \<in> E \<Longrightarrow> Exception x \<in> !\<S> T E"
+  by simp_all
 lemma LooseStateTy_E[elim]:
-  "s \<in> \<S> T \<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C) \<Longrightarrow> (s = PartialCorrect \<Longrightarrow> C) \<Longrightarrow> C" by (cases s) auto
+    "s \<in> \<S> T E
+\<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C)
+\<Longrightarrow> (\<And>x. s = Exception x \<Longrightarrow> x \<in> E \<Longrightarrow> C)
+\<Longrightarrow> (s = PartialCorrect \<Longrightarrow> C)
+\<Longrightarrow> C"
+  by (cases s) auto
 lemma LooseStateTy_I[intro]:
-  " x \<in> T \<Longrightarrow> Success x \<in> \<S> T" and "PartialCorrect \<in> \<S> T" by simp_all
-lemma LooseStateTy_upgrade: "s \<in> \<S> T \<Longrightarrow> s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T" by (cases s) auto
-lemma StrictStateTy_degrade: "s \<in> !\<S> T \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
-lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T) \<Longrightarrow> s \<in> \<S> T" by (cases s) auto
+  "x \<in> T \<Longrightarrow> Success x \<in> \<S> T E"
+  "x \<in> E \<Longrightarrow> Exception x \<in> \<S> T E"
+  "PartialCorrect \<in> \<S> T E"
+  by simp_all
+lemma LooseStateTy_upgrade: "s \<in> \<S> T E \<Longrightarrow> s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T E" by (cases s) auto
+lemma StrictStateTy_degrade: "s \<in> !\<S> T E \<Longrightarrow> s \<in> \<S> T E" by (cases s) auto
+lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T E) \<Longrightarrow> s \<in> \<S> T E" by (cases s) auto
+
+lemma StrictStateTy_subset[intro]:
+  \<open>A \<subseteq> A' \<Longrightarrow> E \<subseteq> E' \<Longrightarrow> !\<S> A E \<subseteq> !\<S> A' E'\<close>
+  unfolding subset_iff StrictStateTy_def by simp
+lemma LooseStateTy_subset[intro]:
+  \<open>A \<subseteq> A' \<Longrightarrow> E \<subseteq> E' \<Longrightarrow> \<S> A E \<subseteq> \<S> A' E'\<close>
+  unfolding subset_iff LooseStateTy_def by simp
 
 end
 
@@ -1202,22 +1236,45 @@ subsection \<open>Hoare Triple\<close>
 
 context std begin
 
-definition \<phi>Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool"
-    ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
-  where [\<phi>def]:"\<phi>Procedure f T U \<longleftrightarrow>
-    (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> INTERP_COMP (R * U))"
+definition \<phi>Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool"
+    ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)
+  where [\<phi>def]:"\<phi>Procedure f T U E \<longleftrightarrow>
+    (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> (INTERP_COMP (R * U)) (INTERP_COMP (R * E)))"
+
+abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
+  where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U {}\<close>
 
 paragraph \<open>Hoare Rules\<close>
 
 lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c SKIP \<lbrace> T \<longmapsto> T \<rbrace>" unfolding \<phi>Procedure_def by simp
 
-lemma \<phi>SEQ: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> X \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> C \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<ggreater> g) \<lbrace> A \<longmapsto> C \<rbrace>"
+lemma \<phi>SEQ:
+   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> B \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<ggreater> g) \<lbrace> A \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
   unfolding instr_comp_def \<phi>Procedure_def bind_def by (auto 0 4)
 
 lemma \<phi>frame:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> R * B \<rbrace>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> R * B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s R * E \<rbrace>"
   unfolding \<phi>Procedure_def
   by (metis (no_types, lifting) mult.assoc)
+
+
+lemma times_set_subset[intro]:
+  \<open>B \<subseteq> B' \<Longrightarrow> A * B \<subseteq> A * B'\<close>
+  \<open>B \<subseteq> B' \<Longrightarrow> B * A \<subseteq> B' * A\<close>
+  unfolding subset_iff times_set_def by simp_all blast+
+
+
+
+lemma \<phi>CONSEQ:
+   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
+\<Longrightarrow> A' \<subseteq> A
+\<Longrightarrow> B \<subseteq> B'
+\<Longrightarrow> E \<subseteq> E'
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
+  unfolding \<phi>Procedure_def
+  by simp (meson INTERP_COMP_subset LooseStateTy_subset subset_iff times_set_subset)
 
 end
 
