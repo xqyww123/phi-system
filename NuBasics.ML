@@ -28,9 +28,6 @@ signature NU_BASICS = sig
   val mk_name_hint : string -> term -> term
   val mk_label_thm : string -> thm
 
-  val dest_premise_tag  : term -> term * term
-  val dest_premise_tag_c: cterm -> cterm * cterm
-
   val dest_Cast   : term -> term * term * term
   val dest_Cast_c : cterm -> cterm * cterm * cterm
 
@@ -191,11 +188,6 @@ val intro_param_name = intro_param o mk_label_c
 
 val dest_Cast   = dest_triop   @{const_name "Subty"}
 val dest_Cast_c = dest_triop_c @{const_name "Subty"}
-
-
-
-val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try dest_Trueprop)
-val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
 
 
 

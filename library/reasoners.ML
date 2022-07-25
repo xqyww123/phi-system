@@ -1,5 +1,6 @@
 signature NU_REASONERS = sig
   val naive_obligation_solver : Proof.context -> thm -> thm Seq.seq
+  val naive_obligation_solver' : Proof.context * thm -> Proof.context * thm
   val premise_tac : Proof.context -> thm -> thm Seq.seq
   val asm_simp_tac : Proof.context -> thm -> thm Seq.seq
   val single_return : tactic -> tactic
@@ -7,16 +8,12 @@ signature NU_REASONERS = sig
 end
 
 structure Nu_Reasoners : NU_REASONERS = struct
-open Thm NuBasics Term
+open Thm Term
 
 fun wrap tac (ctxt,thm) = tac ctxt thm |> Seq.map (pair ctxt)
 
 fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME (th, Seq.empty)))
-
-fun get_thms ctxt name =
-  case Proof_Context.lookup_fact ctxt name of SOME {thms,...} => thms
-                                            | NONE => []
 
 fun aux_thms ctxt = Named_Theorems.get ctxt \<^named_theorems>\<open>useful\<close>
                   @ Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
@@ -27,35 +24,31 @@ fun head_only tac th =
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
 
-(* TODO: 
-*   Because the `auto` tactic tackles those schematic variables badly,
-*   in this tactic, we split the conjection into multiple sub-goals,
-*   and for each sub-goal, we use HOL.refl to instantiate schematic variabls
-*   like ?Y in equities like "X a b = ?Y a b".
-*   However, this strategy is rather naive, and it considers equities one by one.
-*   A more idea strategy should guess those schematic variables as a whole,
-*   and consider situations more than equities. *)
-fun prep_prems ctxt =
-  REPEAT_DETERM (SOMEGOAL (resolve_tac ctxt @{thms Premise_I conjI HOL.refl}))
-    (* THEN print_dbg "222221111"  *)
-
 fun raw_auto ctxt =
   let
     val imp = Proof_Context.get_thms ctxt "\<phi>implication"
   in Method.insert_tac ctxt (aux_thms ctxt |> @{print}) 1
      THEN (if null imp then all_tac else resolve_tac ctxt imp 1)
-     THEN print_dbg "22222"
      THEN Clasimp.auto_tac ctxt
   end
- (* THEN print_dbg "22222"  *)
 
 
 (*** Premise tac ***)
 fun naive_obligation_solver ctxt th =
-  if Config.get ctxt Nu_Reasoner.auto_level >= 2 andalso
-     can (major_prem_of #> HOLogic.dest_Trueprop #> dest_premise_tag) th
-  then head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt)))) th
-  else Seq.empty
+  case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
+    of SOME (_, \<^const>\<open>True\<close>) => Seq.single (@{thm Premise_True} RS th)
+     | SOME _ => head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt)))) th
+     | NONE => Seq.empty
+
+fun naive_obligation_solver' (ctxt,th) =
+ (case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
+    of SOME (_, \<^const>\<open>True\<close>) => @{thm Premise_True} RS th
+     | SOME (_, goal) =>
+          (case Seq.pull (head_only (HEADGOAL (SOLVED' (K (raw_auto ctxt)))) th)
+             of SOME (th',_) => th'
+              | NONE => error ("fail to prove automatically the\n"^Syntax.string_of_term ctxt goal))
+     | NONE => th)
+   |> pair ctxt
 
 fun contract_obligations ctxt thm = let open Conv in
   gconv_rule (bottom_conv (K (try_conv (rewrs_conv

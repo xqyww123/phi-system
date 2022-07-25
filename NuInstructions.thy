@@ -12,6 +12,72 @@ definition op_drop :: "('VAL,'RES_N,'RES) proc" where
   "op_drop = \<phi>M_get_Val (\<lambda>_. Success)"
 
 
+subsection \<open>Throw Exception\<close>
+
+text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
+
+lemma (in std) throw_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Exception \<lbrace> X \<longmapsto> Any \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
+  unfolding \<phi>Procedure_def by blast
+
+subsection \<open>Try-Catch\<close>
+
+definition op_try :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where \<open>op_try f g s = (case f s of Success s' \<Rightarrow> Success s' | Exception s' \<Rightarrow> g s'
+                                   | PartialCorrect \<Rightarrow> PartialCorrect | Fail \<Rightarrow> Fail)\<close>
+
+lemma (in std) "__op_try__":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> Y1 + Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace> \<close>
+  unfolding op_try_def \<phi>Procedure_def 
+  by (auto 2 4 simp add: ring_distribs)
+
+definition "Union_the_Same_Or_Arbitrary_when_Var Z X Y \<longleftrightarrow> (Z::'a set) = X + Y"
+
+lemma Union_the_Same_Or_Arbitrary_when_Var__the_Same:
+  \<open>Union_the_Same_Or_Arbitrary_when_Var Z Z Z\<close>
+  unfolding Union_the_Same_Or_Arbitrary_when_Var_def by simp
+
+lemma Union_the_Same_Or_Arbitrary_when_Var__Arbitrary:
+  \<open>Union_the_Same_Or_Arbitrary_when_Var (X + Y) X Y\<close>
+  unfolding Union_the_Same_Or_Arbitrary_when_Var_def ..
+
+\<phi>reasoner_ML Union_the_Same_Or_Arbitrary_when_Var 1200
+  (conclusion \<open>Union_the_Same_Or_Arbitrary_when_Var ?Z ?X ?Y\<close>) = \<open>
+fn (ctxt,sequent) =>
+  let
+    val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Union_the_Same_Or_Arbitrary_when_Var\<close>, _)
+          $ Z $ _ $ _) = Thm.major_prem_of sequent
+  in (ctxt,
+        (if is_Var (Envir.beta_eta_contract Z)
+         then @{thm Union_the_Same_Or_Arbitrary_when_Var__Arbitrary}
+         else @{thm Union_the_Same_Or_Arbitrary_when_Var__the_Same})
+        RS sequent) |> Seq.single
+  end
+\<close>
+
+proc (in std) try'':
+  for EE2 YY
+  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE2 \<rbrace>\<close>
+  argument X
+  return YY
+  throws EE2
+  \<medium_left_bracket> "__op_try__" F G \<medium_right_bracket>. .
+
+proc (in std) try':
+  assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
+  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
+  argument X
+  return Z
+  throws E2
+  \<medium_left_bracket> "__op_try__" F G fold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def] \<medium_right_bracket>. .
+
+
+
+
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Integer arithmetic\<close>
@@ -460,10 +526,6 @@ definition op_var_scope' :: "'TY \<Rightarrow> (varname \<Rightarrow> ('VAL,'RES
     \<phi>M_set_res_entry R_var.updt (\<lambda>f. f(vname := Some v)) \<ggreater>
     F vname))"
 
-definition op_var_scope :: "'TY \<Rightarrow> (varname \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_var_scope TY F =
-    op_var_scope' TY (\<lambda>vname. F vname \<ggreater> op_free_var vname)"
-
 lemma (in std) \<phi>M_get_var:
   \<open>v \<in> Well_Type TY
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>
@@ -576,14 +638,6 @@ lemma (in std) op_free_var:
   qed
   done
 
-lemma (in std) op_var_scope''_\<phi>app:
-   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-    \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y\<heavy_comma> u \<Ztypecolon> Var vname Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j u. True \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TY F \<lbrace> X\<heavy_comma> v \<Ztypecolon> Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  unfolding Premise_def op_var_scope_def
-  apply (rule op_var_scope', simp add: Premise_def,
-      rule \<phi>SEQ, assumption)
-  \<medium_left_bracket> \<exists>u op_free_var thm \<phi>thesis \<medium_right_bracket>. .
 
 
 
@@ -658,61 +712,6 @@ inductive SemRec :: "(('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) p
 definition op_recursion :: "'TY list \<Rightarrow> 'TY list \<Rightarrow> (('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_recursion _ _ F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
-
-subsection \<open>Try-Catch\<close>
-
-definition op_try :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where \<open>op_try f g s = (case f s of Success s' \<Rightarrow> Success s' | Exception s' \<Rightarrow> g s'
-                                   | PartialCorrect \<Rightarrow> PartialCorrect | Fail \<Rightarrow> Fail)\<close>
-
-lemma (in std) "__op_try__":
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> Y1 + Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace> \<close>
-  unfolding op_try_def \<phi>Procedure_def 
-  by (auto 2 4 simp add: ring_distribs)
-
-definition "Union_the_Same_Or_Arbitrary_when_Var Z X Y \<longleftrightarrow> (Z::'a set) = X + Y"
-
-lemma Union_the_Same_Or_Arbitrary_when_Var__the_Same:
-  \<open>Union_the_Same_Or_Arbitrary_when_Var Z Z Z\<close>
-  unfolding Union_the_Same_Or_Arbitrary_when_Var_def by simp
-
-lemma Union_the_Same_Or_Arbitrary_when_Var__Arbitrary:
-  \<open>Union_the_Same_Or_Arbitrary_when_Var (X + Y) X Y\<close>
-  unfolding Union_the_Same_Or_Arbitrary_when_Var_def ..
-
-\<phi>reasoner_ML Union_the_Same_Or_Arbitrary_when_Var 1200
-  (conclusion \<open>Union_the_Same_Or_Arbitrary_when_Var ?Z ?X ?Y\<close>) = \<open>
-fn (ctxt,sequent) =>
-  let
-    val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Union_the_Same_Or_Arbitrary_when_Var\<close>, _)
-          $ Z $ _ $ _) = Thm.major_prem_of sequent
-  in (ctxt,
-        (if is_Var (Envir.beta_eta_contract Z)
-         then @{thm Union_the_Same_Or_Arbitrary_when_Var__Arbitrary}
-         else @{thm Union_the_Same_Or_Arbitrary_when_Var__the_Same})
-        RS sequent) |> Seq.single
-  end
-\<close>
-
-
-proc try'':
-  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
-  argument X
-  return Y
-  throws E2
-  \<medium_left_bracket> "__op_try__" F G \<medium_right_bracket>. .
-
-proc try':
-  assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
-  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
-  argument X
-  return Z
-  throws E2
-  \<medium_left_bracket> "__op_try__" F G fold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def] \<medium_right_bracket>. .
 
 
 subsection \<open>Tuple Operations\<close>

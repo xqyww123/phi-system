@@ -134,9 +134,9 @@ fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = 
 
 fun gen_define (binding,attrs) sequent lthy =
   let
-    val sequent = sequent
+    val sequent' = sequent
           |> Drule.zero_var_indexes
-    val (f,_,_,_) = Thm.concl_of sequent |> concl_of |> PhiSyntax.dest_procedure 
+    val (f,_,_,_) = Thm.concl_of sequent' |> concl_of |> PhiSyntax.dest_procedure 
 
     (*all variables in the procedure body*)
     val vars = fold_aterms (fn Var v => insert (op =) (Var v)
@@ -162,15 +162,15 @@ fun gen_define (binding,attrs) sequent lthy =
           (proc_th RS (def RS rename_proc))
           handle THM _ => (proc_th RS (def RS rename_proc'))
 
-    val (lthy, sequent) =
+    val (lthy, sequent'') =
       if Binding.is_empty binding orelse Config.get lthy not_define_new_const
-      then (lthy, sequent)
+      then (lthy, sequent')
       else lthy
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
             |-> (fn (tm,(_,def)) => 
                   Local_Theory.background_theory (Context.theory_map
                                       (add_procedure (Binding.name_of binding)))
-                  #> rpair (rename (norm_def lthy arity def) sequent))
+                  #> rpair (rename (norm_def lthy arity def) sequent'))
 
     (*val sequent = sequent
           |> Raw_Simplifier.rewrite_rule lthy @{thms atomize_imp}
@@ -179,8 +179,8 @@ fun gen_define (binding,attrs) sequent lthy =
           |> Raw_Simplifier.rewrite_rule lthy
               (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2") *)
   in lthy |> Local_Theory.notes_kind procedure_kind
-                [((proc_binding,attrs), [([sequent],[])])]
-          |> apfst (fn [(_,[sequent])] => sequent)
+                [((proc_binding,attrs), [([sequent''],[])])]
+          |> apfst (fn [(_,[sequent''''])] => sequent'''')
   end
 
 fun define binding =

@@ -80,7 +80,7 @@ val eof_ctx_stack_name = "NuPrime.End_of_Contextual_Stack"
 fun mk_eof_ctx_stack tm = Const(eof_ctx_stack_name, dummyT) $ tm
 val mk_register_collection = I
 val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
-      if can dest_premise_tag (concl_of th) then th RS @{thm Premise_D} else th)]
+      if can PLPR_Syntax.dest_premise_tag (concl_of th) then th RS @{thm Premise_D} else th)]
 (* fun mk_register_collection tm = Const(@{const_name RegisterCollection},
 * dummyT) $ tm *)
 
@@ -153,24 +153,6 @@ fun working_mode_on1 ctxt goal =
 
 fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
 
-fun comp_no_flatten_matched (th, n) i rule =
-  (case distinct Thm.eq_thm (Seq.list_of
-      (Thm.bicompose NONE {flatten = false, match = true, incremented = true}
-        (false, th, n) i rule)) of
-    [th'] => Thm.solve_constraints th'
-  | [] => raise THM ("comp_no_flatten", i, [th, rule])
-  | _ => raise THM ("comp_no_flatten: unique result expected", i, [th, rule]));
-
-fun mk_Application_Conv th1' th2 =
-  let
-    val th1 = Drule.incr_indexes th2 th1'
-  in Thm.instantiate (TVars.empty, Vars.make [
-              ((("P",0), \<^typ>\<open>prop\<close>), Thm.cprop_of th1),
-              ((("Q",0), \<^typ>\<open>prop\<close>), Thm.cprem_of th2 1)
-          ]) @{thm \<phi>Application_Conv}
-     |> (fn th => comp_no_flatten_matched (implies_elim th th1, Thm.nprems_of th1 + 1) 1 th2)
-  end
-
 val procedure : working_mode = 
   let
     val destined_phi = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction))
@@ -186,20 +168,12 @@ val procedure : working_mode =
     destined_phi = destined_phi,
     destined_phi_c = destined_phi_c,
     end_proof = (fn ctxt => fn solution => fn goal =>
-        (ctxt, mk_Application_Conv solution goal)
-          |> Nu_Reasoner.reason
-          |> (fn SOME (_, ret) => ret
-               | NONE => error("Fail to end the block. "^
-                   "You may turn on \<phi>trace_reasoning to debug where the reasoning fails."))),
+        NuApply.MP ctxt solution goal),
     end_block = (fn (ctxt,ctxt') => fn solution => fn goal =>
         let
           val solution' = singleton (Proof_Context.export ctxt ctxt') (initial_reassemble ctxt solution)
         in
-          (ctxt', mk_Application_Conv solution' goal)
-            |> Nu_Reasoner.reason
-            |> (fn SOME (_, ret) => ret
-                 | NONE => error("Fail to end the block. "^
-                     "You may turn on \<phi>trace_reasoning to debug where the reasoning fails."))
+          NuApply.MP ctxt' solution' goal
         end
         handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
 } end

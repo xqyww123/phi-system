@@ -37,6 +37,7 @@ attribute_setup TRY_THEN = \<open>(Scan.lift (Scan.optional (Args.bracks Parse.n
 
 ML_file \<open>library/cost_net.ML\<close>
 
+
 section \<open>The Reasoner\<close>
 
 
@@ -175,7 +176,7 @@ lemma Premise_refl[\<phi>reason 2000 on \<open>Premise ?mode (?x = ?x)\<close>]:
   "Premise mode (x = x)"
   unfolding Premise_def ..
 
-
+ML_file \<open>library/PLPR_Syntax.ML\<close>
 
 subsection \<open>Cut\<close>
 

@@ -13,8 +13,8 @@ fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ (Const (\
   | dest_Var (Const (\<^const_name>\<open>std.Obj_Ele\<close>, _) $ x) = dest_Var x
   | dest_Var _ = NONE
 
-fun local_value_export rule vars sequent =
-  (Drule.forall_intr_list vars sequent) COMP rule
+fun local_value_export ctxt rule vars sequent =
+  NuApply.MP ctxt (Drule.forall_intr_list vars sequent) rule
 
 datatype operation = Set_Var of cterm | New_Var of Binding.binding
 
@@ -71,7 +71,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val (_,arg_phi,ret_phi,E) = dest_procedure_c prem'
 
     val ([], ctxt) =
-      Proof_Context.add_assms (fn _ => fn [] => (local_value_export sequent' vterms, I)) [] ctxt
+      Proof_Context.add_assms (fn ctxt'' => fn [] => (local_value_export ctxt'' sequent' vterms, I)) [] ctxt
 
     val goal = NuToplevel.get_thesis ctxt
     val (trueprop, goal_term) = Thm.dest_comb goal

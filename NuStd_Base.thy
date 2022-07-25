@@ -105,19 +105,12 @@ lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> 
 
 paragraph \<open>Set Variable\<close>
 
-declare [ [\<phi>trace_reasoning] ]
-
 proc op_set_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> U\<close>
   return   \<open>y \<Ztypecolon> Var var U\<close>
-  \<medium_left_bracket>;;
-    to_Identity \<exists>v
-  
-  ;; \<open>var\<close> ;; to_Identity
-  ;;  op_set_var''
-  \<medium_right_bracket>. .
+  \<medium_left_bracket> to_Identity \<open>var\<close> to_Identity op_set_var'' \<medium_right_bracket>. .
 
 proc op_set_var__synthesis[
   \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> ?R'\<heavy_comma> SYNTHESIS VAL ($?var := ?y) \<Ztypecolon> ?U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -135,20 +128,22 @@ return   \<open>Y\<heavy_comma> y \<Ztypecolon> Var var U \<heavy_comma> SYNTHES
 throws   E
   \<medium_left_bracket> G S op_set_var op_get_var \<medium_right_bracket>. .
 
-
+declare [ [\<phi>not_define_new_const = false] ]
 
 paragraph \<open>Declare New Variables\<close>
 
-proc op_var_scope:
+proc (in std) op_var_scope:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>\<close>
   argument \<open>X\<heavy_comma> x \<Ztypecolon> T\<close>
   return   \<open>Y\<close>
   throws   E
-  \<medium_left_bracket> to_Identity op_var_scope'' \<medium_left_bracket> BLK to_Identity \<medium_right_bracket>. \<medium_right_bracket>. .
+  \<medium_left_bracket> to_Identity op_var_scope';;
+  note [ [\<phi>trace_reasoning] ] ;;
+    try'' \<medium_left_bracket> BLK to_Identity op_free_var \<medium_right_bracket>. \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>. \<medium_right_bracket>. .
 
 lemma "__\<phi>op_var_scope__":
-  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
+  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TY F \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> T) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   using op_var_scope_\<phi>app
@@ -210,13 +205,13 @@ lemma (in std) op_and[\<phi>overload \<and>]:
 proc [
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<and> ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> y \<Ztypecolon> \<bool>\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
     and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<and> y) \<Ztypecolon> \<bool>\<close>
-  throws   \<open>E1 \<union> E2\<close>
-  \<medium_left_bracket> F1 \<rightarrow> x, y ;; F2 $y \<and> ;; \<medium_right_bracket> .. .
+  throws   \<open>E1 + E2\<close>
+  \<medium_left_bracket> F1 \<rightarrow> y ;; F2 $y \<and> ;; \<medium_right_bracket>. .
 
 paragraph \<open>Or\<close>
 
@@ -226,13 +221,14 @@ lemma (in std) op_or[\<phi>overload \<or>]:
   by \<phi>reason
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<or> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<or> ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> y \<Ztypecolon> \<bool>\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> y \<Ztypecolon> \<bool>\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<or> y) \<Ztypecolon> \<bool>\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> x, y;; F2 $y \<or> \<medium_right_bracket>. .
 
 
@@ -286,14 +282,15 @@ lemma (in std) op_add[\<phi>overload +]:
   by \<phi>reason
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x + ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x + ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b]  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   premises \<open>x + y < 2 ^ b\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x + y) \<Ztypecolon> \<nat>[b]\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y + \<medium_right_bracket>. .
 
 
@@ -307,14 +304,15 @@ lemma (in std) op_sub[\<phi>overload -]:
   by (metis Nat.add_diff_assoc2 add.commute less_imp_diff_less mod_add_self2 mod_less)
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x - ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x - ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   premises \<open>y \<le> x\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x - y) \<Ztypecolon> \<nat>[b]\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y - \<medium_right_bracket>. .
 
 
@@ -327,13 +325,14 @@ lemma (in std) op_udiv[\<phi>overload /]:
   using div_le_dividend le_less_trans by blast
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x div ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x div ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x div y) \<Ztypecolon> \<nat>[b]\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y / \<medium_right_bracket>. .
 
 
@@ -345,23 +344,25 @@ lemma (in std) op_lt[\<phi>overload <]:
   by \<phi>reason
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x < ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x < ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x < y) \<Ztypecolon> \<bool>\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y ;; $x $y < \<medium_right_bracket>. .
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x > ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x > ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x > y) \<Ztypecolon> \<bool>\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> y;; F2 $y < \<medium_right_bracket>. .
 
 paragraph \<open>Less Equal\<close>
@@ -372,23 +373,25 @@ lemma (in std) op_le[\<phi>overload \<le>]:
   by \<phi>reason
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<le> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<le> ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b]  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<le> y) \<Ztypecolon> \<bool>\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y \<le> \<medium_right_bracket>. .
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<ge> ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x \<ge> ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x \<ge> y) \<Ztypecolon> \<bool>\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> x;; F2 $x \<le> \<medium_right_bracket>. .
 
 
@@ -412,10 +415,10 @@ apply (unfold \<phi>Equal_def Premise_def, simp)
 
 
 proc [
-    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x = ?y) \<Ztypecolon> ?T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> ?R2\<heavy_comma> SYNTHESIS VAL (?x = ?y) \<Ztypecolon> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS VAL x \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL y \<Ztypecolon> T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS VAL x \<Ztypecolon> T  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS VAL y \<Ztypecolon> T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   assumes [\<phi>reason on \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason on \<open>\<phi>SemType (y \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason on \<open>\<phi>Equal T ?can_eq ?eq\<close>]: \<open>\<phi>Equal T can_eq (=)\<close>
@@ -423,6 +426,7 @@ proc [
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS VAL (x = y) \<Ztypecolon> \<bool>\<close>
+  throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y;; $x $y = \<medium_right_bracket>. .
 
 

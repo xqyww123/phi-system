@@ -102,6 +102,18 @@ fun debug ctxt (c,(r : reasoner as {name,...})) =
               ^ Syntax.string_of_term (Proof_Context.set_mode Proof_Context.mode_abbrev ctxt) name)
 fun dbg2 ctxt term = (tracing (Syntax.string_of_term ctxt term); term)
 
+fun my_match thy po =
+  let
+    val (_,tms) = Pattern.match thy po (Vartab.empty, Vartab.empty)
+  in Vartab.fold (fn ((name,_),(_,tm)) => fn flag =>
+        if String.isPrefix "var_" name
+        then flag andalso is_Var (Envir.beta_eta_contract tm)
+        else flag
+     ) tms true
+  end
+  handle Pattern.MATCH => false
+
+
 fun call_tactics ctxt tactics th =
   if Thm.no_prems th
   then raise Success (ctxt, th)
@@ -113,10 +125,10 @@ fun call_tactics ctxt tactics th =
                     Cost_Net.retrieve tactics term
                       |> filter (fn (_,reasoner) =>
                           exists (fn pat =>
-                            Pattern.matches (Proof_Context.theory_of ctxt) (pat,term))
+                            my_match (Proof_Context.theory_of ctxt) (pat,term))
                           (#pattern reasoner)
                           andalso forall (fn pat =>
-                            not (Pattern.matches (Proof_Context.theory_of ctxt) (pat,term)))
+                            not (my_match (Proof_Context.theory_of ctxt) (pat,term)))
                           (#not_match reasoner))
                       |> (if Config.get ctxt trace_candicates
                           then (fn rs => (List.app (debug ctxt) rs; rs))
