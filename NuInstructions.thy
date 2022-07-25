@@ -659,6 +659,62 @@ definition op_recursion :: "'TY list \<Rightarrow> 'TY list \<Rightarrow> (('VAL
   where "op_recursion _ _ F s = (if (\<exists>t. SemRec F s t) then The (SemRec F s) else PartialCorrect)"
 
 
+subsection \<open>Try-Catch\<close>
+
+definition op_try :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where \<open>op_try f g s = (case f s of Success s' \<Rightarrow> Success s' | Exception s' \<Rightarrow> g s'
+                                   | PartialCorrect \<Rightarrow> PartialCorrect | Fail \<Rightarrow> Fail)\<close>
+
+lemma (in std) "__op_try__":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> Y1 + Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace> \<close>
+  unfolding op_try_def \<phi>Procedure_def 
+  by (auto 2 4 simp add: ring_distribs)
+
+definition "Union_the_Same_Or_Arbitrary_when_Var Z X Y \<longleftrightarrow> (Z::'a set) = X + Y"
+
+lemma Union_the_Same_Or_Arbitrary_when_Var__the_Same:
+  \<open>Union_the_Same_Or_Arbitrary_when_Var Z Z Z\<close>
+  unfolding Union_the_Same_Or_Arbitrary_when_Var_def by simp
+
+lemma Union_the_Same_Or_Arbitrary_when_Var__Arbitrary:
+  \<open>Union_the_Same_Or_Arbitrary_when_Var (X + Y) X Y\<close>
+  unfolding Union_the_Same_Or_Arbitrary_when_Var_def ..
+
+\<phi>reasoner_ML Union_the_Same_Or_Arbitrary_when_Var 1200
+  (conclusion \<open>Union_the_Same_Or_Arbitrary_when_Var ?Z ?X ?Y\<close>) = \<open>
+fn (ctxt,sequent) =>
+  let
+    val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Union_the_Same_Or_Arbitrary_when_Var\<close>, _)
+          $ Z $ _ $ _) = Thm.major_prem_of sequent
+  in (ctxt,
+        (if is_Var (Envir.beta_eta_contract Z)
+         then @{thm Union_the_Same_Or_Arbitrary_when_Var__Arbitrary}
+         else @{thm Union_the_Same_Or_Arbitrary_when_Var__the_Same})
+        RS sequent) |> Seq.single
+  end
+\<close>
+
+
+proc try'':
+  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
+  argument X
+  return Y
+  throws E2
+  \<medium_left_bracket> "__op_try__" F G \<medium_right_bracket>. .
+
+proc try':
+  assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
+  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
+  argument X
+  return Z
+  throws E2
+  \<medium_left_bracket> "__op_try__" F G fold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def] \<medium_right_bracket>. .
+
+
 subsection \<open>Tuple Operations\<close>
 
 

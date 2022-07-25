@@ -578,6 +578,11 @@ definition \<open>plus_set = union\<close>
 instance by standard (auto simp add: plus_set_def zero_set_def)
 end
 
+lemma plus_set_in_iff[iff]:
+  \<open>x \<in> A + B \<longleftrightarrow> x \<in> A \<or> x \<in> B\<close> unfolding plus_set_def by simp
+
+lemma plus_set_S_S [simp]: \<open>S + S = S\<close> for S :: \<open>'a set\<close> unfolding plus_set_def by simp
+
 instantiation set :: (semigroup_mult) semiring_0 begin
 instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
 end

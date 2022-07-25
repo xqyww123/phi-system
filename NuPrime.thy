@@ -920,6 +920,10 @@ lemma INTERP_COMP[\<phi>expns]:
 lemma INTERP_COMP_subset[intro, simp]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_COMP A \<subseteq> INTERP_COMP B\<close>
   unfolding INTERP_COMP_def subset_iff by simp blast
 
+lemma INTERP_COMP_plus[iff]:
+  \<open>INTERP_COMP (A + B) = INTERP_COMP A + INTERP_COMP B\<close>
+  unfolding INTERP_COMP_def plus_set_def by simp blast
+
 lemma INTERP_COMP_empty[intro, simp]:
   \<open>S = {} \<Longrightarrow> INTERP_COMP S = {}\<close>
   unfolding INTERP_COMP_def set_eq_iff by simp
@@ -1101,6 +1105,15 @@ lemma StrictStateTy_subset[intro]:
 lemma LooseStateTy_subset[intro]:
   \<open>A \<subseteq> A' \<Longrightarrow> E \<subseteq> E' \<Longrightarrow> \<S> A E \<subseteq> \<S> A' E'\<close>
   unfolding subset_iff LooseStateTy_def by simp
+
+lemma LooseStateTy_plus[iff]:
+  \<open>\<S> (A + B) E   = \<S> A E + \<S> B E\<close>
+  \<open>\<S> X (EA + EB) = \<S> X EA + \<S> X EB\<close>
+  unfolding set_eq_iff LooseStateTy_def by simp_all
+lemma StrictStateTy_plus[iff]:
+  \<open>!\<S> (A + B) E   = !\<S> A E  + !\<S> B E\<close>
+  \<open>!\<S> X (EA + EB) = !\<S> X EA + !\<S> X EB\<close>
+  unfolding set_eq_iff StrictStateTy_def by simp_all
 
 end
 
