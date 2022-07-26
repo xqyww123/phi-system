@@ -578,12 +578,16 @@ definition \<open>plus_set = union\<close>
 instance by standard (auto simp add: plus_set_def zero_set_def)
 end
 
+instantiation set :: (type) ordered_comm_monoid_add begin
+instance by standard (auto simp add: plus_set_def zero_set_def)
+end
+
 lemma plus_set_in_iff[iff]:
   \<open>x \<in> A + B \<longleftrightarrow> x \<in> A \<or> x \<in> B\<close> unfolding plus_set_def by simp
 
 lemma plus_set_S_S [simp]: \<open>S + S = S\<close> for S :: \<open>'a set\<close> unfolding plus_set_def by simp
 
-instantiation set :: (semigroup_mult) semiring_0 begin
+instantiation set :: (semigroup_mult) ordered_semiring_0 begin
 instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
 end
 
@@ -591,11 +595,12 @@ instantiation set :: (monoid_mult) semiring_1 begin
 instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
 end
 
-instantiation set :: (ab_semigroup_mult) comm_semiring_0 begin
+instantiation set :: (ab_semigroup_mult) ordered_comm_semiring begin
 instance apply standard
   apply (simp add: zero_set_def plus_set_def times_set_def)
   using mult.commute apply blast
-  by (simp add: distrib_right)
+   apply (simp add: distrib_right)
+  by simp
 end
 
 instantiation set :: (comm_monoid_mult) comm_semiring_1 begin

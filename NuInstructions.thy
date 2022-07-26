@@ -673,9 +673,10 @@ paragraph \<open>While Loop\<close>
 
 inductive SemDoWhile :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) comp \<Rightarrow> ('VAL,'RES_N,'RES) state \<Rightarrow> bool" where
   "f s = Success (V_int.mk (1,0) # vs, res) \<Longrightarrow> SemDoWhile f s (Success (vs,res))"
+| "f s = Success (V_int.mk (1,1) # vs, res) \<Longrightarrow> SemDoWhile f (vs,res) s'' \<Longrightarrow> SemDoWhile f s s''"
+| "f s = Exception e \<Longrightarrow> SemDoWhile f s (Exception e)"
 | "f s = PartialCorrect \<Longrightarrow> SemDoWhile f s PartialCorrect"
 | "f s = Fail \<Longrightarrow> SemDoWhile f s Fail"
-| "f s = Success (V_int.mk (1,1) # vs, res) \<Longrightarrow> SemDoWhile f (vs,res) s'' \<Longrightarrow> SemDoWhile f s s''"
 
 lemma "\<nexists> y. SemDoWhile (\<lambda>(vs,res). Success (V_int.mk (1,1) # vs, res)) (vs,res) y"
   apply rule apply (elim exE) subgoal for y 
@@ -694,7 +695,9 @@ lemma SemDoWhile_deterministic:
     shows "s1 = s2"
 proof -
   have "SemDoWhile c s s1 \<Longrightarrow> (\<forall>s2. SemDoWhile c s s2 \<longrightarrow> s1 = s2)"
-    by (induct rule: SemDoWhile.induct) (subst SemDoWhile.simps, simp)+
+    apply (induct rule: SemDoWhile.induct) 
+    apply (subst SemDoWhile.simps, simp)+ apply blast
+    by (subst SemDoWhile.simps, simp)+
   thus ?thesis
     using assms by simp
 qed

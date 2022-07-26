@@ -71,7 +71,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val (_,arg_phi,ret_phi,E) = dest_procedure_c prem'
 
     val ([], ctxt) =
-      Proof_Context.add_assms (fn ctxt'' => fn [] => (local_value_export ctxt'' sequent' vterms, I)) [] ctxt
+      Proof_Context.add_assms (fn _ => fn [] => (local_value_export ctxt sequent' vterms, I)) [] ctxt
 
     val goal = NuToplevel.get_thesis ctxt
     val (trueprop, goal_term) = Thm.dest_comb goal

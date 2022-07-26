@@ -248,9 +248,9 @@ lemma (in std) [\<phi>reason 1200
   unfolding Synthesis_Parse_def ..
 
 lemma (in std) [\<phi>reason
-    on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS numeral ?n \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 1 \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 0 \<Ztypecolon> \<nat>[?b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS numeral ?n \<Ztypecolon> \<nat>[?b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 1 \<Ztypecolon> \<nat>[?b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 0 \<Ztypecolon> \<nat>[?b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
@@ -263,9 +263,9 @@ lemma (in std) op_const_size_t:
   by \<phi>reason
 
 lemma (in std) [\<phi>reason 1200
-    on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS (numeral ?n) \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 0 \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 1 \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS (numeral ?n) \<Ztypecolon> Size \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 0 \<Ztypecolon> Size \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS 1 \<Ztypecolon> Size \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS n \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Synthesis_def GOAL_CTXT_def
@@ -444,20 +444,22 @@ lemma op_sel_\<phi>app:
   by \<phi>reason
 
 lemma branch_\<phi>app:
-  \<open> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace>)
-\<Longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace>)
+  \<open> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T \<rbrace>)
+\<Longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>F \<rbrace>)
 \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge C Y\<^sub>T Y\<^sub>F = Y
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if br\<^sub>T br\<^sub>F \<lbrace> X\<heavy_comma> C \<Ztypecolon> \<bool> \<longmapsto> Y  \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if br\<^sub>T br\<^sub>F \<lbrace> X\<heavy_comma> C \<Ztypecolon> \<bool> \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T + E\<^sub>F \<rbrace>\<close>
   unfolding op_if_def Premise_def Conv_def Merge_def
-  by \<phi>reason (simp add: \<phi>expns)+
+  apply \<phi>reason apply (simp add: \<phi>expns)+
+  by (meson \<phi>CONSEQ plus_set_in_iff subsetI)
 
 proc "if":
-  assumes C: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c cond \<lbrace> X \<longmapsto> X1\<heavy_comma> C \<Ztypecolon> \<bool> \<rbrace>\<close>
-      and brT: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace>\<close>
-      and brF: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace>\<close>
+  assumes C: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c cond \<lbrace> X \<longmapsto> X1\<heavy_comma> C \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+      and brT: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T \<rbrace>\<close>
+      and brF: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>F \<rbrace>\<close>
       and [\<phi>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge C Y\<^sub>T Y\<^sub>F = ?Y\<close>]: \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v Merge C Y\<^sub>T Y\<^sub>F = Y\<close>
   argument \<open>X\<close>
   return \<open>Y\<close>
+  throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
   \<medium_left_bracket> C branch brT brF \<medium_right_bracket>. .
 
 end
@@ -472,48 +474,56 @@ subsection \<open>Control Flow\<close>
 subsubsection \<open>Loops\<close>
 
 lemma (in std) "__DoWhile__rule_\<phi>app":
-  " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<heavy_comma> P x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<and> \<not> P x' \<rbrace>"
+  " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> P x' \<Ztypecolon> \<bool>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
   unfolding op_do_while_def \<phi>Procedure_def
-  apply (simp add: SemDoWhile_deterministic2 \<phi>expns pair_forall LooseStateTy_expn')
+  apply (simp add: SemDoWhile_deterministic2 \<phi>expns LooseStateTy_expn')
   apply (rule allI impI conjI)+
   apply (elim exE)
   apply (simp add: SemDoWhile_deterministic2)
-  subgoal for val res R s fic
-    apply (rotate_tac 1)
-    apply (induct body "(val, res)" s arbitrary: val res fic rule: SemDoWhile.induct)
+  subgoal for comp R s
+  apply (rotate_tac 2)
+    apply (induct body comp s rule: SemDoWhile.induct)
+apply (simp add: \<phi>expns times_list_def)
+    apply fastforce
+    subgoal premises prems for f s val res s''
+      apply (rule \<open>_ \<Longrightarrow> _ \<Longrightarrow> _\<close>[OF \<open>\<forall>_. _\<close>])
       apply (simp add: \<phi>expns times_list_def)
-    subgoal premises prems for f val' res' val res fic
-        apply (insert \<open>\<forall>_. _\<close>[THEN spec[where x=val], THEN spec[where x=res], THEN spec[where x=R],
-              simplified \<open>f (val, res) = _\<close>, simplified, unfolded imp_ex,
-              THEN spec[where x=fic], THEN mp, OF \<open>_ \<and> _\<close>])
-        by fastforce
-      apply (simp add: \<phi>expns times_list_def)
-      apply (simp add: \<phi>expns times_list_def)
-      subgoal premises prems for f val res fic
-        apply (insert \<open>\<forall>_. _\<close>[THEN spec[where x=val], THEN spec[where x=res], THEN spec[where x=R],
-              simplified \<open>f (val, res) = _\<close>, simplified])
-        using prems(2) by blast
-      apply (simp add: \<phi>expns times_list_def)
-      subgoal premises prems for f val' res' s'' val res fic
-        apply (insert \<open>\<forall>_. _\<close>[THEN spec[where x=val], THEN spec[where x=res], THEN spec[where x=R],
-              simplified \<open>f (val, res) = _\<close>, simplified, unfolded imp_ex,
-              THEN spec[where x=fic], THEN mp, OF \<open>_ \<and> _\<close>])
-        using prems(3) by fastforce
-      . .
+      apply (insert \<open>\<forall>_. _\<close>[THEN spec[where x=s], THEN spec[where x=R], simplified prems, simplified])
+      apply (clarsimp simp add: \<phi>expns times_list_def)
+      by (metis zero_neq_one)
+    apply force
+     apply force
+  apply (simp add: \<phi>expns times_list_def)
+    subgoal premises prems for f s
+      using \<open>\<forall>_. _\<close>[THEN spec[where x=s], THEN spec[where x=R], simplified prems, simplified] . . .
+
+
+text \<open>Note the While rule we mentioned in the paper is just a special case of the above
+      __DoWhile__rule_\<phi>app\<close>
+
+lemma (in std)
+  " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<heavy_comma> P x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x'\<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<and> \<not> P x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<rbrace>"
+  using "__DoWhile__rule_\<phi>app"[where X=\<open>\<lambda>x. X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j I x\<close> and P=P,
+            simplified Subjection_times, simplified] .
+
 
 declare [[\<phi>not_define_new_const]]
+
+declare [ [\<phi>trace_reasoning] ]
 
 proc (in std) do_while:
 assumes V: \<open>Variant_Cast vars X X'\<close>
     and \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond\<close>
 premises X[useful]: \<open>cond vars\<close>
-assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X' x \<longmapsto> \<exists>*x'. X' x'\<heavy_comma> cond x' \<Ztypecolon> \<bool> \<rbrace>\<close>
+assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X' x \<longmapsto> \<exists>*x'. X' x'\<heavy_comma> cond x' \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
 argument \<open>X\<close>
 return   \<open>X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> cond x'\<close>
+throws E
   \<medium_left_bracket> unfold V[unfolded Variant_Cast_def]
-    "__DoWhile__rule"[where I=\<open>\<lambda>_. True\<close>, where P=cond, simplified] \<medium_left_bracket> B \<medium_right_bracket>.
-  \<medium_right_bracket>. .
+    "__DoWhile__rule"[where P=cond, simplified] \<medium_left_bracket> B \<medium_right_bracket>.
+  \<medium_right_bracket> by simp .
 
 declare [[\<phi>not_define_new_const=false]]
 
@@ -536,7 +546,8 @@ proc while:
 proc
   argument \<open>x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>x - 1 \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket>  \<rightarrow> varx ;; (*assign the value x to a variable named varx*)
+  \<medium_left_bracket>  \<rightarrow> varx
+  ;; (*assign the value x to a variable named varx*)
                (* command `;;` leads a statement, or ends the previous statement. *)
      if \<open>0 < $varx\<close> \<medium_left_bracket> \<open>$varx - 1\<close> \<medium_right_bracket>.
                     \<medium_left_bracket> \<open>0::nat\<close> \<medium_right_bracket>.
@@ -624,8 +635,8 @@ lemma "__op_recursion__":
   " (\<And>x. \<phi>SemTypes (X x) TXs)
 \<Longrightarrow> (\<And>x. \<phi>SemTypes (Y x) TYs)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> (\<forall>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X x'' \<longmapsto> Y x'' \<rbrace>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<lbrace> X x' \<longmapsto> Y x' \<rbrace>)
-\<Longrightarrow> \<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion TXs TYs F \<lbrace> X x \<longmapsto> Y x \<rbrace>"
+\<Longrightarrow> (\<forall>g x'. (\<forall>x''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X x'' \<longmapsto> Y x'' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x'' \<rbrace>) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g \<lbrace> X x' \<longmapsto> Y x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' \<rbrace>)
+\<Longrightarrow> \<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion TXs TYs F \<lbrace> X x \<longmapsto> Y x \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x \<rbrace>"
   unfolding op_recursion_def \<phi>Procedure_def atomize_all
   apply (auto simp add: SemRec_deterministic2)
   subgoal for x a b xa R
