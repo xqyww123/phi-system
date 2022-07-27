@@ -899,8 +899,6 @@ fiction_space (in pre_std_fic) std_fic :: \<open>'RES_N \<Rightarrow> 'RES\<clos
 
 subsubsection \<open>Standard Settings\<close>
 
-type_synonym ('VAL,'RES_N,'RES) comp = \<open>'VAL opstack \<times> ('RES_N \<Rightarrow> 'RES)\<close>
-
 locale std = std_fic
   where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra)\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
@@ -910,11 +908,11 @@ begin
 
 abbreviation "INTERP_RES fic \<equiv> Valid_Resource \<inter> S_Assert (Fic_Space fic) \<inter> \<I> INTERP fic"
 
-definition INTERP_COMP :: \<open>('VAL,'FIC_N,'FIC) comp set \<Rightarrow> ('VAL,'RES_N,'RES) comp set\<close>
-  where "INTERP_COMP T = { (s,res) |s res fic. (s,fic) \<in> T \<and> res \<in> INTERP_RES fic }"
+definition INTERP_COMP :: \<open>('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('RES_N \<Rightarrow> 'RES) set\<close>
+  where "INTERP_COMP T = { res. \<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic }"
 
 lemma INTERP_COMP[\<phi>expns]:
-  \<open>(s,res) \<in> INTERP_COMP T \<longleftrightarrow> (\<exists>fic. (s,fic) \<in> T \<and> res \<in> INTERP_RES fic)\<close>
+  \<open>res \<in> INTERP_COMP T \<longleftrightarrow> (\<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic)\<close>
   unfolding INTERP_COMP_def by simp
 
 lemma INTERP_COMP_subset[intro, simp]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_COMP A \<subseteq> INTERP_COMP B\<close>
@@ -1013,9 +1011,11 @@ end
 subsection \<open>Monadic Formalization\<close>
 
 datatype ('VAL,'RES_N,'RES) state =
-      Success (dest_state: "('VAL,'RES_N,'RES) comp")
-    | Exception (dest_state: "('VAL,'RES_N,'RES) comp")
+      Success \<open>'VAL list\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
+    | Exception (resource: "('RES_N \<Rightarrow> 'RES)")
     | Fail | PartialCorrect
+
+hide_const(open) resource
 
 text\<open> The basic state of the \<phi>-system virtual machine is represented by type "('a::lrep) state"}.
   The valid state `Success` essentially has two major form, one without registers and another one with them,
@@ -1028,23 +1028,21 @@ text\<open> The basic state of the \<phi>-system virtual machine is represented 
 
 declare state.split[split]
 
-type_synonym ('VAL,'RES_N,'RES) proc = "('VAL,'RES_N,'RES) comp \<Rightarrow> ('VAL,'RES_N,'RES) state"
+type_synonym ('VAL,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('VAL,'RES_N,'RES) state"
 
-definition bind :: " ('VAL,'RES_N,'RES) state \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) state " \<comment>\<open>monadic bind\<close>
-  where "bind s f = (case s of Success x \<Rightarrow> f x | Exception x \<Rightarrow> Exception x
+definition bind :: " ('VAL,'RES_N,'RES) state \<Rightarrow> ('VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) state " \<comment>\<open>monadic bind\<close>
+  where "bind s f = (case s of Success v x \<Rightarrow> f v x | Exception x \<Rightarrow> Exception x
                              | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
 
-definition instr_comp :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<ggreater>/ _" [75,76] 75) 
+definition instr_comp :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<ggreater>=/ _" [75,76] 75) 
   where "instr_comp f g s = bind (f s) g"
 
-abbreviation SKIP :: "('VAL,'RES_N,'RES) proc" where "SKIP \<equiv> Success" \<comment>\<open>the instruction `no-operation`\<close>
-
-lemma proc_bind_SKIP[simp]: "f \<ggreater> SKIP \<equiv> f" "SKIP \<ggreater> f \<equiv> f"
+lemma proc_bind_SKIP[simp]: "f \<ggreater>= Success \<equiv> f"
   unfolding instr_comp_def bind_def atomize_eq fun_eq_iff by simp+
 
 section \<open>Specification Framework\<close>
 
-type_synonym ('VAL,'RES_N,'RES) assn = "('VAL,'RES_N,'RES) comp set" \<comment> \<open>assertion\<close>
+type_synonym ('RES_N,'RES) assn = "('RES_N \<Rightarrow> 'RES) set" \<comment> \<open>assertion\<close>
 
 subsection \<open>Preliminary\<close>
 
@@ -1052,73 +1050,76 @@ subsubsection \<open>Predicates for Total Correctness & Partial Correctness\<clo
 
 context std_sem begin
 
-definition StrictStateTy :: "('VAL,'RES_N,'RES) comp set
-                          \<Rightarrow> ('VAL,'RES_N,'RES) comp set
+definition StrictStateTy :: "('VAL list \<Rightarrow> ('RES_N,'RES) assn)
+                          \<Rightarrow> ('RES_N,'RES) assn
                           \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("!\<S>")
-  where "!\<S> T E = {s. case s of Success x \<Rightarrow> x \<in> T | Exception x \<Rightarrow> x \<in> E
+  where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
                               | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
-definition LooseStateTy  :: "('VAL,'RES_N,'RES) comp set
-                          \<Rightarrow> ('VAL,'RES_N,'RES) comp set
+definition LooseStateTy  :: "('VAL list \<Rightarrow> ('RES_N,'RES) assn)
+                          \<Rightarrow> ('RES_N,'RES) assn
                           \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("\<S>")
-  where  "\<S> T E = {s. case s of Success x \<Rightarrow> x \<in> T | Exception x \<Rightarrow> x \<in> E
+  where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
                               | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
 
 lemma StrictStateTy_expn[iff,\<phi>def]:
-        "Success x \<in> !\<S> T E \<equiv> x \<in> T" "Exception x \<in> !\<S> T E \<equiv> x \<in> E"
+        "Success vs x \<in> !\<S> T E \<equiv> x \<in> T vs" "Exception x \<in> !\<S> T E \<equiv> x \<in> E"
         "\<not> (Fail \<in> !\<S> T E)"  "\<not> (PartialCorrect \<in> !\<S> T E)"
   and LooseStateTy_expn[iff,\<phi>def]:
-        "Success x \<in> \<S> T E \<equiv> x \<in> T" "Exception x \<in> \<S> T E \<equiv> x \<in> E"
+        "Success vs x \<in> \<S> T E \<equiv> x \<in> T vs" "Exception x \<in> \<S> T E \<equiv> x \<in> E"
         "\<not> (Fail \<in> \<S> T E)"  "(PartialCorrect \<in> \<S> T E)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
 lemma LooseStateTy_expn' :
-    "x \<in> \<S> T E \<longleftrightarrow> x = PartialCorrect \<or> (\<exists>x'. x = Success x' \<and> x' \<in> T) \<or> (\<exists>x'. x = Exception x' \<and> x' \<in> E)"
+    "x \<in> \<S> T E \<longleftrightarrow> x = PartialCorrect \<or> (\<exists>x' vs. x = Success vs x' \<and> x' \<in> T vs) \<or> (\<exists>x'. x = Exception x' \<and> x' \<in> E)"
   by (cases x) simp_all
 
 lemma StrictStateTy_elim[elim]:
     "s \<in> !\<S> T E
-\<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C)
+\<Longrightarrow> (\<And>x vs. s = Success vs x \<Longrightarrow> x \<in> T vs \<Longrightarrow> C)
 \<Longrightarrow> (\<And>x. s = Exception x \<Longrightarrow> x \<in> E \<Longrightarrow> C)
 \<Longrightarrow> C" by (cases s) auto
 lemma StrictStateTy_intro[intro]:
-    " x \<in> T \<Longrightarrow> Success x \<in> !\<S> T E"
+    " x \<in> T vs \<Longrightarrow> Success vs x \<in> !\<S> T E"
     " x \<in> E \<Longrightarrow> Exception x \<in> !\<S> T E"
   by simp_all
 lemma LooseStateTy_E[elim]:
     "s \<in> \<S> T E
-\<Longrightarrow> (\<And>x. s = Success x \<Longrightarrow> x \<in> T \<Longrightarrow> C)
+\<Longrightarrow> (\<And>x vs. s = Success vs x \<Longrightarrow> x \<in> T vs \<Longrightarrow> C)
 \<Longrightarrow> (\<And>x. s = Exception x \<Longrightarrow> x \<in> E \<Longrightarrow> C)
 \<Longrightarrow> (s = PartialCorrect \<Longrightarrow> C)
 \<Longrightarrow> C"
   by (cases s) auto
 lemma LooseStateTy_I[intro]:
-  "x \<in> T \<Longrightarrow> Success x \<in> \<S> T E"
+  "x \<in> T vs \<Longrightarrow> Success vs x \<in> \<S> T E"
   "x \<in> E \<Longrightarrow> Exception x \<in> \<S> T E"
   "PartialCorrect \<in> \<S> T E"
   by simp_all
-lemma LooseStateTy_upgrade: "s \<in> \<S> T E \<Longrightarrow> s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T E" by (cases s) auto
+
+lemma LooseStateTy_upgrade:
+  "s \<in> \<S> T E \<Longrightarrow> s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T E"
+  by (cases s) auto
 lemma StrictStateTy_degrade: "s \<in> !\<S> T E \<Longrightarrow> s \<in> \<S> T E" by (cases s) auto
 lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T E) \<Longrightarrow> s \<in> \<S> T E" by (cases s) auto
 
 lemma StrictStateTy_subset[intro]:
-  \<open>A \<subseteq> A' \<Longrightarrow> E \<subseteq> E' \<Longrightarrow> !\<S> A E \<subseteq> !\<S> A' E'\<close>
+  \<open>(\<And>vs. A vs \<subseteq> A' vs) \<Longrightarrow> E \<subseteq> E' \<Longrightarrow> !\<S> A E \<subseteq> !\<S> A' E'\<close>
   unfolding subset_iff StrictStateTy_def by simp
 lemma LooseStateTy_subset[intro]:
-  \<open>A \<subseteq> A' \<Longrightarrow> E \<subseteq> E' \<Longrightarrow> \<S> A E \<subseteq> \<S> A' E'\<close>
+  \<open>(\<And>vs. A vs \<subseteq> A' vs) \<Longrightarrow> E \<subseteq> E' \<Longrightarrow> \<S> A E \<subseteq> \<S> A' E'\<close>
   unfolding subset_iff LooseStateTy_def by simp
 
 lemma LooseStateTy_plus[iff]:
-  \<open>\<S> (A + B) E   = \<S> A E + \<S> B E\<close>
+(*  \<open>\<S> (A + B) E   = \<S> A E + \<S> B E\<close> *)
   \<open>\<S> X (EA + EB) = \<S> X EA + \<S> X EB\<close>
   unfolding set_eq_iff LooseStateTy_def by simp_all
 lemma StrictStateTy_plus[iff]:
-  \<open>!\<S> (A + B) E   = !\<S> A E  + !\<S> B E\<close>
+(*  \<open>!\<S> (A + B) E   = !\<S> A E  + !\<S> B E\<close> *)
   \<open>!\<S> X (EA + EB) = !\<S> X EA + !\<S> X EB\<close>
   unfolding set_eq_iff StrictStateTy_def by simp_all
 
 end
 
 
-subsubsection \<open>Stack Element and Communicative Monoid Resource\<close>
+(* subsubsection \<open>Stack Element and Communicative Monoid Resource\<close>
 
 abbreviation (in std) \<open>Void \<equiv> (1::('VAL,'FIC_N,'FIC) assn)\<close>
 
@@ -1156,7 +1157,7 @@ lemma OBJ_comm: \<open>S * (OBJ T) = (OBJ T) * S\<close>
   using mult.commute by blast
 
 end
-
+*)
 (*
 subsubsection \<open>Separation\<close>
 
@@ -1252,41 +1253,53 @@ subsection \<open>Assertion\<close>
 
 context std begin
 
-definition \<phi>Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> ('VAL,'FIC_N,'FIC) assn \<Rightarrow> bool"
+definition \<phi>Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('VAL list \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)
   where [\<phi>def]:"\<phi>Procedure f T U E \<longleftrightarrow>
-    (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> (INTERP_COMP (R * U)) (INTERP_COMP (R * E)))"
+    (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COMP (R * U vs)) (INTERP_COMP (R * E)))"
 
 abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
 
 subsubsection \<open>Essential Hoare Rules\<close>
 
-lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c SKIP \<lbrace> T \<longmapsto> T \<rbrace>" unfolding \<phi>Procedure_def by simp
+lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success [] \<lbrace> T \<longmapsto> \<lambda>_. T \<rbrace>" unfolding \<phi>Procedure_def by simp
 
 lemma \<phi>SEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> B \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<ggreater> g) \<lbrace> A \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
+\<Longrightarrow> (\<And>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g vs \<lbrace> B vs \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<ggreater>= g) \<lbrace> A \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
   unfolding instr_comp_def \<phi>Procedure_def bind_def by (auto 0 4)
 
 lemma \<phi>frame:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> R * B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s R * E \<rbrace>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s R * E \<rbrace>"
   unfolding \<phi>Procedure_def
-  by (metis (no_types, lifting) mult.assoc)
+  apply clarify subgoal premises prems for comp R'
+    using prems(1)[THEN spec[where x=comp], THEN spec[where x=\<open>R' * R\<close>],
+          simplified mult.assoc, THEN mp, OF prems(2)] . .
 
 lemma \<phi>frame0:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> R * B \<rbrace>"
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace>"
   using \<phi>frame[where E=0, simplified] .
 
 lemma \<phi>CONSEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
 \<Longrightarrow> A' \<subseteq> A
-\<Longrightarrow> B \<subseteq> B'
+\<Longrightarrow> (\<And>ret. B ret \<subseteq> B' ret)
 \<Longrightarrow> E \<subseteq> E'
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
   unfolding \<phi>Procedure_def
-  by simp (meson INTERP_COMP_subset LooseStateTy_subset subset_iff times_set_subset)
+  apply clarify
+  subgoal premises prems for comp R proof -
+    have \<open>INTERP_COMP (R * A') \<subseteq> INTERP_COMP (R * A)\<close>
+      apply (rule INTERP_COMP_subset; rule times_set_subset)
+      using prems by blast
+    moreover have \<open>\<S> (\<lambda>vs. INTERP_COMP (R * B vs)) (INTERP_COMP (R * E))
+       \<subseteq> \<S> (\<lambda>vs. INTERP_COMP (R * B' vs)) (INTERP_COMP (R * E'))\<close>
+      apply (rule LooseStateTy_subset; rule INTERP_COMP_subset; rule times_set_subset)
+      using prems by blast+
+    ultimately show ?thesis using prems by blast
+  qed .
 end
 
 
