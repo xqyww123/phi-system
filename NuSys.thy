@@ -63,13 +63,6 @@ ML_file NuHelp.ML
 
 subsection \<open>Code Block & Current Construction & Pending Construction\<close>
 
-definition (in std) CodeBlock :: "('RES_N \<Rightarrow> 'RES)
-                               \<Rightarrow> 'ret::value
-                               \<Rightarrow> ('RES_N \<Rightarrow> 'RES)
-                               \<Rightarrow> ('ret,'RES_N,'RES) proc
-                               \<Rightarrow> bool"
-  where "CodeBlock s' ret s prog \<longleftrightarrow> prog s = Success ret s' \<or> prog s = Fail"
-
 (* syntax "_codeblock_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>)" [100,0,0] 3)
 syntax "_codeblock_" :: "idt \<Rightarrow> logic \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>" [100,0] 3) *)
 
@@ -81,10 +74,10 @@ definition (in std)
   where "CurrentConstruction s R S \<longleftrightarrow> s \<in> (INTERP_COMP (R * S))"
 
 definition (in std)
-  PendingConstruction :: " ('ret::value,'RES_N,'RES) proc
+  PendingConstruction :: " ('VAL,'RES_N,'RES) proc
                         \<Rightarrow> ('RES_N \<Rightarrow> 'RES)
                         \<Rightarrow> ('FIC_N,'FIC) assn
-                        \<Rightarrow> ('ret \<Rightarrow> ('FIC_N,'FIC) assn)
+                        \<Rightarrow> ('VAL list \<Rightarrow> ('FIC_N,'FIC) assn)
                         \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool "
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
     where "PendingConstruction f s R S E \<longleftrightarrow> f s \<in> \<S> (\<lambda>ret. INTERP_COMP (R * S ret)) (INTERP_COMP (R * E))"
@@ -117,7 +110,7 @@ lemma \<phi>accept_proc:
 
 lemma \<phi>return:
   "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (Return ret) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s 0"
-  unfolding CurrentConstruction_def PendingConstruction_def CodeBlock_def bind_def Return_def
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def
   by simp+
 
 lemma \<phi>reassemble_proc_final:
@@ -2925,14 +2918,17 @@ section \<open>Construction Elements\<close>
 
 context std_sem begin
 
-definition \<phi>M_assert :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Success () s else Fail)\<close>
+definition \<phi>M_assert :: \<open>bool \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Success [] s else Fail)\<close>
 
-definition \<phi>M_assume :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Success () s else PartialCorrect)\<close>
+definition \<phi>M_assume :: \<open>bool \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Success [] s else PartialCorrect)\<close>
 
-definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL \<Rightarrow> ('v \<Rightarrow> ('y::value,'RES_N,'RES) proc) \<Rightarrow> ('y,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_getV TY VDT_dest v F = (\<phi>M_assert (v \<in> Well_Type TY) \<ggreater> F (VDT_dest v))\<close>
+definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> ('v \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_getV TY VDT_dest F v = (\<phi>M_assert (v \<noteq> [] \<and> hd v \<in> Well_Type TY) \<ggreater> F (VDT_dest (hd v)) (tl v))\<close>
+
+definition \<phi>M_Return :: \<open>'VAL list \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_Return ret vs = (\<phi>M_assert (vs = []) \<ggreater> Success ret)\<close>
 
 end
 
@@ -2945,7 +2941,7 @@ lemma \<phi>M_assert[\<phi>reason! on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>
   unfolding \<phi>Procedure_def \<phi>M_assert_def by (auto simp add: \<phi>expns Inhabited_def)
 
 lemma \<phi>M_assert_True[simp]:
-  \<open>\<phi>M_assert True = Success ()\<close>
+  \<open>\<phi>M_assert True = Success []\<close>
   unfolding \<phi>M_assert_def by simp
 
 lemma \<phi>M_assert':
@@ -2967,8 +2963,8 @@ lemma \<phi>M_detail_left[\<phi>reason 2200000]:  \<open>\<^bold>p\<^bold>r\<^bo
 lemma \<phi>M_detail_right[\<phi>reason 2200000]: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1\<heavy_comma> Y v \<rbrace>\<close> by simp
 
 lemma \<phi>M_getV[\<phi>reason!]: \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> <\<phi>expn> v \<in> Well_Type TY)
-            \<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
-            \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest v F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val v A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+            \<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) vs \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
+            \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest F (v#vs) \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val v A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_def Premise_def
   by (clarsimp simp add: \<phi>expns)
 
@@ -2976,10 +2972,16 @@ declare \<phi>M_getV[THEN \<phi>M_tail_left, \<phi>reason!]
 
 lemma \<phi>M_Success[\<phi>reason!]:
   \<open> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success v \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success [v] \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val (hd u) T \<rbrace> \<close>
   unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
 
+lemma \<phi>M_Return[\<phi>reason!]:
+  \<open> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_Return [v] [] \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val (hd u) T \<rbrace> \<close>
+  unfolding \<phi>Procedure_def \<phi>M_Return_def by (clarsimp simp add: \<phi>expns)
+
 declare \<phi>M_Success[where X=1, simplified, \<phi>reason!]
+declare \<phi>M_Return[where X=1, simplified, \<phi>reason!]
 
 end
 

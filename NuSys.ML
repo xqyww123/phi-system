@@ -15,10 +15,6 @@ signature NU_SYS = sig
   val set_label : string -> context_state -> context_state
 
   val start_proc : string (*blk name*) -> cterm -> Proof.context -> context_state
-  val rename_blk_var : string -> context_state -> cterm (*renamed block*) * context_state
-        (* current old_name reulst in ...
-        * ---------------------------------
-        *  current new_name reulst in *)
 
   val auto_construct : cterm -> context_state -> context_state
 
@@ -209,19 +205,6 @@ fun start_proc blk_name arg_nuTy ctxt =
           (fn _ => fn [cc] => (snd o finish_proc cc o pair ctxt, I)) [init] ctxt
   in
     (ctxt,init)
-  end
-
-fun rename_blk_var name (ctxt,meta) =
-  let open PhiSyntax
-    val codeblock = current_codeblock meta
-    val (s,_,_,_,_) = dest_codeblock_c codeblock
-    val thy = Thm.theory_of_thm meta
-    val s' = Thm.global_cterm_of thy (Free (name, typ_of_cterm s))
-    val meta = meta |> implies_intr codeblock
-                |> forall_intr s |> forall_elim s'
-                (* |> forall_intr a |> forall_elim a' *)
-  in
-    (cprem_of meta 1, (ctxt, NuHelp.undisch meta))
   end
 
 

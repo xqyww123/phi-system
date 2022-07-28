@@ -117,6 +117,24 @@ datatype cond_kind = Premise | Requirement
 
 
 
+structure Blk_Level = Proof_Data (
+  type T = int
+  val init = K 0
+)
+
+fun inc_blk_level ctxt =
+  let
+    val i = Blk_Level.get ctxt
+  in (i, Blk_Level.put (i+1) ctxt)
+  end
+
+fun dec_blk_level ctxt =
+  let
+    val i = Blk_Level.get ctxt
+  in (i, Blk_Level.put (i-1) ctxt)
+  end
+
+
 
 
 
@@ -494,8 +512,9 @@ fun gen_finish_proc qed genz int stat =
     val ctxt_ = Proof.context_of stat
     val goal = get_thesis ctxt_
     val mode = working_mode_on1 ctxt_ (Thm.term_of goal)
-  in stat |>
-    Proof.map_context_result (fn ctxt =>
+  in stat
+  |> Proof.map_context (dec_blk_level #> snd)
+  |> Proof.map_context_result (fn ctxt =>
       let
         val sequent = NuBasics.the_programming_sequent' ctxt
         val sequent' =
@@ -503,7 +522,7 @@ fun gen_finish_proc qed genz int stat =
           then let
             val current_nu = #destined_phi_c mode (Thm.cprop_of sequent)
                               |> Thm.term_of
-                              |> Procedure_Syntax.abstract_return_vals (Proof_Context.theory_of ctxt)
+                              |> Procedure_Syntax.abstract_return_vals
                               |> Thm.cterm_of ctxt
             val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
                               |> Drule.infer_instantiate ctxt 
@@ -593,8 +612,6 @@ fun synthesis term (ctxt, sequent) =
   end
 
 
-
-
 local
 val attr_useful = map (Attrib.attribute @{context}) @{attributes [useful]}
 in
@@ -638,7 +655,7 @@ fun gen_begin_block prep_attr bindings int stat =
     
     val blk_name = case proc of (Var ((x,_),_)) => x
                       | _ => "block"
-    val level = PhiSyntax.current_block_depth sequent
+    val (level, stat) = Proof.map_context_result inc_blk_level stat
     val blk_name = "L\<phi>'" ^ (Int.toString level) ^ "_" ^ blk_name
     
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)

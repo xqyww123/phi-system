@@ -26,13 +26,6 @@ include PHI_SYNTAX
   val block_var_of_Constuction_c : cterm  -> cterm
   val current_block_var   : thm -> term
   val current_block_var_c : thm -> cterm
-  val current_block_depth : thm -> int
-  val dest_codeblock   : term -> term * term * term * term * term
-  val dest_codeblock_c : cterm -> cterm * cterm * cterm * cterm * cterm
-  val codeblock_name   : term -> string
-  val codeblocks_of   : thm -> term list
-  val codeblocks_of_c : thm -> cterm list
-  val current_codeblock : thm -> cterm
 
   val dest_procedure   : term -> term * term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm * cterm
@@ -142,27 +135,6 @@ val current_block_var =
     #> perhaps (try Logic.strip_assums_concl)
     #> perhaps (try dest_Trueprop)
     #> block_var_of_Constuction
-val dest_codeblock   = perhaps (try dest_Trueprop) #> dest_quinop @{const_name "std.CodeBlock"}
-val codeblock_name   = dest_codeblock #> #1 #> term_name
-val dest_codeblock_c = perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "std.CodeBlock"}
-val codeblocks_of   = hyps_of  #> filter (can dest_codeblock  )
-val codeblocks_of_c = chyps_of #> filter (can dest_codeblock_c)
-fun current_block_depth th =
-  codeblocks_of th |> filter (dest_codeblock #> #1 #> term_name #>
-    (String.isPrefix "\<phi>hide_") #> not) |> length
-fun current_codeblock specthm =
-  let
-    val blk_var = current_block_var specthm
-  in
-    chyps_of specthm
-  |> find_first (fn hy => (term_of hy |> try (dest_codeblock #> #1)) = SOME blk_var)
-  |> Option.valOf
-  end
-fun disch_codeblock cb th =
-  implies_intr cb th |> forall_intr (dest_codeblock_c cb |> #1)
-fun undisch_codeblock cb_var = Thm.forall_elim cb_var #> undisch
-fun disch_current_codeblock specthm =
-  disch_codeblock (current_codeblock specthm) specthm
 
 val dest_goal_ctxt   = dest_binop   \<^const_name>\<open>GOAL_CTXT\<close> #> #1
 val dest_goal_ctxt_c = dest_binop_c \<^const_name>\<open>GOAL_CTXT\<close> #> #1

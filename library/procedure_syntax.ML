@@ -1,6 +1,6 @@
 signature PROCEDURE_SYNTAX = sig
   val translate_ret : term -> term
-  val abstract_return_vals : theory -> term -> term
+  val abstract_return_vals : term -> term
 end
 
 structure Procedure_Syntax : PROCEDURE_SYNTAX = struct
@@ -78,21 +78,21 @@ fun collect_values L (Const ("local.Val", _) $ v) = v::L
   | collect_values L (Abs (_,_,X)) = collect_values L X
   | collect_values L _ = L
 
-fun is_value_type thy typ =
-  typ <> \<^typ>\<open>unit\<close> andalso Sign.of_sort thy (typ, \<^sort>\<open>value\<close>)
+fun is_value_type (Type (\<^type_name>\<open>list\<close>, [TFree ("'VAL", _)])) = true
+  | is_value_type _ = false
 
-fun collect_values' thy X =
+fun collect_values' X =
   case Term.strip_comb X
     of (Free _, L) =>
-          filter (fn x => is_value_type thy (fastype_of x)) L
+          filter (fn x => is_value_type (fastype_of x)) L
      | (Var _, L) =>
-          filter (fn x => is_value_type thy (fastype_of x)) L
+          filter (fn x => is_value_type (fastype_of x)) L
      | _ => collect_values [] X
 
 
-fun abstract_return_vals thy term =
+fun abstract_return_vals term =
   let
-    val vals = maps (collect_values' thy) (PhiSyntax.strip_separations term)
+    val vals = maps collect_values' (PhiSyntax.strip_separations term)
              |> distinct (op =)
     val num = length vals
     val term' = subst_free (map_index (fn (i,v) => (v, tuple_proj num  i (Bound 0))) vals) term

@@ -16,7 +16,7 @@ lemma (in std) throw_\<phi>app:
 
 subsection \<open>Try-Catch\<close>
 
-definition op_try :: "('ret::value,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc"
+definition op_try :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where \<open>op_try f g s = (case f s of Success x s' \<Rightarrow> Success x s' | Exception s' \<Rightarrow> g s'
                                    | PartialCorrect \<Rightarrow> PartialCorrect | Fail \<Rightarrow> Fail)\<close>
 
@@ -78,24 +78,24 @@ subsection \<open>Arithmetic Operations\<close>
 subsubsection \<open>Integer arithmetic\<close>
 
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_const_int bits const = Success (V_int.mk (bits,const))"
+  where "op_const_int bits const = Success [V_int.mk (bits,const)]"
 
 definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
-                          \<ggreater> Success (V_int.mk (addrspace_bits,c))"
+                          \<ggreater> Success [V_int.mk (addrspace_bits,c)]"
   \<comment> \<open> `op_const_size_t` checks the overflow during the compilation towards certain decided platform.  \<close>
 
-definition op_add :: "nat \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_add bits = (\<lambda>va vb.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (V_int.mk (bits, ((val_a + val_b) mod 2^bits)))
-  )))"
+definition op_add :: "nat \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_add bits =
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_b.
+      \<phi>M_Return [V_int.mk (bits, ((val_a + val_b) mod 2^bits))]
+  ))"
 
 
 lemma (in std) op_add:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b vb va \<lbrace> x \<Ztypecolon> Val va \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vb \<nat>[b] \<longmapsto> \<lambda>v. x + y \<Ztypecolon> Val v \<nat>[b] \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b [vb,va] \<lbrace> x \<Ztypecolon> Val va \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vb \<nat>[b] \<longmapsto> \<lambda>v. x + y \<Ztypecolon> Val (hd v) \<nat>[b] \<rbrace>\<close>
   unfolding op_add_def Premise_def
   by \<phi>reason
 
@@ -107,77 +107,77 @@ lemma (in std) op_add:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (left \<ggreater> right \<ggreater> op_add b) \<lbrace> R1 \<longmapsto> R3\<heavy_comma> SYNTHESIS x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   apply (\<phi>reason, assumption) *)
 
-definition op_sub :: "nat \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_sub bits = (\<lambda>va vb.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (V_int.mk (bits, ((2^bits + val_b - val_a) mod 2^bits)))
-  )))"
-
-definition op_udiv :: "nat \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_udiv bits = (\<lambda>va vb.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (V_int.mk (bits, (val_b div val_a)))
-  )))"
-
-definition op_lt :: "nat \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_lt bits = (\<lambda>va vb.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (V_int.mk (1, (if val_b < val_a then 1 else 0)))
-  )))"
-
-
-definition op_le :: "nat \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_le bits = (\<lambda>va vb.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
-      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (V_int.mk (1, (if val_b \<le> val_a then 1 else 0)))
-  )))"
-
-
-definition op_not :: "'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_not = (\<lambda>rawv.
-    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) rawv (\<lambda>v.
-    Success (V_int.mk (1, 1 - v))
+definition op_sub :: "nat \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_sub bits =
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_b.
+      \<phi>M_Return [V_int.mk (bits, ((2^bits + val_b - val_a) mod 2^bits))]
   ))"
 
-definition op_and :: "'VAL \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_and = (\<lambda>va vb.
-    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) va (\<lambda>v.
-    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) vb (\<lambda>u.
-    Success (V_int.mk (1, v+u-1))
-  )))"
+definition op_udiv :: "nat \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_udiv bits =
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_b.
+      \<phi>M_Return [V_int.mk (bits, (val_b div val_a))]
+  ))"
 
-definition op_or :: "'VAL \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_or = (\<lambda>va vb.
-    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) va (\<lambda>v.
-    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) vb (\<lambda>u.
-    Success (V_int.mk (1, min 1 (v+u)))
-  )))"
+definition op_lt :: "nat \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_lt bits =
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_b.
+      \<phi>M_Return [V_int.mk (1, (if val_b < val_a then 1 else 0))]
+  ))"
 
-definition op_equal :: "'TY \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_equal TY = (\<lambda>u v. 
-    \<phi>M_assert (u \<in> Well_Type TY) \<ggreater>
-    \<phi>M_assert (v \<in> Well_Type TY) \<ggreater>
+
+definition op_le :: "nat \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_le bits =
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) (\<lambda>val_b.
+      \<phi>M_Return [V_int.mk (1, (if val_b \<le> val_a then 1 else 0))]
+  ))"
+
+
+definition op_not :: "'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_not =
+    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) (\<lambda>v.
+    \<phi>M_Return [V_int.mk (1, 1 - v)]
+  )"
+
+definition op_and :: "'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_and =
+    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) (\<lambda>v.
+    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) (\<lambda>u.
+    \<phi>M_Return [V_int.mk (1, v+u-1)]
+  ))"
+
+definition op_or :: "'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_or =
+    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) (\<lambda>v.
+    \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) (\<lambda>u.
+    \<phi>M_Return [V_int.mk (1, min 1 (v+u))]
+  ))"
+
+definition op_equal :: "'TY \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_equal TY =
+    \<phi>M_getV TY id (\<lambda>v.
+    \<phi>M_getV TY id (\<lambda>u vs.
     (\<lambda>res. \<phi>M_assert (Can_EqCompare res v u) res) \<ggreater>
-    Success (V_int.mk (1, (if EqCompare v u then 1 else 0)))
-)"
+    \<phi>M_Return [V_int.mk (1, (if EqCompare v u then 1 else 0))] vs
+))"
 
 
 subsubsection \<open>Address / Pointer\<close>
 
-definition \<phi>M_get_logptr :: \<open>'TY \<Rightarrow> 'VAL \<Rightarrow> ('TY logaddr \<Rightarrow> ('ret::value,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_get_logptr TY raw F = \<phi>M_getV \<tau>Pointer V_pointer.dest raw (\<lambda>p. F (rawaddr_to_log TY p))\<close>
+definition \<phi>M_get_logptr :: \<open>'TY \<Rightarrow> ('TY logaddr \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_get_logptr TY F = \<phi>M_getV \<tau>Pointer V_pointer.dest (\<lambda>p. F (rawaddr_to_log TY p))\<close>
 
 lemma (in std) \<phi>M_get_logptr[\<phi>reason!]:
   \<open>(valid_logaddr addr \<Longrightarrow>
     addr \<noteq> 0 \<Longrightarrow>
     logaddr_type addr = TY \<Longrightarrow>
     0 < MemObj_Size TY \<Longrightarrow>
-    \<^bold>p\<^bold>r\<^bold>o\<^bold>c F addr \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow>
-   \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_logptr TY v F \<lbrace> X\<heavy_comma> addr \<Ztypecolon> Val v (Pointer TY) \<longmapsto> Y \<rbrace>\<close>
+    \<^bold>p\<^bold>r\<^bold>o\<^bold>c F addr vs \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow>
+   \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_logptr TY F (v#vs) \<lbrace> X\<heavy_comma> addr \<Ztypecolon> Val v (Pointer TY) \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>M_get_logptr_def
   by (rule \<phi>M_getV, simp add: \<phi>expns valid_logaddr_def,
         auto simp add: \<phi>expns)
@@ -185,53 +185,55 @@ lemma (in std) \<phi>M_get_logptr[\<phi>reason!]:
 
 subsection \<open>Access the Resource\<close>
 
-definition \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a ?) \<Rightarrow> ('a \<Rightarrow> ('ret::value,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+definition \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a ?) \<Rightarrow> ('a \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_res R F = (\<lambda>res. F (the_fine (R res)) res)\<close>
 
-definition \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a) ?) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret::value,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+definition \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a) ?) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_res_entry R k F = \<phi>M_get_res R (\<lambda>res.
     case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
 
 definition \<phi>M_set_res_entry :: \<open>
     ((('k \<rightharpoonup> 'v) ? \<Rightarrow> ('k \<rightharpoonup> 'v) ?) \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'RES_N \<Rightarrow> 'RES)
-      \<Rightarrow> (('k \<rightharpoonup> 'v) \<Rightarrow> ('k \<rightharpoonup> 'v)) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
+      \<Rightarrow> (('k \<rightharpoonup> 'v) \<Rightarrow> ('k \<rightharpoonup> 'v)) \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_set_res_entry Updt F = (\<lambda>res.
-    Success () (Updt (map_fine F) res))\<close>
+    Success [] (Updt (map_fine F) res))\<close>
 
 
 subsubsection \<open>Memory Operations\<close>
 
 definition \<phi>M_get_mem
-    :: "'TY segidx \<Rightarrow> nat list \<Rightarrow> ('VAL \<Rightarrow> ('ret::value,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc"
+    :: "'TY segidx \<Rightarrow> nat list \<Rightarrow> ('VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "\<phi>M_get_mem seg idx F =
             \<phi>M_get_res_entry R_mem.get seg (\<lambda>val.
             \<phi>M_assert (val \<in> Well_Type (segidx.layout seg)) \<ggreater> F (index_value idx val))"
 
-definition op_load_mem :: "'TY \<Rightarrow> 'VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_load_mem TY = (\<lambda>raw.
-    \<phi>M_get_logptr TY raw (\<lambda>ptr.
-    \<phi>M_get_mem (memaddr.segment ptr) (memaddr.index ptr) Success))"
+definition op_load_mem :: "'TY \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_load_mem TY =
+    \<phi>M_get_logptr TY (\<lambda>ptr vs.
+    \<phi>M_get_mem (memaddr.segment ptr) (memaddr.index ptr) (\<lambda>x. \<phi>M_Return [x] vs))"
 
-definition op_store_mem :: "'TY \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> (unit,'RES_N,'RES) proc"
-  where "op_store_mem TY = (\<lambda>raw_ptr v.
-    \<phi>M_get_logptr TY raw_ptr (\<lambda>ptr. case ptr of (seg |: idx) \<Rightarrow>
-    \<phi>M_assert (v \<in> Well_Type TY) \<ggreater>
+definition op_store_mem :: "'TY \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+  where "op_store_mem TY =
+    \<phi>M_get_logptr TY (\<lambda>ptr. case ptr of (seg |: idx) \<Rightarrow>
+    \<phi>M_getV TY id (\<lambda>v vs.
+    \<phi>M_assert (vs = []) \<ggreater>
     \<phi>M_get_mem seg idx (\<lambda>_.
     \<phi>M_set_res_entry R_mem.updt (\<lambda>f. f(seg := map_option (index_mod_value idx (\<lambda>_. v)) (f seg))))))"
 
-definition op_free_mem :: "'VAL \<Rightarrow> (unit,'RES_N,'RES) proc"
-  where "op_free_mem = (\<lambda>raw.
-    \<phi>M_getV \<tau>Pointer V_pointer.dest raw (\<lambda>ptr. case ptr of (seg |: ofst) \<Rightarrow>
-    \<phi>M_assert (ofst = 0) \<ggreater>
-    \<phi>M_set_res_entry R_mem.updt (\<lambda>f. f(seg := None))))"
+definition op_free_mem :: "('VAL,'RES_N,'RES) M"
+  where "op_free_mem =
+    \<phi>M_getV \<tau>Pointer V_pointer.dest (\<lambda>ptr vs. case ptr of (seg |: ofst) \<Rightarrow>
+    \<phi>M_assert (ofst = 0 \<and> vs = []) \<ggreater>
+    \<phi>M_set_res_entry R_mem.updt (\<lambda>f. f(seg := None)))"
 
-definition op_alloc_mem :: "'TY \<Rightarrow> 'VAL \<Rightarrow> (unit,'RES_N,'RES) proc"
-  where "op_alloc_mem TY' = (\<lambda>vnum.
-    \<phi>M_getV (\<tau>Int addrspace_bits) V_int.dest vnum (\<lambda>(_, n).
+definition op_alloc_mem :: "'TY \<Rightarrow> ('VAL,'RES_N,'RES) M"
+  where "op_alloc_mem TY' =
+    \<phi>M_getV (\<tau>Int addrspace_bits) V_int.dest (\<lambda>(_, n) vs.
+    \<phi>M_assert (vs = []) \<ggreater>
     \<phi>M_set_res_entry R_mem.updt (\<lambda>f.
     let TY = \<tau>Array n TY'
       ; addr = (@addr. f addr = None \<and> segidx.layout addr = TY)
-     in f(addr := Some (Zero TY)))))"
+     in f(addr := Some (Zero TY))))"
 
 declare (in std) fiction_mem_\<I>[simp]
 
@@ -284,22 +286,25 @@ lemma (in std) \<phi>M_get_mem[\<phi>reason!]:
 
 lemma (in std) op_load_mem:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_mem TY raw
-          \<lbrace> ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> ptr \<Ztypecolon> Val raw (Pointer TY) \<longmapsto> \<lambda>raw. ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> v \<Ztypecolon> Val raw Identity \<rbrace>\<close>
+    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_mem TY [raw]
+          \<lbrace> ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> ptr \<Ztypecolon> Val raw (Pointer TY) \<longmapsto> \<lambda>raw. ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> v \<Ztypecolon> Val (hd raw) Identity \<rbrace>\<close>
   unfolding Premise_def op_load_mem_def
   apply (cases ptr; simp)
   apply \<phi>reason
   apply simp
   by \<phi>reason
 
+declare [ [\<phi>trace_reasoning] ]
+
 lemma (in std) op_store_mem:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store_mem TY raw_ptr raw_u
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store_mem TY [raw_ptr,raw_u]
           \<lbrace> ptr \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> u \<Ztypecolon> Val raw_u Identity\<heavy_comma> ptr \<Ztypecolon> Val raw_ptr (Pointer TY)
         \<longmapsto> \<lambda>_. ptr \<Zinj> 1 \<Znrres> u \<Ztypecolon> Ref Identity\<rbrace>\<close>
   unfolding Premise_def op_store_mem_def
-  apply (rule \<phi>M_get_logptr, cases ptr, simp add: \<phi>expns, clarify, rule \<phi>M_get_mem)
+  apply (rule \<phi>M_get_logptr)
+  apply (cases ptr, simp, \<phi>reason, simp, rule \<phi>M_get_mem)
   unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
   apply (auto simp add: \<phi>expns FIC_mem.interp_split' R_mem_valid_split' share_mem_def
                         R_mem.mult_in_dom times_list_def)
@@ -434,7 +439,7 @@ lemma (in std) share_mem'_drop_seg:
 
 
 lemma (in std) op_alloc_mem:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_mem TY raw_n \<lbrace> n \<Ztypecolon> Val raw_n Size \<longmapsto> \<lambda>_. ((seg |: []) \<Zinj> 1 \<Znrres> (Zero (\<tau>Array n TY)) \<Ztypecolon> Ref Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j seg. True) \<rbrace>\<close>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_mem TY [raw_n] \<lbrace> n \<Ztypecolon> Val raw_n Size \<longmapsto> \<lambda>_. ((seg |: []) \<Zinj> 1 \<Znrres> (Zero (\<tau>Array n TY)) \<Ztypecolon> Ref Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j seg. True) \<rbrace>\<close>
   unfolding op_alloc_mem_def
   apply (rule \<phi>M_tail_left, rule \<phi>M_getV; simp add: \<phi>expns)
   unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
@@ -476,7 +481,7 @@ lemma (in std) op_alloc_mem:
 
 
 lemma (in std) op_free_mem:
-   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_mem vptr \<lbrace> (seg |: []) \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> (seg |: 0) \<Ztypecolon> Val vptr RawPointer \<longmapsto> 1\<rbrace>\<close>
+   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_mem [vptr] \<lbrace> (seg |: []) \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> (seg |: 0) \<Ztypecolon> Val vptr RawPointer \<longmapsto> 1\<rbrace>\<close>
   unfolding op_free_mem_def
   apply (rule \<phi>M_getV; simp add: \<phi>expns)
   unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
@@ -506,14 +511,14 @@ lemma (in std) op_free_mem:
 
 subsubsection \<open>Variable Operations\<close>
 
-definition \<phi>M_get_var :: "varname \<Rightarrow> 'TY \<Rightarrow> ('VAL \<Rightarrow> ('ret::value,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc"
+definition \<phi>M_get_var :: "varname \<Rightarrow> 'TY \<Rightarrow> ('VAL \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "\<phi>M_get_var vname TY F = \<phi>M_get_res_entry (R_var.get) vname (\<lambda>val.
             \<phi>M_assert (val \<in> Well_Type TY) \<ggreater> F val)"
 
 definition op_get_var :: "varname \<Rightarrow> 'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_get_var vname TY = \<phi>M_get_var vname TY Success"
+  where "op_get_var vname TY = \<phi>M_get_var vname TY (\<lambda>x. Success [x])"
 
-definition op_set_var :: "varname \<Rightarrow> 'TY \<Rightarrow> 'VAL \<Rightarrow> (unit,'RES_N,'RES) proc"
+definition op_set_var :: "varname \<Rightarrow> 'TY \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_set_var vname TY = (\<lambda>v. \<phi>M_get_var vname TY (\<lambda>_.
             \<phi>M_assert (v \<in> Well_Type TY) \<ggreater> \<phi>M_set_res_entry R_var.updt (\<lambda>f. f(vname := Some v))))"
 
