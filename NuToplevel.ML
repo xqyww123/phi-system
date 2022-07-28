@@ -96,16 +96,6 @@ val v_goal_name = "\<phi>goal"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 val top_blk_name = "\<t>\<o>\<p>_\<b>\<l>\<o>\<c>\<k>"
 
-fun parse_arg (X as (Const (@{const_name "\<phi>Type"}, _) $ _ $ _)) =
-      X |> mk_monop @{const_name "Ele"}
-  | parse_arg (Abs (a,ty, X)) = Abs (a,ty, parse_arg X)
-  | parse_arg ((C as Const ("_type_constraint_", _)) $ X) = (C $ parse_arg X)
-  | parse_arg ((C as Const (@{const_name "ExSet"}, _)) $ X) = (C $ parse_arg X)
-  | parse_arg ((C as Const (@{const_name "Subjection"}, _)) $ X $ P) =
-      (C $ parse_arg X $ P)
-  | parse_arg X = X
-
-
 fun put_thesis thesis = 
       Proof_Context.put_thms false ("\<phi>thesis", SOME [Drule.mk_term thesis])
 fun get_thesis ctxt =
@@ -159,10 +149,6 @@ val procedure : working_mode =
            (#3 o PhiSyntax.dest_procedure)
     val destined_phi_c = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction_c))
            (#3 o PhiSyntax.dest_procedure_c)
-    fun initial_reassemble ctxt sequent =
-          if can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
-          then sequent RS Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_0"
-          else sequent
   in {
     domain = (K (can PhiSyntax.dest_procedure)),
     destined_phi = destined_phi,
@@ -171,7 +157,7 @@ val procedure : working_mode =
         NuApply.MP ctxt solution goal),
     end_block = (fn (ctxt,ctxt') => fn solution => fn goal =>
         let
-          val solution' = singleton (Proof_Context.export ctxt ctxt') (initial_reassemble ctxt solution)
+          val solution' = singleton (Proof_Context.export ctxt ctxt') solution
         in
           NuApply.MP ctxt' solution' goal
         end
@@ -227,7 +213,7 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
                    preconds)
 
     val goal = case raw_goal_ctxt of NONE => goal'
-                 | SOME G => Const (\<^const_name>\<open>GOAL_CTXT\<close>, dummyT)
+                  | SOME G => Const (\<^const_name>\<open>GOAL_CTXT\<close>, dummyT)
                               $ HOLogic.dest_Trueprop goal'
                               $ parse_term G
 
@@ -264,7 +250,8 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
         val (arg, ret, throws', preconds) = prep_Nu ctxt arg_ret_throws_conds
         (*val _ = debug_term ctxt "arg " arg
         val _ = debug_term ctxt "ret " ret*)
-        val v_proc = Var (v_proc_var, PhiSyntax.mk_procT ctxt)
+        val ret = Procedure_Syntax.translate_ret ret
+        val v_proc = Var (v_proc_var, dummyT)
         val throws = if throws' = Term.dummy
                      then Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT)
                      else throws'
@@ -299,7 +286,7 @@ val begin_proc =
 val begin_proc_cmd =
       gen_begin_proc Syntax.parse_term Syntax.parse_prop Syntax.parse_typ Proof_Context.read_var
         (fn ctxt => fn (arg,ret,throws,conds) =>
-          (parse_arg arg, parse_arg ret, parse_arg throws, conds)
+          (arg, ret, throws, conds)
         ) (K I)
 
 fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
@@ -316,9 +303,9 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         val var_names = take (length raw_vars) fixed_names
         val vars = origin_names ~~ (map (rpair dummyT) var_names)
 
-        val arg = parse_arg raw_arg
-        val ret = parse_arg raw_ret
-        val throws = parse_arg raw_throws
+        val arg = raw_arg
+        val ret = Procedure_Syntax.translate_ret raw_ret
+        val throws = raw_throws
 
         val conds' = map (snd #> fst #> perhaps (try dest_Trueprop)) conds
         val arg' = arg
@@ -432,8 +419,8 @@ fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
   let
     fun mk_Goal (ctxt,fixes,_) (arg, ret, _, preconds) =
       let
-        val arg = parse_arg arg
-        val ret = parse_arg ret
+        val arg = arg
+        val ret = ret
         val additional_prop = case additional_prop
                                 of SOME x => prep_term ctxt x
                                  | _ => @{term True}
@@ -496,6 +483,10 @@ fun RSXX ctxt tha thb = RSNXX ctxt tha (1,thb);
 
 local
 
+
+
+
+
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
 
 fun gen_finish_proc qed genz int stat =
@@ -507,13 +498,27 @@ fun gen_finish_proc qed genz int stat =
     Proof.map_context_result (fn ctxt =>
       let
         val sequent = NuBasics.the_programming_sequent' ctxt
+        val sequent' =
+          if can PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent)
+          then let
+            val current_nu = #destined_phi_c mode (Thm.cprop_of sequent)
+                              |> Thm.term_of
+                              |> Procedure_Syntax.abstract_return_vals (Proof_Context.theory_of ctxt)
+                              |> Thm.cterm_of ctxt
+            val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
+                              |> Drule.infer_instantiate ctxt 
+                                   (if Term.domain_type (Thm.typ_of_cterm current_nu) = @{typ unit}
+                                    then [(("T",0),current_nu), (("ret",0),@{cterm "()"})]
+                                    else [(("T",0),current_nu)])
+            in sequent RS return_rule end
+          else sequent
         val desired_nu = #destined_phi_c mode goal
       in
-        (ctxt,sequent)
+        (ctxt,sequent')
           |> invoke_Block_End_Hook
           |> (case genz
                 of Phi_Generalization.None => I
-              | _ => NuSys.cast (#destined_phi mode (Thm.prop_of sequent)
+              | _ => NuSys.cast (#destined_phi mode (Thm.prop_of sequent')
                                   |> Phi_Generalization.generalize_cmd genz ctxt
                                   |> Syntax.check_term ctxt
                                   |> Thm.cterm_of ctxt))

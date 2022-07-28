@@ -10,7 +10,6 @@ open NuHelp PhiSyntax NuSys
 
 fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ (Const (\<^const_name>\<open>std.Var\<close>,_) $ _ $ name $ T))
       = SOME (Term.term_name name, (x,T))
-  | dest_Var (Const (\<^const_name>\<open>std.Obj_Ele\<close>, _) $ x) = dest_Var x
   | dest_Var _ = NONE
 
 fun local_value_export ctxt rule vars sequent =
@@ -79,7 +78,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
     fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
       | left_most X = X
     val ret_phi' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) ret_phi
-    val Var R = left_most (Thm.term_of ret_phi')
+    val Var R = left_most (case Thm.term_of ret_phi' of Abs (_,_,X) => X)
     val goal_ret' = Thm.instantiate_cterm (TVars.empty, Vars.make [(R,goal_ret)]) ret_phi'
     val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E)
     val ctxt = NuToplevel.put_thesis goal' ctxt

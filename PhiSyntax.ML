@@ -6,14 +6,14 @@ include PHI_SYNTAX
   val get_assn_typ : Proof.context -> typ
 
   val mk_stateT : Proof.context -> typ
+  val mk_resourceT : Proof.context -> typ
   val mk_assnT : Proof.context -> typ
-  val mk_procT : Proof.context -> typ
+  val mk_procT : Proof.context -> typ -> typ
 
   val dest_nuTy : term -> term * term
   val dest_nuTy_c : cterm -> cterm * cterm
   val mk_nuTy : term * term -> term
   val mk_Nu_ty : typ * typ -> typ
-  val dest_ELE : term -> term
 
   val dest_CurrentConstruction : term -> term * term * term
   val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm
@@ -76,6 +76,13 @@ fun mk_stateT ctxt =
     Type(@{type_name "state"}, [VAL,RES_N,RES])
   end
 
+fun mk_resourceT ctxt =
+  let
+    val {VAL,RES_N,RES,...} = get_types ctxt
+  in
+    Type(@{type_name "fun"}, [RES_N, RES])
+  end
+
 fun mk_assnT ctxt =
   let
     val {VAL,FIC_N,FIC,...} = get_types ctxt
@@ -83,11 +90,11 @@ fun mk_assnT ctxt =
     Type(@{type_abbrev "assn"}, [VAL,FIC_N,FIC])
   end
 
-fun mk_procT ctxt =
+fun mk_procT ctxt T =
   let
     val {VAL,RES_N,RES,...} = get_types ctxt
   in
-    Type(@{type_abbrev "proc"}, [VAL,RES_N,RES])
+    Type(@{type_abbrev "proc"}, [T,RES_N,RES])
   end
 
 
@@ -96,12 +103,7 @@ fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
                                       | TERM _ => raise TERM (msg, [prop_of th])
 
 
-fun dest_ELE (Const (@{const_name std.Val_Ele}, _) $ X) = X
-  | dest_ELE (Const (@{const_name std.Obj_Ele}, _) $ X) = X
-  | dest_ELE (Const (@{const_name Ele}, _) $ X) = X
-  | dest_ELE X = X
-
-val dest_nuTy = dest_ELE #> dest_binop @{const_name "\<phi>Type"}
+val dest_nuTy = dest_binop @{const_name "\<phi>Type"}
 val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}
 val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])

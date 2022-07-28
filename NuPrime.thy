@@ -135,10 +135,19 @@ lemma mem_shift_add_cancel[simp]:
 
 
 
+paragraph \<open>Constrains by Sort\<close>
+
+class "value"
+  \<comment> \<open>Constrains the type that can be returned by a semantic monad.
+  A monad may return multiple values. In that case, it returns a tuple of values.\<close>
+
+instantiation unit :: "value" begin instance .. end
+instantiation prod :: ("value","value") "value" begin instance .. end
+instantiation list :: ("value") "value" begin instance .. end
 
 paragraph \<open>Model\<close>
 
-virtual_datatype 'TY std_val :: nonsepable_semigroup =
+virtual_datatype 'TY std_val :: "{nonsepable_semigroup,value}" =
   V_int     :: \<open>nat \<times> nat\<close>
   V_pointer :: \<open>'TY rawaddr\<close>
   V_tup     :: \<open>'self list\<close>
@@ -211,7 +220,7 @@ locale std_sem_pre =
 + std_val where CONS_OF   = VAL_CONS_OF
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
-            and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
+            and TYPE'REP  = \<open>TYPE('VAL::{nonsepable_semigroup,value})\<close>
 + std_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
@@ -549,7 +558,7 @@ end
 
 locale std_sem =
   std_sem_pre where TYPES = TYPES
-  for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times> ('RES_N => 'RES::comm_monoid_mult)) itself\<close>
+  for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::{value,nonsepable_semigroup}) \<times> ('RES_N => 'RES::comm_monoid_mult)) itself\<close>
 + assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
     and   WT_ptr[simp]: \<open>Well_Type \<tau>Pointer     = { V_pointer.mk addr |addr. valid_rawaddr addr }\<close>
     and   WT_tup[simp]: \<open>Well_Type (\<tau>Tuple ts)  = { V_tup.mk vs       |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
@@ -748,9 +757,9 @@ lemma pull_map_node:
 
 
 locale pre_std_fic =
-  std_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
+  std_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::{value,nonsepable_semigroup}) \<times>
                ('RES_N => 'RES::comm_monoid_mult))\<close>
-for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::nonsepable_semigroup) \<times>
+for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL::{value,nonsepable_semigroup}) \<times>
                ('RES_N => 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra) itself\<close>
 
 + fixes Mapof_Val :: \<open>'VAL \<Rightarrow> nat list \<rightharpoonup> 'VAL\<close>
@@ -900,7 +909,7 @@ fiction_space (in pre_std_fic) std_fic :: \<open>'RES_N \<Rightarrow> 'RES\<clos
 subsubsection \<open>Standard Settings\<close>
 
 locale std = std_fic
-  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra)\<close>
+  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::{value,nonsepable_semigroup}) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult) \<times> 'SHVAL::sep_algebra)\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
     and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC) \<times> 'SHVAL::sep_algebra) itself\<close>
@@ -1010,8 +1019,9 @@ end
 
 subsection \<open>Monadic Formalization\<close>
 
-datatype ('VAL,'RES_N,'RES) state =
-      Success \<open>'VAL list\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
+
+datatype ('ret::"value",'RES_N,'RES) state =
+      Success 'ret (resource: "('RES_N \<Rightarrow> 'RES)")
     | Exception (resource: "('RES_N \<Rightarrow> 'RES)")
     | Fail | PartialCorrect
 
@@ -1028,17 +1038,24 @@ text\<open> The basic state of the \<phi>-system virtual machine is represented 
 
 declare state.split[split]
 
-type_synonym ('VAL,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('VAL,'RES_N,'RES) state"
+type_synonym ('ret,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state"
 
-definition bind :: " ('VAL,'RES_N,'RES) state \<Rightarrow> ('VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) state " \<comment>\<open>monadic bind\<close>
-  where "bind s f = (case s of Success v x \<Rightarrow> f v x | Exception x \<Rightarrow> Exception x
-                             | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
+definition bind :: "('a,'RES_N,'RES) proc \<Rightarrow> ('a::value \<Rightarrow> ('b::value,'RES_N,'RES) proc) \<Rightarrow> ('b,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
+  where "bind f g = (\<lambda>res. case f res of Success v x \<Rightarrow> g v x | Exception x \<Rightarrow> Exception x
+                                       | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
 
-definition instr_comp :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<ggreater>=/ _" [75,76] 75) 
-  where "instr_comp f g s = bind (f s) g"
+abbreviation bind' ("_ \<ggreater>/ _" [76,75] 75)
+  where \<open>bind' f g \<equiv> (f \<bind> (\<lambda>_. g))\<close>
 
-lemma proc_bind_SKIP[simp]: "f \<ggreater>= Success \<equiv> f"
-  unfolding instr_comp_def bind_def atomize_eq fun_eq_iff by simp+
+lemma proc_bind_SKIP[simp]:
+  "f \<bind> Success \<equiv> f"
+  "Success any \<ggreater> f \<equiv> f"
+  "(g \<ggreater> Success any) \<ggreater> f \<equiv> g \<ggreater> f"
+  unfolding bind_def atomize_eq fun_eq_iff by simp+
+
+lemma proc_bind_assoc:
+  "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
+  unfolding bind_def fun_eq_iff by simp
 
 section \<open>Specification Framework\<close>
 
@@ -1050,14 +1067,14 @@ subsubsection \<open>Predicates for Total Correctness & Partial Correctness\<clo
 
 context std_sem begin
 
-definition StrictStateTy :: "('VAL list \<Rightarrow> ('RES_N,'RES) assn)
+definition StrictStateTy :: "('ret::value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
-                          \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("!\<S>")
+                          \<Rightarrow> ('ret,'RES_N,'RES) state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
                               | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
-definition LooseStateTy  :: "('VAL list \<Rightarrow> ('RES_N,'RES) assn)
+definition LooseStateTy  :: "('ret::value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
-                          \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("\<S>")
+                          \<Rightarrow> ('ret,'RES_N,'RES) state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
                               | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
 
@@ -1118,10 +1135,10 @@ lemma StrictStateTy_plus[iff]:
 
 end
 
+abbreviation (in std) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
+
 
 (* subsubsection \<open>Stack Element and Communicative Monoid Resource\<close>
-
-abbreviation (in std) \<open>Void \<equiv> (1::('VAL,'FIC_N,'FIC) assn)\<close>
 
 consts Ele :: " 'a set \<Rightarrow> ('VAL,'FIC_N,'FIC) assn " ("ELE _" [17] 16)
 
@@ -1253,7 +1270,7 @@ subsection \<open>Assertion\<close>
 
 context std begin
 
-definition \<phi>Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('VAL list \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
+definition \<phi>Procedure :: "('ret::value,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('ret \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)
   where [\<phi>def]:"\<phi>Procedure f T U E \<longleftrightarrow>
     (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COMP (R * U vs)) (INTERP_COMP (R * E)))"
@@ -1263,13 +1280,13 @@ abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold
 
 subsubsection \<open>Essential Hoare Rules\<close>
 
-lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success [] \<lbrace> T \<longmapsto> \<lambda>_. T \<rbrace>" unfolding \<phi>Procedure_def by simp
+lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success v \<lbrace> T v \<longmapsto> T \<rbrace>" unfolding \<phi>Procedure_def by simp
 
 lemma \<phi>SEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> (\<And>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g vs \<lbrace> B vs \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<ggreater>= g) \<lbrace> A \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
-  unfolding instr_comp_def \<phi>Procedure_def bind_def by (auto 0 4)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<bind> g) \<lbrace> A \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
+  unfolding \<phi>Procedure_def bind_def by (auto 0 4)
 
 lemma \<phi>frame:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s R * E \<rbrace>"

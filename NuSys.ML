@@ -96,12 +96,13 @@ fun REPEATX tac =
 
 fun cast desired_nu (ctxt,sequent) =
   let
-    val cast = Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
-    val cast' = Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'"
-    val cast  = Drule.infer_instantiate ctxt [(("T'",0),desired_nu)] cast
-    val cast' = Drule.infer_instantiate ctxt [(("T'",0),desired_nu)] cast'
+    val if_current_construction = can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
+    val rule =(if if_current_construction
+               then Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
+               else Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'")
+              |> Drule.infer_instantiate ctxt [(("T'",0),desired_nu)]
     val (ctxt', sequent') =
-          case Nu_Reasoner.reason (ctxt, (sequent RS cast' handle THM _ => sequent RS cast))
+          case Nu_Reasoner.reason (ctxt, sequent RS rule)
             of SOME ret => ret
              | NONE => raise CastFail (desired_nu, sequent)
     val _ = case Thm.prop_of sequent'
@@ -112,40 +113,40 @@ fun cast desired_nu (ctxt,sequent) =
                | _ => raise CastFail (desired_nu, sequent)
   in (ctxt',sequent') end
 
-fun export_codeblock ctxt cb sequent =
-  let open PhiSyntax
-    val (f,_,_,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
-    val reassemble_proc = Proof_Context.get_thm ctxt
-          (case f of Const (\<^const_name>\<open>EMPTY_PROC\<close>, _)
-                => "local.\<phi>reassemble_proc_00"
-            | _ => "local.\<phi>reassemble_proc")
-    val (s',_,_,_,_) = dest_codeblock_c cb
-  in
-    sequent
-      |> Thm.implies_intr cb
-      |> Thm.forall_intr s'
-      |> (fn th => th COMP reassemble_proc)
-      (* |> Thm.assumption NONE 1
-      |> Seq.make_results |> Seq.the_result "export_codeblock" *)
+fun export_codeblock ctxt param_cterms rule assm sequent =
+     sequent |> Thm.implies_intr assm
+             |> Drule.forall_intr_list param_cterms
+             |> (fn th => th COMP rule)
+
+structure Val_Counter = Proof_Data (
+  type T = int
+  val init = K 0
+)
+
+fun inc_val_counter ctxt =
+  let
+    val n = Val_Counter.get ctxt
+  in (n, Val_Counter.put (n+1) ctxt)
   end
+
 
 fun accept_proc (ctxt,sequent) =
   let open PhiSyntax
-    val (f,s,_,_,_) = dest_PendingConstruction (Thm.prop_of sequent)
-    val tyb = range_type (fastype_of f)
-    val name = term_name s |> Variable.revert_fixed ctxt
-    val ([name],ctxt) = Variable.add_fixes [name] ctxt
-    val s' = Free (name, tyb)
-    val ctxt = Variable.declare_constraints s' ctxt
-    val s' = Thm.cterm_of ctxt s'
     val accept_proc_thm = Proof_Context.get_thm ctxt "local.\<phi>accept_proc"
-    val accept_proc_thm = Drule.infer_instantiate ctxt [(("s'",0),s')] accept_proc_thm
-    val sequent' = sequent RS accept_proc_thm
-    val assm = Thm.cprem_of sequent' 1
-    val ([cb],ctxt) = Assumption.add_assms
-          (fn _ => fn [cb] => (export_codeblock ctxt cb, I)) [assm] ctxt
+    val rule = sequent RS accept_proc_thm
+    val ([(s_name', s_ty), (ret_name', ret_ty)], \<^const>\<open>Pure.imp\<close> $ sequent'_term $ _) =
+          NuHelp.strip_binder_raw \<^const_name>\<open>Pure.all\<close> (hd (Thm.prems_of rule))
+    val ([s_name,ret_name],ctxt') = Variable.add_fixes [s_name',ret_name'] ctxt
+    val sequent'_cterm =
+          Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name,s_ty)], sequent'_term)
+              |> Thm.cterm_of ctxt
+    val param_cterms = [Free (s_name,s_ty), Free (ret_name, ret_ty)]
+              |> map (Thm.cterm_of ctxt)
+
+    val ([sequent'],ctxt'2) = Assumption.add_assms
+          (fn _ => fn [assm] => (export_codeblock ctxt' param_cterms rule assm, I)) [sequent'_cterm] ctxt'
   in
-    (ctxt, cb RS sequent')
+    (ctxt'2, sequent')
   end
 
 (*Param & Label*)
@@ -195,7 +196,7 @@ fun finish_proc cc (ctxt,sequent) =
 fun start_proc blk_name arg_nuTy ctxt =
   let open PhiSyntax
     val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
-    val stat_var = Free (blk_name, mk_stateT ctxt)
+    val stat_var = Free (blk_name, mk_resourceT ctxt)
     val ctxt = Variable.declare_constraints stat_var ctxt
     val init = Const("local.CurrentConstruction",
                   fastype_of stat_var --> dummyT
