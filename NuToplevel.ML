@@ -526,11 +526,16 @@ fun gen_finish_proc qed genz int stat =
                               |> Syntax.check_term ctxt
                               |> Thm.cterm_of ctxt
             val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
-                              |> Drule.infer_instantiate ctxt 
-                                   (if Term.domain_type (Thm.typ_of_cterm current_nu) = @{typ unit}
-                                    then [(("T",0),current_nu), (("ret",0),@{cterm "()"})]
-                                    else [(("T",0),current_nu)])
-            in sequent RS return_rule end
+                              |> Drule.infer_instantiate ctxt [(("T",0),current_nu)]
+            val sequent' = sequent RS return_rule
+            val (Const (@{const_name Return}, _) $ ret,_,_,_,_)
+                  = PhiSyntax.dest_PendingConstruction (Thm.concl_of sequent')
+            in case ret of Var (ret_var,_) =>
+                 Drule.infer_instantiate ctxt [(ret_var,
+                   Thm.cterm_of ctxt (Const (@{const_name "Nil"},PhiSyntax.value_list_T ctxt)))]
+                    sequent'
+                 | _ => sequent'
+            end
           else sequent
         val desired_nu = #destined_phi_c mode goal
       in

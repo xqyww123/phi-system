@@ -570,7 +570,8 @@ proc
     \<medium_left_bracket> \<open>$v+1\<close> \<rightarrow> v \<medium_right_bracket>. ;; (* this ;; leads an empty statement which does nothing except simplification *)
     have [simp]: \<open>x = 10\<close> using \<phi> by simp ;;
     $v
-  \<medium_right_bracket>. .
+    \<medium_right_bracket>. .
+
 
 
 subsubsection \<open>recursion\<close>
