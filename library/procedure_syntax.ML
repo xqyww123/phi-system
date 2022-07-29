@@ -12,21 +12,23 @@ fun translate_arg cnt term =
        | x => x
      ) term
 
-fun tuple_proj n 0 term =
-      (if n <= 1 then term else Const (\<^const_name>\<open>fst\<close>, dummyT) $ term)
-  | tuple_proj n i term =
-      tuple_proj (n-1) (i-1) (Const (\<^const_name>\<open>snd\<close>, dummyT) $ term)
+fun list_proj 0 term = Const (\<^const_name>\<open>hd\<close>, dummyT) $ term
+  | list_proj i term = list_proj (i-1) (Const (\<^const_name>\<open>tl\<close>, dummyT) $ term)
+fun list_remain 0 term = term
+  | list_remain i term = list_remain (i-1) (Const (\<^const_name>\<open>tl\<close>, dummyT) $ term)
 
-fun map_ret N i j (Const (\<^const_name>\<open>val_syntax\<close>, _)) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ tuple_proj N j (Bound i))
-  | map_ret N i j (Const (\<^const_name>\<open>std.Val\<close>, _) $ Free _) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ tuple_proj N j (Bound i))
-  | map_ret N i j (Const (\<^const_name>\<open>std.Val\<close>, _) $ Var _) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ tuple_proj N j (Bound i))
-  | map_ret N i j (Const ("local.Val", _) $ Free _) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ tuple_proj N j (Bound i))
-  | map_ret N i j (Const ("local.Val", _) $ Var _) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ tuple_proj N j (Bound i))
+
+fun map_ret _ i j (Const (\<^const_name>\<open>val_syntax\<close>, _)) =
+      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_proj j (Bound i))
+  | map_ret _ i j (Const (\<^const_name>\<open>std.Val\<close>, _) $ Free _) =
+      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_proj j (Bound i))
+  | map_ret _ i j (Const (\<^const_name>\<open>std.Val\<close>, _) $ Var _) =
+      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_proj j (Bound i))
+  | map_ret _ i j (Const ("local.Val", _) $ Free _) =
+      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_proj j (Bound i))
+  | map_ret _ i j (Const ("local.Val", _) $ Var _) =
+      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_proj j (Bound i))
+  | map_ret N i j (Const (\<^const_name>\<open>ret_syntax\<close>, _)) = (j, list_remain N (Bound i))
   | map_ret N i j (Abs (name,ty,X)) =
        map_ret N (i+1) j X |> apsnd (fn X => Abs (name, ty,X))
   | map_ret N i j (X $ Y) =
@@ -67,7 +69,7 @@ fun translate_ret (term as (Abs _)) = term
                                       | Const (\<^const_name>\<open>ExSet\<close>, _) $ _ => true
                                       | Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ => true
                                       | _ => false)
-        then Abs ("\<r>\<e>\<t>", (if num = 0 then \<^typ>\<open>unit\<close> else dummyT), map_ret num 0 0 term |> snd)
+        then Abs ("\<r>\<e>\<t>", Type(\<^type_name>\<open>list\<close>, [TFree ("'VAL", dummyS)]), map_ret num 0 0 term |> snd)
         else term
       end
 
@@ -78,7 +80,7 @@ fun collect_values L (Const ("local.Val", _) $ v) = v::L
   | collect_values L (Abs (_,_,X)) = collect_values L X
   | collect_values L _ = L
 
-fun is_value_type (Type (\<^type_name>\<open>list\<close>, [TFree ("'VAL", _)])) = true
+fun is_value_type (TFree ("'VAL", _)) = true
   | is_value_type _ = false
 
 fun collect_values' X =
@@ -90,13 +92,25 @@ fun collect_values' X =
      | _ => collect_values [] X
 
 
+(* TODO: improve performance by replacing get_index *)
+fun subst_value vals lev (\<^const>\<open>ret_syntax\<close>) = list_remain (length vals) (Bound lev)
+  | subst_value vals lev (Free (_, Type (\<^type_name>\<open>list\<close>, [TFree ("'VAL", _)]))) =
+      list_remain (length vals) (Bound lev)
+  | subst_value vals lev term =
+      let val i = find_index (fn x => x aconv term) vals
+       in if i = ~1
+          then (case term of A $ B => subst_value vals lev A $ subst_value vals lev B
+                           | Abs(name,ty,X) => Abs(name, ty, subst_value vals (lev+1) X)
+                           | X => X)
+          else list_proj i (Bound lev) end
+
+
 fun abstract_return_vals term =
   let
     val vals = maps collect_values' (PhiSyntax.strip_separations term)
              |> distinct (op =)
-    val num = length vals
-    val term' = subst_free (map_index (fn (i,v) => (v, tuple_proj num  i (Bound 0))) vals) term
-  in Abs("\<r>\<e>\<t>", HOLogic.mk_tupleT (map fastype_of vals), term')
+    val term' = subst_value vals 0 term
+  in Abs("\<r>\<e>\<t>", Type(\<^type_name>\<open>list\<close>, [TFree("'VAL", dummyS)]), term')
   end
     
 

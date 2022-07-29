@@ -6,6 +6,7 @@ include PHI_SYNTAX
   val get_assn_typ : Proof.context -> typ
 
   val mk_stateT : Proof.context -> typ
+  val value_list_T : Proof.context -> typ
   val mk_resourceT : Proof.context -> typ
   val mk_assnT : Proof.context -> typ
   val mk_procT : Proof.context -> typ -> typ
@@ -67,6 +68,13 @@ fun mk_stateT ctxt =
     val {VAL,RES_N,RES,...} = get_types ctxt
   in
     Type(@{type_name "state"}, [VAL,RES_N,RES])
+  end
+
+fun value_list_T ctxt =
+  let
+    val {VAL,...} = get_types ctxt
+  in
+    Type(@{type_name "list"}, [VAL])
   end
 
 fun mk_resourceT ctxt =

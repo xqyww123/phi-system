@@ -523,6 +523,7 @@ fun gen_finish_proc qed genz int stat =
             val current_nu = #destined_phi_c mode (Thm.cprop_of sequent)
                               |> Thm.term_of
                               |> Procedure_Syntax.abstract_return_vals
+                              |> Syntax.check_term ctxt
                               |> Thm.cterm_of ctxt
             val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
                               |> Drule.infer_instantiate ctxt 
@@ -663,13 +664,15 @@ fun gen_begin_block prep_attr bindings int stat =
     fun after_qed (ctxt',[[th]]) stat =
       end_block stat |> (fn stat =>
           let val ctxt'' = context_of stat
-              val vars' = Variable.export_terms ctxt' ctxt'' vars
               fun gen_sequent sequent =
-                    #end_proof mode ctxt''
-                      (singleton (Proof_Context.export ctxt' ctxt'') th
-                        |> Drule.forall_intr_list (map (cterm_of ctxt'') vars')
-                        |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all})
-                      sequent
+                let
+                  val (th'::vars') = (th::map (Drule.mk_term o cterm_of ctxt') vars)
+                                        |> Proof_Context.export ctxt' ctxt''
+                  val th'' = th'
+                          |> Drule.forall_intr_list (map Drule.dest_term vars')
+                          |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
+                in #end_proof mode ctxt'' th'' sequent
+                end
           in if is_top
              then stat
                     |> enter_backward

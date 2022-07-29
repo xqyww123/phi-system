@@ -38,6 +38,7 @@ abbrevs
   and "<;>" = "\<Zcomp>"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
   and "<val>" = "\<^bold>v\<^bold>a\<^bold>l"
+  and "<ret>" = "\<^bold>r\<^bold>e\<^bold>t"
 begin
 
 declare [ [ML_debugger, ML_exception_debugger] ]
@@ -1681,6 +1682,8 @@ end
 consts val_syntax :: "unit \<Rightarrow> unit" ("\<^bold>v\<^bold>a\<^bold>l _" [22] 21) (*the type is senseless because
   it will and should be translated during type-checking phase.
   Any occurrence not translated means the misusing.*)
+consts ret_syntax :: \<open>unit\<close> ("\<^bold>r\<^bold>e\<^bold>t")
+
 ML_file \<open>library/procedure_syntax.ML\<close>
 
 
@@ -2927,8 +2930,8 @@ definition \<phi>M_assume :: \<open>bool \<Rightarrow> ('VAL,'RES_N,'RES) proc\<
 definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> ('v \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest F v = (\<phi>M_assert (v \<noteq> [] \<and> hd v \<in> Well_Type TY) \<ggreater> F (VDT_dest (hd v)) (tl v))\<close>
 
-definition \<phi>M_Return :: \<open>'VAL list \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_Return ret vs = (\<phi>M_assert (vs = []) \<ggreater> Success ret)\<close>
+definition \<phi>M_getEnd :: \<open>('VAL,'RES_N,'RES) proc \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_getEnd F vs = (\<phi>M_assert (vs = []) \<ggreater> F)\<close>
 
 end
 
@@ -2975,13 +2978,12 @@ lemma \<phi>M_Success[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success [v] \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val (hd u) T \<rbrace> \<close>
   unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
 
-lemma \<phi>M_Return[\<phi>reason!]:
-  \<open> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_Return [v] [] \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val (hd u) T \<rbrace> \<close>
-  unfolding \<phi>Procedure_def \<phi>M_Return_def by (clarsimp simp add: \<phi>expns)
+lemma \<phi>M_getEnd[\<phi>reason!]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getEnd F [] \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<close>
+  unfolding \<phi>M_getEnd_def by (clarsimp simp add: \<phi>expns)
 
 declare \<phi>M_Success[where X=1, simplified, \<phi>reason!]
-declare \<phi>M_Return[where X=1, simplified, \<phi>reason!]
 
 end
 
