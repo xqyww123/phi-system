@@ -58,9 +58,8 @@ fun get_types ctxt =
   end
 
 fun get_assn_typ ctxt =
-  let val {VAL,FIC_N,FIC,...} = get_types ctxt
-   in Type (\<^type_name>\<open>set\<close>, [Type (\<^type_name>\<open>prod\<close>,
-        [Type (\<^type_name>\<open>list\<close>, [VAL]), Type("fun", [FIC_N, FIC])])]) end
+  let val {FIC_N,FIC,...} = get_types ctxt
+   in Type (\<^type_name>\<open>set\<close>, [Type("fun", [FIC_N, FIC])]) end
 
 
 fun mk_stateT ctxt =

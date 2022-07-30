@@ -5,6 +5,7 @@ theory Phi_Logic_Programming_Reasoner
   abbrevs
       "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
+  and "<conv>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v"
 begin
 
 chapter \<open>\<phi> Logic Programming Reasoner\<close>
@@ -214,12 +215,18 @@ text \<open>Terminates the reasoning successfully and immediately\<close>
 
 subsection \<open>Conversion\<close>
 
-definition Conv :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v _ = _" [51,51] 50)
-  where "Conv origin obj \<longleftrightarrow> obj = origin"
+definition Conv :: "mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v[_] _ = _" [10,51,51] 50)
+  where "Conv mode origin obj \<longleftrightarrow> obj = origin"
 
-text \<open>\<^prop>\<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v A = B\<close> indicates the reasoner should convert \<^term>\<open>A\<close> into some \<^term>\<open>B\<close>.
+text \<open>\<^prop>\<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A = B\<close> indicates the reasoner should convert \<^term>\<open>A\<close> into some \<^term>\<open>B\<close>.
   Specific rules should be configured to reason those goals.\<close>
 
+lemma Conv_cong[cong]:
+  \<open>A \<equiv> A' \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A = B \<equiv> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A' = B\<close>
+  by simp
+
+lemma Conv_I: \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A = A\<close>
+  unfolding Conv_def ..
 
 
 subsubsection \<open>Matches\<close>

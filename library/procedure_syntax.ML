@@ -63,14 +63,7 @@ fun translate_ret (term as (Abs _)) = term
       let
         val num = translate_num_more term
       in
-        if num > 0 orelse (case term of Const (\<^const_name>\<open>times\<close>, _) $ _ $ _ => true
-                                      | Const ("local.COMMA", _) $ _ $ _ => true
-                                      | Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => true
-                                      | Const (\<^const_name>\<open>ExSet\<close>, _) $ _ => true
-                                      | Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ => true
-                                      | _ => false)
-        then Abs ("\<r>\<e>\<t>", Type(\<^type_name>\<open>list\<close>, [TFree ("'VAL", dummyS)]), map_ret num 0 0 term |> snd)
-        else term
+        Abs ("\<r>\<e>\<t>", Type(\<^type_name>\<open>list\<close>, [TFree ("'VAL", dummyS)]), map_ret num 0 0 term |> snd)
       end
 
 fun collect_values L (Const ("local.Val", _) $ v) = v::L
@@ -115,9 +108,9 @@ fun abstract_return_vals term =
     
 
 
-fun need_translate 
-  (Const ("local.\<phi>Procedure_no_exception", _) $ _ $ _ $ _) = true
-| need_translate  (Const ("local.\<phi>Procedure", _) $ _ $ _ $ _ $ _) = true
+fun need_translate (Const ("local.\<phi>Procedure_no_exception", _)) = true
+| need_translate (Const ("local.\<phi>Procedure", _)) = true
+| need_translate (Const (\<^const_name>\<open>ret_syntax\<close>, _)) = true
 | need_translate (A $ B) = need_translate A orelse need_translate B
 | need_translate (Abs (_, _, X)) = need_translate X
 | need_translate _ = false

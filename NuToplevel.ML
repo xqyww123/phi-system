@@ -287,8 +287,15 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
           end
         fun post_process' binding int lthy th =
           lthy
-            |> NuProcedure.define binding (post_process lthy
-                (Raw_Simplifier.rewrite_rule lthy @{thms final_proc_rewrite} th))
+            |> NuProcedure.define binding (
+                (lthy, (th RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
+                          handle THM _  => (th RSN (3,
+                              Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
+                  |> Nu_Reasoner.reason
+                  |> (fn SOME (lthy', th) => post_process lthy' th
+                       | NONE => error("Fail to simplify finally the procedure.\n"^
+                                       "It is a rare error and you may check the simplification "^
+                                       "rules of procedure_simps")))
             |-> (fn th => fn lthy =>
                   (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
                     (("\<phi>procedure", ""), [("", [th])]); lthy))
@@ -417,6 +424,15 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                                     (singleton (Proof_Context.export ctxt''' lthy) proof0))
                    |> Goal.conclude
                    |> Object_Logic.rulify lthy
+                 |> (fn th' => (lthy,
+                        (th' RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
+                          handle THM _  => (th' RSN (3,
+                              Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
+                   |> Nu_Reasoner.reason
+                   |> (fn SOME (_, th) => th
+                        | NONE => error("Fail to simplify finally the procedure.\n"^
+                                        "It is a rare error and you may check the simplification "^
+                                        "rules of procedure_simps")))
                )
             |-> (fn th => fn lthy =>
                    (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy

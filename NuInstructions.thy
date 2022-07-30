@@ -72,7 +72,6 @@ proc (in std) try':
 
 
 
-
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Integer arithmetic\<close>
@@ -295,8 +294,6 @@ lemma (in std) op_load_mem:
   apply \<phi>reason
   apply simp
   by \<phi>reason
-
-declare [ [\<phi>trace_reasoning] ]
 
 lemma (in std) op_store_mem:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY

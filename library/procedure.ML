@@ -132,23 +132,74 @@ fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = 
   | concl_of (\<^const>\<open>Pure.imp\<close> $ _ $ x) = concl_of x
   | concl_of x = x
 
+
+fun closure ctxt f =
+  let
+    val valT = #VAL (PhiSyntax.get_types ctxt)
+    val listT = Type(\<^type_name>\<open>list\<close>, [valT])
+    val vars = fold_aterms (fn Var (name, T) =>
+                                if T = valT orelse T = listT then I
+                                else insert (op =) (name, T)
+                             | _ => I) f []
+    val arity = length vars
+
+    val hd = Const (\<^const_name>\<open>hd\<close>, listT --> valT)
+    val tl = Const (\<^const_name>\<open>tl\<close>, listT --> listT)
+    fun tl_ntimes i tm = if i <= 0 then tm else tl_ntimes (i-1) (tl $ tm)
+    fun updtL i L v =
+          if fastype_of v = valT
+          then (case find_index (fn x => x = v) L
+                  of ~1 => (v::L, hd $ tl_ntimes (length L) (Bound i))
+                   |  i => (L, hd $ tl_ntimes (length L - 1 - i) (Bound i)))
+          else (L, v)
+    fun updtR i (N,R) v = 
+          if fastype_of v = listT
+          then (case R of SOME R' => if v aconv R' then ((N,R), tl_ntimes N (Bound i))
+                                     else raise TERM ("A procedure can have at most 1 "^
+                                                      "variable-length argument.", [v,R'])
+                        | NONE => ((N, SOME v), tl_ntimes N (Bound i)))
+          else ((N,R), v)
+    fun gen_pass updt =
+      let
+        fun pass i s (v as Var _)  = updt i s v
+          | pass i s (A $ B) =
+              (case pass i s A of (s',A') => case pass i s' B of (s'',B') => (s'', A' $ B'))
+          | pass i s (Abs (name,ty,X)) =
+              (case pass (i+1) s X of (s', X') => (s', Abs (name,ty,X')))
+          | pass _ s X = (s, X)
+       in pass 0 end
+
+    val (L,f')  = gen_pass updtL [] f
+    val ((_,R),f'') = gen_pass updtR (length L, NONE) f'
+    val has_ret = is_some R orelse not (null L)
+
+    fun updtV i () v =
+          if fastype_of v = valT orelse fastype_of v = listT
+          then ((), v)
+          else (case find_index (fn x => Var x = v) vars
+                  of ~1 => raise Fail "bug!"
+                   |  j => ((), Bound (j + i + (if has_ret then 1 else 0))))
+    val (_,f''')  = gen_pass updtV () f''
+
+    val tvars = Term.add_tvars f []
+
+  in (if has_ret then Abs ("\<a>\<r>\<g>", listT, f''') else f''')
+      |> fold (fn ((name,_), T) => fn X => Abs (name, T, X)) vars
+      |> pair (length tvars, arity + 1)
+  end
+
 fun gen_define (binding,attrs) sequent lthy =
   let
     val sequent' = sequent
           |> Drule.zero_var_indexes
     val (f,_,_,_) = Thm.concl_of sequent' |> concl_of |> PhiSyntax.dest_procedure 
 
+
+    
+
     (*all variables in the procedure body*)
-    val vars = fold_aterms (fn Var v => insert (op =) (Var v)
-                             | _ => I) f []
-    val tvars = Term.add_tvars f []
-    fun lambda v body = Abs (Term.term_name v, fastype_of v, abstract_over (v,body))
     (*then f' is the standard form of a definition*)
-    val f' = fold lambda vars f
-          |> map_types (map_type_tvar (fn ((vname,0),sort) => TFree (vname,sort)))
-          |> fold (fn ((vname,0),sort) => fn x =>
-                  Abs ("_", Type ("itself", [TFree (vname,sort)]), x)) tvars
-    val arity = (length tvars, length vars)
+    val (arity,f') = closure lthy f
 
     val (def_binding,proc_binding) = if Binding.is_empty binding
                                      then (binding,binding)
