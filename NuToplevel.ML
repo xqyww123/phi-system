@@ -536,13 +536,15 @@ fun gen_finish_proc qed genz int stat =
         val sequent' =
           if can PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent)
           then let
-            val current_nu = #destined_phi_c mode (Thm.cprop_of sequent)
-                              |> Thm.term_of
-                              |> Procedure_Syntax.abstract_return_vals
-                              |> Syntax.check_term ctxt
-                              |> Thm.cterm_of ctxt
+            val (ins,current_nu) =
+                  #destined_phi_c mode (Thm.cprop_of sequent)
+                     |> Thm.term_of
+                     |> Procedure_Syntax.abstract_return_vals ctxt
+                     |> apfst (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
+                     |> apsnd (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
             val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
-                              |> Drule.infer_instantiate ctxt [(("T",0),current_nu)]
+                              |> Drule.infer_instantiate ctxt [(("T",0),current_nu),(("ret",0),ins)]
+                              |> Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>V_simps}
             val sequent' = sequent RS return_rule
             val (Const (@{const_name Return}, _) $ ret,_,_,_,_)
                   = PhiSyntax.dest_PendingConstruction (Thm.concl_of sequent')

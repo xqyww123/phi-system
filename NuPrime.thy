@@ -1011,7 +1011,6 @@ end
 
 subsection \<open>Monadic Formalization\<close>
 
-
 datatype ('VAL,'RES_N,'RES) state =
       Success \<open>'VAL list\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
     | Exception (resource: "('RES_N \<Rightarrow> 'RES)")
@@ -1033,7 +1032,7 @@ declare state.split[split]
 type_synonym ('VAL,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('VAL,'RES_N,'RES) state"
 type_synonym ('VAL,'RES_N,'RES) M = "'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
 
-definition bind :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
+definition bind :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) M \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
   where "bind f g = (\<lambda>res. case f res of Success v x \<Rightarrow> g v x | Exception x \<Rightarrow> Exception x
                                        | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
 
@@ -1050,6 +1049,14 @@ lemma proc_bind_assoc:
   "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
   unfolding bind_def fun_eq_iff by simp
 
+definition "\<phi>V_hd = hd"
+definition "\<phi>V_tl = tl"
+
+lemma \<phi>V_simps:
+  \<open>\<phi>V_hd (x#l) \<equiv> x\<close>
+  \<open>\<phi>V_tl (x#l) \<equiv> l\<close>
+  unfolding \<phi>V_hd_def \<phi>V_tl_def by simp+
+
 section \<open>Specification Framework\<close>
 
 type_synonym ('RES_N,'RES) assn = "('RES_N \<Rightarrow> 'RES) set" \<comment> \<open>assertion\<close>
@@ -1065,7 +1072,7 @@ definition StrictStateTy :: "('VAL list \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
                               | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
-definition LooseStateTy  :: "('VAL list \<Rightarrow> ('RES_N,'RES) assn)
+definition LooseStateTy  :: "('VAL  list \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
                           \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E

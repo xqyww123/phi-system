@@ -143,8 +143,8 @@ fun closure ctxt f =
                              | _ => I) f []
     val arity = length vars
 
-    val hd = Const (\<^const_name>\<open>hd\<close>, listT --> valT)
-    val tl = Const (\<^const_name>\<open>tl\<close>, listT --> listT)
+    val hd = Const (\<^const_name>\<open>\<phi>V_hd\<close>, listT --> valT)
+    val tl = Const (\<^const_name>\<open>\<phi>V_tl\<close>, listT --> listT)
     fun tl_ntimes i tm = if i <= 0 then tm else tl_ntimes (i-1) (tl $ tm)
     fun updtL i L v =
           if fastype_of v = valT

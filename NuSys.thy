@@ -3003,8 +3003,8 @@ declare \<phi>M_getV[THEN \<phi>M_tail_left, \<phi>reason!]
 
 lemma \<phi>M_Success[\<phi>reason!]:
   \<open> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success [v] \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val (hd u) T \<rbrace> \<close>
-  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success [v] \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val (\<phi>V_hd u) T \<rbrace> \<close>
+  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns \<phi>V_hd_def)
 
 lemma \<phi>M_getEnd[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>

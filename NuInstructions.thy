@@ -95,7 +95,7 @@ definition op_add :: "nat \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RE
 
 lemma (in std) op_add:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b [vb,va] \<lbrace> x \<Ztypecolon> Val va \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vb \<nat>[b] \<longmapsto> \<lambda>v. x + y \<Ztypecolon> Val (hd v) \<nat>[b] \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b [vb,va] \<lbrace> x \<Ztypecolon> Val va \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vb \<nat>[b] \<longmapsto> \<lambda>v. x + y \<Ztypecolon> Val (\<phi>V_hd v) \<nat>[b] \<rbrace>\<close>
   unfolding op_add_def Premise_def
   by \<phi>reason
 
@@ -288,7 +288,7 @@ lemma (in std) \<phi>M_get_mem[\<phi>reason!]:
 lemma (in std) op_load_mem:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_mem TY [raw]
-          \<lbrace> ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> ptr \<Ztypecolon> Val raw (Pointer TY) \<longmapsto> \<lambda>raw. ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> v \<Ztypecolon> Val (hd raw) Identity \<rbrace>\<close>
+          \<lbrace> ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> ptr \<Ztypecolon> Val raw (Pointer TY) \<longmapsto> \<lambda>raw. ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> v \<Ztypecolon> Val (\<phi>V_hd raw) Identity \<rbrace>\<close>
   unfolding Premise_def op_load_mem_def
   apply (cases ptr; simp)
   apply \<phi>reason

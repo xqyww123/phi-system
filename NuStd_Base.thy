@@ -55,10 +55,6 @@ lemma (in std) [\<phi>reason 2000 on \<open>Synthesis_Parse (?var::varname) ?Y\<
   \<open>Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T)\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma (in std) [\<phi>reason 2000 on \<open>Synthesis_Parse (?x <val-of-var> ?var) ?Y\<close>]:
-  \<open>Synthesis_Parse (x <val-of-var> var) (\<lambda>_. x <val-of-var> var \<Ztypecolon> Val ? T)\<close>
-  unfolding Synthesis_Parse_def 
-
 
 \<phi>processor (in std) get_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.term >> (fn var => fn () =>
@@ -90,6 +86,8 @@ proc op_get_var:
   \<medium_left_bracket>
     to_Identity op_get_var''
   \<medium_right_bracket>. .
+
+declare [ [\<phi>trace_reasoning] ]
 
 lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ?x <val-of-var> ?var \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> SUBGOAL G G2
