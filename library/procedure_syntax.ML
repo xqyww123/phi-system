@@ -1,74 +1,138 @@
 signature PROCEDURE_SYNTAX = sig
   val translate_ret : term -> term
-  val abstract_return_vals : Proof.context -> term -> term * term
+  val abstract_return_vals : term -> term * term
 end
 
 structure Procedure_Syntax : PROCEDURE_SYNTAX = struct
 
 fun translate_arg cnt term =
   map_aterms (
-      fn Const (\<^const_name>\<open>val_syntax\<close>, _) =>
-            Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ Free ("\<v>\<a>\<l>" ^ (string_of_int (cnt())), dummyT)
+      fn Const (\<^const_name>\<open>anonymous_val\<close>, _) =>
+            Free ("\<v>\<a>\<l>" ^ (string_of_int (cnt())), dummyT)
        | x => x
      ) term
 
-fun list_nth 0 term = Const (\<^const_name>\<open>\<phi>V_hd\<close>, dummyT) $ term
-  | list_nth i term = list_nth (i-1) (Const (\<^const_name>\<open>\<phi>V_tl\<close>, dummyT) $ term)
-fun list_last 0 term = term
-  | list_last i term = list_last (i-1) (Const (\<^const_name>\<open>\<phi>V_tl\<close>, dummyT) $ term)
+fun dest_prodT (Type (\<^type_name>\<open>sem_value\<close>, [T])) = HOLogic.dest_prodT T
+  | dest_prodT (Type ("dummy", [])) = (dummyT,dummyT)
+  | dest_prodT T = raise TYPE("bug #fsahofew", [T], [])
+fun mk_prodT (Type (\<^type_name>\<open>sem_value\<close>, [T1]), Type (\<^type_name>\<open>sem_value\<close>, [T2]))
+      = Type (\<^type_name>\<open>sem_value\<close>, [HOLogic.mk_prodT (T1,T2)])
+  | mk_prodT (Type ("dummy", []), _) = dummyT
+  | mk_prodT (_, Type ("dummy", [])) = dummyT
+  | mk_prodT (T1,T2) = raise TYPE("bug #geasr89", [T1,T2], [])
+
+fun mk_tuple _ [] = \<^term>\<open>sem_value ()\<close>
+  | mk_tuple _ [tm] = tm
+  | mk_tuple (Type (\<^type_name>\<open>sem_value\<close>, [T])::tys) (tm::tms)
+      = Const (\<^const_name>\<open>\<phi>V_pair\<close>, Type (\<^type_name>\<open>sem_value\<close>, [fst (HOLogic.dest_prodT T)])
+                                 --> Type (\<^type_name>\<open>sem_value\<close>, [snd (HOLogic.dest_prodT T)])
+                                 --> Type (\<^type_name>\<open>sem_value\<close>, [T]))
+          $ tm $ mk_tuple tys tms
+  | mk_tuple tys tms = raise TYPE ("bug #vq4t4", tys, tms)
+
+(* fun mk_prodT []  = \<^typ>\<open>unit sem_value\<close>
+  | mk_prodT (Type ("dummy", []) :: _) = dummyT
+  | mk_prodT [T] = T
+  | mk_prodT (Type (\<^type_name>\<open>sem_value\<close>, [T])::Ts) =
+      (case mk_prodT Ts of Type (\<^type_name>\<open>sem_value\<close>, [Ts']) =>
+          Type (\<^type_name>\<open>sem_value\<close>, [HOLogic.mk_prodT (T,Ts')]))
+  | mk_prodT T = raise TYPE("bug #g4389h", T, []) *)
+
+fun nth_project [_] 0 term = term
+  | nth_project (ty::_::_) 0 term
+      = Const (\<^const_name>\<open>\<phi>V_fst\<close>, ty --> fst (dest_prodT ty)) $ term
+  | nth_project (ty::tys::tyss) i term =
+      Const (\<^const_name>\<open>\<phi>V_snd\<close>, ty --> tys) $ nth_project (tys::tyss) (i-1) term
+
+fun collect_ret Vs (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)) = v::Vs
+  | collect_ret Vs (v as Free (_, Type(\<^type_name>\<open>sem_value\<close>, _))) = insert (op = ) v Vs
+  | collect_ret Vs (v as Var (_, Type(\<^type_name>\<open>sem_value\<close>, _)))  = insert (op = ) v Vs
+  | collect_ret Vs (v as Const ("_type_constraint_", Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
+      = insert (op = ) v Vs
+  | collect_ret Vs (v as Const (\<^const_name>\<open>map_sem_value\<close>, _) $ _ $ Var _) = insert (op = ) v Vs
+  | collect_ret Vs (v as Const (\<^const_name>\<open>map_sem_value\<close>, _) $ _ $ Free _)= insert (op = ) v Vs
+  | collect_ret Vs (Abs (_,_,X)) = collect_ret Vs X
+  | collect_ret Vs (X $ Y) = collect_ret (collect_ret Vs X) Y
+  | collect_ret Vs _ = Vs
 
 
-fun map_ret _ i j (Const (\<^const_name>\<open>val_syntax\<close>, _)) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_nth j (Bound i))
-  | map_ret _ i j (Const (\<^const_name>\<open>std.Val\<close>, _) $ Free _) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_nth j (Bound i))
-  | map_ret _ i j (Const (\<^const_name>\<open>std.Val\<close>, _) $ Var _) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_nth j (Bound i))
-  | map_ret _ i j (Const ("local.Val", _) $ Free _) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_nth j (Bound i))
-  | map_ret _ i j (Const ("local.Val", _) $ Var _) =
-      (j + 1, Const (\<^const_name>\<open>std.Val\<close>, dummyT) $ list_nth j (Bound i))
-  | map_ret N i j (Const (\<^const_name>\<open>ret_syntax\<close>, _)) = (j, list_last N (Bound i))
-  | map_ret N i j (Abs (name,ty,X)) =
-       map_ret N (i+1) j X |> apsnd (fn X => Abs (name, ty,X))
-  | map_ret N i j (X $ Y) =
-      map_ret N i j X |> (fn (j',X') => map_ret N i j' Y |> apsnd (fn Y' => X' $ Y'))
-  | map_ret _ 0 j (Bound a) = (j, Bound (a+1))
-  | map_ret _ _ j X = (j,X)
+fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous_val\<close>, _))
+      = (j + 1, Vs, nth_project Tys j (Bound i))
+  | map_ret Tys i (j, Vs, v as Const ("_type_constraint_",
+                                           Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
+      = (case AList.lookup (op =) Vs v
+           of SOME k => (j, Vs, nth_project Tys k (Bound i))
+            | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
+  | map_ret Tys i (j, Vs, v as Free (_, Type(\<^type_name>\<open>sem_value\<close>, _)))
+      = (case AList.lookup (op =) Vs v
+           of SOME k => (j, Vs, nth_project Tys k (Bound i))
+            | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
+  | map_ret Tys i (j, Vs, v as Var (_, Type(\<^type_name>\<open>sem_value\<close>, _)))
+      = (case AList.lookup (op =) Vs v
+           of SOME k => (j, Vs, nth_project Tys k (Bound i))
+            | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
+  | map_ret Tys i (j, Vs, v as Const (\<^const_name>\<open>map_sem_value\<close>, _) $ _ $ Var _)
+      = (case AList.lookup (op =) Vs v
+           of SOME k => (j, Vs, nth_project Tys k (Bound i))
+            | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
+  | map_ret Tys i (j, Vs, v as Const (\<^const_name>\<open>map_sem_value\<close>, _) $ _ $ Free _)
+      = (case AList.lookup (op =) Vs v
+           of SOME k => (j, Vs, nth_project Tys k (Bound i))
+            | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
+  | map_ret Tys i (j, Vs, Abs (name,ty,X))
+      = (case map_ret Tys (i+1) (j, Vs, X) of (j',Vs',X') =>
+            (j',Vs',Abs (name, ty,X')))
+  | map_ret Tys i (j, Vs, X $ Y)
+      = (case map_ret Tys i (j,Vs,X) of (j',Vs',X') =>
+          (case map_ret Tys i (j',Vs',Y) of (j'',Vs'',Y') =>
+              (j'',Vs'', X' $ Y')))
+  | map_ret _ 0 (j,Vs,Bound a) = (j, Vs, Bound (a+1))
+  | map_ret _ _ jVX = jVX
+
+
+fun translate_ret (term as (Abs _)) = term
+  | translate_ret (term as (Var _)) = term
+  | translate_ret (term as (Free _)) = term
+  | translate_ret (Const ("_type_constraint_", ty) $ X)
+      = Const ("_type_constraint_", ty) $ translate_ret X
+  | translate_ret term =
+      let
+        val Vs = collect_ret [] term
+        val Tys = map (K dummyT) Vs
+                    |> fold_rev (fn T => (fn [] => [T]
+                                           | L as T'::_ => mk_prodT (T,T') :: L)) []
+        val T = if null Tys then \<^typ>\<open>unit\<close> else hd Tys
+        val T' = Type(\<^type_name>\<open>sem_value\<close>, [T])
+      in Abs ("\<r>\<e>\<t>", T',
+           if null Vs then term else #3(map_ret Tys 0 (0,[],term)))
+      end
+
+fun abstract_return_vals (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
+      = (\<^term>\<open>undefined :: unreachable sem_value\<close>,
+         Abs ("_", \<^typ>\<open>unreachable sem_value\<close>, term))
+| abstract_return_vals term =
+  let
+   val Vs = collect_ret [] term
+   fun dest_T (Type (\<^type_name>\<open>sem_value\<close>, [X])) = X
+     | dest_T _ = raise Fail "BUG #dnwf87"
+   val Tys = map (dest_T o fastype_of) Vs
+              |> fold_rev (fn T => (fn [] => [T]
+                                     | L as T'::_ => mk_prodT (T,T') :: L)) []
+   val T = if null Tys then \<^typ>\<open>unit\<close> else hd Tys
+   val T' = Type(\<^type_name>\<open>sem_value\<close>, [T])
+  in (mk_tuple Tys Vs, Abs("\<r>\<e>\<t>", T', #3(map_ret Tys 0 (0,[],term))))
+  end
+
 
 (* fun translate_num term =
       fold_aterms (
           fn Const (\<^const_name>\<open>val_syntax\<close>, _) => (fn n => n + 1)
            | _ => I) term 0 *)
 
-fun translate_num_ret'' n (Const (\<^const_name>\<open>val_syntax\<close>, _)) = n + 1
-  | translate_num_ret'' n (Const ("local.Val", _) $ Free _ ) = n + 1
-  | translate_num_ret'' n (Const ("local.Val", _) $ Var _) = n + 1
-  | translate_num_ret'' n (Const (\<^const_name>\<open>std.Val\<close>, _) $ Free _) = n + 1
-  | translate_num_ret'' n (Const (\<^const_name>\<open>std.Val\<close>, _) $ Var _) = n + 1
-  | translate_num_ret'' n (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = translate_num_ret'' n X
-  | translate_num_ret'' n (X $ Y) =
-      translate_num_ret'' (translate_num_ret'' n X) Y
-  | translate_num_ret'' n (Abs (_,_,X)) = translate_num_ret'' n X
-  | translate_num_ret'' n _ = n
-fun translate_num_ret' (Abs (_,_,_)) = 0
-  | translate_num_ret' term = translate_num_ret'' 0 term
-
-
-fun need_translate_ret' (Const (\<^const_name>\<open>ret_syntax\<close>, _)) = true
-  | need_translate_ret' (Const (\<^const_name>\<open>val_syntax\<close>, _)) = true
-  | need_translate_ret' (Const ("local.Val", _) $ Free _ ) = true
-  | need_translate_ret' (Const ("local.Val", _) $ Var _) = true
-  | need_translate_ret' (Const (\<^const_name>\<open>std.Val\<close>, _) $ Free _) = true
-  | need_translate_ret' (Const (\<^const_name>\<open>std.Val\<close>, _) $ Var _) = true
-  | need_translate_ret' (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_ret' X
-  | need_translate_ret' (A $ B) = need_translate_ret' A orelse need_translate_ret' B
-  | need_translate_ret' (Abs (_, _, X)) = need_translate_ret' X
-  | need_translate_ret' _ = false
 fun need_translate_ret (Abs (_,_,_)) = false
   | need_translate_ret _ = true
 
-fun need_translate_arg (Const (\<^const_name>\<open>val_syntax\<close>, _)) = true
+fun need_translate_arg (Const (\<^const_name>\<open>anonymous_val\<close>, _)) = true
   | need_translate_arg (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
   | need_translate_arg (A $ B) = need_translate_arg A orelse need_translate_arg B
   | need_translate_arg (Abs (_, _, X)) = need_translate_arg X
@@ -81,85 +145,6 @@ fun need_translate (Const ("local.\<phi>Procedure_no_exception", _) $ _ $ Arg $ 
 | need_translate (A $ B) = need_translate A orelse need_translate B
 | need_translate (Abs (_, _, X)) = need_translate X
 | need_translate _ = false
-
-
-
-fun translate_ret (term as (Abs _)) = term
-  | translate_ret (term as (Var _)) = term
-  | translate_ret (term as (Free _)) = term
-  | translate_ret (Const ("_type_constraint_", ty) $ X)
-      = Const ("_type_constraint_", ty) $ translate_ret X
-  | translate_ret term =
-      if need_translate_ret term
-      then let
-             val num = translate_num_ret' term
-           in
-             Abs ("\<r>\<e>\<t>", Type(\<^type_name>\<open>list\<close>,
-                 [TFree ("'VAL", dummyS)]), map_ret num 0 0 term |> snd)
-           end
-      else term
-
-fun collect_values' L (Const ("local.Val", _) $ v) = v::L
-  | collect_values' L (Const (@{const_name std.Val}, _) $ v) = v::L
-  | collect_values' L (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = collect_values' L X
-  | collect_values' L (A $ B) = collect_values' (collect_values' L A) B
-  | collect_values' L (Abs (_,_,X)) = collect_values' L X
-  | collect_values' L _ = L
-fun is_varlenT (Type(\<^type_name>\<open>list\<close>, [TFree("'VAL", _)])) = true
-  | is_varlenT _ = false
-fun is_varlen (Free (_,T)) = is_varlenT T
-  | is_varlen (Var (_,T)) = is_varlenT T
-  | is_varlen _ = false
-fun collect_values X (L,R) =
-  case Term.strip_comb X
-    of (Free _, tms) => (L, filter is_varlen tms @ R)
-     | (Var  _, tms) => (L, filter is_varlen tms @ R)
-     | _ => (collect_values' L X, R)
-
-fun abstract_return_vals ctxt term =
-  let
-    val valT = #VAL (PhiSyntax.get_types ctxt)
-    val listT = Type(\<^type_name>\<open>list\<close>, [valT])
-    fun list_nth 0 term = Const (\<^const_name>\<open>\<phi>V_hd\<close>, listT --> valT) $ term
-      | list_nth i term = list_nth (i-1) (Const (\<^const_name>\<open>\<phi>V_tl\<close>, listT --> listT) $ term)
-    fun list_last 0 term = term
-      | list_last i term = list_last (i-1) (Const (\<^const_name>\<open>\<phi>V_tl\<close>, listT --> listT) $ term)
-
-    val (vals, varlen') = fold collect_values (PhiSyntax.strip_separations term) ([],[])
-    val N = length vals
-    val varlen = case distinct (op =) varlen'
-                   of [r] => SOME r
-                    | [ ] => NONE
-                    | Rs => raise TERM ("multiple variable-length arguments/returns.", Rs)
-    fun trans 0 (i, Bound j) = (i, Bound (j+1))
-      | trans k (i, Const ("local.Val", ty) $ _)
-          = (i+1, Const (@{const_name std.Val}, ty) $ list_nth i (Bound k))
-      | trans k (i, Const (@{const_name std.Val}, ty) $ _)
-          = (i+1, Const (@{const_name std.Val}, ty) $ list_nth i (Bound k))
-      | trans k (i, Const (\<^const_name>\<open>\<phi>Type\<close>, t1) $ x $ T)
-          = trans k (i, T) |> apsnd (fn T' => Const (\<^const_name>\<open>\<phi>Type\<close>, t1) $ x $ T')
-      | trans k (i, A $ B)
-          = (case trans k (i, A) of (i',A')  =>
-             case trans k (i',B) of (i'',B') => (i'', A' $ B'))
-      | trans k (i, Abs (name,ty,X))
-          = (case trans (k+1) (i,X) of (i',X') => (i',Abs (name,ty,X')))
-      | trans _ (i, X) = (i, X)
-    fun trans_varlen term =
-      if is_varlen term then list_last N (Bound 0) else term
-    fun trans' X =
-      case Term.strip_comb X
-        of (Free a, tms) => Term.list_comb (Free a, map trans_varlen tms)
-         | (Var a, tms) => Term.list_comb (Var a, map trans_varlen tms)
-         | _ => trans 0 (0,X) |> snd
-    val instance = 
-          the_default (Const(\<^const_name>\<open>Nil\<close>, listT)) varlen
-            |> fold_rev (fn V => fn L =>
-                  Const (\<^const_name>\<open>Cons\<close>, valT --> listT --> listT) $ V $ L) vals
-  in (instance, Abs("\<r>\<e>\<t>", Type(\<^type_name>\<open>list\<close>, [TFree("'VAL", dummyS)]), trans' term))
-  end
-
- 
-    
 
 
 fun translate_procedure cnt

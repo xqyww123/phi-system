@@ -135,8 +135,6 @@ lemma mem_shift_add_cancel[simp]:
 
 
 
-paragraph \<open>Constrains by Sort\<close>
-
 paragraph \<open>Model\<close>
 
 virtual_datatype 'TY std_val :: "nonsepable_semigroup" =
@@ -145,12 +143,12 @@ virtual_datatype 'TY std_val :: "nonsepable_semigroup" =
   V_tup     :: \<open>'self list\<close>
   V_array   :: \<open>'TY \<times> 'self list\<close>
 
-virtual_datatype 'TY std_shared_val :: sep_algebra =
+(*virtual_datatype 'TY std_shared_val :: sep_algebra =
   SV_int     :: \<open>nat \<times> nat share option\<close>
   SV_pointer :: \<open>'TY rawaddr share option\<close>
   SV_tup     :: \<open>'self list\<close>
   SV_array   :: \<open>'TY \<times> 'self list\<close>
-
+*)
 
 subsubsection \<open>Resource\<close>
 
@@ -164,7 +162,7 @@ lemma infinite_varname:
   \<open>infinite (UNIV::varname set)\<close>
   by (metis (mono_tags, opaque_lifting) Rep_varname_cases UNIV_I finite_imageI infinite_UNIV_char_0 surj_def)
 
-resource_space ('VAL::nonsepable_semigroup,'TY) std_res =
+resource_space ('VAL::"nonsepable_semigroup",'TY) std_res =
   R_mem :: \<open>('TY,'VAL) R_mem\<close>
   R_var :: \<open>('TY,'VAL) R_var\<close>
 
@@ -1011,8 +1009,11 @@ end
 
 subsection \<open>Monadic Formalization\<close>
 
-datatype ('VAL,'RES_N,'RES) state =
-      Success \<open>'VAL list\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
+datatype 'a sem_value = sem_value (dest_sem_value: 'a)
+typedecl unreachable
+
+datatype ('ret,'RES_N,'RES) state =
+      Success \<open>'ret sem_value\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
     | Exception (resource: "('RES_N \<Rightarrow> 'RES)")
     | Fail | PartialCorrect
 
@@ -1029,10 +1030,10 @@ text\<open> The basic state of the \<phi>-system virtual machine is represented 
 
 declare state.split[split]
 
-type_synonym ('VAL,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('VAL,'RES_N,'RES) state"
-type_synonym ('VAL,'RES_N,'RES) M = "'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc"
+type_synonym ('ret,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state"
+type_synonym ('arg, 'ret,'RES_N,'RES) M = "'arg sem_value \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state"
 
-definition bind :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('VAL,'RES_N,'RES) M \<Rightarrow> ('VAL,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
+definition bind :: "('a,'RES_N,'RES) proc \<Rightarrow> ('a,'b,'RES_N,'RES) M \<Rightarrow> ('b,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
   where "bind f g = (\<lambda>res. case f res of Success v x \<Rightarrow> g v x | Exception x \<Rightarrow> Exception x
                                        | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
 
@@ -1049,13 +1050,17 @@ lemma proc_bind_assoc:
   "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
   unfolding bind_def fun_eq_iff by simp
 
-definition "\<phi>V_hd = hd"
-definition "\<phi>V_tl = tl"
 
-lemma \<phi>V_simps:
-  \<open>\<phi>V_hd (x#l) \<equiv> x\<close>
-  \<open>\<phi>V_tl (x#l) \<equiv> l\<close>
-  unfolding \<phi>V_hd_def \<phi>V_tl_def by simp+
+definition \<open>\<phi>V_pair x y = sem_value (dest_sem_value x, dest_sem_value y)\<close>
+definition \<open>\<phi>V_fst x = map_sem_value fst x\<close>
+definition \<open>\<phi>V_snd x = map_sem_value snd x\<close>
+
+lemma \<phi>V_simps[folded atomize_eq]:
+  \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
+  \<open>\<phi>V_fst (\<phi>V_pair v y) = v\<close>
+  \<open>\<phi>V_snd (\<phi>V_pair x v) = v\<close>
+  unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def by (cases v, simp)+
+  
 
 section \<open>Specification Framework\<close>
 
@@ -1067,14 +1072,14 @@ subsubsection \<open>Predicates for Total Correctness & Partial Correctness\<clo
 
 context std_sem begin
 
-definition StrictStateTy :: "('VAL list \<Rightarrow> ('RES_N,'RES) assn)
+definition StrictStateTy :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
-                          \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("!\<S>")
+                          \<Rightarrow> ('ret,'RES_N,'RES) state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
                               | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
-definition LooseStateTy  :: "('VAL  list \<Rightarrow> ('RES_N,'RES) assn)
+definition LooseStateTy  :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
-                          \<Rightarrow> ('VAL,'RES_N,'RES) state set" ("\<S>")
+                          \<Rightarrow> ('ret,'RES_N,'RES) state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
                               | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
 
@@ -1270,7 +1275,7 @@ subsection \<open>Assertion\<close>
 
 context std begin
 
-definition \<phi>Procedure :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('VAL list \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
+definition \<phi>Procedure :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)
   where [\<phi>def]:"\<phi>Procedure f T U E \<longleftrightarrow>
     (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COMP (R * U vs)) (INTERP_COMP (R * E)))"

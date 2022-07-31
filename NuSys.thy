@@ -74,10 +74,10 @@ definition (in std)
   where "CurrentConstruction s R S \<longleftrightarrow> s \<in> (INTERP_COMP (R * S))"
 
 definition (in std)
-  PendingConstruction :: " ('VAL,'RES_N,'RES) proc
+  PendingConstruction :: " ('ret,'RES_N,'RES) proc
                         \<Rightarrow> ('RES_N \<Rightarrow> 'RES)
                         \<Rightarrow> ('FIC_N,'FIC) assn
-                        \<Rightarrow> ('VAL list \<Rightarrow> ('FIC_N,'FIC) assn)
+                        \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn)
                         \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool "
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
     where "PendingConstruction f s R S E \<longleftrightarrow> f s \<in> \<S> (\<lambda>ret. INTERP_COMP (R * S ret)) (INTERP_COMP (R * E))"
@@ -106,6 +106,13 @@ lemma \<phi>accept_proc:
 \<Longrightarrow> (\<And>s' ret. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (g ret) \<^bold>o\<^bold>n s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2)
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> g) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 + E2"
   unfolding CurrentConstruction_def PendingConstruction_def bind_def
+  by (cases "f s") (auto simp add: ring_distribs)
+
+lemma \<phi>return_when_unreachable:
+  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> Return (sem_value undefined)) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  for f :: \<open>(unreachable, 'RES_N, 'RES) proc\<close>
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def
   by (cases "f s") (auto simp add: ring_distribs)
 
 lemma \<phi>return:
@@ -1671,11 +1678,12 @@ lemma "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztype
 
 subsection \<open>Value\<close>
 
-definition (in std) Val :: \<open>'VAL \<Rightarrow> ('VAL, 'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'a) \<phi>\<close>
-  where \<open>Val val T = (\<lambda>x. Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j val \<in> (x \<Ztypecolon> T))\<close>
+definition (in std) Val :: \<open>'VAL sem_value \<Rightarrow> ('VAL, 'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'a) \<phi>\<close>
+  where \<open>Val val T = (\<lambda>x. Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
+
 
 lemma (in std) Val_expn [\<phi>expns]:
-  \<open>(x \<Ztypecolon> Val val T) = (Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j val \<in> (x \<Ztypecolon> T))\<close>
+  \<open>(x \<Ztypecolon> Val val T) = (Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
   unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma (in std) Val_inhabited [\<phi>reason_elim, elim!]:
@@ -1689,14 +1697,19 @@ lemma (in std) Val_cast [\<phi>reason]:
 
 subsubsection \<open>Syntax\<close>
 
-context std begin
-ML  \<open>@{term \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace>\<close>}\<close>
-end
+consts anonymous_val :: \<open>'a sem_value\<close>
+  \<comment> \<open>Any anonymous_val will be translated into a unique value during the parsing\<close>
 
-consts val_syntax :: "unit \<Rightarrow> unit" ("\<^bold>v\<^bold>a\<^bold>l _" [22] 21) (*the type is senseless because
-  it will and should be translated during type-checking phase.
-  Any occurrence not translated means the misusing.*)
-consts ret_syntax :: \<open>unit\<close> ("\<^bold>r\<^bold>e\<^bold>t")
+syntax val_syntax :: "logic \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>l _" [18] 17)
+
+setup \<open>(Sign.add_trrules (let open Ast 
+    in [
+      Syntax.Parse_Rule (
+        Appl [Constant \<^syntax_const>\<open>val_syntax\<close>,
+                Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x", Variable "T"]],
+        Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x",
+                Appl [Constant "\<^const>local.Val", Constant \<^const_name>\<open>anonymous_val\<close>, Variable "T"]])
+  ] end))\<close>
 
 ML_file \<open>library/procedure_syntax.ML\<close>
 
@@ -2789,10 +2802,7 @@ subsubsection \<open>Constructive\<close>
   \<open>fn (ctxt, sequent) => NuApplicant.parser >> (fn thms => fn _ =>
     let open NuBasics
     val apps = NuApplicant.applicant_thms ctxt thms
-    val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
-    in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
-         of SOME (th, _) => (ctxt,th)
-          | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
+    in NuApply.MPs ctxt apps sequent |> pair ctxt end)\<close>
 
 ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_parsing", \<^here>) (K false)\<close>
 
@@ -2949,17 +2959,19 @@ section \<open>Construction Elements\<close>
 
 context std_sem begin
 
-definition \<phi>M_assert :: \<open>bool \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Success [] s else Fail)\<close>
+definition \<phi>M_assert :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Success (sem_value ()) s else Fail)\<close>
 
-definition \<phi>M_assume :: \<open>bool \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Success [] s else PartialCorrect)\<close>
+definition \<phi>M_assume :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Success (sem_value  ()) s else PartialCorrect)\<close>
 
-definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> ('v \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc) \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_getV TY VDT_dest F v = (\<phi>M_assert (v \<noteq> [] \<and> hd v \<in> Well_Type TY) \<ggreater> F (VDT_dest (hd v)) (tl v))\<close>
+definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'RES_N,'RES) proc) \<Rightarrow> ('y,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_getV TY VDT_dest v F =
+    (\<phi>M_assert (dest_sem_value v \<in> Well_Type TY) \<ggreater> F (VDT_dest (dest_sem_value v)))\<close>
 
-definition \<phi>M_getEnd :: \<open>('VAL,'RES_N,'RES) proc \<Rightarrow> 'VAL list \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_getEnd F vs = (\<phi>M_assert (vs = []) \<ggreater> F)\<close>
+definition \<phi>M_caseV :: \<open>('VAL sem_value \<Rightarrow> ('vr,'ret,'RES_N,'RES) M) \<Rightarrow> ('VAL \<times> 'vr,'ret,'RES_N,'RES) M\<close>
+  where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of sem_value (a1,a2) \<Rightarrow> F (sem_value a1) (sem_value a2))\<close>
+
 
 end
 
@@ -2972,7 +2984,7 @@ lemma \<phi>M_assert[\<phi>reason! on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>
   unfolding \<phi>Procedure_def \<phi>M_assert_def by (auto simp add: \<phi>expns Inhabited_def)
 
 lemma \<phi>M_assert_True[simp]:
-  \<open>\<phi>M_assert True = Success []\<close>
+  \<open>\<phi>M_assert True = Success (sem_value ())\<close>
   unfolding \<phi>M_assert_def by simp
 
 lemma \<phi>M_assert':
@@ -2993,25 +3005,32 @@ lemma \<phi>M_tail_right_right: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<
 lemma \<phi>M_detail_left[\<phi>reason 2200000]:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace>\<close> by simp
 lemma \<phi>M_detail_right[\<phi>reason 2200000]: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1\<heavy_comma> Y v \<rbrace>\<close> by simp
 
-lemma \<phi>M_getV[\<phi>reason!]: \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> <\<phi>expn> v \<in> Well_Type TY)
-            \<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) vs \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
-            \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest F (v#vs) \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val v A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+
+lemma \<phi>M_getV[\<phi>reason!]:
+   \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> <\<phi>expn> v \<in> Well_Type TY)
+\<Longrightarrow> \<r>Cut
+\<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest (sem_value v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem_value v) A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_def Premise_def
   by (clarsimp simp add: \<phi>expns)
 
-declare \<phi>M_getV[THEN \<phi>M_tail_left, \<phi>reason!]
+declare \<phi>M_getV[where X=1, simplified, \<phi>reason!]
+
+lemma \<phi>M_caseV[\<phi>reason!]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F va vb \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_caseV F (\<phi>V_pair va vb) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>M_caseV_def \<phi>V_pair_def by simp
 
 lemma \<phi>M_Success[\<phi>reason!]:
   \<open> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success [v] \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val (\<phi>V_hd u) T \<rbrace> \<close>
-  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns \<phi>V_hd_def)
-
-lemma \<phi>M_getEnd[\<phi>reason!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getEnd F [] \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<close>
-  unfolding \<phi>M_getEnd_def by (clarsimp simp add: \<phi>expns)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success (sem_value v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
+  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
 
 declare \<phi>M_Success[where X=1, simplified, \<phi>reason!]
+
+lemma \<phi>M_Success'[\<phi>reason 1100000]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success (sem_value ()) \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
+  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
 
 end
 

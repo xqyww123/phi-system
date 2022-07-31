@@ -163,10 +163,14 @@ fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
 
 val procedure : working_mode = 
   let
-    val destined_phi = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction))
-           (#3 o PhiSyntax.dest_procedure)
-    val destined_phi_c = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction_c))
-           (#3 o PhiSyntax.dest_procedure_c)
+    val destined_phi =
+          orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction))
+         (orelse_opt (try (#3 o PhiSyntax.dest_procedure))
+             (#4 o PhiSyntax.dest_PendingConstruction))
+    val destined_phi_c =
+          orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction_c))
+         (orelse_opt (try (#3 o PhiSyntax.dest_procedure_c))
+             (#4 o PhiSyntax.dest_PendingConstruction_c))
   in {
     domain = (K (can PhiSyntax.dest_procedure)),
     destined_phi = destined_phi,
@@ -503,15 +507,6 @@ fun invoke_Block_End_Hook (ctxt,sequent) =
   fold (fn hook => fn stat => hook stat) (Block_End_Hook.get ctxt) (ctxt,sequent)
 
 
-fun RSNXX ctxt tha (i, thb) =
-  (case Seq.pull (biresolution (SOME ctxt) false [(false, tha)] i thb) of
-    SOME (th, _) => solve_constraints th
-  | _ => raise THM ("RSNXX: no unifiers", i, [tha, thb]));
-fun RSXX ctxt tha thb = RSNXX ctxt tha (1,thb);
-
-
-
-
 
 
 
@@ -539,7 +534,7 @@ fun gen_finish_proc qed genz int stat =
             val (ins,current_nu) =
                   #destined_phi_c mode (Thm.cprop_of sequent)
                      |> Thm.term_of
-                     |> Procedure_Syntax.abstract_return_vals ctxt
+                     |> Procedure_Syntax.abstract_return_vals
                      |> apfst (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
                      |> apsnd (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
             val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
@@ -556,8 +551,20 @@ fun gen_finish_proc qed genz int stat =
             end
           else sequent
         val desired_nu = #destined_phi_c mode goal
+        val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
+        val current_phi = #destined_phi_c mode (Thm.cprop_of sequent')
+        val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
+        val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
+                                                    (current_arg_T, desired_arg_T)) Envir.init
+                        then sequent'
+                        else if current_arg_T = @{typ "unreachable sem_value"}
+                        then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_when_unreachable"
+                        else error ("Current block expects returning "^
+                                Syntax.string_of_typ ctxt desired_arg_T^
+                                " but it actually returns "^
+                                Syntax.string_of_typ ctxt current_arg_T)
       in
-        (ctxt,sequent')
+        (ctxt,sequent'')
           |> invoke_Block_End_Hook
           |> (case genz
                 of Phi_Generalization.None => I

@@ -8,7 +8,8 @@ signature NU_APPLICATION = sig
   val try_apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state option
   val apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state
 
-  val MP : Proof.context -> thm -> thm -> thm
+  val MPs : Proof.context -> thm list -> thm -> thm
+  val MP  : Proof.context -> thm -> thm -> thm
 (*   val trace : bool Config.T
 
   type cost = int
@@ -126,20 +127,29 @@ fun comp_no_flatten_matched (th, n) i rule =
   | [] => raise THM ("comp_no_flatten", i, [th, rule])
   | _ => raise THM ("comp_no_flatten: unique result expected", i, [th, rule]));
 
-fun MP ctxt th1' th2 =
+fun MPs ctxt th1s' th2 =
   let
-    val th1 = Drule.incr_indexes th2 th1'
-  in Thm.instantiate (TVars.empty, Vars.make [
-              ((("P",0), \<^typ>\<open>prop\<close>), Thm.cprop_of th1),
+    val th1s = map (Drule.incr_indexes th2) th1s'
+    val stats = map (fn th1 =>
+          Thm.instantiate (TVars.empty, Vars.make [
+              ((("P",0), \<^typ>\<open>prop\<close>), Thm.cconcl_of th1),
               ((("Q",0), \<^typ>\<open>prop\<close>), Thm.cprem_of th2 1)
           ]) @{thm \<phi>Application_Conv}
-     |> (fn th => comp_no_flatten_matched (Thm.implies_elim th th1, Thm.nprems_of th1 + 3) 1 th2)
-     |> pair ctxt
-     |> Nu_Reasoner.reason
-     |> Option.map Nu_Reasoners.naive_obligation_solver'
+     |> (fn th => comp_no_flatten_matched (th1, Thm.nprems_of th1) 1 th
+                    |> Thm.permute_prems 0 (Thm.nprems_of th1))
+     |> (fn th => comp_no_flatten_matched (th, Thm.nprems_of th1 + 3) 1 th2)
+     |> pair ctxt |> Seq.single
+     |> pair 0
+     ) th1s
+  in 
+    Seq.pull (Nu_Reasoner.reason_s ctxt stats)
+     |> Option.map (Nu_Reasoners.naive_obligation_solver' o fst)
      |> (fn SOME (_, ret) => ret
           | NONE => error("Reasoning Fails. You may turn on \<phi>trace_reasoning to debug where the reasoning fails."))
   end
+
+fun MP ctxt th1' th2 =
+  MPs ctxt [th1'] th2
   
 end
 

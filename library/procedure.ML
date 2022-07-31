@@ -135,57 +135,31 @@ fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = 
 
 fun closure ctxt f =
   let
-    val valT = #VAL (PhiSyntax.get_types ctxt)
-    val listT = Type(\<^type_name>\<open>list\<close>, [valT])
-    val vars = fold_aterms (fn Var (name, T) =>
-                                if T = valT orelse T = listT then I
-                                else insert (op =) (name, T)
-                             | _ => I) f []
-    val arity = length vars
-
-    val hd = Const (\<^const_name>\<open>\<phi>V_hd\<close>, listT --> valT)
-    val tl = Const (\<^const_name>\<open>\<phi>V_tl\<close>, listT --> listT)
-    fun tl_ntimes i tm = if i <= 0 then tm else tl_ntimes (i-1) (tl $ tm)
-    fun updtL i L v =
-          if fastype_of v = valT
-          then (case find_index (fn x => x = v) L
-                  of ~1 => (v::L, hd $ tl_ntimes (length L) (Bound i))
-                   |  i => (L, hd $ tl_ntimes (length L - 1 - i) (Bound i)))
-          else (L, v)
-    fun updtR i (N,R) v = 
-          if fastype_of v = listT
-          then (case R of SOME R' => if v aconv R' then ((N,R), tl_ntimes N (Bound i))
-                                     else raise TERM ("A procedure can have at most 1 "^
-                                                      "variable-length argument.", [v,R'])
-                        | NONE => ((N, SOME v), tl_ntimes N (Bound i)))
-          else ((N,R), v)
-    fun gen_pass updt =
-      let
-        fun pass i s (v as Var _)  = updt i s v
-          | pass i s (A $ B) =
-              (case pass i s A of (s',A') => case pass i s' B of (s'',B') => (s'', A' $ B'))
-          | pass i s (Abs (name,ty,X)) =
-              (case pass (i+1) s X of (s', X') => (s', Abs (name,ty,X')))
-          | pass _ s X = (s, X)
-       in pass 0 end
-
-    val (L,f')  = gen_pass updtL [] f
-    val ((_,R),f'') = gen_pass updtR (length L, NONE) f'
-    val has_ret = is_some R orelse not (null L)
-
-    fun updtV i () v =
-          if fastype_of v = valT orelse fastype_of v = listT
-          then ((), v)
-          else (case find_index (fn x => Var x = v) vars
-                  of ~1 => raise Fail "bug!"
-                   |  j => ((), Bound (j + i + (if has_ret then 1 else 0))))
-    val (_,f''')  = gen_pass updtV () f''
-
     val tvars = Term.add_tvars f []
+    val (subst,_) = Term.fold_types Term.declare_typ_names f Name.context
+                    |> pair []
+                    |> fold_rev (fn ((name,idx),sort) => fn (L,ctxt) =>
+                          Name.variant name ctxt |-> (fn name' =>
+                            pair ((((name,idx),sort), TFree (name',sort))::L))) tvars
+    val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f
 
-  in (if has_ret then Abs ("\<a>\<r>\<g>", listT, f''') else f''')
+    val (_,(has_ret,f'')) = Procedure_Syntax.abstract_return_vals f'
+                   |> apsnd (fn Abs (_,\<^typ>\<open>unit sem_value\<close>, X) => (false,X) | X => (true,X))
+    val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
+                             | _ => I) f'' []
+    fun abst i (Var v) =
+         (case find_index (fn x => x = v) vars
+            of ~1 => raise Fail "bug!"
+             |  j => Bound (j + i))
+      | abst i (A $ B) = abst i A $ abst i B
+      | abst i (Abs (name,ty,X)) = Abs (name,ty,abst (i+1) X)
+      | abst _ X = X
+
+    val arity = length vars + (if has_ret then 1 else 0)
+  in abst 0 f''
       |> fold (fn ((name,_), T) => fn X => Abs (name, T, X)) vars
-      |> pair (length tvars, arity + 1)
+      |> fold (fn (_,tfree) => fn x => Abs ("_", Type ("itself", [tfree]), x)) subst
+      |> pair (length tvars, arity)
   end
 
 fun gen_define (binding,attrs) sequent lthy =
