@@ -49,21 +49,28 @@ fun gen_pattern_match prep_vars prep_pattern
 fun gen_generalize prep_vars prep_pattern prep_subj
         raw_vars raw_pattern subj ctxt' assn =
   let
-    val (origin_names, vnames, vars, assn', ctxt) =
-          gen_pattern_match prep_vars prep_pattern raw_vars raw_pattern ctxt' assn
-    fun subst_var n x = case Symtab.lookup vars n
-                of SOME (i,_) => Bound i
-                 | NONE => x
-  in assn'
-       |> (fn x => case subj
-                     of SOME s => Const (\<^const_name>\<open>Subjection\<close>, dummyT) $ x $ prep_subj ctxt s
-                      | NONE => x)
-       |> Term.map_aterms (fn (x as Var ((n,0),_)) => subst_var n x
-                            | (x as Free (n,_)) => subst_var n x
-                            | x => x)
-       |> fold (fn v => fn b =>
-            Const (\<^const_name>\<open>ExSet\<close>, dummyT) $ Abs (v, snd (the (Symtab.lookup vars v)), b)
-          ) origin_names
+    val (origin_names, _, vars, assn', ctxt) =
+          gen_pattern_match prep_vars prep_pattern raw_vars raw_pattern ctxt' assn      
+    fun subst_var lev n x = case Symtab.lookup vars n
+                              of SOME (i,_) => Bound (lev + i)
+                               | NONE => x
+    fun abstract lev (tm as Var ((n,0),_)) = subst_var lev n tm
+      | abstract lev (tm as Free (n,_)) = subst_var lev n tm
+      | abstract lev (A $ B) = abstract lev A $ abstract lev B
+      | abstract lev (Abs (name,ty,X)) = (Abs (name,ty, abstract (lev+1) X))
+      | abstract j (Bound i) = if j <= i then Bound (i + length origin_names) else Bound i
+      | abstract _ X = X
+    fun generalize assn'' = assn''
+           |> (fn x => case subj
+                         of SOME s => Const (\<^const_name>\<open>Subjection\<close>, dummyT) $ x $ prep_subj ctxt s
+                          | NONE => x)
+           |> abstract 0
+           |> fold (fn v => fn b =>
+                Const (\<^const_name>\<open>ExSet\<close>, dummyT) $ Abs (v, snd (the (Symtab.lookup vars v)), b)
+              ) origin_names
+  in case assn'
+       of Abs (name, ty, X) => Abs (name, ty, generalize X)
+        | X => generalize X
   end
 
 val generalize_by_pattern_cmd =

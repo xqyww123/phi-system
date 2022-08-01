@@ -132,12 +132,10 @@ fun MPs ctxt th1s' th2 =
     val th1s = map (Drule.incr_indexes th2) th1s'
     val stats = map (fn th1 =>
           Thm.instantiate (TVars.empty, Vars.make [
-              ((("P",0), \<^typ>\<open>prop\<close>), Thm.cconcl_of th1),
+              ((("P",0), \<^typ>\<open>prop\<close>), Thm.cprop_of th1),
               ((("Q",0), \<^typ>\<open>prop\<close>), Thm.cprem_of th2 1)
           ]) @{thm \<phi>Application_Conv}
-     |> (fn th => comp_no_flatten_matched (th1, Thm.nprems_of th1) 1 th
-                    |> Thm.permute_prems 0 (Thm.nprems_of th1))
-     |> (fn th => comp_no_flatten_matched (th, Thm.nprems_of th1 + 3) 1 th2)
+     |> (fn th => comp_no_flatten_matched (Thm.implies_elim th th1, 3) 1 th2)
      |> pair ctxt |> Seq.single
      |> pair 0
      ) th1s

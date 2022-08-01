@@ -5,8 +5,7 @@ include PHI_SYNTAX
         {TY_N: typ, TY: typ, VAL_N: typ, VAL: typ, RES_N: typ, RES: typ, FIC_N: typ, FIC: typ}
   val get_assn_typ : Proof.context -> typ
 
-  val mk_stateT : Proof.context -> typ
-  val value_list_T : Proof.context -> typ
+  val mk_stateT : Proof.context -> typ -> typ
   val mk_resourceT : Proof.context -> typ
   val mk_assnT : Proof.context -> typ
   val mk_procT : Proof.context -> typ -> typ
@@ -38,6 +37,9 @@ include PHI_SYNTAX
   val dest_subtyping_c : cterm -> cterm * cterm * cterm
 
   val strip_separations : term -> term list
+
+  val dest_sem_value_T: typ -> typ
+  val mk_sem_value_T: typ -> typ
 end
 
 structure PhiSyntax : PHI_SYNTAX = struct
@@ -62,32 +64,25 @@ fun get_assn_typ ctxt =
    in Type (\<^type_name>\<open>set\<close>, [Type("fun", [FIC_N, FIC])]) end
 
 
-fun mk_stateT ctxt =
+fun mk_stateT ctxt T =
   let
-    val {VAL,RES_N,RES,...} = get_types ctxt
+    val {RES_N,RES,...} = get_types ctxt
   in
-    Type(@{type_name "state"}, [VAL,RES_N,RES])
-  end
-
-fun value_list_T ctxt =
-  let
-    val {VAL,...} = get_types ctxt
-  in
-    Type(@{type_name "list"}, [VAL])
+    Type(@{type_name "state"}, [T,RES_N,RES])
   end
 
 fun mk_resourceT ctxt =
   let
-    val {VAL,RES_N,RES,...} = get_types ctxt
+    val {RES_N,RES,...} = get_types ctxt
   in
     Type(@{type_name "fun"}, [RES_N, RES])
   end
 
 fun mk_assnT ctxt =
   let
-    val {VAL,FIC_N,FIC,...} = get_types ctxt
+    val {FIC_N,FIC,...} = get_types ctxt
   in
-    Type(@{type_abbrev "assn"}, [VAL,FIC_N,FIC])
+    Type(@{type_abbrev "assn"}, [FIC_N,FIC])
   end
 
 fun mk_procT ctxt T =
@@ -174,5 +169,8 @@ fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separati
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
   | strip_separations (Abs (_, _, T)) = strip_separations T
   | strip_separations T = strip_binop_l @{const_name times} T
+
+val dest_sem_value_T = dest_monop_ty \<^type_name>\<open>sem_value\<close>
+fun mk_sem_value_T T = Type(\<^type_name>\<open>sem_value\<close>, [T])
 
 end

@@ -86,7 +86,7 @@ fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous_val\<close>, _))
       = (case map_ret Tys i (j,Vs,X) of (j',Vs',X') =>
           (case map_ret Tys i (j',Vs',Y) of (j'',Vs'',Y') =>
               (j'',Vs'', X' $ Y')))
-  | map_ret _ 0 (j,Vs,Bound a) = (j, Vs, Bound (a+1))
+  | map_ret _ b (j,Vs,Bound a) = (j, Vs, Bound (if b <= a then a+1 else a)) 
   | map_ret _ _ jVX = jVX
 
 

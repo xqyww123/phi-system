@@ -1060,7 +1060,7 @@ lemma \<phi>V_simps[folded atomize_eq]:
   \<open>\<phi>V_fst (\<phi>V_pair v y) = v\<close>
   \<open>\<phi>V_snd (\<phi>V_pair x v) = v\<close>
   unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def by (cases v, simp)+
-  
+
 
 section \<open>Specification Framework\<close>
 

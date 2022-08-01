@@ -58,7 +58,6 @@ and \<phi>lemmata \<open>Contextual facts during the programming. They are autom
        cleared frequently\<close> 
 
 ML_file NuHelp.ML
-(* ML_file \<open>library/NuSimpCongruence.ML\<close> *)
 
 
 subsection \<open>Code Block & Current Construction & Pending Construction\<close>
@@ -113,6 +112,14 @@ lemma \<phi>return_when_unreachable:
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> Return (sem_value undefined)) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
   for f :: \<open>(unreachable, 'RES_N, 'RES) proc\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def
+  by (cases "f s") (auto simp add: ring_distribs)
+
+lemma \<phi>return_additional_unit:
+  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> (\<lambda>v. Return (\<phi>V_pair (sem_value ()) v))) \<^bold>o\<^bold>n s [R]
+        \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>ret. T (\<phi>V_snd ret)) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def \<phi>V_pair_def
+    \<phi>V_fst_def \<phi>V_snd_def
   by (cases "f s") (auto simp add: ring_distribs)
 
 lemma \<phi>return:
@@ -309,16 +316,15 @@ lemma [\<phi>reason 1200 on \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
   unfolding lambda_abstraction_def by simp
 
 \<phi>reasoner_ML lambda_abstraction 1100 (conclusion "lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
-  case Thm.major_prem_of sequent
-    of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ Var Y'') =>
-      let
-        val Y' = Abs("", fastype_of x, abstract_over (x, Y)) |> Thm.cterm_of ctxt
-        val sequent = @{thm lambda_abstraction} RS Thm.instantiate (TVars.empty, Vars.make [(Y'',Y')]) sequent
-      in
-        Seq.single (ctxt, sequent)
-      end
-     | \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ _ $ _ $ _) =>
-        Seq.single (ctxt, @{thm lambda_abstraction} RS sequent)
+  let
+    val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _)
+      = Thm.major_prem_of sequent
+    val Y' = Abs("", fastype_of x, abstract_over (x, Y))
+    val rule = Drule.infer_instantiate ctxt
+          (map (apsnd (Thm.cterm_of ctxt)) [(("x",0),x), (("Y'",0),Y')]) @{thm lambda_abstraction}
+  in
+    Seq.single (ctxt, rule RS sequent)
+  end
 \<close>
 
 lemma [\<phi>reason 1200 on \<open>lambda_abstraction (tag ?x) ?fx ?f\<close>]:
@@ -424,22 +430,6 @@ end
 
 definition Subty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool " ("(2\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
   where "(\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P) \<longleftrightarrow> (\<forall>v. v \<in> A \<longrightarrow> v \<in> B \<and> P)"
-
-lemma (in std) \<phi>CONSEQ':
-   "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A' \<longmapsto> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
-\<Longrightarrow> (\<And>x. \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e B x \<longmapsto> B' x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2)
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e E \<longmapsto> E' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
-  unfolding Subty_def
-  by (meson \<phi>CONSEQ subsetI)
-
-lemma (in std) \<phi>CONSEQ'E:
-   "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e E \<longmapsto> E' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
-  unfolding Subty_def
-  by (meson \<phi>CONSEQ subsetI)
 
 subsubsection \<open>Subjection\<close>
 
@@ -583,6 +573,25 @@ lemma (in std) \<phi>ExTyp_strip:
 lemma [\<phi>reason 200]: "(\<And>c. \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e T c \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P c) \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e (ExSet T) \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<exists>c. P c)"
   unfolding Subty_def by (simp add: \<phi>expns) blast
 
+subsubsection \<open>Simplification & Reasoning\<close>
+
+ML_file \<open>library/NuSimpCongruence.ML\<close>
+
+lemma (in std) \<phi>CONSEQ':
+   "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A' \<longmapsto> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
+\<Longrightarrow> (\<And>x. \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e B x \<longmapsto> B' x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2)
+\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e E \<longmapsto> E' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
+  unfolding Subty_def
+  by (meson \<phi>CONSEQ subsetI)
+
+lemma (in std) \<phi>CONSEQ'E:
+   "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e E \<longmapsto> E' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
+  unfolding Subty_def
+  by (meson \<phi>CONSEQ subsetI)
 
 
 section \<open>More Features of the Deductive Programming\<close>
@@ -1409,8 +1418,6 @@ lemma (in std) [\<phi>reason 1200 on \<open>
 
 
 
-
-
 section \<open>Elementary \<phi>-Types\<close>
 
 
@@ -1713,6 +1720,9 @@ setup \<open>(Sign.add_trrules (let open Ast
 
 ML_file \<open>library/procedure_syntax.ML\<close>
 
+lemma (in std) [\<phi>reason 1100 on \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> 'VAL set)) ?X\<close>]:
+  \<open>Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
+  unfolding Synthesis_Parse_def ..
 
 subsubsection \<open>Simplification Rules\<close>
 
@@ -1760,9 +1770,16 @@ lemma (in std) [\<phi>reason 2000 on \<open>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using "\<phi>cast_P" Val_cast \<phi>cast_intro_frame by metis
 
+subsubsection \<open>Simplification\<close>
 
+lemma (in std) Val_simp_cong:
+  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
+\<Longrightarrow> (x \<Ztypecolon> Val v T) = (x' \<Ztypecolon> Val v T')\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
 
-
+simproc_setup (in std) Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
+  K (NuSimpCong.simproc @{thm Val_simp_cong[folded atomize_eq]})
+\<close>
 
 
 subsection \<open>Representative Type Tagging\<close>
@@ -2203,7 +2220,7 @@ subsubsection \<open>Value\<close>
 
 text \<open>The rules require the same values are alpha-conversible. \<close>
 
-lemma [\<phi>reason 1500 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R\<heavy_comma> ?y \<Ztypecolon> Val ?v ?U \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?x \<Ztypecolon> Val ?v ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1500 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?R\<heavy_comma> ?y \<Ztypecolon> Val ?v ?U \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?x \<Ztypecolon> Val ?v' ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   " \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e y \<Ztypecolon> U \<longmapsto> x \<Ztypecolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e R \<heavy_comma> y \<Ztypecolon> Val v U \<longmapsto> R \<heavy_comma> \<blangle> x \<Ztypecolon> Val v T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding cast_def pair_forall
@@ -2380,8 +2397,9 @@ subsection \<open>Convergence of Branches\<close>
 consts branch_convergence :: mode
 
 definition "Merge \<equiv> If"
-definition "MergeNeg \<equiv> Not"
+(*definition "MergeNeg \<equiv> Not"*)
 
+text \<open>This merging procedure always retain the order of the left side.\<close>
 
 subsubsection \<open>Identity\<close>
 
@@ -2399,9 +2417,15 @@ lemma [\<phi>reason 10 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_con
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P A B = If P A B"
   unfolding Conv_def ..
 
-text \<open>There is no fallback for \<^const>\<open>Merge\<close>. The Merge is not allowed to be fallback\<close>
+text \<open>There is no fallback for \<^const>\<open>Merge\<close>. The Merge is not allowed to be fallback.
+  If the convergence for Merge fails, the reasoning fails.\<close>
 
 subsubsection \<open>Ad-hoc rules\<close>
+
+lemma [\<phi>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?X ?Y = (?Z::?'a sem_value \<Rightarrow> ?'b)\<close>]:
+  \<open> (\<And>ret::'a sem_value. \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (X ret) (Y ret) = Z ret)
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P X Y = Z\<close>
+  unfolding Conv_def Merge_def by force
 
 lemma [\<phi>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) = ?X\<close>]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P x y = z
@@ -2414,6 +2438,13 @@ lemma [\<phi>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_conver
   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P (a \<Zinj> x) (b \<Zinj> y) = (aa \<Zinj> z)"
   unfolding Conv_def Merge_def by force
 
+lemma (in std) branch_convergence_skip:
+  " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 \<heavy_comma> X) (N \<heavy_comma> Y \<heavy_comma> \<blangle> R2 \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 \<heavy_comma> X) (N \<heavy_comma> \<blangle> R2 \<heavy_comma> Y \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+  unfolding Conv_def cast_def Merge_def
+  by (simp add: mult.commute mult.left_commute)
+
+(*
 lemma [\<phi>reason 3000]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P A B = X
   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge (MergeNeg (MergeNeg P)) A B = X"
@@ -2423,7 +2454,7 @@ lemma [\<phi>reason 2800]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P B A = X
   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If (MergeNeg P) A B = X"
   unfolding MergeNeg_def by force
-
+*)
 
 subsubsection \<open>Subjection\<close>
 
@@ -2462,6 +2493,10 @@ lemma [\<phi>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_c
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (\<exists>* x. L x) R = (\<exists>* x. X x)"
   unfolding Conv_def Merge_def by (simp add: set_eq_iff \<phi>expns)
 
+text \<open>The merging recognize two existential quantifier are identical if their type and variable name
+  are the same. If so it uses @{thm Conv_Merge_Ex_both} to merge the quantification,
+  or else the right side is expanded first.\<close>
+
 \<phi>reasoner_ML Merge_Existential 2000 (conclusion \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) = ?X\<close>) =
 \<open>fn (ctxt,sequent) =>
   let
@@ -2478,33 +2513,36 @@ lemma [\<phi>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_c
 
 subsubsection \<open>Separations Initialization\<close>
 
-lemma [\<phi>reason 1200]:
-  "SUBGOAL TOP_GOAL G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1 * L2) (1 * \<blangle> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1 * L2) R = X"
-  for X :: \<open>'a::monoid_mult set\<close>
-  unfolding Conv_def cast_def mult_1_left . 
+lemma (in std) [\<phi>reason 1200
+    on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?L1 * ?L2) ?R = ?X\<close>
+  if no \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?L (?R1\<heavy_comma> \<blangle> ?R2 \<brangle>) = ?X\<close>
+]:
+  " SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1\<heavy_comma> L2) (1\<heavy_comma> \<blangle> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1\<heavy_comma> L2) R = X"
+  unfolding Conv_def cast_def mult_1_left .
+
+(*TODO*)
 
 subsubsection \<open>Value\<close>
 
-lemma [\<phi>reason 1200 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (VAL ?V1) (VAL ?V2) = ?X\<close>]: 
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P V1 V2 = V
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (VAL V1) (VAL V2) = (VAL V)"
-  unfolding Conv_def cast_def Merge_def by force
+lemma (in std) [\<phi>reason 1200 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?x \<Ztypecolon> Val ?v ?T) (?y \<Ztypecolon> Val ?v' ?U) = ?X\<close>]: 
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) (y \<Ztypecolon> U) = (z \<Ztypecolon> Z)
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> Val v T) (y \<Ztypecolon> Val v U) = (z \<Ztypecolon> Val v Z)"
+  unfolding Conv_def cast_def Merge_def set_eq_iff by (simp add: \<phi>expns)
 
-lemma (in std) [\<phi>reason 1200 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> VAL ?V1) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> VAL ?V2 \<brangle>) = ?X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close> ]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P V1 V2 = V
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P R1 (1 \<heavy_comma> \<blangle> N \<heavy_comma> R2 \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 \<heavy_comma> VAL V1) (N \<heavy_comma> \<blangle> R2 \<heavy_comma> VAL V2 \<brangle>) = (R \<heavy_comma> VAL V) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def Merge_def
-  using mult.assoc by fastforce
+lemma (in std) [\<phi>reason 1200 on
+  \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Val ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?y \<Ztypecolon> Val ?v' ?U \<brangle>) = ?X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) (y \<Ztypecolon> U) = (z \<Ztypecolon> Z)
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P R1 (1 \<heavy_comma> \<blangle> N \<heavy_comma> R2 \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 \<heavy_comma> x \<Ztypecolon> Val v T) (N \<heavy_comma> \<blangle> R2 \<heavy_comma> y \<Ztypecolon> Val v U \<brangle>) = (R \<heavy_comma> z \<Ztypecolon> Val v Z) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+  unfolding Conv_def cast_def Merge_def by (simp add: \<phi>expns)
 
-lemma (in std) [\<phi>reason 1200]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 \<heavy_comma> VAL V1) (N \<heavy_comma> OBJ H2 \<heavy_comma> \<blangle> R2 \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 \<heavy_comma> VAL V1) (N \<heavy_comma> \<blangle> R2 \<heavy_comma> OBJ H2 \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def Merge_def
-    by (metis mult.assoc OBJ_comm)
-
+declare (in std) branch_convergence_skip[\<phi>reason 1200
+     on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Val ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?Y \<brangle>) = ?R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  if no \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Val ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?y \<Ztypecolon> Val ?v' ?U \<brangle>) = ?R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?rG\<close>
+]
 
 subsubsection \<open>Object\<close>
 
@@ -2515,40 +2553,6 @@ lemma [\<phi>reason]:
   "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a1 = a2
    \<Longrightarrow> EqualAddress (a1 \<Zinj> x1 \<Ztypecolon> T1) (a2 \<Zinj> x2 \<Ztypecolon> T2) "
   unfolding EqualAddress_def ..
-
-lemma [\<phi>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (OBJ ?H1) (OBJ ?H2) = ?X\<close> ]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P H1 H2 = H
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (OBJ H1) (OBJ H2) = (OBJ H)"
-  unfolding Conv_def FOCUS_TAG_def Merge_def by force
-
-lemma (in std) [\<phi>reason 1200]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge (MergeNeg P) (N \<heavy_comma> R \<heavy_comma> VAL V2) (1 \<heavy_comma> \<blangle> L \<heavy_comma> OBJ H1\<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L \<heavy_comma> OBJ H1) (N \<heavy_comma> \<blangle> R \<heavy_comma> VAL V2 \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def Merge_def MergeNeg_def mult_1_left
-  by (metis mult.assoc)
-
-lemma (in std) [\<phi>reason 1200]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (N \<heavy_comma> R) (1 \<heavy_comma> \<blangle> L \<heavy_comma> OBJ H1\<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge (MergeNeg P) (L \<heavy_comma> OBJ H1) (N \<heavy_comma> \<blangle> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def Merge_def MergeNeg_def by force
-
-lemma (in std) [\<phi>reason 100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?L \<heavy_comma> OBJ ?H1) (?N \<heavy_comma> \<blangle> ?R \<heavy_comma> OBJ ?H2 \<brangle>) = ?X''' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<comment> \<open>search the immediate element\<close>
-  "CHK_SUBGOAL G
-   \<Longrightarrow> EqualAddress H1 H2
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (OBJ H1) (OBJ H2) = H
-   \<Longrightarrow> SOLVE_SUBGOAL G \<comment> \<open>if success, trim all other branches on G\<close>
-   \<Longrightarrow> SUBGOAL G G2
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (1 \<heavy_comma> \<blangle> N \<heavy_comma> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L \<heavy_comma> OBJ H1) (N \<heavy_comma> \<blangle> R \<heavy_comma> OBJ H2 \<brangle>) = (X \<heavy_comma> H) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def Merge_def mult_1_left by (metis mult.assoc)
-
-lemma (in std) [\<phi>reason 70 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?L (?N \<heavy_comma> \<blangle> ?R \<heavy_comma> OBJ ?H2 \<brangle>) = ?X''' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<comment> \<open>search next\<close>
-  "CHK_SUBGOAL G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> OBJ H2 \<heavy_comma> \<blangle> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<heavy_comma> OBJ H2 \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by (metis mult.assoc OBJ_comm)
 
 subsubsection \<open>Unfold\<close>
 
@@ -2568,29 +2572,20 @@ lemma (in std) [\<phi>reason 2200]:
   unfolding Conv_def cast_def by force
 
 
-subsubsection \<open>Padding 1\<close>
+subsubsection \<open>Padding Void\<close>
 
 lemma (in std) [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (1 \<heavy_comma> OBJ L) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (OBJ L) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+  " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (1 \<heavy_comma> x \<Ztypecolon> T) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by force
 
 lemma (in std) [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (1 \<heavy_comma> VAL L) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (VAL L) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> 1 \<heavy_comma> y \<Ztypecolon> U \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> y \<Ztypecolon> U \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by force
 
-lemma (in std) [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> 1 \<heavy_comma> VAL V \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> VAL V \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by force
 
-lemma (in std) [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> 1 \<heavy_comma> OBJ V \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> OBJ V \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by force
-
-subsubsection \<open>Eliminate 1 Hole\<close>
+subsubsection \<open>Eliminate Void Hole\<close>
 
 lemma (in std) [\<phi>reason 2000]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
@@ -2802,7 +2797,10 @@ subsubsection \<open>Constructive\<close>
   \<open>fn (ctxt, sequent) => NuApplicant.parser >> (fn thms => fn _ =>
     let open NuBasics
     val apps = NuApplicant.applicant_thms ctxt thms
-    in NuApply.MPs ctxt apps sequent |> pair ctxt end)\<close>
+    val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
+    in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
+         of SOME (th, _) => (ctxt,th)
+          | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
 
 ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_parsing", \<^here>) (K false)\<close>
 

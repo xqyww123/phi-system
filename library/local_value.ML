@@ -78,7 +78,9 @@ fun mk_var_scope names''' (ctxt,sequent) =
     fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
       | left_most X = X
     val ret_phi' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) ret_phi
-    val (Var (R,_) $ _) = left_most (case Thm.term_of ret_phi' of Abs (_,_,X) => X)
+    val Var (R,_) = case Thm.term_of ret_phi'
+                      of Abs (_,_,X) => left_most X |> dest_comb |> fst
+                       | X => left_most X
     val goal_ret' = Drule.infer_instantiate ctxt [(R,goal_ret)] (Drule.mk_term ret_phi')
                       |> Drule.dest_term
     val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E)

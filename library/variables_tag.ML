@@ -32,13 +32,17 @@ fun gen_vary prep_vars prep_pattern prep_subj
           = Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
     val (origin_names, vnames, vars, X'', ctxt) =
           Phi_Generalization.gen_pattern_match prep_vars prep_pattern raw_vars raw_pattern ctxt' X'
-    fun subst_var n x = case Symtab.lookup vars n
-                          of SOME (i,_) => Bound i
-                           | NONE => x
+    fun subst_var lev n x = case Symtab.lookup vars n
+                              of SOME (i,_) => Bound (lev + i)
+                               | NONE => x
+    fun abstract lev (tm as Var ((n,0),_)) = subst_var lev n tm
+      | abstract lev (tm as Free (n,_)) = subst_var lev n tm
+      | abstract lev (A $ B) = abstract lev A $ abstract lev B
+      | abstract lev (Abs (name,ty,X)) = (Abs (name,ty, abstract (lev+1) X))
+      | abstract j (Bound i) = Bound (if j <= i then i + 1 + length vnames else i)
+      | abstract _ X = X
     val wrap =
-           Term.map_aterms (fn (x as Var ((n,0),_)) => subst_var n x
-                             | (x as Free (n,_)) => subst_var n x
-                             | x => x)
+           abstract 0
         #> fold (fn (n,v) => fn b =>
               caseprod (Abs (n, the_default dummyT (Option.map snd (Symtab.lookup vars v)), b))
             ) (origin_names ~~ vnames)

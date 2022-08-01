@@ -482,6 +482,15 @@ lemma [\<phi>reason 110 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\
   by (simp add: \<phi>expns times_list_def, blast)
 
 
+lemma (in std) Var_simp_cong:
+  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
+\<Longrightarrow> (x \<Ztypecolon> Var v T) = (x' \<Ztypecolon> Var v T')\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
+simproc_setup (in std) Var_simp_cong ("x \<Ztypecolon> Var v T") = \<open>
+  K (NuSimpCong.simproc @{thm Var_simp_cong[folded atomize_eq]})
+\<close>
+
 subsubsection \<open>Synthesis Rules\<close>
 
 lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>ret. ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Var ?var ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
@@ -529,6 +538,21 @@ lemma [\<phi>reason 2000 on \<open>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] \<phi>cast_intro_frame by metis
 
+
+subsubsection \<open>Branch Convergence Rules\<close>
+
+lemma (in std) [\<phi>reason 1200 on
+  \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Var ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?y \<Ztypecolon> Var ?v' ?U \<brangle>) = ?X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) (y \<Ztypecolon> U) = (z \<Ztypecolon> Z)
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P R1 (1 \<heavy_comma> \<blangle> N \<heavy_comma> R2 \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 \<heavy_comma> x \<Ztypecolon> Var v T) (N \<heavy_comma> \<blangle> R2 \<heavy_comma> y \<Ztypecolon> Var v U \<brangle>) = (R \<heavy_comma> z \<Ztypecolon> Var v Z) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+  unfolding Conv_def cast_def Merge_def by (cases P; simp add: \<phi>expns mult.assoc)
+
+declare (in std) branch_convergence_skip[\<phi>reason 1200
+     on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Var ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?Y \<brangle>) = ?R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  if no \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Var ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?y \<Ztypecolon> Var ?v' ?U \<brangle>) = ?R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?rG\<close>
+]
 
 
 subsection \<open>Memory Object\<close>

@@ -58,7 +58,8 @@ signature NU_REASONER = sig
   val attr_del_elim : attribute
 
   val reason' : bool (*trace*) -> reasoner Cost_Net.T -> context_state -> context_state option
-  val reason : context_state -> context_state option
+  val reason  : context_state -> context_state option
+  val reason1 : context_state -> context_state
   val reason_s : Proof.context -> (cost * context_state Seq.seq) list -> context_state Seq.seq (* Note it only returns one
     theorem in the returned sequence, that the one succeeded first or of least cost. *)
   val reason_tac :  Proof.context -> context_tactic
@@ -220,6 +221,10 @@ fun add_lthy cost_reasoner =
 fun del reasoner = Tactics.map (Cost_Net.remove reasoner);
 fun reason stat =
       reason' (Config.get (fst stat) trace) (Tactics.get (Context.Proof (fst stat))) stat
+fun reason1 stat =
+      case reason stat of SOME x => x
+        | NONE => error ("Reasoning Fail! You may turn on \<phi>reasoning_tracing and "^
+                         "\<phi>reasoning_tracing_condidates to debug.")
 fun reason_s ctxt =
       reason'_s (Config.get ctxt trace) (Tactics.get (Context.Proof ctxt))
 fun reason_tac ctxt stat = Seq.make (fn () =>

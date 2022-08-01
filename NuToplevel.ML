@@ -527,7 +527,18 @@ fun gen_finish_proc qed genz int stat =
   |> Proof.map_context (dec_blk_level #> snd)
   |> Proof.map_context_result (fn ctxt =>
       let
-        val sequent = NuBasics.the_programming_sequent' ctxt
+        val sequent_pre1 = NuBasics.the_programming_sequent' ctxt
+        val sequent_pre0 =
+          if Thm.no_prems sequent_pre1
+          then sequent_pre1
+          else Nu_Reasoner.reason1 (ctxt,sequent_pre1) |> snd
+        val sequent =
+          if can PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent_pre0)
+          then sequent_pre0
+          else if can PhiSyntax.dest_PendingConstruction (Thm.concl_of sequent_pre0)
+          then sequent_pre0
+          else raise THM ("Bad sequent. Should be either CurrentConstruction or PendingConstruction"
+                            ,0,[sequent_pre0])
         val sequent' =
           if can PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent)
           then let
@@ -540,25 +551,24 @@ fun gen_finish_proc qed genz int stat =
             val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
                               |> Drule.infer_instantiate ctxt [(("T",0),current_nu),(("ret",0),ins)]
                               |> Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>V_simps}
-            val sequent' = sequent RS return_rule
-            val (Const (@{const_name Return}, _) $ ret,_,_,_,_)
-                  = PhiSyntax.dest_PendingConstruction (Thm.concl_of sequent')
-            in case ret of Var (ret_var,_) =>
-                 Drule.infer_instantiate ctxt [(ret_var,
-                   Thm.cterm_of ctxt (Const (@{const_name "Nil"},PhiSyntax.value_list_T ctxt)))]
-                    sequent'
-                 | _ => sequent'
+            in sequent RS return_rule
             end
           else sequent
         val desired_nu = #destined_phi_c mode goal
         val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
+                              |> PhiSyntax.dest_sem_value_T
         val current_phi = #destined_phi_c mode (Thm.cprop_of sequent')
         val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
+                              |> PhiSyntax.dest_sem_value_T
         val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
                                                     (current_arg_T, desired_arg_T)) Envir.init
                         then sequent'
-                        else if current_arg_T = @{typ "unreachable sem_value"}
+                        else if current_arg_T = @{typ "unreachable"}
                         then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_when_unreachable"
+                        else if can (Pattern.unify_types (Context.Proof ctxt)
+                                  (HOLogic.mk_prodT (@{typ unit}, current_arg_T), desired_arg_T))
+                                  Envir.init
+                        then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_additional_unit"
                         else error ("Current block expects returning "^
                                 Syntax.string_of_typ ctxt desired_arg_T^
                                 " but it actually returns "^
@@ -568,7 +578,7 @@ fun gen_finish_proc qed genz int stat =
           |> invoke_Block_End_Hook
           |> (case genz
                 of Phi_Generalization.None => I
-              | _ => NuSys.cast (#destined_phi mode (Thm.prop_of sequent')
+              | _ => NuSys.cast (#destined_phi mode (Thm.prop_of sequent'')
                                   |> Phi_Generalization.generalize_cmd genz ctxt
                                   |> Syntax.check_term ctxt
                                   |> Thm.cterm_of ctxt))
