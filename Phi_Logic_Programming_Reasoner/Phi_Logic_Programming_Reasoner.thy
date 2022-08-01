@@ -340,9 +340,40 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   HEADGOAL (resolve0_tac @{thms Simplify_I})
 \<close> *)
 
+subsection \<open>Misc\<close>
 
+subsubsection \<open>Collect Schematic & Free & other terms\<close>
 
+paragraph \<open>Schematic\<close>
 
+definition \<open>Collect_Schematic (typ::'a itself) sch Term \<equiv> Trueprop True\<close>
+
+text \<open>It collects all schematic variables matching type \<^typ>\<open>'a\<close> in \<^term>\<open>Term\<close>.
+  The return is in form \<^term>\<open>Collect_Schematic TYPE('a) (v1, v2, v3) Term\<close>.
+  The matching of \<^typ>\<open>'a\<close> is in the usual way, where only schematic variables but no free variables
+    are considered as variables that can match something.\<close>
+
+lemma Collect_Schematic_I: \<open>PROP Collect_Schematic TY sch Term\<close>
+  unfolding Collect_Schematic_def ..
+
+\<phi>reasoner_ML Collect_Schematic 1200 (conclusion \<open>PROP Collect_Schematic TYPE(?'a) ?sch ?Term\<close>) = \<open>
+  fn (ctxt, sequent) =>
+    let
+      val (Const (\<^const_name>\<open>Collect_Schematic\<close>, _)
+            $ Const (\<^const_name>\<open>Pure.type\<close>, Type(\<^type_name>\<open>itself\<close>, [T])))
+            $ _
+            $ Term
+        = Thm.major_prem_of sequent
+      val vs = fold_aterms (fn (v as Var (_, T')) => (fn L =>
+                                  if Type.could_match (T,T') then insert (op =) v L else L)
+                             | _ => I) Term []
+      val vs' = Thm.cterm_of ctxt (HOLogic.mk_tuple vs)
+      val rule = Drule.infer_instantiate ctxt [(("sch",0),vs')] @{thm Collect_Schematic_I}
+    in Seq.single (ctxt, rule RS sequent)
+    end
+\<close>
+
+(*Others, to be done!*)
 
 
 end

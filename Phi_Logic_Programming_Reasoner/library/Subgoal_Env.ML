@@ -28,7 +28,10 @@ structure Subgoal = Proof_Data (
 fun name_of_goal \<^const>\<open>TOP_GOAL\<close> = ""
   | name_of_goal term = Term.term_name term
 
-fun fetch_goal ctxt = the o Symtab.lookup (Subgoal.get ctxt |> #1) o name_of_goal
+fun fetch_goal ctxt goal =
+  case Symtab.lookup (Subgoal.get ctxt |> #1) (name_of_goal goal)
+    of SOME X => X
+     | NONE => raise TERM ("The goal does not exist!", [goal])
 
 fun subgoal (ctxt,sequent) =
   let

@@ -146,10 +146,14 @@ val dest_procedure   = perhaps (try dest_Trueprop) #> perhaps (try dest_goal_ctx
 val dest_procedure_c = perhaps (try dest_Trueprop_c) #> perhaps (try dest_goal_ctxt_c)
   #> dest_quadop_c @{const_name "std.\<phi>Procedure"}
 
-val dest_subtyping   = perhaps (try dest_Trueprop)
-  #> dest_triop @{const_name "Subty"}
-val dest_subtyping_c = perhaps (try dest_Trueprop_c)
-  #> dest_triop_c @{const_name "Subty"}
+val dest_subtyping   =
+         perhaps (try dest_Trueprop)
+      #> perhaps (try dest_goal_ctxt)
+      #> dest_triop @{const_name "Subty"}
+val dest_subtyping_c =
+         perhaps (try dest_Trueprop_c)
+      #> perhaps (try dest_goal_ctxt_c)
+      #> dest_triop_c @{const_name "Subty"}
 
 
 fun dest_destined_phityp term =

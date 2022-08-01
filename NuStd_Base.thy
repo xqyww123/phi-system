@@ -131,7 +131,7 @@ paragraph \<open>Declare New Variables\<close>
 proc (in std) op_var_scope:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
-                        \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>\<close>
+                        \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>\<close>
   argument \<open>X\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
   return   \<open>Y\<close>
   throws   E
@@ -140,7 +140,8 @@ proc (in std) op_var_scope:
 
 
 lemma "__\<phi>op_var_scope__":
-  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y (ret::'aa sem_value) \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>)
+  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y (ret::'aa sem_value) \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
+                \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) TY F raw \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Val raw T) \<longmapsto> Y (ret::'aa sem_value) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding mult.assoc[symmetric]
@@ -202,6 +203,7 @@ lemma (in std) op_and[\<phi>overload \<and>]:
   unfolding op_and_def
   by (cases va; cases vb; simp, \<phi>reason)
 
+
 proc "\<phi>__synthesis_land"[
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x \<and> ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
@@ -211,7 +213,7 @@ proc "\<phi>__synthesis_land"[
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<and> y) \<Ztypecolon> \<bool>\<close>
   throws   \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 \<rightarrow> y;; F2 $y \<and>  \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> y;; F2 $y \<and> \<medium_right_bracket>. .
 
 paragraph \<open>Or\<close>
 
@@ -347,7 +349,6 @@ lemma (in std) op_lt[\<phi>overload <]:
   unfolding op_lt_def
   by (cases rawx; cases rawy; simp, \<phi>reason)
 
-declare [ [\<phi>trace_reasoning] ]
 
 proc \<phi>__synthesis_lt[
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x < ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
