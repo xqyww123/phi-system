@@ -116,14 +116,16 @@ lemma \<phi>return_when_unreachable:
 
 lemma \<phi>return_additional_unit:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> (\<lambda>v. Return (\<phi>V_pair (sem_value ()) v))) \<^bold>o\<^bold>n s [R]
-        \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>ret. T (\<phi>V_snd ret)) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> (\<lambda>v. Return (\<phi>V_pair v (sem_value ())))) \<^bold>o\<^bold>n s [R]
+        \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>ret. T (\<phi>V_fst ret)) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def \<phi>V_pair_def
     \<phi>V_fst_def \<phi>V_snd_def
   by (cases "f s") (auto simp add: ring_distribs)
 
 lemma \<phi>return:
-  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (Return ret) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s 0"
+  " \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'
+\<Longrightarrow> T' = T ret
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (Return ret) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s 0"
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def
   by simp+
 
@@ -957,6 +959,19 @@ lemma [\<phi>reason 30
   \<open>Synthesis_Parse x (\<lambda>ret. x \<Ztypecolon> X ret)\<close>
   unfolding Synthesis_Parse_def ..
 
+
+lemma (in std) [\<phi>reason 10
+    on \<open>Synthesis_Parse (numeral ?n::?'bb::numeral) ?X\<close>
+       \<open>Synthesis_Parse (0::?'cc::zero) ?X\<close>
+       \<open>Synthesis_Parse (1::?'dd::one) ?X\<close>
+ if no \<open>Synthesis_Parse (numeral ?n::nat) ?X\<close>
+       \<open>Synthesis_Parse (0::nat) ?X\<close>
+       \<open>Synthesis_Parse (1::nat) ?X\<close>
+]:
+  \<open> Synthesis_Parse (n :: nat) X
+\<Longrightarrow> Synthesis_Parse n X\<close>
+  .
+
 end
 
 
@@ -1682,6 +1697,23 @@ lemma "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztype
 (* lemma "\<phi>Equal (N <up-lift> f) can_eq eq \<longleftrightarrow> \<phi>Equal N (inv_imagep can_eq f) (inv_imagep eq f)"
   unfolding \<phi>Equal_def by (auto 0 6) *)
 
+subsection \<open>Any\<close>
+
+definition \<phi>Any :: \<open>('x, unit) \<phi>\<close>
+  where \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
+
+lemma \<phi>Any_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Any)\<close>
+  unfolding \<phi>Any_def \<phi>Type_def by simp
+
+lemma \<phi>Any_inhabited[\<phi>reason_elim, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>Any) \<Longrightarrow> C \<Longrightarrow> C\<close>
+  .
+
+lemma \<phi>Any_cast [\<phi>reason on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?X \<longmapsto> ?x \<Ztypecolon> Any \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> x \<Ztypecolon> \<phi>Any\<close>
+  unfolding Subty_def by (simp add: \<phi>expns)
+
 
 subsection \<open>Value\<close>
 
@@ -1801,6 +1833,7 @@ lemma (in std) [\<phi>reason]:
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
 \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> U <of-type> TY \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding Subty_def by (simp add: \<phi>expns)
+
 
 
 
@@ -2804,7 +2837,7 @@ subsubsection \<open>Constructive\<close>
 
 ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_parsing", \<^here>) (K false)\<close>
 
-\<phi>processor synthesis 8000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)
+\<phi>processor synthesis 8800 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)
   \<open>fn (ctxt, sequent) => Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number))
 >> (fn raw_term => fn () =>
   let

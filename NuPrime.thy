@@ -1044,6 +1044,7 @@ lemma proc_bind_SKIP[simp]:
   "f \<bind> Success \<equiv> f"
   "Success any \<ggreater> f \<equiv> f"
   "(g \<ggreater> Success any) \<ggreater> f \<equiv> g \<ggreater> f"
+  "(\<lambda>v. Success v \<bind> h) \<equiv> h"
   unfolding bind_def atomize_eq fun_eq_iff by simp+
 
 lemma proc_bind_assoc:
@@ -1055,12 +1056,11 @@ definition \<open>\<phi>V_pair x y = sem_value (dest_sem_value x, dest_sem_value
 definition \<open>\<phi>V_fst x = map_sem_value fst x\<close>
 definition \<open>\<phi>V_snd x = map_sem_value snd x\<close>
 
-lemma \<phi>V_simps[folded atomize_eq]:
+lemma \<phi>V_simps[simp]:
   \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
-  \<open>\<phi>V_fst (\<phi>V_pair v y) = v\<close>
-  \<open>\<phi>V_snd (\<phi>V_pair x v) = v\<close>
+  \<open>\<phi>V_fst (\<phi>V_pair u y) = u\<close>
+  \<open>\<phi>V_snd (\<phi>V_pair x u) = u\<close>
   unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def by (cases v, simp)+
-
 
 section \<open>Specification Framework\<close>
 

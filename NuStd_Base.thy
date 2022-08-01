@@ -130,7 +130,8 @@ paragraph \<open>Declare New Variables\<close>
 
 proc (in std) op_var_scope:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>\<close>
+    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
+                        \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY) \<rbrace>\<close>
   argument \<open>X\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
   return   \<open>Y\<close>
   throws   E
@@ -241,6 +242,7 @@ lemma (in std) op_const_int_\<phi>app:
 
 lemma (in std) [\<phi>reason 1200
     on \<open>Synthesis_Parse (numeral ?n::nat) ?X\<close>
+       \<open>Synthesis_Parse (1::nat) ?X\<close>
        \<open>Synthesis_Parse (0::nat) ?X\<close>
 ]:
   \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>[32]) X
@@ -345,16 +347,21 @@ lemma (in std) op_lt[\<phi>overload <]:
   unfolding op_lt_def
   by (cases rawx; cases rawy; simp, \<phi>reason)
 
+declare [ [\<phi>trace_reasoning] ]
+
 proc \<phi>__synthesis_lt[
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x < ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l xxx \<Ztypecolon> \<nat>[b]\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l yyy \<Ztypecolon> \<bool>\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
     and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x < y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 \<rightarrow> x;; F2 \<rightarrow> y ;; $x $y < \<medium_right_bracket>. .
+  \<medium_left_bracket> \<open>0 \<Ztypecolon> \<nat>[b]\<close> \<rightarrow>  x  ;;
+ F1;; \<rightarrow> x'', x',  x
+  ;; F2 \<rightarrow> y ;; $x $y < \<medium_right_bracket>
+  .. .
 
 proc \<phi>__synthesis_gt[
     \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x > ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -551,6 +558,14 @@ proc while:
 (*Example*)
 
 
+proc AA:
+  argument \<open>\<^bold>v\<^bold>a\<^bold>l 1 \<Ztypecolon> \<nat>[32]\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l 2 \<Ztypecolon> \<nat>[32]\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l 3 \<Ztypecolon> \<nat>[32]\<close>
+  return \<open>\<^bold>v\<^bold>a\<^bold>l 6 \<Ztypecolon> \<nat>[32]\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l 4 \<Ztypecolon> \<nat>[32]\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l 2 \<Ztypecolon> \<nat>[32]\<close>
+  \<medium_left_bracket> + + 4 2
+  \<medium_right_bracket>. .
+
+thm AA_\<phi>compilation
+
 proc XX:
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l x - 1 \<Ztypecolon> \<nat>[32]\<close>
@@ -566,16 +581,17 @@ proc XX:
 
 proc
   premises \<open>x < 10\<close>
-  argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[20]\<close>
-  return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[20]\<close>
+  argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
+  return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket> \<rightarrow> v ;;
     while x invar \<open>x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
     \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>.
-    \<medium_left_bracket> \<open>$v+1\<close> ;; \<rightarrow> v \<medium_right_bracket>. ;; (* this ;; leads an empty statement which does nothing but simplification *)
+    \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. ;; (* this ;; leads an empty statement which does nothing but simplification *)
     have [simp]: \<open>x = 10\<close> using \<phi> by simp ;;
     $v
   \<medium_right_bracket>. .
 
+thm \<phi>__synthesis_lt_\<phi>compilation
 
 
 subsubsection \<open>recursion\<close>

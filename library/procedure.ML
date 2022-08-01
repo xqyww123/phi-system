@@ -143,7 +143,7 @@ fun closure ctxt f =
                             pair ((((name,idx),sort), TFree (name',sort))::L))) tvars
     val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f
 
-    val (_,(has_ret,f'')) = Procedure_Syntax.abstract_return_vals f'
+    val (_,(has_ret,f'')) = Procedure_Syntax.abstract_return_vals "\<a>\<r>\<g>" false f'
                    |> apsnd (fn Abs (_,\<^typ>\<open>unit sem_value\<close>, X) => (false,X) | X => (true,X))
     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
                              | _ => I) f'' []

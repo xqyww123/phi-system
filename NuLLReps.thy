@@ -491,6 +491,7 @@ simproc_setup (in std) Var_simp_cong ("x \<Ztypecolon> Var v T") = \<open>
   K (NuSimpCong.simproc @{thm Var_simp_cong[folded atomize_eq]})
 \<close>
 
+
 subsubsection \<open>Synthesis Rules\<close>
 
 lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>ret. ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Var ?var ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:

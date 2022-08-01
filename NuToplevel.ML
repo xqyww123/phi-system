@@ -545,13 +545,14 @@ fun gen_finish_proc qed genz int stat =
             val (ins,current_nu) =
                   #destined_phi_c mode (Thm.cprop_of sequent)
                      |> Thm.term_of
-                     |> Procedure_Syntax.abstract_return_vals
+                     |> Procedure_Syntax.abstract_return_vals "\<r>\<e>\<t>" true
                      |> apfst (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
                      |> apsnd (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
             val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
                               |> Drule.infer_instantiate ctxt [(("T",0),current_nu),(("ret",0),ins)]
-                              |> Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>V_simps}
-            in sequent RS return_rule
+            in (sequent RS return_rule)
+                |> rule_by_tactic ctxt
+                      (SOLVED' (Simplifier.simp_tac ctxt) 1)
             end
           else sequent
         val desired_nu = #destined_phi_c mode goal
@@ -566,7 +567,7 @@ fun gen_finish_proc qed genz int stat =
                         else if current_arg_T = @{typ "unreachable"}
                         then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_when_unreachable"
                         else if can (Pattern.unify_types (Context.Proof ctxt)
-                                  (HOLogic.mk_prodT (@{typ unit}, current_arg_T), desired_arg_T))
+                                  (HOLogic.mk_prodT (current_arg_T, @{typ unit}), desired_arg_T))
                                   Envir.init
                         then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_additional_unit"
                         else error ("Current block expects returning "^
