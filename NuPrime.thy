@@ -1031,7 +1031,7 @@ text\<open> The basic state of the \<phi>-system virtual machine is represented 
 declare state.split[split]
 
 type_synonym ('ret,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state"
-type_synonym ('arg, 'ret,'RES_N,'RES) M = "'arg sem_value \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state"
+type_synonym ('arg, 'ret,'RES_N,'RES) M = "'arg sem_value \<Rightarrow> ('ret,'RES_N,'RES) proc"
 
 definition bind :: "('a,'RES_N,'RES) proc \<Rightarrow> ('a,'b,'RES_N,'RES) M \<Rightarrow> ('b,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
   where "bind f g = (\<lambda>res. case f res of Success v x \<Rightarrow> g v x | Exception x \<Rightarrow> Exception x

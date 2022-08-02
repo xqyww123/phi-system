@@ -53,13 +53,14 @@ fn (ctxt,sequent) =>
 
 declare [ [\<phi>not_define_new_const] ]
 
+
 proc (in std) try'':
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE2 \<rbrace>\<close>
   argument X
   return YY
   throws EE2
-  \<medium_left_bracket> "__op_try__" F G \<medium_right_bracket>. .
+  \<medium_left_bracket> ;; "__op_try__"  ;; F G \<medium_right_bracket>. .
 
 proc (in std) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
@@ -96,12 +97,11 @@ definition op_add :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES)
   )))"
 
 
-
-lemma (in std) op_add:
+(* lemma (in std) op_add:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b (\<phi>V_pair vb va) \<lbrace> x \<Ztypecolon> Val va \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vb \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_add_def Premise_def
-  by (cases va; cases vb; simp, \<phi>reason)
+  by (cases va; cases vb; simp, \<phi>reason) *)
 
 
 (* lemma (in std)
@@ -117,6 +117,14 @@ definition op_sub :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES)
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
       Success (sem_value (V_int.mk (bits, ((2^bits + val_b - val_a) mod 2^bits))))
+  )))"
+
+definition op_umul :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES) M"
+  where "op_umul bits =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
+      Success (sem_value (V_int.mk (bits, ((val_b * val_a) mod 2^bits))))
   )))"
 
 definition op_udiv :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES) M"

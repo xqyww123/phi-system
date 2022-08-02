@@ -101,17 +101,18 @@ fun success_application (ctxt,sequent) =
     Seq.empty
   end
 
-fun try_apply applicants (ctxt,sequent) =
-  let
-    val apps = applicants
-                |> foldl1 (fn (a,b) =>
-                      Drule.comp_no_flatten (b,0) 1 (
-                      Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
-    val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
-  in
-    Nu_Reasoner.reason (ctxt,sequent')
-      |> Option.map (apsnd (Goal.conclude))
-  end
+fun try_apply [] (ctxt,sequent) = NONE
+  | try_apply applicants (ctxt,sequent) =
+      let
+        val apps = applicants
+                    |> foldl1 (fn (a,b) =>
+                          Drule.comp_no_flatten (b,0) 1 (
+                           Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
+        val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
+      in
+        Nu_Reasoner.reason (ctxt,sequent')
+          |> Option.map (apsnd (Goal.conclude))
+      end
 
 fun apply applicants stat =
   case try_apply applicants stat

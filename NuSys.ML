@@ -3,7 +3,6 @@ signature NU_SYS = sig
   (** Tactics **)
   exception CastFail of cterm * thm
   exception ReasoningFail of thm
-  val raw_auto : Proof.context -> tactic
 
   (** Basic Operations **)
   val cast : cterm (*desired nu*) -> context_state (*sequent*) -> context_state
@@ -39,54 +38,9 @@ open Thm NuBasics Term
 exception CastFail of cterm * thm
 exception ReasoningFail of thm
 
-val aux_name = "that" and aux_name_raw = "\<phi>aux'raw"
-fun hyp_export is_goal asms = (I,I)
-val curr_const_attrs = [Thm.declaration_attribute (Named_Theorems.add_thm "NuSys.useful")]
-fun aux_facts ctxt = Proof_Context.get_thms ctxt aux_name
-fun aux_facts_raw ctxt = Proof_Context.get_thm ctxt aux_name_raw
-
-
-fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
+(*fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))
-fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
-
-(** Tactics **)
-fun head_only tac th =
-  if nprems_of th = 0
-  then all_tac th
-  else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
-fun raw_auto ctxt =
-  ((Method.insert_tac ctxt (Named_Theorems.get ctxt "NuSys.useful") 1)
-    THEN Clasimp.auto_tac ctxt)
-
-
-
-(*** auto resolve tac ***)
-fun SOLVED tac st =
-  if Thm.nprems_of st = 0 then all_tac st
-  else (tac st |> Seq.filter (fn st' => Thm.nprems_of st' < Thm.nprems_of st));
-
-fun SOLVED_RULE rule fail (ctxt,thm) =
-  if Thm.nprems_of thm = 0 then (ctxt,thm)
-  else (case rule (ctxt,thm) of SOME (ctxt',thm') =>
-          if Thm.nprems_of thm' < Thm.nprems_of thm
-          then (ctxt',thm')
-          else fail (ctxt',thm')
-        | NONE => fail (ctxt,thm))
-
-fun REPEATX tac =
-  let
-    fun rep qs st = if length qs > 100 then raise Fail "too deep tac" else
-      (case Seq.pull (tac st) of
-        NONE => SOME (st, Seq.make (fn () => repq qs))
-      | SOME (st', q) => rep (q :: qs) st')
-    and repq [] = NONE
-      | repq (q :: qs) = if length qs > 100 then raise Fail "too deep tac" else
-          (case Seq.pull q of
-            NONE => repq qs
-          | SOME (st, q) => rep (q :: qs) st);
-  in fn st => Seq.make (fn () => rep [] st) end;
-
+fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 
 (** Basic Operations **)
 
@@ -109,7 +63,7 @@ fun cast desired_nu (ctxt,sequent) =
                | _ => raise CastFail (desired_nu, sequent)
   in (ctxt',sequent') end
 
-fun export_codeblock ctxt param_cterms rule assm sequent =
+fun export_codeblock _ param_cterms rule assm sequent =
      sequent |> Thm.implies_intr assm
              |> Drule.forall_intr_list param_cterms
              |> (fn th => th COMP rule)
@@ -130,9 +84,12 @@ fun accept_proc (ctxt,sequent) =
   let open PhiSyntax
     val accept_proc_thm = Proof_Context.get_thm ctxt "local.\<phi>accept_proc"
     val rule = sequent RS accept_proc_thm
-    val ([(s_name', s_ty), (ret_name', ret_ty)], \<^const>\<open>Pure.imp\<close> $ sequent'_term $ _) =
+    val ([(s_name', s_ty), (_, ret_ty)], \<^const>\<open>Pure.imp\<close> $ sequent'_term $ _) =
           NuHelp.strip_binder_raw \<^const_name>\<open>Pure.all\<close> (hd (Thm.prems_of rule))
-    val ([s_name,ret_name],ctxt') = Variable.add_fixes [s_name',ret_name'] ctxt
+    val ([s_name,ret_name],ctxt') =
+            inc_val_counter ctxt |-> (fn i => Proof_Context.add_fixes
+                [(Binding.name s_name', NONE, NoSyn),
+                 (Binding.name ("\<v>\<a>\<l>" ^ string_of_int i), SOME ret_ty, NoSyn)])
     val sequent'_cterm =
           Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name,s_ty)], sequent'_term)
               |> Thm.cterm_of ctxt
