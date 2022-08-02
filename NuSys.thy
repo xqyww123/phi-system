@@ -353,7 +353,7 @@ lemma \<phi>return_when_unreachable:
 
 lemma \<phi>return_additional_unit:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> (\<lambda>v. Return (\<phi>V_pair v (sem_value ())))) \<^bold>o\<^bold>n s [R]
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> (\<lambda>v. Return (\<phi>V_pair v \<phi>V_nil))) \<^bold>o\<^bold>n s [R]
         \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>ret. T (\<phi>V_fst ret)) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def \<phi>V_pair_def
     \<phi>V_fst_def \<phi>V_snd_def
@@ -683,7 +683,7 @@ subsubsection \<open>Misc\<close>
 
 lemma (in std) "\<phi>__Return_rule__":
   \<open> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem_value ()) \<lbrace> X \<longmapsto> \<lambda>_::unit sem_value. Y \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_::unit sem_value. Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def Return_def Subty_def by (simp add: \<phi>expns) blast
 
 
@@ -1827,7 +1827,7 @@ lemma (in std) [\<phi>reason 1200
 ]:
   \<open> PROP Assertion_Level_SubType_Reasoning
       (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> R\<heavy_comma> SYNTHESIS x \<Ztypecolon> Val raw T \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem_value ()) \<lbrace> X \<longmapsto> \<lambda>_::unit sem_value. R\<heavy_comma> SYNTHESIS x \<Ztypecolon> Val raw T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_. R\<heavy_comma> SYNTHESIS x \<Ztypecolon> Val raw T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Assertion_Level_SubType_Reasoning_def GOAL_CTXT_def
   by (rule "\<phi>__Return_rule__")
 
@@ -3090,10 +3090,10 @@ section \<open>Construction Elements\<close>
 context std_sem begin
 
 definition \<phi>M_assert :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Success (sem_value ()) s else Fail)\<close>
+  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Success \<phi>V_nil s else Fail)\<close>
 
 definition \<phi>M_assume :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Success (sem_value  ()) s else PartialCorrect)\<close>
+  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Success \<phi>V_nil s else PartialCorrect)\<close>
 
 definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'RES_N,'RES) proc) \<Rightarrow> ('y,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
@@ -3114,7 +3114,7 @@ lemma \<phi>M_assert[\<phi>reason! on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>
   unfolding \<phi>Procedure_def \<phi>M_assert_def by (auto simp add: \<phi>expns Inhabited_def)
 
 lemma \<phi>M_assert_True[simp]:
-  \<open>\<phi>M_assert True = Success (sem_value ())\<close>
+  \<open>\<phi>M_assert True = Success \<phi>V_nil\<close>
   unfolding \<phi>M_assert_def by simp
 
 lemma \<phi>M_assert':
@@ -3159,7 +3159,7 @@ lemma \<phi>M_Success[\<phi>reason!]:
 declare \<phi>M_Success[where X=1, simplified, \<phi>reason!]
 
 lemma \<phi>M_Success'[\<phi>reason 1100000]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success (sem_value ()) \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
   unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
 
 end

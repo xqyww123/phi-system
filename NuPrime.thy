@@ -1052,6 +1052,7 @@ lemma proc_bind_assoc:
   unfolding bind_def fun_eq_iff by simp
 
 
+abbreviation \<open>\<phi>V_nil \<equiv> sem_value ()\<close>
 definition \<open>\<phi>V_pair x y = sem_value (dest_sem_value x, dest_sem_value y)\<close>
 definition \<open>\<phi>V_fst x = map_sem_value fst x\<close>
 definition \<open>\<phi>V_snd x = map_sem_value snd x\<close>
