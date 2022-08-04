@@ -81,11 +81,11 @@ structure Fiction_Space : FICTION_SPACE = struct
 val distinct_compsN = "distinct_names"
 val namesN = "_names"
 val fields_locale_N = "_fields"
-val repN = "'REP"
+val repN = "'FIC"
 val typeN = "THE_TYPE"
 val repTN = "TYPE'REP"
 val nameTN = "TYPE'NAME"
-val NAME_N = "'NAME"
+val NAME_N = "'FIC_N"
 val INTERPRET_N = "INTERPRET"
 val TVAR_N = "TYPE"
 
@@ -523,17 +523,20 @@ fun FIS_definition rep_sort project_injectL
                 val params = Locale.params_of thy (the target)
               in
                 ((t,(("",false),(Expression.Positional (map (SOME o Free o fst) params),[])))::locinsts',
-                 map (fn ((N,T),M) => (Binding.name N, SOME T, M)) params @ locs')
+                  locs' @
+                  map_filter (fn ((N,T),M) => if exists (fn (N',_,_) => N = Binding.name_of N') locs'
+                                              then NONE
+                                              else SOME (Binding.name N, SOME T, M)) params)
               end
             | NONE => (locinsts',locs')
     val name_insts = map (fn (n,T) =>
           (n, Const (\<^const_name>\<open>Entry.name\<close>, entryT (T_of_fic T) --> nameT)
                 $ Free (n, entryT (T_of_fic T)))) all_comps
 
-    fun interprete_parent_valuetypes (prefix, (Ts, pname, comps)) thy =
+    fun interprete_parent_valuetypes (prefix, (Ts, pname, comps)) thyx =
       let
         val {components,...} =
-             the (Symtab.lookup (FIS_Data.get (Context.Theory thy)) pname);
+             the (Symtab.lookup (FIS_Data.get (Context.Theory thyx)) pname);
         val components' = map (uncurry the_default) (map fst components ~~ comps)
         val pars = components';
 
@@ -544,7 +547,7 @@ fun FIS_definition rep_sort project_injectL
       in
         prove_interpretation_in (fn ctxt =>
             Locale.intro_locales_tac {strict = true, eager = false} ctxt [])
-          (suffix fields_locale_N name, expr) thy
+          (suffix fields_locale_N name, expr) thyx
       end;
 
     fun interprete_parent (prefix, (_, pname, rs)) =
@@ -698,7 +701,7 @@ fun gen_define_FIS prep_typ prep_term (sort,project_injectL)
     
     fun prep_sort S' S = if S = "" then S' else Syntax.read_sort ctxt S
     val sort' = fold (parent_sort thy o #2 o #2) parents'
-                    (prep_sort \<^sort>\<open>comm_monoid_mult\<close> sort)
+                    (prep_sort \<^sort>\<open>{comm_monoid_mult,no_inverse}\<close> sort)
     val env = (repN, sort')::env
     
     val fictionT = Type(\<^type_name>\<open>fiction\<close>, [dummyT, resT'])

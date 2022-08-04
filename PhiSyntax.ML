@@ -52,12 +52,12 @@ fun get_types ctxt =
           Type (@{type_name prod}, [Type("fun", [TY_N, TY]),
             Type (@{type_name prod}, [Type("fun", [VAL_N, VAL]),
               Type (@{type_name prod}, [Type("fun", [RES_N, RES]),
-                Type (@{type_name prod}, [Type("fun", [FIC_N, FIC]), _])])])])])
+                Type("fun", [FIC_N, FIC])])])])])
         = tys
-        handle BIND => error ("Corrupted TYPES entry!")
   in
     {TY_N=TY_N, TY=TY, VAL_N=VAL_N, VAL=VAL, RES_N=RES_N, RES=RES, FIC_N=FIC_N, FIC=FIC}
   end
+  handle BIND => error ("Corrupted TYPES entry!")
 
 fun get_assn_typ ctxt =
   let val {FIC_N,FIC,...} = get_types ctxt

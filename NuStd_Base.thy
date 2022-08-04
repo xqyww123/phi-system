@@ -610,7 +610,7 @@ proc
     $v
   \<medium_right_bracket>. .
 
-
+(*
 
 subsubsection \<open>recursion\<close>
 
@@ -1003,5 +1003,5 @@ ML_file \<open>codegen/Instructions.ML\<close>
 
 
 \<phi>export_llvm
-
+*)
 end
