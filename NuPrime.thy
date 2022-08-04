@@ -25,17 +25,17 @@ specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by auto
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype std_ty =
+virtual_datatype \<phi>min_ty =
   T_int     :: nat \<comment> \<open>in unit of bits\<close>
 
-context std_ty begin
+context \<phi>min_ty begin
 abbreviation \<open>\<tau>Int \<equiv> T_int.mk\<close>
 end
 
 
 subsubsection \<open>Value\<close>
 
-virtual_datatype 'TY std_val :: "nonsepable_semigroup" =
+virtual_datatype 'TY \<phi>min_val :: "nonsepable_semigroup" =
   V_int     :: \<open>nat \<times> nat\<close>
 
 
@@ -48,20 +48,20 @@ lemma infinite_varname:
   \<open>infinite (UNIV::varname set)\<close>
   by (metis (mono_tags, opaque_lifting) Rep_varname_cases UNIV_I finite_imageI infinite_UNIV_char_0 surj_def)
 
-resource_space ('VAL::"nonsepable_semigroup",'TY) std_res =
+resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>min_res =
   R_var :: \<open>('TY,'VAL) R_var\<close>
 
 subsection \<open>A Standard Semantics\<close>
 
-locale std_sem =
-  std_ty  where CONS_OF   = TY_CONS_OF
+locale \<phi>min_sem =
+  \<phi>min_ty  where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
             and TYPE'REP  = \<open>TYPE('TY)\<close>
-+ std_val where CONS_OF   = VAL_CONS_OF
++ \<phi>min_val where CONS_OF   = VAL_CONS_OF
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
             and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
-+ std_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
++ \<phi>min_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
             and TYPE'REP  = \<open>TYPE('RES::comm_monoid_mult)\<close>
@@ -125,13 +125,13 @@ end
 
 subsubsection \<open>Minimal Fiction\<close>
 
-fiction_space (in std_sem) std_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
+fiction_space (in \<phi>min_sem) \<phi>min_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
   FIC_var :: exclusive_var
 
 
 subsubsection \<open>Standard Settings\<close>
 
-locale std = std_fic
+locale \<phi>min = \<phi>min_fic
   where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult))\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
     and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 
@@ -296,7 +296,7 @@ subsection \<open>Preliminary\<close>
 
 subsubsection \<open>Predicates for Total Correctness & Partial Correctness\<close>
 
-context std_sem begin
+context \<phi>min_sem begin
 
 definition StrictStateTy :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
@@ -366,14 +366,14 @@ lemma StrictStateTy_plus[iff]:
 
 end
 
-abbreviation (in std) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
+abbreviation (in \<phi>min) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
 
 
 (* subsubsection \<open>Stack Element and Communicative Monoid Resource\<close>
 
 consts Ele :: " 'a set \<Rightarrow> ('VAL,'FIC_N,'FIC) assn " ("ELE _" [17] 16)
 
-context std begin
+context \<phi>min begin
 
 definition Val_Ele :: " 'VAL set \<Rightarrow> ('VAL,'FIC_N,'FIC) assn " ("VAL _" [17] 16)
   where "(VAL S) = { ([v], 1) | v. v \<in> S } "
@@ -416,7 +416,7 @@ lemma [elim]: "A \<perpendicular> B \<Longrightarrow> ((\<And>x. x \<in> A \<Lon
 
 lemma disjoint_empty [iff]: "{} \<perpendicular> S"  "S \<perpendicular> {}" unfolding disjoint_def by auto
 
-context std begin
+context \<phi>min begin
 
 lemma Separation_expn:
   "(s,h) \<in> (T * U) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U)"
@@ -499,7 +499,7 @@ lemma Separation_I[intro]:
 
 subsection \<open>Assertion\<close>
 
-context std begin
+context \<phi>min begin
 
 definition \<phi>Procedure :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)

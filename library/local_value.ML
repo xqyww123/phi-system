@@ -8,7 +8,7 @@ end
 structure Local_Value : LOCAL_VALUE = struct
 open NuHelp PhiSyntax NuSys
 
-fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ (Const (\<^const_name>\<open>std.Var\<close>,_) $ _ $ name $ T))
+fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ (Const (\<^const_name>\<open>\<phi>min.Var\<close>,_) $ _ $ name $ T))
       = SOME (Term.term_name name, (x,T))
   | dest_Var _ = NONE
 

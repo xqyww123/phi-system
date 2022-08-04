@@ -107,7 +107,7 @@ subsubsection \<open>Resource\<close>
 type_synonym ('TY,'VAL) R_mem' = \<open>('TY segidx \<rightharpoonup> 'VAL)\<close>
 type_synonym ('TY,'VAL) R_mem = \<open>('TY,'VAL) R_mem' ?\<close>
 
-resource_space ('VAL::"nonsepable_semigroup",'TY) agmem_res = ('VAL,'TY) std_res +
+resource_space ('VAL::"nonsepable_semigroup",'TY) agmem_res = ('VAL,'TY) \<phi>min_res +
   R_mem :: \<open>('TY,'VAL) R_mem\<close>
 
 
@@ -686,7 +686,7 @@ lemma share_mem_def':
 end
 
 
-fiction_space (in agmem_sem) agmem_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> = std_fic +
+fiction_space (in agmem_sem) agmem_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> = \<phi>min_fic +
   FIC_mem :: share_mem
 
 (* TODO: agmem_sem should be a locale expression! ! *)

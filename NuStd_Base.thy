@@ -51,12 +51,12 @@ definition Variable_of :: \<open>'a \<Rightarrow> varname \<Rightarrow> 'a\<clos
 definition Set_Variable :: \<open>varname \<Rightarrow> 'a \<Rightarrow> 'a\<close> ("$_ := _" [1000, 51] 50)
   where [iff]: \<open>($x := y) = y\<close>
 
-lemma (in std) [\<phi>reason 2000 on \<open>Synthesis_Parse (?var::varname) ?Y\<close>]:
+lemma (in \<phi>min) [\<phi>reason 2000 on \<open>Synthesis_Parse (?var::varname) ?Y\<close>]:
   \<open>Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T)\<close>
   unfolding Synthesis_Parse_def ..
 
 
-\<phi>processor (in std) get_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
+\<phi>processor (in \<phi>min) get_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.term >> (fn var => fn () =>
     let
       val ctxt_parse = Config.put phi_synthesis_parsing true ctxt
@@ -73,7 +73,7 @@ subsubsection \<open>Operations\<close>
 
 ML_file_debug "library/local_value.ML"
 
-context std begin
+context \<phi>min begin
 
 paragraph \<open>Get Variable\<close>
 
@@ -127,7 +127,7 @@ declare [ [\<phi>not_define_new_const = false] ]
 
 paragraph \<open>Declare New Variables\<close>
 
-proc (in std) op_var_scope:
+proc (in \<phi>min) op_var_scope:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
                         \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>\<close>
@@ -181,7 +181,7 @@ subsubsection \<open>Boolean Arithmetic\<close>
 
 paragraph \<open>Not\<close>
 
-lemma (in std) op_not[\<phi>overload \<not>]:
+lemma (in \<phi>min) op_not[\<phi>overload \<not>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not raw \<lbrace> x \<Ztypecolon> Val raw \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
   by (cases raw, simp, \<phi>reason)
@@ -197,7 +197,7 @@ proc [
 
 paragraph \<open>And\<close>
 
-lemma (in std) op_and[\<phi>overload \<and>]:
+lemma (in \<phi>min) op_and[\<phi>overload \<and>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> Val va \<bool>\<heavy_comma> b \<Ztypecolon> Val vb \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l a \<and> b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
   by (cases va; cases vb; simp, \<phi>reason)
@@ -216,7 +216,7 @@ proc [
 
 paragraph \<open>Or\<close>
 
-lemma (in std) op_or[\<phi>overload \<or>]:
+lemma (in \<phi>min) op_or[\<phi>overload \<or>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> Val va \<bool>\<heavy_comma> b \<Ztypecolon> Val vb \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l a \<or> b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def
   by (cases va; cases vb, simp, \<phi>reason)
@@ -236,12 +236,12 @@ proc [
 
 subsubsection \<open>Constant Integer\<close>
 
-lemma (in std) op_const_int_\<phi>app:
+lemma (in \<phi>min) op_const_int_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2^b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_const_int_def Premise_def Synthesis_def
   by \<phi>reason
 
-lemma (in std) [\<phi>reason 1200
+lemma (in \<phi>min) [\<phi>reason 1200
     on \<open>Synthesis_Parse (numeral ?n::nat) ?X\<close>
        \<open>Synthesis_Parse (1::nat) ?X\<close>
        \<open>Synthesis_Parse (0::nat) ?X\<close>
@@ -250,7 +250,7 @@ lemma (in std) [\<phi>reason 1200
 \<Longrightarrow> Synthesis_Parse n X\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma (in std) [\<phi>reason
+lemma (in \<phi>min) [\<phi>reason
     on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l numeral ?n \<Ztypecolon> \<nat>[?b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
        \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l 1 \<Ztypecolon> \<nat>[?b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
        \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l 0 \<Ztypecolon> \<nat>[?b] \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -260,12 +260,12 @@ lemma (in std) [\<phi>reason
   unfolding Synthesis_def GOAL_CTXT_def
   using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
 
-lemma (in std) op_const_size_t:
+lemma (in \<phi>min) op_const_size_t:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> Size \<rbrace>\<close>
   unfolding op_const_size_t_def Premise_def
   by \<phi>reason
 
-lemma (in std) [\<phi>reason 1200
+lemma (in \<phi>min) [\<phi>reason 1200
     on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (numeral ?n) \<Ztypecolon> Size \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
        \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l 0 \<Ztypecolon> Size \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
        \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l 1 \<Ztypecolon> Size \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -279,7 +279,7 @@ subsubsection \<open>Integer Arithmetic\<close>
 
 paragraph \<open>Addition\<close>
 
-lemma (in std) op_add[\<phi>overload +]:
+lemma (in \<phi>min) op_add[\<phi>overload +]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_add_def Premise_def
@@ -300,7 +300,7 @@ proc [
 
 paragraph \<open>Subtraction\<close>
 
-lemma (in std) op_sub[\<phi>overload -]:
+lemma (in \<phi>min) op_sub[\<phi>overload -]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_sub_def Premise_def
@@ -323,7 +323,7 @@ proc [
 
 paragraph \<open>Times\<close>
 
-lemma (in std) op_omul[\<phi>overload *]:
+lemma (in \<phi>min) op_omul[\<phi>overload *]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * y < 2^b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_umul b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x * y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_umul_def Premise_def
@@ -345,7 +345,7 @@ proc [
 
 paragraph \<open>Division\<close>
 
-lemma (in std) op_udiv[\<phi>overload /]:
+lemma (in \<phi>min) op_udiv[\<phi>overload /]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_udiv_def Premise_def
   apply (cases vx; cases vy; simp, \<phi>reason) apply (simp add: \<phi>expns)
@@ -365,7 +365,7 @@ proc [
 
 paragraph \<open>Less Than\<close>
 
-lemma (in std) op_lt[\<phi>overload <]:
+lemma (in \<phi>min) op_lt[\<phi>overload <]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt b (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> Val rawx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val rawy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_lt_def
   by (cases rawx; cases rawy; simp, \<phi>reason)
@@ -394,7 +394,7 @@ proc [
 
 paragraph \<open>Less Equal\<close>
 
-lemma (in std) op_le[\<phi>overload \<le>]:
+lemma (in \<phi>min) op_le[\<phi>overload \<le>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le b (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> Val rawx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val rawy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_le_def
   by (cases rawx; cases rawy; simp, \<phi>reason)
@@ -426,7 +426,7 @@ subsubsection \<open>General Arithmetic\<close>
 
 paragraph \<open>Equal\<close>
 
-lemma (in std) op_equal_\<phi>app[\<phi>overload =]:
+lemma (in \<phi>min) op_equal_\<phi>app[\<phi>overload =]:
   \<open> \<phi>SemType (a \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (b \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Equal T can_eq eq
@@ -464,7 +464,7 @@ end
 
 subsection \<open>Branches & Loops\<close>
 
-context std begin
+context \<phi>min begin
 
 
 lemma op_sel_\<phi>app:
@@ -501,13 +501,13 @@ end
 
 section \<open>Procedures and Operations\<close>
 
-context std begin
+context \<phi>min begin
 
 subsection \<open>Control Flow\<close>
 
 subsubsection \<open>Loops\<close>
 
-lemma (in std) "__DoWhile__rule_\<phi>app":
+lemma (in \<phi>min) "__DoWhile__rule_\<phi>app":
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l P x' \<Ztypecolon> \<bool>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
   unfolding op_do_while_def \<phi>Procedure_def
@@ -535,7 +535,7 @@ lemma (in std) "__DoWhile__rule_\<phi>app":
 text \<open>Note the While rule we mentioned in the paper is just a special case of the above
       __DoWhile__rule_\<phi>app\<close>
 
-lemma (in std)
+lemma (in \<phi>min)
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l P x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x'\<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<and> \<not> P x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<rbrace>"
   using "__DoWhile__rule_\<phi>app"[where X=\<open>\<lambda>x. X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j I x\<close> and P=P,
@@ -545,7 +545,7 @@ lemma (in std)
 declare [[\<phi>not_define_new_const]]
 
 
-proc (in std) do_while:
+proc (in \<phi>min) do_while:
 assumes V: \<open>Variant_Cast vars X X'\<close>
     and \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond\<close>
 premises X[useful]: \<open>cond vars\<close>

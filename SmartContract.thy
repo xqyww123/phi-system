@@ -8,7 +8,7 @@ subsection \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype sc_ty = std_ty +
+virtual_datatype sc_ty = \<phi>min_ty +
   T_LedgeRef   :: unit
   T_Mapping    :: unit
   T_ChainArray :: unit

@@ -83,7 +83,7 @@ fun set_programming_sequent' sequent ctxt =
   let
     val is_construction =
           case Thm.prop_of sequent
-            of \<^const>\<open>Trueprop\<close> $ P => NuHelp.has_head \<^const_name>\<open>std.CurrentConstruction\<close> P
+            of \<^const>\<open>Trueprop\<close> $ P => NuHelp.has_head \<^const_name>\<open>\<phi>min.CurrentConstruction\<close> P
              | _ => false
     fun put data = Programming_Sequent.put (SOME data) ctxt
   in

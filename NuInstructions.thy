@@ -4,13 +4,13 @@ begin
 
 section \<open>A Set of Predefined Minimal Instructions\<close>
 
-context std_sem begin
+context \<phi>min_sem begin
 
 subsection \<open>Throw Exception\<close>
 
 text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
 
-lemma (in std) throw_\<phi>app:
+lemma (in \<phi>min) throw_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Exception \<lbrace> X \<longmapsto> (\<lambda>_::unreachable sem_value. 0) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
   unfolding \<phi>Procedure_def by blast
 
@@ -20,7 +20,7 @@ definition op_try :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) p
   where \<open>op_try f g s = (case f s of Success x s' \<Rightarrow> Success x s' | Exception s' \<Rightarrow> g s'
                                    | PartialCorrect \<Rightarrow> PartialCorrect | Fail \<Rightarrow> Fail)\<close>
 
-lemma (in std) "__op_try__":
+lemma (in \<phi>min) "__op_try__":
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> \<lambda>v. Y1 v + Y2 v \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace> \<close>
@@ -55,7 +55,7 @@ declare [ [\<phi>not_define_new_const] ]
 
 declare [ [\<phi>trace_processing] ]
 
-proc (in std) try'':
+proc (in \<phi>min) try'':
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE2 \<rbrace>\<close>
   argument X
@@ -63,7 +63,7 @@ proc (in std) try'':
   throws EE2
   \<medium_left_bracket> ;; "__op_try__"  ;; F G \<medium_right_bracket>. .
 
-proc (in std) try':
+proc (in \<phi>min) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
@@ -98,14 +98,14 @@ definition op_add :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES)
   )))"
 
 
-(* lemma (in std) op_add:
+(* lemma (in \<phi>min) op_add:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b (\<phi>V_pair vb va) \<lbrace> x \<Ztypecolon> Val va \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vb \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_add_def Premise_def
   by (cases va; cases vb; simp, \<phi>reason) *)
 
 
-(* lemma (in std)
+(* lemma (in \<phi>min)
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c left  \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<nat>[b] \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c right \<lbrace> R2 \<longmapsto> R3\<heavy_comma> SYNTHESIS y \<Ztypecolon> \<nat>[b] \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2^b
@@ -231,7 +231,7 @@ definition op_var_scope' :: "'TY
     F vname
   ))"
 
-lemma (in std) \<phi>M_get_var[\<phi>reason!]:
+lemma (in \<phi>min) \<phi>M_get_var[\<phi>reason!]:
   \<open>v \<in> Well_Type TY
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_var vname TY F \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>\<close>
@@ -255,7 +255,7 @@ lemma (in std) \<phi>M_get_var[\<phi>reason!]:
   qed
   done
 
-lemma (in std) \<phi>M_set_var[\<phi>reason!]:
+lemma (in \<phi>min) \<phi>M_set_var[\<phi>reason!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_set_res_entry R_var.updt (\<lambda>f. f(vname \<mapsto> u)) \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
   unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
   apply (auto simp add: \<phi>expns R_var_valid_split' R_var.prj.homo_mult FIC_var_split
@@ -276,7 +276,7 @@ lemma (in std) \<phi>M_set_var[\<phi>reason!]:
   done
 
 
-lemma (in std) op_get_var''_\<phi>app:
+lemma (in \<phi>min) op_get_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var vname TY \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> v \<Ztypecolon> Var vname Identity \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity \<rbrace>\<close>
   unfolding op_get_var_def Premise_def
@@ -284,7 +284,7 @@ lemma (in std) op_get_var''_\<phi>app:
 end
 
 
-lemma (in std) op_set_var''_\<phi>app:
+lemma (in \<phi>min) op_set_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var vname TY rawv \<lbrace> v \<Ztypecolon> Var vname Identity\<heavy_comma> u \<Ztypecolon> Val rawv Identity \<longmapsto> u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
@@ -292,7 +292,7 @@ lemma (in std) op_set_var''_\<phi>app:
   by (cases rawv; simp, \<phi>reason, assumption, simp add: \<phi>expns, \<phi>reason)
 
 
-lemma (in std) op_var_scope':
+lemma (in \<phi>min) op_var_scope':
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
     \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F rawv \<lbrace> X\<heavy_comma> v \<Ztypecolon> Val rawv Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
@@ -321,7 +321,7 @@ lemma (in std) op_var_scope':
   qed
   done
 
-lemma (in std) op_free_var:
+lemma (in \<phi>min) op_free_var:
    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_var vname \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> 1 \<rbrace>\<close>
   unfolding op_free_var_def \<phi>Procedure_def \<phi>M_set_res_entry_def
   apply (auto simp add: \<phi>expns R_var_valid_split' R_var.prj.homo_mult FIC_var_split
@@ -344,7 +344,7 @@ lemma (in std) op_free_var:
 
 
 
-context std begin
+context \<phi>min begin
 
 
 
@@ -459,11 +459,11 @@ lemma cons_tup_cons:
   apply (smt (verit, del_insts) Suc_le_eq append1_eq_conv list.sel(1) list_all2_Cons2 rev_eq_Cons_iff take_hd_drop)
   by (simp add: take_Suc_conv_app_nth)
 
-lemma (in std) op_cons_tup_nil:
+lemma (in \<phi>min) op_cons_tup_nil:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c cons_tup [] \<lbrace> Void \<longmapsto> () \<Ztypecolon> EmptyTuple \<rbrace>\<close>
   unfolding cons_tup_nil by \<phi>reason
 
-lemma (in std) op_cons_tup_cons:
+lemma (in \<phi>min) op_cons_tup_cons:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c cons_tup TYs \<lbrace> X \<longmapsto> VAL y \<Ztypecolon> Y \<rbrace>
 \<Longrightarrow> \<phi>SemType (a \<Ztypecolon> A) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c cons_tup (TY#TYs) \<lbrace> VAL a \<Ztypecolon> A\<heavy_comma> X \<longmapsto> VAL (a,y) \<Ztypecolon> (\<clubsuit> A \<^emph> Y) \<rbrace>\<close>
@@ -499,11 +499,11 @@ lemma op_dest_tup_cons_expn:
       instr_comp_def bind_def)
   by (metis list.discI list.exhaust_sel list.rel_sel list.sel(1))
 
-lemma (in std) op_dest_tup_nil:
+lemma (in \<phi>min) op_dest_tup_nil:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dest_tup [] \<lbrace> () \<Ztypecolon> EmptyTuple \<longmapsto> Void \<rbrace> \<close>
   unfolding op_dest_tup_nil_expn by \<phi>reason
 
-lemma (in std) op_dest_tup_cons:
+lemma (in \<phi>min) op_dest_tup_cons:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dest_tup TYs \<lbrace> VAL y \<Ztypecolon> Y \<longmapsto> X \<rbrace>
 \<Longrightarrow> \<phi>SemType (a \<Ztypecolon> A) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dest_tup (TY#TYs) \<lbrace> VAL (a,y) \<Ztypecolon> (\<clubsuit> A \<^emph> \<phi>Is_Tuple Y) \<longmapsto> VAL a \<Ztypecolon> A\<heavy_comma> X \<rbrace>\<close>
@@ -532,7 +532,7 @@ definition op_set_element :: "nat list \<Rightarrow> 'TY \<Rightarrow> ('VAL,'RE
     \<phi>M_put_Val (index_mod_value idx (\<lambda>_. u) v)
   ))"
 
-lemma (in std) op_get_element:
+lemma (in \<phi>min) op_get_element:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m valid_index TY idx
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> X) TY
 \<Longrightarrow> \<phi>Index_getter idx X Y f
@@ -541,7 +541,7 @@ lemma (in std) op_get_element:
   apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
   by \<phi>reason
 
-lemma (in std) op_set_element:
+lemma (in \<phi>min) op_set_element:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m valid_index TY idx
 \<Longrightarrow> \<phi>Index_mapper idx X Y f
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> X) TY

@@ -3,14 +3,14 @@ theory NuLLReps
   abbrevs "<own>" = "\<left_fish_tail>"
     and "<none>" = "\<down_fish_tail>"
     and "<object>" = "\<R_arr_tail>"
-begin   
+begin
 
 section \<open>\<phi>-Types for Semantic Models\<close>
 
 declare pair_forall[lrep_exps] pair_exists[lrep_exps]
 (* declare llty_prod[\<phi>intro] *)
 
-context std begin
+context \<phi>min begin
 
 subsection \<open>Integer\<close>
 
@@ -189,12 +189,12 @@ lemma [\<phi>reason 110 on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\
   by (simp add: \<phi>expns times_list_def, blast)
 
 
-lemma (in std) Var_simp_cong:
+lemma (in \<phi>min) Var_simp_cong:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> Var v T) = (x' \<Ztypecolon> Var v T')\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
-simproc_setup (in std) Var_simp_cong ("x \<Ztypecolon> Var v T") = \<open>
+simproc_setup (in \<phi>min) Var_simp_cong ("x \<Ztypecolon> Var v T") = \<open>
   K (NuSimpCong.simproc @{thm Var_simp_cong[folded atomize_eq]})
 \<close>
 
@@ -249,7 +249,7 @@ lemma [\<phi>reason 2000 on \<open>
 
 subsubsection \<open>Branch Convergence Rules\<close>
 
-lemma (in std) [\<phi>reason 1200 on
+lemma (in \<phi>min) [\<phi>reason 1200 on
   \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Var ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?y \<Ztypecolon> Var ?v' ?U \<brangle>) = ?X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) (y \<Ztypecolon> U) = (z \<Ztypecolon> Z)
@@ -257,7 +257,7 @@ lemma (in std) [\<phi>reason 1200 on
 \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 \<heavy_comma> x \<Ztypecolon> Var v T) (N \<heavy_comma> \<blangle> R2 \<heavy_comma> y \<Ztypecolon> Var v U \<brangle>) = (R \<heavy_comma> z \<Ztypecolon> Var v Z) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def Merge_def by (cases P; simp add: \<phi>expns mult.assoc)
 
-declare (in std) branch_convergence_skip[\<phi>reason 1200
+declare (in \<phi>min) branch_convergence_skip[\<phi>reason 1200
      on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Var ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?Y \<brangle>) = ?R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
   if no \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 \<heavy_comma> ?x \<Ztypecolon> Var ?v ?T) (?N \<heavy_comma> \<blangle> ?R2 \<heavy_comma> ?y \<Ztypecolon> Var ?v' ?U \<brangle>) = ?R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?rG\<close>
 ]

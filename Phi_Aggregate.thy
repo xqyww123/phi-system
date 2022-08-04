@@ -8,7 +8,7 @@ subsection \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype aggregate_ty = std_ty +
+virtual_datatype aggregate_ty = \<phi>min_ty +
   T_tup     :: \<open>'self list\<close>
   T_array   :: \<open>'self \<times> nat\<close>
 
@@ -29,7 +29,7 @@ end
 
 subsubsection \<open>Value\<close>
 
-virtual_datatype 'TY aggregate_val :: "nonsepable_semigroup" = 'TY std_val +
+virtual_datatype 'TY aggregate_val :: "nonsepable_semigroup" = 'TY \<phi>min_val +
   V_tup     :: \<open>'self list\<close>
   V_array   :: \<open>'TY \<times> 'self list\<close>
 
@@ -51,7 +51,7 @@ locale aggregate =
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
             and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
-+ std where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
++ \<phi>min where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
                   \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult)
                   \<times> ('FIC_N \<Rightarrow> 'FIC::{comm_monoid_mult,no_inverse}))\<close>
@@ -157,7 +157,7 @@ lemma Valid_Type_\<tau>Array[simp]:
 lemma Valid_Type_\<tau>Tuple[simp]:
   \<open>Valid_Type (\<tau>Tuple Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
   unfolding Inhabited_def
-  by (metis (mono_tags, lifting) list_all_length std_sem.zero_well_typ std_sem_axioms)
+  by (metis (mono_tags, lifting) list_all_length \<phi>min_sem.zero_well_typ \<phi>min_sem_axioms)
 
 end
 
