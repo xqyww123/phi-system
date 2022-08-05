@@ -368,137 +368,14 @@ end
 abbreviation (in \<phi>min) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
 
 
-(* subsubsection \<open>Stack Element and Communicative Monoid Resource\<close>
-
-consts Ele :: " 'a set \<Rightarrow> ('VAL,'FIC_N,'FIC) assn " ("ELE _" [17] 16)
-
-context \<phi>min begin
-
-definition Val_Ele :: " 'VAL set \<Rightarrow> ('VAL,'FIC_N,'FIC) assn " ("VAL _" [17] 16)
-  where "(VAL S) = { ([v], 1) | v. v \<in> S } "
-
-adhoc_overloading Ele Val_Ele
-
-lemma [\<phi>expns]:
-  "(s,h) \<in> (VAL V) \<longleftrightarrow> h = 1 \<and> (\<exists>v. s = [v] \<and> v \<in> V)"
-  unfolding Val_Ele_def by simp blast
-
-lemma Val_Ele_inhabited[elim!]:
-  "Inhabited (VAL T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: pair_exists \<phi>expns)
-
-definition Obj_Ele :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('VAL,'FIC_N,'FIC) assn " ("OBJ _" [17] 16)
-  where "(OBJ T) = { ([],h) | h. h \<in> T } "
-
-adhoc_overloading Ele Obj_Ele
-
-lemma [\<phi>expns]: "(s,h) \<in> (OBJ T) \<longleftrightarrow> s = [] \<and> h \<in> T"
-  unfolding Obj_Ele_def by simp
-
-lemma Obj_Ele_inhabited[elim!]:
-  "Inhabited (OBJ T) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: pair_exists \<phi>expns)
-
-lemma OBJ_comm: \<open>S * (OBJ T) = (OBJ T) * S\<close>
-  unfolding Obj_Ele_def times_set_def set_eq_iff apply (simp add: times_list_def)
-  using mult.commute by blast
-
-end
-*)
-(*
-subsubsection \<open>Separation\<close>
-
-definition disjoint :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " (infixl "\<perpendicular>" 60) where "disjoint A B \<longleftrightarrow> (A \<inter> B = {})"
-lemma disjoint_rewL: "A \<perpendicular> B \<longleftrightarrow> (\<forall>x. x \<in> A \<longrightarrow> x \<notin> B)" unfolding disjoint_def by auto
-lemma disjoint_rewR: "A \<perpendicular> B \<longleftrightarrow> (\<forall>x. x \<in> B \<longrightarrow> x \<notin> A)" unfolding disjoint_def by auto
-lemma [elim]: "A \<perpendicular> B \<Longrightarrow> ((\<And>x. x \<in> A \<Longrightarrow> x \<in> B \<Longrightarrow> False) \<Longrightarrow> C) \<Longrightarrow> C" unfolding disjoint_def by auto
-
-lemma disjoint_empty [iff]: "{} \<perpendicular> S"  "S \<perpendicular> {}" unfolding disjoint_def by auto
-
-context \<phi>min begin
-
-lemma Separation_expn:
-  "(s,h) \<in> (T * U) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h2,s2) \<in> T \<and> (h1,s1) \<in> U)"
-  unfolding Separation_def by simp
-
-lemma Separation_expn_R:
-  "(h,s) \<in> (T * U) \<longleftrightarrow> (\<exists>h1 h2 s1 s2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> s = s1 @\<^sub>s\<^sub>k s2 \<and> (h1,s2) \<in> T \<and> (h2,s1) \<in> U)"
-  unfolding Separation_def
-  by simp (metis disjoint_def disjoint_rewR map_add_comm) 
-
-lemma Separation_expn_V[nu_exps]:
-  "(h, stack (deepize v # r)) \<in> (R * VAL V) \<longleftrightarrow> ((h, stack r) \<in> R \<and> v \<in> V )"
-  unfolding Separation_def Shallowize'_expn
-  by (simp add: nu_exps) force
-
-end
-
-lemma Separation_expn_V':
-  "(h, s) \<in> (R * VAL V) \<longleftrightarrow> (\<exists>v r. s = stack (deepize v # r) \<and> (h, stack r) \<in> R \<and> v \<in> V )"
-  unfolding Separation_def Shallowize'_expn
-  by (simp add: nu_exps) force
-
-lemma Separation_expn_O[nu_exps]:
-  "(h,s) \<in> (R * OBJ H) \<longleftrightarrow>
-  (\<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> (h2,s) \<in> Shallowize' R \<and> h1 \<in> H )"
-  unfolding Separation_def Shallowize'_expn
-  by (simp add: nu_exps)
-
-lemma Separation_expn_O_R:
-  "(h,s) \<in> (R * OBJ H) \<longleftrightarrow>
-  (\<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> (h1,s) \<in> Shallowize' R \<and> h2 \<in> H )"
-  unfolding Separation_def Shallowize'_expn
-  by (simp add: nu_exps) (metis disjoint_def disjoint_rewR map_add_comm)
-
-lemma [elim!,\<phi>elim]: "Inhabited (T * U) \<Longrightarrow> (Inhabited T \<Longrightarrow> Inhabited U \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: pair_exists nu_exps Separation_expn) blast
-
-
-lemma Separation_assoc[simp]: "(A * (B * C)) = (A * B * C)"
-  unfolding Separation_def set_eq_iff pair_forall
-  apply auto subgoal for h2 s2 h1a h2a s1a s2a
-    apply (rule exI [where x = "h1a"], rule exI [where x = "h2a ++ h2"],
-          simp add: disjoint_def inf_sup_distrib1 inf_sup_distrib2)
-    apply (rule exI [of _ s1a], rule exI [of _ "s2a @\<^sub>s\<^sub>k s2"], simp)
-    apply blast done
-  subgoal for h1 s1 h1a h2a s1a s2a
-    apply (rule exI [where x = "h1 ++ h1a"], rule exI [where x = "h2a"],
-          simp add: disjoint_def inf_sup_distrib1 inf_sup_distrib2)
-    apply (rule exI [of _ "s1 @\<^sub>s\<^sub>k s1a"], simp, blast)
-    done
-  done
-
-lemma Separation_comm:
-  " (OBJ A * B) = (B * OBJ A) "
-  " (A' * OBJ B') = (OBJ B' * A') "
-  unfolding Separation_def set_eq_iff pair_forall
-  by (simp_all add: disjoint_def nu_exps) (blast dest: map_add_comm)+
-
-lemma shallowize_ex: "(\<exists>x::('c::lrep). P x) \<longleftrightarrow> (\<exists>x. P (shallowize x))"
-  using deepize_inj by metis
-lemma shallowize_ex': "TERM TYPE('c) \<Longrightarrow> (\<exists>x::('c::lrep). P x) \<longleftrightarrow> (\<exists>x. P (shallowize x))"
-  using shallowize_ex .
-
-lemma shallowize_all: "(\<forall>x::('c::lrep). P x) \<longleftrightarrow> (\<forall>x. P (shallowize x))"
-  using deepize_inj by metis
-lemma shallowize_all': "TERM TYPE('c) \<Longrightarrow> (\<forall>x::('c::lrep). P x) \<longleftrightarrow> (\<forall>x. P (shallowize x))"
-  using shallowize_all .
-
-
-lemma Separation_E[elim]:
-  "(h,s) \<in> (T * U) \<Longrightarrow> (\<And>h1 h2 s1 s2. h = h1 ++ h2 \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2
-      \<Longrightarrow> (h2,s2) \<in> T \<Longrightarrow> (h1,s1) \<in> U \<Longrightarrow> C) \<Longrightarrow> C "
-  unfolding Separation_expn by simp blast
-
-lemma Separation_I[intro]:
-  "(h2,s2) \<in> T \<Longrightarrow> (h1,s1) \<in> U \<Longrightarrow> dom h1 \<perpendicular> dom h2 \<Longrightarrow> s = s1 @\<^sub>s\<^sub>k s2 \<Longrightarrow> (h1 ++ h2, s) \<in> (T * U)"
-  unfolding Separation_expn by simp blast
-
-*)
-
 subsection \<open>Assertion\<close>
 
 context \<phi>min begin
+
+definition Fiction_Spec :: \<open>('FIC_N \<Rightarrow>'FIC) \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> 'FIC_N \<Rightarrow>'FIC) \<Rightarrow> bool\<close>
+              ("FIC\<lbrace> (2_) \<rbrace>/ (2_)/ \<lbrace> (2_) \<rbrace>" [2,101,2] 100)
+  where \<open>FIC\<lbrace> P \<rbrace> C \<lbrace> Q \<rbrace> \<longleftrightarrow>
+    (\<forall>com. com \<in> INTERP_RES P \<longrightarrow> C com \<in> \<S> (\<lambda>v. INTERP_RES (Q v)) 0)\<close>
 
 definition \<phi>Procedure :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)
@@ -507,6 +384,36 @@ definition \<phi>Procedure :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FI
 
 abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
+
+
+lemma ext_func_forall_eq_simp[simp]:
+  \<open>(\<exists>f. (\<forall>v. f v = g v) \<and> P f) \<longleftrightarrow> P g\<close>
+  unfolding fun_eq_iff[symmetric]
+  by blast
+
+lemma \<phi>Procedure_I_noexcep:
+  \<open> (\<forall>r p. p \<in> P \<longrightarrow> (\<exists>q. (\<forall>v. q v \<in> Q v) \<and> FIC\<lbrace> r * p \<rbrace> f \<lbrace>\<lambda>v. r * q v \<rbrace> ))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<rbrace>\<close>
+  unfolding \<phi>Procedure_def INTERP_COMP Fiction_Spec_def
+  apply (clarsimp simp add: times_set_def)
+  subgoal for comp R r p
+    apply (cases \<open>f comp\<close>; simp add: INTERP_COMP)
+    subgoal premises prems for v' res'
+      apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=p], THEN mp, OF \<open>p \<in> P\<close>])
+      apply clarify
+      subgoal premises prems' for q
+        using prems'(2)[THEN spec[where x=comp], simplified prems, simplified] prems'(1) prems
+        by blast .
+    subgoal premises prems for e
+      apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=p], THEN mp, OF \<open>p \<in> P\<close>])
+      apply clarify
+      subgoal premises prems' for q
+        using prems'(2)[THEN spec[where x=comp], simplified prems zero_set_def, simplified]
+        by blast .
+    by (smt (z3) LooseStateTy_expn(3)) .
+
+  
+
 
 subsubsection \<open>Essential Hoare Rules\<close>
 
