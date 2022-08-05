@@ -1858,6 +1858,20 @@ lemma (in \<phi>min) [\<phi>reason]:
   unfolding Subty_def \<phi>SemType_def by (simp add: \<phi>expns) blast
 
 
+subsection \<open>Share\<close>
+
+definition \<phi>Share :: \<open>rat \<Rightarrow> ('v,'x) \<phi> \<Rightarrow> ('v share, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)
+  where \<open>\<phi>Share n T x = { Share n v |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1 } \<close>
+
+lemma \<phi>Share_expn[\<phi>expns]:
+  \<open> p \<in> (x \<Ztypecolon> n \<Znrres>\<phi> T) \<longleftrightarrow> (\<exists>v. p = Share n v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1) \<close>
+  unfolding \<phi>Type_def \<phi>Share_def by simp
+
+lemma [\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> n \<Znrres>\<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+
 subsection \<open>Misc.\<close>
 
 definition Function_over :: \<open>('a,'b) \<phi> \<Rightarrow> 'c \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<phi>\<close> (infix "<func-over>" 40)
@@ -3099,7 +3113,7 @@ definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Ri
   where \<open>\<phi>M_getV TY VDT_dest v F =
     (\<phi>M_assert (dest_sem_value v \<in> Well_Type TY) \<ggreater> F (VDT_dest (dest_sem_value v)))\<close>
 
-definition \<phi>M_caseV :: \<open>('VAL sem_value \<Rightarrow> ('vr,'ret,'RES_N,'RES) M) \<Rightarrow> ('VAL \<times> 'vr,'ret,'RES_N,'RES) M\<close>
+definition \<phi>M_caseV :: \<open>('VAL sem_value \<Rightarrow> ('vr,'ret,'RES_N,'RES) proc') \<Rightarrow> ('VAL \<times> 'vr,'ret,'RES_N,'RES) proc'\<close>
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of sem_value (a1,a2) \<Rightarrow> F (sem_value a1) (sem_value a2))\<close>
 
 

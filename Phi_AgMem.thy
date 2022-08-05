@@ -270,8 +270,8 @@ assumes memobj_size_arr    : \<open>MemObj_Size (\<tau>Array N T) = N * MemObj_S
           least 1 byte, which may affect the performance unnecessarily. However, since zero-element
           tuple and array are so special ...
         One thing: we do not support arbitrary-length array like [0 x nat] in LLVM? TODO \<close>
-assumes res_valid_mem: \<open>Resource_Validator R_mem.name = R_mem.inject ` Valid_Mem\<close>
 
+(* TODO: purge this *)
 fixes In_Mem :: \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'TY segidx \<Rightarrow> bool\<close>
 defines \<open>In_Mem res seg \<equiv> seg \<in> dom !!(R_mem.get res)\<close>
 
@@ -528,6 +528,7 @@ locale agmem_sem =
                 \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult)) itself\<close>
 
 assumes WT_ptr[simp]: \<open>Well_Type \<tau>Pointer = { V_pointer.mk addr |addr. valid_rawaddr addr }\<close>
+assumes res_valid_mem: \<open>Resource_Validator R_mem.name = R_mem.inject ` Valid_Mem\<close>
 
 fixes Mapof_Val :: \<open>'VAL \<Rightarrow> nat list \<rightharpoonup> 'VAL\<close>
 assumes Mapof_Val_inj: \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> Mapof_Val Va = Mapof_Val Vb \<Longrightarrow> Va = Vb\<close>
@@ -701,8 +702,8 @@ begin
 
 lemma R_mem_valid_split: \<open>res \<in> Valid_Resource \<longleftrightarrow>
     R_mem.clean res \<in> Valid_Resource \<and> (\<exists>m. res R_mem.name = R_mem.inject m \<and> m \<in> Valid_Mem)\<close>
-  by (subst R_mem.split, simp add: Valid_Resource_def times_fun_def res_valid_mem image_iff)
-     (metis empty_iff image_iff res_valid_mem)
+  by (subst R_mem.split, simp add: Valid_Resource_def times_fun_def res_valid_mem image_iff, blast)
+     
 
 lemma R_mem_valid_split': \<open>NO_MATCH (R_mem.clean res') res \<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow>
     R_mem.clean res \<in> Valid_Resource \<and> (\<exists>m. res R_mem.name = R_mem.inject m \<and> m \<in> Valid_Mem)\<close>
@@ -877,29 +878,29 @@ definition \<phi>M_get_mem
             \<phi>M_get_res_entry R_mem.get seg (\<lambda>val.
             \<phi>M_assert (val \<in> Well_Type (segidx.layout seg)) \<ggreater> F (index_value idx val))"
 
-definition op_load_mem :: "'TY \<Rightarrow> ('VAL, 'VAL,'RES_N,'RES) M"
+definition op_load_mem :: "'TY \<Rightarrow> ('VAL, 'VAL,'RES_N,'RES) proc'"
   where "op_load_mem TY v =
     \<phi>M_get_logptr TY v (\<lambda>ptr.
     \<phi>M_get_mem (memaddr.segment ptr) (memaddr.index ptr) (\<lambda>x. Success (sem_value x)))"
 
-definition op_store_mem :: "'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) M"
+definition op_store_mem :: "'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'"
   where "op_store_mem TY =
     \<phi>M_caseV (\<lambda>va vb.
     \<phi>M_get_logptr TY va (\<lambda>ptr. case ptr of (seg |: idx) \<Rightarrow>
     \<phi>M_getV TY id vb (\<lambda>v.
     \<phi>M_get_mem seg idx (\<lambda>_.
-    \<phi>M_set_res_entry R_mem.updt (\<lambda>f. f(seg := map_option (index_mod_value idx (\<lambda>_. v)) (f seg)))))))"
+    \<phi>M_set_res R_mem.updt (\<lambda>f. f(seg := map_option (index_mod_value idx (\<lambda>_. v)) (f seg)))))))"
 
-definition op_free_mem :: "('VAL, unit,'RES_N,'RES) M"
+definition op_free_mem :: "('VAL, unit,'RES_N,'RES) proc'"
   where "op_free_mem v =
     \<phi>M_getV \<tau>Pointer V_pointer.dest v (\<lambda>ptr. case ptr of (seg |: ofst) \<Rightarrow>
     \<phi>M_assert (ofst = 0) \<ggreater>
-    \<phi>M_set_res_entry R_mem.updt (\<lambda>f. f(seg := None)))"
+    \<phi>M_set_res R_mem.updt (\<lambda>f. f(seg := None)))"
 
-definition op_alloc_mem :: "'TY \<Rightarrow> ('VAL, unit,'RES_N,'RES) M"
+definition op_alloc_mem :: "'TY \<Rightarrow> ('VAL, unit,'RES_N,'RES) proc'"
   where "op_alloc_mem TY' v =
     \<phi>M_getV (\<tau>Int addrspace_bits) V_int.dest v (\<lambda>(_, n).
-    \<phi>M_set_res_entry R_mem.updt (\<lambda>f.
+    \<phi>M_set_res R_mem.updt (\<lambda>f.
     let TY = \<tau>Array n TY'
       ; addr = (@addr. f addr = None \<and> segidx.layout addr = TY)
      in f(addr := Some (Zero TY))))"
@@ -972,7 +973,7 @@ lemma (in agmem) op_store_mem:
   unfolding Premise_def op_store_mem_def
   apply (rule \<phi>M_caseV, rule \<phi>M_get_logptr)
   apply (cases ptr; cases raw_u; simp, \<phi>reason)
-  unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
+  unfolding \<phi>M_set_res_def \<phi>Procedure_def
   apply (auto simp add: \<phi>expns FIC_mem.interp_split' R_mem_valid_split' share_mem_def
                         R_mem.mult_in_dom times_list_def)
   subgoal premises prems for seg idx R fic res mem mem_remain'
@@ -1109,7 +1110,7 @@ lemma (in agmem) op_alloc_mem:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_mem TY raw_n \<lbrace> n \<Ztypecolon> Val raw_n Size \<longmapsto> ((seg |: []) \<Zinj> 1 \<Znrres> (Zero (\<tau>Array n TY)) \<Ztypecolon> Ref Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j seg. True) \<rbrace>\<close>
   unfolding op_alloc_mem_def
   apply (cases raw_n; simp, rule \<phi>M_tail_left, rule \<phi>M_getV; simp add: \<phi>expns)
-  unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
+  unfolding \<phi>M_set_res_def \<phi>Procedure_def
   apply (auto simp add: \<phi>expns FIC_mem.interp_split' R_mem_valid_split' times_fun dom_mult
                         R_mem.mult_in_dom Valid_Mem_def mult_strip_fine_011 mult_strip_fine_001
                         fiction_mem_\<I>'' share_mem_def' times_list_def)
@@ -1151,7 +1152,7 @@ lemma (in agmem) op_free_mem:
    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_mem vptr \<lbrace> (seg |: []) \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> (seg |: 0) \<Ztypecolon> Val vptr RawPointer \<longmapsto> 1\<rbrace>\<close>
   unfolding op_free_mem_def
   apply (cases vptr; simp, rule \<phi>M_getV; simp add: \<phi>expns)
-  unfolding \<phi>M_set_res_entry_def \<phi>Procedure_def
+  unfolding \<phi>M_set_res_def \<phi>Procedure_def
   apply (auto simp add: \<phi>expns FIC_mem.interp_split' R_mem_valid_split' times_fun dom_mult
                         R_mem.mult_in_dom Valid_Mem_def mult_strip_fine_011 mult_strip_fine_001
                         fiction_mem_\<I>'' share_mem_def' times_list_def)

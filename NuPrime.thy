@@ -70,10 +70,9 @@ locale \<phi>min_sem =
 
 fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
 assumes Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
+assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
 
 fixes type_measure :: \<open>'TY \<Rightarrow> nat\<close>
-
-assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
 
 fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES set\<close>
 assumes res_valid_var: \<open>Resource_Validator R_var.name = {R_var.inject (Fine vars) |vars. finite (dom vars)}\<close>
@@ -256,9 +255,9 @@ text\<open> The basic state of the \<phi>-system virtual machine is represented 
 declare state.split[split]
 
 type_synonym ('ret,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state"
-type_synonym ('arg, 'ret,'RES_N,'RES) M = "'arg sem_value \<Rightarrow> ('ret,'RES_N,'RES) proc"
+type_synonym ('arg, 'ret,'RES_N,'RES) proc' = "'arg sem_value \<Rightarrow> ('ret,'RES_N,'RES) proc"
 
-definition bind :: "('a,'RES_N,'RES) proc \<Rightarrow> ('a,'b,'RES_N,'RES) M \<Rightarrow> ('b,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
+definition bind :: "('a,'RES_N,'RES) proc \<Rightarrow> ('a,'b,'RES_N,'RES) proc' \<Rightarrow> ('b,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
   where "bind f g = (\<lambda>res. case f res of Success v x \<Rightarrow> g v x | Exception x \<Rightarrow> Exception x
                                        | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
 
