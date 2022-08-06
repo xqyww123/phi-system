@@ -139,23 +139,23 @@ begin
 
 abbreviation "INTERP_RES fic \<equiv> Valid_Resource \<inter> S_Assert (Fic_Space fic) \<inter> \<I> INTERP fic"
 
-definition INTERP_COMP :: \<open>('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('RES_N \<Rightarrow> 'RES) set\<close>
-  where "INTERP_COMP T = { res. \<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic }"
+definition INTERP_COM :: \<open>('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('RES_N \<Rightarrow> 'RES) set\<close>
+  where "INTERP_COM T = { res. \<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic }"
 
-lemma INTERP_COMP[\<phi>expns]:
-  \<open>res \<in> INTERP_COMP T \<longleftrightarrow> (\<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic)\<close>
-  unfolding INTERP_COMP_def by simp
+lemma INTERP_COM[\<phi>expns]:
+  \<open>res \<in> INTERP_COM T \<longleftrightarrow> (\<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic)\<close>
+  unfolding INTERP_COM_def by simp
 
-lemma INTERP_COMP_subset[intro, simp]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_COMP A \<subseteq> INTERP_COMP B\<close>
-  unfolding INTERP_COMP_def subset_iff by simp blast
+lemma INTERP_COM_subset[intro, simp]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_COM A \<subseteq> INTERP_COM B\<close>
+  unfolding INTERP_COM_def subset_iff by simp blast
 
-lemma INTERP_COMP_plus[iff]:
-  \<open>INTERP_COMP (A + B) = INTERP_COMP A + INTERP_COMP B\<close>
-  unfolding INTERP_COMP_def plus_set_def by simp blast
+lemma INTERP_COM_plus[iff]:
+  \<open>INTERP_COM (A + B) = INTERP_COM A + INTERP_COM B\<close>
+  unfolding INTERP_COM_def plus_set_def by simp blast
 
-lemma INTERP_COMP_empty[intro, simp]:
-  \<open>S = {} \<Longrightarrow> INTERP_COMP S = {}\<close>
-  unfolding INTERP_COMP_def set_eq_iff by simp
+lemma INTERP_COM_empty[intro, simp]:
+  \<open>S = {} \<Longrightarrow> INTERP_COM S = {}\<close>
+  unfolding INTERP_COM_def set_eq_iff by simp
 
 lemma INTERP_mono:
   \<open> Fic_Space fic
@@ -372,15 +372,18 @@ subsection \<open>Assertion\<close>
 
 context \<phi>min begin
 
-definition Fiction_Spec :: \<open>('FIC_N \<Rightarrow>'FIC) \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> 'FIC_N \<Rightarrow>'FIC) \<Rightarrow> bool\<close>
-              ("FIC\<lbrace> (2_) \<rbrace>/ (2_)/ \<lbrace> (2_) \<rbrace>" [2,101,2] 100)
-  where \<open>FIC\<lbrace> P \<rbrace> C \<lbrace> Q \<rbrace> \<longleftrightarrow>
-    (\<forall>com. com \<in> INTERP_RES P \<longrightarrow> C com \<in> \<S> (\<lambda>v. INTERP_RES (Q v)) 0)\<close>
+definition Fiction_Spec :: \<open>('RES_N, 'RES) assn \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> ('RES_N,'RES) assn) \<Rightarrow> ('RES_N,'RES) assn \<Rightarrow> bool\<close>
+  where \<open>Fiction_Spec P C Q E \<longleftrightarrow>
+    (\<forall>com. com \<in> P \<longrightarrow> C com \<in> \<S> Q E)\<close>
+
+(* definition Fiction_Spec :: \<open>('FIC_N, 'FIC) assn \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool\<close>
+  where \<open>Fiction_Spec P C Q E \<longleftrightarrow>
+    (\<forall>com. com \<in> INTERP_COM P \<longrightarrow> C com \<in> \<S> (\<lambda>v. INTERP_COM (Q v)) (INTERP_COM E))\<close> *)
 
 definition \<phi>Procedure :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)
   where [\<phi>def]:"\<phi>Procedure f T U E \<longleftrightarrow>
-    (\<forall>comp R. comp \<in> INTERP_COMP (R * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COMP (R * U vs)) (INTERP_COMP (R * E)))"
+    (\<forall>comp R. comp \<in> INTERP_COM (R * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COM (R * U vs)) (INTERP_COM (R * E)))"
 
 abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
@@ -391,28 +394,39 @@ lemma ext_func_forall_eq_simp[simp]:
   unfolding fun_eq_iff[symmetric]
   by blast
 
-lemma \<phi>Procedure_I_noexcep:
-  \<open> (\<forall>r p. p \<in> P \<longrightarrow> (\<exists>q. (\<forall>v. q v \<in> Q v) \<and> FIC\<lbrace> r * p \<rbrace> f \<lbrace>\<lambda>v. r * q v \<rbrace> ))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<rbrace>\<close>
-  unfolding \<phi>Procedure_def INTERP_COMP Fiction_Spec_def
+lemma \<phi>Procedure_alt:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_COM ({r} * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COM ({r} * U vs)) (INTERP_COM ({r} * E)))\<close>
+  apply rule
+   apply ((unfold \<phi>Procedure_def)[1], blast)
+  unfolding \<phi>Procedure_def INTERP_COM Fiction_Spec_def
   apply (clarsimp simp add: times_set_def)
   subgoal for comp R r p
-    apply (cases \<open>f comp\<close>; simp add: INTERP_COMP)
-    subgoal premises prems for v' res'
-      apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=p], THEN mp, OF \<open>p \<in> P\<close>])
-      apply clarify
-      subgoal premises prems' for q
-        using prems'(2)[THEN spec[where x=comp], simplified prems, simplified] prems'(1) prems
-        by blast .
+    apply (cases \<open>f comp\<close>; simp add: \<phi>expns INTERP_COM_def)
+    apply fastforce
     subgoal premises prems for e
-      apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=p], THEN mp, OF \<open>p \<in> P\<close>])
-      apply clarify
-      subgoal premises prems' for q
-        using prems'(2)[THEN spec[where x=comp], simplified prems zero_set_def, simplified]
-        by blast .
-    by (smt (z3) LooseStateTy_expn(3)) .
+      apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
+      using prems by blast
+    subgoal premises prems
+      apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
+      using prems by blast . .
 
-  
+lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
+
+lemma \<phi>Procedure_I_noexcep:
+  \<open>(\<And>r. Fiction_Spec (INTERP_COM {r * p |p. p \<in> P}) f (\<lambda>v. INTERP_COM {r * q |q. q \<in> Q v}) (INTERP_COM {r * e |e. e \<in> E}))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>Procedure_def INTERP_COM Fiction_Spec_def
+  apply (clarsimp simp add: times_set_def)
+  subgoal for comp R r p
+    apply (cases \<open>f comp\<close>; simp add: \<phi>expns INTERP_COM_def)
+    apply fastforce
+    subgoal premises prems for e
+      apply (insert prems(1)[of r, THEN spec[where x=comp], simplified prems, simplified])
+      using prems by blast
+    subgoal premises prems
+      apply (insert prems(1)[of r, THEN spec[where x=comp], simplified prems, simplified])
+      using prems by blast . .
 
 
 subsubsection \<open>Essential Hoare Rules\<close>
@@ -445,12 +459,12 @@ lemma \<phi>CONSEQ:
   unfolding \<phi>Procedure_def
   apply clarify
   subgoal premises prems for comp R proof -
-    have \<open>INTERP_COMP (R * A') \<subseteq> INTERP_COMP (R * A)\<close>
-      apply (rule INTERP_COMP_subset; rule times_set_subset)
+    have \<open>INTERP_COM (R * A') \<subseteq> INTERP_COM (R * A)\<close>
+      apply (rule INTERP_COM_subset; rule times_set_subset)
       using prems by blast
-    moreover have \<open>\<S> (\<lambda>vs. INTERP_COMP (R * B vs)) (INTERP_COMP (R * E))
-       \<subseteq> \<S> (\<lambda>vs. INTERP_COMP (R * B' vs)) (INTERP_COMP (R * E'))\<close>
-      apply (rule LooseStateTy_subset; rule INTERP_COMP_subset; rule times_set_subset)
+    moreover have \<open>\<S> (\<lambda>vs. INTERP_COM (R * B vs)) (INTERP_COM (R * E))
+       \<subseteq> \<S> (\<lambda>vs. INTERP_COM (R * B' vs)) (INTERP_COM (R * E'))\<close>
+      apply (rule LooseStateTy_subset; rule INTERP_COM_subset; rule times_set_subset)
       using prems by blast+
     ultimately show ?thesis using prems by blast
   qed .

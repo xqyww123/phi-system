@@ -152,11 +152,13 @@ lemma objref_infinite_cls:
   using inj_def by fastforce
 
 
-definition Valid_Objs :: "('TY,'VAL) object_heap set"
-  where "Valid_Objs = {h. \<forall>k. h (Nil,k) = None}"
+definition Valid_Objs :: "('TY,'VAL) object_heap fine set"
+  where "Valid_Objs = Fine ` {h. \<forall>k. h (Nil,k) = None}"
 
 lemma Valid_Objs_1[simp]: \<open>1 \<in> Valid_Objs\<close>
   unfolding Valid_Objs_def one_fun_def one_fine_def by simp
+
+
 
 lemma ObjHeap_freshness:
   \<open>finite (dom f) \<Longrightarrow> \<exists>k. f k = 1 \<and> object_ref.class k = cls\<close>
@@ -172,9 +174,9 @@ lemma fiction_objs_\<I>:
   by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def one_fine_def)
 
 definition \<open>share_val_fiction =
-      Fiction (\<lambda>m. {f. to_share o f = m})\<close>
+      Fiction (\<lambda>m. {f. m = to_share o f})\<close>
 lemma share_val_fiction_\<I>:
-  \<open>\<I> share_val_fiction = (\<lambda>m. {f. to_share o f = m})\<close>
+  \<open>\<I> share_val_fiction = (\<lambda>m. {f. m = to_share o f})\<close>
   unfolding share_val_fiction_def
   by (rule Fiction_inverse, simp add: Fictional_def one_set_def)
 
@@ -188,8 +190,19 @@ locale \<phi>OO_sem =
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
                   \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES)) itself\<close>
-assumes res_valid_objects[simp]: \<open>Resource_Validator R_objs.name = R_objs.inject ` Fine ` Valid_Objs\<close>
+assumes res_valid_objects[simp]: \<open>Resource_Validator R_objs.name = R_objs.inject ` Valid_Objs\<close>
 begin
+
+lemma "__res_valid_objects_R_objs_get__":
+  \<open> res \<in> Valid_Resource
+\<Longrightarrow> R_objs.get res \<in> Valid_Objs\<close>
+  unfolding Valid_Resource_def
+  apply simp
+  subgoal premises prems
+    using prems(1)[THEN spec[where x=R_objs.name], simplified res_valid_objects]
+    by fastforce .
+  
+
 end
 
 
@@ -217,6 +230,65 @@ lemma R_objs_valid_split: \<open>res \<in> Valid_Resource \<longleftrightarrow>
 lemma R_objs_valid_split': \<open>NO_MATCH (R_objs.clean res') res \<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow>
     R_objs.clean res \<in> Valid_Resource \<and> (\<exists>m. res R_objs.name = R_objs.inject (Fine m) \<and> m \<in> Valid_Objs)\<close>
   using R_objs_valid_split .
+
+lemma share_objs_implies_value_full:
+  \<open> res \<in> \<I> share_objs (FIC_OO_share.get r * Fine (\<lambda>(x, y). (1(ref := 1(field \<mapsto> 1 \<Znrres> v))) x y))
+\<Longrightarrow> \<exists>objs. R_objs.get res = Fine (objs * 1((ref,field) \<mapsto> v))\<close>
+  apply (clarsimp simp add: share_objs_def fiction_objs_\<I> share_val_fiction_\<I>
+            mult_strip_fine_011 fun_eq_iff times_fun sep_disj_fun_def)
+  subgoal premises prems for y m a
+    apply (rule exI[where x="strip_share o a"])
+    apply (insert prems(2,4,5)[THEN spec[where x=ref], THEN spec[where x=field], simplified])
+    apply (cases \<open>a (ref, field)\<close>; cases \<open>y (ref, field)\<close>; clarsimp)
+    subgoal for aa bb
+      apply (insert prems(2,4,5)[THEN spec[where x=aa], THEN spec[where x=bb], simplified])
+      by (cases \<open>aa = ref\<close>; simp)
+    subgoal for u
+      by (cases u; simp) . .
+
+
+lemma share_objs_implies_value:
+  \<open> res \<in> \<I> share_objs (FIC_OO_share.get r * Fine (\<lambda>(x, y). (1(ref := 1(field \<mapsto> n \<Znrres> v))) x y))
+\<Longrightarrow> \<exists>objs. R_objs.get res = Fine objs \<and> objs (ref,field) = Some v\<close>
+  apply (clarsimp simp add: share_objs_def fiction_objs_\<I> share_val_fiction_\<I>
+            mult_strip_fine_011 fun_eq_iff times_fun sep_disj_fun_def)
+  subgoal premises prems for y m a
+    apply (rule exI[where x=y], simp)
+    apply (insert prems(2,4,5)[THEN spec[where x=ref], THEN spec[where x=field], simplified])
+    apply (cases \<open>a (ref, field)\<close>; simp)
+    apply (metis option.simps(9) strip_share_Share)
+    by (metis option.simps(9) sep_disj_share share.exhaust strip_share_Share times_share) .
+
+thm "__res_valid_objects_R_objs_get__"
+
+lemma
+  assumes A: \<open>res \<in> \<I> share_objs (FIC_OO_share.get r * Fine (\<lambda>(x, y). (1(ref := 1(field \<mapsto> n \<Znrres> v))) x y))\<close>
+  shows share_objs_implies_\<phi>M_get_res_entry:
+            \<open>\<phi>M_get_res_entry R_objs.get (ref, field) F res = F v res\<close>
+proof -
+  note A' = share_objs_implies_value[of res, of r, OF A]
+  show ?thesis
+    unfolding \<phi>M_get_res_entry_def \<phi>M_get_res_def
+    by (insert A', clarsimp)
+qed
+
+
+lemma
+  assumes V: \<open>res_r * res \<in> Valid_Resource\<close>
+  assumes A: \<open>res \<in> \<I> share_objs (FIC_OO_share.get r * Fine (\<lambda>(x, y). (1(ref := 1(field \<mapsto> n \<Znrres> v))) x y))\<close>
+  shows share_objs_implies_\<phi>M_get_res_entry':
+            \<open>\<phi>M_get_res_entry R_objs.get (ref, field) F (res_r * res) = F v (res_r * res)\<close>
+proof -
+  note A' = share_objs_implies_value[of res, of r, OF A]
+  show ?thesis
+    unfolding \<phi>M_get_res_entry_def \<phi>M_get_res_def
+    by (insert A', insert V[THEN "__res_valid_objects_R_objs_get__"],
+          clarsimp simp add: R_objs.get_homo_mult Valid_Objs_def
+          mult_strip_fine_011 times_fun R_objs.proj_homo_mult
+          sep_disj_fun_nonsepable(2)[where x=\<open>(ref, field)\<close>])
+qed
+
+
 
 end
 
@@ -306,8 +378,8 @@ definition op_obj_load_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow
 definition op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
   where \<open>op_obj_store_field field TY =
     \<phi>M_caseV (\<lambda>vstore vref.
-    \<phi>M_getV TY id vstore (\<lambda>store.
     \<phi>M_getV_ref vref (\<lambda>ref.
+    \<phi>M_getV TY id vstore (\<lambda>store.
     \<phi>M_get_res_entry R_objs.get (ref,field) (\<lambda>v. \<phi>M_assert (v \<in> Well_Type TY))
  \<ggreater> \<phi>M_set_res R_objs.updt (\<lambda>f. f((ref,field) \<mapsto> store))
 )))\<close>
@@ -320,13 +392,75 @@ lemma (in \<phi>OO) \<phi>M_getV_ref[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_ref raw F \<lbrace> X\<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_ref_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
 
+
+
+
+
+lemma (in \<phi>OO) \<phi>M_get_res_entry_R_objs[\<phi>reason!]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_res_entry R_objs.get (ref, field) F
+      \<lbrace> v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>Procedure_alt
+  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split')
+  subgoal premises prems for fic_r res_r res
+    apply (subst share_objs_implies_\<phi>M_get_res_entry'[OF \<open>_ \<in> Valid_Resource\<close>, of fic_r, OF \<open>res \<in> _\<close>])
+    apply (rule prems(1)[THEN spec[where x="res_r * res"], THEN spec[where x=fic_r], THEN mp])
+    apply (simp add: prems \<phi>expns FIC_OO_share.interp_split')
+    using prems by blast .
+
+
 lemma (in \<phi>OO) op_obj_load_field:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_load_field field TY raw \<lbrace>
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_load_field field TY raw \<lbrace>
       v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)
   \<longmapsto> v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
 \<rbrace>\<close>
-  unfolding op_obj_load_field_def
-  apply \<phi>reason
+  unfolding op_obj_load_field_def Premise_def
+  by (\<phi>reason, simp, \<phi>reason)
+
+
+lemma (in \<phi>OO)
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_set_res R_objs.updt (\<lambda>f. f((ref, field) \<mapsto> u))
+         \<lbrace> v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (1 \<Znrres>\<phi> Identity))
+  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi>Object ref (\<phi>Field field (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
+  unfolding \<phi>Procedure_alt \<phi>M_set_res_def
+  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split')
+  subgoal premises prems for fic_r res_r res
+    apply (insert share_objs_implies_value_full[of res, of fic_r, OF \<open>res \<in> \<I> share_objs _\<close>])
+    apply (clarify)
+    thm prems
+
+
+lemma (in \<phi>OO) op_obj_store_field:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
+      v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)
+  \<longmapsto> u \<Ztypecolon> \<phi>Object ref (\<phi>Field field (\<phi>Share n Identity))
+\<rbrace>\<close>
+  unfolding op_obj_store_field_def Premise_def
+  apply (cases rawref; cases rawu; simp; \<phi>reason, assumption, simp add: \<phi>expns)
+    unfolding \<phi>Procedure_alt
+  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split')
+  subgoal premises prems for x1 fic_r res_r res
+    apply (subst share_objs_implies_\<phi>M_get_res_entry'[OF \<open>_ \<in> Valid_Resource\<close>, of fic_r, OF \<open>res \<in> _\<close>])
+    apply (simp add: prems \<phi>expns )
+    thm FIC_OO_share.interp_split'
+    using prems 
+
+
+
+lemma
+  \<open>
+ \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_res_entry R_objs.get (ref, field) F \<lbrace>
+     FIC_OO_share.mk (Fine (\<lambda>(x, y). (1(ref := 1(field \<mapsto> n \<Znrres> v))) x y))
+ \<longmapsto>
+\<rbrace>\<close>
+
+
+  apply (subst ext_func_forall_eq_simp)
+thm ext_func_forall_eq_simp
   unfolding \<phi>M_get_res_entry_def \<phi>M_get_res_def \<phi>Procedure_def
   apply (clarsimp simp add: \<phi>expns FIC_OO_share.interp_split' R_objs_valid_split' share_objs_def
             fiction_objs_\<I> mult_strip_fine_011 R_objs.mult_strip_inject_011 share_val_fiction_\<I>

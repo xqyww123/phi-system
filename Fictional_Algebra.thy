@@ -379,6 +379,13 @@ end
 lemma sep_disj_fun: \<open>(f ## g) \<Longrightarrow> f x ## g x\<close>
   unfolding sep_disj_fun_def by blast
 
+lemma sep_disj_fun_nonsepable:
+  \<open>f x = Some v \<Longrightarrow> f ## g \<Longrightarrow> g x = None\<close>
+  \<open>f x = Some v \<Longrightarrow> g ## f \<Longrightarrow> g x = None\<close>
+  for v :: \<open>'a :: nonsepable_semigroup\<close>
+  by (metis sep_disj_fun sep_disj_option_nonsepable)+
+  
+
 instantiation "fun" :: (type,sep_ab_semigroup) sep_ab_semigroup begin
 instance by standard (simp_all add: sep_disj_fun_def times_fun_def fun_eq_iff
                                add: sep_disj_commute sep_mult_commute)
@@ -748,6 +755,10 @@ lemma times_fine':
   \<open>a ## b \<Longrightarrow> Fine a * Fine b = Fine (a*b)\<close>
   using times_fine by simp
 
+lemma times_fine''[simp]:
+  \<open>a ## b \<Longrightarrow> !!(Fine a * Fine b) = (a*b)\<close>
+  using times_fine by simp
+
 instance ..
 end
 
@@ -804,6 +815,7 @@ definition sep_disj_share :: "'a share \<Rightarrow> 'a share \<Rightarrow> bool
 lemma sep_disj_share[simp]:
   "(n \<Znrres> x) ## (m \<Znrres> y) \<longleftrightarrow> 0 < n \<and> 0 < m \<and> x = y"
   unfolding sep_disj_share_def by simp_all
+
 
 instance proof
   fix x y z :: "'a share"
@@ -1080,7 +1092,11 @@ abbreviation "mk x \<equiv> 1(name := inject x)"
 lemma inject_inj[simp]:
   \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
   by (metis proj_inj)
-  
+
+lemma get_homo_mult:
+  \<open>get (a * b) = get a * get b\<close>
+  by (simp add: prj.homo_mult times_fun)
+
 lemma mk_homo_one[simp]: \<open>mk x = 1 \<longleftrightarrow> x = 1\<close>
   by (metis fun_1upd1 fun_upd_eqD inj.homo_one proj_inj)
 

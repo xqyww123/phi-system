@@ -307,7 +307,7 @@ definition (in \<phi>min)
                         \<Rightarrow> ('FIC_N,'FIC) assn
                         \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool "
     ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _" [1000,1000,11] 10)
-  where "CurrentConstruction s R S \<longleftrightarrow> s \<in> (INTERP_COMP (R * S))"
+  where "CurrentConstruction s R S \<longleftrightarrow> s \<in> (INTERP_COM (R * S))"
 
 definition (in \<phi>min)
   PendingConstruction :: " ('ret,'RES_N,'RES) proc
@@ -316,7 +316,7 @@ definition (in \<phi>min)
                         \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn)
                         \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool "
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
-    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<in> \<S> (\<lambda>ret. INTERP_COMP (R * S ret)) (INTERP_COMP (R * E))"
+    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<in> \<S> (\<lambda>ret. INTERP_COM (R * S ret)) (INTERP_COM (R * E))"
 
 lemma (in \<phi>min) CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (auto 0 4 simp add: \<phi>expns)
