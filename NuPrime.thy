@@ -53,6 +53,12 @@ resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>min_res =
 
 subsection \<open>A Standard Semantics\<close>
 
+locale \<phi>resource_sem =
+  fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+begin
+definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
+end
+
 locale \<phi>min_sem =
   \<phi>min_ty  where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
@@ -64,8 +70,10 @@ locale \<phi>min_sem =
 + \<phi>min_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
-            and TYPE'REP  = \<open>TYPE('RES::comm_monoid_mult)\<close>
-  for TY_CONS_OF and VAL_CONS_OF
+            and TYPE'REP  = \<open>TYPE('RES::{no_inverse,comm_monoid_mult})\<close>
++ \<phi>resource_sem where Resource_Validator = Resource_Validator
+for TY_CONS_OF and VAL_CONS_OF
+  and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL) \<times> ('RES_N => 'RES)) itself\<close>
 
 fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
@@ -74,7 +82,6 @@ assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |
 
 fixes type_measure :: \<open>'TY \<Rightarrow> nat\<close>
 
-fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES set\<close>
 assumes res_valid_var: \<open>Resource_Validator R_var.name = {R_var.inject (Fine vars) |vars. finite (dom vars)}\<close>
 
 fixes Can_EqCompare :: \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> bool\<close>
@@ -106,8 +113,6 @@ lemma Valid_Types[simp]:
   apply (simp)
   using less_exp by blast
 
-definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
-
 
 paragraph \<open>Fictions\<close>
 
@@ -131,7 +136,8 @@ fiction_space (in \<phi>min_sem) \<phi>min_fic :: \<open>'RES_N \<Rightarrow> 'R
 subsubsection \<open>Standard Settings\<close>
 
 locale \<phi>min = \<phi>min_fic
-  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult))\<close>
+  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                   \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
     and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
@@ -295,7 +301,7 @@ subsection \<open>Preliminary\<close>
 
 subsubsection \<open>Predicates for Total Correctness & Partial Correctness\<close>
 
-context \<phi>min_sem begin
+context \<phi>resource_sem begin
 
 definition StrictStateTy :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
@@ -371,11 +377,6 @@ abbreviation (in \<phi>min) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
 subsection \<open>Assertion\<close>
 
 context \<phi>min begin
-
-definition Fiction_Spec :: \<open>('RES_N, 'RES) assn \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> ('RES_N,'RES) assn) \<Rightarrow> ('RES_N,'RES) assn \<Rightarrow> bool\<close>
-  where \<open>Fiction_Spec P C Q E \<longleftrightarrow>
-    (\<forall>com. com \<in> P \<longrightarrow> C com \<in> \<S> Q E)\<close>
-
 (* definition Fiction_Spec :: \<open>('FIC_N, 'FIC) assn \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool\<close>
   where \<open>Fiction_Spec P C Q E \<longleftrightarrow>
     (\<forall>com. com \<in> INTERP_COM P \<longrightarrow> C com \<in> \<S> (\<lambda>v. INTERP_COM (Q v)) (INTERP_COM E))\<close> *)
@@ -399,34 +400,19 @@ lemma \<phi>Procedure_alt:
 \<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_COM ({r} * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COM ({r} * U vs)) (INTERP_COM ({r} * E)))\<close>
   apply rule
    apply ((unfold \<phi>Procedure_def)[1], blast)
-  unfolding \<phi>Procedure_def INTERP_COM Fiction_Spec_def
+  unfolding \<phi>Procedure_def INTERP_COM
   apply (clarsimp simp add: times_set_def)
   subgoal for comp R r p
     apply (cases \<open>f comp\<close>; simp add: \<phi>expns INTERP_COM_def)
     apply fastforce
     subgoal premises prems for e
       apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
-      using prems by blast
+      by (metis Fic_Space_Un prems(3) prems(4) prems(5) prems(6) prems(7))
     subgoal premises prems
       apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
-      using prems by blast . .
+      by (metis Fic_Space_Un prems(3) prems(4) prems(5) prems(6) prems(7)) . .
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
-
-lemma \<phi>Procedure_I_noexcep:
-  \<open>(\<And>r. Fiction_Spec (INTERP_COM {r * p |p. p \<in> P}) f (\<lambda>v. INTERP_COM {r * q |q. q \<in> Q v}) (INTERP_COM {r * e |e. e \<in> E}))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  unfolding \<phi>Procedure_def INTERP_COM Fiction_Spec_def
-  apply (clarsimp simp add: times_set_def)
-  subgoal for comp R r p
-    apply (cases \<open>f comp\<close>; simp add: \<phi>expns INTERP_COM_def)
-    apply fastforce
-    subgoal premises prems for e
-      apply (insert prems(1)[of r, THEN spec[where x=comp], simplified prems, simplified])
-      using prems by blast
-    subgoal premises prems
-      apply (insert prems(1)[of r, THEN spec[where x=comp], simplified prems, simplified])
-      using prems by blast . .
 
 
 subsubsection \<open>Essential Hoare Rules\<close>

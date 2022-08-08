@@ -245,7 +245,7 @@ subsubsection \<open>Semantics\<close>
 locale agmem_sem_pre =
   aggregate where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                  \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult)
+                  \<times> ('RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse})
                   \<times> ('FIC_N \<Rightarrow> 'FIC::{comm_monoid_mult,no_inverse}))\<close>
 + agmem_ty where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
@@ -257,10 +257,10 @@ locale agmem_sem_pre =
 + agmem_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
-            and TYPE'REP  = \<open>TYPE('RES::comm_monoid_mult)\<close>
+            and TYPE'REP  = \<open>TYPE('RES::{no_inverse,comm_monoid_mult})\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult)
+                \<times> ('RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse})
                 \<times> ('FIC_N \<Rightarrow> 'FIC::{comm_monoid_mult,no_inverse})
             ) itself\<close>
 fixes MemObj_Size :: \<open>'TY \<Rightarrow> nat\<close> \<comment> \<open>in size of bytes\<close>
@@ -521,11 +521,11 @@ end
 locale agmem_sem =
   agmem_sem_pre where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                  \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult)
+                  \<times> ('RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse})
                   \<times> ('FIC_N \<Rightarrow> 'FIC::{comm_monoid_mult,no_inverse}))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult)) itself\<close>
+                \<times> ('RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse})) itself\<close>
 
 assumes WT_ptr[simp]: \<open>Well_Type \<tau>Pointer = { V_pointer.mk addr |addr. valid_rawaddr addr }\<close>
 assumes res_valid_mem: \<open>Resource_Validator R_mem.name = R_mem.inject ` Valid_Mem\<close>
@@ -694,7 +694,9 @@ fiction_space (in agmem_sem) agmem_fic :: \<open>'RES_N \<Rightarrow> 'RES\<clos
 
 
 locale agmem = agmem_fic
-  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup) \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult))\<close>
+  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
+                    \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                    \<times> ('RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse}))\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
     and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
@@ -1018,6 +1020,7 @@ lemma (in agmem) op_store_mem:
     done
   qed
   done
+
 
 declare (in agmem) fiction_mem_\<I>[simp del]
 

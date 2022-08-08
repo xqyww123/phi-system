@@ -53,7 +53,7 @@ locale aggregate =
             and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
 + \<phi>min where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                  \<times> ('RES_N \<Rightarrow> 'RES::comm_monoid_mult)
+                  \<times> ('RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse})
                   \<times> ('FIC_N \<Rightarrow> 'FIC::{comm_monoid_mult,no_inverse}))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL) \<times> ('RES_N => 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 

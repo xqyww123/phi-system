@@ -188,28 +188,137 @@ definition op_equal :: "'TY \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'RES_N,'RES)
 
 subsection \<open>Access the Resource\<close>
 
-definition \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a ?) \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+paragraph \<open>Legacy\<close>
+
+definition (in \<phi>resource_sem)
+    \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a ?) \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_res R F = (\<lambda>res. F (the_fine (R res)) res)\<close>
 
-definition \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a) ?) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+definition (in \<phi>resource_sem)
+    \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a) ?) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_res_entry R k F = \<phi>M_get_res R (\<lambda>res.
     case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
 
-definition \<phi>M_get_res_entry2 :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k1 \<Rightarrow> 'k2 \<rightharpoonup> 'a) ?) \<Rightarrow> 'k1 \<Rightarrow> 'k2 \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_get_res_entry2 R k1 k2 F = \<phi>M_get_res R (\<lambda>res.
-    case res k1 k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
-
-definition \<phi>M_set_res :: \<open>
+definition (in \<phi>resource_sem) \<phi>M_set_res :: \<open>
     (('x ? \<Rightarrow> 'x ?) \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'RES_N \<Rightarrow> 'RES)
       \<Rightarrow> ('x \<Rightarrow> 'x) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_set_res Updt F = (\<lambda>res.
     Success (sem_value ()) (Updt (map_fine F) res))\<close>
 
-(* definition \<phi>M_set_res_entry :: \<open>
-    (('x ? \<Rightarrow> 'x ?) \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'RES_N \<Rightarrow> 'RES)
-      \<Rightarrow> ('x \<Rightarrow> 'x) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_set_res_entry Updt F = (\<lambda>res.
-    Success (sem_value ()) (Updt (map_fine F) res))\<close> *)
+paragraph \<open>Getters\<close>
+
+definition (in fine_resource)
+    \<phi>R_get_res :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_get_res F = (\<lambda>res. F (the_fine (get res)) res)\<close>
+
+definition (in partial_map_resource)
+    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_get_res_entry k F = \<phi>R_get_res (\<lambda>res.
+    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
+
+definition (in partial_map_resource2)
+    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
+    case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
+
+lemma (in partial_map_resource) \<phi>R_get_res_entry[\<phi>reason!]:
+  \<open> !!(get res) k = Some v
+\<Longrightarrow> F v res \<in> \<S> Y E
+\<Longrightarrow> \<phi>R_get_res_entry k F res \<in> \<S> Y E\<close>
+  unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
+
+lemma (in partial_map_resource2) \<phi>R_get_res_entry[\<phi>reason!]:
+  \<open> !!(get res) k k2 = Some v
+\<Longrightarrow> F v res \<in> \<S> Y E
+\<Longrightarrow> \<phi>R_get_res_entry k k2 F res \<in> \<S> Y E\<close>
+  unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
+
+
+paragraph \<open>Setters\<close>
+
+definition (in fine_resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_set_res F = (\<lambda>res. Success (sem_value ()) (updt (map_fine F) res))\<close>
+
+definition (in mapping_resource)
+    \<phi>R_allocate_res_entry :: \<open>('key \<Rightarrow> bool)
+                           \<Rightarrow> 'val
+                           \<Rightarrow> ('key \<Rightarrow> ('ret,'RES_N,'RES) proc)
+                           \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_allocate_res_entry P init F = \<phi>R_get_res (\<lambda>res.
+    let k = (@k. res k = 1 \<and> P k)
+     in \<phi>R_set_res (\<lambda>f. f(k := init))
+        \<ggreater> F k)\<close>
+
+lemma (in partial_map_resource) \<phi>R_set_res:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := u) \<in> Valid)
+\<Longrightarrow> P (!!(get res))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k \<mapsto> any)))})
+\<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
+      \<in> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})) Any\<close>
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
+
+lemma (in partial_map_resource2) \<phi>R_set_res[\<phi>reason!]:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in> Valid)
+\<Longrightarrow> P (!!(get res))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := 1(k2 \<mapsto> any))))})
+\<Longrightarrow> \<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
+      \<in> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := 1(k2 := u))))})) Any\<close>
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
+
+
+paragraph \<open>Dispose\<close>
+
+lemma (in partial_map_resource) \<phi>R_dispose_res[\<phi>reason!]:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> m(k := None) \<in> Valid)
+\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k \<mapsto> any)))})
+\<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := None)) res
+      \<in> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
+
+lemma (in partial_map_resource2) \<phi>R_dispose_res2[\<phi>reason!]:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in> Valid)
+\<Longrightarrow> dom (!!(get res) k) = dom any
+\<Longrightarrow> P (!!(get res))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := any)))})
+\<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := 1)) res
+      \<in> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
+
+
+paragraph \<open>Allocate\<close>
+
+lemma (in mapping_resource) \<phi>R_set_res_new[\<phi>reason!]:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> m(k := u) \<in> Valid)
+\<Longrightarrow> k \<notin> dom1 !!(get res)
+\<Longrightarrow> res \<in> \<phi>Res_Spec R
+\<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
+      \<in> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})) Any\<close>
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__new_rule__")
+
+lemma (in mapping_resource) \<phi>R_allocate_res_entry[\<phi>reason!]:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
+\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in> Valid \<longrightarrow> m(k := init) \<in> Valid)
+\<Longrightarrow> (\<And>k res. res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := init)))} \<^bold>s\<^bold>u\<^bold>b\<^bold>j P k)
+      \<Longrightarrow> F k res \<in> \<S> Y E)
+\<Longrightarrow> res \<in> \<phi>Res_Spec R
+\<Longrightarrow> \<phi>R_allocate_res_entry P init F res \<in> \<S> Y E\<close>
+  unfolding \<phi>R_allocate_res_entry_def \<phi>R_get_res_def
+  subgoal premises prems proof -
+    let ?m = \<open>!!(get res)\<close>
+    define k' where \<open>k' = (SOME k. ?m k = 1 \<and> P k)\<close>
+    have \<open>\<exists>k'. ?m k' = 1 \<and> P k'\<close>
+      by (metis (mono_tags, opaque_lifting) IntD1 \<phi>resource_sem.\<phi>Res_Spec_def \<r>_valid_split fine.sel image_iff prems(1) prems(4) proj_inj)
+    note this[THEN someI_ex]
+    then have t1[simp]: \<open>?m k' = 1 \<and> P k'\<close> unfolding k'_def by blast
+    show ?thesis
+      unfolding k'_def[symmetric]
+      apply (simp, rule \<phi>M_RS_WP_SEQ, rule \<phi>R_set_res_new)
+      using prems(2) t1 apply blast
+      apply (simp add: dom1_def)
+      using \<open>res \<in> \<phi>Res_Spec _\<close> apply this
+      by (simp add: prems(3))
+  qed .
+
 
 
 subsubsection \<open>Variable Operations\<close>
