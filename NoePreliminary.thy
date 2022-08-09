@@ -70,6 +70,10 @@ locale homo_mult = homo_one \<phi>
   for \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
 + assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
 
+lemma homo_mult:
+  \<open>homo_mult \<phi> \<longleftrightarrow> (\<phi> 1 = 1) \<and> (\<forall> x y. \<phi> (x * y) = \<phi> x * \<phi> y)\<close>
+  unfolding homo_mult_def homo_mult_axioms_def homo_one_def ..
+  
 
 definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
 

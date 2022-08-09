@@ -221,6 +221,12 @@ definition (in partial_map_resource2)
   where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
     case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
 
+lemma (in fine_resource) \<phi>R_get_res[\<phi>reason!]:
+  \<open> !!(get res) = v
+\<Longrightarrow> F v res \<in> \<S> Y E
+\<Longrightarrow> \<phi>R_get_res F res \<in> \<S> Y E\<close>
+  unfolding \<phi>R_get_res_def by simp
+
 lemma (in partial_map_resource) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open> !!(get res) k = Some v
 \<Longrightarrow> F v res \<in> \<S> Y E
@@ -238,16 +244,6 @@ paragraph \<open>Setters\<close>
 
 definition (in fine_resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_set_res F = (\<lambda>res. Success (sem_value ()) (updt (map_fine F) res))\<close>
-
-definition (in mapping_resource)
-    \<phi>R_allocate_res_entry :: \<open>('key \<Rightarrow> bool)
-                           \<Rightarrow> 'val
-                           \<Rightarrow> ('key \<Rightarrow> ('ret,'RES_N,'RES) proc)
-                           \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>R_allocate_res_entry P init F = \<phi>R_get_res (\<lambda>res.
-    let k = (@k. res k = 1 \<and> P k)
-     in \<phi>R_set_res (\<lambda>f. f(k := init))
-        \<ggreater> F k)\<close>
 
 lemma (in partial_map_resource) \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := u) \<in> Valid)
@@ -275,7 +271,7 @@ lemma (in partial_map_resource) \<phi>R_dispose_res[\<phi>reason!]:
       \<in> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
 
-lemma (in partial_map_resource2) \<phi>R_dispose_res2[\<phi>reason!]:
+lemma (in partial_map_resource2) \<phi>R_dispose_res[\<phi>reason!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in> Valid)
 \<Longrightarrow> dom (!!(get res) k) = dom any
 \<Longrightarrow> P (!!(get res))
@@ -286,6 +282,18 @@ lemma (in partial_map_resource2) \<phi>R_dispose_res2[\<phi>reason!]:
 
 
 paragraph \<open>Allocate\<close>
+
+definition (in mapping_resource)
+    \<phi>R_allocate_res_entry :: \<open>('key \<Rightarrow> bool)
+                           \<Rightarrow> 'val
+                           \<Rightarrow> ('key \<Rightarrow> ('ret,'RES_N,'RES) proc)
+                           \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_allocate_res_entry P init F =
+    \<phi>R_get_res (\<lambda>res.
+    let k = (@k. res k = 1 \<and> P k)
+     in \<phi>R_set_res (\<lambda>f. f(k := init))
+        \<ggreater> F k
+)\<close>
 
 lemma (in mapping_resource) \<phi>R_set_res_new[\<phi>reason!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> m(k := u) \<in> Valid)

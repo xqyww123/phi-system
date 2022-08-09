@@ -1020,10 +1020,6 @@ lemmas Fiction_inverse[simp] = Fiction_inverse[simplified]
 lemma Fiction_one[simp]: "\<I> I 1 = 1"
   using Fictional_def \<I> by blast
 
-lemma
-  \<open>\<I> I (a*b) = \<I> I a * \<I> I b\<close> for a :: \<open>'x :: comm_monoid_mult\<close>
-  
-
 
 subsection \<open>Instances\<close>
 
@@ -1242,17 +1238,6 @@ begin
 
 definition "INTERP = fiction.fun' INTERPRET"
 
-lemma
-  \<open> finite (dom1 a)
-\<Longrightarrow> finite (dom1 b)
-\<Longrightarrow> \<I> INTERP (a * b) = \<I> INTERP a * \<I> INTERP b\<close>
-  unfolding INTERP_def apply (simp add: times_fun dom1_mult_disjoint
-      fun_prod_homo[where f=a and g=b, simplified times_fun_def])
-  thm fun_prod_homo[where f=\<open>\<lambda>x. \<I> (INTERPRET x) (a x)\<close> and g=\<open>\<lambda>x. \<I> (INTERPRET x) (b x)\<close>,
-      simplified times_fun_def]
-  term prod
-
-
 end
 
 definition "Fic_Space (f::'a\<Rightarrow>'b::no_inverse) \<longleftrightarrow> finite (dom1 f)"
@@ -1260,7 +1245,8 @@ definition "Fic_Space (f::'a\<Rightarrow>'b::no_inverse) \<longleftrightarrow> f
 lemma Fic_Space_Un[simp]: \<open>Fic_Space (a*b) \<longleftrightarrow> Fic_Space a \<and> Fic_Space b\<close>
   unfolding Fic_Space_def by (simp add: dom1_mult_disjoint finite_Un)
 
-
+lemma Fic_Space_1[simp]: \<open>Fic_Space 1\<close>
+  unfolding Fic_Space_def by simp
 
 
 locale fictional_project_inject =

@@ -3231,29 +3231,25 @@ lemma (in \<phi>min) \<phi>Procedure_\<phi>Res_Spec:
   qed .
 
 
-lemma (in \<phi>resource_sem) \<phi>Res_Spec_subj_E[elim!]:
-  \<open> res \<in> \<phi>Res_Spec (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)
-\<Longrightarrow> (P \<Longrightarrow> res \<in> \<phi>Res_Spec S \<Longrightarrow> C)
-\<Longrightarrow> C\<close>
-  unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns)
+lemma (in \<phi>resource_sem) \<phi>Res_Spec_subj[iff]:
+  \<open> \<phi>Res_Spec (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<phi>Res_Spec S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<close>
+  unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns set_eq_iff)
 
-lemma (in \<phi>resource_sem) \<phi>Res_Spec_subj_I[intro!]:
+lemma (in \<phi>resource_sem) \<phi>Res_Spec_subj_\<S>:
   \<open> P
-\<Longrightarrow> res \<in> \<phi>Res_Spec S
-\<Longrightarrow> res \<in> \<phi>Res_Spec (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns)
+\<Longrightarrow> res \<in> \<S> S E
+\<Longrightarrow> res \<in> (\<S> (\<lambda>v. S v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) E)\<close>
+  by (clarsimp simp add: \<phi>expns set_eq_iff)
 
-lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex_E[elim!]:
-  \<open> res \<in> \<phi>Res_Spec (ExSet S)
-\<Longrightarrow> (\<And>x. res \<in> \<phi>Res_Spec (S x) \<Longrightarrow> C)
-\<Longrightarrow> C\<close>
-  unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns, blast)
+lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex[iff]:
+  \<open> \<phi>Res_Spec (ExSet S) = (\<exists>*x. \<phi>Res_Spec (S x))\<close>
+  unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns set_eq_iff)
 
-lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex_I[intro!]:
-  \<open> res \<in> \<phi>Res_Spec (S x)
-\<Longrightarrow> res \<in> \<phi>Res_Spec (ExSet S)\<close>
-  unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns, blast)
-  
+lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex_\<S>:
+  \<open> P
+\<Longrightarrow> res \<in> \<S> (S x) E
+\<Longrightarrow> res \<in> (\<S> (\<lambda>v. (\<exists>*x. S x v)) E)\<close>
+  by (cases res; clarsimp simp add: \<phi>expns set_eq_iff; blast)
 
 
 paragraph \<open>Weakest Precondition Transformer for \<phi>Res_Spec\<close>
@@ -3318,6 +3314,12 @@ lemma raw_fiction_itself_expn[\<phi>expns]:
   unfolding \<phi>Res_Spec_def set_eq_iff
   by (clarsimp simp add: \<phi>expns raw_fiction_\<I>)
 
+lemma get_res_Valid:
+  \<open> res \<in> \<phi>Res_Spec S
+\<Longrightarrow> (get res) \<in> Valid\<close>
+  unfolding \<phi>Res_Spec_def by (clarsimp simp add: \<r>_valid_split')
+
+
 end
 
 subsubsection \<open>Resources using Fine\<close>
@@ -3346,6 +3348,11 @@ lemma fine_fiction_itself_expn[\<phi>expns]:
  = \<phi>Res_Spec (R * {mk (Fine x)})\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
   by (clarsimp simp add: \<phi>expns basic_fine_fiction_\<I>)
+
+lemma get_res_Valid:
+  \<open> res \<in> \<phi>Res_Spec S
+\<Longrightarrow> !!(get res) \<in> Valid\<close>
+  unfolding \<phi>Res_Spec_def by (clarsimp simp add: \<r>_valid_split')
 
 end
 
@@ -3469,14 +3476,6 @@ proof -
   show ?thesis by fastforce
 qed
 
-lemma
-  assumes A: \<open> res \<in> \<phi>Res_Spec (\<I> INTERP (r * FIC_OO_share.mk (Fine (1(k \<mapsto> n \<Znrres> v)))))\<close>
-  shows share_fiction_partially_implies''[simp]: \<open>!!( get res) k = Some v\<close>
-proof -
-  from A[THEN share_fiction_partially_implies]
-  show ?thesis by fastforce
-qed
-
 lemma raw_unit_assertion_implies[simp]:
   \<open>res \<in> \<phi>Res_Spec (R * { mk (Fine (1(k \<mapsto> v)))})
 \<Longrightarrow> !!(get res) k = Some v\<close>
@@ -3558,24 +3557,24 @@ lemma "__dispose_rule__":
 
 definition \<open>share_fiction = basic_fine_fiction (fiction.fine (fiction.pointwise' (\<lambda>_. fiction_to_share)))\<close>
 
-lemma share_fiction_expn_full:
-  \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> 1 \<Znrres> v)))))
- = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k := 1(k2 \<mapsto> v))))})\<close>
+lemma share_fiction_expn_full':
+  \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := to_share o f))))
+ = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k := f)))})\<close>
   unfolding set_eq_iff
   apply (clarify, rule;
          clarsimp simp add: share_fiction_def basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
             mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' mult_strip_inject_011 times_fun)
   subgoal premises prems for res_r y a r
     apply (insert \<open>\<forall>x. a x * _ = _\<close>[THEN spec[where x=k], simplified,
-          unfolded to_share_strip_011[where b=\<open>1(k2 \<mapsto> v)\<close>, simplified,
+          unfolded to_share_strip_011[where b=f, simplified,
                       OF sep_disj_fun[where x=k, OF \<open>a ## _\<close>, simplified]]])
       apply (clarify)
       subgoal premises prems2 for a' proof -
-        have t1: \<open>y = y(k := a') * 1(k := 1(k2 \<mapsto> v))\<close>
+        have t1: \<open>y = y(k := a') * 1(k := f)\<close>
           unfolding fun_eq_iff times_fun
           apply simp
           by (metis fun_upd_apply mult_1_class.mult_1_right prems2(2) times_fun_def)
-        have t2: \<open>y(k := a') ## 1(k := 1(k2 \<mapsto> v))\<close>
+        have t2: \<open>y(k := a') ## 1(k := f)\<close>
           using prems2(3) sep_disj_fun_def by fastforce
         show ?thesis
           apply (subst t1)
@@ -3585,20 +3584,24 @@ lemma share_fiction_expn_full:
           by (smt (verit, del_insts) mult_1_class.mult_1_right one_fun prems(4) prems2(1))
       qed .
     subgoal premises prems for res_r a fic_r r proof -
-      have t1: \<open>a ## 1(k := 1(k2 \<mapsto> v))\<close>
+      have t1: \<open>a ## 1(k := f)\<close>
         by (metis prems(7) prems(8) sep_disj_commuteI sep_disj_multD1 sep_mult_commute)
-      have t2: \<open>fic_r ## 1(k := 1(k2 \<mapsto> 1 \<Znrres> v))\<close>
+      have t2: \<open>fic_r ## 1(k := to_share o f)\<close>
         unfolding sep_disj_fun_def
         apply (clarsimp)
-        by (metis fun_upd_same map_option_o_map_upd prems(4) sep_disj_fun t1 to_share_funcomp_sep_disj_I)
+        by (metis comp_apply fun_upd_same prems(4) sep_disj_fun_def t1 to_share_funcomp_sep_disj_I)
 
       show ?thesis
         apply (clarsimp simp add: mult.assoc mk_homo_mult[symmetric] times_fine'[OF t1])
-        apply (rule exI[where x=res_r], rule exI[where x="mk (Fine (a * 1(k := 1(k2 \<mapsto> v)))) "],
+        apply (rule exI[where x=res_r], rule exI[where x="mk (Fine (a * 1(k := f))) "],
                 simp add: prems t2)
         by (smt (verit, best) fun_split_1 fun_upd_def fun_upd_same map_option_o_map_upd prems(4) sep_disj_fun t1 t2 times_fun to_share_funcomp_1 to_share_strip_011)
     qed .
 
+lemma share_fiction_expn_full:
+  \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> 1 \<Znrres> v)))))
+ = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k := 1(k2 \<mapsto> v))))})\<close>
+  using share_fiction_expn_full'[where f=\<open>1(k2 \<mapsto> v)\<close>, simplified] .
 
 lemma share_fiction_partially_implies:
   \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v)))))
@@ -3637,6 +3640,13 @@ lemma raw_unit_assertion_implies[simp]:
       proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun)
   by (metis (full_types) fun_upd_same sep_disj_option_nonsepable(1) times_option(3))
 
+lemma raw_unit_assertion_implies':
+  \<open>res \<in> \<phi>Res_Spec (R * { mk (Fine (1(k := f)))})
+\<Longrightarrow> f \<subseteq>\<^sub>m !!(get res) k\<close>
+  unfolding \<phi>Res_Spec_def
+  apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
+      proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun map_le_def)
+  by (smt (verit, del_insts) sep_disj_option_nonsepable(1) times_option(3))
 
 
 end

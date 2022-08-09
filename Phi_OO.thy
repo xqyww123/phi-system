@@ -22,7 +22,6 @@ fun parents_of_with_self
   where \<open>parents_of_with_self (Class name parents fields) =
             insert (Class name parents fields) (\<Union> (parents_of_with_self ` set parents))\<close>
 
-
 instantiation class_id :: (type) order begin
 
 definition \<open>less_eq_class_id C1 C2 \<longleftrightarrow> C2 \<in> parents_of_with_self C1\<close>
@@ -147,27 +146,25 @@ lemma Valid_Type_Ref[simp]:
   unfolding Inhabited_def by simp
 
 lemma objref_infinite_cls:
-  \<open>infinite {a. object_ref.class a = cls}\<close>
-  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>{a. object_ref.class a = cls}\<close>
+  \<open>infinite {a. a \<noteq> Nil \<and> object_ref.class a = cls}\<close>
+  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>{a. a \<noteq> Nil \<and> object_ref.class a = cls}\<close>
         and f = \<open>\<lambda>n. object_ref cls n\<close>]
   using inj_def by fastforce
 
 
 definition Valid_Objs :: "('TY,'VAL) object_heap set"
   where "Valid_Objs =
-      {h. h Nil = 1
+      {h. h Nil = 1 \<and> finite (dom1 h)
        \<and> (\<forall>cls nonce. dom (h (object_ref cls nonce)) = {} \<or>
                       dom (h (object_ref cls nonce)) = dom (class_id.fields cls) ) }"
 
 lemma Valid_Objs_1[simp]: \<open>1 \<in> Valid_Objs\<close>
-  unfolding Valid_Objs_def one_fun_def one_fine_def by simp
+  unfolding Valid_Objs_def one_fun_def one_fine_def by (simp add: dom1_def one_fun_def)
 
-
-
-lemma ObjHeap_freshness:
-  \<open>finite (dom f) \<Longrightarrow> \<exists>k. f k = 1 \<and> object_ref.class k = cls\<close>
-  unfolding dom_def
-  by (metis (mono_tags, lifting) finite_subset mem_Collect_eq objref_infinite_cls one_option_def subsetI)
+lemma R_Objs_freshness:
+  \<open>finite (dom1 f) \<Longrightarrow> \<exists>k. f k = 1 \<and> k \<noteq> Nil \<and> object_ref.class k = cls\<close>
+  unfolding dom1_def
+  by (metis (mono_tags, lifting) finite_subset mem_Collect_eq objref_infinite_cls subsetI)
 
 end
 
@@ -182,6 +179,13 @@ begin
 
 sublocale R_objs: partial_map_resource2 Valid_Objs R_objs Resource_Validator
   by (standard, simp_all add: Resource_Validator_objs)
+
+definition initial_value_of_class
+  where \<open>initial_value_of_class cls = map_option Zero o class_id.fields cls\<close>
+
+lemma dom_initial_value_of_class:
+  \<open>dom (initial_value_of_class cls) = dom (class_id.fields cls)\<close>
+  unfolding initial_value_of_class_def dom_def set_eq_iff by simp
 
 end
 
@@ -257,41 +261,101 @@ subsection \<open>Object\<close>
 
 context \<phi>OO begin
 
-definition \<phi>Object :: \<open>'TY object_ref \<Rightarrow> (field_name \<Rightarrow> 'VAL share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
-  where \<open>\<phi>Object obj T x = { FIC_OO_share.mk (Fine (1(obj := v))) |v. v \<in> (x \<Ztypecolon> T) \<and> obj \<noteq> Nil }\<close>
+paragraph \<open>Fields in A Object\<close>
 
-lemma \<phi>Object_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Object obj T) \<longleftrightarrow> (\<exists>v. p = FIC_OO_share.mk (Fine (1(obj := v))) \<and> v \<in> (x \<Ztypecolon> T) \<and> obj \<noteq> Nil)\<close>
-  unfolding \<phi>Object_def \<phi>Type_def by simp
+definition \<phi>InObj :: \<open>'TY object_ref \<Rightarrow> (field_name \<Rightarrow> 'VAL share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
+  where \<open>\<phi>InObj obj T x = { FIC_OO_share.mk (Fine (1(obj := v))) |v. v \<in> (x \<Ztypecolon> T) \<and> obj \<noteq> Nil }\<close>
+
+lemma \<phi>InObj_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>InObj obj T) \<longleftrightarrow> (\<exists>v. p = FIC_OO_share.mk (Fine (1(obj := v))) \<and> v \<in> (x \<Ztypecolon> T) \<and> obj \<noteq> Nil)\<close>
+  unfolding \<phi>InObj_def \<phi>Type_def by simp
 
 lemma [\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Object obj T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  \<open>Inhabited (x \<Ztypecolon> \<phi>InObj obj T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+paragraph \<open>A Whole Object\<close>
 
+definition \<phi>RawObject :: \<open>'TY object_ref \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, field_name \<Rightarrow> 'VAL share option) \<phi>\<close>
+  where \<open>\<phi>RawObject ref obj = { FIC_OO_share.mk (Fine (1(ref := obj))) }\<close>
 
+lemma \<phi>RawObject_expn[\<phi>expns]:
+  \<open>p \<in> (obj \<Ztypecolon> \<phi>RawObject ref) \<longleftrightarrow> p = FIC_OO_share.mk (Fine (1(ref := obj)))\<close>
+  unfolding \<phi>RawObject_def \<phi>Type_def by simp
 
+lemma \<phi>RawObject_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (obj \<Ztypecolon> \<phi>RawObject ref) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+end
 
 section \<open>Instructions\<close>
 
-definition \<phi>M_getV_ref :: \<open>'VAL sem_value \<Rightarrow> ('TY object_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+paragraph \<open>Reference Value\<close>
+
+definition (in \<phi>OO_sem) \<phi>M_getV_ref :: \<open>'VAL sem_value \<Rightarrow> ('TY object_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_ref v F = \<phi>M_getV \<tau>Ref V_ref.dest v F\<close>
 
+lemma (in \<phi>OO) \<phi>M_getV_ref[\<phi>reason!]:
+  \<open> (of_class cls ref \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F ref \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_ref raw F \<lbrace> X\<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>M_getV_ref_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
 
-definition \<phi>M_obj_allocate :: \<open>'TY class_id \<Rightarrow> ('TY object_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_obj_allocate cls F = \<close>
 
-definition op_obj_new :: \<open>'TY class_id \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
-  where \<open>op_obj_new cls = \<close> 
+paragraph \<open>Allocation\<close>
 
-definition op_obj_load_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
+definition (in \<phi>OO_sem) op_obj_allocate :: \<open>'TY class_id \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>op_obj_allocate cls =
+      R_objs.\<phi>R_allocate_res_entry (\<lambda>ref. ref \<noteq> Nil \<and> object_ref.class ref = cls)
+            (initial_value_of_class cls) (\<lambda>ref. Success (sem_value (V_ref.mk ref)))\<close>
+
+lemma (in \<phi>OO) op_obj_allocate:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_allocate cls
+      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> \<phi>RawObject ref\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec op_obj_allocate_def
+  apply (clarsimp simp add: \<phi>expns FIC_OO_share.interp_split')
+  apply (rule R_objs.\<phi>R_allocate_res_entry)
+  apply (clarsimp simp add: Valid_Objs_def)
+  using R_Objs_freshness apply blast
+    apply (clarsimp simp add: Valid_Objs_def one_fun_def dom_initial_value_of_class)
+  prefer 2 apply assumption
+  apply (simp add: \<phi>expns)
+  subgoal for r res k res'
+    by (cases k; simp add: R_objs.share_fiction_expn_full') .
+
+
+
+paragraph \<open>Load Field\<close>
+
+definition (in \<phi>OO_sem) op_obj_load_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_obj_load_field field TY v =
     \<phi>M_getV_ref v (\<lambda>ref.
     R_objs.\<phi>R_get_res_entry ref field (\<lambda>v.
     \<phi>M_assert (v \<in> Well_Type TY) \<ggreater> Success (sem_value v)))\<close>
 
-definition op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
+lemma (in \<phi>OO) \<phi>M_get_res_entry_R_objs[\<phi>reason!]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_objs.\<phi>R_get_res_entry ref field F
+      \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def)
+  apply (rule R_objs.\<phi>R_get_res_entry[where v=v])
+   apply (simp add: FIC_OO_share.interp_split')
+  by blast
+
+lemma (in \<phi>OO) op_obj_load_field:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_load_field field TY raw \<lbrace>
+      v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)
+  \<longmapsto> v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
+\<rbrace>\<close>
+  unfolding op_obj_load_field_def Premise_def
+  by (\<phi>reason, assumption, \<phi>reason)
+
+
+paragraph \<open>Store Field\<close>
+
+definition (in \<phi>OO_sem) op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
   where \<open>op_obj_store_field field TY =
     \<phi>M_caseV (\<lambda>vstore vref.
     \<phi>M_getV_ref vref (\<lambda>ref.
@@ -300,67 +364,72 @@ definition op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarro
  \<ggreater> R_objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some store) field) ref)
 )))\<close>
 
-
-
-
-lemma (in \<phi>OO) \<phi>M_getV_ref[\<phi>reason!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F ref \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_ref raw F \<lbrace> X\<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  unfolding \<phi>M_getV_ref_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
-
-
-lemma (in \<phi>OO) \<phi>M_get_res_entry_R_objs[\<phi>reason!]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_objs.\<phi>R_get_res_entry ref field F
-      \<lbrace> v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def)
-
-  apply (rule R_objs.\<phi>R_get_res_entry[where v=v])
-  
-  thm FIC_OO_share.interp_split'
-
-
-lemma (in \<phi>OO) op_obj_load_field:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_load_field field TY raw \<lbrace>
-      v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)
-  \<longmapsto> v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
-\<rbrace>\<close>
-  unfolding op_obj_load_field_def Premise_def
-  by (\<phi>reason) unfold \<phi>Procedure_\<phi>Res_Spec,
-       clarsimp simp add: \<phi>expns FIC_OO_share.interp_split',
-       rule R_objs.\<phi>R_get_res_entry[where v=v]; simp)
-
-
-lemma (in \<phi>OO) "\<phi>R_set_res_objs":
+lemma (in \<phi>OO) "\<phi>R_set_res_objs"[\<phi>reason!]:
   \<open> field \<in> dom (class_id.fields (object_ref.class ref))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) field) ref)
-         \<lbrace> v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (1 \<Znrres>\<phi> Identity))
-  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi>Object ref (\<phi>Field field (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (1 \<Znrres>\<phi> Identity))
+  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split'
           R_objs.share_fiction_expn_full)
   apply (rule R_objs.\<phi>R_set_res[where P="\<lambda>m. field \<in> dom (m ref)"])
-  apply (cases ref; clarsimp simp add: Valid_Objs_def map_fun_at_def)
-  apply (metis insert_dom option.distinct(1))
-  using R_objs.share_fiction_expn_full R_objs.share_fiction_partially_implies' apply blast
+  apply (cases ref; clarsimp simp add: Valid_Objs_def map_fun_at_def dom1_def)
+  apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1))
+  using R_objs.raw_unit_assertion_implies apply blast
   by assumption
-
 
 lemma (in \<phi>OO) op_obj_store_field:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e field \<in> dom (class_id.fields (object_ref.class ref))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
-      v \<Ztypecolon> \<phi>Object ref (\<phi>Field field (\<phi>Share 1 Identity)) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)
-  \<longmapsto> u \<Ztypecolon> \<phi>Object ref (\<phi>Field field (\<phi>Share 1 Identity))
+      v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (\<phi>Share 1 Identity)) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)
+  \<longmapsto> u \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (\<phi>Share 1 Identity))
 \<rbrace>\<close>
   unfolding op_obj_store_field_def Premise_def
-  apply (cases rawref; cases rawu; simp; \<phi>reason)
-apply ( rule \<phi>R_set_res_objs)
+  by (cases rawref; cases rawu; simp; \<phi>reason, assumption, simp add: \<phi>expns, \<phi>reason, assumption)
 
+paragraph \<open>Allocation\<close>
 
-end
+definition (in \<phi>OO_sem) op_obj_dispose :: \<open>'TY class_id \<Rightarrow> ('VAL, unit,'RES_N,'RES) proc'\<close>
+  where \<open>op_obj_dispose cls vref =
+    \<phi>M_getV_ref vref (\<lambda>ref.
+    R_objs.\<phi>R_get_res (\<lambda>m. \<phi>M_assert ((ref \<in> dom1 m \<or> class_id.fields cls = 1) \<and> object_ref.class ref = cls))
+ \<ggreater> R_objs.\<phi>R_set_res (\<lambda>f. f(ref := 1))
+)\<close>
+
+lemma (in \<phi>OO) op_obj_dispose:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ref \<noteq> Nil
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e dom fields = dom (class_id.fields cls)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_dispose cls rawv \<lbrace>
+      to_share o fields \<Ztypecolon> \<phi>RawObject ref \<heavy_comma> ref \<Ztypecolon> Val rawv (Ref cls)
+  \<longmapsto> Void
+\<rbrace>\<close>
+  unfolding op_obj_dispose_def Premise_def
+  apply (rule \<phi>M_getV_ref)
+  apply (rule \<phi>SEQ[where B=\<open>\<lambda>_. to_share \<circ> fields \<Ztypecolon> \<phi>RawObject ref\<close>])
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split'
+          R_objs.share_fiction_expn_full')
+   apply (rule R_objs.\<phi>R_get_res, simp, simp add: dom1_def)
+  subgoal premises prems for r res proof -
+    have t1: \<open>object_ref.class ref = cls\<close>
+      by (metis object_ref.collapse of_class.simps(1) prems(1) prems(3))
+    have t2: \<open>!!(R_objs.get res) ref = 1 \<longrightarrow> class_id.fields cls = 1\<close>
+      unfolding one_fun_def one_option_def
+      using R_objs.raw_unit_assertion_implies'[unfolded map_le_def, OF \<open>res \<in> _\<close>]
+      by (metis domIff prems(2))
+    show ?thesis by (simp add: t1 t2 prems)
+  qed
+  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split'
+          R_objs.share_fiction_expn_full')
+  apply (rule R_objs.\<phi>R_dispose_res[where P=\<open>\<lambda>_. True\<close> and any=fields])
+     apply (clarsimp simp add: Valid_Objs_def one_fun_def)
+  apply (cases ref; simp)
+  using R_objs.get_res_Valid[simplified Valid_Objs_def, simplified]
+    R_objs.raw_unit_assertion_implies'[where f=fields]
+  apply (smt (z3) dom_eq_empty_conv empty_iff map_le_antisym map_le_def)
+  ..  
+
 
 end
