@@ -734,10 +734,10 @@ fun RES_decl' (default_sort, default_locale) =
     Scan.optional (\<^keyword>\<open>::\<close> |-- (
       Parse.sort -- Scan.optional (\<^keyword>\<open>,\<close> |-- Parse.name_position) (default_locale, Position.none)
     )) (default_sort,(default_locale, Position.none)) --
-  (\<^keyword>\<open>=\<close> |--
+  (Scan.optional (\<^keyword>\<open>=\<close> |--
     ((Scan.repeat1 comp >> pair []) ||
       (plus1_unless comp parent --
-        Scan.optional (\<^keyword>\<open>+\<close> |-- Parse.!!! (Scan.repeat1 comp)) [])));
+        Scan.optional (\<^keyword>\<open>+\<close> |-- Parse.!!! (Scan.repeat1 comp)) []))) ([],[]));
 
 
 fun define_RES_command kwd comment defaults_setting =

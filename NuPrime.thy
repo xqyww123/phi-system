@@ -2,9 +2,7 @@
 
 theory NuPrime \<comment> \<open>The Primary Theory of the \<phi>-System\<close>
   imports Main
-    "HOL-Library.Word"
     NoePreliminary
-    "HOL-Library.Adhoc_Overloading"
     Fictional_Algebra
     "Virt_Datatype/Virtual_Datatype"
   abbrevs "<:>" = "\<Ztypecolon>"
@@ -25,33 +23,17 @@ specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by auto
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype \<phi>min_ty =
-  T_int     :: nat \<comment> \<open>in unit of bits\<close>
-
-context \<phi>min_ty begin
-abbreviation \<open>\<tau>Int \<equiv> T_int.mk\<close>
-end
-
+virtual_datatype \<phi>empty_ty
 
 subsubsection \<open>Value\<close>
 
-virtual_datatype 'TY \<phi>min_val :: "nonsepable_semigroup" =
-  V_int     :: \<open>nat \<times> nat\<close>
+virtual_datatype 'TY \<phi>empty_val :: "nonsepable_semigroup"
 
+print_locale \<phi>empty_val
 
 subsubsection \<open>Resource\<close>
 
-typedef varname = \<open>UNIV::nat set\<close> ..
-type_synonym ('TY,'VAL) R_var = \<open>(varname \<rightharpoonup> 'VAL) ?\<close>
-
-lemma infinite_varname:
-  \<open>infinite (UNIV::varname set)\<close>
-  by (metis (mono_tags, opaque_lifting) Rep_varname_cases UNIV_I finite_imageI infinite_UNIV_char_0 surj_def)
-
-resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>min_res =
-  R_var :: \<open>('TY,'VAL) R_var\<close>
-
-subsection \<open>A Standard Semantics\<close>
+resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>empty_res
 
 locale \<phi>resource_sem =
   fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
@@ -59,44 +41,42 @@ begin
 definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
 end
 
-locale \<phi>min_sem =
-  \<phi>min_ty  where CONS_OF   = TY_CONS_OF
+subsection \<open>Empty Semantics\<close>
+
+locale \<phi>empty_sem =
+  \<phi>empty_ty  where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
             and TYPE'REP  = \<open>TYPE('TY)\<close>
-+ \<phi>min_val where CONS_OF   = VAL_CONS_OF
++ \<phi>empty_val where CONS_OF   = VAL_CONS_OF
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
             and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
-+ \<phi>min_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
++ \<phi>empty_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
             and TYPE'REP  = \<open>TYPE('RES::{no_inverse,comm_monoid_mult})\<close>
 + \<phi>resource_sem where Resource_Validator = Resource_Validator
 for TY_CONS_OF and VAL_CONS_OF
-  and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
-+ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N => 'VAL) \<times> ('RES_N => 'RES)) itself\<close>
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
++ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
+                \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
+                \<times> ('RES_N => 'RES)) itself\<close>
 
 fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
 assumes Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
-assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
 
 fixes type_measure :: \<open>'TY \<Rightarrow> nat\<close>
 
-assumes res_valid_var: \<open>Resource_Validator R_var.name = {R_var.inject (Fine vars) |vars. finite (dom vars)}\<close>
-
 fixes Can_EqCompare :: \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> bool\<close>
-assumes can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (b1,x1)) (V_int.mk (b2,x2)) \<longleftrightarrow> b1 = b2"
-  and   can_eqcmp_sym: "Can_EqCompare res A B \<longleftrightarrow> Can_EqCompare res B A"
+assumes can_eqcmp_sym: "Can_EqCompare res A B \<longleftrightarrow> Can_EqCompare res B A"
 
-fixes EqCompare
-assumes eqcmp_int[simp]: "EqCompare (V_int.mk i1) (V_int.mk i2) \<longleftrightarrow> i1 = i2"
+fixes EqCompare :: \<open>'VAL \<Rightarrow> 'VAL \<Rightarrow> bool\<close>
 (*  and   eqcmp_refl:  "EqCompare A A"
     and   eqcmp_sym:   "EqCompare A B \<longleftrightarrow> EqCompare B A"
     and   eqcmp_trans: "EqCompare A B \<Longrightarrow> EqCompare B C \<Longrightarrow> EqCompare A C" *)
 
 fixes Zero :: \<open>'TY \<Rightarrow> 'VAL\<close>
 assumes zero_well_typ: "Zero T \<in> Well_Type T"
-  and   zero_int[simp]: \<open>Zero (T_int.mk b)      = V_int.mk (b,0)\<close>
 (*TODO: not all value has zero!!*)
 begin
 
@@ -104,38 +84,19 @@ lemma Well_Type_unique:
   \<open>v \<in> Well_Type ta \<Longrightarrow> v \<in> Well_Type tb \<Longrightarrow> ta = tb\<close>
   using Well_Type_disjoint by blast
 
-
 abbreviation \<open>Valid_Type T \<equiv> Inhabited (Well_Type T)\<close>
-
-lemma Valid_Types[simp]:
-  \<open>Valid_Type (\<tau>Int n)\<close>
-  unfolding Inhabited_def
-  apply (simp)
-  using less_exp by blast
-
-
-paragraph \<open>Fictions\<close>
-
-definition "fiction_var I = Fiction (\<lambda>x. { 1(R_var #= y) |y. y \<in> \<I> I x})"
-lemma fiction_var_\<I>[simp]:
-  "\<I> (fiction_var I) = (\<lambda>x. { 1(R_var #= y) |y. y \<in> \<I> I x})"
-  unfolding fiction_var_def
-  by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def)
-
-definition "exclusive_var = fiction_var fiction.it"
 
 end
 
+print_locale \<phi>empty_sem
 
-subsubsection \<open>Minimal Fiction\<close>
+subsubsection \<open>Empty Fiction\<close>
 
-fiction_space (in \<phi>min_sem) \<phi>min_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
-  FIC_var :: exclusive_var
+fiction_space (in \<phi>empty_sem) \<phi>empty_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close>
 
+subsubsection \<open>Empty Settings\<close>
 
-subsubsection \<open>Standard Settings\<close>
-
-locale \<phi>min = \<phi>min_fic
+locale \<phi>empty = \<phi>empty_fic
   where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
                    \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
@@ -163,6 +124,11 @@ lemma INTERP_COM_empty[intro, simp]:
   \<open>S = {} \<Longrightarrow> INTERP_COM S = {}\<close>
   unfolding INTERP_COM_def set_eq_iff by simp
 
+lemma INTERP_COM_0[simp]:
+  \<open>INTERP_COM 0 = 0\<close>
+  \<open>INTERP_COM {} = {}\<close>
+  unfolding INTERP_COM_def zero_set_def by simp+
+
 lemma INTERP_mono:
   \<open> Fic_Space fic
 \<Longrightarrow> Fic_Space x
@@ -178,7 +144,7 @@ lemma INTERP_mono:
 
 
 
-lemma FIC_var_split: \<open>Fic_Space fic \<Longrightarrow>
+(*lemma FIC_var_split: \<open>Fic_Space fic \<Longrightarrow>
     \<I> INTERP (fic * FIC_var.mk vars) = \<I> INTERP fic * {R_var.mk vars}\<close>
   apply (subst FIC_var.interp_split; simp add: exclusive_var_def R_var.mk_homo_mult)
   by (subst FIC_var.interp_split[where f = fic]; simp add: exclusive_var_def
@@ -192,7 +158,7 @@ lemma R_var_valid_split':
    \<open>NO_MATCH (R_var.clean res') res \<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow>
     R_var.clean res \<in> Valid_Resource \<and> (\<exists>vars. res R_var.name = R_var.inject (Fine vars) \<and> finite (dom vars))\<close>
   using R_var_valid_split .
-
+*)
 
 (*
 lemma \<open>Fic_Space fic \<Longrightarrow>
@@ -371,12 +337,12 @@ lemma StrictStateTy_plus[iff]:
 
 end
 
-abbreviation (in \<phi>min) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
+abbreviation (in \<phi>empty) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
 
 
 subsection \<open>Assertion\<close>
 
-context \<phi>min begin
+context \<phi>empty begin
 (* definition Fiction_Spec :: \<open>('FIC_N, 'FIC) assn \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool\<close>
   where \<open>Fiction_Spec P C Q E \<longleftrightarrow>
     (\<forall>com. com \<in> INTERP_COM P \<longrightarrow> C com \<in> \<S> (\<lambda>v. INTERP_COM (Q v)) (INTERP_COM E))\<close> *)

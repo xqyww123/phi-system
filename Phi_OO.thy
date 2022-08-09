@@ -1,5 +1,5 @@
 theory Phi_OO
-  imports NuInstructions
+  imports NuInstructions Phi_Min
 begin
 
 chapter \<open>Object Oriented Programming Model\<close>
@@ -188,7 +188,6 @@ lemma dom_initial_value_of_class:
   unfolding initial_value_of_class_def dom_def set_eq_iff by simp
 
 end
-
 
 fiction_space (in \<phi>OO_sem) \<phi>OO_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> = \<phi>min_fic +
   FIC_OO_share :: R_objs.share_fiction

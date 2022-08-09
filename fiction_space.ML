@@ -495,7 +495,7 @@ fun FIS_definition rep_sort project_injectL
     val domainT = nameT --> HOLogic.mk_setT repT
     val INTERP_T = nameT --> fictionT repT resT
     val INTERP = Free(INTERPRET_N, INTERP_T)
-    val TYPE_TY = Free(nameTN, nameTT)
+    val NAME_TY = Free(nameTN, nameTT)
     val VALUE_TY = Free(repTN, repTT)
     val TVARS = map (fn (T,S) => (prefix TVAR_N T, Term.itselfT (TFree(T,S)))) args
 
@@ -513,10 +513,11 @@ fun FIS_definition rep_sort project_injectL
                           SOME (Free (n, entryT (T_of_fic T))),
                           SOME T]
                     ,[])))) all_comps;
-    val locs' = (Binding.name typeN, SOME (Term.itselfT repT), NoSyn) ::
-               (Binding.name INTERPRET_N, SOME INTERP_T, NoSyn) ::
-                maps (fn (n,T) => [(Binding.name n, NONE, NoSyn)]) all_comps @
-                map (fn (N,Ty) => (Binding.name N, SOME Ty, NoSyn) ) TVARS
+    val locs' = (Binding.name nameTN, SOME (Term.itselfT nameT), NoSyn) ::
+                (Binding.name repTN,  SOME (Term.itselfT repT),  NoSyn) ::
+                (Binding.name INTERPRET_N, SOME INTERP_T, NoSyn) ::
+                 maps (fn (n,T) => [(Binding.name n, NONE, NoSyn)]) all_comps @
+                 map (fn (N,Ty) => (Binding.name N, SOME Ty, NoSyn) ) TVARS
     val (locinsts,locs) =
           case target of SOME t =>
               let
@@ -541,7 +542,7 @@ fun FIS_definition rep_sort project_injectL
         val pars = components';
 
         val expr = ([(suffix fields_locale_N pname,
-                     (prefix, (Expression.Positional (map SOME (typeN::INTERPRET_N::pars)),[])))],[]);
+                     (prefix, (Expression.Positional (map SOME (nameTN::repTN::INTERPRET_N::pars)),[])))],[]);
 (*        val (_, SOME intro) = Locale.intros_of thy (suffix fields_locale_N pname) |> @{print}
         val ax = Locale.axioms_of thy (suffix fields_locale_N full_name) |> @{print} *)
       in
@@ -585,10 +586,10 @@ fun FIS_definition rep_sort project_injectL
      |> add_locale name_b
             (  [(suffix namesN full_name,
                   (("",false),
-                   (Expression.Named ((typeN, TYPE_TY)::name_insts)
+                   (Expression.Named ((typeN, NAME_TY)::name_insts)
                    ,[]))),
                 (suffix fields_locale_N full_name,
-                  (("",false),(Expression.Named [(typeN, VALUE_TY)], []))
+                  (("",false),(Expression.Named [(nameTN, NAME_TY),(repTN, VALUE_TY)], []))
                 )],
                [(Binding.name nameTN,  SOME nameTT,  NoSyn),
                 (Binding.name repTN, SOME repTT, NoSyn)])
@@ -798,10 +799,10 @@ fun FIS_decl' (default_sort, default_locale) =
     Scan.optional (Parse.sort --| \<^keyword>\<open>,\<close> -- Parse.name_position)
       (default_sort, (default_locale, Position.none))
   ) --
-  (\<^keyword>\<open>=\<close> |--
+  (Scan.optional (\<^keyword>\<open>=\<close> |--
     ((Scan.repeat1 comp >> pair []) ||
       (plus1_unless comp parent --
-        Scan.optional (\<^keyword>\<open>+\<close> |-- Parse.!!! (Scan.repeat1 comp)) [])));
+        Scan.optional (\<^keyword>\<open>+\<close> |-- Parse.!!! (Scan.repeat1 comp)) []))) ([],[]));
 
 
 fun define_FIS_command kwd comment defaults_setting =

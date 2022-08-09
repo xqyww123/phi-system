@@ -504,7 +504,8 @@ fun VDT_definition value_sort project_injectL
     val locinsts =
           case target of SOME t => (t,(("",false),(Expression.Positional [],[])))::locinsts
                        | NONE => locinsts
-    val locs = (Binding.name typeN, SOME (Term.itselfT valueT), NoSyn) ::
+    val locs = (Binding.name nameTN,  SOME (Term.itselfT nameT),  NoSyn) ::
+               (Binding.name valueTN, SOME (Term.itselfT valueT), NoSyn) ::
                (Binding.name CONS_OF_N, SOME (valueT --> nameT), NoSyn) ::
                maps (fn (n,T) => [(Binding.name n, NONE, NoSyn)]) all_comps @
                map (fn (N,Ty) => (Binding.name N, SOME Ty, NoSyn) ) TVARS
@@ -520,7 +521,7 @@ fun VDT_definition value_sort project_injectL
         val pars = components';
 
         val expr = ([(suffix fields_locale_N pname,
-                     (prefix, (Expression.Positional (map SOME (typeN::CONS_OF_N::pars)),[])))],[]);
+                     (prefix, (Expression.Positional (map SOME (nameTN::valueTN::CONS_OF_N::pars)),[])))],[]);
 (*        val (_, SOME intro) = Locale.intros_of thy (suffix fields_locale_N pname) |> @{print}
         val ax = Locale.axioms_of thy (suffix fields_locale_N full_name) |> @{print} *)
       in
@@ -567,7 +568,7 @@ fun VDT_definition value_sort project_injectL
                    (Expression.Named ((typeN, TYPE_TY)::name_insts)
                    ,[]))),
                 (suffix fields_locale_N full_name,
-                  (("",false),(Expression.Named [(typeN, VALUE_TY)], []))
+                  (("",false),(Expression.Named [(nameTN, TYPE_TY),(valueTN, VALUE_TY)], []))
                 )],
                [(Binding.name nameTN,  SOME nameTT,  NoSyn),
                 (Binding.name valueTN, SOME valueTT, NoSyn)])
@@ -753,10 +754,10 @@ fun VDT_decl' (default_value_sort, default_locale) =
          Parse.sort >> rpair (default_locale, Position.none)
       || \<^keyword>\<open>(\<close> |-- Parse.sort --| \<^keyword>\<open>,\<close> -- Parse.name_position --| \<^keyword>\<open>)\<close>
     )) (default_value_sort,(default_locale, Position.none)) --
-  (\<^keyword>\<open>=\<close> |--
+  (Scan.optional (\<^keyword>\<open>=\<close> |--
     ((Scan.repeat1 comp >> pair []) ||
       (plus1_unless comp parent --
-        Scan.optional (\<^keyword>\<open>+\<close> |-- Parse.!!! (Scan.repeat1 comp)) [])));
+        Scan.optional (\<^keyword>\<open>+\<close> |-- Parse.!!! (Scan.repeat1 comp)) []))) ([],[]));
 
 
 fun define_VDT_command kwd comment defaults_setting =
