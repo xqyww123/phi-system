@@ -96,9 +96,19 @@ subsubsection \<open>Value\<close>
 datatype 'TY object_ref = object_ref ("class": \<open>'TY class_id\<close>) ("nonce": nat) | Nil
 hide_const (open) "class" nonce
 
+paragraph \<open>Properties\<close>
+
 primrec of_class
   where \<open>of_class cls (object_ref cls' _) \<longleftrightarrow> cls = cls'\<close>
-     | \<open>of_class _ Nil \<longleftrightarrow> True\<close>
+  | \<open>of_class _ Nil \<longleftrightarrow> True\<close>
+
+instantiation object_ref :: (type) zero begin
+definition \<open>zero_object_ref = Nil\<close>
+instance ..
+end
+
+
+paragraph \<open>The Model\<close>
 
 virtual_datatype 'TY \<phi>OO_val :: "nonsepable_semigroup" = 'TY \<phi>min_val +
   V_ref :: \<open>'TY object_ref\<close>
@@ -136,7 +146,6 @@ locale \<phi>OO_sem_pre =
             ) itself\<close>
 assumes WT_ref[simp]: \<open>Well_Type \<tau>Ref = UNIV\<close>
   and   zero_ref[simp]: \<open>Zero \<tau>Ref = V_ref.mk Nil\<close>
-  and   type_measure_ref[simp]:  \<open>type_measure \<tau>Ref = 1\<close>
   and   Can_EqCompare_ref[simp]: \<open>Can_EqCompare res (V_ref.mk ref1) (V_ref.mk ref2)\<close>
   and   EqCompare_ref[simp]:     \<open>EqCompare (V_ref.mk ref1) (V_ref.mk ref2) \<longleftrightarrow> ref1 = ref2\<close>
 begin
@@ -161,7 +170,7 @@ definition Valid_Objs :: "('TY,'VAL) object_heap set"
 lemma Valid_Objs_1[simp]: \<open>1 \<in> Valid_Objs\<close>
   unfolding Valid_Objs_def one_fun_def one_fine_def by (simp add: dom1_def one_fun_def)
 
-lemma R_Objs_freshness:
+lemma obj_map_freshness:
   \<open>finite (dom1 f) \<Longrightarrow> \<exists>k. f k = 1 \<and> k \<noteq> Nil \<and> object_ref.class k = cls\<close>
   unfolding dom1_def
   by (metis (mono_tags, lifting) finite_subset mem_Collect_eq objref_infinite_cls subsetI)
@@ -245,11 +254,11 @@ end
 
 subsection \<open>Field\<close>
 
-definition \<phi>Field :: \<open>field_name \<Rightarrow> ('v, 'x) \<phi> \<Rightarrow> (field_name \<Rightarrow> 'v option, 'x) \<phi>\<close>
-  where \<open>\<phi>Field field T x = { 1(field \<mapsto> v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
+definition \<phi>Field :: \<open>field_name \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> (field_name \<Rightarrow> 'v, 'x) \<phi>\<close>
+  where \<open>\<phi>Field field T x = { 1(field := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
 
 lemma \<phi>Field_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Field field T) \<longleftrightarrow> (\<exists>v. p = 1(field \<mapsto> v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Field field T) \<longleftrightarrow> (\<exists>v. p = 1(field := v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Field_def \<phi>Type_def by simp
 
 lemma [\<phi>reason_elim!, elim!]:
@@ -314,7 +323,7 @@ lemma (in \<phi>OO) op_obj_allocate:
   apply (clarsimp simp add: \<phi>expns FIC_OO_share.interp_split')
   apply (rule R_objs.\<phi>R_allocate_res_entry)
   apply (clarsimp simp add: Valid_Objs_def)
-  using R_Objs_freshness apply blast
+  using obj_map_freshness apply blast
     apply (clarsimp simp add: Valid_Objs_def one_fun_def dom_initial_value_of_class)
   prefer 2 apply assumption
   apply (simp add: \<phi>expns)

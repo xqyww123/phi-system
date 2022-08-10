@@ -1870,16 +1870,27 @@ lemma (in \<phi>empty) [\<phi>reason]:
 
 subsection \<open>Share\<close>
 
-definition \<phi>Share :: \<open>rat \<Rightarrow> ('v,'x) \<phi> \<Rightarrow> ('v share, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)
-  where \<open>\<phi>Share n T x = { Share n v |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1 } \<close>
+definition \<phi>Share :: \<open>rat \<Rightarrow> ('v,'x) \<phi> \<Rightarrow> ('v share option, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)
+  where \<open>\<phi>Share n T x = { Some (Share n v) |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1 } \<close>
 
 lemma \<phi>Share_expn[\<phi>expns]:
-  \<open> p \<in> (x \<Ztypecolon> n \<Znrres>\<phi> T) \<longleftrightarrow> (\<exists>v. p = Share n v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1) \<close>
+  \<open> p \<in> (x \<Ztypecolon> n \<Znrres>\<phi> T) \<longleftrightarrow> (\<exists>v. p = Some (Share n v) \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1) \<close>
   unfolding \<phi>Type_def \<phi>Share_def by simp
 
 lemma [\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> n \<Znrres>\<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
+
+
+definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close>
+  where \<open>\<phi>None T = { 1 } \<close>
+
+lemma \<phi>None_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>None) \<longleftrightarrow> p = 1\<close>
+  unfolding \<phi>None_def \<phi>Type_def by simp
+
+lemma \<phi>None_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 
 subsection \<open>Misc.\<close>
@@ -3522,6 +3533,60 @@ lemma raw_unit_assertion_implies[simp]:
 end
 
 
+locale share_fiction_for_partial_mapping_resource =
+   \<phi>resource_sem Resource_Validator
++  R: partial_map_resource Valid Res Resource_Validator
++  fictional_project_inject INTERPRET Fic \<open>R.share_fiction\<close>
+for Valid :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) set"
+and Res :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('key \<Rightarrow> 'val option) ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+and Fic :: "('FIC_N,'FIC, ('key \<Rightarrow> 'val share option) ?) Fictional_Algebra.Entry"
+begin
+
+lemma expand:
+  \<open>Fic_Space r
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> 1 \<Znrres> v)))))
+  = \<phi>Res_Spec (\<I> INTERP r * { R.mk (Fine (1(k \<mapsto> v)))})\<close>
+  unfolding \<phi>Res_Spec_def set_eq_iff
+  apply (clarify, rule;
+         clarsimp simp add: R.share_fiction_def R.basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
+            mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011 interp_split')
+
+  subgoal premises prems for res_r y a r
+    apply (insert \<open>a * _ = _\<close>[unfolded to_share_strip_011[where b=\<open>1(k \<mapsto> v)\<close>, simplified, OF \<open>a ## _\<close>]])
+    apply (clarsimp simp add: times_fine'[symmetric] R.mk_homo_mult mult.assoc[symmetric])
+    using prems(4) by blast
+    
+  subgoal premises prems for res_r a r proof -
+    have t1[simp]: \<open>a ## 1(k \<mapsto> v)\<close>
+      by (metis prems(7) prems(8) sep_disj_commuteI sep_disj_multD1 sep_mult_commute)
+    show ?thesis
+    apply (clarsimp simp add: mult.assoc R.mk_homo_mult[symmetric] times_fine')
+    apply (rule exI[where x=res_r], rule exI[where x="R.mk (Fine (a * 1(k \<mapsto> v)))"], simp add: prems)
+    by (metis (no_types, lifting) map_option_o_map_upd t1 to_share_funcomp_1 to_share_funcomp_sep_disj_I to_share_strip_011)
+  qed .
+
+
+lemma partial_implies:
+  \<open> Fic_Space r
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> n \<Znrres> v)))))
+\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> objs k = Some v\<close>
+  apply (clarsimp simp add: R.share_fiction_def R.basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
+            mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
+            R.proj_homo_mult interp_split')
+  subgoal premises prems for res_r y a r proof -
+    from \<open>a * _ = _\<close>[THEN fun_cong[where x=k], simplified times_fun, simplified]
+    have t1: \<open>y k = Some v\<close>
+      using prems(7) prems(8) strip_share_fun_mult by fastforce
+    then show ?thesis apply (simp add: t1 times_fun)
+      using prems(10) sep_disj_partial_map_some_none t1 by fastforce
+  qed .
+
+end
+
+
+
 paragraph \<open>Two Level Parital Mapping\<close>
 
 definition \<open>map_fun_at g k f = (\<lambda>x. if x = k then g (f x) else f x)\<close>
@@ -3682,6 +3747,99 @@ lemma raw_unit_assertion_implies':
       proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun map_le_def)
   by (smt (verit, del_insts) sep_disj_option_nonsepable(1) times_option(3))
 
+end
+
+
+locale share_fiction_for_partial_mapping_resource2 =
+   \<phi>resource_sem Resource_Validator
++  R: partial_map_resource2 Valid Res Resource_Validator
++  fictional_project_inject INTERPRET Fic \<open>R.share_fiction\<close>
+for Valid :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) set"
+and Res :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+and Fic :: "('FIC_N,'FIC, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) ?) Fictional_Algebra.Entry"
+begin
+
+lemma expand':
+  \<open>Fic_Space r
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := to_share o f)))))
+  = \<phi>Res_Spec (\<I> INTERP r * { R.mk (Fine (1(k := f)))})\<close>
+  unfolding set_eq_iff
+  apply (clarify, rule;
+         clarsimp simp add: R.share_fiction_def R.basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
+            mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011 times_fun
+            interp_split')
+  subgoal premises prems for res_r y a r
+    apply (insert \<open>\<forall>x. a x * _ = _\<close>[THEN spec[where x=k], simplified,
+          unfolded to_share_strip_011[where b=f, simplified,
+                      OF sep_disj_fun[where x=k, OF \<open>a ## _\<close>, simplified]]])
+      apply (clarify)
+      subgoal premises prems2 for a' proof -
+        have t1: \<open>y = y(k := a') * 1(k := f)\<close>
+          unfolding fun_eq_iff times_fun
+          apply simp
+          by (metis fun_upd_apply mult_1_class.mult_1_right prems2(2) times_fun_def)
+        have t2: \<open>y(k := a') ## 1(k := f)\<close>
+          using prems2(3) sep_disj_fun_def by fastforce
+        show ?thesis
+          apply (subst t1)
+          apply (clarsimp simp add: times_fine'[OF t2, symmetric] R.mk_homo_mult mult.assoc[symmetric])
+          apply (rule exI[where x="res_r * R.mk (Fine (y(k := a')))"], simp)
+          apply (rule exI[where x=res_r], rule exI[where x="R.mk (Fine (y(k := a')))"], simp add: prems)
+          by (smt (verit) mult_1_class.mult_1_right prems(5) prems2(1) times_fun_def)
+      qed .
+    subgoal premises prems for res_r a fic_r r proof -
+      have t1: \<open>a ## 1(k := f)\<close>
+        by (metis prems(8) prems(9) sep_disj_multD1 sep_mult_ac(2) sep_mult_ac(4))
+      have t2: \<open>fic_r ## 1(k := to_share o f)\<close>
+        unfolding sep_disj_fun_def
+        apply (clarsimp)
+        by (metis comp_apply fun_upd_same prems(6) sep_disj_fun_def t1 to_share_funcomp_sep_disj_I)
+
+      show ?thesis
+        apply (clarsimp simp add: mult.assoc R.mk_homo_mult[symmetric] times_fine'[OF t1])
+        apply (rule exI[where x=res_r], rule exI[where x="R.mk (Fine (a * 1(k := f))) "],
+                simp add: prems t2)
+        by (smt (verit, del_insts) fun_upd_other fun_upd_same mult_1_class.mult_1_right sep_disj_fun_def t1 times_fun_def to_share_funcomp_sep_disj_I to_share_strip_011) 
+    qed .
+
+lemma expand:
+  \<open>Fic_Space r
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> 1 \<Znrres> v))))))
+  = \<phi>Res_Spec (\<I> INTERP r * { R.mk (Fine (1(k := 1(k2 \<mapsto> v))))})\<close>
+  using expand'[where f=\<open>1(k2 \<mapsto> v)\<close>, simplified] .
+
+
+lemma partial_implies:
+  \<open> Fic_Space r
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v))))))
+\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> objs k k2 = Some v\<close>
+  apply (clarsimp simp add: R.share_fiction_def R.basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
+            mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
+            R.proj_homo_mult interp_split')
+  subgoal premises prems for res_r y a r proof -
+    note t1 = \<open>a ## _\<close>[THEN sep_disj_fun[where x=k], simplified,
+                 THEN sep_disj_fun[where x=k2], simplified]
+    from \<open>\<forall>_. (a * _) _ = _\<close>[THEN spec[where x=k], simplified times_fun, simplified,
+          THEN fun_cong[where x=k2],
+          simplified times_fun, simplified]
+    have t2: \<open>y k k2 = Some v\<close>
+      using t1 apply (cases \<open>a k k2\<close>; cases \<open>y k k2\<close>; simp)
+      by (metis sep_disj_share share.collapse share.inject times_share)
+
+    then show ?thesis apply (simp add: t2 times_fun)
+      by (metis mult_1_class.mult_1_left one_option_def prems(10) sep_disj_fun sep_disj_fun_nonsepable(2) t2)
+  qed .
+
+lemma partial_implies':
+  assumes FS: \<open>Fic_Space r\<close>
+    and A: \<open> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v))))))\<close>
+  shows [simp]: \<open>!!(R.get res) k k2 = Some v\<close>
+proof -
+  from partial_implies[OF FS, OF A]
+  show ?thesis by fastforce
+qed
 
 end
 

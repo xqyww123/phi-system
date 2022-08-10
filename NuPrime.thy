@@ -65,8 +65,6 @@ and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_mon
 fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
 assumes Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
 
-fixes type_measure :: \<open>'TY \<Rightarrow> nat\<close>
-
 fixes Can_EqCompare :: \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> bool\<close>
 assumes can_eqcmp_sym: "Can_EqCompare res A B \<longleftrightarrow> Can_EqCompare res B A"
 

@@ -1,5 +1,5 @@
 theory Phi_Aggregate
-  imports NuPrime NuSys
+  imports Phi_Min
 begin
 
 section \<open>Semantics\<close>
@@ -42,6 +42,7 @@ datatype ('TY,'VAL) \<I>\<D>\<X> = \<I>\<D>\<X>
   (idx_step_value: \<open>nat \<Rightarrow> 'VAL \<Rightarrow> 'VAL\<close>)
   (idx_step_mod_value: \<open>nat \<Rightarrow> ('VAL \<Rightarrow> 'VAL) \<Rightarrow> 'VAL \<Rightarrow> 'VAL\<close>)
   (idx_step_offset: \<open>'TY \<Rightarrow> nat \<Rightarrow> nat\<close>)
+  (type_measure: \<open>'TY \<Rightarrow> nat\<close>)
 
 locale aggregate =
   aggregate_ty where CONS_OF   = TY_CONS_OF
@@ -68,7 +69,7 @@ assumes zero_tup[simp]: \<open>Zero (T_tup.mk Ts)     = V_tup.mk (map Zero Ts)\<
 
 assumes V_tup_mult: \<open>V_tup.mk t1 * V_tup.mk t2 = V_tup.mk (t1 @ t2)\<close>
     and   idx_step_type_measure: \<open>valid_idx_step \<I>\<D>\<X> T i
-                              \<Longrightarrow> type_measure (idx_step_type \<I>\<D>\<X> i T) < type_measure T\<close>
+                              \<Longrightarrow> type_measure \<I>\<D>\<X> (idx_step_type \<I>\<D>\<X> i T) < type_measure \<I>\<D>\<X> T\<close>
     and   idx_step_type_tup  : \<open>i < length tys \<Longrightarrow> idx_step_type \<I>\<D>\<X> i (\<tau>Tuple tys) = tys!i \<close>
     and   idx_step_type_arr  : \<open>i \<le> N \<Longrightarrow> idx_step_type \<I>\<D>\<X> i (\<tau>Array N T) = T\<close>
     and   valid_idx_step_tup : \<open>valid_idx_step \<I>\<D>\<X> (\<tau>Tuple tys) i \<longleftrightarrow> i < length tys\<close>
@@ -109,7 +110,7 @@ lemma valid_index_tail[simp]:
   by (induct idx arbitrary: T; simp)
 
 lemma index_type_measure:
-  \<open>valid_index T idx \<Longrightarrow> idx \<noteq> [] \<Longrightarrow> type_measure (index_type idx T) < type_measure T\<close>
+  \<open>valid_index T idx \<Longrightarrow> idx \<noteq> [] \<Longrightarrow> type_measure \<I>\<D>\<X> (index_type idx T) < type_measure \<I>\<D>\<X> T\<close>
   apply (induct idx arbitrary: T; simp)
   by (metis dual_order.strict_trans fold_simps(1) idx_step_type_measure)
 
@@ -157,7 +158,7 @@ lemma Valid_Type_\<tau>Array[simp]:
 lemma Valid_Type_\<tau>Tuple[simp]:
   \<open>Valid_Type (\<tau>Tuple Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
   unfolding Inhabited_def
-  by (metis (mono_tags, lifting) list_all_length \<phi>min_sem.zero_well_typ \<phi>min_sem_axioms)
+  using Ball_set zero_well_typ by blast
 
 end
 
@@ -357,7 +358,7 @@ lemma (in aggregate) \<phi>Index_mapper_arr:
 end
 
 
-hide_const (open) valid_idx_step idx_step_type idx_step_value idx_step_mod_value idx_step_offset
+hide_const (open) valid_idx_step idx_step_type idx_step_value idx_step_mod_value idx_step_offset type_measure
 hide_const (open) \<I>\<D>\<X>
 
 end
