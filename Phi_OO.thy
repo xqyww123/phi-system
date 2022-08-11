@@ -254,15 +254,15 @@ end
 
 subsection \<open>Field\<close>
 
-definition \<phi>Field :: \<open>field_name \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> (field_name \<Rightarrow> 'v, 'x) \<phi>\<close>
-  where \<open>\<phi>Field field T x = { 1(field := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
+definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close>
+  where \<open>\<phi>MapAt key T x = { 1(key := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
 
-lemma \<phi>Field_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Field field T) \<longleftrightarrow> (\<exists>v. p = 1(field := v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Field_def \<phi>Type_def by simp
+lemma \<phi>MapAt_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>MapAt key T) \<longleftrightarrow> (\<exists>v. p = 1(key := v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
+  unfolding \<phi>MapAt_def \<phi>Type_def by simp
 
 lemma [\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Field field T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  \<open>Inhabited (x \<Ztypecolon> \<phi>MapAt field T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 subsection \<open>Object\<close>
@@ -342,9 +342,9 @@ definition (in \<phi>OO_sem) op_obj_load_field :: \<open>field_name \<Rightarrow
 
 lemma (in \<phi>OO) \<phi>M_get_res_entry_R_objs[\<phi>reason!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+      \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_objs.\<phi>R_get_res_entry ref field F
-      \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+      \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def)
   apply (rule R_objs.\<phi>R_get_res_entry[where v=v])
@@ -354,8 +354,8 @@ lemma (in \<phi>OO) \<phi>M_get_res_entry_R_objs[\<phi>reason!]:
 lemma (in \<phi>OO) op_obj_load_field:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_load_field field TY raw \<lbrace>
-      v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)
-  \<longmapsto> v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (\<phi>Share n Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
+      v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (\<phi>Share n Identity)) \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)
+  \<longmapsto> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (\<phi>Share n Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
 \<rbrace>\<close>
   unfolding op_obj_load_field_def Premise_def
   by (\<phi>reason, assumption, \<phi>reason)
@@ -375,8 +375,8 @@ definition (in \<phi>OO_sem) op_obj_store_field :: \<open>field_name \<Rightarro
 lemma (in \<phi>OO) "\<phi>R_set_res_objs"[\<phi>reason!]:
   \<open> field \<in> dom (class_id.fields (object_ref.class ref))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) field) ref)
-         \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (1 \<Znrres>\<phi> Identity))
-  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (1 \<Znrres>\<phi> Identity))
+  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split'
           R_objs.share_fiction_expn_full)
@@ -391,8 +391,8 @@ lemma (in \<phi>OO) op_obj_store_field:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e field \<in> dom (class_id.fields (object_ref.class ref))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
-      v \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (\<phi>Share 1 Identity)) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)
-  \<longmapsto> u \<Ztypecolon> \<phi>InObj ref (\<phi>Field field (\<phi>Share 1 Identity))
+      v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (\<phi>Share 1 Identity)) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)
+  \<longmapsto> u \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (\<phi>Share 1 Identity))
 \<rbrace>\<close>
   unfolding op_obj_store_field_def Premise_def
   by (cases rawref; cases rawu; simp; \<phi>reason, assumption, simp add: \<phi>expns, \<phi>reason, assumption)

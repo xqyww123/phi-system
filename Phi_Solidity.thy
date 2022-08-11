@@ -44,7 +44,25 @@ virtual_datatype 'TY solidity_val = 'TY \<phi>OO_val +
 
 subsubsection \<open>Resource\<close>
 
-type_synonym 'VAL ledge = \<open>(address \<Rightarrow> 'VAL storage_path \<Rightarrow> 'VAL option)\<close>
+paragraph \<open>Algebra to represent uninitialized data\<close>
+
+datatype 'V uninit = initialized 'V | uninitialized
+
+instantiation uninit :: (nonsepable_semigroup) nonsepable_semigroup begin
+definition \<open>sep_disj_uninit (x::'a uninit) (y::'a uninit) \<longleftrightarrow> False\<close>
+instance apply standard unfolding sep_disj_uninit_def by simp_all
+end
+
+
+paragraph \<open>Main Model\<close>
+
+type_synonym 'VAL ledge = \<open>(address \<Rightarrow> 'VAL storage_path \<Rightarrow> 'VAL uninit option)\<close>
+
+text \<open>\<^term>\<open>Some (initialized V)\<close> means an initialized slot with value \<^term>\<open>V\<close>;
+  \<^term>\<open>Some uninitialized\<close> means an uninitialized slot which is accessible from
+    current computation state by legal ledge-accessing operations (excluding creation
+    of new contract instance).
+  \<^term>\<open>None\<close> means a slot which is not accessible. It is not allocated space typically.\<close>
 
 resource_space ('VAL::"nonsepable_semigroup",'TY) solidity_res = ('VAL,'TY) \<phi>min_res +
   R_ledge :: \<open>'VAL ledge ?\<close>
@@ -193,6 +211,8 @@ subsubsection \<open>Slot of Ledge\<close>
 text \<open>About the slot mentioned here, the semantic model does not consider compact storage where
   multiple fields are compact and stored in a single physical slot.\<close>
 
+term \<phi>MapAt
+
 definition \<phi>AtLedge :: \<open>'VAL storage_path \<Rightarrow> ('y::one, 'x) \<phi> \<Rightarrow> ('VAL storage_path \<Rightarrow> 'y, 'x) \<phi>\<close>
   where \<open>\<phi>AtLedge path T x = { 1(path := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
 
@@ -207,24 +227,24 @@ lemma \<phi>AtLedge_inhabited[\<phi>reason_elim!, elim!]:
 
 subsubsection \<open>Path towards a Slot\<close>
 
-definition \<phi>LedgePath
-    :: \<open>'VAL storage_path \<Rightarrow> ('VAL storage_path \<Rightarrow> 'y, 'x) \<phi> \<Rightarrow> ('VAL storage_path \<Rightarrow> 'y::one, 'x) \<phi>\<close>
-  where \<open>\<phi>LedgePath path T x = { push_map path v |v. v \<in> (x \<Ztypecolon> T) }\<close>
+definition \<phi>MapKeys
+    :: \<open>'k list \<Rightarrow> ('k list \<Rightarrow> 'y, 'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'y::one, 'x) \<phi>\<close>
+  where \<open>\<phi>MapKeys path T x = { push_map path v |v. v \<in> (x \<Ztypecolon> T) }\<close>
 
-lemma \<phi>LedgePath_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>LedgePath path T) \<longleftrightarrow> (\<exists>v. p = push_map path v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>LedgePath_def \<phi>Type_def by simp
+lemma \<phi>MapKeys_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>MapKeys path T) \<longleftrightarrow> (\<exists>v. p = push_map path v \<and> v \<in> (x \<Ztypecolon> T))\<close>
+  unfolding \<phi>MapKeys_def \<phi>Type_def by simp
 
-lemma \<phi>LedgePath_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>LedgePath path T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma \<phi>MapKeys_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>MapKeys path T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
-lemma \<phi>LedgePath_\<phi>LedgePath[simp]:
-  \<open>(x \<Ztypecolon> \<phi>LedgePath path1 (\<phi>LedgePath path2 T)) = (x \<Ztypecolon> \<phi>LedgePath (path1@path2) T)\<close>
+lemma \<phi>MapKeys_\<phi>MapKeys[simp]:
+  \<open>(x \<Ztypecolon> \<phi>MapKeys path1 (\<phi>MapKeys path2 T)) = (x \<Ztypecolon> \<phi>MapKeys (path1@path2) T)\<close>
   by (simp add: set_eq_iff \<phi>expns push_map_push_map[symmetric], blast)
 
-lemma \<phi>LedgePath_\<phi>AtLedge[simp]:
-  \<open>(x \<Ztypecolon> \<phi>LedgePath path1 (\<phi>AtLedge path2 T)) = (x \<Ztypecolon> \<phi>AtLedge (path1@path2) T)\<close>
+lemma \<phi>MapKeys_\<phi>AtLedge[simp]:
+  \<open>(x \<Ztypecolon> \<phi>MapKeys path1 (\<phi>AtLedge path2 T)) = (x \<Ztypecolon> \<phi>AtLedge (path1@path2) T)\<close>
   apply (simp add: set_eq_iff \<phi>expns)
   using push_map_unit
   by force
@@ -233,7 +253,7 @@ lemma \<phi>LedgePath_\<phi>AtLedge[simp]:
 subsubsection \<open>Spec of an Instance\<close>
 
 definition (in solidity) LInstance
-    :: \<open>address \<Rightarrow> ('VAL storage_path \<Rightarrow> 'VAL share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
+    :: \<open>address \<Rightarrow> ('VAL storage_path \<Rightarrow> 'VAL uninit share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
   where \<open>LInstance addr T x = { FIC_ledge.mk (Fine (1(addr := v))) |v. v \<in> (x \<Ztypecolon> T) }\<close>
 
 lemma (in solidity) LInstance_expn[\<phi>expns]:
@@ -243,6 +263,19 @@ lemma (in solidity) LInstance_expn[\<phi>expns]:
 lemma (in solidity) LInstance_inhabited[\<phi>expns]:
   \<open>Inhabited (x \<Ztypecolon> LInstance addr T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
+
+subsubsection \<open>Initialized or Not\<close>
+
+definition (in solidity) \<phi>Init :: \<open>('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
+  where \<open>\<phi>Init T x = (({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j Zero (SemTyp_Of (x \<Ztypecolon> T)) \<in> (x \<Ztypecolon> T)) + initialized ` (x \<Ztypecolon> T))\<close>
+
+lemma (in solidity) \<phi>Inited_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Init T) \<longleftrightarrow> (p = uninitialized \<and> Zero (SemTyp_Of (x \<Ztypecolon> T)) \<in> (x \<Ztypecolon> T) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T)))\<close>
+  unfolding \<phi>Type_def \<phi>Init_def by (simp add: \<phi>expns, blast)
+  
+lemma (in solidity) \<phi>Inited_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>Init T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
 
 section Instruction
@@ -272,31 +305,59 @@ subsection \<open>Resource\<close>
 
 paragraph \<open>Load Field\<close>
 
+context solidity_sem begin
+term R_ledge.\<phi>R_get_res_entry
+end
+
+definition (in solidity_sem)
+  \<phi>M_get_res_entry_ledge :: \<open>
+    'TY \<Rightarrow> 'VAL ledge_ref
+       \<Rightarrow> ('VAL \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('a, 'RES_N, 'RES) state)
+         \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('a, 'RES_N, 'RES) state\<close>
+  where "\<phi>M_get_res_entry_ledge TY k F =
+    R_ledge.\<phi>R_get_res_entry (ledge_ref.instance k) (ledge_ref.path k) (\<lambda>v.
+      case v of initialized u \<Rightarrow> \<phi>M_assert (u \<in> Well_Type TY) \<ggreater> F u
+        | uninitialized \<Rightarrow> F (Zero TY))"
+
 definition (in solidity_sem) op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_load_ledge TY v =
     \<phi>M_getV_LedgeRef v (\<lambda>ref.
-    R_ledge.\<phi>R_get_res_entry (ledge_ref.instance ref) (ledge_ref.path ref) (\<lambda>v.
-    \<phi>M_assert (v \<in> Well_Type TY) \<ggreater> Success (sem_value v)))\<close>
+    \<phi>M_get_res_entry_ledge TY ref (\<lambda>v. Success (sem_value v)))\<close>
+
+lemma (in \<phi>empty_sem) [simp]:
+  \<open> v \<in> Well_Type TY
+\<Longrightarrow> SemTyp_Of (v \<Ztypecolon> Identity) = TY\<close>
+  unfolding \<phi>Type_def Identity_def
+  by (simp add: \<phi>SemType_def)
 
 lemma (in solidity) \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> LInstance addr (\<phi>AtLedge path (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_ledge.\<phi>R_get_res_entry addr path F
-      \<lbrace> v \<Ztypecolon> LInstance addr (\<phi>AtLedge path (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  unfolding \<phi>Procedure_\<phi>Res_Spec
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> LInstance addr (\<phi>MapAt path (n \<Znrres>\<phi> (\<phi>Init Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_res_entry_ledge TY (ledge_ref addr path) F
+      \<lbrace> v \<Ztypecolon> LInstance addr (\<phi>MapAt path (n \<Znrres>\<phi> (\<phi>Init Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec \<phi>M_get_res_entry_ledge_def Premise_def
   apply (clarsimp simp add: \<phi>expns zero_set_def)
-  apply (rule R_ledge.\<phi>R_get_res_entry[where v=v])
+  subgoal for r res vb
+  apply (rule R_ledge.\<phi>R_get_res_entry[where v=vb])
   apply (simp add: FIC_ledge.partial_implies')
-  by blast
+    apply (cases vb; simp)
+    subgoal premises prems for x1
+      apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, simplified prems, simplified])
+      using FIC_ledge.Fic_Space_m prems(3) by blast
+    subgoal premises prems
+      apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, simplified prems, simplified])
+      using FIC_ledge.Fic_Space_m prems(3) by blast . .
+
 
 lemma (in solidity) op_load_ledge:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_ledge TY raw \<lbrace>
-      v \<Ztypecolon> LInstance addr (\<phi>AtLedge path (\<phi>Share n Identity)) \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
-  \<longmapsto> v \<Ztypecolon> LInstance addr (\<phi>AtLedge path (\<phi>Share n Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
+      v \<Ztypecolon> LInstance addr (\<phi>MapAt path (\<phi>Share n (\<phi>Init Identity))) \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
+  \<longmapsto> v \<Ztypecolon> LInstance addr (\<phi>MapAt path (\<phi>Share n (\<phi>Init Identity))) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
 \<rbrace>\<close>
   unfolding op_load_ledge_def Premise_def
-  by (\<phi>reason, simp, \<phi>reason, assumption, \<phi>reason)
+  by (\<phi>reason, simp, \<phi>reason)
 
 paragraph \<open>Store Field\<close>
 

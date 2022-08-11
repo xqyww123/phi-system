@@ -120,6 +120,23 @@ definition \<phi>Equal :: "('VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \
     can_eq x1 x2 \<and> p1 \<in> (x1 \<Ztypecolon> T) \<and> p2 \<in> (x2 \<Ztypecolon> T)
       \<longrightarrow> Can_EqCompare res p1 p2 \<and> (EqCompare p1 p2 = eq x1 x2))"
 
+lemma \<phi>SemType_unique:
+  \<open> S \<noteq> {}
+\<Longrightarrow> \<phi>SemType S T1
+\<Longrightarrow> \<phi>SemType S T2
+\<Longrightarrow> T1 = T2\<close>
+  unfolding \<phi>SemType_def subset_iff
+  using Well_Type_unique by blast
+
+definition SemTyp_Of :: \<open>'VAL set \<Rightarrow> 'TY\<close>
+  where \<open>SemTyp_Of S = (@TY. \<phi>SemType S TY)\<close>
+
+lemma SemTyp_Of_I[intro!, simp]:
+  \<open>S \<noteq> {} \<Longrightarrow> \<phi>SemType S TY \<Longrightarrow> SemTyp_Of S = TY\<close>
+  unfolding SemTyp_Of_def
+  using \<phi>SemType_unique by blast 
+
+
 end
 
 definition Subty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool " ("(2\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
