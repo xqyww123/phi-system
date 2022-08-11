@@ -20,6 +20,7 @@ end
 subsubsection \<open>Value\<close>
 
 definition "class_user = Class [] [] 1"
+  \<comment> \<open>A user address always has this class\<close>
 
 datatype 'VAL storage_key = SP_field field_name | SP_map_key 'VAL | SP_array_ind nat
 type_synonym 'VAL storage_path = \<open>'VAL storage_key list\<close>
@@ -53,6 +54,14 @@ definition \<open>sep_disj_uninit (x::'a uninit) (y::'a uninit) \<longleftrighta
 instance apply standard unfolding sep_disj_uninit_def by simp_all
 end
 
+paragraph \<open>Models for Runtime Environment\<close>
+
+datatype environ = Environ (sender: address) (code: address)
+
+paragraph \<open>Models for Balance Table\<close>
+
+type_synonym balance_table = \<open>address \<rightharpoonup> nat nonsepable\<close>
+  \<comment> \<open>None means this part of the resource is not accessible and not specified\<close>
 
 paragraph \<open>Main Model\<close>
 
@@ -65,7 +74,10 @@ text \<open>\<^term>\<open>Some (initialized V)\<close> means an initialized slo
   \<^term>\<open>None\<close> means a slot which is not accessible. It is not allocated space typically.\<close>
 
 resource_space ('VAL::"nonsepable_semigroup",'TY) solidity_res = ('VAL,'TY) \<phi>min_res +
-  R_ledge :: \<open>'VAL ledge ?\<close>
+  R_ledge   :: \<open>'VAL ledge ?\<close>
+  R_environ :: \<open>environ nonsepable option ?\<close>
+      \<comment> \<open>None means this part of the resource is not accessible and not specified\<close>
+  R_balance :: \<open>balance_table ?\<close>
 
 
 subsection \<open>Semantics\<close>
@@ -97,8 +109,13 @@ assumes WT_LedgeRef[simp]: \<open>Well_Type \<tau>LedgeRef = UNIV\<close>
   and   Can_EqCompare_Address[simp]:  \<open>Can_EqCompare res (V_Address.mk addr1)  (V_Address.mk addr2)\<close>
   and   EqCompare_LedgeRef[simp]:     \<open>EqCompare (V_LedgeRef.mk lref1) (V_LedgeRef.mk lref2) \<longleftrightarrow> lref1 = lref2\<close>
   and   EqCompare_Address[simp]:      \<open>EqCompare (V_Address.mk addr1)  (V_Address.mk addr2)  \<longleftrightarrow> addr1 = addr2\<close>
-  and   Resource_Validator_Ledge': \<open>Resource_Validator R_ledge.name = R_ledge.inject ` Fine ` {h. h Nil = 1 \<and> finite (dom1 h) }\<close>
+  and   Resource_Validator_Ledge':   \<open>Resource_Validator R_ledge.name   = R_ledge.inject ` Fine ` {h. h Nil = 1 \<and> finite (dom1 h) }\<close>
+  and   Resource_Validator_Environ': \<open>Resource_Validator R_environ.name = R_environ.inject ` Fine ` UNIV\<close>
+  and   Resource_Validator_Balance[simp]:
+              \<open>Resource_Validator R_balance.name = R_balance.inject ` Fine ` UNIV\<close>
 begin
+
+paragraph \<open>Valid Types\<close>
 
 lemma Valid_Type_LedgeRef[simp]:
   \<open>Valid_Type \<tau>LedgeRef\<close>
@@ -107,6 +124,8 @@ lemma Valid_Type_LedgeRef[simp]:
 lemma Valid_Type_Address[simp]:
   \<open>Valid_Type \<tau>Address\<close>
   unfolding Inhabited_def by simp
+
+paragraph \<open>Resource Ledge\<close>
 
 definition Valid_Ledge :: "'VAL ledge set"
   where "Valid_Ledge = {h. h Nil = 1 \<and> finite (dom1 h) }"
@@ -121,13 +140,31 @@ lemma Resource_Validator_Ledge[simp]:
 sublocale R_ledge: partial_map_resource2 Valid_Ledge R_ledge Resource_Validator
   by (standard, simp_all add: Resource_Validator_objs)
 
+
+paragraph \<open>Resource Environ\<close>
+
+definition Valid_Environ :: "environ set" where "Valid_Environ = UNIV"
+
+sublocale R_environ: nosepable_mono_resource R_environ Resource_Validator \<open>nonsepable ` Valid_Environ\<close>
+  apply standard apply simp
+  apply (simp add: Resource_Validator_Environ' image_iff set_eq_iff)
+  by (metis UNIV_I Valid_Environ_def nonsepable.exhaust not_None_eq)
+
+
+paragraph \<open>Resource Balance\<close>
+
+sublocale R_balance: partial_map_resource UNIV R_balance Resource_Validator
+  by (standard; simp add: image_iff set_eq_iff)
+
 end
 
 
 subsection \<open>Fiction\<close>
 
 fiction_space (in solidity_sem) solidity_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
-  FIC_ledge :: \<open>R_ledge.share_fiction\<close>
+  FIC_ledge   :: \<open>R_ledge.share_fiction\<close>
+  FIC_environ :: \<open>R_environ.fiction_agree\<close>
+  FIC_balance :: \<open>R_balance.share_fiction\<close>
 
 locale solidity =
   solidity_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
@@ -143,6 +180,12 @@ begin
 
 sublocale FIC_ledge: share_fiction_for_partial_mapping_resource2 Valid_Ledge R_ledge
     Resource_Validator INTERPRET FIC_ledge ..
+
+sublocale FIC_environ: agreement_fiction_for_nosepable_mono_resource \<open>nonsepable ` Valid_Environ\<close>
+  R_environ Resource_Validator INTERPRET FIC_environ ..
+
+sublocale FIC_balance: share_fiction_for_partial_mapping_resource UNIV R_balance
+    Resource_Validator INTERPRET FIC_balance ..
 
 end
 

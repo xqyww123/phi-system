@@ -3371,6 +3371,8 @@ end
 
 subsubsection \<open>Resources using Fine\<close>
 
+paragraph \<open>Locale for Resource\<close>
+
 locale fine_resource =
   Fictional_Algebra.project_inject entry
 + \<phi>resource_sem Resource_Validator
@@ -3384,17 +3386,20 @@ begin
 sublocale resource entry Resource_Validator \<open>Fine ` Valid\<close>
   by (standard; simp add: image_iff one_fine_def)
 
+lemma get_res_Valid:
+  \<open> res \<in> \<phi>Res_Spec S
+\<Longrightarrow> !!(get res) \<in> Valid\<close>
+  unfolding \<phi>Res_Spec_def by (clarsimp simp add: \<r>_valid_split')
+
+paragraph \<open>Basic Fine Fiction\<close>
+
 definition \<open>basic_fine_fiction I = Fiction (\<lambda>x. { 1(entry #= Fine y) |y. y \<in> \<I> I x })\<close>
 lemma basic_fine_fiction_\<I>:
   "\<I> (basic_fine_fiction I) = (\<lambda>x. { 1(entry #= Fine y) |y. y \<in> \<I> I x})"
   unfolding basic_fine_fiction_def
   by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def one_fine_def)
 
-lemma get_res_Valid:
-  \<open> res \<in> \<phi>Res_Spec S
-\<Longrightarrow> !!(get res) \<in> Valid\<close>
-  unfolding \<phi>Res_Spec_def by (clarsimp simp add: \<r>_valid_split')
-
+paragraph \<open>Identity Fiction\<close>
 
 lemma fine_fiction_itself_expn[\<phi>expns]:
   \<open>\<phi>Res_Spec (R * \<I> (basic_fine_fiction (fiction.fine fiction.it)) (R2 * Fine x))
@@ -3406,6 +3411,9 @@ lemma fine_fiction_itself_expn[\<phi>expns]:
   by (smt (verit, del_insts) fun_mult_norm fun_upd_same get_homo_mult get_res_valid image_iff mk_homo_mult mult_strip_fine_111 proj_inj times_fine(1) times_fine(3))
 
 end
+
+
+paragraph \<open>Identity Fiction\<close>
 
 locale identity_fiction_for_fine_resource =
    \<phi>resource_sem Resource_Validator
@@ -3431,6 +3439,50 @@ lemma expand:
     show ?thesis
       by (metis prems(3) t1 times_fine(1))
   qed .
+
+end
+
+
+subsubsection \<open>Nonsepable Mono-Resource\<close>
+  \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option ?\<close>\<close>
+
+locale nosepable_mono_resource =
+  fine_resource entry Resource_Validator \<open>{None} \<union> Some ` Valid\<close>
+for entry :: "('RES_N, 'RES::{comm_monoid_mult,no_inverse}, 'T::nonsepable_semigroup option ?) Fictional_Algebra.Entry"
+and Resource_Validator :: "'RES_N \<Rightarrow> 'RES set"
+and Valid :: "'T set"
+begin
+
+definition fiction_agree
+  where \<open>fiction_agree = basic_fine_fiction (fiction.fine (fiction.optionwise Fictional_Algebra.fiction_agree))\<close>
+
+end
+
+
+paragraph \<open>Fiction Agreement\<close>
+
+locale agreement_fiction_for_nosepable_mono_resource =
+   \<phi>resource_sem Resource_Validator
++  R: nosepable_mono_resource Res Resource_Validator Valid
++  fictional_project_inject INTERPRET Fic \<open>R.fiction_agree\<close>
+for Valid :: "'T::nonsepable_semigroup set"
+and Res :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, 'T::nonsepable_semigroup option ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+and Fic :: "('FIC_N,'FIC, 'T::nonsepable_semigroup agree option ?) Fictional_Algebra.Entry"
+begin
+
+lemma partial_implies:
+  \<open> Fic_Space r
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (Some (agree x)))))
+\<Longrightarrow> R.get res = Fine (Some x)\<close>
+  unfolding \<phi>Res_Spec_def apply (clarsimp simp add: interp_split'
+     R.fiction_agree_def R.basic_fine_fiction_\<I> \<phi>expns mult_strip_fine_011 R.\<r>_valid_split'
+     R.mult_strip_inject_011 R.proj_homo_mult fiction.optionwise_\<I> image_iff Bex_def
+     fiction_agree_def)
+  subgoal for u y a aa
+    by (cases a; clarsimp simp add: image_iff Bex_def) .
+
 
 end
 
@@ -3473,6 +3525,8 @@ lemma "__new_rule__":
 end
 
 paragraph \<open>One Level Parital Mapping\<close>
+
+subparagraph \<open>Locale for Resource\<close>
 
 locale partial_map_resource =
   mapping_resource Valid entry Resource_Validator
@@ -3567,6 +3621,8 @@ lemma raw_unit_assertion_implies[simp]:
 end
 
 
+subparagraph \<open>Locale for Sharing Fiction\<close>
+
 locale share_fiction_for_partial_mapping_resource =
    \<phi>resource_sem Resource_Validator
 +  R: partial_map_resource Valid Res Resource_Validator
@@ -3633,6 +3689,8 @@ lemma map_fun_at_const[simp]:
   unfolding map_fun_at_def fun_eq_iff by simp
 
 
+subparagraph \<open>Locale of Resources\<close>
+
 locale partial_map_resource2 =
   mapping_resource Valid entry Resource_Validator
 for Valid :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) set"
@@ -3690,6 +3748,7 @@ lemma "__dispose_rule__":
 
 definition \<open>share_fiction = basic_fine_fiction (fiction.fine (fiction.pointwise' (\<lambda>_. fiction_to_share)))\<close>
 
+(*depreciated!*)
 lemma share_fiction_expn_full':
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := to_share o f))))
  = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k := f)))})\<close>
@@ -3736,6 +3795,7 @@ lemma share_fiction_expn_full:
  = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k := 1(k2 \<mapsto> v))))})\<close>
   using share_fiction_expn_full'[where f=\<open>1(k2 \<mapsto> v)\<close>, simplified] .
 
+(*depreciated!*)
 lemma share_fiction_partially_implies:
   \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v)))))
 \<Longrightarrow> \<exists>objs. get res = Fine objs \<and> objs k k2 = Some v\<close>
@@ -3783,6 +3843,7 @@ lemma raw_unit_assertion_implies':
 
 end
 
+subparagraph \<open>Locale For Sharing Fiction\<close>
 
 locale share_fiction_for_partial_mapping_resource2 =
    \<phi>resource_sem Resource_Validator

@@ -1003,6 +1003,37 @@ lemma to_share_ringop_id[simp]:
   unfolding fun_eq_iff
   by (simp, metis strip_share_Share)
 
+
+subsection \<open>Non-sepable Semigroup\<close>
+
+datatype 'a nonsepable = nonsepable 'a
+
+instantiation nonsepable :: (type) nonsepable_semigroup begin
+definition \<open>sep_disj_nonsepable (x :: 'a nonsepable) (y :: 'a nonsepable) = False\<close>
+instance by (standard; case_tac x; case_tac y; simp add: sep_disj_nonsepable_def)
+end
+
+
+subsection \<open>Agreement\<close>
+
+datatype 'a agree = agree 'a
+
+instantiation agree :: (type) cancl_sep_ab_semigroup begin
+definition times_agree :: \<open>'a agree \<Rightarrow> 'a agree \<Rightarrow> 'a agree\<close>
+  where [simp]: \<open>times_agree x y = x\<close>
+definition sep_disj_agree :: \<open>'a agree \<Rightarrow> 'a agree \<Rightarrow> bool\<close>
+  where [simp]: \<open>sep_disj_agree x y \<longleftrightarrow> x = y\<close>
+
+instance apply standard
+   apply (case_tac x; case_tac y; simp)
+   apply (case_tac x; case_tac y; simp)
+   apply (case_tac x; case_tac y; case_tac z; simp add: times_agree_def)
+   apply (case_tac x; case_tac y; case_tac z; simp add: times_agree_def)
+   apply (case_tac x; case_tac y; case_tac z; simp add: times_agree_def) .
+
+end
+
+
 section \<open>Interpretation of Fiction\<close>
 
 subsection \<open>Algebric Structure\<close>
@@ -1132,6 +1163,11 @@ lemma fiction_to_share_\<I>:
   \<open>\<I> fiction_to_share = (\<lambda>m. {f. m = to_share o f})\<close>
   unfolding fiction_to_share_def
   by (rule Fiction_inverse, simp add: Fictional_def one_set_def)
+
+
+subsubsection \<open>Agreement\<close>
+
+definition \<open>fiction_agree = (\<lambda>x. case x of agree x' \<Rightarrow> {x'})\<close>
 
 
 section \<open>Extensible Resource & Fiction Space\<close>
