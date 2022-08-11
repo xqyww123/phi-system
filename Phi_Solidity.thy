@@ -210,7 +210,7 @@ subsubsection \<open>Slot of Ledge\<close>
 
 text \<open>About the slot mentioned here, the semantic model does not consider compact storage where
   multiple fields are compact and stored in a single physical slot.\<close>
-
+(*
 term \<phi>MapAt
 
 definition \<phi>AtLedge :: \<open>'VAL storage_path \<Rightarrow> ('y::one, 'x) \<phi> \<Rightarrow> ('VAL storage_path \<Rightarrow> 'y, 'x) \<phi>\<close>
@@ -223,7 +223,7 @@ lemma \<phi>AtLedge_expn[\<phi>expns]:
 lemma \<phi>AtLedge_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>AtLedge path T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
-
+*)
 
 subsubsection \<open>Path towards a Slot\<close>
 
@@ -243,11 +243,12 @@ lemma \<phi>MapKeys_\<phi>MapKeys[simp]:
   \<open>(x \<Ztypecolon> \<phi>MapKeys path1 (\<phi>MapKeys path2 T)) = (x \<Ztypecolon> \<phi>MapKeys (path1@path2) T)\<close>
   by (simp add: set_eq_iff \<phi>expns push_map_push_map[symmetric], blast)
 
+(*
 lemma \<phi>MapKeys_\<phi>AtLedge[simp]:
   \<open>(x \<Ztypecolon> \<phi>MapKeys path1 (\<phi>AtLedge path2 T)) = (x \<Ztypecolon> \<phi>AtLedge (path1@path2) T)\<close>
   apply (simp add: set_eq_iff \<phi>expns)
   using push_map_unit
-  by force
+  by force *)
 
 
 subsubsection \<open>Spec of an Instance\<close>
@@ -277,6 +278,16 @@ lemma (in solidity) \<phi>Inited_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Init T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
+
+definition \<phi>Uninit :: \<open>('v uninit, unit) \<phi>\<close>
+  where \<open>\<phi>Uninit x = {uninitialized}\<close>
+
+lemma \<phi>Uninit_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Uninit) \<longleftrightarrow> p = uninitialized\<close>
+  unfolding \<phi>Type_def \<phi>Uninit_def by simp
+
+lemma \<phi>Uninit_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 section Instruction
 
@@ -349,7 +360,6 @@ lemma (in solidity) \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
       apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, simplified prems, simplified])
       using FIC_ledge.Fic_Space_m prems(3) by blast . .
 
-
 lemma (in solidity) op_load_ledge:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_ledge TY raw \<lbrace>
@@ -359,8 +369,8 @@ lemma (in solidity) op_load_ledge:
   unfolding op_load_ledge_def Premise_def
   by (\<phi>reason, simp, \<phi>reason)
 
-paragraph \<open>Store Field\<close>
 
+paragraph \<open>Store Field\<close>
 
 definition (in solidity) op_store_ledge
       :: \<open>'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
@@ -368,18 +378,20 @@ definition (in solidity) op_store_ledge
     \<phi>M_caseV (\<lambda>vstore vref.
     \<phi>M_getV_LedgeRef vref (\<lambda>lref.
     \<phi>M_getV TY id vstore (\<lambda>store.
-    R_ledge.\<phi>R_get_res_entry (ledge_ref.instance lref) (ledge_ref.path lref)
-        (\<lambda>v. \<phi>M_assert (v \<in> Well_Type TY))
- \<ggreater> R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some store) (ledge_ref.path lref)) (ledge_ref.instance lref))
+    \<phi>M_get_res_entry_ledge TY lref (\<lambda>_. Success \<phi>V_nil)
+ \<ggreater> R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized store)) (ledge_ref.path lref)) (ledge_ref.instance lref))
 )))\<close>
 
 lemma (in solidity) "\<phi>R_set_res_ledge"[\<phi>reason!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) path) lref)
-         \<lbrace> v \<Ztypecolon> LInstance lref (\<phi>AtLedge path (1 \<Znrres>\<phi> Identity))
-  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> LInstance lref (\<phi>AtLedge path (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized u)) path) lref)
+         \<lbrace> v \<Ztypecolon> LInstance lref (\<phi>MapAt path (1 \<Znrres>\<phi> \<phi>Init Identity))
+  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> LInstance lref (\<phi>MapAt path (1 \<Znrres>\<phi> \<phi>Init Identity)) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_ledge.interp_split'
-          R_ledge.share_fiction_expn_full)
+  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_ledge.interp_split')
+  apply (rule \<phi>Res_Spec_ex_\<S>[where x=\<open>FIC_ledge.mk (Fine (1(lref := 1(path := Some (1 \<Znrres> initialized u)))))\<close>],
+         rule \<phi>Res_Spec_subj_\<S>)
+  using FIC_ledge.Fic_Space_m apply blast
+  apply (simp add: R_ledge.share_fiction_expn_full)
   apply (rule R_ledge.\<phi>R_set_res[where P="\<lambda>m. path \<in> dom (m lref)"])
   apply (cases lref; clarsimp simp add: Valid_Ledge_def map_fun_at_def dom1_def)
   apply (smt (verit, ccfv_SIG) Collect_cong dom_1 dom_eq_empty_conv option.distinct(1))
@@ -391,33 +403,36 @@ lemma (in solidity) op_store_ledge:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store_ledge TY (\<phi>V_pair rawu rawref) \<lbrace>
-      v \<Ztypecolon> LInstance lref (\<phi>AtLedge path (\<phi>Share 1 Identity)) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ledge_ref lref path \<Ztypecolon> Val rawref LedgeRef
-  \<longmapsto> u \<Ztypecolon> LInstance lref (\<phi>AtLedge path (\<phi>Share 1 Identity))
+      v \<Ztypecolon> LInstance lref (\<phi>MapAt path (\<phi>Share 1 (\<phi>Init Identity))) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ledge_ref lref path \<Ztypecolon> Val rawref LedgeRef
+  \<longmapsto> u \<Ztypecolon> LInstance lref (\<phi>MapAt path (\<phi>Share 1 (\<phi>Init Identity)))
 \<rbrace>\<close>
   unfolding op_store_ledge_def Premise_def
-  by (cases rawref; cases rawu; simp; \<phi>reason, simp, \<phi>reason, assumption, simp add: \<phi>expns, \<phi>reason)
+  by (cases rawref; cases rawu; simp; \<phi>reason, simp add: Premise_def, \<phi>reason, simp add: \<phi>expns, \<phi>reason)
 
 
 paragraph \<open>Allocation\<close>
 
 definition (in solidity) op_allocate_ledge :: \<open>('VAL,'RES_N,'RES) proc\<close>
   where \<open>op_allocate_ledge =
-      R_ledge.\<phi>R_allocate_res_entry (\<lambda>ref. ref \<noteq> Nil) 1 (\<lambda>ref. Success (sem_value (V_ref.mk ref)))\<close>
+      R_ledge.\<phi>R_allocate_res_entry (\<lambda>addr. addr \<noteq> Nil) (\<lambda>_. Some uninitialized)
+        (\<lambda>addr. Success (sem_value (V_Address.mk addr)))\<close>
 
-lemma (in \<phi>OO) op_obj_allocate:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_allocate cls
-      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> \<phi>RawObject ref\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
-  unfolding \<phi>Procedure_\<phi>Res_Spec op_obj_allocate_def
-  apply (clarsimp simp add: \<phi>expns FIC_OO_share.interp_split')
-  apply (rule R_objs.\<phi>R_allocate_res_entry)
-  apply (clarsimp simp add: Valid_Objs_def)
+lemma (in solidity) op_obj_allocate:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_allocate_ledge
+      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. 1 \<Ztypecolon> LInstance ref (Identity \<Rrightarrow> 1 \<Znrres>\<phi> \<phi>Uninit)\<heavy_comma> ref \<Ztypecolon> Val ret Address \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec op_allocate_ledge_def
+  apply (clarsimp simp add: \<phi>expns FIC_ledge.interp_split')
+  apply (rule R_ledge.\<phi>R_allocate_res_entry)
+  apply (clarsimp simp add: Valid_Ledge_def)
   using obj_map_freshness apply blast
-    apply (clarsimp simp add: Valid_Objs_def one_fun_def dom_initial_value_of_class)
+  apply (clarsimp simp add: Valid_Ledge_def one_fun_def dom_initial_value_of_class)
   prefer 2 apply assumption
   apply (simp add: \<phi>expns)
   subgoal for r res k res'
-    by (cases k; simp add: R_objs.share_fiction_expn_full') .
-
+    apply (rule exI[where x=\<open>FIC_ledge.mk (Fine (1(k := (\<lambda>_. Some (1 \<Znrres> uninitialized)))))\<close>])
+    apply (cases k; simp add: R_ledge.share_fiction_expn_full'
+            [where f=\<open>\<lambda>_. Some uninitialized\<close>, simplified comp_def, simplified])
+    by blast .
 
 
 

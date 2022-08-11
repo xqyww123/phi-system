@@ -1,5 +1,5 @@
 theory Phi_OO
-  imports NuInstructions Phi_Min
+  imports NuInstructions Phi_Min Phi_OO_Algebra
 begin
 
 chapter \<open>Object Oriented Programming Model\<close>
@@ -9,79 +9,6 @@ section \<open>Semantics & Fictions\<close>
 subsection \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
-
-paragraph \<open>Algebra of Class Dependency\<close>
-
-datatype 'TY class_id = Class (name: string) (parents: \<open>'TY class_id list\<close>) (fields: \<open>string \<rightharpoonup> 'TY\<close>)
-hide_const (open) name parents fields
-
-text \<open>Name of a class is not its identity but the name plus parents.
-  It simplifies the model by ensuring two identical classes have identical parents.\<close>
-
-fun parents_of_with_self
-  where \<open>parents_of_with_self (Class name parents fields) =
-            insert (Class name parents fields) (\<Union> (parents_of_with_self ` set parents))\<close>
-
-instantiation class_id :: (type) order begin
-
-definition \<open>less_eq_class_id C1 C2 \<longleftrightarrow> C2 \<in> parents_of_with_self C1\<close>
-definition \<open>less_class_id (C1::'a class_id) C2 \<longleftrightarrow> C1 \<le> C2 \<and> C1 \<noteq> C2\<close>
-
-instance proof
-  fix x y z :: \<open>'a class_id\<close>
-
-  have \<open>\<And>x y S. x \<in> parents_of_with_self y \<Longrightarrow> x \<noteq> y \<Longrightarrow> size_class_id S x < size_class_id S y\<close>
-  subgoal for x y S
-  apply (induct y arbitrary: x)
-  subgoal for name parents fields x
-    apply clarsimp
-    subgoal for z
-      apply (cases \<open>x = z\<close>)
-      apply (metis class_id.collapse class_id.size_gen not_less_eq order_refl size_list_estimation' verit_comp_simplify1(3))
-      by (metis class_id.exhaust class_id.size_gen less_Suc_eq size_list_estimation) . . .
-  then have t1: \<open>\<And>x y. y \<in> parents_of_with_self x \<and> x \<in> parents_of_with_self y \<Longrightarrow> x = y\<close>
-    by (metis order_less_asym)
-  then  show \<open>(x < y) = (x \<le> y \<and> \<not> y \<le> x)\<close>
-    apply (simp_all add: less_eq_class_id_def less_class_id_def)
-    by blast
-
-  show \<open> x \<le> y \<Longrightarrow> y \<le> x \<Longrightarrow> x = y\<close>
-    by (simp add: less_eq_class_id_def less_class_id_def t1)
-
-  show \<open>x \<le> x\<close>
-    by (cases x; simp add: less_eq_class_id_def less_class_id_def)
-
-  show \<open>x \<le> y \<Longrightarrow> y \<le> z \<Longrightarrow> x \<le> z\<close>
-    unfolding less_eq_class_id_def less_class_id_def
-    by (induct x, auto)
-qed
-end
-
-lemma [simp]: \<open>x \<in> parents_of_with_self x\<close>
-  by (cases x, simp)
-
-lemma [simp]: \<open>Class name (x # L) fields \<noteq> x\<close>
-proof
-  assume A: \<open>Class name (x # L) fields = x\<close>
-  then have t: \<open>\<And>S. size_class_id S (Class name (x # L) fields) = size_class_id S x\<close> by simp
-  then show False
-    by (metis A add_Suc_right class_id.size(2) list.set_intros(1) not_add_less1 not_less_eq size_list_estimation)
-qed
-
-lemma prop_subclass_1[intro]: \<open>Class name (x#L) fields < x\<close>
-  unfolding less_class_id_def less_eq_class_id_def by simp
-
-lemma subclass_1[intro]: \<open>Class name (x#L) fields \<le> x\<close>
-  unfolding less_class_id_def less_eq_class_id_def by simp
-
-lemma subclass_0[intro]: \<open>x \<le> x\<close> for x :: \<open>'a class_id\<close> by simp
-
-(* TODO!
- lemma [intro]: \<open>Class name L \<le> x \<Longrightarrow> Class name (y#L) \<le> x\<close>
-  unfolding less_class_id_def less_eq_class_id_def apply simp*)
-
-
-paragraph \<open>Main Stuff\<close>
 
 virtual_datatype \<phi>OO_ty = \<phi>min_ty +
   T_ref :: unit
@@ -93,7 +20,10 @@ end
 
 subsubsection \<open>Value\<close>
 
-datatype 'TY object_ref = object_ref ("class": \<open>'TY class_id\<close>) ("nonce": nat) | Nil
+type_synonym field_name = string
+type_synonym 'TY "class" = \<open>('TY, field_name \<Rightarrow> 'TY option) class\<close>
+
+datatype 'TY object_ref = object_ref ("class": \<open>'TY class\<close>) ("nonce": nat) | Nil
 hide_const (open) "class" nonce
 
 paragraph \<open>Properties\<close>
@@ -116,7 +46,6 @@ virtual_datatype 'TY \<phi>OO_val :: "nonsepable_semigroup" = 'TY \<phi>min_val 
 
 subsubsection \<open>Resource\<close>
 
-type_synonym field_name = string
 type_synonym ('TY,'VAL) object_heap = \<open>('TY object_ref \<Rightarrow> field_name \<Rightarrow> 'VAL option)\<close>
 
 resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>OO_res = ('VAL,'TY) \<phi>min_res +
@@ -165,7 +94,7 @@ definition Valid_Objs :: "('TY,'VAL) object_heap set"
   where "Valid_Objs =
       {h. h Nil = 1 \<and> finite (dom1 h)
        \<and> (\<forall>cls nonce. dom (h (object_ref cls nonce)) = {} \<or>
-                      dom (h (object_ref cls nonce)) = dom (class_id.fields cls) ) }"
+                      dom (h (object_ref cls nonce)) = dom (class.fields cls) ) }"
 
 lemma Valid_Objs_1[simp]: \<open>1 \<in> Valid_Objs\<close>
   unfolding Valid_Objs_def one_fun_def one_fine_def by (simp add: dom1_def one_fun_def)
@@ -190,10 +119,10 @@ sublocale R_objs: partial_map_resource2 Valid_Objs R_objs Resource_Validator
   by (standard, simp_all add: Resource_Validator_objs)
 
 definition initial_value_of_class
-  where \<open>initial_value_of_class cls = map_option Zero o class_id.fields cls\<close>
+  where \<open>initial_value_of_class cls = map_option Zero o class.fields cls\<close>
 
 lemma dom_initial_value_of_class:
-  \<open>dom (initial_value_of_class cls) = dom (class_id.fields cls)\<close>
+  \<open>dom (initial_value_of_class cls) = dom (class.fields cls)\<close>
   unfolding initial_value_of_class_def dom_def set_eq_iff by simp
 
 end
@@ -227,7 +156,7 @@ subsection \<open>Reference\<close>
 
 context \<phi>OO_sem begin
 
-definition Ref :: \<open>'TY class_id \<Rightarrow> ('VAL, 'TY object_ref) \<phi>\<close>
+definition Ref :: \<open>'TY class \<Rightarrow> ('VAL, 'TY object_ref) \<phi>\<close>
   where \<open>Ref cls ref = ({ V_ref.mk ref } \<^bold>s\<^bold>u\<^bold>b\<^bold>j of_class cls ref)\<close>
 
 lemma \<phi>Ref_expns[\<phi>expns]:
@@ -311,7 +240,7 @@ lemma (in \<phi>OO) \<phi>M_getV_ref[\<phi>reason!]:
 
 paragraph \<open>Allocation\<close>
 
-definition (in \<phi>OO_sem) op_obj_allocate :: \<open>'TY class_id \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+definition (in \<phi>OO_sem) op_obj_allocate :: \<open>'TY class \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
   where \<open>op_obj_allocate cls =
       R_objs.\<phi>R_allocate_res_entry (\<lambda>ref. ref \<noteq> Nil \<and> object_ref.class ref = cls)
             (initial_value_of_class cls) (\<lambda>ref. Success (sem_value (V_ref.mk ref)))\<close>
@@ -373,7 +302,7 @@ definition (in \<phi>OO_sem) op_obj_store_field :: \<open>field_name \<Rightarro
 )))\<close>
 
 lemma (in \<phi>OO) "\<phi>R_set_res_objs"[\<phi>reason!]:
-  \<open> field \<in> dom (class_id.fields (object_ref.class ref))
+  \<open> field \<in> dom (class.fields (object_ref.class ref))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) field) ref)
          \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (1 \<Znrres>\<phi> Identity))
   \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
@@ -389,7 +318,7 @@ lemma (in \<phi>OO) "\<phi>R_set_res_objs"[\<phi>reason!]:
 lemma (in \<phi>OO) op_obj_store_field:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e field \<in> dom (class_id.fields (object_ref.class ref))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e field \<in> dom (class.fields (object_ref.class ref))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
       v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (\<phi>Share 1 Identity)) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)
   \<longmapsto> u \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (\<phi>Share 1 Identity))
@@ -399,16 +328,16 @@ lemma (in \<phi>OO) op_obj_store_field:
 
 paragraph \<open>Allocation\<close>
 
-definition (in \<phi>OO_sem) op_obj_dispose :: \<open>'TY class_id \<Rightarrow> ('VAL, unit,'RES_N,'RES) proc'\<close>
+definition (in \<phi>OO_sem) op_obj_dispose :: \<open>'TY class \<Rightarrow> ('VAL, unit,'RES_N,'RES) proc'\<close>
   where \<open>op_obj_dispose cls vref =
     \<phi>M_getV_ref vref (\<lambda>ref.
-    R_objs.\<phi>R_get_res (\<lambda>m. \<phi>M_assert ((ref \<in> dom1 m \<or> class_id.fields cls = 1) \<and> object_ref.class ref = cls))
+    R_objs.\<phi>R_get_res (\<lambda>m. \<phi>M_assert ((ref \<in> dom1 m \<or> class.fields cls = 1) \<and> object_ref.class ref = cls))
  \<ggreater> R_objs.\<phi>R_set_res (\<lambda>f. f(ref := 1))
 )\<close>
 
 lemma (in \<phi>OO) op_obj_dispose:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ref \<noteq> Nil
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e dom fields = dom (class_id.fields cls)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e dom fields = dom (class.fields cls)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_dispose cls rawv \<lbrace>
       to_share o fields \<Ztypecolon> \<phi>RawObject ref \<heavy_comma> ref \<Ztypecolon> Val rawv (Ref cls)
   \<longmapsto> Void
@@ -423,7 +352,7 @@ lemma (in \<phi>OO) op_obj_dispose:
   subgoal premises prems for r res proof -
     have t1: \<open>object_ref.class ref = cls\<close>
       by (metis object_ref.collapse of_class.simps(1) prems(1) prems(3))
-    have t2: \<open>!!(R_objs.get res) ref = 1 \<longrightarrow> class_id.fields cls = 1\<close>
+    have t2: \<open>!!(R_objs.get res) ref = 1 \<longrightarrow> class.fields cls = 1\<close>
       unfolding one_fun_def one_option_def
       using R_objs.raw_unit_assertion_implies'[unfolded map_le_def, OF \<open>res \<in> _\<close>]
       by (metis domIff prems(2))

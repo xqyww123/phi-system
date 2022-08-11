@@ -1,5 +1,5 @@
 theory Phi_AgMem
-  imports Phi_Aggregate NuSys NuInstructions
+  imports Phi_Aggregate NuSys NuInstructions Map_of_Tree
 begin
 
 section \<open>Semantics\<close>

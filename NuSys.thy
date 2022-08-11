@@ -1640,17 +1640,17 @@ lemma refine_\<phi>app:
   unfolding Subty_def by (simp add: \<phi>expns)
 
 
-subsection \<open>Forward Simulation\<close>
+subsection \<open>Mapping\<close>
 
-definition F_simulate :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('VAL,'b) \<phi> \<Rightarrow> ('VAL \<Rightarrow> 'VAL, 'a \<Rightarrow> 'b) \<phi>\<close> (infixr "\<Rrightarrow>" 25)
+definition \<phi>Mapping :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> ('av \<Rightarrow> 'bv, 'a \<Rightarrow> 'b) \<phi>\<close> (infixr "\<Rrightarrow>" 25)
     \<comment> \<open>Forward Simulation\<close>
   where \<open>(T \<Rrightarrow> U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> g v \<in> (f x \<Ztypecolon> U) })\<close>
 
-lemma F_simulate_expn[\<phi>expns]:
+lemma \<phi>Mapping_expn[\<phi>expns]:
   \<open>g \<in> (f \<Ztypecolon> T \<Rrightarrow> U) \<longleftrightarrow> (\<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> g v \<in> (f x \<Ztypecolon> U))\<close>
-  unfolding F_simulate_def \<phi>Type_def by simp
+  unfolding \<phi>Mapping_def \<phi>Type_def by simp
 
-lemma F_simulate_inhabited[\<phi>expns]:
+lemma \<phi>Mapping_inhabited[\<phi>expns]:
   \<open>Inhabited (f \<Ztypecolon> T \<Rrightarrow> U) \<Longrightarrow> ((\<And>x. Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (f x \<Ztypecolon> U)) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
@@ -1909,6 +1909,20 @@ lemma \<phi>None_expn[\<phi>expns]:
 lemma \<phi>None_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+
+subsection \<open>Black Hole\<close>
+
+text \<open>Essentially, the system is a Classical Separation Logic.
+  For some situation like garbage collection, Intuitionistic Separation Logic can be more convenient.
+  Therefore, we employ a `Black Hole' which can contain arbitrary resources to simulate the
+    Intuitionistic Separation Logic\<close>
+
+abbreviation (in \<phi>empty) Black_Hole :: \<open>('FIC_N \<Rightarrow> 'FIC) set\<close>
+  where \<open>Black_Hole \<equiv> UNIV\<close>
+
+lemma [\<phi>reason on \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e ?X \<longmapsto> UNIV \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  \<open>\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> UNIV\<close>
+  unfolding Subty_def by simp
 
 subsection \<open>Misc.\<close>
 
@@ -3212,6 +3226,10 @@ lemma \<phi>M_Success[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success (sem_value v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
   unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
 
+lemma \<phi>M_Success_0[\<phi>reason! on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success \<phi>V_nil \<lbrace> ?X \<longmapsto> ?Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>\<close>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
+  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
+
 declare \<phi>M_Success[where X=1, simplified, \<phi>reason!]
 
 lemma \<phi>M_Success'[\<phi>reason 1100000]:
@@ -3276,8 +3294,7 @@ lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex[iff]:
   unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns set_eq_iff)
 
 lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex_\<S>:
-  \<open> P
-\<Longrightarrow> res \<in> \<S> (S x) E
+  \<open> res \<in> \<S> (S x) E
 \<Longrightarrow> res \<in> (\<S> (\<lambda>v. (\<exists>*x. S x v)) E)\<close>
   by (cases res; clarsimp simp add: \<phi>expns set_eq_iff; blast)
 
