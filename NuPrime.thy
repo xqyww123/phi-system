@@ -86,20 +86,13 @@ abbreviation \<open>Valid_Type T \<equiv> Inhabited (Well_Type T)\<close>
 
 end
 
-print_locale \<phi>empty_sem
-
 subsubsection \<open>Empty Fiction\<close>
 
-fiction_space (in \<phi>empty_sem) \<phi>empty_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close>
-
-subsubsection \<open>Empty Settings\<close>
-
-locale \<phi>empty = \<phi>empty_fic
-  where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                   \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
-    and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
-    and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 
-+ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
+locale \<phi>fiction =
+  \<phi>resource_sem Resource_Validator
++ fictional_space INTERPRET
+for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse} set"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{comm_monoid_mult,no_inverse}, 'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse}) fiction"
 begin
 
 definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> S_Assert (Fic_Space fic) \<inter> \<I> INTERP fic"
@@ -140,6 +133,19 @@ lemma INTERP_mono:
                    disjoint_dom1_eq_1[of fic x])
   using times_set_I by blast
 
+end
+
+subsubsection \<open>Empty Settings\<close>
+
+locale \<phi>empty =
+  \<phi>fiction Resource_Validator INTERPRET
++ \<phi>empty_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
+                               \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                               \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
+             and Resource_Validator = Resource_Validator
+for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse} set"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{comm_monoid_mult,no_inverse}, 'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse}) fiction"
++ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 
 
 (*lemma FIC_var_split: \<open>Fic_Space fic \<Longrightarrow>
@@ -192,8 +198,6 @@ lemma \<open>Fic_Space fic \<Longrightarrow> n \<noteq> 0 \<Longrightarrow>
 
 *)
 
-
-end
 
 
 (* type_synonym logaddr = "nat memaddr" *)
@@ -333,7 +337,7 @@ lemma StrictStateTy_plus[iff]:
 
 end
 
-abbreviation (in \<phi>empty) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
+abbreviation (in \<phi>fiction) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
 
 
 subsection \<open>Assertion\<close>
@@ -390,11 +394,11 @@ abbreviation SimpleSubty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " (
 
 paragraph \<open>View Shift\<close>
 
-definition (in \<phi>empty) View_Shift
+definition (in \<phi>fiction) View_Shift
     :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
   where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<in> INTERP_COM (R * T) \<longrightarrow> x \<in> INTERP_COM (R * U) \<and> P)"
 
-abbreviation (in \<phi>empty) Simple_View_Shift
+abbreviation (in \<phi>fiction) Simple_View_Shift
     :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _)"  [13,13] 12)
   where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
 

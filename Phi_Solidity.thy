@@ -518,12 +518,14 @@ definition (in solidity_sem)
     R_environ.\<phi>R_get_res_entry (\<lambda>env. Success (sem_value (word_to_V_int (G env))))\<close>
 
 lemma (in solidity)
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<phi>V_nil \<lbrace> env \<Ztypecolon> FIC_environ.\<phi> Identity \<longmapsto> \<^bold>v\<^bold>a\<^bold>l unat (G env) \<Ztypecolon> \<nat>[LENGTH('len)] \<rbrace>\<close>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<phi>V_nil \<lbrace>
+      env \<Ztypecolon> FIC_environ.\<phi> Identity
+  \<longmapsto> env \<Ztypecolon> FIC_environ.\<phi> Identity\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat (G env) \<Ztypecolon> \<nat>[LENGTH('len)]
+\<rbrace>\<close>
   for G :: \<open>environ \<Rightarrow> 'len::len word\<close>
   unfolding op_get_environ_word_def \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns, rule R_environ.\<phi>R_get_res_entry[where v=env])
    apply (simp add: FIC_environ.partial_implies)
-  apply (simp add: \<phi>expns)
-  apply (\<phi>reason)
+  by (simp add: \<phi>expns)
 
 end

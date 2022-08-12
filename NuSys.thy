@@ -55,7 +55,7 @@ lemma \<phi>Type_eqI:
 
 paragraph \<open>Syntax\<close>
 
-abbreviation (in \<phi>empty) COMMA
+abbreviation (in \<phi>fiction) COMMA
   :: \<open>('FIC_N,'FIC) assn \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('FIC_N,'FIC) assn\<close> (infixl "\<heavy_comma>" 13)
   where \<open>COMMA \<equiv> (*)\<close>
 
@@ -2368,7 +2368,9 @@ lemma [\<phi>reason 2100]:
 lemma [\<phi>reason 2100]:
   "(\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w T x \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<Longrightarrow>
    \<^bold>v\<^bold>i\<^bold>e\<^bold>w ExSet T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding View_Shift_def by (simp add: \<phi>expns) metis
+  unfolding View_Shift_def GOAL_CTXT_def
+  apply (simp add: \<phi>expns)
+  by fastforce
 
 (* subsubsection \<open>Tailling\<close> \<comment> \<open>\<close>
 
@@ -3540,11 +3542,33 @@ lemma fine_fiction_itself_expn[\<phi>expns]:
 
 end
 
+paragraph \<open>Basic Locale for Fiction of Fine Resource\<close>
+
+locale basic_fiction_for_fine_resource =
+  \<phi>fiction Resource_Validator INTERPRET
++  R: fine_resource Res Resource_Validator Valid
++  fictional_project_inject INTERPRET Fic \<open>R.basic_fine_fiction (fiction.fine I)\<close>
+for Valid :: "'T::sep_algebra set"
+and I :: "('U::sep_algebra, 'T) fiction"
+and Res :: "('RES_N, 'RES::{comm_monoid_mult,no_inverse}, 'T ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+and Fic :: "('FIC_N,'FIC::{no_inverse,comm_monoid_mult},'U ?) Fictional_Algebra.Entry"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+begin
+
+lemma fiction_undef_bottom[simp]:
+  \<open>INTERP_RES (u * mk Undef) = {}\<close>
+  unfolding set_eq_iff INTERP_RES_def
+  by (simp add: interp_split' R.basic_fine_fiction_\<I> times_fine)
+
+end
+
+print_locale basic_fiction_for_fine_resource
 
 paragraph \<open>Identity Fiction\<close>
 
 locale identity_fiction_for_fine_resource =
-   \<phi>resource_sem Resource_Validator
+   \<phi>fiction Resource_Validator INTERPRET
 +  R: fine_resource Res Resource_Validator
 +  fictional_project_inject INTERPRET Fic \<open>R.basic_fine_fiction (fiction.fine fiction.it)\<close>
 for Res :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('T::sep_algebra) ?) Fictional_Algebra.Entry"
@@ -3552,6 +3576,8 @@ and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_mon
 and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
 and Fic :: "('FIC_N,'FIC,'T ?) Fictional_Algebra.Entry"
 begin
+
+sublocale basic_fiction_for_fine_resource where I = \<open>fiction.it\<close> ..
 
 lemma expand:
   \<open> Fic_Space r
@@ -3590,7 +3616,7 @@ end
 paragraph \<open>Fiction Agreement\<close>
 
 locale agreement_fiction_for_nosepable_mono_resource =
-   \<phi>resource_sem Resource_Validator
+   \<phi>fiction Resource_Validator INTERPRET
 +  R: nonsepable_mono_resource Res Resource_Validator Valid
 +  fictional_project_inject INTERPRET Fic \<open>R.fiction_agree\<close>
 for Valid :: "'T set"
@@ -3600,6 +3626,10 @@ and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES
 and Fic :: "('FIC_N,'FIC, 'T nonsepable agree option ?) Fictional_Algebra.Entry"
 begin
 
+sublocale basic_fiction_for_fine_resource \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
+  \<open>fiction.optionwise Fictional_Algebra.fiction_agree\<close>
+  by (standard; simp add: R.fiction_agree_def)
+                       
 lemma partial_implies:
   \<open> Fic_Space r
 \<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (Some (agree (nonsepable x))))))
@@ -3611,6 +3641,30 @@ lemma partial_implies:
   subgoal for u y a aa
     by (cases a; clarsimp simp add: image_iff Bex_def) .
 
+lemma VS_double:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w {mk x |x. P x} \<longmapsto> {mk x |x. P x} * {mk x |x. P x}\<close>
+  unfolding View_Shift_def
+  apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric] times_fine)
+  subgoal for x R u x'
+    apply (cases x'; simp)
+    subgoal for x'' apply (cases x''; simp)
+       apply (metis fun_1upd1 inj_homo_one mult_1_class.mult_1_right one_fine_def one_option_def)
+      subgoal for a by (rule exI[where x=\<open>u * mk (Fine (Some a))\<close>]; simp
+                ; rule exI[where x=u]; rule exI[where x=\<open>mk (Fine (Some a))\<close>]; simp
+                ; rule exI[where x=\<open>mk (Fine (Some a))\<close>]; rule exI[where x=\<open>mk (Fine (Some a))\<close>]
+                ; simp add: mk_homo_mult[symmetric] times_fine) . . .
+
+lemma VS_contract:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w {mk x |x. P x} * {mk x |x. P x} \<longmapsto> {mk x |x. P x} \<close>
+  unfolding View_Shift_def
+  apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric])
+  subgoal for x R u xa xb
+    apply (cases xa; cases xb; simp add: times_fine)
+    subgoal for a b
+      apply (cases \<open>a ## b\<close>; simp; cases a; cases b; simp)
+      by blast+ . .
+
+
 definition \<phi> :: \<open>('T, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
   where \<open>\<phi> T x = { mk (Fine (Some (agree (nonsepable v)))) |v. v \<in> (x \<Ztypecolon> T) }\<close>
 
@@ -3621,6 +3675,28 @@ lemma \<phi>_expns[simp]:
 lemma \<phi>_inhabited[simp]:
   \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma \<phi>_double_\<phi>app:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> \<phi> T \<longmapsto> x \<Ztypecolon> \<phi> T \<heavy_comma> x \<Ztypecolon> \<phi> T\<close>
+proof -
+  have \<open>\<exists>P. (x \<Ztypecolon> \<phi> T) = {mk x |x. P x}\<close>
+    unfolding set_eq_iff apply (simp add: \<phi>expns)
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Fine (Some (agree (nonsepable v))) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    by blast
+  then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi> T) = {mk x |x. P x}\<close> by blast
+  show ?thesis by (simp add: VS_double)
+qed
+
+lemma \<phi>_contract_\<phi>app:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> \<phi> T \<heavy_comma> x \<Ztypecolon> \<phi> T \<longmapsto> x \<Ztypecolon> \<phi> T\<close>
+proof -
+  have \<open>\<exists>P. (x \<Ztypecolon> \<phi> T) = {mk x |x. P x}\<close>
+    unfolding set_eq_iff apply (simp add: \<phi>expns)
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Fine (Some (agree (nonsepable v))) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    by blast
+  then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi> T) = {mk x |x. P x}\<close> by blast
+  show ?thesis by (simp add: VS_contract)
+qed
 
 end
 

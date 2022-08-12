@@ -1019,6 +1019,9 @@ subsection \<open>Agreement\<close>
 
 datatype 'a agree = agree 'a
 
+lemma agree_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (agree x))\<close> by (metis agree.exhaust) 
+lemma agree_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (agree x))\<close> by (metis agree.exhaust) 
+
 instantiation agree :: (type) cancl_sep_ab_semigroup begin
 definition times_agree :: \<open>'a agree \<Rightarrow> 'a agree \<Rightarrow> 'a agree\<close>
   where [simp]: \<open>times_agree x y = x\<close>
