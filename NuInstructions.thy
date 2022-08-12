@@ -100,6 +100,10 @@ definition (in fine_resource)
     \<phi>R_get_res :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res F = (\<lambda>res. F (the_fine (get res)) res)\<close>
 
+definition (in nonsepable_mono_resource)
+    \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nonsepable.dest v') | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
+
 definition (in partial_map_resource)
     \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res_entry k F = \<phi>R_get_res (\<lambda>res.
@@ -115,6 +119,12 @@ lemma (in fine_resource) \<phi>R_get_res[\<phi>reason!]:
 \<Longrightarrow> F v res \<in> \<S> Y E
 \<Longrightarrow> \<phi>R_get_res F res \<in> \<S> Y E\<close>
   unfolding \<phi>R_get_res_def by simp
+
+lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
+  \<open> !!(get res) = Some (nonsepable v)
+\<Longrightarrow> F v res \<in> \<S> Y E
+\<Longrightarrow> \<phi>R_get_res_entry F res \<in> \<S> Y E\<close>
+  unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
 lemma (in partial_map_resource) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open> !!(get res) k = Some v

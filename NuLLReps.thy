@@ -1,5 +1,5 @@
 theory NuLLReps
-  imports NuSys "HOL-Library.Word"
+  imports NuSys
   abbrevs "<own>" = "\<left_fish_tail>"
     and "<none>" = "\<down_fish_tail>"
     and "<object>" = "\<R_arr_tail>"

@@ -77,7 +77,7 @@ proc op_get_var:
 
 lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ?x <val-of-var> ?var \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> SUBGOAL G G2
-\<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X \<longmapsto> Y\<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y\<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
 \<Longrightarrow> SOLVE_SUBGOAL G2
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> X \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x <val-of-var> var \<Ztypecolon> T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
@@ -99,9 +99,9 @@ proc op_set_var__synthesis[
   \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ($?var := ?y) \<Ztypecolon> ?U ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
 assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> X1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<close>
-  and S[unfolded Assertion_Level_SubType_Reasoning_def]:
-        \<open>\<And>vy. PROP Assertion_Level_SubType_Reasoning(
-                  \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e X1\<heavy_comma> y \<Ztypecolon> Val vy U \<longmapsto> \<blangle> Y\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> Val vy U \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any)\<close>
+  and S[unfolded View_Shift_Reasoning_def]:
+        \<open>\<And>vy. PROP View_Shift_Reasoning(
+                  \<^bold>v\<^bold>i\<^bold>e\<^bold>w X1\<heavy_comma> y \<Ztypecolon> Val vy U \<longmapsto> \<blangle> Y\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> Val vy U \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any)\<close>
   and [\<phi>reason on \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   and [\<phi>reason on \<open>\<phi>SemType (y \<Ztypecolon> U) ?TY\<close>]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
  goal G
@@ -122,8 +122,8 @@ proc (in \<phi>min) op_var_scope:
   argument \<open>X\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
   return   \<open>Y\<close>
   throws   E
-  \<medium_left_bracket> to_Identity op_var_scope';;
-    try'' ;; \<medium_left_bracket> BLK to_Identity ;; op_free_var \<medium_right_bracket> .. \<medium_left_bracket> to_Identity op_free_var;; throw \<medium_right_bracket>. \<medium_right_bracket>. .
+  \<medium_left_bracket> to_Identity op_var_scope'
+    try'' \<medium_left_bracket> BLK to_Identity op_free_var \<medium_right_bracket>. \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>. \<medium_right_bracket>. .
 
 
 lemma "__\<phi>op_var_scope__":
@@ -471,7 +471,7 @@ lemma branch_\<phi>app:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if br\<^sub>T br\<^sub>F rawc \<lbrace> X\<heavy_comma> C \<Ztypecolon> Val rawc \<bool> \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T + E\<^sub>F \<rbrace>\<close>
   unfolding op_if_def Premise_def Conv_def Merge_def
   apply (cases rawc; cases C; simp; \<phi>reason; simp add: \<phi>expns)
-  using \<phi>CONSEQ'E cast_id subty_union by blast+
+  using \<phi>CONSEQ'E view_shift_id view_shift_union by blast+
 
 
 proc "if":
@@ -509,9 +509,8 @@ lemma (in \<phi>min) "__DoWhile__rule_\<phi>app":
     apply (induct body comp s rule: SemDoWhile.induct)
     apply (clarsimp simp add: \<phi>expns times_list_def)
     subgoal premises prems for f s res c u v proof -
-      have t1: \<open>(\<exists>fic. (\<exists>c. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X c) \<and> P c) \<and>
-                    s \<in> Valid_Resource \<and> Fic_Space fic \<and> s \<in> \<I> INTERP fic)\<close>
-        using Fic_Space_Un prems(3) prems(4) prems(5) prems(6) prems(7) prems(8) prems(9) by blast
+      have t1: \<open>\<exists>fic. (\<exists>c. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X c) \<and> P c) \<and> s \<in> INTERP_RES fic\<close>
+        using prems(3) prems(4) prems(5) prems(6) by blast
       show ?thesis
         apply (insert \<open>\<forall>_ _._\<close>[THEN spec[where x=s], THEN spec[where x=R], THEN mp, OF t1])
         using prems(1) by fastforce
@@ -603,8 +602,8 @@ proc
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket> \<rightarrow> v ;;
     while x invar \<open>x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
-    \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>.
-    \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. ;; (* this ;; leads an empty statement which does nothing but simplification *)
+    \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>. (*condition body of the loop*)
+    \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*) ;; (* this ;; leads an empty statement which does nothing but simplification *)
     $v
   \<medium_right_bracket>. .
 

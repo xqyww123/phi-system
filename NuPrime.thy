@@ -102,7 +102,7 @@ locale \<phi>empty = \<phi>empty_fic
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 begin
 
-abbreviation "INTERP_RES fic \<equiv> Valid_Resource \<inter> S_Assert (Fic_Space fic) \<inter> \<I> INTERP fic"
+definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> S_Assert (Fic_Space fic) \<inter> \<I> INTERP fic"
 
 definition INTERP_COM :: \<open>('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('RES_N \<Rightarrow> 'RES) set\<close>
   where "INTERP_COM T = { res. \<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic }"
@@ -192,8 +192,6 @@ lemma \<open>Fic_Space fic \<Longrightarrow> n \<noteq> 0 \<Longrightarrow>
 
 *)
 
-
-definition "View_Shift u v \<longleftrightarrow> INTERP_RES u \<subseteq> INTERP_RES v "
 
 end
 
@@ -340,6 +338,12 @@ abbreviation (in \<phi>empty) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<clos
 
 subsection \<open>Assertion\<close>
 
+lemma ext_func_forall_eq_simp[simp]:
+  \<open>(\<exists>f. (\<forall>v. f v = g v) \<and> P f) \<longleftrightarrow> P g\<close>
+  unfolding fun_eq_iff[symmetric]
+  by blast
+
+
 context \<phi>empty begin
 (* definition Fiction_Spec :: \<open>('FIC_N, 'FIC) assn \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool\<close>
   where \<open>Fiction_Spec P C Q E \<longleftrightarrow>
@@ -353,12 +357,6 @@ definition \<phi>Procedure :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FI
 abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
 
-
-lemma ext_func_forall_eq_simp[simp]:
-  \<open>(\<exists>f. (\<forall>v. f v = g v) \<and> P f) \<longleftrightarrow> P g\<close>
-  unfolding fun_eq_iff[symmetric]
-  by blast
-
 lemma \<phi>Procedure_alt:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_COM ({r} * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COM ({r} * U vs)) (INTERP_COM ({r} * E)))\<close>
@@ -371,15 +369,40 @@ lemma \<phi>Procedure_alt:
     apply fastforce
     subgoal premises prems for e
       apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
-      by (metis Fic_Space_Un prems(3) prems(4) prems(5) prems(6) prems(7))
+      using prems(2) prems(3) prems(4) by blast
     subgoal premises prems
       apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
-      by (metis Fic_Space_Un prems(3) prems(4) prems(5) prems(6) prems(7)) . .
+      using prems(2) prems(4) by blast . .
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
+end
 
-subsubsection \<open>Essential Hoare Rules\<close>
+subsection \<open>Sub-Typing & View Shift\<close>
+
+paragraph \<open>Sub-Type\<close>
+
+definition Subty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool " ("(2\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
+  where "(\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P) \<longleftrightarrow> (\<forall>v. v \<in> A \<longrightarrow> v \<in> B \<and> P)"
+
+abbreviation SimpleSubty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e _/ \<longmapsto> _)" [13,13] 12)
+  where \<open>SimpleSubty T U \<equiv> Subty T U True\<close>
+
+paragraph \<open>View Shift\<close>
+
+definition (in \<phi>empty) View_Shift
+    :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
+  where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<in> INTERP_COM (R * T) \<longrightarrow> x \<in> INTERP_COM (R * U) \<and> P)"
+
+abbreviation (in \<phi>empty) Simple_View_Shift
+    :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _)"  [13,13] 12)
+  where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
+
+
+
+subsection \<open>Essential Hoare Rules\<close>
+
+context \<phi>empty begin
 
 lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success v \<lbrace> T v \<longmapsto> T \<rbrace>" unfolding \<phi>Procedure_def by simp
 
@@ -400,24 +423,21 @@ lemma \<phi>frame0:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace>"
   using \<phi>frame[where E=0, simplified] .
 
+lemma \<phi>frame_view:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R * A \<longmapsto> R * B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding View_Shift_def
+  by (metis (no_types, lifting) mult.assoc)
+
 lemma \<phi>CONSEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
-\<Longrightarrow> A' \<subseteq> A
-\<Longrightarrow> (\<And>ret. B ret \<subseteq> B' ret)
-\<Longrightarrow> E \<subseteq> E'
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A' \<longmapsto> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any1
+\<Longrightarrow> (\<And>ret. \<^bold>v\<^bold>i\<^bold>e\<^bold>w B ret \<longmapsto> B' ret \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2)
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w E \<longmapsto> E' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any3
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
-  unfolding \<phi>Procedure_def
-  apply clarify
-  subgoal premises prems for comp R proof -
-    have \<open>INTERP_COM (R * A') \<subseteq> INTERP_COM (R * A)\<close>
-      apply (rule INTERP_COM_subset; rule times_set_subset)
-      using prems by blast
-    moreover have \<open>\<S> (\<lambda>vs. INTERP_COM (R * B vs)) (INTERP_COM (R * E))
-       \<subseteq> \<S> (\<lambda>vs. INTERP_COM (R * B' vs)) (INTERP_COM (R * E'))\<close>
-      apply (rule LooseStateTy_subset; rule INTERP_COM_subset; rule times_set_subset)
-      using prems by blast+
-    ultimately show ?thesis using prems by blast
-  qed .
+  unfolding \<phi>Procedure_def View_Shift_def
+  by (smt (verit, del_insts) LooseStateTy_expn')
+
 end
 
 

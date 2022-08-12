@@ -1006,7 +1006,8 @@ lemma to_share_ringop_id[simp]:
 
 subsection \<open>Non-sepable Semigroup\<close>
 
-datatype 'a nonsepable = nonsepable 'a
+datatype 'a nonsepable = nonsepable (dest: 'a)
+hide_const (open) dest
 
 instantiation nonsepable :: (type) nonsepable_semigroup begin
 definition \<open>sep_disj_nonsepable (x :: 'a nonsepable) (y :: 'a nonsepable) = False\<close>

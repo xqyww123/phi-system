@@ -1,5 +1,5 @@
 theory Phi_Solidity
-  imports Phi_OO Map_of_Tree
+  imports Phi_OO Map_of_Tree Phi_Min_ex
 begin
 
 section \<open>Semantics\<close>
@@ -56,7 +56,27 @@ end
 
 paragraph \<open>Models for Runtime Environment\<close>
 
-datatype environ = Environ (sender: address) (code: address)
+text \<open>Not Supported: msg.data\<close>
+
+datatype environ = Environ
+  (blockhash: \<open>256 word\<close>)
+  (basefee: \<open>256 word\<close>)
+  (chainid: \<open>256 word\<close>)
+  (coinbase: \<open>256 word\<close>)
+  (difficulty: \<open>256 word\<close>)
+  (gaslimit: \<open>256 word\<close>)
+  (blocknumber: \<open>256 word\<close>)
+  (timestamp: \<open>256 word\<close>)
+  (gasprice: \<open>256 word\<close>)
+
+datatype mutable_environ = Mutable_Environ
+  (sender: address)
+  (sig: \<open>32 word\<close>)
+  ("value": \<open>256 word\<close>)
+  (origin: address)
+
+hide_const (open) blockhash basefee chainid coinbase difficulty gaslimit blocknumber timestamp
+  sender sig "value" gasprice origin
 
 paragraph \<open>Models for Balance Table\<close>
 
@@ -78,6 +98,7 @@ resource_space ('VAL::"nonsepable_semigroup",'TY) solidity_res = ('VAL,'TY) \<ph
   R_environ :: \<open>environ nonsepable option ?\<close>
       \<comment> \<open>None means this part of the resource is not accessible and not specified\<close>
   R_balance :: \<open>balance_table ?\<close>
+  R_msg :: \<open>mutable_environ nonsepable option ?\<close>
 
 
 subsection \<open>Semantics\<close>
@@ -111,6 +132,7 @@ assumes WT_LedgeRef[simp]: \<open>Well_Type \<tau>LedgeRef = UNIV\<close>
   and   EqCompare_Address[simp]:      \<open>EqCompare (V_Address.mk addr1)  (V_Address.mk addr2)  \<longleftrightarrow> addr1 = addr2\<close>
   and   Resource_Validator_Ledge':   \<open>Resource_Validator R_ledge.name   = R_ledge.inject ` Fine ` {h. h Nil = 1 \<and> finite (dom1 h) }\<close>
   and   Resource_Validator_Environ': \<open>Resource_Validator R_environ.name = R_environ.inject ` Fine ` UNIV\<close>
+  and   Resource_Validator_Msg[simp]: \<open>Resource_Validator R_msg.name = R_msg.inject ` Fine ` UNIV\<close>
   and   Resource_Validator_Balance[simp]:
               \<open>Resource_Validator R_balance.name = R_balance.inject ` Fine ` UNIV\<close>
 begin
@@ -143,12 +165,15 @@ sublocale R_ledge: partial_map_resource2 Valid_Ledge R_ledge Resource_Validator
 
 paragraph \<open>Resource Environ\<close>
 
-definition Valid_Environ :: "environ set" where "Valid_Environ = UNIV"
-
-sublocale R_environ: nosepable_mono_resource R_environ Resource_Validator \<open>nonsepable ` Valid_Environ\<close>
+sublocale R_environ: nonsepable_mono_resource R_environ Resource_Validator UNIV
   apply standard apply simp
   apply (simp add: Resource_Validator_Environ' image_iff set_eq_iff)
-  by (metis UNIV_I Valid_Environ_def nonsepable.exhaust not_None_eq)
+  by (metis nonsepable.exhaust not_None_eq)
+
+sublocale R_msg: nonsepable_mono_resource R_msg Resource_Validator UNIV
+  apply standard apply simp
+  apply (simp add: Resource_Validator_Environ' image_iff set_eq_iff)
+  by (metis nonsepable.exhaust not_None_eq)
 
 
 paragraph \<open>Resource Balance\<close>
@@ -165,6 +190,7 @@ fiction_space (in solidity_sem) solidity_fic :: \<open>'RES_N \<Rightarrow> 'RES
   FIC_ledge   :: \<open>R_ledge.share_fiction\<close>
   FIC_environ :: \<open>R_environ.fiction_agree\<close>
   FIC_balance :: \<open>R_balance.share_fiction\<close>
+  FIC_msg     :: \<open>R_msg.basic_fine_fiction (fiction.fine fiction.it)\<close>
 
 locale solidity =
   solidity_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
@@ -181,11 +207,16 @@ begin
 sublocale FIC_ledge: share_fiction_for_partial_mapping_resource2 Valid_Ledge R_ledge
     Resource_Validator INTERPRET FIC_ledge ..
 
-sublocale FIC_environ: agreement_fiction_for_nosepable_mono_resource \<open>nonsepable ` Valid_Environ\<close>
+sublocale FIC_environ: agreement_fiction_for_nosepable_mono_resource UNIV
   R_environ Resource_Validator INTERPRET FIC_environ ..
 
 sublocale FIC_balance: share_fiction_for_partial_mapping_resource UNIV R_balance
     Resource_Validator INTERPRET FIC_balance ..
+
+sublocale FIC_msg: identity_fiction_for_fine_resource UNIV R_msg
+    Resource_Validator INTERPRET FIC_msg
+  apply (standard; simp add: set_eq_iff image_iff)
+  by (metis nonsepable.exhaust option.exhaust)
 
 end
 
@@ -247,7 +278,7 @@ lemma LedgeRef_eq[\<phi>reason]:
 
 end
 
-subsection \<open>\<phi>-Types for Resources\<close>
+subsection \<open>\<phi>-Types for Ledge\<close>
 
 subsubsection \<open>Slot of Ledge\<close>
 
@@ -332,6 +363,7 @@ lemma \<phi>Uninit_expn[\<phi>expns]:
 lemma \<phi>Uninit_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+
 section Instruction
 
 subsection \<open>Value Arithmetic\<close>
@@ -355,7 +387,7 @@ lemma (in solidity) \<phi>M_getV_Address[\<phi>reason!]:
   unfolding \<phi>M_getV_Address_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
 
 
-subsection \<open>Resource\<close>
+subsection \<open>Ledge\<close>
 
 paragraph \<open>Load Field\<close>
 
@@ -478,6 +510,20 @@ lemma (in solidity) op_obj_allocate:
     by blast .
 
 
+subsection \<open>Globally Available Variables\<close>
 
+definition (in solidity_sem)
+      op_get_environ_word :: \<open>(environ \<Rightarrow> 'len::len word) \<Rightarrow> (unit, 'VAL, 'RES_N,'RES) proc'\<close>
+  where \<open>op_get_environ_word G _ =
+    R_environ.\<phi>R_get_res_entry (\<lambda>env. Success (sem_value (word_to_V_int (G env))))\<close>
+
+lemma (in solidity)
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<phi>V_nil \<lbrace> env \<Ztypecolon> FIC_environ.\<phi> Identity \<longmapsto> \<^bold>v\<^bold>a\<^bold>l unat (G env) \<Ztypecolon> \<nat>[LENGTH('len)] \<rbrace>\<close>
+  for G :: \<open>environ \<Rightarrow> 'len::len word\<close>
+  unfolding op_get_environ_word_def \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns, rule R_environ.\<phi>R_get_res_entry[where v=env])
+   apply (simp add: FIC_environ.partial_implies)
+  apply (simp add: \<phi>expns)
+  apply (\<phi>reason)
 
 end
