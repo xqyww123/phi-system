@@ -1,5 +1,6 @@
 theory Phi_AgMem
   imports Phi_Aggregate NuSys NuInstructions Map_of_Tree
+    "HOL-Library.Word"
 begin
 
 section \<open>Semantics\<close>
@@ -758,7 +759,7 @@ definition \<phi>M_get_mem
 definition op_load_mem :: "'TY \<Rightarrow> ('VAL, 'VAL,'RES_N,'RES) proc'"
   where "op_load_mem TY v =
     \<phi>M_get_logptr TY v (\<lambda>ptr.
-    \<phi>M_get_mem (memaddr.segment ptr) (memaddr.index ptr) (\<lambda>x. Success (sem_value x)))"
+    \<phi>M_get_mem (memaddr.segment ptr) (memaddr.index ptr) (\<lambda>x. Return (sem_value x)))"
 
 definition op_store_mem :: "'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'"
   where "op_store_mem TY =
@@ -794,7 +795,7 @@ lemma (in agmem) \<phi>M_get_mem[\<phi>reason!]:
   unfolding \<phi>M_get_mem_def \<phi>M_get_res_entry_def \<phi>M_get_res_def
   apply (auto simp add: \<phi>expns FIC_mem.interp_split' R_mem_valid_split' share_mem_def
                 R_mem.mult_in_dom Valid_Mem_def times_fun
-                mult_strip_fine_011 times_list_def)
+                mult_strip_fine_011 times_list_def del: subsetI)
   subgoal premises prems for R fic res mem mem'
   proof -
     note [simp] = mult_strip_fine_011

@@ -500,33 +500,21 @@ lemma (in \<phi>min) "__DoWhile__rule_\<phi>app":
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l P x' \<Ztypecolon> \<bool>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
   unfolding op_do_while_def \<phi>Procedure_def
-  apply (simp add: SemDoWhile_deterministic2 LooseStateTy_expn')
+  apply (simp add: subset_iff LooseStateTy_expn')
   apply (rule allI impI conjI)+
-  apply (elim exE)
-  apply (simp add: SemDoWhile_deterministic2)
   subgoal for comp R s
   apply (rotate_tac 2)
-    apply (induct body comp s rule: SemDoWhile.induct)
-    apply (clarsimp simp add: \<phi>expns times_list_def)
-    subgoal premises prems for f s res c u v proof -
-      have t1: \<open>\<exists>fic. (\<exists>c. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X c) \<and> P c) \<and> s \<in> INTERP_RES fic\<close>
-        using prems(3) prems(4) prems(5) prems(6) by blast
+    apply (induct body comp s rule: SemDoWhile.induct; clarsimp simp add: \<phi>expns times_list_def)
+    apply fastforce
+    subgoal premises prems for res f s s'' c u v proof -
+      have t1: \<open>\<exists>c. (\<exists>fic. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X c) \<and> s \<in> INTERP_RES fic) \<and> P c\<close>
+        using prems(5) prems(6) prems(7) prems(8) by blast
       show ?thesis
         apply (insert \<open>\<forall>_ _._\<close>[THEN spec[where x=s], THEN spec[where x=R], THEN mp, OF t1])
-        using prems(1) by fastforce
+        using prems(1) prems(3) by fastforce
     qed
-    subgoal premises prems for f s res s''
-      apply (rule \<open>_ \<Longrightarrow> _ \<Longrightarrow> _\<close>[OF \<open>\<forall>_. _\<close>])
-      apply (simp add: \<phi>expns times_list_def)
-      apply (insert \<open>\<forall>_. _\<close>[THEN spec[where x=s], THEN spec[where x=R], simplified prems, simplified])
-      apply (clarsimp simp add: \<phi>expns times_list_def)
-      by (metis Fic_Space_Un one_neq_zero)
-    apply force
-     apply force
-  apply (simp add: \<phi>expns times_list_def)
-    subgoal premises prems for f s
-      using \<open>\<forall>_. _\<close>[THEN spec[where x=s], THEN spec[where x=R], simplified prems, simplified] . . .
-
+    apply fastforce
+    by blast .
 
 text \<open>Note the While rule we mentioned in the paper is just a special case of the above
       __DoWhile__rule_\<phi>app\<close>

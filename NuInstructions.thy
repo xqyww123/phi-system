@@ -11,21 +11,27 @@ subsection \<open>Throw Exception\<close>
 text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
 
 lemma (in \<phi>empty) throw_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Exception \<lbrace> X \<longmapsto> (\<lambda>_::unreachable sem_value. 0) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
-  unfolding \<phi>Procedure_def by blast
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift Exception \<lbrace> X \<longmapsto> (\<lambda>_::unreachable sem_value. 0) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
+  unfolding \<phi>Procedure_def subset_iff det_lift_def by clarsimp
 
 subsection \<open>Try-Catch\<close>
 
 definition op_try :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc"
-  where \<open>op_try f g s = (case f s of Success x s' \<Rightarrow> Success x s' | Exception s' \<Rightarrow> g s'
-                                   | PartialCorrect \<Rightarrow> PartialCorrect | Fail \<Rightarrow> Fail)\<close>
+  where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'} | Exception s' \<Rightarrow> g s'
+                                   | PartialCorrect \<Rightarrow> {PartialCorrect} | Fail \<Rightarrow> {Fail}) ` f s)\<close>
 
 lemma (in \<phi>empty) "__op_try__":
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> \<lambda>v. Y1 v + Y2 v \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace> \<close>
-  unfolding op_try_def \<phi>Procedure_def 
-  by (auto 2 5 simp add: ring_distribs)
+  unfolding op_try_def \<phi>Procedure_def subset_iff
+  apply clarsimp subgoal for comp R x s
+    apply (cases s; simp; cases x; clarsimp simp add: \<phi>expns ring_distribs)
+    apply (smt (z3) INTERP_COM LooseStateTy_expn(1) mem_Collect_eq times_set_def)
+    apply (smt (z3) INTERP_COM LooseStateTy_expn(1) LooseStateTy_expn(2) set_mult_expn)
+    apply (smt (z3) INTERP_COM LooseStateTy_expn(2) set_mult_expn)
+    apply (smt (z3) INTERP_COM LooseStateTy_expn(2) LooseStateTy_expn(3) set_mult_expn)
+    by blast .
 
 definition "Union_the_Same_Or_Arbitrary_when_Var Z X Y \<longleftrightarrow> (\<forall>v. (Z::'v \<Rightarrow> 'a set) v = X v + Y v)"
 
@@ -86,13 +92,13 @@ definition (in \<phi>resource_sem)
 definition (in \<phi>resource_sem)
     \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a) ?) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_res_entry R k F = \<phi>M_get_res R (\<lambda>res.
-    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
+    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Fail}))\<close>
 
 definition (in \<phi>resource_sem) \<phi>M_set_res :: \<open>
     (('x ? \<Rightarrow> 'x ?) \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'RES_N \<Rightarrow> 'RES)
       \<Rightarrow> ('x \<Rightarrow> 'x) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_set_res Updt F = (\<lambda>res.
-    Success (sem_value ()) (Updt (map_fine F) res))\<close>
+    {Success (sem_value ()) (Updt (map_fine F) res)})\<close>
 
 paragraph \<open>Getters\<close>
 
@@ -102,54 +108,54 @@ definition (in fine_resource)
 
 definition (in nonsepable_mono_resource)
     \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nonsepable.dest v') | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
+  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nonsepable.dest v') | _ \<Rightarrow> (\<lambda>_. {Fail}))\<close>
 
 definition (in partial_map_resource)
     \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res_entry k F = \<phi>R_get_res (\<lambda>res.
-    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
+    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Fail}))\<close>
 
 definition (in partial_map_resource2)
     \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
-    case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. Fail))\<close>
+    case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Fail}))\<close>
 
 lemma (in fine_resource) \<phi>R_get_res[\<phi>reason!]:
   \<open> !!(get res) = v
-\<Longrightarrow> F v res \<in> \<S> Y E
-\<Longrightarrow> \<phi>R_get_res F res \<in> \<S> Y E\<close>
-  unfolding \<phi>R_get_res_def by simp
+\<Longrightarrow> F v res \<subseteq> \<S> Y E
+\<Longrightarrow> \<phi>R_get_res F res \<subseteq> \<S> Y E\<close>
+  unfolding \<phi>R_get_res_def subset_iff by simp
 
 lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
   \<open> !!(get res) = Some (nonsepable v)
-\<Longrightarrow> F v res \<in> \<S> Y E
-\<Longrightarrow> \<phi>R_get_res_entry F res \<in> \<S> Y E\<close>
+\<Longrightarrow> F v res \<subseteq> \<S> Y E
+\<Longrightarrow> \<phi>R_get_res_entry F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
 lemma (in partial_map_resource) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open> !!(get res) k = Some v
-\<Longrightarrow> F v res \<in> \<S> Y E
-\<Longrightarrow> \<phi>R_get_res_entry k F res \<in> \<S> Y E\<close>
+\<Longrightarrow> F v res \<subseteq> \<S> Y E
+\<Longrightarrow> \<phi>R_get_res_entry k F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
 lemma (in partial_map_resource2) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open> !!(get res) k k2 = Some v
-\<Longrightarrow> F v res \<in> \<S> Y E
-\<Longrightarrow> \<phi>R_get_res_entry k k2 F res \<in> \<S> Y E\<close>
+\<Longrightarrow> F v res \<subseteq> \<S> Y E
+\<Longrightarrow> \<phi>R_get_res_entry k k2 F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
 
 paragraph \<open>Setters\<close>
 
 definition (in fine_resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>R_set_res F = (\<lambda>res. Success (sem_value ()) (updt (map_fine F) res))\<close>
+  where \<open>\<phi>R_set_res F = (\<lambda>res. {Success (sem_value ()) (updt (map_fine F) res)})\<close>
 
 lemma (in partial_map_resource) \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := u) \<in> Valid)
 \<Longrightarrow> P (!!(get res))
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k \<mapsto> any)))})
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
-      \<in> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})) Any\<close>
+      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
 
 lemma (in partial_map_resource2) \<phi>R_set_res[\<phi>reason!]:
@@ -157,7 +163,7 @@ lemma (in partial_map_resource2) \<phi>R_set_res[\<phi>reason!]:
 \<Longrightarrow> P (!!(get res))
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := 1(k2 \<mapsto> any))))})
 \<Longrightarrow> \<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
-      \<in> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := 1(k2 := u))))})) Any\<close>
+      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := 1(k2 := u))))})) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
 
 
@@ -167,7 +173,7 @@ lemma (in partial_map_resource) \<phi>R_dispose_res[\<phi>reason!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> m(k := None) \<in> Valid)
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k \<mapsto> any)))})
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := None)) res
-      \<in> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
+      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
 
 lemma (in partial_map_resource2) \<phi>R_dispose_res[\<phi>reason!]:
@@ -176,7 +182,7 @@ lemma (in partial_map_resource2) \<phi>R_dispose_res[\<phi>reason!]:
 \<Longrightarrow> P (!!(get res))
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := any)))})
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := 1)) res
-      \<in> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
+      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
 
 
@@ -199,16 +205,16 @@ lemma (in mapping_resource) \<phi>R_set_res_new[\<phi>reason!]:
 \<Longrightarrow> k \<notin> dom1 !!(get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
-      \<in> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})) Any\<close>
+      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__new_rule__")
 
 lemma (in mapping_resource) \<phi>R_allocate_res_entry[\<phi>reason!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
 \<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in> Valid \<longrightarrow> m(k := init) \<in> Valid)
 \<Longrightarrow> (\<And>k res. res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := init)))} \<^bold>s\<^bold>u\<^bold>b\<^bold>j P k)
-      \<Longrightarrow> F k res \<in> \<S> Y E)
+      \<Longrightarrow> F k res \<subseteq> \<S> Y E)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
-\<Longrightarrow> \<phi>R_allocate_res_entry P init F res \<in> \<S> Y E\<close>
+\<Longrightarrow> \<phi>R_allocate_res_entry P init F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_allocate_res_entry_def \<phi>R_get_res_def
   subgoal premises prems proof -
     let ?m = \<open>!!(get res)\<close>

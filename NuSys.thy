@@ -197,7 +197,7 @@ definition (in \<phi>empty)
                         \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn)
                         \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool "
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
-    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<in> \<S> (\<lambda>ret. INTERP_COM (R * S ret)) (INTERP_COM (R * E))"
+    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> \<S> (\<lambda>ret. INTERP_COM (R * S ret)) (INTERP_COM (R * E))"
 
 lemma (in \<phi>empty) CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (auto 0 4 simp add: \<phi>expns)
@@ -210,8 +210,6 @@ lemma (in \<phi>empty) CurrentConstruction_mk_elim_rule:
 
 paragraph \<open>Rules for Constructing Programs\<close>
 
-definition \<open>Return = Success\<close>
-
 context \<phi>empty begin
 
 lemma \<phi>apply_proc:
@@ -222,29 +220,29 @@ lemma \<phi>accept_proc:
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1
 \<Longrightarrow> (\<And>s' ret. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (g ret) \<^bold>o\<^bold>n s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2)
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> g) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 + E2"
-  unfolding CurrentConstruction_def PendingConstruction_def bind_def
-  by (cases "f s") (auto simp add: ring_distribs)
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def subset_iff
+  apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
 
 lemma \<phi>return_when_unreachable:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> Return (sem_value undefined)) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
   for f :: \<open>(unreachable, 'RES_N, 'RES) proc\<close>
-  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def
-  by (cases "f s") (auto simp add: ring_distribs)
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff
+  apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
 
 lemma \<phi>return_additional_unit:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> (\<lambda>v. Return (\<phi>V_pair v \<phi>V_nil))) \<^bold>o\<^bold>n s [R]
         \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>ret. T (\<phi>V_fst ret)) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def \<phi>V_pair_def
-    \<phi>V_fst_def \<phi>V_snd_def
-  by (cases "f s") (auto simp add: ring_distribs)
+    \<phi>V_fst_def \<phi>V_snd_def det_lift_def subset_iff
+  apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
 
 lemma \<phi>return:
   " \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'
 \<Longrightarrow> T' = T ret
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (Return ret) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s 0"
-  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff
   by simp+
 
 lemma \<phi>reassemble_proc_final:
@@ -266,7 +264,7 @@ paragraph \<open>Simplification in the Programming\<close>
 
 lemma (in \<phi>empty) [simp]:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P"
-  unfolding CurrentConstruction_def by (simp_all add: \<phi>expns pair_All) blast
+  unfolding CurrentConstruction_def by (simp_all add: \<phi>expns pair_All)
 
 lemma (in \<phi>empty) [simp]:
   "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> (B \<and> C)"
@@ -274,7 +272,7 @@ lemma (in \<phi>empty) [simp]:
 
 lemma (in \<phi>empty) \<phi>ExTyp_strip:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExSet T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T c)"
-  unfolding CurrentConstruction_def atomize_eq by (simp_all add: \<phi>expns pair_All) blast
+  unfolding CurrentConstruction_def atomize_eq by (simp_all add: \<phi>expns pair_All)
 
 lemma (in \<phi>empty) Subjection_simp_proc_arg'[simp]:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)"
@@ -541,8 +539,8 @@ subsubsection \<open>Finalization Rewrites\<close>
 consts procedure_simplification :: mode
 named_theorems procedure_simps
 
-declare proc_bind_SKIP[folded Return_def, procedure_simps]
-  proc_bind_SKIP[procedure_simps]
+declare proc_bind_SKIP[procedure_simps]
+  proc_bind_SKIP'[procedure_simps]
   proc_bind_assoc[procedure_simps]
 
 \<phi>reasoner procedure_equivalent 1200 (conclusion \<open>Premise procedure_simplification ?P\<close>)
@@ -571,8 +569,8 @@ subsubsection \<open>Misc\<close>
 lemma (in \<phi>empty) "\<phi>__Return_rule__":
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_::unit sem_value. Y \<rbrace>\<close>
-  unfolding \<phi>Procedure_def Return_def View_Shift_def
-  by blast
+  unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def
+  by clarsimp
 
 
 subsection \<open>Ad-hoc Overload\<close>
@@ -2080,9 +2078,9 @@ lemma (in \<phi>empty) "_\<phi>cast_internal_rule_'":
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
   unfolding FOCUS_TAG_def Imply_def PendingConstruction_def bind_def GOAL_CTXT_def
     View_Shift_Reasoning_def View_Shift_def
-  apply (clarsimp simp add: \<phi>expns LooseStateTy_expn')
-  by (smt (verit, del_insts) Fic_Space_Un)
-  
+  apply (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff)
+  subgoal for x by (cases x; simp; fastforce) .
+
 
 (* subsubsection \<open>General Rules\<close>
 
@@ -3194,10 +3192,10 @@ subsection \<open>Definitions of Elementary Constructions\<close>
 context \<phi>empty_sem begin
 
 definition \<phi>M_assert :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Success \<phi>V_nil s else Fail)\<close>
+  where \<open>\<phi>M_assert P = (\<lambda>s. if P then Return \<phi>V_nil s else {Fail})\<close>
 
 definition \<phi>M_assume :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Success \<phi>V_nil s else PartialCorrect)\<close>
+  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Return \<phi>V_nil s else {PartialCorrect})\<close>
 
 definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'RES_N,'RES) proc) \<Rightarrow> ('y,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
@@ -3216,23 +3214,26 @@ declare \<phi>SEQ[\<phi>reason!]
 
 lemma \<phi>M_assert[\<phi>reason! on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_assert ?P \<lbrace> ?A \<longmapsto> ?B \<rbrace>\<close>]:
   \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace>\<close>
-  unfolding \<phi>Procedure_def \<phi>M_assert_def by (auto simp add: \<phi>expns Inhabited_def)
+  unfolding \<phi>Procedure_def \<phi>M_assert_def Return_def det_lift_def
+  by (clarsimp simp add: \<phi>expns Inhabited_def, blast)
 
 lemma \<phi>M_assert_True[simp]:
-  \<open>\<phi>M_assert True = Success \<phi>V_nil\<close>
+  \<open>\<phi>M_assert True = Return \<phi>V_nil\<close>
   unfolding \<phi>M_assert_def by simp
 
 lemma \<phi>M_assert':
   \<open>P \<Longrightarrow> Q (F args) \<Longrightarrow> Q ((\<phi>M_assert P \<ggreater> F) args)\<close>
-  unfolding \<phi>M_assert_def bind_def by simp
+  unfolding \<phi>M_assert_def bind_def Return_def det_lift_def by simp
 
 lemma \<phi>M_assume[\<phi>reason!]:
   \<open>(P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
-  unfolding \<phi>Procedure_def \<phi>M_assume_def bind_def by force
+  unfolding \<phi>Procedure_def \<phi>M_assume_def bind_def Return_def det_lift_def
+  by clarsimp
 
 lemma throw_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Exception \<lbrace> X \<longmapsto> \<lambda>_. 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
-  unfolding \<phi>Procedure_def by simp
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift Exception \<lbrace> X \<longmapsto> \<lambda>_. 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
+  unfolding \<phi>Procedure_def subset_iff det_lift_def
+  by clarsimp
 
 lemma \<phi>M_tail_left:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
 lemma \<phi>M_tail_right: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1 \<heavy_comma> Y v \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
@@ -3258,18 +3259,15 @@ lemma \<phi>M_caseV[\<phi>reason!]:
 
 lemma \<phi>M_Success[\<phi>reason!]:
   \<open> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success (sem_value v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
-  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
-
-lemma \<phi>M_Success_0[\<phi>reason! on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success \<phi>V_nil \<lbrace> ?X \<longmapsto> ?Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>\<close>]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
-  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem_value v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
+  unfolding \<phi>Procedure_def det_lift_def Return_def
+  by (clarsimp simp add: \<phi>expns)
 
 declare \<phi>M_Success[where X=1, simplified, \<phi>reason!]
 
-lemma \<phi>M_Success'[\<phi>reason 1100000]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
-  unfolding \<phi>Procedure_def by (clarsimp simp add: \<phi>expns)
+lemma \<phi>M_Success'[\<phi>reason 1100000 on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_nil \<lbrace> ?X \<longmapsto> ?X' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>\<close>]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_nil \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
+  unfolding Return_def \<phi>Procedure_def det_lift_def by (clarsimp simp add: \<phi>expns)
 
 end
 
@@ -3287,27 +3285,29 @@ lemma (in \<phi>resource_sem)[simp]:
 lemma (in \<phi>empty) \<phi>Procedure_\<phi>Res_Spec:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space (r * p))
-      \<longrightarrow> f res \<in> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space (r * q)))
+      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space (r * q)))
                     (\<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E \<and> Fic_Space (r * e))))\<close>
   apply rule
-   apply (unfold \<phi>Procedure_alt INTERP_COM \<phi>Res_Spec_def)
+   apply (unfold \<phi>Procedure_alt INTERP_COM \<phi>Res_Spec_def subset_iff)
    apply (clarsimp simp add: times_set_def \<phi>expns INTERP_RES_def)
-  subgoal premises prems for r res c proof-
+  subgoal premises prems for r res s c proof-
     have t1: \<open>(\<exists>fic. (\<exists>y. fic = r * y \<and> y \<in> P) \<and> res \<in> Valid_Resource \<and> Fic_Space fic \<and> res \<in> \<I> INTERP fic)\<close>
       using Fic_Space_Un prems by blast
     show ?thesis
-      apply (insert prems(1)[THEN spec[where x=res], THEN spec[where x=r], THEN mp, OF t1])
-      apply (cases \<open>f res\<close>; simp add: \<phi>expns INTERP_RES_def)
+      apply (insert prems(1)[THEN spec[where x=res], THEN spec[where x=r], THEN mp, OF t1,
+              THEN spec[where x=s], THEN mp, OF \<open>s \<in> f res\<close>])
+      apply (cases s; clarsimp simp add: \<phi>expns INTERP_RES_def)
       apply force
       using Fic_Space_Un by blast
   qed
   apply (clarsimp simp add: times_set_def \<phi>expns INTERP_RES_def)
-  subgoal premises prems for res r c proof-
+  subgoal premises prems for res r s c proof-
     have t1: \<open>res \<in> Valid_Resource \<and> (\<exists>c. res \<in> \<I> INTERP (r * c) \<and> c \<in> P \<and> Fic_Space r \<and> Fic_Space c)\<close>
       using prems by blast
     show ?thesis
-      apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, OF t1])
-      apply (cases "f res"; simp add: \<phi>expns INTERP_RES_def)
+      apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, OF t1,
+              THEN spec[where x=s], THEN mp, OF \<open>s \<in> _\<close>])
+      apply (cases s; simp add: \<phi>expns INTERP_RES_def)
       using Fic_Space_Un apply blast
       using Fic_Space_Un by blast
   qed .
@@ -3319,8 +3319,8 @@ lemma (in \<phi>resource_sem) \<phi>Res_Spec_subj[iff]:
 
 lemma (in \<phi>resource_sem) \<phi>Res_Spec_subj_\<S>:
   \<open> P
-\<Longrightarrow> res \<in> \<S> S E
-\<Longrightarrow> res \<in> (\<S> (\<lambda>v. S v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) E)\<close>
+\<Longrightarrow> res \<subseteq> \<S> S E
+\<Longrightarrow> res \<subseteq> (\<S> (\<lambda>v. S v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) E)\<close>
   by (clarsimp simp add: \<phi>expns set_eq_iff)
 
 lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex[iff]:
@@ -3328,18 +3328,21 @@ lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex[iff]:
   unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns set_eq_iff)
 
 lemma (in \<phi>resource_sem) \<phi>Res_Spec_ex_\<S>:
-  \<open> res \<in> \<S> (S x) E
-\<Longrightarrow> res \<in> (\<S> (\<lambda>v. (\<exists>*x. S x v)) E)\<close>
-  by (cases res; clarsimp simp add: \<phi>expns set_eq_iff; blast)
+  \<open> res \<subseteq> \<S> (S x) E
+\<Longrightarrow> res \<subseteq> (\<S> (\<lambda>v. (\<exists>*x. S x v)) E)\<close>
+  apply (clarsimp simp add: \<phi>expns set_eq_iff subset_iff)
+  subgoal for x by (cases x; clarsimp simp add: \<phi>expns set_eq_iff subset_iff; blast) .
 
 
 paragraph \<open>Weakest Precondition Transformer for \<phi>Res_Spec\<close>
 
 lemma (in \<phi>resource_sem) \<phi>M_RS_WP_SEQ[\<phi>reason!]:
-  \<open> F res \<in> \<S> P E
-\<Longrightarrow> (\<And>ret res. res \<in> P ret \<Longrightarrow>  G ret res \<in> \<S> Q E)
-\<Longrightarrow> (F \<bind> G) res \<in> \<S> Q E\<close>
-  unfolding bind_def by (cases "F res"; simp add: \<phi>expns)
+  \<open> F res \<subseteq> \<S> P E
+\<Longrightarrow> (\<And>ret res. res \<in> P ret \<Longrightarrow> G ret res \<subseteq> \<S> Q E)
+\<Longrightarrow> (F \<bind> G) res \<subseteq> \<S> Q E\<close>
+  unfolding bind_def subset_iff
+  apply clarsimp subgoal for s s'
+    by (cases s'; simp; cases s; clarsimp ; blast) .
 
 
 subsection \<open>Tools for mostly used resource form\<close>

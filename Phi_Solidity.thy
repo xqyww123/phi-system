@@ -439,8 +439,8 @@ end
 definition (in solidity_sem)
   \<phi>M_get_res_entry_ledge :: \<open>
     'TY \<Rightarrow> 'VAL ledge_ref
-       \<Rightarrow> ('VAL \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('a, 'RES_N, 'RES) state)
-         \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('a, 'RES_N, 'RES) state\<close>
+       \<Rightarrow> ('VAL \<Rightarrow> ('a, 'RES_N, 'RES) proc)
+         \<Rightarrow> ('a, 'RES_N, 'RES) proc\<close>
   where "\<phi>M_get_res_entry_ledge TY k F =
     R_ledge.\<phi>R_get_res_entry (ledge_ref.instance k) (ledge_ref.path k) (\<lambda>v.
       case v of initialized u \<Rightarrow> \<phi>M_assert (u \<in> Well_Type TY) \<ggreater> F u
@@ -449,7 +449,7 @@ definition (in solidity_sem)
 definition (in solidity_sem) op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_load_ledge TY v =
     \<phi>M_getV_LedgeRef v (\<lambda>ref.
-    \<phi>M_get_res_entry_ledge TY ref (\<lambda>v. Success (sem_value v)))\<close>
+    \<phi>M_get_res_entry_ledge TY ref (\<lambda>v. Return (sem_value v)))\<close>
 
 lemma (in \<phi>empty_sem) [simp]:
   \<open> v \<in> Well_Type TY
@@ -464,10 +464,10 @@ lemma (in solidity) \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_res_entry_ledge TY (ledge_ref addr path) F
       \<lbrace> v \<Ztypecolon> LInstance addr (\<phi>MapAt path (n \<Znrres>\<phi> (\<phi>Init Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec \<phi>M_get_res_entry_ledge_def Premise_def
-  apply (clarsimp simp add: \<phi>expns zero_set_def)
+  apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
   subgoal for r res vb
   apply (rule R_ledge.\<phi>R_get_res_entry[where v=vb])
-  apply (simp add: FIC_ledge.partial_implies')
+  apply simp
     apply (cases vb; simp)
     subgoal premises prems for x1
       apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, simplified prems, simplified])
@@ -494,7 +494,7 @@ definition (in solidity) op_store_ledge
     \<phi>M_caseV (\<lambda>vstore vref.
     \<phi>M_getV_LedgeRef vref (\<lambda>lref.
     \<phi>M_getV TY id vstore (\<lambda>store.
-    \<phi>M_get_res_entry_ledge TY lref (\<lambda>_. Success \<phi>V_nil)
+    \<phi>M_get_res_entry_ledge TY lref (\<lambda>_. Return \<phi>V_nil)
  \<ggreater> R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized store)) (ledge_ref.path lref)) (ledge_ref.instance lref))
 )))\<close>
 
@@ -503,7 +503,7 @@ lemma (in solidity) "\<phi>R_set_res_ledge"[\<phi>reason!]:
          \<lbrace> v \<Ztypecolon> LInstance lref (\<phi>MapAt path (1 \<Znrres>\<phi> \<phi>Init Identity))
   \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> LInstance lref (\<phi>MapAt path (1 \<Znrres>\<phi> \<phi>Init Identity)) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_ledge.interp_split')
+  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_ledge.interp_split' del: subsetI)
   apply (rule \<phi>Res_Spec_ex_\<S>[where x=\<open>FIC_ledge.mk (Fine (1(lref := 1(path := Some (1 \<Znrres> initialized u)))))\<close>],
          rule \<phi>Res_Spec_subj_\<S>)
   using FIC_ledge.Fic_Space_m apply blast
@@ -530,19 +530,19 @@ paragraph \<open>Allocation\<close>
 definition (in solidity) op_allocate_ledge :: \<open>('VAL,'RES_N,'RES) proc\<close>
   where \<open>op_allocate_ledge =
       R_ledge.\<phi>R_allocate_res_entry (\<lambda>addr. addr \<noteq> Nil) (\<lambda>_. Some uninitialized)
-        (\<lambda>addr. Success (sem_value (V_Address.mk addr)))\<close>
+        (\<lambda>addr. Return (sem_value (V_Address.mk addr)))\<close>
 
 lemma (in solidity) op_obj_allocate:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_allocate_ledge
       \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. 1 \<Ztypecolon> LInstance ref (Identity \<Rrightarrow> 1 \<Znrres>\<phi> \<phi>Uninit)\<heavy_comma> ref \<Ztypecolon> Val ret Address \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec op_allocate_ledge_def
-  apply (clarsimp simp add: \<phi>expns FIC_ledge.interp_split')
+  apply (clarsimp simp add: \<phi>expns FIC_ledge.interp_split' del: subsetI)
   apply (rule R_ledge.\<phi>R_allocate_res_entry)
   apply (clarsimp simp add: Valid_Ledge_def)
   using obj_map_freshness apply blast
-  apply (clarsimp simp add: Valid_Ledge_def one_fun_def dom_initial_value_of_class)
+  apply (clarsimp simp add: Valid_Ledge_def one_fun_def dom_initial_value_of_class del: subsetI)
   prefer 2 apply assumption
-  apply (simp add: \<phi>expns)
+  apply (simp add: \<phi>expns Return_def det_lift_def)
   subgoal for r res k res'
     apply (rule exI[where x=\<open>FIC_ledge.mk (Fine (1(k := (\<lambda>_. Some (1 \<Znrres> uninitialized)))))\<close>])
     apply (cases k; simp add: R_ledge.share_fiction_expn_full'
@@ -559,7 +559,7 @@ definition (in solidity_sem)
   where \<open>op_get_balance va =
     \<phi>M_getV_Address va (\<lambda>addr.
     R_balance.\<phi>R_get_res_entry addr (\<lambda>n.
-    Success (sem_value (word_to_V_int (nonsepable.dest n)))
+    Return (sem_value (word_to_V_int (nonsepable.dest n)))
   ))\<close>
 
 
@@ -569,7 +569,7 @@ subsubsection \<open>Globally Available Variables\<close>
 definition (in solidity_sem)
       op_get_environ_word :: \<open>(environ \<Rightarrow> 'len::len word) \<Rightarrow> (unit, 'VAL, 'RES_N,'RES) proc'\<close>
   where \<open>op_get_environ_word G _ =
-    R_environ.\<phi>R_get_res_entry (\<lambda>env. Success (sem_value (word_to_V_int (G env))))\<close>
+    R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
 
 lemma (in solidity)
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<phi>V_nil \<lbrace>
@@ -578,9 +578,9 @@ lemma (in solidity)
 \<rbrace>\<close>
   for G :: \<open>environ \<Rightarrow> 'len::len word\<close>
   unfolding op_get_environ_word_def \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns, rule R_environ.\<phi>R_get_res_entry[where v=env])
+  apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_environ.\<phi>R_get_res_entry[where v=env])
    apply (simp add: FIC_environ.partial_implies)
-  by (simp add: \<phi>expns)
+  by (simp add: \<phi>expns Return_def det_lift_def)
 
 subsection \<open>Call\<close>
 
@@ -589,7 +589,7 @@ definition \<open>fallback_N = ''fallback''\<close>
 definition (in solidity_sem) op_send :: \<open>('VAL,unit,'RES_N,'RES) proc'\<close>
   where \<open>op_send va =
     \<phi>M_getV \<tau>Address V_Address.dest va (\<lambda>addr res.
-    Success \<phi>V_nil (the (Public_Methods (object_ref.class addr) fallback_N) res)
+    Return \<phi>V_nil (the (Public_Methods (object_ref.class addr) fallback_N) res)
   )\<close>
 
 

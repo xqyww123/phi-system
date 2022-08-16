@@ -297,10 +297,9 @@ lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> 
   \<open> SUBGOAL G G'
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G'
 \<Longrightarrow> SOLVE_SUBGOAL G'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Success (sem_value ()) \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> Var var T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem_value ()) \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> Var var T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def FOCUS_TAG_def Synthesis_def
-  using \<phi>reassemble_proc_final
-  by (metis Return_def \<phi>__Return_rule__)
+  by (metis \<phi>__Return_rule__)
 
 
 subsubsection \<open>Application Methods for Subtyping\<close>
@@ -368,11 +367,11 @@ subsection \<open>Arithmetic Operations\<close>
 subsubsection \<open>Integer arithmetic\<close>
 
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_const_int bits const = Success (sem_value (V_int.mk (bits,const)))"
+  where "op_const_int bits const = Return (sem_value (V_int.mk (bits,const)))"
 
 definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
-                          \<ggreater> Success (sem_value (V_int.mk (addrspace_bits,c)))"
+                          \<ggreater> Return (sem_value (V_int.mk (addrspace_bits,c)))"
   \<comment> \<open> `op_const_size_t` checks the overflow during the compilation towards certain decided platform.  \<close>
 
 definition op_add :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES) proc'"
@@ -380,7 +379,7 @@ definition op_add :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES)
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (sem_value (V_int.mk (bits, ((val_a + val_b) mod 2^bits))))
+      Return (sem_value (V_int.mk (bits, ((val_a + val_b) mod 2^bits))))
   )))"
 
 
@@ -403,7 +402,7 @@ definition op_sub :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES)
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (sem_value (V_int.mk (bits, ((2^bits + val_b - val_a) mod 2^bits))))
+      Return (sem_value (V_int.mk (bits, ((2^bits + val_b - val_a) mod 2^bits))))
   )))"
 
 definition op_umul :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES) proc'"
@@ -411,7 +410,7 @@ definition op_umul :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (sem_value (V_int.mk (bits, ((val_b * val_a) mod 2^bits))))
+      Return (sem_value (V_int.mk (bits, ((val_b * val_a) mod 2^bits))))
   )))"
 
 definition op_udiv :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES) proc'"
@@ -419,7 +418,7 @@ definition op_udiv :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'RES_N, 'RES
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (sem_value (V_int.mk (bits, (val_b div val_a))))
+      Return (sem_value (V_int.mk (bits, (val_b div val_a))))
   )))"
 
 definition op_lt :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'RES_N,'RES) proc'"
@@ -427,7 +426,7 @@ definition op_lt :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'RES_N,'RES) pr
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (sem_value (V_int.mk (1, (if val_b < val_a then 1 else 0))))
+      Return (sem_value (V_int.mk (1, (if val_b < val_a then 1 else 0))))
   )))"
 
 
@@ -436,14 +435,14 @@ definition op_le :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'RES_N,'RES) pr
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Success (sem_value (V_int.mk (1, (if val_b \<le> val_a then 1 else 0))))
+      Return (sem_value (V_int.mk (1, (if val_b \<le> val_a then 1 else 0))))
   )))"
 
 
 definition op_not :: "('VAL, 'VAL,'RES_N,'RES) proc'"
   where "op_not v =
     \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) v (\<lambda>v.
-    Success (sem_value (V_int.mk (1, 1 - v)))
+    Return (sem_value (V_int.mk (1, 1 - v)))
   )"
 
 definition op_and :: "('VAL \<times> 'VAL, 'VAL,'RES_N,'RES) proc'"
@@ -451,7 +450,7 @@ definition op_and :: "('VAL \<times> 'VAL, 'VAL,'RES_N,'RES) proc'"
     \<phi>M_caseV (\<lambda>va vb.
     \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) va (\<lambda>v.
     \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) vb (\<lambda>u.
-    Success (sem_value (V_int.mk (1, v+u-1)))
+    Return (sem_value (V_int.mk (1, v+u-1)))
   )))"
 
 definition op_or :: "('VAL \<times> 'VAL, 'VAL,'RES_N,'RES) proc'"
@@ -459,7 +458,7 @@ definition op_or :: "('VAL \<times> 'VAL, 'VAL,'RES_N,'RES) proc'"
     \<phi>M_caseV (\<lambda>va vb.
     \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) va (\<lambda>v.
     \<phi>M_getV (\<tau>Int 1) (snd o V_int.dest) vb (\<lambda>u.
-    Success (sem_value (V_int.mk (1, min 1 (v+u))))
+    Return (sem_value (V_int.mk (1, min 1 (v+u))))
   )))"
 
 definition op_equal :: "'TY \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'RES_N,'RES) proc'"
@@ -468,7 +467,7 @@ definition op_equal :: "'TY \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'RES_N,'RES)
     \<phi>M_getV TY id va (\<lambda>v.
     \<phi>M_getV TY id vb (\<lambda>u.
     (\<lambda>res. \<phi>M_assert (Can_EqCompare res u v) res) \<ggreater>
-    Success (sem_value (V_int.mk (1, (if EqCompare u v then 1 else 0))))
+    Return (sem_value (V_int.mk (1, (if EqCompare u v then 1 else 0))))
 )))"
 
 
@@ -482,7 +481,7 @@ definition \<phi>M_get_var
             \<phi>M_assert (val \<in> Well_Type TY) \<ggreater> F val)"
 
 definition op_get_var :: "varname \<Rightarrow> 'TY \<Rightarrow> ('VAL,'RES_N,'RES) proc"
-  where "op_get_var vname TY = \<phi>M_get_var vname TY (\<lambda>x. Success (sem_value x))"
+  where "op_get_var vname TY = \<phi>M_get_var vname TY (\<lambda>x. Return (sem_value x))"
 
 definition op_set_var :: "varname \<Rightarrow> 'TY \<Rightarrow> ('VAL, unit, 'RES_N, 'RES) proc'"
   where "op_set_var vname TY v =
@@ -506,12 +505,13 @@ lemma (in \<phi>min) \<phi>M_get_var[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_var vname TY F \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec \<phi>M_get_var_def
-  by (clarsimp simp add: \<phi>expns FIC_var.expand, rule R_var.\<phi>R_get_res_entry[where v=v]; simp)
+  by (clarsimp simp add: \<phi>expns FIC_var.expand del: subsetI;
+      rule R_var.\<phi>R_get_res_entry[where v=v]; simp)
 
 lemma (in \<phi>min) \<phi>M_set_var[\<phi>reason!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c R_var.\<phi>R_set_res (\<lambda>f. f(vname \<mapsto> u)) \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  by (clarsimp simp add: \<phi>expns FIC_var.expand, rule R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp)
+  by (clarsimp simp add: \<phi>expns FIC_var.expand del: subsetI, rule R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp)
 
 lemma (in \<phi>min) op_get_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
@@ -535,12 +535,12 @@ lemma (in \<phi>min) op_var_scope':
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F rawv \<lbrace> X\<heavy_comma> v \<Ztypecolon> Val rawv Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding op_var_scope'_def Premise_def
   apply (cases rawv; simp, \<phi>reason)
-  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec)
+  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec del: subsetI)
   subgoal for r res c
   apply (rule R_var.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])
      apply (clarsimp) using finite_map_freshness infinite_varname apply blast
       apply (clarsimp)
-  apply (clarsimp simp add: FIC_var.expand[symmetric] mult.assoc)
+  apply (clarsimp simp add: FIC_var.expand[symmetric] mult.assoc del: subsetI)
   subgoal premises prems for k res'
     apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res'],
                 simplified prems, simplified, THEN mp])
@@ -550,7 +550,7 @@ lemma (in \<phi>min) op_var_scope':
 lemma (in \<phi>min) op_free_var:
    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_var vname \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> 1 \<rbrace>\<close>
   unfolding op_free_var_def \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns FIC_var.expand)
+  apply (clarsimp simp add: \<phi>expns FIC_var.expand del: subsetI)
   apply (rule R_var.\<phi>R_dispose_res[where any=v])
   apply clarsimp .
 
@@ -567,7 +567,7 @@ definition op_sel :: "'TY \<Rightarrow> ('VAL \<times> 'VAL \<times> 'VAL, 'VAL,
     \<phi>M_getV (\<tau>Int 1) V_int.dest vc (\<lambda>c.
     \<phi>M_getV TY id va (\<lambda>a.
     \<phi>M_getV TY id vb (\<lambda>b.
-    Success (sem_value (if snd c = 1 then b else a)))))))"
+    Return (sem_value (if snd c = 1 then b else a)))))))"
 
 paragraph \<open>Branch\<close>
 
@@ -580,24 +580,22 @@ definition op_if :: "('ret,'RES_N,'RES) proc
 paragraph \<open>While Loop\<close>
 
 inductive SemDoWhile :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> (unit,'RES_N,'RES) state \<Rightarrow> bool" where
-  "f s = Success (sem_value (V_int.mk (1,0))) res \<Longrightarrow> SemDoWhile f s (Success (sem_value ()) res)"
-| "f s = Success (sem_value (V_int.mk (1,1))) res \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
-| "f s = Exception e \<Longrightarrow> SemDoWhile f s (Exception e)"
-| "f s = PartialCorrect \<Longrightarrow> SemDoWhile f s PartialCorrect"
-| "f s = Fail \<Longrightarrow> SemDoWhile f s Fail"
+  "Success (sem_value (V_int.mk (1,0))) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (sem_value ()) res)"
+| "Success (sem_value (V_int.mk (1,1))) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
+| "Exception e \<in> f s \<Longrightarrow> SemDoWhile f s (Exception e)"
+| "PartialCorrect \<in> f s \<Longrightarrow> SemDoWhile f s PartialCorrect"
+| "Fail \<in> f s \<Longrightarrow> SemDoWhile f s Fail"
 
-lemma "\<nexists> y. SemDoWhile (\<lambda>res. Success (sem_value (V_int.mk (1,1))) res) res y"
+lemma "\<nexists> y. SemDoWhile (\<lambda>res. Return (sem_value (V_int.mk (1,1))) res) res y"
   apply rule apply (elim exE) subgoal for y 
-    thm SemDoWhile.induct
-    apply (induct "(\<lambda>res. Success (sem_value (V_int.mk (1,1))) (res::'RES_N \<Rightarrow> 'RES))" res y
+    apply (induct "(\<lambda>res. Return (sem_value (V_int.mk (1,1))) (res::'RES_N \<Rightarrow> 'RES))" res y
            rule: SemDoWhile.induct)
-       apply simp_all
-    done done
+       apply (simp_all add: Return_def det_lift_def) . .
 
 definition op_do_while :: "('VAL,'RES_N,'RES) proc \<Rightarrow> (unit,'RES_N,'RES) proc" where
-  "op_do_while f s = (if (\<exists>y. SemDoWhile f s y) then The (SemDoWhile f s) else PartialCorrect)"
+  "op_do_while f s = Collect (SemDoWhile f s)"
 
-lemma SemDoWhile_deterministic:
+(* lemma SemDoWhile_deterministic:
   assumes "SemDoWhile c s s1"
       and "SemDoWhile c s s2"
     shows "s1 = s2"
@@ -611,13 +609,13 @@ qed
 
 lemma SemDoWhile_deterministic2:
     "SemDoWhile body s x \<Longrightarrow> The ( SemDoWhile body s) = x"
-  using SemDoWhile_deterministic by blast
+  using SemDoWhile_deterministic by blast *)
 
 
 paragraph \<open>Recursion\<close>
 
 inductive SemRec :: "(('a,'a,'RES_N,'RES) proc' \<Rightarrow> ('a,'a,'RES_N,'RES) proc')
-            \<Rightarrow> 'a sem_value \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('a,'RES_N,'RES) state \<Rightarrow> bool"
+            \<Rightarrow> 'a sem_value \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('a,'RES_N,'RES) state set \<Rightarrow> bool"
 where
   SemRec_I0: "(\<And>g. F g x res = y) \<Longrightarrow> SemRec F x res y"
 | SemRec_IS: "SemRec (F o F) x res y \<Longrightarrow> SemRec F x res y"
@@ -625,7 +623,7 @@ where
 definition op_recursion :: "'TY list \<Rightarrow> 'TY list
                          \<Rightarrow> (('a,'a,'RES_N,'RES) proc' \<Rightarrow> ('a,'a,'RES_N,'RES) proc')
                          \<Rightarrow> ('a,'a,'RES_N,'RES) proc'"
-  where "op_recursion _ _ F x s = (if (\<exists>t. SemRec F x s t) then The (SemRec F x s) else PartialCorrect)"
+  where "op_recursion _ _ F x s = (if (\<exists>t. SemRec F x s t) then The (SemRec F x s) else {})"
 
 
 end

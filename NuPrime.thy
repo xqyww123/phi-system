@@ -238,26 +238,33 @@ text\<open> The basic state of the \<phi>-system virtual machine is represented 
 
 declare state.split[split]
 
-type_synonym ('ret,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state"
+type_synonym ('ret,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state set"
 type_synonym ('arg, 'ret,'RES_N,'RES) proc' = "'arg sem_value \<Rightarrow> ('ret,'RES_N,'RES) proc"
 
 definition bind :: "('a,'RES_N,'RES) proc \<Rightarrow> ('a,'b,'RES_N,'RES) proc' \<Rightarrow> ('b,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
-  where "bind f g = (\<lambda>res. case f res of Success v x \<Rightarrow> g v x | Exception x \<Rightarrow> Exception x
-                                       | Fail \<Rightarrow> Fail | PartialCorrect \<Rightarrow> PartialCorrect)"
+  where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x | Exception x \<Rightarrow> {Exception x}
+                                       | Fail \<Rightarrow> {Fail} | PartialCorrect \<Rightarrow> {PartialCorrect}) ` f res))"
 
 abbreviation bind' ("_ \<ggreater>/ _" [76,75] 75)
   where \<open>bind' f g \<equiv> (f \<bind> (\<lambda>_. g))\<close>
 
-lemma proc_bind_SKIP[simp]:
-  "f \<bind> Success \<equiv> f"
-  "Success any \<ggreater> f \<equiv> f"
-  "(g \<ggreater> Success any) \<ggreater> f \<equiv> g \<ggreater> f"
-  "(\<lambda>v. Success v \<bind> h) \<equiv> h"
-  unfolding bind_def atomize_eq fun_eq_iff by simp+
+definition \<open>det_lift f x = {f x}\<close>
+definition \<open>Return = det_lift o Success\<close>
+
+lemma proc_bind_SKIP'[simp]:
+  "f \<bind> Return \<equiv> f"
+  "Return any \<ggreater> f \<equiv> f"
+  "(g \<ggreater> Return any) \<ggreater> f \<equiv> g \<ggreater> f"
+  "(\<lambda>v. Return v \<bind> h) \<equiv> h"
+  unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
+  by (clarsimp; metis state.exhaust)+
+
+lemmas proc_bind_SKIP[simp] = proc_bind_SKIP'[unfolded Return_def, simplified]
 
 lemma proc_bind_assoc:
   "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
-  unfolding bind_def fun_eq_iff by simp
+  unfolding bind_def fun_eq_iff det_lift_def set_eq_iff
+  by clarsimp
 
 
 abbreviation \<open>\<phi>V_nil \<equiv> sem_value ()\<close>
@@ -368,27 +375,27 @@ context \<phi>fiction begin
 definition \<phi>Procedure :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)
   where [\<phi>def]:"\<phi>Procedure f T U E \<longleftrightarrow>
-    (\<forall>comp R. comp \<in> INTERP_COM (R * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COM (R * U vs)) (INTERP_COM (R * E)))"
+    (\<forall>comp R. comp \<in> INTERP_COM (R * T) \<longrightarrow> f comp \<subseteq> \<S> (\<lambda>vs. INTERP_COM (R * U vs)) (INTERP_COM (R * E)))"
 
 abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
 
 lemma \<phi>Procedure_alt:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_COM ({r} * T) \<longrightarrow> f comp \<in> \<S> (\<lambda>vs. INTERP_COM ({r} * U vs)) (INTERP_COM ({r} * E)))\<close>
+\<longleftrightarrow> (\<forall>comp r. comp \<in> INTERP_COM ({r} * T) \<longrightarrow> f comp \<subseteq> \<S> (\<lambda>vs. INTERP_COM ({r} * U vs)) (INTERP_COM ({r} * E)))\<close>
   apply rule
    apply ((unfold \<phi>Procedure_def)[1], blast)
-  unfolding \<phi>Procedure_def INTERP_COM
+  unfolding \<phi>Procedure_def INTERP_COM subset_iff
   apply (clarsimp simp add: times_set_def)
-  subgoal for comp R r p
-    apply (cases \<open>f comp\<close>; simp add: \<phi>expns INTERP_COM_def)
+  subgoal for comp R s r p
+    apply (cases \<open>s\<close>; simp add: \<phi>expns INTERP_COM_def)
     apply fastforce
     subgoal premises prems for e
       apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
-      using prems(2) prems(3) prems(4) by blast
+      using \<phi>resource_sem.LooseStateTy_expn(2) prems(2) prems(3) prems(4) prems(5) by blast
     subgoal premises prems
       apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
-      using prems(2) prems(4) by blast . .
+      using prems(2) prems(4) prems(5) by blast . .
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
@@ -410,20 +417,23 @@ subsection \<open>Essential Hoare Rules\<close>
 
 context \<phi>empty begin
 
-lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c Success v \<lbrace> T v \<longmapsto> T \<rbrace>" unfolding \<phi>Procedure_def by simp
+lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift (Success v) \<lbrace> T v \<longmapsto> T \<rbrace>"
+  unfolding \<phi>Procedure_def det_lift_def by clarsimp
 
 lemma \<phi>SEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> (\<And>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g vs \<lbrace> B vs \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (f \<bind> g) \<lbrace> A \<longmapsto> C \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
-  unfolding \<phi>Procedure_def bind_def by (auto 0 4)
+  unfolding \<phi>Procedure_def bind_def apply (clarsimp simp add: subset_iff)
+  subgoal for comp R x s
+    apply (cases s; clarsimp; cases x; clarsimp; blast) . .
 
 lemma \<phi>frame:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s R * E \<rbrace>"
-  unfolding \<phi>Procedure_def
-  apply clarify subgoal premises prems for comp R'
+  unfolding \<phi>Procedure_def subset_iff
+  apply clarify subgoal premises prems for comp R' s
     using prems(1)[THEN spec[where x=comp], THEN spec[where x=\<open>R' * R\<close>],
-          simplified mult.assoc, THEN mp, OF prems(2)] . .
+          simplified mult.assoc, THEN mp, OF prems(2)] prems(3) by blast .
 
 lemma \<phi>frame0:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace>"
@@ -441,8 +451,8 @@ lemma \<phi>CONSEQ:
 \<Longrightarrow> (\<And>ret. \<^bold>v\<^bold>i\<^bold>e\<^bold>w B ret \<longmapsto> B' ret \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w E \<longmapsto> E' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any3
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
-  unfolding \<phi>Procedure_def View_Shift_def
-  by (smt (verit, del_insts) LooseStateTy_expn')
+  unfolding \<phi>Procedure_def View_Shift_def subset_iff
+  by blast
 
 end
 

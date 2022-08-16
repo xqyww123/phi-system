@@ -41,8 +41,8 @@ type_synonym ('RES_N,'RES) transition = \<open>(('RES_N \<Rightarrow> 'RES) \<ti
 
 definition Transition_Of :: \<open>('ret,'RES_N,'RES) proc \<Rightarrow> ('RES_N,'RES) transition\<close>
   where \<open>Transition_Of proc =
-    { (res,res') | res res'. (\<exists>ret. proc res = Success ret res')
-                           \<or> proc res = Exception res'}\<close>
+    { (res,res') | res res'. (\<exists>ret. Success ret res' \<in> proc res)
+                           \<or> Exception res' \<in> proc res}\<close>
 
 definition rel_of_fun :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a \<times> 'b) set\<close>
   where \<open>rel_of_fun f = { (x,y) |x y. f x = y }\<close>
@@ -103,12 +103,17 @@ lemma (in \<phi>fiction) Resource_Transition_Spec_I:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> Transition_Of f \<subseteq> (P \<longrightarrow>\<^sub>\<phi>[R] (ExSet Q + E))\<close>
   unfolding \<phi>Procedure_def \<phi>GTS_R_def GTS_def Transition_Of_def
-  apply (clarsimp simp add: AllSet_expn)
+  apply (clarsimp simp add: AllSet_expn subset_iff; rule conjI; clarify)
+  subgoal premises prems for x y ret
+    apply (insert prems(1)[THEN spec, THEN spec, THEN mp, OF \<open>x \<in> _\<close>,
+                      THEN spec, THEN mp, OF \<open>_ \<in> f x\<close>])
+    apply (simp add: semiring_class.distrib_left \<phi>expns)
+    by blast
   subgoal premises prems for x y
-    apply (insert prems(1)[THEN spec, THEN spec, THEN mp, OF \<open>x \<in> _\<close>],
-           insert \<open>_ \<or> _\<close>)
-    apply (cases \<open>f x\<close>; simp add: semiring_class.distrib_left \<phi>expns)
-    by blast .
+    apply (insert prems(1)[THEN spec, THEN spec, THEN mp, OF \<open>x \<in> _\<close>,
+                      THEN spec, THEN mp, OF \<open>_ \<in> f x\<close>])
+    by (simp add: semiring_class.distrib_left \<phi>expns)
+  .
 
 
 subsection \<open>Decision Procedure for Validating Specification of Transition Closure\<close>
