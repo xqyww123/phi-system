@@ -186,8 +186,8 @@ fun intro_param tm =
                    Vars.make  [((("x",0), typ_of (ctyp_of_cterm tm)), tm)]) @{thm ParamTag}
 val intro_param_name = intro_param o mk_label_c
 
-val dest_Cast   = dest_triop   @{const_name "Subty"}
-val dest_Cast_c = dest_triop_c @{const_name "Subty"}
+val dest_Cast   = dest_triop   @{const_name "Imply"}
+val dest_Cast_c = dest_triop_c @{const_name "Imply"}
 
 
 

@@ -142,18 +142,18 @@ val dest_goal_ctxt   = dest_binop   \<^const_name>\<open>GOAL_CTXT\<close> #> #1
 val dest_goal_ctxt_c = dest_binop_c \<^const_name>\<open>GOAL_CTXT\<close> #> #1
 
 val dest_procedure   = perhaps (try dest_Trueprop) #> perhaps (try dest_goal_ctxt)
-  #> dest_quadop @{const_name "\<phi>empty.\<phi>Procedure"}
+  #> dest_quadop @{const_name "\<phi>fiction.\<phi>Procedure"}
 val dest_procedure_c = perhaps (try dest_Trueprop_c) #> perhaps (try dest_goal_ctxt_c)
-  #> dest_quadop_c @{const_name "\<phi>empty.\<phi>Procedure"}
+  #> dest_quadop_c @{const_name "\<phi>fiction.\<phi>Procedure"}
 
 val dest_subtyping   =
          perhaps (try dest_Trueprop)
       #> perhaps (try dest_goal_ctxt)
-      #> dest_triop @{const_name "Subty"}
+      #> dest_triop @{const_name "Imply"}
 val dest_subtyping_c =
          perhaps (try dest_Trueprop_c)
       #> perhaps (try dest_goal_ctxt_c)
-      #> dest_triop_c @{const_name "Subty"}
+      #> dest_triop_c @{const_name "Imply"}
 
 
 fun dest_destined_phityp term =

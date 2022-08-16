@@ -21,7 +21,7 @@ end
 subsubsection \<open>Value\<close>
 
 type_synonym field_name = string
-type_synonym 'TY "class" = \<open>('TY, field_name \<Rightarrow> 'TY option) class\<close>
+type_synonym 'TY "class" = \<open>(field_name \<Rightarrow> 'TY option) class\<close>
 
 datatype 'TY object_ref = object_ref ("class": \<open>'TY class\<close>) ("nonce": nat) | Nil
 hide_const (open) "class" nonce

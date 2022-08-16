@@ -5,8 +5,11 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<phi>-System\<close>
     NoePreliminary
     Fictional_Algebra
     "Virt_Datatype/Virtual_Datatype"
+    BI_for_Phi
   abbrevs "<:>" = "\<Ztypecolon>"
     and "<throws>" = "\<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s"
+    and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
+    and "<view>" = "\<^bold>v\<^bold>i\<^bold>e\<^bold>w"
 begin
 
 chapter \<open>Semantics & Specification Framework --- Base of the Programming Language\<close>
@@ -114,6 +117,15 @@ lemma INTERP_COM_plus[iff]:
 lemma INTERP_COM_empty[intro, simp]:
   \<open>S = {} \<Longrightarrow> INTERP_COM S = {}\<close>
   unfolding INTERP_COM_def set_eq_iff by simp
+
+lemma  INTERP_COM_subj[\<phi>expns]:
+  \<open> INTERP_COM (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (INTERP_COM S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<close>
+  unfolding INTERP_COM_def by (simp add: \<phi>expns set_eq_iff, blast)
+
+lemma  INTERP_COM_ex[\<phi>expns]:
+  \<open> INTERP_COM (ExSet S) = (\<exists>\<^sup>s x. INTERP_COM (S x)) \<close>
+  unfolding INTERP_COM_def by (simp add: \<phi>expns set_eq_iff, blast)
+
 
 lemma INTERP_COM_0[simp]:
   \<open>INTERP_COM 0 = 0\<close>
@@ -348,7 +360,7 @@ lemma ext_func_forall_eq_simp[simp]:
   by blast
 
 
-context \<phi>empty begin
+context \<phi>fiction begin
 (* definition Fiction_Spec :: \<open>('FIC_N, 'FIC) assn \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool\<close>
   where \<open>Fiction_Spec P C Q E \<longleftrightarrow>
     (\<forall>com. com \<in> INTERP_COM P \<longrightarrow> C com \<in> \<S> (\<lambda>v. INTERP_COM (Q v)) (INTERP_COM E))\<close> *)
@@ -382,17 +394,7 @@ lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
 end
 
-subsection \<open>Sub-Typing & View Shift\<close>
-
-paragraph \<open>Sub-Type\<close>
-
-definition Subty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool " ("(2\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
-  where "(\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P) \<longleftrightarrow> (\<forall>v. v \<in> A \<longrightarrow> v \<in> B \<and> P)"
-
-abbreviation SimpleSubty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e _/ \<longmapsto> _)" [13,13] 12)
-  where \<open>SimpleSubty T U \<equiv> Subty T U True\<close>
-
-paragraph \<open>View Shift\<close>
+subsection \<open>View Shift\<close>
 
 definition (in \<phi>fiction) View_Shift
     :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)

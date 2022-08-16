@@ -649,6 +649,13 @@ subsection \<open>Partial Map\<close>
 lemma one_partial_map: \<open>1 = Map.empty\<close>
   unfolding one_fun_def one_option_def ..
 
+lemma times_fun_map_add_right:
+  \<open>dom f \<inter> dom h = {} \<Longrightarrow> (f * g) ++ h = f * (g ++ h)\<close>
+  unfolding times_fun_def fun_eq_iff map_add_def
+  by (simp add: disjoint_iff domIff option.case_eq_if times_option_def)
+
+paragraph \<open>Separation Disjunction\<close>
+
 lemma sep_disj_partial_map_del:
   \<open>f ## g \<Longrightarrow> f ## g(k := None)\<close>
   unfolding sep_disj_fun_def sep_disj_option_def
@@ -671,11 +678,14 @@ lemma sep_disj_partial_map_upd:
   unfolding sep_disj_partial_map_disjoint fun_upd_def times_fun fun_eq_iff
   by simp (metis disjoint_iff domIff times_option(3))
 
-lemma times_fun_map_add_right:
-  \<open>dom f \<inter> dom h = {} \<Longrightarrow> (f * g) ++ h = f * (g ++ h)\<close>
-  unfolding times_fun_def fun_eq_iff map_add_def
-  by (simp add: disjoint_iff domIff option.case_eq_if times_option_def)
-  
+lemma nonsepable_semigroup_sepdisj_fun:
+  \<open>a ## 1(k \<mapsto> x) \<Longrightarrow> a ## 1(k := any)\<close>
+  for x :: \<open>'b::nonsepable_semigroup\<close>
+  unfolding sep_disj_fun_def
+  apply clarify subgoal premises prems for x
+    apply (insert prems[THEN spec[where x=x]])
+    by (cases \<open>a x\<close>; simp; cases "x = k"; simp) .
+
 
 subsubsection \<open>dom1: Domain except one\<close>
 

@@ -1,5 +1,6 @@
 theory Phi_Solidity
   imports Phi_OO Map_of_Tree Phi_Min_ex
+    Phi_Prime_ex
 begin
 
 section \<open>Semantics\<close>
@@ -24,6 +25,7 @@ definition "class_user = Class [] [] 1"
 
 datatype 'VAL storage_key = SP_field field_name | SP_map_key 'VAL | SP_array_ind nat
 type_synonym 'VAL storage_path = \<open>'VAL storage_key list\<close>
+type_synonym contract_class = \<open>unit class\<close>
 type_synonym address = \<open>unit object_ref\<close>
   \<comment> \<open>The ledge doesn't need to records the type of fields, so the type parameter of object_ref is unit.
       It the class of an instance_ref is \<^term>\<open>class_user\<close>, it is an user address.\<close>
@@ -80,7 +82,7 @@ hide_const (open) blockhash basefee chainid coinbase difficulty gaslimit blocknu
 
 paragraph \<open>Models for Balance Table\<close>
 
-type_synonym balance_table = \<open>address \<rightharpoonup> nat nonsepable\<close>
+type_synonym balance_table = \<open>address \<rightharpoonup> 256 word nonsepable\<close>
   \<comment> \<open>None means this part of the resource is not accessible and not specified\<close>
 
 paragraph \<open>Main Model\<close>
@@ -135,6 +137,40 @@ assumes WT_LedgeRef[simp]: \<open>Well_Type \<tau>LedgeRef = UNIV\<close>
   and   Resource_Validator_Msg[simp]: \<open>Resource_Validator R_msg.name = R_msg.inject ` Fine ` UNIV\<close>
   and   Resource_Validator_Balance[simp]:
               \<open>Resource_Validator R_balance.name = R_balance.inject ` Fine ` UNIV\<close>
+
+fixes Internal_Public_Methods_Transition :: \<open>('RES_N,'RES) transition list\<close>
+  \<comment> \<open>It is a restriction. The verification conclusion is not extensible.
+      Every time we only consider the sub-system consisting of the modules to be verified,
+      and we only consider state of this sub-system, not including state outside.
+      It causes any time we want to extend the conclusion to a larger project,
+      the proof cannot be reused.
+      This restriction is because, any transition of this sub-system is an instance belongs to
+      the closure of all its public methods, but transitions in outer system is unknowable.
+      The frame rule which gives us localization before, is not available here because the
+      state of outer system is not constant anymore.
+
+      TODO: why not use an explicit R1 R2 to express the change of outer state,
+          { R1 * X } C { R2 * Y }
+      Question: but what if we call two outer methods sequentially,
+          { Ra1 * Xa } Ca { Ra2 * Ya }       { Rb1 * Xb } Cb { Rb2 * Yb }
+      How to connect / coordinate these two free variables Ra2 and Rb1?\<close>
+
+fixes Public_Methods :: \<open>contract_class \<Rightarrow> field_name \<Rightarrow> ('RES_N,'RES) transition_fun option\<close>
+  \<comment> \<open>The public methods can be defined unspecifiedly, just requiring meeting the proposition
+      public_methods_transition_closure', typically by a Hilbert Choice.
+      We leave this to be a fixed variable instead of defining it, is for the sake of
+      potentially specific assignment in an actual verification project.
+      User may assigns the transition of some method of some class to be something specific.\<close>
+  \<comment> \<open>Here talk about a drawback in Solidity. Currently the signature of virtual methods in
+    the base class actually specifies nothing but only types of arguments and returns.
+    It is far from the ideal. The ideal should be specifying more and restricting more,
+    to be best a specification written in Separation Logic. This is an advantage of a
+    theorem based contract language.\<close>
+
+assumes public_methods_transition_closure':
+   \<open>\<forall>cls name. name \<in> dom (Public_Methods cls) \<longrightarrow>
+    rel_of_fun (the (Public_Methods cls name)) \<subseteq> (\<Union> (set Internal_Public_Methods_Transition))\<^sup>*\<close>
+
 begin
 
 paragraph \<open>Valid Types\<close>
@@ -363,6 +399,11 @@ lemma \<phi>Uninit_expn[\<phi>expns]:
 lemma \<phi>Uninit_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+subsection \<open>Balance Table\<close>
+
+context solidity begin
+term FIC_balance
+end
 
 section Instruction
 
@@ -484,7 +525,6 @@ lemma (in solidity) op_store_ledge:
   unfolding op_store_ledge_def Premise_def
   by (cases rawref; cases rawu; simp; \<phi>reason, simp add: Premise_def, \<phi>reason, simp add: \<phi>expns, \<phi>reason)
 
-
 paragraph \<open>Allocation\<close>
 
 definition (in solidity) op_allocate_ledge :: \<open>('VAL,'RES_N,'RES) proc\<close>
@@ -510,7 +550,21 @@ lemma (in solidity) op_obj_allocate:
     by blast .
 
 
-subsection \<open>Globally Available Variables\<close>
+subsection \<open>Environment & Balance\<close>
+
+subsubsection \<open>Balance Table\<close>
+
+definition (in solidity_sem)
+    op_get_balance :: \<open>('VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_get_balance va =
+    \<phi>M_getV_Address va (\<lambda>addr.
+    R_balance.\<phi>R_get_res_entry addr (\<lambda>n.
+    Success (sem_value (word_to_V_int (nonsepable.dest n)))
+  ))\<close>
+
+
+
+subsubsection \<open>Globally Available Variables\<close>
 
 definition (in solidity_sem)
       op_get_environ_word :: \<open>(environ \<Rightarrow> 'len::len word) \<Rightarrow> (unit, 'VAL, 'RES_N,'RES) proc'\<close>
@@ -527,5 +581,16 @@ lemma (in solidity)
   apply (clarsimp simp add: \<phi>expns, rule R_environ.\<phi>R_get_res_entry[where v=env])
    apply (simp add: FIC_environ.partial_implies)
   by (simp add: \<phi>expns)
+
+subsection \<open>Call\<close>
+
+definition \<open>fallback_N = ''fallback''\<close>
+
+definition (in solidity_sem) op_send :: \<open>('VAL,unit,'RES_N,'RES) proc'\<close>
+  where \<open>op_send va =
+    \<phi>M_getV \<tau>Address V_Address.dest va (\<lambda>addr res.
+    Success \<phi>V_nil (the (Public_Methods (object_ref.class addr) fallback_N) res)
+  )\<close>
+
 
 end
