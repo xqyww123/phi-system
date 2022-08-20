@@ -105,6 +105,9 @@ resource_space ('VAL::"nonsepable_semigroup",'TY) solidity_res = ('VAL,'TY) \<ph
 
 subsection \<open>Semantics\<close>
 
+datatype 'TY method_sig = method_sig (name: string) (typ_sig: \<open>'TY list \<times> 'TY list\<close>)
+hide_const (open) "name" "typ_sig"
+
 locale solidity_sem =
   \<phi>OO_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
@@ -137,39 +140,6 @@ assumes WT_LedgeRef[simp]: \<open>Well_Type \<tau>LedgeRef = UNIV\<close>
   and   Resource_Validator_Msg[simp]: \<open>Resource_Validator R_msg.name = R_msg.inject ` Fine ` UNIV\<close>
   and   Resource_Validator_Balance[simp]:
               \<open>Resource_Validator R_balance.name = R_balance.inject ` Fine ` UNIV\<close>
-
-fixes Internal_Public_Methods_Transition :: \<open>('RES_N,'RES) transition list\<close>
-  \<comment> \<open>It is a restriction. The verification conclusion is not extensible.
-      Every time we only consider the sub-system consisting of the modules to be verified,
-      and we only consider state of this sub-system, not including state outside.
-      It causes any time we want to extend the conclusion to a larger project,
-      the proof cannot be reused.
-      This restriction is because, any transition of this sub-system is an instance belongs to
-      the closure of all its public methods, but transitions in outer system is unknowable.
-      The frame rule which gives us localization before, is not available here because the
-      state of outer system is not constant anymore.
-
-      TODO: why not use an explicit R1 R2 to express the change of outer state,
-          { R1 * X } C { R2 * Y }
-      Question: but what if we call two outer methods sequentially,
-          { Ra1 * Xa } Ca { Ra2 * Ya }       { Rb1 * Xb } Cb { Rb2 * Yb }
-      How to connect / coordinate these two free variables Ra2 and Rb1?\<close>
-
-fixes Public_Methods :: \<open>contract_class \<Rightarrow> field_name \<Rightarrow> ('RES_N,'RES) transition_fun option\<close>
-  \<comment> \<open>The public methods can be defined unspecifiedly, just requiring meeting the proposition
-      public_methods_transition_closure', typically by a Hilbert Choice.
-      We leave this to be a fixed variable instead of defining it, is for the sake of
-      potentially specific assignment in an actual verification project.
-      User may assigns the transition of some method of some class to be something specific.\<close>
-  \<comment> \<open>Here talk about a drawback in Solidity. Currently the signature of virtual methods in
-    the base class actually specifies nothing but only types of arguments and returns.
-    It is far from the ideal. The ideal should be specifying more and restricting more,
-    to be best a specification written in Separation Logic. This is an advantage of a
-    theorem based contract language.\<close>
-
-assumes public_methods_transition_closure':
-   \<open>\<forall>cls name. name \<in> dom (Public_Methods cls) \<longrightarrow>
-    rel_of_fun (the (Public_Methods cls name)) \<subseteq> (\<Union> (set Internal_Public_Methods_Transition))\<^sup>*\<close>
 
 begin
 
@@ -217,6 +187,10 @@ paragraph \<open>Resource Balance\<close>
 sublocale R_balance: partial_map_resource UNIV R_balance Resource_Validator
   by (standard; simp add: image_iff set_eq_iff)
 
+paragraph \<open>Transition Closure\<close>
+
+
+
 end
 
 
@@ -246,7 +220,7 @@ sublocale FIC_ledge: share_fiction_for_partial_mapping_resource2 Valid_Ledge R_l
 sublocale FIC_environ: agreement_fiction_for_nosepable_mono_resource UNIV
   R_environ Resource_Validator INTERPRET FIC_environ ..
 
-sublocale FIC_balance: share_fiction_for_partial_mapping_resource UNIV R_balance
+sublocale FIC_balance: share_fiction_for_partial_mapping_resource_nonsepable UNIV R_balance
     Resource_Validator INTERPRET FIC_balance ..
 
 sublocale FIC_msg: identity_fiction_for_fine_resource UNIV R_msg
@@ -256,7 +230,99 @@ sublocale FIC_msg: identity_fiction_for_fine_resource UNIV R_msg
 
 end
 
-section \<open>Primitive \<phi>-Type\<close>
+subsection \<open>Project\<close>
+
+text \<open>This section gives bases for extending the common solidity semantics for each verification
+  project. This extension contains basically public methods in the project, which are a part of
+  the program semantics but different for each project.
+  (It is essentially due to our formalization do not internalize the behavior of
+   declaring public methods. We do not have a model for program modules. I think locale,
+   is pretty good for modeling them in this shallow way, though it indeed extends the semantics
+   every time. Or we may say, our model for modules is exact locale, in this shallow way?)
+  Later we will provide a common installation of the common semantics but for each project,
+  the extension is different, and users have to instantiate that extension.\<close>
+
+locale solidity_project_sem =
+  solidity_sem where TYPES = TYPES
+for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
+             \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+             \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult})
+           ) itself\<close>
++
+fixes Internal_Public_Methods_Transitions :: \<open>('RES_N,'RES) transition list\<close>
+  \<comment> \<open>It is a restriction. The verification conclusion is not extensible.
+      Every time we only consider the sub-system consisting of the modules to be verified,
+      and we only consider state of this sub-system, not including state outside.
+      It causes any time we want to extend the conclusion to a larger project,
+      the proof cannot be reused.
+      This restriction is because, any transition of this sub-system is an instance belongs to
+      the closure of all its public methods, but transitions in outer system is unknowable.
+      The frame rule which gives us localization before, is not available here because the
+      state of outer system is not constant anymore.
+
+      TODO: why not use an explicit R1 R2 to express the change of outer state,
+          { R1 * X } C { R2 * Y }
+      Question: but what if we call two outer methods sequentially,
+          { Ra1 * Xa } Ca { Ra2 * Ya }       { Rb1 * Xb } Cb { Rb2 * Yb }
+      How to connect / coordinate these two free variables Ra2 and Rb1?\<close>
+
+fixes Public_Methods :: \<open>contract_class \<Rightarrow> 'TY method_sig \<Rightarrow> ('VAL list,'VAL list,'RES_N,'RES) proc' option\<close>
+  \<comment> \<open>All public methods in the smart contract environment, including methods inside the module
+        and those outside methods of clients.\<close>
+  \<comment> \<open>The public methods can be defined unspecifiedly, just requiring meeting the proposition
+      ``public_methods_transition_closure'', typically by a Hilbert Choice.
+      We leave this to be a fixed variable instead of defining it, is for the sake of
+      potentially specific assignment in an actual verification project.
+      User may assigns the transition of some method of some class to be something specific.\<close>
+  \<comment> \<open>Here talk about a drawback in Solidity. Currently the signature of virtual methods in
+    the base class actually specifies nothing but only types of arguments and returns.
+    It is far from the ideal. The ideal should be specifying more and restricting more,
+    to be best a specification written in Separation Logic. This is an advantage of a
+    theorem based contract language.\<close>
+
+assumes public_methods_well_typed:
+  \<open>\<forall>cls name. name \<in> dom (Public_Methods cls)
+\<longrightarrow> \<phi>Type_Spec_for_Deep (method_sig.typ_sig name) (the (Public_Methods cls name))\<close>
+
+assumes public_methods_transition_closure':
+   \<open>\<forall>cls name. name \<in> dom (Public_Methods cls)
+\<longrightarrow> Transition_Of' (the (Public_Methods cls name)) \<subseteq> (\<Union> (set Internal_Public_Methods_Transitions))\<^sup>*\<close>
+begin
+
+definition \<open>Transition_Closure = (\<Union> (set Internal_Public_Methods_Transitions))\<^sup>*\<close>
+
+lemma public_methods_transition_closure:
+  \<open>\<forall>cls name. name \<in> dom (Public_Methods cls)
+\<longrightarrow> Transition_Of' (the (Public_Methods cls name)) \<subseteq> Transition_Closure\<close>
+  unfolding Transition_Closure_def using public_methods_transition_closure' .
+
+end
+
+
+locale solidity_project =
+  solidity_project_sem where TYPES = \<open>TYPE (('TY_N \<Rightarrow> 'TY)
+                                         \<times> ('VAL_N \<Rightarrow> 'VAL)
+                                         \<times> ('RES_N \<Rightarrow> 'RES)
+                                     )\<close>
++ solidity where TYPES = \<open>TYPE (('TY_N \<Rightarrow> 'TY)
+                              \<times> ('VAL_N \<Rightarrow> 'VAL)
+                              \<times> ('RES_N \<Rightarrow> 'RES)
+                              \<times> ('FIC_N \<Rightarrow> 'FIC)
+                        )\<close>
+for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
+             \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+             \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult})
+             \<times> ('FIC_N \<Rightarrow> 'FIC::{comm_monoid_mult,no_inverse})
+           ) itself\<close>
++
+fixes Transition_Closure_Spec :: \<open>('RES_N, 'RES) transition\<close>
+  \<comment> \<open>This constant is intended to be given by user! that meets the Transition_Closure_Spec'.\<close>
+assumes Transition_Closure:
+  \<open>Transition_Closure \<subseteq> Transition_Closure_Spec\<close>
+
+
+
+section \<open>Primitive \<phi>-Types\<close>
 
 context solidity_sem begin
 
@@ -363,17 +429,9 @@ lemma \<phi>MapKeys_\<phi>AtLedge[simp]:
 
 subsubsection \<open>Spec of an Instance\<close>
 
-definition (in solidity) LInstance
+abbreviation (in solidity) Contract
     :: \<open>address \<Rightarrow> ('VAL storage_path \<Rightarrow> 'VAL uninit share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
-  where \<open>LInstance addr T x = { FIC_ledge.mk (Fine (1(addr := v))) |v. v \<in> (x \<Ztypecolon> T) }\<close>
-
-lemma (in solidity) LInstance_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> LInstance addr T) \<longleftrightarrow> (\<exists>v. p = FIC_ledge.mk (Fine (1(addr := v))) \<and> v \<in> (x \<Ztypecolon> T) )\<close>
-  unfolding \<phi>Type_def LInstance_def by simp
-
-lemma (in solidity) LInstance_inhabited[\<phi>expns]:
-  \<open>Inhabited (x \<Ztypecolon> LInstance addr T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  where \<open>Contract k T \<equiv> FIC_ledge.\<phi> (\<phi>MapAt k T)\<close>
 
 subsubsection \<open>Initialized or Not\<close>
 
@@ -399,11 +457,13 @@ lemma \<phi>Uninit_expn[\<phi>expns]:
 lemma \<phi>Uninit_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
-subsection \<open>Balance Table\<close>
 
-context solidity begin
-term FIC_balance
-end
+subsection \<open>Balance\<close>
+
+abbreviation (in solidity)
+  \<open>Balance' n addr \<equiv> FIC_balance.\<phi> (\<phi>MapAt addr (n \<Znrres>\<phi> Nonsepable \<nat>\<^sup>w))\<close>
+
+abbreviation (in solidity) \<open>Balance addr \<equiv> FIC_balance.\<phi> (\<phi>MapAt addr (1 \<Znrres>\<phi> Nonsepable \<nat>\<^sup>w))\<close>
 
 section Instruction
 
@@ -460,9 +520,9 @@ lemma (in \<phi>empty_sem) [simp]:
 lemma (in solidity) \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> LInstance addr (\<phi>MapAt path (n \<Znrres>\<phi> (\<phi>Init Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+      \<lbrace> v \<Ztypecolon> Contract addr (\<phi>MapAt path (n \<Znrres>\<phi> (\<phi>Init Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_res_entry_ledge TY (ledge_ref addr path) F
-      \<lbrace> v \<Ztypecolon> LInstance addr (\<phi>MapAt path (n \<Znrres>\<phi> (\<phi>Init Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+      \<lbrace> v \<Ztypecolon> Contract addr (\<phi>MapAt path (n \<Znrres>\<phi> (\<phi>Init Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec \<phi>M_get_res_entry_ledge_def Premise_def
   apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
   subgoal for r res vb
@@ -479,8 +539,8 @@ lemma (in solidity) \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
 lemma (in solidity) op_load_ledge:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_ledge TY raw \<lbrace>
-      v \<Ztypecolon> LInstance addr (\<phi>MapAt path (\<phi>Share n (\<phi>Init Identity))) \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
-  \<longmapsto> v \<Ztypecolon> LInstance addr (\<phi>MapAt path (\<phi>Share n (\<phi>Init Identity))) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
+      v \<Ztypecolon> Contract addr (\<phi>MapAt path (\<phi>Share n (\<phi>Init Identity))) \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
+  \<longmapsto> v \<Ztypecolon> Contract addr (\<phi>MapAt path (\<phi>Share n (\<phi>Init Identity))) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
 \<rbrace>\<close>
   unfolding op_load_ledge_def Premise_def
   by (\<phi>reason, simp, \<phi>reason)
@@ -494,20 +554,20 @@ definition (in solidity) op_store_ledge
     \<phi>M_caseV (\<lambda>vstore vref.
     \<phi>M_getV_LedgeRef vref (\<lambda>lref.
     \<phi>M_getV TY id vstore (\<lambda>store.
-    \<phi>M_get_res_entry_ledge TY lref (\<lambda>_. Return \<phi>V_nil)
+    \<phi>M_get_res_entry_ledge TY lref (\<lambda>_. Return \<phi>V_none)
  \<ggreater> R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized store)) (ledge_ref.path lref)) (ledge_ref.instance lref))
 )))\<close>
 
 lemma (in solidity) "\<phi>R_set_res_ledge"[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized u)) path) lref)
-         \<lbrace> v \<Ztypecolon> LInstance lref (\<phi>MapAt path (1 \<Znrres>\<phi> \<phi>Init Identity))
-  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> LInstance lref (\<phi>MapAt path (1 \<Znrres>\<phi> \<phi>Init Identity)) \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> Contract lref (\<phi>MapAt path (1 \<Znrres>\<phi> \<phi>Init Identity))
+  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> Contract lref (\<phi>MapAt path (1 \<Znrres>\<phi> \<phi>Init Identity)) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def FIC_ledge.interp_split' del: subsetI)
   apply (rule \<phi>Res_Spec_ex_\<S>[where x=\<open>FIC_ledge.mk (Fine (1(lref := 1(path := Some (1 \<Znrres> initialized u)))))\<close>],
          rule \<phi>Res_Spec_subj_\<S>)
   using FIC_ledge.Fic_Space_m apply blast
-  apply (simp add: R_ledge.share_fiction_expn_full)
+  apply (simp add: R_ledge.share_fiction_expn_full[unfolded  R_ledge.share_fiction_def])
   apply (rule R_ledge.\<phi>R_set_res[where P="\<lambda>m. path \<in> dom (m lref)"])
   apply (cases lref; clarsimp simp add: Valid_Ledge_def map_fun_at_def dom1_def)
   apply (smt (verit, ccfv_SIG) Collect_cong dom_1 dom_eq_empty_conv option.distinct(1))
@@ -519,8 +579,8 @@ lemma (in solidity) op_store_ledge:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store_ledge TY (\<phi>V_pair rawu rawref) \<lbrace>
-      v \<Ztypecolon> LInstance lref (\<phi>MapAt path (\<phi>Share 1 (\<phi>Init Identity))) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ledge_ref lref path \<Ztypecolon> Val rawref LedgeRef
-  \<longmapsto> u \<Ztypecolon> LInstance lref (\<phi>MapAt path (\<phi>Share 1 (\<phi>Init Identity)))
+      v \<Ztypecolon> Contract lref (\<phi>MapAt path (\<phi>Share 1 (\<phi>Init Identity))) \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ledge_ref lref path \<Ztypecolon> Val rawref LedgeRef
+  \<longmapsto> u \<Ztypecolon> Contract lref (\<phi>MapAt path (\<phi>Share 1 (\<phi>Init Identity)))
 \<rbrace>\<close>
   unfolding op_store_ledge_def Premise_def
   by (cases rawref; cases rawu; simp; \<phi>reason, simp add: Premise_def, \<phi>reason, simp add: \<phi>expns, \<phi>reason)
@@ -534,9 +594,9 @@ definition (in solidity) op_allocate_ledge :: \<open>('VAL,'RES_N,'RES) proc\<cl
 
 lemma (in solidity) op_obj_allocate:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_allocate_ledge
-      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. 1 \<Ztypecolon> LInstance ref (Identity \<Rrightarrow> 1 \<Znrres>\<phi> \<phi>Uninit)\<heavy_comma> ref \<Ztypecolon> Val ret Address \<rbrace>\<close>
+      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. 1 \<Ztypecolon> Contract ref (Identity \<Rrightarrow> 1 \<Znrres>\<phi> \<phi>Uninit)\<heavy_comma> ref \<Ztypecolon> Val ret Address \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec op_allocate_ledge_def
-  apply (clarsimp simp add: \<phi>expns FIC_ledge.interp_split' del: subsetI)
+  apply (clarsimp simp add: \<phi>expns FIC_ledge.interp_split'[folded R_ledge.share_fiction_def] del: subsetI)
   apply (rule R_ledge.\<phi>R_allocate_res_entry)
   apply (clarsimp simp add: Valid_Ledge_def)
   using obj_map_freshness apply blast
@@ -562,6 +622,46 @@ definition (in solidity_sem)
     Return (sem_value (word_to_V_int (nonsepable.dest n)))
   ))\<close>
 
+lemma (in solidity) op_get_balance_raw:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_balance va \<lbrace>
+      m \<Ztypecolon> FIC_balance.\<phi> (\<phi>MapAt addr (n \<Znrres>\<phi> Nonsepable Identity)) \<heavy_comma> addr \<Ztypecolon> Val va Address
+  \<longmapsto> m \<Ztypecolon> FIC_balance.\<phi> (\<phi>MapAt addr (n \<Znrres>\<phi> Nonsepable Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat m \<Ztypecolon> \<nat>[256]
+\<rbrace>\<close>
+  unfolding op_get_balance_def FIC_balance.\<phi>nonsepable_normalize
+  apply \<phi>reason subgoal proof -
+  have t1:
+    \<open>V_int.mk (LENGTH('a), unat m) \<in> (unat m \<Ztypecolon> \<nat>[LENGTH('a)]) \<close>
+    for m :: \<open>'a::len word\<close>
+    by (simp add: \<phi>expns)
+  show ?thesis by (simp add: t1[of m, simplified] Premise_def)
+qed .
+
+declare [[\<phi>trace_reasoning]]
+
+proc (in solidity) op_get_balance:
+  argument \<open>m \<Ztypecolon> Balance' n addr \<heavy_comma> addr \<Ztypecolon> Val va Address\<close>
+  return \<open>m \<Ztypecolon> Balance' n addr \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m \<Ztypecolon> \<nat>[256]\<close>
+  \<medium_left_bracket> op_get_balance_raw
+
+
+definition (in solidity_sem)
+    \<phi>M_set_balance :: \<open>('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
+  where \<open>\<phi>M_set_balance =
+    \<phi>M_caseV (\<lambda>va vm.
+    \<phi>M_getV_Address va (\<lambda>addr.
+    \<phi>M_getV (\<tau>Int 256) V_int.dest vm (\<lambda>(_,m).
+    R_balance.\<phi>R_set_res (\<lambda>f. f(addr \<mapsto> nonsepable (of_nat m)))
+  )))\<close>
+
+lemma (in solidity) op_set_balance:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_set_balance (\<phi>V_pair va vm) \<lbrace>
+      m \<Ztypecolon> FIC_balance.\<phi> (\<phi>MapAt addr (1 \<Znrres>\<phi> Nonsepable Identity)) \<heavy_comma> m' \<Ztypecolon> Val vm \<nat>[256] \<heavy_comma> addr \<Ztypecolon> Val va Address
+  \<longmapsto> (of_nat m') \<Ztypecolon> FIC_balance.\<phi> (\<phi>MapAt addr (1 \<Znrres>\<phi> Nonsepable Identity))
+\<rbrace>\<close>
+  unfolding \<phi>M_set_balance_def FIC_balance.\<phi>nonsepable_normalize
+  by (cases vm; simp; \<phi>reason; simp only: \<phi>Nat_expn V_int.dest_mk case_prod_conv,
+      rule FIC_balance.\<phi>R_set_res, simp, simp)
+
 
 
 subsubsection \<open>Globally Available Variables\<close>
@@ -572,9 +672,9 @@ definition (in solidity_sem)
     R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
 
 lemma (in solidity)
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<phi>V_nil \<lbrace>
-      env \<Ztypecolon> FIC_environ.\<phi> Identity
-  \<longmapsto> env \<Ztypecolon> FIC_environ.\<phi> Identity\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat (G env) \<Ztypecolon> \<nat>[LENGTH('len)]
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<phi>V_none \<lbrace>
+      env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))
+  \<longmapsto> env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat (G env) \<Ztypecolon> \<nat>[LENGTH('len)]
 \<rbrace>\<close>
   for G :: \<open>environ \<Rightarrow> 'len::len word\<close>
   unfolding op_get_environ_word_def \<phi>Procedure_\<phi>Res_Spec
@@ -586,11 +686,133 @@ subsection \<open>Call\<close>
 
 definition \<open>fallback_N = ''fallback''\<close>
 
-definition (in solidity_sem) op_send :: \<open>('VAL,unit,'RES_N,'RES) proc'\<close>
-  where \<open>op_send va =
-    \<phi>M_getV \<tau>Address V_Address.dest va (\<lambda>addr res.
-    Return \<phi>V_nil (the (Public_Methods (object_ref.class addr) fallback_N) res)
-  )\<close>
 
+
+definition (in \<phi>empty_sem) \<phi>Transition_Spec_to_Proc_Spec
+    :: \<open> ('VAL list, 'a) \<phi>
+      \<Rightarrow> ('VAL list, 'b) \<phi>
+      \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc'
+      \<Rightarrow> 'TY list \<times> 'TY list
+      \<Rightarrow> ('RES_N,'RES) transition
+      \<Rightarrow> bool
+      \<Rightarrow> prop\<close>
+  where \<open>\<phi>Transition_Spec_to_Proc_Spec XV YV proc Tys Tr P
+      \<equiv> Trueprop ( \<phi>Type_Spec_for_Deep Tys proc
+        \<longrightarrow> Transition_Of' proc \<subseteq> Tr
+        \<longrightarrow> P)\<close>
+
+definition (in \<phi>empty_sem) \<phi>Transition_Spec_to_Proc_Spec_cast_type
+  where \<open>\<phi>Transition_Spec_to_Proc_Spec_cast_type \<equiv> Trueprop\<close>
+
+lemma (in \<phi>empty)[\<phi>reason 2000 on
+      \<open>PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+              ((\<exists>*x. x \<Ztypecolon> Val ?rawvs ?X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Val ?rawvs' ?Y))\<close>]:
+  \<open> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+              ((\<exists>*x. x \<Ztypecolon> X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Y))
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+              ((\<exists>*x. x \<Ztypecolon> Val rawvs X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Val rawvs Y))\<close>
+  unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
+  by (simp add: \<phi>expns)
+
+lemma (in \<phi>empty_sem) [\<phi>reason 2000]:
+  \<open> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+      ((\<exists>*x. x \<Ztypecolon> Empty_List) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Identity <of-types> []))\<close>
+  unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
+  by (clarsimp simp add: \<phi>expns times_list_def)
+
+lemma (in \<phi>empty_sem) [\<phi>reason 2000]:
+  \<open>(\<And>x. x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y x \<Ztypecolon> Identity <of-type> Ty)
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+        ((\<exists>*x. x \<Ztypecolon> List_Item T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Identity <of-types> [Ty]))\<close>
+  unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
+  by (clarsimp simp add: \<phi>expns times_list_def)
+
+lemma (in \<phi>empty_sem) [\<phi>reason 2000]:
+  \<open>(\<And>x. x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y x \<Ztypecolon> Identity <of-type> Ty)
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+        ((\<exists>*x. x \<Ztypecolon> X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Identity <of-types> Tys))
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+        ((\<exists>*x. x \<Ztypecolon> (X \<^emph> List_Item T)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Identity <of-types> (Ty#Tys)))\<close>
+  unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
+  by (clarsimp simp add: \<phi>expns times_list_def, blast)
+
+lemma (in \<phi>empty_sem) [\<phi>reason 2000]:
+  \<open> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+            ((\<exists>*y. y \<Ztypecolon> Identity <of-types> []) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*x. x \<Ztypecolon> Empty_List))\<close>
+  unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
+  by (clarsimp simp add: \<phi>expns times_list_def)
+
+lemma (in \<phi>empty_sem) [\<phi>reason 2000]:
+  \<open> (\<And>y. y \<Ztypecolon> Identity <of-type> Ty \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x y \<Ztypecolon> T)
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+            ((\<exists>*y. y \<Ztypecolon> Identity <of-types> [Ty]) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*x. x \<Ztypecolon> List_Item T))\<close>
+  unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
+  apply (clarsimp simp add: \<phi>expns times_list_def)
+  by (metis (no_types, lifting) list_all2_Cons2 list_all2_Nil2)
+
+lemma (in \<phi>empty_sem) [\<phi>reason 2000]:
+  \<open> (\<And>y. y \<Ztypecolon> Identity <of-type> Ty \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x y \<Ztypecolon> T)
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+            ((\<exists>*y. y \<Ztypecolon> Identity <of-types> Tys) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*x. x \<Ztypecolon> X))
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+            ((\<exists>*y. y \<Ztypecolon> Identity <of-types> (Ty#Tys)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*x. x \<Ztypecolon> (X \<^emph> List_Item T)))\<close>
+  unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
+  apply (clarsimp simp add: \<phi>expns times_list_def)
+  by (metis (no_types, lifting) append_Cons list_all2_Cons2 self_append_conv2)
+
+lemma (in \<phi>empty) [\<phi>reason 2000 on
+    \<open>PROP \<phi>Transition_Spec_to_Proc_Spec ?XV ?YV ?proc (?Tya,?Tyb) (?X \<longrightarrow>\<^sub>R\<^sub>\<phi> ?Y) ?RET\<close>
+]:
+  \<open> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+        ((\<exists>*x. x \<Ztypecolon> XV) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*vx. vx \<Ztypecolon> Identity <of-types> Tya))
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
+        ((\<exists>*vy. vy \<Ztypecolon> Identity <of-types> Tyb) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*x. x \<Ztypecolon> YV))
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec XV YV proc (Tya,Tyb) (X \<longrightarrow>\<^sub>R\<^sub>\<phi> Y)
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c proc rawv \<lbrace> X\<heavy_comma> (\<exists>*x. x \<Ztypecolon> Val rawv XV) \<longmapsto> \<lambda>ret. Y\<heavy_comma> (\<exists>*x. x \<Ztypecolon> Val ret YV) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s Y
+  \<rbrace>)\<close>
+  unfolding \<phi>Transition_Spec_to_Proc_Spec_def \<phi>Type_Spec_for_Deep_def subset_iff Imply_def
+      \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
+  apply (clarsimp simp add: \<phi>expns Transition_Of_def \<phi>GTS_def \<phi>Procedure_def GTS_def)
+  subgoal for comp R s u r x
+    apply (cases rawv; cases s; simp add: \<phi>expns sem_value_All sem_value_forall) 
+    by (smt (verit, del_insts) mult_1_class.mult_1_right)+ .
+
+lemma (in \<phi>empty) [\<phi>reason 2000 on
+    \<open>PROP \<phi>Transition_Spec_to_Proc_Spec ?XV ?YV ?proc ?Tys (?S1 \<inter> ?S2) ?P\<close>
+]:
+  \<open> PROP \<phi>Transition_Spec_to_Proc_Spec XV YV proc Tys S1 P1
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec XV YV proc Tys S2 P2
+\<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec XV YV proc Tys (S1 \<inter> S2) (P1 \<and> P2)\<close>
+  unfolding \<phi>Transition_Spec_to_Proc_Spec_def
+  by blast
+
+
+
+
+lemma (in solidity)
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Public_Methods cls name rawv \<lbrace>
+     
+     vx \<Ztypecolon> Val rawv (Identity <of-types> fst (method_sig.typ_sig name))
+ \<longmapsto> \<lambda>ret. (vy \<Ztypecolon> Val ret (Identity <of-types> snd (method_sig.typ_sig name)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j vy. True)
+\<rbrace>\<close>
+
+
+definition (in solidity_sem) op_raw_call
+      :: \<open>'TY method_sig
+       \<Rightarrow> ('VAL \<times> 'arg,'ret,'RES_N,'RES) proc'\<close>
+  where \<open>op_raw_call fname Arg Ret =
+    \<phi>M_caseV (\<lambda>va varg.
+    \<phi>M_getV_Address va (\<lambda>addr.
+      shallowize_proc Arg Ret (the (Public_Methods (object_ref.class addr) fname)) varg
+  ))\<close>
+\<comment> \<open>It is nondeterministic! cuz, one cannot assume the height of the calling stack, considering
+  send consumes one space in the stack and fails when overflow, so the success of a send operation
+  cannot be predicted in the semantics of Solidity!
+
+  Albeit, one can infer from a previous success of an external calling, that the next calling will
+  not trigger stack overflow. Other factors like exceptions throwed from the callee are also hard
+  to predict.
+  To simply, we adopt a slightly stricter policy that, every external call is
+  nondeterministic and can fail. It relieves us from counting stack height or gas consumption.\<close>
 
 end

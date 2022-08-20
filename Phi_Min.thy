@@ -121,6 +121,10 @@ lemma \<phi>Nat_elim[elim!,\<phi>reason_elim!]:
   "Inhabited (x \<Ztypecolon> \<nat>[b]) \<Longrightarrow> (x < 2^b \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (auto simp add: \<phi>expns)
 
+lemma
+  \<open>Inhabited (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> x < 2^b\<close>
+  unfolding Inhabited_def by (auto simp add: \<phi>expns)
+
 lemma \<phi>Nat_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<nat>[?b]) ?ty\<close>]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<nat>[b]) (\<tau>Int b)\<close>
   unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns)
@@ -140,6 +144,10 @@ definition \<phi>NatRound :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>\<^s
 lemma \<phi>NatRound_expn[\<phi>expns]:
   "p \<in> (x \<Ztypecolon> \<nat>\<^sup>r[b]) \<longleftrightarrow> p = V_int.mk (b, (x mod 2^b))"
   unfolding \<phi>Type_def \<phi>NatRound_def by simp
+
+lemma
+  \<open>Inhabited (x \<Ztypecolon> \<nat>\<^sup>r[b]) \<longleftrightarrow> True\<close>
+  unfolding Inhabited_def by (auto simp add: \<phi>expns)
 
 lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) \<nat>\<^sup>r[?b] ?z\<close>]:
   "\<phi>Zero (T_int.mk b) (\<nat>\<^sup>r[b]) 0"
@@ -584,7 +592,7 @@ inductive SemDoWhile :: "('VAL,'RES_N,'RES) proc \<Rightarrow> ('RES_N \<Rightar
 | "Success (sem_value (V_int.mk (1,1))) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
 | "Exception e \<in> f s \<Longrightarrow> SemDoWhile f s (Exception e)"
 | "PartialCorrect \<in> f s \<Longrightarrow> SemDoWhile f s PartialCorrect"
-| "Fail \<in> f s \<Longrightarrow> SemDoWhile f s Fail"
+| "Invalid \<in> f s \<Longrightarrow> SemDoWhile f s Invalid"
 
 lemma "\<nexists> y. SemDoWhile (\<lambda>res. Return (sem_value (V_int.mk (1,1))) res) res y"
   apply rule apply (elim exE) subgoal for y 

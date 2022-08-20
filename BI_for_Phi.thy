@@ -63,6 +63,10 @@ lemma Subjection_inhabited[elim!,\<phi>reason_elim!]:
   \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+lemma Subjection_inhabited_expn[\<phi>inhabited]:
+  \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> Inhabited S \<and> P\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
 lemma Subjection_cong[cong]:
   \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> S \<equiv> S') \<Longrightarrow> (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<equiv> (S' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P')\<close>
   unfolding atomize_eq set_eq_iff by (simp add: \<phi>expns, blast)
@@ -92,6 +96,14 @@ definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\
 notation ExSet (binder "\<exists>\<^sup>s" 10)
 
 lemma [\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
+
+lemma ExSet_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (ExSet S) \<Longrightarrow> (\<And>x. Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns; blast)
+
+lemma ExSet_inhabited_expn[\<phi>inhabited]:
+  \<open>Inhabited (ExSet S) \<longleftrightarrow> (\<exists>x. Inhabited (S x))\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 syntax
   "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _" [3,0,4] 3)
@@ -129,11 +141,25 @@ lemma ExSet_SubjSet[simp]:
   \<open>(X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j P b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. P b \<and> Q b)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 200]: 
+lemma [\<phi>reason 200]: (*depreciated*)
    "(\<And>c. T c \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P c)
 \<Longrightarrow> (ExSet T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d (\<exists>c. P c)"
   unfolding Imply_def by (simp add: \<phi>expns) blast
 
+lemma [\<phi>reason 300]:
+  \<open>(\<And>c. S c \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P)
+\<Longrightarrow> (ExSet S) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def by (simp add: \<phi>expns, blast)
+
+lemma [\<phi>reason]:
+  \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' x \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (ExSet S') \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast)
+
+lemma [\<phi>reason]:
+  \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P x
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d (Ex P)\<close>
+  unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast)
 
 
 subsection \<open>Universal Quantification\<close>

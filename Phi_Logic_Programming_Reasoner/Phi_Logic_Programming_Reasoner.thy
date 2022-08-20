@@ -342,6 +342,21 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 subsection \<open>Misc\<close>
 
+subsubsection \<open>Useless Tag\<close>
+
+text \<open>Sometimes, like in a simplification where information are always transformed equally
+  (no information loses), some useless information is generated during some procedure.
+  These information are necessary technically like for an equality in a simplification rule,
+    but are useless for the verification.
+  These information can be wrapped by a Useless tag to annotate this.
+  In \<phi>-Programming, any extracted lemmas wrapped by this tag will not be added into
+    proof environment and dropped simply.\<close>
+
+definition USELESS :: \<open>bool \<Rightarrow> bool\<close> where \<open>USELESS x = x\<close>
+
+lemma [simp]: \<open>USELESS True\<close> unfolding USELESS_def ..
+
+
 subsubsection \<open>Collect Schematic & Free & other terms\<close>
 
 paragraph \<open>Schematic\<close>

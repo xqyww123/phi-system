@@ -147,7 +147,12 @@ locale \<phi>OO =
                   \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult})
                   \<times> ('FIC_N \<Rightarrow> 'FIC))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
+begin
 
+sublocale FIC_OO_share: share_fiction_for_partial_mapping_resource2 Valid_Objs R_objs
+    Resource_Validator INTERPRET FIC_OO_share ..
+
+end
 
 
 section \<open>\<phi>Types\<close>
@@ -181,47 +186,14 @@ lemma \<phi>Ref_semty[\<phi>reason 1000]:
 
 end
 
-subsection \<open>Field\<close>
-
-definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close>
-  where \<open>\<phi>MapAt key T x = { 1(key := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
-
-lemma \<phi>MapAt_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>MapAt key T) \<longleftrightarrow> (\<exists>v. p = 1(key := v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>MapAt_def \<phi>Type_def by simp
-
-lemma [\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>MapAt field T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
 subsection \<open>Object\<close>
 
 context \<phi>OO begin
 
 paragraph \<open>Fields in A Object\<close>
 
-definition \<phi>InObj :: \<open>'TY object_ref \<Rightarrow> (field_name \<Rightarrow> 'VAL share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
-  where \<open>\<phi>InObj obj T x = { FIC_OO_share.mk (Fine (1(obj := v))) |v. v \<in> (x \<Ztypecolon> T) \<and> obj \<noteq> Nil }\<close>
-
-lemma \<phi>InObj_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>InObj obj T) \<longleftrightarrow> (\<exists>v. p = FIC_OO_share.mk (Fine (1(obj := v))) \<and> v \<in> (x \<Ztypecolon> T) \<and> obj \<noteq> Nil)\<close>
-  unfolding \<phi>InObj_def \<phi>Type_def by simp
-
-lemma [\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>InObj obj T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-paragraph \<open>A Whole Object\<close>
-
-definition \<phi>RawObject :: \<open>'TY object_ref \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, field_name \<Rightarrow> 'VAL share option) \<phi>\<close>
-  where \<open>\<phi>RawObject ref obj = { FIC_OO_share.mk (Fine (1(ref := obj))) }\<close>
-
-lemma \<phi>RawObject_expn[\<phi>expns]:
-  \<open>p \<in> (obj \<Ztypecolon> \<phi>RawObject ref) \<longleftrightarrow> p = FIC_OO_share.mk (Fine (1(ref := obj)))\<close>
-  unfolding \<phi>RawObject_def \<phi>Type_def by simp
-
-lemma \<phi>RawObject_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (obj \<Ztypecolon> \<phi>RawObject ref) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+abbreviation \<phi>InObj :: \<open>'TY object_ref \<Rightarrow> (field_name \<Rightarrow> 'VAL share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
+  where \<open>\<phi>InObj obj T \<equiv> FIC_OO_share.\<phi> (\<phi>MapAt obj T)\<close>
 
 end
 
@@ -247,7 +219,7 @@ definition (in \<phi>OO_sem) op_obj_allocate :: \<open>'TY class \<Rightarrow> (
 
 lemma (in \<phi>OO) op_obj_allocate:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_allocate cls
-      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> \<phi>RawObject ref\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
+      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> \<phi>InObj ref Identity\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec op_obj_allocate_def
   apply (clarsimp simp add: \<phi>expns FIC_OO_share.interp_split' del: subsetI)
   apply (rule R_objs.\<phi>R_allocate_res_entry)
@@ -257,7 +229,8 @@ lemma (in \<phi>OO) op_obj_allocate:
   prefer 2 apply assumption
   apply (simp add: \<phi>expns)
   subgoal for r res k res'
-    by (cases k; simp add: R_objs.share_fiction_expn_full' Return_def det_lift_def) .
+    apply (cases k; simp add: R_objs.share_fiction_expn_full' Return_def det_lift_def)
+    using R_objs.share_fiction_def R_objs.share_fiction_expn_full' by presburger .
 
 
 
@@ -268,17 +241,6 @@ definition (in \<phi>OO_sem) op_obj_load_field :: \<open>field_name \<Rightarrow
     \<phi>M_getV_ref v (\<lambda>ref.
     R_objs.\<phi>R_get_res_entry ref field (\<lambda>v.
     \<phi>M_assert (v \<in> Well_Type TY) \<ggreater> Return (sem_value v)))\<close>
-
-lemma (in \<phi>OO) \<phi>M_get_res_entry_R_objs[\<phi>reason!]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_objs.\<phi>R_get_res_entry ref field F
-      \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
-  apply (rule R_objs.\<phi>R_get_res_entry[where v=v])
-   apply (simp add: FIC_OO_share.interp_split')
-  by blast
 
 lemma (in \<phi>OO) op_obj_load_field:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
@@ -301,20 +263,6 @@ definition (in \<phi>OO_sem) op_obj_store_field :: \<open>field_name \<Rightarro
  \<ggreater> R_objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some store) field) ref)
 )))\<close>
 
-lemma (in \<phi>OO) "\<phi>R_set_res_objs"[\<phi>reason!]:
-  \<open> field \<in> dom (class.fields (object_ref.class ref))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) field) ref)
-         \<lbrace> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (1 \<Znrres>\<phi> Identity))
-  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
-  unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split'
-          R_objs.share_fiction_expn_full del: subsetI)
-  apply (rule R_objs.\<phi>R_set_res[where P="\<lambda>m. field \<in> dom (m ref)"])
-  apply (cases ref; clarsimp simp add: Valid_Objs_def map_fun_at_def dom1_def)
-  apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1))
-  using R_objs.raw_unit_assertion_implies apply blast
-  by assumption
-
 lemma (in \<phi>OO) op_obj_store_field:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
@@ -324,7 +272,12 @@ lemma (in \<phi>OO) op_obj_store_field:
   \<longmapsto> u \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (\<phi>Share 1 Identity))
 \<rbrace>\<close>
   unfolding op_obj_store_field_def Premise_def
-  by (cases rawref; cases rawu; simp; \<phi>reason, assumption, simp add: \<phi>expns, \<phi>reason, assumption)
+  apply (cases rawref; cases rawu; simp; \<phi>reason, assumption, simp add: \<phi>expns)
+  apply (rule FIC_OO_share.\<phi>R_set_res[where P="\<lambda>m. field \<in> dom (m ref)"])
+  apply (cases ref; clarsimp simp add: Valid_Objs_def map_fun_at_def dom1_def)
+  apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1))
+  using R_objs.raw_unit_assertion_implies by blast
+
 
 paragraph \<open>Allocation\<close>
 
@@ -339,16 +292,14 @@ lemma (in \<phi>OO) op_obj_dispose:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ref \<noteq> Nil
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e dom fields = dom (class.fields cls)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_dispose cls rawv \<lbrace>
-      to_share o fields \<Ztypecolon> \<phi>RawObject ref \<heavy_comma> ref \<Ztypecolon> Val rawv (Ref cls)
+      to_share o fields \<Ztypecolon> \<phi>InObj ref Identity \<heavy_comma> ref \<Ztypecolon> Val rawv (Ref cls)
   \<longmapsto> Void
 \<rbrace>\<close>
   unfolding op_obj_dispose_def Premise_def
   apply (rule \<phi>M_getV_ref)
-  apply (rule \<phi>SEQ[where B=\<open>\<lambda>_. to_share \<circ> fields \<Ztypecolon> \<phi>RawObject ref\<close>])
-  unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split'
-          R_objs.share_fiction_expn_full' del: subsetI)
-   apply (rule R_objs.\<phi>R_get_res, simp, simp add: dom1_def)
+  apply (rule \<phi>SEQ[where B=\<open>\<lambda>_. to_share \<circ> fields \<Ztypecolon> \<phi>InObj ref Identity\<close>])
+  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.expand' \<phi>Procedure_\<phi>Res_Spec del: subsetI)
+  apply (rule R_objs.\<phi>R_get_res, simp, simp add: dom1_def)
   subgoal premises prems for r res proof -
     have t1: \<open>object_ref.class ref = cls\<close>
       by (metis object_ref.collapse of_class.simps(1) prems(1) prems(3))
@@ -358,15 +309,12 @@ lemma (in \<phi>OO) op_obj_dispose:
       by (metis domIff prems(2))
     show ?thesis by (simp add: t1 t2 prems Return_def det_lift_def)
   qed
-  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.interp_split'
-          R_objs.share_fiction_expn_full' del: subsetI)
-  apply (rule R_objs.\<phi>R_dispose_res[where P=\<open>\<lambda>_. True\<close> and any=fields])
-     apply (clarsimp simp add: Valid_Objs_def one_fun_def)
+  apply (rule FIC_OO_share.\<phi>R_dispose_res[where P=\<open>\<lambda>_. True\<close>],
+         clarsimp simp add: Valid_Objs_def one_fun_def)
   apply (cases ref; simp)
   using R_objs.get_res_Valid[simplified Valid_Objs_def, simplified]
     R_objs.raw_unit_assertion_implies'[where f=fields]
-  apply (smt (z3) dom_eq_empty_conv empty_iff map_le_antisym map_le_def)
-  ..  
+  apply (smt (z3) dom_eq_empty_conv empty_iff map_le_antisym map_le_def) .
 
 
 end

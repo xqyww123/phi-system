@@ -530,7 +530,6 @@ lemma (in \<phi>min)
 
 declare [[\<phi>not_define_new_const]]
 
-
 proc (in \<phi>min) do_while:
 assumes V: \<open>Variant_Cast vars X X'\<close>
     and \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond\<close>

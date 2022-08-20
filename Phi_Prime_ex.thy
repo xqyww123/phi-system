@@ -4,6 +4,91 @@ begin
 
 chapter \<open>Extension of Semantics & Specification Framework\<close>
 
+section \<open>Deeper model of Procedure\<close>
+
+text \<open>A representation of a procedure is not totally deep. The number of arguments and returns
+  are still represented by product type shallowly, causing procedures do not have the same type.
+  It meets problems certain situation like when we create a public method table, where
+  we need all procedures have the same type.
+  Therefore this section gives a way to deep-ize procedures by serialization its arguments and returns.\<close>
+
+
+type_synonym ('a,'VAL) serializer = \<open>'a \<Rightarrow> 'VAL list\<close>
+
+definition Serializer :: \<open>('a \<Rightarrow> 'b list) \<Rightarrow> ('a,'b list,'RES_N,'RES) proc'\<close>
+  where \<open>Serializer f = (Return o map_sem_value f)\<close>
+
+definition Deserializer :: \<open>('a \<Rightarrow> 'b list) \<Rightarrow> ('b list,'a,'RES_N,'RES) proc'\<close>
+  where \<open>Deserializer f = (\<lambda>vs. if (\<exists>a. f a = dest_sem_value vs)
+                                then Return (map_sem_value (the_inv f) vs)
+                                else (\<lambda>_. {Invalid}) )\<close>
+
+definition Is_Serializer :: \<open>('a \<Rightarrow> 'b list) \<Rightarrow> bool\<close>
+  where \<open>Is_Serializer f \<longleftrightarrow> inj f \<and> (\<forall>x y. length (f x) = length (f y))\<close>
+
+lemma Serializer_Deserializer[simp]:
+  \<open> Is_Serializer f
+\<Longrightarrow> (\<lambda>x. Serializer f x \<bind> Deserializer f) = Return\<close>
+  unfolding Is_Serializer_def Serializer_def Deserializer_def fun_eq_iff
+  by (clarsimp simp add: sem_value_forall the_inv_f_f, blast)
+
+lemma Serializer_Deserializer'[simp]:
+  \<open> Is_Serializer f
+\<Longrightarrow> (\<lambda>x. Serializer f x \<bind> Deserializer f \<bind> g) = g\<close>
+  unfolding Is_Serializer_def Serializer_def Deserializer_def fun_eq_iff
+  by (clarsimp simp add: sem_value_forall the_inv_f_f, blast)
+
+definition serialize_single :: \<open>'a \<Rightarrow> 'a list\<close>
+  where \<open>serialize_single x = [x]\<close>
+
+definition serialize_pair :: \<open>('a \<Rightarrow> 'x list) \<Rightarrow> ('b \<Rightarrow> 'x list) \<Rightarrow> ('a \<times> 'b \<Rightarrow> 'x list)\<close>
+  where \<open>serialize_pair f g = (\<lambda>(a,b). f a @ g b)\<close>
+
+lemma serialize_single_Serializer[simp]:
+  \<open>Is_Serializer serialize_single\<close>
+  unfolding Is_Serializer_def serialize_single_def
+  by (simp add: inj_on_def)
+  
+lemma serialize_pair_Serializer[simp]:
+  \<open> Is_Serializer f
+\<Longrightarrow> Is_Serializer g
+\<Longrightarrow> Is_Serializer (serialize_pair f g)\<close>
+  unfolding serialize_pair_def Is_Serializer_def inj_def
+  by (simp, metis)
+
+definition
+    deepize_proc :: \<open>('arg, 'VAL) serializer
+                  \<Rightarrow> ('ret, 'VAL) serializer
+                  \<Rightarrow> ('arg,'ret,'RES_N,'RES) proc'
+                  \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc'\<close>
+    where \<open>deepize_proc Arg Ret proc v = Deserializer Arg v \<bind> proc \<bind> Serializer Ret\<close>
+
+definition
+    shallowize_proc :: \<open>('arg, 'VAL) serializer
+                     \<Rightarrow> ('ret, 'VAL) serializer
+                     \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc'
+                     \<Rightarrow> ('arg,'ret,'RES_N,'RES) proc'\<close>
+    where \<open>shallowize_proc Arg Ret proc v = Serializer Arg v \<bind> proc \<bind> Deserializer Ret\<close>
+
+lemma  "__shallowize_proc_deepize_proc__"[simp]:
+  \<open> Is_Serializer Arg
+\<Longrightarrow> Is_Serializer Ret
+\<Longrightarrow> shallowize_proc Arg Ret (deepize_proc Arg Ret proc) = proc\<close>
+  unfolding deepize_proc_def shallowize_proc_def
+  by (simp, subst proc_bind_assoc[symmetric], simp only: Serializer_Deserializer')
+
+definition (in \<phi>empty_sem) \<phi>Type_Spec_for_Deep
+    :: \<open>'TY list \<times> 'TY list \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc' \<Rightarrow> bool\<close>
+  where \<open>\<phi>Type_Spec_for_Deep tys proc \<longleftrightarrow>
+    (\<forall>arg ret res res'.
+        list_all2 (\<lambda>a t. a \<in> Well_Type t) (dest_sem_value arg) (fst tys)
+      \<and> Success ret res' \<in> proc arg res
+    \<longrightarrow> list_all2 (\<lambda>a t. a \<in> Well_Type t) (dest_sem_value ret) (snd tys))
+  \<and> (\<forall>arg res. list_all2 (\<lambda>a t. a \<in> Well_Type t) (dest_sem_value arg) (fst tys)
+      \<longrightarrow> Invalid \<notin> proc arg res)\<close>
+
+
+
 section \<open>Resource Transition\<close>
 
 subsection \<open>Mathematical Preliminary\<close>
@@ -44,9 +129,11 @@ definition Transition_Of :: \<open>('ret,'RES_N,'RES) proc \<Rightarrow> ('RES_N
     { (res,res') | res res'. (\<exists>ret. Success ret res' \<in> proc res)
                            \<or> Exception res' \<in> proc res}\<close>
 
+abbreviation Transition_Of' :: \<open>('arg,'ret,'RES_N,'RES) proc' \<Rightarrow> ('RES_N,'RES) transition\<close>
+  where \<open>Transition_Of' proc \<equiv> (\<exists>\<^sup>s arg. Transition_Of (proc arg))\<close>
+
 definition rel_of_fun :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a \<times> 'b) set\<close>
   where \<open>rel_of_fun f = { (x,y) |x y. f x = y }\<close>
-
 
 subsection \<open>Specification\<close>
 

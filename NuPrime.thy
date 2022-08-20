@@ -214,16 +214,54 @@ lemma \<open>Fic_Space fic \<Longrightarrow> n \<noteq> 0 \<Longrightarrow>
 
 (* type_synonym logaddr = "nat memaddr" *)
 
+subsection \<open>Explicit Annotation of Semantic Arguments and Returns\<close>
 
-subsection \<open>Monadic Formalization\<close>
+text \<open>Arguments and Returns are wrapped by sem_value type.
+  For sure this wrap is not necessary, but it helps the programming framework and syntax parser
+  to recognize which entity is an argument or a return.\<close>
 
 datatype 'a sem_value = sem_value (dest_sem_value: 'a)
 typedecl unreachable
 
+lemma sem_value_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (sem_value x))\<close> by (metis sem_value.exhaust)
+lemma sem_value_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (sem_value x))\<close> by (metis sem_value.exhaust)
+lemma sem_value_All: \<open>(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (sem_value x))\<close>
+proof
+  fix x :: 'a assume A: \<open>(\<And>x. PROP P x)\<close> then show \<open>PROP P (sem_value x)\<close> .
+next
+  fix x :: \<open>'a sem_value\<close> assume A: \<open>\<And>x. PROP P (sem_value x)\<close>
+  from \<open>PROP P (sem_value (dest_sem_value x))\<close> show "PROP P x" by simp
+qed
+
+abbreviation \<open>\<phi>V_none \<equiv> sem_value ()\<close>
+definition \<open>\<phi>V_pair x y = sem_value (dest_sem_value x, dest_sem_value y)\<close>
+definition \<open>\<phi>V_fst x = map_sem_value fst x\<close>
+definition \<open>\<phi>V_snd x = map_sem_value snd x\<close>
+abbreviation \<open>\<phi>V_nil \<equiv> sem_value []\<close>
+definition \<open>\<phi>V_cons h l = sem_value (dest_sem_value h # dest_sem_value l)\<close>
+definition \<open>\<phi>V_hd l = sem_value (hd (dest_sem_value l))\<close>
+definition \<open>\<phi>V_tl l = sem_value (tl (dest_sem_value l))\<close>
+
+lemma \<phi>V_simps[simp]:
+  \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
+  \<open>\<phi>V_fst (\<phi>V_pair u y) = u\<close>
+  \<open>\<phi>V_snd (\<phi>V_pair x u) = u\<close>
+  \<open>\<phi>V_cons (sem_value h) (sem_value l) = sem_value (h#l)\<close>
+  \<open>\<phi>V_hd (\<phi>V_cons hv lv) = hv\<close>
+  \<open>\<phi>V_tl (\<phi>V_cons hv lv) = lv\<close>
+  unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def
+     apply (cases v, simp)
+     apply (cases v, simp)
+     apply (cases v, simp)
+     apply simp apply simp apply simp .
+
+
+subsection \<open>Monadic Formalization\<close>
+
 datatype ('ret,'RES_N,'RES) state =
       Success \<open>'ret sem_value\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
     | Exception (resource: "('RES_N \<Rightarrow> 'RES)")
-    | Fail | PartialCorrect
+    | Invalid | PartialCorrect
 
 hide_const(open) resource
 
@@ -241,19 +279,21 @@ declare state.split[split]
 type_synonym ('ret,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'RES_N,'RES) state set"
 type_synonym ('arg, 'ret,'RES_N,'RES) proc' = "'arg sem_value \<Rightarrow> ('ret,'RES_N,'RES) proc"
 
-definition bind :: "('a,'RES_N,'RES) proc \<Rightarrow> ('a,'b,'RES_N,'RES) proc' \<Rightarrow> ('b,'RES_N,'RES) proc"  ("_ \<bind>/ _" [76,75] 75)
+definition bind :: "('a,'RES_N,'RES) proc \<Rightarrow> ('a,'b,'RES_N,'RES) proc' \<Rightarrow> ('b,'RES_N,'RES) proc"  ("_ \<bind>/ _" [75,76] 75)
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x | Exception x \<Rightarrow> {Exception x}
-                                       | Fail \<Rightarrow> {Fail} | PartialCorrect \<Rightarrow> {PartialCorrect}) ` f res))"
+                                       | Invalid \<Rightarrow> {Invalid} | PartialCorrect \<Rightarrow> {PartialCorrect}) ` f res))"
 
-abbreviation bind' ("_ \<ggreater>/ _" [76,75] 75)
+abbreviation bind' ("_ \<ggreater>/ _" [75,76] 75)
   where \<open>bind' f g \<equiv> (f \<bind> (\<lambda>_. g))\<close>
 
 definition \<open>det_lift f x = {f x}\<close>
 definition \<open>Return = det_lift o Success\<close>
+definition Nondet :: \<open>('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>Nondet f g = (\<lambda>res. f res \<union> g res)\<close>
 
 lemma proc_bind_SKIP'[simp]:
   "f \<bind> Return \<equiv> f"
-  "Return any \<ggreater> f \<equiv> f"
+  "Return any \<bind> ff \<equiv> ff any"
   "(g \<ggreater> Return any) \<ggreater> f \<equiv> g \<ggreater> f"
   "(\<lambda>v. Return v \<bind> h) \<equiv> h"
   unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
@@ -261,22 +301,11 @@ lemma proc_bind_SKIP'[simp]:
 
 lemmas proc_bind_SKIP[simp] = proc_bind_SKIP'[unfolded Return_def, simplified]
 
-lemma proc_bind_assoc:
+lemma proc_bind_assoc[simp]:
   "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
   unfolding bind_def fun_eq_iff det_lift_def set_eq_iff
   by clarsimp
 
-
-abbreviation \<open>\<phi>V_nil \<equiv> sem_value ()\<close>
-definition \<open>\<phi>V_pair x y = sem_value (dest_sem_value x, dest_sem_value y)\<close>
-definition \<open>\<phi>V_fst x = map_sem_value fst x\<close>
-definition \<open>\<phi>V_snd x = map_sem_value snd x\<close>
-
-lemma \<phi>V_simps[simp]:
-  \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
-  \<open>\<phi>V_fst (\<phi>V_pair u y) = u\<close>
-  \<open>\<phi>V_snd (\<phi>V_pair x u) = u\<close>
-  unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def by (cases v, simp)+
 
 section \<open>Specification Framework\<close>
 
@@ -292,19 +321,19 @@ definition StrictStateTy :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
                           \<Rightarrow> ('ret,'RES_N,'RES) state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
-                              | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
+                              | Invalid \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
 definition LooseStateTy  :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('RES_N,'RES) assn
                           \<Rightarrow> ('ret,'RES_N,'RES) state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception x \<Rightarrow> x \<in> E
-                              | Fail \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
+                              | Invalid \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
 
 lemma StrictStateTy_expn[iff,\<phi>def]:
         "Success vs x \<in> !\<S> T E \<equiv> x \<in> T vs" "Exception x \<in> !\<S> T E \<equiv> x \<in> E"
-        "\<not> (Fail \<in> !\<S> T E)"  "\<not> (PartialCorrect \<in> !\<S> T E)"
+        "\<not> (Invalid \<in> !\<S> T E)"  "\<not> (PartialCorrect \<in> !\<S> T E)"
   and LooseStateTy_expn[iff,\<phi>def]:
         "Success vs x \<in> \<S> T E \<equiv> x \<in> T vs" "Exception x \<in> \<S> T E \<equiv> x \<in> E"
-        "\<not> (Fail \<in> \<S> T E)"  "(PartialCorrect \<in> \<S> T E)"
+        "\<not> (Invalid \<in> \<S> T E)"  "(PartialCorrect \<in> \<S> T E)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
 lemma LooseStateTy_expn' :
     "x \<in> \<S> T E \<longleftrightarrow> x = PartialCorrect \<or> (\<exists>x' vs. x = Success vs x' \<and> x' \<in> T vs) \<or> (\<exists>x'. x = Exception x' \<and> x' \<in> E)"
@@ -360,12 +389,6 @@ abbreviation (in \<phi>fiction) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<cl
 
 
 subsection \<open>Assertion\<close>
-
-lemma ext_func_forall_eq_simp[simp]:
-  \<open>(\<exists>f. (\<forall>v. f v = g v) \<and> P f) \<longleftrightarrow> P g\<close>
-  unfolding fun_eq_iff[symmetric]
-  by blast
-
 
 context \<phi>fiction begin
 (* definition Fiction_Spec :: \<open>('FIC_N, 'FIC) assn \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool\<close>

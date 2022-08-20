@@ -2,11 +2,11 @@ theory NuInstructions
   imports NuPrime NuLLReps
 begin
 
-section \<open>A Set of Predefined Minimal Instructions\<close>
+section \<open>Common Instructions\<close>
 
 context \<phi>empty_sem begin
 
-subsection \<open>Throw Exception\<close>
+subsection \<open>Exception\<close>
 
 text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
 
@@ -14,11 +14,9 @@ lemma (in \<phi>empty) throw_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift Exception \<lbrace> X \<longmapsto> (\<lambda>_::unreachable sem_value. 0) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def by clarsimp
 
-subsection \<open>Try-Catch\<close>
-
 definition op_try :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'} | Exception s' \<Rightarrow> g s'
-                                   | PartialCorrect \<Rightarrow> {PartialCorrect} | Fail \<Rightarrow> {Fail}) ` f s)\<close>
+                                   | PartialCorrect \<Rightarrow> {PartialCorrect} | Invalid \<Rightarrow> {Invalid}) ` f s)\<close>
 
 lemma (in \<phi>empty) "__op_try__":
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
@@ -83,7 +81,7 @@ declare [ [\<phi>not_define_new_const = false] ]
 
 subsection \<open>Access the Resource\<close>
 
-paragraph \<open>Legacy\<close>
+subsubsection \<open>Legacy\<close>
 
 definition (in \<phi>resource_sem)
     \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a ?) \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
@@ -92,7 +90,7 @@ definition (in \<phi>resource_sem)
 definition (in \<phi>resource_sem)
     \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a) ?) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_res_entry R k F = \<phi>M_get_res R (\<lambda>res.
-    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Fail}))\<close>
+    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 definition (in \<phi>resource_sem) \<phi>M_set_res :: \<open>
     (('x ? \<Rightarrow> 'x ?) \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'RES_N \<Rightarrow> 'RES)
@@ -100,25 +98,13 @@ definition (in \<phi>resource_sem) \<phi>M_set_res :: \<open>
   where \<open>\<phi>M_set_res Updt F = (\<lambda>res.
     {Success (sem_value ()) (Updt (map_fine F) res)})\<close>
 
-paragraph \<open>Getters\<close>
+subsubsection \<open>Getters\<close>
+
+paragraph \<open>fine_resource\<close>
 
 definition (in fine_resource)
     \<phi>R_get_res :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res F = (\<lambda>res. F (the_fine (get res)) res)\<close>
-
-definition (in nonsepable_mono_resource)
-    \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nonsepable.dest v') | _ \<Rightarrow> (\<lambda>_. {Fail}))\<close>
-
-definition (in partial_map_resource)
-    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>R_get_res_entry k F = \<phi>R_get_res (\<lambda>res.
-    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Fail}))\<close>
-
-definition (in partial_map_resource2)
-    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
-    case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Fail}))\<close>
 
 lemma (in fine_resource) \<phi>R_get_res[\<phi>reason!]:
   \<open> !!(get res) = v
@@ -126,11 +112,24 @@ lemma (in fine_resource) \<phi>R_get_res[\<phi>reason!]:
 \<Longrightarrow> \<phi>R_get_res F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_def subset_iff by simp
 
+paragraph \<open>nonsepable_mono_resource\<close>
+
+definition (in nonsepable_mono_resource)
+    \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nonsepable.dest v') | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
+
 lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
   \<open> !!(get res) = Some (nonsepable v)
 \<Longrightarrow> F v res \<subseteq> \<S> Y E
 \<Longrightarrow> \<phi>R_get_res_entry F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
+
+paragraph \<open>partial_map_resource\<close>
+
+definition (in partial_map_resource)
+    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_get_res_entry k F = \<phi>R_get_res (\<lambda>res.
+    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 lemma (in partial_map_resource) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open> !!(get res) k = Some v
@@ -138,17 +137,51 @@ lemma (in partial_map_resource) \<phi>R_get_res_entry[\<phi>reason!]:
 \<Longrightarrow> \<phi>R_get_res_entry k F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
+subparagraph \<open>share_fiction_for_partial_mapping_resource\<close>
+
+lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[\<phi>reason!]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> \<phi> (\<phi>MapAt key (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
+      \<lbrace> v \<Ztypecolon> \<phi> (\<phi>MapAt key (n \<Znrres>\<phi> Identity)) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
+  apply (rule R.\<phi>R_get_res_entry[where v=v])
+  apply simp
+  by blast
+
+paragraph \<open>partial_map_resource2\<close>
+
+definition (in partial_map_resource2)
+    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
+    case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
+
 lemma (in partial_map_resource2) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open> !!(get res) k k2 = Some v
 \<Longrightarrow> F v res \<subseteq> \<S> Y E
 \<Longrightarrow> \<phi>R_get_res_entry k k2 F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
+lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[\<phi>reason!]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> \<phi> (\<phi>MapAt k1 (\<phi>MapAt k2 (n \<Znrres>\<phi> Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
+      \<lbrace> v \<Ztypecolon> \<phi> (\<phi>MapAt k1 (\<phi>MapAt k2 (n \<Znrres>\<phi> Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
+  apply (rule R.\<phi>R_get_res_entry[where v=v])
+  apply simp
+  by blast
 
-paragraph \<open>Setters\<close>
+subsubsection \<open>Setters\<close>
+
+paragraph \<open>fine_resource\<close>
 
 definition (in fine_resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_set_res F = (\<lambda>res. {Success (sem_value ()) (updt (map_fine F) res)})\<close>
+
+paragraph \<open>partial_map_resource\<close>
 
 lemma (in partial_map_resource) \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := u) \<in> Valid)
@@ -158,6 +191,18 @@ lemma (in partial_map_resource) \<phi>R_set_res:
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
 
+lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_set_res":
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
+\<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine (1(k \<mapsto> v)))}) \<Longrightarrow> P !!(R.get res))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
+         \<lbrace> v \<Ztypecolon> \<phi> (\<phi>MapAt k (1 \<Znrres>\<phi> Identity)) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (\<phi>MapAt k (1 \<Znrres>\<phi> Identity)) \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def expand del: subsetI)
+  subgoal for r res
+    by (rule R.\<phi>R_set_res, assumption, simp, assumption) .
+
+paragraph \<open>partial_map_resource2\<close>
+
 lemma (in partial_map_resource2) \<phi>R_set_res[\<phi>reason!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in> Valid)
 \<Longrightarrow> P (!!(get res))
@@ -166,15 +211,42 @@ lemma (in partial_map_resource2) \<phi>R_set_res[\<phi>reason!]:
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (Fine (1(k := 1(k2 := u))))})) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
 
+lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res":
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in> Valid)
+\<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine (1(k := 1(k2 \<mapsto> v))))}) \<Longrightarrow> P !!(R.get res))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
+         \<lbrace> v \<Ztypecolon> \<phi> (\<phi>MapAt k (\<phi>MapAt k2 (1 \<Znrres>\<phi> Identity)))
+  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (\<phi>MapAt k (\<phi>MapAt k2 (1 \<Znrres>\<phi> Identity))) \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def expand del: subsetI)
+  subgoal for r res
+    by (rule R.\<phi>R_set_res, assumption, simp, assumption) .
 
-paragraph \<open>Dispose\<close>
+
+subsubsection \<open>Dispose\<close>
+
+paragraph \<open>partial_map_resource\<close>
 
 lemma (in partial_map_resource) \<phi>R_dispose_res[\<phi>reason!]:
-  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> m(k := None) \<in> Valid)
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
+\<Longrightarrow> P (!!(get res))
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k \<mapsto> any)))})
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := None)) res
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
+
+lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_dispose_res":
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
+\<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine (1(k \<mapsto> v)))}) \<Longrightarrow> P !!(R.get res))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := None))
+         \<lbrace> v \<Ztypecolon> \<phi> (\<phi>MapAt k (1 \<Znrres>\<phi> Identity)) \<longmapsto> Void \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def expand del: subsetI)
+  subgoal for r res
+    by (rule R.\<phi>R_dispose_res, assumption, simp, simp) .
+
+
+paragraph \<open>partial_map_resource2\<close>
 
 lemma (in partial_map_resource2) \<phi>R_dispose_res[\<phi>reason!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in> Valid)
@@ -185,8 +257,28 @@ lemma (in partial_map_resource2) \<phi>R_dispose_res[\<phi>reason!]:
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
 
+lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res":
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in> Valid)
+\<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine (1(k := f)))})
+      \<Longrightarrow> P !!(R.get res) \<and> dom f = dom (!!(R.get res) k))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := 1))
+         \<lbrace> to_share o f \<Ztypecolon> \<phi> (\<phi>MapAt k Identity) \<longmapsto> Void \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def expand' del: subsetI)
+  subgoal for r res
+    apply (rule R.\<phi>R_dispose_res, assumption, standard, simp)
+    subgoal premises prems proof -
+      have t1: \<open>dom f = dom (!!(R.get res) k)\<close>
+        using prems(2) prems(3) by blast
+      have t2: \<open>f \<subseteq>\<^sub>m !!(R.get res) k\<close>
+        using R.raw_unit_assertion_implies' prems(3) by blast
+      have t3: \<open>!!(R.get res) k = f\<close>
+        by (metis (no_types, lifting) map_le_antisym map_le_def t1 t2)
+      show ?thesis
+        using prems(3) t3 by blast
+    qed . .
 
-paragraph \<open>Allocate\<close>
+subsubsection \<open>Allocate\<close>
 
 definition (in mapping_resource)
     \<phi>R_allocate_res_entry :: \<open>('key \<Rightarrow> bool)

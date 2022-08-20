@@ -13,6 +13,7 @@ named_theorems \<phi>def \<open>primitive definitions used to unfold in proofs o
   (* and \<nu>address_def \<open>primitive definitions for unfolding in proofs for address\<close> *)
   and \<nu>post_construct and \<nu>auto_destruct
 named_theorems typing_expn "expansion theorems for abstractions" and lrep_exps and \<phi>expns
+  and \<phi>inhabited
 
 setup \<open>
 let
@@ -60,6 +61,11 @@ lemma In_S_Assert[simp]:
 lemma fold_tail:
   \<open>fold f (l @ [x]) = f x o fold f l\<close>
   by (induct l; simp)
+
+lemma ext_func_forall_eq_simp[simp]:
+  \<open>(\<exists>f. (\<forall>v. f v = g v) \<and> P f) \<longleftrightarrow> P g\<close>
+  unfolding fun_eq_iff[symmetric]
+  by blast
 
 
 locale homo_one =
