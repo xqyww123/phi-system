@@ -39,7 +39,7 @@ signature NU_TOPLEVEL = sig
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> string option
         -> bool -> Proof.context -> Proof.state
-  val begin_cast_cmd : Attrib.binding
+  val begin_view_shift_cmd : Attrib.binding
         -> xstring (*domain*)
         -> xstring (*image*)
         -> xstring option (*addtional_prop,   cast domain |--> image with additional_prop*)
@@ -452,7 +452,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
 val begin_rec_proc_cmd = gen_begin_rec_proc
       Syntax.parse_term Syntax.parse_prop Syntax.parse_typ Proof_Context.read_var
 
-fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
+fun gen_begin_view_shift_cmd prep_term prep_prop prep_typ prep_var
       binding arg ret additional_prop =
   let
     fun mk_Goal (ctxt,fixes,_) (arg, ret, _, preconds) =
@@ -463,7 +463,7 @@ fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
                                 of SOME x => prep_term ctxt x
                                  | _ => @{term True}
         val goal = mk_Trueprop
-          (Const ("local.\<phi>Subty", dummyT) $ arg $ ret $ additional_prop)
+          (Const ("local.View_Shift", dummyT) $ arg $ ret $ additional_prop)
         fun constr_process stat =
           let
             val ctxt = Proof.context_of stat
@@ -483,7 +483,7 @@ fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
           end
         fun post_process binding int lthy th =
           (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
-            (("\<phi>cast", ""), [("", [th])]); lthy)
+            (("\<phi> view shift", ""), [("", [th])]); lthy)
       in
         (goal, constr_process, post_process, fixes, preconds)
       end
@@ -491,8 +491,8 @@ fun gen_begin_cast_cmd prep_term prep_prop prep_typ prep_var
     gen_constr_envir prep_term prep_prop prep_typ prep_var I mk_Goal binding arg ret NONE
   end
 
-val begin_cast_cmd =
-      gen_begin_cast_cmd Syntax.parse_term Syntax.parse_prop Syntax.parse_typ
+val begin_view_shift_cmd =
+      gen_begin_view_shift_cmd Syntax.parse_term Syntax.parse_prop Syntax.parse_typ
       Proof_Context.read_var
 
 
@@ -642,11 +642,16 @@ fun prove_prem int stat =
 fun synthesis term (ctxt, sequent) =
   let
     val mode_constr = can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
-    val synthesis = Proof_Context.get_thm ctxt  (if mode_constr then "local.__\<phi>synthesis__"
-                                                                else "local.__\<phi>synthesis__antecedent")
-                  |> Drule.infer_instantiate ctxt [(("X",0), term)]
-                  |> (fn rule => if mode_constr then sequent RS rule
-                                                else rule RS sequent)
+    val synthesis =
+      if Thm.typ_of_cterm term = \<^typ>\<open>action\<close>
+      then @{thm \<phi>do_action}
+              |> Thm.instantiate (TVars.empty, Vars.make [((("action",0),@{typ action}), term)])
+              |> (fn rule => rule RS sequent)
+      else Proof_Context.get_thm ctxt (if mode_constr then "local.__\<phi>synthesis__"
+                                                      else "local.__\<phi>synthesis__antecedent")
+              |> Drule.infer_instantiate ctxt [(("X",0), term)]
+              |> (fn rule => if mode_constr then sequent RS rule
+                                            else rule RS sequent)
   in
     case Nu_Reasoner.reason (ctxt, synthesis)
       of SOME ret => ret

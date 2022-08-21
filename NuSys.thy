@@ -178,6 +178,11 @@ subsubsection \<open>Reasoning Tags\<close>
 definition \<open>Filter_Out_Values (T::'a set) (T'::'a set) \<equiv> Trueprop (T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T')\<close>
 definition \<open>View_Shift_Reasoning T \<equiv> Trueprop T\<close>
 
+subsubsection \<open>Construction Mode\<close>
+
+consts programming_mode :: mode
+       view_shift_mode  :: mode
+
 subsection \<open>Current Construction & Pending Construction\<close>
 
 (* syntax "_codeblock_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>)" [100,0,0] 3)
@@ -256,6 +261,12 @@ lemma \<phi>rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^b
 lemma \<phi>rename_proc_with_goal:
   \<open>f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def using \<phi>rename_proc .
+
+
+lemma \<phi>make_view_shift:
+  \<open> (\<And>s R. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S') \<and> P)
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding CurrentConstruction_def View_Shift_def by blast
 
 end
 
@@ -870,22 +881,9 @@ lemma start_unique_solution_reasoning:
 
 subsection \<open>Synthesis\<close>
 
-definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
-
-text (in \<phi>empty) \<open>
-  SYNTHESIS tags a part of the post \<phi>-type of a triple, representing this part is synthesised
-    by the procedure of this triple. The procedure generates some values (or state) that meet
-    the assertion tagged by SYNTHESIS.
-  For example, \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> represents the procedure f generates
-    something that meets Z.
-
-  During the reasoning, if a SYNTHESIS tags occurs in an antecedent, particularly in the post \<phi>-type,
-    like \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace> \<Longrightarrow> C\<close>, it represents the reasoner needs to find
-    some f that generates something meeting Z.
-
-  Therefore, reasoning rules having the conclusion tagged by SYNTHESIS (in its post-type),
-    like \<^prop>\<open>A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close>, tell procedure f can generate what meets Z.
-\<close>
+text \<open>The section presents a generic synthesis framework.
+  It is called generic because it supports different semantics of synthesis on different kinds of
+    sequent. For example, \<close>
 
 
 
@@ -938,6 +936,28 @@ lemma (in \<phi>empty) [\<phi>reason 10
   .
 
 end
+
+
+
+
+
+
+definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
+
+text (in \<phi>empty) \<open>
+  SYNTHESIS tags a part of the post \<phi>-type of a triple, representing this part is synthesised
+    by the procedure of this triple. The procedure generates some values (or state) that meet
+    the assertion tagged by SYNTHESIS.
+  For example, \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> represents the procedure f generates
+    something that meets Z.
+
+  During the reasoning, if a SYNTHESIS tags occurs in an antecedent, particularly in the post \<phi>-type,
+    like \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace> \<Longrightarrow> C\<close>, it represents the reasoner needs to find
+    some f that generates something meeting Z.
+
+  Therefore, reasoning rules having the conclusion tagged by SYNTHESIS (in its post-type),
+    like \<^prop>\<open>A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close>, tell procedure f can generate what meets Z.
+\<close>
 
 
 
@@ -1007,7 +1027,6 @@ lemma (in \<phi>empty) [\<phi>reason 1200]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS f x \<Ztypecolon> T ret \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS (case_named f (tag x)) \<Ztypecolon> T ret \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P\<close>
   by simp
-
 
 
 subsection \<open>Application\<close> \<comment> \<open>of procedures, subtypings, and any other things\<close>
@@ -1443,6 +1462,60 @@ lemma (in \<phi>empty) [\<phi>reason 1200 on \<open>
   unfolding \<phi>Application_Conv_def Exhaustive_Abstract_def GOAL_CTXT_def FOCUS_TAG_def
     View_Shift_Reasoning_def
   using \<phi>CONSEQ by blast
+
+
+subsection \<open>Action\<close>
+
+text \<open>Action is a kind of meta calling mechanism.
+  When user inputs some action name to call, initially the system does not know what
+    the user intends to do, to construct a procedure or to cast by a view shift or to
+      synthesis something or even to call a combination of these features.
+  The construction going to happen on the sequent is decided by reasoning.
+  The action name is encoded into an antecedent, and then the reasoner starts to
+    try to solve the antecedent, causing the system starts to construct the sequent
+    according to the given action name and configured reasoning rules relating to
+    this action name.\<close>
+
+typedecl action
+
+text \<open>The action name is encoded to be a fixed free variable or a constant of \<^typ>\<open>action\<close>.
+  Therefore the pattern matching can be native and fast.
+  Note an action can be parameterized like, \<^typ>\<open>nat \<Rightarrow> bool \<Rightarrow> action\<close> parameterized
+    by a nat and a boolean. Other parameters can come from the sequent.
+
+  The name encoding is by prefixing "\<A>\<c>\<t>\<i>\<o>\<n>_"\<close>
+
+definition DoAction :: \<open>action \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
+  where \<open>DoAction action sequent result \<equiv> (PROP sequent \<Longrightarrow> PROP result)\<close>
+
+text \<open>\<^prop>\<open>PROP DoAction action sequent result\<close> is the antecedent to be reasoned
+  to return the construction result of the sequent by the action.\<close>
+
+definition \<open>ACTION \<equiv> Pure.term\<close>
+
+text \<open>There are two way to activate the construction of an action.
+  One is by application mechanism where user inputs a theorem of shape \<^prop>\<open>PROP ACTION action\<close>;
+  another is by synthesis, where user inputs a cartouche of \<^term>\<open>action\<close>.\<close>
+
+paragraph \<open>First way, by Application\<close>
+
+lemma [\<phi>reason 2000]:
+  \<open> PROP DoAction action sequent result
+\<Longrightarrow> PROP \<phi>Application_Method (ACTION action) sequent result\<close>
+  unfolding \<phi>Application_Method_def DoAction_def \<phi>Application_def .
+
+paragraph \<open>Second way, by Synthesis\<close>
+
+text \<open>This way is hard coded in ML: Phi_Toplevel.synthesis.\<close>
+
+lemma \<phi>do_action:
+  \<open> PROP sequent
+\<Longrightarrow> PROP DoAction action sequent result
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> PROP result\<close>
+  unfolding DoAction_def
+  subgoal premises prems using prems(2)[OF prems(1)] . .
 
 
 section \<open>Elementary \<phi>-Types\<close>
@@ -2018,6 +2091,16 @@ lemma \<phi>None_expn[\<phi>expns]:
 
 lemma \<phi>None_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
+
+paragraph \<open>Sharing Action\<close>
+
+term share
+
+lemma
+  \<open>\<close>
+
+
 
 subsection \<open>Agreement\<close>
 
