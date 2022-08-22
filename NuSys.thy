@@ -536,8 +536,6 @@ ML_file "library/reasoners.ML"
 
 
 
-
-
 section \<open>More Features of the Deductive Programming\<close>
 
 subsection \<open>Preliminary\<close>
@@ -1566,7 +1564,11 @@ definition DoAction :: \<open>action \<Rightarrow> prop \<Rightarrow> prop \<Rig
 text \<open>\<^prop>\<open>PROP DoAction action sequent result\<close> is the antecedent to be reasoned
   to return the construction result of the sequent by the action.\<close>
 
-definition \<open>ACTION \<equiv> Pure.term\<close>
+definition ACTION :: \<open>action \<Rightarrow> prop\<close> where \<open>ACTION \<equiv> Pure.term\<close>
+
+lemma ACTION_I: \<open>PROP ACTION XX\<close> unfolding ACTION_def term_def .
+
+subsubsection \<open>Methods of Applying Action\<close>
 
 text \<open>There are two way to activate the construction of an action.
   One is by application mechanism where user inputs a theorem of shape \<^prop>\<open>PROP ACTION action\<close>;
@@ -1581,20 +1583,40 @@ lemma [\<phi>reason 2000]:
 
 paragraph \<open>Second way, by Synthesis\<close>
 
-text \<open>This way is hard coded in ML: Phi_Toplevel.synthesis.\<close>
-
-lemma \<phi>do_action:
-  \<open> PROP sequent
-\<Longrightarrow> PROP DoAction action sequent result
+lemma [\<phi>reason 1400]:
+  \<open> PROP Synthesis_Parse action action'
+\<Longrightarrow> PROP DoAction action' sequent result
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> PROP result\<close>
-  unfolding DoAction_def
-  subgoal premises prems using prems(2)[OF prems(1)] . .
+\<Longrightarrow> PROP DoSynthesis (action::action) sequent result\<close>
+  unfolding DoSynthesis_def DoAction_def .
+
+
+subsubsection \<open>Snippets of Action\<close>
+
+paragraph \<open>Action by View Shift\<close>
+
+consts Action_VS :: \<open>action \<Rightarrow> action\<close>
+
+definition View_Shift_Action :: \<open>action \<Rightarrow> bool \<Rightarrow> prop\<close>
+  where \<open>View_Shift_Action action VS \<equiv> Trueprop VS\<close>
+
+text \<open>Antecedent \<^prop>\<open>PROP View_Shift_Action action VS\<close> intends to find a view shift \<^prop>\<open>VS\<close>
+  giving the purpose assigned to \<^term>\<open>action\<close>.\<close>
+
+lemma (in \<phi>empty) [\<phi>reason ]:
+  \<open> PROP View_Shift_Action action (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X1 \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2)
+\<Longrightarrow> PROP View_Shift_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> R1\<heavy_comma> X1 \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any)
+\<Longrightarrow> PROP DoAction (Action_VS action)
+      (Trueprop (CurrentConstruction mode s R X))
+      (Trueprop (CurrentConstruction mode s R (R1\<heavy_comma> Y) \<and> Any \<and> Any2))\<close>
+  unfolding DoAction_def View_Shift_Reasoning_def View_Shift_Action_def
+  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+
+
 
 
 section \<open>Elementary \<phi>-Types\<close>
-
 
 subsection \<open>Type Level Subjection\<close>
 
@@ -2149,6 +2171,25 @@ lemma (in \<phi>empty_sem) [\<phi>reason_elim, elim!]:
 
 subsection \<open>Share\<close>
 
+definition \<phi>Share' :: \<open>rat \<Rightarrow> ('v::share,'x) \<phi> \<Rightarrow> ('v::share,'x) \<phi>\<close>
+  where \<open>\<phi>Share' n T = (\<lambda>x. { share n v |v. v \<in> (x \<Ztypecolon> T) } \<^bold>s\<^bold>u\<^bold>b\<^bold>j 0 < n)\<close>
+
+lemma [\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Share' n T) \<longleftrightarrow> (\<exists>v. p = share n v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n)\<close>
+  unfolding \<phi>Share'_def \<phi>Type_def by (simp add: \<phi>expns, blast)
+
+lemma
+  \<open>(x \<Ztypecolon> \<phi>Share' na (\<phi>Share' nb T)) = (x \<Ztypecolon> \<phi>Share' (na + nb) T)\<close>
+  for T :: \<open>('a::share_semimodule_mult, 'b) \<phi>\<close>
+  unfolding set_eq_iff
+  apply (simp add: \<phi>expns share_share[symmetric])
+  thm share_share
+
+
+
+
+
+
 definition \<phi>Share :: \<open>rat \<Rightarrow> ('v,'x) \<phi> \<Rightarrow> ('v share option, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)
   where \<open>\<phi>Share n T x = { Some (Share n v) |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1 } \<close>
 
@@ -2292,8 +2333,312 @@ lemma (in \<phi>empty) [\<phi>reason 1200]:
   unfolding Synthesis_def lambda_abstraction_def by (simp add: \<phi>expns)
 
 
+section \<open>Interactive Programming & Proving Environment\<close>
 
-section \<open>Reasoning\<close>
+subsection \<open>ML codes\<close>
+
+
+ML_file "./library/instructions.ML"
+ML_file "./general/parser.ML"
+ML_file "./library/processor.ML"
+ML_file "./library/procedure.ML"
+
+
+ML_file NuSys.ML
+ML_file "./library/processors.ML"
+ML_file "./library/obtain.ML"
+ML_file "./library/generalization.ML"
+(* ML_file "./codegen/compilation.ML" *)
+ML_file NuToplevel.ML
+
+
+subsection \<open>Isar Commands & Attributes\<close>
+
+ML \<open>Theory.setup (Global_Theory.add_thms_dynamic (@{binding "\<phi>instr"}, NuInstructions.list_definitions #> map snd))  \<close>
+
+attribute_setup \<phi>instr = \<open>Scan.succeed (Thm.declaration_attribute NuInstructions.add) \<close>
+  \<open>Instructions of \<phi>-system\<close>
+
+attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_position --| Parse.$$$ ")") #>
+    (fn (name,(ctx,toks)) => Scan.lift (NuProcessor.get_attr ctx name) (ctx,toks))
+  || Scan.lift NuProcessor.process_attr\<close>
+  \<open>Evaluate the \<phi>-system process or the process of the given processor on the target theorem\<close>
+
+
+ML \<open>
+
+local open Scan NuToplevel NuSys Parse 
+val nustatement = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- opt_attribs -- Scan.repeat1 Parse.propp);
+val structured_statement =
+  nustatement -- Parse_Spec.if_statement' -- Parse.for_fixes
+    >> (fn ((shows, assumes), fixes) => (fixes, assumes, shows));
+val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
+val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
+val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
+val precond_statement = Scan.repeat ((premises_statement >> map (pair NuToplevel.Premise))
+                || (requires_statement >> map (pair NuToplevel.Requirement))) >> flat;
+val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term);
+val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
+        Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
+val defines_statement = Scan.optional ($$$ "defines" |-- Parse.!!! statement1) [];
+val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
+val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
+           where_statement -- defines_statement  -- precond_statement -- goal;
+
+val arg = Parse.term
+val arg_ret = (\<^keyword>\<open>argument\<close> |-- arg --| \<^keyword>\<open>return\<close> -- arg -- option (\<^keyword>\<open>throws\<close> |-- arg))
+
+in
+
+(* val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>exty_simproc\<close> "setup the pecific simproc for \<^const>\<open>ExTy\<close>"
+  (Parse.binding >> NuExTyp.set_simproc_cmd) *)
+
+val _ =
+  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
+    ((Parse_Spec.opt_thm_name ":" -- nu_statements -- arg_ret) >>
+        (fn ((b,(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
+            (begin_proc_cmd b arg ret throws fixes includes lets defs preconds G)));
+
+val loop_variables = $$$ "var" |-- !!! vars;
+val _ =
+  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
+    ((Parse_Spec.opt_thm_name ":" -- loop_variables -- nu_statements -- arg_ret) >>
+        (fn (((b,vars),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
+            (begin_rec_proc_cmd b arg ret throws (vars,fixes) includes lets defs preconds G)));
+
+(* val _ =
+  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>\<phi>cast\<close> "begin a procedure construction"
+    ((Parse_Spec.thm_name ":" -- option ($$$ "and" |-- Parse.term) -- nu_statements - arg_ret) >>
+        (fn ((b,(((((fixes,includes),lets),defs),preconds),G)), (arg,ret)) =>
+            (begin_cast_cmd b arg ret fixes includes lets defs preconds G))); *)
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
+    (NuProcessor.powerful_process_p >> Toplevel.proof)
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
+   (((optional (\<^keyword>\<open>premises\<close> |--
+            and_list (binding -- opt_attribs || Parse.attribs >> pair Binding.empty)) []
+      >> NuToplevel.begin_block_cmd)
+   -- NuProcessor.powerful_process_p_inert)
+   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
+    (Phi_Generalization.syntax >> (Toplevel.proof' o NuToplevel.end_block_cmd))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
+    (((Phi_Generalization.syntax >> (fn genric => fn int =>
+        NuToplevel.end_block_cmd genric int
+    #> (fn s => Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>") s)
+    #> Proof.local_future_terminal_proof
+          ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
+          ,NONE)))
+   -- NuProcessor.powerful_process_p_inert)
+   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
+
+val _ =
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
+      (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
+          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
+          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
+        >> NuProcessor.setup_cmd)
+
+(* val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
+      (Parse.binding --| $$$ "=" -- Parse.const -- option ($$$ ":" |-- Parse.typ --| $$$ "\<longmapsto>" -- Parse.typ)
+        >> (Toplevel.theory o NuProcedure.add_interface_command))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<phi>export_llvm\<close> "export LLVM target"
+      (Scan.succeed (Toplevel.theory (NuToplevel.export_LLVM))) *)
+
+end
+\<close>
+
+attribute_setup intro_forall = \<open>Scan.lift (Scan.repeat Args.var) >> (fn tms =>
+  Thm.rule_attribute [] (fn ctx => fn th => 
+    let open Thm
+    val vs = add_vars th Vars.empty |> Vars.dest
+    val foralls = map (fn tm => case find_first (fn (_,v) => #1 (dest_Var (term_of v)) = tm) vs
+                  of SOME (_,y) => y | _ => error (#1 tm ^ " is not a var ")) tms
+    in Drule.forall_intr_list foralls th end)) \<close>
+
+
+subsection \<open>Elements of the Language\<close>
+
+text \<open>Convention of priorities:
+  \<^item> Simplifications and Conversions for canonical forms < 1000
+  \<^item> Reasoning Antecedents = 1000
+  \<^item> General Application not bound on specific pattern or keyword : 9000~9999
+\<close>
+
+context \<phi>empty begin
+
+subsubsection \<open>Controls\<close>
+
+\<phi>processor set_auto_level 10 (\<open>PROP ?P\<close>) \<open>(fn (ctxt, sequent) => NuParse.auto_level_force >>
+  (fn auto_level' => fn _ => (Config.put Nu_Reasoner.auto_level auto_level' ctxt, sequent)))\<close>
+  \<open>Note the declared auto-level is only valid during the current statement.
+   In the next statement, the auto-level will be reset to the default fully-automated level.\<close>
+
+\<phi>processor repeat 12 (\<open>PROP ?P\<close>) \<open>let
+  in fn (ctxt, sequent) =>
+    Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*") >> (fn (tok,n) => fn () =>
+        (case Int.fromString n of SOME n => funpow n | _ => error ("should be a number: "^n))
+          (NuProcessor.process_by_input [tok]) (ctxt, sequent)
+    )
+  end\<close>
+
+
+subsubsection \<open>Constructive\<close>
+
+\<phi>processor accept_call 500 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>) \<open>fn stat =>
+  Scan.succeed (fn _ => NuSys.accept_proc stat)\<close>
+
+\<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => NuApplicant.parser >> (fn xnames => fn _ =>
+  (NuApply.apply (NuApplicant.applicant_thms ctxt xnames) (ctxt, sequent)))\<close>
+
+\<phi>processor set_param 5000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
+  NuSys.set_param_cmd term stat)\<close>
+
+\<phi>processor set_label 5000 (\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>
+  NuSys.set_label name stat)\<close>
+
+\<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
+  \<open>fn (ctxt, sequent) => NuApplicant.parser >> (fn thms => fn _ =>
+    let open NuBasics
+    val apps = NuApplicant.applicant_thms ctxt thms
+    val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
+    in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
+         of SOME (th, _) => (ctxt,th)
+          | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
+
+ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_parsing", \<^here>) (K false)\<close>
+
+\<phi>processor synthesis 8800 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)
+  \<open>fn (ctxt, sequent) => Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number))
+>> (fn raw_term => fn () =>
+  let
+    val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
+                        |> Config.put phi_synthesis_parsing true
+    val term = Syntax.parse_term ctxt_parser raw_term
+                  |> Syntax.check_term ctxt_parser
+                  |> Thm.cterm_of ctxt
+   in
+    NuSys.synthesis term (ctxt, sequent)
+  end)\<close>
+
+\<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
+  \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
+      raise Process_State_Call' (toks, stat, NuObtain.choose insts), []))\<close>
+
+\<phi>processor implicit_existential_elimination 800 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
+  \<open>fn stat => Scan.succeed (fn () =>
+      if Config.get (#1 stat) Nu_Reasoner.auto_level >= 2
+      then raise Process_State_Call (stat, NuObtain.auto_choose)
+      else raise Bypass NONE)\<close>
+
+subsubsection \<open>Simplifiers & Reasoners\<close>
+
+\<phi>processor enter_proof 5000 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
+  \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
+      raise Terminate_Process (stat, snd o NuToplevel.prove_prem false))\<close>
+
+\<phi>processor \<phi>simplifier 100 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>NuProcessors.simplifier []\<close>
+(* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
+
+\<phi>processor move_fact 200 (\<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T) \<and> ?P\<close>)
+\<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
+  let
+    fun filter_lemma th =
+      case Thm.prop_of th
+        of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>USELESS\<close> $ _) => NONE
+         | \<^const>\<open>Trueprop\<close> $ \<^const>\<open>True\<close> => NONE
+         | _ => SOME th
+    val lemmas = (sequent RS @{thm conjunct2})
+                  |> HOLogic.conj_elims ctxt
+                  |> map_filter filter_lemma
+    val (_,ctxt') = Proof_Context.note_thms ""
+                      ((Binding.empty, [Named_Theorems.add \<^named_theorems>\<open>\<phi>lemmata\<close>]),
+                       [(lemmas,[])]) ctxt
+  in
+    (ctxt', sequent RS @{thm conjunct1})
+  end)\<close>
+
+(* Any simplification should finish before priority 999, or else
+ *  this processor will be triggered unnecessarily frequently.*)
+\<phi>processor set_\<phi>this 999 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
+\<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
+  let
+    val ctxt' = NuBasics.set_programming_sequent' sequent ctxt
+  in
+    raise Bypass (SOME(ctxt', sequent))
+  end)\<close>
+
+\<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
+\<open>fn stat => Scan.succeed (fn _ =>
+  let open NuBasics
+    fun reason i (ctxt,sequent) =
+      if Thm.no_prems sequent
+      then (ctxt,sequent)
+      else case Nu_Reasoner.reason (ctxt, Goal.protect 1 sequent)
+             of SOME (ctxt',sequent') => reason (1+i) (ctxt', Goal.conclude sequent')
+              | NONE => if i = 0 then raise Bypass (SOME (ctxt,sequent))
+                                 else (ctxt,sequent)
+  in reason 0 stat
+  end)\<close>
+
+\<phi>processor naive_obligation_solver 8000 (\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close>)
+  \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
+    if Config.get ctxt Nu_Reasoner.auto_level >= 2
+    then case Seq.pull (Nu_Reasoners.naive_obligation_solver ctxt sequent)
+           of SOME (ret, _) => (ctxt, ret)
+            | NONE => raise Bypass NONE
+    else raise Bypass NONE)\<close>
+
+\<phi>processor fold 2000 (\<open>PROP ?P\<close>) \<open>
+  fn (ctxt, sequent) => NuParse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
+    (ctxt, Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent)
+)\<close>
+
+\<phi>processor unfold 2000 (\<open>PROP ?P\<close>) \<open>
+  fn (ctxt, sequent) => NuParse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
+    (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
+)\<close>
+
+(* \<phi>processor goal 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close> \<open>
+  fn (ctxt, sequent) => Parse.$$$ "goal" >> (fn _ => fn _ =>
+    let
+      val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
+      val (_,_,desired_nu) = PhiSyntax.dest_procedure_c goal
+      val ty = Thm.typ_of_cterm desired_nu
+      val prot = Const (\<^const_name>\<open>Implicit_Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
+      val ctxt = Config.put Nu_Reasoner.auto_level 1 ctxt
+    in NuSys.cast (Thm.apply prot desired_nu) (ctxt,sequent) end
+)\<close> *)
+
+end
+
+paragraph \<open>Quantification Expansion\<close>
+
+simproc_setup named_forall_expansion ("All (P :: 'a <named> 'names \<Rightarrow> bool)") =
+  \<open>K (QuantExpansion.simproc_of QuantExpansion.forall_expansion)\<close>
+
+simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow> 'b set)") =
+  \<open>K (fn ctx => fn cterms => QuantExpansion.simproc_of QuantExpansion.ExNu_expansion ctx cterms)\<close>
+
+simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
+  \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
+
+lemmas [unfolded atomize_eq[symmetric], named_expansion] =
+  Product_Type.prod.case NuSys.named.case Function_over_case_named
+
+
+
+section \<open>Reasoning & Programming\<close>
 
 
 
@@ -3081,6 +3426,12 @@ lemma Prog_Interface_func:
 
 subsection \<open>Filter Out Values\<close>
 
+text (in \<phi>empty) \<open>Given an assertion X, antecedent \<^term>\<open>Filter_Out_Values X X'\<close> returns X' where
+  all value assertions \<^term>\<open>x \<Ztypecolon> Val raw T\<close> are filtered out.
+
+  It is typically used in exception. When a computation triggers an exception at state X,
+    the state recorded in the exception is exactly X' where value assertions are filtered out.\<close>
+
 definition \<open>Filter_Out_Values'' \<equiv> Filter_Out_Values\<close>
 definition \<open>Filter_Out_Values' (remain::'a::times set) (keep::'a set) (check::'a set) (ret::'a set)
               \<equiv> Trueprop (keep = check \<longrightarrow> (remain * keep \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ret))\<close>
@@ -3144,308 +3495,20 @@ lemma (in \<phi>empty) [\<phi>reason 1080 on \<open>PROP Filter_Out_Values' ?R ?
 
 
 
-section \<open>Implementation of the Language\<close>
-
-subsection \<open>ML codes\<close>
-
-
-ML_file "./library/instructions.ML"
-ML_file "./general/parser.ML"
-ML_file "./library/processor.ML"
-ML_file "./library/procedure.ML"
-
-
-ML_file NuSys.ML
-ML_file "./library/processors.ML"
-ML_file "./library/obtain.ML"
-ML_file "./library/generalization.ML"
-(* ML_file "./codegen/compilation.ML" *)
-ML_file NuToplevel.ML
-
-
-subsection \<open>Isar Commands & Attributes\<close>
-
-ML \<open>Theory.setup (Global_Theory.add_thms_dynamic (@{binding "\<phi>instr"}, NuInstructions.list_definitions #> map snd))  \<close>
-
-attribute_setup \<phi>instr = \<open>Scan.succeed (Thm.declaration_attribute NuInstructions.add) \<close>
-  \<open>Instructions of \<phi>-system\<close>
-
-attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_position --| Parse.$$$ ")") #>
-    (fn (name,(ctx,toks)) => Scan.lift (NuProcessor.get_attr ctx name) (ctx,toks))
-  || Scan.lift NuProcessor.process_attr\<close>
-  \<open>Evaluate the \<phi>-system process or the process of the given processor on the target theorem\<close>
-
-
-ML \<open>
-
-local open Scan NuToplevel NuSys Parse 
-val nustatement = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- opt_attribs -- Scan.repeat1 Parse.propp);
-val structured_statement =
-  nustatement -- Parse_Spec.if_statement' -- Parse.for_fixes
-    >> (fn ((shows, assumes), fixes) => (fixes, assumes, shows));
-val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
-val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
-val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
-val precond_statement = Scan.repeat ((premises_statement >> map (pair NuToplevel.Premise))
-                || (requires_statement >> map (pair NuToplevel.Requirement))) >> flat;
-val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term);
-val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
-        Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
-val defines_statement = Scan.optional ($$$ "defines" |-- Parse.!!! statement1) [];
-val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
-val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
-           where_statement -- defines_statement  -- precond_statement -- goal;
-
-val arg = Parse.term
-val arg_ret = (\<^keyword>\<open>argument\<close> |-- arg --| \<^keyword>\<open>return\<close> -- arg -- option (\<^keyword>\<open>throws\<close> |-- arg))
-
-in
-
-(* val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>exty_simproc\<close> "setup the pecific simproc for \<^const>\<open>ExTy\<close>"
-  (Parse.binding >> NuExTyp.set_simproc_cmd) *)
-
-val _ =
-  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- nu_statements -- arg_ret) >>
-        (fn ((b,(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
-            (begin_proc_cmd b arg ret throws fixes includes lets defs preconds G)));
-
-val loop_variables = $$$ "var" |-- !!! vars;
-val _ =
-  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- loop_variables -- nu_statements -- arg_ret) >>
-        (fn (((b,vars),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
-            (begin_rec_proc_cmd b arg ret throws (vars,fixes) includes lets defs preconds G)));
-
-(* val _ =
-  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>\<phi>cast\<close> "begin a procedure construction"
-    ((Parse_Spec.thm_name ":" -- option ($$$ "and" |-- Parse.term) -- nu_statements - arg_ret) >>
-        (fn ((b,(((((fixes,includes),lets),defs),preconds),G)), (arg,ret)) =>
-            (begin_cast_cmd b arg ret fixes includes lets defs preconds G))); *)
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (NuProcessor.powerful_process_p >> Toplevel.proof)
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
-   (((optional (\<^keyword>\<open>premises\<close> |--
-            and_list (binding -- opt_attribs || Parse.attribs >> pair Binding.empty)) []
-      >> NuToplevel.begin_block_cmd)
-   -- NuProcessor.powerful_process_p_inert)
-   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (Phi_Generalization.syntax >> (Toplevel.proof' o NuToplevel.end_block_cmd))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
-    (((Phi_Generalization.syntax >> (fn genric => fn int =>
-        NuToplevel.end_block_cmd genric int
-    #> (fn s => Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>") s)
-    #> Proof.local_future_terminal_proof
-          ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
-          ,NONE)))
-   -- NuProcessor.powerful_process_p_inert)
-   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
-
-val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
-      (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
-          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
-          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
-        >> NuProcessor.setup_cmd)
-
-(* val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
-      (Parse.binding --| $$$ "=" -- Parse.const -- option ($$$ ":" |-- Parse.typ --| $$$ "\<longmapsto>" -- Parse.typ)
-        >> (Toplevel.theory o NuProcedure.add_interface_command))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<phi>export_llvm\<close> "export LLVM target"
-      (Scan.succeed (Toplevel.theory (NuToplevel.export_LLVM))) *)
-
-end
-\<close>
-
-attribute_setup intro_forall = \<open>Scan.lift (Scan.repeat Args.var) >> (fn tms =>
-  Thm.rule_attribute [] (fn ctx => fn th => 
-    let open Thm
-    val vs = add_vars th Vars.empty |> Vars.dest
-    val foralls = map (fn tm => case find_first (fn (_,v) => #1 (dest_Var (term_of v)) = tm) vs
-                  of SOME (_,y) => y | _ => error (#1 tm ^ " is not a var ")) tms
-    in Drule.forall_intr_list foralls th end)) \<close>
-
-
-subsection \<open>Elements of the Language\<close>
-
-text \<open>Convention of priorities:
-  \<^item> Simplifications and Conversions for canonical forms < 1000
-  \<^item> Reasoning Antecedents = 1000
-  \<^item> General Application not bound on specific pattern or keyword : 9000~9999
-\<close>
-
-context \<phi>empty begin
-
-subsubsection \<open>Controls\<close>
-
-\<phi>processor set_auto_level 10 (\<open>PROP ?P\<close>) \<open>(fn (ctxt, sequent) => NuParse.auto_level_force >>
-  (fn auto_level' => fn _ => (Config.put Nu_Reasoner.auto_level auto_level' ctxt, sequent)))\<close>
-  \<open>Note the declared auto-level is only valid during the current statement.
-   In the next statement, the auto-level will be reset to the default fully-automated level.\<close>
-
-\<phi>processor repeat 12 (\<open>PROP ?P\<close>) \<open>let
-  in fn (ctxt, sequent) =>
-    Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*") >> (fn (tok,n) => fn () =>
-        (case Int.fromString n of SOME n => funpow n | _ => error ("should be a number: "^n))
-          (NuProcessor.process_by_input [tok]) (ctxt, sequent)
-    )
-  end\<close>
-
-
-subsubsection \<open>Constructive\<close>
-
-\<phi>processor accept_call 500 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>) \<open>fn stat =>
-  Scan.succeed (fn _ => NuSys.accept_proc stat)\<close>
-
-\<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => NuApplicant.parser >> (fn xnames => fn _ =>
-  (NuApply.apply (NuApplicant.applicant_thms ctxt xnames) (ctxt, sequent)))\<close>
-
-\<phi>processor set_param 5000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
-  NuSys.set_param_cmd term stat)\<close>
-
-\<phi>processor set_label 5000 (\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>
-  NuSys.set_label name stat)\<close>
-
-\<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
-  \<open>fn (ctxt, sequent) => NuApplicant.parser >> (fn thms => fn _ =>
-    let open NuBasics
-    val apps = NuApplicant.applicant_thms ctxt thms
-    val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
-    in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
-         of SOME (th, _) => (ctxt,th)
-          | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
-
-ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_parsing", \<^here>) (K false)\<close>
-
-\<phi>processor synthesis 8800 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)
-  \<open>fn (ctxt, sequent) => Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number))
->> (fn raw_term => fn () =>
-  let
-    val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
-                        |> Config.put phi_synthesis_parsing true
-    val term = Syntax.parse_term ctxt_parser raw_term
-                  |> Syntax.check_term ctxt_parser
-                  |> Thm.cterm_of ctxt
-   in
-    NuSys.synthesis term (ctxt, sequent)
-  end)\<close>
-
-\<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
-  \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
-      raise Process_State_Call' (toks, stat, NuObtain.choose insts), []))\<close>
-
-\<phi>processor implicit_existential_elimination 800 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)
-  \<open>fn stat => Scan.succeed (fn () =>
-      if Config.get (#1 stat) Nu_Reasoner.auto_level >= 2
-      then raise Process_State_Call (stat, NuObtain.auto_choose)
-      else raise Bypass NONE)\<close>
-
-subsubsection \<open>Simplifiers & Reasoners\<close>
-
-\<phi>processor enter_proof 5000 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
-  \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
-      raise Terminate_Process (stat, snd o NuToplevel.prove_prem false))\<close>
-
-\<phi>processor \<phi>simplifier 100 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>NuProcessors.simplifier []\<close>
-(* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
-
-\<phi>processor move_fact 200 (\<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T) \<and> ?P\<close>)
-\<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
-  let
-    val (_,ctxt') = Proof_Context.note_thms ""
-                      ((Binding.empty, [Named_Theorems.add \<^named_theorems>\<open>\<phi>lemmata\<close>]),
-                       [([sequent RS @{thm conjunct2}],[])]) ctxt
-  in
-    (ctxt', sequent RS @{thm conjunct1})
-  end)\<close>
-
-(* Any simplification should finish before priority 100, or else
- *  this processor will be triggered unnecessarily frequently.*)
-\<phi>processor set_\<phi>this 999 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)
-\<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
-  let
-    val ctxt' = NuBasics.set_programming_sequent' sequent ctxt
-  in
-    raise Bypass (SOME(ctxt', sequent))
-  end)\<close>
-
-\<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
-\<open>fn stat => Scan.succeed (fn _ =>
-  let open NuBasics
-    fun reason i (ctxt,sequent) =
-      if Thm.no_prems sequent
-      then (ctxt,sequent)
-      else case Nu_Reasoner.reason (ctxt, Goal.protect 1 sequent)
-             of SOME (ctxt',sequent') => reason (1+i) (ctxt', Goal.conclude sequent')
-              | NONE => if i = 0 then raise Bypass (SOME (ctxt,sequent))
-                                 else (ctxt,sequent)
-  in reason 0 stat
-  end)\<close>
-
-\<phi>processor naive_obligation_solver 8000 (\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close>)
-  \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
-    if Config.get ctxt Nu_Reasoner.auto_level >= 2
-    then case Seq.pull (Nu_Reasoners.naive_obligation_solver ctxt sequent)
-           of SOME (ret, _) => (ctxt, ret)
-            | NONE => raise Bypass NONE
-    else raise Bypass NONE)\<close>
-
-\<phi>processor fold 2000 (\<open>PROP ?P\<close>) \<open>
-  fn (ctxt, sequent) => NuParse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
-    (ctxt, Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent)
-)\<close>
-
-\<phi>processor unfold 2000 (\<open>PROP ?P\<close>) \<open>
-  fn (ctxt, sequent) => NuParse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
-    (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
-)\<close>
-
-(* \<phi>processor goal 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close> \<open>
-  fn (ctxt, sequent) => Parse.$$$ "goal" >> (fn _ => fn _ =>
-    let
-      val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
-      val (_,_,desired_nu) = PhiSyntax.dest_procedure_c goal
-      val ty = Thm.typ_of_cterm desired_nu
-      val prot = Const (\<^const_name>\<open>Implicit_Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
-      val ctxt = Config.put Nu_Reasoner.auto_level 1 ctxt
-    in NuSys.cast (Thm.apply prot desired_nu) (ctxt,sequent) end
-)\<close> *)
-
-end
-
-paragraph \<open>Quantification Expansion\<close>
-
-simproc_setup named_forall_expansion ("All (P :: 'a <named> 'names \<Rightarrow> bool)") =
-  \<open>K (QuantExpansion.simproc_of QuantExpansion.forall_expansion)\<close>
-
-simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow> 'b set)") =
-  \<open>K (fn ctx => fn cterms => QuantExpansion.simproc_of QuantExpansion.ExNu_expansion ctx cterms)\<close>
-
-simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
-  \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
-
-lemmas [unfolded atomize_eq[symmetric], named_expansion] =
-  Product_Type.prod.case NuSys.named.case Function_over_case_named
-
-
-section \<open>Mechanism III - Additional Parts\<close>
-
 subsection \<open>Variable Extraction\<close>
 
 definition Variant_Cast :: "'vars \<Rightarrow> 'a set \<Rightarrow> ('vars \<Rightarrow> 'a set) \<Rightarrow> bool" ("\<^bold>v\<^bold>a\<^bold>r\<^bold>y _ \<^bold>i\<^bold>n _/ \<longmapsto> _" )
   where "Variant_Cast insts X X' \<longleftrightarrow> X = X' insts"
+
+text \<open>The main usage of this reasoning is for loop and recursion.
+  Given an assertion X, \<^prop>\<open>Variant_Cast vars X X'\<close> tries under instruction from user to
+    extract the variable part \<^term>\<open>vars\<close> in the assertion. This part typically will be
+    universally quantified inside loop bodies.
+
+  There are two syntax for instructing this extraction.
+  One is 'v1 v2 ...' instructing all occurrence of free variables v1 v2... in X will be such generalized.
+  Another is 'v1 v2 in pattern' instructing to first pattern match X and then v1 v2 in the matched
+    pattern will be generalized.\<close>
 
 lemma Variant_Cast_I: "X = X' vars \<Longrightarrow> Variant_Cast vars X X' "
   unfolding Variant_Cast_def by auto
@@ -3478,7 +3541,29 @@ in syn_pattern_match || syn_var_term end\<close>
 (*  \<open>Nu_Reasoners.wrap (fn ctxt => Nu_Reasoners.asm_simp_tac (ctxt addsimps Proof_Context.get_thms ctxt "\<phi>expns"))\<close> *)
 
 
-section \<open>Tools for Constructing Instructions and for Reasoning them\<close>
+subsection \<open>Share\<close>
+
+definition \<Phi>Share :: \<open>(rat \<Rightarrow> 'a::share set) \<Rightarrow> bool\<close>
+  where \<open>\<Phi>Share S \<longleftrightarrow> (\<forall>v m n. v \<in> S m \<longrightarrow> 0 < n \<longrightarrow> share n v \<in> S (n * m))\<close>
+
+
+
+
+subsection \<open>Actions\<close>
+
+subsubsection \<open>Share\<close>
+
+consts \<A>\<c>\<t>\<i>\<o>\<n>_share :: action
+
+lemma share_\<phi>app:
+  \<open>PROP ACTION (Action_VS \<A>\<c>\<t>\<i>\<o>\<n>_share)\<close>
+  using ACTION_I . 
+
+
+
+
+
+section \<open>Tools for Constructing Semantic Instructions and for Reasoning them\<close>
 
 subsection \<open>Definitions of Elementary Constructions\<close>
 
@@ -3574,6 +3659,10 @@ lemma (in \<phi>resource_sem)[simp]:
   \<open>\<phi>Res_Spec {} = {}\<close>
   \<open>\<phi>Res_Spec 0 = {}\<close>
   unfolding \<phi>Res_Spec_def by (simp add: zero_set_def)+
+
+lemma (in \<phi>fiction) \<phi>INTERP_RES_\<phi>Res_Spec:
+  \<open>res \<in> INTERP_RES fic \<longleftrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP fic) \<and> Fic_Space fic\<close>
+  unfolding INTERP_RES_def \<phi>Res_Spec_def by (simp, blast)
 
 lemma (in \<phi>fiction) \<phi>Procedure_\<phi>Res_Spec:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
@@ -3688,6 +3777,24 @@ lemma get_res_Valid:
 
 
 end
+
+
+subsection \<open>Share Fiction\<close>
+
+locale basic_fiction_for_fine_resource =
+  \<phi>fiction Resource_Validator INTERPRET
++  R: fine_resource Res Resource_Validator Valid
++  fictional_project_inject INTERPRET Fic \<open>R.basic_fine_fiction (fiction.fine I)\<close>
+for Valid :: "'T::sep_algebra set"
+and I :: "('U::sep_algebra, 'T) fiction"
+and Res :: "('RES_N, 'RES::{comm_monoid_mult,no_inverse}, 'T ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+and Fic :: "('FIC_N,'FIC::{no_inverse,comm_monoid_mult},'U ?) Fictional_Algebra.Entry"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+
+
+
+
 
 subsection \<open>Resources using Fine\<close>
 
@@ -3926,7 +4033,7 @@ lemma "__new_rule__":
         thm fun_split_1_not_dom1[where f=m]
         apply (subst fun_split_1_not_dom1[where k=k]) using A apply this
         apply (simp add: times_fine'[symmetric] t2 inj.homo_mult split)
-        by (subst fun_1upd_homo_right1[symmetric], simp add: t3)
+        by (metis fun_1upd_homo_left1 mult.commute t3)
     }
     then show ?thesis
       by (meson domD prems(2) prems(4))
@@ -3976,7 +4083,7 @@ lemma "__dispose_rule__":
 
 definition \<open>share_fiction = basic_fine_fiction (fiction.fine fiction_to_share)\<close>
 
-lemma share_fiction_expn_full:
+(* lemma share_fiction_expn_full:
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<Znrres> v))))
  = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k \<mapsto> v)))})\<close>
   unfolding set_eq_iff
@@ -4027,7 +4134,7 @@ lemma raw_unit_assertion_implies[simp]:
       proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun)
   by (metis (mono_tags, opaque_lifting) sep_disj_option_nonsepable(2) sep_mult_ac(4) sep_mult_commute times_option(2))
 
-
+*)
 end
 
 
@@ -4071,30 +4178,54 @@ lemma expand:
     by (metis (no_types, lifting) map_option_o_map_upd t1 to_share_funcomp_1 to_share_funcomp_sep_disj_I to_share_strip_011)
   qed .
 
-
 lemma partial_implies:
   \<open> Fic_Space r
 \<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> n \<Znrres> v)))))
-\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> objs k = Some v\<close>
+\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> objs k = Some v \<and> 0 < n \<and> n \<le> 1\<close>
   apply (clarsimp simp add: R.share_fiction_def R.basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
             mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
             R.proj_homo_mult interp_split')
   subgoal premises prems for res_r y a r proof -
-    from \<open>a * _ = _\<close>[THEN fun_cong[where x=k], simplified times_fun, simplified]
-    have t1: \<open>y k = Some v\<close>
+    have t2: \<open>a k ## Some (n \<Znrres> v)\<close> by (metis fun_upd_same prems(7) sep_disj_fun)
+    note t0 = \<open>a * _ = _\<close>[THEN fun_cong[where x=k], simplified times_fun, simplified]
+    have t3: \<open>0 < n \<and> n \<le> 1\<close> by (insert t0 t2, cases \<open>a k\<close>; cases \<open>y k\<close>; simp; case_tac aa; clarsimp)
+    from t0 have t1: \<open>y k = Some v\<close>
       using prems(7) prems(8) strip_share_fun_mult by fastforce
-    then show ?thesis apply (simp add: t1 times_fun)
+    then show ?thesis apply (simp add: t1 times_fun t3)
       using prems(10) sep_disj_partial_map_some_none t1 by fastforce
   qed .
 
-lemma partial_implies':
+lemma partial_implies'[simp]:
   assumes FS: \<open>Fic_Space r\<close>
     and A: \<open> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> n \<Znrres> v)))))\<close>
-  shows [simp]: \<open>!!(R.get res) k = Some v\<close>
+  shows \<open>!!(R.get res) k = Some v \<and> 0 < n \<and> n \<le> 1\<close>
 proof -
   from partial_implies[OF FS, OF A]
   show ?thesis by fastforce
 qed
+
+thm partial_implies'[unfolded \<phi>Res_Spec_def, simplified, simplified \<phi>expns]
+
+lemma VS_merge_ownership:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> \<phi> (\<phi>MapAt k (na \<Znrres>\<phi> T)) \<heavy_comma> x \<Ztypecolon> \<phi> (\<phi>MapAt k (nb \<Znrres>\<phi> T)) \<longmapsto> x \<Ztypecolon> \<phi> (\<phi>MapAt k (na + nb \<Znrres>\<phi> T))\<close>
+  unfolding View_Shift_def Premise_def
+  apply (clarsimp simp add: \<phi>expns mult.assoc mk_homo_mult[symmetric] times_fine)
+  subgoal for res R res_r res_xa res_xb
+    apply (cases \<open>res_xa = res_xb\<close>; clarsimp simp add: fun_1upd_homo \<phi>INTERP_RES_\<phi>Res_Spec)
+    apply (rule exI[where x=\<open>res_r * mk (Fine (1(k \<mapsto> na + nb \<Znrres> res_xb)))\<close>], simp)
+    using partial_implies' by blast .
+
+lemma VS_split_ownership:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e na + nb = n \<and> 0 < na \<and> 0 < nb
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> \<phi> (\<phi>MapAt k (n \<Znrres>\<phi> T)) \<longmapsto> x \<Ztypecolon> \<phi> (\<phi>MapAt k (na \<Znrres>\<phi> T)) \<heavy_comma> x \<Ztypecolon> \<phi> (\<phi>MapAt k (nb \<Znrres>\<phi> T))\<close>
+  unfolding View_Shift_def Premise_def
+  apply (clarsimp simp add: \<phi>expns)
+  subgoal for res R res_r res_x
+    apply (rule exI[where x=\<open>res_r * (mk (Fine (1(k \<mapsto> na \<Znrres> res_x))) * mk (Fine (1(k \<mapsto> nb \<Znrres> res_x))))\<close>],
+          rule conjI, blast)
+    by (clarsimp simp add: mk_homo_mult[symmetric] times_fine fun_1upd_homo) .
+
+
 
 end
 

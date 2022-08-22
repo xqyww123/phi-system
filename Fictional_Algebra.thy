@@ -451,12 +451,12 @@ lemma fun_1upd1[simp]:
   unfolding one_fun_def fun_upd_def by simp
 
 lemma fun_1upd_homo:
-    "1(k := x) * 1(k := y) = 1(k := x * y)" for x :: "'a::comm_monoid_mult"
+    "1(k := x) * 1(k := y) = 1(k := x * y)" for x :: "'a::sep_algebra"
   unfolding one_fun_def fun_upd_def times_fun_def
   by fastforce
 
 lemma fun_1upd_homo_right1:
-    "f(k := x) * 1(k := y) = f(k := x * y)" for x :: "'a::comm_monoid_mult"
+    "f(k := x) * 1(k := y) = f(k := x * y)" for x :: "'a::sep_algebra"
   unfolding one_fun_def fun_upd_def times_fun_def fun_eq_iff
   by clarsimp
 
@@ -685,6 +685,16 @@ lemma nonsepable_semigroup_sepdisj_fun:
   apply clarify subgoal premises prems for x
     apply (insert prems[THEN spec[where x=x]])
     by (cases \<open>a x\<close>; simp; cases "x = k"; simp) .
+
+lemma fun_sep_disj_fupdt[simp]:
+  \<open>f1 ## f2 \<Longrightarrow> x1 ## x2 \<Longrightarrow> f1(k := x1) ## f2(k := x2)\<close>
+  unfolding sep_disj_fun_def by simp
+
+lemma fun_sep_disj_1_fupdt[simp]:
+  \<open>f(k := x1) ## 1(k := x2) \<longleftrightarrow> x1 ## x2\<close>
+  \<open>1(k := x1) ## f(k := x2) \<longleftrightarrow> x1 ## x2\<close>
+  for x1 :: \<open>'b :: sep_disj_one\<close>
+  unfolding sep_disj_fun_def by simp_all
 
 
 subsubsection \<open>dom1: Domain except one\<close>
@@ -1249,7 +1259,8 @@ lemma get_homo_mult:
 lemma mk_homo_one[simp]: \<open>mk x = 1 \<longleftrightarrow> x = 1\<close>
   by (metis fun_1upd1 fun_upd_eqD inj.homo_one proj_inj)
 
-lemma mk_homo_mult: \<open>mk (a * b) = mk a * mk b\<close> by (simp add: inj.homo_mult fun_1upd_homo)
+lemma mk_homo_mult: \<open>mk (a * b) = mk a * mk b\<close>
+  by (simp add: fun_1upd_homo_left1 inj.homo_mult)
 
 lemma mk_inj[simp]: \<open>mk a = mk b \<longleftrightarrow> a = b\<close>
   unfolding fun_eq_iff by simp

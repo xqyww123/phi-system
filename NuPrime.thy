@@ -10,6 +10,7 @@ theory NuPrime \<comment> \<open>The Primary Theory of the \<phi>-System\<close>
     and "<throws>" = "\<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s"
     and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
     and "<view>" = "\<^bold>v\<^bold>i\<^bold>e\<^bold>w"
+    and "<with>" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"
 begin
 
 chapter \<open>Semantics & Specification Framework --- Base of the Programming Language\<close>
@@ -467,6 +468,12 @@ lemma \<phi>frame_view:
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R * A \<longmapsto> R * B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc)
+
+lemma \<phi>view_trans:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2\<close>
+  unfolding View_Shift_def by blast
 
 lemma \<phi>CONSEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
