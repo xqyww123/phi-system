@@ -189,11 +189,17 @@ subsection \<open>Current Construction & Pending Construction\<close>
 syntax "_codeblock_" :: "idt \<Rightarrow> logic \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>" [100,0] 3) *)
 
 definition (in \<phi>empty)
-  CurrentConstruction :: " ('RES_N \<Rightarrow> 'RES)
+  CurrentConstruction :: " mode
+                        \<Rightarrow> ('RES_N \<Rightarrow> 'RES)
                         \<Rightarrow> ('FIC_N,'FIC) assn
                         \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool "
-    ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _" [1000,1000,11] 10)
-  where "CurrentConstruction s R S \<longleftrightarrow> s \<in> (INTERP_COM (R * S))"
+  where "CurrentConstruction mode s R S \<longleftrightarrow> s \<in> (INTERP_COM (R * S))"
+
+abbreviation (in \<phi>empty) Programming_CurrentConstruction ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _" [1000,1000,11] 10)
+  where \<open>Programming_CurrentConstruction \<equiv> CurrentConstruction programming_mode\<close>
+
+abbreviation (in \<phi>empty) View_Shift_CurrentConstruction ("\<^bold>v\<^bold>i\<^bold>e\<^bold>w _ [_]/ \<^bold>i\<^bold>s _" [1000,1000,11] 10)
+  where \<open>View_Shift_CurrentConstruction \<equiv> CurrentConstruction view_shift_mode\<close>
 
 definition (in \<phi>empty)
   PendingConstruction :: " ('ret,'RES_N,'RES) proc
@@ -204,21 +210,25 @@ definition (in \<phi>empty)
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
     where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> \<S> (\<lambda>ret. INTERP_COM (R * S ret)) (INTERP_COM (R * E))"
 
-lemma (in \<phi>empty) CurrentConstruction_D: "CurrentConstruction s H T \<Longrightarrow> Inhabited T"
-  unfolding CurrentConstruction_def Inhabited_def by (auto 0 4 simp add: \<phi>expns)
+lemma (in \<phi>empty) CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
+  unfolding CurrentConstruction_def Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
 
 lemma (in \<phi>empty) CurrentConstruction_mk_elim_rule:
-  "CurrentConstruction s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
+  "CurrentConstruction mode s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
   using CurrentConstruction_D by blast
 
 
 
-paragraph \<open>Rules for Constructing Programs\<close>
+subsubsection \<open>Rules for Constructing Programs\<close>
 
 context \<phi>empty begin
 
+paragraph \<open>Construct Procedure\<close>
+
 lemma \<phi>apply_proc:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)"
+  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow>(\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)"
   unfolding \<phi>Procedure_def CurrentConstruction_def PendingConstruction_def bind_def by (auto 0 5)
 
 lemma \<phi>accept_proc:
@@ -255,6 +265,14 @@ lemma \<phi>reassemble_proc_final:
   unfolding CurrentConstruction_def PendingConstruction_def \<phi>Procedure_def bind_def pair_All
   by blast
 
+paragraph \<open>Construct View Shift\<close>
+
+lemma \<phi>make_view_shift:
+  \<open> (\<And>s R. \<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S \<Longrightarrow> (\<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S') \<and> P)
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding CurrentConstruction_def View_Shift_def by blast
+
+paragraph \<open>Rename Procedure\<close>
 
 lemma \<phi>rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>" by fast
 
@@ -262,11 +280,27 @@ lemma \<phi>rename_proc_with_goal:
   \<open>f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def using \<phi>rename_proc .
 
+paragraph \<open>View Shift & Subtyping\<close>
 
-lemma \<phi>make_view_shift:
-  \<open> (\<And>s R. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S') \<and> P)
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
-  unfolding CurrentConstruction_def View_Shift_def by blast
+lemma (in \<phi>empty) \<phi>apply_view_shift_P:
+  "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
+  unfolding CurrentConstruction_def View_Shift_def
+  by (simp_all add: pair_All \<phi>expns)
+
+lemma (in \<phi>empty) \<phi>apply_view_shift:
+  "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> CurrentConstruction mode blk R S'"
+  unfolding CurrentConstruction_def View_Shift_def
+  by (simp_all add: pair_All \<phi>expns)
+
+lemma (in \<phi>empty) "\<phi>cast":
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
+  unfolding CurrentConstruction_def Imply_def
+  by (simp_all add: pair_All \<phi>expns) blast
+
+lemma (in \<phi>empty) "\<phi>cast_P":
+  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T') \<and> P"
+  unfolding CurrentConstruction_def Imply_def
+  by (simp_all add: pair_All \<phi>expns) blast
 
 end
 
@@ -637,16 +671,6 @@ lemma \<phi>cast_intro_frame_R:
   "U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> U' * R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U * R \<^bold>a\<^bold>n\<^bold>d P "
   unfolding Imply_def pair_forall times_set_def by blast
 
-lemma (in \<phi>empty) "\<phi>cast":
-  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
-  unfolding CurrentConstruction_def Imply_def
-  by (simp_all add: pair_All \<phi>expns) blast
-
-lemma (in \<phi>empty) "\<phi>cast_P":
-  "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T') \<and> P"
-  unfolding CurrentConstruction_def Imply_def
-  by (simp_all add: pair_All \<phi>expns) blast
-
 lemma cast_whole_\<phi>app:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' \<^bold>a\<^bold>n\<^bold>d P"
   unfolding Argument_def .
@@ -883,20 +907,34 @@ subsection \<open>Synthesis\<close>
 
 text \<open>The section presents a generic synthesis framework.
   It is called generic because it supports different semantics of synthesis on different kinds of
-    sequent. For example, \<close>
+    sequent. For example, on Programming_CurrentConstruction, the behavior is to reason
+    a procedure to generate an output satisfying the desired specification;
+    on View_Shift_CurrentConstruction, it is to reason a view shift;
+    on a form of \<open>P \<Longrightarrow> Q\<close>, it is to reason a proposition P according to the given term.\<close>
 
+definition DoSynthesis :: \<open>'a \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
+  where \<open>DoSynthesis term sequent result \<equiv> (PROP sequent \<Longrightarrow> PROP result)\<close>
 
+definition Synthesis_Parse :: \<open>'a \<Rightarrow> 'b \<Rightarrow> prop\<close>
+  where \<open>Synthesis_Parse input parsed \<equiv> Trueprop True\<close>
 
-subsubsection \<open>Parse the Term to be Synthesised\<close>
+lemma \<phi>synthesis:
+  \<open> PROP sequent
+\<Longrightarrow> PROP DoSynthesis X sequent result
+\<Longrightarrow> PROP result\<close>
+  unfolding DoSynthesis_def .
 
-definition (in \<phi>empty) Synthesis_Parse :: \<open>'a \<Rightarrow> ('ret \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> bool\<close>
-  where \<open>Synthesis_Parse input parsed \<longleftrightarrow> True\<close>
+text \<open>
+  Overall, the synthesis procedure consists of 2 phases. The first phase as a pre-processor,
+    parses the input from user and then the second phase triggers the reasoning process
+    on the parsed input.
 
-text (in \<phi>empty) \<open>The system synthesises a program whose output meets the assertion given by user.
-  However, asking user to always input complete assertion may be verbose.
-  For example, user may want to input an abstract object \<^term>\<open>x\<close> only to synthesis \<^term>\<open>x \<Ztypecolon> T\<close>
-    for some arbitrary \<^term>\<open>T\<close>; user may also want to input \<^term>\<open>0::nat\<close> to actually synthesis
-    \<^term>\<open>0 \<Ztypecolon> Natural_Number\<close>.
+  The reason why we parse the input is because, inputting always complete assertions
+    can be verbose.
+  For example, user may input just an abstract object \<^term>\<open>x\<close> to mean to
+    synthesis \<^term>\<open>x \<Ztypecolon> T\<close> for some unspecified \<^term>\<open>T\<close>;
+    user may also input \<^term>\<open>0::nat\<close> to mean to synthesis \<^term>\<open>0 \<Ztypecolon> Natural_Number\<close>.
+
   Antecedent \<^schematic_term>\<open>Synthesis_Parse input ?parsed\<close> provides this function to parse the user
     input \<^term>\<open>input\<close> before the synthesis. Configured by several rules, the reasoner instantiates
     \<^schematic_term>\<open>?parsed\<close> and solves this antecedent.
@@ -904,108 +942,145 @@ text (in \<phi>empty) \<open>The system synthesises a program whose output meets
   By disabling \<phi>_synthesis_parsing to disable this feature.\<close>
 
 
+subsubsection \<open>Parse the Term to be Synthesised\<close>
+
 context \<phi>empty begin
 
-lemma [\<phi>reason 9999 on \<open>Synthesis_Parse (?X'::?'ret \<Rightarrow> ('FIC_N,'FIC)assn) ?X\<close>]:
-  \<open>Synthesis_Parse X X\<close>
+lemma [\<phi>reason 9999 on
+  \<open>PROP Synthesis_Parse (?X'::?'ret \<Rightarrow> ('FIC_N,'FIC)assn) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+]:
+  \<open>PROP Synthesis_Parse X X\<close> for X :: \<open>'ret \<Rightarrow> ('FIC_N,'FIC)assn\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 9999 on \<open>Synthesis_Parse (?X'::('FIC_N,'FIC)assn) ?X\<close>]:
-  \<open>Synthesis_Parse X (\<lambda>_. X)\<close>
+lemma [\<phi>reason 9999 on
+  \<open>PROP Synthesis_Parse (?X'::('FIC_N,'FIC)assn) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+]:
+  \<open>PROP Synthesis_Parse X (\<lambda>_. X)\<close> for X :: \<open>('FIC_N,'FIC)assn\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason 30 
-    on \<open>Synthesis_Parse ?x ?Y\<close>
-    if no \<open>Synthesis_Parse (?x \<Ztypecolon> ?T) ?Y\<close>
-          \<open>Synthesis_Parse (?x::('FIC_N,'FIC) assn) ?Y\<close>
-          \<open>Synthesis_Parse (?x::?'ret \<Rightarrow> ('FIC_N,'FIC) assn) ?Y\<close>]:
-  \<open>Synthesis_Parse x (\<lambda>ret. x \<Ztypecolon> X ret)\<close>
+    on \<open>PROP Synthesis_Parse ?x (?Y::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+    if no \<open>PROP Synthesis_Parse (?x \<Ztypecolon> ?T) ?Y\<close>
+          \<open>PROP Synthesis_Parse (?x::('FIC_N,'FIC) assn) ?Y\<close>
+          \<open>PROP Synthesis_Parse (?x::?'ret \<Rightarrow> ('FIC_N,'FIC) assn) ?Y\<close>
+]:
+  \<open>PROP Synthesis_Parse x (\<lambda>ret. (x \<Ztypecolon> X ret :: ('FIC_N,'FIC)assn))\<close>
   unfolding Synthesis_Parse_def ..
 
 
 lemma (in \<phi>empty) [\<phi>reason 10
-    on \<open>Synthesis_Parse (numeral ?n::?'bb::numeral) ?X\<close>
-       \<open>Synthesis_Parse (0::?'cc::zero) ?X\<close>
-       \<open>Synthesis_Parse (1::?'dd::one) ?X\<close>
- if no \<open>Synthesis_Parse (numeral ?n::nat) ?X\<close>
-       \<open>Synthesis_Parse (0::nat) ?X\<close>
-       \<open>Synthesis_Parse (1::nat) ?X\<close>
+    on \<open>PROP Synthesis_Parse (numeral ?n::?'bb::numeral) ?X\<close>
+       \<open>PROP Synthesis_Parse (0::?'cc::zero) ?X\<close>
+       \<open>PROP Synthesis_Parse (1::?'dd::one) ?X\<close>
+ if no \<open>PROP Synthesis_Parse (?n::nat) ?X\<close>
 ]:
-  \<open> Synthesis_Parse (n :: nat) X
-\<Longrightarrow> Synthesis_Parse n X\<close>
-  .
+  \<open> PROP Synthesis_Parse (n :: nat) X
+\<Longrightarrow> PROP Synthesis_Parse n X\<close>
+ \<comment> \<open>This rule specifies: when input any 0, 1, or \<^schematic_term>\<open>numeral ?sth\<close>, of unspecified type,
+      they should be treated as of natural number type.\<close>
+  unfolding Synthesis_Parse_def
+  ..
 
 end
 
 
-
-
-
+subsubsection \<open>Tagging the part a construction can synthesis\<close>
 
 definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
 
 text (in \<phi>empty) \<open>
-  SYNTHESIS tags a part of the post \<phi>-type of a triple, representing this part is synthesised
-    by the procedure of this triple. The procedure generates some values (or state) that meet
-    the assertion tagged by SYNTHESIS.
+  Occurring in a rule, SYNTHESIS tags a part of the post \<phi>-type of a triple or a view shifting,
+    representing this part can be synthesised by this construction.
   For example, \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> represents the procedure f generates
     something that meets Z.
 
-  During the reasoning, if a SYNTHESIS tags occurs in an antecedent, particularly in the post \<phi>-type,
-    like \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace> \<Longrightarrow> C\<close>, it represents the reasoner needs to find
-    some f that generates something meeting Z.
-
-  Therefore, reasoning rules having the conclusion tagged by SYNTHESIS (in its post-type),
-    like \<^prop>\<open>A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close>, tell procedure f can generate what meets Z.
+  Occurring during reasoning, like \<^schematic_prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace> \<Longrightarrow> C\<close>,
+    it represents the reasoner needs to find some construction (here it specifies it must be a
+    procedure) ?f that generates something meeting Z.
 \<close>
-
-
 
 subsubsection \<open>Synthesis Operations\<close>
 
-text (in \<phi>empty) \<open>
-  There are two sort of synthesis operations. The usual one, given by "__\<phi>synthesis__",
-    tells how to synthesis user-inputted X' on antecedent-free
-    sequent \<^prop>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1\<close>
-  Another sort of operations works on antecedented sequents \<^prop>\<open>Q \<Longrightarrow> C\<close>.
-    It tells, given user input X, by what way to synthesis something meeting X to solve this
-    antecedent Q.
-\<close>
+paragraph \<open>Construction on Programming\<close>
 
-
-lemma (in \<phi>empty) "__\<phi>synthesis__":
-  " \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1
+lemma (in \<phi>empty) [\<phi>reason 1200
+  on \<open>PROP DoSynthesis ?X (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S1)) ?RET\<close>
+]:
+  " PROP Synthesis_Parse X X'
 \<Longrightarrow> SUBGOAL TOP_GOAL G
-\<Longrightarrow> Synthesis_Parse X X'
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> SYNTHESIS X' v \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. S2\<heavy_comma> X' v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
-  unfolding Synthesis_def GOAL_CTXT_def
+\<Longrightarrow> PROP DoSynthesis X
+      (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1))
+      (Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. S2\<heavy_comma> X' v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))"
+  unfolding Synthesis_def GOAL_CTXT_def DoSynthesis_def
   using \<phi>apply_proc .
 
-definition \<open>Synthesis_by X Q = Q\<close>
+text \<open>On programming mode, the synthesis operation always tries to find a procedure.
+  View shifts have to be wrapped in a procedure. (TODO: an automatic wrapper)\<close>
 
-lemma (in \<phi>empty) "__\<phi>synthesis__antecedent":
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> Synthesis_by X Q  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+paragraph \<open>Construction on View Shifting\<close>
+
+lemma (in \<phi>empty) [\<phi>reason 1200
+  on \<open>PROP DoSynthesis ?X (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?blk [?H] \<^bold>i\<^bold>s ?S1)) ?RET\<close>
+]:
+  " PROP Synthesis_Parse X X'
+\<Longrightarrow> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> Q\<close>
-  unfolding Synthesis_by_def GOAL_CTXT_def .
+\<Longrightarrow> PROP DoSynthesis X
+      (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S1))
+      (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S2\<heavy_comma> X'))"
+  unfolding Synthesis_def GOAL_CTXT_def DoSynthesis_def
+  using \<phi>apply_view_shift .
 
-text \<open>And there are rules telling how to synthesis the Q by the X in detail\<close>
+text \<open>On view shifting mode, the synthesis operation tries to find a view shifting.\<close>
 
-subparagraph \<open>Rules to solve an antecedent by synthesis\<close>
+paragraph \<open>Solving an antecedent by Synthesis\<close>
+
+definition Synthesis_by :: \<open>'a \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Synthesis_by X Q = Q\<close>
+
+text \<open>User should configure how to in detail solve an antecedent \<^prop>\<open>P\<close> by a
+  given input \<^term>\<open>X\<close>, by giving rules like \<^prop>\<open>Synthesis_by X P\<close>.\<close>
+
+definition Synthesis_by_internal :: \<open>'a \<Rightarrow> prop \<Rightarrow> prop\<close>
+  where \<open>Synthesis_by_internal X Q \<equiv> Q\<close>
+
+lemma [\<phi>reason 1200
+  on \<open>PROP DoSynthesis ?X (PROP ?P \<Longrightarrow> PROP ?Q) ?RET\<close>
+]:
+  " PROP Synthesis_by_internal X (PROP P)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> PROP DoSynthesis X (PROP P \<Longrightarrow> PROP Q) (PROP Q)"
+  unfolding DoSynthesis_def Synthesis_by_internal_def .
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>x. PROP Synthesis_by_internal X (PROP P x))
+\<Longrightarrow> PROP Synthesis_by_internal X (\<And>x. PROP P x)\<close>
+  unfolding Synthesis_by_internal_def .
+
+lemma [\<phi>reason 1200]:
+  \<open>(PROP P \<Longrightarrow> PROP Synthesis_by_internal X (PROP Q))
+\<Longrightarrow> PROP Synthesis_by_internal X (PROP P \<Longrightarrow> PROP Q)\<close>
+  unfolding Synthesis_by_internal_def .
+
+lemma [\<phi>reason 1200]:
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> Synthesis_by X P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> PROP Synthesis_by_internal X (Trueprop P)\<close>
+  unfolding Synthesis_by_internal_def Synthesis_by_def GOAL_CTXT_def .
 
 lemma (in \<phi>empty) [\<phi>reason 1400]:
-  \<open> Synthesis_Parse X X'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS X' ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Synthesis_by X (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS X' ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS X ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Synthesis_by X (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS X ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Synthesis_by_def .
 
 lemma (in \<phi>empty) [\<phi>reason 1200]:
-  \<open> Synthesis_Parse X X'
+  \<open> PROP Synthesis_Parse X X'
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS X' ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Synthesis_by X (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> X' ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Synthesis_by_def Synthesis_def .
@@ -1918,8 +1993,10 @@ setup \<open>(Sign.add_trrules (let open Ast
 
 ML_file \<open>library/procedure_syntax.ML\<close>
 
-lemma (in \<phi>empty) [\<phi>reason 1100 on \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> 'VAL set)) ?X\<close>]:
-  \<open>Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
+lemma (in \<phi>empty) [\<phi>reason 1100 on
+  \<open>PROP Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> 'VAL set)) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+]:
+  \<open>PROP Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
   unfolding Synthesis_Parse_def ..
 
 subsubsection \<open>Simplification Rules\<close>
@@ -1981,8 +2058,10 @@ simproc_setup (in \<phi>empty) Val_simp_cong ("x \<Ztypecolon> Val v T") = \<ope
 
 subsubsection \<open>Synthesis\<close>
 
-lemma (in \<phi>empty) [\<phi>reason 2000 on \<open>Synthesis_Parse (?raw::'VAL sem_value) ?Y\<close>]:
-  \<open>Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
+lemma (in \<phi>empty) [\<phi>reason 2000 on
+  \<open>PROP Synthesis_Parse (?raw::'VAL sem_value) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+]:
+  \<open>PROP Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma (in \<phi>empty) [\<phi>reason 1200
@@ -2198,10 +2277,12 @@ lemma (in \<phi>empty) [\<phi>reason 2000]:
   unfolding lambda_abstraction_def by (simp add: \<phi>expns)
 
 
-lemma (in \<phi>empty) [\<phi>reason 1200 on \<open>Synthesis_Parse ?input (\<lambda>v. ?f \<Ztypecolon> ?T v <func-over> ?x)\<close>]:
-  \<open> Synthesis_Parse input (\<lambda>v. fx \<Ztypecolon> T v)
+lemma (in \<phi>empty) [\<phi>reason 1200 on
+  \<open>PROP Synthesis_Parse ?input (\<lambda>v. ?f \<Ztypecolon> ?T v <func-over> ?x :: ('FIC_N,'FIC)assn)\<close>
+]:
+  \<open> PROP Synthesis_Parse input (\<lambda>v. fx \<Ztypecolon> T v)
 \<Longrightarrow> lambda_abstraction x fx f
-\<Longrightarrow> Synthesis_Parse input (\<lambda>v. f \<Ztypecolon> T v <func-over> x)\<close>
+\<Longrightarrow> PROP Synthesis_Parse input (\<lambda>v. f \<Ztypecolon> T v <func-over> x :: ('FIC_N,'FIC)assn)\<close>
   unfolding Synthesis_Parse_def ..
 
 
@@ -3258,7 +3339,7 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
                   |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
    in
-    NuToplevel.synthesis term (ctxt, sequent)
+    NuSys.synthesis term (ctxt, sequent)
   end)\<close>
 
 \<phi>processor existential_elimination 50 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ExSet ?T\<close>)

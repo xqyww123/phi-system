@@ -63,7 +63,7 @@ proc (in \<phi>empty) try'':
   argument X
   return YY
   throws EE2
-  \<medium_left_bracket> ;; "__op_try__"  ;; F G \<medium_right_bracket>. .
+  \<medium_left_bracket> "__op_try__" F G \<medium_right_bracket>. .
 
 proc (in \<phi>empty) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>

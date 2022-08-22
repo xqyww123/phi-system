@@ -15,8 +15,8 @@ include PHI_SYNTAX
   val mk_nuTy : term * term -> term
   val mk_Nu_ty : typ * typ -> typ
 
-  val dest_CurrentConstruction : term -> term * term * term
-  val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm
+  val dest_CurrentConstruction   :  term -> term * term * term * term
+  val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm * cterm
   val dest_PendingConstruction : term -> term * term * term * term * term
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm * cterm
   val dest_current_nu   : thm -> term
@@ -104,28 +104,28 @@ val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 
 val dest_CurrentConstruction   =
-      perhaps (try dest_Trueprop) #> dest_triop @{const_name "\<phi>empty.CurrentConstruction"}
+      perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name "\<phi>empty.CurrentConstruction"}
 val dest_CurrentConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_triop_c @{const_name "\<phi>empty.CurrentConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "\<phi>empty.CurrentConstruction"}
 val dest_PendingConstruction   =
-      perhaps (try dest_Trueprop) #> dest_quinop @{const_name "\<phi>empty.PendingConstruction"}
+      perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name "\<phi>empty.PendingConstruction"}
 val dest_PendingConstruction_c =
       perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "\<phi>empty.PendingConstruction"}
 
-fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #1)
+fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #2)
   handle TERM _ => ((dest_PendingConstruction c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [c]))
-fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #1)
+fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #2)
   handle TERM _ => ((dest_PendingConstruction_c c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
 
 fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
 val dest_current_nu =
       Thm.prop_of #> perhaps (try dest_Trueprop)
-        #> orelse_opt (try (dest_PendingConstruction #> #4)) (dest_CurrentConstruction #> #3)
+        #> orelse_opt (try (dest_PendingConstruction #> #4)) (dest_CurrentConstruction #> #4)
 val dest_current_nu_c =
       Thm.cprop_of #> perhaps (try dest_Trueprop_c)
-        #> orelse_opt (try (dest_PendingConstruction_c #> #4)) (dest_CurrentConstruction_c #> #3)
+        #> orelse_opt (try (dest_PendingConstruction_c #> #4)) (dest_CurrentConstruction_c #> #4)
 
 val current_block_var_c =
   Thm.cprop_of

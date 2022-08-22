@@ -62,7 +62,6 @@ signature NU_TOPLEVEL = sig
   val end_block_cmd : Phi_Generalization.generic -> bool -> Proof.state -> Proof.state
   
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
-  val synthesis : cterm -> context_state -> context_state
   (*val export_LLVM : theory -> theory *)
 end
 
@@ -164,11 +163,11 @@ fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
 val procedure : working_mode = 
   let
     val destined_phi =
-          orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction))
+          orelse_opt (try (#4 o PhiSyntax.dest_CurrentConstruction))
          (orelse_opt (try (#3 o PhiSyntax.dest_procedure))
              (#4 o PhiSyntax.dest_PendingConstruction))
     val destined_phi_c =
-          orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction_c))
+          orelse_opt (try (#4 o PhiSyntax.dest_CurrentConstruction_c))
          (orelse_opt (try (#3 o PhiSyntax.dest_procedure_c))
              (#4 o PhiSyntax.dest_PendingConstruction_c))
   in {
@@ -637,25 +636,6 @@ fun prove_prem int stat =
                 HEADGOAL (resolve_tac ctxt @{thms Premise_I})
               ))) #> Seq.the_result "should never fail"
             )
-  end
-
-fun synthesis term (ctxt, sequent) =
-  let
-    val mode_constr = can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
-    val synthesis =
-      if Thm.typ_of_cterm term = \<^typ>\<open>action\<close>
-      then @{thm \<phi>do_action}
-              |> Thm.instantiate (TVars.empty, Vars.make [((("action",0),@{typ action}), term)])
-              |> (fn rule => rule RS sequent)
-      else Proof_Context.get_thm ctxt (if mode_constr then "local.__\<phi>synthesis__"
-                                                      else "local.__\<phi>synthesis__antecedent")
-              |> Drule.infer_instantiate ctxt [(("X",0), term)]
-              |> (fn rule => if mode_constr then sequent RS rule
-                                            else rule RS sequent)
-  in
-    case Nu_Reasoner.reason (ctxt, synthesis)
-      of SOME ret => ret
-       | NONE => error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
   end
 
 

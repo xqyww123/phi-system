@@ -28,7 +28,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val names = rev names'''
     val arity = length names
     val ex_vars = Thm.prop_of sequent
-                  |> dest_CurrentConstruction |> #3
+                  |> dest_CurrentConstruction |> #4
                   |> strip_separations
                   |> map_filter (dest_Var)
     fun check_name name =
@@ -102,7 +102,7 @@ let open Ast PhiSyntax
   fun mk_GetVar ctxt name =
     let
       val value = Thm.prop_of (NuBasics.the_construction ctxt)
-                  |> dest_CurrentConstruction |> #3
+                  |> dest_CurrentConstruction |> #4
                   |> strip_separations
                   |> get_first (dest_Var #> Option.mapPartial (fn (name',(x,_)) =>
                                                         if name' = name then SOME x else NONE))

@@ -40,8 +40,10 @@ definition Variable_of :: \<open>'a \<Rightarrow> varname \<Rightarrow> 'a\<clos
 definition Set_Variable :: \<open>varname \<Rightarrow> 'a \<Rightarrow> 'a\<close> ("$_ := _" [1000, 51] 50)
   where [iff]: \<open>($x := y) = y\<close>
 
-lemma (in \<phi>min) [\<phi>reason 2000 on \<open>Synthesis_Parse (?var::varname) ?Y\<close>]:
-  \<open>Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T)\<close>
+lemma (in \<phi>min) [\<phi>reason 2000 on
+  \<open>PROP Synthesis_Parse (?var::varname) (?Y::?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+]:
+  \<open>PROP Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T :: ('FIC_N,'FIC) assn)\<close>
   unfolding Synthesis_Parse_def ..
 
 
@@ -53,7 +55,7 @@ lemma (in \<phi>min) [\<phi>reason 2000 on \<open>Synthesis_Parse (?var::varname
                   |> Syntax.check_term ctxt_parse
                   |> Thm.cterm_of ctxt
     in
-      NuToplevel.synthesis term (ctxt,sequent)
+      NuSys.synthesis term (ctxt,sequent)
     end)
 \<close>
 
@@ -230,12 +232,13 @@ lemma (in \<phi>min) op_const_int_\<phi>app:
   by \<phi>reason
 
 lemma (in \<phi>min) [\<phi>reason 1200
-    on \<open>Synthesis_Parse (numeral ?n::nat) ?X\<close>
-       \<open>Synthesis_Parse (1::nat) ?X\<close>
-       \<open>Synthesis_Parse (0::nat) ?X\<close>
+    on \<open>PROP Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+       \<open>PROP Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+       \<open>PROP Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
 ]:
-  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>[32]) X
-\<Longrightarrow> Synthesis_Parse n X\<close>
+  \<open> PROP Synthesis_Parse (n \<Ztypecolon> \<nat>[32]) X
+\<Longrightarrow> PROP Synthesis_Parse n X\<close>
+  for X :: \<open>'ret \<Rightarrow> ('FIC_N,'FIC) assn\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma (in \<phi>min) [\<phi>reason
@@ -568,6 +571,7 @@ proc AA:
 
 thm op_const_int_\<phi>app
 thm AA_\<phi>compilation
+
 
 proc XX:
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>

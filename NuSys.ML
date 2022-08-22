@@ -15,7 +15,7 @@ signature NU_SYS = sig
 
   val start_proc : string (*blk name*) -> cterm -> Proof.context -> context_state
 
-  val auto_construct : cterm -> context_state -> context_state
+  val synthesis : cterm -> context_state -> context_state
 
   val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
         -> Proof_Context.mode -> bool -> string -> Method.text option
@@ -135,7 +135,7 @@ fun set_label name (ctxt,sequent) = (ctxt, mk_label_thm name RS sequent)
 fun finish_proc cc (ctxt,sequent) =
   let open PhiSyntax
     val reassemble_proc_final = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_final"
-    val (s',H',_) = dest_CurrentConstruction_c cc
+    val (_,s',H',_) = dest_CurrentConstruction_c cc
   in
     sequent
       |> Thm.implies_intr cc
@@ -152,10 +152,14 @@ fun start_proc blk_name arg_nuTy ctxt =
     val stat_var = Free (blk_name, mk_resourceT ctxt)
     val ctxt = Variable.declare_constraints stat_var ctxt
     val init = Const("local.CurrentConstruction",
-                  fastype_of stat_var --> dummyT
-                                      --> typ_of_cterm arg_nuTy
-                                      --> \<^typ>\<open>bool\<close>)
-               $ stat_var $ Free (RR, dummyT)
+                      \<^typ>\<open>mode\<close>
+                  --> fastype_of stat_var
+                  --> dummyT
+                  --> typ_of_cterm arg_nuTy
+                  --> \<^typ>\<open>bool\<close>)
+               $ \<^const>\<open>programming_mode\<close>
+               $ stat_var
+               $ Free (RR, dummyT)
     val init = Thm.cterm_of ctxt (Syntax.check_term ctxt init)
     val init = Thm.apply @{cterm Trueprop} (Thm.apply init arg_nuTy)
     val ([init],ctxt) = Assumption.add_assms
@@ -165,19 +169,15 @@ fun start_proc blk_name arg_nuTy ctxt =
   end
 
 
-fun auto_construct target (ctxt,sequent) =
+fun synthesis term (ctxt, sequent) =
   let
-    val Make_by_proc = Proof_Context.get_thm ctxt "local.\<phi>Make_by_proc"
-    val stat = 
-      (sequent RS Drule.infer_instantiate ctxt [(("exp",0),target)] Make_by_proc)
-          |> Goal.protect 1
-          |> pair ctxt
-          |> Nu_Reasoner.reason
-  in case stat of SOME (ctxt,sequent) =>
-        if Thm.no_prems sequent
-        then (ctxt, Goal.conclude sequent)
-        else raise CTERM ("fail to construct", [target])
-      | NONE => raise CTERM ("fail to construct", [target])
+    val rule = @{thm \<phi>synthesis}
+          |> Drule.infer_instantiate ctxt [(("X",0),term), (("sequent",0), Thm.cprop_of sequent)]
+    val sequent' = Thm.implies_elim rule sequent
+  in
+    case Nu_Reasoner.reason (ctxt, sequent')
+      of SOME ret => ret
+       | NONE => error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
   end
 
 
