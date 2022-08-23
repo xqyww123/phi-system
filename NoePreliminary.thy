@@ -79,7 +79,10 @@ locale homo_mult = homo_one \<phi>
 lemma homo_mult:
   \<open>homo_mult \<phi> \<longleftrightarrow> (\<phi> 1 = 1) \<and> (\<forall> x y. \<phi> (x * y) = \<phi> x * \<phi> y)\<close>
   unfolding homo_mult_def homo_mult_axioms_def homo_one_def ..
-  
+
+locale mult_strip_011 =
+  fixes \<psi> :: " 'a::times \<Rightarrow> 'b::times "
+  assumes mult_strip_011: \<open>a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c)\<close>
 
 definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
 
@@ -202,6 +205,24 @@ instance proof
 qed
 end
 
+class to_posrat_1 = to_posrat + one +
+  assumes to_posrat_1[simp]: \<open>to_posrat 1 = 1\<close>
+
+class to_posrat_plus_0 = zero + to_posrat + plus + ord +
+  assumes to_posrat_plus[simp]: \<open>0 < x \<Longrightarrow> 0 < y \<Longrightarrow> to_posrat x + to_posrat y = to_posrat (x + y)\<close>
+
+class to_posrat_times_0 = zero + to_posrat + times + ord +
+  assumes to_posrat_times[simp]:
+      \<open>0 < x \<Longrightarrow> 0 < y \<Longrightarrow> to_posrat x * to_posrat y = to_posrat (x * y)\<close>
+
+class to_posrat_inv_0 = zero + to_posrat + inverse + ord +
+  assumes to_posrat_inv[simp]:
+      \<open>0 < x \<Longrightarrow> 0 < y \<Longrightarrow> to_posrat x / to_posrat y = to_posrat (x / y)\<close>
+
+class to_posrat_ord = to_posrat + zero + order +
+  assumes to_posrat_le[simp]: \<open>0 < x \<Longrightarrow> 0 < y \<Longrightarrow> to_posrat x \<le> to_posrat y \<longleftrightarrow> x \<le> y\<close>
+  assumes to_posrat_lt[simp]: \<open>0 < x \<Longrightarrow> 0 < y \<Longrightarrow> to_posrat x < to_posrat y \<longleftrightarrow> x < y\<close>  
+
 
 
 subsection \<open>Non-negative Rational\<close>
@@ -238,7 +259,6 @@ end
 lemma to_posrat_to_pos0rat[simp]: \<open>to_posrat (to_pos0rat x) = x\<close> for x :: posrat
   unfolding to_posrat_pos0rat_def to_pos0rat_posrat_def
   by (metis NoePreliminary.pos0rat_inverse NoePreliminary.rat_of_posrat less_le_not_le rat_of_posrat_inverse)
-
 
 instantiation pos0rat :: zero begin
 lift_definition zero_pos0rat :: pos0rat is 0 by simp
@@ -355,6 +375,141 @@ lemma to_posrat_mult_homo_pos0rat:
   for x :: pos0rat
   unfolding to_posrat_pos0rat_def
   by transfer (simp add: posrat_inverse times_posrat_def)
+
+
+instantiation pos0rat :: inverse begin
+lift_definition inverse_po0srat :: \<open>pos0rat \<Rightarrow> pos0rat\<close> is inverse by simp
+instance ..
+end
+
+lemma \<open>0 \<le> a \<Longrightarrow> 0 \<le> b \<Longrightarrow> pos0rat a + pos0rat b = pos0rat (a + b)\<close>
+  by (simp add: eq_onp_same_args plus_pos0rat.abs_eq)
+
+lemma \<open>0 \<le> a \<Longrightarrow> 0 \<le> b \<Longrightarrow> 0 \<le> a - b \<Longrightarrow> pos0rat a - pos0rat b = pos0rat (a - b)\<close>
+  by (simp add: eq_onp_same_args minus_pos0rat.abs_eq)
+
+instantiation pos0rat :: to_posrat_plus_0 begin
+instance by (standard, metis eq_onp_same_args less_add_same_cancel2 less_pos0rat.rep_eq
+                             plus_pos0rat.rep_eq plus_posrat.abs_eq to_posrat_pos0rat_def)
+end
+
+instantiation pos0rat :: to_posrat_inv_0 begin
+instance apply standard
+  by (metis cr_pos0rat_def divide_pos0rat.rep_eq divide_posrat.abs_eq eq_OO eq_onp_same_args less_pos0rat.rep_eq pcr_pos0rat_def to_posrat_pos0rat_def zero_pos0rat.transfer) 
+end
+
+instantiation pos0rat :: to_posrat_times_0 begin
+instance apply standard
+  using to_posrat_mult_homo_pos0rat by force
+end
+
+
+class to_pos0rat_0 = to_pos0rat + zero +
+  assumes to_pos0rat_0[simp]: \<open>to_pos0rat 0 = 0\<close>
+
+class to_pos0rat_1 = to_pos0rat + one +
+  assumes to_pos0rat_1[simp]: \<open>to_pos0rat 1 = 1\<close>
+
+class to_pos0rat_ord = to_pos0rat_0 + order +
+  assumes to_pos0rat_le[simp]: \<open>0 \<le> x \<Longrightarrow> 0 \<le> y \<Longrightarrow> to_pos0rat x \<le> to_pos0rat y \<longleftrightarrow> x \<le> y\<close>
+  assumes to_pos0rat_lt[simp]: \<open>0 \<le> x \<Longrightarrow> 0 \<le> y \<Longrightarrow> to_pos0rat x < to_pos0rat y \<longleftrightarrow> x < y\<close>
+begin
+lemma to_pos0rat_lt_0[simp]: \<open>0 \<le> x \<Longrightarrow> 0 < to_pos0rat x \<longleftrightarrow> 0 < x\<close>
+  using local.to_pos0rat_lt by fastforce
+
+lemma to_pos0rat_lt_0'[simp]: \<open>0 < x \<Longrightarrow> 0 < to_pos0rat x\<close>
+  by simp
+  
+end
+
+lemma to_pos0rat_le_0[simp]: \<open>x \<le> 0 \<Longrightarrow> 0 \<le> to_pos0rat x\<close>
+  using pos0rat_LE0 by blast
+
+class to_pos0rat_plus = to_pos0rat_0 + plus + ord +
+  assumes to_pos0rat_plus[simp]:
+    \<open>0 \<le> x \<Longrightarrow> 0 \<le> y \<Longrightarrow> to_pos0rat x + to_pos0rat y = to_pos0rat (x + y)\<close>
+
+class to_pos0rat_times = to_pos0rat_0 + times + ord +
+  assumes to_pos0rat_times[simp]:
+    \<open>0 \<le> x \<Longrightarrow> 0 \<le> y \<Longrightarrow> to_pos0rat x * to_pos0rat y = to_pos0rat (x * y)\<close>
+
+class to_pos0rat_inv = to_pos0rat_0 + inverse + ord +
+  assumes to_pos0rat_inv[simp]:
+    \<open>0 \<le> x \<Longrightarrow> 0 < y \<Longrightarrow> to_pos0rat x / to_pos0rat y = to_pos0rat (x / y)\<close>
+
+class to_pos0rat_minus = to_pos0rat_0 + minus + ord +
+  assumes to_pos0rat_minus[simp]:
+    \<open>0 \<le> x \<Longrightarrow> 0 \<le> y \<Longrightarrow> y \<le> x \<Longrightarrow> to_pos0rat x - to_pos0rat y = to_pos0rat (x - y)\<close>
+
+
+instantiation rat :: to_pos0rat_0 begin
+definition \<open>to_pos0rat_rat = pos0rat\<close>
+instance apply standard
+  by (simp add: to_pos0rat_rat_def zero_pos0rat_def)
+end
+
+instantiation rat :: to_pos0rat_1 begin
+instance apply standard
+  by (simp add: one_pos0rat_def to_pos0rat_rat_def) 
+end
+
+instantiation rat :: to_pos0rat_ord begin
+instance apply standard
+  using less_eq_pos0rat.rep_eq pos0rat.pos0rat_inverse to_pos0rat_rat_def apply force
+  by (simp add: less_pos0rat.rep_eq pos0rat.pos0rat_inverse to_pos0rat_rat_def)
+end
+
+instantiation rat :: to_pos0rat_plus begin
+instance apply standard
+  by (simp add: eq_onp_same_args plus_pos0rat.abs_eq to_pos0rat_rat_def) 
+end
+
+instantiation rat :: to_pos0rat_minus begin
+instance apply standard
+  by (simp add: eq_onp_same_args minus_pos0rat.abs_eq to_pos0rat_rat_def)
+end
+
+instantiation rat :: to_pos0rat_times begin
+instance apply standard
+  by (simp add: eq_onp_same_args times_pos0rat.abs_eq to_pos0rat_rat_def)
+end
+
+instantiation rat :: to_pos0rat_inv begin
+instance apply standard
+  by (simp add: divide_pos0rat.abs_eq eq_onp_same_args to_pos0rat_rat_def)
+end
+
+
+
+
+instantiation rat :: to_posrat_1 begin
+definition \<open>to_posrat_rat \<equiv> posrat\<close>
+instance apply standard
+  by (simp add: one_posrat.abs_eq to_posrat_rat_def) 
+end
+
+instantiation rat :: to_posrat_ord begin
+instance apply standard
+  apply (simp add: eq_onp_same_args less_eq_posrat.abs_eq to_posrat_rat_def)
+  by (simp add: eq_onp_same_args less_posrat.abs_eq to_posrat_rat_def)
+end
+
+instantiation rat :: to_posrat_plus_0 begin
+instance apply standard
+  by (simp add: eq_onp_same_args plus_posrat.abs_eq to_posrat_rat_def)
+end
+
+instantiation rat :: to_posrat_times_0 begin
+instance apply standard
+  by (simp add: eq_onp_same_args times_posrat.abs_eq to_posrat_rat_def)
+end
+
+instantiation rat :: to_posrat_inv_0 begin
+instance apply standard
+  by (simp add: divide_posrat.abs_eq eq_onp_same_args to_posrat_rat_def)
+end
+
+
 
 (*
 
