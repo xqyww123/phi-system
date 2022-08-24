@@ -2172,19 +2172,17 @@ lemma (in \<phi>empty_sem) [\<phi>reason_elim, elim!]:
 subsection \<open>Share\<close>
 
 definition \<phi>Share' :: \<open>rat \<Rightarrow> ('v::share,'x) \<phi> \<Rightarrow> ('v::share,'x) \<phi>\<close>
-  where \<open>\<phi>Share' n T = (\<lambda>x. { share (to_pos0rat n) v |v. v \<in> (x \<Ztypecolon> T) } \<^bold>s\<^bold>u\<^bold>b\<^bold>j 0 < n)\<close>
+  where \<open>\<phi>Share' n T = (\<lambda>x. { share (to_pos0rat n) v |v. v \<in> (x \<Ztypecolon> T) } \<^bold>s\<^bold>u\<^bold>b\<^bold>j 0 < n \<and> n \<le> 1)\<close>
 
 lemma [\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Share' n T) \<longleftrightarrow> (\<exists>v. p = share (to_pos0rat n) v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n)\<close>
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Share' n T) \<longleftrightarrow> (\<exists>v. p = share (to_pos0rat n) v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1)\<close>
   unfolding \<phi>Share'_def \<phi>Type_def by (simp add: \<phi>expns, blast)
 
 lemma
-  \<open> 0 < na
-\<Longrightarrow> 0 < nb
-\<Longrightarrow> (x \<Ztypecolon> \<phi>Share' na (\<phi>Share' nb T)) = (x \<Ztypecolon> \<phi>Share' (na * nb) T)\<close>
+  \<open>(x \<Ztypecolon> \<phi>Share' na (\<phi>Share' nb T)) = (x \<Ztypecolon> \<phi>Share' (na * nb) T \<^bold>s\<^bold>u\<^bold>b\<^bold>j 0 < na \<and> na \<le> 1 \<and> 0 < nb \<and> nb \<le> 1)\<close>
   unfolding set_eq_iff
   apply (clarsimp simp add: \<phi>expns)
-  by (smt (z3) order_less_imp_le share_share_not0 to_pos0rat_lt_0' to_pos0rat_times)
+  by (smt (z3) mult_le_one mult_pos_pos order_less_imp_le share_share_not0 to_pos0rat_lt_0' to_pos0rat_times)
 
 
 
@@ -3878,6 +3876,7 @@ locale permission_fiction =
 +  complete_perm: homo_mult complete_perm
 +  complete_perm: mult_strip_011 complete_perm
 +  complete_perm: homo_sep_disj complete_perm
++  complete_perm: homo_join_sub complete_perm
 +  fictional_project_inject INTERPRET Fic
       \<open>R.basic_fine_fiction (fiction.fine (Fiction (\<lambda>u. {v. complete_perm v = u})))\<close>
 for Valid :: "'T::sep_algebra set"
@@ -3924,15 +3923,20 @@ lemma expand_raw:
 
 lemma partial_implies:
   \<open> Fic_Space r
-\<Longrightarrow> 0 < n
+\<Longrightarrow> 0 < n \<and> n \<le> 1
 \<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (share n (complete_perm x)))))
-\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> x \<preceq>\<^sub>S\<^sub>L objs \<and> n \<le> 1\<close>
+\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> x \<preceq>\<^sub>S\<^sub>L objs\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: R.basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
             mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
             R.proj_homo_mult interp_split')
+  
   subgoal premises prems for res_r y a r proof -
     thm prems
+
+
+
+    
     have t2: \<open>a k ## Some (n \<Znrres> v)\<close> by (metis fun_upd_same prems(7) sep_disj_fun)
     note t0 = \<open>a * _ = _\<close>[THEN fun_cong[where x=k], simplified times_fun, simplified]
     have t3: \<open>0 < n \<and> n \<le> 1\<close> by (insert t0 t2, cases \<open>a k\<close>; cases \<open>y k\<close>; simp; case_tac aa; clarsimp)
@@ -3960,8 +3964,8 @@ lemma VS_merge_ownership:
   apply (clarsimp simp add: \<phi>expns mult.assoc mk_homo_mult[symmetric] times_fine)
   subgoal for res R res_r res_xa res_xb
     apply (cases \<open>res_xa ## res_xb\<close>; clarsimp simp add: fun_1upd_homo \<phi>INTERP_RES_\<phi>Res_Spec share_left_distrib)
-    apply (rule exI[where x=\<open>res_r * mk (Fine (share (na + nb) res_xb))\<close>], simp)
-    by (metis share_sep_left_distrib_0) .
+    apply (rule exI[where x=\<open>res_r * mk (Fine (share (to_pos0rat (na + nb)) res_xb))\<close>], simp)
+    by (metis less_le_not_le share_sep_left_distrib to_pos0rat_plus) .
 
 lemma VS_split_ownership:
   \<open> (\<forall>u. u \<in> (x \<Ztypecolon> T) \<longrightarrow> u ## u)
@@ -3970,7 +3974,7 @@ lemma VS_split_ownership:
   unfolding View_Shift_def Premise_def
   apply (clarsimp simp add: \<phi>expns)
   subgoal for res R res_r res_x
-    apply (rule exI[where x=\<open>res_r * (mk (Fine (share na res_x)) * mk (Fine (share nb res_x)))\<close>],
+    apply (rule exI[where x=\<open>res_r * (mk (Fine (share (to_pos0rat na) res_x)) * mk (Fine (share (to_pos0rat nb) res_x)))\<close>],
           rule conjI, blast)
     by (clarsimp simp add: mk_homo_mult[symmetric] times_fine fun_1upd_homo share_sep_left_distrib_0) .
 

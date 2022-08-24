@@ -223,6 +223,15 @@ class to_posrat_ord = to_posrat + zero + order +
   assumes to_posrat_le[simp]: \<open>0 < x \<Longrightarrow> 0 < y \<Longrightarrow> to_posrat x \<le> to_posrat y \<longleftrightarrow> x \<le> y\<close>
   assumes to_posrat_lt[simp]: \<open>0 < x \<Longrightarrow> 0 < y \<Longrightarrow> to_posrat x < to_posrat y \<longleftrightarrow> x < y\<close>  
 
+lemma to_posrat_le_1[simp]:
+  \<open>0 < x \<Longrightarrow> to_posrat x \<le> 1 \<longleftrightarrow> x \<le> 1\<close>
+  for x :: \<open>'a::{to_posrat_ord,to_posrat_1,zero_less_one}\<close>
+  by (metis to_posrat_1 to_posrat_le zero_less_one)
+
+lemma to_posrat_lt_1[simp]:
+  \<open>0 < x \<Longrightarrow> to_posrat x < 1 \<longleftrightarrow> x < 1\<close>
+  for x :: \<open>'a::{to_posrat_ord,to_posrat_1,zero_less_one}\<close>
+  by (metis to_posrat_1 to_posrat_lt zero_less_one)
 
 
 subsection \<open>Non-negative Rational\<close>
@@ -402,6 +411,13 @@ instantiation pos0rat :: to_posrat_times_0 begin
 instance apply standard
   using to_posrat_mult_homo_pos0rat by force
 end
+
+instantiation pos0rat :: to_posrat_ord begin
+instance apply standard
+  apply (metis NoePreliminary.posrat_inverse cr_pos0rat_def eq_OO less_eq_pos0rat.rep_eq less_eq_posrat.rep_eq less_pos0rat.rep_eq pcr_pos0rat_def to_posrat_pos0rat_def zero_pos0rat.transfer)
+  by (metis NoePreliminary.posrat_inverse cr_pos0rat_def eq_OO less_pos0rat.rep_eq less_posrat.rep_eq pcr_pos0rat_def to_posrat_pos0rat_def zero_pos0rat.transfer)
+end
+
 
 
 class to_pos0rat_0 = to_pos0rat + zero +
