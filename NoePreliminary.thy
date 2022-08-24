@@ -418,6 +418,10 @@ instance apply standard
   by (metis NoePreliminary.posrat_inverse cr_pos0rat_def eq_OO less_pos0rat.rep_eq less_posrat.rep_eq pcr_pos0rat_def to_posrat_pos0rat_def zero_pos0rat.transfer)
 end
 
+instantiation pos0rat :: field begin
+end
+
+lemma \<open>(2::pos0rat) / 4 = (1 / 2)\<close> by simp
 
 
 class to_pos0rat_0 = to_pos0rat + zero +
