@@ -43,6 +43,9 @@ lemma pair_exists: "Ex P \<longleftrightarrow> (\<exists>a b. P (a,b))" using sp
 lemma pair_forall: "All P \<longleftrightarrow> (\<forall>a b. P (a,b))" using split_paired_All .
 lemmas pair_All = split_paired_all
 
+lemmas option_exists = split_option_ex
+lemmas option_forall = split_option_all
+
 lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> PROP R)" by rule simp+
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
 
@@ -417,11 +420,6 @@ instance apply standard
   apply (metis NoePreliminary.posrat_inverse cr_pos0rat_def eq_OO less_eq_pos0rat.rep_eq less_eq_posrat.rep_eq less_pos0rat.rep_eq pcr_pos0rat_def to_posrat_pos0rat_def zero_pos0rat.transfer)
   by (metis NoePreliminary.posrat_inverse cr_pos0rat_def eq_OO less_pos0rat.rep_eq less_posrat.rep_eq pcr_pos0rat_def to_posrat_pos0rat_def zero_pos0rat.transfer)
 end
-
-instantiation pos0rat :: field begin
-end
-
-lemma \<open>(2::pos0rat) / 4 = (1 / 2)\<close> by simp
 
 
 class to_pos0rat_0 = to_pos0rat + zero +

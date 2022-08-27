@@ -48,7 +48,7 @@ subsubsection \<open>Resource\<close>
 
 type_synonym ('TY,'VAL) object_heap = \<open>('TY object_ref \<Rightarrow> field_name \<Rightarrow> 'VAL option)\<close>
 
-resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>OO_res = ('VAL,'TY) \<phi>min_res +
+resource_space ('VAL::"share_resistence_nonsepable_semigroup",'TY) \<phi>OO_res = ('VAL,'TY) \<phi>min_res +
   R_objs :: \<open>('TY,'VAL) object_heap ?\<close>
 
 
@@ -56,7 +56,7 @@ subsection \<open>Main Stuff of Semantics\<close>
 
 locale \<phi>OO_sem_pre =
   \<phi>min_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                  \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                  \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
                   \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
 + \<phi>OO_ty where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
@@ -64,13 +64,13 @@ locale \<phi>OO_sem_pre =
 + \<phi>OO_val where CONS_OF   = VAL_CONS_OF
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
-            and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
+            and TYPE'REP  = \<open>TYPE('VAL::share_resistence_nonsepable_semigroup)\<close>
 + \<phi>OO_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
             and TYPE'REP  = \<open>TYPE('RES::{no_inverse,comm_monoid_mult})\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
-                \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
                 \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult})
             ) itself\<close>
 assumes WT_ref[simp]: \<open>Well_Type \<tau>Ref = UNIV\<close>
@@ -109,7 +109,7 @@ end
 
 locale \<phi>OO_sem =
   \<phi>OO_sem_pre where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                  \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                  \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
                   \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES)) itself\<close>
 assumes Resource_Validator_objs: \<open>Resource_Validator R_objs.name = R_objs.inject ` Fine ` Valid_Objs\<close>
@@ -138,12 +138,12 @@ lemma "__case_prod_ref_field__":
 
 locale \<phi>OO =
   \<phi>OO_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                  \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                  \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
                   \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
       and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
       and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close>
 + \<phi>min where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                  \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                  \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
                   \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult})
                   \<times> ('FIC_N \<Rightarrow> 'FIC))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
@@ -192,8 +192,12 @@ context \<phi>OO begin
 
 paragraph \<open>Fields in A Object\<close>
 
-abbreviation \<phi>InObj :: \<open>'TY object_ref \<Rightarrow> (field_name \<Rightarrow> 'VAL share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
-  where \<open>\<phi>InObj obj T \<equiv> FIC_OO_share.\<phi> (\<phi>MapAt obj T)\<close>
+term \<open>FIC_OO_share.\<phi>\<close>
+thm FIC_OO_share.VS_merge_ownership
+term FIC_OO_share.share.\<phi>
+
+abbreviation \<phi>Obj :: \<open>'TY object_ref \<Rightarrow> (field_name \<Rightarrow> 'VAL share option, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
+  where \<open>\<phi>Obj obj T \<equiv> FIC_OO_share.\<phi> (\<phi>MapAt obj T)\<close>
 
 end
 
@@ -217,20 +221,22 @@ definition (in \<phi>OO_sem) op_obj_allocate :: \<open>'TY class \<Rightarrow> (
       R_objs.\<phi>R_allocate_res_entry (\<lambda>ref. ref \<noteq> Nil \<and> object_ref.class ref = cls)
             (initial_value_of_class cls) (\<lambda>ref. Return (sem_value (V_ref.mk ref)))\<close>
 
+bundle (in \<phi>OO) xx = [[unify_trace_failure]]
+
 lemma (in \<phi>OO) op_obj_allocate:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_allocate cls
       \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> \<phi>InObj ref Identity\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec op_obj_allocate_def
-  apply (clarsimp simp add: \<phi>expns FIC_OO_share.interp_split' del: subsetI)
+  apply (clarsimp simp add: \<phi>expns del: subsetI)
   apply (rule R_objs.\<phi>R_allocate_res_entry)
   apply (clarsimp simp add: Valid_Objs_def)
   using obj_map_freshness apply blast
     apply (clarsimp simp add: Valid_Objs_def one_fun_def dom_initial_value_of_class)
   prefer 2 apply assumption
-  apply (simp add: \<phi>expns)
+  apply (simp add: \<phi>expns Return_def det_lift_def)
   subgoal for r res k res'
-    apply (cases k; simp add: R_objs.share_fiction_expn_full' Return_def det_lift_def)
-    using R_objs.share_fiction_def R_objs.share_fiction_expn_full' by presburger .
+    apply (clarsimp simp add: FIC_OO_share.expand[where x=\<open>1(k := initial_value_of_class cls)\<close>, simplified])
+    by (cases k; simp) .
 
 
 
@@ -249,7 +255,7 @@ lemma (in \<phi>OO) op_obj_load_field:
   \<longmapsto> v \<Ztypecolon> \<phi>InObj ref (\<phi>MapAt field (\<phi>Share n Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
 \<rbrace>\<close>
   unfolding op_obj_load_field_def Premise_def
-  by (\<phi>reason, assumption, \<phi>reason)
+  apply (\<phi>reason, assumption, \<phi>reason)
 
 
 paragraph \<open>Store Field\<close>

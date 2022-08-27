@@ -54,7 +54,7 @@ locale \<phi>empty_sem =
 + \<phi>empty_val where CONS_OF   = VAL_CONS_OF
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
-            and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
+            and TYPE'REP  = \<open>TYPE('VAL::share_resistence_nonsepable_semigroup)\<close>
 + \<phi>empty_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
@@ -63,7 +63,7 @@ locale \<phi>empty_sem =
 for TY_CONS_OF and VAL_CONS_OF
 and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
-                \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
+                \<times> ('VAL_N => 'VAL::share_resistence_nonsepable_semigroup)
                 \<times> ('RES_N => 'RES)) itself\<close>
 
 fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
@@ -153,7 +153,7 @@ subsubsection \<open>Empty Settings\<close>
 locale \<phi>empty =
   \<phi>fiction Resource_Validator INTERPRET
 + \<phi>empty_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                               \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                               \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
                                \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
              and Resource_Validator = Resource_Validator
 for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse} set"

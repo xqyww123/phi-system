@@ -33,7 +33,7 @@ lemma infinite_varname:
   \<open>infinite (UNIV::varname set)\<close>
   by (metis (mono_tags, opaque_lifting) Rep_varname_cases UNIV_I finite_imageI infinite_UNIV_char_0 surj_def)
 
-resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>min_res = ('VAL,'TY) \<phi>empty_res +
+resource_space ('VAL::"share_resistence_nonsepable_semigroup",'TY) \<phi>min_res = ('VAL,'TY) \<phi>empty_res +
   R_var :: \<open>('TY,'VAL) R_var\<close>
 
 subsubsection \<open>Pure Semantics\<close>
@@ -46,7 +46,7 @@ locale \<phi>min_sem =
 + \<phi>min_val where CONS_OF   = VAL_CONS_OF
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
-            and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
+            and TYPE'REP  = \<open>TYPE('VAL::share_resistence_nonsepable_semigroup)\<close>
 + \<phi>min_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
@@ -54,7 +54,7 @@ locale \<phi>min_sem =
 + \<phi>resource_sem where Resource_Validator = Resource_Validator
 + \<phi>resource_sem where Resource_Validator = Resource_Validator
 for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
-                \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
+                \<times> ('VAL_N => 'VAL::share_resistence_nonsepable_semigroup)
                 \<times> ('RES_N => 'RES::{comm_monoid_mult,no_inverse})) itself\<close>
 +
 assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
@@ -80,12 +80,12 @@ fiction_space (in \<phi>min_sem) \<phi>min_fic :: \<open>'RES_N \<Rightarrow> 'R
   FIC_var :: \<open>R_var.basic_fine_fiction (fiction.fine fiction.it)\<close>
 
 locale \<phi>min =
-  \<phi>min_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+  \<phi>min_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
                             \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
     and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 
 + \<phi>empty where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                          \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                          \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
                           \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult})
                           \<times> ('FIC_N \<Rightarrow> 'FIC))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
