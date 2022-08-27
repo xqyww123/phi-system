@@ -1721,11 +1721,11 @@ lemma from_Identity_\<phi>app:
 
 subsection \<open>Prod\<close>
 
-definition \<phi>Prod :: " ('concrete::times, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixl "\<^emph>" 70)
+definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixl "\<^emph>" 70)
   where "A \<^emph> B = (\<lambda>(a,b). A a * B b)"
 
 lemma \<phi>Prod_expn[\<phi>expns]:
-  "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>ca cb. concrete = ca * cb \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb \<in> (b \<Ztypecolon> B))"
+  "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>ca cb. concrete = ca * cb \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb \<in> (b \<Ztypecolon> B) \<and> ca ## cb)"
   unfolding \<phi>Prod_def \<phi>Type_def times_set_def by simp
 
 lemma \<phi>Prod_expn':
@@ -1734,11 +1734,11 @@ lemma \<phi>Prod_expn':
 
 lemma \<phi>Prod_inhabited[elim!,\<phi>reason_elim!]:
   "Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<Longrightarrow> (Inhabited (x1 \<Ztypecolon> T1) \<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
-lemma \<phi>Prod_inhabited_expn[\<phi>inhabited]:
+(* lemma \<phi>Prod_inhabited_expn[\<phi>inhabited]:
   \<open>Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longleftrightarrow> Inhabited (x1 \<Ztypecolon> T1) \<and> Inhabited (x2 \<Ztypecolon> T2)\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  unfolding Inhabited_def apply (simp add: \<phi>expns) *)
 
 lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (a \<Ztypecolon> A) * (b \<Ztypecolon> B)"
   by (simp add: \<phi>expns set_eq_iff)
@@ -2171,12 +2171,48 @@ lemma (in \<phi>empty_sem) [\<phi>reason_elim, elim!]:
 
 subsection \<open>Share\<close>
 
+
+
+
 definition (in perm_transformer) \<phi> :: \<open>rat \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
   where \<open>\<phi> n T = (\<lambda>x. { share n (\<psi> v) |v. v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) } \<^bold>s\<^bold>u\<^bold>b\<^bold>j 0 < n \<and> n \<le> 1)\<close>
 
 lemma (in perm_transformer) [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> n T) \<longleftrightarrow> (\<exists>v. p = share n (\<psi> v) \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> 0 < n \<and> n \<le> 1)\<close>
   unfolding \<phi>_def \<phi>Type_def by (simp add: \<phi>expns, blast)
+
+
+
+
+definition \<phi>Share :: \<open>rat \<Rightarrow> ('v::share,'x) \<phi> \<Rightarrow> ('v, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)
+  where \<open>\<phi>Share n T = (\<lambda>x. { share n v |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n }) \<close>
+
+lemma \<phi>Share_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Share n T) \<longleftrightarrow> (\<exists>v. p = share n v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n)\<close>
+  unfolding \<phi>Share_def \<phi>Type_def by simp
+
+lemma \<phi>Share_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>Share n T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma \<phi>Share_1[simp]:
+  \<open> \<phi>Share 1 T = T \<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
+
+lemma \<phi>Share_\<phi>Share[simp]:
+  \<open> 0 < n \<and> 0 < m
+\<Longrightarrow> \<phi>Share n (\<phi>Share m T) = (\<phi>Share (n*m) T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
+  by (metis mult_le_one order_less_imp_le share_share_not0)
+
+definition Share_Uniq :: \<open>('a::share_semimodule_sep) set \<Rightarrow> bool\<close>
+  where \<open>Share_Uniq S \<longleftrightarrow> (\<forall>u v. u \<in> S \<and> v \<in> S)\<close>
+
+lemma
+  \<open> 0 < n \<and> 0 < m
+\<Longrightarrow> (x \<Ztypecolon> \<phi>Share n T) * (x \<Ztypecolon> \<phi>Share m T) = (x \<Ztypecolon> \<phi>Share (n+m) T)\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  apply (clarsimp simp add: \<phi>expns set_eq_iff; rule; clarsimp simp add: share_sep_left_distrib)
 
 (*
 definition \<phi>Share :: \<open>rat \<Rightarrow> ('v,'x) \<phi> \<Rightarrow> ('v share option, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)

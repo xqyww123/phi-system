@@ -25,65 +25,82 @@ class ab_group_mult = inverse + comm_monoid_mult +
 class semigroup_mult_left_cancel = semigroup_mult +
   assumes semigroup_mult_left_cancel: \<open>a * c = b * c \<longleftrightarrow> a = b\<close>
 
-class raw_sep_disj =
+class sep_disj =
   fixes sep_disj :: "'a => 'a => bool" (infix "##" 60)
 
-class sep_disj = raw_sep_disj +
+class total_sep_disj = sep_disj +
+  assumes total_sep_disj[simp]: \<open>x ## y\<close>
+
+class comm_sep_disj = sep_disj +
   assumes sep_disj_commuteI: "x ## y \<Longrightarrow> y ## x"
 begin
 lemma sep_disj_commute: "x ## y \<longleftrightarrow> y ## x"
   by (blast intro: sep_disj_commuteI)
 end
 
-class pre_sep_ab_semigroup = sep_disj + times
+class sep_magma = sep_disj + times
 begin
 definition join_sub (infix "\<preceq>\<^sub>S\<^sub>L" 50) 
   where \<open>join_sub y z \<longleftrightarrow> (\<exists>x. z = x * y \<and> x ## y)\<close>
 end
 
-class sep_ab_semigroup = pre_sep_ab_semigroup +
-  assumes sep_mult_commute: "x ## y \<Longrightarrow> x * y = y * x"
+class sep_semigroup = sep_magma +
   assumes sep_mult_assoc:
-    "\<lbrakk> x ## y; y ## z; x ## z \<rbrakk> \<Longrightarrow> (x * y) * z = x * (y * z)"
+    "\<lbrakk> x ## y; x * y ## z \<rbrakk> \<Longrightarrow> (x * y) * z = x * (y * z)"
   assumes join_positivity: \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
   assumes sep_disj_multD1: "\<lbrakk> x ## y * z; y ## z \<rbrakk> \<Longrightarrow> x ## y"
   assumes sep_disj_multI1: "\<lbrakk> x ## y * z; y ## z \<rbrakk> \<Longrightarrow> x * y ## z"
-begin
+  assumes sep_disj_multD2: "\<lbrakk> x * y ## z; x ## y \<rbrakk> \<Longrightarrow> y ## z"
+  assumes sep_disj_multI2: "\<lbrakk> x * y ## z; x ## y \<rbrakk> \<Longrightarrow> x ## y * z"
 
-lemma sep_disj_multD2: "\<lbrakk> x ## y * z; y ## z \<rbrakk> \<Longrightarrow> x ## z"
-  using local.sep_disj_commuteI local.sep_disj_multD1 local.sep_disj_multI1 by blast
-
-end
+class sep_ab_semigroup = sep_semigroup + comm_sep_disj +
+  assumes sep_mult_commute: "x ## y \<Longrightarrow> x * y = y * x"
 
 class sep_disj_one = sep_disj + mult_1 +
-  assumes sep_disj_one [simp]: "x ## 1"
+  assumes sep_disj_one_left  [simp]: "x ## 1"
+  assumes sep_disj_one_right [simp]: "1 ## x"
+
+class sep_monoid = sep_disj_one + sep_semigroup
 begin
+lemma sep_no_negative [simp]:
+  \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
+  by (metis local.join_positivity local.mult_1_right local.sep_disj_one_left sep_magma.join_sub_def)
+end
 
-lemma sep_disj_one' [simp]: "1 ## x"
-  using local.sep_disj_one sep_disj_commute by blast
+definition (in times) subsume (infix "\<preceq>\<^sub>\<times>" 50) 
+  where \<open>subsume y z \<longleftrightarrow> (\<exists>x. z = x * y)\<close>
 
+class positive_mult = times +
+  assumes positive_mult: \<open>x \<preceq>\<^sub>\<times> y \<Longrightarrow> y \<preceq>\<^sub>\<times> x \<Longrightarrow> x = y\<close>
+
+class total_sep_monoid = monoid_mult + positive_mult + total_sep_disj
+begin
+subclass sep_magma .
+subclass sep_monoid proof
+  fix x y z :: 'a
+  show \<open>x ## 1\<close> by simp
+  show \<open>1 ## x\<close> by simp
+  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
+    using mult_assoc by blast
+  show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
+    apply (clarsimp simp add: join_sub_def)
+    by (metis local.positive_mult times.subsume_def)
+  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by simp
+  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by simp
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by simp
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z \<close> by simp
+qed
+subclass no_inverse by standard simp
 end
 
 class sep_algebra = sep_disj_one + sep_ab_semigroup
 begin
 
-lemma sep_no_negative [simp]:
-  \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
-  by (metis local.join_positivity local.join_sub_def local.mult_1_right local.sep_disj_one)
-  
+subclass sep_monoid ..
 
 lemma sep_mult_left_commute[simp]:
-  assumes a: "a ## b" "b ## c" "a ## c"
-  shows "b * (a * c) = a * (b * c)" (is "?lhs = ?rhs")
-proof -
-  have "?lhs = b * a * c" using a
-    by (simp add: sep_mult_assoc[symmetric] sep_disj_commute)
-  also have "... = a * b * c" using a
-    by (simp add: sep_mult_commute sep_disj_commute)
-  also have "... = ?rhs" using a
-    by (simp add: sep_mult_assoc sep_disj_commute)
-  finally show ?thesis .
-qed
+  "b ## (a * c) \<Longrightarrow> a ## c \<Longrightarrow> b * (a * c) = a * (b * c)"
+  by (metis local.sep_disj_commute local.sep_disj_multD2 local.sep_mult_assoc local.sep_mult_commute)
 
 lemmas sep_mult_ac = sep_mult_assoc sep_mult_commute sep_mult_left_commute
                     sep_disj_commute (* nearly always necessary *)
@@ -101,48 +118,70 @@ lemma join_sub_frame:
 
 lemma join_sub_ext_left:
   \<open>z ## y \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L z * y\<close>
-  unfolding join_sub_def apply auto
-    by (metis local.sep_disj_multD1 local.sep_disj_multD2 local.sep_disj_multI1 local.sep_mult_assoc)
+  unfolding join_sub_def apply clarsimp
+  by (metis local.sep_disj_multD1 local.sep_disj_multI1 local.sep_mult_assoc sep_mult_left_commute)
 
 lemma join_sub_ext_right:
   \<open>y ## z \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L y * z\<close>
-  unfolding join_sub_def apply auto
-  by (metis join_sub_ext_left local.join_sub_def local.sep_disj_commute local.sep_mult_commute)
+  unfolding join_sub_def apply clarsimp
+  by (metis local.sep_disj_commute local.sep_disj_multD1 local.sep_disj_multI1 local.sep_mult_assoc local.sep_mult_commute)
+end
 
+class total_sep_algebra = comm_monoid_mult + positive_mult + total_sep_disj
+begin
+subclass sep_magma .
+subclass sep_algebra proof
+  fix x y z :: 'a
+  show \<open>x ## 1\<close> by simp
+  show \<open>1 ## x\<close> by simp
+  show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by (simp add: mult_commute)
+  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by simp
+  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by simp
+  show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
+    by (metis local.join_sub_def local.positive_mult times.subsume_def)
+  show \<open>x ## y \<Longrightarrow> y ## x\<close> by simp
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by simp
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close> by simp
+  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
+    by (simp add: mult_assoc)
+qed
+subclass total_sep_monoid ..
 end
 
 class discrete_sep_semigroup = sep_disj + times +
   assumes discrete_sep_disj[simp]: "x ## y \<longleftrightarrow> x = y"
     and discrete_mult[simp]: "x * y = (if x = y then x else undefined)"
 begin
-subclass pre_sep_ab_semigroup ..
+subclass sep_magma .
 subclass sep_ab_semigroup proof
   fix x y z :: 'a
   show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by simp 
-  show \<open>x ## y \<Longrightarrow> y ## z \<Longrightarrow> x ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by simp
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close> unfolding join_sub_def by force
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by simp
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by simp
+  show \<open>x ## y \<Longrightarrow> y ## x\<close> by simp
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by simp
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close> by simp
+  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by simp
   (*show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
     using local.join_sub_def by force*)
 qed
 end
 
-class nonsepable_semigroup = raw_sep_disj + times +
+class nonsepable_semigroup = sep_disj + times +
   assumes nonsepable_disj[simp]: "\<not> x ## y"
 begin
-subclass pre_sep_ab_semigroup by (standard; simp)
+subclass sep_magma .
 subclass sep_ab_semigroup by (standard; simp add: local.join_sub_def)
 end
 
-class nonsepable_monoid = raw_sep_disj + mult_1 +
+class nonsepable_monoid = sep_disj + mult_1 +
   assumes nonsepable_disj_1[simp]: \<open>x ## y \<longleftrightarrow> x = 1 \<or> y = 1\<close>
 begin
-subclass pre_sep_ab_semigroup by (standard; simp; blast)
+subclass sep_magma .
 subclass sep_algebra proof
   fix x y z :: 'a
   show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by fastforce
-  show \<open>x ## y \<Longrightarrow> y ## z \<Longrightarrow> x ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by fastforce
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close>
     by (metis local.mult_1_right local.nonsepable_disj_1)
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close>
@@ -151,6 +190,14 @@ subclass sep_algebra proof
     unfolding join_sub_def apply clarsimp
     by (metis local.mult_1_left)
   show \<open>x ## 1\<close> by simp
+  show \<open>1 ## x\<close> by simp
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close>
+    by (metis local.mult_1_left local.nonsepable_disj_1)
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close>
+    by (metis local.mult_1_right local.nonsepable_disj_1)
+  show \<open>x ## y \<Longrightarrow> y ## x\<close>
+    using local.nonsepable_disj_1 by blast
+  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by force
 qed
 end
 
@@ -175,7 +222,7 @@ end
 class share_one_eq_one_iff = share_one +
   assumes share_one_eq_one_iff[simp]: \<open>0 < n \<Longrightarrow> share n x = 1 \<longleftrightarrow> x = 1\<close>
 
-class share_sep_disj = share + sep_disj +
+class share_sep_disj = share + comm_sep_disj +
   assumes share_sep_disj_left_L0[simp]: \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> x ## y \<Longrightarrow> share n x ## y\<close>
 (*    and   share_sep_disj_refl[simp]:  \<open>n \<noteq> 0 \<Longrightarrow> m \<noteq> 0 \<Longrightarrow> share n x ## share m x\<close> *)
 begin
@@ -190,13 +237,13 @@ lemma share_sep_disj_right_L0[simp]: \<open>0 < n \<Longrightarrow> n \<le> 1 \<
 end
 
 class share_semimodule_sep = share_sep_disj + sep_ab_semigroup +
-  assumes share_sep_left_distrib_0:  \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x ## share m x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
+  assumes share_sep_left_distrib_0:  \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
 
 class share_module_sep = share_sep_disj + share_one + sep_algebra +
-  assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x ## share m x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
+  assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
     and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
@@ -205,7 +252,7 @@ begin
 subclass share_semimodule_sep proof
   fix x y :: 'a
   fix n m :: rat
-  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x ## share m x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
+  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (simp add: local.share_sep_left_distrib)
   show \<open>0 < n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (simp add: local.share_sep_right_distrib)
@@ -232,26 +279,29 @@ subclass share by (standard; simp)
 end
 
 class share_resistence_semimodule_sep = share_resistence_semi + sep_disj + sep_ab_semigroup +
-  assumes share_resistence_semimodule_sep[simp]: \<open>x ## x \<Longrightarrow> x * x = x\<close>
+  assumes share_resistence_semimodule_mult[simp]: \<open>x * x = x\<close>
     and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
 begin
 subclass share_semimodule_sep by (standard; simp add: join_sub_def)
 end
 
 class share_resistence_module_sep = share_resistence + sep_disj + sep_algebra +
-  assumes share_resistence_module_sep[simp]: \<open>x ## x \<Longrightarrow> x * x = x\<close>
+  assumes share_resistence_module_mult[simp]: \<open>x * x = x\<close>
     and   can_share_one[simp]: \<open>can_share 1\<close>
     and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
 begin
 subclass share_module_sep apply (standard; clarsimp simp add: join_sub_def)
-  by (metis local.mult_1_left local.sep_disj_one')
+  by (metis local.mult_1_left local.sep_disj_one_right)
 end
 
 
-class share_resistence_nonsepable_semigroup = nonsepable_semigroup + share_resistence_semi
+class share_resistence_nonsepable_semigroup = nonsepable_semigroup + share_resistence_semi +
+  assumes share_resistence_nonsepable_semigroup_mult[simp]: \<open>x * x = x\<close>
 begin
 subclass share_resistence_semimodule_sep by (standard; simp)
 end
+
+
 
 locale homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
@@ -319,10 +369,10 @@ proof
     by (rule exI[where x=1], simp)
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L z \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L z\<close>
     unfolding join_sub_strict_def join_sub_def
-    by (metis sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_mult_ac(1))
+    by (meson join_sub_def join_sub_ext_left)
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
     unfolding join_sub_strict_def join_sub_def
-    using \<open>(x \<prec>\<^sub>S\<^sub>L y) = (x \<preceq>\<^sub>S\<^sub>L y \<and> \<not> y \<preceq>\<^sub>S\<^sub>L x)\<close> join_sub_def join_sub_strict_def by blast
+    using join_positivity join_sub_def by blast
 qed
  
 interpretation join_sub: order_bot 1 \<open>join_sub::'a::sep_algebra \<Rightarrow> 'a \<Rightarrow> bool\<close> join_sub_strict
@@ -374,10 +424,7 @@ lemma sep_disj_option[simp]:
   unfolding sep_disj_option_def
   apply simp by (cases z; simp)+
 
-instance proof
-  fix x y :: \<open>'a option\<close>
-  show \<open>x ## y \<Longrightarrow> y ## x\<close> by (cases x; cases y; simp add: sep_disj_commute)
-qed
+instance ..
 end
 
 lemma sep_disj_option_nonsepable[simp]:
@@ -386,17 +433,20 @@ lemma sep_disj_option_nonsepable[simp]:
   for y :: \<open>'a :: nonsepable_semigroup\<close>
   by (cases x; simp)+
 
-instantiation option :: (pre_sep_ab_semigroup) pre_sep_ab_semigroup begin
+instantiation option :: (comm_sep_disj) comm_sep_disj begin
+instance apply (standard; case_tac x; case_tac y; simp)
+  using sep_disj_commute by blast
+end
+
+instantiation option :: (sep_magma) sep_magma begin
 instance ..
 end
 
-instantiation option :: (sep_ab_semigroup) sep_ab_semigroup begin
+instantiation option :: (sep_semigroup) sep_semigroup begin
 instance proof
   fix x y z :: \<open>'a option\<close>
-  show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by (cases x; cases y; simp add: sep_disj_commute sep_mult_commute)
-  show \<open>x ## y \<Longrightarrow> y ## z \<Longrightarrow> x ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
+  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
     by (cases x; cases y; cases z; simp add: sep_disj_commute sep_mult_commute sep_mult_assoc)
-
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
     unfolding join_sub_def
     apply (cases x; clarsimp simp add: sep_disj_commute sep_mult_commute;
@@ -412,7 +462,20 @@ instance proof
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close>
     apply (cases x; simp; cases y; simp; cases z; simp)
     using sep_disj_multI1 by blast
-  qed
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close>
+    apply (cases x; simp; cases y; simp; cases z; simp)
+    using sep_disj_multD2 by blast
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close>
+    apply (cases x; simp; cases y; simp; cases z; simp)
+    using sep_disj_multI2 by blast
+qed
+end
+
+instantiation option :: (sep_ab_semigroup) sep_ab_semigroup begin
+instance proof
+  fix x y z :: \<open>'a option\<close>
+  show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by (cases x; cases y; simp add: sep_disj_commute sep_mult_commute)
+qed
 end
 
 instantiation option :: (sep_ab_semigroup) sep_algebra begin
@@ -421,6 +484,7 @@ instance proof
   show \<open>1 * x = x\<close> by simp
   show \<open>x * 1 = x\<close> by simp
   show \<open>x ## 1\<close> by simp
+  show \<open>1 ## x\<close> by simp
 qed
 end
 
@@ -455,14 +519,14 @@ instantiation option :: (share_semimodule_sep) share_module_sep begin
 instance proof
   fix n m :: rat
   fix x y :: \<open>'a option\<close>
-  show \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x ## share m x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
+  show \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (case_tac x; clarsimp simp add: share_option_def share_sep_left_distrib_0 order_less_le)
   show \<open>0 \<le> n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (case_tac x; case_tac y; clarsimp simp add: share_option_def share_sep_right_distrib_0)
   show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
     unfolding join_sub_def apply (cases x; clarsimp simp add: share_option_def)
     apply (cases \<open>n = 1\<close>)
-     apply (simp, metis can_share_option(1) mult_1_class.mult_1_left sep_disj_one')
+     apply (simp, metis can_share_option(1) mult_1_class.mult_1_left sep_disj_one_right)
     apply (cases \<open>n = 0\<close>, simp)
     subgoal premises prems for x'
     proof -
@@ -471,7 +535,7 @@ instance proof
       show ?thesis apply (insert t1)
         unfolding join_sub_def apply (elim disjE; clarsimp)
         apply (metis sep_disj_option(1) times_option(1))
-        by (metis mult_1_class.mult_1_left sep_disj_one') 
+        by (metis mult_1_class.mult_1_left sep_disj_one_right) 
     qed .
   show \<open>x ## y \<Longrightarrow> can_share (x * y) = (can_share x \<and> can_share y)\<close>
     by (cases x; cases y; simp)
@@ -567,6 +631,16 @@ instantiation list :: (type) monoid_mult begin
 instance by standard (simp_all add: times_list_def)
 end
 
+instantiation list :: (type) sep_magma begin
+definition sep_disj_list :: \<open>'a list \<Rightarrow> 'a list \<Rightarrow> bool\<close>
+  where [simp]: \<open>sep_disj_list _ _ = True\<close>
+instance by (standard; simp)
+end
+
+instantiation list :: (type) sep_monoid begin
+instance by (standard; clarsimp simp add: times_list_def join_sub_def)
+end
+
 
 subsection \<open>Function\<close>
 
@@ -614,6 +688,10 @@ end
 
 instantiation "fun" :: (type,sep_disj) sep_disj begin
 definition "sep_disj_fun m1 m2 = (\<forall>x. m1 x ## m2 x)"
+instance ..
+end
+
+instantiation "fun" :: (type,comm_sep_disj) comm_sep_disj begin
 instance by (standard, simp_all add: sep_disj_fun_def times_fun_def fun_eq_iff
                                 add: sep_disj_commute sep_mult_commute )
 end
@@ -632,8 +710,36 @@ instantiation "fun" :: (type,mult_1) mult_1 begin
 instance by (standard; simp add: one_fun_def times_fun_def)
 end
 
-instantiation "fun" :: (type,pre_sep_ab_semigroup) pre_sep_ab_semigroup begin
+instantiation "fun" :: (type,sep_disj_one) sep_disj_one begin
+instance by (standard; simp add: sep_disj_fun_def)
+end
+
+instantiation "fun" :: (type,sep_magma) sep_magma begin
 instance ..
+end
+
+instantiation "fun" :: (type,sep_semigroup) sep_semigroup begin
+instance proof
+  fix x y z :: "'a \<Rightarrow> 'b"
+  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
+    apply (simp add: sep_disj_fun_def times_fun_def fun_eq_iff)
+    using sep_mult_assoc by blast
+  show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
+    unfolding join_sub_def apply (clarsimp simp add: times_fun fun_eq_iff)
+    by (metis join_positivity join_sub_def sep_disj_fun)
+  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close>
+    apply (simp add: sep_disj_fun_def times_fun_def fun_eq_iff)
+    using sep_disj_multD1 by blast
+  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close>
+    apply (simp add: sep_disj_fun_def times_fun_def fun_eq_iff)
+    using sep_disj_multI1 by blast
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close>
+    apply (simp add: sep_disj_fun_def times_fun_def fun_eq_iff)
+    using sep_disj_multD2 by blast
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close>
+    apply (simp add: sep_disj_fun_def times_fun_def fun_eq_iff)
+    using sep_disj_multI2 by blast
+qed
 end
 
 instantiation "fun" :: (type,sep_ab_semigroup) sep_ab_semigroup begin
@@ -641,18 +747,11 @@ instance proof
   fix x y z :: "'a \<Rightarrow> 'b"
   show \<open>x ## y \<Longrightarrow> x * y = y * x\<close>
     by (simp add: sep_disj_fun_def times_fun_def fun_eq_iff sep_disj_commute sep_mult_commute)
-  show \<open>x ## y \<Longrightarrow> y ## z \<Longrightarrow> x ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
-    by (simp add: sep_disj_fun_def times_fun_def fun_eq_iff sep_disj_commute sep_mult_commute sep_mult_assoc)
-  show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
-    unfolding join_sub_def apply (clarsimp simp add: times_fun fun_eq_iff)
-    by (metis join_positivity join_sub_def sep_disj_fun times_fun_def)
-  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close>
-    apply (simp add: sep_disj_fun_def times_fun_def fun_eq_iff sep_disj_commute sep_mult_commute)
-    using sep_disj_multD1 by blast
-  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close>
-    apply (simp add: sep_disj_fun_def times_fun_def fun_eq_iff sep_disj_commute sep_mult_commute)
-    using sep_disj_commute sep_disj_multI1 by blast
 qed
+end
+
+instantiation "fun" :: (type, sep_monoid) sep_monoid begin
+instance by (standard; simp add: sep_disj_fun_def fun_eq_iff times_fun_def; blast)
 end
 
 instantiation "fun" :: (type, sep_algebra) sep_algebra begin
@@ -682,6 +781,23 @@ lemma [simp]: "(f * 1(k := x))(k:=1) = f(k:=1)" for f :: "'a \<Rightarrow> 'b"
 lemma [simp]: "k' \<noteq> k \<Longrightarrow> (f * 1(k' := x))(k:=1) = f(k:=1) * 1(k' := x)" for f :: "'a \<Rightarrow> 'b"
   unfolding fun_upd_def fun_eq_iff times_fun_def by simp
 end
+
+instantiation "fun" :: (type,total_sep_monoid) total_sep_monoid begin
+instance proof
+  fix x y :: \<open>'a \<Rightarrow> 'b\<close>
+  show \<open>x \<preceq>\<^sub>\<times> y \<Longrightarrow> y \<preceq>\<^sub>\<times> x \<Longrightarrow> x = y\<close>
+    unfolding subsume_def apply (clarsimp simp add: times_fun_def fun_eq_iff)
+    using positive_mult_class.positive_mult subsume_def by blast
+  show \<open>x ## y\<close> by (simp add: sep_disj_fun_def)
+qed
+end
+
+instantiation "fun" :: (type,total_sep_algebra) total_sep_algebra begin
+instance ..
+end
+
+
+
 
 lemma fun_split_1: "f = f(k:=1) * 1(k:= f k)" for f :: "'a \<Rightarrow> 'b :: mult_1"
   unfolding fun_upd_def fun_eq_iff times_fun_def by simp
@@ -850,57 +966,61 @@ end
 lemma set_in_1[simp]: "x \<in> 1 \<longleftrightarrow> x = 1"
   unfolding one_set_def by simp
 
-instantiation set :: (times) times begin
-definition "times_set P Q = { x * y | x y. x \<in> P \<and> y \<in> Q }"
+instantiation set :: ("{sep_disj,times}") times begin
+definition "times_set P Q = { x * y | x y. x \<in> P \<and> y \<in> Q \<and> x ## y }"
 instance ..
 end
 
 lemma times_set_I:
-  \<open>x \<in> P \<Longrightarrow> y \<in> Q \<Longrightarrow> x * y \<in> P * Q\<close>
+  \<open>x \<in> P \<Longrightarrow> y \<in> Q \<Longrightarrow> x ## y \<Longrightarrow> x * y \<in> P * Q\<close>
   unfolding times_set_def by simp blast
 
 lemma set_mult_zero[iff]: "{} * S = {}" "S * {} = {}"
   unfolding times_set_def by simp_all
 
-lemma set_mult_single: \<open>{A} * {B} = {A * B}\<close>
+lemma set_mult_single: \<open>A ## B \<Longrightarrow> {A} * {B} = {A * B}\<close>
   unfolding times_set_def set_eq_iff by simp
 
 lemma set_mult_expn[\<phi>expns]:
-  \<open>uv \<in> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<in> S \<and> v \<in> T)\<close>
+  \<open>uv \<in> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<in> S \<and> v \<in> T \<and> u ## v)\<close>
   unfolding times_set_def by simp
 
 lemma set_mult_inhabited[elim!]:
   \<open>Inhabited (S * T) \<Longrightarrow> (Inhabited S \<Longrightarrow> Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def times_set_def by simp
+  unfolding Inhabited_def times_set_def by (simp, blast)
 
 lemma times_set_subset[intro, simp]:
   \<open>B \<subseteq> B' \<Longrightarrow> A * B \<subseteq> A * B'\<close>
   \<open>B \<subseteq> B' \<Longrightarrow> B * A \<subseteq> B' * A\<close>
   unfolding subset_iff times_set_def by simp_all blast+
 
-instantiation set :: (times) mult_zero begin
-instance by standard (simp_all add: zero_set_def)
+instantiation set :: ("{sep_disj,times}") mult_zero begin
+instance by (standard; simp add: zero_set_def times_set_def)
 end
 
-instantiation set :: (no_inverse) no_inverse begin
-instance by (standard, simp add: one_set_def times_set_def set_eq_iff) (metis no_inverse)
+instantiation set :: ("{sep_disj_one,no_inverse}") no_inverse begin
+instance apply (standard, simp add: one_set_def times_set_def set_eq_iff)
+  by (metis (no_types, opaque_lifting) no_inverse sep_disj_one_left sep_disj_one_right)
 end
 
-instantiation set :: (semigroup_mult) semigroup_mult begin
-instance apply standard
-  apply (auto simp add: times_set_def algebra_simps)
-  apply blast
-  by (metis mult.assoc) 
+instantiation set :: (sep_semigroup) semigroup_mult begin
+instance
+  apply (standard; clarsimp simp add: times_set_def algebra_simps set_eq_iff; rule; clarsimp)
+  using sep_disj_multD2 sep_disj_multI2 sep_mult_assoc apply blast
+  by (metis sep_disj_multD1 sep_disj_multI1 sep_mult_assoc)
 end
 
-instantiation set :: (monoid_mult) monoid_mult begin
+instantiation set :: (sep_monoid) monoid_mult begin
 instance by standard (simp_all add: one_set_def times_set_def)
 end
 
-instantiation set :: (comm_monoid_mult) comm_monoid_mult begin
-instance apply standard
-  apply (simp_all add: one_set_def times_set_def)
-  using mult.commute by blast
+instantiation set :: (sep_ab_semigroup) ab_semigroup_mult begin
+instance apply (standard; simp add: times_set_def set_eq_iff)
+  using sep_disj_commute sep_mult_commute by blast
+end
+
+instantiation set :: (sep_algebra) comm_monoid_mult begin
+instance by (standard; simp_all add: one_set_def times_set_def)
 end
 
 instantiation set :: (type) comm_monoid_add begin
@@ -917,23 +1037,22 @@ lemma plus_set_in_iff[iff]:
 
 lemma plus_set_S_S [simp]: \<open>S + S = S\<close> for S :: \<open>'a set\<close> unfolding plus_set_def by simp
 
-instantiation set :: (semigroup_mult) ordered_semiring_0 begin
+instantiation set :: (sep_semigroup) ordered_semiring_0 begin
 instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
 end
 
-instantiation set :: (monoid_mult) semiring_1 begin
+instantiation set :: (sep_monoid) semiring_1 begin
 instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
 end
 
-instantiation set :: (ab_semigroup_mult) ordered_comm_semiring begin
+instantiation set :: (sep_ab_semigroup) ordered_comm_semiring begin
 instance apply standard
   apply (simp add: zero_set_def plus_set_def times_set_def)
   using mult.commute apply blast
-   apply (simp add: distrib_right)
   by simp
 end
 
-instantiation set :: (comm_monoid_mult) comm_semiring_1 begin
+instantiation set :: (sep_algebra) comm_semiring_1 begin
 instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
 end
 
@@ -978,7 +1097,7 @@ lemma nonsepable_semigroup_sepdisj_fun:
   \<open>a ## 1(k \<mapsto> x) \<Longrightarrow> a ## 1(k := any)\<close>
   for x :: \<open>'b::nonsepable_semigroup\<close>
   unfolding sep_disj_fun_def
-  by (metis fun_upd_other fun_upd_same sep_disj_one' sep_disj_option_nonsepable(1))
+  by (metis fun_upd_other fun_upd_same sep_disj_one_right sep_disj_option_nonsepable(1))
 
 
 lemma fun_sep_disj_fupdt[simp]:
@@ -1032,7 +1151,7 @@ lemma dom1_disjoint_sep_disj:
   \<open>dom1 g \<inter> dom1 f = {} \<Longrightarrow> g ## f\<close>
   for f :: \<open>'a \<Rightarrow> 'b::sep_disj_one\<close>
   unfolding sep_disj_fun_def dom1_def set_eq_iff
-  by (simp, metis sep_disj_one sep_disj_one')
+  by (simp; metis sep_disj_one_left sep_disj_one_right)
 
 lemma sep_disj_dom1_disj_disjoint:
   \<open>g ## f \<longleftrightarrow> dom1 g \<inter> dom1 f = {}\<close>
@@ -1102,6 +1221,9 @@ subsection \<open>Partiality\<close>
 datatype 'a fine ("_ ?" [100] 101) = Fine (the_fine: 'a) | Undef
 notation the_fine ("!!_" [1000] 1000)
 
+lemma split_fine_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (Fine x)) \<and> P Undef\<close> by (metis fine.exhaust_sel)
+lemma split_fine_ex : \<open>Ex  P \<longleftrightarrow> (\<exists>x. P (Fine x)) \<or> P Undef\<close> by (metis fine.exhaust_sel) 
+
 lemma Fine_inject[simp]: \<open>inj Fine\<close>
   by (meson fine.inject injI)
 
@@ -1153,20 +1275,55 @@ instantiation fine :: ("{sep_disj,times}") mult_zero begin
 instance by standard (simp_all add: times_fine)
 end
 
-instantiation fine :: (sep_ab_semigroup) ab_semigroup_mult begin
+instantiation fine :: (sep_semigroup) semigroup_mult begin
 instance proof
   fix a b c :: \<open>'a ?\<close>
   show \<open>a * b * c = a * (b * c)\<close>
     apply (cases a; cases b; cases c; clarsimp simp add: sep_disj_commute sep_mult_commute times_fine)
-    by (metis sep_disj_commuteI sep_disj_multD1 sep_disj_multI1 sep_mult_assoc sep_mult_commute)
+    by (metis sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
+qed
+end
+
+instantiation fine :: (sep_ab_semigroup) ab_semigroup_mult begin
+instance proof
+  fix a b c :: \<open>'a ?\<close>
   show \<open>a * b = b * a\<close>
     by (cases a; cases b; clarsimp simp add: sep_disj_commute sep_mult_commute times_fine)
 qed
 end
 
+instantiation fine :: (sep_monoid) monoid_mult begin
+instance by (standard; simp)
+end
+
 instantiation fine :: (sep_algebra) comm_monoid_mult begin
 instance by standard (case_tac a; simp add: one_fine_def times_fine)
 end
+
+instantiation fine :: (type) total_sep_disj begin
+definition sep_disj_fine :: \<open>'a ? \<Rightarrow> 'a ? \<Rightarrow> bool\<close> where
+  [simp]: \<open>sep_disj_fine x y = True\<close>
+instance by (standard; simp)
+end
+
+instantiation fine :: (sep_magma) sep_magma begin
+instance by (standard; case_tac x; case_tac y; simp add: sep_disj_commute one_fine_def)
+end
+
+instantiation fine :: (sep_monoid) total_sep_monoid begin
+instance proof
+  fix x y z :: \<open>'a fine\<close>
+  show \<open>x \<preceq>\<^sub>\<times> y \<Longrightarrow> y \<preceq>\<^sub>\<times> x \<Longrightarrow> x = y\<close>
+    apply (cases x; cases y; simp add: subsume_def split_fine_ex times_fine)
+    apply clarsimp
+    by (metis fine.sel fine.simps(3) join_positivity join_sub_def)
+qed
+end
+
+instantiation fine :: (sep_algebra) total_sep_algebra begin
+instance ..
+end
+
 
 lemma mult_strip_fine_111:
   \<open>Fine a * Fine b = Fine c \<longleftrightarrow> (a ## b \<and> a * b = c)\<close>
@@ -1195,7 +1352,7 @@ lemma share_All: \<open>(\<And>x. PROP P x) \<equiv> (\<And>n x'. PROP (P (Share
 next fix x assume \<open>\<And>n x'. PROP P (n \<Znrres> x')\<close> from \<open>PROP P (share.perm x \<Znrres> share.val x)\<close> show \<open>PROP P x\<close> by simp
 qed
 
-instantiation share :: (type) pre_sep_ab_semigroup begin
+instantiation share :: (type) sep_magma begin
 
 definition times_share :: "'a share \<Rightarrow> 'a share \<Rightarrow> 'a share" where
   "times_share x' y' = (case x' of n \<Znrres> x \<Rightarrow> (case y' of m \<Znrres> y \<Rightarrow>
@@ -1213,17 +1370,14 @@ lemma sep_disj_share[simp]:
   "(n \<Znrres> x) ## (m \<Znrres> y) \<longleftrightarrow> 0 < n \<and> 0 < m \<and> n + m \<le> 1 \<and> x = y"
   unfolding sep_disj_share_def by simp_all
 
-instance proof
-fix x y z :: "'a share"
-  show "x ## y \<Longrightarrow> y ## x" by (cases x; cases y) (simp add: add.commute)
-qed
+instance ..
 end
 
 instantiation share :: (type) sep_ab_semigroup begin
 instance proof
   fix x y z :: "'a share"
   show "x ## y \<Longrightarrow> x * y = y * x" by (cases x; cases y) (simp add: add.commute) 
-  show "x ## y \<Longrightarrow> y ## z \<Longrightarrow> x ## z \<Longrightarrow> x * y * z = x * (y * z)"
+  show "x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)"
     by (cases x; cases y; cases z) (simp add: add.assoc)
   show "x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y"
     by (cases x; cases y; cases z; simp)
@@ -1234,6 +1388,11 @@ instance proof
     unfolding join_sub_def
     apply (clarsimp; cases x; cases y; clarsimp)
     by (metis add.commute add_cancel_left_left add_le_cancel_left le_add_same_cancel1 less_le_not_le nle_le sep_disj_share share.exhaust share.inject share.sel(2) times_share)
+  show "x ## y \<Longrightarrow> y ## x" by (cases x; cases y) (simp add: add.commute)
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close>
+    by (cases x; cases y; cases z; simp)
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close>
+    by (cases x; cases y; cases z; simp)
 qed
 end
 
@@ -1281,7 +1440,7 @@ abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
 lemma perm_transformer_to_share[intro!]:
-  \<open>perm_transformer' (to_share::'a::share_resistence_nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
+  \<open>perm_transformer' (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
   fix a' :: \<open>'a share option\<close>
@@ -1406,6 +1565,8 @@ instantiation nonsepable :: (type) share_resistence_nonsepable_semigroup begin
 definition \<open>sep_disj_nonsepable (x :: 'a nonsepable) (y :: 'a nonsepable) = False\<close>
 definition share_nonsepable :: \<open>rat \<Rightarrow> 'a nonsepable \<Rightarrow> 'a nonsepable\<close>
   where [simp]: \<open>share_nonsepable _ x = x\<close>
+definition times_nonsepable :: \<open>'a nonsepable \<Rightarrow> 'a nonsepable \<Rightarrow> 'a nonsepable\<close>
+  where [simp]: \<open>times_nonsepable x y = x\<close>
 instance by (standard; case_tac x; simp; case_tac y; simp add: sep_disj_nonsepable_def)
 end
 
@@ -1417,16 +1578,13 @@ datatype 'a agree = agree 'a
 lemma agree_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (agree x))\<close> by (metis agree.exhaust) 
 lemma agree_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (agree x))\<close> by (metis agree.exhaust) 
 
-instantiation agree :: (type) pre_sep_ab_semigroup begin
+instantiation agree :: (type) sep_magma begin
 definition times_agree :: \<open>'a agree \<Rightarrow> 'a agree \<Rightarrow> 'a agree\<close>
   where [simp]: \<open>times_agree x y = x\<close>
 definition sep_disj_agree :: \<open>'a agree \<Rightarrow> 'a agree \<Rightarrow> bool\<close>
   where [simp]: \<open>sep_disj_agree x y \<longleftrightarrow> x = y\<close>
 
-instance proof
-  fix x y z :: \<open>'a agree\<close>
-  show \<open>x ## y \<Longrightarrow> y ## x\<close> by (case_tac x; case_tac y; simp)
-qed
+instance ..
 end
 
 instantiation agree :: (type) share_semimodule_sep begin
@@ -1440,7 +1598,7 @@ instance proof
   fix x y z :: \<open>'a agree\<close>
   fix n m :: rat
   show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by (case_tac x; case_tac y; simp)
-  show \<open>x ## y \<Longrightarrow> y ## z \<Longrightarrow> x ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by (case_tac x; case_tac y; simp)
+  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by (case_tac x; case_tac y; simp)
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close> unfolding join_sub_def by simp
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by (case_tac x; case_tac y; case_tac z; simp)
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by (case_tac x; case_tac y; case_tac z; simp)
@@ -1449,11 +1607,14 @@ instance proof
   show \<open>share 1 x = x\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> can_share (share n x)\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> x ## y \<Longrightarrow> share n x ## y\<close> by (cases x; simp)
-  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x ## share m x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
+  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (cases x; simp)
   show \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close> by (cases x; simp)
+  show \<open>x ## y \<Longrightarrow> y ## x\<close> by (cases x; cases y; simp)
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by (cases x; cases y; cases z; simp)
+  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close> by (cases x; cases y; cases z; simp)
 qed
 end
 
@@ -1518,7 +1679,7 @@ subsubsection \<open>Pairwise\<close>
 
 definition "pair I1 I2 = Fiction (\<lambda>(x,y). \<I> I1 x * \<I> I2 y) "
 lemma pair_\<I>[simp]: "\<I> (pair I1 I2) = (\<lambda>(x,y). \<I> I1 x * \<I> I2 y)"
-  for I1 :: "('a::one,'b::monoid_mult) fiction"
+  for I1 :: "('a::one,'b::sep_monoid) fiction"
   unfolding pair_def by (rule Fiction_inverse) (simp add: Fictional_def one_prod_def)
 notation pair (infixl "\<bullet>" 50)
 
@@ -1699,7 +1860,7 @@ ML_file_debug \<open>Resource_Space.ML\<close>
 subsection \<open>Extensive Fictional Space\<close>
 
 locale fictional_space =
-  fixes INTERPRET :: "'NAME \<Rightarrow> ('REP::{no_inverse,comm_monoid_mult},'RES::{comm_monoid_mult}) fiction"
+  fixes INTERPRET :: "'NAME \<Rightarrow> ('REP::total_sep_algebra,'RES::total_sep_algebra) fiction"
 begin
 
 definition "INTERP = fiction.fun' INTERPRET"
@@ -1718,7 +1879,7 @@ lemma Fic_Space_1[simp]: \<open>Fic_Space 1\<close>
 locale fictional_project_inject =
   fictional_space INTERPRET + project_inject entry +
   inj: homo_mult \<open>Entry.inject entry\<close> + prj: homo_mult \<open>Entry.project entry\<close>
-  for INTERPRET :: "'NAME \<Rightarrow> ('REP::{no_inverse,comm_monoid_mult},'RES::comm_monoid_mult) fiction"
+  for INTERPRET :: "'NAME \<Rightarrow> ('REP::total_sep_algebra,'RES::total_sep_algebra) fiction"
   and entry :: "('NAME,'REP,'T::comm_monoid_mult) Entry"
 + fixes I :: "('T,'RES) fiction"
   assumes proj_inj[simp]: "Entry.project entry (Entry.inject entry x) = x"

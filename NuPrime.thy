@@ -40,7 +40,7 @@ subsubsection \<open>Resource\<close>
 resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>empty_res
 
 locale \<phi>resource_sem =
-  fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+  fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
 begin
 definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
 end
@@ -54,16 +54,16 @@ locale \<phi>empty_sem =
 + \<phi>empty_val where CONS_OF   = VAL_CONS_OF
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
-            and TYPE'REP  = \<open>TYPE('VAL::share_resistence_nonsepable_semigroup)\<close>
+            and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
 + \<phi>empty_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
-            and TYPE'REP  = \<open>TYPE('RES::{no_inverse,comm_monoid_mult})\<close>
+            and TYPE'REP  = \<open>TYPE('RES::total_sep_algebra)\<close>
 + \<phi>resource_sem where Resource_Validator = Resource_Validator
 for TY_CONS_OF and VAL_CONS_OF
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
-                \<times> ('VAL_N => 'VAL::share_resistence_nonsepable_semigroup)
+                \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
                 \<times> ('RES_N => 'RES)) itself\<close>
 
 fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
@@ -95,8 +95,8 @@ subsubsection \<open>Empty Fiction\<close>
 locale \<phi>fiction =
   \<phi>resource_sem Resource_Validator
 + fictional_space INTERPRET
-for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse} set"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{comm_monoid_mult,no_inverse}, 'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse}) fiction"
+for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::total_sep_algebra set"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra, 'RES_N \<Rightarrow> 'RES::total_sep_algebra) fiction"
 begin
 
 definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> S_Assert (Fic_Space fic) \<inter> \<I> INTERP fic"
@@ -144,7 +144,7 @@ lemma INTERP_mono:
   unfolding INTERP_def Fic_Space_def
   apply (simp add: dom1_mult_disjoint times_fun prod.union_disjoint
                    disjoint_dom1_eq_1[of fic x])
-  using times_set_I by blast
+  by (meson dom1_disjoint_sep_disj times_set_I)
 
 end
 
@@ -153,11 +153,11 @@ subsubsection \<open>Empty Settings\<close>
 locale \<phi>empty =
   \<phi>fiction Resource_Validator INTERPRET
 + \<phi>empty_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                               \<times> ('VAL_N \<Rightarrow> 'VAL::share_resistence_nonsepable_semigroup)
-                               \<times> ('RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult}))\<close>
+                               \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                               \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra))\<close>
              and Resource_Validator = Resource_Validator
-for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse} set"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{comm_monoid_mult,no_inverse}, 'RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse}) fiction"
+for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::total_sep_algebra set"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra, 'RES_N \<Rightarrow> 'RES::total_sep_algebra) fiction"
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 
 
