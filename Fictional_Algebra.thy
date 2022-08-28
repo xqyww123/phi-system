@@ -208,7 +208,7 @@ class raw_share =
 class share = raw_share +
   assumes share_share_not0: \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
     and   share_left_one[simp]:  \<open>share 1 x = x\<close>
-    and   can_share_imply[simp]: \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> can_share (share n x)\<close>
+    and   can_share_imply[simp]: \<open>0 < n \<Longrightarrow> can_share (share n x) \<longleftrightarrow> can_share x\<close>
 
 class share_one = share + one +
   assumes share_right_one[simp]: \<open>share n 1 = 1\<close>
@@ -223,7 +223,8 @@ class share_one_eq_one_iff = share_one +
   assumes share_one_eq_one_iff[simp]: \<open>0 < n \<Longrightarrow> share n x = 1 \<longleftrightarrow> x = 1\<close>
 
 class share_sep_disj = share + comm_sep_disj +
-  assumes share_sep_disj_left_L0[simp]: \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> x ## y \<Longrightarrow> share n x ## y\<close>
+  assumes share_sep_disj_left[simp]:
+      \<open>0 < n \<Longrightarrow> share n x ## y \<longleftrightarrow> x ## y\<close>
 (*    and   share_sep_disj_refl[simp]:  \<open>n \<noteq> 0 \<Longrightarrow> m \<noteq> 0 \<Longrightarrow> share n x ## share m x\<close> *)
 begin
 
@@ -231,20 +232,21 @@ begin
   \<open>m \<noteq> 0 \<Longrightarrow> x ## share m x\<close>  \<open>m \<noteq> 0 \<Longrightarrow> share m x ## x\<close>
   by (metis share_left_one share_sep_disj_refl)+ *)
   
-lemma share_sep_disj_right_L0[simp]: \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> x ## y \<Longrightarrow> x ## share n y\<close>
-  using local.share_sep_disj_left_L0 sep_disj_commute by force
+lemma share_sep_disj_right[simp]:
+        \<open>0 < n \<Longrightarrow> y ## share n x \<Longrightarrow> y ## x\<close>
+  using local.share_sep_disj_left sep_disj_commute by force
 
 end
 
 class share_semimodule_sep = share_sep_disj + sep_ab_semigroup +
-  assumes share_sep_left_distrib_0:  \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
-    and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
+  assumes share_sep_left_distrib_0:  \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
+    and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
 
 class share_module_sep = share_sep_disj + share_one + sep_algebra +
-  assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
-    and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
+  assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
+    and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
     and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
 begin
@@ -252,10 +254,10 @@ begin
 subclass share_semimodule_sep proof
   fix x y :: 'a
   fix n m :: rat
-  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
-    by (simp add: local.share_sep_left_distrib)
-  show \<open>0 < n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
-    by (simp add: local.share_sep_right_distrib)
+  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
+    by (meson local.share_sep_left_distrib order_less_le)
+  show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
+    using local.share_sep_right_distrib order_less_imp_le by blast
   show \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     by (simp add: local.share_sub)
   show \<open>x ## y \<Longrightarrow> can_share (x * y) = (can_share x \<and> can_share y)\<close> by simp
@@ -279,14 +281,14 @@ subclass share by (standard; simp)
 end
 
 class share_resistence_semimodule_sep = share_resistence_semi + sep_disj + sep_ab_semigroup +
-  assumes share_resistence_semimodule_mult[simp]: \<open>x * x = x\<close>
+  assumes share_resistence_semimodule_mult[simp]: \<open>x ## x \<Longrightarrow> x * x = x\<close>
     and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
 begin
 subclass share_semimodule_sep by (standard; simp add: join_sub_def)
 end
 
 class share_resistence_module_sep = share_resistence + sep_disj + sep_algebra +
-  assumes share_resistence_module_mult[simp]: \<open>x * x = x\<close>
+  assumes share_resistence_module_sep_mult[simp]: \<open>x ## x \<Longrightarrow> x * x = x\<close>
     and   can_share_one[simp]: \<open>can_share 1\<close>
     and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
 begin
@@ -296,7 +298,7 @@ end
 
 
 class share_resistence_nonsepable_semigroup = nonsepable_semigroup + share_resistence_semi +
-  assumes share_resistence_nonsepable_semigroup_mult[simp]: \<open>x * x = x\<close>
+  assumes share_resistence_nonsepable_semigroup_mult[simp]: \<open>x ## x \<Longrightarrow> x * x = x\<close>
 begin
 subclass share_resistence_semimodule_sep by (standard; simp)
 end
@@ -305,7 +307,7 @@ end
 
 locale homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
-  assumes sep_disj_homo[simp]: \<open>\<psi> a ## \<psi> b \<longleftrightarrow> a ## b\<close>
+  assumes sep_disj_homo[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
 
 locale homo_join_sub =
   fixes \<psi> :: \<open>'a::sep_ab_semigroup \<Rightarrow> 'b::sep_ab_semigroup\<close>
@@ -519,9 +521,9 @@ instantiation option :: (share_semimodule_sep) share_module_sep begin
 instance proof
   fix n m :: rat
   fix x y :: \<open>'a option\<close>
-  show \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
+  show \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (case_tac x; clarsimp simp add: share_option_def share_sep_left_distrib_0 order_less_le)
-  show \<open>0 \<le> n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
+  show \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (case_tac x; case_tac y; clarsimp simp add: share_option_def share_sep_right_distrib_0)
   show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
     unfolding join_sub_def apply (cases x; clarsimp simp add: share_option_def)
@@ -856,7 +858,7 @@ instance apply (standard; simp_all add: share_fun_def fun_eq_iff times_fun_def s
     have t1: \<open>\<forall>a. share n (x a) \<preceq>\<^sub>S\<^sub>L (x a)\<close>
       by (simp add: prems share_sub)
     show ?thesis apply (insert t1; clarsimp simp add: join_sub_def)
-      by (metis prems share_sep_disj_right_L0)
+      by metis
   qed
   by blast
 end
@@ -1364,10 +1366,10 @@ lemma times_share[simp]:
 
 definition sep_disj_share :: "'a share \<Rightarrow> 'a share \<Rightarrow> bool" where
   "sep_disj_share x' y' \<longleftrightarrow> (case x' of n \<Znrres> x \<Rightarrow>
-    (case y' of m \<Znrres> y \<Rightarrow> 0 < n \<and> 0 < m \<and> n + m \<le> 1 \<and> x = y))"
+    (case y' of m \<Znrres> y \<Rightarrow> 0 < n \<and> 0 < m \<and> x = y))"
 
 lemma sep_disj_share[simp]:
-  "(n \<Znrres> x) ## (m \<Znrres> y) \<longleftrightarrow> 0 < n \<and> 0 < m \<and> n + m \<le> 1 \<and> x = y"
+  "(n \<Znrres> x) ## (m \<Znrres> y) \<longleftrightarrow> 0 < n \<and> 0 < m \<and> x = y"
   unfolding sep_disj_share_def by simp_all
 
 instance ..
@@ -1399,8 +1401,8 @@ end
 
 instantiation share :: (type) share begin
 
-definition \<open>can_share_share x = (case x of Share n x' \<Rightarrow> 0 < n \<and> n \<le> 1)\<close>
-lemma [simp]: \<open>can_share (Share n x) \<longleftrightarrow> 0 < n \<and> n \<le> 1\<close>
+definition \<open>can_share_share x = (case x of Share n x' \<Rightarrow> 0 < n)\<close>
+lemma [simp]: \<open>can_share (Share n x) \<longleftrightarrow> 0 < n\<close>
   unfolding can_share_share_def by simp
 
 definition share_share :: "rat \<Rightarrow> 'a share \<Rightarrow> 'a share"
@@ -1408,25 +1410,25 @@ definition share_share :: "rat \<Rightarrow> 'a share \<Rightarrow> 'a share"
 lemma [simp]: \<open>share n (m \<Znrres> x) = n*m \<Znrres> x\<close>
   unfolding share_share_def by simp
 
-instance by (standard; case_tac x; simp add: share_share_def mult.assoc mult_le_one)
+instance apply (standard; case_tac x; simp add: share_share_def mult.assoc mult_le_one)
+  using mult_pos_pos zero_less_mult_pos by blast
 
 end
 
 instantiation share :: (type) share_semimodule_sep begin
 instance proof
   fix x y :: \<open>'a share\<close>
-  fix n m :: rat
+  fix n n' m :: rat
 
-  show \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> x ## y \<Longrightarrow> share n x ## y\<close>
-    apply (cases x; cases y; simp)
-    by (metis add_mono_thms_linordered_semiring(3) less_le_not_le mult.commute mult_left_le order_trans)
+  show \<open>0 < n \<Longrightarrow> share n x ## y = x ## y\<close>
+    by (cases x; cases y; simp add: zero_less_mult_iff)
   show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (cases x; cases y; simp add: distrib_right)
-  show \<open>0 < n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
+  show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (cases x; cases y; simp add: distrib_left)
   show \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     apply (cases x; cases y; simp add: join_sub_def share_exists)
-    by (metis add.commute add_le_same_cancel1 diff_add_cancel leD leI mult.commute mult_cancel_right2 mult_left_le nle_le)
+    by (metis add.commute add_le_same_cancel1 diff_add_cancel linorder_not_le mult_1_class.mult_1_left mult_less_cancel_right)
   show \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
     by (cases x; clarsimp; cases y; clarsimp; rule; clarsimp)
 qed
@@ -1596,7 +1598,7 @@ definition can_share_agree :: \<open>'a agree \<Rightarrow> bool\<close>
 
 instance proof
   fix x y z :: \<open>'a agree\<close>
-  fix n m :: rat
+  fix n n' m :: rat
   show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by (case_tac x; case_tac y; simp)
   show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by (case_tac x; case_tac y; simp)
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close> unfolding join_sub_def by simp
@@ -1606,7 +1608,6 @@ instance proof
   show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close> by (cases x; simp)
   show \<open>share 1 x = x\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> can_share (share n x)\<close> by (cases x; simp)
-  show \<open>0 < n \<Longrightarrow> n \<le> 1 \<Longrightarrow> x ## y \<Longrightarrow> share n x ## y\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> share n x ## share n y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
@@ -1615,6 +1616,8 @@ instance proof
   show \<open>x ## y \<Longrightarrow> y ## x\<close> by (cases x; cases y; simp)
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by (cases x; cases y; cases z; simp)
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close> by (cases x; cases y; cases z; simp)
+  show \<open>0 < n \<Longrightarrow> 0 < n' \<Longrightarrow> n' \<le> n \<Longrightarrow> share n x ## y \<Longrightarrow> share n' x ## y\<close>
+    by (cases x; cases y; simp)
 qed
 end
 
