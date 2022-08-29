@@ -1,6 +1,6 @@
 theory NuSys
   imports NuPrime "./Phi_Logic_Programming_Reasoner/Phi_Logic_Programming_Reasoner"
-    "HOL-Library.Adhoc_Overloading" BI_for_Phi
+    "HOL-Library.Adhoc_Overloading" BI_for_Phi Map_of_Tree
   keywords
     "proc" "rec_proc" (*"\<phi>cast"*) :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
@@ -1871,20 +1871,52 @@ lemma \<phi>Mapping_inhabited[\<phi>expns]:
 
 subsection \<open>Point on a Mapping\<close>
 
-definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<dash_tri_R_arrow>" 25)
+definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 60)
   where \<open>\<phi>MapAt key T x = { 1(key := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
 
 lemma \<phi>MapAt_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>MapAt key T) \<longleftrightarrow> (\<exists>v. p = 1(key := v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
+  \<open>p \<in> (x \<Ztypecolon> key \<^bold>\<rightarrow> T) \<longleftrightarrow> (\<exists>v. p = 1(key := v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>MapAt_def \<phi>Type_def by simp
 
 lemma [\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>MapAt field T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  \<open>Inhabited (x \<Ztypecolon> field \<^bold>\<rightarrow> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+lemma \<phi>MapAt_\<phi>Prod:
+  \<open>k \<^bold>\<rightarrow> (T \<^emph> U) = (k \<^bold>\<rightarrow> T) \<^emph> (k \<^bold>\<rightarrow> U)\<close>
+  for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
+  apply (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1))
+  by (metis fun_1upd_homo_right1)
 
 
-subsection \<open>Down Lifting\<close> (*depreciated*)
+
+definition \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>L\<^sub>s" 60)
+  where \<open>\<phi>MapAt_L key T x = { push_map key v |v. v \<in> (x \<Ztypecolon> T) }\<close>
+
+abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>L" 60)
+  where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
+
+lemma \<phi>MapAt_L_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) \<longleftrightarrow> (\<exists>v. p = push_map k v \<and> v \<in> (x \<Ztypecolon> T))\<close>
+  unfolding \<phi>Type_def \<phi>MapAt_L_def by simp
+
+lemma \<phi>MapAt_L_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma \<phi>MapAt_L_\<phi>Prod:
+  \<open>k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (T \<^emph> U) = (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) \<^emph> (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s U)\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid list,'b) \<phi>\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule)
+  apply (clarsimp simp add: push_map_distrib_mult[symmetric])
+  using push_map_sep_disj apply blast
+  apply (clarsimp simp add: push_map_distrib_mult)
+  by blast
+  
+
+
+(* subsection \<open>Down Lifting\<close> (*depreciated*)
 
 definition DownLift :: "('a, 'b) \<phi> \<Rightarrow> ('c \<Rightarrow> 'b) \<Rightarrow> ('a,'c) \<phi>" (infixl "<down-lift>" 80)
   where "DownLift N g x = (g x \<Ztypecolon> N)"
@@ -1955,6 +1987,7 @@ lemma "x \<Ztypecolon> N \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\
 
 (* lemma "\<phi>Equal (N <up-lift> f) can_eq eq \<longleftrightarrow> \<phi>Equal N (inv_imagep can_eq f) (inv_imagep eq f)"
   unfolding \<phi>Equal_def by (auto 0 6) *)
+*)
 
 subsection \<open>Any\<close>
 
@@ -2173,46 +2206,154 @@ subsection \<open>Share\<close>
 
 
 
+definition perm_transformer_\<phi> :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
+  where \<open>perm_transformer_\<phi> \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> perm_transformer' \<psi>})\<close>
 
-definition (in perm_transformer) \<phi> :: \<open>rat \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
-  where \<open>\<phi> n T = (\<lambda>x. { share n (\<psi> v) |v. v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) } \<^bold>s\<^bold>u\<^bold>b\<^bold>j 0 < n \<and> n \<le> 1)\<close>
+abbreviation (in perm_transformer) \<open>\<phi> \<equiv> perm_transformer_\<phi> \<psi>\<close>
+
+lemma perm_transformer_\<phi>_expns:
+  \<open>p \<in> (x \<Ztypecolon> perm_transformer_\<phi> \<psi> T)
+    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> perm_transformer' \<psi>)\<close>
+  unfolding perm_transformer_\<phi>_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma (in perm_transformer) [\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi> n T) \<longleftrightarrow> (\<exists>v. p = share n (\<psi> v) \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> 0 < n \<and> n \<le> 1)\<close>
-  unfolding \<phi>_def \<phi>Type_def by (simp add: \<phi>expns, blast)
+  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v))\<close>
+  unfolding perm_transformer_\<phi>_def \<phi>Type_def by (simp add: \<phi>expns)
 
 
 
 
-definition \<phi>Share :: \<open>rat \<Rightarrow> ('v::share,'x) \<phi> \<Rightarrow> ('v, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)
+definition \<phi>Share :: \<open>rat \<Rightarrow> ('v::share,'x) \<phi> \<Rightarrow> ('v, 'x) \<phi>\<close> (infixr "\<Znrres>" 60)
   where \<open>\<phi>Share n T = (\<lambda>x. { share n v |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n }) \<close>
 
 lemma \<phi>Share_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Share n T) \<longleftrightarrow> (\<exists>v. p = share n v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n)\<close>
+  \<open>p \<in> (x \<Ztypecolon> n \<Znrres> T) \<longleftrightarrow> (\<exists>v. p = share n v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n )\<close>
   unfolding \<phi>Share_def \<phi>Type_def by simp
 
 lemma \<phi>Share_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Share n T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  \<open>Inhabited (x \<Ztypecolon> n \<Znrres> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma \<phi>Share_1[simp]:
-  \<open> \<phi>Share 1 T = T \<close>
+  \<open> (1 \<Znrres> T) = T \<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
 lemma \<phi>Share_\<phi>Share[simp]:
   \<open> 0 < n \<and> 0 < m
-\<Longrightarrow> \<phi>Share n (\<phi>Share m T) = (\<phi>Share (n*m) T)\<close>
+\<Longrightarrow> n \<Znrres> m \<Znrres> T = n*m \<Znrres> T \<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-  by (metis mult_le_one order_less_imp_le share_share_not0)
+  by (metis share_share_not0)
 
-definition Share_Uniq :: \<open>('a::share_semimodule_sep) set \<Rightarrow> bool\<close>
-  where \<open>Share_Uniq S \<longleftrightarrow> (\<forall>u v. u \<in> S \<and> v \<in> S)\<close>
 
-lemma
+definition \<phi>Sep_Disj :: \<open>('a::sep_disj,'b1) \<phi> \<Rightarrow> ('a::sep_disj,'b2) \<phi> \<Rightarrow> bool\<close>
+  where \<open>\<phi>Sep_Disj T U \<longleftrightarrow> (\<forall>x y u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (y \<Ztypecolon> U) \<longrightarrow> u ## v)\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
+\<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow> T) (k2 \<^bold>\<rightarrow> U)\<close>
+  for T :: \<open>('a::sep_disj_one, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def
+  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
+\<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow>\<^sub>L T) (k2 \<^bold>\<rightarrow>\<^sub>L U)\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_disj_one, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def
+  by (clarsimp simp add: \<phi>expns sep_disj_fun_def push_map_def)
+
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj X A
+\<Longrightarrow> \<phi>Sep_Disj X B
+\<Longrightarrow> \<phi>Sep_Disj X (A \<^emph> B) \<close>
+  for X :: \<open>('a::sep_disj_intuitive, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def
+  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
+
+lemma [\<phi>reason 1300]:
+  \<open> \<phi>Sep_Disj X Z
+\<Longrightarrow> \<phi>Sep_Disj Y Z
+\<Longrightarrow> \<phi>Sep_Disj (X \<^emph> Y) Z \<close>
+  for X :: \<open>('a::sep_disj_intuitive, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def
+  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
+
+
+
+
+
+
+definition \<phi>Sep_Disj_Identical :: \<open>('a::share_semimodule_sep, 'b) \<phi> \<Rightarrow> bool\<close>
+  where \<open>\<phi>Sep_Disj_Identical T
+    \<longleftrightarrow> (\<forall>x u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (x \<Ztypecolon> T) \<and> u ## v \<longrightarrow> u = v)
+      \<and> (\<forall>x u. u \<in> (x \<Ztypecolon> T) \<longrightarrow> can_share u)\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Identical (n \<Znrres> T)\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  apply (clarsimp simp add: \<phi>expns)
+  by force
+
+lemma \<phi>Sep_Disj_Identical_\<phi>MapAt[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow> T)\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  apply (clarsimp simp add: \<phi>expns)
+  by force
+
+lemma \<phi>Sep_Disj_Identical_\<phi>MapAt_L[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T)\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  apply (clarsimp simp add: \<phi>expns)
+  by (metis push_map_def push_map_sep_disj share_one_class.can_share_one)
+  
+
+lemma \<phi>Sep_Disj_Identical_Prod[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Identical U
+\<Longrightarrow> \<phi>Sep_Disj_Identical (T \<^emph> U)\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  apply (clarsimp simp add: \<phi>expns)
+  by (metis sep_disj_commute sep_disj_multD1 sep_mult_commute share_semimodule_sep_class.sep_mult_can_share)
+
+lemma \<phi>Share_share:
   \<open> 0 < n \<and> 0 < m
-\<Longrightarrow> (x \<Ztypecolon> \<phi>Share n T) * (x \<Ztypecolon> \<phi>Share m T) = (x \<Ztypecolon> \<phi>Share (n+m) T)\<close>
+\<Longrightarrow> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) * (x \<Ztypecolon> m \<Znrres> T) = (x \<Ztypecolon> n+m \<Znrres> T)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  apply (clarsimp simp add: \<phi>expns set_eq_iff; rule; clarsimp simp add: share_sep_left_distrib)
+  unfolding \<phi>Sep_Disj_Identical_def
+  apply (clarsimp simp add: \<phi>expns set_eq_iff; rule; clarsimp)
+  using share_sep_left_distrib_0 apply blast
+  subgoal for v
+  apply (rule exI[where x=\<open>share n v\<close>], rule exI[where x=\<open>share m v\<close>], simp)
+    by (metis can_share_self_disj share_sep_left_distrib_0) .
+
+
+lemma \<phi>Share_\<phi>MapAt:
+  \<open>n \<Znrres> k \<^bold>\<rightarrow> T = k \<^bold>\<rightarrow> n \<Znrres> T\<close>
+  for T :: \<open>('a::share_one,'b) \<phi>\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
+  apply blast
+  by (metis share_fun_updt share_right_one)
+
+lemma \<phi>Share_\<phi>MapAt_L:
+  \<open>n \<Znrres> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T = k \<^bold>\<rightarrow>\<^sub>L\<^sub>s n \<Znrres> T\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::share_one,'b) \<phi>\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule)
+  apply (clarsimp simp add: share_push_map) apply blast
+  apply (clarsimp simp add: share_push_map[symmetric]) by blast
+
+lemma \<phi>Share_\<phi>Prod:
+  \<open>n \<Znrres> T \<^emph> U = (n \<Znrres> T) \<^emph> (n \<Znrres> U)\<close>
+  for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
+  apply (metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
+  using share_sep_right_distrib_0 by blast
+
+
 
 (*
 definition \<phi>Share :: \<open>rat \<Rightarrow> ('v,'x) \<phi> \<Rightarrow> ('v share option, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)
@@ -2227,7 +2368,7 @@ lemma [\<phi>reason_elim!, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns) *)
 
 
-definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<circled_bullet> _" [91] 90)
+definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<fish_eye> _" [91] 90)
   where \<open>\<phi>Some T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
 
 lemma \<phi>Some_expn[\<phi>expns]:
@@ -2238,9 +2379,61 @@ lemma \<phi>Some_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Some T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+lemma [\<phi>reason 1200]:
+  \<open>\<phi>Sep_Disj_Identical (perm_transformer_\<phi> to_share (\<phi>Some T)) \<close>
+  for T :: \<open>('a::nonsepable_semigroup, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  by (clarsimp simp add: \<phi>expns perm_transformer_\<phi>_expns; rule; clarsimp)
 
 
-definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close> ("\<circled_white_bullet>")
+lemma perm_transformer_\<phi>_MapAt:
+  \<open>perm_transformer_\<phi> ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> perm_transformer_\<phi> f T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns perm_transformer_\<phi>_expns
+            perm_transformer_pointwise_eq; rule; clarsimp)
+  apply (smt (verit, del_insts) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer_pointwise)
+  by (metis (no_types, lifting) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer'.can_share_\<psi> perm_transformer_pointwise)
+
+
+lemma perm_transformer_\<phi>_MapAt_L:
+  \<open>perm_transformer_\<phi> ((o) f) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) = (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s perm_transformer_\<phi> ((o) f) T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns perm_transformer_\<phi>_expns
+            perm_transformer_pointwise_eq; rule; clarsimp)
+  using homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi> apply blast
+  by (metis homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
+
+
+lemma perm_transformer_\<phi>_Prod:
+  \<open> \<phi>Sep_Disj T U
+\<Longrightarrow> perm_transformer_\<phi> f (T \<^emph> U) = (perm_transformer_\<phi> f T) \<^emph> (perm_transformer_\<phi> f U)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns perm_transformer_\<phi>_expns \<phi>Sep_Disj_def; rule; clarsimp)
+  apply (metis homo_sep_disj_semi.sep_disj_homo homo_sep_mult.homo_mult homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
+  by (metis homo_sep_mult.homo_mult perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
+
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> f T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> ((o) f) (k \<^bold>\<rightarrow> T)) \<close>
+  by (subst perm_transformer_\<phi>_MapAt; rule \<phi>Sep_Disj_Identical_\<phi>MapAt)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> ((o) f) T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> ((o) f) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T)) \<close>
+  by (subst perm_transformer_\<phi>_MapAt_L; rule \<phi>Sep_Disj_Identical_\<phi>MapAt_L)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj T U
+\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> f T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> f U)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> f (T \<^emph> U)) \<close>
+  by (subst perm_transformer_\<phi>_Prod; blast intro: \<phi>Sep_Disj_Identical_Prod)
+
+
+
+
+
+
+
+definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close> ("\<circle>")
   where \<open>\<phi>None T = { 1 } \<close>
 
 lemma \<phi>None_expn[\<phi>expns]:
@@ -2250,6 +2443,10 @@ lemma \<phi>None_expn[\<phi>expns]:
 lemma \<phi>None_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical (\<phi>None :: ('a::share_module_sep,unit) \<phi>) \<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  by (clarsimp simp add: \<phi>expns)
 
 
 
@@ -3464,7 +3661,7 @@ text (in \<phi>empty) \<open>Given an assertion X, antecedent \<^term>\<open>Fil
     the state recorded in the exception is exactly X' where value assertions are filtered out.\<close>
 
 definition \<open>Filter_Out_Values'' \<equiv> Filter_Out_Values\<close>
-definition \<open>Filter_Out_Values' (remain::'a::times set) (keep::'a set) (check::'a set) (ret::'a set)
+definition \<open>Filter_Out_Values' (remain::'a::sep_magma set) (keep::'a set) (check::'a set) (ret::'a set)
               \<equiv> Trueprop (keep = check \<longrightarrow> (remain * keep \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ret))\<close>
 
 lemma [\<phi>reason on \<open>PROP Filter_Out_Values ?X ?Z\<close>]:
@@ -3765,8 +3962,8 @@ subsection \<open>Minimal Resource\<close>
 locale resource =
   Fictional_Algebra.project_inject entry
 + \<phi>resource_sem Resource_Validator
-for entry :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, 'T::comm_monoid_mult) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+for entry :: "('RES_N, 'RES::total_sep_algebra, 'T::total_sep_algebra) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
 + fixes Valid :: \<open>'T set\<close>
   assumes Valid_1: \<open>1 \<in> Valid\<close>
   assumes Resource_Validator[simp]: \<open>Resource_Validator name = inject ` Valid\<close>
@@ -3824,8 +4021,8 @@ subsubsection \<open>Locale for Resource\<close>
 locale fine_resource =
   Fictional_Algebra.project_inject entry
 + \<phi>resource_sem Resource_Validator
-for entry :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, 'T::sep_algebra ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+for entry :: "('RES_N, 'RES::total_sep_algebra, 'T::sep_algebra ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
 + fixes Valid :: \<open>'T set\<close>
   assumes Valid_1[simp]: \<open>1 \<in> Valid\<close>
   assumes Resource_Validator[simp]: \<open>Resource_Validator name = inject ` Fine ` Valid\<close>
@@ -3868,15 +4065,21 @@ locale basic_fiction_for_fine_resource =
 +  fictional_project_inject INTERPRET Fic \<open>R.basic_fine_fiction (fiction.fine I)\<close>
 for Valid :: "'T::sep_algebra set"
 and I :: "('U::sep_algebra, 'T) fiction"
-and Res :: "('RES_N, 'RES::{comm_monoid_mult,no_inverse}, 'T ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
-and Fic :: "('FIC_N,'FIC::{no_inverse,comm_monoid_mult},'U ?) Fictional_Algebra.Entry"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+and Res :: "('RES_N, 'RES::total_sep_algebra, 'T ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+and Fic :: "('FIC_N,'FIC::total_sep_algebra,'U ?) Fictional_Algebra.Entry"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
 begin
 
 lemma fiction_undef_bottom[simp]:
   \<open>INTERP_RES (u * mk Undef) = {}\<close>
   unfolding set_eq_iff INTERP_RES_def
+  by (simp add: interp_split' R.basic_fine_fiction_\<I> times_fine)
+
+lemma fiction_undef_bottom'[simp]:
+  \<open> Fic_Space u
+\<Longrightarrow> \<I> INTERP (u * mk Undef) = {}\<close>
+  unfolding set_eq_iff
   by (simp add: interp_split' R.basic_fine_fiction_\<I> times_fine)
 
 paragraph \<open>\<phi>-Type\<close>
@@ -3907,9 +4110,9 @@ locale permission_fiction =
       \<open>R.basic_fine_fiction (fiction.fine (fic_functional perm_transformer))\<close>
 for Valid :: "'T::sep_algebra set"
 and perm_transformer :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
-and Res :: "('RES_N, 'RES::{comm_monoid_mult,no_inverse}, 'T ?) Fictional_Algebra.Entry"
+and Res :: "('RES_N, 'RES::total_sep_algebra, 'T ?) Fictional_Algebra.Entry"
 and Resource_Validator :: "'RES_N \<Rightarrow> 'RES set"
-and Fic :: "('FIC_N, 'FIC::{comm_monoid_mult,no_inverse}, 'U ?) Fictional_Algebra.Entry"
+and Fic :: "('FIC_N, 'FIC::total_sep_algebra, 'U ?) Fictional_Algebra.Entry"
 and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC, 'RES_N \<Rightarrow> 'RES) fiction"
 begin
 
@@ -3920,37 +4123,48 @@ lemma expand_raw:
 \<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (perm_transformer x))))
   = \<phi>Res_Spec (\<I> INTERP r * { R.mk (Fine x)})\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarify, rule;
-         clarsimp simp add: R.basic_fine_fiction_\<I> \<phi>expns
+  apply (clarify, rule; clarsimp simp add: R.basic_fine_fiction_\<I> \<phi>expns
             share.sep_mult_strip_011 \<phi>Res_Spec_def R.\<r>_valid_split'
             R.mult_strip_inject_011 interp_split' mult_strip_fine_011)
-
   subgoal for res_r a r
     apply (rule exI[where x=\<open>res_r * R.mk (Fine a)\<close>])
     by (metis R.mk_homo_mult fun_mult_norm times_fine(1))
-
   subgoal premises prems for res_r y a proof -
     have t1[simp]: \<open>y ## x\<close>
-      by (metis prems(7) prems(8) sep_disj_commute sep_disj_multD1 sep_mult_ac(2))
-    show ?thesis
+      using prems(7) prems(8) sep_disj_multD2 by blast
+    show ?thesis apply simp
       apply (rule exI[where x=\<open>res_r\<close>], rule exI[where x=\<open>R.mk (Fine (y * x))\<close>])
       by (metis R.mk_homo_mult share.homo_mult fun_mult_norm prems(4) t1 times_fine')
   qed .
 
 lemma partial_implies_raw:
   \<open> Fic_Space r
-\<Longrightarrow> 0 < n \<and> n \<le> 1
+\<Longrightarrow> 0 < n 
 \<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (share n (perm_transformer x)))))
 \<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> x \<preceq>\<^sub>S\<^sub>L objs\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: R.basic_fine_fiction_\<I> \<phi>expns
             mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
             R.proj_homo_mult interp_split')
-  by (metis join_sub_def join_sub_ext_left share.join_sub_share_join_sub_whole)
+  apply (cases \<open>n \<le> 1\<close>)
+   apply (metis join_sub_def join_sub_ext_left share.join_sub_share_join_sub_whole share_sep_disj_right)
+  subgoal premises prems for u y a b proof -
+    have t0: \<open>1 / n * n = 1\<close> using prems(12) by force
+    have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close>
+      by (metis divide_le_eq_1 nle_le prems(12) prems(2) zero_less_divide_1_iff)
+    have t2: \<open>share (1/n) (share n (perm_transformer x)) \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
+      by (simp add: order_less_imp_le prems(2) share_sub t1)
+    then have \<open>perm_transformer x \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
+      using share_share_not0
+      by (metis prems(2) share_left_one t0 t1) 
+    then show ?thesis
+      by (metis join_sub_ext_left prems(11) prems(2) prems(8) prems(9) share.homo_join_sub share_sep_disj_right) 
+  qed .
+end
 
 
 
-lemma VS_merge_ownership:
+(* lemma VS_merge_ownership:
   \<open> (\<forall>ua ub. ua \<in> (x \<Ztypecolon> T) \<and> ub \<in> (x \<Ztypecolon> T) \<and>
              can_share (perm_transformer ua) \<and> can_share (perm_transformer ub) \<and>
              share na (perm_transformer ua) ## share nb (perm_transformer ub) \<longrightarrow> ua = ub)
@@ -3976,7 +4190,7 @@ lemma VS_split_ownership:
                                     * mk (Fine (share nb (perm_transformer res_x))))\<close>],
            rule conjI, blast)
     by (clarsimp simp add: mk_homo_mult[symmetric] times_fine fun_1upd_homo share_sep_left_distrib_0) .
-end
+end*)
 
 (* locale permission_fiction =
   \<phi>fiction Resource_Validator INTERPRET
@@ -4010,9 +4224,9 @@ locale identity_fiction_for_fine_resource =
    \<phi>fiction Resource_Validator INTERPRET
 +  R: fine_resource Res Resource_Validator
 +  fictional_project_inject INTERPRET Fic \<open>R.basic_fine_fiction (fiction.fine fiction.it)\<close>
-for Res :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('T::sep_algebra) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+for Res :: "('RES_N, 'RES::total_sep_algebra, ('T::sep_algebra) ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
 and Fic :: "('FIC_N,'FIC,'T ?) Fictional_Algebra.Entry"
 begin
 
@@ -4024,7 +4238,7 @@ lemma expand:
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify; rule; clarsimp simp add: \<phi>expns R.basic_fine_fiction_\<I> mult_strip_fine_011
           interp_split')
-  apply (metis R.inj_homo_mult fun_1upd_homo_left1 fun_mult_norm times_fine')
+  apply (metis (no_types, lifting) R.mk_homo_mult fun_mult_norm times_fine')
   apply (clarsimp simp add: R.mk_homo_mult[symmetric] mult.assoc)
   subgoal premises prems for ua y proof -
     have t1: \<open>y ## x\<close>
@@ -4041,7 +4255,7 @@ subsection \<open>Nonsepable Mono-Resource\<close>
 
 locale nonsepable_mono_resource =
   fine_resource entry Resource_Validator \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
-for entry :: "('RES_N, 'RES::{comm_monoid_mult,no_inverse}, 'T nonsepable option ?) Fictional_Algebra.Entry"
+for entry :: "('RES_N, 'RES::total_sep_algebra, 'T nonsepable option ?) Fictional_Algebra.Entry"
 and Resource_Validator :: "'RES_N \<Rightarrow> 'RES set"
 and Valid :: "'T set"
 begin
@@ -4059,9 +4273,9 @@ locale agreement_fiction_for_nosepable_mono_resource =
 +  R: nonsepable_mono_resource Res Resource_Validator Valid
 +  fictional_project_inject INTERPRET Fic \<open>R.fiction_agree\<close>
 for Valid :: "'T set"
-and Res :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, 'T nonsepable option ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+and Res :: "('RES_N, 'RES::total_sep_algebra, 'T nonsepable option ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
 and Fic :: "('FIC_N,'FIC, 'T nonsepable agree option ?) Fictional_Algebra.Entry"
 begin
 
@@ -4137,8 +4351,8 @@ subsection \<open>Resources based on Mapping\<close>
 
 locale mapping_resource =
   fine_resource entry Resource_Validator
-for entry :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('key \<Rightarrow> 'val::sep_algebra) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+for entry :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'val::sep_algebra) ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
 begin
 
 lemma "__new_rule__":
@@ -4176,8 +4390,8 @@ subsubsection \<open>Locale for Resource\<close>
 locale partial_map_resource =
   mapping_resource Valid entry Resource_Validator
 for Valid :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) set"
-and entry :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('key \<Rightarrow> 'val::nonsepable_semigroup option) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+and entry :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'val::nonsepable_semigroup option) ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
 begin
 
 lemma "__updt_rule__":
@@ -4190,14 +4404,13 @@ lemma "__updt_rule__":
   apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
           proj_homo_mult times_fun_upd )
   apply (clarsimp simp add: mult_strip_fine_011 sep_disj_partial_map_upd
-          nonsepable_semigroup_sepdisj_fun times_fine'[symmetric] mk_homo_mult
-          mult.assoc[symmetric])
+          nonsepable_semigroup_sepdisj_fun
+          times_fine'[symmetric] mk_homo_mult)
   subgoal premises prems for x aa proof -
     have [simp]: \<open>clean x * mk (Fine aa) = x\<close>
       by (metis fun_split_1 prems(7))
     show ?thesis
-      apply simp
-      using prems(5) by blast
+      using fun_mult_norm prems(5) by fastforce
   qed .
 
 
@@ -4262,7 +4475,7 @@ lemma raw_unit_assertion_implies[simp]:
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
       proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun)
-  by (metis (mono_tags, opaque_lifting) sep_disj_option_nonsepable(2) sep_mult_ac(4) sep_mult_commute times_option(2))
+  by (metis (mono_tags, lifting) sep_disj_option_nonsepable(1) sep_mult_commute times_option(2))
 
 
 end
@@ -4275,10 +4488,10 @@ locale share_fiction_for_partial_mapping_resource =
 +  R: partial_map_resource Valid Res Resource_Validator
 +  fictional_project_inject INTERPRET Fic \<open>R.share_fiction\<close>
 +  \<phi>fiction Resource_Validator INTERPRET
-for Valid :: "('key \<Rightarrow> 'val::share_resistence_nonsepable_semigroup option) set"
-and Res :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('key \<Rightarrow> 'val option) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+for Valid :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) set"
+and Res :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'val option) ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
 and Fic :: "('FIC_N,'FIC, ('key \<Rightarrow> 'val share option) ?) Fictional_Algebra.Entry"
 begin
 
@@ -4288,8 +4501,8 @@ lemmas expand = expand_raw
 
 lemma partial_implies:
   \<open> Fic_Space r
-\<Longrightarrow> 0 < n \<and> n \<le> 1
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> n \<Znrres> v)))))
+\<Longrightarrow> 0 < n
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> Share n v)))))
 \<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> objs k = Some v\<close>
   subgoal premises prems proof -
     obtain objs where t1: \<open>R.get res = Fine objs \<and> 1(k \<mapsto> v) \<preceq>\<^sub>S\<^sub>L objs\<close>
@@ -4300,15 +4513,15 @@ lemma partial_implies:
 
 lemma partial_implies'[simp]:
   assumes FS: \<open>Fic_Space r\<close>
-    and N: \<open>0 < n \<and> n \<le> 1\<close>
-    and A: \<open>res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> n \<Znrres> v)))))\<close>
+    and N: \<open>0 < n\<close>
+    and A: \<open>res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> Share n v)))))\<close>
   shows \<open>!!(R.get res) k = Some v\<close>
 proof -
   from partial_implies[OF FS, OF N, OF A]
   show ?thesis by fastforce
 qed
 
-lemma VS_merge_ownership_identity:
+(* lemma VS_merge_ownership_identity:
   \<open> na + nb \<le> 1
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity) \<longmapsto> x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) Identity)\<close>
   by (rule VS_merge_ownership; simp add: \<phi>expns)
@@ -4316,30 +4529,31 @@ lemma VS_merge_ownership_identity:
 lemma VS_split_ownership_identity:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (0 < n \<longrightarrow> na + nb = n \<and> 0 < na \<and> 0 < nb)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<longmapsto> x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity)\<close>
-  apply (rule VS_split_ownership; simp add: \<phi>expns sep_disj_fun_def share_fun_def; clarify)
-  subgoal premises prems for a
-    by (insert \<open>\<forall>_. _\<close>[THEN spec[where x=a]], cases \<open>x a\<close>; simp add: share_All prems) .
+  by (rule VS_split_ownership; simp add: \<phi>expns sep_disj_fun_def share_fun_def; clarify)
+  (* subgoal premises prems for a
+    by (insert \<open>\<forall>_. _\<close>[THEN spec[where x=a]], cases \<open>x a\<close>; simp add: share_All prems) . *)
+
 
 lemma VS_divide_ownership:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w FIX x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<longmapsto> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity)\<close>
   unfolding Fix_def
   by (rule VS_split_ownership_identity; simp add: Premise_def)
-
+*)
 end
 
 locale share_fiction_for_partial_mapping_resource_nonsepable =
   share_fiction_for_partial_mapping_resource
     Valid Res Resource_Validator INTERPRET Fic
 for Valid :: "('key \<Rightarrow> 'val nonsepable option) set"
-and Res :: "('RES_N, 'RES::{comm_monoid_mult,no_inverse}, ('key \<Rightarrow> 'val nonsepable option) ?) Fictional_Algebra.Entry"
+and Res :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'val nonsepable option) ?) Fictional_Algebra.Entry"
 and Resource_Validator :: "'RES_N \<Rightarrow> 'RES set"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{comm_monoid_mult,no_inverse}, 'RES_N \<Rightarrow> 'RES) fiction"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra, 'RES_N \<Rightarrow> 'RES) fiction"
 and Fic :: "('FIC_N, 'FIC, ('key \<Rightarrow> 'val nonsepable share option) ?) Fictional_Algebra.Entry"
 begin
 
 lemma \<phi>nonsepable_normalize:
-  \<open>(x \<Ztypecolon> \<phi> (share.\<phi> n (\<phi>MapAt addr (\<phi>Some (Nonsepable Identity)))))
- = (nonsepable x \<Ztypecolon> \<phi> (share.\<phi> n (\<phi>MapAt addr (\<phi>Some Identity))))\<close>
+  \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Nonsepable Identity)))))
+ = (nonsepable x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Identity))))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 end
@@ -4362,8 +4576,8 @@ subsubsection \<open>Locale of Resources\<close>
 locale partial_map_resource2 =
   mapping_resource Valid entry Resource_Validator
 for Valid :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) set"
-and entry :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
+and entry :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
 begin
 
 lemma "__updt_rule__":
@@ -4526,10 +4740,10 @@ locale share_fiction_for_partial_mapping_resource2 =
    \<phi>resource_sem Resource_Validator
 +  R: partial_map_resource2 Valid Res Resource_Validator
 +  fictional_project_inject INTERPRET Fic \<open>R.share_fiction\<close>
-for Valid :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::share_resistence_nonsepable_semigroup option) set"
-and Res :: "('RES_N, 'RES::{no_inverse,comm_monoid_mult}, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) fiction"
+for Valid :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) set"
+and Res :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) ?) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
 and Fic :: "('FIC_N,'FIC, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) ?) Fictional_Algebra.Entry"
 begin
 
@@ -4545,8 +4759,8 @@ lemmas partial_implies = partial_implies_raw
 
 lemma partial_implies':
   \<open> Fic_Space r
-\<Longrightarrow> 0 < n \<and> n \<le> 1
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v))))))
+\<Longrightarrow> 0 < n
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> Share n v))))))
 \<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> objs k k2 = Some v\<close>
   subgoal premises prems proof -
     obtain objs where t1: \<open>R.get res = Fine objs \<and> 1(k := 1(k2 \<mapsto> v)) \<preceq>\<^sub>S\<^sub>L objs\<close>
@@ -4558,8 +4772,8 @@ lemma partial_implies':
 
 lemma partial_implies'':
   assumes FS: \<open>Fic_Space r\<close>
-    and N: \<open>0 < n \<and> n \<le> 1\<close>
-    and A: \<open> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v))))))\<close>
+    and N: \<open>0 < n\<close>
+    and A: \<open> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> Share n v))))))\<close>
   shows [simp]: \<open>!!(R.get res) k k2 = Some v\<close>
 proof -
   from partial_implies'[OF FS, OF N, OF A]

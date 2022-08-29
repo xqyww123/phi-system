@@ -143,9 +143,9 @@ subparagraph \<open>share_fiction_for_partial_mapping_resource\<close>
 
 lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (share.\<phi> n (\<phi>MapAt key (\<phi>Some Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+      \<lbrace> v \<Ztypecolon> \<phi> (n \<Znrres> share.\<phi> (key \<^bold>\<rightarrow> (\<phi>Some Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
-      \<lbrace> v \<Ztypecolon> \<phi> (share.\<phi> n (\<phi>MapAt key (\<phi>Some Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+      \<lbrace> v \<Ztypecolon> \<phi> (n \<Znrres> share.\<phi> (key \<^bold>\<rightarrow> (\<phi>Some Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def share.can_share_\<psi>[simplified] del: subsetI)
   apply (rule R.\<phi>R_get_res_entry[where v=v])
