@@ -6,6 +6,14 @@ section \<open>Additional Stuffs\<close>
 
 subsection \<open>Representations about Word\<close>
 
+subsubsection \<open>Word is not Separable\<close>
+
+instantiation word :: (len) nonsepable_semigroup begin
+definition sep_disj_word :: \<open>'a word \<Rightarrow> 'a word \<Rightarrow> bool\<close>
+  where [simp]: \<open>sep_disj_word _ _ = False\<close>
+instance by (standard; simp)
+end
+
 subsubsection \<open>Natural Number Abstraction\<close>
 
 paragraph \<open>Natural Number\<close>

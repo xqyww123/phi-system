@@ -798,17 +798,18 @@ end
 instantiation "fun" :: (type,comm_monoid_mult) comm_monoid_mult begin
 instance by standard (simp_all add: mult.commute times_fun_def fun_eq_iff)
 
+
 paragraph \<open>Multiplication with Function Update\<close>
 
 lemmas fun_mult_norm = mult.assoc[where ?'a = "'a \<Rightarrow> 'b", symmetric]
 
-lemma [simp]: "(f * 1(k := x)) k = f k * x" for f :: "'a \<Rightarrow> 'b"
+lemma times_fupdt_1_apply[simp]: "(f * 1(k := x)) k = f k * x" for f :: "'a \<Rightarrow> 'b"
   by (simp add: times_fun_def)
 
-lemma [simp]: "k' \<noteq> k \<Longrightarrow> (f * 1(k':=x)) k = f k" for f :: "'a \<Rightarrow> 'b"
+lemma times_fupdt_1_apply'[simp]: "k' \<noteq> k \<Longrightarrow> (f * 1(k':=x)) k = f k" for f :: "'a \<Rightarrow> 'b"
   by (simp add: times_fun_def)
 
-lemma [simp]: "(f * 1(k := x))(k:=1) = f(k:=1)" for f :: "'a \<Rightarrow> 'b"
+lemma times_fupdt_1_fupdt_1[simp]: "(f * 1(k := x))(k:=1) = f(k:=1)" for f :: "'a \<Rightarrow> 'b"
   unfolding fun_upd_def fun_eq_iff times_fun_def by simp
 
 lemma [simp]: "k' \<noteq> k \<Longrightarrow> (f * 1(k' := x))(k:=1) = f(k:=1) * 1(k' := x)" for f :: "'a \<Rightarrow> 'b"
@@ -828,8 +829,6 @@ end
 instantiation "fun" :: (type,total_sep_algebra) total_sep_algebra begin
 instance ..
 end
-
-
 
 
 lemma fun_split_1: "f = f(k:=1) * 1(k:= f k)" for f :: "'a \<Rightarrow> 'b :: mult_1"
@@ -1111,6 +1110,13 @@ lemma sep_disj_partial_map_some_none:
   for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
   using disjoint_iff sep_disj_partial_map_disjoint by fastforce
 
+lemma sep_disj_partial_map_not_1_1:
+  \<open>f ## g \<Longrightarrow> g k \<noteq> 1 \<Longrightarrow> f k = 1\<close>
+  for f :: "'a \<Rightarrow> ('b :: nonsepable_monoid)"
+  unfolding sep_disj_fun_def apply simp
+  by blast
+  
+
 lemma sep_disj_partial_map_upd:
   \<open>f ## g \<Longrightarrow> k \<in> dom g \<Longrightarrow> (f * g)(k := v) = (f * g(k:=v))\<close>
   for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
@@ -1133,6 +1139,12 @@ lemma fun_sep_disj_1_fupdt[simp]:
   \<open>1(k := x1) ## f(k := x2) \<longleftrightarrow> x1 ## x2\<close>
   for x1 :: \<open>'b :: sep_disj_one\<close>
   unfolding sep_disj_fun_def by (simp; rule; clarsimp)+
+
+lemma fun_sep_disj_imply_v:
+  \<open>f(k := x1) ## g(k := x2) \<Longrightarrow> x1 ## x2\<close>
+  unfolding sep_disj_fun_def
+  apply (clarsimp simp add: sep_disj_fun_def)
+  by presburger
 
 lemma share_1_fupdt[simp]:
   \<open>share n (1(k := v)) = 1(k := share n v)\<close>
@@ -1158,10 +1170,10 @@ lemma dom1_dom: "dom1 f = dom f"
 
 lemma one_updt_one[simp]: "1(a:=1) = 1" unfolding one_fun_def fun_upd_def by simp
 
-lemma [simp]: "x \<noteq> 1 \<Longrightarrow> f(k:=x) \<noteq> 1"
+lemma v_neq_1_fupdt_neq_1[simp]: "x \<noteq> 1 \<Longrightarrow> f(k:=x) \<noteq> 1"
   unfolding one_fun_def fun_upd_def fun_eq_iff by simp blast
 
-lemma [simp]: "1 o f = 1"
+lemma one_ringop_f_is_1[simp]: "1 o f = 1"
   unfolding one_fun_def fun_eq_iff by simp
 
 lemma finite_dom1_mult1[simp]:
@@ -1337,10 +1349,28 @@ lemma perm_transformer_pointwise_eq:
 subsubsection \<open>Subsumption\<close>
 
 lemma nonsepable_partial_map_subsumption:
-  \<open>f \<preceq>\<^sub>S\<^sub>L g \<Longrightarrow> k \<in> dom f \<Longrightarrow> g k = f k\<close>
-  for f :: \<open>'k \<Rightarrow> 'v::nonsepable_semigroup option\<close>
+  \<open>f \<preceq>\<^sub>S\<^sub>L g \<Longrightarrow> k \<in> dom1 f \<Longrightarrow> g k = f k\<close>
+  for f :: \<open>'k \<Rightarrow> 'v::nonsepable_monoid\<close>
   unfolding join_sub_def
-  by (clarsimp simp add: times_fun sep_disj_partial_map_some_none)
+  apply (clarsimp simp add: times_fun)
+  by (metis disjoint_dom1_eq_1(1) mult_1_class.mult_1_left sep_disj_commute sep_disj_dom1_disj_disjoint)
+
+lemma nonsepable_1_fupdt_subsumption:
+  \<open> 1(k := v) \<preceq>\<^sub>S\<^sub>L objs
+\<Longrightarrow> v \<noteq> 1
+\<Longrightarrow> objs k = v\<close>
+  for v :: \<open>'v::nonsepable_monoid\<close>
+  using nonsepable_partial_map_subsumption[where f=\<open>1(k := v)\<close>]
+  by (clarsimp simp add: times_fun)
+
+lemma nonsepable_partial_map_subsumption_L2:
+  \<open> 1(k := v) \<preceq>\<^sub>S\<^sub>L objs
+\<Longrightarrow> v \<subseteq>\<^sub>m objs k\<close>
+  for v :: \<open>'b \<Rightarrow> 'c::nonsepable_semigroup option\<close>
+  unfolding join_sub_def map_le_def
+  apply (clarsimp simp add: times_fun)
+  by (metis (mono_tags, opaque_lifting) fun_upd_same mult_1_class.mult_1_left one_option_def sep_disj_fun_def sep_disj_partial_map_some_none)
+
 
 subsection \<open>Partiality\<close>
 
@@ -1535,12 +1565,12 @@ end
 instantiation share :: (type) share begin
 
 definition \<open>can_share_share x = (case x of Share n x' \<Rightarrow> 0 < n)\<close>
-lemma [simp]: \<open>can_share (Share n x) \<longleftrightarrow> 0 < n\<close>
+lemma can_share_share[simp]: \<open>can_share (Share n x) \<longleftrightarrow> 0 < n\<close>
   unfolding can_share_share_def by simp
 
 definition share_share :: "rat \<Rightarrow> 'a share \<Rightarrow> 'a share"
   where \<open>share_share n x = (case x of Share m x' \<Rightarrow> Share (n*m) x')\<close>
-lemma [simp]: \<open>share n (Share m x) = Share (n*m) x\<close>
+lemma share_share[simp]: \<open>share n (Share m x) = Share (n*m) x\<close>
   unfolding share_share_def by simp
 
 instance apply (standard; case_tac x; simp add: share_share_def mult.assoc mult_le_one)
@@ -1867,7 +1897,7 @@ end
 lemmas [simp] = fiction.fun_\<I> fiction.fun'_\<I> fiction.option_\<I> fiction.fine_\<I>
   fiction.it'_def fiction.it_\<I> fiction.defined_\<I> fiction.pointwise'_\<I>
 
-lemma [simp]: "\<I> (fiction.fun I) (1(k:=v)) = \<I> I v" by simp
+lemma fiction_fun_\<I>_1_fupdt[simp]: "\<I> (fiction.fun I) (1(k:=v)) = \<I> I v" by simp
 
 subsubsection \<open>Functional Fiction\<close>
 
@@ -2032,7 +2062,7 @@ lemmas prj_homo_mult[simp] = prj.homo_mult
 lemmas prj_homo_one = prj.homo_one
 
 
-lemma [simp]: "R * inject x * inject y = R * inject (x * y)"
+lemma inject_assoc_homo[simp]: "R * inject x * inject y = R * inject (x * y)"
   by (simp add: mult.assoc) 
 
 lemma interp_m[simp]: "\<I> INTERP (mk x) = \<I> I x"

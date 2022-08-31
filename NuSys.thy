@@ -1914,7 +1914,14 @@ lemma \<phi>MapAt_L_\<phi>Prod:
   apply (clarsimp simp add: push_map_distrib_mult)
   by blast
   
+lemma \<phi>MapAt_L_\<phi>MapAt:
+  \<open>k1 \<^bold>\<rightarrow>\<^sub>L\<^sub>s k2 \<^bold>\<rightarrow> T = k1 @ k2 \<^bold>\<rightarrow> T\<close>
+  by (rule \<phi>Type_eqI; simp add: \<phi>expns; force)
 
+lemma \<phi>MapAt_L_\<phi>MapAt_L:
+  \<open>k1 \<^bold>\<rightarrow>\<^sub>L\<^sub>s k2 \<^bold>\<rightarrow>\<^sub>L\<^sub>s T = k1 @ k2 \<^bold>\<rightarrow>\<^sub>L\<^sub>s T\<close>
+  apply (rule \<phi>Type_eqI; simp add: \<phi>expns)
+  by (metis push_map_push_map)
 
 (* subsection \<open>Down Lifting\<close> (*depreciated*)
 
@@ -2206,19 +2213,19 @@ subsection \<open>Share\<close>
 
 
 
-definition perm_transformer_\<phi> :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
-  where \<open>perm_transformer_\<phi> \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> perm_transformer' \<psi>})\<close>
+definition \<phi>perm_transformer :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
+  where \<open>\<phi>perm_transformer \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> perm_transformer' \<psi>})\<close>
 
-abbreviation (in perm_transformer) \<open>\<phi> \<equiv> perm_transformer_\<phi> \<psi>\<close>
+abbreviation (in perm_transformer) \<open>\<phi> \<equiv> \<phi>perm_transformer \<psi>\<close>
 
-lemma perm_transformer_\<phi>_expns:
-  \<open>p \<in> (x \<Ztypecolon> perm_transformer_\<phi> \<psi> T)
+lemma \<phi>perm_transformer_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>perm_transformer \<psi> T)
     \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> perm_transformer' \<psi>)\<close>
-  unfolding perm_transformer_\<phi>_def \<phi>Type_def by (simp add: \<phi>expns)
+  unfolding \<phi>perm_transformer_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma (in perm_transformer) [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v))\<close>
-  unfolding perm_transformer_\<phi>_def \<phi>Type_def by (simp add: \<phi>expns)
+  unfolding \<phi>perm_transformer_def \<phi>Type_def by (simp add: \<phi>expns)
 
 
 
@@ -2368,8 +2375,14 @@ lemma [\<phi>reason_elim!, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns) *)
 
 
-definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<fish_eye> _" [91] 90)
+definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
   where \<open>\<phi>Some T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
+
+abbreviation \<phi>Share_Some ("\<fish_eye> _" [91] 90)
+  where \<open>\<phi>Share_Some T \<equiv> \<phi>perm_transformer to_share (\<phi>Some T)\<close>
+
+abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
+  where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> \<phi>perm_transformer to_share (\<phi>Some T)\<close>
 
 lemma \<phi>Some_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Some T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<in> (x \<Ztypecolon> T))\<close>
@@ -2380,52 +2393,52 @@ lemma \<phi>Some_inhabited[\<phi>reason_elim!, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Identical (perm_transformer_\<phi> to_share (\<phi>Some T)) \<close>
+  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_transformer to_share (\<phi>Some T)) \<close>
   for T :: \<open>('a::nonsepable_semigroup, 'b) \<phi>\<close>
   unfolding \<phi>Sep_Disj_Identical_def
-  by (clarsimp simp add: \<phi>expns perm_transformer_\<phi>_expns; rule; clarsimp)
+  by (clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns; rule; clarsimp)
 
 
-lemma perm_transformer_\<phi>_MapAt:
-  \<open>perm_transformer_\<phi> ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> perm_transformer_\<phi> f T)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns perm_transformer_\<phi>_expns
+lemma \<phi>perm_transformer_MapAt:
+  \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_transformer f T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
             perm_transformer_pointwise_eq; rule; clarsimp)
   apply (smt (verit, del_insts) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer_pointwise)
   by (metis (no_types, lifting) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer'.can_share_\<psi> perm_transformer_pointwise)
 
 
-lemma perm_transformer_\<phi>_MapAt_L:
-  \<open>perm_transformer_\<phi> ((o) f) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) = (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s perm_transformer_\<phi> ((o) f) T)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns perm_transformer_\<phi>_expns
+lemma \<phi>perm_transformer_MapAt_L:
+  \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) = (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s \<phi>perm_transformer ((o) f) T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
             perm_transformer_pointwise_eq; rule; clarsimp)
   using homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi> apply blast
   by (metis homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
 
 
-lemma perm_transformer_\<phi>_Prod:
+lemma \<phi>perm_transformer_Prod:
   \<open> \<phi>Sep_Disj T U
-\<Longrightarrow> perm_transformer_\<phi> f (T \<^emph> U) = (perm_transformer_\<phi> f T) \<^emph> (perm_transformer_\<phi> f U)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns perm_transformer_\<phi>_expns \<phi>Sep_Disj_def; rule; clarsimp)
+\<Longrightarrow> \<phi>perm_transformer f (T \<^emph> U) = (\<phi>perm_transformer f T) \<^emph> (\<phi>perm_transformer f U)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns \<phi>Sep_Disj_def; rule; clarsimp)
   apply (metis homo_sep_disj_semi.sep_disj_homo homo_sep_mult.homo_mult homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
   by (metis homo_sep_mult.homo_mult perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
 
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> f T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> ((o) f) (k \<^bold>\<rightarrow> T)) \<close>
-  by (subst perm_transformer_\<phi>_MapAt; rule \<phi>Sep_Disj_Identical_\<phi>MapAt)
+  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_transformer f T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow> T)) \<close>
+  by (subst \<phi>perm_transformer_MapAt; rule \<phi>Sep_Disj_Identical_\<phi>MapAt)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> ((o) f) T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> ((o) f) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T)) \<close>
-  by (subst perm_transformer_\<phi>_MapAt_L; rule \<phi>Sep_Disj_Identical_\<phi>MapAt_L)
+  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_transformer ((o) f) T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T)) \<close>
+  by (subst \<phi>perm_transformer_MapAt_L; rule \<phi>Sep_Disj_Identical_\<phi>MapAt_L)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Sep_Disj T U
-\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> f T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> f U)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (perm_transformer_\<phi> f (T \<^emph> U)) \<close>
-  by (subst perm_transformer_\<phi>_Prod; blast intro: \<phi>Sep_Disj_Identical_Prod)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_transformer f T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_transformer f U)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_transformer f (T \<^emph> U)) \<close>
+  by (subst \<phi>perm_transformer_Prod; blast intro: \<phi>Sep_Disj_Identical_Prod)
 
 
 
@@ -2434,7 +2447,7 @@ lemma [\<phi>reason 1200]:
 
 
 definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close> ("\<circle>")
-  where \<open>\<phi>None T = { 1 } \<close>
+  where \<open>\<phi>None = (\<lambda>x. { 1 }) \<close>
 
 lemma \<phi>None_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>None) \<longleftrightarrow> p = 1\<close>
@@ -2448,7 +2461,17 @@ lemma [\<phi>reason 1200]:
   unfolding \<phi>Sep_Disj_Identical_def
   by (clarsimp simp add: \<phi>expns)
 
+lemma \<phi>Share_\<phi>None:
+  \<open>0 < n \<Longrightarrow> n \<Znrres> \<circle> = (\<circle> :: ('a::share_one,unit) \<phi>)\<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
+lemma \<phi>MapAt_\<phi>None:
+  \<open>k \<^bold>\<rightarrow> \<circle> = \<circle>\<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
+
+lemma \<phi>MapAt_L_\<phi>None:
+  \<open>k \<^bold>\<rightarrow>\<^sub>L \<circle> = \<circle>\<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
 subsection \<open>Agreement\<close>
 

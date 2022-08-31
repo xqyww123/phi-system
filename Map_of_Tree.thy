@@ -40,9 +40,13 @@ lemma push_map_sep_disj[simp]:
   unfolding sep_disj_fun_def push_map_def apply simp
   by (metis append_eq_conv_conj)
 
-lemma push_map_mult_1[simp]:
+lemma push_map_eq_1[simp]:
   \<open>push_map idx f = 1 \<longleftrightarrow> f = 1\<close>
   unfolding push_map_def fun_eq_iff by simp (metis append_eq_conv_conj)
+
+lemma push_map_1[simp]:
+  \<open>push_map idx 1 = 1\<close>
+  unfolding push_map_def fun_eq_iff by simp
 
 lemma push_map_mult_nil[simp]:
   \<open>push_map [] f = f\<close>

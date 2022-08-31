@@ -25,9 +25,20 @@ lemma (in \<phi>empty) "__op_try__":
   unfolding op_try_def \<phi>Procedure_def subset_iff
   apply clarsimp subgoal for comp R x s
     apply (cases s; simp; cases x; clarsimp simp add: \<phi>expns ring_distribs)
-    apply (smt (z3) INTERP_COM LooseStateTy_expn(1) mem_Collect_eq times_set_def)
-    apply (smt (z3) INTERP_COM LooseStateTy_expn(1) LooseStateTy_expn(2) set_mult_expn)
-    apply (smt (z3) INTERP_COM LooseStateTy_expn(2) set_mult_expn)
+    subgoal premises prems for a b u v
+      by (smt (z3) INTERP_COM LooseStateTy_expn(1) mem_Collect_eq
+            prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
+            prems(3) prems(6) prems(7) prems(8) times_set_def)
+    subgoal premises prems for a b u v
+      by (smt (z3) INTERP_COM LooseStateTy_expn(1) LooseStateTy_expn(2)
+            prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
+            prems(2)[THEN spec[where x=a], THEN spec[where x=R]]
+            prems(10) prems(3) prems(4) prems(7) prems(8) prems(9) set_mult_expn)
+    subgoal premises prems for a b u v
+      by (smt (z3) INTERP_COM LooseStateTy_expn(2)
+            prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
+            prems(2)[THEN spec[where x=a], THEN spec[where x=R]]
+            prems(3) prems(4) prems(7) prems(8) prems(9) set_mult_expn)
     apply (smt (z3) INTERP_COM LooseStateTy_expn(2) LooseStateTy_expn(3) set_mult_expn)
     by blast .
 
@@ -143,9 +154,9 @@ subparagraph \<open>share_fiction_for_partial_mapping_resource\<close>
 
 lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (n \<Znrres> share.\<phi> (key \<^bold>\<rightarrow> (\<phi>Some Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+      \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
-      \<lbrace> v \<Ztypecolon> \<phi> (n \<Znrres> share.\<phi> (key \<^bold>\<rightarrow> (\<phi>Some Identity))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+      \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def share.can_share_\<psi>[simplified] del: subsetI)
   apply (rule R.\<phi>R_get_res_entry[where v=v])
@@ -167,14 +178,22 @@ lemma (in partial_map_resource2) \<phi>R_get_res_entry[\<phi>reason!]:
 
 lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[\<phi>reason!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (share.\<phi> n (\<phi>MapAt k1 (\<phi>MapAt k2 (\<phi>Some Identity)))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
-      \<lbrace> v \<Ztypecolon> \<phi> (share.\<phi> n (\<phi>MapAt k1 (\<phi>MapAt k2 (\<phi>Some Identity)))) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def share.can_share_\<psi>[simplified] del: subsetI)
   apply (rule R.\<phi>R_get_res_entry[where v=v])
   apply simp
   by blast
+
+lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry1[\<phi>reason!]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  using \<phi>R_get_res_entry[where n=1, simplified] .
+
 
 subsubsection \<open>Setters\<close>
 
@@ -199,8 +218,7 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_set_res":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine (1(k \<mapsto> v)))}) \<Longrightarrow> P !!(R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
-         \<lbrace> v \<Ztypecolon> \<phi> (share.\<phi> 1 (\<phi>MapAt k (\<phi>Some Identity)))
- \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (share.\<phi> 1 (\<phi>MapAt k (\<phi>Some Identity))) \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def
           expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
@@ -223,8 +241,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine (1(k := 1(k2 \<mapsto> v))))}) \<Longrightarrow> P !!(R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
-         \<lbrace> v \<Ztypecolon> \<phi> (share.\<phi> 1 (\<phi>MapAt k (\<phi>MapAt k2 (\<phi>Some Identity))))
-  \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (share.\<phi> 1 (\<phi>MapAt k (\<phi>MapAt k2 (\<phi>Some Identity)))) \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def
                             expand[where x=\<open>1(k := 1(k2 \<mapsto> v))\<close>, simplified]
@@ -250,7 +267,7 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_dispose_res":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine (1(k \<mapsto> v)))}) \<Longrightarrow> P !!(R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := None))
-         \<lbrace> v \<Ztypecolon> \<phi> (share.\<phi> 1 (\<phi>MapAt k (\<phi>Some Identity))) \<longmapsto> Void \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified] del: subsetI)
   subgoal for r res
@@ -273,7 +290,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res":
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine (1(k := f)))})
       \<Longrightarrow> P !!(R.get res) \<and> dom f = dom (!!(R.get res) k))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := 1))
-         \<lbrace> to_share o f \<Ztypecolon> \<phi> (\<phi>MapAt k Identity) \<longmapsto> Void \<rbrace>\<close>
+         \<lbrace> to_share o f \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> Identity) \<longmapsto> Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k := f)\<close>, simplified] del: subsetI)
   subgoal for r res
