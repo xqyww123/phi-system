@@ -438,6 +438,7 @@ lemma
 \<Longrightarrow> PROP MeetSpec (A \<subseteq> P1 \<inter> P2)\<close>
   unfolding MeetSpec_def by blast
 
+(*
 lemma (in \<phi>fiction)
   \<open> INTERP_COM (R * A) \<inter> INTERP_COM (R * X) = {}
 \<Longrightarrow> (A \<longrightarrow>\<^sub>\<phi>[R] B) \<subseteq> (X \<longrightarrow>\<^sub>\<phi>[R] Y)\<close>
@@ -456,7 +457,7 @@ lemma (in \<phi>fiction)
     show ?thesis
       apply (rule prems(2)[THEN mp])
 
-
+*)
 
 
 (*

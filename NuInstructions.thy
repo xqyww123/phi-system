@@ -1,5 +1,5 @@
 theory NuInstructions
-  imports NuPrime NuLLReps
+  imports NuPrime NuSys
 begin
 
 section \<open>Common Instructions\<close>
