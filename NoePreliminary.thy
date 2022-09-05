@@ -89,6 +89,12 @@ locale mult_strip_011 =
 
 definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
 
+lemma Inhabited_I:
+  \<open>x \<in> S \<Longrightarrow> Inhabited S\<close>
+  unfolding Inhabited_def ..
+
+
+
 class no_inverse = times + one +
   assumes no_inverse[simp]: \<open>a * b = 1 \<longleftrightarrow> a = 1 \<and> b = 1\<close>
 

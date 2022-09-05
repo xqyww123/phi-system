@@ -10,6 +10,8 @@ subsection \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
+(*TODO: array reference*)
+
 virtual_datatype \<phi>OO_ty = \<phi>min_ty +
   T_ref :: unit
 
@@ -74,7 +76,7 @@ locale \<phi>OO_sem_pre =
                 \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra)
             ) itself\<close>
 assumes WT_ref[simp]: \<open>Well_Type \<tau>Ref = UNIV\<close>
-  and   zero_ref[simp]: \<open>Zero \<tau>Ref = V_ref.mk Nil\<close>
+  and   zero_ref[simp]: \<open>Zero \<tau>Ref = Some (V_ref.mk Nil)\<close>
   and   Can_EqCompare_ref[simp]: \<open>Can_EqCompare res (V_ref.mk ref1) (V_ref.mk ref2)\<close>
   and   EqCompare_ref[simp]:     \<open>EqCompare (V_ref.mk ref1) (V_ref.mk ref2) \<longleftrightarrow> ref1 = ref2\<close>
 begin
@@ -119,7 +121,7 @@ sublocale R_objs: partial_map_resource2 Valid_Objs R_objs Resource_Validator
   by (standard, simp_all add: Resource_Validator_objs)
 
 definition initial_value_of_class
-  where \<open>initial_value_of_class cls = map_option Zero o class.fields cls\<close>
+  where \<open>initial_value_of_class cls = map_option (the o Zero) o class.fields cls\<close>
 
 lemma dom_initial_value_of_class:
   \<open>dom (initial_value_of_class cls) = dom (class.fields cls)\<close>
@@ -239,7 +241,7 @@ definition (in \<phi>OO_sem) op_obj_load_field :: \<open>field_name \<Rightarrow
     R_objs.\<phi>R_get_res_entry ref field (\<lambda>v.
     \<phi>M_assert (v \<in> Well_Type TY) \<ggreater> Return (sem_value v)))\<close>
 
-lemma (in \<phi>OO) op_obj_load_field:
+lemma (in \<phi>OO) op_obj_load_field_\<phi>app:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_load_field field TY raw \<lbrace>
       v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)

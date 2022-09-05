@@ -137,56 +137,9 @@ fun dec_blk_level ctxt =
 
 
 
-type working_mode = {
-  domain: Proof.context -> term -> bool,
-  destined_phi: term (*term of the current sequent*) -> term,
-  destined_phi_c: cterm (*term of the current sequent*) -> cterm,
-  end_block: (Proof.context * Proof.context) -> thm (*solution*) -> thm (*goal*) -> thm (*goal'*),
-  end_proof: Proof.context -> thm (*solution*) -> thm (*goal*) -> thm (*goal'*)
-}
 
-structure Working_Modes = Generic_Data(
-  type T = working_mode Symtab.table
-  val empty = Symtab.empty
-  val merge = Symtab.merge (K false)
-)
 
-fun working_mode_on ctxt goal =
-      Symtab.get_first (fn (_,mode) => if #domain mode ctxt goal then SOME mode else NONE)
-        (Working_Modes.get (Context.Proof ctxt))
-fun working_mode_on1 ctxt goal =
-      case working_mode_on ctxt goal of SOME x => x
-         | NONE => error ("Do not know how to handle goal " ^ Syntax.string_of_term ctxt goal)
 
-fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
-
-val procedure : working_mode = 
-  let
-    val destined_phi =
-          orelse_opt (try (#4 o PhiSyntax.dest_CurrentConstruction))
-         (orelse_opt (try (#3 o PhiSyntax.dest_procedure))
-             (#4 o PhiSyntax.dest_PendingConstruction))
-    val destined_phi_c =
-          orelse_opt (try (#4 o PhiSyntax.dest_CurrentConstruction_c))
-         (orelse_opt (try (#3 o PhiSyntax.dest_procedure_c))
-             (#4 o PhiSyntax.dest_PendingConstruction_c))
-  in {
-    domain = (K (can PhiSyntax.dest_procedure)),
-    destined_phi = destined_phi,
-    destined_phi_c = destined_phi_c,
-    end_proof = (fn ctxt => fn solution => fn goal =>
-        NuApply.MP ctxt solution goal),
-    end_block = (fn (ctxt,ctxt') => fn solution => fn goal =>
-        let
-          val solution' = singleton (Proof_Context.export ctxt ctxt') solution
-        in
-          NuApply.MP ctxt' solution' goal
-        end
-        handle e => (Runtime.exn_system_message e; Exn.reraise (@{print} e)))
-} end
-
-val _ = Theory.setup (Context.theory_map
-            (Working_Modes.map (Symtab.update_new ("procedure", procedure))))
 
 
 
@@ -423,7 +376,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                              o Morphism.term (Proof_Context.export_morphism ctxt''' lthy)
                              o Free) vars'')
                    |> Conv.fconv_rule (Conv.repeat_changed_conv (Object_Logic.atomize lthy))
-                   |> (fn sol => #end_proof procedure lthy sol
+                   |> (fn sol => NuApply.MP lthy sol
                                     (singleton (Proof_Context.export ctxt''' lthy) proof0))
                    |> Goal.conclude
                    |> Object_Logic.rulify lthy
@@ -521,7 +474,7 @@ fun gen_finish_proc qed genz int stat =
   let
     val ctxt_ = Proof.context_of stat
     val goal = get_thesis ctxt_
-    val mode = working_mode_on1 ctxt_ (Thm.term_of goal)
+    val mode = Phi_Working_Mode.working_mode_on1 ctxt_ (Thm.term_of goal)
   in stat
   |> Proof.map_context (dec_blk_level #> snd)
   |> Proof.map_context_result (fn ctxt =>
@@ -590,7 +543,9 @@ fun gen_finish_proc qed genz int stat =
           (fn sequent => fn stat =>
       let
         val ctxt = Proof.context_of stat
-        val end_tac = basic_method (fn ctxt' => #end_block mode (ctxt,ctxt') sequent)
+        val end_tac = basic_method (fn ctxt' =>
+              NuApply.MP ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent)
+            )
        in
         stat
           |> Proof.set_facts [] 
@@ -678,7 +633,7 @@ fun gen_begin_block prep_attr bindings int stat =
     val (prems, goal) = (front prems_goal, last prems_goal)
     val (proc,arg,ret,_) = PhiSyntax.dest_procedure goal
 
-    val mode = working_mode_on1 ctxt goal
+    val mode = Phi_Working_Mode.working_mode_on1 ctxt goal
     
     val blk_name = case proc of (Var ((x,_),_)) => x
                       | _ => "block"
@@ -697,7 +652,7 @@ fun gen_begin_block prep_attr bindings int stat =
                   val th'' = th'
                           |> Drule.forall_intr_list (map Drule.dest_term vars')
                           |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
-                in #end_proof mode ctxt'' th'' sequent
+                in NuApply.MP ctxt'' th'' sequent
                 end
           in if is_top
              then stat

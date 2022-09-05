@@ -77,9 +77,8 @@ fixes EqCompare :: \<open>'VAL \<Rightarrow> 'VAL \<Rightarrow> bool\<close>
     and   eqcmp_sym:   "EqCompare A B \<longleftrightarrow> EqCompare B A"
     and   eqcmp_trans: "EqCompare A B \<Longrightarrow> EqCompare B C \<Longrightarrow> EqCompare A C" *)
 
-fixes Zero :: \<open>'TY \<Rightarrow> 'VAL\<close>
-assumes zero_well_typ: "Zero T \<in> Well_Type T"
-(*TODO: not all value has zero!!*)
+fixes Zero :: \<open>'TY \<Rightarrow> 'VAL option\<close>
+assumes zero_well_typ: "pred_option (\<lambda>v. v \<in> Well_Type T) (Zero T)"
 begin
 
 lemma Well_Type_unique:

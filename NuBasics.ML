@@ -28,9 +28,6 @@ signature NU_BASICS = sig
   val mk_name_hint : string -> term -> term
   val mk_label_thm : string -> thm
 
-  val dest_Cast   : term -> term * term * term
-  val dest_Cast_c : cterm -> cterm * cterm * cterm
-
   val intro_param : cterm -> thm
   val intro_param_name : string -> thm
 
@@ -67,10 +64,9 @@ fun the_implication' ctxt =
   case Programming_Sequent.get ctxt of SOME (_, _, imp) => Lazy.force imp
                                      | _ => (err_bad_env (); [])
 
-fun reason_programming_implication ctxt sequent =
+fun reason_programming_implication mode ctxt sequent =
   let
-    val CurrentConstruction_mk_elim_rule =
-            Proof_Context.get_thm ctxt "local.CurrentConstruction_mk_elim_rule"
+    val CurrentConstruction_mk_elim_rule = #inhabited_rule mode ctxt
     val stat = (sequent RS CurrentConstruction_mk_elim_rule)
                   |> pair ctxt |> SOME
                handle THM _ => NONE
@@ -81,18 +77,14 @@ fun reason_programming_implication ctxt sequent =
 
 fun set_programming_sequent' sequent ctxt =
   let
-    val is_construction =
-          case Thm.prop_of sequent
-            of \<^const>\<open>Trueprop\<close> $ P => NuHelp.has_head \<^const_name>\<open>\<phi>empty.CurrentConstruction\<close> P
-             | _ => false
     fun put data = Programming_Sequent.put (SOME data) ctxt
   in
-    if is_construction
-    then put (sequent, sequent, Lazy.lazy (fn () => reason_programming_implication ctxt sequent))
-    else
-      case Programming_Sequent.get ctxt
-        of SOME (_, construction, implication) => put (sequent, construction, implication)
-         | NONE => put (sequent, sequent, Lazy.value [])
+    case Phi_Working_Mode.working_mode_on ctxt (Thm.concl_of sequent)
+      of SOME mode => put (sequent, sequent, Lazy.lazy (fn () =>
+                                                reason_programming_implication mode ctxt sequent))
+       | _ => case Programming_Sequent.get ctxt
+                of SOME (_, construction, implication) => put (sequent, construction, implication)
+                 | NONE => put (sequent, sequent, Lazy.value [])
   end
   
 
@@ -186,8 +178,6 @@ fun intro_param tm =
                    Vars.make  [((("x",0), typ_of (ctyp_of_cterm tm)), tm)]) @{thm ParamTag}
 val intro_param_name = intro_param o mk_label_c
 
-val dest_Cast   = dest_triop   @{const_name "Imply"}
-val dest_Cast_c = dest_triop_c @{const_name "Imply"}
 
 
 

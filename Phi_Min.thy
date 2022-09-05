@@ -22,7 +22,7 @@ end
 subsubsection \<open>Value\<close>
 
 virtual_datatype 'TY \<phi>min_val :: "nonsepable_semigroup" = 'TY \<phi>empty_val +
-  V_int     :: \<open>nat \<times> nat\<close>
+  V_int     :: \<open>nat \<times> nat\<close> \<comment> \<open>bits \<times> value\<close>
 
 subsubsection \<open>Resource\<close>
 
@@ -52,7 +52,6 @@ locale \<phi>min_sem =
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
             and TYPE'REP  = \<open>TYPE('RES::total_sep_algebra)\<close>
 + \<phi>resource_sem where Resource_Validator = Resource_Validator
-+ \<phi>resource_sem where Resource_Validator = Resource_Validator
 for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
                 \<times> ('RES_N => 'RES::total_sep_algebra)) itself\<close>
@@ -61,7 +60,7 @@ assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |
 assumes res_valid_var[simp]: \<open>Resource_Validator R_var.name = {R_var.inject (Fine vars) |vars. finite (dom vars)}\<close>
 assumes can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (b1,x1)) (V_int.mk (b2,x2)) \<longleftrightarrow> b1 = b2"
 assumes eqcmp_int[simp]: "EqCompare (V_int.mk i1) (V_int.mk i2) \<longleftrightarrow> i1 = i2"
-assumes zero_int[simp]: \<open>Zero (T_int.mk b)      = V_int.mk (b,0)\<close>
+assumes zero_int[simp]: \<open>Zero (T_int.mk b)    = Some (V_int.mk (b,0))\<close>
 
 begin
 
@@ -135,6 +134,11 @@ lemma [\<phi>reason on \<open>\<phi>Equal (\<nat>[?b]) ?c ?eq\<close>]:
 
 lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) (\<nat>[?b]) ?zero\<close>]:
   "\<phi>Zero (T_int.mk b) (\<nat>[b]) 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^b
+\<Longrightarrow> is_singleton (x \<Ztypecolon> \<nat>[b])\<close>
+  by (rule is_singletonI''; simp add: \<phi>expns)
 
 paragraph \<open>Rounded Natural Number\<close>
 
@@ -237,6 +241,11 @@ lemma \<phi>Bool_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns)
 
+lemma [\<phi>reason]:
+  \<open>is_singleton (x \<Ztypecolon> \<bool>)\<close>
+  by (rule is_singletonI''; simp add: \<phi>expns)
+
+
 abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
 
 
@@ -324,7 +333,7 @@ lemma [\<phi>reason 2000 on \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Var var T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] \<phi>cast_intro_frame
+  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] implies_left_prod
   by (metis Var_subty)
 
 
@@ -344,7 +353,7 @@ lemma [\<phi>reason 2000 on \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Var var T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] \<phi>cast_intro_frame
+  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] implies_left_prod
   by (metis Var_subty) 
 
 

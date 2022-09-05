@@ -119,7 +119,7 @@ lemma SemTyp_Of_I[intro!, simp]:
 paragraph \<open>Zero Value\<close>
 
 definition \<phi>Zero :: "'TY \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
-  where [\<phi>def]: "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> (x \<Ztypecolon> T)"
+  where [\<phi>def]: "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
 
 paragraph \<open>Equality\<close>
 
@@ -130,6 +130,13 @@ definition \<phi>Equal :: "('VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \
 
 end
 
+paragraph \<open>Functional\<close>
+
+lemma is_singletonI'':
+  \<open> \<exists>p. p \<in> A
+\<Longrightarrow> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
+\<Longrightarrow> is_singleton A\<close>
+  by (metis equals0D is_singletonI')
 
 
 (* declare split_paired_All[simp del] split_paired_Ex[simp del] *)
@@ -213,17 +220,13 @@ definition (in \<phi>empty)
 lemma (in \<phi>empty) CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
 
-lemma (in \<phi>empty) CurrentConstruction_mk_elim_rule:
-  "CurrentConstruction mode s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
-  using CurrentConstruction_D by blast
 
 
-
-subsubsection \<open>Rules for Constructing Programs\<close>
+subsection \<open>Rules for Constructing Programs\<close>
 
 context \<phi>empty begin
 
-paragraph \<open>Construct Procedure\<close>
+subsubsection \<open>Construct Procedure\<close>
 
 lemma \<phi>apply_proc:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
@@ -265,12 +268,20 @@ lemma \<phi>reassemble_proc_final:
   unfolding CurrentConstruction_def PendingConstruction_def \<phi>Procedure_def bind_def pair_All
   by blast
 
-paragraph \<open>Construct View Shift\<close>
+lemma "\<phi>__Return_rule__":
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_::unit sem_value. Y \<rbrace>\<close>
+  unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def
+  by clarsimp
+
+subsubsection \<open>Construct View Shift\<close>
 
 lemma \<phi>make_view_shift:
   \<open> (\<And>s R. \<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S \<Longrightarrow> (\<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S') \<and> P)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding CurrentConstruction_def View_Shift_def by blast
+
+subsubsection \<open>Modification\<close>
 
 paragraph \<open>Rename Procedure\<close>
 
@@ -280,53 +291,72 @@ lemma \<phi>rename_proc_with_goal:
   \<open>f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def using \<phi>rename_proc .
 
-paragraph \<open>View Shift & Subtyping\<close>
+subsubsection \<open>Application of View Shift & Subtyping\<close>
 
-lemma (in \<phi>empty) \<phi>apply_view_shift_P:
+lemma \<phi>apply_view_shift_P:
   "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
   unfolding CurrentConstruction_def View_Shift_def
   by (simp_all add: pair_All \<phi>expns)
 
-lemma (in \<phi>empty) \<phi>apply_view_shift:
+lemma \<phi>apply_view_shift:
   "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> CurrentConstruction mode blk R S'"
   unfolding CurrentConstruction_def View_Shift_def
   by (simp_all add: pair_All \<phi>expns)
 
-lemma (in \<phi>empty) "\<phi>cast":
+lemma "\<phi>cast":
   "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'"
   unfolding CurrentConstruction_def Imply_def
   by (simp_all add: pair_All \<phi>expns) blast
 
-lemma (in \<phi>empty) "\<phi>cast_P":
+lemma "\<phi>cast_P":
   "\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T') \<and> P"
   unfolding CurrentConstruction_def Imply_def
   by (simp_all add: pair_All \<phi>expns) blast
 
 end
 
+subsubsection \<open>Construct Implication\<close>
+
+lemma "\<phi>make_implication":
+  \<open>(\<And>x. x \<in> S \<Longrightarrow> x \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def by (simp add: \<phi>expns)
+
+subsubsection \<open>Essential Rules for Reasoning\<close>
+
+paragraph \<open>Inhabit Rule\<close>
+
+context \<phi>empty begin
+
+lemma CurrentConstruction_Inhabited_rule:
+  "CurrentConstruction mode s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
+  using CurrentConstruction_D by blast
+
 paragraph \<open>Simplification in the Programming\<close>
 
-
-lemma (in \<phi>empty) [simp]:
+lemma [simp]:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P"
   unfolding CurrentConstruction_def by (simp_all add: \<phi>expns pair_All)
 
-lemma (in \<phi>empty) [simp]:
+lemma [simp]:
   "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> (B \<and> C)"
   by simp
 
-lemma (in \<phi>empty) \<phi>ExTyp_strip:
+lemma \<phi>ExTyp_strip:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExSet T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T c)"
   unfolding CurrentConstruction_def atomize_eq by (simp_all add: \<phi>expns pair_All)
 
-lemma (in \<phi>empty) Subjection_simp_proc_arg'[simp]:
+lemma Subjection_simp_proc_arg'[simp]:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)"
   (* and Subjection_simp_func_arg[simp]: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<and>\<^sup>s P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<longmapsto> Y \<rbrace>)" *)
   unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
 
-lemmas (in \<phi>empty) Subjection_simp_proc_arg[unfolded atomize_eq[symmetric]] = Subjection_simp_proc_arg'
+lemmas Subjection_simp_proc_arg[unfolded atomize_eq[symmetric]] = Subjection_simp_proc_arg'
+
+end
 
 
+
+section \<open>More Features of the Deductive Programming\<close>
 
 subsection \<open>Antecedents of Reasoning - Part I\<close>
 
@@ -535,14 +565,12 @@ ML_file "library/reasoners.ML"
   = (rule Premise_I; simp add: \<phi>expns)
 
 
-
-section \<open>More Features of the Deductive Programming\<close>
-
-subsection \<open>Preliminary\<close>
+subsection \<open>General\<close>
 
 subsubsection \<open>Syntax\<close>
 
 ML_file PhiSyntax.ML
+ML_file Phi_Working_Mode.ML
 ML_file NuBasics.ML
 
 consts val_of :: " 'a \<Rightarrow> 'b "
@@ -607,14 +635,6 @@ lemma (in \<phi>empty) "\<phi>__final_proc_rewrite__'":
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Conv_def by simp
 
-subsubsection \<open>Misc\<close>
-
-lemma (in \<phi>empty) "\<phi>__Return_rule__":
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_::unit sem_value. Y \<rbrace>\<close>
-  unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def
-  by clarsimp
-
 
 subsection \<open>Ad-hoc Overload\<close>
 
@@ -627,54 +647,14 @@ attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 NuApplicant.n
 \<phi>overloads cast \<open>Invoke subtyping on the internal content\<close>
 
 
+subsection \<open>Cast & View Shift\<close>
 
-subsection \<open>Subtype\<close>
-
-lemma subty_0[\<phi>reason 2000 on \<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X\<close>
-  unfolding Imply_def zero_set_def by simp
-
-lemma cast_id[\<phi>reason 2000 on \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  "A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A" unfolding Imply_def by fast
-
-lemma cast_id_ty[\<phi>reason 30 on \<open>?x \<Ztypecolon> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+lemma implies_refl_ty[\<phi>reason 30 on \<open>?x \<Ztypecolon> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = y \<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> T" unfolding Imply_def by fast
-
-lemma subty_union[\<phi>reason 800]:
-  \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X + Y \<^bold>a\<^bold>n\<^bold>d P\<close>
-  \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X + Y \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding Imply_def by simp_all
-
-(* abbreviation SimpleSubty :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2_ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _)" [2,14] 13)
-  where "(A \<longmapsto> B) \<equiv> (\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d True)" *)
-(* lemma SubtyE[elim]: "A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> (\<not> Inhabited A \<Longrightarrow> C) \<Longrightarrow> (Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> A \<subseteq> B \<Longrightarrow> P \<Longrightarrow> C) \<Longrightarrow> C"
-   unfolding Imply_def Inhabited_def by (auto intro: Inhabited_subset)
-lemma SubtyI[intro]: "Inhabited A \<Longrightarrow> A \<subseteq> B \<Longrightarrow> P \<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P"
-  and [intro]: "\<not> Inhabited A \<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P" unfolding Imply_def Inhabited_def by auto *)
-
-lemma \<phi>cast_trans:
-  "A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P
-    \<Longrightarrow> (P \<Longrightarrow> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s C \<^bold>a\<^bold>n\<^bold>d Q)
-    \<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s C \<^bold>a\<^bold>n\<^bold>d P \<and> Q"
-  unfolding Imply_def by auto
-
-
-lemma \<phi>cast_intro_frame:
-  "U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> R * U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * U \<^bold>a\<^bold>n\<^bold>d P "
-  unfolding Imply_def pair_forall times_set_def by blast
-
-lemma \<phi>cast_intro_frame_R:
-  "U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> U' * R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U * R \<^bold>a\<^bold>n\<^bold>d P "
-  unfolding Imply_def pair_forall times_set_def by blast
 
 lemma cast_whole_\<phi>app:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' \<^bold>a\<^bold>n\<^bold>d P"
   unfolding Argument_def .
-
-
-subsection \<open>View Shift\<close>
 
 context \<phi>empty begin
 
@@ -686,15 +666,15 @@ lemma View_Shift_by_Subtyp[intro?]:
 
 lemma view_shift_0[\<phi>reason 2000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> X\<close>
-  by (blast intro: View_Shift_by_Subtyp subty_0)
+  by (blast intro: View_Shift_by_Subtyp zero_implies_any)
   
 lemma view_shift_id[\<phi>reason 2000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<longmapsto> ?B \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> A"
-  by (blast intro: View_Shift_by_Subtyp cast_id)
+  by (blast intro: View_Shift_by_Subtyp implies_refl)
 
 lemma view_shift_id_ty[\<phi>reason 30 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?x \<Ztypecolon> ?T \<longmapsto> ?y \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = y \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> T"
-  by (blast intro: View_Shift_by_Subtyp cast_id_ty)
+  by (blast intro: View_Shift_by_Subtyp implies_refl_ty)
 
 lemma view_shift_union[\<phi>reason 800]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
@@ -1307,7 +1287,7 @@ lemma [\<phi>reason 1500 on \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> S))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> T) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" \<phi>cast_intro_frame by blast
+  using "\<phi>cast_P" implies_left_prod by blast
 
 lemma \<phi>apply_subtyping_fully[\<phi>reason on \<open>
   PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P))
@@ -1322,7 +1302,7 @@ lemma \<phi>apply_subtyping_fully[\<phi>reason on \<open>
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def View_Shift_Reasoning_def
-  by (meson \<phi>cast_P \<phi>cast_intro_frame \<phi>view_shift_P)
+  by (meson \<phi>cast_P implies_left_prod \<phi>view_shift_P)
   
 
 
@@ -1417,7 +1397,7 @@ lemma [\<phi>reason 2000 on \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL S))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL T) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" cast_val_\<phi>app[unfolded Argument_def] \<phi>cast_intro_frame by blast
+  using "\<phi>cast_P" cast_val_\<phi>app[unfolded Argument_def] implies_left_prod by blast
 
 lemma [\<phi>reason 2000 on \<open>
   PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
@@ -1432,7 +1412,7 @@ lemma [\<phi>reason 2000 on \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL S))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> VAL T) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" cast_val_\<phi>app[unfolded Argument_def] \<phi>cast_intro_frame by metis
+  using "\<phi>cast_P" cast_val_\<phi>app[unfolded Argument_def] implies_left_prod by metis
 *)
 
 subparagraph \<open>Procedure methods\<close>
@@ -1613,6 +1593,35 @@ lemma (in \<phi>empty) [\<phi>reason ]:
   unfolding DoAction_def View_Shift_Reasoning_def View_Shift_Action_def
   using \<phi>apply_view_shift_P \<phi>frame_view by blast
 
+subsection \<open>Representation of Value in Assertions\<close>
+
+definition (in \<phi>empty) Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'a) \<phi>\<close>
+  where \<open>Val val T = (\<lambda>x. Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
+
+subsubsection \<open>Syntax\<close>
+
+consts anonymous_val :: \<open>'a sem_value\<close>
+  \<comment> \<open>Any anonymous_val will be translated into a unique value during the parsing\<close>
+
+syntax val_syntax :: "logic \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>l _" [18] 17)
+
+setup \<open>(Sign.add_trrules (let open Ast 
+    in [
+      Syntax.Parse_Rule (
+        Appl [Constant \<^syntax_const>\<open>val_syntax\<close>,
+                Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x", Variable "T"]],
+        Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x",
+                Appl [Constant "\<^const>local.Val", Constant \<^const_name>\<open>anonymous_val\<close>, Variable "T"]])
+  ] end))\<close>
+
+ML_file \<open>library/procedure_syntax.ML\<close>
+
+lemma (in \<phi>empty) [\<phi>reason 1100 on
+  \<open>PROP Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> 'VAL set)) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+]:
+  \<open>PROP Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
+  unfolding Synthesis_Parse_def ..
+
 
 
 
@@ -1701,6 +1710,10 @@ lemma Identity_expn[\<phi>expns]:
 lemma Identity_inhabited[elim!,\<phi>reason_elim!]:
   \<open>Inhabited (x \<Ztypecolon> Identity) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+lemma Identity_functional[\<phi>reason]:
+  \<open>is_singleton (x \<Ztypecolon> Identity)\<close>
+  by (rule is_singletonI''; simp add: \<phi>expns)
+
 lemma Identity_E[\<phi>reason on \<open>?v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?x \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T\<close>
   unfolding Imply_def by (simp add: \<phi>expns)
@@ -1718,10 +1731,29 @@ lemma from_Identity_\<phi>app:
   unfolding Imply_def Premise_def by (simp add: \<phi>expns)
 
 
+subsection \<open>None\<close>
+
+definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close> ("\<circle>")
+  where \<open>\<phi>None = (\<lambda>x. { 1 }) \<close>
+
+lemma \<phi>None_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>None) \<longleftrightarrow> p = 1\<close>
+  unfolding \<phi>None_def \<phi>Type_def by simp
+
+lemma \<phi>None_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
+named_theorems \<phi>None_simps \<open>Several simplification rules to clean unnecessary \<phi>None.
+  They are maybe generated by automation procedures.\<close>
+
+lemma \<phi>None_itself_is_one[simp,\<phi>None_simps]:
+  \<open>(() \<Ztypecolon> \<phi>None) = 1\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
 
 subsection \<open>Prod\<close>
 
-definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixl "\<^emph>" 70)
+definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixl "\<^emph>" 55)
   where "A \<^emph> B = (\<lambda>(a,b). A a * B b)"
 
 lemma \<phi>Prod_expn[\<phi>expns]:
@@ -1889,6 +1921,12 @@ lemma \<phi>MapAt_\<phi>Prod:
   apply (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1))
   by (metis fun_1upd_homo_right1)
 
+lemma \<phi>MapAt_cast[\<phi>reason]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow> U \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def
+  by (clarsimp simp add: \<phi>expns; blast)
+
 
 
 definition \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>L\<^sub>s" 60)
@@ -2020,9 +2058,6 @@ lemma (in \<phi>empty) \<phi>Any_vs [\<phi>reason 1200 on \<open>\<^bold>v\<^bol
 
 subsection \<open>Value\<close>
 
-definition (in \<phi>empty) Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'a) \<phi>\<close>
-  where \<open>Val val T = (\<lambda>x. Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
-
 lemma (in \<phi>empty) Val_expn [\<phi>expns]:
   \<open>(x \<Ztypecolon> Val val T) = (Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
   unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
@@ -2037,29 +2072,6 @@ lemma (in \<phi>empty) Val_cast [\<phi>reason]:
   unfolding Imply_def by (simp add: \<phi>expns)
 
 
-subsubsection \<open>Syntax\<close>
-
-consts anonymous_val :: \<open>'a sem_value\<close>
-  \<comment> \<open>Any anonymous_val will be translated into a unique value during the parsing\<close>
-
-syntax val_syntax :: "logic \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>l _" [18] 17)
-
-setup \<open>(Sign.add_trrules (let open Ast 
-    in [
-      Syntax.Parse_Rule (
-        Appl [Constant \<^syntax_const>\<open>val_syntax\<close>,
-                Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x", Variable "T"]],
-        Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x",
-                Appl [Constant "\<^const>local.Val", Constant \<^const_name>\<open>anonymous_val\<close>, Variable "T"]])
-  ] end))\<close>
-
-ML_file \<open>library/procedure_syntax.ML\<close>
-
-lemma (in \<phi>empty) [\<phi>reason 1100 on
-  \<open>PROP Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> 'VAL set)) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
-]:
-  \<open>PROP Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
-  unfolding Synthesis_Parse_def ..
 
 subsubsection \<open>Simplification Rules\<close>
 
@@ -2086,7 +2098,7 @@ lemma (in \<phi>empty) [\<phi>reason 2100 on \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Val_cast \<phi>cast_intro_frame by metis
+  using "\<phi>cast_P" Val_cast implies_left_prod by metis
 
 
 lemma (in \<phi>empty) [\<phi>reason 2000 on \<open>
@@ -2105,7 +2117,7 @@ lemma (in \<phi>empty) [\<phi>reason 2000 on \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Val_cast \<phi>cast_intro_frame by metis
+  using "\<phi>cast_P" Val_cast implies_left_prod by metis
 
 subsubsection \<open>Simplification\<close>
 
@@ -2241,6 +2253,11 @@ lemma \<phi>Share_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> n \<Znrres> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+lemma \<phi>Share_cast[\<phi>reason]:
+  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def by (clarsimp simp add: \<phi>expns; blast)
+
 lemma \<phi>Share_1[simp]:
   \<open> (1 \<Znrres> T) = T \<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
@@ -2258,14 +2275,14 @@ definition \<phi>Sep_Disj :: \<open>('a::sep_disj,'b1) \<phi> \<Rightarrow> ('a:
 lemma [\<phi>reason 1200]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
 \<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow> T) (k2 \<^bold>\<rightarrow> U)\<close>
-  for T :: \<open>('a::sep_disj_one, 'b) \<phi>\<close>
+  for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
   unfolding \<phi>Sep_Disj_def
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
 
 lemma [\<phi>reason 1200]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
 \<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow>\<^sub>L T) (k2 \<^bold>\<rightarrow>\<^sub>L U)\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::sep_disj_one, 'b) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1, 'b) \<phi>\<close>
   unfolding \<phi>Sep_Disj_def
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def push_map_def)
 
@@ -2354,7 +2371,7 @@ lemma \<phi>Share_\<phi>MapAt_L:
   apply (clarsimp simp add: share_push_map[symmetric]) by blast
 
 lemma \<phi>Share_\<phi>Prod:
-  \<open>n \<Znrres> T \<^emph> U = (n \<Znrres> T) \<^emph> (n \<Znrres> U)\<close>
+  \<open>n \<Znrres> (T \<^emph> U) = (n \<Znrres> T) \<^emph> (n \<Znrres> U)\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
   apply (metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
@@ -2446,32 +2463,88 @@ lemma [\<phi>reason 1200]:
 
 
 
-definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close> ("\<circle>")
-  where \<open>\<phi>None = (\<lambda>x. { 1 }) \<close>
-
-lemma \<phi>None_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>None) \<longleftrightarrow> p = 1\<close>
-  unfolding \<phi>None_def \<phi>Type_def by simp
-
-lemma \<phi>None_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
-
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Sep_Disj_Identical (\<phi>None :: ('a::share_module_sep,unit) \<phi>) \<close>
   unfolding \<phi>Sep_Disj_Identical_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma \<phi>Share_\<phi>None:
+lemma \<phi>Share_\<phi>None[\<phi>None_simps]:
   \<open>0 < n \<Longrightarrow> n \<Znrres> \<circle> = (\<circle> :: ('a::share_one,unit) \<phi>)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
-lemma \<phi>MapAt_\<phi>None:
+lemma \<phi>MapAt_\<phi>None[\<phi>None_simps]:
   \<open>k \<^bold>\<rightarrow> \<circle> = \<circle>\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
-lemma \<phi>MapAt_L_\<phi>None:
+lemma \<phi>MapAt_L_\<phi>None[\<phi>None_simps]:
   \<open>k \<^bold>\<rightarrow>\<^sub>L \<circle> = \<circle>\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
+
+
+
+subsection \<open>Automation for Sharing Permission\<close>
+
+subsubsection \<open>Extract\<close>
+
+definition ASP_E :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>ASP_E From Remain To Aux \<longleftrightarrow> (From \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Remain * To \<^bold>a\<^bold>n\<^bold>d Aux)\<close>
+
+paragraph \<open>Structural Point\<close>
+
+lemma [\<phi>reason 3000]:
+  \<open>ASP_E X (() \<Ztypecolon> \<phi>None) X True\<close>
+  for X :: \<open>'a::sep_magma_1 set\<close>
+  unfolding ASP_E_def mult_1_left implies_refl \<phi>None_itself_is_one
+  using implies_refl .
+
+lemma [\<phi>reason 1200 on
+  \<open>ASP_E (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?P\<close>
+]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k = k'
+\<Longrightarrow> ASP_E (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) P
+\<Longrightarrow> ASP_E (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) P\<close>
+  for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
+  unfolding ASP_E_def Premise_def
+  apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
+  apply (rule \<phi>MapAt_cast) .
+
+lemma [\<phi>reason 80 on
+  \<open>ASP_E ((?x,?y) \<Ztypecolon> (?T::(?'a::sep_algebra,?'b) \<phi>) \<^emph> ?U) ?R (?y \<Ztypecolon> ?W) ?P\<close>
+]:
+  \<open> ASP_E (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> W) P
+\<Longrightarrow> ASP_E ((x,y) \<Ztypecolon> T \<^emph> U) ((r,y) \<Ztypecolon> (R \<^emph> U)) (y \<Ztypecolon> W) P\<close>
+  for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
+  unfolding ASP_E_def \<phi>Prod_expn'
+  by (metis implies_left_prod mult.assoc mult.commute)
+
+lemma [\<phi>reason 80 on
+  \<open>ASP_E ((?x,?y) \<Ztypecolon> (?T::(?'a::sep_monoid,?'b) \<phi>) \<^emph> ?U) ?R (?y \<Ztypecolon> ?W) ?P\<close>
+]:
+  \<open> ASP_E (y \<Ztypecolon> U) (r \<Ztypecolon> R) (y \<Ztypecolon> W) P
+\<Longrightarrow> ASP_E ((x,y) \<Ztypecolon> T \<^emph> U) ((x,r) \<Ztypecolon> (T \<^emph> R)) (y \<Ztypecolon> W) P\<close>
+  for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
+  unfolding ASP_E_def \<phi>Prod_expn'
+  by (metis implies_left_prod mult.assoc)
+
+lemma
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> ASP_E (x \<Ztypecolon> n / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> n / 2 \<Znrres> U) P
+\<Longrightarrow> ASP_E (x \<Ztypecolon> n \<Znrres> T) ((x,r) \<Ztypecolon> n / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> n / 2 \<Znrres> U) P\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  unfolding ASP_E_def \<phi>Prod_expn'
+  \<medium_left_bracket>
+
+  thm \<phi>Share_share[where n=\<open>n/2\<close> and m=\<open>n/2\<close>]
+
+lemma
+  \<open> ASP_E (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) P
+\<Longrightarrow> ASP_E (x \<Ztypecolon> n \<Znrres> T) (r \<Ztypecolon> n \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) P\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  unfolding ASP_E_def \<phi>Share_\<phi>Prod[symmetric] \<phi>Prod_expn'[symmetric]
+  using \<phi>Share_cast .
+
+
+
 
 subsection \<open>Agreement\<close>
 
@@ -2801,7 +2874,7 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
 \<phi>processor \<phi>simplifier 100 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>NuProcessors.simplifier []\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
-\<phi>processor move_fact 200 (\<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T) \<and> ?P\<close>)
+\<phi>processor move_fact 200 (\<open>(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T) \<and> ?P\<close> | \<open>?s \<in> ?S \<and> ?P\<close>)
 \<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
   let
     fun filter_lemma th =
@@ -3053,7 +3126,7 @@ lemmas cast_def = GOAL_CTXT_def FOCUS_TAG_def Imply_def
 (* lemma [\<phi>intro0]: "x \<Ztypecolon> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H' * y \<Ztypecolon> Y \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m * y\<^sub>m \<Ztypecolon> Y \<longmapsto> x\<^sub>m \<Ztypecolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
   \<Longrightarrow> x \<Ztypecolon> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H' * \<blangle> y \<Ztypecolon> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m * \<blangle> y\<^sub>m \<Ztypecolon> Y \<brangle> \<longmapsto> x\<^sub>m \<Ztypecolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
   unfolding Heap_Subty_Goal_def . *)
-(* lemma [\<phi>intro0]: "A \<longmapsto> A \<^bold>d\<^bold>u\<^bold>a\<^bold>l B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B" unfolding SubtyDual_def  by (simp add: cast_id) *)
+(* lemma [\<phi>intro0]: "A \<longmapsto> A \<^bold>d\<^bold>u\<^bold>a\<^bold>l B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B" unfolding SubtyDual_def  by (simp add: implies_refl) *)
 
 (* lemma [\<phi>intro 1000]:
   "L * H \<longmapsto> L * H \<^bold>d\<^bold>u\<^bold>a\<^bold>l L * h\<^sub>m \<Ztypecolon> \<blangle> H\<^sub>m \<brangle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s L * h\<^sub>m \<Ztypecolon> H\<^sub>m \<brangle>"
@@ -3450,12 +3523,22 @@ lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding Structural
 
 subsection \<open>Convergence of Branches\<close>
 
+text \<open>This merging procedure retains the order of the left side.\<close>
+
 consts branch_convergence :: mode
 
 definition "Merge \<equiv> If"
 (*definition "MergeNeg \<equiv> Not"*)
 
-text \<open>This merging procedure always retain the order of the left side.\<close>
+text \<open>Though definitionally Merge is identical to If, there is semantic difference between them.
+  Merge has a systematical meaning. Merge P A B means the procedure merging two assertions
+  A and B, whereas If P A B means to merge two abstract objects or two refinement relations.
+  A key difference in the procedure is, there is fallback for If P A B. If there is no further
+  rule telling how to do with If P A B, then the result of the procedure on this is just
+  If P A B itself --- it is usual that a branch statement returning 1 or 2 is specified by
+  \<^term>\<open>(if P then 1 else 2) \<Ztypecolon> \<phi>Nat\<close>. In contrast, there is no fallback for Merge P A B, because
+  a failure of Merge P A B means the failure of merging those two assertions A and B, which is
+  the failure of the whole merging procedure.\<close>
 
 subsubsection \<open>Identity\<close>
 
@@ -3695,7 +3778,7 @@ lemma [\<phi>reason on \<open>PROP Filter_Out_Values ?X ?Z\<close>]:
 
 lemma [\<phi>reason on \<open>PROP Filter_Out_Values ?var_X ?Z\<close>]:
   \<open>PROP Filter_Out_Values X X\<close>
-  unfolding Filter_Out_Values_def using cast_id .
+  unfolding Filter_Out_Values_def using implies_refl .
 
 lemma [\<phi>reason 1200 on \<open>PROP Filter_Out_Values'' (ExSet ?T) ?T'\<close>]:
   \<open>(\<And>c. PROP Filter_Out_Values'' (T c) (T' c))
@@ -3792,10 +3875,14 @@ in syn_pattern_match || syn_var_term end\<close>
 (*  \<open>Nu_Reasoners.wrap (fn ctxt => Nu_Reasoners.asm_simp_tac (ctxt addsimps Proof_Context.get_thms ctxt "\<phi>expns"))\<close> *)
 
 
-subsection \<open>Share\<close>
+subsection \<open>Sharing Permission\<close>
 
 definition \<Phi>Share :: \<open>(rat \<Rightarrow> 'a::share set) \<Rightarrow> bool\<close>
   where \<open>\<Phi>Share S \<longleftrightarrow> (\<forall>v m n. v \<in> S m \<longrightarrow> 0 < n \<longrightarrow> share n v \<in> S (n * m))\<close>
+
+
+
+
 
 
 
@@ -3825,6 +3912,9 @@ definition \<phi>M_assert :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<
 
 definition \<phi>M_assume :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_assume P = (\<lambda>s. if P then Return \<phi>V_none s else {PartialCorrect})\<close>
+
+definition \<phi>M_getV_raw :: \<open>('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'RES_N,'RES) proc) \<Rightarrow> ('y,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_getV_raw VDT_dest v F = F (VDT_dest (dest_sem_value v))\<close>
 
 definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'RES_N,'RES) proc) \<Rightarrow> ('y,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
@@ -3870,6 +3960,14 @@ lemma \<phi>M_tail_right_right: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<
 lemma \<phi>M_detail_left[\<phi>reason 2200000]:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace>\<close> by simp
 lemma \<phi>M_detail_right[\<phi>reason 2200000]: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1\<heavy_comma> Y v \<rbrace>\<close> by simp
 
+
+lemma \<phi>M_getV_raw[\<phi>reason!]:
+   \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_raw VDT_dest (sem_value v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem_value v) A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>M_getV_raw_def Premise_def
+  by (clarsimp simp add: \<phi>expns)
+
+declare \<phi>M_getV_raw[where X=1, simplified, \<phi>reason!]
 
 lemma \<phi>M_getV[\<phi>reason!]:
    \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> <\<phi>expn> v \<in> Well_Type TY)

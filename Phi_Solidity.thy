@@ -32,6 +32,15 @@ type_synonym address = \<open>unit object_ref\<close>
 datatype 'VAL ledge_ref = ledge_ref ("instance": address) (path: \<open>'VAL storage_path\<close>)
 hide_const (open) "instance" path
 
+
+definition prepend_ledge_ref :: \<open>'VAL storage_key \<Rightarrow> 'VAL ledge_ref \<Rightarrow> 'VAL ledge_ref\<close>
+  where \<open>prepend_ledge_ref a ref = (case ref of ledge_ref addr path \<Rightarrow> ledge_ref addr (a#path))\<close>
+
+lemma prepend_ledge_ref[simp]:
+  \<open>prepend_ledge_ref a (ledge_ref addr path) = ledge_ref addr (a#path)\<close>
+  unfolding prepend_ledge_ref_def by simp
+
+
 paragraph \<open>Properties\<close>
 
 instantiation ledge_ref :: (type) zero begin
@@ -61,7 +70,7 @@ paragraph \<open>Models for Runtime Environment\<close>
 text \<open>Not Supported: msg.data\<close>
 
 datatype environ = Environ
-  (blockhash: \<open>256 word\<close>)
+  (blockhash: \<open>nat \<Rightarrow> 256 word\<close>)
   (basefee: \<open>256 word\<close>)
   (chainid: \<open>256 word\<close>)
   (coinbase: \<open>256 word\<close>)
@@ -70,12 +79,12 @@ datatype environ = Environ
   (blocknumber: \<open>256 word\<close>)
   (timestamp: \<open>256 word\<close>)
   (gasprice: \<open>256 word\<close>)
+  (origin: address)
 
 datatype mutable_environ = Mutable_Environ
   (sender: address)
   (sig: \<open>32 word\<close>)
   ("value": \<open>256 word\<close>)
-  (origin: address)
 
 hide_const (open) blockhash basefee chainid coinbase difficulty gaslimit blocknumber timestamp
   sender sig "value" gasprice origin
@@ -129,8 +138,8 @@ locale solidity_sem =
             ) itself\<close>
 assumes WT_LedgeRef[simp]: \<open>Well_Type \<tau>LedgeRef = UNIV\<close>
   and   WT_Address [simp]: \<open>Well_Type \<tau>Address  = UNIV\<close>
-  and   zero_LedgeRef[simp]: \<open>Zero \<tau>LedgeRef = V_LedgeRef.mk (ledge_ref Nil [])\<close>
-  and   zero_Address[simp]:  \<open>Zero \<tau>Address  = V_Address.mk Nil\<close>
+  and   zero_LedgeRef[simp]: \<open>Zero \<tau>LedgeRef = Some (V_LedgeRef.mk (ledge_ref Nil []))\<close>
+  and   zero_Address[simp]:  \<open>Zero \<tau>Address  = Some (V_Address.mk Nil)\<close>
   and   Can_EqCompare_LedgeRef[simp]: \<open>Can_EqCompare res (V_LedgeRef.mk lref1) (V_LedgeRef.mk lref2)\<close>
   and   Can_EqCompare_Address[simp]:  \<open>Can_EqCompare res (V_Address.mk addr1)  (V_Address.mk addr2)\<close>
   and   EqCompare_LedgeRef[simp]:     \<open>EqCompare (V_LedgeRef.mk lref1) (V_LedgeRef.mk lref2) \<longleftrightarrow> lref1 = lref2\<close>
@@ -437,13 +446,13 @@ text \<open>\<phi>Init T relates a value with T if the value is initialized; or 
   value of that type with T.\<close>
 
 definition (in \<phi>empty_sem) \<phi>Init :: \<open>('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
-  where \<open>\<phi>Init T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j Zero (SemTyp_Of (x \<Ztypecolon> T)) \<in> (x \<Ztypecolon> T)) + initialized ` (x \<Ztypecolon> T)\<close>
+  where \<open>\<phi>Init T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j the (Zero (SemTyp_Of (x \<Ztypecolon> T))) \<in> (x \<Ztypecolon> T)) + initialized ` (x \<Ztypecolon> T)\<close>
 
 abbreviation (in \<phi>empty_sem) \<phi>Share_Some_Init ("\<fish_eye>i _" [91] 90)
   where \<open>\<phi>Share_Some_Init T \<equiv> \<fish_eye> \<phi>Init T\<close>
 
 lemma (in \<phi>empty_sem) \<phi>Inited_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Init T) \<longleftrightarrow> (p = uninitialized \<and> Zero (SemTyp_Of (x \<Ztypecolon> T)) \<in> (x \<Ztypecolon> T) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T)))\<close>
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Init T) \<longleftrightarrow> (p = uninitialized \<and> the (Zero (SemTyp_Of (x \<Ztypecolon> T))) \<in> (x \<Ztypecolon> T) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T)))\<close>
   unfolding \<phi>Type_def \<phi>Init_def by (simp add: \<phi>expns, blast)
   
 lemma (in \<phi>empty_sem) \<phi>Inited_inhabited[\<phi>reason_elim!, elim!]:
@@ -470,6 +479,8 @@ section Instruction
 
 subsection \<open>Value Arithmetic\<close>
 
+paragraph \<open>Auxiliary\<close>
+
 definition (in solidity_sem) \<phi>M_getV_LedgeRef
     :: \<open>'VAL sem_value \<Rightarrow> ('VAL ledge_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_LedgeRef v F = \<phi>M_getV \<tau>Ref V_LedgeRef.dest v F\<close>
@@ -479,6 +490,8 @@ lemma (in solidity) \<phi>M_getV_LedgeRef[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_LedgeRef raw F \<lbrace> X\<heavy_comma> lref \<Ztypecolon> Val raw LedgeRef \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_LedgeRef_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
 
+declare (in solidity) \<phi>M_getV_LedgeRef[where X=1, simplified, \<phi>reason!]
+
 definition (in solidity_sem) \<phi>M_getV_Address
     :: \<open>'VAL sem_value \<Rightarrow> (address \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_Address v F = \<phi>M_getV \<tau>Address V_Address.dest v F\<close>
@@ -487,6 +500,49 @@ lemma (in solidity) \<phi>M_getV_Address[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F lref \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_Address raw F \<lbrace> X\<heavy_comma> lref \<Ztypecolon> Val raw Address \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_Address_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
+
+
+subsubsection \<open>Calculation of Ledge Ref\<close>
+
+paragraph \<open>Get Member of a Structure\<close>
+
+definition (in solidity_sem) op_get_member_ledgeRef :: \<open>field_name \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_get_member_ledgeRef field raw =
+    \<phi>M_getV_LedgeRef raw (\<lambda>ref.
+    Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_field field) ref)))
+)\<close>
+
+lemma (in solidity) op_get_member_ledgeRef_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_member_ledgeRef field raw \<lbrace>
+    ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
+\<longmapsto> \<^bold>v\<^bold>a\<^bold>l ledge_ref addr (SP_field field#path) \<Ztypecolon> LedgeRef
+\<rbrace>\<close>
+  unfolding op_get_member_ledgeRef_def
+  by (cases raw; simp; \<phi>reason)
+
+
+paragraph \<open>Get Value of a Mapping\<close>
+
+definition (in solidity_sem) op_get_mapping_ledgeRef :: \<open>('VAL \<times> 'VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_get_mapping_ledgeRef =
+    \<phi>M_caseV (\<lambda>raw_ref raw_v.
+    \<phi>M_getV_LedgeRef raw_ref (\<lambda>ref.
+    \<phi>M_getV_raw id raw_v(\<lambda>v.
+    Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_map_key v) ref)))
+)))\<close>
+
+lemma (in solidity) op_get_mapping_ledgeRef_\<phi>app:
+  \<open> is_singleton (x \<Ztypecolon> T)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_mapping_ledgeRef (\<phi>V_pair raw_ref raw_v) \<lbrace>
+    x \<Ztypecolon> Val raw_v T\<heavy_comma>
+    ledge_ref addr path \<Ztypecolon> Val raw_ref LedgeRef
+\<longmapsto> \<^bold>v\<^bold>a\<^bold>l ledge_ref addr (SP_map_key (the_elem (x \<Ztypecolon> T))#path) \<Ztypecolon> LedgeRef
+\<rbrace>\<close>
+  unfolding op_get_mapping_ledgeRef_def
+  apply (cases raw_v; cases raw_ref; simp; \<phi>reason; simp add: \<phi>expns)
+  by (metis is_singleton_the_elem singletonD)
+
+
 
 
 subsection \<open>Ledge\<close>
@@ -501,7 +557,7 @@ definition (in solidity_sem)
   where "\<phi>M_get_res_entry_ledge TY k F =
     R_ledge.\<phi>R_get_res_entry (ledge_ref.instance k) (ledge_ref.path k) (\<lambda>v.
       case v of initialized u \<Rightarrow> \<phi>M_assert (u \<in> Well_Type TY) \<ggreater> F u
-        | uninitialized \<Rightarrow> F (Zero TY))"
+        | uninitialized \<Rightarrow> F (the (Zero TY)))"
 
 definition (in solidity_sem) op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_load_ledge TY v =
@@ -549,7 +605,6 @@ lemma (in solidity) \<phi>M_get_res_entry_R_ledge_1[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_res_entry_ledge TY (ledge_ref addr path) F
       \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   using \<phi>M_get_res_entry_R_ledge[where n=1, simplified] .
-
 
 lemma (in solidity) op_load_ledge:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
@@ -690,12 +745,23 @@ lemma (in solidity) op_set_balance:
 subsubsection \<open>Globally Available Variables\<close>
 
 definition (in solidity_sem)
-      op_get_environ_word :: \<open>(environ \<Rightarrow> 'len::len word) \<Rightarrow> (unit, 'VAL, 'RES_N,'RES) proc'\<close>
-  where \<open>op_get_environ_word G _ =
+      op_get_environ_word :: \<open>(environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_environ_word G =
     R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
 
+definition (in solidity_sem)
+      op_get_mutable_environ_word :: \<open>(mutable_environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_mutable_environ_word G =
+    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
+
+definition (in solidity_sem)
+      op_get_sender :: \<open>('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_sender =
+    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (mutable_environ.sender env))))\<close>
+
+
 lemma (in solidity)
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<phi>V_none \<lbrace>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<lbrace>
       env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))
   \<longmapsto> env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat (G env) \<Ztypecolon> \<nat>[LENGTH('len)]
 \<rbrace>\<close>

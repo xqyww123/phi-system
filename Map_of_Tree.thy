@@ -36,7 +36,7 @@ lemma push_map_distrib_map_add:
 
 lemma push_map_sep_disj[simp]:
   \<open>push_map idx a ## push_map idx b \<longleftrightarrow> a ## b\<close>
-  for a :: \<open>'k list \<Rightarrow> 'v::sep_disj_one\<close>
+  for a :: \<open>'k list \<Rightarrow> 'v::sep_magma_1\<close>
   unfolding sep_disj_fun_def push_map_def apply simp
   by (metis append_eq_conv_conj)
 

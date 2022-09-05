@@ -60,15 +60,15 @@ class sep_disj_intuitive = sep_magma +
   assumes sep_disj_intuitive_right[simp]: \<open>b ## c \<Longrightarrow> a ## b * c \<longleftrightarrow> a ## b \<and> a ## c\<close>
   assumes sep_disj_intuitive_left [simp]: \<open>a ## b \<Longrightarrow> a * b ## c \<longleftrightarrow> a ## c \<and> b ## c\<close>
 
-class sep_disj_one = sep_disj + mult_1 +
-  assumes sep_disj_one_left  [simp]: "x ## 1"
-  assumes sep_disj_one_right [simp]: "1 ## x"
+class sep_magma_1 = sep_magma + mult_1 +
+  assumes sep_magma_1_left  [simp]: "x ## 1"
+  assumes sep_magma_1_right [simp]: "1 ## x"
 
-class sep_monoid = sep_disj_one + sep_semigroup
+class sep_monoid = sep_magma_1 + sep_semigroup
 begin
 lemma sep_no_negative [simp]:
   \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
-  by (metis local.join_positivity local.mult_1_right local.sep_disj_one_left sep_magma.join_sub_def)
+  by (metis local.join_positivity local.mult_1_right local.sep_magma_1_left sep_magma.join_sub_def)
 end
 
 definition (in times) subsume (infix "\<preceq>\<^sub>\<times>" 50) 
@@ -103,7 +103,7 @@ qed
 subclass positive_mult_one ..
 end
 
-class sep_algebra = sep_disj_one + sep_ab_semigroup
+class sep_algebra = sep_magma_1 + sep_ab_semigroup
 begin
 
 subclass sep_monoid ..
@@ -299,7 +299,7 @@ class share_resistence_module_sep = share_resistence + sep_disj + sep_algebra + 
   assumes can_share_one[simp]: \<open>can_share 1\<close>
 begin
 subclass share_module_sep apply (standard; clarsimp simp add: join_sub_def)
-  by (metis local.mult_1_left local.sep_disj_one_right)
+  by (metis local.mult_1_left local.sep_magma_1_right)
 end
 
 
@@ -534,7 +534,7 @@ instance proof
   show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
     unfolding join_sub_def apply (cases x; clarsimp simp add: share_option_def)
     apply (cases \<open>n = 1\<close>)
-     apply (simp, metis can_share_option(1) mult_1_class.mult_1_left sep_disj_one_right)
+     apply (simp, metis can_share_option(1) mult_1_class.mult_1_left sep_magma_1_right)
     apply (cases \<open>n = 0\<close>, simp)
     subgoal premises prems for x'
     proof -
@@ -543,7 +543,7 @@ instance proof
       show ?thesis apply (insert t1)
         unfolding join_sub_def apply (elim disjE; clarsimp)
         apply (metis sep_disj_option(1) times_option(1))
-        by (metis mult_1_class.mult_1_left sep_disj_one_right) 
+        by (metis mult_1_class.mult_1_left sep_magma_1_right) 
     qed .
   show \<open>x ## y \<Longrightarrow> can_share (x * y) = (can_share x \<and> can_share y)\<close>
     by (cases x; cases y; simp)
@@ -739,12 +739,12 @@ instantiation "fun" :: (type,mult_1) mult_1 begin
 instance by (standard; simp add: one_fun_def times_fun_def)
 end
 
-instantiation "fun" :: (type,sep_disj_one) sep_disj_one begin
-instance by (standard; simp add: sep_disj_fun_def)
-end
-
 instantiation "fun" :: (type,sep_magma) sep_magma begin
 instance ..
+end
+
+instantiation "fun" :: (type,sep_magma_1) sep_magma_1 begin
+instance by (standard; simp add: sep_disj_fun_def)
 end
 
 instantiation "fun" :: (type,sep_semigroup) sep_semigroup begin
@@ -1008,9 +1008,9 @@ instantiation set :: ("{sep_disj,times}") mult_zero begin
 instance by (standard; simp add: zero_set_def times_set_def)
 end
 
-instantiation set :: ("{sep_disj_one,no_inverse}") no_inverse begin
+instantiation set :: ("{sep_magma_1,no_inverse}") no_inverse begin
 instance apply (standard, simp add: one_set_def times_set_def set_eq_iff)
-  by (metis (no_types, opaque_lifting) no_inverse sep_disj_one_left sep_disj_one_right)
+  by (metis (no_types, opaque_lifting) no_inverse sep_magma_1_left sep_magma_1_right)
 end
 
 instantiation set :: (type) total_sep_disj begin
@@ -1020,6 +1020,16 @@ end
 
 instantiation set :: (sep_magma) sep_magma begin
 instance ..
+end
+
+instantiation set :: (sep_magma_1) sep_magma_1 begin
+instance proof
+  fix x :: \<open>'a set\<close>
+  show \<open>1 * x = x\<close> unfolding one_set_def times_set_def by simp
+  show \<open>x * 1 = x\<close> unfolding one_set_def times_set_def by simp
+  show \<open>x ## 1\<close> unfolding one_set_def sep_disj_set_def by simp
+  show \<open>1 ## x\<close> unfolding one_set_def sep_disj_set_def by simp
+qed
 end
 
 instantiation set :: (sep_disj_intuitive) sep_disj_intuitive begin
@@ -1127,7 +1137,7 @@ lemma nonsepable_semigroup_sepdisj_fun:
   \<open>a ## 1(k \<mapsto> x) \<Longrightarrow> a ## 1(k := any)\<close>
   for x :: \<open>'b::nonsepable_semigroup\<close>
   unfolding sep_disj_fun_def
-  by (metis fun_upd_other fun_upd_same sep_disj_one_right sep_disj_option_nonsepable(1))
+  by (metis fun_upd_other fun_upd_same sep_magma_1_right sep_disj_option_nonsepable(1))
 
 
 lemma fun_sep_disj_fupdt[simp]:
@@ -1137,7 +1147,7 @@ lemma fun_sep_disj_fupdt[simp]:
 lemma fun_sep_disj_1_fupdt[simp]:
   \<open>f(k := x1) ## 1(k := x2) \<longleftrightarrow> x1 ## x2\<close>
   \<open>1(k := x1) ## f(k := x2) \<longleftrightarrow> x1 ## x2\<close>
-  for x1 :: \<open>'b :: sep_disj_one\<close>
+  for x1 :: \<open>'b :: sep_magma_1\<close>
   unfolding sep_disj_fun_def by (simp; rule; clarsimp)+
 
 lemma fun_sep_disj_imply_v:
@@ -1190,9 +1200,9 @@ qed
 
 lemma dom1_disjoint_sep_disj:
   \<open>dom1 g \<inter> dom1 f = {} \<Longrightarrow> g ## f\<close>
-  for f :: \<open>'a \<Rightarrow> 'b::sep_disj_one\<close>
+  for f :: \<open>'a \<Rightarrow> 'b::sep_magma_1\<close>
   unfolding sep_disj_fun_def dom1_def set_eq_iff
-  by (simp; metis sep_disj_one_left sep_disj_one_right)
+  by (simp; metis sep_magma_1_left sep_magma_1_right)
 
 lemma sep_disj_dom1_disj_disjoint:
   \<open>g ## f \<longleftrightarrow> dom1 g \<inter> dom1 f = {}\<close>
@@ -1423,7 +1433,7 @@ lemma times_fine''[simp]:
 instance ..
 end
 
-instantiation fine :: (sep_disj_one) mult_1 begin
+instantiation fine :: (sep_magma_1) mult_1 begin
 instance by (standard; case_tac x; simp add: one_fine_def times_fine_def)
 end
 
