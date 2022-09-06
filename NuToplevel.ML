@@ -480,58 +480,18 @@ fun gen_finish_proc qed genz int stat =
   |> Proof.map_context_result (fn ctxt =>
       let
         val sequent_pre1 = NuBasics.the_programming_sequent' ctxt
-        val sequent_pre0 =
+        val sequent =
           if Thm.no_prems sequent_pre1
           then sequent_pre1
           else Nu_Reasoner.reason1 (ctxt,sequent_pre1) |> snd
-        val sequent =
-          if can PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent_pre0)
-          then sequent_pre0
-          else if can PhiSyntax.dest_PendingConstruction (Thm.concl_of sequent_pre0)
-          then sequent_pre0
-          else raise THM ("Bad sequent. Should be either CurrentConstruction or PendingConstruction"
-                            ,0,[sequent_pre0])
-        val sequent' =
-          if can PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent)
-          then let
-            val (ins,current_nu) =
-                  #destined_phi_c mode (Thm.cprop_of sequent)
-                     |> Thm.term_of
-                     |> Procedure_Syntax.abstract_return_vals "\<r>\<e>\<t>" true
-                     |> apfst (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
-                     |> apsnd (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
-            val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
-                              |> Drule.infer_instantiate ctxt [(("T",0),current_nu),(("ret",0),ins)]
-            in (sequent RS return_rule)
-                |> rule_by_tactic ctxt
-                      (SOLVED' (Simplifier.simp_tac ctxt) 1)
-            end
-          else sequent
-        val desired_nu = #destined_phi_c mode goal
-        val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
-                              |> PhiSyntax.dest_sem_value_T
-        val current_phi = #destined_phi_c mode (Thm.cprop_of sequent')
-        val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
-                              |> PhiSyntax.dest_sem_value_T
-        val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
-                                                    (current_arg_T, desired_arg_T)) Envir.init
-                        then sequent'
-                        else if current_arg_T = @{typ "unreachable"}
-                        then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_when_unreachable"
-                        else if can (Pattern.unify_types (Context.Proof ctxt)
-                                  (HOLogic.mk_prodT (current_arg_T, @{typ unit}), desired_arg_T))
-                                  Envir.init
-                        then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_additional_unit"
-                        else error ("Current block expects returning "^
-                                Syntax.string_of_typ ctxt desired_arg_T^
-                                " but it actually returns "^
-                                Syntax.string_of_typ ctxt current_arg_T)
+        val sequent'' = #before_finish mode ctxt goal sequent
+        val desired_nu = #return_spec_c mode ctxt goal
       in
         (ctxt,sequent'')
           |> invoke_Block_End_Hook
           |> (case genz
                 of Phi_Generalization.None => I
-              | _ => NuSys.cast (#destined_phi mode (Thm.prop_of sequent'')
+              | _ => NuSys.cast (#return_spec mode (Thm.prop_of sequent'')
                                   |> Phi_Generalization.generalize_cmd genz ctxt
                                   |> Syntax.check_term ctxt
                                   |> Thm.cterm_of ctxt))
@@ -631,14 +591,12 @@ fun gen_begin_block prep_attr bindings int stat =
     val goal = subst_bounds (rev vars, goal)
     val prems_goal = strip_binop_r @{const_name implies} goal
     val (prems, goal) = (front prems_goal, last prems_goal)
-    val (proc,arg,ret,_) = PhiSyntax.dest_procedure goal
 
     val mode = Phi_Working_Mode.working_mode_on1 ctxt goal
     
-    val blk_name = case proc of (Var ((x,_),_)) => x
-                      | _ => "block"
+    val blk_name = #block_name_of mode goal
     val (level, stat) = Proof.map_context_result inc_blk_level stat
-    val blk_name = "L\<phi>'" ^ (Int.toString level) ^ "_" ^ blk_name
+    val blk_name = "\<L>" ^ (Int.toString level) ^ "_" ^ blk_name
     
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
     
@@ -682,7 +640,7 @@ fun gen_begin_block prep_attr bindings int stat =
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
-      |> Proof.map_context_result (start_proc blk_name (cterm_of ctxt arg) #> swap)
+      |> Proof.map_context_result (#initial_sequent mode blk_name goal #> swap)
       |-> NuBasics.set_nu_fact
       |> Proof.map_context (fn ctxt => 
             Proof_Context.put_thms false ("\<phi>thesis",

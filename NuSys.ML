@@ -13,8 +13,6 @@ signature NU_SYS = sig
   val set_param_cmd : string -> context_state -> context_state
   val set_label : string -> context_state -> context_state
 
-  val start_proc : string (*blk name*) -> cterm -> Proof.context -> context_state
-
   val synthesis : cterm -> context_state -> context_state
 
   val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
@@ -46,11 +44,8 @@ fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 
 fun cast desired_nu (ctxt,sequent) =
   let
-    val if_current_construction = can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
-    val rule =(if if_current_construction
-               then Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
-               else Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'")
-              |> Drule.infer_instantiate ctxt [(("T'",0),desired_nu)]
+    val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent)
+    val rule = #cast_rule mode ctxt desired_nu (Thm.prop_of sequent)
     val (ctxt', sequent') =
           case Nu_Reasoner.reason (ctxt, sequent RS rule)
             of SOME ret => ret
@@ -132,41 +127,8 @@ fun set_param_cmd term (ctxt,sequent) =
 
 fun set_label name (ctxt,sequent) = (ctxt, mk_label_thm name RS sequent)
 
-fun finish_proc cc (ctxt,sequent) =
-  let open PhiSyntax
-    val reassemble_proc_final = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_final"
-    val (_,s',H',_) = dest_CurrentConstruction_c cc
-  in
-    sequent
-      |> Thm.implies_intr cc
-      |> Thm.forall_intr H'
-      |> Thm.forall_intr s'
-      |> (fn th => th COMP reassemble_proc_final)
-      |> pair ctxt
-  end
 
 
-fun start_proc blk_name arg_nuTy ctxt =
-  let open PhiSyntax
-    val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
-    val stat_var = Free (blk_name, mk_resourceT ctxt)
-    val ctxt = Variable.declare_constraints stat_var ctxt
-    val init = Const("local.CurrentConstruction",
-                      \<^typ>\<open>mode\<close>
-                  --> fastype_of stat_var
-                  --> dummyT
-                  --> typ_of_cterm arg_nuTy
-                  --> \<^typ>\<open>bool\<close>)
-               $ \<^const>\<open>programming_mode\<close>
-               $ stat_var
-               $ Free (RR, dummyT)
-    val init = Thm.cterm_of ctxt (Syntax.check_term ctxt init)
-    val init = Thm.apply @{cterm Trueprop} (Thm.apply init arg_nuTy)
-    val ([init],ctxt) = Assumption.add_assms
-          (fn _ => fn [cc] => (snd o finish_proc cc o pair ctxt, I)) [init] ctxt
-  in
-    (ctxt,init)
-  end
 
 
 fun synthesis term (ctxt, sequent) =

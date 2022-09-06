@@ -66,8 +66,8 @@ fun the_implication' ctxt =
 
 fun reason_programming_implication mode ctxt sequent =
   let
-    val CurrentConstruction_mk_elim_rule = #inhabited_rule mode ctxt
-    val stat = (sequent RS CurrentConstruction_mk_elim_rule)
+    val inhabited_rule = #inhabited_rule mode ctxt
+    val stat = (sequent RS inhabited_rule)
                   |> pair ctxt |> SOME
                handle THM _ => NONE
   in case Option.mapPartial Nu_Reasoner.reason stat

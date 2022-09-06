@@ -35,6 +35,8 @@ include PHI_SYNTAX
 
   val dest_implication   : term  -> term * term * term
   val dest_implication_c : cterm -> cterm * cterm * cterm
+  val dest_Set_member    : term  -> term * term
+  val dest_Set_member_c  : cterm -> cterm * cterm
 
   val strip_separations : term -> term list
 
@@ -154,6 +156,15 @@ val dest_implication_c =
          perhaps (try dest_Trueprop_c)
       #> perhaps (try dest_goal_ctxt_c)
       #> dest_triop_c @{const_name "Imply"}
+
+val dest_Set_member =
+  perhaps (try dest_Trueprop)
+      #> perhaps (try dest_goal_ctxt)
+      #> dest_binop @{const_name "Set.member"}
+val dest_Set_member_c =
+  perhaps (try dest_Trueprop_c)
+      #> perhaps (try dest_goal_ctxt_c)
+      #> dest_binop_c @{const_name "Set.member"}
 
 
 fun dest_destined_phityp term =
