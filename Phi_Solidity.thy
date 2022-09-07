@@ -821,7 +821,7 @@ lemma (in \<phi>empty_sem) [\<phi>reason 2000]:
 \<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
         ((\<exists>*x. x \<Ztypecolon> X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Identity <of-types> Tys))
 \<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
-        ((\<exists>*x. x \<Ztypecolon> (X \<^emph> List_Item T)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Identity <of-types> (Ty#Tys)))\<close>
+        ((\<exists>*x. x \<Ztypecolon> (List_Item T \<^emph> X)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*y. y \<Ztypecolon> Identity <of-types> (Ty#Tys)))\<close>
   unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
   by (clarsimp simp add: \<phi>expns times_list_def, blast)
 
@@ -844,7 +844,7 @@ lemma (in \<phi>empty_sem) [\<phi>reason 2000]:
 \<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
             ((\<exists>*y. y \<Ztypecolon> Identity <of-types> Tys) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*x. x \<Ztypecolon> X))
 \<Longrightarrow> PROP \<phi>Transition_Spec_to_Proc_Spec_cast_type
-            ((\<exists>*y. y \<Ztypecolon> Identity <of-types> (Ty#Tys)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*x. x \<Ztypecolon> (X \<^emph> List_Item T)))\<close>
+            ((\<exists>*y. y \<Ztypecolon> Identity <of-types> (Ty#Tys)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>*x. x \<Ztypecolon> (List_Item T \<^emph> X)))\<close>
   unfolding Imply_def \<phi>Transition_Spec_to_Proc_Spec_cast_type_def
   apply (clarsimp simp add: \<phi>expns times_list_def)
   by (metis (no_types, lifting) append_Cons list_all2_Cons2 self_append_conv2)

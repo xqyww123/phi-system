@@ -15,6 +15,7 @@ include PHI_SYNTAX
   val mk_nuTy : term * term -> term
   val mk_Nu_ty : typ * typ -> typ
 
+  val is_construction_mode: term -> term -> bool
   val dest_CurrentConstruction   :  term -> term * term * term * term
   val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm * cterm
   val dest_PendingConstruction : term -> term * term * term * term * term
@@ -113,6 +114,12 @@ val dest_PendingConstruction   =
       perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name "\<phi>empty.PendingConstruction"}
 val dest_PendingConstruction_c =
       perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "\<phi>empty.PendingConstruction"}
+fun is_construction_mode mode tm =
+  case try dest_CurrentConstruction tm
+    of SOME (m,_,_,_) => mode = m
+     | _ => (case try dest_PendingConstruction tm
+               of SOME (m,_,_,_,_) => mode = m
+                | _ => false)
 
 fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #2)
   handle TERM _ => ((dest_PendingConstruction c |> #2)

@@ -353,11 +353,7 @@ end
 subsubsection \<open>Construct Implication\<close>
 
 lemma "\<phi>make_implication":
-  \<open>(\<And>x. x \<in> S \<Longrightarrow> x \<in> T) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T\<close>
-  unfolding Imply_def by (simp add: \<phi>expns)
-
-lemma "\<phi>Implication_Subj_convert":
-  \<open>S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
+  \<open>(\<And>x. x \<in> S \<Longrightarrow> x \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns)
 
 subsubsection \<open>Essential Rules for Reasoning\<close>
@@ -2121,15 +2117,15 @@ lemma \<phi>None_itself_is_one[simp,\<phi>None_simps]:
 
 subsection \<open>Prod\<close>
 
-definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixl "\<^emph>" 55)
-  where "A \<^emph> B = (\<lambda>(a,b). A a * B b)"
+definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 55)
+  where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
 
 lemma \<phi>Prod_expn[\<phi>expns]:
-  "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>ca cb. concrete = ca * cb \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb \<in> (b \<Ztypecolon> B) \<and> ca ## cb)"
+  "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>cb ca. concrete = cb * ca \<and> cb \<in> (b \<Ztypecolon> B) \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb ## ca)"
   unfolding \<phi>Prod_def \<phi>Type_def times_set_def by simp
 
 lemma \<phi>Prod_expn':
-  \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (a \<Ztypecolon> A) * (b \<Ztypecolon> B)\<close>
+  \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 lemma \<phi>Prod_inhabited[elim!,\<phi>reason_elim!]:
@@ -2140,7 +2136,7 @@ lemma \<phi>Prod_inhabited[elim!,\<phi>reason_elim!]:
   \<open>Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longleftrightarrow> Inhabited (x1 \<Ztypecolon> T1) \<and> Inhabited (x2 \<Ztypecolon> T2)\<close>
   unfolding Inhabited_def apply (simp add: \<phi>expns) *)
 
-lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (a \<Ztypecolon> A) * (b \<Ztypecolon> B)"
+lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)"
   by (simp add: \<phi>expns set_eq_iff)
 
 (*lemma (in \<phi>empty) SepNu_to_SepSet: "(OBJ (a,b) \<Ztypecolon> A \<^emph> B) = (OBJ a \<Ztypecolon> A) * (OBJ b \<Ztypecolon> B)"
@@ -2161,24 +2157,24 @@ lemma (in \<phi>empty) [\<phi>reason on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bol
 
 
 lemma [\<phi>reason 1200]:
-  \<open> (x \<Ztypecolon> X) * (y \<Ztypecolon> Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P
+  \<open> (y \<Ztypecolon> Y) * (x \<Ztypecolon> X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> (x,y) \<Ztypecolon> (X \<^emph> Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding \<phi>Prod_split .
 
 lemma [\<phi>reason 1200]:
-  \<open> A * (x \<Ztypecolon> X) * (y \<Ztypecolon> Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P
+  \<open> A * (y \<Ztypecolon> Y) * (x \<Ztypecolon> X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> A * ((x,y) \<Ztypecolon> X \<^emph> Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P\<close>
   for A :: \<open>'a::sep_semigroup set\<close>
   unfolding \<phi>Prod_split
   by (simp add: mult.assoc)
 
 lemma [\<phi>reason 1200]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> Y) * (z \<Ztypecolon> Z) \<^bold>a\<^bold>n\<^bold>d P
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (z \<Ztypecolon> Z) * (y \<Ztypecolon> Y) \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y,z) \<Ztypecolon> (Y \<^emph> Z) \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding \<phi>Prod_split .
 
 lemma [\<phi>reason 1200]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A * (y \<Ztypecolon> Y) * (z \<Ztypecolon> Z) \<^bold>a\<^bold>n\<^bold>d P
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A * (z \<Ztypecolon> Z) * (y \<Ztypecolon> Y) \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A * ((y,z) \<Ztypecolon> Y \<^emph> Z) \<^bold>a\<^bold>n\<^bold>d P\<close>
   for A :: \<open>'a::sep_semigroup set\<close>
   unfolding \<phi>Prod_split
@@ -2234,8 +2230,8 @@ lemma List_Item_inhabited[\<phi>reason_elim!, elim!]:
 lemma \<comment> \<open>A example for how to represent multi-elements list\<close>
   \<open> v1 \<in> (x1 \<Ztypecolon> T1)
 \<Longrightarrow> v2 \<in> (x2 \<Ztypecolon> T2)
-\<Longrightarrow> [v2,v1] \<in> ((x1, x2) \<Ztypecolon> (List_Item T1 \<^emph> List_Item T2))\<close>
-  by (simp add: \<phi>expns times_list_def, rule exI[where x=\<open>[v1]\<close>], rule exI[where x=\<open>[v2]\<close>], simp)
+\<Longrightarrow> [v1,v2] \<in> ((x1, x2) \<Ztypecolon> (List_Item T1 \<^emph> List_Item T2))\<close>
+  by (simp add: \<phi>expns times_list_def, rule exI[where x=\<open>[v2]\<close>], rule exI[where x=\<open>[v1]\<close>], simp)
 
 subsubsection \<open>Empty List\<close>
 
@@ -2357,15 +2353,21 @@ lemma \<phi>MapAt_L_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+lemma \<phi>MapAt_L_cast[\<phi>reason]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s U \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def
+  by (clarsimp simp add: \<phi>expns; blast)
+
 lemma \<phi>MapAt_L_\<phi>Prod:
   \<open>k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (T \<^emph> U) = (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) \<^emph> (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s U)\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid list,'b) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule)
-  apply (clarsimp simp add: push_map_distrib_mult[symmetric])
+  apply (clarsimp simp add: push_map_distrib_sep_mult[symmetric])
   using push_map_sep_disj apply blast
-  apply (clarsimp simp add: push_map_distrib_mult)
+  apply (clarsimp simp add: push_map_distrib_sep_mult)
   by blast
-  
+
 lemma \<phi>MapAt_L_\<phi>MapAt:
   \<open>k1 \<^bold>\<rightarrow>\<^sub>L\<^sub>s k2 \<^bold>\<rightarrow> T = k1 @ k2 \<^bold>\<rightarrow> T\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; force)
@@ -2584,13 +2586,14 @@ lemma (in \<phi>empty)[simp]:
 
 lemma (in \<phi>empty)[simp]:
   \<open> [] \<notin> (\<exists>*x. x \<Ztypecolon> L)
-\<Longrightarrow> (\<exists>*x. x \<Ztypecolon> Val rawv (L \<^emph> List_Item T)) = ((\<exists>*x. x \<Ztypecolon> Val (\<phi>V_tl rawv) L)\<heavy_comma> (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T))\<close>
+\<Longrightarrow> (\<exists>*x. x \<Ztypecolon> Val rawv (List_Item T \<^emph> L)) = ((\<exists>*x. x \<Ztypecolon> Val (\<phi>V_tl rawv) L)\<heavy_comma> (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T))\<close>
   unfolding set_eq_iff
   apply (cases rawv; clarsimp simp add: \<phi>expns \<phi>V_tl_def \<phi>V_hd_def times_list_def)
-  by (metis (no_types, opaque_lifting) append_Cons append_self_conv2 list.distinct(1) list.exhaust_sel list.sel(1) tl_Nil tl_append2)
+  by (metis (no_types, opaque_lifting) append_Cons append_Nil list.exhaust_sel list.sel(1) list.sel(2) list.sel(3))
+  
 
 lemma [simp]:
-  \<open>[] \<notin> (\<exists>*x. x \<Ztypecolon> (L \<^emph> List_Item T))\<close>
+  \<open>[] \<notin> (\<exists>*x. x \<Ztypecolon> (List_Item T \<^emph> L))\<close>
   by (rule; clarsimp simp add: \<phi>expns times_list_def)
 
 lemma [simp]:
@@ -2641,9 +2644,20 @@ lemma (in \<phi>empty_sem) [\<phi>reason_elim, elim!]:
 
 
 
-subsection \<open>Share\<close>
+subsection \<open>Share & Option\<close>
+
+subsubsection \<open>Definition of Properties\<close>
+
+definition \<phi>Sep_Disj :: \<open>('a::sep_disj,'b1) \<phi> \<Rightarrow> ('a::sep_disj,'b2) \<phi> \<Rightarrow> bool\<close>
+  where \<open>\<phi>Sep_Disj T U \<longleftrightarrow> (\<forall>x y u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (y \<Ztypecolon> U) \<longrightarrow> u ## v)\<close>
+
+definition \<phi>Sep_Disj_Identical :: \<open>('a::share_semimodule_sep, 'b) \<phi> \<Rightarrow> bool\<close>
+  where \<open>\<phi>Sep_Disj_Identical T
+    \<longleftrightarrow> (\<forall>x u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (x \<Ztypecolon> T) \<and> u ## v \<longrightarrow> u = v)
+      \<and> (\<forall>x u. u \<in> (x \<Ztypecolon> T) \<longrightarrow> can_share u)\<close>
 
 
+subsubsection \<open>Permission Transformer\<close>
 
 definition \<phi>perm_transformer :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
   where \<open>\<phi>perm_transformer \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> perm_transformer' \<psi>})\<close>
@@ -2659,8 +2673,33 @@ lemma (in perm_transformer) [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v))\<close>
   unfolding \<phi>perm_transformer_def \<phi>Type_def by (simp add: \<phi>expns)
 
+lemma \<phi>perm_transformer_MapAt:
+  \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_transformer f T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
+            perm_transformer_pointwise_eq; rule; clarsimp)
+  apply (smt (verit, del_insts) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer_pointwise)
+  by (metis (no_types, lifting) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer'.can_share_\<psi> perm_transformer_pointwise)
 
 
+lemma \<phi>perm_transformer_MapAt_L:
+  \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) = (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s \<phi>perm_transformer ((o) f) T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
+            perm_transformer_pointwise_eq; rule; clarsimp)
+  using homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi> apply blast
+  by (metis homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
+
+
+lemma \<phi>perm_transformer_Prod:
+  \<open> \<phi>Sep_Disj T U
+\<Longrightarrow> \<phi>perm_transformer f (T \<^emph> U) = (\<phi>perm_transformer f T) \<^emph> (\<phi>perm_transformer f U)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns \<phi>Sep_Disj_def; rule; clarsimp)
+  apply (metis homo_sep_disj_semi.sep_disj_homo homo_sep_mult.homo_mult homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
+  by (metis (mono_tags, lifting) homo_sep_mult.homo_mult perm_transformer'.axioms(1) sep_disj_commute share_semimodule_sep_class.sep_mult_can_share)
+  
+
+
+
+subsubsection \<open>Permission Annotation\<close>
 
 definition \<phi>Share :: \<open>rat \<Rightarrow> ('v::share,'x) \<phi> \<Rightarrow> ('v, 'x) \<phi>\<close> (infixr "\<Znrres>" 60)
   where \<open>\<phi>Share n T = (\<lambda>x. { share n v |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n }) \<close>
@@ -2688,80 +2727,6 @@ lemma \<phi>Share_\<phi>Share[simp]:
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
   by (metis share_share_not0)
 
-
-definition \<phi>Sep_Disj :: \<open>('a::sep_disj,'b1) \<phi> \<Rightarrow> ('a::sep_disj,'b2) \<phi> \<Rightarrow> bool\<close>
-  where \<open>\<phi>Sep_Disj T U \<longleftrightarrow> (\<forall>x y u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (y \<Ztypecolon> U) \<longrightarrow> u ## v)\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
-\<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow> T) (k2 \<^bold>\<rightarrow> U)\<close>
-  for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def
-  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
-\<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow>\<^sub>L T) (k2 \<^bold>\<rightarrow>\<^sub>L U)\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def
-  by (clarsimp simp add: \<phi>expns sep_disj_fun_def push_map_def)
-
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj X A
-\<Longrightarrow> \<phi>Sep_Disj X B
-\<Longrightarrow> \<phi>Sep_Disj X (A \<^emph> B) \<close>
-  for X :: \<open>('a::sep_disj_intuitive, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def
-  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
-
-lemma [\<phi>reason 1300]:
-  \<open> \<phi>Sep_Disj X Z
-\<Longrightarrow> \<phi>Sep_Disj Y Z
-\<Longrightarrow> \<phi>Sep_Disj (X \<^emph> Y) Z \<close>
-  for X :: \<open>('a::sep_disj_intuitive, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def
-  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
-
-
-
-
-
-
-definition \<phi>Sep_Disj_Identical :: \<open>('a::share_semimodule_sep, 'b) \<phi> \<Rightarrow> bool\<close>
-  where \<open>\<phi>Sep_Disj_Identical T
-    \<longleftrightarrow> (\<forall>x u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (x \<Ztypecolon> T) \<and> u ## v \<longrightarrow> u = v)
-      \<and> (\<forall>x u. u \<in> (x \<Ztypecolon> T) \<longrightarrow> can_share u)\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> \<phi>Sep_Disj_Identical (n \<Znrres> T)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
-  apply (clarsimp simp add: \<phi>expns)
-  by force
-
-lemma \<phi>Sep_Disj_Identical_\<phi>MapAt[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow> T)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
-  apply (clarsimp simp add: \<phi>expns)
-  by force
-
-lemma \<phi>Sep_Disj_Identical_\<phi>MapAt_L[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
-  apply (clarsimp simp add: \<phi>expns)
-  by (metis push_map_def push_map_sep_disj share_one_class.can_share_one)
-  
-
-lemma \<phi>Sep_Disj_Identical_Prod[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> \<phi>Sep_Disj_Identical U
-\<Longrightarrow> \<phi>Sep_Disj_Identical (T \<^emph> U)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
-  apply (clarsimp simp add: \<phi>expns)
-  by (metis sep_disj_commute sep_disj_multD1 sep_mult_commute share_semimodule_sep_class.sep_mult_can_share)
 
 lemma \<phi>Share_share:
   \<open> 0 < n \<and> 0 < m
@@ -2805,19 +2770,7 @@ lemma \<phi>Share_\<phi>Prod:
   using share_sep_right_distrib_0 by blast
 
 
-
-(*
-definition \<phi>Share :: \<open>rat \<Rightarrow> ('v,'x) \<phi> \<Rightarrow> ('v share option, 'x) \<phi>\<close> (infix "\<Znrres>\<phi>" 61)
-  where \<open>\<phi>Share n T x = { Some (Share n v) |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1 } \<close>
-
-lemma \<phi>Share_expn[\<phi>expns]:
-  \<open> p \<in> (x \<Ztypecolon> n \<Znrres>\<phi> T) \<longleftrightarrow> (\<exists>v. p = Some (Share n v) \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n \<and> n \<le> 1) \<close>
-  unfolding \<phi>Type_def \<phi>Share_def by simp
-
-lemma [\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> n \<Znrres>\<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns) *)
-
+subsubsection \<open>\<phi>-Some\<close>
 
 definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
   where \<open>\<phi>Some T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
@@ -2836,35 +2789,101 @@ lemma \<phi>Some_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Some T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+
+subsubsection \<open>\<phi>Sep_Disj\<close>
+
 lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_transformer to_share (\<phi>Some T)) \<close>
-  for T :: \<open>('a::nonsepable_semigroup, 'b) \<phi>\<close>
+  \<open> \<phi>Sep_Disj X Y
+\<Longrightarrow> \<phi>Sep_Disj X (m \<Znrres> Y)\<close>
+  for X :: \<open>('a::share_sep_disj,'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def by (clarsimp simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj Y X
+\<Longrightarrow> \<phi>Sep_Disj (m \<Znrres> Y) X\<close>
+  for X :: \<open>('a::share_sep_disj,'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def by (clarsimp simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200]:
+  \<open>\<phi>Sep_Disj X \<phi>None\<close>
+  for X :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200]:
+  \<open>\<phi>Sep_Disj \<phi>None X\<close>
+  for X :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def by (simp add: \<phi>expns)
+
+lemma
+  \<open>\<phi>Sep_Disj (\<phi>perm_transformer \<psi> T) (\<phi>perm_transformer \<psi> U)\<close>
+  unfolding \<phi>Sep_Disj_def
+  apply (clarsimp simp add: \<phi>expns)
+
+
+lemma [\<phi>reason 1200]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
+||| \<phi>Sep_Disj T U
+\<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow> T) (k2 \<^bold>\<rightarrow> U)\<close>
+  for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def Branch_imp
+  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)+
+
+lemma [\<phi>reason 1200]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
+||| \<phi>Sep_Disj T U
+\<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow>\<^sub>L T) (k2 \<^bold>\<rightarrow>\<^sub>L U)\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def Branch_imp
+  by (clarsimp simp add: \<phi>expns sep_disj_fun_def push_map_def)+
+
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj X A
+\<Longrightarrow> \<phi>Sep_Disj X B
+\<Longrightarrow> \<phi>Sep_Disj X (A \<^emph> B) \<close>
+  for X :: \<open>('a::sep_disj_intuitive, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def
+  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
+
+lemma [\<phi>reason 1300]:
+  \<open> \<phi>Sep_Disj X Z
+\<Longrightarrow> \<phi>Sep_Disj Y Z
+\<Longrightarrow> \<phi>Sep_Disj (X \<^emph> Y) Z \<close>
+  for X :: \<open>('a::sep_disj_intuitive, 'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_def
+  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
+
+
+subsubsection \<open>\<phi>Sep_Disj_Identical\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Identical (n \<Znrres> T)\<close>
   unfolding \<phi>Sep_Disj_Identical_def
-  by (clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns; rule; clarsimp)
+  apply (clarsimp simp add: \<phi>expns)
+  by force
 
+lemma \<phi>Sep_Disj_Identical_\<phi>MapAt[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow> T)\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  apply (clarsimp simp add: \<phi>expns)
+  by force
 
-lemma \<phi>perm_transformer_MapAt:
-  \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_transformer f T)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
-            perm_transformer_pointwise_eq; rule; clarsimp)
-  apply (smt (verit, del_insts) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer_pointwise)
-  by (metis (no_types, lifting) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer'.can_share_\<psi> perm_transformer_pointwise)
+lemma \<phi>Sep_Disj_Identical_\<phi>MapAt_L[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T)\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  apply (clarsimp simp add: \<phi>expns)
+  by (metis push_map_def push_map_sep_disj share_one_class.can_share_one)
 
-
-lemma \<phi>perm_transformer_MapAt_L:
-  \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) = (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s \<phi>perm_transformer ((o) f) T)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
-            perm_transformer_pointwise_eq; rule; clarsimp)
-  using homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi> apply blast
-  by (metis homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
-
-
-lemma \<phi>perm_transformer_Prod:
-  \<open> \<phi>Sep_Disj T U
-\<Longrightarrow> \<phi>perm_transformer f (T \<^emph> U) = (\<phi>perm_transformer f T) \<^emph> (\<phi>perm_transformer f U)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_disj_semi.sep_disj_homo homo_sep_mult.homo_mult homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
-  by (metis homo_sep_mult.homo_mult perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
+lemma \<phi>Sep_Disj_Identical_Prod[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Identical U
+\<Longrightarrow> \<phi>Sep_Disj_Identical (T \<^emph> U)\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  apply (clarsimp simp add: \<phi>expns)
+  by (metis sep_disj_commute sep_disj_multD1 sep_mult_commute share_semimodule_sep_class.sep_mult_can_share)
 
 
 lemma [\<phi>reason 1200]:
@@ -2884,6 +2903,15 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_transformer f (T \<^emph> U)) \<close>
   by (subst \<phi>perm_transformer_Prod; blast intro: \<phi>Sep_Disj_Identical_Prod)
 
+lemma [\<phi>reason 1200]:
+  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_transformer to_share (\<phi>Some T))\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  by (clarsimp simp add: \<phi>expns; rule; clarsimp)
+
+lemma [\<phi>reason 1200]:
+  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_transformer to_share \<phi>None)\<close>
+  unfolding \<phi>Sep_Disj_Identical_def
+  by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
 
 
@@ -4276,105 +4304,255 @@ subsection \<open>Automation for Sharing Permission\<close>
 
 subsubsection \<open>Extract\<close>
 
-definition ASP_E :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
-  where \<open>ASP_E From Remain To Residual Aux \<longleftrightarrow> (Residual * From \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Remain * To \<^bold>a\<^bold>n\<^bold>d Aux)\<close>
+text \<open>The canonical form is where all permission annotation are on leaves.
+  It minimizes fragments.\<close>
 
-paragraph \<open>Structural Point\<close>
+definition SharePerm_Extract :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>SharePerm_Extract From Remain To Residual Aux \<longleftrightarrow> (Residual * From \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Remain * To \<^bold>a\<^bold>n\<^bold>d Aux)\<close>
+  \<comment> \<open>Extract To from From, remaining Remain the unused part in From,
+      and leaving Residual the part in To that fails to be obtained from From.\<close>
 
-lemma [\<phi>reason 3000]:
-  \<open>ASP_E X X (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True\<close>
+paragraph \<open>Termination\<close>
+
+lemma [\<phi>reason 3000]: \<comment> \<open>No further extraction is demanded.\<close>
+  \<open>SharePerm_Extract X X (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding ASP_E_def mult_1_left \<phi>None_itself_is_one mult_1_right
+  unfolding SharePerm_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
   using implies_refl .
 
-lemma [\<phi>reason 3000]:
-  \<open>ASP_E X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True\<close>
+lemma [\<phi>reason 3000]: \<comment> \<open>The current object X is exactly what we want to extract.\<close>
+  \<open>SharePerm_Extract X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding ASP_E_def mult_1_left \<phi>None_itself_is_one mult_1_right
+  unfolding SharePerm_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
   using implies_refl .
 
-lemma [\<phi>reason 1200 on
-  \<open>ASP_E (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?R' ?P\<close>
-]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
-\<Longrightarrow> ASP_E (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
-\<Longrightarrow> ASP_E (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (yr \<Ztypecolon> k \<^bold>\<rightarrow> Ur) P\<close>
-  for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
-  unfolding ASP_E_def Premise_def
-  apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
-  apply (rule \<phi>MapAt_cast) .
+paragraph \<open>Normalize the Target\<close>
+
+lemma SharePerm_Extract_To_mult [\<phi>reason 2000 on \<open>SharePerm_Extract ?A ?C (?X * ?Y) ?W ?P\<close> ]:
+  \<open> SharePerm_Extract A B Y WY P1
+\<Longrightarrow> SharePerm_Extract B C X WX P2
+\<Longrightarrow> SharePerm_Extract A C (X * Y) (WX * WY) (P1 \<and> P2)\<close>
+  for X :: \<open>'a::sep_algebra set\<close>
+  unfolding SharePerm_Extract_def
+  \<medium_left_bracket> premises L and R
+    fold mult.assoc
+    L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
+    R[THEN implies_right_prod]
+  \<medium_right_bracket>. .
+
+lemma [\<phi>reason 2000 on \<open>SharePerm_Extract ?A ?C (?X * ?Y) ?W ?P\<close> ]:
+  \<open> SharePerm_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1
+\<Longrightarrow> SharePerm_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2
+\<Longrightarrow> SharePerm_Extract A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX) (P1 \<and> P2)\<close>
+for A :: \<open>'a::sep_algebra set\<close>
+  unfolding \<phi>Prod_expn'
+  using SharePerm_Extract_To_mult .
+
+paragraph \<open>Step by Step\<close>
 
 lemma [\<phi>reason 1200 on
-  \<open>ASP_E ((?x,?y) \<Ztypecolon> (?T::(?'a::sep_algebra,?'b) \<phi>) \<^emph> ?U) ?R (?y \<Ztypecolon> ?W) ?R2 ?P\<close>
+  \<open>SharePerm_Extract (?L * ?X :: 'a::sep_algebra set) ?R ?W ?R2 ?P\<close>
 ]:
-  \<open> ASP_E (y \<Ztypecolon> U) (r \<Ztypecolon> R) (y \<Ztypecolon> W) (yr \<Ztypecolon> Wr) P1
-\<Longrightarrow> ASP_E (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) (yr \<Ztypecolon> Wr) (yr2 \<Ztypecolon> Wr2) P2
-\<Longrightarrow> ASP_E ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) (y \<Ztypecolon> W) (yr2 \<Ztypecolon> Wr2) (P1 \<and> P2)\<close>
-  for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
-  unfolding ASP_E_def \<phi>Prod_expn'
+  \<open> SharePerm_Extract X R Y Wr P1
+\<Longrightarrow> SharePerm_Extract L R2 Wr Wr2 P2
+\<Longrightarrow> SharePerm_Extract (L * X) (R * R2) Y Wr2 (P1 \<and> P2)\<close>
+  for X :: \<open>'a::sep_algebra set\<close>
+  unfolding SharePerm_Extract_def
   \<medium_left_bracket> premises L and R
     fold mult.assoc
     R[THEN implies_right_prod]
     L[THEN implies_left_prod, simplified mult.assoc[symmetric]]
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 1300 on \<open>ASP_E (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?var_m \<Znrres> ?U) ?R2 ?P\<close>]:
+paragraph \<open>Structural Node\<close>
+
+lemma [\<phi>reason 1200 on
+  \<open>SharePerm_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?R' ?P\<close>
+]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (yr \<Ztypecolon> k \<^bold>\<rightarrow> Ur) P\<close>
+  for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
+  unfolding SharePerm_Extract_def Premise_def
+  apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
+  apply (rule \<phi>MapAt_cast) .
+
+lemma [\<phi>reason 1200 on
+  \<open>SharePerm_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?U) ?R' ?P\<close>
+]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s Ur) P\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
+  unfolding SharePerm_Extract_def Premise_def
+  apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric])
+  thm \<phi>MapAt_L_\<phi>Prod[symmetric]
+  apply (rule \<phi>MapAt_L_cast) .
+
+
+lemma [\<phi>reason 1200 on
+  \<open>SharePerm_Extract ((?x,?y) \<Ztypecolon> (?T::(?'a::sep_algebra,?'b) \<phi>) \<^emph> ?U) ?R (?y \<Ztypecolon> ?W) ?R2 ?P\<close>
+]:
+  \<open> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> W) (yr \<Ztypecolon> Wr) P1
+\<Longrightarrow> SharePerm_Extract (y \<Ztypecolon> U) (r2 \<Ztypecolon> R2) (yr \<Ztypecolon> Wr) (yr2 \<Ztypecolon> Wr2) P2
+\<Longrightarrow> SharePerm_Extract ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) (y \<Ztypecolon> W) (yr2 \<Ztypecolon> Wr2) (P1 \<and> P2)\<close>
+  for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
+  unfolding SharePerm_Extract_def \<phi>Prod_expn'
+  \<medium_left_bracket> premises L and R
+    fold mult.assoc
+    R[THEN implies_right_prod]
+    L[THEN implies_left_prod, simplified mult.assoc[symmetric]]
+  \<medium_right_bracket>. .
+
+paragraph \<open>Permission Node\<close>
+
+text \<open>Then, according to the expected permission n and the permission m that we current have,
+  there are 4 rules for 4 cases:
+  \<^item> m is a schematic variable. let m to be n / 2. it means we only give a half what we have,
+      and preserve another half for potential future demand.
+  \<^item> m = n
+  \<^item> m < n
+  \<^item> m > n\<close>
+
+lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?var_m \<Znrres> ?U) ?R2 ?P\<close>]:
     \<comment> \<open>if only requires a part of the permission, give it a half of that currently we have.\<close>
   \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> ASP_E (x \<Ztypecolon> n / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> n / 2 \<Znrres> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> ASP_E (x \<Ztypecolon> n \<Znrres> T) ((r,x) \<Ztypecolon> R \<^emph> n / 2 \<Znrres> T) (y \<Ztypecolon> n / 2 \<Znrres> U) (w \<Ztypecolon> W) P\<close>
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding ASP_E_def \<phi>Prod_expn'
+  unfolding SharePerm_Extract_def
   \<medium_left_bracket> premises [\<phi>reason] and X
-  ;; share_split_\<phi>app[where n=\<open>n/2\<close> and m=\<open>n/2\<close>, simplified, THEN implies_left_prod]
+  ;; share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
   ;; X[THEN implies_right_prod]
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 120 on \<open>ASP_E (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?P\<close>]:
+lemma [\<phi>reason 120 on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
   \<comment> \<open>If requires exactly what we have now, typically this happens after the previous rule or n = 1.\<close>
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m n = m
-\<Longrightarrow> ASP_E (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) P
-\<Longrightarrow> ASP_E (x \<Ztypecolon> n \<Znrres> T) (r \<Ztypecolon> n \<Znrres> R) (y \<Ztypecolon> m \<Znrres> U) P\<close>
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m = n
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding ASP_E_def \<phi>Prod_expn'[symmetric] Premise_def
+  unfolding SharePerm_Extract_def \<phi>Prod_expn'[symmetric] Premise_def
   apply (simp add: \<phi>Share_\<phi>Prod[symmetric])
   using \<phi>Share_cast .
 
-declare [[\<phi>trace_reasoning]]
 
-lemma [\<phi>reason on \<open>ASP_E (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?P\<close>]:
+lemma [\<phi>reason on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
   \<comment> \<open>If requires less than what we have, give it.\<close>
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
 \<Longrightarrow> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> ASP_E (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) P
-\<Longrightarrow> ASP_E (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> ((m-n) \<Znrres> T \<^emph> n \<Znrres> R)) (y \<Ztypecolon> n \<Znrres> U) P\<close>
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> ((m-n) \<Znrres> T \<^emph> n \<Znrres> R)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding ASP_E_def \<phi>Prod_expn'[symmetric]
+  unfolding SharePerm_Extract_def
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and [\<phi>reason] and X
-    share_split_\<phi>app[where n=\<open>m-n\<close> and m=\<open>n\<close>, simplified]
-    \<phi>Share_cast[OF X]
-    unfold \<phi>Share_\<phi>Prod
+    share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
+    fold mult.assoc
+    X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
+        THEN implies_right_prod]
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason on \<open>ASP_E (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?P\<close>]:
+
+lemma [\<phi>reason on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
   \<comment> \<open>If requires less than what we have, give it.\<close>
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
 \<Longrightarrow> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> ASP_E (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) P
-\<Longrightarrow> ASP_E (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> ((m-n) \<Znrres> T \<^emph> n \<Znrres> R)) (y \<Ztypecolon> n \<Znrres> U) P\<close>
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> ((m-n) \<Znrres> T \<^emph> n \<Znrres> R)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding ASP_E_def \<phi>Prod_expn'[symmetric]
+  unfolding SharePerm_Extract_def
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and [\<phi>reason] and X
-    share_split_\<phi>app[where n=\<open>m-n\<close> and m=\<open>n\<close>, simplified]
-    \<phi>Share_cast[OF X]
-    unfold \<phi>Share_\<phi>Prod
+    share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
+    fold mult.assoc
+    X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
+        THEN implies_right_prod]
   \<medium_right_bracket>. .
 
 
+lemma [\<phi>reason on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
+  \<comment> \<open>If requires more than what we have, give all what we can give.\<close>
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m < n
+\<Longrightarrow> \<phi>Sep_Disj_Identical U
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  unfolding SharePerm_Extract_def \<phi>Prod_expn'
+  \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and X
+    X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
+        THEN implies_left_prod, folded mult.assoc]
+  
+  have \<open>(y \<Ztypecolon> n - m \<Znrres> U) * (y \<Ztypecolon> m \<Znrres> U) = (y \<Ztypecolon> n \<Znrres> U)\<close>
+    using \<phi>Share_share[where n=\<open>n-m\<close> and m=m, simplified] \<phi>
+    by (smt (verit) SDI)
+  then have t1: \<open>(y \<Ztypecolon> n - m \<Znrres> U) * (r \<Ztypecolon> m \<Znrres> R) * (y \<Ztypecolon> m \<Znrres> U) = (r \<Ztypecolon> m \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U)\<close>
+    by (metis ab_semigroup_mult_class.mult_ac(1) mult.commute)
+  ;; unfold t1
+  \<medium_right_bracket>. .
 
+paragraph \<open>Normalization for Permission\<close>
 
+subparagraph \<open>Extract each component in a composite step by step\<close>
 
+lemma [\<phi>reason 1200]:
+  \<open> SharePerm_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W P
+\<Longrightarrow> SharePerm_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P\<close>
+  for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>Prod .
+
+lemma [\<phi>reason 1200]:
+  \<open> SharePerm_Extract ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) R Y W P
+\<Longrightarrow> SharePerm_Extract ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) R Y W P\<close>
+  for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>Prod .
+
+lemma [\<phi>reason 1200]:
+  \<open> SharePerm_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W P
+\<Longrightarrow> SharePerm_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P\<close>
+  for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt .
+
+lemma [\<phi>reason 1200]:
+  \<open> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) R Y W P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) R Y W P\<close>
+  for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt .
+
+lemma [\<phi>reason 1200]:
+  \<open> SharePerm_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s n \<Znrres> T) W P
+\<Longrightarrow> SharePerm_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) W P\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt_L .
+
+lemma [\<phi>reason 1200]:
+  \<open> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s n \<Znrres> T) R Y W P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) R Y W P\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt_L .
+
+lemma [\<phi>reason 1200]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m
+\<Longrightarrow> SharePerm_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W P
+\<Longrightarrow> SharePerm_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P\<close>
+  for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
+  unfolding Premise_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open> SharePerm_Extract (x \<Ztypecolon> n * m \<Znrres> T) R Y W P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) R Y W P\<close>
+  for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
+  unfolding SharePerm_Extract_def
+  by (metis Implication_Inhabited_rule Imply_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
+
+text \<open>After all of these normalization, if we encounter the requirement to extract permission n,
+  but there is no permission annotation for the current object, we know it is to extract from
+  a total permission.\<close>
+
+lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> ?T) ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W ?P\<close>
+    if no \<open>SharePerm_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W ?P\<close>]:
+  \<open> SharePerm_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W P
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P\<close>
+  by simp
 
 
 
@@ -4700,16 +4878,40 @@ paragraph \<open>\<phi>-Type\<close>
 
 definition \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
     \<comment> \<open>\<phi>Type for level-1 mapping\<close>
-  where \<open>\<phi> T x = { mk (Fine f) |f. f \<in> (x \<Ztypecolon> T) }\<close>
+  where \<open>\<phi> T = (\<lambda>x. {mk Undef} \<union> { mk (Fine f) |f. f \<in> (x \<Ztypecolon> T) })\<close>
 
 lemma \<phi>_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>f. p = mk (Fine f) \<and> f \<in> (x \<Ztypecolon> T))\<close>
+  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>f. p = mk Undef \<or> p = mk (Fine f) \<and> f \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def \<phi>_def by simp
 
 lemma \<phi>_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+lemma \<phi>_Prod:
+  \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule)
+  apply clarsimp
+  apply (smt (z3) mk_homo_mult times_fine(1) times_fine(2) times_fine(3))
+  apply (clarsimp simp add: mk_homo_mult[symmetric] times_fine)
+  using sep_disj_commute apply blast
+  apply (clarsimp simp add: mk_homo_mult times_fine'[symmetric])
+  by blast
+
+lemma \<phi>_cast:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi> U \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def by (clarsimp simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200 on
+  \<open>SharePerm_Extract (?x \<Ztypecolon> \<phi> ?T) ?R (?y \<Ztypecolon> \<phi> ?U) ?W ?P\<close>
+]:
+  \<open> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> \<phi>Sep_Disj T W
+\<Longrightarrow> \<phi>Sep_Disj U R
+\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W) P\<close>
+  unfolding SharePerm_Extract_def
+  by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
 
 end
 
@@ -4940,7 +5142,7 @@ lemma \<phi>_double_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Fine (Some (agree (nonsepable v))) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Undef \<or> y = Fine (Some (agree (nonsepable v))) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: VS_double)
@@ -4951,7 +5153,7 @@ lemma \<phi>_contract_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Fine (Some (agree (nonsepable v))) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Undef \<or> y = Fine (Some (agree (nonsepable v))) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: VS_contract)
@@ -5389,7 +5591,7 @@ lemma partial_implies'':
     and N: \<open>0 < n\<close>
     and A: \<open> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> Share n v))))))\<close>
   shows [simp]: \<open>!!(R.get res) k k2 = Some v\<close>
-proof -
+proof -                                                                           
   from partial_implies'[OF FS, OF N, OF A]
   show ?thesis by fastforce
 qed

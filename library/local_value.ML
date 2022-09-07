@@ -86,7 +86,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E)
     val ctxt = NuToplevel.put_thesis goal' ctxt
   in
-    #initial_sequent Phi_Workling_Mode.procedure blk_name arg_phi ctxt
+    #initial_sequent Phi_Working_Mode.procedure blk_name arg_phi ctxt
   end
 
 

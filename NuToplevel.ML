@@ -593,7 +593,8 @@ fun gen_begin_block prep_attr bindings int stat =
     val (prems, goal) = (front prems_goal, last prems_goal)
 
     val mode = Phi_Working_Mode.working_mode_on1 ctxt goal
-    
+
+    val arg = #argument_spec mode goal
     val blk_name = #block_name_of mode goal
     val (level, stat) = Proof.map_context_result inc_blk_level stat
     val blk_name = "\<L>" ^ (Int.toString level) ^ "_" ^ blk_name
@@ -640,11 +641,12 @@ fun gen_begin_block prep_attr bindings int stat =
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
-      |> Proof.map_context_result (#initial_sequent mode blk_name goal #> swap)
+      |> Proof.map_context_result (#initial_sequent mode blk_name (cterm_of ctxt arg) #> swap)
       |-> NuBasics.set_nu_fact
-      |> Proof.map_context (fn ctxt => 
-            Proof_Context.put_thms false ("\<phi>thesis",
-              SOME [Drule.mk_term (cterm_of ctxt goal)]) ctxt
+      |> Proof.map_context (fn ctxt => ctxt
+            |> Proof_Context.put_thms false ("\<phi>thesis",
+                  SOME [Drule.mk_term (cterm_of ctxt goal)]) 
+            |> Phi_Working_Mode.set mode
           )
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end

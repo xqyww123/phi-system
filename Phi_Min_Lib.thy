@@ -571,15 +571,13 @@ proc AA:
 thm op_const_int_\<phi>app
 thm AA_\<phi>compilation
 
-
 proc XX:
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l x - 1 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket>  \<rightarrow> varx
   ;; (*assign the value x to a variable named varx*)
-               (* command `;;` leads a statement, or ends the previous statement. *)
-     if \<medium_left_bracket> \<open>0 < $varx\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$varx - 1\<close> \<medium_right_bracket>.
-                    \<medium_left_bracket> \<open>0::nat\<close> \<medium_right_bracket>.
+     (* command `;;` leads a statement, or ends the previous statement. *)
+    if \<medium_left_bracket> \<open>0 < $varx\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$varx - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0::nat\<close> \<medium_right_bracket>.
     (* the cartouche like \<open>0 < $varx\<close> invokes a synthesis process
        to make that value automatically *)
   \<medium_right_bracket>. .

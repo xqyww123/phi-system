@@ -44,7 +44,7 @@ fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 
 fun cast desired_nu (ctxt,sequent) =
   let
-    val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent)
+    val mode = Phi_Working_Mode.mode ctxt
     val rule = #cast_rule mode ctxt desired_nu (Thm.prop_of sequent)
     val (ctxt', sequent') =
           case Nu_Reasoner.reason (ctxt, sequent RS rule)

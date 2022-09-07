@@ -309,8 +309,8 @@ lemma [\<phi>reason 3000]: \<open>CHK_SUBGOAL   NO_GOAL\<close> using CHK_SUBGOA
 lemma [\<phi>reason 9999]: \<open>SOLVE_SUBGOAL NO_GOAL\<close> using SOLVE_SUBGOAL_I .
 
 
-definition GOAL_CTXT :: "bool \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
-  where [iff]: "GOAL_CTXT x _ \<equiv> Trueprop x"
+definition GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
+  where [iff]: "GOAL_CTXT x _ \<equiv> x"
 
 
 subsection \<open>Simplification & Rewrite\<close>
@@ -339,6 +339,86 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   HEADGOAL (asm_simp_tac ctx) THEN
   HEADGOAL (resolve0_tac @{thms Simplify_I})
 \<close> *)
+
+subsection \<open>Branch\<close>
+
+definition Branch :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixr "|||" 3)
+  where \<open>Branch A B \<equiv> (\<And>C::prop. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close>
+
+text \<open>It triggers divergence in searching, with short-cut.
+    Guaranteed by subgoal context, it tries every antecedents from left to right until
+      the first success of solving an antecedent, and none of remains are attempted.\<close>
+
+lemma Branch_imp:
+  \<open> (PROP A ||| PROP B \<Longrightarrow> PROP C)
+ \<equiv> ((PROP A \<Longrightarrow> PROP C) &&& (PROP B \<Longrightarrow> PROP C))\<close>
+  unfolding Branch_def proof
+  assume X: \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C) \<Longrightarrow> PROP C\<close>
+  show \<open>(PROP A \<Longrightarrow> PROP C) &&& (PROP B \<Longrightarrow> PROP C) \<close> proof -
+    assume A: \<open>PROP A\<close>
+    show \<open>PROP C\<close> proof (rule X)
+      fix C :: "prop"
+      assume \<open>PROP A \<Longrightarrow> PROP C\<close>
+      from this[OF A] show \<open>PROP C\<close> .
+    qed
+  next assume B: \<open>PROP B\<close>
+    show \<open>PROP C\<close> proof (rule X)
+      fix C :: "prop"
+      assume \<open>PROP B \<Longrightarrow> PROP C\<close>
+      from this[OF B] show \<open>PROP C\<close> .
+    qed
+  qed
+next
+  assume X: \<open>(PROP A \<Longrightarrow> PROP C) &&& (PROP B \<Longrightarrow> PROP C)\<close>
+    and  Y: \<open>\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C\<close>
+  show \<open>PROP C\<close> proof (rule Y)
+    assume \<open>PROP A\<close>
+    from X[THEN conjunctionD1, OF this] show \<open>PROP C\<close> .
+  next
+    assume \<open>PROP B\<close>
+    from X[THEN conjunctionD2, OF this] show \<open>PROP C\<close> .
+  qed
+qed
+
+lemma [\<phi>reason 1000]:
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> PROP A ||| PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> PROP A ||| PROP B\<close>
+  unfolding GOAL_CTXT_def .
+
+lemma [\<phi>reason on \<open>PROP ?A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close> if no \<open>PROP ?X ||| PROP ?Y \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> PROP A
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding GOAL_CTXT_def .
+
+lemma [\<phi>reason]:
+  \<open> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding GOAL_CTXT_def Branch_def
+proof -
+  assume A: \<open>PROP A\<close>
+  show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
+    fix C :: "prop"
+    assume A': \<open>PROP A \<Longrightarrow> PROP C\<close>
+    show \<open>PROP C\<close> using A'[OF A] .
+  qed
+qed
+
+lemma [\<phi>reason 10]:
+  \<open> PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding GOAL_CTXT_def Branch_def
+proof -
+  assume B: \<open>PROP B\<close>
+  show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
+    fix C :: "prop"
+    assume B': \<open>PROP B \<Longrightarrow> PROP C\<close>
+    show \<open>PROP C\<close> using B'[OF B] .
+  qed
+qed
+
+
 
 subsection \<open>Misc\<close>
 
