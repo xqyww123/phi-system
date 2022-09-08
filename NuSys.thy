@@ -4695,8 +4695,8 @@ lemma \<phi>Res_Spec_subj[iff]:
 
 lemma \<phi>Res_Spec_subj_\<S>:
   \<open> P
-\<Longrightarrow> res \<in> \<S> S E
-\<Longrightarrow> res \<in> (\<S> (\<lambda>v. S v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) E)\<close>
+\<Longrightarrow> res \<subseteq> \<S> S E
+\<Longrightarrow> res \<subseteq> (\<S> (\<lambda>v. S v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) E)\<close>
   by (clarsimp simp add: \<phi>expns set_eq_iff)
 
 lemma \<phi>Res_Spec_ex[iff]:
@@ -4704,9 +4704,8 @@ lemma \<phi>Res_Spec_ex[iff]:
   unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns set_eq_iff)
 
 lemma \<phi>Res_Spec_ex_\<S>:
-  \<open> res \<in> \<S> (S x) E
-\<Longrightarrow> res \<in> (\<S> (\<lambda>v. (\<exists>*x. S x v)) E)\<close>
-  apply (cases res; clarsimp simp add: \<phi>expns set_eq_iff subset_iff; blast)
+  \<open> res \<subseteq> \<S> (S x) E
+\<Longrightarrow> res \<subseteq> (\<S> (\<lambda>v. (\<exists>*x. S x v)) E)\<close>
   apply (clarsimp simp add: \<phi>expns set_eq_iff subset_iff)
   subgoal for x by (cases x; clarsimp simp add: \<phi>expns set_eq_iff subset_iff; blast) .
 
@@ -4776,7 +4775,7 @@ begin
 
 lemma \<r>_valid_split: \<open>res \<in> Valid_Resource \<longleftrightarrow>
     clean res \<in> Valid_Resource \<and> (\<exists>m. res name = inject m \<and> m \<in> Valid)\<close>
-  by (subst split, simp add: Valid_Resource_def times_fun_def image_iff Valid_1 one_fine_def, blast)
+  by (subst split, simp add: Valid_Resource_def times_fun_def image_iff Valid_1, blast)
 
 lemma \<r>_valid_split': \<open>
   NO_MATCH (clean res') res
@@ -4792,18 +4791,6 @@ lemma get_res_valid_raw:
     using prems(1)[THEN spec[where x=name], simplified Resource_Validator]
     by fastforce .
 
-definition \<open>raw_fiction I = Fiction (\<lambda>x. { 1(entry #= y) |y. y \<in> \<I> I x })\<close>
-lemma raw_fiction_\<I>:
-  "\<I> (raw_fiction I) = (\<lambda>x. { 1(entry #= y) |y. y \<in> \<I> I x})"
-  unfolding raw_fiction_def
-  by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def one_fine_def)
-
-lemma raw_fiction_itself_expn[\<phi>expns]:
-  \<open>\<phi>Res_Spec (\<I> (raw_fiction fiction.it) x)
- = \<phi>Res_Spec {mk x}\<close>
-  unfolding \<phi>Res_Spec_def set_eq_iff
-  by (clarsimp simp add: \<phi>expns raw_fiction_\<I>)
-
 lemma get_res_Valid:
   \<open> res \<in> \<phi>Res_Spec S
 \<Longrightarrow> (get res) \<in> Valid\<close>
@@ -4814,14 +4801,14 @@ definition \<open>raw_basic_fiction I = Fiction (\<lambda>x. { 1(entry #= y) |y.
 lemma raw_basic_fiction_\<I>:
   "\<I> (raw_basic_fiction I) = (\<lambda>x. { 1(entry #= y) |y. y \<in> \<I> I x})"
   unfolding raw_basic_fiction_def
-  by (rule Fiction_inverse) (clarsimp simp add: Fictional_def one_set_def one_fine_def)
+  by (rule Fiction_inverse) (clarsimp simp add: Fictional_def one_set_def)
 
 lemma fiction_itself_expn[\<phi>expns]:
   \<open>R2 ## x
 \<Longrightarrow> \<phi>Res_Spec (\<I> (raw_basic_fiction fiction.it) (R2 * x))
   = \<phi>Res_Spec (\<I> (raw_basic_fiction fiction.it) R2) * \<phi>Res_Spec {mk x}\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarsimp simp add: \<phi>expns raw_basic_fiction_\<I> mult_strip_fine_011 )
+  apply (clarsimp simp add: \<phi>expns raw_basic_fiction_\<I>)
   apply (rule; clarify)
    apply (simp add: mk_homo_mult sep_mult_assoc')
   using Valid_Resource_mult_homo sep_disj_mk apply blast
@@ -4910,22 +4897,20 @@ lemma sep_disj_fiction:
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
             share.sep_mult_strip_011 R.\<r>_valid_split'
-            R.mult_strip_inject_011 interp_split' mult_strip_fine_011
-            sep_disj_get_name_eq[symmetric]
+            R.mult_strip_inject_011 interp_split' sep_disj_get_name_eq[symmetric]
             simp del: sep_disj_get_name_eq)
   using sep_disj_multD2 by force
 
-lemma expand_raw:
+lemma expand_subj:
   \<open> Fic_Space r
-\<Longrightarrow> r ## mk (perm_transformer x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x)))
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk (perm_transformer x))
   = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify, rule)
   apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
             share.sep_mult_strip_011 \<phi>Res_Spec_def R.\<r>_valid_split'
-            R.mult_strip_inject_011 interp_split' mult_strip_fine_011)
+            R.mult_strip_inject_011 interp_split')
   subgoal for res_r a r'
     apply (rule exI[where x=\<open>res_r * R.mk a\<close>]; rule)
     apply (metis R.inj_homo_mult R.sep_disj_mk fun_1upd_homo_right1 sep_mult_assoc')
@@ -4935,12 +4920,33 @@ lemma expand_raw:
         R.mult_strip_inject_011 interp_split' sep_mult_assoc)
   subgoal premises prems for res_r a y proof -
     have t1[simp]: \<open>y ## x\<close>
-      using R.sep_disj_mk prems(6) prems(8) sep_disj_multD2 by blast
+      using prems(5) prems(7) sep_disj_multD2 by force
 
     show ?thesis
+      apply rule
       apply (rule exI[where x=\<open>a\<close>], rule exI[where x=\<open>R.mk (y * x)\<close>])
-      by (metis R.inj_homo_mult fun_1upd_homo prems(6) prems(7) prems(8) sep_disj_multI2 share.homo_mult t1)
+      apply (metis R.inj_homo_mult fun_1upd_homo prems(5) prems(6) prems(7) sep_disj_multI2 share.homo_mult t1)
+      by (metis prems(8) sep_disj_get_name_eq share.sep_disj_homo_semi t1)
+      
   qed .
+
+lemma expand:
+  \<open>Fic_Space r
+\<Longrightarrow> r ## mk (perm_transformer x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x))) =
+    \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
+  subgoal premises prems
+    using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
+
+lemma expand_conj:
+  \<open> Fic_Space r
+\<Longrightarrow> a \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x))) \<and> r ## mk (perm_transformer x)
+\<longleftrightarrow> a \<in> \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
+  subgoal premises prems
+    using expand_subj[where r=r and x=x, OF prems(1), unfolded set_eq_iff]
+      by (simp add: \<phi>expns) .
+
+
 
 lemma partial_implies_raw:
   \<open> Fic_Space r
@@ -4950,7 +4956,7 @@ lemma partial_implies_raw:
 \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
-            mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
+            \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
             R.proj_homo_mult interp_split')
   apply (cases \<open>n \<le> 1\<close>)
   apply (metis join_sub_def join_sub_ext_left sep_disj_get_name_eq share.join_sub_share_join_sub_whole)
@@ -5045,31 +5051,34 @@ lemma sep_disj_fiction:
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split'
-            R.mult_strip_inject_011 interp_split' mult_strip_fine_011
+            R.mult_strip_inject_011 interp_split'
             sep_disj_get_name_eq[symmetric]
             simp del: sep_disj_get_name_eq)
   using sep_disj_multD2 by force
+
+lemma expand_subj:
+  \<open> Fic_Space r
+\<Longrightarrow> (\<phi>Res_Spec (\<I> INTERP (r * mk x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk x) = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
+  unfolding \<phi>Res_Spec_mult_homo[symmetric]
+  unfolding \<phi>Res_Spec_def set_eq_iff
+  apply (clarify; rule; clarsimp simp add: \<phi>expns R.raw_basic_fiction_\<I> interp_split')
+  apply (simp add: R.mk_homo_mult)
+  using R.sep_disj_mk sep_disj_get_name_eq sep_disj_multD1 sep_disj_multI1 sep_mult_assoc' apply blast
+  apply (simp add: R.mk_homo_mult[symmetric] sep_mult_assoc)
+  by (metis R.mk_homo_mult R.sep_disj_mk sep_disj_get_name_eq sep_disj_multD2 sep_disj_multI2)
 
 lemma expand:
   \<open> Fic_Space r
 \<Longrightarrow> r ## mk x
 \<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk x)) = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
-  unfolding \<phi>Res_Spec_mult_homo[symmetric]
-  unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarify; rule; clarsimp simp add: \<phi>expns R.raw_basic_fiction_\<I> mult_strip_fine_011
-          interp_split')
-  apply (simp add: R.mk_homo_mult)
-  using R.sep_disj_mk sep_disj_get_name_eq sep_disj_multD1 sep_disj_multI1 sep_mult_assoc' apply blast
-  apply (simp add: R.mk_homo_mult[symmetric] sep_mult_assoc)
-  by (metis R.mk_homo_mult sep_disj_get_name_eq sep_disj_multI2)
-
-
+  subgoal premises prems
+    using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
 end
 
 
 subsection \<open>Nonsepable Mono-Resource\<close>
-  \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option ?\<close>\<close>
+  \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option\<close>\<close>
 
 locale nonsepable_mono_resource =
   resource entry Resource_Validator \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
@@ -5107,7 +5116,7 @@ lemma partial_implies:
 \<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Some (agree (nonsepable x)))))
 \<Longrightarrow> R.get res = Some (nonsepable x)\<close>
   unfolding \<phi>Res_Spec_def apply (clarsimp simp add: interp_split'
-     R.fiction_agree_def R.raw_basic_fiction_\<I> \<phi>expns mult_strip_fine_011 R.\<r>_valid_split'
+     R.fiction_agree_def R.raw_basic_fiction_\<I> \<phi>expns R.\<r>_valid_split'
      R.mult_strip_inject_011 R.proj_homo_mult fiction.optionwise_\<I> image_iff Bex_def
      fiction_agree_def)
   apply (cases \<open>get r\<close>; simp)
@@ -5123,14 +5132,14 @@ lemma partial_implies:
 lemma VS_double:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w {mk x |x. P x} \<longmapsto> {mk x |x. P x} * {mk x |x. P x}\<close>
   unfolding View_Shift_def
-  apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric] times_fine)
+  apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric])
   subgoal for x R u x'
     apply (cases x'; simp)
     apply (metis fun_1upd1 inj_homo_one mult_1_class.mult_1_left one_option_def sep_magma_1_right)
     subgoal for a by (rule exI[where x=\<open>u * mk (Some a)\<close>]; simp
                 ; rule exI[where x=u]; rule exI[where x=\<open>mk (Some a)\<close>]; simp
                 ; rule exI[where x=\<open>mk (Some a)\<close>]; rule exI[where x=\<open>mk (Some a)\<close>]
-                ; simp add: mk_homo_mult[symmetric] times_fine) . .
+                ; simp add: mk_homo_mult[symmetric]) . .
 
 lemma VS_contract:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w {mk x |x. P x} * {mk x |x. P x} \<longmapsto> {mk x |x. P x} \<close>
@@ -5202,7 +5211,7 @@ lemma "__new_rule__":
       have t1: \<open>res(name := inject (m(k := u))) = res * mk (1(k := u)) \<and> res ## mk (1(k := u))\<close>
         thm fun_split_1_not_dom1[where f=m]
         apply (subst fun_split_1_not_dom1[where k=k]) using A apply this
-        apply (simp add: times_fine'[symmetric] t2 inj.homo_mult split)
+        apply (simp add: t2 inj.homo_mult split)
         by (metis fun_1upd_homo_right1 prems(5) proj_inj sep_disj_get_name_eq t2 t3)
     }
     then show ?thesis
@@ -5231,7 +5240,7 @@ lemma "__updt_rule__":
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
           proj_homo_mult times_fun_upd )
-  apply (clarsimp simp add: mult_strip_fine_011 sep_disj_partial_map_upd
+  apply (clarsimp simp add: sep_disj_partial_map_upd
           nonsepable_semigroup_sepdisj_fun mk_homo_mult)
   subgoal premises prems for x aa proof -
     have t1: \<open>clean x * mk aa = x\<close>
@@ -5247,7 +5256,7 @@ lemma "__dispose_rule__":
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k \<mapsto> any))}
 \<Longrightarrow> updt (\<lambda>f. f(k := None)) res \<in> \<phi>Res_Spec R\<close>
-  using "__updt_rule__"[where u=None, simplified, simplified one_fine_def[symmetric],
+  using "__updt_rule__"[where u=None, simplified, simplified,
             simplified, simplified one_set_def[symmetric], simplified] .
 
 abbreviation perm_transformer :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
@@ -5303,7 +5312,7 @@ lemma raw_unit_assertion_implies[simp]:
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
-      proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun)
+      proj_homo_mult sep_disj_fun_def times_fun)
   by (metis (mono_tags, lifting) sep_disj_option_nonsepable(1) sep_mult_commute times_option(2))
 
 
@@ -5326,7 +5335,13 @@ begin
 
 sublocale permission_fiction Valid \<open>R.perm_transformer\<close> by standard blast
 
-lemmas expand = expand_raw
+lemma expand:
+  \<open>Fic_Space r
+\<Longrightarrow> r ## mk (R.perm_transformer x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (R.perm_transformer x))) =
+    \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
+  subgoal premises prems
+    using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
 lemma partial_implies:
   \<open> Fic_Space r
@@ -5551,7 +5566,7 @@ lemma raw_unit_assertion_implies[simp]:
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
-      proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun)
+      proj_homo_mult sep_disj_fun_def times_fun)
   by (metis (full_types) fun_upd_same sep_disj_option_nonsepable(1) times_option(3))
 
 lemma raw_unit_assertion_implies':
@@ -5591,8 +5606,6 @@ and Fic :: "('FIC_N,'FIC, 'key \<Rightarrow> 'key2 \<Rightarrow> 'val share opti
 begin
 
 sublocale permission_fiction Valid \<open>R.perm_transformer\<close> by standard  blast
-
-lemmas expand = expand_raw
 
 lemma [simp]:
   \<open>R.perm_transformer (1(k := f)) = 1(k := to_share o f)\<close>

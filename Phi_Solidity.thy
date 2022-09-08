@@ -105,11 +105,11 @@ text \<open>\<^term>\<open>Some (initialized V)\<close> means an initialized slo
   \<^term>\<open>None\<close> means a slot which is not accessible. It is not allocated space typically.\<close>
 
 resource_space ('VAL::"nonsepable_semigroup",'TY) solidity_res = ('VAL,'TY) \<phi>min_res +
-  R_ledge   :: \<open>'VAL ledge ?\<close>
-  R_environ :: \<open>environ nonsepable option ?\<close>
+  R_ledge   :: \<open>'VAL ledge\<close>
+  R_environ :: \<open>environ nonsepable option\<close>
       \<comment> \<open>None means this part of the resource is not accessible and not specified\<close>
-  R_balance :: \<open>balance_table ?\<close>
-  R_msg :: \<open>mutable_environ nonsepable option ?\<close>
+  R_balance :: \<open>balance_table\<close>
+  R_msg :: \<open>mutable_environ nonsepable option\<close>
 
 
 subsection \<open>Semantics\<close>
@@ -120,7 +120,7 @@ hide_const (open) "name" "typ_sig"
 locale solidity_sem =
   \<phi>OO_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                  \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra))\<close>
+                  \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
 + solidity_ty where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
             and TYPE'REP  = \<open>TYPE('TY)\<close>
@@ -131,10 +131,10 @@ locale solidity_sem =
 + solidity_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
-            and TYPE'REP  = \<open>TYPE('RES::total_sep_algebra)\<close>
+            and TYPE'REP  = \<open>TYPE('RES::sep_algebra)\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra)
+                \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
             ) itself\<close>
 assumes WT_LedgeRef[simp]: \<open>Well_Type \<tau>LedgeRef = UNIV\<close>
   and   WT_Address [simp]: \<open>Well_Type \<tau>Address  = UNIV\<close>
@@ -144,11 +144,11 @@ assumes WT_LedgeRef[simp]: \<open>Well_Type \<tau>LedgeRef = UNIV\<close>
   and   Can_EqCompare_Address[simp]:  \<open>Can_EqCompare res (V_Address.mk addr1)  (V_Address.mk addr2)\<close>
   and   EqCompare_LedgeRef[simp]:     \<open>EqCompare (V_LedgeRef.mk lref1) (V_LedgeRef.mk lref2) \<longleftrightarrow> lref1 = lref2\<close>
   and   EqCompare_Address[simp]:      \<open>EqCompare (V_Address.mk addr1)  (V_Address.mk addr2)  \<longleftrightarrow> addr1 = addr2\<close>
-  and   Resource_Validator_Ledge':   \<open>Resource_Validator R_ledge.name   = R_ledge.inject ` Fine ` {h. h Nil = 1 \<and> finite (dom1 h) }\<close>
-  and   Resource_Validator_Environ': \<open>Resource_Validator R_environ.name = R_environ.inject ` Fine ` UNIV\<close>
-  and   Resource_Validator_Msg[simp]: \<open>Resource_Validator R_msg.name = R_msg.inject ` Fine ` UNIV\<close>
+  and   Resource_Validator_Ledge':   \<open>Resource_Validator R_ledge.name   = R_ledge.inject ` {h. h Nil = 1 \<and> finite (dom1 h) }\<close>
+  and   Resource_Validator_Environ': \<open>Resource_Validator R_environ.name = R_environ.inject ` UNIV\<close>
+  and   Resource_Validator_Msg[simp]: \<open>Resource_Validator R_msg.name = R_msg.inject ` UNIV\<close>
   and   Resource_Validator_Balance[simp]:
-              \<open>Resource_Validator R_balance.name = R_balance.inject ` Fine ` UNIV\<close>
+              \<open>Resource_Validator R_balance.name = R_balance.inject ` UNIV\<close>
 
 begin
 
@@ -168,10 +168,10 @@ definition Valid_Ledge :: "'VAL ledge set"
   where "Valid_Ledge = {h. h Nil = 1 \<and> finite (dom1 h) }"
 
 lemma Valid_Ledge_1[simp]: \<open>1 \<in> Valid_Ledge\<close>
-  unfolding Valid_Ledge_def one_fun_def one_fine_def by (simp add: dom1_def one_fun_def)
+  unfolding Valid_Ledge_def one_fun_def by (simp add: dom1_def one_fun_def)
 
 lemma Resource_Validator_Ledge[simp]:
-  \<open>Resource_Validator R_ledge.name = R_ledge.inject ` Fine ` Valid_Ledge\<close>
+  \<open>Resource_Validator R_ledge.name = R_ledge.inject ` Valid_Ledge\<close>
   unfolding Valid_Ledge_def Resource_Validator_Ledge' ..
 
 sublocale R_ledge: partial_map_resource2 Valid_Ledge R_ledge Resource_Validator
@@ -209,16 +209,16 @@ fiction_space (in solidity_sem) solidity_fic :: \<open>'RES_N \<Rightarrow> 'RES
   FIC_ledge   :: \<open>R_ledge.share_fiction\<close>
   FIC_environ :: \<open>R_environ.fiction_agree\<close>
   FIC_balance :: \<open>R_balance.share_fiction\<close>
-  FIC_msg     :: \<open>R_msg.basic_fine_fiction (fiction.fine fiction.it)\<close>
+  FIC_msg     :: \<open>R_msg.raw_basic_fiction fiction.it\<close>
 
 locale solidity =
   solidity_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                            \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra))\<close>
+                            \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
-    and TYPE'REP = \<open>TYPE('FIC::total_sep_algebra)\<close> 
+    and TYPE'REP = \<open>TYPE('FIC::sep_algebra)\<close> 
 + \<phi>OO where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                           \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                          \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra)
+                          \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
                           \<times> ('FIC_N \<Rightarrow> 'FIC))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 begin
@@ -232,7 +232,7 @@ sublocale FIC_environ: agreement_fiction_for_nosepable_mono_resource UNIV
 sublocale FIC_balance: share_fiction_for_partial_mapping_resource UNIV R_balance
     Resource_Validator INTERPRET FIC_balance ..
 
-sublocale FIC_msg: identity_fiction_for_fine_resource UNIV R_msg
+sublocale FIC_msg: identity_fiction UNIV R_msg
     Resource_Validator INTERPRET FIC_msg
   apply (standard; simp add: set_eq_iff image_iff)
   by (metis nonsepable.exhaust option.exhaust)
@@ -255,7 +255,7 @@ locale solidity_project_sem =
   solidity_sem where TYPES = TYPES
 for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
              \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-             \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra)
+             \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
            ) itself\<close>
 +
 fixes Internal_Public_Methods_Transitions :: \<open>('RES_N,'RES) transition list\<close>
@@ -320,8 +320,8 @@ locale solidity_project =
                         )\<close>
 for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
              \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-             \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra)
-             \<times> ('FIC_N \<Rightarrow> 'FIC::total_sep_algebra)
+             \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
+             \<times> ('FIC_N \<Rightarrow> 'FIC::sep_algebra)
            ) itself\<close>
 +
 fixes Transition_Closure_Spec :: \<open>('RES_N, 'RES) transition\<close>
@@ -583,15 +583,15 @@ lemma (in solidity) \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
   apply simp
     apply (cases vb; simp)
     subgoal premises prems for x1
-      apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, simplified prems, simplified])
-      apply (rule exI[where x=\<open>FIC_ledge.mk (Fine (1(addr := 1(path \<mapsto> Share n (initialized v)))))\<close>], simp add: prems)
+      apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp])
+      apply (rule exI[where x=\<open>FIC_ledge.mk (1(addr := 1(path \<mapsto> Share n (initialized v))))\<close>], simp add: prems)
       apply (rule exI[where x=\<open>1(path \<mapsto> Share n (initialized v))\<close>], simp)
       apply (rule exI[where x=\<open>Some (Share n (initialized v))\<close>], simp)
       apply (rule exI[where x=\<open>Some (Share 1 (initialized v))\<close>], simp add: prems)
       by (rule exI[where x=\<open>Some (initialized v)\<close>], simp)
     subgoal premises prems
-      apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, simplified prems, simplified])
-      apply (rule exI[where x=\<open>FIC_ledge.mk (Fine (1(addr := 1(path \<mapsto> Share n uninitialized))))\<close>], simp add: prems)
+      apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp])
+      apply (rule exI[where x=\<open>FIC_ledge.mk (1(addr := 1(path \<mapsto> Share n uninitialized)))\<close>], simp add: prems)
       apply (rule exI[where x=\<open>1(path \<mapsto> Share n uninitialized)\<close>], simp)
       apply (rule exI[where x=\<open>Some (Share n uninitialized)\<close>], simp)
       apply (rule exI[where x=\<open>Some (Share 1 uninitialized)\<close>], simp add: prems)
@@ -633,22 +633,23 @@ lemma (in solidity) "\<phi>R_set_res_ledge"[\<phi>reason!]:
          \<lbrace> v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
-  apply (rule \<phi>Res_Spec_ex_\<S>[where x=\<open>FIC_ledge.mk (Fine (1(lref := 1(path := Some (Share 1 (initialized u))))))\<close>])
-  apply (rule \<phi>Res_Spec_subj_\<S>)
-
-  apply (simp add: FIC_ledge.Fic_Space_m)
-   apply (rule exI[where x=\<open>1(path \<mapsto> Share 1 (initialized u))\<close>], simp)
-   apply (rule exI[where x=\<open>Some (Share 1 (initialized u))\<close>], simp)
-   apply (rule exI[where x=\<open>Some (initialized u)\<close>], simp)
-  
+  apply (rule \<phi>Res_Spec_ex_\<S>[where x=\<open>FIC_ledge.mk (1(lref := 1(path := Some (Share 1 (initialized u)))))\<close>])
   subgoal for r res x
-  apply (simp add: FIC_ledge.expand[where x=\<open>1(lref := 1(path \<mapsto> x))\<close>, simplified]
-            FIC_ledge.expand[where x=\<open>1(lref := 1(path \<mapsto> initialized u))\<close>, simplified])
-  apply (rule R_ledge.\<phi>R_set_res[where P="\<lambda>m. path \<in> dom (m lref)"])
-  apply (cases lref; clarsimp simp add: Valid_Ledge_def map_fun_at_def dom1_def)
-  apply (smt (verit, ccfv_SIG) Collect_cong dom_1 dom_eq_empty_conv option.distinct(1))
-  using R_ledge.raw_unit_assertion_implies apply blast
-  by assumption .
+  apply (simp add: FIC_ledge.expand[where x=\<open>1(lref := 1(path \<mapsto> x))\<close>, simplified])
+  subgoal premises prems proof -
+    let \<open>?proc \<subseteq> \<S> (\<lambda>v. ?Spec \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?P_ex \<and> ?P_disj) {}\<close> = ?thesis
+    have t1: ?P_ex
+      by (rule exI[where x=\<open>1(path \<mapsto> Share 1 (initialized u))\<close>], simp,
+          rule exI[where x=\<open>Some (Share 1 (initialized u))\<close>], simp,
+          rule exI[where x=\<open>Some (initialized u)\<close>], simp)
+    show ?thesis apply (simp add: t1)
+      apply (simp add: FIC_ledge.expand_subj[where x=\<open>1(lref := 1(path \<mapsto> initialized u))\<close>, simplified] prems)
+      apply (insert prems, rule R_ledge.\<phi>R_set_res[where P="\<lambda>m. path \<in> dom (m lref)"])
+      apply (cases lref; clarsimp simp add: Valid_Ledge_def map_fun_at_def dom1_def)
+      apply (smt (verit, ccfv_SIG) Collect_cong dom_1 dom_eq_empty_conv option.distinct(1))
+      using R_ledge.raw_unit_assertion_implies apply blast
+      by assumption
+  qed . .
 
 
 lemma (in solidity) op_store_ledge:
@@ -681,11 +682,15 @@ lemma (in solidity) op_obj_allocate:
   prefer 2 apply assumption
   apply (simp add: \<phi>expns Return_def det_lift_def)
   subgoal for r res k res'
-    apply (rule exI[where x=\<open>FIC_ledge.mk (Fine (1(k := to_share o (\<lambda>_. Some uninitialized))))\<close>])
-    apply (cases k; simp)
-    subgoal for x11 x12
-    apply (cases k; simp  add: FIC_ledge.expand[where x=\<open>1(object_ref x11 x12 := \<lambda>_. Some (uninitialized))\<close>, simplified])
-      by (rule exI[where x=\<open>to_share \<circ> (\<lambda>_. Some uninitialized)\<close>], simp add: \<phi>expns) . .
+    apply (rule exI[where x=\<open>FIC_ledge.mk (1(k := to_share o (\<lambda>_. Some uninitialized)))\<close>])
+    apply (simp add: \<phi>Res_Spec_mult_homo)
+    subgoal premises prems proof -
+      have t1: \<open>(\<exists>v. 1(k := to_share \<circ> (\<lambda>_. Some uninitialized)) = 1(k := v) \<and>
+         (\<forall>va. v va = Some (Share 1 uninitialized)))\<close>
+        by fastforce
+      show ?thesis
+        by (simp add: t1 FIC_ledge.expand_conj[where x=\<open>1(k := \<lambda>_. Some (uninitialized))\<close>, simplified] prems)
+    qed . .
 
 
 subsection \<open>Environment & Balance\<close>
@@ -714,12 +719,13 @@ lemma (in solidity) op_get_balance_raw:
   show ?thesis by (simp add: t1[of m, simplified] Premise_def)
 qed .
 
-(*declare [[\<phi>trace_reasoning]]
+declare [[\<phi>trace_reasoning]]
 
 proc (in solidity) op_get_balance:
-  argument \<open>m \<Ztypecolon> Balance' n addr \<heavy_comma> addr \<Ztypecolon> Val va Address\<close>
-  return \<open>m \<Ztypecolon> Balance' n addr \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m \<Ztypecolon> \<nat>[256]\<close>
-  \<medium_left_bracket> op_get_balance_raw *)
+  argument \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l addr \<Ztypecolon> Address\<close>
+  return \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m \<Ztypecolon> \<nat>[256]\<close>
+  \<medium_left_bracket> ;; op_get_balance_raw[where n=n]
+  thm op_get_balance_raw[where n=n]
 
 
 definition (in solidity_sem)
@@ -774,7 +780,6 @@ lemma (in solidity)
 subsection \<open>Call\<close>
 
 definition \<open>fallback_N = ''fallback''\<close>
-
 
 
 definition (in \<phi>empty_sem) \<phi>Transition_Spec_to_Proc_Spec

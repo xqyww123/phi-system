@@ -116,8 +116,8 @@ lemma [\<phi>reason]:
 \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<^bold>a\<^bold>n\<^bold>d P"
   unfolding Imply_def Premise_def by (simp add: \<phi>expns)
 
-lemma [simp]: "(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j True) = T"  unfolding set_eq_iff by (simp add: \<phi>expns)
-lemma [simp]: \<open>(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j False) = 0\<close> unfolding set_eq_iff by (simp add: \<phi>expns zero_set_def)
+lemma Subjection_True [simp]: "(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j True) = T"  unfolding set_eq_iff by (simp add: \<phi>expns)
+lemma Subjection_Flase[simp]: \<open>(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j False) = 0\<close> unfolding set_eq_iff by (simp add: \<phi>expns zero_set_def)
 
 (* lemma (in \<phi>empty) [simp]: "(VAL (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (VAL S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff) blast
 lemma (in \<phi>empty) [simp]: "(OBJ (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (OBJ S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff) *)

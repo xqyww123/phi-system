@@ -278,12 +278,12 @@ lemma (in \<phi>fiction) [\<phi>reason 2000]: \<open>
   apply (rule AllSet_trans, rule transI)
   apply (clarsimp simp add: GTS_def \<phi>expns refl_on_def trans_def subset_iff)
   subgoal premises prems for R x y z u v proof -
-    have \<open>(\<exists>fic. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X) \<and> x \<in> INTERP_RES fic)\<close>
-      using \<open>u \<in> R\<close> \<open>v \<in> X\<close> \<open>x \<in> INTERP_RES (u * v)\<close> by blast
+    have \<open>(\<exists>fic. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X \<and> u ## v) \<and> x \<in> INTERP_RES fic)\<close>
+      using prems(3) prems(4) prems(5) prems(6) by blast
     note t1 = \<open>_ \<longrightarrow> _\<close>[THEN mp, OF this]
     then obtain fic' u' v' where t2[simp]: \<open>fic' = u' * v' \<and> u' \<in> R \<and> v' \<in> Y \<and> y \<in> INTERP_RES fic'\<close> by blast
     show ?thesis
-      using prems(1) prems(6) t2 by blast
+      using prems(1) prems(7) t1 by blast
   qed .
 
 

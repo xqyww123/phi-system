@@ -1421,7 +1421,7 @@ lemma nonsepable_partial_map_subsumption_L2:
   by (metis (mono_tags, opaque_lifting) fun_upd_same mult_1_class.mult_1_left one_option_def sep_disj_fun_def sep_disj_partial_map_some_none)
 
 
-subsection \<open>Partiality\<close>
+(* subsection \<open>Partiality\<close>
 
 
 datatype 'a fine ("_ ?" [100] 101) = Fine (the_fine: 'a) | Undef
@@ -1549,7 +1549,7 @@ lemma mult_strip_fine_001:
    a' * b' = Fine c \<longleftrightarrow> (\<exists>a b. a' = Fine a \<and> b' = Fine b \<and> a ## b \<and> a * b = c)\<close>
   by (cases a'; cases b'; simp add: times_fine)
 
-
+*)
 subsection \<open>Fractional SA\<close>
 
 datatype 'a share = Share (perm:rat) (val: 'a)
@@ -1920,7 +1920,7 @@ lemma optionwise_\<I>[simp]:
   by (rule Fiction_inverse) (auto simp add: Fictional_def)
 
 
-subsubsection \<open>Partiality\<close>
+(* subsubsection \<open>Partiality\<close>
 
 definition "fine I = Fiction (case_fine (\<I> I) {})"
 lemma fine_\<I>[simp]: "\<I> (fine I) = case_fine (\<I> I) {}"
@@ -1934,7 +1934,7 @@ lemma defined_\<I>[simp]: "\<I> (defined I) = (\<lambda>x. Fine ` \<I> I x)"
 definition "partialwise I = fiction.fine (defined I)"
 lemma partialwise_\<I>[simp]: "\<I> (partialwise I) (Fine x) = { Fine y |y. y \<in> \<I> I x }"
   unfolding partialwise_def by auto
-
+*)
 
 subsubsection \<open>Exact Itself\<close>
 
@@ -1947,8 +1947,8 @@ lemma it_\<I>[simp]: "\<I> it = it'"
 end
 
 
-lemmas [simp] = fiction.fun_\<I> fiction.fun'_\<I> fiction.option_\<I> fiction.fine_\<I>
-  fiction.it'_def fiction.it_\<I> fiction.defined_\<I> fiction.pointwise'_\<I>
+lemmas [simp] = fiction.fun_\<I> fiction.fun'_\<I> fiction.option_\<I> (* fiction.fine_\<I> *)
+  fiction.it'_def fiction.it_\<I> (* fiction.defined_\<I> *) fiction.pointwise'_\<I>
 
 lemma fiction_fun_\<I>_1_fupdt[simp]: "\<I> (fiction.fun I) (1(k:=v)) = \<I> I v" by simp
 
@@ -1972,11 +1972,11 @@ definition "fiction_share s = (case s of Share w v \<Rightarrow> if w = 1 then {
 lemma fiction_share_\<I>[simp]: "fiction_share (Share w v) = (if w = 1 then {v} else {})"
   unfolding fiction_share_def by simp
 
-lemma In_ficion_fine [simp]:
+(* lemma In_ficion_fine [simp]:
   \<open>x \<in> (case some_fine of Fine y \<Rightarrow> f y | Undef \<Rightarrow> {})
         \<longleftrightarrow> (\<exists>y. some_fine = Fine y \<and> x \<in> f y)\<close>
   by (cases some_fine; simp)
-
+*)
 
 subsubsection \<open>Agreement\<close>
 
@@ -1998,7 +1998,7 @@ syntax
   "_entry_updbind" :: "'a \<Rightarrow> 'a \<Rightarrow> updbind"     ("(2_ #=/ _)")
   "_fine_Update"  :: "'a \<Rightarrow> updbinds \<Rightarrow> 'a"  ("_/'((_)')\<^sub>?" [1000, 0] 900)
 
-definition "fine_fun_updt f x y \<equiv> map_fine (\<lambda>g. fun_upd g x y) f"
+(* definition "fine_fun_updt f x y \<equiv> map_fine (\<lambda>g. fun_upd g x y) f" 
 
 lemma fine_fun_updt[simp]:
   "fine_fun_updt (Fine f) x y = Fine (fun_upd f x y)"
@@ -2010,7 +2010,10 @@ translations
   "f(x#=y)" => "f(CONST Entry.name x := CONST Entry.inject x y)"
   "f(x:=y)\<^sub>?" \<rightleftharpoons> "CONST fine_fun_updt f x y"
   "f(x#=y)\<^sub>?" => "f(CONST Entry.name x := CONST Entry.inject x y)\<^sub>?"
+*)
 
+translations
+  "f(x#=y)" => "f(CONST Entry.name x := CONST Entry.inject x y)"
 
 subsubsection \<open>Projector & Injector\<close>
 

@@ -51,7 +51,7 @@ subsubsection \<open>Resource\<close>
 type_synonym ('TY,'VAL) object_heap = \<open>('TY object_ref \<Rightarrow> field_name \<Rightarrow> 'VAL option)\<close>
 
 resource_space ('VAL::nonsepable_semigroup,'TY) \<phi>OO_res = ('VAL,'TY) \<phi>min_res +
-  R_objs :: \<open>('TY,'VAL) object_heap ?\<close>
+  R_objs :: \<open>('TY,'VAL) object_heap\<close>
 
 
 subsection \<open>Main Stuff of Semantics\<close>
@@ -59,7 +59,7 @@ subsection \<open>Main Stuff of Semantics\<close>
 locale \<phi>OO_sem_pre =
   \<phi>min_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                  \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra))\<close>
+                  \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
 + \<phi>OO_ty where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
             and TYPE'REP  = \<open>TYPE('TY)\<close>
@@ -70,10 +70,10 @@ locale \<phi>OO_sem_pre =
 + \<phi>OO_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
-            and TYPE'REP  = \<open>TYPE('RES::total_sep_algebra)\<close>
+            and TYPE'REP  = \<open>TYPE('RES::sep_algebra)\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra)
+                \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
             ) itself\<close>
 assumes WT_ref[simp]: \<open>Well_Type \<tau>Ref = UNIV\<close>
   and   zero_ref[simp]: \<open>Zero \<tau>Ref = Some (V_ref.mk Nil)\<close>
@@ -99,7 +99,7 @@ definition Valid_Objs :: "('TY,'VAL) object_heap set"
                       dom (h (object_ref cls nonce)) = dom (class.fields cls) ) }"
 
 lemma Valid_Objs_1[simp]: \<open>1 \<in> Valid_Objs\<close>
-  unfolding Valid_Objs_def one_fun_def one_fine_def by (simp add: dom1_def one_fun_def)
+  unfolding Valid_Objs_def one_fun_def by (simp add: dom1_def one_fun_def)
 
 lemma obj_map_freshness:
   \<open>finite (dom1 f) \<Longrightarrow> \<exists>k. f k = 1 \<and> k \<noteq> Nil \<and> object_ref.class k = cls\<close>
@@ -112,9 +112,9 @@ end
 locale \<phi>OO_sem =
   \<phi>OO_sem_pre where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                  \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra))\<close>
+                  \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES)) itself\<close>
-assumes Resource_Validator_objs: \<open>Resource_Validator R_objs.name = R_objs.inject ` Fine ` Valid_Objs\<close>
+assumes Resource_Validator_objs: \<open>Resource_Validator R_objs.name = R_objs.inject ` Valid_Objs\<close>
 begin
 
 sublocale R_objs: partial_map_resource2 Valid_Objs R_objs Resource_Validator
@@ -141,12 +141,12 @@ lemma "__case_prod_ref_field__":
 locale \<phi>OO =
   \<phi>OO_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                  \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra))\<close>
+                  \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
       and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
-      and TYPE'REP = \<open>TYPE('FIC::total_sep_algebra)\<close>
+      and TYPE'REP = \<open>TYPE('FIC::sep_algebra)\<close>
 + \<phi>min where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                   \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                  \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra)
+                  \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
                   \<times> ('FIC_N \<Rightarrow> 'FIC))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 begin
@@ -226,11 +226,13 @@ lemma (in \<phi>OO) op_obj_allocate:
   using obj_map_freshness apply blast
     apply (clarsimp simp add: Valid_Objs_def one_fun_def dom_initial_value_of_class)
   prefer 2 apply assumption
-  apply (simp add: \<phi>expns Return_def det_lift_def)
-  subgoal for r res k res'
-    apply (clarsimp simp add: FIC_OO_share.expand[where x=\<open>1(k := initial_value_of_class cls)\<close>, simplified])
-    by (cases k; simp) .
-
+  apply (simp add: \<phi>expns Return_def det_lift_def \<phi>Res_Spec_mult_homo del: set_mult_expn)
+  subgoal premises prems for r res k res' proof -
+    have t: \<open>of_class cls k\<close>
+      by (metis object_ref.collapse of_class.simps(1) prems(3))
+    show ?thesis
+      by (simp add: t FIC_OO_share.expand_conj[where x=\<open>1(k := initial_value_of_class cls)\<close>, simplified] prems)
+  qed .
 
 
 paragraph \<open>Load Field\<close>
@@ -275,7 +277,7 @@ lemma (in \<phi>OO) op_obj_store_field:
   apply (rule FIC_OO_share.\<phi>R_set_res[where P="\<lambda>m. field \<in> dom (m ref)"])
   apply (cases ref; clarsimp simp add: Valid_Objs_def map_fun_at_def dom1_def)
   apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1))
-  using R_objs.raw_unit_assertion_implies by blast
+  using R_objs.raw_unit_assertion_implies \<phi>Res_Spec_mult_homo by blast
 
 
 paragraph \<open>Dispose\<close>
@@ -297,7 +299,7 @@ lemma (in \<phi>OO) op_obj_dispose:
   unfolding op_obj_dispose_def Premise_def
   apply (rule \<phi>M_getV_ref)
   apply (rule \<phi>SEQ[where B=\<open>\<lambda>_. to_share \<circ> fields \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Identity\<close>])
-  apply (clarsimp simp add: \<phi>expns zero_set_def FIC_OO_share.expand \<phi>Procedure_\<phi>Res_Spec del: subsetI)
+  apply (clarsimp simp add: \<phi>expns zero_set_def \<phi>Procedure_\<phi>Res_Spec del: subsetI)
   apply (rule R_objs.\<phi>R_get_res, simp, simp add: dom1_def)
   subgoal premises prems for r res proof -
     have t1: \<open>object_ref.class ref = cls\<close>
@@ -308,14 +310,16 @@ lemma (in \<phi>OO) op_obj_dispose:
         then have \<open>dom (class.fields cls) = {}\<close> using prems(2) by simp
         then show ?thesis by fastforce
       qed .
-    have t2: \<open>!!(R_objs.get res) ref = 1 \<Longrightarrow> class.fields cls = 1\<close>
+    have t4: \<open>r ## FIC_OO_share.mk (1(ref := to_share \<circ> fields))\<close>
+      using prems(6) by blast
+    have t2: \<open>R_objs.get res ref = 1 \<Longrightarrow> class.fields cls = 1\<close>
       unfolding one_fun_def one_option_def
       apply (cases \<open>fields = Map.empty\<close>)
       using t3 apply blast
       using FIC_OO_share.partial_implies[where x=\<open>1(ref := fields)\<close> and n=1, simplified,
-            OF \<open>Fic_Space r\<close>, OF \<open>res \<in> _\<close>]
+            OF \<open>Fic_Space r\<close>, OF t4, OF \<open>res \<in> _\<close>]
             nonsepable_partial_map_subsumption_L2
-      by (metis domIff fine.sel map_le_def)
+      by (metis domIff map_le_def)
     show ?thesis by (simp add: t1 t2 prems Return_def det_lift_def)
   qed
   apply (rule FIC_OO_share.\<phi>R_dispose_res[where P=\<open>\<lambda>_. True\<close>],
@@ -323,7 +327,6 @@ lemma (in \<phi>OO) op_obj_dispose:
   apply (cases ref; simp)
   using R_objs.get_res_Valid[simplified Valid_Objs_def, simplified]
     R_objs.raw_unit_assertion_implies'[where f=fields]
-  by (smt (z3) dom_eq_empty_conv empty_iff map_le_antisym map_le_def)
-
+  by (smt (z3) \<phi>Res_Spec_mult_homo domIff map_le_antisym map_le_def)
 
 end

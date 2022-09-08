@@ -509,8 +509,8 @@ lemma (in \<phi>min) "__DoWhile__rule_\<phi>app":
     apply (induct body comp s rule: SemDoWhile.induct; clarsimp simp add: \<phi>expns times_list_def)
     apply fastforce
     subgoal premises prems for res f s s'' c u v proof -
-      have t1: \<open>\<exists>c. (\<exists>fic. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X c) \<and> s \<in> INTERP_RES fic) \<and> P c\<close>
-        using prems(5) prems(6) prems(7) prems(8) by blast
+      have t1: \<open>\<exists>c. (\<exists>fic. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X c \<and> u ## v) \<and> s \<in> INTERP_RES fic) \<and> P c\<close>
+        using prems(5) prems(6) prems(7) prems(8) prems(9) by blast
       show ?thesis
         apply (insert \<open>\<forall>_ _._\<close>[THEN spec[where x=s], THEN spec[where x=R], THEN mp, OF t1])
         using prems(1) prems(3) by fastforce

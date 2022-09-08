@@ -188,7 +188,7 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
 
     val goal = case raw_goal_ctxt of NONE => goal'
                   | SOME G => Const (\<^const_name>\<open>GOAL_CTXT\<close>, dummyT)
-                              $ HOLogic.dest_Trueprop goal'
+                              $ goal'
                               $ parse_term G
 
     (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]

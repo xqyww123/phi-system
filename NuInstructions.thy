@@ -92,19 +92,18 @@ subsection \<open>Access the Resource\<close>
 subsubsection \<open>Legacy\<close>
 
 definition (in \<phi>resource_sem)
-    \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a ?) \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_get_res R F = (\<lambda>res. F (the_fine (R res)) res)\<close>
+    \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a) \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_get_res R F = (\<lambda>res. F (R res) res)\<close>
 
 definition (in \<phi>resource_sem)
-    \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a) ?) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_get_res_entry R k F = \<phi>M_get_res R (\<lambda>res.
-    case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
+    \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a)) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_get_res_entry R k F =
+    \<phi>M_get_res R (\<lambda>res. case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 definition (in \<phi>resource_sem) \<phi>M_set_res :: \<open>
-    (('x ? \<Rightarrow> 'x ?) \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'RES_N \<Rightarrow> 'RES)
+    (('x \<Rightarrow> 'x) \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'RES_N \<Rightarrow> 'RES)
       \<Rightarrow> ('x \<Rightarrow> 'x) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_set_res Updt F = (\<lambda>res.
-    {Success (sem_value ()) (Updt (map_fine F) res)})\<close>
+  where \<open>\<phi>M_set_res Updt F = (\<lambda>res. {Success (sem_value ()) (Updt F res)})\<close>
 
 subsubsection \<open>Getters\<close>
 
@@ -205,20 +204,9 @@ lemma (in partial_map_resource) \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := u) \<in> Valid)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k \<mapsto> any))}
-\<Longrightarrow> y \<in> \<phi>R_set_res (\<lambda>f. f(k := u)) res
-\<Longrightarrow> y \<in> \<S> (\<lambda>_. \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := u))}) Any\<close>
+\<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
+      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := u))}) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__" del: set_mult_expn)
-
-lemma (in partial_map_resource) \<phi>R_set_res_2:
-  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
-\<Longrightarrow> P (get res)
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {mk (1(k \<mapsto> any))}
-\<Longrightarrow> y \<in> \<phi>R_set_res (\<lambda>f. f(k \<mapsto> u)) res
-\<Longrightarrow> y \<in> \<S> (\<lambda>_. \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {mk (1(k \<mapsto> u))}
-        \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk (1(k \<mapsto> Share 1 u))) Any\<close>
-  
-
-bundle (in share_fiction_for_partial_mapping_resource) xx = [[unify_trace_failure]]
 
 lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_set_res":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
@@ -228,22 +216,22 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_set_res":
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def
           expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
-          expand[where x=\<open>1(k \<mapsto> u)\<close>, simplified] simp del: set_mult_expn)
-  thm sep_disj_fiction
-  subgoal premises prems for r res proof -
-    have \<open>r ## mk (1(k \<mapsto> Share 1 u))\<close>
-    thm R.\<phi>R_set_res
-    apply (rule R.\<phi>R_set_res, assumption, simp, assumption) .
+          expand_subj[where x=\<open>1(k \<mapsto> u)\<close>, simplified] simp del: set_mult_expn
+          del: subsetI)
+  subgoal for r res
+    by (rule R.\<phi>R_set_res[where k=k and res=res], assumption,
+        simp add: \<phi>Res_Spec_mult_homo, assumption) .
+
 
 paragraph \<open>partial_map_resource2\<close>
 
 lemma (in partial_map_resource2) \<phi>R_set_res[\<phi>reason!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in> Valid)
 \<Longrightarrow> P (get res)
-\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k := 1(k2 \<mapsto> any)))})
+\<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := 1(k2 \<mapsto> any)))}
 \<Longrightarrow> \<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
-      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (1(k := 1(k2 := u)))})) Any\<close>
-  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
+      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := 1(k2 := u)))}) Any\<close>
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__" del: set_mult_expn)
 
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in> Valid)
@@ -253,10 +241,11 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res":
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def
                             expand[where x=\<open>1(k := 1(k2 \<mapsto> v))\<close>, simplified]
-                            expand[where x=\<open>1(k := 1(k2 \<mapsto> u))\<close>, simplified]
-                       del: subsetI)
+                            expand_subj[where x=\<open>1(k := 1(k2 \<mapsto> u))\<close>, simplified]
+                  simp del: set_mult_expn
+                  del: subsetI)
   subgoal for r res
-    by (rule R.\<phi>R_set_res, assumption, simp, assumption) .
+    by (rule R.\<phi>R_set_res, assumption, simp add: \<phi>Res_Spec_mult_homo, assumption) .
 
 
 subsubsection \<open>Dispose\<close>
@@ -269,7 +258,7 @@ lemma (in partial_map_resource) \<phi>R_dispose_res[\<phi>reason!]:
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k \<mapsto> any))})
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := None)) res
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
-  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__" \<phi>Res_Spec_mult_homo)
 
 lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_dispose_res":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
@@ -277,9 +266,10 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_dispose_res":
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified] del: subsetI)
+  apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
+                  simp del: set_mult_expn del: subsetI)
   subgoal for r res
-    by (rule R.\<phi>R_dispose_res, assumption, simp, simp) .
+    by (rule R.\<phi>R_dispose_res, assumption, simp add: \<phi>Res_Spec_mult_homo, simp add: \<phi>Res_Spec_mult_homo) .
 
 
 paragraph \<open>partial_map_resource2\<close>
@@ -290,7 +280,7 @@ lemma (in partial_map_resource2) \<phi>R_dispose_res[\<phi>reason!]:
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k := any))})
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := 1)) res \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
-  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__" \<phi>Res_Spec_mult_homo)
 
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in> Valid)
@@ -299,7 +289,9 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res":
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := 1))
          \<lbrace> to_share o f \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> Identity) \<longmapsto> Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k := f)\<close>, simplified] del: subsetI)
+  apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k := f)\<close>, simplified]
+                            \<phi>Res_Spec_mult_homo
+                  simp del: set_mult_expn del: subsetI)
   subgoal for r res
     apply (rule R.\<phi>R_dispose_res, assumption, standard, simp)
     subgoal premises prems proof -
@@ -310,7 +302,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res":
       have t3: \<open>R.get res k = f\<close>
         by (metis (no_types, lifting) map_le_antisym map_le_def t1 t2)
       show ?thesis
-        using prems(3) t3 by blast
+        using prems(3) t3 \<phi>Res_Spec_mult_homo by blast
     qed . .
 
 subsubsection \<open>Allocate\<close>
@@ -333,7 +325,8 @@ lemma (in mapping_resource) \<phi>R_set_res_new[\<phi>reason!]:
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (1(k := u))})) Any\<close>
-  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__new_rule__")
+  unfolding \<phi>R_set_res_def
+  by (simp add: \<phi>expns "__new_rule__" \<phi>Res_Spec_mult_homo del: set_mult_expn)
 
 lemma (in mapping_resource) \<phi>R_allocate_res_entry[\<phi>reason!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
@@ -347,7 +340,7 @@ lemma (in mapping_resource) \<phi>R_allocate_res_entry[\<phi>reason!]:
     let ?m = \<open>get res\<close>
     define k' where \<open>k' = (SOME k. ?m k = 1 \<and> P k)\<close>
     have \<open>\<exists>k'. ?m k' = 1 \<and> P k'\<close>
-      by (metis (mono_tags, opaque_lifting) IntD1 \<phi>resource_sem.\<phi>Res_Spec_def \<r>_valid_split fine.sel image_iff prems(1) prems(4) proj_inj)
+      using get_res_Valid prems(1) prems(4) by blast
     note this[THEN someI_ex]
     then have t1[simp]: \<open>?m k' = 1 \<and> P k'\<close> unfolding k'_def by blast
     show ?thesis

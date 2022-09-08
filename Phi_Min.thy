@@ -522,15 +522,17 @@ lemma (in \<phi>min) \<phi>M_get_var[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_var vname TY F \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec \<phi>M_get_var_def
-  by (clarsimp simp add: \<phi>expns FIC_var.expand del: subsetI;
+  by (clarsimp simp add: \<phi>expns FIC_var.expand simp del: set_mult_expn del: subsetI;
       rule R_var.\<phi>R_get_res_entry[where v=v]; simp)
 
 lemma (in \<phi>min) \<phi>M_set_var[\<phi>reason!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c R_var.\<phi>R_set_res (\<lambda>f. f(vname \<mapsto> u)) \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns FIC_var.expand del: subsetI)
-  thm R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]
-  apply (rule R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp
+  thm  FIC_var.expand_subj[where x=\<open>1(vname \<mapsto> u)\<close>]
+  by (clarsimp simp add: \<phi>expns FIC_var.expand[where x=\<open>1(vname \<mapsto> v)\<close>]
+                                FIC_var.expand_subj[where x=\<open>1(vname \<mapsto> u)\<close>]
+               simp del: set_mult_expn del: subsetI;
+      rule R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp)
 
 lemma (in \<phi>min) op_get_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
@@ -554,25 +556,27 @@ lemma (in \<phi>min) op_var_scope':
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F rawv \<lbrace> X\<heavy_comma> v \<Ztypecolon> Val rawv Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding op_var_scope'_def Premise_def
   apply (cases rawv; simp, \<phi>reason)
-  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec del: subsetI)
+  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec simp del: set_mult_expn del: subsetI)
   subgoal for r res c
   apply (rule R_var.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])
      apply (clarsimp) using finite_map_freshness infinite_varname apply blast
       apply (clarsimp)
-  apply (clarsimp simp add: FIC_var.expand[symmetric] mult.assoc del: subsetI)
+
+ apply (clarsimp simp del: \<phi>Res_Spec_mult_homo set_mult_expn del: subsetI)
   subgoal premises prems for k res'
     apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res'],
                 simplified prems, simplified, THEN mp])
-    thm prems
-    using prems(5) prems(7) prems(8) by force . .
+    apply (rule exI[where x=\<open>c * FIC_var.mk (1(k \<mapsto> v))\<close>])
+    apply (simp add: \<phi>expns prems)
+    by (smt (verit, ccfv_threshold) FIC_var.expand FIC_var.sep_disj_fiction Fic_Space_Un Fic_Space_m \<phi>Res_Spec_mult_homo prems(5) prems(6) prems(7) prems(8) prems(9) sep_disj_multD2 sep_disj_multI2 sep_mult_assoc')
+  . .
 
 
 lemma (in \<phi>min) op_free_var:
    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_var vname \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> 1 \<rbrace>\<close>
   unfolding op_free_var_def \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns FIC_var.expand del: subsetI)
-  apply (rule R_var.\<phi>R_dispose_res[where any=v])
-  apply clarsimp .
+  by (clarsimp simp add: \<phi>expns FIC_var.expand  simp del: set_mult_expn del: subsetI;
+      rule R_var.\<phi>R_dispose_res[where any=v and P=\<open>\<lambda>_. True\<close>]; clarsimp simp add: \<phi>Res_Spec_mult_homo)
 
 
 subsection \<open>Branches & Loops\<close>
