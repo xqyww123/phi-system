@@ -2677,8 +2677,8 @@ lemma \<phi>perm_transformer_MapAt:
   \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_transformer f T)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
             perm_transformer_pointwise_eq; rule; clarsimp)
-  apply (smt (verit, del_insts) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer_pointwise)
-  by (metis (no_types, lifting) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(4) perm_transformer'.can_share_\<psi> perm_transformer_pointwise)
+  apply (smt (verit, del_insts) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'_def perm_transformer_pointwise)
+  by (metis (no_types, lifting) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.can_share_\<psi> perm_transformer'_def perm_transformer_pointwise)
 
 
 lemma \<phi>perm_transformer_MapAt_L:
@@ -2693,10 +2693,8 @@ lemma \<phi>perm_transformer_Prod:
   \<open> \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>perm_transformer f (T \<^emph> U) = (\<phi>perm_transformer f T) \<^emph> (\<phi>perm_transformer f U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_disj_semi.sep_disj_homo homo_sep_mult.homo_mult homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
-  by (metis (mono_tags, lifting) homo_sep_mult.homo_mult perm_transformer'.axioms(1) sep_disj_commute share_semimodule_sep_class.sep_mult_can_share)
-  
-
+  apply (metis homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_transformer'.axioms(1) perm_transformer'.axioms(2) perm_transformer'.can_share_\<psi>)
+  by (metis \<phi>Type_def perm_transformer'.can_share_\<psi> perm_transformer'_def sep_disj_commuteI sep_mult_strip_011.sep_mult_strip_011)
 
 
 subsubsection \<open>Permission Annotation\<close>
@@ -4686,14 +4684,14 @@ lemma (in \<phi>fiction) \<phi>INTERP_RES_\<phi>Res_Spec:
 
 lemma (in \<phi>fiction) \<phi>Procedure_\<phi>Res_Spec:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space (r * p))
-      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space (r * q)))
-                    (\<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E \<and> Fic_Space (r * e))))\<close>
+\<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space (r * p) \<and> r ## p)
+      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space (r * q) \<and> r ## q))
+                    (\<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E \<and> Fic_Space (r * e) \<and> r ## e)))\<close>
   apply rule
    apply (unfold \<phi>Procedure_alt INTERP_COM \<phi>Res_Spec_def subset_iff)
    apply (clarsimp simp add: times_set_def \<phi>expns INTERP_RES_def)
   subgoal premises prems for r res s c proof-
-    have t1: \<open>(\<exists>fic. (\<exists>y. fic = r * y \<and> y \<in> P) \<and> res \<in> Valid_Resource \<and> Fic_Space fic \<and> res \<in> \<I> INTERP fic)\<close>
+    have t1: \<open>(\<exists>fic. (\<exists>y. fic = r * y \<and> y \<in> P \<and> r ## y) \<and> res \<in> Valid_Resource \<and> Fic_Space fic \<and> res \<in> \<I> INTERP fic)\<close>
       using Fic_Space_Un prems by blast
     show ?thesis
       apply (insert prems(1)[THEN spec[where x=res], THEN spec[where x=r], THEN mp, OF t1,
@@ -4704,8 +4702,8 @@ lemma (in \<phi>fiction) \<phi>Procedure_\<phi>Res_Spec:
   qed
   apply (clarsimp simp add: times_set_def \<phi>expns INTERP_RES_def)
   subgoal premises prems for res r s c proof-
-    have t1: \<open>res \<in> Valid_Resource \<and> (\<exists>c. res \<in> \<I> INTERP (r * c) \<and> c \<in> P \<and> Fic_Space r \<and> Fic_Space c)\<close>
-      using prems by blast
+    have t1: \<open>res \<in> Valid_Resource \<and> (\<exists>c. res \<in> \<I> INTERP (r * c) \<and> c \<in> P \<and> Fic_Space (r * c) \<and> r ## c)\<close>
+      using prems Fic_Space_Un by blast
     show ?thesis
       apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, OF t1,
               THEN spec[where x=s], THEN mp, OF \<open>s \<in> _\<close>])
@@ -4754,8 +4752,8 @@ subsection \<open>Minimal Resource\<close>
 locale resource =
   Fictional_Algebra.project_inject entry
 + \<phi>resource_sem Resource_Validator
-for entry :: "('RES_N, 'RES::total_sep_algebra, 'T::total_sep_algebra) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+for entry :: "('RES_N, 'RES::sep_algebra, 'T::sep_algebra) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
 + fixes Valid :: \<open>'T set\<close>
   assumes Valid_1: \<open>1 \<in> Valid\<close>
   assumes Resource_Validator[simp]: \<open>Resource_Validator name = inject ` Valid\<close>
@@ -4765,11 +4763,12 @@ lemma \<r>_valid_split: \<open>res \<in> Valid_Resource \<longleftrightarrow>
     clean res \<in> Valid_Resource \<and> (\<exists>m. res name = inject m \<and> m \<in> Valid)\<close>
   by (subst split, simp add: Valid_Resource_def times_fun_def image_iff Valid_1 one_fine_def, blast)
 
-lemma \<r>_valid_split': \<open>NO_MATCH (clean res') res \<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow>
-    clean res \<in> Valid_Resource \<and> (\<exists>m. res name = inject m \<and> m \<in> Valid)\<close>
+lemma \<r>_valid_split': \<open>
+  NO_MATCH (clean res') res
+\<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow> clean res \<in> Valid_Resource \<and> (\<exists>m. res name = inject m \<and> m \<in> Valid)\<close>
   using \<r>_valid_split .
 
-lemma get_res_valid:
+lemma get_res_valid_raw:
   \<open> res \<in> Valid_Resource
 \<Longrightarrow> get res \<in> Valid\<close>
   unfolding Valid_Resource_def
@@ -4802,6 +4801,18 @@ lemma raw_basic_fiction_\<I>:
   unfolding raw_basic_fiction_def
   by (rule Fiction_inverse) (clarsimp simp add: Fictional_def one_set_def one_fine_def)
 
+lemma fiction_itself_expn[\<phi>expns]:
+  \<open>R2 ## x
+\<Longrightarrow> \<phi>Res_Spec (R * \<I> (raw_basic_fiction fiction.it) (R2 * x))
+  = \<phi>Res_Spec (R * \<I> (raw_basic_fiction fiction.it) R2 * {mk x})\<close>
+  unfolding \<phi>Res_Spec_def set_eq_iff
+  apply (clarsimp simp add: \<phi>expns raw_basic_fiction_\<I> mult_strip_fine_011 )
+  apply (rule; clarify)
+   apply (simp add: mk_homo_mult sep_mult_assoc')
+  using sep_disj_multD1 sep_disj_multI1 apply fastforce
+  apply (simp add: mk_homo_mult sep_mult_assoc)
+  using sep_disj_multI2 by blast
+
 
 end
 
@@ -4810,78 +4821,28 @@ subsection \<open>Resources using Fine\<close>
 
 subsubsection \<open>Locale for Resource\<close>
 
-locale fine_resource =
-  Fictional_Algebra.project_inject entry
-+ \<phi>resource_sem Resource_Validator
-for entry :: "('RES_N, 'RES::total_sep_algebra, 'T::sep_algebra ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
-+ fixes Valid :: \<open>'T set\<close>
-  assumes Valid_1[simp]: \<open>1 \<in> Valid\<close>
-  assumes Resource_Validator[simp]: \<open>Resource_Validator name = inject ` Fine ` Valid\<close>
-begin
-
-sublocale resource entry Resource_Validator \<open>Fine ` Valid\<close>
-  by (standard; simp add: image_iff one_fine_def)
-
-lemma get_res_Valid:
-  \<open> res \<in> \<phi>Res_Spec S
-\<Longrightarrow> !!(get res) \<in> Valid\<close>
-  unfolding \<phi>Res_Spec_def by (clarsimp simp add: \<r>_valid_split')
-
-subsubsection \<open>Basic Fine Fiction\<close>
-
-definition \<open>basic_fine_fiction I = Fiction (\<lambda>x. { 1(entry #= Fine y) |y. y \<in> \<I> I x })\<close>
-lemma basic_fine_fiction_\<I>:
-  "\<I> (basic_fine_fiction I) = (\<lambda>x. { 1(entry #= Fine y) |y. y \<in> \<I> I x})"
-  unfolding basic_fine_fiction_def
-  by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def one_fine_def)
-
-subsubsection \<open>Identity Fiction\<close>
-
-lemma fine_fiction_itself_expn[\<phi>expns]:
-  \<open>\<phi>Res_Spec (R * \<I> (basic_fine_fiction (fiction.fine fiction.it)) (R2 * Fine x))
- = \<phi>Res_Spec (R * \<I> (basic_fine_fiction (fiction.fine fiction.it)) R2 * {mk (Fine x)})\<close>
-  unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarsimp simp add: \<phi>expns basic_fine_fiction_\<I> mult_strip_fine_011 )
-  apply (rule; clarify)
-  apply (metis fun_mult_norm mk_homo_mult times_fine')
-  by (smt (verit, del_insts) fun_mult_norm fun_upd_same get_homo_mult get_res_valid image_iff mk_homo_mult mult_strip_fine_111 proj_inj times_fine(1) times_fine(3))
-
-end
-
 subsubsection \<open>Basic Locale for Fiction of Fine Resource\<close>
 
-locale basic_fiction_for_fine_resource =
+locale basic_fiction =
   \<phi>fiction Resource_Validator INTERPRET
-+  R: fine_resource Res Resource_Validator Valid
-+  fictional_project_inject INTERPRET Fic \<open>R.basic_fine_fiction (fiction.fine I)\<close>
++  R: resource Res Resource_Validator Valid
++  fictional_project_inject INTERPRET Fic \<open>R.raw_basic_fiction I\<close>
 for Valid :: "'T::sep_algebra set"
 and I :: "('U::sep_algebra, 'T) fiction"
-and Res :: "('RES_N, 'RES::total_sep_algebra, 'T ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
-and Fic :: "('FIC_N,'FIC::total_sep_algebra,'U ?) Fictional_Algebra.Entry"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
+and Res :: "('RES_N, 'RES::sep_algebra, 'T) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
+and Fic :: "('FIC_N,'FIC::sep_algebra,'U) Fictional_Algebra.Entry"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 'RES) fiction"
 begin
-
-lemma fiction_undef_bottom[simp]:
-  \<open>INTERP_RES (u * mk Undef) = {}\<close>
-  unfolding set_eq_iff INTERP_RES_def
-  by (simp add: interp_split' R.basic_fine_fiction_\<I> times_fine)
-
-lemma fiction_undef_bottom'[simp]:
-  \<open> Fic_Space u
-\<Longrightarrow> \<I> INTERP (u * mk Undef) = {}\<close>
-  unfolding set_eq_iff
-  by (simp add: interp_split' R.basic_fine_fiction_\<I> times_fine)
 
 paragraph \<open>\<phi>-Type\<close>
 
 definition \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'x) \<phi>\<close>
     \<comment> \<open>\<phi>Type for level-1 mapping\<close>
-  where \<open>\<phi> T = (\<lambda>x. {mk Undef} \<union> { mk (Fine f) |f. f \<in> (x \<Ztypecolon> T) })\<close>
+  where \<open>\<phi> T = (\<lambda>x. { mk v |v. v \<in> (x \<Ztypecolon> T) })\<close>
 
 lemma \<phi>_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>f. p = mk Undef \<or> p = mk (Fine f) \<and> f \<in> (x \<Ztypecolon> T))\<close>
+  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = mk v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def \<phi>_def by simp
 
 lemma \<phi>_inhabited[\<phi>reason_elim!, elim!]:
@@ -4890,13 +4851,9 @@ lemma \<phi>_inhabited[\<phi>reason_elim!, elim!]:
 
 lemma \<phi>_Prod:
   \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule)
-  apply clarsimp
-  apply (smt (z3) mk_homo_mult times_fine(1) times_fine(2) times_fine(3))
-  apply (clarsimp simp add: mk_homo_mult[symmetric] times_fine)
-  using sep_disj_commute apply blast
-  apply (clarsimp simp add: mk_homo_mult times_fine'[symmetric])
-  by blast
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
+  apply (metis mk_homo_mult)
+  by (metis fun_1upd_homo inj.homo_mult sep_disj_mk)
 
 lemma \<phi>_cast:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
@@ -4907,8 +4864,6 @@ lemma [\<phi>reason 1200 on
   \<open>SharePerm_Extract (?x \<Ztypecolon> \<phi> ?T) ?R (?y \<Ztypecolon> \<phi> ?U) ?W ?P\<close>
 ]:
   \<open> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> \<phi>Sep_Disj T W
-\<Longrightarrow> \<phi>Sep_Disj U R
 \<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W) P\<close>
   unfolding SharePerm_Extract_def
   by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
@@ -4920,61 +4875,80 @@ subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
   \<phi>fiction Resource_Validator INTERPRET
-+  R: fine_resource Res Resource_Validator Valid
++  R: resource Res Resource_Validator Valid
 +  share: perm_transformer perm_transformer
 +  fictional_project_inject INTERPRET Fic
-      \<open>R.basic_fine_fiction (fiction.fine (fic_functional perm_transformer))\<close>
+      \<open>R.raw_basic_fiction (fic_functional perm_transformer)\<close>
 for Valid :: "'T::sep_algebra set"
 and perm_transformer :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
-and Res :: "('RES_N, 'RES::total_sep_algebra, 'T ?) Fictional_Algebra.Entry"
+and Res :: "('RES_N, 'RES::sep_algebra, 'T) Fictional_Algebra.Entry"
 and Resource_Validator :: "'RES_N \<Rightarrow> 'RES set"
-and Fic :: "('FIC_N, 'FIC::total_sep_algebra, 'U ?) Fictional_Algebra.Entry"
+and Fic :: "('FIC_N, 'FIC::sep_algebra, 'U) Fictional_Algebra.Entry"
 and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC, 'RES_N \<Rightarrow> 'RES) fiction"
 begin
 
-sublocale basic_fiction_for_fine_resource Valid \<open>fic_functional perm_transformer\<close> ..
+sublocale basic_fiction Valid \<open>fic_functional perm_transformer\<close> ..
+
+lemma sep_disj_fiction:
+  \<open> Fic_Space r
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP r * { R.mk x })
+\<Longrightarrow> r ## mk (perm_transformer x)\<close>
+  unfolding \<phi>Res_Spec_def set_eq_iff
+  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
+            share.sep_mult_strip_011 \<phi>Res_Spec_def R.\<r>_valid_split'
+            R.mult_strip_inject_011 interp_split' mult_strip_fine_011
+            sep_disj_get_name_eq[symmetric]
+            simp del: sep_disj_get_name_eq)
+  using sep_disj_multD2 by force
 
 lemma expand_raw:
-  \<open>Fic_Space r
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (perm_transformer x))))
-  = \<phi>Res_Spec (\<I> INTERP r * { R.mk (Fine x)})\<close>
+  \<open> Fic_Space r
+\<Longrightarrow> r ## mk (perm_transformer x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x)))
+  = \<phi>Res_Spec (\<I> INTERP r * { R.mk x })\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarify, rule; clarsimp simp add: R.basic_fine_fiction_\<I> \<phi>expns
+  apply (clarify, rule)
+  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
             share.sep_mult_strip_011 \<phi>Res_Spec_def R.\<r>_valid_split'
             R.mult_strip_inject_011 interp_split' mult_strip_fine_011)
-  subgoal for res_r a r
-    apply (rule exI[where x=\<open>res_r * R.mk (Fine a)\<close>])
-    by (metis R.mk_homo_mult fun_mult_norm times_fine(1))
-  subgoal premises prems for res_r y a proof -
+  subgoal for res_r a r'
+    apply (rule exI[where x=\<open>res_r * R.mk a\<close>]; rule)
+    apply (metis R.inj_homo_mult R.sep_disj_mk fun_1upd_homo_right1 sep_mult_assoc')
+    by (metis R.get_homo_mult R.proj_inj R.sep_disj_get_name_eq fun_upd_same sep_disj_multD1 sep_disj_multI1)
+
+  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns \<phi>Res_Spec_def R.\<r>_valid_split'
+        R.mult_strip_inject_011 interp_split' sep_mult_assoc)
+  subgoal premises prems for res_r a y proof -
     have t1[simp]: \<open>y ## x\<close>
-      using prems(7) prems(8) sep_disj_multD2 by blast
-    show ?thesis apply simp
-      apply (rule exI[where x=\<open>res_r\<close>], rule exI[where x=\<open>R.mk (Fine (y * x))\<close>])
-      by (metis R.mk_homo_mult share.homo_mult fun_mult_norm prems(4) t1 times_fine')
+      using R.sep_disj_mk prems(6) prems(8) sep_disj_multD2 by blast
+
+    show ?thesis
+      apply (rule exI[where x=\<open>a\<close>], rule exI[where x=\<open>R.mk (y * x)\<close>])
+      by (metis R.inj_homo_mult fun_1upd_homo prems(6) prems(7) prems(8) sep_disj_multI2 share.homo_mult t1)
   qed .
 
 lemma partial_implies_raw:
   \<open> Fic_Space r
 \<Longrightarrow> 0 < n 
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (share n (perm_transformer x)))))
-\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> x \<preceq>\<^sub>S\<^sub>L objs\<close>
+\<Longrightarrow> r ## mk (share n (perm_transformer x))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (share n (perm_transformer x))))
+\<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
   unfolding \<phi>Res_Spec_def
-  apply (clarsimp simp add: R.basic_fine_fiction_\<I> \<phi>expns
+  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
             mult_strip_fine_011 \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
             R.proj_homo_mult interp_split')
   apply (cases \<open>n \<le> 1\<close>)
-   apply (metis join_sub_def join_sub_ext_left share.join_sub_share_join_sub_whole share_sep_disj_right)
-  subgoal premises prems for u y a b proof -
-    have t0: \<open>1 / n * n = 1\<close> using prems(12) by force
-    have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close>
-      by (metis divide_le_eq_1 nle_le prems(12) prems(2) zero_less_divide_1_iff)
+  apply (metis join_sub_def join_sub_ext_left sep_disj_get_name_eq share.join_sub_share_join_sub_whole)
+  subgoal premises prems for u y a proof -
+    have t0: \<open>1 / n * n = 1\<close> using prems(12) by force 
+    have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close> using prems(12) by force
     have t2: \<open>share (1/n) (share n (perm_transformer x)) \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
       by (simp add: order_less_imp_le prems(2) share_sub t1)
-    then have \<open>perm_transformer x \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
+    then have t3: \<open>perm_transformer x \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
       using share_share_not0
-      by (metis prems(2) share_left_one t0 t1) 
+      by (metis prems(2) share_left_one t0 t1)
     then show ?thesis
-      by (metis join_sub_ext_left prems(11) prems(2) prems(8) prems(9) share.homo_join_sub share_sep_disj_right) 
+      by (metis join_sub_ext_left prems(11) prems(3) prems(9) sep_disj_get_name_eq share.homo_join_sub)
   qed .
 end
 
@@ -5036,32 +5010,43 @@ end *)
 
 subsubsection \<open>Identity Fiction\<close>
 
-locale identity_fiction_for_fine_resource =
+locale identity_fiction =
    \<phi>fiction Resource_Validator INTERPRET
-+  R: fine_resource Res Resource_Validator
-+  fictional_project_inject INTERPRET Fic \<open>R.basic_fine_fiction (fiction.fine fiction.it)\<close>
-for Res :: "('RES_N, 'RES::total_sep_algebra, ('T::sep_algebra) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
-and Fic :: "('FIC_N,'FIC,'T ?) Fictional_Algebra.Entry"
++  R: resource Res Resource_Validator
++  fictional_project_inject INTERPRET Fic \<open>R.raw_basic_fiction fiction.it\<close>
+for Res :: "('RES_N, 'RES::sep_algebra, 'T::sep_algebra) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 'RES) fiction"
+and Fic :: "('FIC_N,'FIC,'T) Fictional_Algebra.Entry"
 begin
 
-sublocale basic_fiction_for_fine_resource where I = \<open>fiction.it\<close> ..
+sublocale basic_fiction where I = \<open>fiction.it\<close> ..
+
+lemma sep_disj_fiction:
+  \<open> Fic_Space r
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP r * { R.mk x })
+\<Longrightarrow> r ## mk x\<close>
+  unfolding \<phi>Res_Spec_def set_eq_iff
+  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
+            \<phi>Res_Spec_def R.\<r>_valid_split'
+            R.mult_strip_inject_011 interp_split' mult_strip_fine_011
+            sep_disj_get_name_eq[symmetric]
+            simp del: sep_disj_get_name_eq)
+  using sep_disj_multD2 by force
 
 lemma expand:
   \<open> Fic_Space r
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine x))) = \<phi>Res_Spec (\<I> INTERP r * {R.mk (Fine x)})\<close>
+\<Longrightarrow> r ## mk x
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk x)) = \<phi>Res_Spec (\<I> INTERP r * {R.mk x})\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarify; rule; clarsimp simp add: \<phi>expns R.basic_fine_fiction_\<I> mult_strip_fine_011
+  apply (clarify; rule; clarsimp simp add: \<phi>expns R.raw_basic_fiction_\<I> mult_strip_fine_011
           interp_split')
-  apply (metis (no_types, lifting) R.mk_homo_mult fun_mult_norm times_fine')
-  apply (clarsimp simp add: R.mk_homo_mult[symmetric] mult.assoc)
-  subgoal premises prems for ua y proof -
-    have t1: \<open>y ## x\<close>
-      by (smt (verit) R.get_homo_mult R.get_res_valid R.project_inject_axioms fun_upd_same image_iff mult_strip_fine_111 prems(2) project_inject.proj_inj times_fine(1) times_fine(3))
-    show ?thesis
-      by (metis prems(3) t1 times_fine(1))
-  qed .
+  apply (simp add: R.mk_homo_mult)
+  using R.sep_disj_mk sep_disj_get_name_eq sep_disj_multD1 sep_disj_multI1 sep_mult_assoc' apply blast
+  apply (simp add: R.mk_homo_mult[symmetric] sep_mult_assoc)
+  by (metis R.mk_homo_mult sep_disj_get_name_eq sep_disj_multI2)
+
+
 
 end
 
@@ -5070,14 +5055,14 @@ subsection \<open>Nonsepable Mono-Resource\<close>
   \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option ?\<close>\<close>
 
 locale nonsepable_mono_resource =
-  fine_resource entry Resource_Validator \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
-for entry :: "('RES_N, 'RES::total_sep_algebra, 'T nonsepable option ?) Fictional_Algebra.Entry"
+  resource entry Resource_Validator \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
+for entry :: "('RES_N, 'RES::sep_algebra, 'T nonsepable option) Fictional_Algebra.Entry"
 and Resource_Validator :: "'RES_N \<Rightarrow> 'RES set"
 and Valid :: "'T set"
 begin
 
 definition fiction_agree
-  where \<open>fiction_agree = basic_fine_fiction (fiction.fine (fiction.optionwise Fictional_Algebra.fiction_agree))\<close>
+  where \<open>fiction_agree = raw_basic_fiction (fiction.optionwise Fictional_Algebra.fiction_agree)\<close>
 
 end
 
@@ -5089,26 +5074,34 @@ locale agreement_fiction_for_nosepable_mono_resource =
 +  R: nonsepable_mono_resource Res Resource_Validator Valid
 +  fictional_project_inject INTERPRET Fic \<open>R.fiction_agree\<close>
 for Valid :: "'T set"
-and Res :: "('RES_N, 'RES::total_sep_algebra, 'T nonsepable option ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
-and Fic :: "('FIC_N,'FIC, 'T nonsepable agree option ?) Fictional_Algebra.Entry"
+and Res :: "('RES_N, 'RES::sep_algebra, 'T nonsepable option) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
+and Fic :: "('FIC_N,'FIC, 'T nonsepable agree option) Fictional_Algebra.Entry"
 begin
 
-sublocale basic_fiction_for_fine_resource \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
+sublocale basic_fiction \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
   \<open>fiction.optionwise Fictional_Algebra.fiction_agree\<close>
   by (standard; simp add: R.fiction_agree_def)
                        
 lemma partial_implies:
   \<open> Fic_Space r
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (Some (agree (nonsepable x))))))
-\<Longrightarrow> R.get res = Fine (Some (nonsepable x))\<close>
+\<Longrightarrow> r ## mk (Some (agree (nonsepable x)))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Some (agree (nonsepable x)))))
+\<Longrightarrow> R.get res = Some (nonsepable x)\<close>
   unfolding \<phi>Res_Spec_def apply (clarsimp simp add: interp_split'
-     R.fiction_agree_def R.basic_fine_fiction_\<I> \<phi>expns mult_strip_fine_011 R.\<r>_valid_split'
+     R.fiction_agree_def R.raw_basic_fiction_\<I> \<phi>expns mult_strip_fine_011 R.\<r>_valid_split'
      R.mult_strip_inject_011 R.proj_homo_mult fiction.optionwise_\<I> image_iff Bex_def
      fiction_agree_def)
+  apply (cases \<open>get r\<close>; simp)
   subgoal for u y a aa
-    by (cases a; clarsimp simp add: image_iff Bex_def) .
+    apply (cases aa; simp)
+    subgoal premises prems for xa proof -
+      have \<open>get r ## Some (agree (nonsepable x))\<close>
+        by (simp add: prems(2))
+      from this [unfolded \<open>get r = _\<close>, simplified]
+      show ?thesis .
+    qed . .
 
 lemma VS_double:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w {mk x |x. P x} \<longmapsto> {mk x |x. P x} * {mk x |x. P x}\<close>
@@ -5116,22 +5109,23 @@ lemma VS_double:
   apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric] times_fine)
   subgoal for x R u x'
     apply (cases x'; simp)
-    subgoal for x'' apply (cases x''; simp)
-       apply (metis fun_1upd1 inj_homo_one mult_1_class.mult_1_right one_fine_def one_option_def)
-      subgoal for a by (rule exI[where x=\<open>u * mk (Fine (Some a))\<close>]; simp
-                ; rule exI[where x=u]; rule exI[where x=\<open>mk (Fine (Some a))\<close>]; simp
-                ; rule exI[where x=\<open>mk (Fine (Some a))\<close>]; rule exI[where x=\<open>mk (Fine (Some a))\<close>]
-                ; simp add: mk_homo_mult[symmetric] times_fine) . . .
+    apply (metis fun_1upd1 inj_homo_one mult_1_class.mult_1_left one_option_def sep_magma_1_right)
+    subgoal for a by (rule exI[where x=\<open>u * mk (Some a)\<close>]; simp
+                ; rule exI[where x=u]; rule exI[where x=\<open>mk (Some a)\<close>]; simp
+                ; rule exI[where x=\<open>mk (Some a)\<close>]; rule exI[where x=\<open>mk (Some a)\<close>]
+                ; simp add: mk_homo_mult[symmetric] times_fine) . .
 
 lemma VS_contract:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w {mk x |x. P x} * {mk x |x. P x} \<longmapsto> {mk x |x. P x} \<close>
   unfolding View_Shift_def
-  apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric])
+  apply (clarsimp simp add: \<phi>expns)
   subgoal for x R u xa xb
-    apply (cases xa; cases xb; simp add: times_fine)
+    apply (cases xa; cases xb; simp)
+    apply (metis fun_split_1 fun_upd_triv inj_homo_one mk_homo_one one_option_def)
+    apply (metis mk_homo_one mult_1_class.mult_1_left one_option_def)
+     apply (metis fun_1upd1 inj_homo_one mult_1_class.mult_1_right one_option_def)
     subgoal for a b
-      apply (cases \<open>a ## b\<close>; simp; cases a; cases b; simp)
-      by blast+ . .
+      by (cases \<open>a ## b\<close>; simp; cases a; cases b; simp add: mk_homo_mult[symmetric]; blast) . .
 
 paragraph \<open>\<phi>-Type\<close>
 
@@ -5142,7 +5136,7 @@ lemma \<phi>_double_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Undef \<or> y = Fine (Some (agree (nonsepable v))) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nonsepable v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: VS_double)
@@ -5153,7 +5147,7 @@ lemma \<phi>_contract_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Undef \<or> y = Fine (Some (agree (nonsepable v))) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nonsepable v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: VS_contract)
@@ -5166,17 +5160,17 @@ end
 subsection \<open>Resources based on Mapping\<close>
 
 locale mapping_resource =
-  fine_resource entry Resource_Validator
-for entry :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'val::sep_algebra) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+  resource entry Resource_Validator
+for entry :: "('RES_N, 'RES::sep_algebra, ('key \<Rightarrow> 'val::sep_algebra)) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
 begin
 
 lemma "__new_rule__":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> m(k := u) \<in> Valid)
-\<Longrightarrow> k \<notin> dom1 !!(get res)
+\<Longrightarrow> k \<notin> dom1 (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
-\<Longrightarrow> updt (map_fine (\<lambda>f. f(k := u))) res
-       \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})\<close>
+\<Longrightarrow> updt (\<lambda>f. f(k := u)) res
+       \<in> \<phi>Res_Spec (R * {mk (1(k := u))})\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
           proj_homo_mult times_fun_upd)
@@ -5185,16 +5179,16 @@ lemma "__new_rule__":
       assume A: \<open>k \<notin> dom1 m\<close>
       have t2: \<open>m ## 1(k := u)\<close>
         using A dom1_def sep_disj_fun_def by fastforce
-      have t3: \<open>res(name := inject (Fine m)) = res\<close>
+      have t3: \<open>res(name := inject m) = res\<close>
         by (simp add: fun_upd_idem prems(5))
-      have t1: \<open>res(name := inject (Fine (m(k := u)))) = res * mk (Fine (1(k := u)))\<close>
+      have t1: \<open>res(name := inject (m(k := u))) = res * mk (1(k := u)) \<and> res ## mk (1(k := u))\<close>
         thm fun_split_1_not_dom1[where f=m]
         apply (subst fun_split_1_not_dom1[where k=k]) using A apply this
         apply (simp add: times_fine'[symmetric] t2 inj.homo_mult split)
-        by (metis fun_1upd_homo_left1 mult.commute t3)
+        by (metis fun_1upd_homo_right1 prems(5) proj_inj sep_disj_get_name_eq t2 t3)
     }
     then show ?thesis
-      by (meson domD prems(2) prems(4))
+      using prems(2) prems(4) by blast
   qed .
 
 end
@@ -5206,41 +5200,41 @@ subsubsection \<open>Locale for Resource\<close>
 locale partial_map_resource =
   mapping_resource Valid entry Resource_Validator
 for Valid :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) set"
-and entry :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'val::nonsepable_semigroup option) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+and entry :: "('RES_N, 'RES::sep_algebra, 'key \<Rightarrow> 'val::nonsepable_semigroup option) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
 begin
 
 lemma "__updt_rule__":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := u) \<in> Valid)
-\<Longrightarrow> P (!!(get res))
-\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k \<mapsto> any)))})
-\<Longrightarrow> updt (map_fine (\<lambda>f. f(k := u))) res
-       \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := u)))})\<close>
+\<Longrightarrow> P (get res)
+\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k \<mapsto> any))})
+\<Longrightarrow> updt (\<lambda>f. f(k := u)) res \<in> \<phi>Res_Spec (R * {mk (1(k := u))})\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
           proj_homo_mult times_fun_upd )
   apply (clarsimp simp add: mult_strip_fine_011 sep_disj_partial_map_upd
-          nonsepable_semigroup_sepdisj_fun
-          times_fine'[symmetric] mk_homo_mult)
+          nonsepable_semigroup_sepdisj_fun mk_homo_mult)
   subgoal premises prems for x aa proof -
-    have [simp]: \<open>clean x * mk (Fine aa) = x\<close>
-      by (metis fun_split_1 prems(7))
+    have t1: \<open>clean x * mk aa = x\<close>
+      by (metis fun_split_1 prems(8))
+    have t2: \<open>clean x ## (mk aa * mk (1(k := u)))\<close>
+      by (simp add: fun_1upd_homo)
     show ?thesis
-      using fun_mult_norm prems(5) by fastforce
+      by (metis nonsepable_semigroup_sepdisj_fun prems(6) prems(9) sep_disj_mk sep_disj_multI1 sep_mult_assoc' t1 t2)
   qed .
 
 
 lemma "__dispose_rule__":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
-\<Longrightarrow> P (!!(get res))
-\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k \<mapsto> any)))})
-\<Longrightarrow> updt (map_fine (\<lambda>f. f(k := None))) res \<in> \<phi>Res_Spec R\<close>
+\<Longrightarrow> P (get res)
+\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k \<mapsto> any))})
+\<Longrightarrow> updt (\<lambda>f. f(k := None)) res \<in> \<phi>Res_Spec R\<close>
   using "__updt_rule__"[where u=None, simplified, simplified one_fine_def[symmetric],
             simplified, simplified one_set_def[symmetric], simplified] .
 
 abbreviation perm_transformer :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
   where \<open>perm_transformer \<equiv> (o) to_share\<close>
-abbreviation \<open>share_fiction \<equiv> basic_fine_fiction (fiction.fine (fic_functional perm_transformer))\<close>
+abbreviation \<open>share_fiction \<equiv> raw_basic_fiction (fic_functional perm_transformer)\<close>
 
 (* lemma share_fiction_expn_full:
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<Znrres> v))))
@@ -5286,8 +5280,8 @@ proof -
 qed
 *)
 lemma raw_unit_assertion_implies[simp]:
-  \<open>res \<in> \<phi>Res_Spec (R * { mk (Fine (1(k \<mapsto> v)))})
-\<Longrightarrow> !!(get res) k = Some v\<close>
+  \<open>res \<in> \<phi>Res_Spec (R * { mk (1(k \<mapsto> v))})
+\<Longrightarrow> get res k = Some v\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
       proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun)
@@ -5305,10 +5299,10 @@ locale share_fiction_for_partial_mapping_resource =
 +  fictional_project_inject INTERPRET Fic \<open>R.share_fiction\<close>
 +  \<phi>fiction Resource_Validator INTERPRET
 for Valid :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) set"
-and Res :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'val option) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
-and Fic :: "('FIC_N,'FIC, ('key \<Rightarrow> 'val share option) ?) Fictional_Algebra.Entry"
+and Res :: "('RES_N, 'RES::sep_algebra, 'key \<Rightarrow> 'val option) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
+and Fic :: "('FIC_N,'FIC, 'key \<Rightarrow> 'val share option) Fictional_Algebra.Entry"
 begin
 
 sublocale permission_fiction Valid \<open>R.perm_transformer\<close> by standard blast
@@ -5318,24 +5312,29 @@ lemmas expand = expand_raw
 lemma partial_implies:
   \<open> Fic_Space r
 \<Longrightarrow> 0 < n
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> Share n v)))))
-\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> objs k = Some v\<close>
-  subgoal premises prems proof -
-    obtain objs where t1: \<open>R.get res = Fine objs \<and> 1(k \<mapsto> v) \<preceq>\<^sub>S\<^sub>L objs\<close>
-      using partial_implies_raw[where x=\<open>1(k \<mapsto> v)\<close> and n=n, simplified] prems by blast
-    show ?thesis apply (rule exI[where x=objs], insert t1, simp add: nonsepable_partial_map_subsumption)
-      by (smt (verit, best) fun_split_1 fun_upd_same join_sub_def one_option_def sep_disj_fun_def sep_disj_option_nonsepable(1) times_fun)
-  qed .
+\<Longrightarrow> r ## mk (1(k \<mapsto> Share n v))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (1(k \<mapsto> Share n v))))
+\<Longrightarrow> R.get res k = Some v\<close>
+  using partial_implies_raw[where x=\<open>1(k \<mapsto> v)\<close> and n=n, simplified]
+    nonsepable_partial_map_subsumption
+  by (smt (verit, ccfv_threshold) fun_split_1 fun_upd_same join_sub_def one_option_def sep_disj_fun_def sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep)
 
 lemma partial_implies'[simp]:
   assumes FS: \<open>Fic_Space r\<close>
     and N: \<open>0 < n\<close>
-    and A: \<open>res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k \<mapsto> Share n v)))))\<close>
-  shows \<open>!!(R.get res) k = Some v\<close>
+    and S: \<open>r ## mk (1(k \<mapsto> Share n v))\<close>
+    and A: \<open>res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (1(k \<mapsto> Share n v))))\<close>
+  shows \<open>R.get res k = Some v\<close>
 proof -
-  from partial_implies[OF FS, OF N, OF A]
+  from partial_implies[OF FS, OF N, OF S, OF A]
   show ?thesis by fastforce
 qed
+
+lemma
+  \<open> r ## mk (1(k \<mapsto> Share 1 v))
+\<Longrightarrow> r ## mk (1(k \<mapsto> Share 1 any))\<close>
+  unfolding sep_disj_get_name_eq[symmetric]
+  thm sep_disj_get_name_eq[symmetric]
 
 (* lemma VS_merge_ownership_identity:
   \<open> na + nb \<le> 1
@@ -5361,10 +5360,10 @@ locale share_fiction_for_partial_mapping_resource_nonsepable =
   share_fiction_for_partial_mapping_resource
     Valid Res Resource_Validator INTERPRET Fic
 for Valid :: "('key \<Rightarrow> 'val nonsepable option) set"
-and Res :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'val nonsepable option) ?) Fictional_Algebra.Entry"
+and Res :: "('RES_N, 'RES::sep_algebra, 'key \<Rightarrow> 'val nonsepable option) Fictional_Algebra.Entry"
 and Resource_Validator :: "'RES_N \<Rightarrow> 'RES set"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra, 'RES_N \<Rightarrow> 'RES) fiction"
-and Fic :: "('FIC_N, 'FIC, ('key \<Rightarrow> 'val nonsepable share option) ?) Fictional_Algebra.Entry"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 'RES) fiction"
+and Fic :: "('FIC_N, 'FIC, 'key \<Rightarrow> 'val nonsepable share option) Fictional_Algebra.Entry"
 begin
 
 lemma \<phi>nonsepable_normalize:
@@ -5392,60 +5391,67 @@ subsubsection \<open>Locale of Resources\<close>
 locale partial_map_resource2 =
   mapping_resource Valid entry Resource_Validator
 for Valid :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) set"
-and entry :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+and entry :: "('RES_N, 'RES::sep_algebra, 'key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
 begin
 
 lemma "__updt_rule__":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in> Valid)
-\<Longrightarrow> P (!!(get res))
-\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := 1(k2 \<mapsto> any))))})
-\<Longrightarrow> updt (map_fine (map_fun_at (map_fun_at (\<lambda>_. u) k2) k)) res
-       \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := 1(k2 := u))))})\<close>
+\<Longrightarrow> P (get res)
+\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k := 1(k2 \<mapsto> any)))})
+\<Longrightarrow> updt (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
+       \<in> \<phi>Res_Spec (R * {mk (1(k := 1(k2 := u)))})\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
-          proj_homo_mult times_fun_upd )
-  apply (clarsimp simp add: mult_strip_fine_011)
+          proj_homo_mult times_fun_upd)
   subgoal premises prems for x aa proof -
     have [simp]: \<open>aa k k2 = None\<close>
-      using prems(8) sep_disj_fun sep_disj_partial_map_some_none by fastforce
-    then have [simp]: \<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k (aa * 1(k := 1(k2 \<mapsto> any)))
+      by (metis (mono_tags, lifting) fun_upd_same prems(9) sep_disj_fun sep_disj_fun_nonsepable(2))
+    then have [simp]:
+        \<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k (aa * 1(k := 1(k2 \<mapsto> any)))
             = aa * 1(k := 1(k2 := u))\<close>
-      unfolding map_fun_at_def fun_eq_iff times_fun_def by auto
-    have [simp]: \<open>clean x * mk (Fine aa) = x\<close>
-      by (metis fun_split_1 prems(7))
-    have [simp]: \<open>aa ## 1(k := 1(k2 := u))\<close>
+      unfolding map_fun_at_def fun_eq_iff times_fun_def
+      by simp
+    have t1[simp]: \<open>clean x * mk aa = x\<close>
+      by (metis fun_split_1 prems(8))
+    have t2[simp]: \<open>aa ## 1(k := 1(k2 := u))\<close>
       by (simp add: sep_disj_fun_def)
+    have t3[simp]:
+      \<open>clean x ## (mk aa * mk (1(k := 1(k2 := u))))\<close>
+      by (simp add: fun_1upd_homo)
+    have t4:
+      \<open>x ## mk (1(k := 1(k2 := u)))\<close>
+      by (metis sep_disj_mk sep_disj_multI1 t1 t2 t3)
 
     show ?thesis
-      apply (simp add: prems times_fine'[symmetric] mk_homo_mult mult.assoc[symmetric])
-      using prems(5) by blast
+      apply (simp add: prems mk_homo_mult sep_mult_assoc')
+      using prems(6) t4 by blast
   qed .
 
 
 lemma "__dispose_rule__":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in> Valid)
-\<Longrightarrow> dom (!!(get res) k) = dom any
-\<Longrightarrow> P (!!(get res))
-\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (Fine (1(k := any)))})
-\<Longrightarrow> updt (map_fine (\<lambda>f. f(k := 1))) res \<in> \<phi>Res_Spec R\<close>
+\<Longrightarrow> dom (get res k) = dom any
+\<Longrightarrow> P (get res)
+\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k := any))})
+\<Longrightarrow> updt (\<lambda>f. f(k := 1)) res \<in> \<phi>Res_Spec R\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
           proj_homo_mult times_fun_upd )
-  apply (clarsimp simp add: mult_strip_fine_011 times_fun)
   subgoal premises prems for x aa proof -
     have \<open>dom (aa k) = {}\<close>
-      by (metis Un_Int_eq(3) dom_mult fun_upd_same prems(2) prems(9) sep_disj_fun sep_disj_partial_map_disjoint)
-    then have [simp]: \<open>(aa * 1(k := any))(k := 1) = aa\<close>
+      by (metis Un_Int_eq(3) dom_mult fun_upd_same prems(10) prems(2) sep_disj_fun sep_disj_partial_map_disjoint)
+    then have t1[simp]: \<open>(aa * 1(k := any))(k := 1) = aa\<close>
       by (smt (verit, del_insts) Diff_iff dom1_upd dom_1 dom_eq_empty_conv fun_split_1_not_dom1 fun_upd_triv fun_upd_upd insertCI)
-    have [simp]: \<open>clean x * mk (Fine aa) = x\<close>
-      by (metis fun_split_1 prems(8))
-    show ?thesis by (simp add: prems)
+    have t2[simp]: \<open>clean x * mk aa = x\<close>
+      by (metis fun_split_1 prems(9))
+    show ?thesis
+      using prems(1) prems(3) prems(5) prems(7) t1 by force
   qed .
 
 abbreviation perm_transformer :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
   where \<open>perm_transformer \<equiv> (o) ((o) to_share)\<close>
-abbreviation \<open>share_fiction \<equiv> basic_fine_fiction (fiction.fine (fic_functional perm_transformer))\<close>
+abbreviation \<open>share_fiction \<equiv> raw_basic_fiction (fic_functional perm_transformer)\<close>
 
 (*depreciated!*)
 (*lemma share_fiction_expn_full':
@@ -5525,27 +5531,31 @@ qed
 *)
 
 lemma raw_unit_assertion_implies[simp]:
-  \<open>res \<in> \<phi>Res_Spec (R * { mk (Fine (1(k := 1(k2 \<mapsto> v))))})
-\<Longrightarrow> !!(get res) k k2 = Some v\<close>
+  \<open>res \<in> \<phi>Res_Spec (R * { mk (1(k := 1(k2 \<mapsto> v)))})
+\<Longrightarrow> get res k k2 = Some v\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
       proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun)
   by (metis (full_types) fun_upd_same sep_disj_option_nonsepable(1) times_option(3))
 
 lemma raw_unit_assertion_implies':
-  \<open>res \<in> \<phi>Res_Spec (R * { mk (Fine (1(k := f)))})
-\<Longrightarrow> f \<subseteq>\<^sub>m !!(get res) k\<close>
+  \<open>res \<in> \<phi>Res_Spec (R * { mk (1(k := f))})
+\<Longrightarrow> f \<subseteq>\<^sub>m get res k\<close>
   unfolding \<phi>Res_Spec_def
-  apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
-      proj_homo_mult mult_strip_fine_011 sep_disj_fun_def times_fun map_le_def)
-  by (smt (verit, del_insts) sep_disj_option_nonsepable(1) times_option(3))
+  apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011)
+  subgoal premises prems for x a proof -
+    have t1[simp]: \<open>inject a ## inject (1(k := f))\<close>
+      by (simp add: prems(7))
+    show ?thesis apply (clarsimp simp add: proj_homo_mult[OF t1] sep_disj_fun_def times_fun map_le_def)
+      by (metis fun_upd_same mult_1_class.mult_1_right one_option_def prems(7) sep_disj_fun sep_disj_option_nonsepable(1) sep_mult_commute)
+  qed .
 
 lemma raw_unit_assertion_implies''[simp]:
-  \<open>res \<in> \<phi>Res_Spec (R * { mk (Fine (1(k := f)))})
+  \<open>res \<in> \<phi>Res_Spec (R * { mk (1(k := f))})
 \<Longrightarrow> k2 \<in> dom f
-\<Longrightarrow> !!(get res) k k2 = f k2\<close>
+\<Longrightarrow> get res k k2 = f k2\<close>
   using raw_unit_assertion_implies'[unfolded map_le_def]
-  by simp 
+  by simp
 
 
 end
@@ -5557,10 +5567,10 @@ locale share_fiction_for_partial_mapping_resource2 =
 +  R: partial_map_resource2 Valid Res Resource_Validator
 +  fictional_project_inject INTERPRET Fic \<open>R.share_fiction\<close>
 for Valid :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) set"
-and Res :: "('RES_N, 'RES::total_sep_algebra, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) ?) Fictional_Algebra.Entry"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
-and Fic :: "('FIC_N,'FIC, ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) ?) Fictional_Algebra.Entry"
+and Res :: "('RES_N, 'RES::sep_algebra, 'key \<Rightarrow> 'key2 \<Rightarrow> 'val option) Fictional_Algebra.Entry"
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra,'RES_N \<Rightarrow> 'RES) fiction"
+and Fic :: "('FIC_N,'FIC, 'key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) Fictional_Algebra.Entry"
 begin
 
 sublocale permission_fiction Valid \<open>R.perm_transformer\<close> by standard  blast
@@ -5576,23 +5586,21 @@ lemmas partial_implies = partial_implies_raw
 lemma partial_implies':
   \<open> Fic_Space r
 \<Longrightarrow> 0 < n
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> Share n v))))))
-\<Longrightarrow> \<exists>objs. R.get res = Fine objs \<and> objs k k2 = Some v\<close>
-  subgoal premises prems proof -
-    obtain objs where t1: \<open>R.get res = Fine objs \<and> 1(k := 1(k2 \<mapsto> v)) \<preceq>\<^sub>S\<^sub>L objs\<close>
-      using partial_implies_raw[where x=\<open>1(k := 1(k2 \<mapsto> v))\<close> and n=n, simplified] prems by blast
-    show ?thesis
-      apply (rule exI[where x=objs])
-      by (smt (verit, del_insts) fun_upd_same join_sub_def mult_1_class.mult_1_right one_option_def sep_disj_fun_def sep_disj_option_nonsepable(1) sep_mult_commute t1 times_fun_def)
-  qed .
+\<Longrightarrow> r ## mk (1(k := 1(k2 \<mapsto> Share n v)))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (1(k := 1(k2 \<mapsto> Share n v)))))
+\<Longrightarrow> R.get res k k2 = Some v\<close>
+  using partial_implies_raw[where x=\<open>1(k := 1(k2 \<mapsto> v))\<close> and n=n, simplified]
+    nonsepable_partial_map_subsumption
+  by (smt (verit, del_insts) fun_upd_same join_sub_def sep_disj_fun_def sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep times_option(3))
 
 lemma partial_implies'':
   assumes FS: \<open>Fic_Space r\<close>
     and N: \<open>0 < n\<close>
-    and A: \<open> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Fine (1(k := 1(k2 \<mapsto> Share n v))))))\<close>
-  shows [simp]: \<open>!!(R.get res) k k2 = Some v\<close>
+    and S: \<open>r ## mk (1(k := 1(k2 \<mapsto> Share n v)))\<close>
+    and A: \<open> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (1(k := 1(k2 \<mapsto> Share n v)))))\<close>
+  shows [simp]: \<open>R.get res k k2 = Some v\<close>
 proof -                                                                           
-  from partial_implies'[OF FS, OF N, OF A]
+  from partial_implies'[OF FS, OF N, OF S, OF A]
   show ?thesis by fastforce
 qed
 

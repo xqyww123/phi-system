@@ -44,14 +44,21 @@ definition join_sub (infix "\<preceq>\<^sub>S\<^sub>L" 50)
   where \<open>join_sub y z \<longleftrightarrow> (\<exists>x. z = x * y \<and> x ## y)\<close>
 end
 
-class sep_semigroup = sep_magma +
+class positive_sep_magma = sep_magma+
+  assumes join_positivity: \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
+
+class sep_semigroup = positive_sep_magma +
   assumes sep_mult_assoc:
     "\<lbrakk> x ## y; x * y ## z \<rbrakk> \<Longrightarrow> (x * y) * z = x * (y * z)"
-  assumes join_positivity: \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
   assumes sep_disj_multD1: "\<lbrakk> x ## y * z; y ## z \<rbrakk> \<Longrightarrow> x ## y"
   assumes sep_disj_multI1: "\<lbrakk> x ## y * z; y ## z \<rbrakk> \<Longrightarrow> x * y ## z"
   assumes sep_disj_multD2: "\<lbrakk> x * y ## z; x ## y \<rbrakk> \<Longrightarrow> y ## z"
   assumes sep_disj_multI2: "\<lbrakk> x * y ## z; x ## y \<rbrakk> \<Longrightarrow> x ## y * z"
+begin
+lemma sep_mult_assoc':
+    "\<lbrakk> y ## z; x ## y * z \<rbrakk> \<Longrightarrow> x * (y * z) = (x * y) * z"
+  by (metis local.sep_disj_multD1 local.sep_disj_multI1 local.sep_mult_assoc)
+end
 
 class sep_ab_semigroup = sep_semigroup + comm_sep_disj +
   assumes sep_mult_commute: "x ## y \<Longrightarrow> x * y = y * x"
@@ -64,11 +71,16 @@ class sep_magma_1 = sep_magma + mult_1 +
   assumes sep_magma_1_left  [simp]: "x ## 1"
   assumes sep_magma_1_right [simp]: "1 ## x"
 
-class sep_monoid = sep_magma_1 + sep_semigroup
+class positive_sep_magma_1 = sep_magma_1 + positive_sep_magma
 begin
 lemma sep_no_negative [simp]:
   \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
   by (metis local.join_positivity local.mult_1_right local.sep_magma_1_left sep_magma.join_sub_def)
+end
+
+class sep_monoid = sep_magma_1 + sep_semigroup
+begin
+subclass positive_sep_magma_1 ..
 end
 
 definition (in times) subsume (infix "\<preceq>\<^sub>\<times>" 50) 
@@ -303,15 +315,19 @@ subclass share_module_sep apply (standard; clarsimp simp add: join_sub_def)
 end
 
 
+locale homo_sep_disj =
+  fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
+  assumes sep_disj_homo[simp]: \<open>\<psi> a ## \<psi> b \<longleftrightarrow> a ## b\<close>
+
 locale homo_sep_disj_semi =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
-  assumes sep_disj_homo[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
+  assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
 
 locale homo_join_sub =
   fixes \<psi> :: \<open>'a::sep_ab_semigroup \<Rightarrow> 'b::sep_ab_semigroup\<close>
   assumes homo_join_sub: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
 
-locale homo_sep_mult = homo_one \<psi> + homo_sep_disj_semi \<psi>
+locale homo_sep_mult = homo_one \<psi>
   for \<psi> :: " 'a::{one,times,sep_disj} \<Rightarrow> 'b::{one,times,sep_disj} "
 + assumes homo_mult: "x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y"
 
@@ -323,7 +339,7 @@ locale inj_at_1 =
   fixes \<psi> :: " 'a::one \<Rightarrow> 'b::one"
   assumes inj_at_1: \<open>\<forall>x. \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
 
-locale perm_transformer' = homo_sep_mult \<psi> + sep_mult_strip_011 \<psi> + homo_join_sub \<psi> + inj_at_1 \<psi>
+locale perm_transformer' = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi> + sep_mult_strip_011 \<psi> + homo_join_sub \<psi> + inj_at_1 \<psi>
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::{share,sep_algebra}\<close>
 + assumes join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
     and   inj_\<psi>[simp]: \<open>inj \<psi>\<close>
@@ -797,24 +813,42 @@ end
 
 instantiation "fun" :: (type,comm_monoid_mult) comm_monoid_mult begin
 instance by standard (simp_all add: mult.commute times_fun_def fun_eq_iff)
-
+end
 
 paragraph \<open>Multiplication with Function Update\<close>
 
-lemmas fun_mult_norm = mult.assoc[where ?'a = "'a \<Rightarrow> 'b", symmetric]
-
-lemma times_fupdt_1_apply[simp]: "(f * 1(k := x)) k = f k * x" for f :: "'a \<Rightarrow> 'b"
+lemma times_fupdt_1_apply[simp]:
+  "(f * 1(k := x)) k = f k * x" for f :: "'a \<Rightarrow> 'b::monoid_mult"
   by (simp add: times_fun_def)
 
-lemma times_fupdt_1_apply'[simp]: "k' \<noteq> k \<Longrightarrow> (f * 1(k':=x)) k = f k" for f :: "'a \<Rightarrow> 'b"
+lemma times_fupdt_1_apply_sep[simp]:
+  "(f * 1(k := x)) k = f k * x" for f :: "'a \<Rightarrow> 'b::sep_monoid"
   by (simp add: times_fun_def)
 
-lemma times_fupdt_1_fupdt_1[simp]: "(f * 1(k := x))(k:=1) = f(k:=1)" for f :: "'a \<Rightarrow> 'b"
+lemma times_fupdt_1_apply'[simp]:
+  "k' \<noteq> k \<Longrightarrow> (f * 1(k':=x)) k = f k" for f :: "'a \<Rightarrow> 'b::monoid_mult"
+  by (simp add: times_fun_def)
+
+lemma times_fupdt_1_apply'_sep[simp]:
+  "k' \<noteq> k \<Longrightarrow> (f * 1(k':=x)) k = f k" for f :: "'a \<Rightarrow> 'b::sep_monoid"
+  by (simp add: times_fun_def)
+
+lemma times_fupdt_1_fupdt_1[simp]:
+  "(f * 1(k := x))(k:=1) = f(k:=1)" for f :: "'a \<Rightarrow> 'b::monoid_mult"
   unfolding fun_upd_def fun_eq_iff times_fun_def by simp
 
-lemma [simp]: "k' \<noteq> k \<Longrightarrow> (f * 1(k' := x))(k:=1) = f(k:=1) * 1(k' := x)" for f :: "'a \<Rightarrow> 'b"
+lemma times_fupdt_1_fupdt_1_sep[simp]:
+  "(f * 1(k := x))(k:=1) = f(k:=1)" for f :: "'a \<Rightarrow> 'b::sep_monoid"
   unfolding fun_upd_def fun_eq_iff times_fun_def by simp
-end
+
+lemma [simp]:
+  "k' \<noteq> k \<Longrightarrow> (f * 1(k' := x))(k:=1) = f(k:=1) * 1(k' := x)" for f :: "'a \<Rightarrow> 'b::monoid_mult"
+  unfolding fun_upd_def fun_eq_iff times_fun_def by simp
+
+lemma [simp]:
+  "k' \<noteq> k \<Longrightarrow> (f * 1(k' := x))(k:=1) = f(k:=1) * 1(k' := x)" for f :: "'a \<Rightarrow> 'b::sep_monoid"
+  unfolding fun_upd_def fun_eq_iff times_fun_def by simp
+
 
 instantiation "fun" :: (type,total_sep_monoid) total_sep_monoid begin
 instance proof
@@ -849,7 +883,7 @@ lemma fun_1upd_homo_right1:
   by clarsimp
 
 lemma fun_1upd_homo_left1:
-    "1(k := x) * f(k := y) = f(k := x * y)" for x :: "'a::comm_monoid_mult"
+    "1(k := x) * f(k := y) = f(k := x * y)" for x :: "'a::sep_monoid"
   unfolding one_fun_def fun_upd_def times_fun_def fun_eq_iff
   by clarsimp
 
@@ -1188,11 +1222,11 @@ lemma one_ringop_f_is_1[simp]: "1 o f = 1"
 
 lemma finite_dom1_mult1[simp]:
   "finite (dom1 (f * 1(k:=v))) \<longleftrightarrow> finite (dom1 f)"
-  for f :: "'a \<Rightarrow> 'b :: comm_monoid_mult"
+  for f :: "'a \<Rightarrow> 'b :: sep_monoid"
 proof -
   have "dom1 (f * 1(k:=v)) = dom1 f \<or> dom1 (f * 1(k:=v)) = insert k (dom1 f)
     \<or> dom1 (f * 1(k:=v)) = dom1 f - {k}"
-  for f :: "'a \<Rightarrow> 'b :: comm_monoid_mult"
+  for f :: "'a \<Rightarrow> 'b :: sep_monoid"
   unfolding dom1_def times_fun_def fun_upd_def set_eq_iff by simp
   then show ?thesis
     by (metis finite_Diff finite_insert infinite_remove)
@@ -1217,8 +1251,13 @@ lemma dom1_mult: \<open>f ## g \<Longrightarrow> dom1 (f * g) = dom1 f \<union> 
 lemma dom_mult: \<open>f ## g \<Longrightarrow> dom (f * g) = dom f \<union> dom g\<close>
   using dom1_mult dom1_dom by metis
 
-lemma dom1_mult_disjoint: \<open>dom1 (f * g) = dom1 f \<union> dom1 g\<close>
+(* lemma dom1_mult_disjoint: \<open>dom1 (f * g) = dom1 f \<union> dom1 g\<close>
   for f :: \<open>'a \<Rightarrow> 'b :: no_inverse\<close>
+  unfolding sep_disj_fun_def dom1_def set_eq_iff times_fun by simp *)
+
+lemma dom1_sep_mult_disjoint:
+  \<open>f ## g \<Longrightarrow>  dom1 (f * g) = dom1 f \<union> dom1 g\<close>
+  for f :: \<open>'a \<Rightarrow> 'b :: positive_sep_magma_1\<close>
   unfolding sep_disj_fun_def dom1_def set_eq_iff times_fun by simp
 
 lemma disjoint_dom1_eq_1:
@@ -1330,8 +1369,8 @@ lemma perm_transformer_pointwise_eq:
     have x3[simp]: \<open>\<And>k a b. 1(k := a) = 1(k := b) \<longleftrightarrow> a = b\<close>
       by (metis fun_upd_same)
 
-    show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> by (meson t3(2))
-    show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close> by (meson t3(3))
+    show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> by (meson t3(3))
+    show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close> by (meson t3(2))
     show \<open>a' ## \<psi> b \<Longrightarrow> (a' * \<psi> b = \<psi> c) = (\<exists>a. a' = \<psi> a \<and> a * b = c \<and> a ## b)\<close>
       unfolding t2(4)[THEN spec[where x=\<open>1(undefined := a')\<close>],
                 THEN spec[where x=\<open>1(undefined := b)\<close>],
@@ -1828,8 +1867,10 @@ lemma fun'_\<I>[simp]: "\<I> (fun' I) = (\<lambda>f. prod (\<lambda>x. \<I> (I x
   unfolding fun'_def by (rule Fiction_inverse) (simp add: Fictional_def)
 
 lemma fun'_split:
-  "finite (dom1 f) \<Longrightarrow> \<I> (fiction.fun' I) f = \<I> (fiction.fun' I) (f(k:=1)) * \<I> (I k) (f k)"
-  for f :: "'a \<Rightarrow> 'b::comm_monoid_mult"
+  " finite (dom1 f)
+\<Longrightarrow> \<I> (fiction.fun' I) f = \<I> (fiction.fun' I) (f(k:=1)) * \<I> (I k) (f k)
+   \<and> \<I> (fiction.fun' I) (f(k:=1)) ## \<I> (I k) (f k)"
+  for f :: "'a \<Rightarrow> 'b::sep_algebra"
   by simp (smt (verit, best) Fiction_one dom1_upd fun_upd_triv mult.comm_neutral mult.commute prod.insert_remove)
 
 definition "fun I = fun' (\<lambda>_. I)"
@@ -1837,8 +1878,10 @@ lemma fun_\<I>[simp]: "\<I> (fun I) = (\<lambda>f. prod (\<I> I o f) (dom1 f))"
   unfolding fun_def by simp
 
 lemma fun_split:
-  "finite (dom1 f) \<Longrightarrow> \<I> (fiction.fun I) f = \<I> (fiction.fun I) (f(k:=1)) * \<I> I (f k)"
-  for f :: "'a \<Rightarrow> 'b::comm_monoid_mult"
+  " finite (dom1 f)
+\<Longrightarrow> \<I> (fiction.fun I) f = \<I> (fiction.fun I) (f(k:=1)) * \<I> I (f k)
+  \<and> \<I> (fiction.fun I) (f(k:=1)) ## \<I> I (f k)"
+  for f :: "'a \<Rightarrow> 'b::sep_algebra"
   unfolding fun_def using fun'_split .
 
 definition "pointwise I = Fiction (\<lambda>f. {g. \<forall>x. g x \<in> \<I> I (f x) })"
@@ -1979,11 +2022,13 @@ text \<open>The resources in the model are designed to be commutative monoids. I
   a 0 element to be the result of applying the monoid operation on undefined operands.\<close>
 
 locale project_inject =
-  inj: homo_mult \<open>Entry.inject entry\<close> + prj: homo_mult \<open>Entry.project entry\<close>
-  for entry :: "('NAME, 'REP::comm_monoid_mult, 'T::comm_monoid_mult) Entry"
+  inj: homo_sep_mult \<open>Entry.inject entry\<close> + prj: homo_sep_mult \<open>Entry.project entry\<close> +
+  inj_disj: homo_sep_disj \<open>Entry.inject entry\<close> + prj_disj: homo_sep_disj \<open>Entry.project entry\<close>
+  for entry :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra) Entry"
 + assumes proj_inj[simp]: "Entry.project entry (Entry.inject entry x) = x"
-    and   mult_in_dom:    \<open>a * b = Entry.inject entry c \<longleftrightarrow>
-                           (\<exists>a' b'. a = Entry.inject entry a' \<and> b = Entry.inject entry b' \<and> a' * b' = c)\<close>
+    and   mult_in_dom:    \<open>a ## b \<Longrightarrow>
+              a * b = Entry.inject entry c \<longleftrightarrow>
+                 (\<exists>a' b'. a = Entry.inject entry a' \<and> b = Entry.inject entry b' \<and> a' * b' = c)\<close>
 begin
 
 abbreviation "name \<equiv> Entry.name entry"
@@ -1994,19 +2039,35 @@ abbreviation "get f \<equiv> project (f name)"
 abbreviation "updt g f \<equiv> f(name := inject (g (get f)))"
 abbreviation "mk x \<equiv> 1(name := inject x)"
 
+lemma sep_disj_mk[simp]:
+  \<open>mk x ## mk y \<longleftrightarrow> x ## y\<close>
+  by (metis fun_sep_disj_1_fupdt(1) inj_disj.sep_disj_homo prj_disj.sep_disj_homo proj_inj)
+
+lemma sep_disj_inject[simp]:
+  \<open>inject x ## inject y \<longleftrightarrow> x ## y\<close>
+  using sep_disj_mk by force
+
+lemma sep_disj_mk_name[simp]:
+  \<open>r ## mk x \<Longrightarrow> r name ## inject x\<close>
+  by (metis fun_upd_same sep_disj_fun)
+
+lemma sep_disj_get_name_eq[simp]:
+  \<open>get r ## x \<longleftrightarrow> r ## mk x\<close>
+  by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv prj_disj.sep_disj_homo proj_inj)
+
 lemma inject_inj[simp]:
   \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
   by (metis proj_inj)
 
 lemma get_homo_mult:
-  \<open>get (a * b) = get a * get b\<close>
+  \<open>a ## b \<Longrightarrow> get (a * b) = get a * get b\<close>
   by (simp add: prj.homo_mult times_fun)
 
 lemma mk_homo_one[simp]: \<open>mk x = 1 \<longleftrightarrow> x = 1\<close>
   by (metis fun_1upd1 fun_upd_eqD inj.homo_one proj_inj)
 
-lemma mk_homo_mult: \<open>mk (a * b) = mk a * mk b\<close>
-  by (simp add: fun_1upd_homo_left1 inj.homo_mult)
+lemma mk_homo_mult: \<open>a ## b \<Longrightarrow> mk (a * b) = mk a * mk b\<close>
+  by (simp add: fun_1upd_homo inj.homo_mult)
 
 lemma mk_inj[simp]: \<open>mk a = mk b \<longleftrightarrow> a = b\<close>
   unfolding fun_eq_iff by simp
@@ -2020,13 +2081,19 @@ lemmas inj_homo_mult = inj.homo_mult
 
 lemmas split = fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP]
 
-lemma mult_strip_inject_011: \<open>NO_MATCH (inject a'') a' \<Longrightarrow>
-  a' * inject b = inject c \<longleftrightarrow> (\<exists>a. a' = inject a \<and> a * b = c)\<close>
-  by (metis mult_in_dom proj_inj)
+lemma mult_strip_inject_011: \<open>
+  NO_MATCH (inject a'') a'
+\<Longrightarrow> a' ## inject b
+\<Longrightarrow> a' * inject b = inject c \<longleftrightarrow> (\<exists>a. a' = inject a \<and> a * b = c \<and> a ## b)\<close>
+  using mult_in_dom by force
 
 lemma times_fun_upd:
   \<open>(R * mk x)(name := inject y) = (clean R * mk y)\<close>
   unfolding times_fun_def fun_upd_def fun_eq_iff by simp
+
+lemma sep_disj_clean[simp]:
+  \<open>clean f ## mk any\<close>
+  by simp
 
 end
 
@@ -2040,17 +2107,18 @@ ML_file_debug \<open>Resource_Space.ML\<close>
 subsection \<open>Extensive Fictional Space\<close>
 
 locale fictional_space =
-  fixes INTERPRET :: "'NAME \<Rightarrow> ('REP::total_sep_algebra,'RES::total_sep_algebra) fiction"
+  fixes INTERPRET :: "'NAME \<Rightarrow> ('REP::sep_algebra,'RES::sep_algebra) fiction"
 begin
 
 definition "INTERP = fiction.fun' INTERPRET"
 
 end
 
-definition "Fic_Space (f::'a\<Rightarrow>'b::no_inverse) \<longleftrightarrow> finite (dom1 f)"
+definition "Fic_Space (f::'a\<Rightarrow>'b::positive_sep_magma_1) \<longleftrightarrow> finite (dom1 f)"
 
-lemma Fic_Space_Un[simp]: \<open>Fic_Space (a*b) \<longleftrightarrow> Fic_Space a \<and> Fic_Space b\<close>
-  unfolding Fic_Space_def by (simp add: dom1_mult_disjoint finite_Un)
+lemma Fic_Space_Un[simp]:
+  \<open>a ## b \<Longrightarrow> Fic_Space (a*b) \<longleftrightarrow> Fic_Space a \<and> Fic_Space b\<close>
+  unfolding Fic_Space_def by (simp add: dom1_sep_mult_disjoint)
 
 lemma Fic_Space_1[simp]: \<open>Fic_Space 1\<close>
   unfolding Fic_Space_def by simp
@@ -2058,9 +2126,9 @@ lemma Fic_Space_1[simp]: \<open>Fic_Space 1\<close>
 
 locale fictional_project_inject =
   fictional_space INTERPRET + project_inject entry +
-  inj: homo_mult \<open>Entry.inject entry\<close> + prj: homo_mult \<open>Entry.project entry\<close>
-  for INTERPRET :: "'NAME \<Rightarrow> ('REP::total_sep_algebra,'RES::total_sep_algebra) fiction"
-  and entry :: "('NAME,'REP,'T::comm_monoid_mult) Entry"
+  inj: homo_sep_mult \<open>Entry.inject entry\<close> + prj: homo_sep_mult \<open>Entry.project entry\<close>
+  for INTERPRET :: "'NAME \<Rightarrow> ('REP::sep_algebra,'RES::sep_algebra) fiction"
+  and entry :: "('NAME,'REP,'T::sep_algebra) Entry"
 + fixes I :: "('T,'RES) fiction"
   assumes proj_inj[simp]: "Entry.project entry (Entry.inject entry x) = x"
     and interpret_reduct[simp]: "\<I> (INTERPRET (Entry.name entry)) = \<I> I o Entry.project entry"
@@ -2072,21 +2140,27 @@ lemmas prj_homo_mult[simp] = prj.homo_mult
 lemmas prj_homo_one = prj.homo_one
 
 
-lemma inject_assoc_homo[simp]: "R * inject x * inject y = R * inject (x * y)"
-  by (simp add: mult.assoc) 
+lemma inject_assoc_homo[simp]:
+  "R ## inject x \<and> R * inject x ## inject y
+\<Longrightarrow> R * inject x * inject y = R * inject (x * y)"
+  by (metis mult_in_dom sep_disj_multD2 sep_mult_assoc)
 
 lemma interp_m[simp]: "\<I> INTERP (mk x) = \<I> I x"
   unfolding INTERP_def by (simp add: sep_disj_commute sep_mult_commute)
 
 lemma interp_split:
   "Fic_Space f \<Longrightarrow>
-    \<I> INTERP f = \<I> INTERP (clean f) * \<I> I (project (f name))"
+    \<I> INTERP f = \<I> INTERP (clean f) * \<I> I (project (f name))
+  \<and> \<I> INTERP (clean f) ## \<I> I (project (f name))"
   unfolding INTERP_def Fic_Space_def
-  by (subst fiction.fun'_split[where ?f = f and ?k = name]) simp_all
+  apply (subst fiction.fun'_split[where ?f = f and ?k = name])
+  by simp_all
 
 lemma interp_split':
-  "NO_MATCH (clean f') f \<Longrightarrow> Fic_Space f \<Longrightarrow>
-    \<I> INTERP f = \<I> INTERP (clean f) * \<I> I (project (f name))"
+  " NO_MATCH (clean f') f
+\<Longrightarrow> Fic_Space f
+\<Longrightarrow> \<I> INTERP f = \<I> INTERP (clean f) * \<I> I (project (f name))
+  \<and> \<I> INTERP (clean f) ## \<I> I (project (f name))"
   using interp_split .
 
 lemma Fic_Space_m[simp]: "Fic_Space (mk x)"

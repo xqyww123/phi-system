@@ -702,7 +702,7 @@ fun gen_define_FIS prep_typ prep_term (sort,project_injectL)
     
     fun prep_sort S' S = if S = "" then S' else Syntax.read_sort ctxt S
     val sort' = fold (parent_sort thy o #2 o #2) parents'
-                    (prep_sort \<^sort>\<open>total_sep_algebra\<close> sort)
+                    (prep_sort \<^sort>\<open>sep_algebra\<close> sort)
     val env = (repN, sort')::env
     
     val fictionT = Type(\<^type_name>\<open>fiction\<close>, [dummyT, resT'])

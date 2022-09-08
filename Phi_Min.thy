@@ -27,7 +27,7 @@ virtual_datatype 'TY \<phi>min_val :: "nonsepable_semigroup" = 'TY \<phi>empty_v
 subsubsection \<open>Resource\<close>
 
 typedef varname = \<open>UNIV::nat set\<close> ..
-type_synonym ('TY,'VAL) R_var = \<open>(varname \<rightharpoonup> 'VAL) ?\<close>
+type_synonym ('TY,'VAL) R_var = \<open>varname \<rightharpoonup> 'VAL\<close>
 
 lemma infinite_varname:
   \<open>infinite (UNIV::varname set)\<close>
@@ -50,14 +50,14 @@ locale \<phi>min_sem =
 + \<phi>min_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
-            and TYPE'REP  = \<open>TYPE('RES::total_sep_algebra)\<close>
+            and TYPE'REP  = \<open>TYPE('RES::sep_algebra)\<close>
 + \<phi>resource_sem where Resource_Validator = Resource_Validator
 for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
-                \<times> ('RES_N => 'RES::total_sep_algebra)) itself\<close>
+                \<times> ('RES_N => 'RES::sep_algebra)) itself\<close>
 +
 assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
-assumes res_valid_var[simp]: \<open>Resource_Validator R_var.name = {R_var.inject (Fine vars) |vars. finite (dom vars)}\<close>
+assumes res_valid_var[simp]: \<open>Resource_Validator R_var.name = {R_var.inject vars |vars. finite (dom vars)}\<close>
 assumes can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (b1,x1)) (V_int.mk (b2,x2)) \<longleftrightarrow> b1 = b2"
 assumes eqcmp_int[simp]: "EqCompare (V_int.mk i1) (V_int.mk i2) \<longleftrightarrow> i1 = i2"
 assumes zero_int[simp]: \<open>Zero (T_int.mk b)    = Some (V_int.mk (b,0))\<close>
@@ -76,21 +76,21 @@ sublocale R_var: partial_map_resource \<open>{vars. finite (dom vars)}\<close> R
 end
 
 fiction_space (in \<phi>min_sem) \<phi>min_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
-  FIC_var :: \<open>R_var.basic_fine_fiction (fiction.fine fiction.it)\<close>
+  FIC_var :: \<open>R_var.raw_basic_fiction fiction.it\<close>
 
 locale \<phi>min =
   \<phi>min_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                            \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra))\<close>
+                            \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
-    and TYPE'REP = \<open>TYPE('FIC::total_sep_algebra)\<close> 
+    and TYPE'REP = \<open>TYPE('FIC::sep_algebra)\<close> 
 + \<phi>empty where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                           \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                          \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra)
+                          \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
                           \<times> ('FIC_N \<Rightarrow> 'FIC))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 begin
 
-sublocale FIC_var: identity_fiction_for_fine_resource \<open>{vars. finite (dom vars)}\<close> R_var
+sublocale FIC_var: identity_fiction \<open>{vars. finite (dom vars)}\<close> R_var
     Resource_Validator INTERPRET FIC_var ..
 
 end
@@ -253,10 +253,10 @@ abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
 subsection \<open>Variable\<close>
 
 definition Var :: \<open>varname \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
-  where \<open>Var vname T x = {FIC_var.mk (Fine (1(vname \<mapsto> val))) |val. val \<in> (x \<Ztypecolon> T)} \<close>
+  where \<open>Var vname T x = {FIC_var.mk (1(vname \<mapsto> val)) |val. val \<in> (x \<Ztypecolon> T)} \<close>
 
 lemma Var_expn[\<phi>expns]:
-  \<open>fic \<in> (x \<Ztypecolon> Var vname T) \<longleftrightarrow> (\<exists>val. fic = FIC_var.mk (Fine (1(vname \<mapsto> val))) \<and> val \<in> (x \<Ztypecolon> T))\<close>
+  \<open>fic \<in> (x \<Ztypecolon> Var vname T) \<longleftrightarrow> (\<exists>val. fic = FIC_var.mk (1(vname \<mapsto> val)) \<and> val \<in> (x \<Ztypecolon> T))\<close>
   unfolding Var_def \<phi>Type_def by simp
 
 lemma Var_inhabited[\<phi>reason_elim!,elim!]:
@@ -528,7 +528,9 @@ lemma (in \<phi>min) \<phi>M_get_var[\<phi>reason!]:
 lemma (in \<phi>min) \<phi>M_set_var[\<phi>reason!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c R_var.\<phi>R_set_res (\<lambda>f. f(vname \<mapsto> u)) \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  by (clarsimp simp add: \<phi>expns FIC_var.expand del: subsetI, rule R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp)
+  apply (clarsimp simp add: \<phi>expns FIC_var.expand del: subsetI)
+  thm R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]
+  apply (rule R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp
 
 lemma (in \<phi>min) op_get_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
@@ -561,6 +563,7 @@ lemma (in \<phi>min) op_var_scope':
   subgoal premises prems for k res'
     apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res'],
                 simplified prems, simplified, THEN mp])
+    thm prems
     using prems(5) prems(7) prems(8) by force . .
 
 

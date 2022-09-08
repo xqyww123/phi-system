@@ -642,7 +642,7 @@ fun gen_define_RES prep_typ (sort,project_injectL)
     val (parents',env) = fold_map add_parent parents args'
     
     fun prep_sort S' S = if S = "" then S' else Syntax.read_sort ctxt S
-    val sort' = fold (parent_sort thy o #2 o #2) parents' (prep_sort \<^sort>\<open>comm_monoid_mult\<close> sort)
+    val sort' = fold (parent_sort thy o #2 o #2) parents' (prep_sort \<^sort>\<open>sep_algebra\<close> sort)
     val env = (repN, sort')::env
 
     val err_dup_args =

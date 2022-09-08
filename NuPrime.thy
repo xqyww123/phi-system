@@ -40,9 +40,14 @@ subsubsection \<open>Resource\<close>
 resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>empty_res
 
 locale \<phi>resource_sem =
-  fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+  fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
 begin
 definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
+
+lemma
+  \<open>A ## B \<Longrightarrow> A * B \<in> Valid_Resource \<longleftrightarrow> A \<in> Valid_Resource \<and> B \<in> Valid_Resource\<close>
+  unfolding Valid_Resource_def apply (simp add: times_fun sep_disj_fun_def)
+
 end
 
 subsection \<open>Empty Semantics\<close>
@@ -58,10 +63,10 @@ locale \<phi>empty_sem =
 + \<phi>empty_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
-            and TYPE'REP  = \<open>TYPE('RES::total_sep_algebra)\<close>
+            and TYPE'REP  = \<open>TYPE('RES::sep_algebra)\<close>
 + \<phi>resource_sem where Resource_Validator = Resource_Validator
 for TY_CONS_OF and VAL_CONS_OF
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::total_sep_algebra set\<close>
+and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
                 \<times> ('RES_N => 'RES)) itself\<close>
@@ -94,8 +99,8 @@ subsubsection \<open>Empty Fiction\<close>
 locale \<phi>fiction =
   \<phi>resource_sem Resource_Validator
 + fictional_space INTERPRET
-for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::total_sep_algebra set"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra, 'RES_N \<Rightarrow> 'RES::total_sep_algebra) fiction"
+for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::sep_algebra set"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 'RES::sep_algebra) fiction"
 begin
 
 definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> S_Assert (Fic_Space fic) \<inter> \<I> INTERP fic"
@@ -139,9 +144,10 @@ lemma INTERP_mono:
 \<Longrightarrow> dom1 fic \<inter> dom1 x = {}
 \<Longrightarrow> res \<in> \<I> INTERP fic
 \<Longrightarrow> p \<in> \<I> INTERP x
-\<Longrightarrow> res * p \<in> \<I> INTERP (fic * x)\<close>
+\<Longrightarrow> fic ## x
+\<Longrightarrow> res * p \<in> \<I> INTERP (fic * x) \<and> res ## p\<close>
   unfolding INTERP_def Fic_Space_def
-  apply (simp add: dom1_mult_disjoint times_fun prod.union_disjoint
+  apply (simp add: dom1_sep_mult_disjoint times_fun prod.union_disjoint
                    disjoint_dom1_eq_1[of fic x])
   by (meson dom1_disjoint_sep_disj times_set_I)
 
@@ -153,10 +159,10 @@ locale \<phi>empty =
   \<phi>fiction Resource_Validator INTERPRET
 + \<phi>empty_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                                \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                               \<times> ('RES_N \<Rightarrow> 'RES::total_sep_algebra))\<close>
+                               \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
              and Resource_Validator = Resource_Validator
-for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::total_sep_algebra set"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::total_sep_algebra, 'RES_N \<Rightarrow> 'RES::total_sep_algebra) fiction"
+for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::sep_algebra set"
+and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 'RES::sep_algebra) fiction"
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 
 
@@ -415,10 +421,10 @@ lemma \<phi>Procedure_alt:
     apply fastforce
     subgoal premises prems for e
       apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
-      using \<phi>resource_sem.LooseStateTy_expn(2) prems(2) prems(3) prems(4) prems(5) by blast
+      using prems(2) prems(3) prems(4) prems(5) prems(6) by blast
     subgoal premises prems
       apply (insert prems(1)[THEN spec[where x=comp], THEN spec[where x=r], simplified prems, simplified])
-      using prems(2) prems(4) prems(5) by blast . .
+      using prems(2) prems(4) prems(5) prems(6) by blast . .
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
