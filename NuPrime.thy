@@ -41,12 +41,21 @@ resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>empty_res
 
 locale \<phi>resource_sem =
   fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
+  assumes Resource_Validator_mult_homo:
+      \<open>\<And>N. A N ## B N \<Longrightarrow> A N * B N \<in> Resource_Validator N \<longleftrightarrow> A N \<in> Resource_Validator N \<and> B N \<in> Resource_Validator N\<close>
+    and   Resource_Validator_1: \<open>\<And>N. 1 \<in> Resource_Validator N\<close>
 begin
+
 definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
 
-lemma
+lemma Valid_Resource_1[iff]:
+  \<open>1 \<in> Valid_Resource\<close>
+  unfolding Valid_Resource_def by (simp add: Resource_Validator_1)
+
+lemma Valid_Resource_mult_homo:
   \<open>A ## B \<Longrightarrow> A * B \<in> Valid_Resource \<longleftrightarrow> A \<in> Valid_Resource \<and> B \<in> Valid_Resource\<close>
-  unfolding Valid_Resource_def apply (simp add: times_fun sep_disj_fun_def)
+  unfolding Valid_Resource_def
+  by (simp add: times_fun sep_disj_fun_def Resource_Validator_mult_homo; blast)
 
 end
 

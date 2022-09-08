@@ -31,11 +31,11 @@ lemma (in \<phi>empty) "__op_try__":
     subgoal premises prems for a b u v
       using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
             prems(2)[THEN spec[where x=a], THEN spec[where x=R]]
-      by (smt (verit, best) INTERP_COM \<phi>resource_sem.LooseStateTy_expn(1) \<phi>resource_sem.LooseStateTy_expn(2) prems(10) prems(11) prems(3) prems(4) prems(7) prems(8) prems(9) set_mult_expn)
+      by (metis (no_types, lifting) INTERP_COM LooseStateTy_expn(1) LooseStateTy_expn(2) prems(10) prems(11) prems(3) prems(4) prems(7) prems(8) prems(9) set_mult_expn)
     subgoal premises prems for a b u v
       using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
             prems(2)[THEN spec[where x=a], THEN spec[where x=R]]
-      by (smt (verit, ccfv_SIG) INTERP_COM \<phi>resource_sem.LooseStateTy_expn(2) prems(10) prems(3) prems(4) prems(7) prems(8) prems(9) set_mult_expn)
+      by (metis (no_types, lifting) INTERP_COM LooseStateTy_expn(2) prems(10) prems(3) prems(4) prems(7) prems(8) prems(9) set_mult_expn)
     apply (smt (z3) INTERP_COM LooseStateTy_expn(2) LooseStateTy_expn(3) set_mult_expn)
     by blast .
 
@@ -204,10 +204,19 @@ paragraph \<open>partial_map_resource\<close>
 lemma (in partial_map_resource) \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := u) \<in> Valid)
 \<Longrightarrow> P (get res)
-\<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k \<mapsto> any))})
-\<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
-      \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec (R * {mk (1(k := u))})) Any\<close>
-  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
+\<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k \<mapsto> any))}
+\<Longrightarrow> y \<in> \<phi>R_set_res (\<lambda>f. f(k := u)) res
+\<Longrightarrow> y \<in> \<S> (\<lambda>_. \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := u))}) Any\<close>
+  unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__" del: set_mult_expn)
+
+lemma (in partial_map_resource) \<phi>R_set_res_2:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
+\<Longrightarrow> P (get res)
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {mk (1(k \<mapsto> any))}
+\<Longrightarrow> y \<in> \<phi>R_set_res (\<lambda>f. f(k \<mapsto> u)) res
+\<Longrightarrow> y \<in> \<S> (\<lambda>_. \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {mk (1(k \<mapsto> u))}
+        \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk (1(k \<mapsto> Share 1 u))) Any\<close>
+  
 
 bundle (in share_fiction_for_partial_mapping_resource) xx = [[unify_trace_failure]]
 
@@ -219,8 +228,8 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_set_res":
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def
           expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
-          expand[where x=\<open>1(k \<mapsto> u)\<close>, simplified]
-          del: subsetI)
+          expand[where x=\<open>1(k \<mapsto> u)\<close>, simplified] simp del: set_mult_expn)
+  thm sep_disj_fiction
   subgoal premises prems for r res proof -
     have \<open>r ## mk (1(k \<mapsto> Share 1 u))\<close>
     thm R.\<phi>R_set_res
