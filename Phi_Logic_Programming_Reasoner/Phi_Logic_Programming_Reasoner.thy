@@ -6,6 +6,7 @@ theory Phi_Logic_Programming_Reasoner
       "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
   and "<conv>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v"
+  and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
 begin
 
 chapter \<open>\<phi> Logic Programming Reasoner\<close>
@@ -60,7 +61,7 @@ in
   || (lift del >> K Nu_Reasoner.attr_del_intro)
 end\<close>
   \<open>Set introduction rules in \<phi> reasonser.
-   Syntax: \<phi>intro [add] <spur-of-the-rule> || \<phi>intro del\<close>
+   Syntax: \<phi>intro [add] <priority-of-the-rule> || \<phi>intro del\<close>
 
 attribute_setup \<phi>reason_elim =
 \<open>let open Args Scan Parse
@@ -346,6 +347,8 @@ subsection \<open>Branch\<close>
 definition Branch :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixr "|||" 3)
   where \<open>Branch A B \<equiv> (\<And>C::prop. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close>
 
+consts BRANCH :: \<open>subgoal \<Rightarrow> subgoal\<close>
+
 text \<open>It triggers divergence in searching, with short-cut.
     Guaranteed by subgoal context, it tries every antecedents from left to right until
       the first success of solving an antecedent, and none of remains are attempted.\<close>
@@ -383,19 +386,19 @@ qed
 
 lemma [\<phi>reason 1000]:
   \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> PROP A ||| PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> PROP A ||| PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
 \<Longrightarrow> PROP A ||| PROP B\<close>
   unfolding GOAL_CTXT_def .
 
-lemma [\<phi>reason on \<open>PROP ?A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close> if no \<open>PROP ?X ||| PROP ?Y \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason on \<open>PROP ?A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close> if no \<open>PROP ?X ||| PROP ?Y \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close>]:
   \<open> PROP A
 \<Longrightarrow> SOLVE_SUBGOAL G
-\<Longrightarrow> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
   unfolding GOAL_CTXT_def .
 
 lemma [\<phi>reason]:
-  \<open> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  \<open> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
+\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
   unfolding GOAL_CTXT_def Branch_def
 proof -
   assume A: \<open>PROP A\<close>
@@ -407,8 +410,8 @@ proof -
 qed
 
 lemma [\<phi>reason 10]:
-  \<open> PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  \<open> PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
+\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
   unfolding GOAL_CTXT_def Branch_def
 proof -
   assume B: \<open>PROP B\<close>
@@ -420,7 +423,102 @@ proof -
 qed
 
 
+subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>
 
+definition Obtain :: \<open>'a \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close> where \<open>Obtain x P \<longleftrightarrow> P x\<close>
+definition \<open>DO_OBTAIN \<equiv> Trueprop True\<close>
+
+lemma DO_OBTAIN_I: \<open>PROP DO_OBTAIN\<close> unfolding DO_OBTAIN_def ..
+lemma Obtain_Framework:
+  \<open>PROP Sequent \<Longrightarrow> PROP GE \<Longrightarrow> PROP DO_OBTAIN \<Longrightarrow> PROP Sequent &&& PROP GE\<close>
+  using conjunctionI .
+
+lemma Obtain_I:
+  \<open>P x \<Longrightarrow> Obtain x P\<close>
+  unfolding Obtain_def .
+
+\<phi>reasoner_ML Obtain 1200 (conclusion \<open>Obtain ?x ?P\<close>) = \<open>
+fn (ctxt, sequent) =>
+  let
+    val obtain_goal = Thm.major_prem_of sequent
+    fun obtain_goal_vars L (Const (\<^const_name>\<open>Obtain\<close>, _) $ V $ P) = obtain_goal_vars (V::L) P
+      | obtain_goal_vars L (\<^const>\<open>Trueprop\<close> $ P) = obtain_goal_vars L P
+      | obtain_goal_vars L (Abs (_,_,P)) = obtain_goal_vars L P
+      | obtain_goal_vars L _ = L
+    fun to_ex_goal (Const (\<^const_name>\<open>Obtain\<close>, Type ("fun", [_, ty])) $ _ $ P)
+          = Const (\<^const_name>\<open>Ex\<close>, ty) $ to_ex_goal P
+      | to_ex_goal (\<^const>\<open>Trueprop\<close> $ P) = \<^const>\<open>Trueprop\<close> $ to_ex_goal P
+      | to_ex_goal (Abs (N,Ty,P)) = Abs (N,Ty, to_ex_goal P)
+      | to_ex_goal P = P
+    val goal = Thm.trivial (Thm.cterm_of ctxt (to_ex_goal obtain_goal))
+    val L = obtain_goal_vars [] obtain_goal
+   in
+    if forall is_Var L
+    then Seq.single (ctxt, goal RS (sequent COMP @{thm Obtain_Framework}))
+    else error("asdwh78")
+  end
+\<close>
+
+\<phi>reasoner_ML DO_OBTAIN 1200 (conclusion \<open>PROP DO_OBTAIN\<close>) = \<open>
+fn (ctxt, sequent') => Seq.make (fn _ =>
+  let
+    val sequent'' = @{thm DO_OBTAIN_I} RS sequent'
+    val (sequent, GE') = Conjunction.elim sequent''
+    val obtain_goal = Thm.major_prem_of sequent
+    fun obtain_goal_vars L (Const (\<^const_name>\<open>Obtain\<close>, _) $ V $ P) = obtain_goal_vars (V::L) P
+      | obtain_goal_vars L (\<^const>\<open>Trueprop\<close> $ P) = obtain_goal_vars L P
+      | obtain_goal_vars L (Abs (_,_,P)) = obtain_goal_vars L P
+      | obtain_goal_vars L _ = L
+    fun get_goal (Const (\<^const_name>\<open>Obtain\<close>, _) $ _ $ P) = get_goal P
+      | get_goal (Abs (_,_,P)) = get_goal P
+      | get_goal (\<^const>\<open>Trueprop\<close> $ P) = get_goal P
+      | get_goal P = P
+    val L = obtain_goal_vars [] obtain_goal
+    val N = length L
+    val GE = Tactical.REPEAT_DETERM_N N
+                (Thm.biresolution NONE false [(true, @{thm exE})] 1) GE' |> Seq.hd
+    val (var_names, ctxt') = Proof_Context.add_fixes
+          (map (fn tm => (Binding.name (Term.term_name tm), SOME (fastype_of tm), NoSyn)) L) ctxt
+    val vars = map Free (var_names ~~ map Term.fastype_of L)
+    val vars_c = map (Thm.cterm_of ctxt') vars
+    val assm =
+        Term.subst_bounds (vars, get_goal obtain_goal)
+          |> Thm.cterm_of ctxt'
+    fun export_assm thm = thm
+          |> Thm.implies_intr assm
+          |> Drule.forall_intr_list vars_c
+          |> (fn th => th COMP GE)
+    val ([assm_thm], ctxt'') = Assumption.add_assms (fn _ => fn _ => (export_assm, I)) [assm] ctxt'
+    val sequent1 = Tactical.REPEAT_DETERM_N N
+            (Thm.biresolution NONE false [(true, @{thm Obtain_I})] 1) sequent |> Seq.hd
+   in SOME ((ctxt'', assm_thm RS sequent1), Seq.empty)
+  end
+)\<close>
+
+
+
+(* subsection \<open>Generalized Elimination\<close>
+
+definition "\<phi>Generalized_Elimination x = x"
+
+definition \<open>DO_GENERALIZED_ELIMINATION \<equiv> Trueprop True\<close>
+
+lemma DO_GENERALIZED_ELIMINATION_I:
+  \<open>PROP DO_GENERALIZED_ELIMINATION\<close>
+  unfolding DO_GENERALIZED_ELIMINATION_def ..
+
+lemma Generalized_Elimination_Framework:
+  \<open> TERM P
+\<Longrightarrow> TERM P \<comment> \<open>Unifies prop in Sequent and that in GE here\<close>
+\<Longrightarrow> PROP Sequent
+\<Longrightarrow> PROP GE
+\<Longrightarrow> PROP DO_GENERALIZED_ELIMINATION
+\<Longrightarrow> PROP GE &&& PROP Sequent\<close>
+  using Pure.conjunctionI .
+
+ML_file \<open>library/elimination.ML\<close>
+
+*)
 subsection \<open>Misc\<close>
 
 subsubsection \<open>Useless Tag\<close>

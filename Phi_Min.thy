@@ -252,12 +252,8 @@ abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
 
 subsection \<open>Variable\<close>
 
-definition Var :: \<open>varname \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
-  where \<open>Var vname T x = {FIC_var.mk (1(vname \<mapsto> val)) |val. val \<in> (x \<Ztypecolon> T)} \<close>
-
-lemma Var_expn[\<phi>expns]:
-  \<open>fic \<in> (x \<Ztypecolon> Var vname T) \<longleftrightarrow> (\<exists>val. fic = FIC_var.mk (1(vname \<mapsto> val)) \<and> val \<in> (x \<Ztypecolon> T))\<close>
-  unfolding Var_def \<phi>Type_def by simp
+abbreviation Var :: \<open>varname \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
+  where \<open>Var vname T \<equiv> (FIC_var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> T))\<close>
 
 lemma Var_inhabited[\<phi>reason_elim!,elim!]:
   \<open>Inhabited (x \<Ztypecolon> Var vname T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -271,7 +267,7 @@ lemma Var_subty:
 lemma Var_view_shift:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> Var vname T \<longmapsto> x' \<Ztypecolon> Var vname T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
-  unfolding Imply_def View_Shift_def by (simp add: \<phi>expns, blast)
+  unfolding Imply_def View_Shift_def by (clarsimp simp add: \<phi>expns, blast)
 
 lemma Var_cast_\<phi>app[\<phi>overload cast]: 
   \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P
@@ -291,7 +287,7 @@ lemma [\<phi>reason 1200 on \<open>EqualAddress (?xa \<Ztypecolon> Var ?va ?Ta) 
   \<open>EqualAddress (xa \<Ztypecolon> Var var Ta) (xb \<Ztypecolon> Var var Tb)\<close>
   unfolding EqualAddress_def ..
 
-lemma [\<phi>reason 110 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
+lemma [\<phi>reason 1300 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " CHK_SUBGOAL G
 \<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> R\<heavy_comma> \<blangle> x' \<Ztypecolon> Var var T' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
@@ -307,16 +303,6 @@ simproc_setup Var_simp_cong ("x \<Ztypecolon> Var v T") = \<open>
   K (NuSimpCong.simproc @{thm Var_simp_cong[folded atomize_eq]})
 \<close>
 
-
-subsubsection \<open>Synthesis Rules\<close>
-
-lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>ret. ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Var ?var ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<open> SUBGOAL G G'
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G'
-\<Longrightarrow> SOLVE_SUBGOAL G'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem_value ()) \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> Var var T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def FOCUS_TAG_def Synthesis_def
-  by (metis \<phi>__Return_rule__)
 
 
 subsubsection \<open>Application Methods for Subtyping\<close>
@@ -354,7 +340,7 @@ lemma [\<phi>reason 2000 on \<open>
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def Fix_def] implies_left_prod
-  by (metis Var_subty) 
+  by (metis Var_subty)
 
 
 subsubsection \<open>Branch Convergence Rules\<close>

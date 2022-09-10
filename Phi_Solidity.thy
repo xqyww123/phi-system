@@ -719,12 +719,12 @@ lemma (in solidity) op_get_balance_raw:
   show ?thesis by (simp add: t1[of m, simplified] Premise_def)
 qed .
 
-declare [[\<phi>trace_reasoning]]
 
 proc (in solidity) op_get_balance:
   argument \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l addr \<Ztypecolon> Address\<close>
   return \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m \<Ztypecolon> \<nat>[256]\<close>
-  \<medium_left_bracket> ;; op_get_balance_raw[where n=n]
+  \<medium_left_bracket> \<open>balance: addr \<^bold>\<rightarrow> _\<close> to_Identity  ;; op_get_balance_raw[where n=n] 
+  note [[\<phi>trace_reasoning]] \<medium_right_bracket>
   thm op_get_balance_raw[where n=n]
 
 

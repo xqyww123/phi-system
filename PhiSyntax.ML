@@ -107,13 +107,13 @@ val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 
 val dest_CurrentConstruction   =
-      perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name "\<phi>empty.CurrentConstruction"}
+      perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name "\<phi>fiction.CurrentConstruction"}
 val dest_CurrentConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "\<phi>empty.CurrentConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "\<phi>fiction.CurrentConstruction"}
 val dest_PendingConstruction   =
-      perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name "\<phi>empty.PendingConstruction"}
+      perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name "\<phi>fiction.PendingConstruction"}
 val dest_PendingConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "\<phi>empty.PendingConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "\<phi>fiction.PendingConstruction"}
 fun is_construction_mode mode tm =
   case try dest_CurrentConstruction tm
     of SOME (m,_,_,_) => mode = m

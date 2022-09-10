@@ -453,7 +453,7 @@ abbreviation (in \<phi>fiction) Simple_View_Shift
 
 subsection \<open>Essential Hoare Rules\<close>
 
-context \<phi>empty begin
+context \<phi>fiction begin
 
 lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift (Success v) \<lbrace> T v \<longmapsto> T \<rbrace>"
   unfolding \<phi>Procedure_def det_lift_def by clarsimp
@@ -483,11 +483,24 @@ lemma \<phi>frame_view:
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc)
 
+lemma \<phi>frame_view_right:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A * R \<longmapsto> B * R \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding View_Shift_def
+  by (metis (no_types, lifting) mult.assoc mult.commute)
+
+
 lemma \<phi>view_trans:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2\<close>
   unfolding View_Shift_def by blast
+
+lemma \<phi>view_shift_by_implication:
+  \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding View_Shift_def Imply_def
+  by (metis INTERP_COM set_mult_expn)
 
 lemma \<phi>CONSEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>

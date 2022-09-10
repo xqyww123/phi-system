@@ -74,7 +74,7 @@ proc op_get_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
-  \<medium_left_bracket> to_Identity op_get_var'' \<medium_right_bracket> using \<phi> by simp .
+  \<medium_left_bracket> to_Identity op_get_var'' \<medium_right_bracket>. .
 
 
 lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ?x <val-of-var> ?var \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:

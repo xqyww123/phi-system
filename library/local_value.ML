@@ -8,8 +8,14 @@ end
 structure Local_Value : LOCAL_VALUE = struct
 open NuHelp PhiSyntax NuSys
 
-fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ (Const (\<^const_name>\<open>\<phi>min.Var\<close>,_) $ _ $ name $ T))
-      = SOME (Term.term_name name, (x,T))
+fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
+                $ x
+                $ (Const (\<^const_name>\<open>basic_fiction.\<phi>\<close>,_)
+                    $ _
+                    $ (Const (\<^const_name>\<open>\<phi>MapAt\<close>, _)
+                        $ Free (name, \<^typ>\<open>varname\<close>)
+                        $ (Const (\<^const_name>\<open>\<phi>Some\<close>, _) $ T))))
+      = SOME (name, (x,T))
   | dest_Var _ = NONE
 
 fun local_value_export ctxt rule vars sequent =

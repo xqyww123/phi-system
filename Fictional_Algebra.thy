@@ -428,6 +428,14 @@ definition [simp]: "one_option = None"
 instance ..
 end
 
+instantiation option :: (times) mult_1 begin
+instance proof
+  fix x :: \<open>'a option\<close>
+  show \<open>1 * x = x\<close> by (cases x; simp)
+  show \<open>x * 1 = x\<close> by (cases x; simp)
+qed
+end
+
 instantiation option :: (sep_disj) sep_disj begin
 
 definition "sep_disj_option x' y' =
@@ -458,11 +466,17 @@ instantiation option :: (sep_magma) sep_magma begin
 instance ..
 end
 
-instantiation option :: (sep_semigroup) sep_semigroup begin
+instantiation option :: (sep_magma) sep_magma_1 begin
 instance proof
-  fix x y z :: \<open>'a option\<close>
-  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
-    by (cases x; cases y; cases z; simp add: sep_disj_commute sep_mult_commute sep_mult_assoc)
+  fix x y :: \<open>'a option\<close>
+  show \<open>x ## 1\<close> by simp
+  show \<open>1 ## x\<close> by simp
+qed
+end
+
+instantiation option :: (positive_sep_magma) positive_sep_magma_1 begin
+instance proof
+  fix x y :: \<open>'a option\<close>
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
     unfolding join_sub_def
     apply (cases x; clarsimp simp add: sep_disj_commute sep_mult_commute;
@@ -472,6 +486,15 @@ instance proof
     apply (auto simp add: sep_disj_option_def split: option.split)
     subgoal for _ u v _ apply (cases u; cases v; simp)
       by (metis join_positivity join_sub_def) .
+qed
+end
+
+
+instantiation option :: (sep_semigroup) sep_semigroup begin
+instance proof
+  fix x y z :: \<open>'a option\<close>
+  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
+    by (cases x; cases y; cases z; simp add: sep_disj_commute sep_mult_commute sep_mult_assoc)
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close>
     apply (cases x; simp; cases y; simp; cases z; simp)
     using sep_disj_multD1 by blast
@@ -495,13 +518,7 @@ qed
 end
 
 instantiation option :: (sep_ab_semigroup) sep_algebra begin
-instance proof
-  fix x y :: \<open>'a option\<close>
-  show \<open>1 * x = x\<close> by simp
-  show \<open>x * 1 = x\<close> by simp
-  show \<open>x ## 1\<close> by simp
-  show \<open>1 ## x\<close> by simp
-qed
+instance ..
 end
 
 
@@ -1300,7 +1317,7 @@ lemma prod_superset_dom1:
 subsubsection \<open>Total Permission Transformation\<close>
 
 
-lemma perm_transformer_pointwise[intro!,simp]:
+lemma perm_transformer_pointwise:
   \<open>perm_transformer' \<psi> \<Longrightarrow> perm_transformer' ((\<circ>) \<psi>)\<close>
   unfolding comp_def
   subgoal premises prem proof
@@ -1342,7 +1359,7 @@ lemma perm_transformer_pointwise[intro!,simp]:
     show \<open>can_share (\<lambda>xa. \<psi> (x xa))\<close> by simp
   qed .
 
-lemma perm_transformer_pointwise_eq:
+lemma perm_transformer_pointwise_eq[iff]:
   \<open>perm_transformer' ((\<circ>) \<psi>) \<longleftrightarrow> perm_transformer' \<psi>\<close>
   for \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
   apply rule prefer 2 using perm_transformer_pointwise apply blast
@@ -1654,7 +1671,7 @@ subsubsection \<open>Convert a function to sharing or back\<close>
 abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
-lemma perm_transformer_to_share[intro!,simp]:
+lemma perm_transformer_to_share[iff]:
   \<open>perm_transformer' (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
