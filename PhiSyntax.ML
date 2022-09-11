@@ -34,6 +34,9 @@ include PHI_SYNTAX
   val dest_destined_phityp   : term -> term
   val dest_destined_phityp_c : cterm -> cterm
 
+  val dest_view_shift   : term  -> term * term * term
+  val dest_view_shift_c : cterm -> cterm * cterm * cterm
+
   val dest_implication   : term  -> term * term * term
   val dest_implication_c : cterm -> cterm * cterm * cterm
   val dest_Set_member    : term  -> term * term
@@ -48,19 +51,19 @@ end
 structure PhiSyntax : PHI_SYNTAX = struct
 open Thm Term HOLogic NuHelp PhiSyntax
 
-fun get_types ctxt =
-  let
-    val SOME tys = Variable.default_type ctxt "TYPES"
-    val Type ("itself", [
-          Type (@{type_name prod}, [Type("fun", [TY_N, TY]),
-            Type (@{type_name prod}, [Type("fun", [VAL_N, VAL]),
-              Type (@{type_name prod}, [Type("fun", [RES_N, RES]),
-                Type("fun", [FIC_N, FIC])])])])])
-        = tys
-  in
-    {TY_N=TY_N, TY=TY, VAL_N=VAL_N, VAL=VAL, RES_N=RES_N, RES=RES, FIC_N=FIC_N, FIC=FIC}
-  end
-  handle BIND => error ("Corrupted TYPES entry!")
+(*TODO*)
+val types = {
+  TY_N = TFree("'TY_N", \<^sort>\<open>type\<close>),
+  TY   = TFree("'TY", \<^sort>\<open>type\<close>),
+  VAL_N= TFree("'VAL_N", \<^sort>\<open>type\<close>),
+  VAL  = TFree("'VAL", \<^sort>\<open>nonsepable_semigroup\<close>),
+  RES_N= TFree("'RES_N", \<^sort>\<open>type\<close>),
+  RES  = TFree("'RES", \<^sort>\<open>sep_algebra\<close>),
+  FIC_N= TFree("'FIC_N", \<^sort>\<open>type\<close>),
+  FIC  = TFree("'FIC", \<^sort>\<open>sep_algebra\<close>)
+}
+
+fun get_types ctxt = types
 
 fun get_assn_typ ctxt =
   let val {FIC_N,FIC,...} = get_types ctxt
@@ -158,6 +161,15 @@ val dest_procedure_c =
      perhaps (try dest_goal_ctxt_c)
   #> perhaps (try dest_Trueprop_c)
   #> dest_quadop_c @{const_name "\<phi>fiction.\<phi>Procedure"}
+
+val dest_view_shift    =
+         perhaps (try dest_Trueprop)
+      #> perhaps (try dest_goal_ctxt)
+      #> dest_triop @{const_name "\<phi>fiction.View_Shift"}
+val dest_view_shift_c  =
+         perhaps (try dest_Trueprop_c)
+      #> perhaps (try dest_goal_ctxt_c)
+      #> dest_triop_c @{const_name "\<phi>fiction.View_Shift"}
 
 val dest_implication   =
          perhaps (try dest_Trueprop)

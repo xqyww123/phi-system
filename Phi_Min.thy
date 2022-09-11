@@ -117,8 +117,8 @@ lemma \<phi>Nat_expn[\<phi>expns]:
   unfolding \<phi>Type_def by (simp add: \<phi>Nat_def)
 
 lemma \<phi>Nat_elim[elim!,\<phi>reason_elim!]:
-  "Inhabited (x \<Ztypecolon> \<nat>[b]) \<Longrightarrow> (x < 2^b \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (auto simp add: \<phi>expns)
+  "Inhabited (x \<Ztypecolon> \<nat>[b]) \<Longrightarrow> (x < 2 ^ Big b \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Big_def Inhabited_def by (auto simp add: \<phi>expns)
 
 lemma
   \<open>Inhabited (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> x < 2^b\<close>
@@ -275,13 +275,13 @@ lemma Var_cast_\<phi>app[\<phi>overload cast]:
   unfolding Argument_def Fix_def
   using Var_view_shift .
 
-lemma Var_ExTyp[simp]:
+(* lemma Var_ExTyp[simp]:
   \<open>(x \<Ztypecolon> Var vname (ExTyp T)) = (\<exists>*a. x a \<Ztypecolon> Var vname (T a))\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns, blast)
+  unfolding set_eq_iff by (simp add: \<phi>expns)
 
 lemma Var_SubjTyp[simp]:
   \<open>(x \<Ztypecolon> Var vname (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (x \<Ztypecolon> Var vname T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns, blast)
+  unfolding set_eq_iff by (simp add: \<phi>expns) *)
 
 lemma [\<phi>reason 1200 on \<open>EqualAddress (?xa \<Ztypecolon> Var ?va ?Ta) (?xb \<Ztypecolon> Var ?vb ?Tb)\<close>]:
   \<open>EqualAddress (xa \<Ztypecolon> Var var Ta) (xb \<Ztypecolon> Var var Tb)\<close>

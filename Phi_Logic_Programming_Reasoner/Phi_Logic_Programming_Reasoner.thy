@@ -335,7 +335,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   where "Default_Simplify \<equiv> Simplify default_simp_setting"
 
 \<phi>reasoner Default_Simplify 1000 (conclusion \<open>Default_Simplify ?x ?y\<close>)
-  = (simp, rule Simplify_I)
+  = (simp?, rule Simplify_I)
   
 (* \<open>fn ctx =>
   HEADGOAL (asm_simp_tac ctx) THEN

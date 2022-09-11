@@ -26,7 +26,7 @@ fun head_only tac th =
 
 fun raw_auto ctxt =
   let
-    val imp = Proof_Context.get_thms ctxt "\<phi>implication"
+    val imp = Proof_Context.get_thms ctxt "\<phi>implication_GE"
   in Method.insert_tac ctxt (aux_thms ctxt) 1
      THEN (if null imp then all_tac else resolve_tac ctxt imp 1)
      THEN Clasimp.auto_tac ctxt

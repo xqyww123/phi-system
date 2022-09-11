@@ -26,13 +26,31 @@ lemma \<phi>Nat_for_Word_expn[\<phi>expns]:
   unfolding \<phi>Type_def \<phi>Nat_for_Word_def by simp
 
 lemma \<phi>Nat_for_Word_expn_elim[elim!,\<phi>reason_elim!]:
-  "Inhabited (x \<Ztypecolon> \<nat>\<^sup>w :: 'len::len word set) \<Longrightarrow> (x < 2^LENGTH('len) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)
+  "Inhabited (x \<Ztypecolon> \<nat>\<^sup>w :: 'len::len word set) \<Longrightarrow> (x < 2^(Big LENGTH('len)) \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Big_def Inhabited_def by (clarsimp simp add: \<phi>expns)
 
 lemma
   \<open>Inhabited (x \<Ztypecolon> \<nat>\<^sup>w :: 'len::len word set) \<longleftrightarrow> x < 2^LENGTH('len)\<close>
   unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)
 
+subsubsection \<open>Conversions\<close>
+
+lemma [
+  \<phi>reason 1200 on \<open>?x \<Ztypecolon> \<nat>\<^sup>w \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>,
+  unfolded Action_Tag_def,
+  \<phi>reason on \<open>?x \<Ztypecolon> \<nat>\<^sup>w \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> Identity \<^bold>a\<^bold>n\<^bold>d ?P\<close>
+]:
+  \<open>x \<Ztypecolon> \<nat>\<^sup>w \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s of_nat x \<Ztypecolon> Identity \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>
+  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
+
+
+lemma [simp]:
+  \<open>m < 2 ^ (Big LENGTH('a::len)) \<Longrightarrow> (word_of_nat m :: 'a word) \<in> (m \<Ztypecolon> \<nat>\<^sup>w)\<close>
+  unfolding Big_def by (simp add: \<phi>expns)
+
+lemma unat_word_of_nat[simp]:
+  \<open>m < 2 ^ (Big LENGTH('a)) \<Longrightarrow> unat (word_of_nat m :: 'a::len word) = m\<close>
+  unfolding Big_def using of_nat_inverse by blast
 
 subsubsection \<open>Conversion between Deep representation and Word\<close>
 

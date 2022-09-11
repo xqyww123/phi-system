@@ -391,74 +391,28 @@ end
 
 subsection \<open>\<phi>-Types for Ledge\<close>
 
-subsubsection \<open>Slot of Ledge\<close>
-
-text \<open>About the slot mentioned here, the semantic model does not consider compact storage where
-  multiple fields are compact and stored in a single physical slot.\<close>
-(*
-term \<phi>MapAt
-
-definition \<phi>AtLedge :: \<open>'VAL storage_path \<Rightarrow> ('y::one, 'x) \<phi> \<Rightarrow> ('VAL storage_path \<Rightarrow> 'y, 'x) \<phi>\<close>
-  where \<open>\<phi>AtLedge path T x = { 1(path := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
-
-lemma \<phi>AtLedge_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>AtLedge path T) \<longleftrightarrow> (\<exists>v. p = 1(path := v) \<and> v \<in> (x \<Ztypecolon> T) )\<close>
-  unfolding \<phi>AtLedge_def \<phi>Type_def by simp
-
-lemma \<phi>AtLedge_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>AtLedge path T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-*)
-
-subsubsection \<open>Path towards a Slot\<close>
-
-definition \<phi>MapKeys
-    :: \<open>'k list \<Rightarrow> ('k list \<Rightarrow> 'y, 'x) \<phi> \<Rightarrow> ('k list \<Rightarrow> 'y::one, 'x) \<phi>\<close>
-  where \<open>\<phi>MapKeys path T x = { push_map path v |v. v \<in> (x \<Ztypecolon> T) }\<close>
-
-lemma \<phi>MapKeys_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>MapKeys path T) \<longleftrightarrow> (\<exists>v. p = push_map path v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>MapKeys_def \<phi>Type_def by simp
-
-lemma \<phi>MapKeys_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>MapKeys path T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma \<phi>MapKeys_\<phi>MapKeys[simp]:
-  \<open>(x \<Ztypecolon> \<phi>MapKeys path1 (\<phi>MapKeys path2 T)) = (x \<Ztypecolon> \<phi>MapKeys (path1@path2) T)\<close>
-  by (simp add: set_eq_iff \<phi>expns push_map_push_map[symmetric], blast)
-
-(*
-lemma \<phi>MapKeys_\<phi>AtLedge[simp]:
-  \<open>(x \<Ztypecolon> \<phi>MapKeys path1 (\<phi>AtLedge path2 T)) = (x \<Ztypecolon> \<phi>AtLedge (path1@path2) T)\<close>
-  apply (simp add: set_eq_iff \<phi>expns)
-  using push_map_unit
-  by force *)
-
-
-subsubsection \<open>Spec of an Instance\<close>
-
-notation (in solidity) FIC_ledge.\<phi> ("ledge: _" [52] 51)
-
 subsubsection \<open>Initialized or Not\<close>
 
 text \<open>\<phi>Init T relates a value with T if the value is initialized; or if not, it relates the zero
   value of that type with T.\<close>
 
-definition (in \<phi>empty_sem) \<phi>Init :: \<open>('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
+context \<phi>empty_sem begin
+
+definition \<phi>Init :: \<open>('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
   where \<open>\<phi>Init T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j the (Zero (SemTyp_Of (x \<Ztypecolon> T))) \<in> (x \<Ztypecolon> T)) + initialized ` (x \<Ztypecolon> T)\<close>
 
-abbreviation (in \<phi>empty_sem) \<phi>Share_Some_Init ("\<fish_eye>i _" [91] 90)
+abbreviation \<phi>Share_Some_Init ("\<fish_eye>i _" [91] 90)
   where \<open>\<phi>Share_Some_Init T \<equiv> \<fish_eye> \<phi>Init T\<close>
 
-lemma (in \<phi>empty_sem) \<phi>Inited_expn[\<phi>expns]:
+lemma \<phi>Inited_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Init T) \<longleftrightarrow> (p = uninitialized \<and> the (Zero (SemTyp_Of (x \<Ztypecolon> T))) \<in> (x \<Ztypecolon> T) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T)))\<close>
   unfolding \<phi>Type_def \<phi>Init_def by (simp add: \<phi>expns, blast)
   
-lemma (in \<phi>empty_sem) \<phi>Inited_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>Inited_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Init T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
+end
 
 definition \<phi>Uninit :: \<open>('v uninit, unit) \<phi>\<close>
   where \<open>\<phi>Uninit x = {uninitialized}\<close>
@@ -470,33 +424,147 @@ lemma \<phi>Uninit_expn[\<phi>expns]:
 lemma \<phi>Uninit_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+context solidity begin
+
+subsubsection \<open>Spec of an Instance\<close>
+
+notation FIC_ledge.\<phi> ("ledge: _" [52] 51)
 
 subsection \<open>Balance\<close>
 
-notation (in solidity) FIC_balance.\<phi> ("balance: _" [52] 51)
+notation FIC_balance.\<phi> ("balance: _" [52] 51)
 
-section Instruction
+end
+
+section Instructions
+
+context solidity_sem begin
 
 subsection \<open>Value Arithmetic\<close>
 
 paragraph \<open>Auxiliary\<close>
 
-definition (in solidity_sem) \<phi>M_getV_LedgeRef
+definition \<phi>M_getV_LedgeRef
     :: \<open>'VAL sem_value \<Rightarrow> ('VAL ledge_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_LedgeRef v F = \<phi>M_getV \<tau>Ref V_LedgeRef.dest v F\<close>
 
-lemma (in solidity) \<phi>M_getV_LedgeRef[\<phi>reason!]:
+definition \<phi>M_getV_Address
+    :: \<open>'VAL sem_value \<Rightarrow> (address \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+  where \<open>\<phi>M_getV_Address v F = \<phi>M_getV \<tau>Address V_Address.dest v F\<close>
+
+subsubsection \<open>Calculation of Ledge Ref\<close>
+
+paragraph \<open>Get Member of a Structure\<close>
+
+definition op_get_member_ledgeRef :: \<open>field_name \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_get_member_ledgeRef field raw =
+    \<phi>M_getV_LedgeRef raw (\<lambda>ref.
+    Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_field field) ref)))
+)\<close>
+
+paragraph \<open>Get Value of a Mapping\<close>
+
+definition op_get_mapping_ledgeRef :: \<open>('VAL \<times> 'VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_get_mapping_ledgeRef =
+    \<phi>M_caseV (\<lambda>raw_ref raw_v.
+    \<phi>M_getV_LedgeRef raw_ref (\<lambda>ref.
+    \<phi>M_getV_raw id raw_v(\<lambda>v.
+    Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_map_key v) ref)))
+)))\<close>
+
+subsection \<open>Ledge\<close>
+
+paragraph \<open>Load Field\<close>
+
+definition \<phi>M_get_res_entry_ledge :: \<open>
+    'TY \<Rightarrow> 'VAL ledge_ref
+       \<Rightarrow> ('VAL \<Rightarrow> ('a, 'RES_N, 'RES) proc)
+         \<Rightarrow> ('a, 'RES_N, 'RES) proc\<close>
+  where "\<phi>M_get_res_entry_ledge TY k F =
+    R_ledge.\<phi>R_get_res_entry (ledge_ref.instance k) (ledge_ref.path k) (\<lambda>v.
+      case v of initialized u \<Rightarrow> \<phi>M_assert (u \<in> Well_Type TY) \<ggreater> F u
+        | uninitialized \<Rightarrow> F (the (Zero TY)))"
+
+subsection \<open>Ledge\<close>
+
+paragraph \<open>Load Field\<close>
+
+definition op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_load_ledge TY v =
+    \<phi>M_getV_LedgeRef v (\<lambda>ref.
+    \<phi>M_get_res_entry_ledge TY ref (\<lambda>v. Return (sem_value v)))\<close>
+
+paragraph \<open>Store Field\<close>
+
+definition op_store_ledge
+      :: \<open>'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
+  where \<open>op_store_ledge TY =
+    \<phi>M_caseV (\<lambda>vstore vref.
+    \<phi>M_getV_LedgeRef vref (\<lambda>lref.
+    \<phi>M_getV TY id vstore (\<lambda>store.
+    \<phi>M_get_res_entry_ledge TY lref (\<lambda>_. Return \<phi>V_none)
+ \<ggreater> R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized store)) (ledge_ref.path lref)) (ledge_ref.instance lref))
+)))\<close>
+
+paragraph \<open>Allocation\<close>
+
+definition op_allocate_ledge :: \<open>('VAL,'RES_N,'RES) proc\<close>
+  where \<open>op_allocate_ledge =
+      R_ledge.\<phi>R_allocate_res_entry (\<lambda>addr. addr \<noteq> Nil) (\<lambda>_. Some uninitialized)
+        (\<lambda>addr. Return (sem_value (V_Address.mk addr)))\<close>
+
+subsection \<open>Environment & Balance\<close>
+
+subsubsection \<open>Balance Table\<close>
+
+definition op_get_balance :: \<open>('VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_get_balance va =
+    \<phi>M_getV_Address va (\<lambda>addr.
+    R_balance.\<phi>R_get_res_entry addr (\<lambda>n.
+    Return (sem_value (word_to_V_int n))
+  ))\<close>
+
+definition \<phi>M_set_balance :: \<open>('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
+  where \<open>\<phi>M_set_balance =
+    \<phi>M_caseV (\<lambda>va vm.
+    \<phi>M_getV_Address va (\<lambda>addr.
+    \<phi>M_getV (\<tau>Int 256) V_int.dest vm (\<lambda>(_,m).
+    R_balance.\<phi>R_set_res (\<lambda>f. f(addr \<mapsto> of_nat m))
+  )))\<close>
+
+subsubsection \<open>Globally Available Variables\<close>
+
+definition op_get_environ_word :: \<open>(environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_environ_word G =
+    R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
+
+definition op_get_mutable_environ_word :: \<open>(mutable_environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_mutable_environ_word G =
+    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
+
+definition op_get_sender :: \<open>('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_sender =
+    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (mutable_environ.sender env))))\<close>
+
+
+end
+
+section Specifications
+
+context solidity begin
+
+subsection \<open>Value Arithmetic\<close>
+
+paragraph \<open>Auxiliary\<close>
+
+lemma \<phi>M_getV_LedgeRef[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F lref \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_LedgeRef raw F \<lbrace> X\<heavy_comma> lref \<Ztypecolon> Val raw LedgeRef \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_LedgeRef_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
 
-declare (in solidity) \<phi>M_getV_LedgeRef[where X=1, simplified, \<phi>reason!]
+declare \<phi>M_getV_LedgeRef[where X=1, simplified, \<phi>reason!]
 
-definition (in solidity_sem) \<phi>M_getV_Address
-    :: \<open>'VAL sem_value \<Rightarrow> (address \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
-  where \<open>\<phi>M_getV_Address v F = \<phi>M_getV \<tau>Address V_Address.dest v F\<close>
-
-lemma (in solidity) \<phi>M_getV_Address[\<phi>reason!]:
+lemma \<phi>M_getV_Address[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F lref \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_Address raw F \<lbrace> X\<heavy_comma> lref \<Ztypecolon> Val raw Address \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_Address_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
@@ -506,13 +574,7 @@ subsubsection \<open>Calculation of Ledge Ref\<close>
 
 paragraph \<open>Get Member of a Structure\<close>
 
-definition (in solidity_sem) op_get_member_ledgeRef :: \<open>field_name \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
-  where \<open>op_get_member_ledgeRef field raw =
-    \<phi>M_getV_LedgeRef raw (\<lambda>ref.
-    Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_field field) ref)))
-)\<close>
-
-lemma (in solidity) op_get_member_ledgeRef_\<phi>app:
+lemma op_get_member_ledgeRef_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_member_ledgeRef field raw \<lbrace>
     ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
 \<longmapsto> \<^bold>v\<^bold>a\<^bold>l ledge_ref addr (SP_field field#path) \<Ztypecolon> LedgeRef
@@ -523,15 +585,7 @@ lemma (in solidity) op_get_member_ledgeRef_\<phi>app:
 
 paragraph \<open>Get Value of a Mapping\<close>
 
-definition (in solidity_sem) op_get_mapping_ledgeRef :: \<open>('VAL \<times> 'VAL,'VAL,'RES_N,'RES) proc'\<close>
-  where \<open>op_get_mapping_ledgeRef =
-    \<phi>M_caseV (\<lambda>raw_ref raw_v.
-    \<phi>M_getV_LedgeRef raw_ref (\<lambda>ref.
-    \<phi>M_getV_raw id raw_v(\<lambda>v.
-    Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_map_key v) ref)))
-)))\<close>
-
-lemma (in solidity) op_get_mapping_ledgeRef_\<phi>app:
+lemma op_get_mapping_ledgeRef_\<phi>app:
   \<open> is_singleton (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_mapping_ledgeRef (\<phi>V_pair raw_ref raw_v) \<lbrace>
     x \<Ztypecolon> Val raw_v T\<heavy_comma>
@@ -543,34 +597,11 @@ lemma (in solidity) op_get_mapping_ledgeRef_\<phi>app:
   by (metis is_singleton_the_elem singletonD)
 
 
-
-
 subsection \<open>Ledge\<close>
 
 paragraph \<open>Load Field\<close>
 
-definition (in solidity_sem)
-  \<phi>M_get_res_entry_ledge :: \<open>
-    'TY \<Rightarrow> 'VAL ledge_ref
-       \<Rightarrow> ('VAL \<Rightarrow> ('a, 'RES_N, 'RES) proc)
-         \<Rightarrow> ('a, 'RES_N, 'RES) proc\<close>
-  where "\<phi>M_get_res_entry_ledge TY k F =
-    R_ledge.\<phi>R_get_res_entry (ledge_ref.instance k) (ledge_ref.path k) (\<lambda>v.
-      case v of initialized u \<Rightarrow> \<phi>M_assert (u \<in> Well_Type TY) \<ggreater> F u
-        | uninitialized \<Rightarrow> F (the (Zero TY)))"
-
-definition (in solidity_sem) op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
-  where \<open>op_load_ledge TY v =
-    \<phi>M_getV_LedgeRef v (\<lambda>ref.
-    \<phi>M_get_res_entry_ledge TY ref (\<lambda>v. Return (sem_value v)))\<close>
-
-lemma (in \<phi>empty_sem) [simp]:
-  \<open> v \<in> Well_Type TY
-\<Longrightarrow> SemTyp_Of (v \<Ztypecolon> Identity) = TY\<close>
-  unfolding \<phi>Type_def Identity_def
-  by (simp add: \<phi>SemType_def)
-
-lemma (in solidity) \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
+lemma \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
       \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>i Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
@@ -598,7 +629,7 @@ lemma (in solidity) \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
       by (rule exI[where x=\<open>Some uninitialized\<close>], simp)
     . .
 
-lemma (in solidity) \<phi>M_get_res_entry_R_ledge_1[\<phi>reason!]:
+lemma \<phi>M_get_res_entry_R_ledge_1[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
       \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
@@ -606,7 +637,7 @@ lemma (in solidity) \<phi>M_get_res_entry_R_ledge_1[\<phi>reason!]:
       \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   using \<phi>M_get_res_entry_R_ledge[where n=1, simplified] .
 
-lemma (in solidity) op_load_ledge:
+lemma op_load_ledge:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_ledge TY raw \<lbrace>
       v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>i Identity \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
@@ -618,17 +649,7 @@ lemma (in solidity) op_load_ledge:
 
 paragraph \<open>Store Field\<close>
 
-definition (in solidity) op_store_ledge
-      :: \<open>'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
-  where \<open>op_store_ledge TY =
-    \<phi>M_caseV (\<lambda>vstore vref.
-    \<phi>M_getV_LedgeRef vref (\<lambda>lref.
-    \<phi>M_getV TY id vstore (\<lambda>store.
-    \<phi>M_get_res_entry_ledge TY lref (\<lambda>_. Return \<phi>V_none)
- \<ggreater> R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized store)) (ledge_ref.path lref)) (ledge_ref.instance lref))
-)))\<close>
-
-lemma (in solidity) "\<phi>R_set_res_ledge"[\<phi>reason!]:
+lemma  "\<phi>R_set_res_ledge"[\<phi>reason!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized u)) path) lref)
          \<lbrace> v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
@@ -651,8 +672,7 @@ lemma (in solidity) "\<phi>R_set_res_ledge"[\<phi>reason!]:
       by assumption
   qed . .
 
-
-lemma (in solidity) op_store_ledge:
+lemma op_store_ledge:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store_ledge TY (\<phi>V_pair rawu rawref) \<lbrace>
@@ -665,12 +685,7 @@ lemma (in solidity) op_store_ledge:
 
 paragraph \<open>Allocation\<close>
 
-definition (in solidity) op_allocate_ledge :: \<open>('VAL,'RES_N,'RES) proc\<close>
-  where \<open>op_allocate_ledge =
-      R_ledge.\<phi>R_allocate_res_entry (\<lambda>addr. addr \<noteq> Nil) (\<lambda>_. Some uninitialized)
-        (\<lambda>addr. Return (sem_value (V_Address.mk addr)))\<close>
-
-lemma (in solidity) op_obj_allocate:
+lemma op_obj_allocate:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_allocate_ledge
       \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. 1 \<Ztypecolon> ledge: ref \<^bold>\<rightarrow> (Identity \<Rrightarrow> \<fish_eye> \<phi>Uninit)\<heavy_comma> ref \<Ztypecolon> Val ret Address \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec op_allocate_ledge_def
@@ -697,15 +712,7 @@ subsection \<open>Environment & Balance\<close>
 
 subsubsection \<open>Balance Table\<close>
 
-definition (in solidity_sem)
-    op_get_balance :: \<open>('VAL,'VAL,'RES_N,'RES) proc'\<close>
-  where \<open>op_get_balance va =
-    \<phi>M_getV_Address va (\<lambda>addr.
-    R_balance.\<phi>R_get_res_entry addr (\<lambda>n.
-    Return (sem_value (word_to_V_int n))
-  ))\<close>
-
-lemma (in solidity) op_get_balance_raw:
+lemma op_get_balance_raw:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_balance va \<lbrace>
       m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity \<heavy_comma> addr \<Ztypecolon> Val va Address
   \<longmapsto> m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat m \<Ztypecolon> \<nat>[256]
@@ -719,25 +726,20 @@ lemma (in solidity) op_get_balance_raw:
   show ?thesis by (simp add: t1[of m, simplified] Premise_def)
 qed .
 
+declare [[\<phi>not_define_new_const]]
 
-proc (in solidity) op_get_balance:
+proc op_get_balance:
   argument \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l addr \<Ztypecolon> Address\<close>
   return \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m \<Ztypecolon> \<nat>[256]\<close>
-  \<medium_left_bracket> \<open>balance: addr \<^bold>\<rightarrow> _\<close> to_Identity  ;; op_get_balance_raw[where n=n] 
-  note [[\<phi>trace_reasoning]] \<medium_right_bracket>
-  thm op_get_balance_raw[where n=n]
+  \<medium_left_bracket>
+  have [useful]: \<open>m < 2^ Big 256\<close> using \<phi> by simp
+  ;; op_get_balance_raw[where n=n]
+  \<medium_right_bracket>. .
 
+declare [[\<phi>not_define_new_const = false]]
+  
 
-definition (in solidity_sem)
-    \<phi>M_set_balance :: \<open>('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
-  where \<open>\<phi>M_set_balance =
-    \<phi>M_caseV (\<lambda>va vm.
-    \<phi>M_getV_Address va (\<lambda>addr.
-    \<phi>M_getV (\<tau>Int 256) V_int.dest vm (\<lambda>(_,m).
-    R_balance.\<phi>R_set_res (\<lambda>f. f(addr \<mapsto> of_nat m))
-  )))\<close>
-
-lemma (in solidity) op_set_balance:
+lemma \<phi>M_set_balance_raw:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_set_balance (\<phi>V_pair va vm) \<lbrace>
       m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> \<fish_eye> Identity \<heavy_comma> m' \<Ztypecolon> Val vm \<nat>[256] \<heavy_comma> addr \<Ztypecolon> Val va Address
   \<longmapsto> (of_nat m') \<Ztypecolon> balance: addr \<^bold>\<rightarrow> \<fish_eye> Identity
@@ -746,28 +748,22 @@ lemma (in solidity) op_set_balance:
   by (cases vm; simp; \<phi>reason; simp only: \<phi>Nat_expn V_int.dest_mk case_prod_conv,
       rule FIC_balance.\<phi>R_set_res, simp, simp)
 
+declare [[\<phi>not_define_new_const]]
 
+proc \<phi>M_set_balance:
+  argument \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> \<fish_eye> \<nat>\<^sup>w\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m' \<Ztypecolon> \<nat>[256] \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l addr \<Ztypecolon> Address\<close>
+  return \<open>m' \<Ztypecolon> balance: addr \<^bold>\<rightarrow> \<fish_eye> \<nat>\<^sup>w\<close>
+  \<medium_left_bracket>
+  have [useful]: \<open>m' < 2^ Big 256\<close> using \<phi> by simp
+  ;; \<phi>M_set_balance_raw
+  \<medium_right_bracket>. .
+
+declare [[\<phi>not_define_new_const = false]]
 
 subsubsection \<open>Globally Available Variables\<close>
 
-definition (in solidity_sem)
-      op_get_environ_word :: \<open>(environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
-  where \<open>op_get_environ_word G =
-    R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
-
-definition (in solidity_sem)
-      op_get_mutable_environ_word :: \<open>(mutable_environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
-  where \<open>op_get_mutable_environ_word G =
-    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
-
-definition (in solidity_sem)
-      op_get_sender :: \<open>('VAL, 'RES_N,'RES) proc\<close>
-  where \<open>op_get_sender =
-    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (mutable_environ.sender env))))\<close>
-
-
-lemma (in solidity)
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<lbrace>
+lemma
+\<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<lbrace>
       env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))
   \<longmapsto> env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat (G env) \<Ztypecolon> \<nat>[LENGTH('len)]
 \<rbrace>\<close>
@@ -776,6 +772,13 @@ lemma (in solidity)
   apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_environ.\<phi>R_get_res_entry[where v=env])
    apply (simp add: FIC_environ.partial_implies)
   by (simp add: \<phi>expns Return_def det_lift_def)
+
+end
+
+
+
+
+(*WIP*)
 
 subsection \<open>Call\<close>
 

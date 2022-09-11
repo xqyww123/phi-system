@@ -314,7 +314,21 @@ lemma proc_bind_SKIP'[simp]:
   unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
   by (clarsimp; metis state.exhaust)+
 
-lemmas proc_bind_SKIP[simp] = proc_bind_SKIP'[unfolded Return_def, simplified]
+lemma proc_bind_return_none[simp]:
+  "f_nil \<ggreater> Return \<phi>V_none \<equiv> f_nil"
+  for f_nil :: \<open>(unit,'RES_N,'RES) proc\<close>
+  unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
+  apply (clarsimp)
+  subgoal for x y
+  apply rule
+    apply clarsimp
+    subgoal for z
+      apply (cases z; simp add: sem_value_All) .
+  apply (rule bexI[where x=y]; clarsimp simp add: sem_value_All) . .
+
+lemmas proc_bind_SKIP[simp] =
+  proc_bind_SKIP'[unfolded Return_def, simplified]
+  proc_bind_return_none[unfolded Return_def, simplified]
 
 lemma proc_bind_assoc[simp]:
   "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
@@ -437,23 +451,20 @@ lemma \<phi>Procedure_alt:
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
-end
 
 subsection \<open>View Shift\<close>
 
-definition (in \<phi>fiction) View_Shift
+definition View_Shift
     :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
   where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<in> INTERP_COM (R * T) \<longrightarrow> x \<in> INTERP_COM (R * U) \<and> P)"
 
-abbreviation (in \<phi>fiction) Simple_View_Shift
+abbreviation Simple_View_Shift
     :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _)"  [13,13] 12)
   where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
 
 
 
 subsection \<open>Essential Hoare Rules\<close>
-
-context \<phi>fiction begin
 
 lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift (Success v) \<lbrace> T v \<longmapsto> T \<rbrace>"
   unfolding \<phi>Procedure_def det_lift_def by clarsimp

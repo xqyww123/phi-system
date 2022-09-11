@@ -60,9 +60,11 @@ fun the_programming_sequent' ctxt =
 
 val the_nu_fact = the_programming_sequent' o Proof.context_of
 
-fun the_implication' ctxt =
+fun the_implication_GE ctxt =
   case Programming_Sequent.get ctxt of SOME (_, _, imp) => Lazy.force imp
                                      | _ => (err_bad_env (); [])
+
+fun the_implication ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_implication_GE ctxt)
 
 fun reason_programming_implication mode ctxt sequent =
   let
@@ -104,11 +106,17 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>co
               of Context.Theory _ => (err_bad_env (); [])
                | Context.Proof ctxt => [the_construction ctxt]))
 
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_GE\<close>,
+          fn genric =>
+              case genric
+              of Context.Theory _ => []
+               | Context.Proof ctxt => the_implication_GE ctxt))
+
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication\<close>,
           fn genric =>
               case genric
               of Context.Theory _ => []
-               | Context.Proof ctxt => the_implication' ctxt))
+               | Context.Proof ctxt => the_implication ctxt))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>\<close>,
           (fn genric =>

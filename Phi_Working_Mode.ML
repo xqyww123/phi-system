@@ -16,6 +16,7 @@ type working_mode = {
 val working_mode_on  : Proof.context -> term -> working_mode option
 val working_mode_on1 : Proof.context -> term -> working_mode
 val procedure : working_mode
+val view_shift : working_mode
 val implication : working_mode
 
 val set  : working_mode -> Proof.context -> Proof.context
@@ -185,6 +186,75 @@ val procedure : working_mode =
 } end
 
 
+(** View Shift **)
+
+
+val view_shift : working_mode = 
+let
+  fun return_spec term =
+    let
+      val (_,T,P) = PhiSyntax.dest_view_shift term
+    in
+      Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
+    end
+  (*TODO: optimize this*)
+  fun return_spec_c ctxt = Thm.term_of #> return_spec #> Thm.cterm_of ctxt
+
+  fun finish_view_shift hyp (ctxt,sequent) =
+    let open PhiSyntax
+      val reassemble_proc_final = Proof_Context.get_thm ctxt "local.\<phi>make_view_shift"
+      val (_,s',H',_) = dest_CurrentConstruction_c hyp
+    in
+      sequent
+        |> Thm.implies_intr hyp
+        |> Thm.forall_intr H'
+        |> Thm.forall_intr s'
+        |> (fn th => th COMP reassemble_proc_final)
+    end
+
+  fun start_view_shift blk_name arg ctxt =
+    let open PhiSyntax
+      val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
+      val stat_var = Free (blk_name, mk_resourceT ctxt)
+      val ctxt = Variable.declare_constraints stat_var ctxt
+      val init = Const("local.CurrentConstruction",
+                        \<^typ>\<open>mode\<close>
+                    --> fastype_of stat_var
+                    --> dummyT
+                    --> Thm.typ_of_cterm arg
+                    --> \<^typ>\<open>bool\<close>)
+                 $ \<^const>\<open>view_shift_mode\<close>
+                 $ stat_var
+                 $ Free (RR, dummyT)
+      val init = Thm.cterm_of ctxt (Syntax.check_term ctxt init)
+      val init = Thm.apply @{cterm Trueprop} (Thm.apply init arg)
+      val ([init],ctxt) = Assumption.add_assms
+            (fn _ => fn [hyp] => (finish_view_shift hyp o pair ctxt, I)) [init] ctxt
+    in
+      (ctxt,init)
+    end
+in
+{
+    domain = (fn _ => fn x => can PhiSyntax.dest_view_shift x
+                       orelse PhiSyntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> x),
+    return_spec = return_spec,
+    return_spec_c = return_spec_c,
+    argument_spec = #1 o PhiSyntax.dest_view_shift,
+    inhabited_rule = (fn ctxt =>
+      Proof_Context.get_thm ctxt "local.CurrentConstruction_Inhabited_rule"),
+    initial_sequent = start_view_shift,
+    block_name_of = (fn term => 
+        case #1 (PhiSyntax.dest_view_shift term)
+          of (Var ((x,_),_)) => x
+           | _ => "\<V>\<S>"),
+    cast_rule = (fn ctxt => fn desired => fn _ =>
+       Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
+        |> Drule.infer_instantiate ctxt [(("T'",0),desired)]
+    ),
+    before_finish = (K (K I))
+}
+end
+
 (** Implication **)
 
 
@@ -196,6 +266,7 @@ let
     in
       Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
     end
+  (*TODO: optimize this*)
   fun return_spec_c ctxt = Thm.term_of #> return_spec #> Thm.cterm_of ctxt
 
   val argument_spec = (#1 o PhiSyntax.dest_implication)
@@ -244,6 +315,7 @@ end
 
 val _ = Theory.setup (Context.theory_map
             (Data.map (Symtab.update_new ("procedure",   procedure)
+                    #> Symtab.update_new ("view_shift",  view_shift)
                     #> Symtab.update_new ("implication", implication)
 )))
 

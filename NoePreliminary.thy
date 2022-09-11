@@ -114,6 +114,50 @@ instantiation nat :: no_inverse begin
 instance by standard simp
 end
 
+subsection \<open>Automation Helpers\<close>
+
+subsubsection \<open>Big Number\<close> \<comment> \<open>A tag to prevent unnecessary expanding of big numbers like 2^256\<close>
+
+definition \<open>Big x = x\<close>
+
+lemma [simp,intro!]:
+  \<open> numeral x < (2::'a::{numeral,power,ord}) ^ n
+\<Longrightarrow> numeral x < (2::'a) ^ Big n\<close>
+  unfolding Big_def .
+
+subsubsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
+
+definition \<open>CONV_GE \<longleftrightarrow> False\<close>
+definition \<open>CONV_GE_Ex \<equiv> Ex\<close>
+definition \<open>CONV_GE_conj \<equiv> (\<and>)\<close>
+
+lemma CONV_GE_phase_1:
+  \<open>A \<longrightarrow> B \<longrightarrow> CONV_GE \<equiv> CONV_GE_conj A B \<longrightarrow> CONV_GE\<close>
+  \<open>(\<forall>x. P x \<longrightarrow> CONV_GE) \<equiv> (CONV_GE_Ex P \<longrightarrow> CONV_GE)\<close>
+  \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj A (B' x)) \<equiv> CONV_GE_conj A (CONV_GE_Ex B')\<close>
+  \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj (A' x) B) \<equiv> CONV_GE_conj (CONV_GE_Ex A') B\<close>
+  \<open>(Q \<longrightarrow> CONV_GE) \<longrightarrow> CONV_GE \<equiv> Q\<close>
+  unfolding atomize_eq CONV_GE_Ex_def CONV_GE_def CONV_GE_conj_def by blast+
+
+lemma CONV_GE_phase_2:
+  \<open>Trueprop (CONV_GE_conj A B) \<equiv> (A &&& B)\<close>
+  unfolding CONV_GE_conj_def atomize_conj .
+
+ML \<open>
+fun conv_GE_to_plain_conjunction ctxt thm =
+  let
+    val V = case Thm.prop_of thm
+      of \<^const>\<open>Pure.imp\<close> $ _ $ (\<^const>\<open>Trueprop\<close> $ Var V) => V
+       | _ => raise THM ("Not a Generalized Elimination rule", 0, [thm])
+    val thm' = Thm.instantiate (TVars.empty, Vars.make [(V, \<^cterm>\<open>CONV_GE\<close>)]) thm
+  in
+    thm'
+      |> Raw_Simplifier.rewrite_rule ctxt @{thms atomize_all atomize_imp atomize_eq atomize_conj CONV_GE_phase_1}
+      |> Raw_Simplifier.rewrite_rule ctxt @{thms CONV_GE_Ex_def CONV_GE_phase_2}
+      |> Conjunction.elim_conjunctions
+  end
+\<close>
+
 
 subsection \<open>Positive Rational\<close>
 
