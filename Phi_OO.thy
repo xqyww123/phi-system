@@ -194,14 +194,63 @@ paragraph \<open>Fields in A Object\<close>
 
 notation (in \<phi>OO) FIC_OO_share.\<phi> ("obj: _" [52] 51)
 
+
 section \<open>Instructions\<close>
+
+context \<phi>OO_sem begin
 
 paragraph \<open>Reference Value\<close>
 
-definition (in \<phi>OO_sem) \<phi>M_getV_ref :: \<open>'VAL sem_value \<Rightarrow> ('TY object_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+definition \<phi>M_getV_ref :: \<open>'VAL sem_value \<Rightarrow> ('TY object_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_ref v F = \<phi>M_getV \<tau>Ref V_ref.dest v F\<close>
 
-lemma (in \<phi>OO) \<phi>M_getV_ref[\<phi>reason!]:
+paragraph \<open>Allocation\<close>
+
+definition op_obj_allocate :: \<open>'TY class \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+  where \<open>op_obj_allocate cls =
+      R_objs.\<phi>R_allocate_res_entry (\<lambda>ref. ref \<noteq> Nil \<and> object_ref.class ref = cls)
+            (initial_value_of_class cls) (\<lambda>ref. Return (sem_value (V_ref.mk ref)))\<close>
+
+paragraph \<open>Load Field\<close>
+
+definition op_obj_load_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_obj_load_field field TY v =
+    \<phi>M_getV_ref v (\<lambda>ref.
+    R_objs.\<phi>R_get_res_entry ref field (\<lambda>v.
+    \<phi>M_assert (v \<in> Well_Type TY) \<ggreater> Return (sem_value v)))\<close>
+
+paragraph \<open>Store Field\<close>
+
+definition op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
+  where \<open>op_obj_store_field field TY =
+    \<phi>M_caseV (\<lambda>vstore vref.
+    \<phi>M_getV_ref vref (\<lambda>ref.
+    \<phi>M_getV TY id vstore (\<lambda>store.
+    R_objs.\<phi>R_get_res_entry ref field (\<lambda>v. \<phi>M_assert (v \<in> Well_Type TY))
+ \<ggreater> R_objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some store) field) ref)
+)))\<close>
+
+paragraph \<open>Dispose\<close>
+
+definition op_obj_dispose :: \<open>'TY class \<Rightarrow> ('VAL, unit,'RES_N,'RES) proc'\<close>
+  where \<open>op_obj_dispose cls vref =
+    \<phi>M_getV_ref vref (\<lambda>ref.
+    R_objs.\<phi>R_get_res (\<lambda>m. \<phi>M_assert ((ref \<in> dom1 m \<or> class.fields cls = 1) \<and> object_ref.class ref = cls))
+ \<ggreater> R_objs.\<phi>R_set_res (\<lambda>f. f(ref := 1))
+)\<close>
+
+
+end
+
+section \<open>Specification of Instructions\<close>
+
+context \<phi>OO begin
+
+declare [[\<phi>not_define_new_const]]
+
+paragraph \<open>Reference Value\<close>
+
+lemma \<phi>M_getV_ref[\<phi>reason!]:
   \<open> (of_class cls ref \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F ref \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_ref raw F \<lbrace> X\<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_ref_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
@@ -209,14 +258,7 @@ lemma (in \<phi>OO) \<phi>M_getV_ref[\<phi>reason!]:
 
 paragraph \<open>Allocation\<close>
 
-definition (in \<phi>OO_sem) op_obj_allocate :: \<open>'TY class \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
-  where \<open>op_obj_allocate cls =
-      R_objs.\<phi>R_allocate_res_entry (\<lambda>ref. ref \<noteq> Nil \<and> object_ref.class ref = cls)
-            (initial_value_of_class cls) (\<lambda>ref. Return (sem_value (V_ref.mk ref)))\<close>
-
-bundle (in \<phi>OO) xx = [[unify_trace_failure]]
-
-lemma (in \<phi>OO) op_obj_allocate:
+lemma op_obj_allocate:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_allocate cls
       \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Identity\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec op_obj_allocate_def
@@ -237,13 +279,7 @@ lemma (in \<phi>OO) op_obj_allocate:
 
 paragraph \<open>Load Field\<close>
 
-definition (in \<phi>OO_sem) op_obj_load_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
-  where \<open>op_obj_load_field field TY v =
-    \<phi>M_getV_ref v (\<lambda>ref.
-    R_objs.\<phi>R_get_res_entry ref field (\<lambda>v.
-    \<phi>M_assert (v \<in> Well_Type TY) \<ggreater> Return (sem_value v)))\<close>
-
-lemma (in \<phi>OO) op_obj_load_field_\<phi>app:
+lemma op_obj_load_field_raw_\<phi>app:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_load_field field TY raw \<lbrace>
       v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)
@@ -252,22 +288,21 @@ lemma (in \<phi>OO) op_obj_load_field_\<phi>app:
   unfolding op_obj_load_field_def Premise_def
   by (\<phi>reason, assumption, \<phi>reason)
 
+proc op_obj_load_field:
+  assumes A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  argument \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
+  return \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
+  \<medium_left_bracket> \<open>obj: _\<close> to_Identity \<exists>v
+  have [simp]: \<open>v \<in> Well_Type TY\<close> using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
+  ;; op_obj_load_field_raw[where TY=TY]
+  \<medium_right_bracket>. .
+  
 
 paragraph \<open>Store Field\<close>
 
-definition (in \<phi>OO_sem) op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
-  where \<open>op_obj_store_field field TY =
-    \<phi>M_caseV (\<lambda>vstore vref.
-    \<phi>M_getV_ref vref (\<lambda>ref.
-    \<phi>M_getV TY id vstore (\<lambda>store.
-    R_objs.\<phi>R_get_res_entry ref field (\<lambda>v. \<phi>M_assert (v \<in> Well_Type TY))
- \<ggreater> R_objs.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some store) field) ref)
-)))\<close>
-
-lemma (in \<phi>OO) op_obj_store_field:
+lemma op_obj_store_field_raw_\<phi>app:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e field \<in> dom (class.fields (object_ref.class ref))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
       v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<fish_eye> Identity \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)
   \<longmapsto> u \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<fish_eye> Identity
@@ -279,17 +314,22 @@ lemma (in \<phi>OO) op_obj_store_field:
   apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1))
   using R_objs.raw_unit_assertion_implies \<phi>Res_Spec_mult_homo by blast
 
+proc op_obj_store_field:
+  assumes A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  assumes B: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+  argument \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<fish_eye> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l ref \<Ztypecolon> Ref cls\<close>
+  return \<open>y \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<fish_eye> U\<close>
+  \<medium_left_bracket> \<open>\<a>\<r>\<g>0\<close> to_Identity \<exists>u
+    \<open>obj: _\<close> to_Identity \<exists>v
+    \<open>\<a>\<r>\<g>0\<close> \<open>\<a>\<r>\<g>1\<close> op_obj_store_field_raw[where TY=TY]
+      affirm using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
+  ;;  affirm using B[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
+  \<medium_right_bracket>. .
+
 
 paragraph \<open>Dispose\<close>
 
-definition (in \<phi>OO_sem) op_obj_dispose :: \<open>'TY class \<Rightarrow> ('VAL, unit,'RES_N,'RES) proc'\<close>
-  where \<open>op_obj_dispose cls vref =
-    \<phi>M_getV_ref vref (\<lambda>ref.
-    R_objs.\<phi>R_get_res (\<lambda>m. \<phi>M_assert ((ref \<in> dom1 m \<or> class.fields cls = 1) \<and> object_ref.class ref = cls))
- \<ggreater> R_objs.\<phi>R_set_res (\<lambda>f. f(ref := 1))
-)\<close>
-
-lemma (in \<phi>OO) op_obj_dispose:
+lemma  op_obj_dispose:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ref \<noteq> Nil
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e dom fields = dom (class.fields cls)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_dispose cls rawv \<lbrace>
@@ -328,5 +368,9 @@ lemma (in \<phi>OO) op_obj_dispose:
   using R_objs.get_res_Valid[simplified Valid_Objs_def, simplified]
     R_objs.raw_unit_assertion_implies'[where f=fields]
   by (smt (z3) \<phi>Res_Spec_mult_homo domIff map_le_antisym map_le_def)
+
+declare [[\<phi>not_define_new_const = false]]
+
+end
 
 end

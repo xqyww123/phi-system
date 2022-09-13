@@ -78,12 +78,12 @@ datatype 'abs environ = environ
   (gasprice: 'abs)
   (origin: address)
 
-datatype 'abs msg = msg
+datatype 'abs msg = mk_msg
   (sender: address)
   ("value": 'abs)
 
 hide_const (open) blockhash basefee chainid coinbase difficulty gaslimit block_number timestamp
-  sender "value" gasprice origin
+  sender "value" gasprice origin mk_msg
 
 abbreviation \<open>Valid_Nat_Environ env \<equiv>
 environ.basefee env < 2 ^ Big 256 \<and>
@@ -94,10 +94,24 @@ environ.timestamp env < 2 ^ Big 256 \<and>
 environ.gasprice env < 2 ^ Big 256
 \<close>
 
+abbreviation \<open>Valid_Nat_Msg env \<equiv>
+msg.value env < 2 ^ Big 256
+\<close>
+
 lemma [simp]:
   \<open> Valid_Nat_Environ x
 \<Longrightarrow> map_environ unat (map_environ word_of_nat x :: 256 word environ) = x\<close>
   by (cases x; simp)
+
+lemma [simp]:
+  \<open> Valid_Nat_Msg x
+\<Longrightarrow> map_msg unat (map_msg word_of_nat x :: 256 word msg) = x\<close>
+  by (cases x; simp)
+
+lemma [simp]:
+  \<open> Valid_Nat_Msg msg
+\<Longrightarrow> unat (msg.value (map_msg word_of_nat msg :: 256 word msg)) = msg.value msg\<close>
+  by (cases msg; simp)
 
 lemma [simp]:
   \<open>environ.origin (map_environ f env) = environ.origin env\<close>
@@ -108,6 +122,7 @@ lemma [simp]:
 
 lemma [simp]:
   \<open>msg.sender (map_msg f env) = msg.sender env\<close>
+  
   by (cases env; simp)+
 
 
@@ -423,9 +438,8 @@ subsection \<open>Balance\<close>
 
 notation FIC_balance.\<phi> ("balance: _" [52] 51)
 
-subsection \<open>Environment\<close>
 
-typ \<open>'a environ\<close>
+subsection \<open>Environment\<close>
 
 definition Environ' :: \<open>(256 word environ, nat environ) \<phi>\<close>
   where \<open>Environ' = (\<lambda>x. {v. map_environ unat v = x})\<close>
@@ -463,6 +477,43 @@ lemma [simp]:
   by (simp add: \<phi>expns)
 
 abbreviation \<open>Environ \<equiv> FIC_environ.\<phi> (Agreement (Nonsepable Environ'))\<close>
+
+
+subsection \<open>Msg\<close>
+
+definition Msg' :: \<open>(256 word msg, nat msg) \<phi>\<close>
+  where \<open>Msg' = (\<lambda>x. {v. map_msg unat v = x})\<close>
+
+lemma Msg'_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> Msg') \<longleftrightarrow> map_msg unat p = x\<close>
+  unfolding \<phi>Type_def Msg'_def by simp
+
+lemma Msg'_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> Msg') \<Longrightarrow> (
+      msg.value x < 2 ^ Big 256 \<Longrightarrow>
+  C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def
+  by (clarsimp simp add: \<phi>expns; case_tac p; cases x;
+      simp add: unat_lt_2_exp_Big[where 'a=\<open>256\<close>, simplified])
+
+paragraph \<open>Reasoning Rule\<close>
+
+lemma [\<phi>reason 1200 on \<open>?x \<Ztypecolon> Msg' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>,
+  unfolded Action_Tag_def,
+  \<phi>reason 1200 on \<open>?x \<Ztypecolon> Msg' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> Identity \<^bold>a\<^bold>n\<^bold>d ?P\<close>
+]:
+  \<open>x \<Ztypecolon> Msg' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s map_msg of_nat x \<Ztypecolon> Identity \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>
+  unfolding Action_Tag_def Imply_def
+  by (clarsimp simp add: \<phi>expns; cases x; case_tac v; simp)
+
+lemma [simp]:
+  \<open> Valid_Nat_Msg msg
+\<Longrightarrow> map_msg word_of_nat msg \<in> (msg \<Ztypecolon> Msg')\<close>
+  by (simp add: \<phi>expns)
+
+
+abbreviation \<open>Msg \<equiv> FIC_msg.\<phi> (\<black_circle> Nonsepable Msg')\<close>
+
 
 end
 
@@ -580,6 +631,9 @@ definition op_get_origin :: \<open>('VAL, 'RES_N,'RES) proc\<close>
   where \<open>op_get_origin =
     R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (environ.origin env))))\<close>
 
+definition op_get_value :: \<open>('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_value =
+    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (msg.value env))))\<close>
 
 end
 
@@ -805,7 +859,6 @@ proc \<phi>M_set_balance:
 
 subsubsection \<open>Globally Available Variables\<close>
 
-
 lemma op_get_origin_raw_\<phi>app:
 \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_origin \<lbrace>
       env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))
@@ -825,26 +878,43 @@ proc op_get_origin:
      op_get_origin_raw
   \<medium_right_bracket>. .
 
-
 lemma op_get_sender_raw_\<phi>app:
 \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_sender \<lbrace>
-      env \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity))
-  \<longmapsto> env \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l msg.sender env \<Ztypecolon> Address
+      msg \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity))
+  \<longmapsto> msg \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l msg.sender msg \<Ztypecolon> Address
 \<rbrace>\<close>
   unfolding op_get_sender_def \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_environ.\<phi>R_get_res_entry[where v=env])
-   apply (simp add: FIC_environ.partial_implies)
+  apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_msg.\<phi>R_get_res_entry[where v=msg])
+  apply (simp add: FIC_msg.expand R_msg.implies_part[where x=\<open>Some (nonsepable msg)\<close>, simplified])
   by (simp add: \<phi>expns Return_def det_lift_def)
 
-proc op_get_origin:
-  argument \<open>env \<Ztypecolon> Environ\<close>
-  return \<open>env \<Ztypecolon> Environ \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l environ.origin env \<Ztypecolon> Address\<close>
+proc op_get_sender:
+  argument \<open>msg \<Ztypecolon> Msg\<close>
+  return \<open>msg \<Ztypecolon> Msg \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l msg.sender msg \<Ztypecolon> Address\<close>
   \<medium_left_bracket> 
-  have [useful]: \<open>Valid_Nat_Environ env\<close> using \<phi> .
+  have [useful]: \<open>Valid_Nat_Msg msg\<close> using \<phi> .
   ;; to_Identity
-     op_get_origin_raw
+     op_get_sender_raw
   \<medium_right_bracket>. .
 
+lemma op_get_value_raw_\<phi>app:
+\<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_value \<lbrace>
+      msg \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity))
+  \<longmapsto> msg \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat (msg.value msg) \<Ztypecolon> \<nat>[256]
+\<rbrace>\<close>
+  unfolding op_get_value_def \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_msg.\<phi>R_get_res_entry[where v=msg])
+  apply (simp add: FIC_msg.expand R_msg.implies_part[where x=\<open>Some (nonsepable msg)\<close>, simplified])
+  by (simp add: \<phi>expns Return_def det_lift_def unat_lt_2_exp_Big[where x=\<open>msg.value msg\<close>, simplified])
+
+proc op_get_value:
+  argument \<open>msg \<Ztypecolon> Msg\<close>
+  return \<open>msg \<Ztypecolon> Msg\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l msg.value msg \<Ztypecolon> \<nat>[256]\<close>
+  \<medium_left_bracket>
+  have [useful]: \<open>Valid_Nat_Msg msg\<close> using \<phi> .
+  ;; to_Identity
+     op_get_value_raw
+  \<medium_right_bracket>. .
 
 lemma op_get_environ_word_raw_\<phi>app:
 \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<lbrace>
@@ -867,7 +937,6 @@ proc op_get_environ_nat:
   ;; to_Identity
      op_get_environ_word_raw[where G=\<open>of_nat o G o map_environ unat\<close> and 'len=256]
   \<medium_right_bracket>. .
-  
 
 declare [[\<phi>not_define_new_const = false]]
 

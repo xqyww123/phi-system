@@ -56,7 +56,7 @@ for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
                 \<times> ('RES_N => 'RES::sep_algebra)) itself\<close>
 +
-assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2^b } \<close>
+assumes WT_int[simp]: \<open>Well_Type (\<tau>Int b)     = { V_int.mk (b,x)    |x. x < 2 ^ Big b } \<close>
 assumes res_valid_var[simp]: \<open>Resource_Validator R_var.name = {R_var.inject vars |vars. finite (dom vars)}\<close>
 assumes can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (b1,x1)) (V_int.mk (b2,x2)) \<longleftrightarrow> b1 = b2"
 assumes eqcmp_int[simp]: "EqCompare (V_int.mk i1) (V_int.mk i2) \<longleftrightarrow> i1 = i2"
@@ -113,20 +113,20 @@ definition \<phi>Nat :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>[_]")
 abbreviation \<open>Size \<equiv> \<nat>[addrspace_bits]\<close>
 
 lemma \<phi>Nat_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (b,x)) \<and> x < 2^b"
-  unfolding \<phi>Type_def by (simp add: \<phi>Nat_def)
+  "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (b,x)) \<and> x < 2 ^ Big b"
+  unfolding \<phi>Type_def Big_def by (simp add: \<phi>Nat_def)
 
 lemma \<phi>Nat_elim[elim!,\<phi>reason_elim!]:
   "Inhabited (x \<Ztypecolon> \<nat>[b]) \<Longrightarrow> (x < 2 ^ Big b \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Big_def Inhabited_def by (auto simp add: \<phi>expns)
+  unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma
-  \<open>Inhabited (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> x < 2^b\<close>
-  unfolding Inhabited_def by (auto simp add: \<phi>expns)
+  \<open>Inhabited (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> x < 2^Big b\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma \<phi>Nat_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<nat>[?b]) ?ty\<close>]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<nat>[b]) (\<tau>Int b)\<close>
-  unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns)
+  unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns Big_def)
 
 lemma [\<phi>reason on \<open>\<phi>Equal (\<nat>[?b]) ?c ?eq\<close>]:
   "\<phi>Equal (\<nat>[b]) (\<lambda>x y. True) (=)"
@@ -136,17 +136,17 @@ lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) (\<nat>[?b]) ?zero\<close
   "\<phi>Zero (T_int.mk b) (\<nat>[b]) 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^b
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^Big b
 \<Longrightarrow> is_singleton (x \<Ztypecolon> \<nat>[b])\<close>
   by (rule is_singletonI''; simp add: \<phi>expns)
 
 paragraph \<open>Rounded Natural Number\<close>
 
 definition \<phi>NatRound :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>\<^sup>r[_]")
-  where "\<nat>\<^sup>r[b] x = { V_int.mk (b, (x mod 2^b)) }"
+  where "\<nat>\<^sup>r[b] x = { V_int.mk (b, (x mod 2 ^ Big b)) }"
 
 lemma \<phi>NatRound_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<nat>\<^sup>r[b]) \<longleftrightarrow> p = V_int.mk (b, (x mod 2^b))"
+  "p \<in> (x \<Ztypecolon> \<nat>\<^sup>r[b]) \<longleftrightarrow> p = V_int.mk (b, (x mod 2 ^ Big b))"
   unfolding \<phi>Type_def \<phi>NatRound_def by simp
 
 lemma
@@ -193,19 +193,19 @@ lemma [\<phi>reason on \<open>\<phi>Zero (T_int.mk ?b) \<int>[?b] ?x\<close>]:
 lemma \<phi>Int_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<int>[?b]) ?ty\<close>]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<int>[b]) (\<tau>Int b)\<close>
   unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns) (smt (verit, ccfv_SIG) diff_le_self power_increasing_iff)
+  by (simp add: \<phi>expns Big_def) (smt (verit, ccfv_SIG) diff_le_self power_increasing_iff)
 
 
 subsubsection \<open>Subtyping\<close>
 
 lemma subty_Z_N[\<phi>overload nat]: 
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> x \<Ztypecolon> \<int>[b] \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s nat x \<Ztypecolon> \<nat>[b]"
-  unfolding Imply_def Premise_def apply (simp add: \<phi>expns del: One_nat_def)
+  unfolding Imply_def Premise_def apply (simp add: \<phi>expns Big_def del: One_nat_def)
   by (smt (verit, del_insts) diff_less less_numeral_extra(1) power_strict_increasing_iff)
 
 lemma subty_N_Z[\<phi>overload int]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2^(b - 1) \<Longrightarrow> x \<Ztypecolon> \<nat>[b] \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s int x \<Ztypecolon> \<int>[b]"
-  unfolding Imply_def Premise_def apply (simp add: \<phi>expns del: One_nat_def)
+  unfolding Imply_def Premise_def apply (simp add: \<phi>expns Big_def del: One_nat_def)
   by (metis less_one linorder_le_cases neg_0_le_iff_le not_exp_less_eq_0_int of_nat_0_le_iff order_trans power_0)
 
 
@@ -239,7 +239,7 @@ lemma \<phi>Bool_zero[\<phi>reason on \<open>\<phi>Zero (\<tau>Int 1) \<bool> ?z
 lemma \<phi>Bool_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> \<bool>) ?ty\<close>]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) (\<tau>Int 1)\<close>
   unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns)
+  by (simp add: \<phi>expns Big_def)
 
 lemma [\<phi>reason]:
   \<open>is_singleton (x \<Ztypecolon> \<bool>)\<close>

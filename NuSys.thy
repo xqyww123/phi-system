@@ -5055,45 +5055,45 @@ subsubsection \<open>Extract\<close>
 text \<open>The canonical form is where all permission annotation are on leaves.
   It minimizes fragments.\<close>
 
-definition SharePerm_Extract :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
-  where \<open>SharePerm_Extract From Remain To Residual Aux \<longleftrightarrow> (Residual * From \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Remain * To \<^bold>a\<^bold>n\<^bold>d Aux)\<close>
+definition Structural_Extract :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Structural_Extract From Remain To Residual Aux \<longleftrightarrow> (Residual * From \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Remain * To \<^bold>a\<^bold>n\<^bold>d Aux)\<close>
   \<comment> \<open>Extract To from From, remaining Remain the unused part in From,
       and leaving Residual the part in To that fails to be obtained from From.\<close>
 
 paragraph \<open>Termination\<close>
 
 lemma [\<phi>reason 3000
-    on \<open>SharePerm_Extract ?X ?R (() \<Ztypecolon> \<phi>None) ?W ?P\<close>
+    on \<open>Structural_Extract ?X ?R (() \<Ztypecolon> \<phi>None) ?W ?P\<close>
 ]: \<comment> \<open>No further extraction is demanded.\<close>
-  \<open>SharePerm_Extract X X (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True\<close>
+  \<open>Structural_Extract X X (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding SharePerm_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
+  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
   using implies_refl .
 
 lemma [\<phi>reason 3000
-    on \<open>SharePerm_Extract ?X ?R 1 ?W ?P\<close>
+    on \<open>Structural_Extract ?X ?R 1 ?W ?P\<close>
 ]: \<comment> \<open>No further extraction is demanded.\<close>
-  \<open>SharePerm_Extract X X 1 1 True\<close>
+  \<open>Structural_Extract X X 1 1 True\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding SharePerm_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
+  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
   using implies_refl .
 
 lemma [\<phi>reason 3000
-    on \<open>SharePerm_Extract ?X ?R ?X ?W ?P\<close>
-       \<open>SharePerm_Extract ?X ?R ?var_X ?W ?P\<close>
+    on \<open>Structural_Extract ?X ?R ?X ?W ?P\<close>
+       \<open>Structural_Extract ?X ?R ?var_X ?W ?P\<close>
 ]: \<comment> \<open>The current object X is exactly what we want to extract.\<close>
-  \<open>SharePerm_Extract X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True\<close>
+  \<open>Structural_Extract X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding SharePerm_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
+  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
   using implies_refl .
 
 
 paragraph \<open>Terminations for Specific Node\<close>
 
-lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> \<black_circle> ?T) ?R (?y \<Ztypecolon> \<black_circle> ?U) ?W ?P\<close>]:
+lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> \<black_circle> ?T) ?R (?y \<Ztypecolon> \<black_circle> ?U) ?W ?P\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None) P\<close>
-  unfolding SharePerm_Extract_def \<phi>None_itself_is_one mult_1_left
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None) P\<close>
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left
   using \<phi>Some_cast .
 
 (*TODO: According to @{thm Agreement_times}, there must be a reasoning mechanism for \<inter>\<^sub>\<phi>
@@ -5101,10 +5101,10 @@ lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> \<black_c
 
 The bellowing reasoning is too weak! *)
 
-lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> Agreement ?T) ?R (?y \<Ztypecolon> Agreement ?U) ?W ?P\<close>]:
+lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> Agreement ?T) ?R (?y \<Ztypecolon> Agreement ?U) ?W ?P\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) P\<close>
-  unfolding SharePerm_Extract_def \<phi>None_itself_is_one mult_1_left
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) P\<close>
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left
   apply (cases C; simp)
   \<medium_left_bracket> premises A
     dup Agreement_cast[OF A]
@@ -5113,39 +5113,39 @@ lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> Agreement
 
 paragraph \<open>Normalize the Target\<close>
 
-lemma SharePerm_Extract_To_mult [\<phi>reason 2000 on \<open>SharePerm_Extract ?A ?C (?X * ?Y) ?W ?P\<close> ]:
-  \<open> SharePerm_Extract A B Y WY P1
+lemma Structural_Extract_To_mult [\<phi>reason 2000 on \<open>Structural_Extract ?A ?C (?X * ?Y) ?W ?P\<close> ]:
+  \<open> Structural_Extract A B Y WY P1
 \<Longrightarrow> Simplify \<phi>None_simps B' B 
-\<Longrightarrow> SharePerm_Extract B' C X WX P2
-\<Longrightarrow> SharePerm_Extract A C (X * Y) (WX * WY) (P1 \<and> P2)\<close>
+\<Longrightarrow> Structural_Extract B' C X WX P2
+\<Longrightarrow> Structural_Extract A C (X * Y) (WX * WY) (P1 \<and> P2)\<close>
   for X :: \<open>'a::sep_algebra set\<close>
-  unfolding SharePerm_Extract_def Simplify_def Action_Tag_def
+  unfolding Structural_Extract_def Simplify_def Action_Tag_def
   \<medium_left_bracket> premises L and B and R
     fold mult.assoc
     L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
     R[THEN implies_right_prod, unfolded B]
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 2000 on \<open>SharePerm_Extract ?A ?C (?X * ?Y) ?W ?P\<close> ]:
-  \<open> SharePerm_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1
+lemma [\<phi>reason 2000 on \<open>Structural_Extract ?A ?C (?X * ?Y) ?W ?P\<close> ]:
+  \<open> Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1
 \<Longrightarrow> Simplify \<phi>None_simps B' B 
-\<Longrightarrow> SharePerm_Extract B' C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2
-\<Longrightarrow> SharePerm_Extract A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX) (P1 \<and> P2)\<close>
+\<Longrightarrow> Structural_Extract B' C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2
+\<Longrightarrow> Structural_Extract A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX) (P1 \<and> P2)\<close>
 for A :: \<open>'a::sep_algebra set\<close>
   unfolding \<phi>Prod_expn'
-  using SharePerm_Extract_To_mult .
+  using Structural_Extract_To_mult .
 
 paragraph \<open>Step by Step\<close>
 
 lemma [\<phi>reason 1200 on
-  \<open>SharePerm_Extract (?L * ?X :: 'a::sep_algebra set) ?R ?W ?R2 ?P\<close>
+  \<open>Structural_Extract (?L * ?X :: 'a::sep_algebra set) ?R ?W ?R2 ?P\<close>
 ]:
-  \<open> SharePerm_Extract X R Y Wr P1
+  \<open> Structural_Extract X R Y Wr P1
 \<Longrightarrow> Simplify \<phi>None_simps Wr' Wr
-\<Longrightarrow> SharePerm_Extract L R2 Wr' Wr2 P2
-\<Longrightarrow> SharePerm_Extract (L * X) (R * R2) Y Wr2 (P1 \<and> P2)\<close>
+\<Longrightarrow> Structural_Extract L R2 Wr' Wr2 P2
+\<Longrightarrow> Structural_Extract (L * X) (R * R2) Y Wr2 (P1 \<and> P2)\<close>
   for X :: \<open>'a::sep_algebra set\<close>
-  unfolding SharePerm_Extract_def Simplify_def
+  unfolding Structural_Extract_def Simplify_def
   \<medium_left_bracket> premises R and WR and L
     fold mult.assoc
     L[THEN implies_right_prod, unfolded WR]
@@ -5153,14 +5153,14 @@ lemma [\<phi>reason 1200 on
   \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200 on
-  \<open>SharePerm_Extract ((?x,?y) \<Ztypecolon> (?T::(?'a::sep_algebra,?'b) \<phi>) \<^emph> ?U) ?R (?y \<Ztypecolon> ?W) ?R2 ?P\<close>
+  \<open>Structural_Extract ((?x,?y) \<Ztypecolon> (?T::(?'a::sep_algebra,?'b) \<phi>) \<^emph> ?U) ?R (?y \<Ztypecolon> ?W) ?R2 ?P\<close>
 ]:
-  \<open> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) Y W' P1
+  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) Y W' P1
 \<Longrightarrow> Simplify \<phi>None_simps W W'
-\<Longrightarrow> SharePerm_Extract (y \<Ztypecolon> U) (r2 \<Ztypecolon> R2) W W2 P2
-\<Longrightarrow> SharePerm_Extract ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2 (P1 \<and> P2)\<close>
+\<Longrightarrow> Structural_Extract (y \<Ztypecolon> U) (r2 \<Ztypecolon> R2) W W2 P2
+\<Longrightarrow> Structural_Extract ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2 (P1 \<and> P2)\<close>
   for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def \<phi>Prod_expn' Simplify_def Action_Tag_def
+  unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Action_Tag_def
   \<medium_left_bracket> premises R and WR and L
     fold mult.assoc
     L[THEN implies_right_prod, unfolded WR]
@@ -5170,36 +5170,36 @@ lemma [\<phi>reason 1200 on
 paragraph \<open>Structural Node\<close>
 
 lemma [\<phi>reason 1200 on
-  \<open>SharePerm_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?R' ?P\<close>
+  \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?R' ?P\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (yr \<Ztypecolon> k \<^bold>\<rightarrow> Ur) P\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (yr \<Ztypecolon> k \<^bold>\<rightarrow> Ur) P\<close>
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def Premise_def
+  unfolding Structural_Extract_def Premise_def
   apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
   apply (rule \<phi>MapAt_cast) .
 
 lemma [\<phi>reason 1200 on
-  \<open>SharePerm_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?U) ?R' ?P\<close>
+  \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?U) ?R' ?P\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s Ur) P\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s Ur) P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def Premise_def
+  unfolding Structural_Extract_def Premise_def
   apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric])
   thm \<phi>MapAt_L_\<phi>Prod[symmetric]
   apply (rule \<phi>MapAt_L_cast) .
 
 lemma [\<phi>reason 1100 on
-  \<open>SharePerm_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?U) ?R' ?P\<close>
+  \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?U) ?R' ?P\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>L\<^sub>s U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>L\<^sub>s W) P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s W) P\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>L\<^sub>s U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>L\<^sub>s W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s W) P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def Premise_def
+  unfolding Structural_Extract_def Premise_def
   subgoal premises prems
     apply (insert prems(2),
        simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
@@ -5207,23 +5207,23 @@ lemma [\<phi>reason 1100 on
   apply (rule \<phi>MapAt_L_cast) . .
 
 lemma [\<phi>reason 1200
-    on \<open>SharePerm_Extract (?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?T) ?R (?y \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?U) ?W ?P\<close>
+    on \<open>Structural_Extract (?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?T) ?R (?y \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?U) ?W ?P\<close>
 ]:
-  \<open> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> \<phi>Sep_Disj W T
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> \<phi>perm_transformer \<psi> T)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi>perm_transformer \<psi> T)
                       (r \<Ztypecolon> \<phi>perm_transformer \<psi> R)
                       (y \<Ztypecolon> \<phi>perm_transformer \<psi> U)
                       (w \<Ztypecolon> \<phi>perm_transformer \<psi> W)
                       P\<close>
-  unfolding SharePerm_Extract_def Imply_def \<phi>Sep_Disj_def
+  unfolding Structural_Extract_def Imply_def \<phi>Sep_Disj_def
   apply (clarsimp simp add: \<phi>expns)
   by (smt (verit, del_insts) homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_transformer'.axioms(1) perm_transformer'.axioms(2) perm_transformer'.can_share_\<psi>)
 
 
-lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C) ?R ?Y ?W ?P\<close>]:
-  \<open> SharePerm_Extract (x \<Ztypecolon> T) R Y W P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T ?\<^sub>\<phi> True) R Y W P\<close>
+lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C) ?R ?Y ?W ?P\<close>]:
+  \<open> Structural_Extract (x \<Ztypecolon> T) R Y W P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T ?\<^sub>\<phi> True) R Y W P\<close>
  \<comment> \<open>If the mechanism requires to extract something nontrivial (note 1 and \<^term>\<open>() \<Ztypecolon> \<phi>None\<close>
       have been considered by more prior rule), claim the optional \<phi>-type.\<close>
   by simp
@@ -5239,39 +5239,39 @@ text \<open>Then, according to the expected permission n and the permission m th
   \<^item> m < n
   \<^item> m > n\<close>
 
-lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?var_m \<Znrres> ?U) ?R2 ?P\<close>]:
+lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?var_m \<Znrres> ?U) ?R2 ?P\<close>]:
     \<comment> \<open>if only requires a part of the permission, give it a half of that currently we have.\<close>
   \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def
+  unfolding Structural_Extract_def
   \<medium_left_bracket> premises [\<phi>reason] and X
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
     X[THEN implies_right_prod]
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 120 on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
+lemma [\<phi>reason 120 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
   \<comment> \<open>If requires exactly what we have now, typically this happens after the previous rule or n = 1.\<close>
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m = n
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W) P\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def \<phi>Prod_expn'[symmetric] Premise_def
+  unfolding Structural_Extract_def \<phi>Prod_expn'[symmetric] Premise_def
   apply (simp add: \<phi>Share_\<phi>Prod[symmetric])
   using \<phi>Share_cast .
 
 
-lemma [\<phi>reason on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
+lemma [\<phi>reason on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
   \<comment> \<open>If requires less than what we have, give it.\<close>
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
 \<Longrightarrow> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> ((m-n) \<Znrres> T \<^emph> n \<Znrres> R)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> ((m-n) \<Znrres> T \<^emph> n \<Znrres> R)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P\<close>
 
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def
+  unfolding Structural_Extract_def
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and [\<phi>reason] and X
     share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
@@ -5280,14 +5280,14 @@ lemma [\<phi>reason on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?
   \<medium_right_bracket>. .
 
 
-lemma [\<phi>reason on \<open>SharePerm_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
+lemma [\<phi>reason on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P\<close>]:
   \<comment> \<open>If requires more than what we have, give all what we can give.\<close>
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m < n
 \<Longrightarrow> \<phi>Sep_Disj_Identical U
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def \<phi>Prod_expn'
+  unfolding Structural_Extract_def \<phi>Prod_expn'
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and X
     X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_left_prod, folded mult.assoc]
@@ -5306,63 +5306,63 @@ paragraph \<open>Normalization for Permission\<close>
 subparagraph \<open>Extract each component in a composite structure, step by step\<close>
 
 lemma [\<phi>reason 1200]:
-  \<open> SharePerm_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W P
-\<Longrightarrow> SharePerm_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P\<close>
+  \<open> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W P
+\<Longrightarrow> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 1200]:
-  \<open> SharePerm_Extract ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) R Y W P
-\<Longrightarrow> SharePerm_Extract ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) R Y W P\<close>
+  \<open> Structural_Extract ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) R Y W P
+\<Longrightarrow> Structural_Extract ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) R Y W P\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 1200]:
-  \<open> SharePerm_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W P
-\<Longrightarrow> SharePerm_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P\<close>
+  \<open> Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W P
+\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
 lemma [\<phi>reason 1200]:
-  \<open> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) R Y W P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) R Y W P\<close>
+  \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) R Y W P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) R Y W P\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
 lemma [\<phi>reason 1200]:
-  \<open> SharePerm_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s n \<Znrres> T) W P
-\<Longrightarrow> SharePerm_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) W P\<close>
+  \<open> Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s n \<Znrres> T) W P
+\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) W P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt_L .
 
 lemma [\<phi>reason 1200]:
-  \<open> SharePerm_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s n \<Znrres> T) R Y W P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) R Y W P\<close>
+  \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s n \<Znrres> T) R Y W P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) R Y W P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt_L .
 
 lemma [\<phi>reason 1200]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m
-\<Longrightarrow> SharePerm_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W P
-\<Longrightarrow> SharePerm_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P\<close>
+\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W P
+\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
   unfolding Premise_def by simp
 
 lemma [\<phi>reason 1200]:
-  \<open> SharePerm_Extract (x \<Ztypecolon> n * m \<Znrres> T) R Y W P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) R Y W P\<close>
+  \<open> Structural_Extract (x \<Ztypecolon> n * m \<Znrres> T) R Y W P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) R Y W P\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
-  unfolding SharePerm_Extract_def
+  unfolding Structural_Extract_def
   by (metis Implication_Inhabited_rule Imply_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
 
 text \<open>After all of these normalization, if we encounter the requirement to extract permission n,
   but there is no permission annotation for the current object, we know it is to extract from
   a total permission.\<close>
 
-lemma [\<phi>reason 1200 on \<open>SharePerm_Extract (?x \<Ztypecolon> ?T) ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W ?P\<close>
-    if no \<open>SharePerm_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W ?P\<close>]:
-  \<open> SharePerm_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P\<close>
+lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> ?T) ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W ?P\<close>
+    if no \<open>Structural_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W ?P\<close>]:
+  \<open> Structural_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P\<close>
   by simp
 
 
@@ -5619,6 +5619,12 @@ lemma fiction_itself_expn[\<phi>expns]:
   using Valid_Resource_mult_homo sep_disj_mk apply blast
   using Valid_Resource_mult_homo inj_homo_mult by force
 
+lemma implies_part:
+  \<open> res \<in> R * \<phi>Res_Spec {mk x}
+\<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L get res\<close>
+  unfolding \<phi>Res_Spec_def join_sub_def times_set_def apply clarsimp
+  using get_homo_mult by fastforce
+
 end
 
 
@@ -5677,23 +5683,23 @@ lemma \<phi>_cast:
 \<Longrightarrow> x \<Ztypecolon> \<phi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi> U \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns)
 
-lemma \<phi>_SharePerm_Extract[\<phi>reason 1200 on
-  \<open>SharePerm_Extract (?x \<Ztypecolon> \<phi> ?T) ?R (?y \<Ztypecolon> \<phi> ?U) ?W ?P\<close>
+lemma \<phi>_Structural_Extract[\<phi>reason 1200 on
+  \<open>Structural_Extract (?x \<Ztypecolon> \<phi> ?T) ?R (?y \<Ztypecolon> \<phi> ?U) ?W ?P\<close>
 ]:
-  \<open> SharePerm_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> SharePerm_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W) P\<close>
-  unfolding SharePerm_Extract_def
+  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W) P\<close>
+  unfolding Structural_Extract_def
   by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
 
-lemma assertion_level_reasoning_by_permission:
+lemma assertion_level_reasoning_by_structural_extraction:
   " Structure_Info U Q
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y Q' : Q
-\<Longrightarrow> SharePerm_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2
+\<Longrightarrow> Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2
 \<Longrightarrow> (Q' \<Longrightarrow> Simplify \<phi>None_simps W' W)
 \<Longrightarrow> (Q' \<Longrightarrow> Simplify \<phi>None_simps R1' R1)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> R2 \<heavy_comma> \<blangle> W' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<heavy_comma> y \<Ztypecolon> \<phi> U \<longmapsto> R2\<heavy_comma> R1' \<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Premise_def GOAL_CTXT_def FOCUS_TAG_def SharePerm_Extract_def Simplify_def Action_Tag_def
+  unfolding Premise_def GOAL_CTXT_def FOCUS_TAG_def Structural_Extract_def Simplify_def Action_Tag_def
   \<medium_left_bracket> premises SI and Q and SE and W and R1 and A
     have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
     ;; A[THEN \<phi>frame_view_right, unfolded W[THEN mp, OF \<open>Q'\<close>]]
@@ -5862,7 +5868,7 @@ lemma partial_implies_raw:
 
 paragraph \<open>Reasoning Rules\<close>
 
-declare assertion_level_reasoning_by_permission[\<phi>reason 1210 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
+declare assertion_level_reasoning_by_structural_extraction[\<phi>reason 1210 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
 
 end
 
@@ -5967,6 +5973,9 @@ lemma expand:
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
+declare assertion_level_reasoning_by_structural_extraction
+          [\<phi>reason 1210 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
+
 end
 
 
@@ -6050,7 +6059,7 @@ paragraph \<open>\<phi>-Type\<close>
 
 abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nonsepable T))\<close>
 
-declare assertion_level_reasoning_by_permission[\<phi>reason 1210 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
+declare assertion_level_reasoning_by_structural_extraction[\<phi>reason 1210 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
 
 lemma \<phi>_double_\<phi>app:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> \<phi>_ag T \<longmapsto> x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>

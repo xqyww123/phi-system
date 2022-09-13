@@ -591,6 +591,12 @@ lemma times_option_none[simp]:
   \<open>x * y = None \<longleftrightarrow> x = None \<and> y = None\<close>
   using no_inverse one_option_def by metis
 
+lemma Some_nonsepable_semigroup_sub_join[simp]:
+  \<open>Some x \<preceq>\<^sub>S\<^sub>L X \<longleftrightarrow> X = Some x\<close>
+  for x :: \<open>'a::nonsepable_semigroup\<close>
+  by (simp add: join_sub_def)
+
+
 subsection \<open>Product\<close>
 
 instantiation prod :: (times, times) times begin
