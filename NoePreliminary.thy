@@ -137,6 +137,7 @@ lemma CONV_GE_phase_1:
   \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj A (B' x)) \<equiv> CONV_GE_conj A (CONV_GE_Ex B')\<close>
   \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj (A' x) B) \<equiv> CONV_GE_conj (CONV_GE_Ex A') B\<close>
   \<open>(Q \<longrightarrow> CONV_GE) \<longrightarrow> CONV_GE \<equiv> Q\<close>
+  \<open>CONV_GE \<longrightarrow> CONV_GE \<equiv> True\<close>
   unfolding atomize_eq CONV_GE_Ex_def CONV_GE_def CONV_GE_conj_def by blast+
 
 lemma CONV_GE_phase_2:

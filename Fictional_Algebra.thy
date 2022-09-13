@@ -1854,6 +1854,7 @@ instantiation agree :: (type) sep_disj_intuitive begin
 instance by (standard; case_tac a; case_tac b; case_tac c; simp)
 end
 
+
 section \<open>Interpretation of Fiction\<close>
 
 subsection \<open>Algebric Structure\<close>

@@ -1,5 +1,5 @@
 theory Map_of_Tree
-  imports Main Fictional_Algebra
+  imports Main Fictional_Algebra "HOL-Library.Sublist"
 begin
 
 section \<open>Map Representation of a Tree\<close>
@@ -8,7 +8,35 @@ text \<open>This section presents a representation of tree using the mapping fro
     typically of type \<^typ>\<open>nat list \<Rightarrow> 'x\<close>.
   Basic operations include `push_map` and `pull_map` which put a sub-tree onto certain location
     and fetch a sub-tree at certain location respectively.
-  It also includes scalar operation `share` which may be used to get sub-permission copies.\<close>
+  It also includes scalar operation `share` which may be used to get sub-permission copies.
+
+  In this representation, the indexes near the root locate at the left side of the list.
+\<close>
+
+subsection \<open>Preliminary\<close>
+
+primrec subtract_prefix :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list"
+  where \<open>subtract_prefix l' (h#l) =
+      (case l' of h' # l'' \<Rightarrow> if h = h' then subtract_prefix l'' l else undefined
+                | [] \<Rightarrow> undefined)\<close>
+  | \<open>subtract_prefix l [] = l\<close>
+
+lemma subtract_prefix[simp]:
+  \<open>subtract_prefix (ha#la) (hb#lb) = (if ha = hb then subtract_prefix la lb else undefined)\<close>
+  \<open>subtract_prefix l [] = l\<close>
+  by simp_all
+
+declare subtract_prefix.simps[simp del]
+
+lemma subtract_prefix_app[simp]:
+  \<open>subtract_prefix (xs @ zs) xs = zs\<close>
+  by (induct xs; simp)
+
+lemma prefix_subtract_prefix[simp]:
+  \<open> prefix xs ys
+\<Longrightarrow> xs @ (subtract_prefix ys xs) = ys \<close>
+  unfolding prefix_def by clarsimp
+
 
 subsection \<open>Push a map to a location\<close>
 

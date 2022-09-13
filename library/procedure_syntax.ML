@@ -8,12 +8,16 @@ end
 
 structure Procedure_Syntax : PROCEDURE_SYNTAX = struct
 
-fun translate_arg cnt term =
-  map_aterms (
-      fn Const (\<^const_name>\<open>anonymous_val\<close>, _) =>
-            Free ("\<v>\<a>\<l>" ^ (string_of_int (cnt())), dummyT)
-       | x => x
-     ) term
+fun translate_arg cnt (Const (\<^const_name>\<open>anonymous_val\<close>, _))
+      = (cnt+1, Free ("\<a>\<r>\<g>" ^ (string_of_int cnt), dummyT))
+  | translate_arg cnt (A $ B)
+      = (case translate_arg cnt  A of (cnt', A') =>
+         case translate_arg cnt' B of (cnt'', B') =>
+          (cnt'', A' $ B'))
+  | translate_arg cnt (Abs (name,ty, X))
+      = (case translate_arg cnt X of (cnt', X') =>
+           (cnt', Abs (name,ty,X')))
+  | translate_arg cnt X = (cnt, X)
 
 fun dest_prodT (Type (\<^type_name>\<open>sem_value\<close>, [Type ("Product_Type.prod", [A, B])]))
       = (Type (\<^type_name>\<open>sem_value\<close>, [A]), Type (\<^type_name>\<open>sem_value\<close>, [B]))
@@ -156,24 +160,23 @@ fun need_translate (Const ("local.\<phi>Procedure_no_exception", _) $ _ $ Arg $ 
 | need_translate _ = false
 
 
-fun translate_procedure cnt
+fun translate_procedure
   (Const ("local.\<phi>Procedure", t1) $ f $ Arg $ Ret $ E) =
     (Const ("local.\<phi>Procedure", t1)
-        $ f $ translate_arg cnt Arg $ translate_ret Ret $ E)
-  | translate_procedure cnt (Const ("local.\<phi>Procedure_no_exception", t1) $ f $ Arg $ Ret) =
+        $ f $ snd (translate_arg 0 Arg) $ translate_ret Ret $ E)
+  | translate_procedure (Const ("local.\<phi>Procedure_no_exception", t1) $ f $ Arg $ Ret) =
     (Const ("local.\<phi>Procedure_no_exception", t1)
-        $ f $ translate_arg cnt Arg $ translate_ret Ret)
-  | translate_procedure C (A $ B) = (translate_procedure C A $ translate_procedure C B)
-  | translate_procedure C (Abs (name,ty,X))
-      = Abs (name, ty, translate_procedure C X)
-  | translate_procedure _ X = X
+        $ f $ snd (translate_arg 0 Arg) $ translate_ret Ret)
+  | translate_procedure (A $ B) = (translate_procedure A $ translate_procedure B)
+  | translate_procedure (Abs (name,ty,X))
+      = Abs (name, ty, translate_procedure X)
+  | translate_procedure X = X
 
 val _ = Theory.setup (
   Context.theory_map (Syntax_Phases.term_check ~10 "\<phi>variable" (fn _ =>
-    let val cnt = Counter.make ()
-     in map (fn term => if need_translate term
-                        then translate_procedure cnt term
-                        else term) end))
+    map (fn term => if need_translate term
+                    then translate_procedure term
+                    else term)))
 )
 
 end

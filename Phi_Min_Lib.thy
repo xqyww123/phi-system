@@ -381,7 +381,11 @@ proc [
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x > y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 F2 \<open>\<v>\<a>\<l>1\<close> \<open>\<v>\<a>\<l>0\<close> < \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 F2
+  note [[\<phi>trace_reasoning]]
+  ;; \<open>\<v>\<a>\<l>1\<close>
+  ;; \<open>\<v>\<a>\<l>0\<close>
+  ;; < \<medium_right_bracket>. .
 
 paragraph \<open>Less Equal\<close>
 
@@ -571,6 +575,11 @@ proc AA:
 thm op_const_int_\<phi>app
 thm AA_\<phi>compilation
 
+term \<open>\<lambda>x. x + 1\<close>
+
+(*
+int XX(int x) { if 0 < x then x - 1 else 0 }
+*)
 proc XX:
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l x - 1 \<Ztypecolon> \<nat>[32]\<close>
@@ -582,8 +591,6 @@ proc XX:
        to make that value automatically *)
   \<medium_right_bracket>. .
 
-thm XX_\<phi>compilation
-
 proc
   premises \<open>x < 10\<close>
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
@@ -594,6 +601,5 @@ proc
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*) ;; (* this ;; leads an empty statement which does nothing but simplification *)
     $v
   \<medium_right_bracket>. .
-
 
 end

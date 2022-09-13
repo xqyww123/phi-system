@@ -56,38 +56,60 @@ virtual_datatype 'TY solidity_val = 'TY \<phi>OO_val +
 
 subsubsection \<open>Resource\<close>
 
-paragraph \<open>Algebra to represent uninitialized data\<close>
-
-datatype 'V uninit = initialized 'V | uninitialized
-
-instantiation uninit :: (nonsepable_semigroup) nonsepable_semigroup begin
-definition \<open>sep_disj_uninit (x::'a uninit) (y::'a uninit) \<longleftrightarrow> False\<close>
-instance apply standard unfolding sep_disj_uninit_def by simp_all
-end
-
 paragraph \<open>Models for Runtime Environment\<close>
 
 text \<open>Not Supported: msg.data\<close>
 
-datatype environ = Environ
+(*TODO:
+gasleft : random
+msg.sig
+msg.data : how? random?
+*)
+
+datatype 'abs environ = environ
   (blockhash: \<open>nat \<Rightarrow> 256 word\<close>)
-  (basefee: \<open>256 word\<close>)
+  (basefee: 'abs)
   (chainid: \<open>256 word\<close>)
   (coinbase: \<open>256 word\<close>)
-  (difficulty: \<open>256 word\<close>)
-  (gaslimit: \<open>256 word\<close>)
-  (blocknumber: \<open>256 word\<close>)
-  (timestamp: \<open>256 word\<close>)
-  (gasprice: \<open>256 word\<close>)
+  (difficulty: 'abs)
+  (gaslimit: 'abs)
+  (block_number: 'abs)
+  (timestamp: 'abs)
+  (gasprice: 'abs)
   (origin: address)
 
-datatype mutable_environ = Mutable_Environ
+datatype 'abs msg = msg
   (sender: address)
-  (sig: \<open>32 word\<close>)
-  ("value": \<open>256 word\<close>)
+  ("value": 'abs)
 
-hide_const (open) blockhash basefee chainid coinbase difficulty gaslimit blocknumber timestamp
-  sender sig "value" gasprice origin
+hide_const (open) blockhash basefee chainid coinbase difficulty gaslimit block_number timestamp
+  sender "value" gasprice origin
+
+abbreviation \<open>Valid_Nat_Environ env \<equiv>
+environ.basefee env < 2 ^ Big 256 \<and>
+environ.difficulty env < 2 ^ Big 256 \<and>
+environ.gaslimit env < 2 ^ Big 256 \<and>
+environ.block_number env < 2 ^ Big 256 \<and>
+environ.timestamp env < 2 ^ Big 256 \<and>
+environ.gasprice env < 2 ^ Big 256
+\<close>
+
+lemma [simp]:
+  \<open> Valid_Nat_Environ x
+\<Longrightarrow> map_environ unat (map_environ word_of_nat x :: 256 word environ) = x\<close>
+  by (cases x; simp)
+
+lemma [simp]:
+  \<open>environ.origin (map_environ f env) = environ.origin env\<close>
+  \<open>environ.chainid (map_environ f env) = environ.chainid env\<close>
+  \<open>environ.blockhash (map_environ f env) = environ.blockhash env\<close>
+  \<open>environ.coinbase (map_environ f env) = environ.coinbase env\<close>
+  by (cases env; simp)+
+
+lemma [simp]:
+  \<open>msg.sender (map_msg f env) = msg.sender env\<close>
+  by (cases env; simp)+
+
 
 paragraph \<open>Models for Balance Table\<close>
 
@@ -106,10 +128,10 @@ text \<open>\<^term>\<open>Some (initialized V)\<close> means an initialized slo
 
 resource_space ('VAL::"nonsepable_semigroup",'TY) solidity_res = ('VAL,'TY) \<phi>min_res +
   R_ledge   :: \<open>'VAL ledge\<close>
-  R_environ :: \<open>environ nonsepable option\<close>
+  R_environ :: \<open>256 word environ nonsepable option\<close>
       \<comment> \<open>None means this part of the resource is not accessible and not specified\<close>
   R_balance :: \<open>balance_table\<close>
-  R_msg :: \<open>mutable_environ nonsepable option\<close>
+  R_msg :: \<open>256 word msg nonsepable option\<close>
 
 
 subsection \<open>Semantics\<close>
@@ -391,39 +413,6 @@ end
 
 subsection \<open>\<phi>-Types for Ledge\<close>
 
-subsubsection \<open>Initialized or Not\<close>
-
-text \<open>\<phi>Init T relates a value with T if the value is initialized; or if not, it relates the zero
-  value of that type with T.\<close>
-
-context \<phi>empty_sem begin
-
-definition \<phi>Init :: \<open>('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
-  where \<open>\<phi>Init T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j the (Zero (SemTyp_Of (x \<Ztypecolon> T))) \<in> (x \<Ztypecolon> T)) + initialized ` (x \<Ztypecolon> T)\<close>
-
-abbreviation \<phi>Share_Some_Init ("\<fish_eye>i _" [91] 90)
-  where \<open>\<phi>Share_Some_Init T \<equiv> \<fish_eye> \<phi>Init T\<close>
-
-lemma \<phi>Inited_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Init T) \<longleftrightarrow> (p = uninitialized \<and> the (Zero (SemTyp_Of (x \<Ztypecolon> T))) \<in> (x \<Ztypecolon> T) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T)))\<close>
-  unfolding \<phi>Type_def \<phi>Init_def by (simp add: \<phi>expns, blast)
-  
-lemma \<phi>Inited_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Init T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns, blast)
-
-end
-
-definition \<phi>Uninit :: \<open>('v uninit, unit) \<phi>\<close>
-  where \<open>\<phi>Uninit x = {uninitialized}\<close>
-
-lemma \<phi>Uninit_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Uninit) \<longleftrightarrow> p = uninitialized\<close>
-  unfolding \<phi>Type_def \<phi>Uninit_def by simp
-
-lemma \<phi>Uninit_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> .
-
 context solidity begin
 
 subsubsection \<open>Spec of an Instance\<close>
@@ -433,6 +422,47 @@ notation FIC_ledge.\<phi> ("ledge: _" [52] 51)
 subsection \<open>Balance\<close>
 
 notation FIC_balance.\<phi> ("balance: _" [52] 51)
+
+subsection \<open>Environment\<close>
+
+typ \<open>'a environ\<close>
+
+definition Environ' :: \<open>(256 word environ, nat environ) \<phi>\<close>
+  where \<open>Environ' = (\<lambda>x. {v. map_environ unat v = x})\<close>
+
+lemma Environ'_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> Environ') \<longleftrightarrow> map_environ unat p = x\<close>
+  unfolding \<phi>Type_def Environ'_def by simp
+
+lemma Environ'_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> Environ') \<Longrightarrow> (
+      environ.basefee x < 2 ^ Big 256 \<and>
+      environ.difficulty x < 2 ^ Big 256 \<and>
+      environ.gaslimit x < 2 ^ Big 256 \<and>
+      environ.block_number x < 2 ^ Big 256 \<and>
+      environ.timestamp x < 2 ^ Big 256 \<and>
+      environ.gasprice x < 2 ^ Big 256 \<Longrightarrow>
+  C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def
+  by (clarsimp simp add: \<phi>expns; case_tac p; cases x;
+      simp add: unat_lt_2_exp_Big[where 'a=\<open>256\<close>, simplified])
+
+paragraph \<open>Reasoning Rule\<close>
+
+lemma [\<phi>reason 1200 on \<open>?x \<Ztypecolon> Environ' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>,
+  unfolded Action_Tag_def,
+  \<phi>reason 1200 on \<open>?x \<Ztypecolon> Environ' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> Identity \<^bold>a\<^bold>n\<^bold>d ?P\<close>
+]:
+  \<open>x \<Ztypecolon> Environ' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s map_environ of_nat x \<Ztypecolon> Identity \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>
+  unfolding Action_Tag_def Imply_def
+  by (clarsimp simp add: \<phi>expns; cases x; case_tac v; simp)
+
+lemma [simp]:
+  \<open> Valid_Nat_Environ env
+\<Longrightarrow> map_environ word_of_nat env \<in> (env \<Ztypecolon> Environ')\<close>
+  by (simp add: \<phi>expns)
+
+abbreviation \<open>Environ \<equiv> FIC_environ.\<phi> (Agreement (Nonsepable Environ'))\<close>
 
 end
 
@@ -534,17 +564,21 @@ definition \<phi>M_set_balance :: \<open>('VAL \<times> 'VAL, unit,'RES_N,'RES) 
 
 subsubsection \<open>Globally Available Variables\<close>
 
-definition op_get_environ_word :: \<open>(environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
+definition op_get_environ_word :: \<open>(256 word environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
   where \<open>op_get_environ_word G =
     R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
 
-definition op_get_mutable_environ_word :: \<open>(mutable_environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
-  where \<open>op_get_mutable_environ_word G =
+definition op_get_msg_word :: \<open>(256 word msg \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_msg_word G =
     R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
 
 definition op_get_sender :: \<open>('VAL, 'RES_N,'RES) proc\<close>
   where \<open>op_get_sender =
-    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (mutable_environ.sender env))))\<close>
+    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (msg.sender env))))\<close>
+
+definition op_get_origin :: \<open>('VAL, 'RES_N,'RES) proc\<close>
+  where \<open>op_get_origin =
+    R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (environ.origin env))))\<close>
 
 
 end
@@ -552,6 +586,8 @@ end
 section Specifications
 
 context solidity begin
+
+declare [[\<phi>not_define_new_const]]
 
 subsection \<open>Value Arithmetic\<close>
 
@@ -602,26 +638,25 @@ subsection \<open>Ledge\<close>
 paragraph \<open>Load Field\<close>
 
 lemma \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>i Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_res_entry_ledge TY (ledge_ref addr path) F
-      \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>i Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+      \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec \<phi>M_get_res_entry_ledge_def Premise_def
   apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
   subgoal for r res vb
   apply (rule R_ledge.\<phi>R_get_res_entry[where v=vb])
   apply simp
     apply (cases vb; simp)
-    subgoal premises prems for x1
-      apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp])
+    subgoal premises prems
+      apply (rule prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp])
       apply (rule exI[where x=\<open>FIC_ledge.mk (1(addr := 1(path \<mapsto> Share n (initialized v))))\<close>], simp add: prems)
       apply (rule exI[where x=\<open>1(path \<mapsto> Share n (initialized v))\<close>], simp)
       apply (rule exI[where x=\<open>Some (Share n (initialized v))\<close>], simp)
       apply (rule exI[where x=\<open>Some (Share 1 (initialized v))\<close>], simp add: prems)
       by (rule exI[where x=\<open>Some (initialized v)\<close>], simp)
     subgoal premises prems
-      apply (rule prems(2)[THEN spec[where x=r], THEN spec[where x=res], THEN mp])
+      apply (rule prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp])
       apply (rule exI[where x=\<open>FIC_ledge.mk (1(addr := 1(path \<mapsto> Share n uninitialized)))\<close>], simp add: prems)
       apply (rule exI[where x=\<open>1(path \<mapsto> Share n uninitialized)\<close>], simp)
       apply (rule exI[where x=\<open>Some (Share n uninitialized)\<close>], simp)
@@ -630,28 +665,34 @@ lemma \<phi>M_get_res_entry_R_ledge[\<phi>reason!]:
     . .
 
 lemma \<phi>M_get_res_entry_R_ledge_1[\<phi>reason!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_res_entry_ledge TY (ledge_ref addr path) F
-      \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+      \<lbrace> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   using \<phi>M_get_res_entry_R_ledge[where n=1, simplified] .
 
-lemma op_load_ledge:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_ledge TY raw \<lbrace>
-      v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>i Identity \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
-  \<longmapsto> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>i Identity \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
+lemma op_load_ledge_raw_\<phi>app:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_ledge TY raw \<lbrace>
+      v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
+  \<longmapsto> v \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity
 \<rbrace>\<close>
   unfolding op_load_ledge_def Premise_def
-  by (\<phi>reason, simp, \<phi>reason)
+  by \<phi>reason
+
+proc op_load_ledge:
+  argument \<open>x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef\<close>
+  return   \<open>x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
+  \<medium_left_bracket> \<open>x \<Ztypecolon> ledge: _\<close> to_Identity 
+    op_load_ledge_raw
+  \<medium_right_bracket>. .
 
 
 paragraph \<open>Store Field\<close>
 
-lemma  "\<phi>R_set_res_ledge"[\<phi>reason!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized u)) path) lref)
-         \<lbrace> v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<rbrace>\<close>
+lemma  \<phi>R_set_res_ledge[\<phi>reason!]:
+  \<open> u \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R_ledge.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some (initialized u)) path) lref)
+         \<lbrace> v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
   apply (rule \<phi>Res_Spec_ex_\<S>[where x=\<open>FIC_ledge.mk (1(lref := 1(path := Some (Share 1 (initialized u)))))\<close>])
@@ -672,20 +713,30 @@ lemma  "\<phi>R_set_res_ledge"[\<phi>reason!]:
       by assumption
   qed . .
 
-lemma op_store_ledge:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
+lemma op_store_ledge_raw_\<phi>app:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store_ledge TY (\<phi>V_pair rawu rawref) \<lbrace>
-      v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ledge_ref lref path \<Ztypecolon> Val rawref LedgeRef
-  \<longmapsto> u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>i Identity
+      v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity \<heavy_comma> u \<Ztypecolon> Val rawu Identity \<heavy_comma> ledge_ref lref path \<Ztypecolon> Val rawref LedgeRef
+  \<longmapsto> u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> Identity
 \<rbrace>\<close>
   unfolding op_store_ledge_def Premise_def
-  by (cases rawref; cases rawu; simp; \<phi>reason, simp add: Premise_def, \<phi>reason, simp add: \<phi>expns, \<phi>reason)
+  by (cases rawref; cases rawu; simp; \<phi>reason, simp add: Premise_def Identity_expn,
+        rule \<phi>R_set_res_ledge, assumption)
 
+proc op_store_ledge:
+  assumes A: \<open>\<phi>SemType (u \<Ztypecolon> T) TY\<close>
+  argument \<open>v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l u \<Ztypecolon> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l ledge_ref lref path \<Ztypecolon> LedgeRef\<close>
+  return   \<open>u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> T\<close>
+  \<medium_left_bracket>
+    \<open>\<a>\<r>\<g>0\<close> to_Identity
+    \<open>ledge: _\<close> to_Identity
+    \<open>\<a>\<r>\<g>0\<close> \<open>\<a>\<r>\<g>1\<close> op_store_ledge_raw
+      affirm using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
+  \<medium_right_bracket>. .
 
 paragraph \<open>Allocation\<close>
 
-lemma op_obj_allocate:
+lemma op_allocate_contract_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_allocate_ledge
       \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. 1 \<Ztypecolon> ledge: ref \<^bold>\<rightarrow> (Identity \<Rrightarrow> \<fish_eye> \<phi>Uninit)\<heavy_comma> ref \<Ztypecolon> Val ret Address \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec op_allocate_ledge_def
@@ -726,8 +777,6 @@ lemma op_get_balance_raw:
   show ?thesis by (simp add: t1[of m, simplified] Premise_def)
 qed .
 
-declare [[\<phi>not_define_new_const]]
-
 proc op_get_balance:
   argument \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l addr \<Ztypecolon> Address\<close>
   return \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m \<Ztypecolon> \<nat>[256]\<close>
@@ -735,9 +784,6 @@ proc op_get_balance:
   have [useful]: \<open>m < 2^ Big 256\<close> using \<phi> by simp
   ;; op_get_balance_raw[where n=n]
   \<medium_right_bracket>. .
-
-declare [[\<phi>not_define_new_const = false]]
-  
 
 lemma \<phi>M_set_balance_raw:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_set_balance (\<phi>V_pair va vm) \<lbrace>
@@ -748,8 +794,6 @@ lemma \<phi>M_set_balance_raw:
   by (cases vm; simp; \<phi>reason; simp only: \<phi>Nat_expn V_int.dest_mk case_prod_conv,
       rule FIC_balance.\<phi>R_set_res, simp, simp)
 
-declare [[\<phi>not_define_new_const]]
-
 proc \<phi>M_set_balance:
   argument \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> \<fish_eye> \<nat>\<^sup>w\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m' \<Ztypecolon> \<nat>[256] \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l addr \<Ztypecolon> Address\<close>
   return \<open>m' \<Ztypecolon> balance: addr \<^bold>\<rightarrow> \<fish_eye> \<nat>\<^sup>w\<close>
@@ -758,20 +802,74 @@ proc \<phi>M_set_balance:
   ;; \<phi>M_set_balance_raw
   \<medium_right_bracket>. .
 
-declare [[\<phi>not_define_new_const = false]]
 
 subsubsection \<open>Globally Available Variables\<close>
 
-lemma
+
+lemma op_get_origin_raw_\<phi>app:
+\<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_origin \<lbrace>
+      env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))
+  \<longmapsto> env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l environ.origin env \<Ztypecolon> Address
+\<rbrace>\<close>
+  unfolding op_get_origin_def \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_environ.\<phi>R_get_res_entry[where v=env])
+   apply (simp add: FIC_environ.partial_implies)
+  by (simp add: \<phi>expns Return_def det_lift_def)
+
+proc op_get_origin:
+  argument \<open>env \<Ztypecolon> Environ\<close>
+  return \<open>env \<Ztypecolon> Environ \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l environ.origin env \<Ztypecolon> Address\<close>
+  \<medium_left_bracket> 
+  have [useful]: \<open>Valid_Nat_Environ env\<close> using \<phi> .
+  ;; to_Identity
+     op_get_origin_raw
+  \<medium_right_bracket>. .
+
+
+lemma op_get_sender_raw_\<phi>app:
+\<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_sender \<lbrace>
+      env \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity))
+  \<longmapsto> env \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l msg.sender env \<Ztypecolon> Address
+\<rbrace>\<close>
+  unfolding op_get_sender_def \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_environ.\<phi>R_get_res_entry[where v=env])
+   apply (simp add: FIC_environ.partial_implies)
+  by (simp add: \<phi>expns Return_def det_lift_def)
+
+proc op_get_origin:
+  argument \<open>env \<Ztypecolon> Environ\<close>
+  return \<open>env \<Ztypecolon> Environ \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l environ.origin env \<Ztypecolon> Address\<close>
+  \<medium_left_bracket> 
+  have [useful]: \<open>Valid_Nat_Environ env\<close> using \<phi> .
+  ;; to_Identity
+     op_get_origin_raw
+  \<medium_right_bracket>. .
+
+
+lemma op_get_environ_word_raw_\<phi>app:
 \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_environ_word G \<lbrace>
       env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))
   \<longmapsto> env \<Ztypecolon> FIC_environ.\<phi> (Agreement (Nonsepable Identity))\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l unat (G env) \<Ztypecolon> \<nat>[LENGTH('len)]
 \<rbrace>\<close>
-  for G :: \<open>environ \<Rightarrow> 'len::len word\<close>
+  for G :: \<open>256 word environ \<Rightarrow> 'len::len word\<close>
   unfolding op_get_environ_word_def \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_environ.\<phi>R_get_res_entry[where v=env])
    apply (simp add: FIC_environ.partial_implies)
   by (simp add: \<phi>expns Return_def det_lift_def)
+
+proc op_get_environ_nat:
+  for G :: \<open>nat environ \<Rightarrow> nat\<close>
+  assumes A[unfolded Premise_def, simp]: \<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m Valid_Nat_Environ env \<longrightarrow> G env < 2 ^ Big 256\<close>
+  argument \<open>env \<Ztypecolon> Environ\<close>
+  return \<open>env \<Ztypecolon> Environ \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l G env \<Ztypecolon> \<nat>[256]\<close>
+  \<medium_left_bracket>
+  have [useful]: \<open>Valid_Nat_Environ env\<close> using \<phi> .
+  ;; to_Identity
+     op_get_environ_word_raw[where G=\<open>of_nat o G o map_environ unat\<close> and 'len=256]
+  \<medium_right_bracket>. .
+  
+
+declare [[\<phi>not_define_new_const = false]]
 
 end
 

@@ -97,7 +97,7 @@ end
 
 section \<open>\<phi>-Types\<close>
 
-context \<phi>min begin
+context \<phi>min_sem begin
 
 subsection \<open>Integer\<close>
 
@@ -248,9 +248,12 @@ lemma [\<phi>reason]:
 
 abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
 
+end
 
 
 subsection \<open>Variable\<close>
+
+context \<phi>min begin
 
 abbreviation Var :: \<open>varname \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
   where \<open>Var vname T \<equiv> (FIC_var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> T))\<close>

@@ -19,10 +19,10 @@ subsubsection \<open>Natural Number Abstraction\<close>
 paragraph \<open>Natural Number\<close>
 
 definition \<phi>Nat_for_Word :: "('len::len word, nat) \<phi>" ("\<nat>\<^sup>w")
-  where "\<nat>\<^sup>w x = (if x < 2^LENGTH('len) then { of_nat x } else {})"
+  where "\<nat>\<^sup>w = (\<lambda>x. {v. unat v = x})"
 
 lemma \<phi>Nat_for_Word_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<nat>\<^sup>w) \<longleftrightarrow> (p = of_nat x) \<and> x < 2^LENGTH('len)" for p :: \<open>'len::len word\<close>
+  "p \<in> (x \<Ztypecolon> \<nat>\<^sup>w) \<longleftrightarrow> unat p = x" for p :: \<open>'len::len word\<close>
   unfolding \<phi>Type_def \<phi>Nat_for_Word_def by simp
 
 lemma \<phi>Nat_for_Word_expn_elim[elim!,\<phi>reason_elim!]:
@@ -31,7 +31,8 @@ lemma \<phi>Nat_for_Word_expn_elim[elim!,\<phi>reason_elim!]:
 
 lemma
   \<open>Inhabited (x \<Ztypecolon> \<nat>\<^sup>w :: 'len::len word set) \<longleftrightarrow> x < 2^LENGTH('len)\<close>
-  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)
+  unfolding Inhabited_def apply (clarsimp simp add: \<phi>expns)
+  using of_nat_inverse unsigned_less by blast
 
 subsubsection \<open>Conversions\<close>
 
@@ -41,16 +42,22 @@ lemma [
   \<phi>reason on \<open>?x \<Ztypecolon> \<nat>\<^sup>w \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> Identity \<^bold>a\<^bold>n\<^bold>d ?P\<close>
 ]:
   \<open>x \<Ztypecolon> \<nat>\<^sup>w \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s of_nat x \<Ztypecolon> Identity \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>
-  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
+  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns; fastforce)
 
 
 lemma [simp]:
   \<open>m < 2 ^ (Big LENGTH('a::len)) \<Longrightarrow> (word_of_nat m :: 'a word) \<in> (m \<Ztypecolon> \<nat>\<^sup>w)\<close>
-  unfolding Big_def by (simp add: \<phi>expns)
+  unfolding Big_def apply (simp add: \<phi>expns)
+  using of_nat_inverse by blast
 
 lemma unat_word_of_nat[simp]:
   \<open>m < 2 ^ (Big LENGTH('a)) \<Longrightarrow> unat (word_of_nat m :: 'a::len word) = m\<close>
   unfolding Big_def using of_nat_inverse by blast
+
+lemma unat_lt_2_exp_Big[simp]:
+  \<open>unat (x::'a::len word) < 2 ^ Big (LENGTH('a))\<close>
+  unfolding Big_def
+  by simp 
 
 subsubsection \<open>Conversion between Deep representation and Word\<close>
 

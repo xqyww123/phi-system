@@ -99,7 +99,7 @@ text \<open>Modes are annotations of the automation. They are typically used spe
 
 typedef mode = "UNIV :: nat set" ..
 
-consts MODE_NORMAL :: mode \<comment> \<open>A generically used tag of the meaning of `default, the most common'.\<close>
+consts default :: mode
 consts MODE_SIMP :: mode \<comment> \<open>relating to simplifier or simplification\<close>
 consts MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
 
@@ -115,7 +115,7 @@ subsection \<open>Proof Obligation\<close>
 
 definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where "Premise _ x = x"
 
-abbreviation Normal_Premise ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where "Normal_Premise \<equiv> Premise MODE_NORMAL"
+abbreviation Normal_Premise ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where "Normal_Premise \<equiv> Premise default"
 abbreviation Simp_Premise ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m _" [27] 26) where "Simp_Premise \<equiv> Premise MODE_SIMP"
 abbreviation Proof_Obligation ("\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n _" [27] 26) where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
 
@@ -221,6 +221,9 @@ definition Conv :: "mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " 
 
 text \<open>\<^prop>\<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A = B\<close> indicates the reasoner should convert \<^term>\<open>A\<close> into some \<^term>\<open>B\<close>.
   Specific rules should be configured to reason those goals.\<close>
+
+abbreviation Default_Conv :: "'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v _ = _" [51,51] 50)
+  where "Default_Conv \<equiv> Conv default"
 
 lemma Conv_cong[cong]:
   \<open>A \<equiv> A' \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A = B \<equiv> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A' = B\<close>
@@ -329,10 +332,8 @@ lemma Simplify_E[elim!]: "Simplify s A B \<Longrightarrow> (A = B \<Longrightarr
 
 subsubsection \<open>Default Simplifier\<close>
 
-consts default_simp_setting :: mode
-
 abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y _ : _" [1000,10] 9)
-  where "Default_Simplify \<equiv> Simplify default_simp_setting"
+  where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner Default_Simplify 1000 (conclusion \<open>Default_Simplify ?x ?y\<close>)
   = (simp?, rule Simplify_I)
