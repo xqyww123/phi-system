@@ -8,7 +8,7 @@ section \<open>Deeper model of Procedure\<close>
 
 text \<open>A representation of a procedure is not totally deep. The number of arguments and returns
   are still represented by product type shallowly, causing procedures do not have the same type.
-  It meets problems certain situation like when we create a public method table, where
+  It has problems for certain situation like when we create a public method table, where
   we need all procedures have the same type.
   Therefore this section gives a way to deep-ize procedures by serialization its arguments and returns.\<close>
 
@@ -56,19 +56,19 @@ lemma serialize_pair_Serializer[simp]:
   unfolding serialize_pair_def Is_Serializer_def inj_def
   by (simp, metis)
 
-definition
+abbreviation
     deepize_proc :: \<open>('arg, 'VAL) serializer
                   \<Rightarrow> ('ret, 'VAL) serializer
                   \<Rightarrow> ('arg,'ret,'RES_N,'RES) proc'
                   \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc'\<close>
-    where \<open>deepize_proc Arg Ret proc v = Deserializer Arg v \<bind> proc \<bind> Serializer Ret\<close>
+    where \<open>deepize_proc Arg Ret proc v \<equiv> Deserializer Arg v \<bind> proc \<bind> Serializer Ret\<close>
 
-definition
+abbreviation
     shallowize_proc :: \<open>('arg, 'VAL) serializer
                      \<Rightarrow> ('ret, 'VAL) serializer
                      \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc'
                      \<Rightarrow> ('arg,'ret,'RES_N,'RES) proc'\<close>
-    where \<open>shallowize_proc Arg Ret proc v = Serializer Arg v \<bind> proc \<bind> Deserializer Ret\<close>
+    where \<open>shallowize_proc Arg Ret proc v \<equiv> Serializer Arg v \<bind> proc \<bind> Deserializer Ret\<close>
 
 lemma  "__shallowize_proc_deepize_proc__"[simp]:
   \<open> Is_Serializer Arg

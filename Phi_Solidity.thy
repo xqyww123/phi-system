@@ -21,7 +21,7 @@ end
 subsubsection \<open>Value\<close>
 
 definition "class_user = Class [] [] 1"
-  \<comment> \<open>A user address always has this class\<close>
+  \<comment> \<open>User addresses are always in this class\<close>
 
 datatype 'VAL storage_key = SP_field field_name | SP_map_key 'VAL | SP_array_ind nat
 type_synonym 'VAL storage_path = \<open>'VAL storage_key list\<close>
@@ -835,7 +835,7 @@ proc op_get_balance:
   argument \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l addr \<Ztypecolon> Address\<close>
   return \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> \<nat>\<^sup>w \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m \<Ztypecolon> \<nat>[256]\<close>
   \<medium_left_bracket>
-  have [useful]: \<open>m < 2^ Big 256\<close> using \<phi> by simp
+  have [simp]: \<open>m < 2^ Big 256\<close> using \<phi> by simp
   ;; op_get_balance_raw[where n=n]
   \<medium_right_bracket>. .
 
@@ -852,7 +852,7 @@ proc \<phi>M_set_balance:
   argument \<open>m \<Ztypecolon> balance: addr \<^bold>\<rightarrow> \<fish_eye> \<nat>\<^sup>w\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l m' \<Ztypecolon> \<nat>[256] \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l addr \<Ztypecolon> Address\<close>
   return \<open>m' \<Ztypecolon> balance: addr \<^bold>\<rightarrow> \<fish_eye> \<nat>\<^sup>w\<close>
   \<medium_left_bracket>
-  have [useful]: \<open>m' < 2^ Big 256\<close> using \<phi> by simp
+  have [simp]: \<open>m' < 2^ Big 256\<close> using \<phi> by simp
   ;; \<phi>M_set_balance_raw
   \<medium_right_bracket>. .
 
