@@ -201,19 +201,19 @@ context \<phi>OO_sem begin
 
 paragraph \<open>Reference Value\<close>
 
-definition \<phi>M_getV_ref :: \<open>'VAL sem_value \<Rightarrow> ('TY object_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+definition \<phi>M_getV_ref :: \<open>'VAL sem_value \<Rightarrow> ('TY object_ref \<Rightarrow> ('ret,'VAL,'RES_N,'RES) proc) \<Rightarrow> ('ret,'VAL,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_ref v F = \<phi>M_getV \<tau>Ref V_ref.dest v F\<close>
 
 paragraph \<open>Allocation\<close>
 
-definition op_obj_allocate :: \<open>'TY class \<Rightarrow> ('VAL,'RES_N,'RES) proc\<close>
+definition op_obj_allocate :: \<open>'TY class \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc\<close>
   where \<open>op_obj_allocate cls =
       R_objs.\<phi>R_allocate_res_entry (\<lambda>ref. ref \<noteq> Nil \<and> object_ref.class ref = cls)
             (initial_value_of_class cls) (\<lambda>ref. Return (sem_value (V_ref.mk ref)))\<close>
 
 paragraph \<open>Load Field\<close>
 
-definition op_obj_load_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
+definition op_obj_load_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL,'VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_obj_load_field field TY v =
     \<phi>M_getV_ref v (\<lambda>ref.
     R_objs.\<phi>R_get_res_entry ref field (\<lambda>v.
@@ -221,7 +221,7 @@ definition op_obj_load_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow
 
 paragraph \<open>Store Field\<close>
 
-definition op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
+definition op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_obj_store_field field TY =
     \<phi>M_caseV (\<lambda>vstore vref.
     \<phi>M_getV_ref vref (\<lambda>ref.
@@ -232,7 +232,7 @@ definition op_obj_store_field :: \<open>field_name \<Rightarrow> 'TY \<Rightarro
 
 paragraph \<open>Dispose\<close>
 
-definition op_obj_dispose :: \<open>'TY class \<Rightarrow> ('VAL, unit,'RES_N,'RES) proc'\<close>
+definition op_obj_dispose :: \<open>'TY class \<Rightarrow> ('VAL, unit,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_obj_dispose cls vref =
     \<phi>M_getV_ref vref (\<lambda>ref.
     R_objs.\<phi>R_get_res (\<lambda>m. \<phi>M_assert ((ref \<in> dom1 m \<or> class.fields cls = 1) \<and> object_ref.class ref = cls))

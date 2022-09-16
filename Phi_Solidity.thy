@@ -312,7 +312,7 @@ fixes Internal_Public_Methods_Transitions :: \<open>('RES_N,'RES) transition lis
           { Ra1 * Xa } Ca { Ra2 * Ya }       { Rb1 * Xb } Cb { Rb2 * Yb }
       How to connect / coordinate these two free variables Ra2 and Rb1?\<close>
 
-fixes Public_Methods :: \<open>contract_class \<Rightarrow> 'TY method_sig \<Rightarrow> ('VAL list,'VAL list,'RES_N,'RES) proc' option\<close>
+fixes Public_Methods :: \<open>contract_class \<Rightarrow> 'TY method_sig \<Rightarrow> ('VAL list,'VAL list,'VAL,'RES_N,'RES) proc' option\<close>
   \<comment> \<open>All public methods in the smart contract environment, including methods inside the module
         and those outside methods of clients.\<close>
   \<comment> \<open>The public methods can be defined unspecifiedly, just requiring meeting the proposition
@@ -526,18 +526,18 @@ subsection \<open>Value Arithmetic\<close>
 paragraph \<open>Auxiliary\<close>
 
 definition \<phi>M_getV_LedgeRef
-    :: \<open>'VAL sem_value \<Rightarrow> ('VAL ledge_ref \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+    :: \<open>'VAL sem_value \<Rightarrow> ('VAL ledge_ref \<Rightarrow> ('ret,'VAL,'RES_N,'RES) proc) \<Rightarrow> ('ret,'VAL,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_LedgeRef v F = \<phi>M_getV \<tau>Ref V_LedgeRef.dest v F\<close>
 
 definition \<phi>M_getV_Address
-    :: \<open>'VAL sem_value \<Rightarrow> (address \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+    :: \<open>'VAL sem_value \<Rightarrow> (address \<Rightarrow> ('ret,'VAL,'RES_N,'RES) proc) \<Rightarrow> ('ret,'VAL,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_Address v F = \<phi>M_getV \<tau>Address V_Address.dest v F\<close>
 
 subsubsection \<open>Calculation of Ledge Ref\<close>
 
 paragraph \<open>Get Member of a Structure\<close>
 
-definition op_get_member_ledgeRef :: \<open>field_name \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
+definition op_get_member_ledgeRef :: \<open>field_name \<Rightarrow> ('VAL,'VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_get_member_ledgeRef field raw =
     \<phi>M_getV_LedgeRef raw (\<lambda>ref.
     Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_field field) ref)))
@@ -545,7 +545,7 @@ definition op_get_member_ledgeRef :: \<open>field_name \<Rightarrow> ('VAL,'VAL,
 
 paragraph \<open>Get Value of a Mapping\<close>
 
-definition op_get_mapping_ledgeRef :: \<open>('VAL \<times> 'VAL,'VAL,'RES_N,'RES) proc'\<close>
+definition op_get_mapping_ledgeRef :: \<open>('VAL \<times> 'VAL,'VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_get_mapping_ledgeRef =
     \<phi>M_caseV (\<lambda>raw_ref raw_v.
     \<phi>M_getV_LedgeRef raw_ref (\<lambda>ref.
@@ -559,8 +559,8 @@ paragraph \<open>Load Field\<close>
 
 definition \<phi>M_get_res_entry_ledge :: \<open>
     'TY \<Rightarrow> 'VAL ledge_ref
-       \<Rightarrow> ('VAL \<Rightarrow> ('a, 'RES_N, 'RES) proc)
-         \<Rightarrow> ('a, 'RES_N, 'RES) proc\<close>
+       \<Rightarrow> ('VAL \<Rightarrow> ('a,'VAL, 'RES_N, 'RES) proc)
+         \<Rightarrow> ('a,'VAL, 'RES_N, 'RES) proc\<close>
   where "\<phi>M_get_res_entry_ledge TY k F =
     R_ledge.\<phi>R_get_res_entry (ledge_ref.instance k) (ledge_ref.path k) (\<lambda>v.
       case v of initialized u \<Rightarrow> \<phi>M_assert (u \<in> Well_Type TY) \<ggreater> F u
@@ -570,7 +570,7 @@ subsection \<open>Ledge\<close>
 
 paragraph \<open>Load Field\<close>
 
-definition op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc'\<close>
+definition op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_load_ledge TY v =
     \<phi>M_getV_LedgeRef v (\<lambda>ref.
     \<phi>M_get_res_entry_ledge TY ref (\<lambda>v. Return (sem_value v)))\<close>
@@ -578,7 +578,7 @@ definition op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) pro
 paragraph \<open>Store Field\<close>
 
 definition op_store_ledge
-      :: \<open>'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
+      :: \<open>'TY \<Rightarrow> ('VAL \<times> 'VAL, unit,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_store_ledge TY =
     \<phi>M_caseV (\<lambda>vstore vref.
     \<phi>M_getV_LedgeRef vref (\<lambda>lref.
@@ -589,7 +589,7 @@ definition op_store_ledge
 
 paragraph \<open>Allocation\<close>
 
-definition op_allocate_ledge :: \<open>('VAL,'RES_N,'RES) proc\<close>
+definition op_allocate_ledge :: \<open>('VAL,'VAL,'RES_N,'RES) proc\<close>
   where \<open>op_allocate_ledge =
       R_ledge.\<phi>R_allocate_res_entry (\<lambda>addr. addr \<noteq> Nil) (\<lambda>_. Some uninitialized)
         (\<lambda>addr. Return (sem_value (V_Address.mk addr)))\<close>
@@ -598,14 +598,14 @@ subsection \<open>Environment & Balance\<close>
 
 subsubsection \<open>Balance Table\<close>
 
-definition op_get_balance :: \<open>('VAL,'VAL,'RES_N,'RES) proc'\<close>
+definition op_get_balance :: \<open>('VAL,'VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_get_balance va =
     \<phi>M_getV_Address va (\<lambda>addr.
     R_balance.\<phi>R_get_res_entry addr (\<lambda>n.
     Return (sem_value (word_to_V_int n))
   ))\<close>
 
-definition \<phi>M_set_balance :: \<open>('VAL \<times> 'VAL, unit,'RES_N,'RES) proc'\<close>
+definition \<phi>M_set_balance :: \<open>('VAL \<times> 'VAL, unit,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>\<phi>M_set_balance =
     \<phi>M_caseV (\<lambda>va vm.
     \<phi>M_getV_Address va (\<lambda>addr.
@@ -615,23 +615,23 @@ definition \<phi>M_set_balance :: \<open>('VAL \<times> 'VAL, unit,'RES_N,'RES) 
 
 subsubsection \<open>Globally Available Variables\<close>
 
-definition op_get_environ_word :: \<open>(256 word environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
+definition op_get_environ_word :: \<open>(256 word environ \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc\<close>
   where \<open>op_get_environ_word G =
     R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
 
-definition op_get_msg_word :: \<open>(256 word msg \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL, 'RES_N,'RES) proc\<close>
+definition op_get_msg_word :: \<open>(256 word msg \<Rightarrow> 'len::len word) \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc\<close>
   where \<open>op_get_msg_word G =
     R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
 
-definition op_get_sender :: \<open>('VAL, 'RES_N,'RES) proc\<close>
+definition op_get_sender :: \<open>('VAL,'VAL,'RES_N,'RES) proc\<close>
   where \<open>op_get_sender =
     R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (msg.sender env))))\<close>
 
-definition op_get_origin :: \<open>('VAL, 'RES_N,'RES) proc\<close>
+definition op_get_origin :: \<open>('VAL,'VAL,'RES_N,'RES) proc\<close>
   where \<open>op_get_origin =
     R_environ.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (environ.origin env))))\<close>
 
-definition op_get_value :: \<open>('VAL, 'RES_N,'RES) proc\<close>
+definition op_get_value :: \<open>('VAL,'VAL,'RES_N,'RES) proc\<close>
   where \<open>op_get_value =
     R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (msg.value env))))\<close>
 
@@ -753,7 +753,7 @@ lemma  \<phi>R_set_res_ledge[\<phi>reason!]:
   subgoal for r res x
   apply (simp add: FIC_ledge.expand[where x=\<open>1(lref := 1(path \<mapsto> x))\<close>, simplified])
   subgoal premises prems proof -
-    let \<open>?proc \<subseteq> \<S> (\<lambda>v. ?Spec \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?P_ex \<and> ?P_disj) {}\<close> = ?thesis
+    let \<open>?proc \<subseteq> \<S> (\<lambda>v. ?Spec \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?P_ex \<and> ?P_disj) (\<lambda>v. {})\<close> = ?thesis
     have t1: ?P_ex
       by (rule exI[where x=\<open>1(path \<mapsto> Share 1 (initialized u))\<close>], simp,
           rule exI[where x=\<open>Some (Share 1 (initialized u))\<close>], simp,
@@ -955,7 +955,7 @@ definition \<open>fallback_N = ''fallback''\<close>
 definition (in \<phi>empty_sem) \<phi>Transition_Spec_to_Proc_Spec
     :: \<open> ('VAL list, 'a) \<phi>
       \<Rightarrow> ('VAL list, 'b) \<phi>
-      \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc'
+      \<Rightarrow> ('VAL list, 'VAL list, 'VAL, 'RES_N, 'RES) proc'
       \<Rightarrow> 'TY list \<times> 'TY list
       \<Rightarrow> ('RES_N,'RES) transition
       \<Rightarrow> bool

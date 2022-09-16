@@ -225,7 +225,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
         (*val _ = debug_term ctxt "arg " arg
         val _ = debug_term ctxt "ret " ret*)
         val ret = Procedure_Syntax.translate_ret ret
-        val v_proc = Var (v_proc_var, dummyT)
+        val v_proc = Var (v_proc_var, dummyT --> Type(@{type_name set}, [Type(@{type_name state}, [dummyT, TFree("'VAL", dummyS), dummyT, dummyT])]))
         val throws = if throws' = Term.dummy
                      then Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT)
                      else throws'

@@ -727,6 +727,9 @@ end
 lemma times_fun: "(f * g) x = f x * g x"
   unfolding times_fun_def by simp
 
+lemma plus_fun: "(f + g) x = f x + g x"
+  unfolding plus_fun_def by simp
+
 instantiation "fun" :: (type,zero) zero begin
 definition "zero_fun = (\<lambda>(x::'a). (0::'b))"
 instance ..
@@ -739,14 +742,14 @@ end
 
 lemma one_fun[simp]: "1 x = 1" unfolding one_fun_def by simp
 lemma zero_fun[simp]: "0 x = 0" unfolding zero_fun_def by simp
-
+lemmas zero_fun_eta[simp] = zero_fun_def[symmetric]
 
 instantiation "fun" :: (type, no_inverse) no_inverse begin
 instance by (standard, simp add: one_fun_def times_fun_def fun_eq_iff, blast) 
 end
 
 instantiation "fun" :: (type, no_negative) no_negative begin
-instance by (standard, simp add: zero_fun_def plus_fun_def fun_eq_iff, blast) 
+instance by (standard, simp del: zero_fun_eta add: zero_fun_def plus_fun_def fun_eq_iff, blast) 
 end
 
 instantiation "fun" :: (type, semigroup_mult) semigroup_mult begin
@@ -836,6 +839,24 @@ end
 
 instantiation "fun" :: (type,comm_monoid_mult) comm_monoid_mult begin
 instance by standard (simp_all add: mult.commute times_fun_def fun_eq_iff)
+end
+
+
+instantiation "fun" :: (type,monoid_add) monoid_add begin
+instance proof
+  fix a b c :: \<open>'a \<Rightarrow> 'b\<close>
+  show \<open>a + b + c = a + (b + c)\<close> unfolding plus_fun_def fun_eq_iff by (simp add: add.assoc)
+  show \<open>0 + a = a\<close> unfolding plus_fun_def fun_eq_iff by (simp add: add.assoc)
+  show \<open>a + 0 = a\<close> unfolding plus_fun_def fun_eq_iff by (simp add: add.assoc)
+qed
+end
+
+instantiation "fun" :: (type,comm_monoid_add) comm_monoid_add begin
+instance proof
+  fix a b :: \<open>'a \<Rightarrow> 'b\<close>
+  show \<open>a + b = b + a\<close> unfolding plus_fun_def fun_eq_iff using add.commute by blast 
+  show \<open>0 + a = a\<close> unfolding plus_fun_def fun_eq_iff by simp
+qed
 end
 
 paragraph \<open>Multiplication with Function Update\<close>

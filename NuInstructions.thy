@@ -4,23 +4,26 @@ begin
 
 section \<open>Common Instructions\<close>
 
-context \<phi>empty_sem begin
-
 subsection \<open>Exception\<close>
 
 text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
 
-lemma (in \<phi>empty) throw_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift Exception \<lbrace> X \<longmapsto> (\<lambda>_::unreachable sem_value. 0) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
-  unfolding \<phi>Procedure_def subset_iff det_lift_def by clarsimp
+definition \<open>throw raw = det_lift (Exception raw)\<close>
 
-definition op_try :: "('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc \<Rightarrow> ('ret,'RES_N,'RES) proc"
-  where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'} | Exception s' \<Rightarrow> g s'
+lemma (in \<phi>fiction) throw_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> \<lambda>_. 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def
+  by clarsimp
+
+definition op_try :: "('ret,'ex,'RES_N,'RES) proc
+                    \<Rightarrow> ('ex sem_value \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc)
+                    \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc"
+  where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'} | Exception v s' \<Rightarrow> g v s'
                                    | PartialCorrect \<Rightarrow> {PartialCorrect} | Invalid \<Rightarrow> {Invalid}) ` f s)\<close>
 
 lemma (in \<phi>empty) "__op_try__":
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E v) \<rbrace>
+\<Longrightarrow> (\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> \<lambda>v. Y1 v + Y2 v \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace> \<close>
   unfolding op_try_def \<phi>Procedure_def subset_iff
   apply clarsimp subgoal for comp R x s
@@ -28,14 +31,30 @@ lemma (in \<phi>empty) "__op_try__":
     subgoal premises prems for a b u v
       using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
       by (metis (no_types, lifting) INTERP_COM LooseStateTy_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) set_mult_expn)
-    subgoal premises prems for a b u v
-      using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
-            prems(2)[THEN spec[where x=a], THEN spec[where x=R]]
-      by (metis (no_types, lifting) INTERP_COM LooseStateTy_expn(1) LooseStateTy_expn(2) prems(10) prems(11) prems(3) prems(4) prems(7) prems(8) prems(9) set_mult_expn)
-    subgoal premises prems for a b u v
-      using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
-            prems(2)[THEN spec[where x=a], THEN spec[where x=R]]
-      by (metis (no_types, lifting) INTERP_COM LooseStateTy_expn(2) prems(10) prems(3) prems(4) prems(7) prems(8) prems(9) set_mult_expn)
+    subgoal premises prems for a b c d u v2 proof -
+      have \<open>Exception a b \<in> \<S> (\<lambda>v. INTERP_COM (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_COM (R \<heavy_comma> E v))\<close>
+        using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
+        using prems(10) prems(3) prems(7) prems(8) prems(9) by blast
+      note this[simplified]
+      then have \<open>Success c d \<in> \<S> (\<lambda>v. INTERP_COM (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_COM (R \<heavy_comma> E2 v))\<close>
+        using prems(2)[of a, THEN spec[where x=b], THEN spec[where x=R]]
+        by (meson INTERP_COM prems(4) set_mult_expn)
+      note this[simplified]
+      then show ?thesis
+        by (metis INTERP_COM prems(11) set_mult_expn)
+    qed
+    subgoal premises prems for a b c d u v proof -
+      have \<open>Exception a b \<in> \<S> (\<lambda>v. INTERP_COM (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_COM (R \<heavy_comma> E v))\<close>
+        using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
+        using prems(10) prems(3) prems(7) prems(8) prems(9) by blast
+      note this[simplified]
+      then have \<open>Exception c d \<in> \<S> (\<lambda>v. INTERP_COM (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_COM (R \<heavy_comma> E2 v))\<close>
+        using prems(2)[THEN spec[where x=b], THEN spec[where x=R]]
+        by (meson INTERP_COM prems(4) set_mult_expn)
+      note this[simplified]
+      then show ?thesis
+        by (simp add: INTERP_COM set_mult_expn)
+    qed
     apply (smt (z3) INTERP_COM LooseStateTy_expn(2) LooseStateTy_expn(3) set_mult_expn)
     by blast .
 
@@ -67,7 +86,7 @@ declare [ [\<phi>not_define_new_const] ]
 
 proc (in \<phi>empty) try'':
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE2 \<rbrace>\<close>
+  assumes G: \<open>(\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE2 \<rbrace>)\<close>
   argument X
   return YY
   throws EE2
@@ -76,12 +95,12 @@ proc (in \<phi>empty) try'':
 proc (in \<phi>empty) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> E \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
+  assumes G: \<open>\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
   argument X
   return Z
   throws E2
   \<medium_left_bracket> "__op_try__" F G 
-    unfold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def, THEN spec, symmetric]
+      unfold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def, THEN spec, symmetric]
   \<medium_right_bracket>. .
 
 declare [ [\<phi>not_define_new_const = false] ]
@@ -92,17 +111,17 @@ subsection \<open>Access the Resource\<close>
 subsubsection \<open>Legacy\<close>
 
 definition (in \<phi>resource_sem)
-    \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a) \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+    \<phi>M_get_res :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'a) \<Rightarrow> ('a \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc) \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_res R F = (\<lambda>res. F (R res) res)\<close>
 
 definition (in \<phi>resource_sem)
-    \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a)) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+    \<phi>M_get_res_entry :: \<open>(('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('k \<rightharpoonup> 'a)) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc) \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_res_entry R k F =
     \<phi>M_get_res R (\<lambda>res. case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 definition (in \<phi>resource_sem) \<phi>M_set_res :: \<open>
     (('x \<Rightarrow> 'x) \<Rightarrow> ('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'RES_N \<Rightarrow> 'RES)
-      \<Rightarrow> ('x \<Rightarrow> 'x) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
+      \<Rightarrow> ('x \<Rightarrow> 'x) \<Rightarrow> (unit,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_set_res Updt F = (\<lambda>res. {Success (sem_value ()) (Updt F res)})\<close>
 
 subsubsection \<open>Getters\<close>
@@ -110,7 +129,7 @@ subsubsection \<open>Getters\<close>
 paragraph \<open>fine_resource\<close>
 
 definition (in resource)
-    \<phi>R_get_res :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+    \<phi>R_get_res :: \<open>('T \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc) \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res F = (\<lambda>res. F (get res) res)\<close>
 
 lemma (in resource) \<phi>R_get_res[\<phi>reason!]:
@@ -122,7 +141,7 @@ lemma (in resource) \<phi>R_get_res[\<phi>reason!]:
 paragraph \<open>nonsepable_mono_resource\<close>
 
 definition (in nonsepable_mono_resource)
-    \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+    \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc) \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nonsepable.dest v') | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
@@ -134,7 +153,7 @@ lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
 paragraph \<open>partial_map_resource\<close>
 
 definition (in partial_map_resource)
-    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc) \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res_entry k F = \<phi>R_get_res (\<lambda>res.
     case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
@@ -162,7 +181,7 @@ lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[\<ph
 paragraph \<open>partial_map_resource2\<close>
 
 definition (in partial_map_resource2)
-    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc) \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
     case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
@@ -195,7 +214,7 @@ subsubsection \<open>Setters\<close>
 
 paragraph \<open>fine_resource\<close>
 
-definition (in resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
+definition (in resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> (unit,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_set_res F = (\<lambda>res. {Success (sem_value ()) (updt F res)})\<close>
 
 paragraph \<open>partial_map_resource\<close>
@@ -264,7 +283,7 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_dispose_res":
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := None))
-         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Void \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
                   simp del: set_mult_expn del: subsetI)
@@ -287,7 +306,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res":
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k := f))})
       \<Longrightarrow> P (R.get res) \<and> dom f = dom (R.get res k))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := 1))
-         \<lbrace> to_share o f \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> Identity) \<longmapsto> Void \<rbrace>\<close>
+         \<lbrace> to_share o f \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k := f)\<close>, simplified]
                             \<phi>Res_Spec_mult_homo
@@ -310,8 +329,8 @@ subsubsection \<open>Allocate\<close>
 definition (in mapping_resource)
     \<phi>R_allocate_res_entry :: \<open>('key \<Rightarrow> bool)
                            \<Rightarrow> 'val
-                           \<Rightarrow> ('key \<Rightarrow> ('ret,'RES_N,'RES) proc)
-                           \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
+                           \<Rightarrow> ('key \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc)
+                           \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_allocate_res_entry P init F =
     \<phi>R_get_res (\<lambda>res.
     let k = (@k. res k = 1 \<and> P k)
@@ -490,7 +509,5 @@ lemma (in \<phi>empty) op_set_element:
 *)
 
 *)
-
-end
 
 end

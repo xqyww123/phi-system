@@ -210,13 +210,14 @@ abbreviation Programming_CurrentConstruction ("\<^bold>c\<^bold>u\<^bold>r\<^bol
 abbreviation View_Shift_CurrentConstruction ("\<^bold>v\<^bold>i\<^bold>e\<^bold>w _ [_]/ \<^bold>i\<^bold>s _" [1000,1000,11] 10)
   where \<open>View_Shift_CurrentConstruction \<equiv> CurrentConstruction view_shift_mode\<close>
 
-definition PendingConstruction :: " ('ret,'RES_N,'RES) proc
+definition PendingConstruction :: " ('ret,'ex,'RES_N,'RES) proc
                         \<Rightarrow> ('RES_N \<Rightarrow> 'RES)
                         \<Rightarrow> ('FIC_N,'FIC) assn
                         \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn)
-                        \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> bool "
+                        \<Rightarrow> ('ex sem_value \<Rightarrow> ('FIC_N,'FIC) assn)
+                        \<Rightarrow> bool "
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
-    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> \<S> (\<lambda>ret. INTERP_COM (R * S ret)) (INTERP_COM (R * E))"
+    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> \<S> (\<lambda>ret. INTERP_COM (R * S ret)) (\<lambda>ex. INTERP_COM (R * E ex))"
 
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
@@ -270,13 +271,13 @@ lemma \<phi>accept_proc:
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1
 \<Longrightarrow> (\<And>s' ret. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (g ret) \<^bold>o\<^bold>n s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2)
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> g) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 + E2"
-  unfolding CurrentConstruction_def PendingConstruction_def bind_def subset_iff
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def subset_iff plus_fun_def
   apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
 
 lemma \<phi>return_when_unreachable:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> Return (sem_value undefined)) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
-  for f :: \<open>(unreachable, 'RES_N, 'RES) proc\<close>
+  for f :: \<open>(unreachable, 'ex, 'RES_N, 'RES) proc\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff
   apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
 
@@ -826,7 +827,7 @@ lemma view_shift_whole_\<phi>app:
 
 
 lemma \<phi>CONSEQ'E:
-   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w E \<longmapsto> E' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3
+   "(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w E v \<longmapsto> E' v \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
   using \<phi>CONSEQ view_shift_id by blast
@@ -863,9 +864,9 @@ definition \<phi>IntroFrameVar' ::
   "('FIC_N,'FIC) assn
 \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('FIC_N,'FIC) assn
 \<Rightarrow> ('ret \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('ret \<Rightarrow> ('FIC_N,'FIC) assn)
-\<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('FIC_N,'FIC) assn
+\<Rightarrow> ('ex \<Rightarrow> ('FIC_N,'FIC) assn) \<Rightarrow> ('ex \<Rightarrow> ('FIC_N,'FIC) assn)
 \<Rightarrow> bool"
-  where "\<phi>IntroFrameVar' R S' S T' T E' E \<longleftrightarrow> S' = (R * S) \<and> T' = (\<lambda>ret. R * T ret) \<and> E' = (R * E) "
+  where "\<phi>IntroFrameVar' R S' S T' T E' E \<longleftrightarrow> S' = (R * S) \<and> T' = (\<lambda>ret. R * T ret) \<and> E' = (\<lambda>ex. R * E ex) "
 
 
 lemma \<phi>IntroFrameVar_No:
@@ -885,7 +886,7 @@ lemma \<phi>IntroFrameVar_Yes:
 lemma \<phi>IntroFrameVar'_Yes:
   " Simplify frame_var_rewrs S' (R * S)
 \<Longrightarrow> Simplify frame_var_rewrs T' (\<lambda>ret. R * T ret)
-\<Longrightarrow> Simplify frame_var_rewrs E' (R * E)
+\<Longrightarrow> Simplify frame_var_rewrs E' (\<lambda>ex. R * E ex)
 \<Longrightarrow> \<phi>IntroFrameVar' R S' S T' T E' E"
   unfolding \<phi>IntroFrameVar'_def by blast
 
@@ -1499,7 +1500,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason on
 ]:
   \<open> \<phi>IntroFrameVar' R S'' S' T T' E'' E'
 \<Longrightarrow> PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
-\<Longrightarrow> PROP Filter_Out_Values E'' E
+\<Longrightarrow> (\<And>v. PROP Filter_Out_Values (E'' v) (E v))
 \<Longrightarrow> PROP \<phi>Application_Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>))
@@ -1513,7 +1514,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason on
     using \<phi>apply_proc[OF \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _\<close>,
           OF \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>\<close>[THEN \<phi>frame[where R=R],
               THEN \<phi>CONSEQ[rotated 1, OF \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>,
-                OF view_shift_id, OF View_Shift_by_Subtyp[OF \<open>E'' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<close>],
+                OF view_shift_id, OF View_Shift_by_Subtyp[OF \<open>E'' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
                 simplified prems(1)]]] . .
 end
 
@@ -1576,7 +1577,7 @@ lemma (in \<phi>fiction) [\<phi>reason 1200 on \<open>
   \<open> Exhaustive_Abstract f f'
 \<Longrightarrow> PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any1)
 \<Longrightarrow> (\<And>ret. PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w Y ret \<longmapsto> Y' ret \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2))
-\<Longrightarrow> PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w E  \<longmapsto> E' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any3)
+\<Longrightarrow> (\<And>ex.  PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w E ex \<longmapsto> E' ex \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any3))
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> Y' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>))\<close>
   unfolding \<phi>Application_Conv_def Exhaustive_Abstract_def GOAL_CTXT_def FOCUS_TAG_def
     Assertion_Level_Reasoning_def
@@ -3772,7 +3773,8 @@ consts assertion_simplification :: mode
   = ((simp only: assertion_simps)?, rule Simplify_I)
 
 lemmas [assertion_simps] =
-  mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left
+  mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left zero_fun
+  zero_fun_def[symmetric] plus_fun
 
 
 
@@ -5381,20 +5383,20 @@ subsection \<open>Definitions of Elementary Constructions\<close>
 
 context \<phi>empty_sem begin
 
-definition \<phi>M_assert :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
+definition \<phi>M_assert :: \<open>bool \<Rightarrow> (unit,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_assert P = (\<lambda>s. if P then Return \<phi>V_none s else {Invalid})\<close>
 
-definition \<phi>M_assume :: \<open>bool \<Rightarrow> (unit,'RES_N,'RES) proc\<close>
+definition \<phi>M_assume :: \<open>bool \<Rightarrow> (unit,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_assume P = (\<lambda>s. if P then Return \<phi>V_none s else {PartialCorrect})\<close>
 
-definition \<phi>M_getV_raw :: \<open>('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'RES_N,'RES) proc) \<Rightarrow> ('y,'RES_N,'RES) proc\<close>
+definition \<phi>M_getV_raw :: \<open>('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'ex,'RES_N,'RES) proc) \<Rightarrow> ('y,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV_raw VDT_dest v F = F (VDT_dest (dest_sem_value v))\<close>
 
-definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'RES_N,'RES) proc) \<Rightarrow> ('y,'RES_N,'RES) proc\<close>
+definition \<phi>M_getV :: \<open>'TY \<Rightarrow> ('VAL \<Rightarrow> 'v) \<Rightarrow> 'VAL sem_value \<Rightarrow> ('v \<Rightarrow> ('y,'ex,'RES_N,'RES) proc) \<Rightarrow> ('y,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
     (\<phi>M_assert (dest_sem_value v \<in> Well_Type TY) \<ggreater> F (VDT_dest (dest_sem_value v)))\<close>
 
-definition \<phi>M_caseV :: \<open>('VAL sem_value \<Rightarrow> ('vr,'ret,'RES_N,'RES) proc') \<Rightarrow> ('VAL \<times> 'vr,'ret,'RES_N,'RES) proc'\<close>
+definition \<phi>M_caseV :: \<open>('VAL sem_value \<Rightarrow> ('vr,'ret,'ex,'RES_N,'RES) proc') \<Rightarrow> ('VAL \<times> 'vr,'ret,'ex,'RES_N,'RES) proc'\<close>
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of sem_value (a1,a2) \<Rightarrow> F (sem_value a1) (sem_value a2))\<close>
 
 end
@@ -5421,11 +5423,6 @@ lemma \<phi>M_assert':
 lemma \<phi>M_assume[\<phi>reason!]:
   \<open>(P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def \<phi>M_assume_def bind_def Return_def det_lift_def
-  by clarsimp
-
-lemma throw_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift Exception \<lbrace> X \<longmapsto> \<lambda>_. 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
-  unfolding \<phi>Procedure_def subset_iff det_lift_def
   by clarsimp
 
 lemma \<phi>M_tail_left:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
@@ -5525,7 +5522,7 @@ lemma (in \<phi>fiction) \<phi>Procedure_\<phi>Res_Spec:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space (r * p) \<and> r ## p)
       \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space (r * q) \<and> r ## q))
-                    (\<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E \<and> Fic_Space (r * e) \<and> r ## e)))\<close>
+                    (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E v \<and> Fic_Space (r * e) \<and> r ## e)))\<close>
   apply rule
    apply (unfold \<phi>Procedure_alt INTERP_COM \<phi>Res_Spec_def subset_iff)
    apply (clarsimp simp add: times_set_def \<phi>expns INTERP_RES_def)
@@ -5758,7 +5755,7 @@ lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> 
   \<open> SUBGOAL G G'
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G'
 \<Longrightarrow> SOLVE_SUBGOAL G'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<phi> T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>_. S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<phi> T \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def FOCUS_TAG_def Synthesis_def
   by (metis \<phi>__Return_rule__)
 

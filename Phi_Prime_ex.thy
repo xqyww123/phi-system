@@ -15,10 +15,10 @@ text \<open>A representation of a procedure is not totally deep. The number of a
 
 type_synonym ('a,'VAL) serializer = \<open>'a \<Rightarrow> 'VAL list\<close>
 
-definition Serializer :: \<open>('a \<Rightarrow> 'b list) \<Rightarrow> ('a,'b list,'RES_N,'RES) proc'\<close>
+definition Serializer :: \<open>('a \<Rightarrow> 'b list) \<Rightarrow> ('a,'b list,'ex,'RES_N,'RES) proc'\<close>
   where \<open>Serializer f = (Return o map_sem_value f)\<close>
 
-definition Deserializer :: \<open>('a \<Rightarrow> 'b list) \<Rightarrow> ('b list,'a,'RES_N,'RES) proc'\<close>
+definition Deserializer :: \<open>('a \<Rightarrow> 'b list) \<Rightarrow> ('b list,'a,'ex,'RES_N,'RES) proc'\<close>
   where \<open>Deserializer f = (\<lambda>vs. if (\<exists>a. f a = dest_sem_value vs)
                                 then Return (map_sem_value (the_inv f) vs)
                                 else (\<lambda>_. {Invalid}) )\<close>
@@ -59,26 +59,25 @@ lemma serialize_pair_Serializer[simp]:
 abbreviation
     deepize_proc :: \<open>('arg, 'VAL) serializer
                   \<Rightarrow> ('ret, 'VAL) serializer
-                  \<Rightarrow> ('arg,'ret,'RES_N,'RES) proc'
-                  \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc'\<close>
+                  \<Rightarrow> ('arg,'ret,'ex,'RES_N,'RES) proc'
+                  \<Rightarrow> ('VAL list, 'VAL list, 'ex, 'RES_N, 'RES) proc'\<close>
     where \<open>deepize_proc Arg Ret proc v \<equiv> Deserializer Arg v \<bind> proc \<bind> Serializer Ret\<close>
 
 abbreviation
     shallowize_proc :: \<open>('arg, 'VAL) serializer
                      \<Rightarrow> ('ret, 'VAL) serializer
-                     \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc'
-                     \<Rightarrow> ('arg,'ret,'RES_N,'RES) proc'\<close>
+                     \<Rightarrow> ('VAL list, 'VAL list, 'ex, 'RES_N, 'RES) proc'
+                     \<Rightarrow> ('arg,'ret,'ex,'RES_N,'RES) proc'\<close>
     where \<open>shallowize_proc Arg Ret proc v \<equiv> Serializer Arg v \<bind> proc \<bind> Deserializer Ret\<close>
 
 lemma  "__shallowize_proc_deepize_proc__"[simp]:
   \<open> Is_Serializer Arg
 \<Longrightarrow> Is_Serializer Ret
 \<Longrightarrow> shallowize_proc Arg Ret (deepize_proc Arg Ret proc) = proc\<close>
-  unfolding deepize_proc_def shallowize_proc_def
   by (simp, subst proc_bind_assoc[symmetric], simp only: Serializer_Deserializer')
 
 definition (in \<phi>empty_sem) \<phi>Type_Spec_for_Deep
-    :: \<open>'TY list \<times> 'TY list \<Rightarrow> ('VAL list, 'VAL list, 'RES_N, 'RES) proc' \<Rightarrow> bool\<close>
+    :: \<open>'TY list \<times> 'TY list \<Rightarrow> ('VAL list, 'VAL list, 'ex, 'RES_N, 'RES) proc' \<Rightarrow> bool\<close>
   where \<open>\<phi>Type_Spec_for_Deep tys proc \<longleftrightarrow>
     (\<forall>arg ret res res'.
         list_all2 (\<lambda>a t. a \<in> Well_Type t) (dest_sem_value arg) (fst tys)
@@ -124,12 +123,12 @@ subsection \<open>Semantic Level\<close>
 type_synonym ('RES_N,'RES) transition_fun = \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('RES_N \<Rightarrow> 'RES)\<close>
 type_synonym ('RES_N,'RES) transition = \<open>(('RES_N \<Rightarrow> 'RES) \<times> ('RES_N \<Rightarrow> 'RES)) set\<close>
 
-definition Transition_Of :: \<open>('ret,'RES_N,'RES) proc \<Rightarrow> ('RES_N,'RES) transition\<close>
+definition Transition_Of :: \<open>('ret,'ex,'RES_N,'RES) proc \<Rightarrow> ('RES_N,'RES) transition\<close>
   where \<open>Transition_Of proc =
     { (res,res') | res res'. (\<exists>ret. Success ret res' \<in> proc res)
-                           \<or> Exception res' \<in> proc res}\<close>
+                           \<or> (\<exists>ex. Exception ex res' \<in> proc res)}\<close>
 
-abbreviation Transition_Of' :: \<open>('arg,'ret,'RES_N,'RES) proc' \<Rightarrow> ('RES_N,'RES) transition\<close>
+abbreviation Transition_Of' :: \<open>('arg,'ret,'ex,'RES_N,'RES) proc' \<Rightarrow> ('RES_N,'RES) transition\<close>
   where \<open>Transition_Of' proc \<equiv> (\<exists>\<^sup>s arg. Transition_Of (proc arg))\<close>
 
 definition rel_of_fun :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a \<times> 'b) set\<close>
@@ -188,7 +187,7 @@ lemma \<comment> \<open>Reflexive transitive property is enough.\<close>
 
 lemma (in \<phi>fiction) Resource_Transition_Spec_I:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> Transition_Of f \<subseteq> (P \<longrightarrow>\<^sub>\<phi>[R] (ExSet Q + E))\<close>
+\<Longrightarrow> Transition_Of f \<subseteq> (P \<longrightarrow>\<^sub>\<phi>[R] (ExSet Q + ExSet E))\<close>
   unfolding \<phi>Procedure_def \<phi>GTS_R_def GTS_def Transition_Of_def
   apply (clarsimp simp add: AllSet_expn subset_iff; rule conjI; clarify)
   subgoal premises prems for x y ret
@@ -196,10 +195,10 @@ lemma (in \<phi>fiction) Resource_Transition_Spec_I:
                       THEN spec, THEN mp, OF \<open>_ \<in> f x\<close>])
     apply (simp add: semiring_class.distrib_left \<phi>expns)
     by blast
-  subgoal premises prems for x y
+  subgoal premises prems for x y ex
     apply (insert prems(1)[THEN spec, THEN spec, THEN mp, OF \<open>x \<in> _\<close>,
                       THEN spec, THEN mp, OF \<open>_ \<in> f x\<close>])
-    by (simp add: semiring_class.distrib_left \<phi>expns)
+    by (simp add: semiring_class.distrib_left \<phi>expns; blast)
   .
 
 
