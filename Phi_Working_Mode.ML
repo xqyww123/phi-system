@@ -133,8 +133,11 @@ val procedure : working_mode =
                      |> Procedure_Syntax.abstract_return_vals "\<r>\<e>\<t>" true
                      |> apfst (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
                      |> apsnd (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
+            val idx_delt = 1 + Int.max (Thm.maxidx_of_cterm ins, Thm.maxidx_of_cterm current_nu)
             val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
-                           |> Drule.infer_instantiate ctxt [(("T",0),current_nu),(("ret",0),ins)]
+                           |> Thm.incr_indexes idx_delt
+                           |> Drule.infer_instantiate ctxt
+                                  [(("T",idx_delt),current_nu),(("ret",idx_delt),ins)]
             in (sequent RS return_rule)
                 |> rule_by_tactic ctxt
                       (SOLVED' (Simplifier.simp_tac ctxt) 1)
@@ -177,10 +180,16 @@ val procedure : working_mode =
           of (Var ((x,_),_)) => x
            | _ => "block"),
     cast_rule = (fn ctxt => fn desired => fn term =>
-       (if can (PhiSyntax.dest_CurrentConstruction) term
-        then Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
-        else Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'"
-       ) |> Drule.infer_instantiate ctxt [(("T'",0),desired)]
+      let
+        val idx = 1 + Thm.maxidx_of_cterm desired
+        val rule =
+          if can (PhiSyntax.dest_CurrentConstruction) term
+          then Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
+          else Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'"
+       in rule
+            |> Thm.incr_indexes idx
+            |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
+       end
     ),
     before_finish = before_finish
 } end
@@ -248,8 +257,13 @@ in
           of (Var ((x,_),_)) => x
            | _ => "\<V>\<S>"),
     cast_rule = (fn ctxt => fn desired => fn _ =>
-       Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
-        |> Drule.infer_instantiate ctxt [(("T'",0),desired)]
+      let
+        val idx = 1 + Thm.maxidx_of_cterm desired
+      in
+        Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
+          |> Thm.incr_indexes idx
+          |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
+      end
     ),
     before_finish = (K (K I))
 }
@@ -306,8 +320,13 @@ in
     initial_sequent = start_implication,
     block_name_of = (K "\<chi>"),
     cast_rule = (fn ctxt => fn desired => fn _ =>
-       @{thm "_\<phi>cast_implication_"}
-        |> Drule.infer_instantiate ctxt [(("T",0),desired)]
+      let
+        val idx = 1 + Thm.maxidx_of_cterm desired
+      in
+        @{thm "_\<phi>cast_implication_"}
+          |> Thm.incr_indexes idx
+          |> Drule.infer_instantiate ctxt [(("T",idx),desired)]
+      end
     ),
     before_finish = (K (K I))
 }

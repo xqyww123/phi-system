@@ -45,7 +45,9 @@ fun subgoal (ctxt,sequent) =
     val ctxt'' = Subgoal.map (fn (g,n,s) =>
                     (Symtab.update_new (name, newg) g,n+1,s)) ctxt'
     val newg_term = Thm.cterm_of ctxt (Free (name,\<^typ>\<open>subgoal\<close>))
-    val subgoal_I = Thm.instantiate' [] [NONE, SOME newg_term] @{thm SUBGOAL_I}
+    val idx = Thm.maxidx_of_cterm newg_term + 1
+    val subgoal_I = Thm.instantiate' [] [NONE, SOME newg_term]
+                      (Thm.incr_indexes idx @{thm SUBGOAL_I})
   in
     Seq.single (ctxt'', subgoal_I RS sequent)
   end

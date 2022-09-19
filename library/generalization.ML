@@ -20,29 +20,35 @@ fun gen_pattern_match prep_vars prep_pattern
   let
     val (origin_names, (vnames, ctxt)) = prep_vars ctxt' raw_vars
     val pattern = prep_pattern (ctxt,vnames) raw_pattern
-    val (tyinst',tminst') =
-            Pattern.first_order_match (Proof_Context.theory_of ctxt) (pattern,term)
-                                      (Vartab.empty,Vartab.empty)
-    fun filter x = fold (Vartab.delete_safe o rpair 0) vnames x
-    val tyinst = filter tyinst'
-    val tminst = filter tminst'
-    val num = length vnames
-    val pattern' = Envir.subst_term (tyinst,tminst) pattern
-    fun update_vars n t tab =
-          case Symtab.lookup tab n
-                                  of SOME (_, t') =>
-                                        if t = t' then tab
-                                        else raise TYPE("pattern has different types", [t,t'], [])
-                                   | NONE =>
-                                      let val idx = find_index (fn n' => n' = n) vnames
-                                       in if idx = ~1
-                                          then tab
-                                          else Symtab.update_new (n, (num - 1 - idx, t)) tab end
-    val vars = fold_aterms (fn (Var ((n,0),t)) => update_vars n t
-                             | (Free (n,t)) => update_vars n t
-                             | _ => I
-                           ) pattern' Symtab.empty
-  in (origin_names, vnames, vars, pattern',ctxt)
+  in
+    if null origin_names
+    then ([], [], Symtab.empty, pattern, ctxt)
+    else
+    let
+      val (tyinst',tminst') =
+              Pattern.first_order_match (Proof_Context.theory_of ctxt) (pattern,term)
+                                        (Vartab.empty,Vartab.empty)
+      fun filter x = fold (Vartab.delete_safe o rpair 0) vnames x
+      val tyinst = filter tyinst'
+      val tminst = filter tminst'
+      val num = length vnames
+      val pattern' = Envir.subst_term (tyinst,tminst) pattern
+      fun update_vars n t tab =
+            case Symtab.lookup tab n
+                                    of SOME (_, t') =>
+                                          if t = t' then tab
+                                          else raise TYPE("pattern has different types", [t,t'], [])
+                                     | NONE =>
+                                        let val idx = find_index (fn n' => n' = n) vnames
+                                         in if idx = ~1
+                                            then tab
+                                            else Symtab.update_new (n, (num - 1 - idx, t)) tab end
+      val vars = fold_aterms (fn (Var ((n,0),t)) => update_vars n t
+                               | (Free (n,t)) => update_vars n t
+                               | _ => I
+                             ) pattern' Symtab.empty
+    in (origin_names, vnames, vars, pattern',ctxt)
+    end
   end
 
 
@@ -105,6 +111,7 @@ local open Parse Scan in
 val syntax =
      (\<^keyword>\<open>var\<close> |-- vars --| \<^keyword>\<open>in\<close> -- term -- option (\<^keyword>\<open>subj\<close> |-- term)) >> ByPattern
   || (\<^keyword>\<open>var\<close> |-- repeat term -- option (\<^keyword>\<open>subj\<close> |-- term)) >> ByPart
+  || (\<^keyword>\<open>subj\<close> |-- term) >> (fn subj => ByPart ([], SOME subj))
   || succeed None
 end
 

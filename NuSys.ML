@@ -133,9 +133,13 @@ fun set_label name (ctxt,sequent) = (ctxt, mk_label_thm name RS sequent)
 
 fun synthesis term (ctxt, sequent) =
   let
-    val rule = @{thm \<phi>synthesis}
-          |> Drule.infer_instantiate ctxt [(("X",0),term), (("sequent",0), Thm.cprop_of sequent)]
-    val sequent' = Thm.implies_elim rule sequent
+    val i_s = Thm.maxidx_of sequent + 1
+    val i_t = Thm.maxidx_of_cterm term + 1
+    val sequent' = @{thm \<phi>synthesis}
+          |> Thm.incr_indexes (i_s + i_t)
+          |> Drule.infer_instantiate ctxt [(("X",i_s + i_t), Thm.incr_indexes_cterm i_s term),
+                                           (("sequent",i_s + i_t), Thm.cprop_of sequent)]
+          |> (fn rule => Thm.implies_elim rule sequent)
   in
     case Nu_Reasoner.reason (ctxt, sequent')
       of SOME ret => ret

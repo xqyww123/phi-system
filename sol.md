@@ -1,6 +1,22 @@
+## Notes
+
+We formalize a semantic resembles closely to Solidity. 
+Nondeterministic. Stricter.
+
+- https://docs.soliditylang.org/en/v0.8.15/control-structures.html#assert-and-require
+  0x41: If you allocate too much memory or create an array that is too large.
+  It means, any public methods because we do not model the memory consumption and in the Solidity standard there is not a fixed limitation of the memory usage.
+
+- We don't support costume error because the currently latest Solidity document (v0.8.17) does not give a way to catch a costume error.
+
+- Give up the support for pushing bytes
+
+
+
+
 ## Overall Structure
 
-``
+```
 theory {{module_name}}
   imports {{imported files, including xxx in `from xxx imports yyy`}}
 begin

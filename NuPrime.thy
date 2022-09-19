@@ -515,6 +515,10 @@ lemma \<phi>frame_view_right:
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc mult.commute)
 
+lemma \<phi>view_refl:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X \<close>
+  unfolding View_Shift_def by blast
+
 lemma \<phi>view_trans:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2

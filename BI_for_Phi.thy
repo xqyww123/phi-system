@@ -119,6 +119,16 @@ lemma [\<phi>reason]:
 lemma Subjection_True [simp]: "(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j True) = T"  unfolding set_eq_iff by (simp add: \<phi>expns)
 lemma Subjection_Flase[simp]: \<open>(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j False) = 0\<close> unfolding set_eq_iff by (simp add: \<phi>expns zero_set_def)
 
+lemma Subjection_Subjection:
+  \<open>(S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) = (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<and> Q)\<close>
+  unfolding set_eq_iff
+  by (simp add: Subjection_expn)
+
+lemma Subjection_Zero[simp]:
+  \<open>(0 \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = 0\<close>
+  unfolding set_eq_iff
+  by (simp add: Subjection_expn zero_set_def)
+
 (* lemma (in \<phi>empty) [simp]: "(VAL (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (VAL S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff) blast
 lemma (in \<phi>empty) [simp]: "(OBJ (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (OBJ S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)" by (simp add: \<phi>expns set_eq_iff) *)
 
@@ -168,7 +178,7 @@ lemma (in \<phi>empty) [simp]: "(OBJ ExSet T) = (\<exists>*c. OBJ T c)" by (simp
 lemma [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: \<phi>expns set_eq_iff) blast
 lemma ExSet_times[simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
 
-lemma [simp]: \<open>ExSet (\<lambda>_. T) = T\<close> unfolding set_eq_iff by (simp add: \<phi>expns)
+lemma ExSet_const[simp]: \<open>ExSet (\<lambda>_. T) = T\<close> unfolding set_eq_iff by (simp add: \<phi>expns)
 lemma [simp]: \<open>(\<exists>* x. F x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x = y \<and> P x) = (F y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P y)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 

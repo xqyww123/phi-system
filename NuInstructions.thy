@@ -4,16 +4,34 @@ begin
 
 section \<open>Common Instructions\<close>
 
+subsection \<open>Drop & Duplicate Value\<close>
+
+context \<phi>empty begin
+
+lemma [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?x \<Ztypecolon> Val ?raw ?T \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_dup\<close>]:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> Val raw T \<longmapsto> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_dup\<close>
+  unfolding View_Shift_def Action_Tag_def
+  by (clarsimp simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_drop\<close>]:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Void \<heavy_comma> x \<Ztypecolon> Val raw T \<longmapsto> Void \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_drop\<close>
+  unfolding View_Shift_def Action_Tag_def
+  by (clarsimp simp add: \<phi>expns)
+
+end
+
 subsection \<open>Exception\<close>
 
 text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
 
 definition \<open>throw raw = det_lift (Exception raw)\<close>
 
-lemma (in \<phi>fiction) throw_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> \<lambda>_. 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X \<rbrace>\<close>
-  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def
-  by clarsimp
+lemma (in \<phi>fiction) throw_\<phi>app[\<phi>reason! on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c throw ?excep \<lbrace> ?X \<longmapsto> ?Any \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?X' \<rbrace>\<close>]:
+  \<open> (\<And>v. PROP Filter_Out_Free_Values (X v) (X' v))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<rbrace>\<close>
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Filter_Out_Free_Values_def Imply_def
+  apply clarsimp
+  by (meson Imply_def View_Shift_def \<phi>view_shift_by_implication)
 
 definition op_try :: "('ret,'ex,'RES_N,'RES) proc
                     \<Rightarrow> ('ex sem_value \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc)

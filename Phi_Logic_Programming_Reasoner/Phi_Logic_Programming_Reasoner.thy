@@ -425,6 +425,7 @@ qed
 
 
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>
+  \<comment> \<open>Maybe Useless, considering to discard!\<close>
 
 definition Obtain :: \<open>'a \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close> where \<open>Obtain x P \<longleftrightarrow> P x\<close>
 definition \<open>DO_OBTAIN \<equiv> Trueprop True\<close>
@@ -537,7 +538,7 @@ definition USELESS :: \<open>bool \<Rightarrow> bool\<close> where \<open>USELES
 lemma [simp]: \<open>USELESS True\<close> unfolding USELESS_def ..
 
 
-subsubsection \<open>Collect Schematic & Free & other terms\<close>
+subsubsection \<open>Collect Schematic & Free & other terms\<close> \<comment> \<open>Not Stable!\<close>
 
 paragraph \<open>Schematic\<close>
 
@@ -563,7 +564,9 @@ lemma Collect_Schematic_I: \<open>PROP Collect_Schematic TY sch Term\<close>
                                   if Type.could_match (T,T') then insert (op =) v L else L)
                              | _ => I) Term []
       val vs' = Thm.cterm_of ctxt (HOLogic.mk_tuple vs)
-      val rule = Drule.infer_instantiate ctxt [(("sch",0),vs')] @{thm Collect_Schematic_I}
+      val idx = Thm.maxidx_of_cterm vs' + 1
+      val rule = Drule.infer_instantiate ctxt [(("sch",idx),vs')]
+                    (Thm.incr_indexes idx @{thm Collect_Schematic_I})
     in Seq.single (ctxt, rule RS sequent)
     end
 \<close>

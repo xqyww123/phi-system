@@ -133,14 +133,16 @@ fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = 
   | concl_of x = x
 
 
-fun closure ctxt f =
+fun closure _ f =
   let
     val tvars = Term.add_tvars f []
     val (subst,_) = Term.fold_types Term.declare_typ_names f Name.context
                     |> pair []
                     |> fold_rev (fn ((name,idx),sort) => fn (L,ctxt) =>
-                          Name.variant name ctxt |-> (fn name' =>
-                            pair ((((name,idx),sort), TFree (name',sort))::L))) tvars
+                          Name.variant name ctxt
+                            |> apfst (fn name' =>
+                                  (((name,idx),sort), TFree (name',sort))::L)
+                     ) tvars
     val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f
 
     val (_,(has_ret,f'')) = Procedure_Syntax.abstract_return_vals "\<a>\<r>\<g>" false f'

@@ -52,7 +52,8 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val op_var_scope' = init
           |> fold (fn v => fn th =>
                 case v of Set_Var vterm =>
-                            (Drule.infer_instantiate ctxt [(("var",0), vterm)] op_set_var) RS th
+                            (Drule.infer_instantiate ctxt
+                                  [(("var",0), Thm.incr_indexes_cterm 1 vterm)] op_set_var) RS th
                         | New_Var _ => op_var_scope RS th) oprs
           |> (fn thm => op_var_scope0 RS thm)
     val (ctxt,sequent') = NuApply.apply [op_var_scope'] (ctxt,sequent)

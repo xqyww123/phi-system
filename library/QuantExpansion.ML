@@ -91,8 +91,11 @@ fun schematic_var_expansion ctx th =
     fun uncurry_ty (Type ("fun", [Type (@{type_name named}, [domains, _]), rng])) =
           fold_rev (fn a => fn ty => a --> ty) (HOLogic.strip_tupleT domains) rng
     val insts = Term.add_vars (Thm.prop_of th) []
-                  |> map_filter (try (` (dest_named o domain_type o snd)) #> Option.map (fn (names, tm) =>
-                      (tm, mk_the_cases (Var (tm |> apsnd uncurry_ty)) names |> Thm.cterm_of ctx)
+                  |> map_filter (try (` (dest_named o domain_type o snd))
+                        #> Option.map (fn (names, tm) =>
+                            (tm,
+                             mk_the_cases (Var (tm |> apsnd uncurry_ty)) names
+                                |> Thm.cterm_of ctx)
                     ))
   in
     Thm.instantiate (TVars.empty, Vars.make insts) th

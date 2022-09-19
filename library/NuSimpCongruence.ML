@@ -11,8 +11,9 @@ fun chk_simplified NONE = NONE
       case Thm.prop_of th of Const (@{const_name Pure.eq}, _) $ a $ b =>
         if Envir.aeconv (a,b) then NONE else SOME th
 
-fun simproc cong ctx cterm =
+fun simproc raw_cong ctx cterm =
   let
+    val cong = Thm.incr_indexes (Thm.maxidx_of_cterm cterm + 1) raw_cong
     val (lhs,_) = Thm.cconcl_of cong |> dest_binop_c @{const_name "Pure.eq"}
     val cong = Thm.instantiate (Thm.first_order_match (lhs,cterm)) cong (* |> @{print} *)
   in

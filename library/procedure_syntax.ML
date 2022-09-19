@@ -60,7 +60,9 @@ fun collect_ret Vs (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)) 
   | collect_ret Vs (v as Var (_, Type(\<^type_name>\<open>sem_value\<close>, _)))  = insert (op = ) v Vs
   | collect_ret Vs (v as Const ("_type_constraint_", Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
       = insert (op = ) v Vs
-  | collect_ret Vs (Const (\<^const_name>\<open>\<phi>empty.Val\<close>, _) $ v) = insert (op = ) v Vs
+  | collect_ret Vs (Const (\<^const_name>\<open>Val\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)))
+      = v::Vs
+  | collect_ret Vs (Const (\<^const_name>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
   | collect_ret Vs (Abs (_,_,X)) = collect_ret Vs X
   | collect_ret Vs (X $ Y) =
       if R2L
@@ -84,7 +86,9 @@ fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous_val\<close>, _))
       = (case AList.lookup (op =) Vs v
            of SOME k => (j, Vs, nth_project Tys k (Bound i))
             | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
-  | map_ret Tys i (j, Vs, (h as Const (\<^const_name>\<open>\<phi>empty.Val\<close>, _)) $ v)
+  | map_ret Tys i (j, Vs, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous_val\<close>, _))
+      = (j + 1, Vs, h $ nth_project Tys j (Bound i))
+  | map_ret Tys i (j, Vs, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
       = (case AList.lookup (op =) Vs v
            of SOME k => (j, Vs, h $ nth_project Tys k (Bound i))
             | NONE => (j + 1, (v,j)::Vs, h $ nth_project Tys j (Bound i)))

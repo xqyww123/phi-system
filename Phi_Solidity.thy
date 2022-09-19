@@ -1,6 +1,6 @@
 theory Phi_Solidity
   imports Phi_OO Map_of_Tree Phi_Min_ex
-    Phi_Prime_ex
+    Phi_Prime_ex Phi_Min_Lib
 begin
 
 section \<open>Semantics\<close>
@@ -12,10 +12,14 @@ subsubsection \<open>Type\<close>
 virtual_datatype solidity_ty = \<phi>OO_ty +
   T_LedgeRef   :: unit
   T_Address    :: unit
+  T_Error      :: unit
+  T_String     :: unit
 
 context solidity_ty begin
 abbreviation \<open>\<tau>LedgeRef \<equiv> T_LedgeRef.mk ()\<close>
 abbreviation \<open>\<tau>Address  \<equiv> T_Address.mk  ()\<close>
+abbreviation \<open>\<tau>Error    \<equiv> T_Error.mk    ()\<close>
+abbreviation \<open>\<tau>String   \<equiv> T_String.mk   ()\<close>
 end
 
 subsubsection \<open>Value\<close>
@@ -32,6 +36,11 @@ type_synonym address = \<open>unit object_ref\<close>
 datatype 'VAL ledge_ref = ledge_ref ("instance": address) (path: \<open>'VAL storage_path\<close>)
 hide_const (open) "instance" path
 
+subparagraph \<open>Exception\<close>
+
+datatype exception = Error string | Panic \<open>256 word\<close> | Ex_Unknown string
+
+paragraph \<open>Properties\<close>
 
 definition prepend_ledge_ref :: \<open>'VAL storage_key \<Rightarrow> 'VAL ledge_ref \<Rightarrow> 'VAL ledge_ref\<close>
   where \<open>prepend_ledge_ref a ref = (case ref of ledge_ref addr path \<Rightarrow> ledge_ref addr (a#path))\<close>
@@ -39,9 +48,6 @@ definition prepend_ledge_ref :: \<open>'VAL storage_key \<Rightarrow> 'VAL ledge
 lemma prepend_ledge_ref[simp]:
   \<open>prepend_ledge_ref a (ledge_ref addr path) = ledge_ref addr (a#path)\<close>
   unfolding prepend_ledge_ref_def by simp
-
-
-paragraph \<open>Properties\<close>
 
 instantiation ledge_ref :: (type) zero begin
 definition \<open>zero_ledge_ref = ledge_ref Nil []\<close>
@@ -53,6 +59,8 @@ paragraph \<open>The Model\<close>
 virtual_datatype 'TY solidity_val = 'TY \<phi>OO_val +
   V_LedgeRef   :: \<open>'self ledge_ref\<close>
   V_Address    :: address
+  V_Error      :: exception
+  V_String     :: string
 
 subsubsection \<open>Resource\<close>
 
@@ -175,12 +183,16 @@ locale solidity_sem =
             ) itself\<close>
 assumes WT_LedgeRef[simp]: \<open>Well_Type \<tau>LedgeRef = UNIV\<close>
   and   WT_Address [simp]: \<open>Well_Type \<tau>Address  = UNIV\<close>
+  and   WT_Error   [simp]: \<open>Well_Type \<tau>Error = UNIV\<close>
+  and   WT_String  [simp]: \<open>Well_Type \<tau>String = UNIV\<close>
   and   zero_LedgeRef[simp]: \<open>Zero \<tau>LedgeRef = Some (V_LedgeRef.mk (ledge_ref Nil []))\<close>
   and   zero_Address[simp]:  \<open>Zero \<tau>Address  = Some (V_Address.mk Nil)\<close>
   and   Can_EqCompare_LedgeRef[simp]: \<open>Can_EqCompare res (V_LedgeRef.mk lref1) (V_LedgeRef.mk lref2)\<close>
   and   Can_EqCompare_Address[simp]:  \<open>Can_EqCompare res (V_Address.mk addr1)  (V_Address.mk addr2)\<close>
+  and   Can_EqCompare_String [simp]:  \<open>Can_EqCompare res (V_String.mk str1) (V_String.mk str2)\<close>
   and   EqCompare_LedgeRef[simp]:     \<open>EqCompare (V_LedgeRef.mk lref1) (V_LedgeRef.mk lref2) \<longleftrightarrow> lref1 = lref2\<close>
-  and   EqCompare_Address[simp]:      \<open>EqCompare (V_Address.mk addr1)  (V_Address.mk addr2)  \<longleftrightarrow> addr1 = addr2\<close>
+  and   EqCompare_Address [simp]:     \<open>EqCompare (V_Address.mk addr1)  (V_Address.mk addr2)  \<longleftrightarrow> addr1 = addr2\<close>
+  and   EqCompare_String  [simp]:     \<open>EqCompare (V_String.mk str1)  (V_String.mk str2)  \<longleftrightarrow> str1 = str2\<close>
   and   Resource_Validator_Ledge':   \<open>Resource_Validator R_ledge.name   = R_ledge.inject ` {h. h Nil = 1 \<and> finite (dom1 h) }\<close>
   and   Resource_Validator_Environ': \<open>Resource_Validator R_environ.name = R_environ.inject ` UNIV\<close>
   and   Resource_Validator_Msg[simp]: \<open>Resource_Validator R_msg.name = R_msg.inject ` UNIV\<close>
@@ -197,6 +209,10 @@ lemma Valid_Type_LedgeRef[simp]:
 
 lemma Valid_Type_Address[simp]:
   \<open>Valid_Type \<tau>Address\<close>
+  unfolding Inhabited_def by simp
+
+lemma Valid_Type_String[simp]:
+  \<open>Valid_Type \<tau>String\<close>
   unfolding Inhabited_def by simp
 
 paragraph \<open>Resource Ledge\<close>
@@ -424,6 +440,59 @@ lemma LedgeRef_eq[\<phi>reason]:
   \<open>\<phi>Equal LedgeRef (\<lambda>_ _. True) (=)\<close>
   unfolding \<phi>Equal_def by (simp add: \<phi>expns zero_ledge_ref_def)
 
+subsubsection \<open>Exception\<close>
+
+definition \<phi>Excep' :: \<open>bool \<Rightarrow> ('VAL, exception) \<phi>\<close>
+  where \<open>\<phi>Excep' P = (\<lambda>x. { V_Error.mk x } \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+
+lemma \<phi>Excep'_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Excep' P) \<longleftrightarrow> (p = V_Error.mk x \<and> P)\<close>
+  unfolding \<phi>Type_def[where T=\<open>\<phi>Excep' P\<close>]
+  by (simp add: \<phi>Excep'_def \<phi>expns; blast)
+
+lemma \<phi>Excep'_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>Excep' P) \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma \<phi>Excep'_cast[\<phi>reason on \<open>?e \<Ztypecolon> \<phi>Excep' ?P \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?e' \<Ztypecolon> \<phi>Excep' ?P' \<^bold>a\<^bold>n\<^bold>d ?Q\<close>]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e e = e'
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (P \<longrightarrow> P')
+\<Longrightarrow> e \<Ztypecolon> \<phi>Excep' P \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s e' \<Ztypecolon> \<phi>Excep' P'\<close>
+  unfolding Premise_def Imply_def
+  by (simp add: \<phi>expns)
+
+end
+
+context solidity begin
+
+abbreviation Excep :: \<open>bool \<Rightarrow> exception \<Rightarrow> 'VAL sem_value \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
+  where \<open>Excep P err raw \<equiv> (UNIV \<heavy_comma> (err \<Ztypecolon> Val raw (\<phi>Excep' P)))\<close>
+
+lemma Excep_subj[simp]:
+  \<open>(Excep P err raw \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) = Excep (Q \<and> P) err raw\<close>
+  unfolding set_eq_iff
+  by (clarsimp simp add: times_set_def \<phi>expns)
+
+end
+
+subsubsection \<open>String\<close>
+
+context solidity_sem begin
+
+definition String :: \<open>('VAL, string) \<phi>\<close>
+  where \<open>String = (\<lambda>s. { V_String.mk s })\<close>
+
+lemma String_expn[\<phi>expns]:
+  \<open>p \<in> (s \<Ztypecolon> String) \<longleftrightarrow> p = V_String.mk s\<close>
+  unfolding \<phi>Type_def String_def by simp
+
+lemma [\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (s \<Ztypecolon> String) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
+lemma [\<phi>reason 1200 on \<open>\<phi>Equal String ?CanEq ?Eq\<close>]:
+  \<open>\<phi>Equal String (\<lambda>_ _. True) (=)\<close>
+  unfolding \<phi>Equal_def by (simp add: \<phi>expns)
+
 end
 
 subsection \<open>\<phi>-Types for Ledge\<close>
@@ -553,6 +622,30 @@ definition op_get_mapping_ledgeRef :: \<open>('VAL \<times> 'VAL,'VAL,'VAL,'RES_
     Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_map_key v) ref)))
 )))\<close>
 
+
+subsubsection \<open>String & Bytes Operations\<close>
+
+definition op_const_str :: \<open>string \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc\<close>
+  where \<open>op_const_str s = Return (sem_value (V_String.mk s))\<close>
+
+definition op_str_concate :: \<open>('VAL \<times> 'VAL, 'VAL, 'VAL, 'RES_N, 'RES) proc'\<close>
+  where \<open>op_str_concate =
+    \<phi>M_caseV (\<lambda>raw2 raw1.
+    \<phi>M_getV \<tau>String V_String.dest raw1 (\<lambda>s1.
+    \<phi>M_getV \<tau>String V_String.dest raw2 (\<lambda>s2.
+    Return (sem_value (V_String.mk (s2 @ s1)))
+)))\<close>
+
+
+
+subsection \<open>Exception\<close>
+
+definition op_revert :: \<open>('VAL,unit,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_revert raw =
+    \<phi>M_getV \<tau>String V_String.dest raw (\<lambda>msg.
+    throw (sem_value (V_Error.mk (Error msg)))
+)\<close>
+
 subsection \<open>Ledge\<close>
 
 paragraph \<open>Load Field\<close>
@@ -565,10 +658,6 @@ definition \<phi>M_get_res_entry_ledge :: \<open>
     R_ledge.\<phi>R_get_res_entry (ledge_ref.instance k) (ledge_ref.path k) (\<lambda>v.
       case v of initialized u \<Rightarrow> \<phi>M_assert (u \<in> Well_Type TY) \<ggreater> F u
         | uninitialized \<Rightarrow> F (the (Zero TY)))"
-
-subsection \<open>Ledge\<close>
-
-paragraph \<open>Load Field\<close>
 
 definition op_load_ledge :: \<open>'TY \<Rightarrow> ('VAL,'VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_load_ledge TY v =
@@ -686,6 +775,42 @@ lemma op_get_mapping_ledgeRef_\<phi>app:
   apply (cases raw_v; cases raw_ref; simp; \<phi>reason; simp add: \<phi>expns)
   by (metis is_singleton_the_elem singletonD)
 
+
+subsubsection \<open>String & Bytes Operations\<close>
+
+lemma op_const_str_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_str s \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l s \<Ztypecolon> String \<rbrace>\<close>
+  unfolding op_const_str_def
+  by \<phi>reason
+
+lemma op_str_concate_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_str_concate (\<phi>V_pair raw1 raw2) \<lbrace> s1 \<Ztypecolon> Val raw1 String\<heavy_comma> s2 \<Ztypecolon> Val raw2 String \<longmapsto> \<^bold>v\<^bold>a\<^bold>l s1 @ s2 \<Ztypecolon> String \<rbrace>\<close>
+  unfolding op_str_concate_def
+  by (cases raw1; cases raw2; simp; \<phi>reason)
+
+
+subsection \<open>Exception\<close>
+
+(* For revert without a message, revert with empty string.
+We do not support CustomError, cuz there isn't a way to catch it in v0.8.17.*)
+
+lemma op_revert_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_revert raw \<lbrace> s \<Ztypecolon> Val raw String \<longmapsto> Any \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s Excep True (Error s) \<rbrace>\<close>
+  unfolding op_revert_def
+  apply (cases raw; simp; \<phi>reason, simp add: Premise_def)
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def
+  apply (clarsimp simp add: \<phi>expns)
+  by (metis mult_1_class.mult_1_right sep_magma_1_left)
+
+declare [[\<phi>not_define_new_const = false]]
+
+proc require:
+  argument \<open>\<^bold>v\<^bold>a\<^bold>l assrt \<Ztypecolon> \<bool>\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l s \<Ztypecolon> String\<close>
+  return   \<open>Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j assrt\<close>
+  throws   \<open>Excep (\<not>assrt) (Error s)\<close>
+  \<medium_left_bracket> if \<open>\<a>\<r>\<g>0\<close> \<medium_left_bracket> drop \<medium_right_bracket>. \<medium_left_bracket> op_revert[where Any=0] \<medium_right_bracket>. \<medium_right_bracket>. .
+
+declare [[\<phi>not_define_new_const]]
 
 subsection \<open>Ledge\<close>
 
