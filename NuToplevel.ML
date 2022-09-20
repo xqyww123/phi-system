@@ -567,7 +567,8 @@ fun gen_begin_block prep_attr bindings int stat =
           if is_top
           then stat
                 |> Proof.apply (Method.Basic (fn ctxt => Method.SIMPLE_METHOD (
-                                    TRY (HEADGOAL (Raw_Simplifier.rewrite_goal_tac ctxt @{thms GOAL_CTXT_def}))
+                                    TRY (HEADGOAL (Raw_Simplifier.rewrite_goal_tac ctxt
+                                          @{thms GOAL_CTXT_def Argument_strip_top}))
                                     THEN HEADGOAL (Object_Logic.full_atomize_tac ctxt)
                                )), Position.no_range)
                 |> Seq.the_result "cannot atomize the first subgoal"
@@ -576,8 +577,11 @@ fun gen_begin_block prep_attr bindings int stat =
           if is_top
           then #goal (Proof.raw_goal stat)
           else the_nu_fact stat
-                  |> Conv.fconv_rule (Conv.prems_conv 1 (Conv.repeat_changed_conv
-                          (Object_Logic.atomize ctxt)))
+                  |> Conv.fconv_rule (Conv.prems_conv 1 (
+                        Conv.repeat_changed_conv (Raw_Simplifier.rewrite ctxt false
+                            @{thms GOAL_CTXT_def Argument_strip_top})
+              then_conv Conv.repeat_changed_conv (Object_Logic.atomize ctxt)
+                     ))
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)
                   |> begin_block
 

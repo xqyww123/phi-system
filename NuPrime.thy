@@ -268,7 +268,7 @@ lemma \<phi>V_simps[simp]:
      apply (cases v, simp)
      apply (cases v, simp)
      apply (cases v, simp)
-     apply simp apply simp apply simp .
+    apply simp apply simp apply simp .
 
 
 subsection \<open>Monadic Formalization\<close>

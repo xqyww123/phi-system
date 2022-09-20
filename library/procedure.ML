@@ -117,15 +117,16 @@ fun add_procedure name ctxt =
 
 val not_define_new_const = Attrib.setup_config_bool \<^binding>\<open>\<phi>not_define_new_const\<close> (K false);
 
-fun norm_def ctxt (m,n) def = let
+fun norm_def ctxt (m,n,instance) def = let
   val vars = strip_abs_vars (Logic.dest_equals (Thm.concl_of def) |> #2)
   val ty_vars = take m vars
         |> map (fn (_, ty) => Thm.cterm_of ctxt (Const ("Pure.type", ty)))
   val normal_vars = take n (drop m vars)
         |> map (fn (name,ty) => Thm.var ((name,0), Thm.ctyp_of ctxt ty))
+  val insts = ty_vars @ normal_vars @ [Thm.cterm_of ctxt instance]
   in
-    fold (fn a => fn b => Thm.combination b a)
-            (map Thm.reflexive (ty_vars @ normal_vars)) def
+    fold (fn a => fn b => Thm.combination b a) (map Thm.reflexive insts) def
+      |> Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>V_simps[folded atomize_eq]}
   end
 
 fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = concl_of x
@@ -133,7 +134,7 @@ fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = 
   | concl_of x = x
 
 
-fun closure _ f =
+fun closure ctxt f =
   let
     val tvars = Term.add_tvars f []
     val (subst,_) = Term.fold_types Term.declare_typ_names f Name.context
@@ -145,8 +146,7 @@ fun closure _ f =
                      ) tvars
     val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f
 
-    val (_,(has_ret,f'')) = Procedure_Syntax.abstract_return_vals "\<a>\<r>\<g>" false f'
-                   |> apsnd (fn Abs (_,\<^typ>\<open>unit sem_value\<close>, X) => (false,X) | X => (true,X))
+    val (instance,f'') = Procedure_Syntax.abstract_return_vals "\<a>\<r>\<g>" false f'
     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
                              | _ => I) f'' []
     fun abst i (Var v) =
@@ -157,11 +157,10 @@ fun closure _ f =
       | abst i (Abs (name,ty,X)) = Abs (name,ty,abst (i+1) X)
       | abst _ X = X
 
-    val arity = length vars + (if has_ret then 1 else 0)
   in abst 0 f''
       |> fold (fn ((name,_), T) => fn X => Abs (name, T, X)) vars
       |> fold (fn (_,tfree) => fn x => Abs ("_", Type ("itself", [tfree]), x)) subst
-      |> pair (length tvars, arity)
+      |> pair (length tvars, length vars, instance)
   end
 
 fun gen_define (binding,attrs) sequent lthy =
@@ -171,11 +170,9 @@ fun gen_define (binding,attrs) sequent lthy =
     val (f,_,_,_) = Thm.concl_of sequent' |> concl_of |> PhiSyntax.dest_procedure 
 
 
-    
-
     (*all variables in the procedure body*)
     (*then f' is the standard form of a definition*)
-    val (arity,f') = closure lthy f
+    val (arity_ins,f') = closure lthy f
 
     val (def_binding,proc_binding) = if Binding.is_empty binding
                                      then (binding,binding)
@@ -194,10 +191,12 @@ fun gen_define (binding,attrs) sequent lthy =
       then (lthy, sequent')
       else lthy
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
-            |-> (fn (tm,(_,def)) => 
-                  Local_Theory.background_theory (Context.theory_map
-                                      (add_procedure (Binding.name_of binding)))
-                  #> rpair (rename (norm_def lthy arity def) sequent'))
+            |-> (fn (tm,(_,def)) => fn lthy_x => 
+                lthy_x
+                  |> Local_Theory.background_theory
+                        (Context.theory_map (add_procedure (Binding.name_of binding)))
+                  |> rpair (rename (norm_def lthy_x arity_ins def) sequent')
+                )
 
     (*val sequent = sequent
           |> Raw_Simplifier.rewrite_rule lthy @{thms atomize_imp}

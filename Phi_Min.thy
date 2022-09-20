@@ -427,6 +427,22 @@ definition op_udiv :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'VAL, 'RES_N
       Return (sem_value (V_int.mk (bits, (val_b div val_a))))
   )))"
 
+definition op_lshr :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'VAL, 'RES_N, 'RES) proc'"
+  where "op_lshr b_b b_a =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV (\<tau>Int b_a) (snd o V_int.dest) va (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int b_b) (snd o V_int.dest) vb (\<lambda>val_b.
+      Return (sem_value (V_int.mk (b_b, (val_b div 2 ^ val_a))))
+  )))"
+
+definition op_lshl :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'VAL, 'RES_N, 'RES) proc'"
+  where "op_lshl b_b b_a =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV (\<tau>Int b_a) (snd o V_int.dest) va (\<lambda>val_a.
+      \<phi>M_getV (\<tau>Int b_b) (snd o V_int.dest) vb (\<lambda>val_b.
+      Return (sem_value (V_int.mk (b_b, (val_b * 2 ^ val_a))))
+  )))"
+
 definition op_lt :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'VAL,'RES_N,'RES) proc'"
   where "op_lt bits =
       \<phi>M_caseV (\<lambda>va vb.
@@ -434,7 +450,6 @@ definition op_lt :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'VAL,'RES_N,'RE
       \<phi>M_getV (\<tau>Int bits) (snd o V_int.dest) vb (\<lambda>val_b.
       Return (sem_value (V_int.mk (1, (if val_b < val_a then 1 else 0))))
   )))"
-
 
 definition op_le :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL,'VAL,'RES_N,'RES) proc'"
   where "op_le bits =

@@ -804,7 +804,7 @@ lemma op_revert_\<phi>app:
 
 declare [[\<phi>not_define_new_const = false]]
 
-proc require:
+proc require :
   argument \<open>\<^bold>v\<^bold>a\<^bold>l assrt \<Ztypecolon> \<bool>\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l s \<Ztypecolon> String\<close>
   return   \<open>Void \<^bold>s\<^bold>u\<^bold>b\<^bold>j assrt\<close>
   throws   \<open>Excep (\<not>assrt) (Error s)\<close>
@@ -1069,7 +1069,7 @@ end
 
 
 
-
+(*
 (*WIP*)
 
 subsection \<open>Call\<close>
@@ -1203,5 +1203,6 @@ definition (in solidity_sem) op_raw_call
   to predict.
   To simply, we adopt a slightly stricter policy that, every external call is
   nondeterministic and can fail. It relieves us from counting stack height or gas consumption.\<close>
+*)
 
 end

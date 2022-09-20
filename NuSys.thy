@@ -181,7 +181,7 @@ and \<phi>lemmata \<open>Contextual facts during the programming. They are autom
 ML_file NuHelp.ML
 ML_file \<open>library/NuSimpCongruence.ML\<close>
 
-subsubsection \<open>Reasoning Tags\<close>
+subsubsection \<open>Forward Definitions of Reasoning Tags\<close>
 
 definition \<open>Assertion_Level_Reasoning T \<equiv> Trueprop T\<close>
 definition \<open>Filter_Out_Free_Values (T::'a set) (T'::'a set) \<equiv> Trueprop (T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T')\<close>
@@ -191,6 +191,8 @@ consts assertion_simplification :: mode
 lemma (in \<phi>fiction) [\<phi>reason 3000 on \<open>PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P)\<close>]:
   \<open>PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X)\<close>
   unfolding Assertion_Level_Reasoning_def using \<phi>view_refl .
+
+definition Argument :: "'a \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where "Argument x = x"
 
 subsubsection \<open>Construction Mode\<close>
 
@@ -354,6 +356,16 @@ lemma "_\<phi>cast_internal_rule_'":
     Assertion_Level_Reasoning_def View_Shift_def
   apply (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff)
   subgoal for x by (cases x; simp; fastforce) .
+
+lemma "_\<phi>cast_exception_":
+  " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+\<Longrightarrow> (\<And>v. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>v\<^bold>i\<^bold>e\<^bold>w E v \<longmapsto> E' v)
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'"
+  unfolding Imply_def PendingConstruction_def bind_def GOAL_CTXT_def
+    View_Shift_def Argument_def
+  apply (simp add: \<phi>expns LooseStateTy_expn' subset_iff; rule)
+  subgoal for x by (cases x; simp; fastforce) .
+
 end
 
 lemma "_\<phi>cast_implication_":
@@ -531,8 +543,6 @@ translations "X" <= "CONST NameHint name X"
 
 subsubsection \<open>Argument tag\<close>
 
-definition Argument :: "'a \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where "Argument x = x"
-
 lemma Argument_I: "P \<Longrightarrow> Argument P" unfolding Argument_def .
 
 text \<open>Sequent in pattern \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P \<Longrightarrow> PROP Q\<close> hints users to input a theorem \<^prop>\<open>A\<^sub>1 \<Longrightarrow> A\<^sub>n \<Longrightarrow> P\<close>
@@ -541,6 +551,9 @@ text \<open>Sequent in pattern \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold
   the reasoner always attempts to solve an unprotected case premises and `Argument` tagging the Subty premise
   in this case prevent this automatic behavior when expecting user to input the cast rule.\<close>
 
+lemma Argument_strip_top:
+  \<open>Trueprop (\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P) \<equiv> Trueprop P\<close>
+  unfolding Argument_def .
 
 
 subsubsection \<open>Technical Tags\<close>
@@ -1337,7 +1350,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop X') (Trueprop (X \<longrightarrow> Y)) (Trueprop Y)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def \<phi>Application_Conv_def by blast
 
-lemma [\<phi>reason 2000]:
+lemma [\<phi>reason 2000 on \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
   \<open>PROP \<phi>Application_Conv (PROP X) (PROP X)\<close>
   unfolding \<phi>Application_Conv_def .
 
@@ -1594,6 +1607,19 @@ lemma (in \<phi>fiction) [\<phi>reason 1200 on \<open>
     Assertion_Level_Reasoning_def
   using \<phi>CONSEQ by blast
 
+
+paragraph \<open>Applying on View Shift Block\<close>
+
+lemma (in \<phi>fiction) [\<phi>reason 1200 on \<open>
+  PROP \<phi>Application_Conv (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P)) (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X' \<longmapsto> ?Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P'))
+\<close>]:
+  \<open> PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any1)
+\<Longrightarrow> PROP Assertion_Level_Reasoning (\<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (Any1 \<and> Any2 \<and> P \<longrightarrow> P')
+\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)) (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P'))\<close>
+  unfolding \<phi>Application_Conv_def Exhaustive_Abstract_def GOAL_CTXT_def FOCUS_TAG_def
+    Assertion_Level_Reasoning_def View_Shift_def
+  by blast
 
 
 paragraph \<open>Applying on Ongoing Implication Construction\<close>
@@ -1944,7 +1970,6 @@ section \<open>Interactive Programming & Proving Environment\<close>
 
 subsection \<open>ML codes\<close>
 
-
 ML_file "./library/instructions.ML"
 ML_file "./general/parser.ML"
 ML_file "./library/processor.ML"
@@ -2214,6 +2239,12 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
 \<phi>processor unfold 2000 (\<open>PROP ?P\<close>) \<open>
   fn (ctxt, sequent) => NuParse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
+)\<close>
+
+(*immediately before the accept call*)
+\<phi>processor (in \<phi>fiction) throws 490 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>)
+  \<open>fn (ctxt, sequent) => \<^keyword>\<open>throws\<close> >> (fn _ => fn () =>
+    (ctxt, sequent RS (Proof_Context.get_thm ctxt "local._\<phi>cast_exception_"))
 )\<close>
 
 (* \<phi>processor goal 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close> \<open>
@@ -4954,7 +4985,7 @@ declare branch_convergence_skip[\<phi>reason 1200
   if no \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 * (?x \<Ztypecolon> Val ?v ?T)) (?N * \<blangle> ?R2 * (?y \<Ztypecolon> Val ?v' ?U) \<brangle>) = (?R::?'a::sep_algebra set) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?rG\<close>
 ]
 
-subsubsection \<open>Object\<close>
+(* subsubsection \<open>Object\<close>
 
 definition EqualAddress :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool "
   where "EqualAddress _ _ = True"
@@ -4962,21 +4993,23 @@ definition EqualAddress :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool "
 lemma [\<phi>reason]:
   "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a1 = a2
    \<Longrightarrow> EqualAddress (a1 \<Zinj> x1 \<Ztypecolon> T1) (a2 \<Zinj> x2 \<Ztypecolon> T2) "
-  unfolding EqualAddress_def ..
+  unfolding EqualAddress_def .. *)
 
 subsubsection \<open>Unfold\<close>
 
-lemma (in \<phi>empty) [\<phi>reason 2000]:
+context \<phi>fiction begin 
+
+lemma [\<phi>reason 2000]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<heavy_comma> R1 \<heavy_comma> R2 \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<heavy_comma> (R1 \<heavy_comma> R2) \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by (metis mult.assoc)
 
-lemma (in \<phi>empty) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1 \<heavy_comma> L2 \<heavy_comma> L3) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1 \<heavy_comma> (L2 \<heavy_comma> L3)) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by (metis mult.assoc)
 
-lemma (in \<phi>empty) [\<phi>reason 2200]:
+lemma [\<phi>reason 2200]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R1 \<heavy_comma> R2 \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> 1 \<heavy_comma> (R1 \<heavy_comma> R2) \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by force
@@ -4984,12 +5017,12 @@ lemma (in \<phi>empty) [\<phi>reason 2200]:
 
 subsubsection \<open>Padding Void\<close>
 
-lemma (in \<phi>empty) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (1 \<heavy_comma> x \<Ztypecolon> T) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by force
 
-lemma (in \<phi>empty) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> 1 \<heavy_comma> y \<Ztypecolon> U \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> y \<Ztypecolon> U \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by force
@@ -4997,23 +5030,23 @@ lemma (in \<phi>empty) [\<phi>reason 2000]:
 
 subsubsection \<open>Eliminate Void Hole\<close>
 
-lemma (in \<phi>empty) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<heavy_comma> 1 \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by force
 
-lemma (in \<phi>empty) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
    \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L \<heavy_comma> 1) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def by force
 
 subsubsection \<open>Termination\<close>
 
-lemma (in \<phi>empty) [\<phi>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P 1 (1 \<heavy_comma> \<blangle> 1 \<brangle>) = ?X'' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P 1 (1 \<heavy_comma> \<blangle> 1 \<brangle>) = ?X'' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P 1 (1 \<heavy_comma> \<blangle> 1 \<brangle>) = 1 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Conv_def cast_def Merge_def by force
   
-
+end
 
 
 (* subsection \<open>Program Interface\<close> \<comment> \<open>Interfaces exported to target LLVM module\<close>
