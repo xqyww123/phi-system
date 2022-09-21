@@ -7,6 +7,7 @@ theory Phi_Logic_Programming_Reasoner
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
   and "<conv>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
+  and "<action>" = "\<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>>"
 begin
 
 chapter \<open>\<phi> Logic Programming Reasoner\<close>
@@ -92,12 +93,34 @@ section \<open>Facilities & Tools\<close>
 
 subsection \<open>General Structures\<close>
 
+subsubsection \<open>Action\<close>
+
+typedecl 'cat action
+
+definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> _" [2,1000] 2)
+  where \<open>Action_Tag P A \<equiv> P\<close>
+
+text \<open>\<^prop>\<open>P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close> is a general way to annotate the rule \<^prop>\<open>P\<close> intends for
+  specific usage or purpose of \<^term>\<open>A\<close>.
+
+  The type variable \<^typ>\<open>'cat\<close> in \<^typ>\<open>'cat action\<close> enables to classify actions by classes.
+  Then an operation can be designed for any generic action \<^term>\<open>act :: 'ty action\<close> whose
+  type \<^typ>\<open>'ty\<close> belongs to certain class.\<close>
+
+lemma Action_Tag_I:
+  \<open>P \<Longrightarrow> P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close>
+  unfolding Action_Tag_def .
+
+lemma Conv_Action_Tag_I:
+  \<open>X = X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close>
+  unfolding Action_Tag_def ..
+
 subsubsection \<open>Mode\<close>
 
 text \<open>Modes are annotations of the automation. They are typically used specifically to determine
   the modes of the automation method to be applied. For example, see the Premise tag.\<close>
 
-typedef mode = "UNIV :: nat set" ..
+type_synonym mode = \<open>unit action\<close>
 
 consts default :: mode
 consts MODE_SIMP :: mode \<comment> \<open>relating to simplifier or simplification\<close>
@@ -216,21 +239,17 @@ text \<open>Terminates the reasoning successfully and immediately\<close>
 
 subsection \<open>Conversion\<close>
 
-definition Conv :: "mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v[_] _ = _" [10,51,51] 50)
-  where "Conv mode origin obj \<longleftrightarrow> obj = origin"
+definition Conv :: "'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v _ = _" [51,51] 50)
+  where "Conv origin obj \<longleftrightarrow> obj = origin"
 
-text \<open>\<^prop>\<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A = B\<close> indicates the reasoner should convert \<^term>\<open>A\<close> into some \<^term>\<open>B\<close>.
+text \<open>\<^prop>\<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v A = B \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close> indicates the reasoner should convert \<^term>\<open>A\<close> into some \<^term>\<open>B\<close>.
   Specific rules should be configured to reason those goals.\<close>
 
-abbreviation Default_Conv :: "'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v _ = _" [51,51] 50)
-  where "Default_Conv \<equiv> Conv default"
-
 lemma Conv_cong[cong]:
-  \<open>A \<equiv> A' \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A = B \<equiv> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A' = B\<close>
+  \<open>A \<equiv> A' \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v A = B \<equiv> \<^bold>c\<^bold>o\<^bold>n\<^bold>v A' = B\<close>
   by simp
 
-lemma Conv_I: \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[mode] A = A\<close>
-  unfolding Conv_def ..
+lemma Conv_I: \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v A = A\<close> unfolding Conv_def ..
 
 
 subsubsection \<open>Matches\<close>

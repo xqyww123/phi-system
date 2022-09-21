@@ -22,7 +22,6 @@ abbrevs
   and "<obligation>" = "\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n"
   and ">->" = "\<Zinj>"
   and "<;>" = "\<Zcomp>"
-  and "<action>" = "\<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>>"
   and "<val>" = "\<^bold>v\<^bold>a\<^bold>l"
   and "<ret>" = "\<^bold>r\<^bold>e\<^bold>t"
   and "<is>" = "\<^bold>i\<^bold>s"
@@ -732,24 +731,24 @@ declare proc_bind_SKIP[procedure_simps]
   = (rule Premise_I; simp only: procedure_simps; fail)
 
 \<phi>reasoner procedure_simplification 1200
-    (conclusion \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[procedure_simplification] ?Q = ?P\<close>)
-  = ((simp only: procedure_simps)?, rule Conv_I; fail)
+    (conclusion \<open>?Q = ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification\<close>)
+  = ((simp only: procedure_simps)?, rule Conv_Action_Tag_I; fail)
 
 context \<phi>fiction begin
 
 lemma "\<phi>__final_proc_rewrite__":
-  \<open> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[procedure_simplification] f = f'
+  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>\<close>
-  unfolding Conv_def by simp
+  unfolding Action_Tag_def by simp
 
 lemma "\<phi>__final_proc_rewrite__'":
-  \<open> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[procedure_simplification] f = f'
+  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Conv_def by simp
+  unfolding Conv_def Action_Tag_def by simp
 
 end
 
@@ -1654,23 +1653,17 @@ text \<open>Action is a kind of meta calling mechanism.
   When user inputs some action name to call, initially the system does not know what
     the user intends to do, to construct a procedure or to cast by a view shift or to
       synthesis something or even to call a combination of these features.
-  The construction going to happen on the sequent is decided by reasoning.
+  The exact construction is decided by reasoning.
   The action name is encoded into an antecedent, and then the reasoner starts to
     try to solve the antecedent, causing the system starts to construct the sequent
     according to the given action name and configured reasoning rules relating to
     this action name.\<close>
 
-typedecl 'cat action
-
 text \<open>The action name is encoded to be a fixed free variable or a constant of \<^typ>\<open>'cat action\<close>.
   Therefore the pattern matching can be native and fast.
   Note an action can be parameterized like, \<^typ>\<open>nat \<Rightarrow> bool \<Rightarrow> 'cat action\<close> parameterized
     by a nat and a boolean. Other parameters can come from the sequent.
-
-  (*The name encoding is by prefixing "\<A>\<c>\<t>\<i>\<o>\<n>_"*)\<close>
-
-definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> _" [2,1000] 2)
-  where \<open>Action_Tag P A \<equiv> P\<close>
+\<close>
 
 text \<open>\<^prop>\<open>P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close> tells \<^prop>\<open>A\<close> is something relating to the action Act, typically
   a procedure rule or an implication or a view shift rule.\<close>
@@ -1725,6 +1718,7 @@ class multi_args_fixed_first
        The action has to always have the shape of `?remain_args \<heavy_comma> ?the_first_arg \<longmapsto> \<cdots>`
         even when the ?remain_args is the Void. *)
 class single_target (* The argument of the action consists of only the first \<phi>-Type element. *)
+class whole_target (* The action applies on the whole assertion. *)
 class structural (* structural homomorphism, A \<longmapsto> B \<Longrightarrow> T(A) \<longmapsto> T(B) *)
 class structural_1_2 (* homomorphism of form A \<longmapsto> B * C \<Longrightarrow> T(A) \<longmapsto> T(B) * T(C) *)
 class structural_2_1 (* homomorphism of form A * B \<longmapsto> C \<Longrightarrow> T(A) * T(B) \<longmapsto> T(C) *)
@@ -1774,6 +1768,17 @@ lemma [\<phi>reason 1100 on \<open>PROP Do_Action (?action::?'a::view_shift acti
   using \<phi>apply_view_shift_P \<phi>frame_view by blast
 
 lemma [\<phi>reason 1200
+    on \<open>PROP Do_Action (?action::?'a::{view_shift, whole_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
+]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action
+\<Longrightarrow> PROP Do_Action action
+      (Trueprop (CurrentConstruction mode s H X))
+      (Trueprop (CurrentConstruction mode s H Y \<and> Any))\<close>
+  for action :: \<open>('a::{view_shift, whole_target}) action\<close>
+  unfolding Do_Action_def Assertion_Level_Reasoning_def Action_Tag_def
+  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+
+lemma [\<phi>reason 1200
     on \<open>PROP Do_Action (?action::?'a::{view_shift, single_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
     if no \<open>PROP Do_Action ?action (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Result\<close>
 ]:
@@ -1807,6 +1812,16 @@ lemma [\<phi>reason 1200 on \<open>PROP Do_Action (?action::?'a::{multi_args_fix
   unfolding Do_Action_def Assertion_Level_Reasoning_def Action_Tag_def
   by (metis (no_types, lifting) \<phi>fiction.\<phi>view_shift_P \<phi>fiction_axioms \<phi>view_shift_intro_frame \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1))
 
+lemma [\<phi>reason
+    on \<open>PROP Do_Action (?action::?'a::whole_target action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
+]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action
+\<Longrightarrow> PROP Do_Action action
+      (Trueprop (CurrentConstruction mode s H X))
+      (Trueprop (CurrentConstruction mode s H Y \<and> Any))\<close>
+  for action :: \<open>('a::whole_target) action\<close>
+  unfolding Do_Action_def Assertion_Level_Reasoning_def Action_Tag_def
+  using \<phi>apply_view_shift_P \<phi>frame_view by blast
 
 lemma [\<phi>reason
     on \<open>PROP Do_Action (?action::?'a::single_target action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1854,6 +1869,17 @@ lemma [\<phi>reason 1100 on \<open>PROP Do_Action (?action::?'a::implication act
       (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> P2 \<and> P))\<close>
   for action :: \<open>'a::implication action\<close>
   unfolding Do_Action_def Action_Tag_def Assertion_Level_Reasoning_def
+  using \<phi>apply_view_shift_P \<phi>view_shift_by_implication implies_left_prod by blast
+
+lemma [\<phi>reason 1200
+    on \<open>PROP Do_Action (?action::?'a::{whole_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
+]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action
+\<Longrightarrow> PROP Do_Action action
+      (Trueprop (CurrentConstruction mode s H X))
+      (Trueprop (CurrentConstruction mode s H Y \<and> P))\<close>
+  for action :: \<open>'a::{whole_target,implication} action\<close>
+  unfolding Do_Action_def Action_Tag_def
   using \<phi>apply_view_shift_P \<phi>view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1200
@@ -3973,6 +3999,45 @@ lemma [\<phi>reason 1000]: "SameNuTy A A" \<comment> \<open>The fallback\<close>
   unfolding SameNuTy_def ..
 
 
+subsubsection \<open>Structural Pattern\<close>
+
+definition Structural_Pattern :: \<open>'a \<Rightarrow> 'b \<Rightarrow> prop\<close>
+  where \<open>Structural_Pattern Input Output_Pattern \<equiv> Trueprop True\<close>
+
+lemma [\<phi>reason 30]:
+  \<open>PROP Structural_Pattern T T'\<close>
+  unfolding Structural_Pattern_def ..
+
+lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (Val ?v ?T) ?X\<close>]:
+  \<open>PROP Structural_Pattern (Val v T) (Val v T')\<close>
+  unfolding Structural_Pattern_def ..
+
+lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (?k \<^bold>\<rightarrow> ?T) ?X\<close>]:
+  \<open> PROP Structural_Pattern T T'
+\<Longrightarrow> PROP Structural_Pattern (k \<^bold>\<rightarrow> T) (k \<^bold>\<rightarrow> T')\<close>
+  unfolding Structural_Pattern_def ..
+
+lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?T) ?X\<close>]:
+  \<open> PROP Structural_Pattern T T'
+\<Longrightarrow> PROP Structural_Pattern (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T')\<close>
+  unfolding Structural_Pattern_def ..
+
+lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (?T \<^emph> ?U) ?X\<close>]:
+  \<open> PROP Structural_Pattern T T'
+\<Longrightarrow> PROP Structural_Pattern U U'
+\<Longrightarrow> PROP Structural_Pattern (T \<^emph> U) (T' \<^emph> U')\<close>
+  unfolding Structural_Pattern_def ..
+
+lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (?n \<Znrres> ?T) ?X\<close>]:
+  \<open> PROP Structural_Pattern T T'
+\<Longrightarrow> PROP Structural_Pattern (n \<Znrres> T) (n \<Znrres> T')\<close>
+  unfolding Structural_Pattern_def ..
+
+lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (\<black_circle> ?T) ?X\<close>]:
+  \<open> PROP Structural_Pattern T T'
+\<Longrightarrow> PROP Structural_Pattern (\<black_circle> T) (\<black_circle> T')\<close>
+  unfolding Structural_Pattern_def ..
+
 subsection \<open>Process of Cleaning\<close>
 
 definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>\<r>Clean S \<longleftrightarrow> (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1)\<close>
@@ -4792,156 +4857,245 @@ lemma [\<phi>reason 2000]:
 
 
 
-subsection \<open>Structural Pairs\<close> (*depreciated*)
+(* subsection \<open>Structural Pairs\<close> (*depreciated*)
 
 definition StructuralTag ("<Structural> _" [10] 9) where "StructuralTag \<equiv> Trueprop"
-lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def .
+lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def . *)
+
+
 
 
 subsection \<open>Convergence of Branches\<close>
 
+text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the canonical \<phi>-BI form \<^term>\<open>C\<close>.
+
+  The strongest post-condition of a branch statement results in \<^term>\<open>If P A B\<close> typically.
+  It is strongest but not good because it violates the canonical \<phi>-BI form.
+  Thus an automation procedure here is presented to transform it.
+  Typically it unifies refinement relations in two branches but leaves abstract objects
+  in an if expression.
+
+  The transformation is as strong as possible to minimize the loose of information.
+  It is clear if two branches are in the same refinement, no information will be lost.
+  If not, and any necessary information is lost in this process, user can always manually transform
+  the assertion before the end of each branch, to unify the refinement of two branches.
+\<close>
+
 text \<open>This merging procedure retains the order of the left side.\<close>
 
-consts branch_convergence :: mode
+typedecl branch_convergence
+instance branch_convergence :: whole_target ..
+consts branch_convergence :: \<open>branch_convergence action\<close>
 
-definition "Merge \<equiv> If"
-(*definition "MergeNeg \<equiv> Not"*)
-
-text \<open>Though definitionally Merge is identical to If, there is semantic difference between them.
-  Merge has a systematical meaning. Merge P A B means the procedure merging two assertions
+(* text \<open>Though definitionally If is identical to If, there is semantic difference between them.
+  If has a systematical meaning. If P A B means the procedure merging two assertions
   A and B, whereas If P A B means to merge two abstract objects or two refinement relations.
   A key difference in the procedure is, there is fallback for If P A B. If there is no further
   rule telling how to do with If P A B, then the result of the procedure on this is just
   If P A B itself --- it is usual that a branch statement returning 1 or 2 is specified by
-  \<^term>\<open>(if P then 1 else 2) \<Ztypecolon> \<phi>Nat\<close>. In contrast, there is no fallback for Merge P A B, because
-  a failure of Merge P A B means the failure of merging those two assertions A and B, which is
-  the failure of the whole merging procedure.\<close>
+  \<^term>\<open>(if P then 1 else 2) \<Ztypecolon> \<phi>Nat\<close>. In contrast, there is no fallback for If P A B, because
+  a failure of If P A B means the failure of merging those two assertions A and B, which is
+  the failure of the whole merging procedure.\<close> *)
 
 subsubsection \<open>Identity\<close>
 
-lemma [\<phi>reason 3000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If ?P ?A ?A'' = ?X\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P A A = A"
-  unfolding Conv_def using if_cancel ..
+lemma [\<phi>reason 3000 on \<open>If ?P ?A ?A'' = ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "If P A A = A \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason 3000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?A ?A'' = ?X\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P A A = A"
-  unfolding Conv_def Merge_def using if_cancel ..
+lemma (in \<phi>fiction) [\<phi>reason 3000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?A ?A'' \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w If P A A \<longmapsto> A \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by (simp add: view_shift_id)
+
+lemma [\<phi>reason 3000 on \<open>If ?P ?A ?A'' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "If P A A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def by simp
 
 subsubsection \<open>Zero\<close>
 
-lemma [\<phi>reason 3000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?A 0 = ?X\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P A 0 = (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)"
-  unfolding Conv_def Merge_def set_eq_iff
+lemma (in \<phi>fiction)
+  [\<phi>reason 3000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?A 0 \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w If P A 0 \<longmapsto> (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def View_Shift_def
+  by simp
+
+lemma (in \<phi>fiction)
+  [\<phi>reason 3000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P 0 ?A \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w If P 0 A \<longmapsto> (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def View_Shift_def
+  by simp
+
+lemma [\<phi>reason 3000 on \<open>If ?P ?A 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "If P A 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def
   by (simp add: \<phi>expns zero_set_def)
 
-lemma [\<phi>reason 3000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P 0 ?A = ?X\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P 0 A = (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P)"
-  unfolding Conv_def Merge_def set_eq_iff
+lemma [\<phi>reason 3000 on \<open>If ?P 0 ?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "If P 0 A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def
   by (simp add: \<phi>expns zero_set_def)
 
 
 subsubsection \<open>Fallback\<close>
 
-lemma [\<phi>reason 10 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If ?P ?A ?B = ?X\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P A B = If P A B"
-  unfolding Conv_def ..
+lemma [\<phi>reason 10 on \<open>If ?P ?A ?B = ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "If P A B = If P A B \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def ..
 
-text \<open>There is no fallback for \<^const>\<open>Merge\<close>. The Merge is not allowed to be fallback.
-  If the convergence for Merge fails, the reasoning fails.\<close>
+text \<open>There is no fallback for \<^const>\<open>If\<close>. The If is not allowed to be fallback.
+  If the convergence for If fails, the reasoning fails.\<close>
 
 subsubsection \<open>Ad-hoc rules\<close>
 
-lemma [\<phi>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?X ?Y = (?Z::?'a sem_value \<Rightarrow> ?'b)\<close>]:
-  \<open> (\<And>ret::'a sem_value. \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (X ret) (Y ret) = Z ret)
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P X Y = Z\<close>
-  unfolding Conv_def Merge_def by force
+lemma [\<phi>reason on \<open>If ?P (?a \<Zinj> ?x) (?b \<Zinj> ?y) = ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  " If P a b = aa \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P x y = z  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (a \<Zinj> x) (b \<Zinj> y) = (aa \<Zinj> z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by force
 
-lemma [\<phi>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) = ?X\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P x y = z
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) (y \<Ztypecolon> T) = (z \<Ztypecolon> T) "
-  unfolding Conv_def Merge_def by force
+lemma (in \<phi>fiction) branch_convergence_skip:
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (R1 * X) (N * Y * \<blangle> R2 \<brangle>) \<longmapsto> R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (R1 * X) (N * \<blangle> R2 * Y \<brangle>) \<longmapsto> R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+  unfolding FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  by (metis mult.assoc mult.commute)
 
-lemma [\<phi>reason on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If ?P (?a \<Zinj> ?x) (?b \<Zinj> ?y) = ?X\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P a b = aa
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P x y = z
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P (a \<Zinj> x) (b \<Zinj> y) = (aa \<Zinj> z)"
-  unfolding Conv_def Merge_def by force
-
-lemma branch_convergence_skip:
-  " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 * X) (N * Y * \<blangle> R2 \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 * X) (N * \<blangle> R2 * Y \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+lemma branch_convergence_skip_imp:
+  " If P (R1 * X) (N * Y * \<blangle> R2 \<brangle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> If P (R1 * X) (N * \<blangle> R2 * Y \<brangle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   for R :: \<open>'a::sep_algebra set\<close>
-  unfolding Conv_def cast_def Merge_def
-  by (simp add: mult.commute mult.left_commute)
+  unfolding FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  by (metis mult.assoc mult.commute)
+
 
 (*
 lemma [\<phi>reason 3000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P A B = X
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge (MergeNeg (MergeNeg P)) A B = X"
+  "If P A B = X
+  \<Longrightarrow> If (MergeNeg (MergeNeg P)) A B = X"
   unfolding MergeNeg_def by simp
 
 lemma [\<phi>reason 2800]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P B A = X
-  \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If (MergeNeg P) A B = X"
+  "If P B A = X
+  \<Longrightarrow> If (MergeNeg P) A B = X"
   unfolding MergeNeg_def by force
 *)
 
 subsubsection \<open>Subjection\<close>
 
 lemma [\<phi>reason 1400]:
-  \<open> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL1 \<and> QL2) R = Z
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL2) R = Z\<close>
-  unfolding Conv_def Merge_def Subjection_Subjection .
+  \<open> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Subjection_Subjection .
 
 lemma [\<phi>reason 1400]:
-  \<open> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR1 \<and> QR2) = Z
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR2) = Z\<close>
-  unfolding Conv_def Merge_def Subjection_Subjection .
+  \<open> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Subjection_Subjection .
 
-lemma [\<phi>reason 1300 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) = ?X\<close>]:
-  " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] If P QL QR = Q
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L R = X
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL) (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR) = (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)"
-  unfolding Conv_def Merge_def by force
+lemma (in \<phi>fiction) [\<phi>reason 1400]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) R \<longmapsto> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) R \<longmapsto> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Subjection_Subjection .
 
-lemma [\<phi>reason 1200 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) ?R = ?X\<close>]:
+lemma (in \<phi>fiction) [\<phi>reason 1400]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) \<longmapsto> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) \<longmapsto> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Subjection_Subjection .
+
+lemma (in \<phi>fiction)
+  [\<phi>reason 1300 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  " If P QL QR = Q \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL) (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR) \<longmapsto> (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def View_Shift_def by force
+
+lemma [\<phi>reason 1300 on \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  " If P QL QR = Q \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL) (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def by force
+
+lemma [\<phi>reason 1200
+    on \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L R = X
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R = (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q)"
-  unfolding Conv_def Merge_def by force
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Imply_def Action_Tag_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) = ?X\<close>]:
+lemma (in \<phi>fiction) [\<phi>reason 1200
+    on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L R = X
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) = (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q)"
-  unfolding Conv_def Merge_def by force
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R \<longmapsto> (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def View_Shift_def
+  by (clarsimp simp add: \<phi>expns; blast)
+
+lemma [\<phi>reason 1200 on \<open>If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
+
+lemma (in \<phi>fiction)
+  [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<longmapsto> (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def View_Shift_def
+  by (clarsimp simp add: \<phi>expns; blast)
+
 
 subsubsection \<open>Existential\<close>
 
-lemma Conv_Merge_Ex_both:
-  "(\<And>x. \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L x) (R x) = X x)
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (\<exists>* x. L x) (\<exists>* x. R x) = (\<exists>* x. X x)"
-  unfolding Conv_def Merge_def by (simp add: set_eq_iff \<phi>expns)
+lemma (in \<phi>fiction) Conv_Merge_Ex_both:
+  "(\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L x) (R x) \<longmapsto> X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (\<exists>* x. L x) (\<exists>* x. R x) \<longmapsto> (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def View_Shift_def
+  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; fastforce)
 
-lemma Conv_Merge_Ex_R[\<phi>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?L (\<exists>* x. ?R x) = ?X\<close>]:
-  "(\<And>x. \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (R x) = X x)
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P  L (\<exists>* x. R x) = (\<exists>* x. X x)"
-  unfolding Conv_def Merge_def by (simp add: set_eq_iff \<phi>expns)
+lemma Conv_Merge_Ex_both_imp:
+  "(\<And>x. If P (L x) (R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
+\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def
+  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; blast)
 
-lemma [\<phi>reason 1100 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (\<exists>* x. ?L x) ?R = ?X\<close>]:
-  "(\<And>x. \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L x) R = X x)
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (\<exists>* x. L x) R = (\<exists>* x. X x)"
-  unfolding Conv_def Merge_def by (simp add: set_eq_iff \<phi>expns)
+lemma (in \<phi>fiction) Conv_Merge_Ex_R
+  [\<phi>reason 1100 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?L (\<exists>* x. ?R x) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "(\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R x) \<longmapsto> X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (\<exists>* x. R x) \<longmapsto> (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def View_Shift_def
+  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; fastforce)
+
+lemma Conv_Merge_Ex_R_imp
+  [\<phi>reason 1100 on \<open>If ?P ?L (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "(\<And>x. If P L (R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
+\<Longrightarrow> If P L (\<exists>* x. R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def
+  by (cases P; simp add: set_eq_iff \<phi>expns; blast)
+
+lemma (in \<phi>fiction)
+  [\<phi>reason 1100 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (\<exists>* x. ?L x) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "(\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L x) R \<longmapsto> X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (\<exists>* x. L x) R \<longmapsto> (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def View_Shift_def
+  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; fastforce)
+
+lemma [\<phi>reason 1100 on \<open>If ?P (\<exists>* x. ?L x) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  "(\<And>x. If P (L x) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
+\<Longrightarrow> If P (\<exists>* x. L x) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def by (cases P; simp add: set_eq_iff \<phi>expns; blast)
 
 text \<open>The merging recognize two existential quantifier are identical if their type and variable name
-  are the same. If so it uses @{thm Conv_Merge_Ex_both} to merge the quantification,
+  are the same. If so it uses Conv_Merge_Ex_both to merge the quantification,
   or else the right side is expanded first.\<close>
 
-\<phi>reasoner_ML Merge_Existential 2000 (conclusion \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) = ?X\<close>) =
+\<phi>reasoner_ML (in \<phi>fiction) Merge_Existential 2000
+  (conclusion \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>) =
 \<open>fn (ctxt,sequent) =>
   let
     val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Conv\<close>, _) $
-        (Const (\<^const_name>\<open>Merge\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
+        (Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
                                           $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))))
         = Thm.major_prem_of sequent
     val sequent' = if exa = exb andalso tya = tyb
@@ -4950,40 +5104,93 @@ text \<open>The merging recognize two existential quantifier are identical if th
   in Seq.single (ctxt, sequent')
   end\<close>
 
+\<phi>reasoner_ML Merge_Existential_imp 2000 (conclusion \<open>If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X\<close>) =
+\<open>fn (ctxt,sequent) =>
+  let
+    val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Conv\<close>, _) $
+        (Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
+                                          $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))))
+        = Thm.major_prem_of sequent
+    val sequent' = if exa = exb andalso tya = tyb
+                   then @{thm Conv_Merge_Ex_both_imp} RS sequent
+                   else @{thm Conv_Merge_Ex_R_imp} RS sequent
+  in Seq.single (ctxt, sequent')
+  end\<close>
 
-subsubsection \<open>Separations Initialization\<close>
 
-lemma (in \<phi>empty) [\<phi>reason 1200
-    on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?L1 * ?L2) ?R = ?X\<close>
-  if no \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P ?L (?R1\<heavy_comma> \<blangle> ?R2 \<brangle>) = ?X\<close>
-]:
-  " SUBGOAL TOP_GOAL G
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1\<heavy_comma> L2) (1\<heavy_comma> \<blangle> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1\<heavy_comma> L2) R = X"
-  unfolding Conv_def cast_def mult_1_left .
 
-(*TODO*)
+subsubsection \<open>Main Procedure\<close>
 
-subsubsection \<open>Value\<close>
+lemma [\<phi>reason 2000 on \<open>If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  " If P x y = z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (z \<Ztypecolon> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def Imply_def by (cases P; simp)
 
-lemma [\<phi>reason 1200 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?x \<Ztypecolon> Val ?v ?T) (?y \<Ztypecolon> Val ?v' ?U) = ?X\<close>]: 
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) (y \<Ztypecolon> U) = (z \<Ztypecolon> Z)
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> Val v T) (y \<Ztypecolon> Val v U) = (z \<Ztypecolon> Val v Z)"
-  unfolding Conv_def cast_def Merge_def set_eq_iff by (simp add: \<phi>expns)
+lemma (in \<phi>fiction)
+  [\<phi>reason 2000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  " If P x y = z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<longmapsto> (z \<Ztypecolon> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def
+  by (cases P; clarsimp simp add: \<phi>expns view_shift_id)
 
-lemma [\<phi>reason 1200 on
-  \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 * (?x \<Ztypecolon> Val ?v ?T)) (?N * \<blangle> ?R2 * (?y \<Ztypecolon> Val ?v' ?U) \<brangle>) = (?X::?'a::sep_algebra set) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-]:
-  " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) (y \<Ztypecolon> U) = (z \<Ztypecolon> Z)
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P R1 (1 * \<blangle> N * R2 \<brangle>) = R \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (R1 * (x \<Ztypecolon> Val v T)) (N * \<blangle> R2 * (y \<Ztypecolon> Val v U) \<brangle>) = (R * (z \<Ztypecolon> Val v Z)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  for R :: \<open>'a::sep_algebra set\<close>
-  unfolding Conv_def cast_def Merge_def by (simp add: \<phi>expns)
+lemma [\<phi>reason 1200 on \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> PROP Structural_Pattern T T'
+\<Longrightarrow> SUBGOAL TOP_GOAL G
+\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> If P x y = z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P T T' = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P L R' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * (z \<Ztypecolon> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def Assertion_Level_Reasoning_def GOAL_CTXT_def FOCUS_TAG_def
+  by (smt (z3) Imply_def implies_right_prod)
 
-declare branch_convergence_skip[\<phi>reason 1200
-     on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 * (?x \<Ztypecolon> Val ?v ?T)) (?N * \<blangle> ?R2 * ?Y \<brangle>) = (?R::?'a::sep_algebra set) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-  if no \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P (?R1 * (?x \<Ztypecolon> Val ?v ?T)) (?N * \<blangle> ?R2 * (?y \<Ztypecolon> Val ?v' ?U) \<brangle>) = (?R::?'a::sep_algebra set) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?rG\<close>
-]
+lemma (in \<phi>fiction)
+  [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> PROP Structural_Pattern T T'
+\<Longrightarrow> SUBGOAL TOP_GOAL G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> If P x y = z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P T T' = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R' \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L * (x \<Ztypecolon> T)) R \<longmapsto> X * (z \<Ztypecolon> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def Assertion_Level_Reasoning_def GOAL_CTXT_def FOCUS_TAG_def
+  by (smt (z3) View_Shift_def mult.commute mult.left_commute)
+
+
+
+subsubsection \<open>Convergence of Structural Nodes\<close>
+
+lemma [\<phi>reason 1200 on \<open>If ?P (?n \<Znrres> ?T) (?n' \<Znrres> ?U) = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (n \<Znrres> T) (n \<Znrres> U) = n \<Znrres> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 1200 on \<open>If ?P (?T \<^emph> ?U) (?T' \<^emph> ?U') = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> If P T T' = T'' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P U U' = U'' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (T \<^emph> U) (T' \<^emph> U') = (T'' \<^emph> U'') \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 1200 on \<open>If ?P (?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?T) (?k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?U) = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s U) = k \<^bold>\<rightarrow>\<^sub>L\<^sub>s Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 1200 on \<open>If ?P (?k \<^bold>\<rightarrow> ?T) (?k' \<^bold>\<rightarrow> ?U) = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (k \<^bold>\<rightarrow> T) (k \<^bold>\<rightarrow> U) = k \<^bold>\<rightarrow> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 1200 on \<open>If ?P (Val ?v ?T) (Val ?v' ?U) = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open>If P (Val v T) (Val v U) = Val v (If P T U) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def by simp
+
+lemma [\<phi>reason 1200 on \<open>If ?P (\<black_circle> ?T) (\<black_circle> ?U) = (\<black_circle> ?Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (\<black_circle> T) (\<black_circle> U) = (\<black_circle> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def by fastforce
 
 (* subsubsection \<open>Object\<close>
 
@@ -4997,56 +5204,51 @@ lemma [\<phi>reason]:
 
 subsubsection \<open>Unfold\<close>
 
-context \<phi>fiction begin 
+lemma (in \<phi>fiction) [\<phi>reason 2000]:
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (N \<heavy_comma> R1 \<heavy_comma> R2) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (N \<heavy_comma> (R1 \<heavy_comma> R2)) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by (metis mult.assoc)
 
 lemma [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<heavy_comma> R1 \<heavy_comma> R2 \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<heavy_comma> (R1 \<heavy_comma> R2) \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by (metis mult.assoc)
+  " If P L (N * R1 * R2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P L (N * (R1 * R2)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  for N :: \<open>'a::sep_semigroup set\<close>
+  unfolding Action_Tag_def by (metis mult.assoc)
 
 lemma [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1 \<heavy_comma> L2 \<heavy_comma> L3) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L1 \<heavy_comma> (L2 \<heavy_comma> L3)) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by (metis mult.assoc)
+  " If P (L1 * L2 * L3) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (L1 * (L2 * L3)) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  for R :: \<open>'a::sep_semigroup set\<close>
+  unfolding Action_Tag_def by (metis mult.assoc)
 
-lemma [\<phi>reason 2200]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R1 \<heavy_comma> R2 \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> 1 \<heavy_comma> (R1 \<heavy_comma> R2) \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by force
-
-
-subsubsection \<open>Padding Void\<close>
-
-lemma [\<phi>reason 2000]:
-  " \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (1 \<heavy_comma> x \<Ztypecolon> T) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (x \<Ztypecolon> T) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by force
-
-lemma [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> 1 \<heavy_comma> y \<Ztypecolon> U \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> y \<Ztypecolon> U \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by force
-
+lemma (in \<phi>fiction) [\<phi>reason 2000]:
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L1 \<heavy_comma> L2 \<heavy_comma> L3) R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L1 \<heavy_comma> (L2 \<heavy_comma> L3)) R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by (metis mult.assoc)
 
 subsubsection \<open>Eliminate Void Hole\<close>
 
 lemma [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L (N \<heavy_comma> \<blangle> R \<heavy_comma> 1 \<brangle>) = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by force
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P L (R * 1) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  for R :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason 2000]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P L R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-   \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P (L \<heavy_comma> 1) R = X \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def by force
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (L * 1) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  for R :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def by (cases P; simp)
 
-subsubsection \<open>Termination\<close>
+lemma (in \<phi>fiction) [\<phi>reason 2000]:
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<heavy_comma> 1) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by (cases P; simp)
 
-lemma [\<phi>reason 2000 on \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge ?P 1 (1 \<heavy_comma> \<blangle> 1 \<brangle>) = ?X'' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  "\<^bold>c\<^bold>o\<^bold>n\<^bold>v[branch_convergence] Merge P 1 (1 \<heavy_comma> \<blangle> 1 \<brangle>) = 1 \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Conv_def cast_def Merge_def by force
-  
-end
+lemma (in \<phi>fiction) [\<phi>reason 2000]:
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L \<heavy_comma> 1) R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by (cases P; simp)
 
 
 (* subsection \<open>Program Interface\<close> \<comment> \<open>Interfaces exported to target LLVM module\<close>
@@ -5925,6 +6127,16 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<r>Clean (x \<Ztypecolon> \<phi> T) \<close>
   unfolding \<r>Clean_def Imply_def apply (simp add: \<phi>expns)
   using mk_homo_one by blast
+
+lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (\<phi> ?T) ?X\<close>]:
+  \<open> PROP Structural_Pattern T T'
+\<Longrightarrow> PROP Structural_Pattern (\<phi> T) (\<phi> T')\<close>
+  unfolding Structural_Pattern_def ..
+
+lemma [\<phi>reason 1200 on \<open>If ?P (\<phi> ?T) (\<phi> ?U) = (\<phi> ?Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (\<phi> T) (\<phi> U) = (\<phi> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def by fastforce
 
 paragraph \<open>Conversion\<close>
 
