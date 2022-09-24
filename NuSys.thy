@@ -1708,6 +1708,7 @@ subsubsection \<open>Classes of Actions\<close>
 class view_shift  (* The action is always a view shift *)
 class implication (* The action is always an implication *)
 class procedure   (* The action is always a procedure *)
+class can_be_implication (* The action can be an implication *)
 class simplification begin
 subclass implication .
 end
@@ -1752,6 +1753,7 @@ lemma [\<phi>reason 2000
 lemma [\<phi>reason 30]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action\<close>
+  for action :: \<open>'a::can_be_implication action\<close>
   unfolding Action_Tag_def
   by (simp add: \<phi>view_shift_by_implication) 
 
@@ -3999,45 +4001,6 @@ lemma [\<phi>reason 1000]: "SameNuTy A A" \<comment> \<open>The fallback\<close>
   unfolding SameNuTy_def ..
 
 
-subsubsection \<open>Structural Pattern\<close>
-
-definition Structural_Pattern :: \<open>'a \<Rightarrow> 'b \<Rightarrow> prop\<close>
-  where \<open>Structural_Pattern Input Output_Pattern \<equiv> Trueprop True\<close>
-
-lemma [\<phi>reason 30]:
-  \<open>PROP Structural_Pattern T T'\<close>
-  unfolding Structural_Pattern_def ..
-
-lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (Val ?v ?T) ?X\<close>]:
-  \<open>PROP Structural_Pattern (Val v T) (Val v T')\<close>
-  unfolding Structural_Pattern_def ..
-
-lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (?k \<^bold>\<rightarrow> ?T) ?X\<close>]:
-  \<open> PROP Structural_Pattern T T'
-\<Longrightarrow> PROP Structural_Pattern (k \<^bold>\<rightarrow> T) (k \<^bold>\<rightarrow> T')\<close>
-  unfolding Structural_Pattern_def ..
-
-lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?T) ?X\<close>]:
-  \<open> PROP Structural_Pattern T T'
-\<Longrightarrow> PROP Structural_Pattern (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T) (k \<^bold>\<rightarrow>\<^sub>L\<^sub>s T')\<close>
-  unfolding Structural_Pattern_def ..
-
-lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (?T \<^emph> ?U) ?X\<close>]:
-  \<open> PROP Structural_Pattern T T'
-\<Longrightarrow> PROP Structural_Pattern U U'
-\<Longrightarrow> PROP Structural_Pattern (T \<^emph> U) (T' \<^emph> U')\<close>
-  unfolding Structural_Pattern_def ..
-
-lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (?n \<Znrres> ?T) ?X\<close>]:
-  \<open> PROP Structural_Pattern T T'
-\<Longrightarrow> PROP Structural_Pattern (n \<Znrres> T) (n \<Znrres> T')\<close>
-  unfolding Structural_Pattern_def ..
-
-lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (\<black_circle> ?T) ?X\<close>]:
-  \<open> PROP Structural_Pattern T T'
-\<Longrightarrow> PROP Structural_Pattern (\<black_circle> T) (\<black_circle> T')\<close>
-  unfolding Structural_Pattern_def ..
-
 subsection \<open>Process of Cleaning\<close>
 
 definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>\<r>Clean S \<longleftrightarrow> (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1)\<close>
@@ -4445,7 +4408,8 @@ lemma [\<phi>reason 100 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heav
   by (simp add: \<phi>view_shift_intro_frame mult.assoc)
   
 
-lemma [\<phi>reason 70 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
+lemma assertion_level_reasoning_skip
+  [\<phi>reason 70 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
   " CHK_SUBGOAL G
   \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
   \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> H \<longmapsto> R' \<heavy_comma> H \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G "
@@ -5135,8 +5099,18 @@ lemma (in \<phi>fiction)
   unfolding Action_Tag_def
   by (cases P; clarsimp simp add: \<phi>expns view_shift_id)
 
+definition \<open>Branch_Convergence_Type_Pattern type the_type_to_match \<equiv> Trueprop True\<close>
+
+lemma [\<phi>reason 10 on \<open>PROP Branch_Convergence_Type_Pattern ?X ?X'\<close>]:
+  \<open>PROP Branch_Convergence_Type_Pattern X X\<close>
+  unfolding Branch_Convergence_Type_Pattern_def ..
+
+lemma [\<phi>reason 1200 on \<open>PROP Branch_Convergence_Type_Pattern (Val ?v ?T) (Val ?v ?T')\<close>]:
+  \<open>PROP Branch_Convergence_Type_Pattern (Val v T) (Val v T')\<close>
+  unfolding Branch_Convergence_Type_Pattern_def ..
+
 lemma [\<phi>reason 1200 on \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
-  \<open> PROP Structural_Pattern T T'
+  \<open> PROP Branch_Convergence_Type_Pattern T T'
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> If P x y = z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
@@ -5148,7 +5122,7 @@ lemma [\<phi>reason 1200 on \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bold
 
 lemma (in \<phi>fiction)
   [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
-  \<open> PROP Structural_Pattern T T'
+  \<open> PROP Branch_Convergence_Type_Pattern T T'
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> If P x y = z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
@@ -5191,6 +5165,12 @@ lemma [\<phi>reason 1200 on \<open>If ?P (\<black_circle> ?T) (\<black_circle> ?
   \<open> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> If P (\<black_circle> T) (\<black_circle> U) = (\<black_circle> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
   unfolding Action_Tag_def by fastforce
+
+lemma [\<phi>reason 1200 on \<open>If ?P (Val ?v ?T) (Val ?v' ?U) = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+  \<open> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P (Val v T) (Val v U) = (Val v Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
+  unfolding Action_Tag_def by fastforce
+
 
 (* subsubsection \<open>Object\<close>
 
@@ -5236,6 +5216,18 @@ lemma [\<phi>reason 2000]:
 
 lemma [\<phi>reason 2000]:
   " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P L (1 * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  for R :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 2000]:
+  " If P L (R' * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> If P L (R' * 1 * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  for R :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 2000]:
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> If P (L * 1) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   for R :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def by (cases P; simp)
@@ -5243,6 +5235,16 @@ lemma [\<phi>reason 2000]:
 lemma (in \<phi>fiction) [\<phi>reason 2000]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<heavy_comma> 1) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma (in \<phi>fiction) [\<phi>reason 2000]:
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (1 \<heavy_comma> R) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma (in \<phi>fiction) [\<phi>reason 2000]:
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R' \<heavy_comma> R) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R' \<heavy_comma> 1 \<heavy_comma> R) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma (in \<phi>fiction) [\<phi>reason 2000]:
@@ -5493,10 +5495,18 @@ lemma [\<phi>reason 3000
   unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right
   using implies_refl .
 
+paragraph \<open>Fall back\<close>
+
+lemma [\<phi>reason 10 on \<open>Structural_Extract ?X ?X' ?Y ?Y' ?P\<close>]:
+  \<open> Structural_Extract X X Y Y True \<close>
+  for X :: \<open>'a::sep_ab_semigroup set\<close>
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left
+  by (simp add: implies_refl mult.commute)
+
 
 paragraph \<open>Terminations for Specific Node\<close>
 
-lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> \<black_circle> ?T) ?R (?y \<Ztypecolon> \<black_circle> ?U) ?W ?P\<close>]:
+lemma [\<phi>reason on \<open>Structural_Extract (?x \<Ztypecolon> \<black_circle> ?T) ?R (?y \<Ztypecolon> \<black_circle> ?U) ?W ?P\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None) P\<close>
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left
@@ -5507,7 +5517,7 @@ lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> \<black_
 
 The bellowing reasoning is too weak! *)
 
-lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> Agreement ?T) ?R (?y \<Ztypecolon> Agreement ?U) ?W ?P\<close>]:
+lemma [\<phi>reason on \<open>Structural_Extract (?x \<Ztypecolon> Agreement ?T) ?R (?y \<Ztypecolon> Agreement ?U) ?W ?P\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) P\<close>
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left
@@ -5532,7 +5542,7 @@ lemma Structural_Extract_To_mult [\<phi>reason 2000 on \<open>Structural_Extract
     R[THEN implies_right_prod, unfolded B]
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 2000 on \<open>Structural_Extract ?A ?C (?X * ?Y) ?W ?P\<close> ]:
+lemma [\<phi>reason 1200 on \<open>Structural_Extract ?A ?C (?X * ?Y) ?W ?P\<close> ]:
   \<open> Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1
 \<Longrightarrow> Simplify \<phi>None_simps B' B 
 \<Longrightarrow> Structural_Extract B' C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2
@@ -5575,7 +5585,7 @@ lemma [\<phi>reason 1200 on
 
 paragraph \<open>Structural Node\<close>
 
-lemma [\<phi>reason 1200 on
+lemma [\<phi>reason on
   \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?R' ?P\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
@@ -5586,7 +5596,7 @@ lemma [\<phi>reason 1200 on
   apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
   apply (rule \<phi>MapAt_cast) .
 
-lemma [\<phi>reason 1200 on
+lemma [\<phi>reason on
   \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?U) ?R' ?P\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
@@ -5598,7 +5608,7 @@ lemma [\<phi>reason 1200 on
   thm \<phi>MapAt_L_\<phi>Prod[symmetric]
   apply (rule \<phi>MapAt_L_cast) .
 
-lemma [\<phi>reason 1100 on
+lemma [\<phi>reason on
   \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>L\<^sub>s (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>L\<^sub>s ?U) ?R' ?P\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
@@ -6127,11 +6137,6 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<r>Clean (x \<Ztypecolon> \<phi> T) \<close>
   unfolding \<r>Clean_def Imply_def apply (simp add: \<phi>expns)
   using mk_homo_one by blast
-
-lemma [\<phi>reason 1200 on \<open>PROP Structural_Pattern (\<phi> ?T) ?X\<close>]:
-  \<open> PROP Structural_Pattern T T'
-\<Longrightarrow> PROP Structural_Pattern (\<phi> T) (\<phi> T')\<close>
-  unfolding Structural_Pattern_def ..
 
 lemma [\<phi>reason 1200 on \<open>If ?P (\<phi> ?T) (\<phi> ?U) = (\<phi> ?Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   \<open> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence

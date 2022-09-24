@@ -651,6 +651,8 @@ proc XX:
     if \<medium_left_bracket> \<open>0 < $varx\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$varx - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0::nat\<close> \<medium_right_bracket>.
     (* the cartouche like \<open>0 < $varx\<close> invokes a synthesis process
        to make that value automatically *)
+  note [[\<phi>trace_reasoning]]
+  ;;
   \<medium_right_bracket>. .
 
 proc
