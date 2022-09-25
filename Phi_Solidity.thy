@@ -1,6 +1,10 @@
 theory Phi_Solidity
   imports Phi_OO Map_of_Tree Phi_Min_ex
     Phi_Prime_ex Phi_Min_Lib
+  abbrevs
+      "<Sfield>" = "\<bbbS>\<f>\<i>\<e>\<l>\<d>"
+  and "<Smap>"   = "\<bbbS>\<m>\<a>\<p>"
+  and "<Sarray>" = "\<bbbS>\<a>\<r>\<r>\<a>\<y>"
 begin
 
 section \<open>Semantics\<close>
@@ -27,7 +31,7 @@ subsubsection \<open>Value\<close>
 definition "class_user = Class [] [] 1"
   \<comment> \<open>User addresses are always in this class\<close>
 
-datatype 'VAL storage_key = SP_field field_name | SP_map_key 'VAL | SP_array_ind nat
+datatype 'VAL storage_key = SP_field field_name ("\<bbbS>\<f>\<i>\<e>\<l>\<d>") | SP_map_key 'VAL | SP_array_ind nat ("\<bbbS>\<a>\<r>\<r>\<a>\<y>")
 type_synonym 'VAL storage_path = \<open>'VAL storage_key list\<close>
 type_synonym contract_class = \<open>unit class\<close>
 type_synonym address = \<open>unit object_ref\<close>
@@ -36,18 +40,21 @@ type_synonym address = \<open>unit object_ref\<close>
 datatype 'VAL ledge_ref = ledge_ref ("instance": address) (path: \<open>'VAL storage_path\<close>)
 hide_const (open) "instance" path
 
+abbreviation SP_map_key_of :: \<open>'VAL set \<Rightarrow> 'VAL storage_key\<close> ("\<bbbS>\<m>\<a>\<p>")
+  where \<open> SP_map_key_of S \<equiv> SP_map_key (the_elem S) \<close>
+
 subparagraph \<open>Exception\<close>
 
 datatype exception = Error string | Panic \<open>256 word\<close> | Ex_Unknown string
 
 paragraph \<open>Properties\<close>
 
-definition prepend_ledge_ref :: \<open>'VAL storage_key \<Rightarrow> 'VAL ledge_ref \<Rightarrow> 'VAL ledge_ref\<close>
-  where \<open>prepend_ledge_ref a ref = (case ref of ledge_ref addr path \<Rightarrow> ledge_ref addr (a#path))\<close>
+definition append_ledge_ref :: \<open>'VAL storage_key \<Rightarrow> 'VAL ledge_ref \<Rightarrow> 'VAL ledge_ref\<close>
+  where \<open>append_ledge_ref a ref = (case ref of ledge_ref addr path \<Rightarrow> ledge_ref addr (path@[a]))\<close>
 
-lemma prepend_ledge_ref[simp]:
-  \<open>prepend_ledge_ref a (ledge_ref addr path) = ledge_ref addr (a#path)\<close>
-  unfolding prepend_ledge_ref_def by simp
+lemma append_ledge_ref[simp]:
+  \<open>append_ledge_ref a (ledge_ref addr path) = ledge_ref addr (path@[a])\<close>
+  unfolding append_ledge_ref_def by simp
 
 instantiation ledge_ref :: (type) zero begin
 definition \<open>zero_ledge_ref = ledge_ref Nil []\<close>
@@ -89,9 +96,10 @@ datatype 'abs environ = environ
 datatype 'abs msg = mk_msg
   (sender: address)
   ("value": 'abs)
+  (this: address)
 
 hide_const (open) blockhash basefee chainid coinbase difficulty gaslimit block_number timestamp
-  sender "value" gasprice origin mk_msg
+  sender "value" gasprice origin mk_msg this
 
 abbreviation \<open>Valid_Nat_Environ env \<equiv>
 environ.basefee env < 2 ^ Big 256 \<and>
@@ -121,17 +129,29 @@ lemma [simp]:
 \<Longrightarrow> unat (msg.value (map_msg word_of_nat msg :: 256 word msg)) = msg.value msg\<close>
   by (cases msg; simp)
 
-lemma [simp]:
+lemma [simp, procedure_simps]:
   \<open>environ.origin (map_environ f env) = environ.origin env\<close>
   \<open>environ.chainid (map_environ f env) = environ.chainid env\<close>
   \<open>environ.blockhash (map_environ f env) = environ.blockhash env\<close>
   \<open>environ.coinbase (map_environ f env) = environ.coinbase env\<close>
   by (cases env; simp)+
 
-lemma [simp]:
+lemma [simp, procedure_simps]:
+  \<open>(environ.origin o map_environ f) = environ.origin\<close>
+  \<open>(environ.chainid o map_environ f) = environ.chainid\<close>
+  \<open>(environ.blockhash o map_environ f) = environ.blockhash\<close>
+  \<open>(environ.coinbase o map_environ f) = environ.coinbase\<close>
+  by (clarsimp simp add: fun_eq_iff)+
+
+lemma [simp, procedure_simps]:
   \<open>msg.sender (map_msg f env) = msg.sender env\<close>
-  
+  \<open>msg.this (map_msg f env) = msg.this env\<close>
   by (cases env; simp)+
+
+lemma [simp, procedure_simps]:
+  \<open>(msg.sender o map_msg f) = msg.sender\<close>
+  \<open>(msg.this o map_msg f) = msg.this\<close>
+  by (clarsimp simp add: fun_eq_iff)+
 
 
 paragraph \<open>Models for Balance Table\<close>
@@ -414,6 +434,10 @@ lemma [\<phi>reason]:
   \<open>\<phi>Equal Address (\<lambda>_ _. True) (=)\<close>
   unfolding \<phi>Equal_def by (simp add: \<phi>expns)
 
+lemma [\<phi>reason]:
+  \<open>is_singleton (addr \<Ztypecolon> Address)\<close>
+  unfolding is_singleton_def set_eq_iff
+  by (simp add: \<phi>expns; blast)
 
 subsubsection \<open>Ledge Ref\<close>
 
@@ -604,12 +628,20 @@ definition \<phi>M_getV_Address
 
 subsubsection \<open>Calculation of Ledge Ref\<close>
 
+paragraph \<open>Get Ledge Ref from a Contract Address\<close>
+
+definition op_root_ledge_ref :: \<open>('VAL,'VAL,'VAL,'RES_N,'RES) proc'\<close>
+  where \<open>op_root_ledge_ref raw =
+    \<phi>M_getV_Address raw (\<lambda>addr.
+    Return (sem_value (V_LedgeRef.mk (ledge_ref addr [])))
+)\<close>
+
 paragraph \<open>Get Member of a Structure\<close>
 
 definition op_get_member_ledgeRef :: \<open>field_name \<Rightarrow> ('VAL,'VAL,'VAL,'RES_N,'RES) proc'\<close>
   where \<open>op_get_member_ledgeRef field raw =
     \<phi>M_getV_LedgeRef raw (\<lambda>ref.
-    Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_field field) ref)))
+    Return (sem_value (V_LedgeRef.mk (append_ledge_ref (SP_field field) ref)))
 )\<close>
 
 paragraph \<open>Get Value of a Mapping\<close>
@@ -619,7 +651,7 @@ definition op_get_mapping_ledgeRef :: \<open>('VAL \<times> 'VAL,'VAL,'VAL,'RES_
     \<phi>M_caseV (\<lambda>raw_ref raw_v.
     \<phi>M_getV_LedgeRef raw_ref (\<lambda>ref.
     \<phi>M_getV_raw id raw_v(\<lambda>v.
-    Return (sem_value (V_LedgeRef.mk (prepend_ledge_ref (SP_map_key v) ref)))
+    Return (sem_value (V_LedgeRef.mk (append_ledge_ref (SP_map_key v) ref)))
 )))\<close>
 
 
@@ -712,9 +744,9 @@ definition op_get_msg_word :: \<open>(256 word msg \<Rightarrow> 'len::len word)
   where \<open>op_get_msg_word G =
     R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (word_to_V_int (G env))))\<close>
 
-definition op_get_sender :: \<open>('VAL,'VAL,'RES_N,'RES) proc\<close>
-  where \<open>op_get_sender =
-    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (msg.sender env))))\<close>
+definition op_get_msg_addr :: \<open>(256 word msg \<Rightarrow> address) \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc\<close>
+  where \<open>op_get_msg_addr G =
+    R_msg.\<phi>R_get_res_entry (\<lambda>env. Return (sem_value (V_Address.mk (G env))))\<close>
 
 definition op_get_origin :: \<open>('VAL,'VAL,'RES_N,'RES) proc\<close>
   where \<open>op_get_origin =
@@ -748,15 +780,23 @@ lemma \<phi>M_getV_Address[\<phi>reason!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_Address raw F \<lbrace> X\<heavy_comma> lref \<Ztypecolon> Val raw Address \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_Address_def by (cases raw, simp, \<phi>reason, simp add: \<phi>expns)
 
+declare \<phi>M_getV_Address[where X=1, simplified, \<phi>reason!]
 
 subsubsection \<open>Calculation of Ledge Ref\<close>
+
+paragraph \<open>Get Ledge Ref from a Contract Address\<close>
+
+lemma op_root_ledge_ref_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_root_ledge_ref raw \<lbrace> addr \<Ztypecolon> Val raw Address \<longmapsto> \<^bold>v\<^bold>a\<^bold>l ledge_ref addr [] \<Ztypecolon> LedgeRef \<rbrace>\<close>
+  unfolding op_root_ledge_ref_def
+  by \<phi>reason
 
 paragraph \<open>Get Member of a Structure\<close>
 
 lemma op_get_member_ledgeRef_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_member_ledgeRef field raw \<lbrace>
     ledge_ref addr path \<Ztypecolon> Val raw LedgeRef
-\<longmapsto> \<^bold>v\<^bold>a\<^bold>l ledge_ref addr (SP_field field#path) \<Ztypecolon> LedgeRef
+\<longmapsto> \<^bold>v\<^bold>a\<^bold>l ledge_ref addr (path @ [SP_field field]) \<Ztypecolon> LedgeRef
 \<rbrace>\<close>
   unfolding op_get_member_ledgeRef_def
   by (cases raw; simp; \<phi>reason)
@@ -769,7 +809,7 @@ lemma op_get_mapping_ledgeRef_\<phi>app:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_mapping_ledgeRef (\<phi>V_pair raw_ref raw_v) \<lbrace>
     x \<Ztypecolon> Val raw_v T\<heavy_comma>
     ledge_ref addr path \<Ztypecolon> Val raw_ref LedgeRef
-\<longmapsto> \<^bold>v\<^bold>a\<^bold>l ledge_ref addr (SP_map_key (the_elem (x \<Ztypecolon> T))#path) \<Ztypecolon> LedgeRef
+\<longmapsto> \<^bold>v\<^bold>a\<^bold>l ledge_ref addr (path @ [SP_map_key (the_elem (x \<Ztypecolon> T))]) \<Ztypecolon> LedgeRef
 \<rbrace>\<close>
   unfolding op_get_mapping_ledgeRef_def
   apply (cases raw_v; cases raw_ref; simp; \<phi>reason; simp add: \<phi>expns)
@@ -1003,23 +1043,23 @@ proc op_get_origin:
      op_get_origin_raw
   \<medium_right_bracket>. .
 
-lemma op_get_sender_raw_\<phi>app:
-\<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_sender \<lbrace>
+lemma op_get_msg_addr_raw_\<phi>app:
+\<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_msg_addr G \<lbrace>
       msg \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity))
-  \<longmapsto> msg \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l msg.sender msg \<Ztypecolon> Address
+  \<longmapsto> msg \<Ztypecolon> FIC_msg.\<phi> (\<phi>Some (Nonsepable Identity)) \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l G msg \<Ztypecolon> Address
 \<rbrace>\<close>
-  unfolding op_get_sender_def \<phi>Procedure_\<phi>Res_Spec
+  unfolding op_get_msg_addr_def \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns del: subsetI, rule R_msg.\<phi>R_get_res_entry[where v=msg])
   apply (simp add: FIC_msg.expand R_msg.implies_part[where x=\<open>Some (nonsepable msg)\<close>, simplified])
   by (simp add: \<phi>expns Return_def det_lift_def)
 
-proc op_get_sender:
+proc op_get_msg_addr:
   argument \<open>msg \<Ztypecolon> Msg\<close>
-  return \<open>msg \<Ztypecolon> Msg \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l msg.sender msg \<Ztypecolon> Address\<close>
-  \<medium_left_bracket> 
+  return \<open>msg \<Ztypecolon> Msg \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l G msg \<Ztypecolon> Address\<close>
+  \<medium_left_bracket>
   have [useful]: \<open>Valid_Nat_Msg msg\<close> using \<phi> .
   ;; to_Identity
-     op_get_sender_raw
+     op_get_msg_addr_raw[where G=\<open>G o map_msg unat\<close>]
   \<medium_right_bracket>. .
 
 lemma op_get_value_raw_\<phi>app:
