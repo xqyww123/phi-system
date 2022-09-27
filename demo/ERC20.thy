@@ -41,7 +41,8 @@ lemma [\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Currency) ?TY\<clo
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns)
 
-
+(*
+ *)
 
 proc balance_of:
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
@@ -50,30 +51,52 @@ proc balance_of:
   return   \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] n \<Znrres> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       \<^bold>v\<^bold>a\<^bold>l balance \<Ztypecolon> \<nat>[256]\<close>
-  \<medium_left_bracket>
+  \<medium_left_bracket> \<rightarrow> v_account;;
     op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
     op_get_member_ledgeRef[where field=\<open>''balance''\<close>]
-    \<open>\<a>\<r>\<g>0\<close> op_get_mapping_ledgeRef
+    op_get_var[where vname=v_account]
+    op_get_mapping_ledgeRef
     op_load_ledge
   \<medium_right_bracket>. .
 
+(* { P } C {} *)
+(* { x : T * x2 : T2 * x3 : T3 ... \<and> P x x2 x3 } C { ... } 
+contract \<rightarrow> field-path \<rightarrow> value
+
+name \<rightarrow> heap
+
+locale
+
+fix msg \<Ztypecolon> Msg
+
+{ x \<Ztypecolon> T  } CCCC {...}
+
+
+{} FFF {}
+
+end
+
+balance \<Ztypecolon> ledge: (msg.contract msg \<rightarrow> Map Address
+
+*)
+
 proc transfer:
-  premises \<open>balance_alice + amount \<le> Total_Supply\<close>
+  premises \<open>balance_receiver + amount \<le> Total_Supply\<close>
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
-      balance_sender \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
-      balance_alice  \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (alice \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l alice \<Ztypecolon> Address\<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l amount \<Ztypecolon> Currency\<close>
+      balance_sender \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address)] \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
+      balance_receiver \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (receiver \<Ztypecolon> Address)] \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
+      \<^bold>v\<^bold>a\<^bold>l receiver \<Ztypecolon> Address\<heavy_comma>
+      \<^bold>v\<^bold>a\<^bold>l amount   \<Ztypecolon> \<nat>[256]\<close>
   return \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       (if amount \<le> balance_sender then balance_sender - amount else balance_sender)
-        \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
-      (if amount \<le> balance_sender then balance_alice + amount else balance_alice)
-        \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (alice \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
+        \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address)] \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
+      (if amount \<le> balance_sender then balance_receiver + amount else balance_receiver)
+        \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (receiver \<Ztypecolon> Address)] \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       \<^bold>v\<^bold>a\<^bold>l amount \<le> balance_sender \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket>
-    \<rightarrow> v_alice, v_amount
-  have [useful]: \<open>balance_alice \<le> Total_Supply\<close> \<open>balance_sender \<le> Total_Supply\<close> using \<phi> by simp+ ;;
+  \<medium_left_bracket> ;;
+    \<rightarrow> v_receiver, v_amount
+  have [useful]: \<open>balance_receiver \<le> Total_Supply\<close> \<open>balance_sender \<le> Total_Supply\<close> using \<phi> by simp+ ;;
     op_get_var[where vname=v_amount]
     op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
@@ -100,7 +123,7 @@ proc transfer:
     op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
     op_get_member_ledgeRef[where field=\<open>''balance''\<close>]
-    op_get_var[where vname=v_alice]
+    op_get_var[where vname=v_receiver]
     op_get_mapping_ledgeRef
     dup
     op_load_ledge
@@ -245,6 +268,7 @@ proc approve:
   ;; \<open>$ret\<close>
   \<medium_right_bracket>. .
 
+thm approve_\<phi>compilation
 
 proc allowance:
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
