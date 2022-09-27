@@ -5625,10 +5625,11 @@ lemma [\<phi>reason 1200 on
 
 paragraph \<open>Structural Node\<close>
 
-lemma [\<phi>reason on
+lemma [\<phi>reason 1200 on
   \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?R' ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
+\<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (yr \<Ztypecolon> k \<^bold>\<rightarrow> Ur) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
@@ -5636,10 +5637,11 @@ lemma [\<phi>reason on
   apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
   apply (rule \<phi>MapAt_cast) .
 
-lemma [\<phi>reason 120 on
+lemma [\<phi>reason 1200 on
   \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?R' ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
+\<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ Ur) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
@@ -5648,34 +5650,36 @@ lemma [\<phi>reason 120 on
   thm \<phi>MapAt_L_\<phi>Prod[symmetric]
   apply (rule \<phi>MapAt_L_cast) .
 
-lemma [\<phi>reason on
+lemma [\<phi>reason 1180 on
   \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?R' ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k'
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
+\<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
   unfolding Structural_Extract_def Premise_def
   subgoal premises prems
-    apply (insert prems(4),
+    apply (insert prems(5),
        simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
           \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k kd, unfolded prems(3)])
     apply (rule \<phi>MapAt_L_cast) . .
 
-lemma [\<phi>reason 70 on
+lemma [\<phi>reason 1150 on
   \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?R' ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' @ kd = k
+\<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
   unfolding Structural_Extract_def Premise_def
   subgoal premises prems
-    apply (insert prems(4),
+    apply (insert prems(5),
        simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
           \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k' kd, unfolded prems(3)])
   apply (rule \<phi>MapAt_L_cast) . .
@@ -5741,10 +5745,11 @@ lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znr
     X[THEN implies_right_prod]
   \<medium_right_bracket>. . *)
 
-lemma [\<phi>reason 120 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<comment> \<open>If requires exactly what we have now, typically this happens after the previous rule or n = 1.\<close>
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m = n
+\<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
@@ -5753,16 +5758,17 @@ lemma [\<phi>reason 120 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrr
   using \<phi>Share_cast .
 
 
-lemma [\<phi>reason on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1180 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<comment> \<open>If requires less than what we have, give it.\<close>
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
 \<Longrightarrow> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> ((m-n) \<Znrres> T \<^emph> n \<Znrres> R)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def
-  \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and [\<phi>reason] and X
+  \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and [\<phi>reason] and _ and X
     share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
     X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
@@ -5770,16 +5776,17 @@ lemma [\<phi>reason on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> 
   \<medium_right_bracket>. .
 
 
-lemma [\<phi>reason on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1170 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<comment> \<open>If requires more than what we have, give all what we can give.\<close>
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m < n
 \<Longrightarrow> \<phi>Sep_Disj_Identical U
+\<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn'
-  \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and X
+  \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and _ and X
     X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_left_prod, folded mult.assoc]
   

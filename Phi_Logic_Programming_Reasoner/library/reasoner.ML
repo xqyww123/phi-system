@@ -3,6 +3,14 @@ signature NU_REASONER = sig
      TODO: optimize as possible as you can! *)
 
   (* Convention:
+   * If a rule has a priority higher or equal to 1000:
+          it is a deterministic rule that in this case, only this rule will be applied
+            if there is no other rule with higher priority.
+   * Else: it is a nondeterministic rule that, it will be applied together with other
+          nondeterministic rule if there is no deterministic rule.
+            The rule with higher priority will be applied first.
+            If the rule is fail other nondeterministic rules will be applied.
+
    *  at a point of the search with several backtrackings
         and potential candidates to be explored from this point,
    *  When all score of candidates < 1000 : normal behavior of scored-search
@@ -75,7 +83,9 @@ signature NU_REASONER = sig
         -> local_theory -> local_theory
 end
 
+
 structure Nu_Reasoner : NU_REASONER = struct
+
 
 type cost = int
 type 'a generic_reasoner = {name: term, pattern: term list, not_match: term list, tactic: 'a}
@@ -94,11 +104,6 @@ val premise_tag = Free("Premise", \<^typ>\<open>prop \<Rightarrow> prop\<close>)
 exception Success  of context_state
 exception Global_Cut of context_state
 exception Local_Cut of (cost * context_state Seq.seq)
-
-structure States = Heap (
-  type elem = (cost * context_state Seq.seq);
-  fun ord ((cost,_),(cost',_)) = int_ord (cost,cost')
-)
 
 
 fun debug ctxt (c,(r : reasoner as {name,...})) =
@@ -158,11 +163,12 @@ fun call_tactics ctxt tactics th =
     handle Local_Cut ret => [ret]
   end
 
-fun gen_reason trace iter tactics result states =
-  if States.is_empty states then result else
+fun gen_reason _ _ _ (result, []) = result
+  | gen_reason trace iter tactics (result, []::L) =
+      gen_reason trace iter tactics (result, L)
+  | gen_reason trace iter tactics (result, ((cost,seq)::L')::L) =
   let
     val _ = if iter > 300 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
-    val ((cost,seq),states) = States.min_elem states
   in
     case Seq.pull seq
       of SOME ((ctxt,th), seq') =>
@@ -171,11 +177,9 @@ fun gen_reason trace iter tactics result states =
                     then tracing ("\<phi>reasoning (score " ^ string_of_int (~cost)
                       ^ "):\n" ^ Thm.string_of_thm ctxt th)
                     else ()
-            val (result',states') = states
-                  |> fold (fn (c,seq'') => States.insert (cost+c, seq''))
-                        (call_tactics ctxt tactics th)
-                  |> States.insert (cost, seq')
-                  |> pair result
+            val Z = (call_tactics ctxt tactics th)
+                  |> map (apfst (fn c' => c' + cost))
+                  |> (fn Z => (result, Z::((cost,seq')::L')::L))
                 handle Success ret => raise Success ret
                      | Global_Cut result' =>
                         let
@@ -184,23 +188,23 @@ fun gen_reason trace iter tactics result states =
                                           ^ Thm.string_of_thm ctxt (snd result'))
                                   else ()
                         in
-                          (SOME result', States.insert (0, Seq.single result') States.empty)
+                          (SOME result', [[(0, Seq.single result')]])
                         end
           in
-            gen_reason trace (iter+1) tactics result' states'
+            gen_reason trace (iter+1) tactics Z
           end)
-       | NONE => gen_reason trace iter tactics result states
+       | NONE => gen_reason trace iter tactics (result, L'::L)
   end
 
 fun gen_reason' trace tactics states =
-      gen_reason trace 0 tactics NONE states
+      gen_reason trace 0 tactics (NONE, states)
       handle Success ret => SOME ret
 
 fun reason' trace tactics state =
-      gen_reason' trace tactics (States.insert (0, Seq.single state) States.empty)
+      gen_reason' trace tactics [[(0, Seq.single state)]]
 
 fun reason'_s trace tactics seqs = Seq.make (fn () =>
-      gen_reason' trace tactics (fold States.insert seqs States.empty)
+      gen_reason' trace tactics [seqs]
         |> Option.map (rpair Seq.empty)
     )
 
@@ -311,18 +315,30 @@ fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 
 
-fun intro_reasoner patterns not_match rule =
+fun intro_reasoner cost patterns not_match rule =
   let
     val rule = Thm.trim_context rule
     val pats = if null patterns then [conclusion_tag $ Thm.concl_of rule]
                else map (fn pat => conclusion_tag $ pat) patterns
     val npats= map (fn pat => conclusion_tag $ pat) not_match
+    val f_num = length (filter (fn \<^prop>\<open>\<r>Feasible\<close> => true | _ => false) (Thm.prems_of rule))
+    val has_feasible =
+          if f_num > 0 andalso cost > ~1000
+          then error ("Conditional \<r>Feasible only makes sense for deterministic rule.")
+          else if f_num > 1
+          then error ("A reasoning rule can contain one \<r>Feasible antecedent at most.")
+          else f_num > 0
   in {name = @{term \<phi>Intro_Rule} $ Thm.prop_of rule,
       pattern = pats,
       not_match = npats,
       tactic = (fn (ctxt, th) =>
-            HEADGOAL (Tactic.resolve_tac ctxt [rule]) th
-                |> Seq.take 1 |> Seq.map (pair ctxt))
+          Seq.make (fn _ =>
+            case Seq.pull (HEADGOAL (Tactic.resolve_tac ctxt [rule]) th)
+              of SOME (ret, _) =>
+                  if has_feasible
+                  then reason (ctxt, ret) |> Option.map (rpair Seq.empty)
+                  else SOME ((ctxt, ret), Seq.empty)
+               | _ => NONE))
       }
   end
 
@@ -338,11 +354,11 @@ fun elim_reasoner patterns not_match  rule =
       tactic = (fn (ctxt, th) => HEADGOAL (Tactic.eresolve_tac ctxt [rule]) th |> Seq.map (pair ctxt))}
   end
 
-fun add_intro_rule (pattern,not_match) (cost, rule) = add (cost, intro_reasoner pattern not_match rule)
+fun add_intro_rule (pattern,not_match) (cost, rule) = add (cost, intro_reasoner cost pattern not_match rule)
 fun add_intro_rules rules =
   fold (fn (rules,cost,pattern,not_match) =>
     fold (Context.proof_map o add_intro_rule (pattern,not_match) o pair cost) rules) rules
-fun del_intro_rule rule = del (intro_reasoner [] [] rule)
+fun del_intro_rule rule = del (intro_reasoner 1000 [] [] rule)
 
 fun attr_add_intro (cost, (pattern, not_match)) =
   Thm.declaration_attribute (add_intro_rule (pattern,not_match) o pair cost)

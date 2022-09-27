@@ -46,6 +46,13 @@ section \<open>The Reasoner\<close>
 
 definition "\<phi>Intro_Rule x = x"
 definition "\<phi>Elim_Rule x = x"
+definition \<r>Feasible :: \<open>bool\<close> where \<open>\<r>Feasible = True\<close>
+
+text \<open>If any deterministic rule (whose priority is greater or equal to 1000),
+  has a \<^prop>\<open>\<r>Feasible\<close> antecedent, this rule is conditioned in the case where
+  all the previous antecedents are successfully solved.
+  It can only be applied if all the antecedents before the \<^prop>\<open>\<r>Feasible\<close>
+  are solved successfully.\<close>
 
 ML_file_debug \<open>library/reasoner.ML\<close>
 
@@ -236,6 +243,14 @@ text \<open>Terminates the reasoning successfully and immediately\<close>
 \<phi>reasoner_ML \<r>Success 10000 (conclusion \<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
   raise Nu_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
 
+
+
+
+
+lemma \<r>Feasible_I[iff]: \<open>\<r>Feasible\<close> unfolding \<r>Feasible_def ..
+
+\<phi>reasoner_ML \<r>Feasible 10000 (conclusion \<open>\<r>Feasible\<close>) = \<open>fn (ctxt,sequent) =>
+  raise Nu_Reasoner.Success (ctxt, @{thm \<r>Feasible_I} RS sequent)\<close>
 
 
 subsection \<open>Conversion\<close>
