@@ -197,7 +197,8 @@ lemma contract_premise_all:
   "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
   unfolding Premise_def atomize_all .
 
-lemma Premise_refl[\<phi>reason 2000 on \<open>Premise ?mode (?x = ?x)\<close>]:
+lemma Premise_refl[\<phi>reason 2000 on \<open>Premise ?mode (?x = ?x)\<close>
+                                   \<open>Premise ?mode (?x = ?var_x)\<close>]:
   "Premise mode (x = x)"
   unfolding Premise_def ..
 

@@ -246,8 +246,6 @@ section \<open>Specification of Instructions\<close>
 
 context \<phi>OO begin
 
-declare [[\<phi>not_define_new_const]]
-
 paragraph \<open>Reference Value\<close>
 
 lemma \<phi>M_getV_ref[\<phi>reason!]:
@@ -288,7 +286,7 @@ lemma op_obj_load_field_raw_\<phi>app:
   unfolding op_obj_load_field_def Premise_def
   by (\<phi>reason, assumption, \<phi>reason)
 
-proc op_obj_load_field:
+proc (nodef) op_obj_load_field:
   assumes A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   argument \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
   return \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
@@ -314,7 +312,7 @@ lemma op_obj_store_field_raw_\<phi>app:
   apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1))
   using R_objs.raw_unit_assertion_implies \<phi>Res_Spec_mult_homo by blast
 
-proc op_obj_store_field:
+proc (nodef) op_obj_store_field:
   assumes A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   assumes B: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   argument \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<fish_eye> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l ref \<Ztypecolon> Ref cls\<close>
@@ -329,7 +327,7 @@ proc op_obj_store_field:
 
 paragraph \<open>Dispose\<close>
 
-lemma  op_obj_dispose:
+lemma op_obj_dispose:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ref \<noteq> Nil
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e dom fields = dom (class.fields cls)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_obj_dispose cls rawv \<lbrace>
@@ -368,8 +366,6 @@ lemma  op_obj_dispose:
   using R_objs.get_res_Valid[simplified Valid_Objs_def, simplified]
     R_objs.raw_unit_assertion_implies'[where f=fields]
   by (smt (z3) \<phi>Res_Spec_mult_homo domIff map_le_antisym map_le_def)
-
-declare [[\<phi>not_define_new_const = false]]
 
 end
 

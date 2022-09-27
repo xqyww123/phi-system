@@ -3,9 +3,9 @@ signature NU_PROCEDURE = sig
   val cast_kind : string
   val app_suffix : string
   val compilation_suffix : string
-  val not_define_new_const : bool Config.T
 
-  val define : Attrib.binding -> thm -> local_theory -> thm * local_theory
+  val define : bool (*whether to define a new constant*)
+        -> Attrib.binding -> thm -> local_theory -> thm * local_theory
 
   type interface = {name: Binding.binding, thm: thm}
   (*interfaces introduced in this given theory, excluding others inherited from father theories*)
@@ -115,8 +115,6 @@ fun add_procedure name ctxt =
   end
   *)
 
-val not_define_new_const = Attrib.setup_config_bool \<^binding>\<open>\<phi>not_define_new_const\<close> (K false);
-
 fun norm_def ctxt (m,n,instance) def = let
   val vars = strip_abs_vars (Logic.dest_equals (Thm.concl_of def) |> #2)
   val ty_vars = take m vars
@@ -163,7 +161,7 @@ fun closure ctxt f =
       |> pair (length tvars, length vars, instance)
   end
 
-fun gen_define (binding,attrs) sequent lthy =
+fun gen_define def_const (binding,attrs) sequent lthy =
   let
     val sequent' = sequent
           |> Drule.zero_var_indexes
@@ -187,7 +185,7 @@ fun gen_define (binding,attrs) sequent lthy =
           handle THM _ => (proc_th RS (def RS rename_proc'))
 
     val (lthy, sequent'') =
-      if Binding.is_empty binding orelse Config.get lthy not_define_new_const
+      if Binding.is_empty binding orelse not def_const
       then (lthy, sequent')
       else lthy
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
@@ -209,7 +207,7 @@ fun gen_define (binding,attrs) sequent lthy =
           |> apfst (fn [(_,[sequent''''])] => sequent'''')
   end
 
-fun define binding =
-  if Binding.is_empty_atts binding then pair else gen_define binding
+fun define def_const binding =
+  if Binding.is_empty_atts binding then pair else gen_define def_const binding
 
 end

@@ -72,9 +72,7 @@ context \<phi>min begin
 
 paragraph \<open>Get Variable\<close>
 
-declare [ [\<phi>not_define_new_const] ]
-
-proc op_get_var:
+proc (nodef) op_get_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   argument \<open>x \<Ztypecolon> Var vname T\<close>
   return   \<open>x \<Ztypecolon> Var vname T\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
@@ -93,14 +91,14 @@ lemma [\<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> 
 
 paragraph \<open>Set Variable\<close>
 
-proc op_set_var:
+proc (nodef) op_set_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U\<close>
   return   \<open>y \<Ztypecolon> Var var U\<close>
   \<medium_left_bracket> to_Identity \<open>var\<close> to_Identity op_set_var'' \<medium_right_bracket>. .
 
-proc op_set_var__synthesis[
+proc (nodef) op_set_var__synthesis[
   \<phi>reason on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ($?var := ?y) \<Ztypecolon> ?U ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
 assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> X1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<close>
@@ -114,8 +112,6 @@ argument \<open>X\<close>
 return   \<open>Y\<heavy_comma> y \<Ztypecolon> Var var U \<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l ($var := y) \<Ztypecolon> U\<close>
 throws   E
   \<medium_left_bracket> G S op_set_var op_get_var \<medium_right_bracket>. .
-
-declare [ [\<phi>not_define_new_const = false] ]
 
 
 paragraph \<open>Declare New Variables\<close>
@@ -160,8 +156,6 @@ lemma "__\<phi>op_var_scope__0":
 >> (fn vars => fn () =>
   raise NuProcessor.Terminate_Process (Local_Value.mk_var_scope vars (ctxt,sequent), I)))
 \<close>
-
-declare [ [\<phi>not_define_new_const = false] ]
 
 
 subsection \<open>Arithmetic Operations\<close>
@@ -312,6 +306,13 @@ proc [
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x + y) \<Ztypecolon> \<nat>[b]\<close>
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 F2 + \<medium_right_bracket>. .
+
+
+lemma op_add_mod:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (x + y) mod 2 ^ Big b \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
+  unfolding op_add_def including unfold_Big
+  by (cases vx; cases vy; simp, \<phi>reason)
+
 
 
 paragraph \<open>Subtraction\<close>
@@ -537,6 +538,7 @@ lemma branch_\<phi>app:
   \<open> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e   C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T \<rbrace>)
 \<Longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>F \<rbrace>)
 \<Longrightarrow> (\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If C (Y\<^sub>T v) (Y\<^sub>F v) \<longmapsto> Y v \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if br\<^sub>T br\<^sub>F rawc \<lbrace> X\<heavy_comma> C \<Ztypecolon> Val rawc \<bool> \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. (E\<^sub>T e \<^bold>s\<^bold>u\<^bold>b\<^bold>j C) + (E\<^sub>F e \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> C) \<rbrace>\<close>
   unfolding op_if_def Premise_def Action_Tag_def including unfold_Big
   apply (cases rawc; cases C; simp; \<phi>reason; simp add: \<phi>expns plus_fun_def)
@@ -597,9 +599,7 @@ lemma (in \<phi>min)
             simplified Subjection_times, simplified] .
 
 
-declare [[\<phi>not_define_new_const]]
-
-proc (in \<phi>min) do_while:
+proc (in \<phi>min) (nodef) do_while:
 assumes V: \<open>Variant_Cast vars X X'\<close>
     and \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m cond\<close>
 premises X[useful]: \<open>cond vars\<close>
@@ -610,8 +610,6 @@ throws E
   \<medium_left_bracket> unfold V[unfolded Variant_Cast_def]
     "__DoWhile__rule"[where P=cond, simplified] \<medium_left_bracket> B \<medium_right_bracket>.
   \<medium_right_bracket> by simp .
-
-declare [[\<phi>not_define_new_const=false]]
 
 
 proc while:

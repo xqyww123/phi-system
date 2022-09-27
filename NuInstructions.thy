@@ -100,9 +100,7 @@ fn (ctxt,sequent) =>
   end
 \<close>
 
-declare [ [\<phi>not_define_new_const] ]
-
-proc (in \<phi>empty) try'':
+proc (in \<phi>empty) (nodef) try'':
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   assumes G: \<open>(\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> YY \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE2 \<rbrace>)\<close>
   argument X
@@ -110,7 +108,7 @@ proc (in \<phi>empty) try'':
   throws EE2
   \<medium_left_bracket> "__op_try__" F G \<medium_right_bracket>. .
 
-proc (in \<phi>empty) try':
+proc (in \<phi>empty) (nodef) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   assumes G: \<open>\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> Y2 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>\<close>
@@ -120,8 +118,6 @@ proc (in \<phi>empty) try':
   \<medium_left_bracket> "__op_try__" F G 
       unfold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def, THEN spec, symmetric]
   \<medium_right_bracket>. .
-
-declare [ [\<phi>not_define_new_const = false] ]
 
 
 subsection \<open>Access the Resource\<close>

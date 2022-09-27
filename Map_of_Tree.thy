@@ -182,6 +182,27 @@ lemma pull_map_node:
   unfolding node_def pull_map_def fun_eq_iff by simp
 
 
+subsection \<open>Extract & Contract from higher-order function\<close>
 
+(*
+TODO
+
+definition contract_map :: \<open>('k \<Rightarrow> 'k list \<Rightarrow> ('v::one)) \<Rightarrow> 'k list \<Rightarrow> 'v\<close>
+  where \<open>contract_map f = (\<lambda>ks. case ks of [] \<Rightarrow> 1 | h#r \<Rightarrow> f h r)\<close>
+
+definition extract_map :: \<open>('k list \<Rightarrow> ('v::one)) \<Rightarrow> 'k \<Rightarrow> 'k list \<Rightarrow> 'v\<close>
+  where \<open>extract_map f = (\<lambda>h r. f (h#r))\<close>
+
+
+lemma
+  \<open>extract_map (contract_map f) = f\<close>
+  unfolding extract_map_def contract_map_def fun_eq_iff
+  by (clarsimp)
+
+lemma
+  \<open>extract_map f h = pull_map [h] f\<close>
+  unfolding pull_map_def extract_map_def fun_eq_iff
+  by (clarsimp; case_tac x; clarsimp)
+*)
 
 end

@@ -61,7 +61,7 @@ fun cast desired_nu (ctxt,sequent) =
 fun export_codeblock _ param_cterms rule assm sequent =
      sequent |> Thm.implies_intr assm
              |> Drule.forall_intr_list param_cterms
-             |> (fn th => th COMP rule)
+             |> (fn th => th COMP_INCR rule)
 
 structure Val_Counter = Proof_Data (
   type T = int
@@ -78,7 +78,7 @@ fun inc_val_counter ctxt =
 fun accept_proc (ctxt,sequent) =
   let open PhiSyntax
     val accept_proc_thm = Proof_Context.get_thm ctxt "local.\<phi>accept_proc"
-    val rule = sequent RS accept_proc_thm
+    val rule = (@{print} sequent) RS accept_proc_thm
     val ([(s_name', s_ty), (_, ret_ty)], \<^const>\<open>Pure.imp\<close> $ sequent'_term $ _) =
           NuHelp.strip_binder_raw \<^const_name>\<open>Pure.all\<close> (hd (Thm.prems_of rule))
     val ([s_name,ret_name],ctxt') =

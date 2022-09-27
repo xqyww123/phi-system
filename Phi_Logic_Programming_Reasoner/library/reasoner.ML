@@ -1,4 +1,7 @@
 signature NU_REASONER = sig
+  (* This file is the major hot point of the whole system.
+     TODO: optimize as possible as you can! *)
+
   (* Convention:
    *  at a point of the search with several backtrackings
         and potential candidates to be explored from this point,
@@ -103,12 +106,16 @@ fun debug ctxt (c,(r : reasoner as {name,...})) =
               ^ Syntax.string_of_term (Proof_Context.set_mode Proof_Context.mode_abbrev ctxt) name)
 fun dbg2 ctxt term = (tracing (Syntax.string_of_term ctxt term); term)
 
+fun is_var (A $ _) = is_var A
+  | is_var (Var _) = true
+  | is_var _ = false
+
 fun my_match thy po =
   let
     val (_,tms) = Pattern.match thy po (Vartab.empty, Vartab.empty)
   in Vartab.fold (fn ((name,_),(_,tm)) => fn flag =>
         if String.isPrefix "var_" name
-        then flag andalso is_Var (Envir.beta_eta_contract tm)
+        then flag andalso is_var (Envir.beta_eta_contract tm)
         else flag
      ) tms true
   end
@@ -154,7 +161,7 @@ fun call_tactics ctxt tactics th =
 fun gen_reason trace iter tactics result states =
   if States.is_empty states then result else
   let
-    val _ = if iter > 100 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
+    val _ = if iter > 300 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
     val ((cost,seq),states) = States.min_elem states
   in
     case Seq.pull seq
@@ -198,7 +205,7 @@ fun reason'_s trace tactics seqs = Seq.make (fn () =>
     )
 
 fun reasoner_eq ({name,pattern,...}, {name=name',pattern=pattern',...}) =
-  (name = name' andalso pattern = pattern')
+  (name = name')
 
 
 
@@ -313,7 +320,9 @@ fun intro_reasoner patterns not_match rule =
   in {name = @{term \<phi>Intro_Rule} $ Thm.prop_of rule,
       pattern = pats,
       not_match = npats,
-      tactic = (fn (ctxt, th) => HEADGOAL (Tactic.resolve_tac ctxt [rule]) th |> Seq.map (pair ctxt))
+      tactic = (fn (ctxt, th) =>
+            HEADGOAL (Tactic.resolve_tac ctxt [rule]) th
+                |> Seq.take 1 |> Seq.map (pair ctxt))
       }
   end
 

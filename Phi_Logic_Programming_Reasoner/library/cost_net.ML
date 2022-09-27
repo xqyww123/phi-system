@@ -41,8 +41,10 @@ fun is_empty (Items {content, ...}) = null content;
 
 fun content (Items {content, ...}) = content;
 fun length items = List.length (content items);
-fun retrieve (Items {net, ...}) = sort (int_ord o apply2 fst) o Net.unify_term net;
-fun retrieve_matching (Items {net, ...}) = sort (int_ord o apply2 fst) o Net.match_term net;
+fun retrieve (Items {net, ...}) =
+  sort (int_ord o apply2 fst) o distinct (PolyML.pointerEq o apply2 snd) o Net.unify_term net;
+fun retrieve_matching (Items {net, ...}) =
+  sort (int_ord o apply2 fst) o distinct (PolyML.pointerEq o apply2 snd) o Net.match_term net;
 
 
 (* standard operations *)

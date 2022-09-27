@@ -16,7 +16,8 @@ signature NU_TOPLEVEL = sig
   val put_thesis : cterm -> Proof.context -> Proof.context
   val get_thesis : Proof.context -> cterm
 
-  val begin_proc_cmd : Attrib.binding 
+  val begin_proc_cmd : bool (*whether to define a new constant*)
+        -> Attrib.binding (*name*)
         -> xstring (*argument*)
         -> xstring (*return*)
         -> xstring option (*throws*)
@@ -27,7 +28,8 @@ signature NU_TOPLEVEL = sig
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> string option
         -> bool -> Proof.context -> Proof.state
-  val begin_rec_proc_cmd : Attrib.binding 
+  val begin_rec_proc_cmd : bool (*whether to define a new constant*)
+        -> Attrib.binding 
         -> xstring (*argument*)
         -> xstring (*return*)
         -> xstring option (*throws*)
@@ -150,7 +152,8 @@ fun dec_blk_level ctxt =
 
 
 fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
-      binding arg ret throws rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt int ctxt =
+      binding arg ret throws rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt
+      int ctxt =
   let
     val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes (prep_ctx ctxt)
     val binding = binding |> apsnd (map (Attrib.check_src ctxt))
@@ -216,7 +219,7 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
          |> constr_process
   end
 
-fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process binding =
+fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process def_const =
   let
     val prep_ctx = I
     fun mk_Goal (ctxt,fixes,_) arg_ret_throws_conds =
@@ -243,7 +246,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
           end
         fun post_process' binding int lthy th =
           lthy
-            |> NuProcedure.define binding (
+            |> NuProcedure.define def_const binding (
                 (lthy, (th RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
                           handle THM _  => (th RSN (3,
                               Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
@@ -259,7 +262,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process bi
         (goal, constr_process, post_process', fixes, preconds)
       end
   in
-    gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal binding
+    gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
   end
     
 val begin_proc =
@@ -271,7 +274,7 @@ val begin_proc_cmd =
         ) (K I)
 
 fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
-        (binding,attr) raw_arg raw_ret raw_throw (raw_vars, raw_fixes) =
+      def_const (binding,attr) raw_arg raw_ret raw_throw (raw_vars, raw_fixes) =
   let open QuantExpansion
     val prep_ctx = I
     val func_name = Binding.name_of binding
@@ -368,7 +371,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
           end
         fun post_process' binding int lthy th =
           lthy
-            |> NuProcedure.define binding (
+            |> NuProcedure.define def_const binding (
                 th |> Drule.forall_intr_list
                         (map ( Thm.cterm_of lthy
                              o map_types (map_type_tvar (fn ((name,_),s) => TVar ((name,0),s)))

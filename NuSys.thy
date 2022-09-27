@@ -177,6 +177,11 @@ and \<phi>lemmata \<open>Contextual facts during the programming. They are autom
        during the programming. Do not modify it manually because it is managed automatically and
        cleared frequently\<close> 
 
+lemma (in \<phi>fiction) [\<phi>programming_simps]:
+  \<open>(A\<heavy_comma> (B\<heavy_comma> C)) = (A\<heavy_comma> B\<heavy_comma> C)\<close>
+  unfolding mult.assoc ..
+
+
 ML_file NuHelp.ML
 ML_file \<open>library/NuSimpCongruence.ML\<close>
 
@@ -424,12 +429,18 @@ lemma CurrentConstruction_Inhabited_rule:
 paragraph \<open>Simplification in the Programming\<close>
 
 lemma [simp]:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> P"
+  "CurrentConstruction mode s H (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> P"
   unfolding CurrentConstruction_def by (simp_all add: \<phi>expns pair_All)
 
 lemma [simp]:
-  "((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T) \<and> (B \<and> C)"
+  "(CurrentConstruction mode s H T \<and> B) \<and> C \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> (B \<and> C)"
   by simp
+
+declare Subjection_expn[simp]
+lemma [\<phi>programming_simps]:
+  \<open>((s \<in> T) \<and> B) \<and> C \<longleftrightarrow> (s \<in> T) \<and> (B \<and> C)\<close>
+  by simp
+  
 
 lemma \<phi>ExTyp_strip:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExSet T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T c)"
@@ -1502,7 +1513,7 @@ subparagraph \<open>Procedure methods\<close>
 lemma apply_proc_fast[\<phi>reason 2000 on \<open>
   PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S \<longmapsto> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>))
           (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S)) ?Result
-\<close> \<open>
+\<close>  \<open>
   PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?var_S \<longmapsto> ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>))
           (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S)) ?Result
 \<close>
@@ -1555,30 +1566,40 @@ lemma Exhaustive_Abstract_I:
 
 \<phi>reasoner_ML Exhaustive_Abstract 1200 (conclusion \<open>Exhaustive_Abstract ?f ?f'\<close>) = \<open>
 let
-fun abstract_bound_over (j, body) =
+
+fun inc_bound 0 X = X
+  | inc_bound d (Bound i) = Bound (i+d)
+  | inc_bound d (A $ B) = inc_bound d A $ inc_bound d B
+  | inc_bound d (Abs (N,T,X)) = Abs (N,T, inc_bound d X)
+  | inc_bound _ X = X
+
+fun abstract_bound_over (x, body) =
   let
-    fun abs i lev tm =
-      if Bound i aconv tm then Bound lev
+    fun abs x lev tm =
+      if x aconv tm then Bound lev
       else
         (case tm of
-          Abs (a, T, t) => Abs (a, T, abs (i+1) (lev + 1) t)
+          Abs (a, T, t) => Abs (a, T, abs (inc_bound 1 x) (lev + 1) t)
         | t $ u =>
-            (abs i lev t $ (abs i lev u handle Same.SAME => u)
-              handle Same.SAME => t $ abs i lev u)
+            (abs x lev t $ (abs x lev u handle Same.SAME => u)
+              handle Same.SAME => t $ abs x lev u)
         | _ => raise Same.SAME)
-  in abs j 0 body handle Same.SAME => body end
+  in abs x 0 body handle Same.SAME => body end
 
 fun my_abstract_over _ (v as Free (name,ty)) body =
       Abs (name, ty, abstract_over (v,body))
   | my_abstract_over btys (Bound i) body =
-      Abs ("", nth btys i, abstract_bound_over (i,body))
+      Abs ("", nth btys i, abstract_bound_over (Bound i,body))
   | my_abstract_over _ v body =
-      Abs ("", fastype_of v, abstract_over (v,body))
+      Abs ("", fastype_of v, abstract_bound_over (v,body))
 
 fun strip btys (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, ty, x)) = strip (ty::btys) x
   | strip btys (\<^const>\<open>Pure.imp\<close> $ _ $ x) = strip btys x
   | strip btys (\<^const>\<open>Trueprop\<close> $ x) = (btys, x)
   | strip _ x = raise TERM ("Exhaustive_Abstract/strip", [x])
+
+fun dec_bound_level d [] = []
+  | dec_bound_level d (h::l) = inc_bound (d+1) h :: (dec_bound_level (d+1) l)
 
 in
   fn (ctxt,sequent) =>
@@ -1587,7 +1608,9 @@ in
         = strip [] (hd (Thm.prems_of sequent))
     in (case Term.strip_comb (Envir.beta_eta_contract f') of (Var v, args) =>
          Thm.instantiate (TVars.empty, Vars.make [
-              (v, Thm.cterm_of ctxt (fold_rev (my_abstract_over btys) args f))]) sequent
+              (v, Thm.cterm_of ctxt (fold_rev (my_abstract_over btys)
+                                              (dec_bound_level (~ (length args)) args) f))])
+           sequent
         | _ => sequent)
        |> (fn seq => Seq.single (ctxt, @{thm Exhaustive_Abstract_I} RS seq))
     end
@@ -2048,6 +2071,9 @@ val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
 val arg = Parse.term
 val arg_ret = (\<^keyword>\<open>argument\<close> |-- arg --| \<^keyword>\<open>return\<close> -- arg -- option (\<^keyword>\<open>throws\<close> |-- arg))
 
+val def_const_flag =
+  Scan.optional ((\<^keyword>\<open>(\<close> |-- NuParse.$$$ "nodef" --| \<^keyword>\<open>)\<close>) >> (K false)) true
+
 in
 
 (* val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>exty_simproc\<close> "setup the pecific simproc for \<^const>\<open>ExTy\<close>"
@@ -2055,16 +2081,16 @@ in
 
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- nu_statements -- arg_ret) >>
-        (fn ((b,(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
-            (begin_proc_cmd b arg ret throws fixes includes lets defs preconds G)));
+    ((def_const_flag -- Parse_Spec.opt_thm_name ":" -- nu_statements -- arg_ret) >>
+        (fn (((def_const, b),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
+            (begin_proc_cmd def_const b arg ret throws fixes includes lets defs preconds G)));
 
 val loop_variables = $$$ "var" |-- !!! vars;
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
-    ((Parse_Spec.opt_thm_name ":" -- loop_variables -- nu_statements -- arg_ret) >>
-        (fn (((b,vars),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
-            (begin_rec_proc_cmd b arg ret throws (vars,fixes) includes lets defs preconds G)));
+    (((def_const_flag -- Parse_Spec.opt_thm_name ":") -- loop_variables -- nu_statements -- arg_ret) >>
+        (fn ((((def_const,b),vars),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
+            (begin_rec_proc_cmd def_const b arg ret throws (vars,fixes) includes lets defs preconds G)));
 
 (* val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>\<phi>cast\<close> "begin a procedure construction"
@@ -2498,7 +2524,6 @@ lemma \<phi>Prod_inhabited[elim!,\<phi>reason_elim!]:
 lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)"
   by (simp add: \<phi>expns set_eq_iff)
 
-
 (*lemma (in \<phi>empty) SepNu_to_SepSet: "(OBJ (a,b) \<Ztypecolon> A \<^emph> B) = (OBJ a \<Ztypecolon> A) * (OBJ b \<Ztypecolon> B)"
   by (simp add: \<phi>expns set_eq_iff times_list_def) *)
 
@@ -2805,7 +2830,7 @@ abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
 
 abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>[\<^sub>]" 60)
-  where \<open>\<phi>MapAt_Lnil key \<equiv> \<phi>MapAt [key]\<close>
+  where \<open>\<phi>MapAt_Lnil key T \<equiv> \<phi>MapAt_L [key] (\<phi>MapAt [] T)\<close>
 
 lemma \<phi>MapAt_L_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) \<longleftrightarrow> (\<exists>v. p = push_map k v \<and> v \<in> (x \<Ztypecolon> T))\<close>
@@ -4128,11 +4153,17 @@ lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<lon
   unfolding \<r>Clean_def FOCUS_TAG_def GOAL_CTXT_def
   using \<phi>view_shift_by_implication .
 
-lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> Void \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> \<r>Clean H
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> Void \<heavy_comma> \<blangle> Void \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding \<r>Clean_def FOCUS_TAG_def GOAL_CTXT_def
   by (simp add: \<phi>view_shift_by_implication)
+
+lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?var_R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H \<heavy_comma> \<blangle> Void \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding FOCUS_TAG_def GOAL_CTXT_def
+  by (simp add: \<phi>view_refl)
+
 
 
 subsubsection \<open>Void Holes\<close> \<comment> \<open>eliminate 1 holes generated during the reasoning \<close>
@@ -5496,8 +5527,7 @@ lemma [\<phi>reason 3000
   using implies_refl .
 
 lemma [\<phi>reason 3000
-    on \<open>Structural_Extract ?X ?R ?X ?W ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-       \<open>Structural_Extract ?X ?R ?var_X ?W ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>Structural_Extract ?X ?R ?Y ?W ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]: \<comment> \<open>The current object X is exactly what we want to extract.\<close>
   \<open>Structural_Extract X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
@@ -5622,16 +5652,34 @@ lemma [\<phi>reason on
   \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?R' ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> CHK_SUBGOAL G
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k'
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
   unfolding Structural_Extract_def Premise_def
   subgoal premises prems
-    apply (insert prems(3),
+    apply (insert prems(4),
        simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
-          \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k kd, unfolded prems(2)])
+          \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k kd, unfolded prems(3)])
+    apply (rule \<phi>MapAt_L_cast) . .
+
+lemma [\<phi>reason 70 on
+  \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?R' ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  \<open> CHK_SUBGOAL G
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' @ kd = k
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
+  unfolding Structural_Extract_def Premise_def
+  subgoal premises prems
+    apply (insert prems(4),
+       simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
+          \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k' kd, unfolded prems(3)])
   apply (rule \<phi>MapAt_L_cast) . .
+
 
 lemma [\<phi>reason]:
   \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U) W P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
@@ -5677,6 +5725,8 @@ text \<open>Then, according to the expected permission n and the permission m th
   \<^item> m = n
   \<^item> m < n
   \<^item> m > n\<close>
+(*
+TODO: re-enable this!
 
 lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?var_m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
     \<comment> \<open>if only requires a part of the permission, give it a half of that currently we have.\<close>
@@ -5689,7 +5739,7 @@ lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znr
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
     X[THEN implies_right_prod]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket>. . *)
 
 lemma [\<phi>reason 120 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<comment> \<open>If requires exactly what we have now, typically this happens after the previous rule or n = 1.\<close>
