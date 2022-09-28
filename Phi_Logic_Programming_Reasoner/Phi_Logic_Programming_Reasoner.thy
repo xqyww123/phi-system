@@ -104,7 +104,7 @@ subsubsection \<open>Action\<close>
 
 typedecl 'cat action
 
-definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> _" [2,1000] 2)
+definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> _" [2,3] 2)
   where \<open>Action_Tag P A \<equiv> P\<close>
 
 text \<open>\<^prop>\<open>P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close> is a general way to annotate the rule \<^prop>\<open>P\<close> intends for
@@ -139,6 +139,21 @@ text \<open>A general technical tag used in the reasoning, usually represents th
   currently focuses on certain part, certain target.\<close>
 
 definition FOCUS_TAG :: " 'a \<Rightarrow> 'a "  ("\<blangle> _ \<brangle>") where [iff]: "\<blangle> x \<brangle> = x"
+
+
+subsection \<open>General Rules\<close>
+
+paragraph \<open>Aggregate Representation of Antecedents\<close>
+
+declare conjunctionI[\<phi>reason 1000]
+  
+paragraph \<open>Trivial Antecedent\<close>
+
+declare TrueI[\<phi>reason 1000]
+
+text \<open>It is a place holder.
+  Sometimes it is useful when a rule is generated automatically and
+  when in this automation no antecedent is actually required.\<close>
 
 
 subsection \<open>Proof Obligation\<close>
