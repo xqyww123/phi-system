@@ -179,7 +179,9 @@ fun gen_reason _ _ _ (result, []) = result
                     else ()
             val Z = (call_tactics ctxt tactics th)
                   |> map (apfst (fn c' => c' + cost))
-                  |> (fn Z => (result, Z::((cost,seq')::L')::L))
+                  |> (fn Z => (result, Z::(
+                        let val t = if pointer_eq (seq',Seq.empty) then L' else (cost,seq')::L'
+                        in if t = [] then L else t::L end)))
                 handle Success ret => raise Success ret
                      | Global_Cut result' =>
                         let
