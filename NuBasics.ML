@@ -9,11 +9,15 @@ signature NU_BASICS = sig
   exception NDBG of thm
 
   val under_programming_environ : Proof.context -> bool
+  val exit_programming_environ : Proof.context -> Proof.context
+  val enter_programming_environ' : thm -> Proof.context -> Proof.context
+
   val the_construction : Proof.context -> thm
   val the_programming_sequent' : Proof.context -> thm
   val the_nu_fact : Proof.state -> thm
   val set_nu_fact : thm -> Proof.state -> Proof.state
-  val set_programming_sequent' : thm -> Proof.context -> Proof.context
+  val enter_programming_environ : thm -> Proof.state -> Proof.state
+  val update_programming_sequent' : thm -> Proof.context -> Proof.context
 
 
   val dest_param : term -> term
@@ -42,29 +46,33 @@ structure Programming_Sequent = Proof_Data (
   type T = (thm (*sequent*)
           * thm (*the latest construction*)
           * thm list lazy (*implication*)
-          ) option;
-  val init = (K NONE)
+          ) list;
+  val init = (K [])
 )
 
-fun err_bad_env () = warning("Not in the \<phi> programming environment")
+fun err_bad_env () = (* warning("Not in the \<phi> programming environment") *) ()
 
 fun the_construction ctxt =
-  case Programming_Sequent.get ctxt of SOME (_,thm, _) => thm
-                                     | _ => (err_bad_env (); Drule.dummy_thm)
+  case Programming_Sequent.get ctxt of (_,thm, _)::_ => thm
+                                     | [] => (err_bad_env (); Drule.dummy_thm)
 
-val under_programming_environ = is_some o Programming_Sequent.get
+val under_programming_environ = not o null o Programming_Sequent.get
+val exit_programming_environ = Programming_Sequent.map tl
 
 fun the_programming_sequent' ctxt =
-  case Programming_Sequent.get ctxt of SOME (thm, _, _) => thm
-                                     | _ => (err_bad_env (); Drule.dummy_thm)
+  case Programming_Sequent.get ctxt of (thm, _, _)::_ => thm
+                                     | [] => (err_bad_env (); Drule.dummy_thm)
 
 val the_nu_fact = the_programming_sequent' o Proof.context_of
 
-fun the_implication_GE ctxt =
-  case Programming_Sequent.get ctxt of SOME (_, _, imp) => Lazy.force imp
-                                     | _ => (err_bad_env (); [])
+fun the_implication_GE i ctxt =
+  let val L = Programming_Sequent.get ctxt
+   in if i < length L
+      then Lazy.force (#3 (List.nth (L,i)))
+      else (err_bad_env (); [])
+   end
 
-fun the_implication ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_implication_GE ctxt)
+fun the_implication i ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_implication_GE i ctxt)
 
 fun reason_programming_implication mode ctxt sequent =
   let
@@ -77,22 +85,26 @@ fun reason_programming_implication mode ctxt sequent =
         | _ => []
   end
 
-fun set_programming_sequent' sequent ctxt =
-  let
-    fun put data = Programming_Sequent.put (SOME data) ctxt
-  in
-    case Phi_Working_Mode.working_mode_on ctxt (Thm.concl_of sequent)
-      of SOME mode => put (sequent, sequent, Lazy.lazy (fn () =>
-                                                reason_programming_implication mode ctxt sequent))
-       | _ => case Programming_Sequent.get ctxt
-                of SOME (_, construction, implication) => put (sequent, construction, implication)
-                 | NONE => put (sequent, sequent, Lazy.value [])
-  end
+fun gen_update_programming_sequent' put sequent ctxt =
+  case Phi_Working_Mode.working_mode_on ctxt (Thm.concl_of sequent)
+    of SOME mode => put ctxt (sequent, sequent, Lazy.lazy (fn () =>
+                                              reason_programming_implication mode ctxt sequent))
+     | _ => case Programming_Sequent.get ctxt
+              of (_, construction, implication)::_ => put ctxt (sequent, construction, implication)
+               | [] => put ctxt (sequent, sequent, Lazy.value [])
+
+val update_programming_sequent' = gen_update_programming_sequent'
+        (fn ctxt => fn data => Programming_Sequent.map (fn L => data::tl L) ctxt)
+val enter_programming_environ' = gen_update_programming_sequent'
+        (fn ctxt => fn data => Programming_Sequent.map (fn L => data::L) ctxt)
   
 
-fun set_nu_fact sequent stat = stat
+fun gen_set_nu_fact updt sequent stat = stat
   |> Proof.set_facts [sequent]
-  |> Proof.map_context (set_programming_sequent' sequent);
+  |> Proof.map_context (updt sequent);
+
+val set_nu_fact = gen_set_nu_fact update_programming_sequent'
+val enter_programming_environ = gen_set_nu_fact enter_programming_environ'
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>this\<close>,
           fn genric =>
@@ -110,13 +122,13 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>im
           fn genric =>
               case genric
               of Context.Theory _ => []
-               | Context.Proof ctxt => the_implication_GE ctxt))
+               | Context.Proof ctxt => the_implication_GE 0 ctxt))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication\<close>,
           fn genric =>
               case genric
               of Context.Theory _ => []
-               | Context.Proof ctxt => the_implication ctxt))
+               | Context.Proof ctxt => the_implication 0 ctxt))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>\<close>,
           (fn genric =>
@@ -124,6 +136,28 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>\<
               of Context.Theory _ => []
                | Context.Proof ctxt =>
                    ( Proof_Context.get_thms ctxt "\<phi>implication"
+                   @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
+                   @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>useful\<close>)
+          )))
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_GE_previous\<close>,
+          fn genric =>
+              case genric
+              of Context.Theory _ => []
+               | Context.Proof ctxt => the_implication_GE 1 ctxt))
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_previous\<close>,
+          fn genric =>
+              case genric
+              of Context.Theory _ => []
+               | Context.Proof ctxt => the_implication 1 ctxt))
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>_previous\<close>,
+          (fn genric =>
+              case genric
+              of Context.Theory _ => []
+               | Context.Proof ctxt =>
+                   ( Proof_Context.get_thms ctxt "\<phi>implication_previous"
                    @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
                    @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>useful\<close>)
           )))

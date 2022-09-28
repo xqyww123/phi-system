@@ -478,6 +478,13 @@ abbreviation Simple_View_Shift
   where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
 
 
+lemma View_Shift_imply_P:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
+\<Longrightarrow> (P1 \<longrightarrow> P2)
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2\<close>
+  unfolding View_Shift_def
+  by blast
+
 
 subsection \<open>Essential Hoare Rules\<close>
 

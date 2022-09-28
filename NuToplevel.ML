@@ -559,13 +559,15 @@ fun prove_prem int stat =
 
 local
 val attr_useful = map (Attrib.attribute @{context}) @{attributes [useful]}
+fun is_backward_mode s = (Proof.assert_backward s; true)
+      handle ERROR _ => false
 in
 
 fun gen_begin_block prep_attr bindings int stat =
   let open Proof
     val ctxt = context_of stat
 
-    val is_top = not (NuBasics.under_programming_environ ctxt)
+    val is_top = not (NuBasics.under_programming_environ ctxt) orelse is_backward_mode stat
     val stat =
           if is_top
           then stat
@@ -649,7 +651,7 @@ fun gen_begin_block prep_attr bindings int stat =
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
       |> Proof.map_context_result (#initial_sequent mode blk_name (cterm_of ctxt arg) #> swap)
-      |-> NuBasics.set_nu_fact
+      |-> (if is_top then NuBasics.enter_programming_environ else NuBasics.set_nu_fact)
       |> Proof.map_context (fn ctxt => ctxt
             |> Proof_Context.put_thms false ("\<phi>thesis",
                   SOME [Drule.mk_term (cterm_of ctxt goal)]) 

@@ -146,6 +146,16 @@ subsection \<open>General Rules\<close>
 paragraph \<open>Aggregate Representation of Antecedents\<close>
 
 declare conjunctionI[\<phi>reason 1000]
+
+definition Aggregate_Antecedent :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
+  where [iff]: \<open>Aggregate_Antecedent = (\<and>)\<close>
+
+declare conjI[folded Aggregate_Antecedent_def, \<phi>reason 1000]
+
+definition Aggregate_Forall :: \<open>('a \<Rightarrow> bool) \<Rightarrow> bool\<close> (binder "\<forall>\<^sub>\<r>" 10)
+  where [iff]: \<open>Aggregate_Forall = All\<close>
+
+declare allI[folded Aggregate_Forall_def, \<phi>reason 1000]
   
 paragraph \<open>Trivial Antecedent\<close>
 
