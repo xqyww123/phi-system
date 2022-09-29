@@ -31,7 +31,7 @@ signature NU_REASONER = sig
    *)
 
   type cost = int
-  type 'a generic_reasoner = {name: term, pattern: term list, not_match: term list, tactic: 'a}
+  type 'a generic_reasoner = {name: term, pos: Position.T, pattern: term list, not_match: term list, tactic: 'a}
   type reasoner = (context_state -> context_state Seq.seq) generic_reasoner
   val reasoner_eq : ('a generic_reasoner * 'a generic_reasoner) -> bool
 
@@ -56,16 +56,16 @@ signature NU_REASONER = sig
   val reasoners : Proof.context -> (cost * reasoner) list
   val reasoner_net : Proof.context -> reasoner Cost_Net.T
 
-  val add_intro_rule : term list * term list -> cost * thm -> Context.generic -> Context.generic
-  val add_intro_rules: (thm list * cost * term list * term list) list -> Proof.context -> Proof.context
+  val add_intro_rule : Position.T -> cost -> term list * term list -> thm -> Context.generic -> Context.generic
+  val add_intro_rules: (thm list * Position.T * cost * term list * term list) list -> Proof.context -> Proof.context
   val del_intro_rule : thm -> Context.generic -> Context.generic
-  val attr_add_intro : int * (term list * term list) -> attribute
+  val attr_add_intro : (Position.T * (int * (term list * term list))) -> attribute
   val attr_del_intro : attribute
 
-  val add_elim_rule : term list * term list -> cost * thm -> Context.generic -> Context.generic
-  val add_elim_rules: (thm list * cost * term list * term list) list -> Proof.context -> Proof.context
+  val add_elim_rule : Position.T -> cost -> term list * term list -> thm -> Context.generic -> Context.generic
+  val add_elim_rules: (thm list * Position.T * cost * term list * term list) list -> Proof.context -> Proof.context
   val del_elim_rule : thm -> Context.generic -> Context.generic
-  val attr_add_elim : int * (term list * term list) -> attribute
+  val attr_add_elim : Position.T * (int * (term list * term list)) -> attribute
   val attr_del_elim : attribute
 
   val reason' : bool (*trace*) -> reasoner Cost_Net.T -> context_state -> context_state option
@@ -75,7 +75,7 @@ signature NU_REASONER = sig
     theorem in the returned sequence, that the one succeeded first or of least cost. *)
   val reason_tac :  Proof.context -> context_tactic
 
-  val setup_cmd : ((string (*name term*) * cost)
+  val setup_cmd : (((string (*name term*) * Position.T) * cost)
                    * ((bool (*true for matching, false for not matching*)
                        * bool (*true for premise pattern, false for conclusion pattern*))
                       * string (*pattern term*)) list
@@ -88,7 +88,7 @@ structure Nu_Reasoner : NU_REASONER = struct
 
 
 type cost = int
-type 'a generic_reasoner = {name: term, pattern: term list, not_match: term list, tactic: 'a}
+type 'a generic_reasoner = {name: term, pos: Position.T, pattern: term list, not_match: term list, tactic: 'a}
 type reasoner = (context_state -> context_state Seq.seq) generic_reasoner
 
 val auto_level = Attrib.setup_config_int \<^binding>\<open>\<phi>auto_level\<close> (K 2)
@@ -103,7 +103,7 @@ val premise_tag = Free("Premise", \<^typ>\<open>prop \<Rightarrow> prop\<close>)
 
 exception Success  of context_state
 exception Global_Cut of context_state
-exception Local_Cut of (cost * context_state Seq.seq)
+exception Local_Cut of (cost * Position.T * context_state Seq.seq)
 
 
 fun debug ctxt (c,(r : reasoner as {name,...})) =
@@ -156,17 +156,18 @@ fun call_tactics ctxt tactics th =
                | _ => NONE
           else if cost <= ~1000 then
             case Seq.pull (#tactic r (ctxt,th))
-              of SOME (x,s) => raise Local_Cut (cost, Seq.cons x s)
+              of SOME (x,s) => raise Local_Cut (cost, #pos r, Seq.cons x s)
                | _ => NONE
-          else SOME (cost, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
+          else SOME (cost, #pos r, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
         )
     handle Local_Cut ret => [ret]
   end
 
 fun gen_reason _ _ _ (result, []) = result
   | gen_reason trace iter tactics (result, []::L) =
-      gen_reason trace iter tactics (result, L)
-  | gen_reason trace iter tactics (result, ((cost,seq)::L')::L) =
+      (if trace then tracing ("Backtracking...") else ();
+       gen_reason trace iter tactics (result, L))
+  | gen_reason trace iter tactics (result, ((cost,pos,seq)::L')::L) =
   let
     val _ = if iter > 300 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
   in
@@ -175,12 +176,12 @@ fun gen_reason _ _ _ (result, []) = result
           (let
             val _ = if trace
                     then tracing ("\<phi>reasoning (score " ^ string_of_int (~cost)
-                      ^ "):\n" ^ Thm.string_of_thm ctxt th)
+                      ^ "):"^ Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                     else ()
             val Z = (call_tactics ctxt tactics th)
-                  |> map (apfst (fn c' => c' + cost))
+                  |> map (fn (a,b,c) => (a+cost,b,c))
                   |> (fn Z => (result, Z::(
-                        let val t = if pointer_eq (seq',Seq.empty) then L' else (cost,seq')::L'
+                        let val t = if pointer_eq (seq',Seq.empty) then L' else (cost,pos,seq')::L'
                         in if null t then L else t::L end)))
                 handle Success ret => raise Success ret
                      | Global_Cut result' =>
@@ -190,7 +191,7 @@ fun gen_reason _ _ _ (result, []) = result
                                           ^ Thm.string_of_thm ctxt (snd result'))
                                   else ()
                         in
-                          (SOME result', [[(0, Seq.single result')]])
+                          (SOME result', [[(0,pos, Seq.single result')]])
                         end
           in
             gen_reason trace (iter+1) tactics Z
@@ -199,7 +200,7 @@ fun gen_reason _ _ _ (result, []) = result
   end
 
 fun gen_reason' trace tactics states =
-      gen_reason trace 0 tactics (NONE, states)
+      gen_reason trace 0 tactics (NONE, map (map (fn (a,b) => (a,Position.none,b))) states)
       handle Success ret => SOME ret
 
 fun reason' trace tactics state =
@@ -262,12 +263,13 @@ fun setup_method_cmd (((name,cost),patterns),method) lthy =
     val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (ctxt,thm) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
-    val lthy'' = add_lthy (cost, {name=name', pattern=pos_pats, not_match=neg_pats, tactic=method'''}) lthy'
+    val lthy'' = add_lthy (cost, {name=name', pos=Binding.pos_of name,
+                                  pattern=pos_pats, not_match=neg_pats, tactic=method'''}) lthy'
   in
     lthy''
 end
 
-fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
+fun setup_cmd ((((name,pos),cost),patterns),tactic_src) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
     val name = Syntax.read_term lthy name
@@ -284,7 +286,8 @@ fun setup_cmd (((name,cost),patterns),tactic_src) lthy =
         (ML_Lex.read
           ("Theory.local_setup (Nu_Reasoner.add_lthy (" ^
           ML_Syntax.print_int cost ^ ", {name=(" ^
-          ML_Syntax.print_term name ^ "), pattern=(" ^
+          ML_Syntax.print_term name ^ "), pos=("^
+          ML_Syntax.print_position pos ^ "), pattern=(" ^
           ML_Syntax.print_list ML_Syntax.print_term pos_pats
           ^ "), not_match=("^
           ML_Syntax.print_list ML_Syntax.print_term neg_pats
@@ -300,7 +303,7 @@ val pattern = Parse.enum "|"
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword \<phi>reasoner_ML} "define \<phi>reasoner"
-    (Parse.term -- (Parse.int >> ~) --| Parse.$$$ "(" -- pattern --| Parse.$$$ ")"
+    (Parse.position Parse.term -- (Parse.int >> ~) --| Parse.$$$ "(" -- pattern --| Parse.$$$ ")"
         --| @{keyword =} -- Parse.ML_source
       >> setup_cmd)
 
@@ -317,7 +320,7 @@ fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 
 
-fun intro_reasoner cost patterns not_match rule =
+fun intro_reasoner pos cost patterns not_match rule =
   let
     val rule = Thm.trim_context rule
     val pats = if null patterns then [conclusion_tag $ Thm.concl_of rule]
@@ -331,6 +334,7 @@ fun intro_reasoner cost patterns not_match rule =
           then error ("A reasoning rule can contain one \<r>Feasible antecedent at most.")
           else f_num > 0
   in {name = @{term \<phi>Intro_Rule} $ Thm.prop_of rule,
+      pos = pos,
       pattern = pats,
       not_match = npats,
       tactic = (fn (ctxt, th) =>
@@ -344,35 +348,37 @@ fun intro_reasoner cost patterns not_match rule =
       }
   end
 
-fun elim_reasoner patterns not_match  rule =
+fun elim_reasoner pos patterns not_match  rule =
   let
     val rule = Thm.trim_context rule
     val pats = if null patterns then [premise_tag $ Thm.major_prem_of rule]
                else map (fn pat => premise_tag $ pat) patterns
     val npats= map (fn pat => premise_tag $ pat) not_match
   in {name = @{term \<phi>Elim_Rule} $ Thm.prop_of rule,
+      pos = pos,
       pattern = pats,
       not_match = npats,
       tactic = (fn (ctxt, th) => HEADGOAL (Tactic.eresolve_tac ctxt [rule]) th |> Seq.map (pair ctxt))}
   end
 
-fun add_intro_rule (pattern,not_match) (cost, rule) = add (cost, intro_reasoner cost pattern not_match rule)
+fun add_intro_rule pos cost (pattern,not_match) rule =
+      add (cost, intro_reasoner pos cost pattern not_match rule)
 fun add_intro_rules rules =
-  fold (fn (rules,cost,pattern,not_match) =>
-    fold (Context.proof_map o add_intro_rule (pattern,not_match) o pair cost) rules) rules
-fun del_intro_rule rule = del (intro_reasoner 1000 [] [] rule)
+  fold (fn (rules,pos,cost,pattern,not_match) =>
+    fold (Context.proof_map o add_intro_rule pos cost (pattern,not_match)) rules) rules
+fun del_intro_rule rule = del (intro_reasoner Position.none 1000 [] [] rule)
 
-fun attr_add_intro (cost, (pattern, not_match)) =
-  Thm.declaration_attribute (add_intro_rule (pattern,not_match) o pair cost)
+fun attr_add_intro (pos, (cost, (pattern, not_match))) =
+  Thm.declaration_attribute (add_intro_rule pos cost (pattern,not_match))
 val attr_del_intro = Thm.declaration_attribute del_intro_rule
 
-fun add_elim_rule (pattern, not_match) (cost, rule) = add (cost, elim_reasoner pattern not_match rule)
+fun add_elim_rule pos cost (pattern, not_match) rule = add (cost, elim_reasoner pos pattern not_match rule)
 fun add_elim_rules rules =
-  fold (fn (rules,cost,pattern,not_match) =>
-    fold (Context.proof_map o add_elim_rule (pattern,not_match) o pair cost) rules) rules
-fun del_elim_rule rule = del (elim_reasoner [] [] rule)
-fun attr_add_elim (cost, (pattern, not_match)) =
-  Thm.declaration_attribute (add_elim_rule (pattern,not_match) o pair cost)
+  fold (fn (rules,pos,cost,pattern,not_match) =>
+    fold (Context.proof_map o add_elim_rule pos cost (pattern,not_match)) rules) rules
+fun del_elim_rule rule = del (elim_reasoner Position.none [] [] rule)
+fun attr_add_elim (pos, (cost, (pattern, not_match))) =
+  Thm.declaration_attribute (add_elim_rule pos cost (pattern,not_match))
 val attr_del_elim = Thm.declaration_attribute del_elim_rule
 
 end

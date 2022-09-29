@@ -5,7 +5,8 @@ signature NU_SYS = sig
   exception ReasoningFail of thm
 
   (** Basic Operations **)
-  val cast : cterm (*desired nu*) -> context_state (*sequent*) -> context_state
+  val cast : cterm (*desired nu*) -> context_state -> context_state
+  val move_lemmata : context_state -> context_state
 
   val accept_proc : context_state -> context_state
 
@@ -41,6 +42,31 @@ fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))
 fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 
 (** Basic Operations **)
+
+fun move_lemmata' (ctxt, sequent) =
+  let
+    fun filter_lemma th =
+      case Thm.prop_of th
+        of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>USELESS\<close> $ _) => NONE
+         | \<^const>\<open>Trueprop\<close> $ \<^const>\<open>True\<close> => NONE
+         | _ => SOME th
+    val lemmas = (sequent RS @{thm conjunct2})
+                  |> HOLogic.conj_elims ctxt
+                  |> map_filter filter_lemma
+    val (_,ctxt') =
+      if null lemmas
+      then (("",[]), ctxt)
+      else Proof_Context.note_thms ""
+             ((Binding.empty, [Named_Theorems.add \<^named_theorems>\<open>\<phi>lemmata\<close>]), [(lemmas,[])]) ctxt
+  in
+    (ctxt', sequent RS @{thm conjunct1})
+  end
+
+fun move_lemmata (ctxt, sequent) =
+  case Thm.prop_of sequent
+    of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>conj\<close> $ _ $ _) => move_lemmata' (ctxt, sequent)
+     | _ => (ctxt, sequent)
+
 
 fun cast desired_nu (ctxt,sequent) =
   let

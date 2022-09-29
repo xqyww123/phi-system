@@ -487,17 +487,18 @@ fun gen_finish_proc qed genz int stat =
           if Thm.no_prems sequent_pre1
           then sequent_pre1
           else Nu_Reasoner.reason1 (ctxt,sequent_pre1) |> snd
-        val sequent'' = #before_finish mode ctxt goal sequent
-        val desired_nu = #return_spec_c mode ctxt goal
+        val (ctxt',sequent') = NuSys.move_lemmata (ctxt, sequent)
+        val sequent'' = #before_finish mode ctxt' goal sequent'
+        val desired_nu = #return_spec_c mode ctxt' goal
       in
-        (ctxt,sequent'')
+        (ctxt',sequent'')
           |> invoke_Block_End_Hook
           |> (case genz
                 of Phi_Generalization.None => I
               | _ => NuSys.cast (#return_spec mode (Thm.prop_of sequent'')
-                                  |> Phi_Generalization.generalize_cmd genz ctxt
-                                  |> Syntax.check_term ctxt
-                                  |> Thm.cterm_of ctxt))
+                                  |> Phi_Generalization.generalize_cmd genz ctxt'
+                                  |> Syntax.check_term ctxt'
+                                  |> Thm.cterm_of ctxt'))
           |> NuSys.cast desired_nu
           |> swap
       end
@@ -573,7 +574,7 @@ fun gen_begin_block prep_attr bindings int stat =
           then stat
                 |> Proof.apply (Method.Basic (fn ctxt => Method.SIMPLE_METHOD (
                                     TRY (HEADGOAL (Raw_Simplifier.rewrite_goal_tac ctxt
-                                          @{thms GOAL_CTXT_def Argument_strip_top}))
+                                          @{thms GOAL_CTXT_def Argument_strip_top SMorphism_def[folded atomize_eq]}))
                                     THEN HEADGOAL (Object_Logic.full_atomize_tac ctxt)
                                )), Position.no_range)
                 |> Seq.the_result "cannot atomize the first subgoal"
@@ -584,7 +585,7 @@ fun gen_begin_block prep_attr bindings int stat =
           else the_nu_fact stat
                   |> Conv.fconv_rule (Conv.prems_conv 1 (
                         Conv.repeat_changed_conv (Raw_Simplifier.rewrite ctxt false
-                            @{thms GOAL_CTXT_def Argument_strip_top})
+                            @{thms GOAL_CTXT_def Argument_strip_top SMorphism_def[folded atomize_eq]})
               then_conv Conv.repeat_changed_conv (Object_Logic.atomize ctxt)
                      ))
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)

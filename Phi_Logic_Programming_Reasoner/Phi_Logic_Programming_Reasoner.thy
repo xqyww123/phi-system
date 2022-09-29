@@ -56,15 +56,18 @@ text \<open>If any deterministic rule (whose priority is greater or equal to 100
 
 ML_file_debug \<open>library/reasoner.ML\<close>
 
+
 attribute_setup \<phi>reason =
 \<open>let open Args Scan Parse 
   fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
   val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
+  fun pos_parser x = (Token.pos_of (hd x), x)
 in
+  (lift pos_parser --
   (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K ~2000000) || optional (Parse.int >> ~) ~100))
       -- (optional (lift ($$$ "on") |-- prop_pattern) []
-       -- optional (lift ($$$ "if" |-- $$$ "no") |-- prop_pattern) [])
+       -- optional (lift ($$$ "if" |-- $$$ "no") |-- prop_pattern) []))
         >> Nu_Reasoner.attr_add_intro)
   || (lift del >> K Nu_Reasoner.attr_del_intro)
 end\<close>
@@ -76,10 +79,12 @@ attribute_setup \<phi>reason_elim =
   fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
   val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
+  fun pos_parser x = (Token.pos_of (hd x), x)
 in
+  (lift pos_parser --
   (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K ~2000000) || optional (Parse.int >> ~) ~100))
       -- (optional (lift ($$$ "on") |-- prop_pattern) []
-       -- optional (lift ($$$ "no") |-- prop_pattern) [])
+       -- optional (lift ($$$ "no") |-- prop_pattern) []))
         >> Nu_Reasoner.attr_add_elim)
   || (lift del >> K Nu_Reasoner.attr_del_elim)
 end\<close>
@@ -88,12 +93,11 @@ end\<close>
 
 method_setup \<phi>reason = \<open>let open Scan Parse in
   Method.sections [
-    Args.add >> K (Method.modifier (Nu_Reasoner.attr_add_intro (~100,([],[]))) \<^here>),
-    Args.del >> K (Method.modifier  Nu_Reasoner.attr_del_intro \<^here>)
+    Parse.position Args.add >> (fn (_,pos) => (Method.modifier (Nu_Reasoner.attr_add_intro (pos,(~100,([],[])))) \<^here>)),    Args.del >> K (Method.modifier  Nu_Reasoner.attr_del_intro \<^here>)
 ] >> (fn irules => fn ctxt => fn ths => Nu_Reasoner.reason_tac ctxt)
 end\<close>
 
-declare conjI[\<phi>reason] TrueI[\<phi>reason]
+declare conjI[\<phi>reason add] TrueI[\<phi>reason add]
 
 
 section \<open>Facilities & Tools\<close>
@@ -457,7 +461,7 @@ lemma [\<phi>reason on \<open>PROP ?A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bol
 \<Longrightarrow> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
   unfolding GOAL_CTXT_def .
 
-lemma [\<phi>reason]:
+lemma [\<phi>reason add]:
   \<open> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
 \<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
   unfolding GOAL_CTXT_def Branch_def

@@ -65,6 +65,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
                 |> (fn x => case x of SOME y => apsnd Goal.conclude y
                                     | _ => error (
     "Fail to assign variable(s). Typically, it is due to incorrect representation types."))
+                |> apsnd (fn th => th RS @{thm conjunct1})
 
     val prem = Thm.cprem_of sequent' 1
     val (vnames,ctxt) =

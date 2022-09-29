@@ -550,7 +550,6 @@ definition NameHint :: "label \<Rightarrow> 'a \<Rightarrow> 'a" where "NameHint
 translations "X" <= "CONST NameHint name X"
 
 
-
 subsubsection \<open>Argument tag\<close>
 
 lemma Argument_I: "P \<Longrightarrow> Argument P" unfolding Argument_def .
@@ -566,7 +565,47 @@ lemma Argument_strip_top:
   unfolding Argument_def .
 
 
-subsubsection \<open>Technical Tags\<close>
+subsubsection \<open>Structural Morphism\<close>
+
+definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [15] 14)
+  where [iff]: \<open>SMorphism X = X\<close>
+
+definition Reverse_Morphism :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Reverse_Morphism R Q \<equiv> (R \<longrightarrow> Q)\<close>
+
+
+text \<open>
+Note, the argument here means any \<phi>-Type in the pre-condition, not necessary argument value.
+
+  If in a procedure or an implication rule or a view shift rule,
+  there is an argument where the procedure or the rule retains its structure,
+  this argument can be marked by \<^term>\<open>SMORPH arg\<close>.
+
+  Recall when applying the procedure or the rule, the reasoner extracts \<^term>\<open>arg\<close> from the
+    current \<phi>-BI specification \<^term>\<open>X\<close> of the current sequent.
+  This extraction may break \<^term>\<open>X\<close> especially when the \<^term>\<open>arg\<close> to be extracted is
+    scattered and embedded in multiple \<phi>-Types in \<^term>\<open>X\<close>.
+  For example, extract \<^term>\<open>(x1, y2) \<Ztypecolon> (A1 * B2)\<close> from
+    \<^term>\<open>((x1, x2) \<Ztypecolon> (A1 * A2)) * ((y1, (y2, y3)) \<Ztypecolon> (B1 * (B2 * B3)))\<close>.
+  After the application, the following sequent will have broken structures because
+    the original structure of \<^term>\<open>X\<close> is destroyed in order to extract \<^term>\<open>arg\<close>.
+  However, the structure of the new \<^term>\<open>arg'\<close> may not changes.
+  If so, by reversing the extraction, it is possible to recovery the original structure of \<^term>\<open>X\<close>,
+    only with changed value of the corresponding part of \<^term>\<open>arg\<close> in \<^term>\<open>X\<close>.
+
+  The system supports multiple arguments to be marked by \<^term>\<open>SMORPH arg\<close>.
+  And the system applies the reverse morphism in the correct order.
+  A requirement is,
+  those structural-retained argument should locate at the end of the procedure's or the rule's
+    argument list. Or else, because the reasoner does not record the extraction morphism of
+    arguments not marked by \<^term>\<open>SMORPH arg\<close>, those arguments which occur after the
+    structural-retained arguments change the \<phi>-BI specification by their extraction
+    causing the recorded morphism of previous \<^term>\<open>SMORPH arg\<close> mismatch the current
+    \<phi>-BI specification and so possibly not able to be applied any more.
+\<close>
+
+
+subsubsection \<open>Technical Tags\<close> (*depreciated*)
 
 datatype uniq_id = UNIQ_ID
   \<comment> \<open>A technical tag that is during the exporting translated to a unique ID.
@@ -1539,17 +1578,20 @@ lemma \<phi>apply_proc_fully[\<phi>reason on
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>))
     (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S))
-    (Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))\<close>
+    (Trueprop ((\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def \<phi>IntroFrameVar'_def
     GOAL_CTXT_def FOCUS_TAG_def Simplify_def Assertion_Level_Reasoning_def
     Simplify_def Filter_Out_Free_Values_def
+  apply rule
   subgoal premises prems
     apply (simp only: prems(1))
     using \<phi>apply_proc[OF \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _\<close>,
           OF \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>\<close>[THEN \<phi>frame[where R=R],
               THEN \<phi>CONSEQ[rotated 1, OF \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>,
                 OF view_shift_id, OF View_Shift_by_Subtyp[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
-                simplified prems(1), unfolded \<open>E''' = E''\<close>, simplified prems(1)]]] . .
+                simplified prems(1), unfolded \<open>E''' = E''\<close>, simplified prems(1)]]] .
+  by (meson \<phi>apply_view_shift_P)
+  
 end
 
 
@@ -2238,23 +2280,8 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
   \<open>NuProcessors.simplifier []\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
-\<phi>processor move_fact 200 (\<open>(\<phi>fiction.CurrentConstruction _ _ ?mode ?blk ?H ?T) \<and> ?P\<close> | \<open>?s \<in> ?S \<and> ?P\<close>)
-\<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
-  let
-    fun filter_lemma th =
-      case Thm.prop_of th
-        of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>USELESS\<close> $ _) => NONE
-         | \<^const>\<open>Trueprop\<close> $ \<^const>\<open>True\<close> => NONE
-         | _ => SOME th
-    val lemmas = (sequent RS @{thm conjunct2})
-                  |> HOLogic.conj_elims ctxt
-                  |> map_filter filter_lemma
-    val (_,ctxt') = Proof_Context.note_thms ""
-                      ((Binding.empty, [Named_Theorems.add \<^named_theorems>\<open>\<phi>lemmata\<close>]),
-                       [(lemmas,[])]) ctxt
-  in
-    (ctxt', sequent RS @{thm conjunct1})
-  end)\<close>
+\<phi>processor move_fact 99 (\<open>?Any \<and> ?P\<close>)
+\<open>fn stat => Scan.succeed (fn _ => NuSys.move_lemmata stat)\<close>
 
 (* Any simplification should finish before priority 999, or else
  *  this processor will be triggered unnecessarily frequently.*)
@@ -3367,6 +3394,31 @@ lemma \<phi>Share_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> n \<Znrres> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
+paragraph \<open>Auxiliary Tag\<close>
+
+definition part :: \<open>rat \<Rightarrow> rat\<close> where [iff]: \<open>part x = x\<close>
+
+text \<open>Many read-only applicable rules require only non-zero permissions.
+  It is reflected as arbitrary schematic variable in the rule, like
+    \<^schematic_prop>\<open> x \<Ztypecolon> ?n \<Znrres> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Z\<close>.
+  As arbitrary schematic variable, the reasoner may by mistake instantiate it to be the total
+  permission. It is not the optimal, and it is better to only assign a half of the permission
+    and to leave the remain half to be used potentially later.
+  For example, if a rule requires twice the same resource,
+    \<^schematic_prop>\<open> (x \<Ztypecolon> ?n \<Znrres> T) * (x \<Ztypecolon> ?m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Z\<close>.
+  The best solution is to assign ?n by a half of the current permission and then assign ?m
+    the half of the remaining half.
+
+  Unfortunately, the reasoner can hardly be configured to apply this conservative policy, because
+  schematic variables have a semantics of accepting any instantiation and there are many short-cut
+  reasoning rule trying to solve greedily a local problem by unification.
+
+  An approach is, if a rule may request a same object by twice, add the tag \<^term>\<open>part\<close> on its
+    permission to tell explicitly the reasoner to only assign it a half of the permission.
+    \<^schematic_prop>\<open> (x \<Ztypecolon> part ?n \<Znrres> T) * (x \<Ztypecolon> part ?m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Z\<close>.
+\<close>
+
+
 paragraph \<open>Implication & Action Rules\<close>
 
 lemma \<phi>Share_cast[\<phi>reason]:
@@ -3461,6 +3513,13 @@ lemma share_split_\<phi>app:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m
 \<Longrightarrow> \<phi>Sep_Disj_Identical T
 \<Longrightarrow> (x \<Ztypecolon> n+m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> n \<Znrres> T) * (x \<Ztypecolon> m \<Znrres> T)\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  by (simp add: \<phi>Share_share implies_refl Premise_def)
+
+lemma share_merge_\<phi>app:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m
+\<Longrightarrow> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) * (x \<Ztypecolon> m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> n+m \<Znrres> T)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   by (simp add: \<phi>Share_share implies_refl Premise_def)
 
@@ -4147,15 +4206,20 @@ lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<lon
   unfolding \<r>Clean_def FOCUS_TAG_def GOAL_CTXT_def
   using \<phi>view_shift_by_implication .
 
-lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> Void \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 4010 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> Void \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> \<r>Clean H
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> Void \<heavy_comma> \<blangle> Void \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding \<r>Clean_def FOCUS_TAG_def GOAL_CTXT_def
   by (simp add: \<phi>view_shift_by_implication)
 
-lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?var_R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H \<heavy_comma> \<blangle> Void \<brangle> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding FOCUS_TAG_def GOAL_CTXT_def
+  by (simp add: \<phi>view_refl)
+
+lemma [\<phi>reason 4011 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Reverse_Morphism True (\<^bold>v\<^bold>i\<^bold>e\<^bold>w H' \<longmapsto> H' \<heavy_comma> \<blangle> Void \<brangle> ) \<and> True \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding FOCUS_TAG_def GOAL_CTXT_def Reverse_Morphism_def
   by (simp add: \<phi>view_refl)
 
 
@@ -4414,6 +4478,11 @@ lemma [\<phi>reason 2300 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<hea
   unfolding cast_def pair_forall
   by (simp add: view_shift_id)
 
+lemma [\<phi>reason 2000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<longmapsto> ?R2\<heavy_comma> \<blangle> SMORPH ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R2 \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Reverse_Morphism RP RX \<and> P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R2 \<heavy_comma> \<blangle> SMORPH X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Reverse_Morphism RP RX \<and> P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding SMorphism_def .
+
 
 subsubsection \<open>Value\<close>
 
@@ -4432,15 +4501,13 @@ lemma [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R\<heav
   unfolding cast_def pair_forall
   by (smt (verit) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
 
-subsubsection \<open>General Search\<close>
-
-lemma [\<phi>reason 100 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
-  " CHK_SUBGOAL G
-  \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H'\<heavy_comma> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-  \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> H \<longmapsto> R\<heavy_comma> H'\<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+lemma [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?x \<Ztypecolon> Val ?v ?V \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    if no \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?x \<Ztypecolon> Val ?v ?V \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> x \<Ztypecolon> Val v V \<longmapsto> R' \<heavy_comma> x \<Ztypecolon> Val v V \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding cast_def
-  by (simp add: \<phi>view_shift_intro_frame mult.assoc)
-  
+  by (smt (verit, best) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
 
 lemma assertion_level_reasoning_skip
   [\<phi>reason 70 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
@@ -4450,20 +4517,26 @@ lemma assertion_level_reasoning_skip
   unfolding cast_def
   by (simp add: \<phi>view_shift_intro_frame mult.commute mult.left_commute)
 
+
+(* 
+We don't need general search any more, because every resource locale configures its reasoning rules.
+
+subsubsection \<open>General Search\<close>
+
+lemma [\<phi>reason 100 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
+  " CHK_SUBGOAL G
+  \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H'\<heavy_comma> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+  \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> H \<longmapsto> R\<heavy_comma> H'\<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+  unfolding cast_def
+  by (simp add: \<phi>view_shift_intro_frame mult.assoc)
+
 lemma [\<phi>reason 10 on \<open>?a \<Zinj> ?x \<Ztypecolon> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R''' \<heavy_comma> ?a' \<Zinj> ?x' \<Ztypecolon> ?T' \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a' \<Longrightarrow>
    a \<Zinj> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s a' \<Zinj> x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow>
    a \<Zinj> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 \<heavy_comma> a' \<Zinj> x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P"
   unfolding cast_def pair_forall by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?x \<Ztypecolon> Val ?v ?V \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-    if no \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> Void \<longmapsto> ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-]:
-  " \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> x \<Ztypecolon> Val v V \<longmapsto> R' \<heavy_comma> x \<Ztypecolon> Val v V \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding cast_def
-  by (smt (verit, best) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
-
+*)
 
 (* lemma [\<phi>reason 1200
     on \<open>?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R' \<heavy_comma> \<blangle> OBJ ?a \<Zinj> ?x \<Ztypecolon> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R'\<^sub>m \<heavy_comma> VAL ?V \<heavy_comma> \<blangle> OBJ ?a\<^sub>m \<Zinj> ?x\<^sub>m \<Ztypecolon> ?X\<^sub>m \<brangle> \<longmapsto> ?R\<^sub>m \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -5511,6 +5584,14 @@ lemma [\<phi>reason 1200 on \<open>(?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^
   \<open>(x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) = (() \<Ztypecolon> \<circle>) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
 
+lemma [\<phi>reason 1200 on \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>]:
+  \<open>(x \<Ztypecolon> \<circle>) = (() \<Ztypecolon> k \<^bold>\<rightarrow> \<circle>) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>MapAt_\<phi>None by simp
+
+lemma [\<phi>reason 1200 on \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>]:
+  \<open>(x \<Ztypecolon> \<circle>) = (() \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
+
 lemma [\<phi>reason 1200 on \<open>(?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> \<circle>) = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>]:
   \<open> perm_transformer' \<psi>
 \<Longrightarrow> (x \<Ztypecolon> \<phi>perm_transformer \<psi> \<circle>) = (() \<Ztypecolon> \<circle>) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>
@@ -5581,31 +5662,27 @@ lemma Structural_Extract'_imply_P:
   by blast
 
 
-
-definition Reverse_Morphism :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close> ("_ <reverse-morphism> _ _" [20,21,21] 20)
-  where \<open>Reverse_Morphism P R Q \<equiv> (P \<and> (R \<longrightarrow> Q))\<close>
-
 lemma Structural_Extract_reverse_morphism_I[intro?]:
   \<open> Structural_Extract X R Y W P
 \<Longrightarrow> RP \<longrightarrow> RX
-\<Longrightarrow> Structural_Extract X R Y W (P <reverse-morphism> RP RX)\<close>
+\<Longrightarrow> Structural_Extract X R Y W (Reverse_Morphism RP RX \<and> P)\<close>
   unfolding Reverse_Morphism_def Structural_Extract_def Imply_def
   by blast
 
 lemma Structural_Extract'_reverse_morphism_I[intro?]:
   \<open> Structural_Extract' X R Y W P
 \<Longrightarrow> RP \<longrightarrow> RX
-\<Longrightarrow> Structural_Extract' X R Y W (P <reverse-morphism> RP RX)\<close>
+\<Longrightarrow> Structural_Extract' X R Y W (Reverse_Morphism RP RX \<and> P)\<close>
   unfolding Structural_Extract'_def Reverse_Morphism_def Structural_Extract_def Imply_def
   by blast
 
-lemma [\<phi>reason 1111]:
-  \<open> Structural_Extract' X R Y W (P <reverse-morphism> RP (Structural_Extract rY rW rX rR rP)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+lemma [\<phi>reason 1111 on \<open>Structural_Extract ?X ?R' ?Y ?W' (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> Structural_Extract' X R Y W (Reverse_Morphism RP (Structural_Extract' rY rW rX rR rP) \<and> P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow>  R = R'  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste
 \<Longrightarrow>  W = W'  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste
 \<Longrightarrow> rR = rR' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste
 \<Longrightarrow> rW = rW' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste
-\<Longrightarrow> Structural_Extract X R' Y W' (P <reverse-morphism> RP (Structural_Extract rY rW' rX rR' rP)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> Structural_Extract X R' Y W' (Reverse_Morphism RP (Structural_Extract rY rW' rX rR' rP) \<and> P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Structural_Extract'_def Action_Tag_def
   by simp
 
@@ -5647,24 +5724,27 @@ lemma Structural_Extract_1_left [\<phi>reason 3000
   using implies_refl .
 
 
-
+(*TODO: BUG: need to check the case where Y requires only partial share permission but
+    this rule may give it the total.*)
 lemma Structural_Extract_exact [\<phi>reason 3000
-    on \<open>Structural_Extract ?X ?R ?Y ?W ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>Structural_Extract' ?X ?R ?Y ?W ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]: \<comment> \<open>The current object X is exactly what we want to extract.\<close>
-  \<open>Structural_Extract X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  \<open>Structural_Extract' X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right GOAL_CTXT_def
+  unfolding Structural_Extract_def Structural_Extract'_def
+      mult_1_left \<phi>None_itself_is_one mult_1_right GOAL_CTXT_def
   using implies_refl .
 
 
 
 
 
+
 lemma [\<phi>reason 3011
-    on \<open>Structural_Extract ?X ?R (() \<Ztypecolon> \<phi>None) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>Structural_Extract ?X ?R (() \<Ztypecolon> \<phi>None) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open>Structural_Extract X X (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None)
-   (True <reverse-morphism> True (Structural_Extract (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) X' X' True))
+   (Reverse_Morphism True (Structural_Extract (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) X' X' True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
   unfolding GOAL_CTXT_def
@@ -5673,10 +5753,10 @@ lemma [\<phi>reason 3011
                    Structural_Extract_reverse_morphism_I)
 
 lemma [\<phi>reason 3011
-    on \<open>Structural_Extract (() \<Ztypecolon> \<phi>None) ?R ?Y ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>Structural_Extract (() \<Ztypecolon> \<phi>None) ?R ?Y ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open>Structural_Extract (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) X X
-    (True <reverse-morphism> True (Structural_Extract X' X' (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True))
+    (Reverse_Morphism True (Structural_Extract X' X' (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
   unfolding GOAL_CTXT_def
@@ -5685,9 +5765,9 @@ lemma [\<phi>reason 3011
                    Structural_Extract_reverse_morphism_I)
 
 lemma [\<phi>reason 3011
-    on \<open>Structural_Extract ?X ?R 1 ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>Structural_Extract ?X ?R 1 ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  \<open>Structural_Extract X X 1 1 (True <reverse-morphism> True (Structural_Extract 1 1 X' X' True))
+  \<open>Structural_Extract X X 1 1 (Reverse_Morphism True (Structural_Extract 1 1 X' X' True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
   unfolding GOAL_CTXT_def
@@ -5696,9 +5776,9 @@ lemma [\<phi>reason 3011
                    Structural_Extract_reverse_morphism_I)
 
 lemma [\<phi>reason 3011
-    on \<open>Structural_Extract 1 ?R ?Y ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>Structural_Extract 1 ?R ?Y ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  \<open>Structural_Extract 1 1 X X (True <reverse-morphism> True (Structural_Extract X' X' 1 1 True))
+  \<open>Structural_Extract 1 1 X X (Reverse_Morphism True (Structural_Extract X' X' 1 1 True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
   unfolding GOAL_CTXT_def
@@ -5707,15 +5787,15 @@ lemma [\<phi>reason 3011
                    Structural_Extract_reverse_morphism_I)
 
 lemma [\<phi>reason 3011
-    on \<open>Structural_Extract ?X ?R ?Y ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    on \<open>Structural_Extract' ?X ?R ?Y ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]: \<comment> \<open>The current object X is exactly what we want to extract.\<close>
-  \<open>Structural_Extract X  (() \<Ztypecolon> \<phi>None) X  (() \<Ztypecolon> \<phi>None)
-    (True <reverse-morphism> True (Structural_Extract X' (() \<Ztypecolon> \<phi>None) X' (() \<Ztypecolon> \<phi>None) True))
+  \<open>Structural_Extract' X  (() \<Ztypecolon> \<phi>None) X  (() \<Ztypecolon> \<phi>None)
+    (Reverse_Morphism True (Structural_Extract' X' (() \<Ztypecolon> \<phi>None) X' (() \<Ztypecolon> \<phi>None) True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
   unfolding GOAL_CTXT_def
   by (blast intro: Structural_Extract_exact [unfolded GOAL_CTXT_def]
-                   Structural_Extract_reverse_morphism_I)
+                   Structural_Extract'_reverse_morphism_I)
 
 
 
@@ -5730,10 +5810,10 @@ lemma Structural_Extract_fallback
       \<phi>None_itself_is_one mult_1_left GOAL_CTXT_def
   by (simp add: implies_refl mult.commute)
 
-lemma [\<phi>reason 1011 on \<open>Structural_Extract' ?X ?X' ?Y ?Y' (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1011 on \<open>Structural_Extract' ?X ?X' ?Y ?Y' (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> Structural_Extract' X  X  Y  Y
-      (True <reverse-morphism> True (Structural_Extract' X' X' Y' Y' True))
+      (Reverse_Morphism True (Structural_Extract' X' X' Y' Y' True) \<and> True)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_ab_semigroup set\<close> and X' :: \<open>'aa::sep_ab_semigroup set\<close>
   unfolding GOAL_CTXT_def
@@ -5754,13 +5834,14 @@ lemma Structural_Extract_\<phi>Some
   using \<phi>Some_cast .
 
 lemma [\<phi>reason 1211 on
-  \<open>Structural_Extract (?x \<Ztypecolon> \<black_circle> ?T) ?R (?y \<Ztypecolon> \<black_circle> ?U) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  \<open>Structural_Extract (?x \<Ztypecolon> \<black_circle> ?T) ?R (?y \<Ztypecolon> \<black_circle> ?U) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None)
-      (P <reverse-morphism> (y' \<Ztypecolon> U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P')
-            (Structural_Extract (y' \<Ztypecolon> \<black_circle> U') (() \<Ztypecolon> \<phi>None) (x' \<Ztypecolon> \<black_circle> T') (() \<Ztypecolon> \<phi>None) P'))
+      (Reverse_Morphism (y' \<Ztypecolon> U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P')
+            (Structural_Extract (y' \<Ztypecolon> \<black_circle> U') (() \<Ztypecolon> \<phi>None) (x' \<Ztypecolon> \<black_circle> T') (() \<Ztypecolon> \<phi>None) P')
+      \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def
   by (blast intro: Structural_Extract_\<phi>Some[unfolded GOAL_CTXT_def]
@@ -5800,12 +5881,13 @@ lemma Structural_Extract_aggrement_from:
   using Agreement_cast .
 
 
-lemma [\<phi>reason 1211 on \<open>Structural_Extract (?x \<Ztypecolon> Agreement ?T) ?R (?y \<Ztypecolon> Agreement ?U) ?W (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1211 on \<open>Structural_Extract (?x \<Ztypecolon> Agreement ?T) ?R (?y \<Ztypecolon> Agreement ?U) ?W (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>)
-      (P <reverse-morphism> (y' \<Ztypecolon> U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P')
-          (Structural_Extract (y' \<Ztypecolon> Agreement U') (() \<Ztypecolon> \<circle>) (x' \<Ztypecolon> Agreement T') (x' \<Ztypecolon> Agreement T' ?\<^sub>\<phi> C') P'))
+      (Reverse_Morphism (y' \<Ztypecolon> U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P')
+          (Structural_Extract (y' \<Ztypecolon> Agreement U') (() \<Ztypecolon> \<circle>) (x' \<Ztypecolon> Agreement T') (x' \<Ztypecolon> Agreement T' ?\<^sub>\<phi> C') P')
+      \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def
   by (blast intro: Structural_Extract_aggrement_to  [unfolded GOAL_CTXT_def]
@@ -5870,17 +5952,18 @@ lemma Structural_Extract_\<phi>Prod_left [\<phi>reason 1200 on
 
 
 lemma [\<phi>reason 1211 on
-  \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (?P <reverse-morphism> ?RR ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (Reverse_Morphism ?RR ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY)
-      (P1 <reverse-morphism> RP1 (Structural_Extract (y' \<Ztypecolon> Y') (wy' \<Ztypecolon> WY') A' B' P1'))
+      (Reverse_Morphism RP1 (Structural_Extract (y' \<Ztypecolon> Y') (wy' \<Ztypecolon> WY') A' B' P1') \<and> P1)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G 
 \<Longrightarrow> Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX)
-      (P2 <reverse-morphism> RP2 (Structural_Extract (x' \<Ztypecolon> X') (wx' \<Ztypecolon> WX') B' C' P2'))
+      (Reverse_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> X') (wx' \<Ztypecolon> WX') B' C' P2') \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX)
-      (P1 \<and> P2 <reverse-morphism> (RP1 \<and>\<^sub>\<r> RP2)
-          (Structural_Extract' ((y',x') \<Ztypecolon> Y' \<^emph> X') ((wy', wx') \<Ztypecolon> WY' \<^emph> WX') A' C' (P1' \<and> P2')))
+      (Reverse_Morphism (RP1 \<and>\<^sub>\<r> RP2)
+        (Structural_Extract' ((y',x') \<Ztypecolon> Y' \<^emph> X') ((wy', wx') \<Ztypecolon> WY' \<^emph> WX') A' C' (P1' \<and> P2'))
+      \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for A :: \<open>'a::sep_algebra set\<close> and A' :: \<open>'aa::sep_algebra set\<close>
   unfolding GOAL_CTXT_def Reverse_Morphism_def Aggregate_Antecedent_def
@@ -5889,16 +5972,16 @@ lemma [\<phi>reason 1211 on
                    Structural_Extract'_imply_P)
 
 lemma [\<phi>reason 1211 on
-  \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (?P <reverse-morphism> ?RR ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (Reverse_Morphism ?RR ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> Structural_Extract (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) Y W
-      (P1 <reverse-morphism> RP1 (Structural_Extract Y' W' (x' \<Ztypecolon> T') (r2' \<Ztypecolon> R2') P1'))
+      (Reverse_Morphism RP1 (Structural_Extract Y' W' (x' \<Ztypecolon> T') (r2' \<Ztypecolon> R2') P1') \<and> P1)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (y \<Ztypecolon> U) (r \<Ztypecolon> R) W W2
-      (P2 <reverse-morphism> RP2 (Structural_Extract W' W2' (y' \<Ztypecolon> U') (r' \<Ztypecolon> R') P2'))
+      (Reverse_Morphism RP2 (Structural_Extract W' W2' (y' \<Ztypecolon> U') (r' \<Ztypecolon> R') P2') \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2
-      (P1 \<and> P2 <reverse-morphism> (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract' Y' W2' ((x',y') \<Ztypecolon> T' \<^emph> U') ((r2',r') \<Ztypecolon> (R2' \<^emph> R')) (P1' \<and> P2')))
+      (Reverse_Morphism (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract' Y' W2' ((x',y') \<Ztypecolon> T' \<^emph> U') ((r2',r') \<Ztypecolon> (R2' \<^emph> R')) (P1' \<and> P2')) \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for Y :: \<open>'a::sep_algebra set\<close> and Y' :: \<open>'aa::sep_algebra set\<close>
   unfolding Reverse_Morphism_def Aggregate_Antecedent_def GOAL_CTXT_def
@@ -5907,16 +5990,16 @@ lemma [\<phi>reason 1211 on
                    Structural_Extract'_imply_P)
 
 lemma [\<phi>reason 1211 on
-  \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> Structural_Extract A B Y WY
-      (P1 <reverse-morphism> RP1 (Structural_Extract Y' WY' A' B' P1'))
+      (Reverse_Morphism RP1 (Structural_Extract Y' WY' A' B' P1') \<and> P1)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract B C X WX
-      (P2 <reverse-morphism> RP2 (Structural_Extract X' WX' B' C' P2'))
+      (Reverse_Morphism RP2 (Structural_Extract X' WX' B' C' P2') \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' A C (X * Y) (WX * WY)
-      (P1 \<and> P2 <reverse-morphism> (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract' (X' * Y') (WX' * WY') A' C' (P1' \<and> P2')))
+      (Reverse_Morphism (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract' (X' * Y') (WX' * WY') A' C' (P1' \<and> P2')) \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close> and X' :: \<open>'aa::sep_algebra set\<close>
   unfolding Reverse_Morphism_def Aggregate_Antecedent_def GOAL_CTXT_def
@@ -5931,7 +6014,7 @@ lemma Structural_Extract_from_mult[\<phi>reason 1200 on
   \<open> Structural_Extract X R2 Y Wr P1  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract L R Wr Wr2 P2  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (L * X) (R * R2) Y Wr2 (P1 \<and> P2)
-    <reverse-morphism>
+    \<and> Reverse_Morphism
     (RP1 &&& RP2)
     (Structural_Extract' (X' * Y') (WX' * WY') A' C' (P1' \<and> P2'))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
@@ -5955,16 +6038,16 @@ lemma Structural_Extract_\<phi>MapAt [\<phi>reason 1200 on
 
 
 lemma [\<phi>reason 1211 on
-  \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?R'
-    (?P <reverse-morphism> ?RR ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  \<open>Structural_Extract' (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> (?T::(?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?R'
+    (Reverse_Morphism ?RR ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (w \<Ztypecolon> k \<^bold>\<rightarrow> W)
-      (P <reverse-morphism> RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') (w' \<Ztypecolon> k \<^bold>\<rightarrow> W') (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') (r' \<Ztypecolon> k \<^bold>\<rightarrow> R') P'))
+      (Reverse_Morphism RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') (w' \<Ztypecolon> k \<^bold>\<rightarrow> W') (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') (r' \<Ztypecolon> k \<^bold>\<rightarrow> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('aa::sep_monoid,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def GOAL_CTXT_def
@@ -5987,15 +6070,15 @@ lemma Structural_Extract_\<phi>MapAt_L [\<phi>reason 1200 on
 
 lemma [\<phi>reason 1211 on
   \<open>Structural_Extract' (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?R'
-      (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+      (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> U') (yr' \<Ztypecolon> Ur') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (yr' \<Ztypecolon> Ur') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ Ur)
-      (P <reverse-morphism> RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (yr' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ Ur') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P'))
+      (Reverse_Morphism RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (yr' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ Ur') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
 for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def atomize_imp atomize_conj GOAL_CTXT_def
@@ -6044,17 +6127,17 @@ lemma Structural_Extract_\<phi>MapAt_L_pad_right [\<phi>reason 1150 on
 
 lemma [\<phi>reason 1183 on
   \<open>Structural_Extract' (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?R'
-      (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+      (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k'
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W)
-      (P <reverse-morphism> RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P'))
+      (Reverse_Morphism RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def GOAL_CTXT_def
@@ -6064,17 +6147,17 @@ lemma [\<phi>reason 1183 on
 
 lemma [\<phi>reason 1153 on
   \<open>Structural_Extract' (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ (?T::(?'k list \<Rightarrow> ?'a::sep_monoid,?'b) \<phi>)) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?R'
-    (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' @ kd = k
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W)
-      (P <reverse-morphism> RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P'))
+      (Reverse_Morphism RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def GOAL_CTXT_def
@@ -6098,13 +6181,13 @@ lemma Structural_Extract_\<phi>Map_L_norm_left [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1211 on \<open>
   Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow> ?U) ?W
-      (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G
+      (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G
 \<close>]:
   \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U) W
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) W
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Reverse_Morphism_def GOAL_CTXT_def
   by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded GOAL_CTXT_def]
@@ -6112,13 +6195,13 @@ lemma [\<phi>reason 1211 on \<open>
                    Structural_Extract_imply_P)
 
 lemma [\<phi>reason 1211 on
-  \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  \<open>Structural_Extract (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T) ?R (?y \<Ztypecolon> ?k' \<^bold>\<rightarrow>\<^sub>@ ?U) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) W
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) W
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Reverse_Morphism_def GOAL_CTXT_def
   by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded GOAL_CTXT_def]
@@ -6143,22 +6226,22 @@ lemma Structural_Extract_\<phi>perm_transformer [\<phi>reason 1200
 
 lemma [\<phi>reason 1211
     on \<open>Structural_Extract' (?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?T) ?R (?y \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?U) ?W
-          (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+          (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<phi>Sep_Disj W T
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> \<phi>perm_transformer \<psi> T)
                         (r \<Ztypecolon> \<phi>perm_transformer \<psi> R)
                         (y \<Ztypecolon> \<phi>perm_transformer \<psi> U)
                         (w \<Ztypecolon> \<phi>perm_transformer \<psi> W)
-       (P <reverse-morphism> (RP \<and>\<^sub>\<r> \<phi>Sep_Disj R' U')
+       (Reverse_Morphism (RP \<and>\<^sub>\<r> \<phi>Sep_Disj R' U')
    (Structural_Extract' (y' \<Ztypecolon> \<phi>perm_transformer \<psi> U')
                         (w' \<Ztypecolon> \<phi>perm_transformer \<psi> W')
                         (x' \<Ztypecolon> \<phi>perm_transformer \<psi> T')
                         (r' \<Ztypecolon> \<phi>perm_transformer \<psi> R')
-                        P'))
+                        P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Reverse_Morphism_def GOAL_CTXT_def Aggregate_Antecedent_def
   by (blast intro: Structural_Extract_\<phi>perm_transformer[unfolded GOAL_CTXT_def]
@@ -6183,12 +6266,12 @@ lemma Structural_Extract_\<phi>Optional_right:
   unfolding Structural_Extract'_def
   by simp
 
-lemma [\<phi>reason 1211 on \<open>Structural_Extract (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C) ?R ?Y ?W (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1211 on \<open>Structural_Extract (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C) ?R ?Y ?W (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> Structural_Extract (x \<Ztypecolon> T) R Y W
-      (P <reverse-morphism> RP (Structural_Extract Y' W' (x' \<Ztypecolon> T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T ?\<^sub>\<phi> True) R Y W
-      (P <reverse-morphism> RP (Structural_Extract Y' W' (x' \<Ztypecolon> T' ?\<^sub>\<phi> True) R' P'))
+      (Reverse_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> T' ?\<^sub>\<phi> True) R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
  \<comment> \<open>If the mechanism requires to extract something nontrivial (note 1 and \<^term>\<open>() \<Ztypecolon> \<phi>None\<close>
       have been considered by more prior rule), claim the optional \<phi>-type.\<close>
@@ -6209,20 +6292,58 @@ text \<open>Then, according to the expected permission n and the permission m th
   \<^item> m < n
   \<^item> m > n\<close>
 (*
-TODO: re-enable this!
+TODO: re-enable this! *)
 
-lemma [\<phi>reason 1200 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?var_m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma Structural_Extract_share_half
+  [\<phi>reason 1300 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> part ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
     \<comment> \<open>if only requires a part of the permission, give it a half of that currently we have.\<close>
   \<open> \<phi>Sep_Disj_Identical T
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> part(m / 2) \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def
+  unfolding Structural_Extract_def Structural_Extract'_def part_def
   \<medium_left_bracket> premises [\<phi>reason] and X
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
     X[THEN implies_right_prod]
-  \<medium_right_bracket>. . *)
+  \<medium_right_bracket>. .
+
+lemma Structural_Extract_share_half_rev:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> Structural_Extract (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Structural_Extract' (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  unfolding Structural_Extract'_def Structural_Extract_def GOAL_CTXT_def \<phi>Prod_expn'
+  \<medium_left_bracket> premises [\<phi>reason] and X
+  have t1: \<open>(r \<Ztypecolon> R) * (x \<Ztypecolon> m / 2 \<Znrres> T) * (y \<Ztypecolon> m / 2 \<Znrres> U) = (r \<Ztypecolon> R) * (y \<Ztypecolon> m / 2 \<Znrres> U) * (x \<Ztypecolon> m / 2 \<Znrres> T)\<close>
+    by (metis (mono_tags, lifting) mult.assoc mult.commute)
+  ;; unfold t1
+     X[THEN implies_right_prod]
+     share_merge_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod, folded mult.assoc]
+  \<medium_right_bracket>. .
+
+
+lemma
+  [\<phi>reason 1311 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> part ?m \<Znrres> ?U) ?R2
+      (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W)
+    (Reverse_Morphism RP
+        (Structural_Extract (y' \<Ztypecolon> m / 2 \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m / 2 \<Znrres> T') (r' \<Ztypecolon> R') P')
+    \<and> P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> part (m / 2) \<Znrres> U) (w \<Ztypecolon> W)
+    (Reverse_Morphism (RP \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
+        (Structural_Extract' (y' \<Ztypecolon> m / 2 \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m \<Znrres> T') ((x',r') \<Ztypecolon> m / 2 \<Znrres> T' \<^emph> R') P')
+    \<and> P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
+  unfolding Reverse_Morphism_def GOAL_CTXT_def Aggregate_Antecedent_def part_def
+  by (blast intro: Structural_Extract_share_half    [unfolded GOAL_CTXT_def part_def]
+                   Structural_Extract_share_half_rev[unfolded GOAL_CTXT_def]
+                   Structural_Extract'_imply_P)
+
+
+
+
 
 lemma Structural_Extract_share_eq
   [\<phi>reason 1200 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
@@ -6237,15 +6358,15 @@ lemma Structural_Extract_share_eq
   apply (simp add: \<phi>Share_\<phi>Prod[symmetric])
   using \<phi>Share_cast .
 
-lemma [\<phi>reason 1211 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1211 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m = n
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W)
-      (P <reverse-morphism> RP (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> m \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P'))
+      (Reverse_Morphism RP (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> m \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def GOAL_CTXT_def
@@ -6301,18 +6422,18 @@ lemma Structural_Extract_share_le
 
 
 lemma [\<phi>reason 1183 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2
-          (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+          (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<comment> \<open>If requires less than what we have, give it.\<close>
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
 \<Longrightarrow> \<phi>Sep_Disj_Identical T
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W)
-      (P <reverse-morphism> (RP \<and>\<^sub>\<r> (\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m-n = mn) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
-        (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> n \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') ((r',x') \<Ztypecolon> (n \<Znrres> R' \<^emph> mn \<Znrres> T')) P'))
+      (Reverse_Morphism (RP \<and>\<^sub>\<r> (\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m-n = mn) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
+        (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> n \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') ((r',x') \<Ztypecolon> (n \<Znrres> R' \<^emph> mn \<Znrres> T')) P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def Aggregate_Antecedent_def GOAL_CTXT_def Premise_def
@@ -6320,17 +6441,17 @@ lemma [\<phi>reason 1183 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Zn
                    Structural_Extract_share_le[unfolded GOAL_CTXT_def]
                    Structural_Extract'_imply_P)
 
-lemma [\<phi>reason 1173 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 (?P <reverse-morphism> ?RP ?RX)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1173 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 (Reverse_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> CHK_SUBGOAL G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < m \<and> m < n
 \<Longrightarrow> \<phi>Sep_Disj_Identical U
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U)
-      (P <reverse-morphism> (RP \<and>\<^sub>\<r> (\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m nm = n - m) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical U')
-        (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') ((w',y') \<Ztypecolon> m \<Znrres> W' \<^emph> nm \<Znrres> U') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P'))
+      (Reverse_Morphism (RP \<and>\<^sub>\<r> (\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m nm = n - m) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical U')
+        (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') ((w',y') \<Ztypecolon> m \<Znrres> W' \<^emph> nm \<Znrres> U') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def Aggregate_Antecedent_def GOAL_CTXT_def Premise_def
@@ -6356,26 +6477,26 @@ lemma [\<phi>reason 2000]:
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 2011 on
-    \<open>Structural_Extract ?X ?R ((?x,?y) \<Ztypecolon> ?n \<Znrres> (?T \<^emph> ?U)) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<open>Structural_Extract ?X ?R ((?x,?y) \<Ztypecolon> ?n \<Znrres> (?T \<^emph> ?U)) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W
-      (P <reverse-morphism> RP (Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> T' \<^emph> n \<Znrres> U') W' X' R' P'))
+      (Reverse_Morphism RP (Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> T' \<^emph> n \<Znrres> U') W' X' R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W
-      (P <reverse-morphism> RP (Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> (T' \<^emph> U')) W' X' R' P'))
+      (Reverse_Morphism RP (Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> (T' \<^emph> U')) W' X' R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 lemma [\<phi>reason 2011 on
-    \<open>Structural_Extract ((?x,?y) \<Ztypecolon> ?n \<Znrres> (?T \<^emph> ?U)) ?W ?X ?R (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    \<open>Structural_Extract ((?x,?y) \<Ztypecolon> ?n \<Znrres> (?T \<^emph> ?U)) ?W ?X ?R (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> T' \<^emph> n \<Znrres> U') W' X' R'
-      (P' <reverse-morphism> RP (Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W P))
+      (Reverse_Morphism RP (Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> (T' \<^emph> U')) W' X' R'
-      (P' <reverse-morphism> RP (Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P))
+      (Reverse_Morphism RP (Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>Prod
@@ -6395,23 +6516,23 @@ lemma [\<phi>reason 2000]:
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
-lemma [\<phi>reason 2011 on \<open>Structural_Extract ?X ?R (?x \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow> ?T) ?W (?P <reverse-morphism> ?RP ?RX)\<close> ]:
+lemma [\<phi>reason 2011 on \<open>Structural_Extract ?X ?R (?x \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow> ?T) ?W (Reverse_Morphism ?RP ?RX \<and> ?P)\<close> ]:
   \<open> Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W
-      (P <reverse-morphism> RP (Structural_Extract (x' \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T') W' X' R' P'))
+      (Reverse_Morphism RP (Structural_Extract (x' \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T') W' X' R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W
-      (P <reverse-morphism> RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T') W' X' R' P'))
+      (Reverse_Morphism RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T') W' X' R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
-lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x' \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow> ?T') ?W' ?X' ?R' (?P <reverse-morphism> ?RP ?RX)\<close>]:
+lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x' \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow> ?T') ?W' ?X' ?R' (Reverse_Morphism ?RP ?RX \<and> ?P)\<close>]:
   \<open> Structural_Extract (x' \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T') W' X' R'
-      (P' <reverse-morphism> RP (Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W P))
+      (Reverse_Morphism RP (Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T') W' X' R'
-      (P' <reverse-morphism> RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P))
+      (Reverse_Morphism RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>MapAt
@@ -6431,23 +6552,23 @@ lemma [\<phi>reason 2000]:
   for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt_L .
 
-lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?R ?Y ?W (?P <reverse-morphism> ?RP ?RX)\<close>]:
+lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?R ?Y ?W (Reverse_Morphism ?RP ?RX \<and> ?P)\<close>]:
   \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) R Y W
-      (P <reverse-morphism> RP (Structural_Extract Y' W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W
-      (P <reverse-morphism> RP (Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
-lemma [\<phi>reason 2011 on \<open>Structural_Extract ?Y ?W (?x \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?R (?P <reverse-morphism> ?RP ?RX)\<close>]:
+lemma [\<phi>reason 2011 on \<open>Structural_Extract ?Y ?W (?x \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?R (Reverse_Morphism ?RP ?RX \<and> ?P)\<close>]:
   \<open> Structural_Extract Y' W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T') R'
-      (P' <reverse-morphism> RP (Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) R Y W P))
+      (Reverse_Morphism RP (Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) R Y W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R'
-      (P' <reverse-morphism> RP (Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W P))
+      (Reverse_Morphism RP (Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
   unfolding Reverse_Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>MapAt_L
@@ -6469,23 +6590,23 @@ lemma [\<phi>reason 2000]:
   unfolding Structural_Extract_def GOAL_CTXT_def
   by (metis Implication_Inhabited_rule Imply_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
 
-lemma [\<phi>reason 2011 on \<open>Structural_Extract ?X ?R (?x \<Ztypecolon> ?n \<Znrres> ?m \<Znrres> ?T) ?W (?P <reverse-morphism> ?RP ?RX)\<close>]:
+lemma [\<phi>reason 2011 on \<open>Structural_Extract ?X ?R (?x \<Ztypecolon> ?n \<Znrres> ?m \<Znrres> ?T) ?W (Reverse_Morphism ?RP ?RX \<and> ?P)\<close>]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m
 \<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W
-      (P <reverse-morphism> RP (Structural_Extract (x' \<Ztypecolon> n * m \<Znrres> T') W' X' R' P'))
+      (Reverse_Morphism RP (Structural_Extract (x' \<Ztypecolon> n * m \<Znrres> T') W' X' R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W
-      (P <reverse-morphism> RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> m \<Znrres> T') W' X' R' P'))
+      (Reverse_Morphism RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> m \<Znrres> T') W' X' R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Premise_def by simp
 
-lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?m \<Znrres> ?T) ?W ?X ?R (?P <reverse-morphism> ?RP ?RX)\<close>]:
+lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?m \<Znrres> ?T) ?W ?X ?R (Reverse_Morphism ?RP ?RX \<and> ?P)\<close>]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m
 \<Longrightarrow> Structural_Extract (x' \<Ztypecolon> n * m \<Znrres> T') W' X' R'
-      (P' <reverse-morphism> RP (Structural_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W P))
+      (Reverse_Morphism RP (Structural_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x' \<Ztypecolon> n \<Znrres> m \<Znrres> T') W' X' R'
-      (P' <reverse-morphism> RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P))
+      (Reverse_Morphism RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Premise_def by simp
 
@@ -6510,23 +6631,23 @@ lemma Structural_Extract_pad_share_right
   by simp
 
 
-lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x \<Ztypecolon> ?T) ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-    if no \<open>Structural_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x \<Ztypecolon> ?T) ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    if no \<open>Structural_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> Structural_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> 1 \<Znrres> T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> 1 \<Znrres> T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> T') R' P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   by simp
 
-lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x \<Ztypecolon> ?T) ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-    if no \<open>Structural_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 2011 on \<open>Structural_Extract (?x \<Ztypecolon> ?T) ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    if no \<open>Structural_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> 1 \<Znrres> T') R'
-      (P' <reverse-morphism> RP (Structural_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W P))
+      (Reverse_Morphism RP (Structural_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> T') R'
-      (P' <reverse-morphism> RP (Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P))
+      (Reverse_Morphism RP (Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   by simp
 
@@ -6864,13 +6985,13 @@ lemma \<phi>_Structural_Extract[\<phi>reason 1200 on
   by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
 
 lemma [\<phi>reason 1211 on
-  \<open>Structural_Extract' (?x \<Ztypecolon> \<phi> ?T) ?R (?y \<Ztypecolon> \<phi> ?U) ?W (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+  \<open>Structural_Extract' (?x \<Ztypecolon> \<phi> ?T) ?R (?y \<Ztypecolon> \<phi> ?U) ?W (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (P <reverse-morphism> RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P'))
+      (Reverse_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W)
-      (P <reverse-morphism> RP (Structural_Extract' (y' \<Ztypecolon> \<phi> U') (w' \<Ztypecolon> \<phi> W') (x' \<Ztypecolon> \<phi> T') (r' \<Ztypecolon> \<phi> R') P'))
+      (Reverse_Morphism RP (Structural_Extract' (y' \<Ztypecolon> \<phi> U') (w' \<Ztypecolon> \<phi> W') (x' \<Ztypecolon> \<phi> T') (r' \<Ztypecolon> \<phi> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Reverse_Morphism_def GOAL_CTXT_def
   by (blast intro: \<phi>_Structural_Extract[unfolded GOAL_CTXT_def]
@@ -6896,14 +7017,13 @@ lemma assertion_level_reasoning_by_structural_extraction__reverse_morphism:
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y Q' : Q
 \<Longrightarrow> SUBGOAL G G2
 \<Longrightarrow> (Q' \<Longrightarrow> Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W
-              (P2 <reverse-morphism> RP2 (Structural_Extract (x' \<Ztypecolon> \<phi> T') W' (y' \<Ztypecolon> \<phi> U') R1' P2'))
+              (Reverse_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> \<phi> T') W' (y' \<Ztypecolon> \<phi> U') R1' P2') \<and> P2)
             \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2)
 \<Longrightarrow> SOLVE_SUBGOAL G2
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (P1 <reverse-morphism> RP1
-      (\<^bold>v\<^bold>i\<^bold>e\<^bold>w A'\<longmapsto> R2'\<heavy_comma> \<blangle> R1' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1'))
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (Reverse_Morphism RP1 (\<^bold>v\<^bold>i\<^bold>e\<^bold>w A'\<longmapsto> R2'\<heavy_comma> \<blangle> R1' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1') \<and> P1)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<heavy_comma> y \<Ztypecolon> \<phi> U \<longmapsto> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (P1 \<and> P2 <reverse-morphism> (RP2 \<and>\<^sub>\<r> RP1)
-      (\<^bold>v\<^bold>i\<^bold>e\<^bold>w A'\<heavy_comma> x' \<Ztypecolon> \<phi> T' \<longmapsto> R2'\<heavy_comma> W'\<heavy_comma> \<blangle> y' \<Ztypecolon> \<phi> U' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1' \<and> P2'))
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<heavy_comma> y \<Ztypecolon> \<phi> U \<longmapsto> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h
+      (Reverse_Morphism (RP2 \<and>\<^sub>\<r> RP1) (\<^bold>v\<^bold>i\<^bold>e\<^bold>w A'\<heavy_comma> x' \<Ztypecolon> \<phi> T' \<longmapsto> R2'\<heavy_comma> W'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1' \<and> P2') \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Premise_def GOAL_CTXT_def FOCUS_TAG_def Structural_Extract_def Simplify_def
             Action_Tag_def Reverse_Morphism_def Aggregate_Antecedent_def
@@ -6919,7 +7039,7 @@ lemma assertion_level_reasoning_by_structural_extraction__reverse_morphism:
   \<medium_right_bracket>. . .
 
 
-lemma [\<phi>reason 1200
+lemma assertion_level_reasoning_skip [\<phi>reason 1200
     on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?X \<longmapsto> ?R'\<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
     if no \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R'\<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
@@ -6927,6 +7047,9 @@ lemma [\<phi>reason 1200
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> X \<longmapsto> R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding cast_def pair_forall
   by (smt (verit) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
+
+
+
 
 lemma [\<phi>reason 1200 on \<open>?x \<Ztypecolon> \<phi> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'aa::{structural, implication} action)\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act
@@ -7088,7 +7211,7 @@ paragraph \<open>Reasoning Rules\<close>
 
 declare assertion_level_reasoning_by_structural_extraction[\<phi>reason 1210 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
 declare assertion_level_reasoning_by_structural_extraction__reverse_morphism
-   [\<phi>reason 1213 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
+   [\<phi>reason 1213 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
 
 end
 
@@ -7196,7 +7319,7 @@ lemma expand:
 declare assertion_level_reasoning_by_structural_extraction
    [\<phi>reason 1210 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
 declare assertion_level_reasoning_by_structural_extraction__reverse_morphism
-   [\<phi>reason 1213 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
+   [\<phi>reason 1213 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
 
 end
 
@@ -7284,7 +7407,7 @@ abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nonsepable T))\<clos
 declare assertion_level_reasoning_by_structural_extraction
     [\<phi>reason 1210 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
 declare assertion_level_reasoning_by_structural_extraction__reverse_morphism
-    [\<phi>reason 1213 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (?P <reverse-morphism> ?RP ?RX) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
+    [\<phi>reason 1213 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<longmapsto> ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]
 
 lemma \<phi>_double_\<phi>app:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> \<phi>_ag T \<longmapsto> x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>

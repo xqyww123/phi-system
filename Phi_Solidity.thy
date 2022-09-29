@@ -898,8 +898,8 @@ lemma op_load_ledge_raw_\<phi>app:
   by \<phi>reason
 
 proc (nodef) op_load_ledge:
-  argument \<open>x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef\<close>
-  return   \<open>x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
+  argument \<open>SMORPH x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef\<close>
+  return   \<open>SMORPH x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
   \<medium_left_bracket> \<open>x \<Ztypecolon> ledge: _\<close> to_Identity 
     op_load_ledge_raw
   \<medium_right_bracket>. .
@@ -943,8 +943,8 @@ lemma op_store_ledge_raw_\<phi>app:
 
 proc (nodef) op_store_ledge:
   assumes A: \<open>\<phi>SemType (u \<Ztypecolon> T) TY\<close>
-  argument \<open>v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l ledge_ref lref path \<Ztypecolon> LedgeRef \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l u \<Ztypecolon> T\<close>
-  return   \<open>u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> T\<close>
+  argument \<open>SMORPH v \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l ledge_ref lref path \<Ztypecolon> LedgeRef \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l u \<Ztypecolon> T\<close>
+  return   \<open>SMORPH u \<Ztypecolon> ledge: lref \<^bold>\<rightarrow> path \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>TY\<rbrakk> T\<close>
   \<medium_left_bracket>
     to_Identity
     \<open>ledge: _\<close> to_Identity
