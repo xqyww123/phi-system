@@ -59,6 +59,7 @@ proc balance_of:
     op_get_mapping_ledgeRef
   ;;op_load_ledge
   thm \<phi>lemmata
+  thm \<phi>morphism
   \<medium_right_bracket>. .
 
 (* { P } C {} *)

@@ -50,16 +50,28 @@ fun move_lemmata' (ctxt, sequent) =
         of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>USELESS\<close> $ _) => NONE
          | \<^const>\<open>Trueprop\<close> $ \<^const>\<open>True\<close> => NONE
          | _ => SOME th
-    val lemmas = (sequent RS @{thm conjunct2})
+    fun is_morphism th =
+      case Thm.concl_of th
+        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Morphism\<close>, _) $ _ $ _ $ _) => true
+         | _ => false
+    val all_lemmas = (sequent RS @{thm conjunct2})
                   |> HOLogic.conj_elims ctxt
                   |> map_filter filter_lemma
-    val (_,ctxt') =
+    val lemmas = all_lemmas |> filter (not o is_morphism)
+    val morphisms = all_lemmas |> filter is_morphism
+    val ctxt' =
       if null lemmas
-      then (("",[]), ctxt)
-      else Proof_Context.note_thms ""
-             ((Binding.empty, [Named_Theorems.add \<^named_theorems>\<open>\<phi>lemmata\<close>]), [(lemmas,[])]) ctxt
+      then ctxt
+      else Context.proof_map (fold (Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close>) lemmas) ctxt
+(* Sorry... I really forget why I decided to use this somehow strange calling.
+Proof_Context.note_thms ""
+             ((Binding.empty, [Named_Theorems.add \<^named_theorems>\<open>\<phi>lemmata\<close>]), [(lemmas,[])]) ctxt *)
+    val ctxt'' =
+      if null morphisms
+      then ctxt'
+      else Context.proof_map (fold (Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>morphism\<close>) morphisms) ctxt'
   in
-    (ctxt', sequent RS @{thm conjunct1})
+    (ctxt'', sequent RS @{thm conjunct1})
   end
 
 fun move_lemmata (ctxt, sequent) =

@@ -133,9 +133,13 @@ text \<open>Modes are annotations of the automation. They are typically used spe
 
 type_synonym mode = \<open>unit action\<close>
 
+text \<open>Here is a list of general common modes. The specific meaning of them is determined in
+  specific situations. Different situation may assign them with different specific meaning.\<close>
+
 consts default :: mode
 consts MODE_SIMP :: mode \<comment> \<open>relating to simplifier or simplification\<close>
 consts MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
+consts MODE_AUTO :: mode \<comment> \<open>something that will be triggered automatically\<close>
 
 subsubsection \<open>Focus\<close>
 
