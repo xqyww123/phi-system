@@ -651,7 +651,7 @@ proc XX:
        to make that value automatically *)
   note [[\<phi>trace_reasoning]]
   ;;
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> using \<phi> by  simp .
 
 proc
   premises \<open>x < 10\<close>

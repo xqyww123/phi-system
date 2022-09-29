@@ -4218,7 +4218,7 @@ lemma [\<phi>reason 4000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<lon
   by (simp add: \<phi>view_refl)
 
 lemma [\<phi>reason 4011 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (Reverse_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Reverse_Morphism True (\<^bold>v\<^bold>i\<^bold>e\<^bold>w H' \<longmapsto> H' \<heavy_comma> \<blangle> Void \<brangle> ) \<and> True \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Reverse_Morphism True (\<^bold>v\<^bold>i\<^bold>e\<^bold>w H' \<longmapsto> Void \<heavy_comma> \<blangle> H' \<brangle> ) \<and> True \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding FOCUS_TAG_def GOAL_CTXT_def Reverse_Morphism_def
   by (simp add: \<phi>view_refl)
 

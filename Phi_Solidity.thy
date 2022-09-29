@@ -898,8 +898,9 @@ lemma op_load_ledge_raw_\<phi>app:
   by \<phi>reason
 
 proc (nodef) op_load_ledge:
-  argument \<open>SMORPH x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef\<close>
+  argument \<open>SMORPH x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> part n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> ledge_ref addr path \<Ztypecolon> Val raw LedgeRef\<close>
   return   \<open>SMORPH x \<Ztypecolon> ledge: addr \<^bold>\<rightarrow> path \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>TY\<rbrakk> T \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
+  unfolding part_def
   \<medium_left_bracket> \<open>x \<Ztypecolon> ledge: _\<close> to_Identity 
     op_load_ledge_raw
   \<medium_right_bracket>. .
