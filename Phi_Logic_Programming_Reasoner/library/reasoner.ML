@@ -169,7 +169,7 @@ fun gen_reason _ _ _ (result, []) = result
        gen_reason trace iter tactics (result, L))
   | gen_reason trace iter tactics (result, ((cost,pos,seq)::L')::L) =
   let
-    val _ = if iter > 300 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
+    val _ = if iter > 1000 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
   in
     case Seq.pull seq
       of SOME ((ctxt,th), seq') =>

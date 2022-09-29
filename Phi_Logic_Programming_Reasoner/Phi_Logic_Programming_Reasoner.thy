@@ -109,7 +109,7 @@ subsubsection \<open>Action\<close>
 typedecl 'cat action
 
 definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> _" [2,3] 2)
-  where \<open>Action_Tag P A \<equiv> P\<close>
+  where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
 
 text \<open>\<^prop>\<open>P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close> is a general way to annotate the rule \<^prop>\<open>P\<close> intends for
   specific usage or purpose of \<^term>\<open>A\<close>.

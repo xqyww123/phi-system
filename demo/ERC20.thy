@@ -105,8 +105,9 @@ proc transfer:
     op_get_member_ledgeRef[where field=\<open>''balance''\<close>]
     op_get_msg_addr[where G=msg.sender]
     op_get_mapping_ledgeRef
-    op_load_ledge
-    op_le \<rightarrow> ret ;;
+  ;; op_load_ledge
+  thm \<phi>morphism
+  ;; op_le \<rightarrow> ret ;;
     if \<medium_left_bracket> op_get_var[where vname=ret] \<medium_right_bracket>.
   \<medium_left_bracket> op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
@@ -118,17 +119,19 @@ proc transfer:
     op_get_member_ledgeRef[where field=\<open>''balance''\<close>]
     op_get_msg_addr[where G=msg.sender]
     op_get_mapping_ledgeRef
-    op_load_ledge
-    op_get_var[where vname=v_amount]
+  ;;op_load_ledge
+  ;;op_get_var[where vname=v_amount]
     op_sub
-    op_store_ledge
-    op_get_msg_addr[where G=msg.contract]
+  thm \<phi>morphism
+  ;;op_store_ledge
+  thm \<phi>morphism
+  ;;op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
     op_get_member_ledgeRef[where field=\<open>''balance''\<close>]
-    op_get_var[where vname=v_receiver]
+  ;;op_get_var[where vname=v_receiver]
     op_get_mapping_ledgeRef
     dup
-    op_load_ledge
+  ;;op_load_ledge
     op_get_var[where vname=v_amount]
     op_add
     op_store_ledge

@@ -118,7 +118,7 @@ fun process_impl procs (stat,toks) limit =
         val stat' = fold (fn (_, Processor {binding, pattern, proc,...}) => fn (ctxt,sequent) =>
           if exists (fn pat => Pattern.matches (Proof_Context.theory_of ctxt) (pat, prop)) pattern
           then let
-            val _ = if limit > 100 then error "too deep process" else ();
+            val _ = if limit > 1000 then error "too deep process" else ();
             val (execute,toks) =
               eof_wrap (proc (ctxt,sequent) || (fn _ => raise Bypass NONE)) toks
             val _ = if Config.get ctxt trace
