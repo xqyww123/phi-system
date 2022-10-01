@@ -114,9 +114,10 @@ fun eof_wrap parse [] = (fst (parse [Token.eof]), [])
 
 fun process_impl procs (stat,toks) limit =
       let
-        val prop = Thm.prop_of (snd stat)
         val stat' = fold (fn (_, Processor {binding, pattern, proc,...}) => fn (ctxt,sequent) =>
-          if exists (fn pat => Pattern.matches (Proof_Context.theory_of ctxt) (pat, prop)) pattern
+          if exists (fn pat =>
+                Pattern.matches (Proof_Context.theory_of ctxt) (pat, Thm.prop_of sequent)
+             ) pattern
           then let
             val _ = if limit > 1000 then error "too deep process" else ();
             val (execute,toks) =

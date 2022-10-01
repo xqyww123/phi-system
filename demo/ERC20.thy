@@ -42,11 +42,17 @@ lemma [\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Currency) ?TY\<clo
   by (simp add: \<phi>expns)
 
 (*
+contract XXX
+
+maping<Address, int256> balance;
+
+end
+
  *)
 
 proc balance_of:
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
-      balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] n \<Znrres> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
+      balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address)] \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       \<^bold>v\<^bold>a\<^bold>l account \<Ztypecolon> Address\<close>
   return   \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address)] \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
@@ -57,6 +63,8 @@ proc balance_of:
     op_get_member_ledgeRef[where field=\<open>''balance''\<close>]
     op_get_var[where vname=v_account]
     op_get_mapping_ledgeRef
+  ;;
+  
   ;;op_load_ledge
   thm \<phi>lemmata
   thm \<phi>morphism
@@ -200,7 +208,9 @@ proc transfer_from:
     op_load_ledge
     op_get_var[where vname=v_amount]
     op_sub
-    op_store_ledge
+    op_store_ledge !!!
+  thm \<phi>morphism
+  ;;
   ;;op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
     op_get_member_ledgeRef[where field=\<open>''allowance''\<close>]

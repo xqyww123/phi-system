@@ -7,6 +7,7 @@ signature NU_SYS = sig
   (** Basic Operations **)
   val cast : cterm (*desired nu*) -> context_state -> context_state
   val move_lemmata : context_state -> context_state
+  val apply_automatic_morphism : context_state -> context_state
 
   val accept_proc : context_state -> context_state
 
@@ -41,7 +42,35 @@ exception ReasoningFail of thm
 fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))
 fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 
+(** Morphism **)
+
+structure Morphism = Proof_Data (
+  type T = thm list
+  val init = K []
+);
+
+val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>morphism\<close>,
+          fn genric =>
+              case genric
+              of Context.Theory _ => []
+               | Context.Proof ctxt => Morphism.get ctxt))
+
 (** Basic Operations **)
+
+fun apply_automatic_morphism' _ [] _ = raise Empty
+  | apply_automatic_morphism' R (M::L) stat =
+      case Thm.concl_of M
+        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Morphism\<close>, _) $ \<^const>\<open>MODE_AUTO\<close> $ _ $ _)
+             => (rev R @ L, NuApply.apply [M] stat)
+         | _ =>apply_automatic_morphism' (M::R) L stat
+
+fun apply_automatic_morphism (ctxt,sequent) =
+  case apply_automatic_morphism' [] (Morphism.get ctxt) (ctxt,sequent)
+    of (R, stat') => apfst (Morphism.put R) stat'
+
+fun simplify_morphisms ctxt [] = []
+  | simplify_morphisms ctxt L =
+      map (Raw_Simplifier.rewrite_rule ctxt @{thms FOCUS_TAG_def[folded atomize_eq]}) L
 
 fun move_lemmata' (ctxt, sequent) =
   let
@@ -58,7 +87,7 @@ fun move_lemmata' (ctxt, sequent) =
                   |> HOLogic.conj_elims ctxt
                   |> map_filter filter_lemma
     val lemmas = all_lemmas |> filter (not o is_morphism)
-    val morphisms = all_lemmas |> filter is_morphism
+    val morphisms = all_lemmas |> filter is_morphism |> simplify_morphisms ctxt
     val ctxt' =
       if null lemmas
       then ctxt
@@ -69,14 +98,14 @@ Proof_Context.note_thms ""
     val ctxt'' =
       if null morphisms
       then ctxt'
-      else Context.proof_map (fold (Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>morphism\<close>) morphisms) ctxt'
+      else Morphism.map (fn L => morphisms@L) ctxt'
   in
     (ctxt'', sequent RS @{thm conjunct1})
   end
 
 fun move_lemmata (ctxt, sequent) =
   case Thm.prop_of sequent
-    of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>conj\<close> $ _ $ _) => move_lemmata' (ctxt, sequent)
+    of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>conj\<close> $ _ $ _) => move_lemmata (move_lemmata' (ctxt, sequent))
      | _ => (ctxt, sequent)
 
 

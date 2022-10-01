@@ -149,6 +149,16 @@ text \<open>A general technical tag used in the reasoning, usually represents th
 definition FOCUS_TAG :: " 'a \<Rightarrow> 'a "  ("\<blangle> _ \<brangle>") where [iff]: "\<blangle> x \<brangle> = x"
 
 
+subsubsection \<open>Try\<close>
+
+definition Try :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Try success_or_fail x = x\<close>
+
+lemma [\<phi>reason 800 on \<open>Try ?S ?P\<close>]:
+  \<open> P
+\<Longrightarrow> Try True P\<close>
+  unfolding Try_def .
+
+
 subsection \<open>General Rules\<close>
 
 paragraph \<open>Aggregate Representation of Antecedents\<close>
@@ -339,7 +349,7 @@ lemma NO_MATCH_I: "NO_MATCH A B" unfolding NO_MATCH_def ..
 
 
 
-subsubsection \<open>Subgoal\<close>
+subsection \<open>Subgoal\<close>
 
 typedef "subgoal" = "UNIV :: nat set" ..
 
@@ -384,6 +394,10 @@ lemma [\<phi>reason 9999]: \<open>SOLVE_SUBGOAL NO_GOAL\<close> using SOLVE_SUBG
 definition GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
   where [iff]: "GOAL_CTXT x _ \<equiv> x"
 
+lemma [\<phi>reason 800 on \<open>Try ?S ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Try True P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Try_def .
 
 
 subsection \<open>Simplification & Rewrite\<close>

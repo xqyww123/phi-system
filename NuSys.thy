@@ -176,7 +176,6 @@ and \<phi>lemmata \<open>Contextual facts during the programming. They are autom
        aggregated from every attached \<^prop>\<open>P\<close> in \<^prop>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk in [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Sth \<^bold>s\<^bold>u\<^bold>b\<^bold>j P\<close>
        during the programming. Do not modify it manually because it is managed automatically and
        cleared frequently\<close>
-and \<phi>morphism \<open>Stores any morphism generated during the automation.\<close>
 
 lemma (in \<phi>fiction) [\<phi>programming_simps]:
   \<open>(A\<heavy_comma> (B\<heavy_comma> C)) = (A\<heavy_comma> B\<heavy_comma> C)\<close>
@@ -207,6 +206,7 @@ text \<open>In \<^term>\<open>X1 * X2 * X3 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\
 definition \<open>Filter_Out_Free_Values (T::'a set) (T'::'a set) \<equiv> Trueprop (T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T')\<close>
 
 consts assertion_simplification :: mode
+named_theorems assertion_simps
 
 lemma (in \<phi>fiction) [\<phi>reason 3000 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' ?mode\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' mode\<close>
@@ -588,6 +588,8 @@ definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [15] 14)
 
 definition Morphism :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Morphism _ R Q = (R \<longrightarrow> Q)\<close>
+
+consts morphism_mode :: mode
 
 abbreviation Automatic_Morphism :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Morphism \<equiv> Morphism MODE_AUTO\<close>
 
@@ -1609,7 +1611,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason on
                 OF view_shift_id, OF View_Shift_by_Subtyp[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
                 simplified prems(1), unfolded \<open>E''' = E''\<close>, simplified prems(1)]]] .
   by (meson \<phi>apply_view_shift_P)
-  
+
 end
 
 
@@ -1727,6 +1729,30 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 on \<open>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using implies_left_prod
   by (metis Imply_def)
+
+subparagraph \<open>Morphism\<close>
+
+lemma [\<phi>reason 2000]:
+  \<open> PROP \<phi>Application_Method (RP \<Longrightarrow> RX \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> morphism_mode) (Trueprop S) (PROP RET)
+\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (Morphism any_mode RP RX)) (Trueprop S) (PROP RET)\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def Morphism_def Action_Tag_def
+  subgoal premises prems using prems(1)[OF prems(2), OF prems(3)[THEN mp], simplified] . .
+
+lemma (in \<phi>fiction) [\<phi>reason 1200 on \<open>
+  PROP \<phi>Application_Method (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S' \<longmapsto> ?T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> morphism_mode)
+        (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
+\<close>]:
+  " \<phi>IntroFrameVar R S'' S' T T'
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' False
+\<Longrightarrow> PROP \<phi>Application_Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> PROP \<phi>Application_Method (\<^bold>v\<^bold>i\<^bold>e\<^bold>w S' \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> morphism_mode)
+      (Trueprop (CurrentConstruction mode blk RR S))
+      (Trueprop ((CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2)))"
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
+    GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def Simplify_def
+  using "\<phi>view_shift_P" \<phi>view_shift_intro_frame
+  by (metis (no_types, lifting))
 
 
 
@@ -2278,7 +2304,7 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
     NuSys.synthesis term (ctxt, sequent)
   end)\<close>
 
-\<phi>processor (in \<phi>fiction) existential_elimination 50 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
+\<phi>processor (in \<phi>fiction) existential_elimination 150 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
   \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
       raise Process_State_Call' (toks, stat, NuObtain.choose insts), []))\<close>
 
@@ -2295,11 +2321,18 @@ subsubsection \<open>Simplifiers & Reasoners\<close>
       raise Terminate_Process (stat, snd o NuToplevel.prove_prem false))\<close>
 
 \<phi>processor \<phi>simplifier 100 (\<open>\<phi>fiction.CurrentConstruction _ _ ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
-  \<open>NuProcessors.simplifier []\<close>
+  \<open>NuProcessors.simplifier\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
-\<phi>processor move_fact 99 (\<open>?Any \<and> ?P\<close>)
-\<open>fn stat => Scan.succeed (fn _ => NuSys.move_lemmata stat)\<close>
+\<phi>processor move_fact1  90 (\<open>?Any \<and> ?P\<close>)
+\<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (NuSys.move_lemmata stat)))\<close>
+
+\<phi>processor move_fact2 110 (\<open>?Any \<and> ?P\<close>)
+\<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (NuSys.move_lemmata stat)))\<close>
+
+\<phi>processor automatic_morphism 90 (\<open>\<phi>fiction.CurrentConstruction _ _ ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
+\<open>not_safe (fn stat => Scan.succeed (fn _ => NuSys.apply_automatic_morphism stat
+      handle Empty => raise Bypass NONE))\<close>
 
 (* Any simplification should finish before priority 999, or else
  *  this processor will be triggered unnecessarily frequently.*)
@@ -3414,7 +3447,7 @@ lemma \<phi>Share_inhabited[\<phi>reason_elim!, elim!]:
 
 paragraph \<open>Auxiliary Tag\<close>
 
-definition part :: \<open>rat \<Rightarrow> rat\<close> where [iff]: \<open>part x = x\<close>
+definition half :: \<open>rat \<Rightarrow> rat\<close> where [iff]: \<open>half x = x\<close>
 
 text \<open>Many read-only applicable rules require only non-zero permissions.
   It is reflected as arbitrary schematic variable in the rule, like
@@ -3431,9 +3464,9 @@ text \<open>Many read-only applicable rules require only non-zero permissions.
   schematic variables have a semantics of accepting any instantiation and there are many short-cut
   reasoning rule trying to solve greedily a local problem by unification.
 
-  An approach is, if a rule may request a same object by twice, add the tag \<^term>\<open>part\<close> on its
+  An approach is, if a rule may request a same object by twice, add the tag \<^term>\<open>half\<close> on its
     permission to tell explicitly the reasoner to only assign it a half of the permission.
-    \<^schematic_prop>\<open> (x \<Ztypecolon> part ?n \<Znrres> T) * (x \<Ztypecolon> part ?m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Z\<close>.
+    \<^schematic_prop>\<open> (x \<Ztypecolon> half ?n \<Znrres> T) * (x \<Ztypecolon> half ?m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Z\<close>.
 \<close>
 
 
@@ -4051,15 +4084,13 @@ lemma (in \<phi>empty) [\<phi>reason 2000 on \<open>OBJ ?X \<^bold>i\<^bold>m\<^
 
 subsubsection \<open>General Simplification for Assertions\<close>
 
-named_theorems assertion_simps
-
 \<phi>reasoner assertion_simplification 1200
   (conclusion \<open>Simplify assertion_simplification ?X' ?X\<close>)
   = ((simp only: assertion_simps)?, rule Simplify_I)
 
 lemmas [assertion_simps] =
   mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left zero_fun
-  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_const
+  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_const FOCUS_TAG_def
 
 
 
@@ -4468,14 +4499,14 @@ lemma [\<phi>reason 2000
 ]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w R  \<longmapsto> R1 \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R1 \<longmapsto> \<blangle> R2 \<brangle>     \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R  \<longmapsto> \<blangle> R2 \<heavy_comma> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R  \<longmapsto> \<blangle> R2 \<heavy_comma> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<and> P1 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding cast_def pair_forall Action_Tag_def
-  by (simp add: \<phi>view_shift_intro_frame_R \<phi>view_shift_trans) 
+  by (metis View_Shift_imply_P \<phi>frame_view_right \<phi>view_trans)
 
 lemma [\<phi>reason 2010 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R\<heavy_comma> ?Y \<longmapsto> \<blangle> ?R2 \<heavy_comma> (FIX ?X) \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> \<blangle> R2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> Y \<longmapsto> \<blangle> R2 \<heavy_comma> FIX X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> Y \<longmapsto> \<blangle> R2 \<heavy_comma> FIX X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<and> P1 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding cast_def pair_forall Fix_def Action_Tag_def
   by (metis \<phi>view_shift_intro_frame_R \<phi>view_shift_trans mult.commute)
 
@@ -5845,23 +5876,23 @@ lemma [\<phi>reason 3011
 paragraph \<open>Fall back\<close>
 
 lemma Structural_Extract_fallback
-  [\<phi>reason 1000 on \<open>Structural_Extract' ?X ?X' ?Y ?Y' ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  [\<phi>reason 10 on \<open>Try ?S (Structural_Extract ?X ?X' ?Y ?Y' ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> CHK_SUBGOAL G
-\<Longrightarrow> Structural_Extract' X X Y Y True  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> Try False (Structural_Extract X X Y Y True)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_ab_semigroup set\<close>
   unfolding Structural_Extract_def Structural_Extract'_def
-      \<phi>None_itself_is_one mult_1_left GOAL_CTXT_def
+      \<phi>None_itself_is_one mult_1_left GOAL_CTXT_def Try_def
   by (simp add: implies_refl mult.commute)
 
-lemma [\<phi>reason 1011 on \<open>Structural_Extract' ?X ?X' ?Y ?Y' (Automatic_Morphism ?RP ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 10 on \<open>Try ?S (Structural_Extract ?X ?X' ?Y ?Y' (Automatic_Morphism ?RP ?RX \<and> ?P)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> CHK_SUBGOAL G
-\<Longrightarrow> Structural_Extract' X  X  Y  Y
-      (Automatic_Morphism True (Structural_Extract' X' X' Y' Y' True) \<and> True)
+\<Longrightarrow> Try False (Structural_Extract X  X  Y  Y
+      (Automatic_Morphism True (Structural_Extract X' X' Y' Y' True) \<and> True))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_ab_semigroup set\<close> and X' :: \<open>'aa::sep_ab_semigroup set\<close>
-  unfolding GOAL_CTXT_def
-  by (blast intro: Structural_Extract_fallback[unfolded GOAL_CTXT_def]
-                   Structural_Extract'_reverse_morphism_I)
+  unfolding GOAL_CTXT_def Try_def
+  by (blast intro: Structural_Extract_fallback[unfolded GOAL_CTXT_def Try_def]
+                   Structural_Extract_reverse_morphism_I)
 
 
 
@@ -5943,11 +5974,12 @@ paragraph \<open>Normalize the Target\<close>
 
 lemma Structural_Extract_to_mult
   [\<phi>reason 1200 on \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close> ]:
-  \<open> Structural_Extract A B Y WY P1  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract B C X WX P2  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+  \<open> Try S1 (Structural_Extract A B Y WY P1)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Try S2 (Structural_Extract B C X WX P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m S1 \<or> S2
 \<Longrightarrow> Structural_Extract' A C (X * Y) (WX * WY) (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close>
-  unfolding Structural_Extract_def Simplify_def Action_Tag_def Structural_Extract'_def
+  unfolding Structural_Extract_def Simplify_def Action_Tag_def Structural_Extract'_def Try_def
   \<medium_left_bracket> premises L and R
     fold mult.assoc
     L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
@@ -5956,8 +5988,9 @@ lemma Structural_Extract_to_mult
 
 lemma Structural_Extract_\<phi>Prod_right
   [\<phi>reason 1200 on \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close> ]:
-  \<open> Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G 
-\<Longrightarrow> Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+  \<open> Try S1 (Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G 
+\<Longrightarrow> Try S2 (Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m S1 \<or> S2
 \<Longrightarrow> Structural_Extract' A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX) (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
 for A :: \<open>'a::sep_algebra set\<close>
   unfolding \<phi>Prod_expn'
@@ -5968,11 +6001,12 @@ paragraph \<open>Step by Step\<close>
 lemma Structural_Extract_from_mult[\<phi>reason 1200 on
   \<open>Structural_Extract' (?L * ?X :: 'a::sep_algebra set) ?R ?W ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  \<open> Structural_Extract X R2 Y Wr P1  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract L R Wr Wr2 P2  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+  \<open> Try S1 (Structural_Extract X R2 Y Wr P1)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Try S2 (Structural_Extract L R Wr Wr2 P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m S1 \<or> S2
 \<Longrightarrow> Structural_Extract' (L * X) (R * R2) Y Wr2 (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close>
-  unfolding Structural_Extract_def Simplify_def Structural_Extract'_def
+  unfolding Structural_Extract_def Simplify_def Structural_Extract'_def Try_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
     L[THEN implies_right_prod]
@@ -5982,11 +6016,12 @@ lemma Structural_Extract_from_mult[\<phi>reason 1200 on
 lemma Structural_Extract_\<phi>Prod_left [\<phi>reason 1200 on
   \<open>Structural_Extract' ((?x,?y) \<Ztypecolon> (?T::(?'a::sep_algebra,?'b) \<phi>) \<^emph> ?U) ?R (?y \<Ztypecolon> ?W) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  \<open> Structural_Extract (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) Y W P1  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract (y \<Ztypecolon> U) (r \<Ztypecolon> R) W W2 P2  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+  \<open> Try S1 (Structural_Extract (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) Y W P1)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> Try S2 (Structural_Extract (y \<Ztypecolon> U) (r \<Ztypecolon> R) W W2 P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m S1 \<or> S2
 \<Longrightarrow> Structural_Extract' ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2 (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
-  unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Action_Tag_def Structural_Extract'_def
+  unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Action_Tag_def Structural_Extract'_def Try_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
     L[THEN implies_right_prod]
@@ -5997,57 +6032,58 @@ lemma Structural_Extract_\<phi>Prod_left [\<phi>reason 1200 on
 lemma [\<phi>reason 1211 on
   \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (Automatic_Morphism ?RR ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  \<open> Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY)
-      (Automatic_Morphism RP1 (Structural_Extract (y' \<Ztypecolon> Y') (wy' \<Ztypecolon> WY') A' B' P1') \<and> P1)
+  \<open> Try S1 (Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY)
+      (Automatic_Morphism RP1 (Structural_Extract (y' \<Ztypecolon> Y') (wy' \<Ztypecolon> WY') A' B' P1') \<and> P1))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G 
-\<Longrightarrow> Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX)
-      (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> X') (wx' \<Ztypecolon> WX') B' C' P2') \<and> P2)
+\<Longrightarrow> Try S2 (Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX)
+      (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> X') (wx' \<Ztypecolon> WX') B' C' P2') \<and> P2))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m S1 \<or> S2
 \<Longrightarrow> Structural_Extract' A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX)
       (Automatic_Morphism (RP1 \<and>\<^sub>\<r> RP2)
         (Structural_Extract' ((y',x') \<Ztypecolon> Y' \<^emph> X') ((wy', wx') \<Ztypecolon> WY' \<^emph> WX') A' C' (P1' \<and> P2'))
       \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for A :: \<open>'a::sep_algebra set\<close> and A' :: \<open>'aa::sep_algebra set\<close>
-  unfolding GOAL_CTXT_def Morphism_def Aggregate_Antecedent_def
-  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>Prod_left [unfolded GOAL_CTXT_def]
+  unfolding GOAL_CTXT_def Morphism_def Aggregate_Antecedent_def Try_def
+  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded GOAL_CTXT_def Try_def]
+                   Structural_Extract_\<phi>Prod_left [unfolded GOAL_CTXT_def Try_def]
                    Structural_Extract'_imply_P)
 
 lemma [\<phi>reason 1211 on
   \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (Automatic_Morphism ?RR ?RX \<and> ?P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  \<open> Structural_Extract (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) Y W
-      (Automatic_Morphism RP1 (Structural_Extract Y' W' (x' \<Ztypecolon> T') (r2' \<Ztypecolon> R2') P1') \<and> P1)
+  \<open> Try S1 (Structural_Extract (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) Y W
+      (Automatic_Morphism RP1 (Structural_Extract Y' W' (x' \<Ztypecolon> T') (r2' \<Ztypecolon> R2') P1') \<and> P1))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract (y \<Ztypecolon> U) (r \<Ztypecolon> R) W W2
-      (Automatic_Morphism RP2 (Structural_Extract W' W2' (y' \<Ztypecolon> U') (r' \<Ztypecolon> R') P2') \<and> P2)
+\<Longrightarrow> Try S2 (Structural_Extract (y \<Ztypecolon> U) (r \<Ztypecolon> R) W W2
+      (Automatic_Morphism RP2 (Structural_Extract W' W2' (y' \<Ztypecolon> U') (r' \<Ztypecolon> R') P2') \<and> P2))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2
       (Automatic_Morphism (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract' Y' W2' ((x',y') \<Ztypecolon> T' \<^emph> U') ((r2',r') \<Ztypecolon> (R2' \<^emph> R')) (P1' \<and> P2')) \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for Y :: \<open>'a::sep_algebra set\<close> and Y' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Morphism_def Aggregate_Antecedent_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>Prod_left [unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Aggregate_Antecedent_def GOAL_CTXT_def Try_def
+  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded GOAL_CTXT_def Try_def]
+                   Structural_Extract_\<phi>Prod_left [unfolded GOAL_CTXT_def Try_def]
                    Structural_Extract'_imply_P)
 
 lemma [\<phi>reason 1211 on
   \<open>Structural_Extract' ?A ?C (?X * ?Y) ?W (Automatic_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  \<open> Structural_Extract A B Y WY
-      (Automatic_Morphism RP1 (Structural_Extract Y' WY' A' B' P1') \<and> P1)
+  \<open> Try S1 (Structural_Extract A B Y WY
+      (Automatic_Morphism RP1 (Structural_Extract Y' WY' A' B' P1') \<and> P1))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract B C X WX
-      (Automatic_Morphism RP2 (Structural_Extract X' WX' B' C' P2') \<and> P2)
+\<Longrightarrow> Try S2 (Structural_Extract B C X WX
+      (Automatic_Morphism RP2 (Structural_Extract X' WX' B' C' P2') \<and> P2))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' A C (X * Y) (WX * WY)
       (Automatic_Morphism (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract' (X' * Y') (WX' * WY') A' C' (P1' \<and> P2')) \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close> and X' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Morphism_def Aggregate_Antecedent_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_to_mult  [unfolded GOAL_CTXT_def]
-                   Structural_Extract_from_mult[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Aggregate_Antecedent_def GOAL_CTXT_def Try_def
+  by (blast intro: Structural_Extract_to_mult  [unfolded GOAL_CTXT_def Try_def]
+                   Structural_Extract_from_mult[unfolded GOAL_CTXT_def Try_def]
                    Structural_Extract'_imply_P)
 
 (*TODO
@@ -6338,13 +6374,13 @@ text \<open>Then, according to the expected permission n and the permission m th
 TODO: re-enable this! *)
 
 lemma Structural_Extract_share_half
-  [\<phi>reason 1300 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> part ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-    \<comment> \<open>if only requires a part of the permission, give it a half of that currently we have.\<close>
+  [\<phi>reason 1300 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> half ?m \<Znrres> ?U) ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+    \<comment> \<open>if only requires a half of the permission, give it a half of that currently we have.\<close>
   \<open> \<phi>Sep_Disj_Identical T
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> part(m / 2) \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> half(m / 2) \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Structural_Extract'_def part_def
+  unfolding Structural_Extract_def Structural_Extract'_def half_def
   \<medium_left_bracket> premises [\<phi>reason] and X
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
@@ -6367,20 +6403,20 @@ lemma Structural_Extract_share_half_rev:
 
 
 lemma
-  [\<phi>reason 1311 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> part ?m \<Znrres> ?U) ?R2
+  [\<phi>reason 1311 on \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> half ?m \<Znrres> ?U) ?R2
       (Automatic_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> \<phi>Sep_Disj_Identical T
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W)
     (Automatic_Morphism RP
         (Structural_Extract (y' \<Ztypecolon> m / 2 \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m / 2 \<Znrres> T') (r' \<Ztypecolon> R') P')
     \<and> P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> part (m / 2) \<Znrres> U) (w \<Ztypecolon> W)
+\<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> half (m / 2) \<Znrres> U) (w \<Ztypecolon> W)
     (Automatic_Morphism (RP \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
-        (Structural_Extract' (y' \<Ztypecolon> part (m / 2) \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m \<Znrres> T') ((x',r') \<Ztypecolon> m / 2 \<Znrres> T' \<^emph> R') P')
+        (Structural_Extract' (y' \<Ztypecolon> half (m / 2) \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m \<Znrres> T') ((x',r') \<Ztypecolon> m / 2 \<Znrres> T' \<^emph> R') P')
     \<and> P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def GOAL_CTXT_def Aggregate_Antecedent_def part_def
-  by (blast intro: Structural_Extract_share_half    [unfolded GOAL_CTXT_def part_def]
+  unfolding Morphism_def GOAL_CTXT_def Aggregate_Antecedent_def half_def
+  by (blast intro: Structural_Extract_share_half    [unfolded GOAL_CTXT_def half_def]
                    Structural_Extract_share_half_rev[unfolded GOAL_CTXT_def]
                    Structural_Extract'_imply_P)
 
@@ -7042,11 +7078,11 @@ lemma assertion_level_reasoning_by_structural_extraction:
   " Structure_Info U Q
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y Q' : Q
 \<Longrightarrow> SUBGOAL G G2
-\<Longrightarrow> (Q' \<Longrightarrow> Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2)
+\<Longrightarrow> (Q' \<Longrightarrow> Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2)
 \<Longrightarrow> SOLVE_SUBGOAL G2
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<heavy_comma> y \<Ztypecolon> \<phi> U \<longmapsto> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding Premise_def GOAL_CTXT_def FOCUS_TAG_def Structural_Extract_def Simplify_def Action_Tag_def
+  unfolding Premise_def GOAL_CTXT_def FOCUS_TAG_def Structural_Extract_def Simplify_def Action_Tag_def Try_def
   \<medium_left_bracket> premises SI and Q and _ and SE and _ and A
     have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
     ;; A[THEN \<phi>frame_view_right]
@@ -7057,8 +7093,8 @@ lemma assertion_level_reasoning_by_structural_extraction__reverse_morphism:
   " Structure_Info U Q
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y Q' : Q
 \<Longrightarrow> SUBGOAL G G2
-\<Longrightarrow> (Q' \<Longrightarrow> Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W
-              (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> \<phi> T') W' (y' \<Ztypecolon> \<phi> U') R1' P2') \<and> P2)
+\<Longrightarrow> (Q' \<Longrightarrow> Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W
+              (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> \<phi> T') W' (y' \<Ztypecolon> \<phi> U') R1' P2') \<and> P2))
             \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2)
 \<Longrightarrow> SOLVE_SUBGOAL G2
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (Automatic_Morphism RP1 (\<^bold>v\<^bold>i\<^bold>e\<^bold>w R2'\<heavy_comma> \<blangle> W' \<brangle> \<longmapsto> A' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1') \<and> P1)
@@ -7067,7 +7103,7 @@ lemma assertion_level_reasoning_by_structural_extraction__reverse_morphism:
       (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (\<^bold>v\<^bold>i\<^bold>e\<^bold>w R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> \<phi> T' \<brangle> \<longmapsto> A'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1' \<and> P2') \<and> P1 \<and> P2)
     \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Premise_def GOAL_CTXT_def FOCUS_TAG_def Structural_Extract_def Simplify_def
-            Action_Tag_def Morphism_def Aggregate_Antecedent_def
+            Action_Tag_def Morphism_def Aggregate_Antecedent_def Try_def
   \<medium_left_bracket> premises SI and Q and _ and SE and _ and A
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
     ;; A[THEN \<phi>frame_view_right]
