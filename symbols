@@ -1,28 +1,11 @@
+\<triangle_bullet>  code: 0x002023  font: Symbola  group: operator
+\<fish_eye>         code: 0x0025C9  font: Symbola  group: punctuation
 \<fish_eye>         code: 0x0025C9  font: Symbola  group: punctuation
 \<black_circle>     code: 0x0025CF  font: Symbola  group: punctuation
-\<dash_tri_R_arrow> code: 0x00279F  font: Symbola  group: arrow    abbrev: .>
-\<circled_bullet>   code: 0x0029BF  font: Symbola  group: operator abbrev: \<OO>
-\<circled_white_bullet>   code: 0x0029BE   font: Symbola  group: operator abbrev: \<OO>
-
-\<left_double_quotation>  code: 0x00201C  group: punctuation abbrev: "
-\<right_double_quotation> code: 0x00201D  group: punctuation abbrev: "
-\<left_single_quotation>  code: 0x002018  group: punctuation abbrev: '
-\<right_single_quotation> code: 0x002019  group: punctuation abbrev: '
 
 \<heavy_comma>      code: 0x00275F    font: Symbola    group: punctuation  abbrev: ,,
-\<heavy_asterisk>   code: 0x002731    font: Symbola    group: punctuation  abbrev: <**>
-\<rtbrak>           code: 0x002998    font: Symbola    group: punctuation  abbrev: )]
-\<ltbrak>           code: 0x002997    font: Symbola    group: punctuation  abbrev: [(
 \<perpendicular>    code: 0x0027c2    font: Symbola    group: relation     abbrev: _|_
-\<left_fish_tail>   code: 0x00297c    font: Symbola    group: operator
-\<down_fish_tail>   code: 0x00297f    font: Symbola    group: operator
-\<long_dobule_mapsto>  code: 0x0027fe   group: arrow   abbrev: |==>
 \<blangle>         code: 0x00276c   font: Symbola  group: punctuation abbrev: <<b
 \<brangle>         code: 0x00276d   font: Symbola  group: punctuation abbrev: >>b
-\<nuInstrComp>           code: 0x0022d7  font: Symbola
 \<medium_left_bracket>   code: 0x002774  font: Symbola   abbrev: {{
 \<medium_right_bracket>  code: 0x002775  font: Symbola   abbrev: }}
-\<ratio>        code: 0x002236   font: Symbola   group: operator     abbrev: <TY>
-\<nuLinkL>      code: 0x002919   font: Symbola   group: punctuation  abbrev: --<
-\<nuLinkR>      code: 0x00291a   font: Symbola   group: punctuation  abbrev: >--
-\<nuFusion>     code: 0x00229b   font: Symbola   group: operator     abbrev: ~O*

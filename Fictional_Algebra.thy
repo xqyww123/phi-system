@@ -13,6 +13,8 @@ section \<open>Algebra Structures\<close>
 
 subsection \<open>Preliminary Structures\<close>
 
+subsubsection \<open>Homomorphism-like\<close>
+
 locale homo_one =
   fixes \<phi> :: " 'a::one \<Rightarrow> 'b::one "
   assumes homo_one[simp]: "\<phi> 1 = 1"
@@ -29,6 +31,8 @@ locale mult_strip_011 =
   fixes \<psi> :: " 'a::times \<Rightarrow> 'b::times "
   assumes mult_strip_011: \<open>a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c)\<close>
 
+subsubsection \<open>Group-like\<close>
+
 class mult_1 = times + one +
   assumes mult_1_left [simp]: "1 * x = x"
       and mult_1_right[simp]: "x * 1 = x"
@@ -42,6 +46,7 @@ class ab_group_mult = inverse + comm_monoid_mult +
 
 class semigroup_mult_left_cancel = semigroup_mult +
   assumes semigroup_mult_left_cancel: \<open>a * c = b * c \<longleftrightarrow> a = b\<close>
+
 
 subsection \<open>Separation Algebra\<close>
 
@@ -88,6 +93,12 @@ end
 
 class sep_ab_semigroup = sep_semigroup + comm_sep_disj +
   assumes sep_mult_commute: "x ## y \<Longrightarrow> x * y = y * x"
+begin
+lemma self_sep_disj:
+  \<open>x ## y \<Longrightarrow> x * y ## x * y \<Longrightarrow> x ## x\<close>
+  \<open>x ## y \<Longrightarrow> x * y ## x * y \<Longrightarrow> y ## y\<close>
+  using local.sep_disj_commute local.sep_disj_multD1 sep_disj_multD2 by blast+
+end
 
 class sep_disj_intuitive = sep_magma +
   assumes sep_disj_intuitive_right[simp]: \<open>b ## c \<Longrightarrow> a ## b * c \<longleftrightarrow> a ## b \<and> a ## c\<close>
@@ -135,8 +146,7 @@ subclass sep_monoid proof
   show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
     using mult_assoc by blast
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
-    apply (clarsimp simp add: join_sub_def)
-    by (metis local.positive_mult times.subsume_def)
+    by (clarsimp simp add: join_sub_def, metis local.positive_mult times.subsume_def)
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by simp
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by simp
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by simp
@@ -158,8 +168,8 @@ lemma sep_mult_left_commute[simp]:
 
 lemma join_sub_frame:
   \<open>r ## y \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> r * x \<preceq>\<^sub>S\<^sub>L r * y\<close>
-  unfolding join_sub_def apply clarsimp
-  by (metis local.sep_disj_commuteI local.sep_disj_multD1 local.sep_disj_multI1 local.sep_mult_assoc local.sep_mult_commute)
+  unfolding join_sub_def
+  by (clarsimp, metis local.sep_disj_commuteI local.sep_disj_multI1 local.sep_mult_commute)
 
 (*lemma
   \<open>r ## y \<Longrightarrow> r ## x \<Longrightarrow> r * x \<preceq>\<^sub>S\<^sub>L r * y \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
@@ -167,14 +177,16 @@ lemma join_sub_frame:
 
 lemma join_sub_ext_left:
   \<open>z ## y \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L z * y\<close>
-  unfolding join_sub_def apply clarsimp
-  by (metis local.sep_disj_multD1 local.sep_disj_multI1 local.sep_mult_assoc sep_mult_left_commute)
+  unfolding join_sub_def
+  by (clarsimp, metis local.sep_disj_multD1 local.sep_disj_multI1 local.sep_mult_assoc sep_mult_left_commute)
 
 lemma join_sub_ext_right:
   \<open>y ## z \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L y * z\<close>
-  unfolding join_sub_def apply clarsimp
-  by (metis local.sep_disj_commute local.sep_disj_multD1 local.sep_disj_multI1 local.sep_mult_assoc local.sep_mult_commute)
+  unfolding join_sub_def
+  by (clarsimp, metis local.sep_disj_commute local.sep_disj_multD1 local.sep_disj_multI1 local.sep_mult_assoc local.sep_mult_commute)
 end
+
+subsubsection \<open>Special Separation Algebra\<close>
 
 class total_sep_algebra = comm_monoid_mult + positive_mult + total_sep_disj
 begin
@@ -196,8 +208,6 @@ subclass sep_algebra proof
 qed
 subclass total_sep_monoid ..
 end
-
-subsubsection \<open>Special Separation Algebra\<close>
 
 class discrete_sep_semigroup = sep_disj + times +
   assumes discrete_sep_disj[simp]: "x ## y \<longleftrightarrow> x = y"
@@ -252,11 +262,31 @@ subclass sep_algebra proof
 qed
 end
 
-subsection \<open>Share Algebra\<close>
+subsection \<open>Structural Algebra\<close>
+
+text \<open>Hierarchical Algebra models tree-like data structures.
+
+It is a module-like structure with a path as its scalar, e.g. a list.
+The monoid operation of the scalar is path concatenation, and the monoid operation of the elements
+is composition of two separated parts of the data structure.
+It is different with semimodule in that the scalar is not a semiring but only a monoid.
+The scalar does not have addition operation.\<close>
+
+locale hierarchical_alg =
+  fixes locate :: \<open>'path::monoid_mult \<Rightarrow> 'a::sep_algebra \<Rightarrow> 'a\<close> (infixr ":\<^enum>" 75)
+  assumes locate_distrib_right: \<open>path :\<^enum> (x * y) = path :\<^enum> x * path :\<^enum> y\<close>
+    and   locate_assoc: \<open>pa :\<^enum> pb :\<^enum> x = (pa * pb) :\<^enum> x\<close>
+    and   locate_left_1:  \<open>1 :\<^enum> x = x\<close>
+    and   locate_right_1: \<open>path :\<^enum> 1 = 1\<close>
+  
+
+subsection \<open>Permission Algebra\<close>
 
 text \<open>An algebra for objects that can be partially owned, and shared.
 
-The range of the ownership is [0,\<infinity>)
+The range of the ownership is [0,\<infinity>). Albeit the total permission is 1, the permission can be
+greater than 1.
+This relaxation eases 
 
 structural share algebra
 
@@ -265,18 +295,15 @@ including negative rationals. A better choice is using non-negative rationals on
 like the type \<^typ>\<open>posrat\<close>.\<close>
 
 class raw_share =
-  fixes share :: \<open>rat \<Rightarrow> 'a \<Rightarrow> 'a\<close>
-  fixes can_share :: \<open>'a \<Rightarrow> bool\<close>
+  fixes share :: \<open>rat \<Rightarrow> 'a \<Rightarrow> 'a\<close> (infixr ":\<Znrres>" 75)
 
 class share = raw_share + \<comment> \<open>share algebra for semigroup, where unit \<open>1\<close> is not defined\<close>
   assumes share_share_not0: \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
     and   share_left_one[simp]:  \<open>share 1 x = x\<close>
-    and   can_share_imply[simp]: \<open>0 < n \<Longrightarrow> can_share (share n x) \<longleftrightarrow> can_share x\<close>
 
 class share_one = share + one +
   assumes share_right_one[simp]: \<open>share n 1 = 1\<close>
     and   share_left_0[simp]:    \<open>share 0 x = 1\<close>
-    and   can_share_one[simp]:   \<open>can_share 1\<close>
 begin
 lemma share_share: \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
   using less_eq_rat_def local.share_share_not0 by fastforce
@@ -287,7 +314,6 @@ class share_one_eq_one_iff = share_one +
 
 class share_sep_disj = share + comm_sep_disj +
   assumes share_sep_disj_left[simp]: \<open>0 < n \<Longrightarrow> share n x ## y \<longleftrightarrow> x ## y\<close>
-  assumes can_share_self_disj[simp]: \<open>can_share x \<Longrightarrow> x ## x\<close>
 (*    and   share_sep_disj_refl[simp]:  \<open>n \<noteq> 0 \<Longrightarrow> m \<noteq> 0 \<Longrightarrow> share n x ## share m x\<close> *)
 begin
 
@@ -304,14 +330,16 @@ end
 class share_semimodule_sep = share_sep_disj + sep_ab_semigroup +
   assumes share_sep_left_distrib_0:  \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
-    and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
-    and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
+    and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
+begin
+lemma self_disj_I: \<open>x ## y \<Longrightarrow> x ## x \<Longrightarrow> y ## y \<Longrightarrow> x * y ## x * y\<close>
+  by (smt (verit, best) less_numeral_extra(1) local.sep_disj_commuteI local.sep_disj_multI2 local.sep_mult_assoc local.sep_mult_commute local.share_sep_disj_left local.share_sep_left_distrib_0 local.share_sep_right_distrib_0 zero_less_two)
+end
 
 class share_module_sep = share_sep_disj + share_one + sep_algebra +
   assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
-    and   share_sub: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
-    and   sep_mult_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
+    and   share_sub: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
 begin
 
 subclass share_semimodule_sep proof
@@ -321,9 +349,8 @@ subclass share_semimodule_sep proof
     by (meson local.share_sep_left_distrib order_less_le)
   show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     using local.share_sep_right_distrib order_less_imp_le by blast
-  show \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
+  show \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     by (simp add: local.share_sub)
-  show \<open>x ## y \<Longrightarrow> can_share (x * y) = (can_share x \<and> can_share y)\<close> by simp
 qed
 end
 
@@ -345,16 +372,13 @@ end
 
 class share_resistence_sep_assms = raw_share + sep_disj + times +
   assumes share_resistence_sep_mult[simp]: \<open>x ## x \<Longrightarrow> x * x = x\<close>
-  assumes share_resistence_sep_can_share[simp]: \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
-  assumes share_resistence_sep_can_share_disj[simp]: \<open>can_share x \<Longrightarrow> x ## x\<close>
 
 class share_resistence_semimodule_sep = share_resistence_semi + sep_disj + sep_ab_semigroup + share_resistence_sep_assms
 begin
 subclass share_semimodule_sep by (standard; simp add: join_sub_def)
 end
 
-class share_resistence_module_sep = share_resistence + sep_disj + sep_algebra + share_resistence_sep_assms +
-  assumes can_share_one[simp]: \<open>can_share 1\<close>
+class share_resistence_module_sep = share_resistence + sep_disj + sep_algebra + share_resistence_sep_assms
 begin
 subclass share_module_sep apply (standard; clarsimp simp add: join_sub_def)
   by (metis local.mult_1_left local.sep_magma_1_right)
@@ -390,10 +414,10 @@ locale inj_at_1 =
   assumes inj_at_1: \<open>\<forall>x. \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
 
 locale perm_transformer' = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi> + sep_mult_strip_011 \<psi> + homo_join_sub \<psi> + inj_at_1 \<psi>
-  for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::{share,sep_algebra}\<close>
+  for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
 + assumes join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
     and   inj_\<psi>[simp]: \<open>inj \<psi>\<close>
-    and   can_share_\<psi>[simp]: \<open>can_share (\<psi> x)\<close>
+    and   \<psi>_self_disj: \<open>\<psi> x ## \<psi> x\<close>
 
 text \<open>Given an element of a separation algebra x, a permission transformer \<phi> gives the complete
   permission of x.\<close>
@@ -574,12 +598,6 @@ end
 
 instantiation option :: (share) share begin
 
-definition \<open>can_share_option x = (case x of Some x' \<Rightarrow> can_share x' | None \<Rightarrow> True)\<close>
-
-lemma can_share_option[simp]:
-  \<open>can_share (Some x) \<longleftrightarrow> can_share x\<close> \<open>can_share None\<close>
-  unfolding can_share_option_def by simp_all
-
 definition \<open>share_option n = (if 0 < n then map_option (share n) else (\<lambda>_. None))\<close>
 
 lemma share_option_simps[simp]:
@@ -614,10 +632,10 @@ instance proof
     by (case_tac x; clarsimp simp add: share_option_def share_sep_left_distrib_0 order_less_le)
   show \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (case_tac x; case_tac y; clarsimp simp add: share_option_def share_sep_right_distrib_0)
-  show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
+  show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
     unfolding join_sub_def apply (cases x; clarsimp simp add: share_option_def)
     apply (cases \<open>n = 1\<close>)
-     apply (simp, metis can_share_option(1) mult_1_class.mult_1_left sep_magma_1_right)
+    apply (metis sep_disj_option(2) share_left_one times_option(3))
     apply (cases \<open>n = 0\<close>, simp)
     subgoal premises prems for x'
     proof -
@@ -628,8 +646,6 @@ instance proof
         apply (metis sep_disj_option(1) times_option(1))
         by (metis mult_1_class.mult_1_left sep_magma_1_right) 
     qed .
-  show \<open>x ## y \<Longrightarrow> can_share (x * y) = (can_share x \<and> can_share y)\<close>
-    by (cases x; cases y; simp)
 qed
 end
 
@@ -989,8 +1005,6 @@ paragraph \<open>Share\<close>
 
 instantiation "fun" :: (type, share) share begin
 
-definition [simp]: \<open>can_share_fun (f::'a\<Rightarrow>'b) \<longleftrightarrow> (\<forall>x. can_share (f x))\<close>
-
 definition share_fun :: \<open>rat \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'b\<close>
   where \<open>share_fun n f = share n o f\<close>
 
@@ -1017,8 +1031,7 @@ instance apply (standard; simp_all add: share_fun_def fun_eq_iff times_fun_def s
       by (simp add: prems share_sub)
     show ?thesis apply (insert t1; clarsimp simp add: join_sub_def)
       by metis
-  qed
-  by blast
+  qed .
 end
 
 instantiation "fun" :: (type, share_semimodule_mult) share_semimodule_mult begin
@@ -1433,7 +1446,8 @@ lemma perm_transformer_pointwise:
       by (rule, simp add: fun_eq_iff inj_eq)
     show \<open>\<forall>x. ((\<lambda>xa. \<psi> (x xa)) = 1) = (x = 1)\<close>
       by (simp add: one_fun_def fun_eq_iff)
-    show \<open>can_share (\<lambda>xa. \<psi> (x xa))\<close> by simp
+    show \<open>(\<lambda>xa. \<psi> (x xa)) ## (\<lambda>xa. \<psi> (x xa))\<close>
+      by (simp add: sep_disj_fun_def)
   qed .
 
 lemma perm_transformer_pointwise_eq[iff]:
@@ -1484,9 +1498,8 @@ lemma perm_transformer_pointwise_eq[iff]:
     show \<open>inj \<psi>\<close>
       apply (insert t3(8); simp add: inj_def fun_eq_iff)
       by meson
-    show \<open>can_share (\<psi> x)\<close>
-      using t3(9)[THEN spec[where x=\<open>1(undefined := x)\<close>], THEN spec[where x=undefined],
-                simplified x1, simplified] .
+    show \<open>\<psi> x ## \<psi> x\<close>
+      using t3(9)[THEN spec[where x=\<open>\<lambda>_. x\<close>], simplified] .
   qed .
 
 subsubsection \<open>Subsumption\<close>
@@ -1707,17 +1720,12 @@ end
 
 instantiation share :: (type) share begin
 
-definition \<open>can_share_share x = (case x of Share n x' \<Rightarrow> 0 < n)\<close>
-lemma can_share_share[simp]: \<open>can_share (Share n x) \<longleftrightarrow> 0 < n\<close>
-  unfolding can_share_share_def by simp
-
 definition share_share :: "rat \<Rightarrow> 'a share \<Rightarrow> 'a share"
   where \<open>share_share n x = (case x of Share m x' \<Rightarrow> Share (n*m) x')\<close>
 lemma share_share[simp]: \<open>share n (Share m x) = Share (n*m) x\<close>
   unfolding share_share_def by simp
 
-instance apply (standard; case_tac x; simp add: share_share_def mult.assoc mult_le_one)
-  using mult_pos_pos zero_less_mult_pos by blast
+instance by (standard; case_tac x; simp add: share_share_def mult.assoc mult_le_one)
 
 end
 
@@ -1732,12 +1740,9 @@ instance proof
     by (cases x; cases y; simp add: distrib_right)
   show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (cases x; cases y; simp add: distrib_left)
-  show \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
+  show \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     apply (cases x; cases y; simp add: join_sub_def share_exists)
     by (metis add.commute add_le_same_cancel1 diff_add_cancel linorder_not_le mult_1_class.mult_1_left mult_less_cancel_right)
-  show \<open>x ## y \<Longrightarrow> can_share (x * y) \<longleftrightarrow> can_share x \<and> can_share y\<close>
-    by (cases x; clarsimp; cases y; clarsimp; rule; clarsimp)
-  show \<open>can_share x \<Longrightarrow> x ## x\<close> by (cases x; clarsimp)
 qed
 end
 
@@ -1772,7 +1777,7 @@ proof
   show \<open>inj to_share\<close>
     by (rule, simp, metis option.inj_map_strong share.inject)
   show \<open>\<forall>x. (to_share x = 1) = (x = 1)\<close> by simp
-  show \<open>can_share (to_share x)\<close> by (cases x; simp)
+  show \<open>to_share x ## to_share x\<close> by (cases x; simp)
 qed
 
 
@@ -1901,8 +1906,6 @@ instantiation agree :: (type) share_semimodule_sep begin
 
 definition share_agree :: \<open>rat \<Rightarrow> 'a agree \<Rightarrow> 'a agree\<close>
   where [simp]: \<open>share_agree _ x = x\<close>
-definition can_share_agree :: \<open>'a agree \<Rightarrow> bool\<close>
-  where [simp]: \<open>can_share_agree _ \<longleftrightarrow> True\<close>
 
 instance proof
   fix x y z :: \<open>'a agree\<close>
@@ -1912,18 +1915,15 @@ instance proof
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close> unfolding join_sub_def by simp
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by (case_tac x; case_tac y; case_tac z; simp)
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by (case_tac x; case_tac y; case_tac z; simp)
-  show \<open>x ## y \<Longrightarrow> can_share (x * y) = (can_share x \<and> can_share y)\<close> by (cases x; cases y; simp)
   show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close> by (cases x; simp)
   show \<open>share 1 x = x\<close> by (cases x; simp)
-  show \<open>0 < n \<Longrightarrow> can_share (share n x) \<longleftrightarrow> can_share x\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close> by (cases x; simp)
-  show \<open>0 < n \<and> n < 1 \<Longrightarrow> can_share x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close> by (cases x; simp)
+  show \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close> by (cases x; simp)
   show \<open>x ## y \<Longrightarrow> y ## x\<close> by (cases x; cases y; simp)
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by (cases x; cases y; cases z; simp)
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close> by (cases x; cases y; cases z; simp)
   show \<open>0 < n \<Longrightarrow> share n x ## y = x ## y\<close> by (cases x; cases y; simp)
-  show \<open>can_share x \<Longrightarrow> x ## x\<close> by (cases x; simp)
 qed
 end
 

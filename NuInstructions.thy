@@ -187,7 +187,7 @@ lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[\<ph
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
       \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def share.can_share_\<psi>[simplified] del: subsetI)
+  apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
   apply (rule R.\<phi>R_get_res_entry[where v=v])
   apply simp
   by blast
@@ -211,7 +211,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[\<p
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
       \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
-  apply (clarsimp simp add: \<phi>expns zero_set_def share.can_share_\<psi>[simplified] del: subsetI)
+  apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
   apply (rule R.\<phi>R_get_res_entry[where v=v])
   apply simp
   by blast

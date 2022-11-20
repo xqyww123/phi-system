@@ -3334,23 +3334,23 @@ definition \<phi>Sep_Disj :: \<open>('a::sep_disj,'b1) \<phi> \<Rightarrow> ('a:
 definition \<phi>Sep_Disj_Identical :: \<open>('a::share_semimodule_sep, 'b) \<phi> \<Rightarrow> bool\<close>
   where \<open>\<phi>Sep_Disj_Identical T
     \<longleftrightarrow> (\<forall>x u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (x \<Ztypecolon> T) \<and> u ## v \<longrightarrow> u = v)
-      \<and> (\<forall>x u. u \<in> (x \<Ztypecolon> T) \<longrightarrow> can_share u)\<close>
+      \<and> (\<forall>x u. u \<in> (x \<Ztypecolon> T) \<longrightarrow> u ## u)\<close>
 
 
 subsubsection \<open>Permission Transformer\<close>
 
 definition \<phi>perm_transformer :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
-  where \<open>\<phi>perm_transformer \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> perm_transformer' \<psi>})\<close>
+  where \<open>\<phi>perm_transformer \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> perm_transformer' \<psi>})\<close>
 
 abbreviation (in perm_transformer) \<open>\<phi> \<equiv> \<phi>perm_transformer \<psi>\<close>
 
 lemma \<phi>perm_transformer_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>perm_transformer \<psi> T)
-    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v) \<and> perm_transformer' \<psi>)\<close>
+    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> perm_transformer' \<psi>)\<close>
   unfolding \<phi>perm_transformer_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma (in perm_transformer) [\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> can_share (\<psi> v))\<close>
+  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>perm_transformer_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma \<phi>perm_transformer_inhabited[\<phi>reason_elim!, elim!]:
@@ -3396,7 +3396,7 @@ lemma \<phi>perm_transformer_\<phi>None:
   \<open> perm_transformer' \<psi>
 \<Longrightarrow> \<phi>perm_transformer \<psi> \<circle> = \<circle>\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-  using inj_at_1.inj_at_1 perm_transformer'.axioms(5) perm_transformer'.can_share_\<psi> by fastforce
+  by (metis inj_at_1_def perm_transformer'.axioms(5))
 
 lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'a::simplification action)\<close>]:
   \<open>x \<Ztypecolon> \<phi>perm_transformer \<psi> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<circle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close>
@@ -3409,30 +3409,30 @@ lemma \<phi>perm_transformer_MapAt:
   \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_transformer f T)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
             perm_transformer_pointwise_eq; rule; clarsimp)
-  apply (smt (verit, del_insts) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'_def perm_transformer_pointwise)
-  by (metis (no_types, lifting) fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.can_share_\<psi> perm_transformer'_def perm_transformer_pointwise)
+  using inj_at_1.inj_at_1 perm_transformer'.axioms(5) apply fastforce
+  by (metis fun_upd_comp inj_at_1.inj_at_1 perm_transformer'.axioms(5) perm_transformer_pointwise)
 
 
 lemma \<phi>perm_transformer_MapAt_L:
   \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow>\<^sub>@ T) = (k \<^bold>\<rightarrow>\<^sub>@ \<phi>perm_transformer ((o) f) T)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_transformer_expns
             perm_transformer_pointwise_eq; rule; clarsimp)
-  using homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi> apply blast
-  by (metis homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) perm_transformer'.can_share_\<psi>)
+  using homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) apply blast
+  by (metis homo_one.push_map_homo homo_sep_mult_def perm_transformer'.axioms(1) push_map_sep_disj)
 
 
 lemma \<phi>perm_transformer_Prod_imply:
   \<open>x \<Ztypecolon> \<phi>perm_transformer f (T \<^emph> U) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> (\<phi>perm_transformer f T) \<^emph> (\<phi>perm_transformer f U)\<close>
   unfolding Imply_def
   apply (cases x; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def)
-  by (metis homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_transformer'.can_share_\<psi> perm_transformer'_def)
+  using homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_transformer'_def by blast
 
 lemma \<phi>perm_transformer_Prod:
   \<open> \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>perm_transformer f (T \<^emph> U) = (\<phi>perm_transformer f T) \<^emph> (\<phi>perm_transformer f U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_transformer'.axioms(1) perm_transformer'.axioms(2) perm_transformer'.can_share_\<psi>)
-  by (metis \<phi>Type_def perm_transformer'.can_share_\<psi> perm_transformer'_def sep_disj_commuteI sep_mult_strip_011.sep_mult_strip_011)
+  using homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_transformer'_def apply blast
+  by (metis homo_sep_mult.homo_mult perm_transformer'_def sep_disj_commute)
 
 
 subsubsection \<open>Permission Annotation\<close>
@@ -3528,7 +3528,7 @@ lemma \<phi>Share_share:
   using share_sep_left_distrib_0 apply blast
   subgoal for v
   apply (rule exI[where x=\<open>share n v\<close>], rule exI[where x=\<open>share m v\<close>], simp)
-    by (metis can_share_self_disj share_sep_left_distrib_0) .
+    by (metis share_sep_left_distrib_0) .
 
 lemma \<phi>Share_\<phi>MapAt:
   \<open>n \<Znrres> k \<^bold>\<rightarrow> T = k \<^bold>\<rightarrow> n \<Znrres> T\<close>
@@ -3707,7 +3707,7 @@ lemma \<phi>Sep_Disj_Identical_\<phi>MapAt_L[\<phi>reason 1200]:
 \<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow>\<^sub>@ T)\<close>
   unfolding \<phi>Sep_Disj_Identical_def
   apply (clarsimp simp add: \<phi>expns)
-  by (metis push_map_def push_map_sep_disj share_one_class.can_share_one)
+  using push_map_sep_disj by blast
 
 lemma \<phi>Sep_Disj_Identical_Prod[\<phi>reason 1200]:
   \<open> \<phi>Sep_Disj_Identical T
@@ -3715,7 +3715,7 @@ lemma \<phi>Sep_Disj_Identical_Prod[\<phi>reason 1200]:
 \<Longrightarrow> \<phi>Sep_Disj_Identical (T \<^emph> U)\<close>
   unfolding \<phi>Sep_Disj_Identical_def
   apply (clarsimp simp add: \<phi>expns)
-  by (metis sep_disj_commute sep_disj_multD1 sep_mult_commute share_semimodule_sep_class.sep_mult_can_share)
+  by (metis self_disj_I sep_disj_commute sep_disj_multD2 sep_mult_commute)
 
 
 lemma [\<phi>reason 1200]:
@@ -6301,7 +6301,7 @@ lemma Structural_Extract_\<phi>perm_transformer [\<phi>reason 1200
                         P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Structural_Extract_def Imply_def \<phi>Sep_Disj_def Structural_Extract'_def
   apply (clarsimp simp add: \<phi>expns)
-  by (smt (verit, del_insts) homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_transformer'.axioms(1) perm_transformer'.axioms(2) perm_transformer'.can_share_\<psi>)
+  by (metis (no_types, opaque_lifting) homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_transformer'_def)
 
 lemma [\<phi>reason 1211
     for \<open>Structural_Extract' (?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?T) ?R (?y \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?U) ?W
@@ -7276,7 +7276,7 @@ lemma partial_implies_raw:
     have t0: \<open>1 / n * n = 1\<close> using prems(12) by force 
     have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close> using prems(12) by force
     have t2: \<open>share (1/n) (share n (perm_transformer x)) \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
-      by (simp add: order_less_imp_le prems(2) share_sub t1)
+      by (simp add: order_less_imp_le prems(2) share.\<psi>_self_disj share_sub t1)
     then have t3: \<open>perm_transformer x \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
       using share_share_not0
       by (metis prems(2) share_left_one t0 t1)
