@@ -37,6 +37,7 @@ signature NU_BASICS = sig
 
   val param_set_free_var_name : Proof.context -> string -> thm -> thm
   (* val auto_fusion_arity : term -> int *)
+
 end
 structure NuBasics : NU_BASICS = struct
 open Thm Term HOLogic NuHelp
@@ -77,8 +78,7 @@ fun the_implication i ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_impli
 fun reason_programming_implication mode ctxt sequent =
   let
     val inhabited_rule = #inhabited_rule mode ctxt
-    val stat = (sequent RS inhabited_rule)
-                  |> pair ctxt |> SOME
+    val stat = SOME (ctxt, (sequent RS inhabited_rule))
                handle THM _ => NONE
   in case Option.mapPartial Nu_Reasoner.reason stat
        of SOME (_, result) => [result]

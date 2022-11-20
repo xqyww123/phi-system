@@ -1,13 +1,14 @@
 signature NU_REASONERS = sig
   exception Attemption_Fail of Proof.context * thm
+
+  val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
   val auto_obligation_solver : Proof.context -> thm -> thm Seq.seq
   val auto_obligation_solver' : Proof.context * thm -> Proof.context * thm
   val safer_obligation_solver : Proof.context -> thm -> thm Seq.seq
   val safer_obligation_solver' : Proof.context * thm -> Proof.context * thm
-  val premise_tac : Proof.context -> thm -> thm Seq.seq
+
+  val defer_obligation_tac : Proof.context -> thm -> thm Seq.seq
   val asm_simp_tac : Proof.context -> thm -> thm Seq.seq
-  val single_return : tactic -> tactic
-  val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
 end
 
 structure Nu_Reasoners : NU_REASONERS = struct
@@ -23,7 +24,6 @@ fun wrap tac (ctxt,thm) = tac ctxt thm |> Seq.map (pair ctxt)
 fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME (th, Seq.empty))) *)
 
 fun aux_thms ctxt = Named_Theorems.get ctxt \<^named_theorems>\<open>useful\<close>
-                  @ Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
 
 (** Tactics **)
 
@@ -50,17 +50,18 @@ fun raw_auto ctxt =
 
 (*Wrap a context tactic of type `Proof.context -> thm -> thm Seq.seq` to the
   transition between states, of type `Proof.context * thm -> Proof.context * thm`.
-  *It only adopts the first result of applying the tactic, and drops other alternatives.*
-  Because reasoners in the file only attack the first sub-goal and solves it totally or fails,
-  this short-cut makes differences only when the sub-goal to be solved has some schematic variables
+  *This wrap only adopts the first result of applying the tactic, and drops other alternatives.*
+  The original seq-based tactics are not affected by this.
+
+  Because reasoners in the file only attack the first antecedent and solves it totally or fails,
+  this short-cut makes differences only when the antecedent to be solved has some schematic variables
   to be instantiated during the tactic application.
 
-  The semantics of schematic variables in these reasoners is, any possible instantiation is
-  acceptable. Therefore, we choose the first result that a tactic returns.
-
+  The semantics of schematic variables in auto_obligation_solver and safer_obligation_solver is,
+  any possible instantiation is acceptable.
+  
   If the schematic variables are not able to be chosen arbitrarily, additional mechanisms have
-  to be applied previously, for the case of state
-  transition `Proof.context * thm -> Proof.context * thm`.*)
+  to be applied previously.*)
 fun context_tactic_to_state_transition tac (ctxt, sequent) =
   case Seq.pull (tac ctxt sequent)
     of SOME (th', _) => (ctxt, th')
@@ -88,9 +89,7 @@ fun safer_obligation_solver ctxt th =
 
 val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver
 
-(*Insert a premise into a proof obligation*)
-fun contract_obligations ctxt thm =
-let open Conv in
+fun contract_obligations ctxt thm = let open Conv in
   gconv_rule (bottom_conv (K (try_conv (rewrs_conv
     @{thms contract_premise_true
            contract_premise_imp contract_premise_all
@@ -98,7 +97,7 @@ let open Conv in
   |> fconv_rule (rewr_conv @{thm contract_obligations})
 end
 
-fun premise_tac ctxt thm =
+fun defer_obligation_tac ctxt thm =
   let
     val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
           case tm of (_ $ (@{term Proof_Obligation} $ _)) => true
@@ -106,7 +105,7 @@ fun premise_tac ctxt thm =
     val n = Thm.nprems_of thm
   in
     if idx = ~1
-    then auto_obligation_solver ctxt thm
+    then error ("Fail to defer a proof obligation: an \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n antecedent is not found.")
     else Thm.permute_prems 1 idx thm
       |> contract_obligations ctxt
       |> Thm.permute_prems 0 (~idx)
@@ -119,14 +118,6 @@ fun premise_tac ctxt thm =
 fun asm_simp_tac ctxt =
   REPEAT (HEADGOAL (resolve_tac ctxt @{thms Premise_I})) THEN
   HEADGOAL (SOLVED' (Simplifier.asm_simp_tac (ctxt addsimps aux_thms ctxt)))
-  
-
-fun single_return tac s =
-  Seq.make (fn () => 
-    case Seq.chop 2 (tac s)
-      of ([s'], _) => SOME (s', Seq.empty)
-       | _ => NONE
-  )
 
 
 end

@@ -61,7 +61,7 @@ signature NU_TOPLEVEL = sig
         -> bool -> Proof.context -> Proof.state *)
   val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
-  val end_block_cmd : Phi_Generalization.generic -> bool -> Proof.state -> Proof.state
+  val end_block_cmd : string option -> bool -> Proof.state -> Proof.state
   
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
   (*val export_LLVM : theory -> theory *)
@@ -335,7 +335,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
             |> Syntax.check_term ctxt'' |> Thm.cterm_of ctxt''
             |> Goal.init
             |> (HEADGOAL (resolve_tac ctxt'' [recursion_thm])
-                THEN (Raw_Simplifier.rewrite_rule ctxt'' (*it is very ugly here!*)
+                THEN (Raw_Simplifier.rewrite_rule ctxt'' (*improve this!*)
                        (All::forall::Subjection_simp_proc_arg::
                         Named_Theorems.get ctxt'' @{named_theorems named_expansion})
                       #> Seq.single))
@@ -473,7 +473,7 @@ local
 
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
 
-fun gen_finish_proc qed genz int stat =
+fun gen_finish_proc prep_term qed target int stat =
   let
     val ctxt_ = Proof.context_of stat
     val goal = get_thesis ctxt_
@@ -488,17 +488,19 @@ fun gen_finish_proc qed genz int stat =
           then sequent_pre1
           else Nu_Reasoner.reason1 (ctxt,sequent_pre1) |> snd
         val (ctxt',sequent') = NuSys.move_lemmata (ctxt, sequent)
-        val sequent'' = #before_finish mode ctxt' goal sequent'
+        val (ctxt'',sequent'') = (ctxt',sequent')
+              |> (case target
+                    of NONE => I
+                     | SOME term =>
+                        let val ctxt'' = Proof_Context.set_mode (Proof_Context.mode_pattern) ctxt'
+                         in NuSys.cast (prep_term ctxt'' term |> Thm.cterm_of ctxt'')
+                         #> Nu_Reasoners.auto_obligation_solver'
+                         end)
+              |> #before_finish mode goal
         val desired_nu = #return_spec_c mode ctxt' goal
       in
-        (ctxt',sequent'')
-          |> invoke_Block_End_Hook
-          |> (case genz
-                of Phi_Generalization.None => I
-              | _ => NuSys.cast (#return_spec mode (Thm.prop_of sequent'')
-                                  |> Phi_Generalization.generalize_cmd genz ctxt'
-                                  |> Syntax.check_term ctxt'
-                                  |> Thm.cterm_of ctxt'))
+        (ctxt'',sequent'')
+          (* |> invoke_Block_End_Hook *)
           |> NuSys.cast desired_nu
           |> swap
       end
@@ -518,14 +520,14 @@ fun gen_finish_proc qed genz int stat =
      |> snd
   end
 in
-val end_block_cmd = gen_finish_proc Proof.local_qed
+val end_block_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
 
 (* fun gen_finish_proc' prep_specthm qed int stat =
   let val sequent = Proof.the_fact stat
   in if current_block_depth sequent > 1 then 
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
     else gen_finish_proc prep_specthm qed int stat end *)
-val finish_proc_cmd = gen_finish_proc Proof.local_qed
+val finish_proc_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
 end
 
 

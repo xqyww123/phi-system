@@ -19,14 +19,14 @@ fun eliminate_term ctxt xs thm =
             |> Syntax.check_term ctxt |> Thm.cterm_of ctxt
     in
       NuSys.cast typing' (ctxt,thm)
-        |> Nu_Reasoners.naive_obligation_solver'
+        |> Nu_Reasoners.safer_obligation_solver'
         |> snd
     end
   end;
 
-fun eliminate ctxt rule xs As thm =
+fun eliminate ctxt rule xs As thm'' =
   let
-    val thm = eliminate_term ctxt xs thm
+    val thm = eliminate_term ctxt xs thm''
     val _ = Object_Logic.is_judgment ctxt (Thm.concl_of thm) orelse
       error "Conclusion in obtained context must be object-logic judgment"
 
@@ -41,24 +41,24 @@ fun eliminate ctxt rule xs As thm =
     |> singleton (Variable.export ctxt' ctxt)
   end;
 
-fun eliminate_nusys ctx rule xs As th =
-  eliminate ctx rule xs As th
+fun eliminate_nusys ctxt rule xs As th =
+  eliminate ctxt rule xs As th
   handle e => Exn.reraise (@{print} e)
 fun obtain_export ctxt rule xs _ As = (eliminate_nusys ctxt rule xs As, I)
 
 local
-fun expand_exE ctx th =
+fun expand_exE ctxt th =
   (th RS @{thm exE}) |>
-    Tactic.rule_by_tactic ctx (REPEAT (Tactic.eresolve_tac ctx [exE] 1))
-fun match_vars ctx ret [] [] [] = rev ret
-  | match_vars ctx ret insts' [] (x::insts) =
+    Tactic.rule_by_tactic ctxt (REPEAT (Tactic.eresolve_tac ctxt [exE] 1))
+fun match_vars ctxt ret [] [] [] = rev ret
+  | match_vars ctxt ret insts' [] (x::insts) =
       error "unequalled length of instantiations and quantifiers"
-  | match_vars ctx ret insts' (quant::vars) [] =
-      error ("quantifier "^(Syntax.string_of_term ctx quant)^" is not been instantiated")
-  | match_vars ctx ret insts' (quant::vars) ((v,x)::insts) =
+  | match_vars ctxt ret insts' (quant::vars) [] =
+      error ("quantifier "^(Syntax.string_of_term ctxt quant)^" is not been instantiated")
+  | match_vars ctxt ret insts' (quant::vars) ((v,x)::insts) =
       if v = quant
-      then match_vars ctx (x::ret) [] vars (insts' @ insts)
-      else match_vars ctx ret ((v,x)::insts') (quant::vars) insts
+      then match_vars ctxt (x::ret) [] vars (insts' @ insts)
+      else match_vars ctxt ret ((v,x)::insts') (quant::vars) insts
 fun trim_var_name name =
   if String.isSuffix "__" name
   then String.substring (name, 0, String.size name - 2)
@@ -66,16 +66,20 @@ fun trim_var_name name =
 val trim_var = dest_Free #> apfst trim_var_name #> Free
 in
 
+
 fun choose inst_names stat =
-  let open NuBasics NuHelp HOLogic Term
+  let open NuBasics NuHelp HOLogic Term Conv
     val major = NuBasics.the_nu_fact stat
-    val ctx = Proof.context_of stat
+    val ctxt = Proof.context_of stat
     fun map_name_result f b c =
           (f (Binding.name_of b) c) |>> (fn s => Binding.map_name (K s) b)
     val (inst_names,_) =
       fold_map (map_name_result Name.variant) inst_names (Name.make_context [])
-    val ExTyp_strip = Proof_Context.get_thm ctx "local.\<phi>ExTyp_strip"
-    val major = Raw_Simplifier.rewrite_rule ctx [ExTyp_strip] major
+    val N = length inst_names
+    val ExTyp_strip = Proof_Context.get_thm ctxt "local.\<phi>ExTyp_strip"
+    fun exBI_strip 0 = all_conv
+      | exBI_strip N = rewr_conv ExTyp_strip then_conv binder_conv (K (exBI_strip (N-1))) ctxt
+    val major = fconv_rule (arg_conv (exBI_strip N)) major
     val (vars,body) = Thm.prop_of major |> dest_Trueprop |> strip_binder_raw "HOL.Ex"
     val var_tys = map snd vars
     val (inst_names, stat) =
@@ -83,15 +87,15 @@ fun choose inst_names stat =
             (map (fn (ty,nam) => (nam, SOME ty, NoSyn)) (var_tys~~inst_names))
           ) stat
     val insts = map Free (inst_names ~~ var_tys)
-    val ctx = Proof.context_of stat
+    val ctxt = Proof.context_of stat
     val meta'_term = mk_Trueprop (subst_bounds (rev insts, body))
-                        |> Thm.cterm_of ctx
+                        |> Thm.cterm_of ctxt
     val meta' = Thm.assume  meta'_term
-    val rule = expand_exE ctx major
-    val cinsts = map (Thm.cterm_of ctx) insts;
+    val rule = expand_exE ctxt major
+    val cinsts = map (Thm.cterm_of ctxt) insts;
   in
     stat |> Proof.map_context
-              (Assumption.add_assms (obtain_export ctx rule cinsts) [meta'_term] #> snd)
+              (Assumption.add_assms (obtain_export ctxt rule cinsts) [meta'_term] #> snd)
          |> NuBasics.set_nu_fact meta'
   end
 

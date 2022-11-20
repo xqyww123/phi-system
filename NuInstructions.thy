@@ -8,12 +8,12 @@ subsection \<open>Drop & Duplicate Value\<close>
 
 context \<phi>empty begin
 
-lemma [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?x \<Ztypecolon> Val ?raw ?T \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_dup\<close>]:
+lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?x \<Ztypecolon> Val ?raw ?T \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_dup\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> Val raw T \<longmapsto> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_dup\<close>
   unfolding View_Shift_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_drop\<close>]:
+lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_drop\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Void \<heavy_comma> x \<Ztypecolon> Val raw T \<longmapsto> Void \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action_drop\<close>
   unfolding View_Shift_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
@@ -26,7 +26,7 @@ text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exce
 
 definition \<open>throw raw = det_lift (Exception raw)\<close>
 
-lemma (in \<phi>fiction) throw_\<phi>app[\<phi>reason! on \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c throw ?excep \<lbrace> ?X \<longmapsto> ?Any \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?X' \<rbrace>\<close>]:
+lemma (in \<phi>fiction) throw_\<phi>app[\<phi>reason! for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c throw ?excep \<lbrace> ?X \<longmapsto> ?Any \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?X' \<rbrace>\<close>]:
   \<open> (\<And>v. PROP Filter_Out_Free_Values (X v) (X' v))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<rbrace>\<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Filter_Out_Free_Values_def Imply_def

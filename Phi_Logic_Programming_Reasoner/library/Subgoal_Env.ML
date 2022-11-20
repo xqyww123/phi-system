@@ -35,13 +35,17 @@ fun fetch_goal ctxt goal =
 
 fun subgoal (ctxt,sequent) =
   let
-    val (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>SUBGOAL\<close> $ root' $ _))
+    val (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>SUBGOAL\<close> $ father' $ _))
           = Thm.major_prem_of sequent
     val cnt = Subgoal.get ctxt |> #2
     val ([name], ctxt') = Proof_Context.add_fixes
               [(Binding.name ("\<r>GOAL"^string_of_int cnt), SOME \<^typ>\<open>subgoal\<close>, NoSyn)] ctxt
-    val root = fetch_goal ctxt root'
-    val newg = Subgoal (cnt,root, Synchronized.var "Subgoal_Env" false)
+    val father = fetch_goal ctxt father'
+    val _ = if chk_goal father
+            then error ("Attempt to open a sub-goal under a solved father goal "
+                         ^Syntax.string_of_term ctxt father'^".")
+            else ()
+    val newg = Subgoal (cnt, father, Synchronized.var "Subgoal_Env" false)
     val ctxt'' = Subgoal.map (fn (g,n,s) =>
                     (Symtab.update_new (name, newg) g,n+1,s)) ctxt'
     val newg_term = Thm.cterm_of ctxt (Free (name,\<^typ>\<open>subgoal\<close>))

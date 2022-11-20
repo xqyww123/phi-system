@@ -1,0 +1,20 @@
+chapter Phi_Logic_Programming_Reasoner
+
+session Phi_Logic_Programming_Reasoner = Main +
+  options [document = pdf, document_output = "output", document_build = build]
+  sessions
+    "HOL-Eisbach"
+  theories
+    Phi_Logic_Programming_Reasoner
+  document_files (in "~~/src/Doc/")
+    "pdfsetup.sty"
+    "iman.sty"
+    "extra.sty"
+    "isar.sty"
+    "ttbox.sty"
+    "underscore.sty"
+    "manual.bib"
+  document_files
+    "build"
+    "root.tex"
+    "phi.sty"

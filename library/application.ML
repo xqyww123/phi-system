@@ -10,23 +10,7 @@ signature NU_APPLICATION = sig
 
   val MPs : Proof.context -> thm list -> thm -> thm
   val MP  : Proof.context -> thm -> thm -> thm
-(*   val trace : bool Config.T
 
-  type cost = int
-  type application_thm = {
-    thm : thm, (* the application theorem *)
-    applicant_idx : cost (* index of the applicant (e.g. the procedure to be called)
-                         * among premises of the application theorem. *)
-  }
-  type reasoner = (Proof.context -> thm list -> tactic) Nu_Reasoner.generic_reasoner
-
-  val update : (cost * application_thm) -> Context.generic -> Context.generic
-  val update' : (cost * reasoner) -> Context.generic -> Context.generic
-  
-  val content : Context.generic -> (cost * reasoner) list
-
-  val setup_cmd : ((string (*name term*) * cost) * string list (*pattern terms*)) * Input.source (* tactic source*)
-        -> local_theory -> local_theory *)
 end
 
 structure NuApply : NU_APPLICATION = struct
@@ -142,7 +126,7 @@ fun MPs ctxt th1s' th2 =
      ) th1s
   in 
     Seq.pull (Nu_Reasoner.reason_s ctxt stats)
-     |> Option.map (Nu_Reasoners.naive_obligation_solver' o fst)
+     |> Option.map (Nu_Reasoners.safer_obligation_solver' o fst)
      |> (fn SOME (_, ret) => ret
           | NONE => error("Reasoning Fails. You may turn on \<phi>trace_reasoning to debug where the reasoning fails."))
   end

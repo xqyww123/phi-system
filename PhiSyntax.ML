@@ -153,40 +153,44 @@ val current_block_var =
 val dest_goal_ctxt   = dest_binop   \<^const_name>\<open>GOAL_CTXT\<close> #> #1
 val dest_goal_ctxt_c = dest_binop_c \<^const_name>\<open>GOAL_CTXT\<close> #> #1
 
-val dest_procedure   =
+val dest_action_tag   = dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
+val dest_action_tag_c = dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
+
+val dest_tags =
      perhaps (try dest_goal_ctxt)
+  #> perhaps (try dest_action_tag)
   #> perhaps (try dest_Trueprop)
+val dest_tags_c =
+     perhaps (try dest_goal_ctxt_c)
+  #> perhaps (try dest_action_tag_c)
+  #> perhaps (try dest_Trueprop_c)
+
+val dest_procedure   =
+     dest_tags
   #> dest_quadop @{const_name "\<phi>fiction.\<phi>Procedure"}
 val dest_procedure_c =
-     perhaps (try dest_goal_ctxt_c)
-  #> perhaps (try dest_Trueprop_c)
+     dest_tags_c
   #> dest_quadop_c @{const_name "\<phi>fiction.\<phi>Procedure"}
 
 val dest_view_shift    =
-         perhaps (try dest_Trueprop)
-      #> perhaps (try dest_goal_ctxt)
+         dest_tags
       #> dest_triop @{const_name "\<phi>fiction.View_Shift"}
 val dest_view_shift_c  =
-         perhaps (try dest_Trueprop_c)
-      #> perhaps (try dest_goal_ctxt_c)
+         dest_tags_c
       #> dest_triop_c @{const_name "\<phi>fiction.View_Shift"}
 
 val dest_implication   =
-         perhaps (try dest_Trueprop)
-      #> perhaps (try dest_goal_ctxt)
+         dest_tags
       #> dest_triop @{const_name "Imply"}
 val dest_implication_c =
-         perhaps (try dest_goal_ctxt_c)
-      #> perhaps (try dest_Trueprop_c)
+         dest_tags_c
       #> dest_triop_c @{const_name "Imply"}
 
 val dest_Set_member =
-         perhaps (try dest_goal_ctxt)
-      #> perhaps (try dest_Trueprop)
+         dest_tags
       #> dest_binop @{const_name "Set.member"}
 val dest_Set_member_c =
-         perhaps (try dest_goal_ctxt_c)
-      #> perhaps (try dest_Trueprop_c)
+         dest_tags_c
       #> dest_binop_c @{const_name "Set.member"}
 
 

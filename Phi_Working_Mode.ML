@@ -9,8 +9,9 @@ type working_mode = {
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
   block_name_of: term -> string,
-  cast_rule:     Proof.context -> cterm (*desired*) -> term (*prop*) -> thm,
-  before_finish: Proof.context -> cterm -> thm -> thm
+  cast: cterm (*desired*) -> Proof.context * thm (*sequent*) -> Proof.context * thm,
+  cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
+  before_finish: cterm -> Proof.context * thm -> Proof.context * thm
 }
 
 val working_mode_on  : Proof.context -> term -> working_mode option
@@ -21,6 +22,9 @@ val implication : working_mode
 
 val set  : working_mode -> Proof.context -> Proof.context
 val mode : Proof.context -> working_mode
+
+val cast : cterm -> Proof.context * thm -> Proof.context * thm
+val cast_exception : cterm -> Proof.context * thm -> Proof.context * thm
 
 end
 
@@ -35,8 +39,9 @@ type working_mode = {
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
   block_name_of: term -> string,
-  cast_rule: Proof.context -> cterm -> term -> thm,
-  before_finish: Proof.context -> cterm -> thm -> thm
+  cast: cterm -> Proof.context * thm -> Proof.context * thm,
+  cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
+  before_finish: cterm -> Proof.context * thm -> Proof.context * thm
 }
 
 structure Data = Generic_Data(
@@ -68,6 +73,51 @@ fun mode ctxt = case Mode.get ctxt
                    | NONE => error ("No working mode has been set in this context.")
   
 
+(* Auxiliaries *)
+
+fun generic_cast rule place desired_nu (ctxt,sequent) =
+  let
+    val (ctxt', sequent') =
+          case Nu_Reasoner.reason (ctxt, sequent RS rule)
+            of SOME ret => ret
+             | NONE => raise Phi_Error.CastFail (place, desired_nu, sequent)
+    val _ = case Thm.prop_of sequent'
+              of (\<^const>\<open>Trueprop\<close> $ _) => ()
+               | (\<^const>\<open>Pure.imp\<close>
+                    $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ _))
+                    $ (\<^const>\<open>Trueprop\<close> $ _)) => ()
+               | _ => raise Phi_Error.CastFail (place, desired_nu, sequent)
+  in (ctxt',sequent') end
+
+fun cannot_cast_exception sequent =
+  raise THM("cannot cast the exception of the sequent", 0, [sequent])
+
+
+fun collect_free_variables vars term = inter (op =) vars (Term.add_frees term [])
+
+(*fun generic_existential_generalization cast vars spec stat =
+  if null vars
+  then state
+  else
+
+fun eliminate_term ctxt xs thm =
+  let open NuBasics PhiSyntax NuHelp
+    val tm = Thm.prop_of thm
+    val vs = map (dest_Free o Thm.term_of) xs;
+    val bads = Term.fold_aterms (fn t as Free v =>
+      if member (op =) vs v then insert (op aconv) t else I | _ => I) tm [];
+  in
+    if null bads then thm
+    else let
+      val typing' = dest_current_nu thm
+            |> list_mk_binder @{const_name ExSet} bads
+            |> Syntax.check_term ctxt |> Thm.cterm_of ctxt
+    in
+      NuSys.cast typing' (ctxt,thm)
+        |> Nu_Reasoners.naive_obligation_solver'
+        |> snd
+    end
+  end *)
 
 (* Working Modes *)
 
@@ -122,7 +172,7 @@ val procedure : working_mode =
       end
 
 
-    fun before_finish ctxt goal sequent =
+    fun before_finish goal (ctxt,sequent) =
       let
         val sequent' =
           if can PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent)
@@ -162,7 +212,7 @@ val procedure : working_mode =
                                 Syntax.string_of_typ ctxt desired_arg_T^
                                 " but it actually returns "^
                                 Syntax.string_of_typ ctxt current_arg_T)
-      in sequent'' end
+      in (ctxt,sequent'') end
 
   in {
     domain = (fn _ => fn tm =>
@@ -179,16 +229,28 @@ val procedure : working_mode =
         case #1 (PhiSyntax.dest_procedure term)
           of (Var ((x,_),_)) => x
            | _ => "block"),
-    cast_rule = (fn ctxt => fn desired => fn term =>
+    cast = (fn desired => fn (ctxt, sequent) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule =
-          if can (PhiSyntax.dest_CurrentConstruction) term
+         (if can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
           then Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
-          else Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'"
-       in rule
+          else Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'")
             |> Thm.incr_indexes idx
             |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
+       in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
+       end
+    ),
+    cast_exception = (fn desired => fn (ctxt, sequent) =>
+      let
+        val idx = 1 + Thm.maxidx_of_cterm desired
+        val rule =
+         (if can (PhiSyntax.dest_PendingConstruction) (Thm.prop_of sequent)
+          then Proof_Context.get_thm ctxt "local._\<phi>cast_exception_rule_"
+          else cannot_cast_exception sequent)
+            |> Thm.incr_indexes idx
+            |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
+       in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
        end
     ),
     before_finish = before_finish
@@ -256,16 +318,18 @@ in
         case #1 (PhiSyntax.dest_view_shift term)
           of (Var ((x,_),_)) => x
            | _ => "\<V>\<S>"),
-    cast_rule = (fn ctxt => fn desired => fn _ =>
+    cast = (fn desired => fn (ctxt, sequent) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
-      in
-        Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
+        val rule = Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
           |> Thm.incr_indexes idx
           |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
+      in
+        generic_cast rule "sequent" desired (ctxt, sequent)
       end
     ),
-    before_finish = (K (K I))
+    cast_exception = K (cannot_cast_exception o snd),
+    before_finish = (K I)
 }
 end
 
@@ -319,16 +383,18 @@ in
     inhabited_rule = K @{thm Implication_Inhabited_rule},
     initial_sequent = start_implication,
     block_name_of = (K "\<chi>"),
-    cast_rule = (fn ctxt => fn desired => fn _ =>
+    cast = (fn desired => fn (ctxt,sequent) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
-      in
-        @{thm "_\<phi>cast_implication_"}
+        val rule = @{thm "_\<phi>cast_implication_"}
           |> Thm.incr_indexes idx
           |> Drule.infer_instantiate ctxt [(("T",idx),desired)]
+      in
+        generic_cast rule "sequent" desired (ctxt, sequent)
       end
     ),
-    before_finish = (K (K I))
+    cast_exception = K (cannot_cast_exception o snd),
+    before_finish = (K I)
 }
 end
 
@@ -337,6 +403,21 @@ val _ = Theory.setup (Context.theory_map
                     #> Symtab.update_new ("view_shift",  view_shift)
                     #> Symtab.update_new ("implication", implication)
 )))
+
+
+
+fun cast desired (ctxt,sequent) =
+  let
+    val mode = mode ctxt
+  in
+    #cast mode desired (ctxt,sequent)
+  end
+fun cast_exception desired (ctxt,sequent) =
+  let
+    val mode = mode ctxt
+  in
+    #cast_exception mode desired (ctxt,sequent)
+  end
 
 
 end

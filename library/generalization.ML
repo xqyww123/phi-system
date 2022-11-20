@@ -5,11 +5,11 @@ signature PHI_GENERALIZATION = sig
         -> 'a list -> 'b -> Proof.context
         -> term -> string list * string list * (int * typ) Symtab.table * term * Proof.context
 
-  datatype generic = ByPart of string list * string option
-                   | ByPattern of ((binding * string option * mixfix) list * string) * string option
-                   | None
-  val generalize_cmd : generic -> Proof.context -> term -> term
-  val syntax : Token.T list -> generic * Token.T list
+  datatype command = By_Quantifiers of string list * string option
+                   | By_Pattern of ((binding * string option * mixfix) list * string) * string option
+                   | Nop
+  val generalize : command -> Proof.context -> term -> term
+  val syntax : Token.T list -> command * Token.T list
 
 end
 
@@ -74,9 +74,10 @@ fun gen_generalize prep_vars prep_pattern prep_subj
            |> fold (fn v => fn b =>
                 Const (\<^const_name>\<open>ExSet\<close>, dummyT) $ Abs (v, snd (the (Symtab.lookup vars v)), b)
               ) origin_names
-  in case assn'
+  in(case assn'
        of Abs (name, ty, X) => Abs (name, ty, generalize X)
-        | X => generalize X
+        | X => generalize X)
+     |> Syntax.check_term ctxt'
   end
 
 val generalize_by_pattern_cmd =
@@ -91,7 +92,7 @@ val generalize_by_pattern_cmd =
                                              | x => x))
                      Syntax.read_term
 
-fun generalize_by_parts_cmd raw_vars subj ctxt assn =
+fun generalize_by_quantifiers_cmd raw_vars subj ctxt assn =
       gen_generalize (fn ctxt => Syntax.read_terms ctxt
                               #> map (fn (Free (x,_)) => x
                                        | t => raise TERM("pattern must be a free variable", [t]))
@@ -99,20 +100,24 @@ fun generalize_by_parts_cmd raw_vars subj ctxt assn =
                      (K (K assn)) Syntax.read_term
                      raw_vars () subj ctxt assn
 
-datatype generic = ByPart of string list * string option
-                 | ByPattern of ((binding * string option * mixfix) list * string) * string option
-                 | None
+datatype command = By_Quantifiers of string list * string option
+                 | By_Pattern of ((binding * string option * mixfix) list * string) * string option
+                 | Nop
 
-fun generalize_cmd (ByPart (parts,subj)) = generalize_by_parts_cmd parts subj
-  | generalize_cmd (ByPattern ((vars,pat),subj)) = generalize_by_pattern_cmd vars pat subj
-  | generalize_cmd None = K I
+fun generalize (By_Quantifiers (parts,subj)) = generalize_by_quantifiers_cmd parts subj
+  | generalize (By_Pattern ((vars,pat),subj)) = generalize_by_pattern_cmd vars pat subj
+  | generalize Nop = K I
 
 local open Parse Scan in
 val syntax =
-     (\<^keyword>\<open>var\<close> |-- vars --| \<^keyword>\<open>in\<close> -- term -- option (\<^keyword>\<open>subj\<close> |-- term)) >> ByPattern
-  || (\<^keyword>\<open>var\<close> |-- repeat term -- option (\<^keyword>\<open>subj\<close> |-- term)) >> ByPart
-  || (\<^keyword>\<open>subj\<close> |-- term) >> (fn subj => ByPart ([], SOME subj))
-  || succeed None
+     (\<^keyword>\<open>var\<close> |-- vars --| \<^keyword>\<open>in\<close> -- term -- option (\<^keyword>\<open>subj\<close> |-- term)) >> By_Pattern
+  || (\<^keyword>\<open>var\<close> |-- repeat term -- option (\<^keyword>\<open>subj\<close> |-- term)) >> By_Quantifiers
+  || (\<^keyword>\<open>subj\<close> |-- term) >> (fn subj => By_Quantifiers ([], SOME subj))
+  || (term >> (fn t => By_Pattern (([],t),NONE)))
+  || succeed Nop
+
+(* Generalize an assertion by existentially quantifying vars and constraining with subj. *)
+
 end
 
 end

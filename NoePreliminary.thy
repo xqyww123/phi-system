@@ -46,7 +46,6 @@ lemmas pair_All = split_paired_all
 lemmas option_exists = split_option_ex
 lemmas option_forall = split_option_all
 
-lemma conj_imp: "(P \<and> Q \<Longrightarrow> PROP R) \<equiv> (P \<Longrightarrow> Q \<Longrightarrow> PROP R)" by rule simp+
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
 
 definition \<open>pred_option1 P x \<longleftrightarrow> (case x of Some x' \<Rightarrow> P x' | None \<Rightarrow> False)\<close>
@@ -71,21 +70,6 @@ lemma ext_func_forall_eq_simp[simp]:
   by blast
 
 
-locale homo_one =
-  fixes \<phi> :: " 'a::one \<Rightarrow> 'b::one "
-  assumes homo_one[simp]: "\<phi> 1 = 1"
-
-locale homo_mult = homo_one \<phi>
-  for \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
-+ assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
-
-lemma homo_mult:
-  \<open>homo_mult \<phi> \<longleftrightarrow> (\<phi> 1 = 1) \<and> (\<forall> x y. \<phi> (x * y) = \<phi> x * \<phi> y)\<close>
-  unfolding homo_mult_def homo_mult_axioms_def homo_one_def ..
-
-locale mult_strip_011 =
-  fixes \<psi> :: " 'a::times \<Rightarrow> 'b::times "
-  assumes mult_strip_011: \<open>a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c)\<close>
 
 definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
 
@@ -113,6 +97,21 @@ end
 instantiation nat :: no_inverse begin
 instance by standard simp
 end
+
+subsection \<open>Error Mechanism\<close>
+
+ML_file \<open>Phi_Error.ML\<close>
+
+subsection \<open>Helper Attributes \& Tactics\<close>
+
+attribute_setup rotated = \<open>Scan.lift (Scan.optional Parse.int 1 -- Scan.optional Parse.int 0) >>
+  (fn (k,j) => Thm.rule_attribute [] (fn _ => Thm.permute_prems j k))\<close>
+  \<open>Enhanced version of the Pure.rotated\<close>
+
+attribute_setup TRY_THEN = \<open>(Scan.lift (Scan.optional (Args.bracks Parse.nat) 1) -- Attrib.thm
+      >> (fn (i, B) => Thm.rule_attribute [B] (fn _ => fn A => A RSN (i, B) handle THM _ => A)))
+    \<close> "resolution with rule, and do nothing if fail"
+
 
 subsection \<open>Automation Helpers\<close>
 

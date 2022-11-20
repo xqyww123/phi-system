@@ -1,122 +1,393 @@
 theory Phi_Logic_Programming_Reasoner
   imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools"
-  keywords "no" "on" :: quasi_command
+  keywords "except" :: quasi_command
     and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
   abbrevs
       "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
-  and "<conv>" = "\<^bold>c\<^bold>o\<^bold>n\<^bold>v"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
   and "<action>" = "\<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>>"
 begin
 
-chapter \<open>\<phi> Logic Programming Reasoner\<close>
+ML_file \<open>antiquote_setup.ML\<close>
 
-text \<open>This is a reasoner based on logic programming like Prolog.
-  A reasoning state is represented as a Horn clause, like
-\<^prop>\<open>(Premise1 \<Longrightarrow> Premise2 \<Longrightarrow> Antecedent1)
-\<Longrightarrow> (Premise21 \<Longrightarrow> Premise22 \<Longrightarrow> Antecedent2)
-\<Longrightarrow> Conclusion\<close>.
-  The order of subgoals (like Antecedent1 and Antecedent2 above) is significant.
-  A previous subgoal may instantiate schematic variables in later subgoals.
-  Therefore, instead of subgoal which implies unorder,
-    following logic terminology we call these subgoals \textit{antecedent}.
-  The reasoner always processes antecedents in order.
-  \<close>
+ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
 
-
-section \<open>Preliminary Configure\<close>
-
-named_theorems useful \<open>theorems that will be *used* in the automatic proving,
-          which basically has the same effect as the using command.\<close>
-
-attribute_setup rotated = \<open>Scan.lift (Scan.optional Parse.int 1 -- Scan.optional Parse.int 0) >>
-  (fn (k,j) => Thm.rule_attribute [] (fn _ => Thm.permute_prems j k))\<close>
-  \<open>Enhanced version of the Pure.rotated\<close>
-
-attribute_setup TRY_THEN = \<open>(Scan.lift (Scan.optional (Args.bracks Parse.nat) 1) -- Attrib.thm
-      >> (fn (i, B) => Thm.rule_attribute [B] (fn _ => fn A => A RSN (i, B) handle THM _ => A)))
-    \<close> "resolution with rule, and do nothing if fail"
-
-ML_file \<open>library/cost_net.ML\<close>
-
-
-section \<open>The Reasoner\<close>
-
-
-definition "\<phi>Intro_Rule x = x"
-definition "\<phi>Elim_Rule x = x"
 definition \<r>Feasible :: \<open>bool\<close> where \<open>\<r>Feasible = True\<close>
-
-text \<open>If any deterministic rule (whose priority is greater or equal to 1000),
-  has a \<^prop>\<open>\<r>Feasible\<close> antecedent, this rule is conditioned in the case where
-  all the previous antecedents are successfully solved.
-  It can only be applied if all the antecedents before the \<^prop>\<open>\<r>Feasible\<close>
-  are solved successfully.\<close>
 
 ML_file_debug \<open>library/reasoner.ML\<close>
 
+section \<open>Introduction\<close>
 
-attribute_setup \<phi>reason =
-\<open>let open Args Scan Parse 
-  fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
-  val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
-  val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
-  fun pos_parser x = (Token.pos_of (hd x), x)
-in
-  (lift pos_parser --
-  (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K ~2000000) || optional (Parse.int >> ~) ~100))
-      -- (optional (lift ($$$ "on") |-- prop_pattern) []
-       -- optional (lift ($$$ "if" |-- $$$ "no") |-- prop_pattern) []))
-        >> Nu_Reasoner.attr_add_intro)
-  || (lift del >> K Nu_Reasoner.attr_del_intro)
-end\<close>
-  \<open>Set introduction rules in \<phi> reasonser.
-   Syntax: \<phi>intro [add] <priority-of-the-rule> || \<phi>intro del\<close>
+text \<open>
+  \<phi>-Logic Programming Reasoner is a extensible reasoning engine
+  based on logic programming like Prolog.
+  It allows arbitrary user reasoners to be integrated freely, and applies them selectively
+  by matching the pattern of the goals.
+  
+  The reasoning is a depth-first heuristic search guided by \<^emph>\<open>priority\<close> of each branch.
+  A reasoning state is represented by a \<^emph>\<open>pair\<close> of \<^verbatim>\<open>Proof.context\<close> and a sequent, of type
+  \<^verbatim>\<open>Proof.context * thm\<close>.
+  Search branches on a reasoning state are admissible reasoners on the sequent.
+  A reasoner is admissible on a sequent if the sequent matches the pattern of the reasoner
+  (cf. patterns in \cref{sec:patterns}).
 
-attribute_setup \<phi>reason_elim =
-\<open>let open Args Scan Parse
-  fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
-  val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
-  val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
-  fun pos_parser x = (Token.pos_of (hd x), x)
-in
-  (lift pos_parser --
-  (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K ~2000000) || optional (Parse.int >> ~) ~100))
-      -- (optional (lift ($$$ "on") |-- prop_pattern) []
-       -- optional (lift ($$$ "no") |-- prop_pattern) []))
-        >> Nu_Reasoner.attr_add_elim)
-  || (lift del >> K Nu_Reasoner.attr_del_elim)
-end\<close>
-  \<open>Set elimduction rules in \<phi> reasonser.
-  Syntax: \<phi>reasoner_elim [add] <spur-of-the-rule> || \<phi>reasoner_elim del\<close>
+  The reasoning accepts several reasoning states, and outputs \<^emph>\<open>one\<close> reasoning state which is the
+  first one satisfies the termination condition, \<^emph>\<open>or\<close> none if every search branches fail.
 
-method_setup \<phi>reason = \<open>let open Scan Parse in
-  Method.sections [
-    Parse.position Args.add >> (fn (_,pos) => (Method.modifier (Nu_Reasoner.attr_add_intro (pos,(~100,([],[])))) \<^here>)),    Args.del >> K (Method.modifier  Nu_Reasoner.attr_del_intro \<^here>)
-] >> (fn irules => fn ctxt => fn ths => Nu_Reasoner.reason_tac ctxt)
-end\<close>
+  The priorities of rules demonstrate which rules are better among admissible reasoners.
+  The priority makes sense only locally, among all admissible reasoners on a reasoning state.
+  The accumulation of priority values (i.e. the sum of the priority of all applied reasoners) of a
+  reasoning state is meaningless and merely for debug-usage.
+  Because it is a DFS, the first reached result is the optimal one w.r.t each search branches in a
+  greedy sense. (the global maximum is senseless here because the priority accumulation is
+  meaningless).
 
-declare conjI[\<phi>reason add] TrueI[\<phi>reason add]
+  The sequent of the reasoning state is a Harrop Formula (HF), e.g.,
+  \[ \<open>Antecedent1 \<Longrightarrow> Antecedent2 \<Longrightarrow> Conclusion\<close>, \]
+  where antecedents represent sub-goals that have to be reasoned \textit{in order}.
+
+  The \xphi-LPR engine reasons antecedents in order, invoking the reasoners that match the pattern
+  of the leading antecedent best (cf. Priority).
+
+  An antecedent can be augmented by conditions that can be utilized during the reasoning.
+  It can also be universally quantified.
+  \[ \<open>(\<And>x. P1 x \<Longrightarrow> P2 x \<Longrightarrow> Conclusion_of_Antecedent1 x) \<Longrightarrow> A2 \<Longrightarrow> C\<close> \]
+
+  A typically reasoner is to deduce the conclusion of the antecedent by applying an introduction
+  rule like \<open>A11 x \<Longrightarrow> A12 x \<Longrightarrow> Conclusion_of_Antecedent1 x\<close>, resulting in
+  \[ \<open>(\<And>x. P1 x \<Longrightarrow> P2 x \<Longrightarrow> A11 x) \<Longrightarrow> (\<And>x. P11 x \<Longrightarrow> P12 x \<Longrightarrow> A12 x) \<Longrightarrow> A2 \<Longrightarrow> C\<close>. \]
+
+  Then, the engine reasons the currently heading antecedent \<open>(\<And>x. P1 x \<Longrightarrow> P2 x \<Longrightarrow> A11 x)\<close>
+  recursively. The antecedent list of a reasoning state resembles a calling stack of usual programs.
+  From this perspective, the introduction rule of \<^prop>\<open>Antecedent1\<close> invokes two 'sub-routines'
+  (or the reasoners of) \<^prop>\<open>A11\<close> and \<^prop>\<open>A22\<close>.
+  \<close>
+
+section \<open>The Engine \& The Concepts\<close>
+
+text \<open>
+The engine is implemented in \<^verbatim>\<open>library/reasoner.ML\<close>.
+
+\<^verbatim>\<open>structure Nu_Reasoner = struct
+
+(*Reasoning state*)
+type context_state = Proof.context * thm
+type name = term (* the name as a term is just for pretty printing *)
+
+val pattern_on_conclusion : term -> pattern
+val pattern_on_condition  : term -> pattern
+
+(*A reasoner is a quintuple*)
+type reasoner = {
+  name: name,
+  pos: Position.T,
+  pattern: pattern list,
+  blacklist: pattern list,
+  tactic: context_state -> context_state Seq.seq
+}
+
+type priority = int
+val add : priority * reasoner -> Context.generic -> Context.generic
+val del : name -> Context.generic -> Context.generic
+val reason : context_state -> context_state option
+
+val auto_level : int Config.T
+
+exception Success of context_state
+exception Global_Cut of context_state
+
+...
+end
+\<close>\<close>
+
+paragraph \<open>Patterns \label{sec:patterns}\<close>
+
+text \<open>
+The \<^bold>\<open>pattern\<close> and the \<^bold>\<open>blacklist\<close> stipulate the range in which a reasoner will be invoked.
+A reasoner is invoked iff the antecedent matches at least one pattern in the pattern list and none
+  in the blacklist.\<close>
+
+text \<open>
+There are two kinds of patterns, that match on conclusion and that on condition, constructed by
+\<^verbatim>\<open>pattern_on_conclusion\<close> and \<^verbatim>\<open>pattern_on_conclusion\<close> respectively.
+\<close>
+
+text \<open>\<^bold>\<open>Prefix \<^verbatim>\<open>var\<close>\<close>. A schematic variable in a pattern can have name prefix \<^verbatim>\<open>var_\<close>.
+In this case, the variable only matches schematic variables.
+
+\<^emph>\<open>Remark\<close>: It is important to write schematic variables in patterns explicitly. The engine
+does not convert any free variables to schematic variables implicitly.\<close>
 
 
-section \<open>Facilities & Tools\<close>
+paragraph \<open>Automatic Level\<close> text \<open>by \<^verbatim>\<open>auto_level\<close>
+is a general configuration deciding whether the engine applies
+  some aggressive tactics that may consume considerable time or never terminate.
 
-subsection \<open>General Structures\<close>
+There are 3 levels:
+\<^enum>[0]: the most safe, which may mean manual mode for some reasoner.
+      It does not exclude non-termination or blocking when some tactics are necessary for the
+      features. Method @{method simp} and @{method clarify} are acceptable on this level.
+\<^enum>[1]: relatively safe automation, where aggressive tactics are forbidden but non-termination is
+  still possible. Method @{method auto} is forbidden in this level because it blocks too easily.
+\<^enum>[2]: the most powerful automation, where no limitation is imposed on automation strategies.\<close>
+
+paragraph \<open>Priority \label{sec:cut}\<close>
+
+text \<open>
+
+The reasoning is a depth-first search and every reasoner is registered with a priority deciding
+the order of attempting the reasoners. Reasoners with higher priority are attempted first.
+
+According to the priority of reasoners, reasoners fall into 3 sorts corresponding to
+different pruning optimization strategy.
+
+\<^enum> When the priorities of the candidate reasoners on a certain reasoning state are all less than 1000,
+  the reasoning works in the normal behavior where it attempts the highest candidate and once fails
+  backtracks to the next candidate.
+
+\<^enum> When the highest priority of the candidates $\geq$ 1000 and $<$ than 1000,000,
+  this candidate becomes a \<^emph>\<open>local cut\<close>. The reasoning attempts only the local cut and if it fails,
+  no other candidates will be attempted, but the backtrack is still propagated to the upper layer
+  (of the search tree).
+  Any presence of a candidate with priority $\geq$ 1000, causes the reasoning (at this point)
+  assertive (in the sense that no alternative search branch will be attempted).
+
+\<^enum> When the highest priority of the candidates $\geq$ 100,000,
+  this candidate becomes a \<^emph>\<open>global cut\<close>. No backtrack will be propagated at the global cut.
+  Global cut has a semantics of that certain milestone in the reasoning has been achieved, and
+  all the later reasoning should start from this point, and forget all the previous search history
+  (reset the root of the search tree to the global cut).
+  Once the later reasoning fails, the engine returns this global cut.
+
+Reasoners of priority $\geq$ 1000 are named \<^emph>\<open>assertive reasoners\<close> and others are
+\<^emph>\<open>submissive reasoners\<close>.
+
+\<^emph>\<open>Remark\<close>: a local cut reasoner can throw \<^verbatim>\<open>Global_Cut state\<close> to trigger a global cut with the
+  reasoning \<^verbatim>\<open>state\<close>.
+
+\<close>
+
+
+paragraph \<open>Termination\<close>
+
+text \<open>The reasoning terminates when:
+
+\<^item> Any reasoning state has no antecedent any more. This reasoning state is returned.
+\<^item> Any reasoner throws \<^verbatim>\<open>Success result\<close>.
+\<^item> All accessible search paths are traversed.
+\<close>
+
+text \<open>\<open>\<r>Success\<close> is an antecedent that throws \<^verbatim>\<open>Success\<close>.
+Therefore it remarks the reasoning is succeeded.
+A typical usage of \<open>\<r>Success\<close> is shown in the following sequent,
+\[ \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<r>Success \<Longrightarrow> P \<Longrightarrow> Q\<close> \]
+which expresses the reasoning succeeds after solving \<^prop>\<open>A1\<close>, \<^prop>\<open>A2\<close>, and it outputs
+  result \<^prop>\<open>P \<Longrightarrow> Q\<close>.\<close>
+
+text \<open>\<open>Pure.prop P\<close> is helpful to protect remaining antecedents if you only want to reason
+  the beginning several antecedents instead of all antecedents, e.g.,
+\[ \<open>Solve_A1 \<Longrightarrow> Pure.prop (Protect_A2 \<Longrightarrow> C)\<close> \]\<close>
+
+paragraph \<open>Output\<close>
+
+text \<open>The output reasoning state can be:
+
+\<^item> The first traversed reasoning state that has no antecedent.
+\<^item> The \<^verbatim>\<open>result\<close> threw out by \<^verbatim>\<open>Success result\<close>.
+\<^item> The latest global cut.
+\<close>
+
+text \<open>If none of the above are reached during a reasoning process, the process returns nothing
+  (\<^verbatim>\<open>None\<close> or \<^verbatim>\<open>Seq.empty\<close>).
+The reasoning only outputs \<^emph>\<open>milestone states\<close> representing the problem is indeed solved partially
+instead of any unfinished intermediate reasoning state.
+Milestone states are explicitly annotated by user (e.g.,
+  by antecedent \<^prop>\<open>\<r>Success\<close> or by setting the priority to 1000,000).
+Any other intermediate reasoning state is not considered a successfully finished state
+so that is not outputted.\<close>
+
+
+section \<open>Provide User Reasoners \& Apply the Engine\<close>
+
+text \<open>\xphi-LPR can be augmented by user reasoners.
+The system predefines a resolution based reasoner using introducing rules and elimination rules.
+Other arbitrary reasoners can also be built from tactics or ML code.\<close>
+
+subsection \<open>Introduction Rule \& Elimination Rule\<close>
+
+text \<open>Two attributes are provided to provide introduction reasoning rules and elimination
+  reasoning rules respectively.
+Introduction rules are used to deduce the conclusion of an antecedent, and
+elimination rules are used to simplify a condition of the antecedent.
+
+  \begin{matharray}{rcl}
+    @{attribute_def \<phi>reason} & : & \<open>attribute\<close> \\
+    @{attribute_def \<phi>reason_elim} & : & \<open>attribute\<close> \\
+  \end{matharray}
+
+  \small
+  \<^rail>\<open>
+    (@@{attribute \<phi>reason} | @@{attribute \<phi>reason_elim}) (@{syntax add_rule} | 'add' @{syntax add_rule} | 'del')
+    ;
+    @{syntax_def add_rule}: @{syntax priority}?
+    ('for' @{syntax patterns})? ('except' @{syntax blacklist})?
+    ;
+    @{syntax_def priority}: (@{syntax nat} | '!')
+    ;
+    @{syntax_def patterns}: (() + @{syntax term})
+    ;
+    @{syntax_def blacklist}: (() + @{syntax term})
+  \<close>
+  \normalsize
+
+\<^descr> @{attribute \<phi>reason}~\<^verbatim>\<open>add\<close> declares introduction rules, and
+  @{attribute \<phi>reason_elim}~\<^verbatim>\<open>add\<close> declares elimination rules.
+  @{attribute \<phi>reason}~\<^verbatim>\<open>del\<close> and @{attribute \<phi>reason_elim}~\<^verbatim>\<open>del\<close> remove the introduction rule
+  and the elimination rule respectively.
+  If no keyword \<^verbatim>\<open>add\<close> or \<^verbatim>\<open>del\<close> is given, by default the attributes declare new rules.
+
+\<^descr> The @{syntax patterns} and @{syntax blacklist} are that described in \cref{sec:patterns}.
+  For introduction rules, the patterns and the blacklist match only the conclusion of the
+  leading antecedent; for elimination rules, they match only the conditions of the
+  leading antecedent.
+
+  Patterns can be omitted. For introduction rule, the default pattern is the conclusion
+  of the rule; for elimination rule, the default is the first premise.
+
+\<^descr> @{syntax priority} can be a natural number or, an exclamation mark denoting the priority of
+  1000,000, i.e., the minimal priority for a global cut.
+  If the priority is not given explicitly, by default it is 100.
+\<close>
+
+text \<open>  A global cut rule represents the rule is safe and any further reasoning should start from
+  the result of the global cut rule, which means it never backtracks.
+Global cuts are often seen in elimination rules.
+\<close>
+
+text \<open>\<^emph>\<open>Remark\<close>: Rules of priority $\geq$ 1000 are named \<^emph>\<open>assertive rules\<close> and others are
+\<^emph>\<open>submissive rules\<close>.\<close>
+
+text \<open>\<^emph>\<open>Remark\<close>: The concise attribute expression [[\<phi>reason]] and [[\<phi>reason_elim]] are valid
+  and denote for [[\<phi>reason add]] and [[\<phi>reason_elim add]]. However, they are not recommended
+  because of technical reasons that the attribute cannot get the position of the rule, and
+  therefore the position cannot be displayed in the debug printing.\<close>
+
+paragraph \<open>Example\<close>
+
+declare conjI[\<phi>reason add] TrueI[\<phi>reason 1000]
+
+paragraph \<open>\<open>\<r>\<close>Feasible \label{sec:rFeasible}\<close>
+
+text \<open>Cut rules including local cut and global cut are those of priority $\geq$ 1000.
+A cut rule can have at most one special \<open>\<r>Feasible\<close> antecedent, which determines whether the cut
+rule is feasible to be applied.
+\[ \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<r>Feasible \<Longrightarrow> A3 \<Longrightarrow> C\<close> \]
+Any antecedents before the \<^const>\<open>\<r>Feasible\<close> (e.g. \<open>A1\<close> and \<open>A2\<close> above) are conditions of this cut rule.
+When applying the rule, those conditions will be attempted first by the reasoning engine in order,
+and if their reasoning is failed, the cut rule is discarded and not considered as an admissible rule,
+just like the rule is never given.
+So the engine attempts the next highest-priority rule.
+If the next rule is not a cut rule (its priority < 1000), the engine works in the normal
+mode with backtracking.
+
+\<^const>\<open>\<r>Feasible\<close> provides a mechanism to constrain the condition of applying a cut rule arbitrarily,
+whereas previously the condition is only determined on the patterns and the blacklist, which is
+not expressive enough.
+\<close>
+
+subsection \<open>Reasoners by Methods and ML code\<close>
+
+text \<open>
+There are two commands defining reasoners, respectively by Eisbach expression and by ML code.
+
+  \begin{matharray}{rcl}
+    @{command_def \<phi>reasoner} & : & \<open>local_theory \<rightarrow> local_theory\<close>\\
+    @{command_def \<phi>reasoner_ML} & : & \<open>local_theory \<rightarrow> local_theory\<close>\\
+  \end{matharray}
+
+  \<^rail>\<open>
+    @@{command \<phi>reasoner} @{syntax name} @{syntax priority} @{syntax patterns'} '=' @{syntax Eisabach_method}
+    ;
+    @@{command \<phi>reasoner_ML} @{syntax name} @{syntax priority} @{syntax patterns'} '=' @{syntax ML_code}
+    ;
+    @{syntax_def patterns'}: '(' (('conclusion' @{syntax term} | 'premises' @{syntax term}) + '\<bar>') ')'
+  \<close>
+
+\<^descr> @{command \<phi>reasoner} defines a reasoner using an Eisabach expression. The Eisabach expression
+  defines a proof method in Isabelle/Isar and this proof method is invoked on the leading antecedent
+  as a sub-goal when @{syntax patterns'} match.
+
+\<^descr> @{command \<phi>reasoner_ML} defines a reasoner from ML code. The given code should be a ML function
+  of type \<^verbatim>\<open>context_state -> context_state Seq.seq\<close>, i.e., a contextual tactic.
+
+\<^descr> Pattern \<^verbatim>\<open>conclusion\<close>~\<open>term\<close> match the conclusion of an antecedent and \<^verbatim>\<open>premises\<close>~\<open>term\<close> match
+  conditions of an antecedent.
+
+\<close>
+
+subsection \<open>Apply the Engine\<close>
+
+text \<open>There are two ways to use the reasoning engine, from ML code by using \<^verbatim>\<open>Nu_Reasoner.reason\<close>,
+and as a proof method.\<close>
+
+subsubsection \<open>Proof Method\<close>
+
+text \<open>
+There are two commands defining reasoners, respectively by Eisbach expression and by ML code.
+
+  \begin{matharray}{rcl}
+    @{method_def \<phi>reason} & : & \<open>method\<close>\\
+  \end{matharray}
+
+  \<^rail>\<open>
+    @@{method \<phi>reason} ('add' @{syntax thms})? ('del' @{syntax thms})?
+  \<close>
+
+\<^descr> @{method \<phi>reason}~\<^verbatim>\<open>add\<close>~\<open>a\<close>~\<^verbatim>\<open>del\<close>~\<open>b\<close>
+  applies \<phi>-LPR on the proof state (which is a HHF sequent~\cite{isar-ref}).
+  It means subgoals of the proof are regarded as antecedents and \<phi>-LPR reasons them one by one
+  in order.
+
+  Optional modifier \<^verbatim>\<open>add\<close>~\<open>a\<close> adds introduction rules \<open>a\<close> temporarily with default patterns
+  (the conclusion of the rule) and default priority (100).
+  Modifier \<^verbatim>\<open>del\<close>~\<open>b\<close> removes introductions rules \<open>b\<close> temporarily.
+  We do not provide modifiers to alter elimination rules now.
+\<close>
+
+
+section \<open>Predefined Antecedents, Reasoners, and Rules\<close>
+
+
+subsection \<open>Auxiliary Structures\<close>
 
 subsubsection \<open>Action\<close>
 
-typedecl 'cat action
+text \<open>In the reasoning, antecedents of the same form may have different purposes, e.g.,
+  antecedent \<open>P = ?Q\<close> may except a complete simplification or numeric calculation only or any other
+  specific conversion. Of different purposes, antecedents are expected to be processed by
+  different reasoners. To achieves this, because the engine selects reasoners by syntactic pattern,
+  this section proposes a general structure tagging the purpose of antecedents.
+
+The purpose is denoted by \<open>action\<close> type, which is an unspecified type because it serves only for
+  syntactic purpose.\<close>
+
+typedecl 'category action
 
 definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> _" [2,3] 2)
   where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
 
-text \<open>\<^prop>\<open>P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close> is a general way to annotate the rule \<^prop>\<open>P\<close> intends for
-  specific usage or purpose of \<^term>\<open>A\<close>.
+text \<open>
+\<open>\<open>P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close>\<close> tags antecedent \<^prop>\<open>P\<close> by the specific purpose denoted by \<^term>\<open>A\<close>.
 
-  The type variable \<^typ>\<open>'cat\<close> in \<^typ>\<open>'cat action\<close> enables to classify actions by classes.
-  Then an operation can be designed for any generic action \<^term>\<open>act :: 'ty action\<close> whose
-  type \<^typ>\<open>'ty\<close> belongs to certain class.\<close>
+  The type variable \<^typ>\<open>'category\<close> enables to classify actions by types and type classes.
+  For example, some operation may be designed for any generic action \<open>?act :: (?'ty::cls) action\<close>
+  that fall into class \<open>cls\<close>.
+
+\<^emph>\<open>Comment: I am thinking this category type variable is a bad design because the ItemNet the
+  indexing data structure we are using doesn't support type sort, causing this feature is actually
+  not indexed at all, causing the reasoning here becomes searching one by one in linear time!
+  Maybe classification should be done by some term-level structure. Let's think when have time!\<close>\<close>
 
 lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close>
@@ -128,20 +399,21 @@ lemma Conv_Action_Tag_I:
 
 subsubsection \<open>Mode\<close>
 
-text \<open>Modes are annotations of the automation. They are typically used specifically to determine
-  the modes of the automation method to be applied. For example, see the Premise tag.\<close>
+text \<open>Modes are general annotations used in various antecedents, which may configure
+  for the specific reasoning behavior among slight different options.
+  The exact meaning of them depend on the specific antecedent using them.
+  An example can be found in \cref{sec:proof-obligation}.\<close>
 
 type_synonym mode = \<open>unit action\<close>
 
-text \<open>Here is a list of general common modes. The specific meaning of them is determined in
-  specific situations. Different situation may assign them with different specific meaning.\<close>
+text \<open>We provide a serial of predefined modes, which may be commonly useful.\<close>
 
 consts default :: mode
-consts MODE_SIMP :: mode \<comment> \<open>relating to simplifier or simplification\<close>
+consts MODE_SIMP :: mode \<comment> \<open>relating to simplification\<close>
 consts MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
 consts MODE_AUTO :: mode \<comment> \<open>something that will be triggered automatically\<close>
 
-subsubsection \<open>Focus\<close>
+subsubsection \<open>Focus\<close> \<comment> \<open>Depreciated\<close>
 
 text \<open>A general technical tag used in the reasoning, usually represents the reasoning
   currently focuses on certain part, certain target.\<close>
@@ -149,174 +421,104 @@ text \<open>A general technical tag used in the reasoning, usually represents th
 definition FOCUS_TAG :: " 'a \<Rightarrow> 'a "  ("\<blangle> _ \<brangle>") where [iff]: "\<blangle> x \<brangle> = x"
 
 
-subsubsection \<open>Try\<close>
+subsubsection \<open>Useless Tag\<close> \<comment> \<open>It is useful, but needs to be moved somewhere else. \<phi>-LPR doesn't use it!\<close>
 
-definition Try :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Try success_or_fail x = x\<close>
+text \<open>Simplification is a transformation preserving all information.
+  It is powerful while sometimes we expect the transformation can be weaker by disposing
+  some useless information that we do not need.
 
-lemma [\<phi>reason 800 on \<open>Try ?S ?P\<close>]:
-  \<open> P
-\<Longrightarrow> Try True P\<close>
-  unfolding Try_def .
+  \<open>\<open>Useless\<close>\<close> tag is proposed for wrapping those unnecessary terms .... TBD!
+  These information can be wrapped by a Useless tag to annotate this.
+  In \<phi>-Programming, any extracted lemmas wrapped by this tag will not be added into
+    proof environment and dropped simply.\<close>
+
+definition USELESS :: \<open>bool \<Rightarrow> bool\<close> where \<open>USELESS x = x\<close>
+
+lemma [simp]: \<open>USELESS True\<close> unfolding USELESS_def ..
+
 
 
 subsection \<open>General Rules\<close>
 
-paragraph \<open>Aggregate Representation of Antecedents\<close>
+text \<open>\<^bold>\<open>Schematic variables\<close> are able to be instantiated (assigned) by reasoners.
+ The instantiation of an schematic variable \<open>?v\<close> updates all the occurrences of \<open>?v\<close> in the
+  remaining sequent, and this instantion can be seen as assigning results of the execution of the
+  antecedent.
+For example,
+ \[ \<open>1 + 2 = ?result \<Longrightarrow> Print ?result \<Longrightarrow> Done\<close> \]
+  the reasoning of antecedent \<open>1 + 2 = ?result\<close> instantiates \<open>?result\<close> to \<open>3\<close>, and results in
+\[ \<open>Print 3 \<Longrightarrow> Done\<close> \]
+ If view the antecedent as a program (sub-routine),
+ the schematic variables of the antecedent have a meaning of \<^emph>\<open>output\<close>,
+ and we name them \<^emph>\<open>output variables\<close>.
 
-declare conjunctionI[\<phi>reason 1000]
+The following \<open>Try\<close> antecedent is a such example.\<close>
 
-definition Aggregate_Antecedent :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
-  where [iff]: \<open>Aggregate_Antecedent = (\<and>)\<close>
+subsubsection \<open>Try\<close>
 
-declare conjI[folded Aggregate_Antecedent_def, \<phi>reason 1000]
-
-definition Aggregate_Forall :: \<open>('a \<Rightarrow> bool) \<Rightarrow> bool\<close> (binder "\<forall>\<^sub>\<r>" 10)
-  where [iff]: \<open>Aggregate_Forall = All\<close>
-
-declare allI[folded Aggregate_Forall_def, \<phi>reason 1000]
-  
-paragraph \<open>Trivial Antecedent\<close>
-
-declare TrueI[\<phi>reason 1000]
-
-text \<open>It is a place holder.
-  Sometimes it is useful when a rule is generated automatically and
-  when in this automation no antecedent is actually required.\<close>
-
-
-subsection \<open>Proof Obligation\<close>
-
-definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where "Premise _ x = x"
-
-abbreviation Normal_Premise ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26) where "Normal_Premise \<equiv> Premise default"
-abbreviation Simp_Premise ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m _" [27] 26) where "Simp_Premise \<equiv> Premise MODE_SIMP"
-abbreviation Proof_Obligation ("\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n _" [27] 26) where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
+definition Try :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Try success_or_fail P = P\<close>
 
 text \<open>
-  The tag represents an ordinary proof obligation other than the internal-system terms
-    that have a specific meaning and purpose and can be inferred automatically.
-  Thus, the tag simply triggers a general prover to attempt to solve it automatically.
+The typical usage is \<open>\<open>Try ?success_or_fail P\<close>\<close>, where
+\<open>P\<close> should be an antecedent having some fallback reasoner (not given here),
+and \<open>?success_or_fail\<close> is an output variable representing whether the \<open>P\<close> is successfully
+deduced \<^emph>\<open>without\<close> using fallback.
 
-  There are multiple strategies to handle them, depending on the difficulty of the problem
-    and more specifically the solving time that the situation can afford.
+A high priority (800) rule reasons \<open>\<open>Try True P\<close>\<close> normally and set the output variable
+\<open>success_or_fail\<close> to be true.\<close>
 
-  The \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> denotes the \<^prop>\<open>P\<close> should be solved by full power, without counting
-    the potential very long time of waiting. In the situation, user usually can interrupt
-    the computation.
+lemma [\<phi>reason 800 for \<open>Try ?S ?P\<close>]:
+  \<open> P
+\<Longrightarrow> Try True P\<close>
+  unfolding Try_def .
 
-  The \<^term>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> suits for time-sensible situation because the reasoner only uses
-    light-weight strategies to attack the goal, like `clarsimp'. Many reasoning rules use
-    this strategy because the time-consuming computation is not affordable during the automatic process.
-
-  The \<^term>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P\<close> is interesting. Once it is presented in a Horn clause, proofs of
-    any \<^term>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P'\<close> before this tag are delayed until the proof of this tag.
-  In fact, proof obligations (\<^prop>\<open>P'\<close>) are moved into \<^term>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P\<close> to be \<^term>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P \<and> P'\<close>
-    by using conjuncture.
-  This strategy is useful when \<^prop>\<open>P'\<close> has undetermined schematic variables while those
-    variables can be determined by later automatic reasoning (by the reasoning of later subgoals in
-    the Horn clause but early than the \<^term>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P\<close> tag).
-
-  When the automatic solving consumes a lot of time, users can set the auto level down to
-    semi-auto (level 1) to suppress the automatic behavior and solve it manually. (TODO: by which command?)
+text \<open>
+Users using \<open>\<open>Try True P\<close>\<close> should provide the fallback rule for their own \<open>P\<close>.
+It depends on the application scenario and there is not a general rule for fallback of course.
+The fallback rule may has the following form,
+\[ \<open> Fallback_of_P \<Longrightarrow> Try False P \<close> \]
 \<close>
 
-lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
-lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma Premise_E[elim!]: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
-lemma Premise_Irew: "(P \<Longrightarrow> C) \<equiv> Trueprop (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<longrightarrow> C)" unfolding Premise_def atomize_imp .
+subsubsection \<open>Compact Representation of Antecedents\<close>
 
-lemma Premise_True[\<phi>reason 5000]: "Premise mode True" unfolding Premise_def ..
-lemma [\<phi>reason 5000]:
-  "Premise mode P
-  \<Longrightarrow> Premise mode (Premise any_mode P)"
-  unfolding Premise_def .
+text \<open>Meta-programming is feasible on \<phi>-LPR.
+The reasoning of an antecedent may generate dynamically another antecedent, and assign it to
+an output variable of type \<^typ>\<open>bool\<close>.
 
+When multiple antecedents are going to be generated, it is
+more efficient to contract them into one antecedent using conjunctions (e.g. \<open>A1 \<and> A2 \<and> A3 \<and> \<cdots>\<close>),
+so they can be represented by one output variable of type \<^typ>\<open>bool\<close>.
 
-paragraph \<open>Internal Lemmas\<close>
+\<open>(\<and>\<^sub>r)\<close> and \<open>(\<forall>\<^sub>r)\<close> are used to contract antecedents and embed universally quantified variables
+respectively.
+\<close>
 
-lemma contract_premise_true:
-  "(True \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode B) "
-  by simp
+definition Compact_Antecedent :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
+  where [iff]: \<open>Compact_Antecedent = (\<and>)\<close>
 
-lemma contract_premise_imp:
-  "(A \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode (A \<longrightarrow> B)) "
-  unfolding Premise_def atomize_imp .
+definition Compact_Forall :: \<open>('a \<Rightarrow> bool) \<Rightarrow> bool\<close> (binder "\<forall>\<^sub>\<r>" 10)
+  where [iff]: \<open>Compact_Forall = All\<close>
 
-lemma contract_premise_all:
-  "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
-  unfolding Premise_def atomize_all .
+text \<open>Assertive rules are given to unfold the compression and reason the antecedents in order.\<close>
 
-lemma Premise_refl[\<phi>reason 2000 on \<open>Premise ?mode (?x = ?x)\<close>
-                                   \<open>Premise ?mode (?x = ?var_x)\<close>]:
-  "Premise mode (x = x)"
-  unfolding Premise_def ..
+lemma [\<phi>reason 1000]:
+  \<open>P \<Longrightarrow> Q \<Longrightarrow> P \<and>\<^sub>\<r> Q\<close>
+  unfolding Compact_Antecedent_def ..
 
-ML_file \<open>library/PLPR_Syntax.ML\<close>
+lemma [\<phi>reason 1000]:
+  \<open>(\<And>x. P x) \<Longrightarrow> \<forall>\<^sub>\<r>x. P x\<close>
+  unfolding Compact_Forall_def ..
 
-subsection \<open>Cut\<close>
-
-text \<open>There are three kinds of cuts.
-  \<^item> Local Cut : If the priority of a rule is greater (or equal) than 1000, this rule
-      is a local cut in the sense the reasoning will not branch but only apply this rule instead
-      (apply the rule with maximum priority if there are multiple rules are local cut).
-  \<^item> Global Cut : If the priority is greater (or equal) than 1000_000, this rule is
-      a global cut that no backtrack will be applied before this.
-      It implies some achievement has been reached.
-      Thus the reasoner returns the latest global cut point when not all antecedents are solved.
-  \<^item> Ultimate Cut i.e. \<r>Success : It represents an ultimate success has been reached in the reasoning,
-      so the reasoner terminates and returns the Horn clause triggering \<r>Success.\<close>
-
-
-definition \<r>Cut :: bool where \<open>\<r>Cut = True\<close>
-
-text \<open>It triggers a (global) reasoning cut.\<close>
-
-lemma [iff, \<phi>reason 1000000]: \<open>\<r>Cut\<close> unfolding \<r>Cut_def ..
-
-
-
-
-definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
-
-lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
-
-text \<open>Terminates the reasoning successfully and immediately\<close>
-
-\<phi>reasoner_ML \<r>Success 10000 (conclusion \<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
-  raise Nu_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
-
-
-
-
-
-lemma \<r>Feasible_I[iff]: \<open>\<r>Feasible\<close> unfolding \<r>Feasible_def ..
-
-\<phi>reasoner_ML \<r>Feasible 10000 (conclusion \<open>\<r>Feasible\<close>) = \<open>fn (ctxt,sequent) =>
-  raise Nu_Reasoner.Success (ctxt, @{thm \<r>Feasible_I} RS sequent)\<close>
-
-
-subsection \<open>Conversion\<close>
-
-definition Conv :: "'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>c\<^bold>o\<^bold>n\<^bold>v _ = _" [51,51] 50)
-  where "Conv origin obj \<longleftrightarrow> obj = origin"
-
-text \<open>\<^prop>\<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v A = B \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close> indicates the reasoner should convert \<^term>\<open>A\<close> into some \<^term>\<open>B\<close>.
-  Specific rules should be configured to reason those goals.\<close>
-
-lemma Conv_cong[cong]:
-  \<open>A \<equiv> A' \<Longrightarrow> \<^bold>c\<^bold>o\<^bold>n\<^bold>v A = B \<equiv> \<^bold>c\<^bold>o\<^bold>n\<^bold>v A' = B\<close>
-  by simp
-
-lemma Conv_I: \<open>\<^bold>c\<^bold>o\<^bold>n\<^bold>v A = A\<close> unfolding Conv_def ..
+declare conjunctionI[\<phi>reason 1000] \<comment> \<open>Meta-conjunction \<open>P &&& Q\<close> is also a compression.\<close>
 
 
 subsubsection \<open>Matches\<close>
 
-definition Matches :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> where \<open>Matches _ _ = True\<close>
+text \<open>Antecedent \<^prop>\<open>Matches pattern term\<close> asserts \<^term>\<open>pattern\<close> matches \<^term>\<open>term\<close>;
+  \<^prop>\<open>NO_MATCH pattern term\<close> asserts \<^term>\<open>pattern\<close> does not match \<^term>\<open>term\<close>.\<close>
 
-text \<open>In the reasoning, a subgoal \<^prop>\<open>Matches pattern term\<close> is solved iff \<^term>\<open>pattern\<close>
-  matches \<^term>\<open>term\<close>. This subgoal is useful to restrict a rule to match certain pattern to be applied.\<close>
+definition Matches :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> where \<open>Matches _ _ = True\<close>
 
 lemma Matches_I: \<open>Matches pattern term\<close> unfolding Matches_def ..
 
@@ -331,51 +533,222 @@ lemma Matches_I: \<open>Matches pattern term\<close> unfolding Matches_def ..
       else Seq.empty
     end\<close>
 
-
-
-subsection \<open>Not Match\<close>
-
 lemma NO_MATCH_I: "NO_MATCH A B" unfolding NO_MATCH_def ..
 
 \<phi>reasoner_ML NO_MATCH 0 (conclusion "NO_MATCH ?A ?B") = \<open>
   fn (ctxt,th) =>
-  case try Thm.major_prem_of th
-    of SOME (\<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>NO_MATCH\<close>, _) $ a $ b)) =>
-        if Pattern.matches (Proof_Context.theory_of ctxt) (a,b)
-        then Seq.empty
-        else Seq.single (ctxt, @{thm NO_MATCH_I} RS th)
-     | _ => Seq.empty
+  let
+    val (\<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>NO_MATCH\<close>, _) $ a $ b)) = Thm.major_prem_of th
+  in
+    if Pattern.matches (Proof_Context.theory_of ctxt) (a,b)
+    then Seq.empty
+    else Seq.single (ctxt, @{thm NO_MATCH_I} RS th)
+  end
 \<close>
 
 
+subsection \<open>Cut\<close>
 
-subsection \<open>Subgoal\<close>
+text \<open>The cuts have been introduced in \cref{sec:cut}.
 
-typedef "subgoal" = "UNIV :: nat set" ..
+Antecedent \<open>\<r>Cut\<close> triggers a global cut marking the reasoning state a milestone and disposing
+all previous search history (cannot backtrack beyond the state).
+\<close>
+
+definition \<r>Cut :: bool where \<open>\<r>Cut = True\<close>
+
+lemma [iff, \<phi>reason 1000000]: \<open>\<r>Cut\<close> unfolding \<r>Cut_def ..
+
+text \<open>Antecedent \<open>\<r>Success\<close> terminates the reasoning successfully with the reasoning state as
+the result.\<close>
+
+definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
+lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
+
+\<phi>reasoner_ML \<r>Success 10000 (conclusion \<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
+  raise Nu_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
+
+text \<open>\<open>\<r>Feasible\<close> has been introduced in \cref{sec:rFeasible}. The following rules relate
+to the internal implementation. We refer interesting readers to \<^file>\<open>library/reasoner.ML\<close>.\<close>
+
+lemma \<r>Feasible_I: \<open>\<r>Feasible\<close> unfolding \<r>Feasible_def ..
+
+\<phi>reasoner_ML \<r>Feasible 10000 (conclusion \<open>\<r>Feasible\<close>) = \<open>fn (ctxt,sequent) =>
+  raise Nu_Reasoner.Success (ctxt, @{thm \<r>Feasible_I} RS sequent)\<close>
+
+
+
+subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}\<close>
+
+definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where "Premise _ x = x"
+
+abbreviation Normal_Premise ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26)
+  where "Normal_Premise \<equiv> Premise default"
+abbreviation Simp_Premise ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m _" [27] 26)
+  where "Simp_Premise \<equiv> Premise MODE_SIMP"
+abbreviation Proof_Obligation ("\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n _" [27] 26)
+  where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
+
+text \<open>
+  \<^prop>\<open>Premise mode P\<close> represents an ordinary proposition has to be proved during the reasoning.
+  There are different modes expressing different roles in the reasoning.
+
+  \<^descr> \<^prop>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is a \<^emph>\<open>guard\<close> of a rule, which constrains that the rule is appliable only
+  when \<^prop>\<open>P\<close> can be solved \<^emph>\<open>automatically\<close> during the reasoning.
+  If \<^prop>\<open>P\<close> fails to be solved, even if it is actually valid, the rule will not be applied.
+  Therefore, \<^prop>\<open>P\<close> has to be as simple as possible. The tactic used to solve \<^prop>\<open>P\<close> is
+  @{method clarsimp}.
+  A more powerful tactic like @{method auto} is not adoptable because the tactic must be safe and
+  non-blocking commonly. 
+  A blocking search branch blocks the whole reasoning, which is not acceptable.
+
+  \<^prop>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is not for proof obligations that are intended to be solved by users.
+  It is more like 'controller or switch' of the rules, i.e. \<^emph>\<open>guard\<close>.
+
+  \<^descr> \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> represents a proof obligation.
+  Proof obligations in reasoning rules should be represented by it.
+
+  \<^descr> \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> by contrast
+  represents proof obligations \<open>Q\<close> that are ready to be solved by user (or by automatic tools).
+\<close>
+text \<open>
+  The difference between \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> and \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> is subtle:
+  In a reasoning process, many reasoning rules may be applied, which may generate many
+  \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close>.
+  The engine tries to solve \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> automatically but if it fails the search branch
+  would be stuck. Because the search has not been finished, it is bad to ask users' intervention
+  to solve the goal because the search branch may high-likely fail later.
+  It is \<^emph>\<open>not ready\<close> for user to solve \<open>P\<close> here, and suggestively \<open>P\<close> should be deferred to
+  an ideal moment for user solving obligations.
+  This is `ideal moment' is \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close>. If any \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> exists in the antecedents
+  of the sequent, the engine contracts \<open>P\<close> into the latest \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close>, e.g., from
+  \[ \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> A1 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q' \<Longrightarrow> \<cdots> \<close> \]
+  it deduces
+  \[ \<open>A1 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q \<and> P \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q' \<Longrightarrow> \<cdots> \<close> \]
+  In short, \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> collects obligations generated during a reasoning process,
+  and enables user to solve them at an idea moment.
+
+  A typical reasoning request (the initial reasoning state namely the argument of the reasoning
+  process) is of the following form,
+ \[ \<open>Problem \<Longrightarrow> \<r>Success \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> Conclusion\<close> \]
+  The \<open>True\<close> represents empty collection or none obligation.
+  If the reasoning succeeds, it returns sequent in form
+ \[ \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<and> P1 \<and> P2 \<and> \<cdots> \<Longrightarrow> Conclusion\<close> \]
+  where \<open>P1, P2, \<cdots>\<close> are obligations generated by reasoning \<open>Problem\<close>.
+  And then, user may solve the obligations manually or by automatic tools.
+
+  For antecedent \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close>,
+  if there is another \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q'\<close> in the remaining antecedents,
+  the reasoner also defer \<open>Q\<close> to \<open>Q'\<close>, just like \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> is a \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q\<close>.
+
+  If no \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q'\<close> exists in the remaining antecedents,
+  the reasoner of \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> and \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> raises
+  an error aborting the whole reasoning, because the reasoning request is not configured correctly.
+  The reasoner never attempts to solve \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> practically.
+
+  Nonetheless, we still provide tool for reasoning obligations automatically, albeit they have
+  to be called separately with the reasoning engine. See \<^verbatim>\<open>auto_obligation_solver\<close> and
+  \<^verbatim>\<open>safer_obligation_solver\<close> in \<^file>\<open>library/reasoners.ML\<close>.
+\<close>
+
+lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
+lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
+lemma Premise_E[elim!]: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
+
+
+subsubsection \<open>Implementation of the reasoners\<close>
+
+lemma Premise_True[\<phi>reason 5000]: "Premise mode True" unfolding Premise_def ..
+
+lemma [\<phi>reason 5000]:
+  " Premise mode P
+\<Longrightarrow> Premise mode (Premise any_mode P)"
+  unfolding Premise_def .
+
+lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
+                                    \<open>Premise ?mode (?x = ?var_x)\<close>]:
+  "Premise mode (x = x)"
+  unfolding Premise_def ..
+
+
+\<phi>reasoner Simp_Premise 10 (conclusion \<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m ?P\<close>)
+  = (rule Premise_I; simp; fail)
+
+lemma contract_obligations:
+  "(Premise mode P \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q \<Longrightarrow> PROP C) \<equiv> (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P \<and> Q \<Longrightarrow> PROP C)"
+  unfolding Premise_def by rule simp+
+
+lemma contract_premise_true:
+  "(True \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode B) "
+  by simp
+
+lemma contract_premise_imp:
+  "(A \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode (A \<longrightarrow> B)) "
+  unfolding Premise_def atomize_imp .
+
+lemma contract_premise_all:
+  "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
+  unfolding Premise_def atomize_all .
+
+named_theorems useful \<open>theorems to be inserted in the automatic proving,
+       having the same effect of using the @{command using} command.\<close>
+
+ML_file \<open>library/PLPR_Syntax.ML\<close>
+ML_file "library/reasoners.ML"
+
+\<phi>reasoner_ML Normal_Premise 10 (conclusion \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P\<close> | conclusion \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P\<close>)
+  = \<open>Nu_Reasoners.wrap Nu_Reasoners.defer_obligation_tac\<close>
+
+
+
+subsection \<open>Pruning\<close>
+
+text \<open>At a reasoning state \<open>A\<close>, multiple search branches may be emitted parallel to
+find a solution of the antecedent.
+A branch may find the solution while other branches from \<open>A\<close> still remain in the search history.
+Then the reasoning in DFS manner keeps to solve next antecedent \<open>B\<close> and we assume \<open>B\<close> fails.
+The reasoning then backtrack, and redo the search of \<open>A\<close> on remaining branches of \<open>A\<close>.
+It is not reasonable because the reasoning is redoing a solved problem on \<open>A\<close>.
+To address this, a solution is to prune branches of \<open>A\<close> after \<open>A\<close> succeeds.
+
+In this section we introduce \<open>subgoal\<close> mechanism achieving the pruning.
+Each antecedent \<open>A\<close> is tagged with a goal context \<open>G\<close>, as \<open>\<open>A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>\<close>.
+A reasoning rule may check that the goal \<open>G\<close> has not been solved before doing any substantial
+computation, e.g.,
+\[ \<open>CHK_SUBGOAL G \<Longrightarrow> Computation \<Longrightarrow> (Ant \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)\<close> \]
+Antecedent \<open>CHK_SUBGOAL G\<close> succeeds only when the goal \<open>G\<close> is not marked solved, \<^emph>\<open>or\<close>, the current
+  search branch is the thread that marked \<open>G\<close> solved previously.
+When a rule succeeds, the rule may mark the goal \<open>G\<close> solved to prune other branches that check \<open>G\<close>.
+\[ \<open>Computation \<Longrightarrow> SOLVE_SUBGOAL G \<Longrightarrow> (Ant \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)\<close> \]
+If a goal \<open>G\<close> has been marked solved, any other antecedent \<open>SOLVE_SUBGOAL G\<close> marking \<open>G\<close> again, will
+fail, unless the current search branch is the thread that marked \<open>G\<close> solved previously.
+
+A subgoal is represented by an unspecified type which only has a syntactic effect in the reasoning.\<close>
+
+typedecl "subgoal"
+
+definition GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
+  where [iff]: "(PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> A"
+
+definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
+  where "CHK_SUBGOAL X \<longleftrightarrow> True"
+definition SOLVE_SUBGOAL :: "subgoal \<Rightarrow> bool"
+  where "SOLVE_SUBGOAL X \<longleftrightarrow> True"
+
+text \<open>Subgoals are hierarchical, having the unique top-most goal named \<open>\<open>TOP_GOAL\<close>\<close>.
+New goal contexts are obtained by antecedent \<open>\<open>SUBGOAL G ?G'\<close>\<close> which assigns a new subgoal
+under an unsolved \<open>G\<close> to output variable \<open>?G'\<close>.
+The reasoning raises an error if \<open>?G'\<close> is not a schematic variable.
+
+\<open>\<open>SOLVE_SUBGOAL G\<close>\<close> marks the goal \<open>G\<close> and all its subgoals solved.
+The \<open>TOP_GOAL\<close> can never be solved.\<close>
 
 consts TOP_GOAL :: "subgoal"
-consts NO_GOAL :: "subgoal"
 
 definition SUBGOAL :: "subgoal \<Rightarrow> subgoal \<Rightarrow> bool" where "SUBGOAL ROOT NEW_GOAL = True"
-definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
-  where "CHK_SUBGOAL X = True"
-definition SOLVE_SUBGOAL :: "subgoal \<Rightarrow> bool" where "SOLVE_SUBGOAL X = True"
 
-text \<open>The three tags provides a hierarchical subgoal environment.
-  \<^prop>\<open>SUBGOAL ROOT NEW_GOAL\<close> creates a new unique subgoal \<^term>\<open>NEW_GOAL\<close> under \<^term>\<open>ROOT\<close>.
-    \<^term>\<open>NEW_GOAL\<close> should be a schematic variable to be instantiated by the reasoner.
-  \<^prop>\<open>SOLVE_SUBGOAL GOAL\<close> marks the GOAL and all its subgoals solved.
-  \<^prop>\<open>CHK_SUBGOAL GOAL\<close> checks whether the GOAL is marked solved. If it is,
-    this proposition is rejected to be solved by the reasoner, causing any search path
-    assuming this proposition terminates. Therefore, no additional searches
-    assuming this proposition will continue once the subgoal is solved.
 
-  Once \<^term>\<open>GOAL\<close> is marked solved. Later \<^prop>\<open>SOLVE_SUBGOAL GOAL\<close> only succeeds on the
-    search path which marks this goal. Any branch irrelevant with the point of
-    the marking cannot mark the \<^term>\<open>GOAL\<close> again, and \<^prop>\<open>SOLVE_SUBGOAL GOAL\<close>
-    fails for them, causing those branches terminate.
-
-  The \<^term>\<open>TOP_GOAL\<close> can never be solved.\<close>
+subsubsection \<open>Implementation of the Subgoal Reasoners\<close>
 
 lemma SUBGOAL_I[iff]: "SUBGOAL ROOT NEWGOAL" unfolding SUBGOAL_def ..
 lemma CHK_SUBGOAL_I[iff]: "CHK_SUBGOAL X" unfolding CHK_SUBGOAL_def ..
@@ -387,54 +760,63 @@ ML_file \<open>library/Subgoal_Env.ML\<close>
 \<phi>reasoner_ML CHK_SUBGOAL 2000 (conclusion \<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal\<close>
 \<phi>reasoner_ML SOLVE_SUBGOAL 9900 (conclusion \<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal\<close>
 
-lemma [\<phi>reason 3000]: \<open>CHK_SUBGOAL   NO_GOAL\<close> using CHK_SUBGOAL_I   .
-lemma [\<phi>reason 9999]: \<open>SOLVE_SUBGOAL NO_GOAL\<close> using SOLVE_SUBGOAL_I .
-
-
-definition GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
-  where [iff]: "GOAL_CTXT x _ \<equiv> x"
-
-lemma [\<phi>reason 800 on \<open>Try ?S ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 800 for \<open>Try ?S ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Try True P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Try_def .
 
 
-subsection \<open>Simplification & Rewrite\<close>
-
-definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[_] _ : _" [10,1000,10] 9)
-  where "Simplify setting result origin \<longleftrightarrow> result = origin"
-
-lemma [cong]: "A = A' \<Longrightarrow> Simplify s x A = Simplify s x A' "
-  unfolding Simplify_def by simp
-
-lemma Simplify_I[intro!]: "Simplify s A A" unfolding Simplify_def ..
-lemma Simplify_E[elim!]: "Simplify s A B \<Longrightarrow> (A = B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Simplify_def by blast
-
-
-subsubsection \<open>Default Simplifier\<close>
-
-abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y _ : _" [1000,10] 9)
-  where "Default_Simplify \<equiv> Simplify default"
-
-\<phi>reasoner Default_Simplify 1000 (conclusion \<open>Default_Simplify ?x ?y\<close>)
-  = (simp?, rule Simplify_I)
-  
-(* \<open>fn ctx =>
-  HEADGOAL (asm_simp_tac ctx) THEN
-  HEADGOAL (resolve0_tac @{thms Simplify_I})
-\<close> *)
-
 subsection \<open>Branch\<close>
+
+text \<open>\<open>A ||| B\<close> is an antecedent way to encode search branch.
+Compared with the ordinary approach using multiple submissive rules,
+short-cut is featured by using subgoal. It tries each antecedent from left to right until
+      the first success of solving an antecedent, and none of the remains are attempted.\<close>
 
 definition Branch :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixr "|||" 3)
   where \<open>Branch A B \<equiv> (\<And>C::prop. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close>
 
+subsubsection \<open>Implementation\<close>
+
 consts BRANCH :: \<open>subgoal \<Rightarrow> subgoal\<close>
 
-text \<open>It triggers divergence in searching, with short-cut.
-    Guaranteed by subgoal context, it tries every antecedents from left to right until
-      the first success of solving an antecedent, and none of remains are attempted.\<close>
+lemma [\<phi>reason 1000]:
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> PROP A ||| PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
+\<Longrightarrow> PROP A ||| PROP B\<close>
+  unfolding GOAL_CTXT_def .
+
+lemma [\<phi>reason for \<open>PROP ?A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close> except \<open>PROP ?X ||| PROP ?Y \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close>]:
+  \<open> PROP A
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
+  unfolding GOAL_CTXT_def .
+
+lemma [\<phi>reason add]:
+  \<open> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
+\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
+  unfolding GOAL_CTXT_def Branch_def
+proof -
+  assume A: \<open>PROP A\<close>
+  show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
+    fix C :: "prop"
+    assume A': \<open>PROP A \<Longrightarrow> PROP C\<close>
+    show \<open>PROP C\<close> using A'[OF A] .
+  qed
+qed
+
+lemma [\<phi>reason 10]:
+  \<open> PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
+\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
+  unfolding GOAL_CTXT_def Branch_def
+proof -
+  assume B: \<open>PROP B\<close>
+  show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
+    fix C :: "prop"
+    assume B': \<open>PROP B \<Longrightarrow> PROP C\<close>
+    show \<open>PROP C\<close> using B'[OF B] .
+  qed
+qed
 
 lemma Branch_imp:
   \<open> (PROP A ||| PROP B \<Longrightarrow> PROP C)
@@ -467,45 +849,35 @@ next
   qed
 qed
 
-lemma [\<phi>reason 1000]:
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> PROP A ||| PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
-\<Longrightarrow> PROP A ||| PROP B\<close>
-  unfolding GOAL_CTXT_def .
+subsection \<open>Simplification \& Rewrite\<close>
 
-lemma [\<phi>reason on \<open>PROP ?A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close> if no \<open>PROP ?X ||| PROP ?Y \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close>]:
-  \<open> PROP A
-\<Longrightarrow> SOLVE_SUBGOAL G
-\<Longrightarrow> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
-  unfolding GOAL_CTXT_def .
+text \<open>\<open>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
+  \<open>mode\<close>. The \<open>?result\<close> should be an output variable for the result of the simplification.
+  
+  We implement a \<open>default\<close> mode where the system simple-set is used to simplify
+  \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
 
-lemma [\<phi>reason add]:
-  \<open> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
-\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
-  unfolding GOAL_CTXT_def Branch_def
-proof -
-  assume A: \<open>PROP A\<close>
-  show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
-    fix C :: "prop"
-    assume A': \<open>PROP A \<Longrightarrow> PROP C\<close>
-    show \<open>PROP C\<close> using A'[OF A] .
-  qed
-qed
+definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[_] _ : _" [10,1000,10] 9)
+  where "Simplify setting result origin \<longleftrightarrow> result = origin"
 
-lemma [\<phi>reason 10]:
-  \<open> PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
-\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
-  unfolding GOAL_CTXT_def Branch_def
-proof -
-  assume B: \<open>PROP B\<close>
-  show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
-    fix C :: "prop"
-    assume B': \<open>PROP B \<Longrightarrow> PROP C\<close>
-    show \<open>PROP C\<close> using B'[OF B] .
-  qed
-qed
+lemma [cong]: "A = A' \<Longrightarrow> Simplify s x A = Simplify s x A' "
+  unfolding Simplify_def by simp
+
+lemma Simplify_I[intro!]: "Simplify s A A" unfolding Simplify_def ..
+lemma Simplify_E[elim!]: "Simplify s A B \<Longrightarrow> (A = B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Simplify_def by blast
 
 
+subsubsection \<open>Default Simplifier\<close>
+
+abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y _ : _" [1000,10] 9)
+  where "Default_Simplify \<equiv> Simplify default"
+
+\<phi>reasoner Default_Simplify 1000 (conclusion \<open>Default_Simplify ?x ?y\<close>)
+  = (simp?, rule Simplify_I)
+
+
+
+(*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>
   \<comment> \<open>Maybe Useless, considering to discard!\<close>
 
@@ -579,7 +951,7 @@ fn (ctxt, sequent') => Seq.make (fn _ =>
   end
 )\<close>
 
-
+*)
 
 (* subsection \<open>Generalized Elimination\<close>
 
@@ -603,24 +975,11 @@ lemma Generalized_Elimination_Framework:
 ML_file \<open>library/elimination.ML\<close>
 
 *)
+
+
+(*
 subsection \<open>Misc\<close>
-
-subsubsection \<open>Useless Tag\<close>
-
-text \<open>Sometimes, like in a simplification where information are always transformed equally
-  (no information loses), some useless information is generated during some procedure.
-  These information are necessary technically like for an equality in a simplification rule,
-    but are useless for the verification.
-  These information can be wrapped by a Useless tag to annotate this.
-  In \<phi>-Programming, any extracted lemmas wrapped by this tag will not be added into
-    proof environment and dropped simply.\<close>
-
-definition USELESS :: \<open>bool \<Rightarrow> bool\<close> where \<open>USELESS x = x\<close>
-
-lemma [simp]: \<open>USELESS True\<close> unfolding USELESS_def ..
-
-
-subsubsection \<open>Collect Schematic & Free & other terms\<close> \<comment> \<open>Not Stable!\<close>
+ subsubsection \<open>Collect Schematic \& Free \& other terms\<close> \<comment> \<open>Not Stable!\<close>
 
 paragraph \<open>Schematic\<close>
 
@@ -652,7 +1011,7 @@ lemma Collect_Schematic_I: \<open>PROP Collect_Schematic TY sch Term\<close>
     in Seq.single (ctxt, rule RS sequent)
     end
 \<close>
-
+*)
 (*Others, to be done!*)
 
 

@@ -11,6 +11,24 @@ chapter \<open>First Order Fictional Algebra\<close>
 
 section \<open>Algebra Structures\<close>
 
+subsection \<open>Preliminary Structures\<close>
+
+locale homo_one =
+  fixes \<phi> :: " 'a::one \<Rightarrow> 'b::one "
+  assumes homo_one[simp]: "\<phi> 1 = 1"
+
+locale homo_mult = homo_one \<phi>
+  for \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
++ assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
+
+lemma homo_mult:
+  \<open>homo_mult \<phi> \<longleftrightarrow> (\<phi> 1 = 1) \<and> (\<forall> x y. \<phi> (x * y) = \<phi> x * \<phi> y)\<close>
+  unfolding homo_mult_def homo_mult_axioms_def homo_one_def ..
+
+locale mult_strip_011 =
+  fixes \<psi> :: " 'a::times \<Rightarrow> 'b::times "
+  assumes mult_strip_011: \<open>a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c)\<close>
+
 class mult_1 = times + one +
   assumes mult_1_left [simp]: "1 * x = x"
       and mult_1_right[simp]: "x * 1 = x"
@@ -25,6 +43,10 @@ class ab_group_mult = inverse + comm_monoid_mult +
 class semigroup_mult_left_cancel = semigroup_mult +
   assumes semigroup_mult_left_cancel: \<open>a * c = b * c \<longleftrightarrow> a = b\<close>
 
+subsection \<open>Separation Algebra\<close>
+
+subsubsection \<open>Separation Disjunction\<close>
+
 class sep_disj =
   fixes sep_disj :: "'a => 'a => bool" (infix "##" 60)
 
@@ -38,6 +60,8 @@ lemma sep_disj_commute: "x ## y \<longleftrightarrow> y ## x"
   by (blast intro: sep_disj_commuteI)
 end
 
+subsubsection \<open>Separation Magma\<close>
+
 class sep_magma = sep_disj + times
 begin
 definition join_sub (infix "\<preceq>\<^sub>S\<^sub>L" 50) 
@@ -46,6 +70,8 @@ end
 
 class positive_sep_magma = sep_magma+
   assumes join_positivity: \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
+
+subsubsection \<open>Separation Semigroup\<close>
 
 class sep_semigroup = positive_sep_magma +
   assumes sep_mult_assoc:
@@ -67,6 +93,8 @@ class sep_disj_intuitive = sep_magma +
   assumes sep_disj_intuitive_right[simp]: \<open>b ## c \<Longrightarrow> a ## b * c \<longleftrightarrow> a ## b \<and> a ## c\<close>
   assumes sep_disj_intuitive_left [simp]: \<open>a ## b \<Longrightarrow> a * b ## c \<longleftrightarrow> a ## c \<and> b ## c\<close>
 
+subsubsection \<open>Unital Separation\<close>
+
 class sep_magma_1 = sep_magma + mult_1 +
   assumes sep_magma_1_left  [simp]: "x ## 1"
   assumes sep_magma_1_right [simp]: "1 ## x"
@@ -77,6 +105,8 @@ lemma sep_no_negative [simp]:
   \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
   by (metis local.join_positivity local.mult_1_right local.sep_magma_1_left sep_magma.join_sub_def)
 end
+
+subsubsection \<open>Separation Monoid\<close>
 
 class sep_monoid = sep_magma_1 + sep_semigroup
 begin
@@ -114,6 +144,8 @@ subclass sep_monoid proof
 qed
 subclass positive_mult_one ..
 end
+
+subsubsection \<open>Separation Algebra\<close>
 
 class sep_algebra = sep_magma_1 + sep_ab_semigroup
 begin
@@ -164,6 +196,8 @@ subclass sep_algebra proof
 qed
 subclass total_sep_monoid ..
 end
+
+subsubsection \<open>Special Separation Algebra\<close>
 
 class discrete_sep_semigroup = sep_disj + times +
   assumes discrete_sep_disj[simp]: "x ## y \<longleftrightarrow> x = y"
@@ -218,11 +252,23 @@ subclass sep_algebra proof
 qed
 end
 
+subsection \<open>Share Algebra\<close>
+
+text \<open>An algebra for objects that can be partially owned, and shared.
+
+The range of the ownership is [0,\<infinity>)
+
+structural share algebra
+
+TODO: limited by automation, the ownership of an object is represented by \<^typ>\<open>rat\<close>
+including negative rationals. A better choice is using non-negative rationals only,
+like the type \<^typ>\<open>posrat\<close>.\<close>
+
 class raw_share =
   fixes share :: \<open>rat \<Rightarrow> 'a \<Rightarrow> 'a\<close>
   fixes can_share :: \<open>'a \<Rightarrow> bool\<close>
 
-class share = raw_share +
+class share = raw_share + \<comment> \<open>share algebra for semigroup, where unit \<open>1\<close> is not defined\<close>
   assumes share_share_not0: \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
     and   share_left_one[simp]:  \<open>share 1 x = x\<close>
     and   can_share_imply[simp]: \<open>0 < n \<Longrightarrow> can_share (share n x) \<longleftrightarrow> can_share x\<close>
@@ -314,6 +360,10 @@ subclass share_module_sep apply (standard; clarsimp simp add: join_sub_def)
   by (metis local.mult_1_left local.sep_magma_1_right)
 end
 
+subsection \<open>Homomorphism from Separation Algebra to Share Algebra\<close>
+
+text \<open>The homomorphism maps each element in a separation algebra to the one of the total
+  ownership in the share algebra.\<close>
 
 locale homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
@@ -321,7 +371,7 @@ locale homo_sep_disj =
 
 locale homo_sep_disj_semi =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
-  assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
+  assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> (* TODO: improve this to be a \<longleftrightarrow> ! *)
 
 locale homo_join_sub =
   fixes \<psi> :: \<open>'a::sep_ab_semigroup \<Rightarrow> 'b::sep_ab_semigroup\<close>

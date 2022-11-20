@@ -1,11 +1,8 @@
 (* The Signature *)
 signature NU_SYS = sig
-  (** Tactics **)
-  exception CastFail of cterm * thm
-  exception ReasoningFail of thm
-
   (** Basic Operations **)
-  val cast : cterm (*desired nu*) -> context_state -> context_state
+  val cast : cterm -> Proof.context * thm -> Proof.context * thm
+  val cast_exception : cterm -> Proof.context * thm -> Proof.context * thm
   val move_lemmata : context_state -> context_state
   val apply_automatic_morphism : context_state -> context_state
 
@@ -35,8 +32,6 @@ end
 (* The Structure *)
 structure NuSys : NU_SYS = struct
 open Thm NuBasics Term
-exception CastFail of cterm * thm
-exception ReasoningFail of thm
 
 (*fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))
@@ -57,6 +52,9 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>mo
 
 (** Basic Operations **)
 
+val cast = Phi_Working_Mode.cast
+val cast_exception = Phi_Working_Mode.cast_exception
+
 fun apply_automatic_morphism' _ [] _ = raise Empty
   | apply_automatic_morphism' R (M::L) stat =
       case Thm.concl_of M
@@ -68,7 +66,7 @@ fun apply_automatic_morphism (ctxt,sequent) =
   case apply_automatic_morphism' [] (Morphism.get ctxt) (ctxt,sequent)
     of (R, stat') => apfst (Morphism.put R) stat'
 
-fun simplify_morphisms ctxt [] = []
+fun simplify_morphisms _   [] = []
   | simplify_morphisms ctxt L =
       map (Raw_Simplifier.rewrite_rule ctxt @{thms FOCUS_TAG_def[folded atomize_eq]}) L
 
@@ -91,10 +89,10 @@ fun move_lemmata' (ctxt, sequent) =
     val ctxt' =
       if null lemmas
       then ctxt
-      else Context.proof_map (fold (Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close>) lemmas) ctxt
-(* Sorry... I really forget why I decided to use this somehow strange calling.
-Proof_Context.note_thms ""
-             ((Binding.empty, [Named_Theorems.add \<^named_theorems>\<open>\<phi>lemmata\<close>]), [(lemmas,[])]) ctxt *)
+      else Context.proof_map (fold (fn th =>
+              Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th
+            #>Named_Theorems.add_thm \<^named_theorems>\<open>useful\<close> th
+           ) lemmas) ctxt
     val ctxt'' =
       if null morphisms
       then ctxt'
@@ -108,22 +106,6 @@ fun move_lemmata (ctxt, sequent) =
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>conj\<close> $ _ $ _) => move_lemmata (move_lemmata' (ctxt, sequent))
      | _ => (ctxt, sequent)
 
-
-fun cast desired_nu (ctxt,sequent) =
-  let
-    val mode = Phi_Working_Mode.mode ctxt
-    val rule = #cast_rule mode ctxt desired_nu (Thm.prop_of sequent)
-    val (ctxt', sequent') =
-          case Nu_Reasoner.reason (ctxt, sequent RS rule)
-            of SOME ret => ret
-             | NONE => raise CastFail (desired_nu, sequent)
-    val _ = case Thm.prop_of sequent'
-              of (\<^const>\<open>Trueprop\<close> $ _) => ()
-               | (\<^const>\<open>Pure.imp\<close>
-                    $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ _))
-                    $ (\<^const>\<open>Trueprop\<close> $ _)) => ()
-               | _ => raise CastFail (desired_nu, sequent)
-  in (ctxt',sequent') end
 
 fun export_codeblock _ param_cterms rule assm sequent =
      sequent |> Thm.implies_intr assm
@@ -171,11 +153,33 @@ fun param_type sequent =
   (* TODO: how to parse (check) the term of a desired type pattern
   * (schematic type variable)? *)
 
-fun set_param term (ctxt,sequent) =
-  (ctxt,
-    (term |> Type.constraint (param_type sequent)
-          |> Syntax.check_term ctxt |> Thm.cterm_of ctxt |> NuBasics.intro_param)
-      RS sequent)
+
+
+fun set_param' ctxt term sequent =
+    (term |> Thm.cterm_of ctxt |> NuBasics.intro_param)
+      RS sequent
+
+fun set_param term' (ctxt,sequent) =
+  let
+    val (\<^const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>ParamTag\<close>, _) $ X)) = Thm.major_prem_of sequent
+    val term = term' |> Type.constraint (param_type sequent) |> Syntax.check_term ctxt
+  in
+    case X
+      of Const(\<^const_name>\<open>ExSet\<close>, _) $ (Abs (_,_,(Const(\<^const_name>\<open>ExSet\<close>, _) $ _)))
+            => (ctxt, set_param' ctxt term  sequent)
+       | Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
+            let
+              val (N,term') = QuantExpansion.aggregate_variables_quantification term
+            in (ctxt, set_param' ctxt term' sequent
+                        |> Raw_Simplifier.rewrite_rule ctxt
+                              (QuantExpansion.ExNu_expansion N ctxt
+                            :: QuantExpansion.forall_expansion N ctxt
+                            :: QuantExpansion.pure_All_expansion N ctxt
+                            :: QuantExpansion.exists_expansion N ctxt
+                            :: QuantExpansion.aux_expansions ctxt))
+            end
+       | _ => (ctxt, set_param' ctxt term sequent)
+  end
 
 fun set_param_cmd term (ctxt,sequent) =
   case try (dest_funT #> apfst PhiSyntax.dest_named) (param_type sequent)

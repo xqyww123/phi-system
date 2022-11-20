@@ -49,11 +49,11 @@ abbreviation SimpleImply :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " (
   where \<open>SimpleImply T U \<equiv> Imply T U True\<close>
 
 
-lemma zero_implies_any[\<phi>reason 2000 on \<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+lemma zero_implies_any[\<phi>reason 2000 for \<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   \<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X\<close>
   unfolding Imply_def zero_set_def by simp
 
-lemma implies_refl[\<phi>reason 2000 on \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+lemma implies_refl[\<phi>reason 2000 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   "A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A" unfolding Imply_def by fast
 
 lemma implies_union[\<phi>reason 800]:

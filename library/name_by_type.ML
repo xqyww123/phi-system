@@ -3,6 +3,7 @@ signature PHI_SYNTAX = sig
   val mk_name_tylabels : string list -> typ (* ["i","j","k"] -> 'i \<times> 'j \<times> 'k *)
   val mk_name_tag_ast : (Ast.ast * string list) -> Ast.ast
 
+  val mk_namedT : typ -> string list -> typ
   val dest_named : typ -> (string * typ) list
   val dest_named_only_names : typ -> string list
 
@@ -35,6 +36,8 @@ fun mk_name_tag_ast (term,names) =
         term,
         mk_name_tylabels_ast names]
 end
+
+fun mk_namedT T names = Type(\<^type_name>\<open>named\<close>, [T, mk_name_tylabels names])
 
 fun dest_name_tylabel (TFree (name,_)) = trim_tylabel_name name
   | dest_name_tylabel (TVar ((name,_),_)) = trim_tylabel_name name

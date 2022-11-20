@@ -1,81 +1,68 @@
+(*
+The engine of the Phi Logic Programming Reasoner
+Author: Qiyuan Xu
+*)
 signature NU_REASONER = sig
   (* This file is the major hot point of the whole system.
-     TODO: optimize as possible as you can! *)
+     TODO: optimize it as much as possible! *)
 
-  (* Convention:
-   * If a rule has a priority higher or equal to 1000:
-          it is a deterministic rule that in this case, only this rule will be applied
-            if there is no other rule with higher priority.
-   * Else: it is a nondeterministic rule that, it will be applied together with other
-          nondeterministic rule if there is no deterministic rule.
-            The rule with higher priority will be applied first.
-            If the rule is fail other nondeterministic rules will be applied.
+ 
+  type priority = int
+  type pattern = term
+  type name = term
 
-   *  at a point of the search with several backtrackings
-        and potential candidates to be explored from this point,
-   *  When all score of candidates < 1000 : normal behavior of scored-search
-   *  When at least a score \<ge> 1000 but < 1000,000 : a local cut that abrogates
-   *        any other candidates except the one with the maximum score
-   *  When at least a score \<ge> 1000,000 : a global cut that abrogates
-   *        all other backtrackings and reset the search to start from
-   *        the candidate of the maximum score. This candidate will be
-   *        returned when no further global cut is met and not all premises
-   *        are solved. The global cut means the reasoning has achieved
-   *        certain success and future reasoning work can be based on this point.
-   * 
-   * The reasoner either returns the state whose all premises are solved
-   *    or the latest global cut point.
-   *
-   * The score above (and also the score in user interface) equals to
-   *   the negative cost in the following code.
-   *)
+  (* Pattern must be wrapped either by conclusion_tag or condition_tag to demonstrate
+     which part the pattern describes. *)
+  val conclusion_tag : term
+  val condition_tag : term
+  val pattern_on_conclusion : term -> pattern
+  val pattern_on_condition  : term -> pattern
 
-  type cost = int
-  type 'a generic_reasoner = {name: term, pos: Position.T, pattern: term list, not_match: term list, tactic: 'a}
-  type reasoner = (context_state -> context_state Seq.seq) generic_reasoner
-  val reasoner_eq : ('a generic_reasoner * 'a generic_reasoner) -> bool
+  type reasoner = {name: name,
+                 pos: Position.T,
+                 pattern: pattern list,
+                 blacklist: pattern list,
+                 tactic: (context_state -> context_state Seq.seq)}
 
-  val trace : bool Config.T
-  val trace_candicates : bool Config.T
 
-  (* auto level: 2 - fully auto, 1 - paritally auto, 0 - fully manual *)
+  val trace : bool Config.T (*Prints the state of every reasoning step.*)
+  val trace_candidates : bool Config.T (*Prints the candidates at each step.*)
+
+  (* auto level: 2 - fully auto, 1 - partially auto, 0 - fully manual *)
   val auto_level : int Config.T
   val reduce_auto_level : int -> Proof.context -> Proof.context
-
-  (*For any pattern P matching the conclusion, pass `conclusion_tag $ P` to this library;
-   * or for P matching premises, pass `premise_tag $ P`. *)
-  val conclusion_tag : term
-  val premise_tag : term
 
   exception Success of context_state
   exception Global_Cut of context_state
 
-  val add : cost * reasoner -> Context.generic -> Context.generic
-  val add_lthy : cost * reasoner -> local_theory -> local_theory
-  val del : reasoner -> Context.generic -> Context.generic
-  val reasoners : Proof.context -> (cost * reasoner) list
+  val add : priority * reasoner -> Context.generic -> Context.generic
+  val add_lthy : priority * reasoner -> local_theory -> local_theory
+  val del : name -> Context.generic -> Context.generic
+  val reasoners : Proof.context -> (priority * reasoner) list
   val reasoner_net : Proof.context -> reasoner Cost_Net.T
-
-  val add_intro_rule : Position.T -> cost -> term list * term list -> thm -> Context.generic -> Context.generic
-  val add_intro_rules: (thm list * Position.T * cost * term list * term list) list -> Proof.context -> Proof.context
-  val del_intro_rule : thm -> Context.generic -> Context.generic
-  val attr_add_intro : (Position.T * (int * (term list * term list))) -> attribute
-  val attr_del_intro : attribute
-
-  val add_elim_rule : Position.T -> cost -> term list * term list -> thm -> Context.generic -> Context.generic
-  val add_elim_rules: (thm list * Position.T * cost * term list * term list) list -> Proof.context -> Proof.context
-  val del_elim_rule : thm -> Context.generic -> Context.generic
-  val attr_add_elim : Position.T * (int * (term list * term list)) -> attribute
-  val attr_del_elim : attribute
 
   val reason' : bool (*trace*) -> reasoner Cost_Net.T -> context_state -> context_state option
   val reason  : context_state -> context_state option
   val reason1 : context_state -> context_state
-  val reason_s : Proof.context -> (cost * context_state Seq.seq) list -> context_state Seq.seq (* Note it only returns one
-    theorem in the returned sequence, that the one succeeded first or of least cost. *)
+  val reason_s : Proof.context -> (priority * context_state Seq.seq) list -> context_state Seq.seq
+    (* Note it returns at most one state in the returned sequence. *)
   val reason_tac :  Proof.context -> context_tactic
 
-  val setup_cmd : (((string (*name term*) * Position.T) * cost)
+
+  val add_intro_rule : Position.T -> priority -> term list * term list -> thm -> Context.generic -> Context.generic
+  val add_intro_rules: (thm list * Position.T * priority * term list * term list) list -> Proof.context -> Proof.context
+  val del_intro_rule : thm -> Context.generic -> Context.generic
+  val attr_add_intro : (Position.T * (int * (term list * term list))) -> attribute
+  val attr_del_intro : attribute
+
+  val add_elim_rule : Position.T -> priority -> term list * term list -> thm -> Context.generic -> Context.generic
+  val add_elim_rules: (thm list * Position.T * priority * term list * term list) list -> Proof.context -> Proof.context
+  val del_elim_rule : thm -> Context.generic -> Context.generic
+  val attr_add_elim : Position.T * (int * (term list * term list)) -> attribute
+  val attr_del_elim : attribute
+
+
+  val setup_cmd : (((string (*name term*) * Position.T) * priority)
                    * ((bool (*true for matching, false for not matching*)
                        * bool (*true for premise pattern, false for conclusion pattern*))
                       * string (*pattern term*)) list
@@ -87,23 +74,31 @@ end
 structure Nu_Reasoner : NU_REASONER = struct
 
 
-type cost = int
-type 'a generic_reasoner = {name: term, pos: Position.T, pattern: term list, not_match: term list, tactic: 'a}
-type reasoner = (context_state -> context_state Seq.seq) generic_reasoner
+type priority = int
+type pattern = term
+type name = term
+type reasoner = {name: term,
+                 pos: Position.T,
+                 pattern: term list,
+                 blacklist: term list,
+                 tactic: (context_state -> context_state Seq.seq)}
+
 
 val auto_level = Attrib.setup_config_int \<^binding>\<open>\<phi>auto_level\<close> (K 2)
 fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning\<close> (K false);
-val trace_candicates = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning_candicates\<close> (K false);
+val trace_candidates = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning_candidates\<close> (K false);
 
 val conclusion_tag = Free("Conclusion", \<^typ>\<open>prop \<Rightarrow> prop\<close>)
-val premise_tag = Free("Premise", \<^typ>\<open>prop \<Rightarrow> prop\<close>)
+val condition_tag = Free("Condition", \<^typ>\<open>prop \<Rightarrow> prop\<close>)
 
+fun pattern_on_conclusion term = conclusion_tag $ term
+fun pattern_on_condition  term = condition_tag  $ term
 
 exception Success  of context_state
 exception Global_Cut of context_state
-exception Local_Cut of (cost * Position.T * context_state Seq.seq)
+exception Local_Cut of (priority * Position.T * context_state Seq.seq)
 
 
 fun debug ctxt (c,(r : reasoner as {name,...})) =
@@ -115,9 +110,9 @@ fun is_var (A $ _) = is_var A
   | is_var (Var _) = true
   | is_var _ = false
 
-fun my_match thy po =
+fun match_term thy pat_obj =
   let
-    val (_,tms) = Pattern.match thy po (Vartab.empty, Vartab.empty)
+    val (_,tms) = Pattern.match thy pat_obj (Vartab.empty, Vartab.empty)
   in Vartab.fold (fn ((name,_),(_,tm)) => fn flag =>
         if String.isPrefix "var_" name
         then flag andalso is_var (Envir.beta_eta_contract tm)
@@ -126,24 +121,30 @@ fun my_match thy po =
   end
   handle Pattern.MATCH => false
 
+fun cond_concl_of_goal st i =
+  let val (gi, rfrees) = Logic.goal_params st i
+      val B = Logic.strip_assums_concl gi
+      val As = Logic.strip_assums_hyp gi
+  in conclusion_tag $ subst_bounds (rfrees, B)
+      :: map (fn t => condition_tag $ t) (map (fn A => subst_bounds (rfrees, A)) As)
+  end
 
 fun call_tactics ctxt tactics th =
   if Thm.no_prems th
   then raise Success (ctxt, th)
   else let
     val prop = Thm.prop_of th
-    val tacs = ((conclusion_tag $ Logic.concl_of_goal prop 1)
-                :: map (fn t => premise_tag $ t) (Logic.prems_of_goal prop 1))
+    val tacs = cond_concl_of_goal prop 1
                 |> maps (fn term =>
                     Cost_Net.retrieve tactics term
                       |> filter (fn (_,reasoner) =>
                           exists (fn pat =>
-                            my_match (Proof_Context.theory_of ctxt) (pat,term))
+                            match_term (Proof_Context.theory_of ctxt) (pat,term))
                           (#pattern reasoner)
                           andalso forall (fn pat =>
-                            not (my_match (Proof_Context.theory_of ctxt) (pat,term)))
-                          (#not_match reasoner))
-                      |> (if Config.get ctxt trace_candicates
+                            not (match_term (Proof_Context.theory_of ctxt) (pat,term)))
+                          (#blacklist reasoner))
+                      |> (if Config.get ctxt trace_candidates
                           then (fn rs => (List.app (debug ctxt) rs; rs))
                           else I))
                 |> sort (int_ord o apply2 fst)
@@ -200,7 +201,7 @@ fun gen_reason _ _ _ (result, []) = result
   end
 
 fun gen_reason' trace tactics states =
-      gen_reason trace 0 tactics (NONE, map (map (fn (a,b) => (a,Position.none,b))) states)
+      gen_reason trace 0 tactics (NONE, map (map (fn (a,b) => (~a,Position.none,b))) states)
       handle Success ret => SOME ret
 
 fun reason' trace tactics state =
@@ -225,14 +226,16 @@ structure Tactics = Generic_Data (
   val merge : T * T -> T = Cost_Net.merge
 )
 
-fun reasoners ctxt = Cost_Net.content (Tactics.get (Context.Proof ctxt))
+fun reasoners ctxt = Cost_Net.content (Tactics.get (Context.Proof ctxt)) |> map (apfst ~)
 fun reasoner_net ctxt = Tactics.get (Context.Proof ctxt)
-fun add cost_reasoner = Tactics.map (Cost_Net.update cost_reasoner);
+fun add (priority,reasoner) = Tactics.map (Cost_Net.update (~priority,reasoner));
 fun add_lthy cost_reasoner =
    Local_Theory.background_theory (Context.theory_map (add cost_reasoner))
 #> Local_Theory.map_contexts (K (Context.proof_map (add cost_reasoner)))
 
-fun del reasoner = Tactics.map (Cost_Net.remove reasoner);
+fun del name = Tactics.map (Cost_Net.remove(
+      {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty}))
+
 fun reason stat =
       reason' (Config.get (fst stat) trace) (Tactics.get (Context.Proof (fst stat))) stat
 fun reason1 stat =
@@ -255,16 +258,16 @@ fun setup_method_cmd (((name,cost),patterns),method) lthy =
                       |> apsnd (Syntax.read_props ctxt)
                       |> (op ~~)
     val pos_pats = patterns |> map_filter (fn ((direct,prem), pat) =>
-             (if direct then SOME ((if prem then premise_tag else conclusion_tag) $ pat) else NONE))
+             (if direct then SOME ((if prem then condition_tag else conclusion_tag) $ pat) else NONE))
     val neg_pats = patterns |> map_filter (fn ((direct,prem), pat) =>
-             (if direct then NONE else SOME ((if prem then premise_tag else conclusion_tag) $ pat)))
+             (if direct then NONE else SOME ((if prem then condition_tag else conclusion_tag) $ pat)))
     val name' = Free(Binding.name_of name, dummyT)
 
     val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (ctxt,thm) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
     val lthy'' = add_lthy (cost, {name=name', pos=Binding.pos_of name,
-                                  pattern=pos_pats, not_match=neg_pats, tactic=method'''}) lthy'
+                                  pattern=pos_pats, blacklist=neg_pats, tactic=method'''}) lthy'
   in
     lthy''
 end
@@ -277,9 +280,9 @@ fun setup_cmd ((((name,pos),cost),patterns),tactic_src) lthy =
                       |> apsnd (Syntax.read_props ctxt)
                       |> (op ~~)
     val pos_pats = patterns |> map_filter (fn ((direct,prem), pat) =>
-             (if direct then SOME ((if prem then premise_tag else conclusion_tag) $ pat) else NONE))
+             (if direct then SOME ((if prem then condition_tag else conclusion_tag) $ pat) else NONE))
     val neg_pats = patterns |> map_filter (fn ((direct,prem), pat) =>
-             (if direct then NONE else SOME ((if prem then premise_tag else conclusion_tag) $ pat)))
+             (if direct then NONE else SOME ((if prem then condition_tag else conclusion_tag) $ pat)))
   in
     lthy |> Context.proof_map (
       ML_Context.expression (Input.pos_of tactic_src)
@@ -289,7 +292,7 @@ fun setup_cmd ((((name,pos),cost),patterns),tactic_src) lthy =
           ML_Syntax.print_term name ^ "), pos=("^
           ML_Syntax.print_position pos ^ "), pattern=(" ^
           ML_Syntax.print_list ML_Syntax.print_term pos_pats
-          ^ "), not_match=("^
+          ^ "), blacklist=("^
           ML_Syntax.print_list ML_Syntax.print_term neg_pats
           ^"), tactic=(let in ") @
           ML_Lex.read_source tactic_src @
@@ -297,19 +300,20 @@ fun setup_cmd ((((name,pos),cost),patterns),tactic_src) lthy =
     )
   end
 
-val pattern = Parse.enum "|"
-      ((Scan.optional (\<^keyword>\<open>no\<close> >> K false) true
+val patterns = Parse.$$$ "(" |-- Parse.enum "|"
+      ((Scan.optional (\<^keyword>\<open>except\<close> >> K false) true
         -- (\<^keyword>\<open>premises\<close> >> K true || \<^keyword>\<open>conclusion\<close> >> K false)) -- Parse.term)
+      --| Parse.$$$ ")"
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword \<phi>reasoner_ML} "define \<phi>reasoner"
-    (Parse.position Parse.term -- (Parse.int >> ~) --| Parse.$$$ "(" -- pattern --| Parse.$$$ ")"
+    (Parse.position Parse.term -- Parse.int -- patterns
         --| @{keyword =} -- Parse.ML_source
       >> setup_cmd)
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword \<phi>reasoner} "define \<phi>reasoner"
-    (Parse.binding -- (Parse.int >> ~) --| Parse.$$$ "(" -- pattern --| Parse.$$$ ")"
+    (Parse.binding -- Parse.int -- patterns
         --| @{keyword =} -- Parse.args1 (K true)
       >> setup_method_cmd)
 
@@ -320,23 +324,24 @@ fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 
 
-fun intro_reasoner pos cost patterns not_match rule =
+fun name_of_intro_reasoner rule = Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Thm.prop_of rule
+fun intro_reasoner pos priority patterns blacklist rule =
   let
     val rule = Thm.trim_context rule
     val pats = if null patterns then [conclusion_tag $ Thm.concl_of rule]
                else map (fn pat => conclusion_tag $ pat) patterns
-    val npats= map (fn pat => conclusion_tag $ pat) not_match
+    val npats= map (fn pat => conclusion_tag $ pat) blacklist
     val f_num = length (filter (fn \<^prop>\<open>\<r>Feasible\<close> => true | _ => false) (Thm.prems_of rule))
     val has_feasible =
-          if f_num > 0 andalso cost > ~1000
-          then error ("Conditional \<r>Feasible only makes sense for deterministic rule.")
+          if f_num > 0 andalso priority < 1000
+          then error ("Conditional \<r>Feasible only makes sense for assertive rule.")
           else if f_num > 1
           then error ("A reasoning rule can contain one \<r>Feasible antecedent at most.")
           else f_num > 0
-  in {name = @{term \<phi>Intro_Rule} $ Thm.prop_of rule,
+  in {name = name_of_intro_reasoner rule,
       pos = pos,
       pattern = pats,
-      not_match = npats,
+      blacklist = npats,
       tactic = (fn (ctxt, th) =>
           Seq.make (fn _ =>
             case Seq.pull (HEADGOAL (Tactic.resolve_tac ctxt [rule]) th)
@@ -348,37 +353,87 @@ fun intro_reasoner pos cost patterns not_match rule =
       }
   end
 
-fun elim_reasoner pos patterns not_match  rule =
+fun name_of_elim_reasoner rule = Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Thm.prop_of rule
+fun elim_reasoner pos patterns blacklist  rule =
   let
     val rule = Thm.trim_context rule
-    val pats = if null patterns then [premise_tag $ Thm.major_prem_of rule]
-               else map (fn pat => premise_tag $ pat) patterns
-    val npats= map (fn pat => premise_tag $ pat) not_match
-  in {name = @{term \<phi>Elim_Rule} $ Thm.prop_of rule,
+    val pats = if null patterns then [condition_tag $ fst (Logic.dest_implies (Thm.prop_of rule))]
+               else map (fn pat => condition_tag $ pat) patterns
+    val npats= map (fn pat => condition_tag $ pat) blacklist
+  in {name = name_of_elim_reasoner rule,
       pos = pos,
       pattern = pats,
-      not_match = npats,
+      blacklist = npats,
       tactic = (fn (ctxt, th) => HEADGOAL (Tactic.eresolve_tac ctxt [rule]) th |> Seq.map (pair ctxt))}
   end
 
-fun add_intro_rule pos cost (pattern,not_match) rule =
-      add (cost, intro_reasoner pos cost pattern not_match rule)
+fun add_intro_rule pos priority (pattern,blacklist) rule =
+      add (priority, intro_reasoner pos priority pattern blacklist rule)
 fun add_intro_rules rules =
-  fold (fn (rules,pos,cost,pattern,not_match) =>
-    fold (Context.proof_map o add_intro_rule pos cost (pattern,not_match)) rules) rules
-fun del_intro_rule rule = del (intro_reasoner Position.none 1000 [] [] rule)
+  fold (fn (rules,pos,priority,pattern,blacklist) =>
+    fold (Context.proof_map o add_intro_rule pos priority (pattern,blacklist)) rules) rules
+fun del_intro_rule rule = del (name_of_intro_reasoner rule)
 
-fun attr_add_intro (pos, (cost, (pattern, not_match))) =
-  Thm.declaration_attribute (add_intro_rule pos cost (pattern,not_match))
+fun attr_add_intro (pos, (priority, (pattern, blacklist))) =
+  Thm.declaration_attribute (add_intro_rule pos priority (pattern,blacklist))
 val attr_del_intro = Thm.declaration_attribute del_intro_rule
 
-fun add_elim_rule pos cost (pattern, not_match) rule = add (cost, elim_reasoner pos pattern not_match rule)
+fun add_elim_rule pos priority (pattern, blacklist) rule
+      = add (priority, elim_reasoner pos pattern blacklist rule)
 fun add_elim_rules rules =
-  fold (fn (rules,pos,cost,pattern,not_match) =>
-    fold (Context.proof_map o add_elim_rule pos cost (pattern,not_match)) rules) rules
-fun del_elim_rule rule = del (elim_reasoner Position.none [] [] rule)
-fun attr_add_elim (pos, (cost, (pattern, not_match))) =
-  Thm.declaration_attribute (add_elim_rule pos cost (pattern,not_match))
+  fold (fn (rules,pos,priority,pattern,blacklist) =>
+    fold (Context.proof_map o add_elim_rule pos priority (pattern,blacklist)) rules) rules
+fun del_elim_rule rule = del (name_of_elim_reasoner rule)
+fun attr_add_elim (pos, (priority, (pattern, blacklist))) =
+  Thm.declaration_attribute (add_elim_rule pos priority (pattern,blacklist))
 val attr_del_elim = Thm.declaration_attribute del_elim_rule
+
+
+
+val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
+(let open Args Scan Parse 
+  fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
+  val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
+  val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
+  fun pos_parser x = (Token.pos_of (hd x), x)
+in
+  (lift pos_parser --
+  (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K 2000000) || optional Parse.int 100))
+      -- (optional (lift (\<^keyword>\<open>for\<close>) |-- prop_pattern) []
+       -- optional (lift (\<^keyword>\<open>except\<close>) |-- prop_pattern) []))
+        >> attr_add_intro)
+  || (lift del >> K attr_del_intro)
+end)
+"Decalre or remove introduction rules in \<phi>-LPR."
+
+#> Attrib.setup \<^binding>\<open>\<phi>reason_elim\<close>
+(let open Args Scan Parse
+  fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
+  val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
+  val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
+  fun pos_parser x = (Token.pos_of (hd x), x)
+in
+  (lift pos_parser --
+  (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K 2000000) || optional Parse.int 100))
+      -- (optional (lift \<^keyword>\<open>for\<close> |-- prop_pattern) []
+       -- optional (lift \<^keyword>\<open>except\<close> |-- prop_pattern) []))
+        >> attr_add_elim)
+  || (lift del >> K attr_del_elim)
+end)
+"Decalre or remove elimination rules in \<phi>-LPR."
+
+#> Method.setup \<^binding>\<open>\<phi>reason\<close>
+(let open Scan Parse in
+  Method.sections [
+    Parse.position Args.add >> (fn (_,pos) =>
+                                    Method.modifier (attr_add_intro (pos,(100,([],[])))) \<^here>),
+    Args.del >> K (Method.modifier attr_del_intro \<^here>)
+] >> (fn irules => fn ctxt => fn ths => reason_tac ctxt)
+end)
+"Apply \<phi>-LPR as a proof method."
+
+)
+
+
 
 end
