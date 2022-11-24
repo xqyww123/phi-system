@@ -1,0 +1,7 @@
+#!/bin/sh
+
+sed -i 's/\\<\([^>]*\)>/\\x\1 /g; s/\\isactrlbold {\\isacharless}//g; s/\\isactrlbold {\\isachargreater}//g' ./Algebras.tex
+
+xelatex root.tex
+xelatex root.tex
+xelatex root.tex

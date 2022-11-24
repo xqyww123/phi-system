@@ -1,0 +1,6 @@
+session "Phi-Statespace" = HOL +
+  theories [skip_proofs = false]
+    StateSpaceLocale
+    StateSpaceSyntax
+    StateFun
+  document_files "root.tex"

@@ -1,10 +1,16 @@
-session "Phi-Logic-Programming-Reasoner" = Main +
+session "Virtual-Datatype" = "Phi-Statespace" +
+  sessions
+    "Phi-Statespace"
+  theories
+    Virtual_Datatype
+
+session "Virtual-Datatype-Doc" in example = "Virtual-Datatype" +
   options [document = pdf, document_output = "output", document_build = build]
   sessions
-    "HOL-Eisbach"
+    "Virtual-Datatype"
     "Phi-Document"
   theories
-    Phi_Logic_Programming_Reasoner
+    VDT_Example
   document_files (in "~~/src/Doc/")
     "pdfsetup.sty"
     "iman.sty"
@@ -13,8 +19,9 @@ session "Phi-Logic-Programming-Reasoner" = Main +
     "ttbox.sty"
     "underscore.sty"
     "manual.bib"
-  document_files (in "../document")
-    "phi.sty"
+  document_files (in "../../../document")
+    phi.sty
+    bib.bib
   document_files
     "root.tex"
-    "build"
+    "build"  

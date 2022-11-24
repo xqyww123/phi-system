@@ -1,0 +1,92 @@
+chapter \<open>Preliminary\<close>
+
+section \<open>Preliminary\<close>
+
+theory Preliminary
+  imports Main "Phi-Algebras.Algebras"
+begin
+
+subsection \<open>Named Theorems\<close>
+
+named_theorems \<phi>expns \<open>Semantics Expansions, used to expand assertions semantically.\<close>
+and \<phi>inhabited \<open>Inhabitance lemmas, of form \<open>Inhabited P \<longleftrightarrow> Expansion\<close>\<close>
+
+declare set_mult_expn[\<phi>expns]
+
+subsection \<open>Error Mechanism\<close>
+
+declare [ [ML_debugger, ML_exception_debugger] ]
+
+ML_file \<open>library/Phi_Error.ML\<close>
+
+subsection \<open>Helper Lemmas\<close>
+
+lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
+
+subsection \<open>Helper Attributes \& Tactics\<close>
+
+attribute_setup rotated = \<open>Scan.lift (Scan.optional Parse.int 1 -- Scan.optional Parse.int 0) >>
+  (fn (k,j) => Thm.rule_attribute [] (fn _ => Thm.permute_prems j k))\<close>
+  \<open>Enhanced version of the Pure.rotated\<close>
+
+attribute_setup TRY_THEN = \<open>(Scan.lift (Scan.optional (Args.bracks Parse.nat) 1) -- Attrib.thm
+      >> (fn (i, B) => Thm.rule_attribute [B] (fn _ => fn A => A RSN (i, B) handle THM _ => A)))
+    \<close> "resolution with rule, and do nothing if fail"
+
+
+subsection \<open>Document Antiquotations\<close>
+
+setup \<open>
+let
+  fun read_prop_pat ctxt = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt)
+  val prop_pattern = Scan.peek (Args.named_term o read_prop_pat o Context.proof_of)
+
+  val basic_entity = Document_Output.antiquotation_pretty_source_embedded
+  fun pretty_term_style ctxt (style, t) =
+    Document_Output.pretty_term ctxt (style t);
+
+in
+   ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
+    (Args.term_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
+#> ML_Antiquotation.inline_embedded \<^binding>\<open>prop_pattern\<close>
+    (prop_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
+#> basic_entity \<^binding>\<open>schematic_term\<close> (Term_Style.parse -- Args.term_pattern) pretty_term_style
+#> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop_pattern) pretty_term_style
+end\<close>
+
+(*TODO: Move this*)
+subsubsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
+
+definition \<open>CONV_GE \<longleftrightarrow> False\<close>
+definition \<open>CONV_GE_Ex \<equiv> Ex\<close>
+definition \<open>CONV_GE_conj \<equiv> (\<and>)\<close>
+
+lemma CONV_GE_phase_1:
+  \<open>A \<longrightarrow> B \<longrightarrow> CONV_GE \<equiv> CONV_GE_conj A B \<longrightarrow> CONV_GE\<close>
+  \<open>(\<forall>x. P x \<longrightarrow> CONV_GE) \<equiv> (CONV_GE_Ex P \<longrightarrow> CONV_GE)\<close>
+  \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj A (B' x)) \<equiv> CONV_GE_conj A (CONV_GE_Ex B')\<close>
+  \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj (A' x) B) \<equiv> CONV_GE_conj (CONV_GE_Ex A') B\<close>
+  \<open>(Q \<longrightarrow> CONV_GE) \<longrightarrow> CONV_GE \<equiv> Q\<close>
+  \<open>CONV_GE \<longrightarrow> CONV_GE \<equiv> True\<close>
+  unfolding atomize_eq CONV_GE_Ex_def CONV_GE_def CONV_GE_conj_def by blast+
+
+lemma CONV_GE_phase_2:
+  \<open>Trueprop (CONV_GE_conj A B) \<equiv> (A &&& B)\<close>
+  unfolding CONV_GE_conj_def atomize_conj .
+
+ML \<open>
+fun conv_GE_to_plain_conjunction ctxt thm =
+  let
+    val V = case Thm.prop_of thm
+      of \<^const>\<open>Pure.imp\<close> $ _ $ (\<^const>\<open>Trueprop\<close> $ Var V) => V
+       | _ => raise THM ("Not a Generalized Elimination rule", 0, [thm])
+    val thm' = Thm.instantiate (TVars.empty, Vars.make [(V, \<^cterm>\<open>CONV_GE\<close>)]) thm
+  in
+    thm'
+      |> Raw_Simplifier.rewrite_rule ctxt @{thms atomize_all atomize_imp atomize_eq atomize_conj CONV_GE_phase_1}
+      |> Raw_Simplifier.rewrite_rule ctxt @{thms CONV_GE_Ex_def CONV_GE_phase_2}
+      |> Conjunction.elim_conjunctions
+  end
+\<close>
+
+end

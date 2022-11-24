@@ -1,10 +1,11 @@
-session "Phi-Logic-Programming-Reasoner" = Main +
-  options [document = pdf, document_output = "output", document_build = build]
+session "Phi-Semantics-Framework" = "Main" +
+  options [document = pdf, document_build = build]
   sessions
-    "HOL-Eisbach"
-    "Phi-Document"
+    "Phi-Statespace"
+    "Virtual-Datatype"
+    "Phi-Algebras"
   theories
-    Phi_Logic_Programming_Reasoner
+    Phi_Semantics_Framework
   document_files (in "~~/src/Doc/")
     "pdfsetup.sty"
     "iman.sty"
@@ -14,7 +15,8 @@ session "Phi-Logic-Programming-Reasoner" = Main +
     "underscore.sty"
     "manual.bib"
   document_files (in "../document")
-    "phi.sty"
+    phi.sty
+    bib.bib
   document_files
     "root.tex"
-    "build"
+    "build"  

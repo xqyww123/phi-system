@@ -1,10 +1,13 @@
-session "Phi-Logic-Programming-Reasoner" = Main +
+chapter Phi
+
+session "Phi-Algebras" = Main +
   options [document = pdf, document_output = "output", document_build = build]
   sessions
-    "HOL-Eisbach"
+    "Phi-Statespace"
     "Phi-Document"
   theories
-    Phi_Logic_Programming_Reasoner
+    Algebras
+    Map_of_Tree
   document_files (in "~~/src/Doc/")
     "pdfsetup.sty"
     "iman.sty"

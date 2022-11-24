@@ -1,5 +1,5 @@
 theory Phi_Logic_Programming_Reasoner
-  imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools"
+  imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi-Document.Base"
   keywords "except" :: quasi_command
     and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
   abbrevs
@@ -8,8 +8,6 @@ theory Phi_Logic_Programming_Reasoner
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
   and "<action>" = "\<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>>"
 begin
-
-ML_file \<open>antiquote_setup.ML\<close>
 
 ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
 

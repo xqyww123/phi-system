@@ -615,7 +615,7 @@ lemma RawPointer_zero[\<phi>reason on \<open>\<phi>Zero (T_pointer.mk ()) RawPoi
 
 lemma RawPointer_eqcmp[\<phi>reason on \<open>\<phi>Equal RawPointer ?c ?eq\<close>]:
   "\<phi>Equal RawPointer (\<lambda>x y. x = 0 |: 0 \<or> y = 0 |: 0 \<or> memaddr.segment x = memaddr.segment y) (=)"
-  unfolding \<phi>Equal_def by (simp add: lrep_exps \<phi>expns zero_memaddr_def) blast
+  unfolding \<phi>Equal_def by (simp add: \<phi>expns zero_memaddr_def) blast
 
 lemma RawPointer_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> RawPointer) ?ty\<close>]:
   \<open>\<phi>SemType (x \<Ztypecolon> RawPointer) \<tau>Pointer\<close>
