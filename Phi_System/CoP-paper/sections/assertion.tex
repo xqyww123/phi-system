@@ -1,0 +1,57 @@
+\section{Syntax \& Semantics of CoP Assertions \& Sequents}
+
+A CoP sequent is in form,
+\[ P \mbar S ⊢ Q \qquad\qquad S \Coloneqq ⋅ ~|~ S \mathrel{;} (f,v) \]
+where hypothesis (pre-condition) $P$ and consequence (post-condition) $Q$ are φ-BI assertions,
+$f$ is a procedure, $v$ is the return value of the procedure.
+Return values of former procedures are available in later procedures.
+$S$ is a sequence of procedures representing the current construct of the programming.
+Semantic interpretation $\seminterp{S}_r$ translates a sequence returning $r$ to a monadic program,
+\[ \seminterp{⋅}_r ≜ \mathrm{return}\;r \qquad\qquad \seminterp{(f, v) \mathbin{;} S}_r ≜ \lambda v.\; f \bind \seminterp{S}_r \]
+It is obvious any monadic program can be represented in an equivalent sequence of instructions
+(or any atomic sub-procedures as a single construction step).
+
+The semantics of sequent $P \mbar S ⊢ Q$ is given as,
+\begin{gather*}
+  (P \mbar S ⊢ Q) ≡ ∀ s\,s'\,y.\; \mathrm{Success}\;y\;s' ∈ \seminterp{S}_r ∧ (s ⊨ P) \longrightarrow (s' ⊨ Q'\,y)\\
+r = Free(Q) \cap \{ v : (any,v) \in S \} \qquad Q' = \lambda r.\; Q
+\end{gather*}
+where $r$ is a tuple of values occurring in the post-condition $Q$ and $Q'$ is the lambda abstraction of $Q$ over $r$.
+We define such $r$ as values to be returned from the procedure.
+Sequent $P \mbar S ⊢ Q$ specifies that, from a state $s$ satisfying $P$, any normal (successful) execution path of $\seminterp{S}_r$ results in a state $s'$ with return value $y$ satisfying $Q'\,y$.
+
+\begin{remark}
+We write $P ⊢ Q$ for $P \mbar ⋅ ⊢ Q$ directly.
+\end{remark}
+
+Now following the approach of Dynamic Logic,
+we extend BI (φ-BI) by a weakest precondition modality $[C]\{Q\}\{E\}$.
+Semantically, it represents
+given the resource of state $s$ as the input, which subjects to $s ⊨ [C]\{Q\}\{E\}$,
+the execution of the monadic program $C$
+results in either some successful state $\mathrm{Success}\;v\;s'$ with $s' ⊨ Q\,v$,
+or some exceptional state $\mathrm{Exception}\;e\;s'$ with $s' ⊨ E\,e$,
+or optionally NonTerm depending on the configuration of total correctness or partial correctness.
+Significantly, the semantics of conventional quadruple $\{P\}C\{Q\}\{E\}$ is identical to that of BI assertion
+  $P \longrightarrow [C]\{Q\}\{E\}$.
+Actually, in CoP, \[\{P\}C\{Q\}\{E\} ~\triangleq~ P \longrightarrow [C]\{Q\}\{E\}. \tag{HQ}\label{def:HQ}\]
+
+%A procedure $C$ is specified by a quadruple $\{P\}C\{Q\}\{E\}$ where $P, Q$ are the conventional pre- and post-condition respectively and $E$ is the specification for abnormal exits by exceptions.
+Recall control flow combinators in \cref{sec:prog-sem} which are higher-order monads.
+For them, the specifications of the procedural parameters (namely the parameters that are a procedure) are given in antecedents of implications over the quadruple, e.g.,
+\begin{multline*}
+  \{P\}B_T\{Q_T\}\{E_T\} \Longrightarrow \{P\}B_F\{Q_F\}\{E_F\} \Longrightarrow \\
+      \{P\}~\mathrm{if}\;c\;B_T\;B_F~\{(c \longrightarrow P_T) ∨ (¬c \longrightarrow P_F)\}\{e.\;E_T\,e \lor E_F\,e\}
+\end{multline*}
+Note, the specifications of any-order procedures are indeed Heredity Harrop Formulas (HHFs).
+HHF is the orthodox form of formulas in logic programming, which is also the way of how nested procedures are constructed as shall be elaborated in \cref{sec:process}.
+
+\begin{remark}
+$A \Longrightarrow C$ represents an implication where the antecedent $A$ is not necessarily
+specifying the same concrete resource (namely the possible world) of consequence $C$.
+$(A \Longrightarrow C) \triangleq (∀w.\,@_w A) \longrightarrow C$.
+It coincides with the implication in the meta-logic (that implements the BI) exactly.
+If semantic interpretation $\seminterp{\cdot}$ translates φ-BI formulas into meta-logic formulas,
+  there is $\seminterp{A \Longrightarrow C} = (\seminterp{A} \longrightarrow \seminterp{C})$.
+\end{remark}
+

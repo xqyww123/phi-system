@@ -1,5 +1,5 @@
 theory Phi_Logic_Programming_Reasoner
-  imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi-Document.Base"
+  imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
   keywords "except" :: quasi_command
     and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
   abbrevs

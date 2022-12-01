@@ -1,8 +1,8 @@
-session "Phi-Logic-Programming-Reasoner" = Main +
+session Phi_Logic_Programming_Reasoner = Main +
   options [document = pdf, document_output = "output", document_build = build]
   sessions
     "HOL-Eisbach"
-    "Phi-Document"
+    "Phi_Document"
   theories
     Phi_Logic_Programming_Reasoner
   document_files (in "~~/src/Doc/")

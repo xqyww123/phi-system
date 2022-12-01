@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sed -i 's/\\<\([^>]*\)>/\\x\1 /g; s/\\isactrlbold {\\isacharless}//g; s/\\isactrlbold {\\isachargreater}//g' ./Phi_Semantics_Framework.tex ./Resource_Space.tex
+sed -i 's/\\<\([^>]*\)>/\\x\1 /g; s/\\isactrlbold {\\isacharless}//g; s/\\isactrlbold {\\isachargreater}//g' ./BI.tex ./Phi_BI.tex ./Calculus_of_Programming.tex ./Preliminary.tex ./Spec_Framework.tex ./Sys.tex
 
 xelatex root.tex
 xelatex root.tex

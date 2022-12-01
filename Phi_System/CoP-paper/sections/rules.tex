@@ -1,0 +1,74 @@
+\section{Inference Rules}
+
+First, noticing the semantics of $P \mbar ⋅ ⊢ Q$ is identical to the semantics of BI sequent
+ $P ⊢ Q$, CoP inherits all inference rules of BI on $P \mbar ⋅ ⊢ Q$.
+It also brings us an axiom
+\[ P \mbar ⋅ ⊢ P \tag{Ax}\label{Ax} \]
+
+Pure assertions valid on former procedure sequence are also valid on the descendent sequence.
+Here we only give a rule on φ-BI because in ordinary BI
+there is no general syntactic way to represent pure assertions, whereas in φ-BI,
+any pure assertion is represented by satisfaction $@_w P$.
+\begin{prooftree}
+\AxiomC{$Γ \mbar S ⊢ @_w P$}
+\RightLabel{(DESC)}
+\UnaryInfC{$Γ \mbar S; S' ⊢ @_w P$}
+\end{prooftree}
+Two consequence rules for CoP sequents and wp-modalities enable us to transform the
+pre/post-condition of CoP sequents and the specifications of the exceptional state in wp-modalities
+respectively.
+
+\begin{prooftree}
+\AxiomC{$P' ⊢ P$}
+\AxiomC{$P' \mbar S ⊢ Q$}
+\AxiomC{$Q ⊢ Q'$}
+\RightLabel{(CSQ)}
+\TrinaryInfC{$P' \mbar S ⊢ Q'$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$P ⊢ P'$}
+\AxiomC{$E ⊢ E'$}
+\RightLabel{(wp-CSQ)}
+\BinaryInfC{$[C]\{P\}\{E\} ⊢ [C]\{P'\}\{E'\}$}
+\end{prooftree}
+
+By the definition of Hoare quadruple (\ref{def:HQ}), \emph{derived} from CSQ rule,
+the APP rule enables us to apply a procedure on an on-going construction,
+
+\begin{prooftree}
+\AxiomC{$Γ \mbar S ⊢ P$}
+\AxiomC{$⊢ \{P\}C\{Q\}\{E\}$}
+\RightLabel{(APP)}
+\BinaryInfC{$Γ \mbar S ⊢ [C]\{Q\}\{E\}$}
+\end{prooftree}
+
+A primitive rule named ACCEPT then absorbs the procedure $C$ from the consequence $[C]\{Q\}\{E\}$
+into the procedure sequence in the hypothesis,
+
+\begin{prooftree}
+\AxiomC{$Γ \mbar S ⊢ [C]\{Q\}\{E\}$}
+\RightLabel{(ACCEPT)\quad \parbox{5cm}{$v$ is a fresh variable not free in $Γ, S, C, Q$}}
+\UnaryInfC{$Γ \mbar S; (C,v) ⊢ Q\,v$}
+\end{prooftree}
+
+Finally, the primitive ASSEMBLE rule enables us to deduce a quadruple  from an on-going sequent by
+assembling every step of procedure in the sequence,
+
+\begin{prooftree}
+\AxiomC{$Γ \mbar S; (C_1,r) ⊢ [C_2]\{Q\}\{E_2\}$}
+\AxiomC{$Γ \mbar S ⊢ [C_1]\{P\}\{E_1\}$}
+\RightLabel{(ASSEMBLE)}
+\BinaryInfC{$Γ \mbar S ⊢ [C_1 \bind λr.\;C_2]\{P\}\{e.\;E_1\,e ∨ (∃r.\,E_2\,e)\}$}
+\end{prooftree}
+
+The rule assembles a step of procedure $C_1$ by means of the wp-modality $[C_1]\{P\}\{E_1\}$
+where the exceptional specification $E_1$ of $C_1$ is given.
+
+The assembling process works backwardly starting from the latest and the innermost procedure in the monadic representation.
+The process is initialized by ASSEMBLE-0 axiom which makes the first and the innermost $(\mathrm{return}\;r)$ instruction.
+\[ Q'\;r \longrightarrow [\mathrm{return}\;r]\{Q'\}\{e.\, ⊥\} \tag{ASSEMBLE-0}\label{ax:ASSEMBLE-0} \]
+$r$ are the values intended to be returned.
+They can be given explicitly by the user, or be extracted from the post-condition $Q$ by letting
+$r = \mathrm{Free}(Q) \cap \{ v : (any,v) ∈ S\}$, i.e., all values occurring in $Q$.
+When $r$ is decided, rewrite $Q$ into $Q'\,r$, viz., $Q \equiv Q'\,r$. Then the axiom is appliable.

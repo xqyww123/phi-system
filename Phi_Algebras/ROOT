@@ -1,10 +1,10 @@
 chapter Phi
 
-session "Phi-Algebras" = Main +
+session Phi_Algebras = Main +
   options [document = pdf, document_output = "output", document_build = build]
   sessions
-    "Phi-Statespace"
-    "Phi-Document"
+    "Phi_Statespace"
+    "Phi_Document"
   theories
     Algebras
     Map_of_Tree

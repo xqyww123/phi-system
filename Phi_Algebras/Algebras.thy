@@ -1,6 +1,6 @@
 theory Algebras
   imports Main HOL.Rat
-    "Phi-Statespace.StateFun" "Phi-Document.Base"
+    "Phi_Statespace.StateFun" "Phi_Document.Base"
   abbrevs "!!" = "!!"
 begin
 

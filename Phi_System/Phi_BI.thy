@@ -15,4 +15,6 @@ lemma \<phi>Type_eqI:
   \<open>(\<forall>x p. p \<in> (x \<Ztypecolon> a) \<longleftrightarrow> p \<in> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
   unfolding \<phi>Type_def by blast
 
+ML_file \<open>library/NuSimpCongruence.ML\<close>
+
 end

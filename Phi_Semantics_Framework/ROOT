@@ -1,9 +1,9 @@
-session "Phi-Semantics-Framework" = "Main" +
+session Phi_Semantics_Framework = Main +
   options [document = pdf, document_build = build]
   sessions
-    "Phi-Statespace"
-    "Virtual-Datatype"
-    "Phi-Algebras"
+    Phi_Statespace
+    Virtual_Datatype
+    Phi_Algebras
   theories
     Phi_Semantics_Framework
   document_files (in "~~/src/Doc/")

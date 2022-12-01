@@ -7,8 +7,8 @@ section \<open>Framework for Modular Formalization of Resources \& Fictional Res
 text \<open>Algebras used in the formalization are given in~\cite{Algebras}.\<close>
 
 theory Resource_Space
-  imports "Phi-Algebras.Algebras"
-    "Virtual-Datatype.Virtual_Datatype"
+  imports "Phi_Algebras.Algebras"
+    "Virtual_Datatype.Virtual_Datatype"
   keywords "resource_space" :: thy_defn
     and "fiction_space" :: thy_defn
 begin

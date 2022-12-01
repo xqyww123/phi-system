@@ -1,14 +1,14 @@
-session "Virtual-Datatype" = "Phi-Statespace" +
+session Virtual_Datatype = Phi_Statespace +
   sessions
-    "Phi-Statespace"
+    Phi_Statespace
   theories
     Virtual_Datatype
 
-session "Virtual-Datatype-Doc" in example = "Virtual-Datatype" +
+session Virtual_Datatype_Doc in example = Virtual_Datatype +
   options [document = pdf, document_output = "output", document_build = build]
   sessions
-    "Virtual-Datatype"
-    "Phi-Document"
+    Virtual_Datatype
+    Phi_Document
   theories
     VDT_Example
   document_files (in "~~/src/Doc/")

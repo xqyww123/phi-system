@@ -1,5 +1,5 @@
 theory Virtual_Datatype
-  imports "Phi-Statespace.StateFun"
+  imports "Phi_Statespace.StateFun"
   keywords "virtual_datatype" :: thy_decl
 begin
 

@@ -1,11 +1,11 @@
-session "Phi_System" = "Phi_Semantics_Framework" +
-  options[document_build = build]
+session "PhiSem-Min" = "Phi_System" +
   sessions
     "Phi_Algebras"
     "Phi_Semantics_Framework"
     "Phi_Logic_Programming_Reasoner"
+    "Phi_System"
   theories
-    Sys
+    PhiSem_Min
   document_files (in "~~/src/Doc/")
     "pdfsetup.sty"
     "iman.sty"
@@ -14,7 +14,7 @@ session "Phi_System" = "Phi_Semantics_Framework" +
     "ttbox.sty"
     "underscore.sty"
     "manual.bib"
-  document_files (in "../document")
+  document_files (in "../../document")
     phi.sty
     bib.bib
   document_files

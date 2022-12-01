@@ -1,3 +1,3 @@
-session "Phi-Document" = Pure +
+session "Phi_Document" = Pure +
   theories
     Base

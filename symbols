@@ -1,5 +1,4 @@
-\<triangle_bullet>  code: 0x002023  font: Symbola  group: operator
-\<fish_eye>         code: 0x0025C9  font: Symbola  group: punctuation
+\<tribullet>        code: 0x002023  font: Symbola  group: operator
 \<fish_eye>         code: 0x0025C9  font: Symbola  group: punctuation
 \<black_circle>     code: 0x0025CF  font: Symbola  group: punctuation
 
@@ -9,3 +8,5 @@
 \<brangle>         code: 0x00276d   font: Symbola  group: punctuation abbrev: >>b
 \<medium_left_bracket>   code: 0x002774  font: Symbola   abbrev: {{
 \<medium_right_bracket>  code: 0x002775  font: Symbola   abbrev: }}
+\<dblcoloneqq>     code: 0x002A74   font: Symbola   group: relation   abbrev: ::=
+

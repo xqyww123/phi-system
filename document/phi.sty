@@ -1,9 +1,27 @@
 \usepackage{newunicodechar}
 \usepackage{fontspec}
+\usepackage{mathtools}
+\usepackage{bussproofs}
 \newfontfamily\Symbola{Symbola}
-\newcommand{\xphi}{\text{\Symbola φ}}
+\newunicodechar{φ}{\text{\Symbola φ}}
+\newcommand{\xphi}{φ}
 \newcommand{\xr}{\text{\Symbola 𝗋}}
+\newcommand{\xtop}{\top}
+\newcommand{\xbottom}{\bot}
 \newcommand{\xinfinity}{\text{\Symbola ∞}}
 \newcommand{\isasymblangle}{\text{\Symbola ❬}}
 \newcommand{\isasymbrangle}{\text{\Symbola ❭}}
 \newcommand{\isactrlenum}{\text{\Symbola ▸}}
+\newcommand{\isasymheavyUNDERSCOREcomma}{\text{\Symbola ❟}}
+\newcommand{\isactrlemph}{\text{\Symbola ∗}}
+\newcommand{\isasymmediumUNDERSCOREleftUNDERSCOREbracket}{\text{\Symbola ❴}}
+\newcommand{\isasymmediumUNDERSCORErightUNDERSCOREbracket}{\text{\Symbola ❵}}
+\newcommand{\xlambda}{\text{\Symbola λ}}
+\newcommand{\isasymblackUNDERSCOREcircle}{\text{\Symbola ●}}
+\newcommand{\isasymfishUNDERSCOREeye}{\text{\Symbola ◉}}
+\newcommand{\xle}{\text{\Symbola ≤}}
+\newcommand{\dblcoloneqq}{\text{\Symbola ⩴}}
+\newcommand{\mbar}{\mathrel{|}}
+\newcommand{\seminterp}[1]{\llbracket#1\rrbracket}
+\newcommand{\satisfies}[1]{\mathop{@_{#1}}}
+

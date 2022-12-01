@@ -1,9 +1,7 @@
-chapter \<open>Preliminary\<close>
-
 section \<open>Preliminary\<close>
 
 theory Preliminary
-  imports Main "Phi-Algebras.Algebras"
+  imports Main "Phi_Algebras.Algebras"
 begin
 
 subsection \<open>Named Theorems\<close>
@@ -18,6 +16,10 @@ subsection \<open>Error Mechanism\<close>
 declare [ [ML_debugger, ML_exception_debugger] ]
 
 ML_file \<open>library/Phi_Error.ML\<close>
+
+subsection \<open>Helper ML\<close>
+
+ML_file \<open>library/NuHelp.ML\<close>
 
 subsection \<open>Helper Lemmas\<close>
 

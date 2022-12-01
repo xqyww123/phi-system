@@ -1,4 +1,4 @@
-session "Phi-Statespace" = HOL +
+session Phi_Statespace = HOL +
   theories [skip_proofs = false]
     StateSpaceLocale
     StateSpaceSyntax

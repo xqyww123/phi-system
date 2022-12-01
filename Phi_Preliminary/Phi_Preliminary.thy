@@ -1,3 +1,6 @@
+(* Depreciated! ! ! *)
+
+
 theory Phi_Preliminary
   imports Main HOL.Rat
 (*  abbrevs

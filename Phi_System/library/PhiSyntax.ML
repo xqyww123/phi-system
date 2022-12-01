@@ -110,13 +110,13 @@ val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 
 val dest_CurrentConstruction   =
-      perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name "\<phi>fiction.CurrentConstruction"}
+      perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name "\<phi>spec.CurrentConstruction"}
 val dest_CurrentConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "\<phi>fiction.CurrentConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "\<phi>spec.CurrentConstruction"}
 val dest_PendingConstruction   =
-      perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name "\<phi>fiction.PendingConstruction"}
+      perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name "\<phi>spec.PendingConstruction"}
 val dest_PendingConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "\<phi>fiction.PendingConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "\<phi>spec.PendingConstruction"}
 fun is_construction_mode mode tm =
   case try dest_CurrentConstruction tm
     of SOME (m,_,_,_) => mode = m
@@ -167,17 +167,17 @@ val dest_tags_c =
 
 val dest_procedure   =
      dest_tags
-  #> dest_quadop @{const_name "\<phi>fiction.\<phi>Procedure"}
+  #> dest_quadop @{const_name "\<phi>spec.\<phi>Procedure"}
 val dest_procedure_c =
      dest_tags_c
-  #> dest_quadop_c @{const_name "\<phi>fiction.\<phi>Procedure"}
+  #> dest_quadop_c @{const_name "\<phi>spec.\<phi>Procedure"}
 
 val dest_view_shift    =
          dest_tags
-      #> dest_triop @{const_name "\<phi>fiction.View_Shift"}
+      #> dest_triop @{const_name "\<phi>spec.View_Shift"}
 val dest_view_shift_c  =
          dest_tags_c
-      #> dest_triop_c @{const_name "\<phi>fiction.View_Shift"}
+      #> dest_triop_c @{const_name "\<phi>spec.View_Shift"}
 
 val dest_implication   =
          dest_tags

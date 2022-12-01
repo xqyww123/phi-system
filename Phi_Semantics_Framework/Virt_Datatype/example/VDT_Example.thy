@@ -1,7 +1,7 @@
 (* AUTHOR: Qiyuan Xu, 2022 *)
 
 theory VDT_Example
-  imports "Virtual-Datatype.Virtual_Datatype" "Phi-Document.Base"
+  imports "Virtual_Datatype.Virtual_Datatype" "Phi_Document.Base"
 begin
 
 section \<open>Introduction\<close>

@@ -114,7 +114,7 @@ end
 
 subsubsection \<open>Fiction\<close>
 
-locale \<phi>fiction =
+locale \<phi>spec =
   \<phi>resource_sem Resource_Validator
 + fictional_space INTERPRET
 for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::sep_algebra set"
@@ -171,7 +171,7 @@ end
 subsubsection \<open>All-in-One Module\<close>
 
 locale \<phi>empty =
-  \<phi>fiction Resource_Validator INTERPRET
+  \<phi>spec Resource_Validator INTERPRET
 + \<phi>empty_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                                \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
                                \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
@@ -281,25 +281,86 @@ lemma \<phi>V_simps[simp]:
 
 subsubsection \<open>Monadic Formalization\<close>
 
+text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential returning state of a program.
+
+\<^item> \<open>Success v r\<close> represents a successful returning state with return value \<open>v\<close> and resulted resource
+  state \<open>r\<close>.
+
+\<^item> \<open>Exception v r\<close> represents the computation throws an exception of value \<open>v\<close>, at the
+  moment when the state of the resources is \<open>r\<close>.
+
+\<^item> \<open>NonTerm\<close> represents the execution does not terminate.
+
+\<^item> \<open>Invalid\<close> represents the computation is invalid.
+  It defines the domain of valid programs, which are the ones that never never generates
+  an execution path that results in \<open>Invalid\<close>.
+ 
+\<^item> \<open>Assumption_Violated\<close> represents the computation that results in an execution path that is not
+  considered or modelled by the trust base.
+  For example, the formalization of the allocation instruction may assume the size of the object
+  to be allocated is always less than the size of the address space (e.g., \<open>2\<^sup>3\<^sup>2\<close> bytes).
+  In another case users may assume the size of their objects is representable by \<open>size_t\<close>.
+  \<open>Assumption_Violated\<close> enables an easy way for semantic assumptions, e.g., to assume \<open>P\<close>,
+  \[ \<open>if P then do-something else return Assumption_Violated\<close> \]
+  \<open>Assumption_Violated\<close> is admitted by any post-condition, i.e.,
+  \[ {\<top>} return Assumption_Violated {\<bottom>} \]
+  Computations returning \<open>Assumption_Violated\<close> are trusted by the trust base.
+  This additional increment in the trust base is controllable, because whether and where to
+  use the \<open>Assumption_Violated\<close>, this is determined by the formalization of instruction semantics,
+  which belongs to the trust base already.
+\<close>
+
 datatype ('ret,'ex,'RES_N,'RES) state =
       Success \<open>'ret sem_value\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
     | Exception \<open>'ex sem_value\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
     | Invalid | PartialCorrect
 
 
+lemma split_state_All:
+  \<open>All P \<longleftrightarrow> (\<forall>v r. P (Success v r)) \<and> (\<forall>v r. P (Exception v r)) \<and> P Invalid \<and> P PartialCorrect\<close>
+  by (metis state.exhaust)
+
+lemma split_state_Ex:
+  \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Exception v r)) \<or> P Invalid \<or> P PartialCorrect\<close>
+  by (metis state.exhaust)  
 
 hide_const(open) resource
 
-text\<open> The basic state of the \<phi>-system virtual machine is represented by type \<open>('a::lrep) state\<close>.
-  The valid state `Success` essentially has two major form, one without registers and another one with them,
-      \<^item> \<open>StatOn (x1, x2, \<cdots>, xn, void)\<close>,
-  where \<open>(x1, x2, \<cdots>, xn, void)\<close> represents the stack in the state, with @{term x\<^sub>i} as the i-th element on the stack.
-  The @{term STrap} is trapped state due to invalid operations like zero division.
-  The negative state @{term PartialCorrect} represents the admissible error situation that is not considered in partial correctness.
-  For example, @{term PartialCorrect} may represents an admissible crash, and in that case the partial correctness certifies that
-    ``if the program exits normally, the output would be correct''.\<close>
-
 declare state.split[split]
+
+text \<open>Procedure is the basic building block of a program on the semantics formalization.
+It represents a segment of a program, which is defined inductively,
+
+\<^item> Any instruction instantiated by any arguments is a procedure
+\<^item> Any lambda abstraction of a procedure is a procedure
+\<^item> Sequential composition \<open>f \<bind> g\<close> is a procedure iff \<open>f, g\<close> are procedures.
+\<^item> A control flow combinator combines several procedures into a procedure
+
+Control flow combinator does not include the sequential composition combinator \<open>\<bind>\<close>.
+
+Any function, routine, or sub-routine in high level languages is a procedure but a procedure
+does not necessarily corresponds to them nor any basic block in assemble representations.
+
+A procedure is not required to be a valid program necessarily.
+Procedure is only a syntax structure and the semantics of invalid operations or programs
+is expressed by returning \<open>Invalid\<close>.
+
+%% Not Required:
+% \<^bold>\<open>Normal Form of Procedures\<close> (NFP) is defined by the following BNF,
+% \begin{align}
+% \<open>NFP p\<close> \Coloneqq & \<open>return v\<close>
+%                 | & \<open>i \<bind> p\<close>   & &\text{for \<open>i \<in> Instructions\<close>} \\
+%                 | & \<open>\<lambda>x. p\<close>
+%                 | & \<open>c p p \<cdots> p\<close> & &\text{\<open>c\<close> is a control flow combinator.}
+% \end{align}
+% It essentially says any lambda abstraction occurring in the left hand side of a sequential
+% composition \<open>(\<lambda>x. f) \<bind> g\<close> can be expanded to the whole term, i.e., \<open>\<lambda>x. (f \<bind> g)\<close>.
+% And any body of the control flows is also in NFP.
+% It is obvious the NFP can express equivalently any procedure.
+% NFP is used later in CoP to construct any procedure.
+
+% TODO: value annotation and slightly-shallow representation.
+ \<close>
 
 type_synonym ('ret,'ex,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'ex,'RES_N,'RES) state set"
 type_synonym ('arg,'ret,'ex,'RES_N,'RES) proc' = "'arg sem_value \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc"

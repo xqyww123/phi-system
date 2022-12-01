@@ -5,46 +5,61 @@ text \<open>Note, this is NOT \<phi>-BI logic but a partial implementation of th
 
 \<^descr> \<^emph>\<open>Multi-Term Form\<close> is the canonical form in the reasoning of \<phi>-System, which demonstrates
   abstractions directly and clearly in a localized way. It is characterized by form,
-\[ \<open>\<exists>a. (x\<^sub>1 \<Ztypecolon> T\<^sub>1 * x\<^sub>2 \<Ztypecolon> T\<^sub>2 * \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n) \<and> P\<close> \]
+\[ \<open>\<exists>a. (x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<^emph> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<^emph> \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n) \<and> P\<close> \]
 where \<open>P\<close> is a pure proposition only containing free variables occurring in \<open>x\<^sub>1,\<cdots>,x\<^sub>n,a\<close>.
 It relates the concrete resource to a set of abstract objects \<open>{(x\<^sub>1,\<cdots>,x\<^sub>n) |a. P}\<close> if
   \<^emph>\<open>variables \<open>a\<close> are not free in \<open>T\<^sub>1,\<cdots>,T\<^sub>n\<close>\<close>.
 All specifications in \<phi>-System are in Multi-Term Form. It is so pervasive that we use a set-like
 notation to denote them,
-\[ \<open>(x\<^sub>1 \<Ztypecolon> T\<^sub>1 * x\<^sub>2 \<Ztypecolon> T\<^sub>2 * \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P)\<close> \]
+\[ \<open>(x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<^emph> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<^emph> \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P)\<close> \]
 Readers may read it as a set,
-\[ \<open>{ x\<^sub>1 \<Ztypecolon> T\<^sub>1 * x\<^sub>2 \<Ztypecolon> T\<^sub>2 * \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n |a. P }\<close> \]
+\[ \<open>{ x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<^emph> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<^emph> \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n |a. P }\<close> \] 
+
+\<^descr> \<^emph>\<open>Simple Multi-Term Form\<close> is a MTF where there is no existential quantification and the attached
+  \<open>P\<close> is trivial \<open>True\<close>, viz., it is characterized by
+  \[ \<open>x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<^emph> \<cdots> \<^emph> x\<^sub>n \<Ztypecolon> T\<^sub>n\<close> \]
+\<close>
+
+text \<open>
+The characteristics of this implementation consists of optimization for \<phi>-BI, mainly focusing on
+the Multi-Term Form.
+It trims off unnecessary constructs for \<phi>-BI.
+The proof engineering and the automation only considers this minimal BI.
 
   \<^item> It does not have a general additive conjunction (\<open>\<and>\<close>) that connects any BI assertions,
     but only the one (\<open>A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P\<close>) connects a BI assertion \<open>A\<close> and a pure assertion \<open>P\<close>,
-    because it is exactly what at most the canonical form of \<phi>-BI requires.
-    Correspondingly, the proof engineering and automation never considers things other than this.
+    because it is exactly what at most the MTF requires.
+
   \<^item> Implication does not occur in assertions (of \<phi>-SL), but it represents transformations of
     abstraction so has a significant role in reasoning (rules).
     We emphasize this transformation by assigning the implication with notation
     \<open>A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P \<triangleq> A \<longrightarrow> B \<and> P\<close>, where \<open>P\<close> is a pure assertion.
     The \<open>P\<close> helps to capture the information (in abstract domain) lost in the
     weakening of this implication.
-    Currying implications like \<open>A \<longrightarrow> B \<longrightarrow> C\<close> are never used in \<phi>-BI
+    Currying implications like \<open>A \<longrightarrow> B \<longrightarrow> C\<close> are never used in \<phi>-BI.
+
   \<^item> Optionally we have universal quantification. It can be used to quantify free variables
-    if for any reason free variables are not advocated. The universal quantifier is typically
+    if for any reason free variables are inadmissible. The universal quantifier is typically
     not necessary in \<phi>-BI and \<phi>-SL, where we use free variables directly. However, in some
     situation, like when we consider transitions of resource states and we want a transition
     relation for each procedure, we need a single universally quantified assertion,
     instead of a family of assertions indexed by free variables.
-  \<^item> We only have multiplicative conjunctions, specialized additive conjunction described above,
+
+  \<^item> The use of a implication represents a transformation of abstraction.
+    Therefore, implications are never curried or nested, always in form \<open>X \<longrightarrow> Y \<and> P\<close> 
+    where \<open>X, Y\<close> are MTF and \<open>P\<close> is a pure proposition.
+    We denote them by notation \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>.
+
+  \<^item> It only has multiplicative conjunctions, specialized additive conjunction described above,
     existential quantification, and optionally universal quantification,
-    because these are all the canonical form of \<phi>-BI requires
-    (may plus implication that only occurs in reasoning rules).
+    which are all the MTF requires,
+    plus implications that only occur in reasoning rules.
     Any other things, should be some specific \<phi>-Types expressing their meaning
     specifically and particularly.
-
-  Thus a simple name 'BI' is not suitable for this theory, because we do not want any
-    conflict with another more general implementation of BI. The suffix 'for_Phi'
-    ensures the name to be unique.\<close>
+\<close>
 
 theory BI
-  imports "Phi-Logic-Programming-Reasoner.Phi_Logic_Programming_Reasoner" Preliminary
+  imports "Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner" Preliminary
   abbrevs "<implies>" = "\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s"
       and "<and>"  = "\<^bold>a\<^bold>n\<^bold>d"
       and "<subj>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>j"
