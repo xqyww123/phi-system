@@ -250,7 +250,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process de
                 (lthy, (th RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
                           handle THM _  => (th RSN (3,
                               Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
-                  |> Nu_Reasoner.reason
+                  |> Nu_Reasoner.reason ~1
                   |> (fn SOME (lthy', th) => post_process lthy' th
                        | NONE => error("Fail to simplify finally the procedure.\n"^
                                        "It is a rare error and you may check the simplification "^
@@ -339,7 +339,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                        (All::forall::Subjection_simp_proc_arg::
                         Named_Theorems.get ctxt'' @{named_theorems named_expansion})
                       #> Seq.single))
-            |> Seq.maps (Nu_Reasoner.reason_tac ctxt'' o pair ctxt'')
+            |> Seq.maps (Nu_Reasoner.reason_tac ~1 ctxt'' o pair ctxt'')
             |> Seq.the_result "fail to reason sematic type of the procedure."
 
         val goal' = Thm.cprem_of proof0 1 |> Thm.term_of |> dest_Trueprop
@@ -387,7 +387,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                         (th' RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
                           handle THM _  => (th' RSN (3,
                               Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
-                   |> Nu_Reasoner.reason
+                   |> Nu_Reasoner.reason ~1
                    |> (fn SOME (_, th) => th
                         | NONE => error("Fail to simplify finally the procedure.\n"^
                                         "It is a rare error and you may check the simplification "^
@@ -486,7 +486,7 @@ fun gen_finish_proc prep_term qed target int stat =
         val sequent =
           if Thm.no_prems sequent_pre1
           then sequent_pre1
-          else Nu_Reasoner.reason1 (ctxt,sequent_pre1) |> snd
+          else Nu_Reasoner.reason1 ~1 (ctxt,sequent_pre1) |> snd
         val (ctxt',sequent') = NuSys.move_lemmata (ctxt, sequent)
         val (ctxt'',sequent'') = (ctxt',sequent')
               |> (case target

@@ -642,7 +642,9 @@ text \<open>
   If no \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q'\<close> exists in the remaining antecedents,
   the reasoner of \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> and \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> raises
   an error aborting the whole reasoning, because the reasoning request is not configured correctly.
-  The reasoner never attempts to solve \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> practically.
+
+  Semantically, \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> represents a proof obligation \<open>Q\<close> intended to be addressed by
+  user. It can be deferred but the reasoner never attempts to solve \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> practically.
 
   Nonetheless, we still provide tool for reasoning obligations automatically, albeit they have
   to be called separately with the reasoning engine. See \<^verbatim>\<open>auto_obligation_solver\<close> and

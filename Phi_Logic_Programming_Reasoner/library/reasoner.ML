@@ -41,12 +41,14 @@ signature NU_REASONER = sig
   val reasoners : Proof.context -> (priority * reasoner) list
   val reasoner_net : Proof.context -> reasoner Cost_Net.T
 
-  val reason' : bool (*trace*) -> reasoner Cost_Net.T -> context_state -> context_state option
-  val reason  : context_state -> context_state option
-  val reason1 : context_state -> context_state
+  (* N: number of premises to be attacked at most. ~1 means to attack all. *)
+  val reason' : int (*N*) -> bool (*trace*) -> reasoner Cost_Net.T
+              -> context_state -> context_state option
+  val reason  : int (*N*) -> context_state -> context_state option
+  val reason1 : int (*N*) -> context_state -> context_state
   val reason_s : Proof.context -> (priority * context_state Seq.seq) list -> context_state Seq.seq
     (* Note it returns at most one state in the returned sequence. *)
-  val reason_tac :  Proof.context -> context_tactic
+  val reason_tac : int (*N*) -> Proof.context -> context_tactic
 
 
   val add_intro_rule : Position.T -> priority -> term list * term list -> thm -> Context.generic -> Context.generic
@@ -129,8 +131,8 @@ fun cond_concl_of_goal st i =
       :: map (fn t => condition_tag $ t) (map (fn A => subst_bounds (rfrees, A)) As)
   end
 
-fun call_tactics ctxt tactics th =
-  if Thm.no_prems th
+fun call_tactics N ctxt tactics th =
+  if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
   else let
     val prop = Thm.prop_of th
@@ -164,11 +166,11 @@ fun call_tactics ctxt tactics th =
     handle Local_Cut ret => [ret]
   end
 
-fun gen_reason _ _ _ (result, []) = result
-  | gen_reason trace iter tactics (result, []::L) =
+fun gen_reason N _ _ _ (result, []) = result
+  | gen_reason N trace iter tactics (result, []::L) =
       (if trace then tracing ("Backtracking...") else ();
-       gen_reason trace iter tactics (result, L))
-  | gen_reason trace iter tactics (result, ((cost,pos,seq)::L')::L) =
+       gen_reason N trace iter tactics (result, L))
+  | gen_reason N trace iter tactics (result, ((cost,pos,seq)::L')::L) =
   let
     val _ = if iter > 1000 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
   in
@@ -179,7 +181,7 @@ fun gen_reason _ _ _ (result, []) = result
                     then tracing ("\<phi>reasoning (score " ^ string_of_int (~cost)
                       ^ "):"^ Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                     else ()
-            val Z = (call_tactics ctxt tactics th)
+            val Z = (call_tactics N ctxt tactics th)
                   |> map (fn (a,b,c) => (a+cost,b,c))
                   |> (fn Z => (result, Z::(
                         let val t = if pointer_eq (seq',Seq.empty) then L' else (cost,pos,seq')::L'
@@ -195,20 +197,24 @@ fun gen_reason _ _ _ (result, []) = result
                           (SOME result', [[(0,pos, Seq.single result')]])
                         end
           in
-            gen_reason trace (iter+1) tactics Z
+            gen_reason N trace (iter+1) tactics Z
           end)
-       | NONE => gen_reason trace iter tactics (result, L'::L)
+       | NONE => gen_reason N trace iter tactics (result, L'::L)
   end
 
-fun gen_reason' trace tactics states =
-      gen_reason trace 0 tactics (NONE, map (map (fn (a,b) => (~a,Position.none,b))) states)
+fun gen_reason' N trace tactics states =
+      gen_reason N trace 0 tactics (NONE, map (map (fn (a,b) => (~a,Position.none,b))) states)
       handle Success ret => SOME ret
 
-fun reason' trace tactics state =
-      gen_reason' trace tactics [[(0, Seq.single state)]]
+fun num_of_protected_prems thm ~1 = 0
+  | num_of_protected_prems thm num_of_attack_prems =
+      Thm.nprems_of thm - num_of_attack_prems
+
+fun reason' N trace tactics state =
+      gen_reason' (num_of_protected_prems (snd state) N) trace tactics [[(0, Seq.single state)]]
 
 fun reason'_s trace tactics seqs = Seq.make (fn () =>
-      gen_reason' trace tactics [seqs]
+      gen_reason' 0 trace tactics [seqs]
         |> Option.map (rpair Seq.empty)
     )
 
@@ -236,16 +242,16 @@ fun add_lthy cost_reasoner =
 fun del name = Tactics.map (Cost_Net.remove(
       {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty}))
 
-fun reason stat =
-      reason' (Config.get (fst stat) trace) (Tactics.get (Context.Proof (fst stat))) stat
-fun reason1 stat =
-      case reason stat of SOME x => x
+fun reason N stat =
+      reason' N (Config.get (fst stat) trace) (Tactics.get (Context.Proof (fst stat))) stat
+fun reason1 N stat =
+      case reason N stat of SOME x => x
         | NONE => error ("Reasoning Fail! You may turn on \<phi>reasoning_tracing and "^
                          "\<phi>reasoning_tracing_condidates to debug.")
 fun reason_s ctxt =
       reason'_s (Config.get ctxt trace) (Tactics.get (Context.Proof ctxt))
-fun reason_tac ctxt stat = Seq.make (fn () =>
-      reason' (Config.get ctxt trace) (Tactics.get (Context.Proof ctxt)) stat
+fun reason_tac N ctxt stat = Seq.make (fn () =>
+      reason' N (Config.get ctxt trace) (Tactics.get (Context.Proof ctxt)) stat
        |> Option.map (rpair Seq.empty o Seq.Result)
     )
 
@@ -347,7 +353,7 @@ fun intro_reasoner pos priority patterns blacklist rule =
             case Seq.pull (HEADGOAL (Tactic.resolve_tac ctxt [rule]) th)
               of SOME (ret, _) =>
                   if has_feasible
-                  then reason (ctxt, ret) |> Option.map (rpair Seq.empty)
+                  then reason ~1 (ctxt, ret) |> Option.map (rpair Seq.empty)
                   else SOME ((ctxt, ret), Seq.empty)
                | _ => NONE))
       }
@@ -424,11 +430,12 @@ end)
 
 #> Method.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Scan Parse in
+  Scan.lift (Scan.optional Parse.nat ~1) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
                                     Method.modifier (attr_add_intro (pos,(100,([],[])))) \<^here>),
     Args.del >> K (Method.modifier attr_del_intro \<^here>)
-] >> (fn irules => fn ctxt => fn ths => reason_tac ctxt)
+] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."
 

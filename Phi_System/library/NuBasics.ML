@@ -75,12 +75,13 @@ fun the_implication_GE i ctxt =
 
 fun the_implication i ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_implication_GE i ctxt)
 
+(* Reason pure facts that the given sequent implies. *)
 fun reason_programming_implication mode ctxt sequent =
   let
     val inhabited_rule = #inhabited_rule mode ctxt
     val stat = SOME (ctxt, (sequent RS inhabited_rule))
                handle THM _ => NONE
-  in case Option.mapPartial Nu_Reasoner.reason stat
+  in case Option.mapPartial (Nu_Reasoner.reason ~1) stat
        of SOME (_, result) => [result]
         | _ => []
   end

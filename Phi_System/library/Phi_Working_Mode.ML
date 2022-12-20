@@ -78,7 +78,7 @@ fun mode ctxt = case Mode.get ctxt
 fun generic_cast rule place desired_nu (ctxt,sequent) =
   let
     val (ctxt', sequent') =
-          case Nu_Reasoner.reason (ctxt, sequent RS rule)
+          case Nu_Reasoner.reason ~1 (ctxt, sequent RS rule)
             of SOME ret => ret
              | NONE => raise Phi_Error.CastFail (place, desired_nu, sequent)
     val _ = case Thm.prop_of sequent'

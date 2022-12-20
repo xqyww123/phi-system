@@ -61,7 +61,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
                       (fn th => @{thm Premise_True} RS th)
                    #> Thm.permute_prems 0 1
                    #> Goal.protect (num_sets + arity))
-                |> Nu_Reasoner.reason
+                |> Nu_Reasoner.reason ~1
                 |> (fn x => case x of SOME y => apsnd Goal.conclude y
                                     | _ => error (
     "Fail to assign variable(s). Typically, it is due to incorrect representation types."))

@@ -1919,10 +1919,17 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
     raise Bypass (SOME(ctxt', sequent))
   end)\<close>
 
+notepad
+begin
+  assume A: \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> A3 \<Longrightarrow> A4 \<Longrightarrow> A5 \<Longrightarrow> C\<close>
+  ML_val \<open>Thm.permute_prems 0 1 @{thm A}\<close>
+end
+
+
 \<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
 \<open>fn (ctxt,sequent) => Scan.succeed (fn _ =>
-  case Nu_Reasoner.reason (ctxt, Goal.protect 1 sequent)
-    of SOME (ctxt',sequent') => (ctxt', Goal.conclude sequent')
+  case Nu_Reasoner.reason 1 (ctxt, sequent)
+    of SOME (ctxt',sequent') => (ctxt', sequent')
      | NONE => raise Bypass (SOME (ctxt,sequent))
 )\<close>
 
@@ -5501,9 +5508,8 @@ lemma Structural_Extract_aggrement_to
             Structural_Extract'_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
-  note [[\<phi>trace_reasoning]]
-  ;; dup
-  ;; Agreement_cast[OF A]
+    dup
+    Agreement_cast[OF A]
   \<medium_right_bracket>.
   using Agreement_cast .
 
@@ -5515,8 +5521,8 @@ lemma Structural_Extract_aggrement_from:
             Structural_Extract'_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
-  ;; Agreement_cast[OF A]
-     Agreement_shrink
+    Agreement_cast[OF A]
+    Agreement_shrink
   \<medium_right_bracket>.
   using Agreement_cast .
 
