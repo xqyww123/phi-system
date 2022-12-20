@@ -36,6 +36,29 @@ attribute_setup TRY_THEN = \<open>(Scan.lift (Scan.optional (Args.bracks Parse.n
     \<close> "resolution with rule, and do nothing if fail"
 
 
+subsection \<open>Helper Objects\<close>
+
+subsubsection \<open>Big Number\<close>
+
+text \<open>A tag to suppress unnecessary expanding of big numbers like \<open>2^256  \<close>\<close>
+
+definition \<open>Big x = x\<close>
+
+lemma [iff]:
+  \<open>(2::nat) ^ Big 8  = 256\<close>
+  \<open>(2::nat) ^ Big 16 = 65536\<close>
+  \<open>(2::nat) ^ Big 32 = 4294967296\<close>
+  by (simp add: Big_def)+
+
+lemma [iff]:
+  \<open> numeral x < (2::'a) ^ Big n \<longleftrightarrow> numeral x < (2::'a::{numeral,power,ord}) ^ n\<close>
+  \<open> 1 < (2::'a) ^ Big n \<longleftrightarrow> 1 < (2::'a::{numeral,power,ord}) ^ n\<close>
+  \<open> 0 < (2::'b) ^ Big n \<longleftrightarrow> 0 < (2::'b::{numeral,power,ord,zero}) ^ n\<close>
+  \<open> n < 16 \<Longrightarrow> Big n = n \<close>
+  unfolding Big_def by simp+
+
+
+
 subsection \<open>Document Antiquotations\<close>
 
 setup \<open>
@@ -90,5 +113,6 @@ fun conv_GE_to_plain_conjunction ctxt thm =
       |> Conjunction.elim_conjunctions
   end
 \<close>
+
 
 end

@@ -62,29 +62,6 @@ ML_file \<open>Phi_Error.ML\<close>
 
 subsection \<open>Automation Helpers\<close>
 
-subsubsection \<open>Big Number\<close> \<comment> \<open>A tag to prevent unnecessary expanding of big numbers like 2^256\<close>
-
-definition \<open>Big x = x\<close>
-
-named_theorems Big_expns
-
-notepad
-begin
-  assume A[simplified]: \<open>P ((2::nat) ^ 16)\<close>
-end
-
-lemma [iff]:
-  \<open>(2::nat) ^ Big 8 = 256\<close>
-  \<open>(2::nat) ^ Big 16 = 65536\<close>
-  \<open>(2::nat) ^ Big 32 = 4294967296\<close>
-  by (simp add: Big_def)+
-
-lemma [iff]:
-  \<open> numeral x < (2::'a) ^ Big n \<longleftrightarrow> numeral x < (2::'a::{numeral,power,ord}) ^ n\<close>
-  \<open> 1 < (2::'a) ^ Big n \<longleftrightarrow> 1 < (2::'a::{numeral,power,ord}) ^ n\<close>
-  \<open> 0 < (2::'b) ^ Big n \<longleftrightarrow> 0 < (2::'b::{numeral,power,ord,zero}) ^ n\<close>
-  \<open> n < 16 \<Longrightarrow> Big n = n \<close>
-  unfolding Big_def by simp+
 
 
 

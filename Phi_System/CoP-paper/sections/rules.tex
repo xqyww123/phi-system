@@ -1,74 +1,85 @@
-\section{Inference Rules}
+\subsection{Inference Rules of CoP}
 
-First, noticing the semantics of $P \mbar ⋅ ⊢ Q$ is identical to the semantics of BI sequent
- $P ⊢ Q$, CoP inherits all inference rules of BI on $P \mbar ⋅ ⊢ Q$.
-It also brings us an axiom
-\[ P \mbar ⋅ ⊢ P \tag{Ax}\label{Ax} \]
-
-Pure assertions valid on former procedure sequence are also valid on the descendent sequence.
-Here we only give a rule on φ-BI because in ordinary BI
-there is no general syntactic way to represent pure assertions, whereas in φ-BI,
-any pure assertion is represented by satisfaction $@_w P$.
+\begin{figure}[t]
+\small\begin{center}
+\begin{minipage}{.3\textwidth}
 \begin{prooftree}
-\AxiomC{$Γ \mbar S ⊢ @_w P$}
-\RightLabel{(DESC)}
-\UnaryInfC{$Γ \mbar S; S' ⊢ @_w P$}
+  \AxiomC{$P \mbar \cdot \vdash Q$}
+  \doubleLine\RightLabel{(CoP)}
+  \UnaryInfC{$P \vdash Q$}
 \end{prooftree}
-Two consequence rules for CoP sequents and wp-modalities enable us to transform the
-pre/post-condition of CoP sequents and the specifications of the exceptional state in wp-modalities
-respectively.
-
+\end{minipage}%
+\begin{minipage}{.4\textwidth}
 \begin{prooftree}
-\AxiomC{$P' ⊢ P$}
-\AxiomC{$P' \mbar S ⊢ Q$}
+\AxiomC{$P \mbar S ⊢ Q$}
 \AxiomC{$Q ⊢ Q'$}
 \RightLabel{(CSQ)}
-\TrinaryInfC{$P' \mbar S ⊢ Q'$}
+\BinaryInfC{$ P \mbar S ⊢ Q'$}
 \end{prooftree}
+\end{minipage}%
+%\begin{minipage}{.5\textwidth}
+%\begin{prooftree}
+%\AxiomC{$P ⊢ P'$}
+%\RightLabel{(wp-CSQ)}
+%\UnaryInfC{$\wpm{C}{P} ⊢ \wpm{C}{P'}$}
+%\end{prooftree}
+%\end{minipage}
 
+\vspace{.5em}
+\begin{minipage}{.5\textwidth}
 \begin{prooftree}
-\AxiomC{$P ⊢ P'$}
-\AxiomC{$E ⊢ E'$}
-\RightLabel{(wp-CSQ)}
-\BinaryInfC{$[C]\{P\}\{E\} ⊢ [C]\{P'\}\{E'\}$}
-\end{prooftree}
-
-By the definition of Hoare quadruple (\ref{def:HQ}), \emph{derived} from CSQ rule,
-the APP rule enables us to apply a procedure on an on-going construction,
-
-\begin{prooftree}
-\AxiomC{$Γ \mbar S ⊢ P$}
-\AxiomC{$⊢ \{P\}C\{Q\}\{E\}$}
+\AxiomC{$ Γ \mbar S ⊢ P$}
+\AxiomC{$ \vdash A \Longrightarrow \{P\}C\{Q\}$}
 \RightLabel{(APP)}
-\BinaryInfC{$Γ \mbar S ⊢ [C]\{Q\}\{E\}$}
+\BinaryInfC{$ Γ \mbar S ⊢ A \Longrightarrow \wpm{C}{Q}$}
 \end{prooftree}
-
-A primitive rule named ACCEPT then absorbs the procedure $C$ from the consequence $[C]\{Q\}\{E\}$
-into the procedure sequence in the hypothesis,
-
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
 \begin{prooftree}
-\AxiomC{$Γ \mbar S ⊢ [C]\{Q\}\{E\}$}
-\RightLabel{(ACCEPT)\quad \parbox{5cm}{$v$ is a fresh variable not free in $Γ, S, C, Q$}}
+\AxiomC{$Γ \mbar S ⊢ \wpm{C}{Q}$}
+\RightLabel{(ACCEPT)*}
 \UnaryInfC{$Γ \mbar S; (C,v) ⊢ Q\,v$}
 \end{prooftree}
+\end{minipage}
 
-Finally, the primitive ASSEMBLE rule enables us to deduce a quadruple  from an on-going sequent by
-assembling every step of procedure in the sequence,
-
+  \vspace{.5em}
+\begin{minipage}{.53\textwidth}
 \begin{prooftree}
-\AxiomC{$Γ \mbar S; (C_1,r) ⊢ [C_2]\{Q\}\{E_2\}$}
-\AxiomC{$Γ \mbar S ⊢ [C_1]\{P\}\{E_1\}$}
-\RightLabel{(ASSEMBLE)}
-\BinaryInfC{$Γ \mbar S ⊢ [C_1 \bind λr.\;C_2]\{P\}\{e.\;E_1\,e ∨ (∃r.\,E_2\,e)\}$}
+\AxiomC{$ P \mbar S; (C_1,v) ⊢ \wpm{C_2}{Q}$}
+\RightLabel{\parbox{3cm}{(ASMBL)\\ \scriptsize variable $v \notin \mathrm{Free}(Q)$}}
+\UnaryInfC{$ P \mbar S ⊢ \wpm{C_1 \bind \lambda v.\;C_2}{Q}$}
 \end{prooftree}
+\end{minipage}%
+\begin{minipage}{.47\textwidth}
+\begin{prooftree}
+  \AxiomC{$P \mbar S \vdash Q'\,r$}
+  \RightLabel{(ASMBL-0)}
+  \UnaryInfC{$P \mbar S \vdash \wpm{\mathrm{return}\;r}{Q'}$}
+\end{prooftree}
+\end{minipage}
 
-The rule assembles a step of procedure $C_1$ by means of the wp-modality $[C_1]\{P\}\{E_1\}$
-where the exceptional specification $E_1$ of $C_1$ is given.
+\end{center}
+*$v$ is a fresh variable not free in $Γ, S, C, Q$
+\normalsize
+  \caption{Inference rules of CoP}\label{fig:rules}
+\end{figure}
 
-The assembling process works backwardly starting from the latest and the innermost procedure in the monadic representation.
-The process is initialized by ASSEMBLE-0 axiom which makes the first and the innermost $(\mathrm{return}\;r)$ instruction.
-\[ Q'\;r \longrightarrow [\mathrm{return}\;r]\{Q'\}\{e.\, ⊥\} \tag{ASSEMBLE-0}\label{ax:ASSEMBLE-0} \]
-$r$ are the values intended to be returned.
-They can be given explicitly by the user, or be extracted from the post-condition $Q$ by letting
-$r = \mathrm{Free}(Q) \cap \{ v : (any,v) ∈ S\}$, i.e., all values occurring in $Q$.
-When $r$ is decided, rewrite $Q$ into $Q'\,r$, viz., $Q \equiv Q'\,r$. Then the axiom is appliable.
+%First, noticing the semantics of $ P \mbar ⋅ ⊢ Q$ is identical to the semantics of BI sequent
+% $P ⊢ Q$, CoP inherits all inference rules from φ-BI on $ P \mbar ⋅ ⊢ Q$, including an axiom $P \mbar ⋅ ⊢ P$.
+%Other rules introduces in CoP are given in \cref{fig:rules}.
+
+The rules are given in \cref{fig:rules}.
+CoP rule converts between φ-BI sequents and CoP sequents when the sequence $S$ is empty.
+
+CSQ rule enables transformation of the post-condition.
+APP rule is \emph{derived} from CSQ rule (cf. the definition \ref{def:HQ}).
+It enables applying a procedure $C$ on an on-going construction.
+%optionally transform assertions $Q,E$ by wp-CSQ rule,
+After solving the antecedent $A$, ACCEPT rule moves $C$ into the procedure sequence in the hypothesis.
+Repeating applying the rules, it is feasible to construct program fragments consisting of sequential statements.
+
+ASMBL rule assembles procedures in the sequence $S$ backwardly into [$C$]-modality.
+%It needs additional help from sequent $\wpm{C_1}{Q'}{E_1}$ to decide the exception specification $E_1$ of $C_1$.
+Initiated by ASMBL-0, repeat application of ASMBL rule assembles the program monad from a sequence $S$ of procedures.
+Eventually, from $P \mbar S \vdash Q$ it deduces $P \mbar \cdot \vdash [C]\{Q\}$ for $C = \seminterp{S}_r$, from which then we have $\{P\}C\{Q\}$.
+

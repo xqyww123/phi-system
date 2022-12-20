@@ -6,11 +6,36 @@ begin
 
 named_theorems \<phi>programming_simps \<open>Simplification rules used in the deductive programming\<close>
 
-subsection \<open>Assertion Definitions\<close>
+subsection \<open>Implementing CoP Sequent\<close>
 
+text \<open>CoP sequent \<open>P | S |- Q\<close> for \<open>S = (C\<^sub>1,v\<^sub>1); \<cdots> ; (C\<^sub>n,v\<^sub>n)\<close> is implemented as
+\begin{align*}
+& \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s\<^sub>0 [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n P\<close>, \\
+& \<open>CodeBlock s\<^sub>0 s\<^sub>1 C\<^sub>1 v\<^sub>1,\<close>         \\
+&     \qquad \<open>\<cdots>\<close>                 \\
+& \<open>CodeBlock s\<^sub>i\<^sub>-\<^sub>1 s\<^sub>i C\<^sub>i v\<^sub>i,\<close>       \\
+&     \qquad \<open>\<cdots>\<close>                 \\
+& \<open>CodeBlock s\<^sub>n\<^sub>-\<^sub>1 s\<^sub>n C\<^sub>n v\<^sub>n\<close>        \\
+\<open>\<turnstile>\<close> \;&\; \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s\<^sub>n [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q\<close>
+\end{align*}
+where \<open>s\<^sub>0\<close> denotes the initial state before execution and \<open>s\<^sub>i, v\<^sub>i\<close> denote
+respectively the intermediate state after executing procedure \<open>C\<^sub>i\<close> and
+the return value of \<open>C\<^sub>i\<close>.
+Sequence \<open>{s\<^sub>i}\<^sub>n\<close> therefore links execution of each procedure.
+\<open>R\<close> is the frame variable.
 
-(* syntax "_codeblock_exp_" :: "idt \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> bool"  ("(2\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _/  \<^bold>a\<^bold>s '\<open>_'\<close>/ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>)" [100,0,0] 3)
-syntax "_codeblock_" :: "idt \<Rightarrow> logic \<Rightarrow> bool" ("\<^bold>c\<^bold>o\<^bold>d\<^bold>e\<^bold>b\<^bold>l\<^bold>o\<^bold>c\<^bold>k _ \<^bold>f\<^bold>o\<^bold>r \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<^bold>s '\<open>_'\<close>" [100,0] 3) *)
+[C]-modality \<open>[C]{Q}{E}\<close> is implemented by \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g C \<^bold>o\<^bold>n s\<^sub>n [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>.
+
+\<close>
+
+text \<open>
+In addition, besides programming of procedures,
+the system is extended to deduce view shift and transformation of abstraction by programming.
+
+The programming deduction of view shift is also realized using similar structures
+(\<open>CurrentConstruction\<close>). Thus we reuse the infrastructures and
+give two modes \<open>programming_mode\<close> and \<open>view_shift_mode\<close> to differentiate the two modes.
+\<close>
 
 consts programming_mode :: mode
        view_shift_mode  :: mode
@@ -38,45 +63,49 @@ definition PendingConstruction :: " ('ret,'ex,'RES_N,'RES) proc
     ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
     where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> \<S> (\<lambda>ret. INTERP_SPEC (R * S ret)) (\<lambda>ex. INTERP_SPEC (R * E ex))"
 
+definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
+
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
-
-definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
 
 end
 
 
 subsection \<open>Forward Declaration of Reasoner\<close>
 
-text \<open>When applying a procedure \<open>{P} C\<^sub>2 {Q}\<close> on \<open>{_} C\<^sub>1 {P'}\<close>, the brute conversion
-  \<open>P \<longrightarrow> (P' -\<^emph> P) \<^emph> P'\<close> is not feasible because it leverages no data refinement.
+text \<open>Before we enter any deep discussion, a \<phi>-LPR reasoner tag for
+  Transformation of State Abstraction (ToSA) is required to be declared first.
+  Remarked as \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close> or \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close>,
+  it annotates the Transformation of Abstraction (ToA) is about (fictional)
+  computation state.
 
-The following decision procedure tries to prove \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d ?P\<close> and to give the strongest
-  \<open>?P\<close> as to the configured rules, for the two MTF assertions \<open>X \<equiv> (X\<^sub>1 \<^emph> \<cdots> \<^emph> X\<^sub>n \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P)\<close>
-  and \<open>Y \<equiv> (Y\<^sub>1 \<^emph> \<cdots> \<^emph> Y\<^sub>m \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q)\<close> where \<open>X\<^sub>i\<close> and \<open>Y\<^sub>j\<close> are all \<phi>-types.
+  Particularly, reasoner for it
+  \<^enum> handles MTF and particularly its leading existential quantification and conjunction
+  \<^enum> regards separated \<phi>-types independently and invokes ToA reasoning for each
+    destined \<phi>-type. This behavior can be overrode.
 \<close>
 
-consts assertion_conversion' :: \<open>bool \<comment> \<open>whether to transform \<phi>-types\<close> \<Rightarrow> mode\<close>
+consts ToSA' :: \<open>bool \<comment> \<open>whether to transform \<phi>-types\<close> \<Rightarrow> mode\<close>
 
-abbreviation \<open>assertion_conversion \<equiv> assertion_conversion' True\<close>
+abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
 
 text \<open>The boolean argument indicates whether to attempt transformation of \<phi>-types or keep them
 unchanged.
 
-\<^item> In \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>1 * \<cdots> * Y\<^sub>m \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_conversion' True\<close>,
+\<^item> In \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>1 * \<cdots> * Y\<^sub>m \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' True\<close>,
   for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close> to be obtained, the reasoner
   tries to for each source \<phi>-Type \<^term>\<open>X\<^sub>j\<close> find a way to cast some several \<^term>\<open>X\<^sub>j\<close> to the
   desired \<^term>\<open>Y\<^sub>i\<close>, by reasoning some rule like \<open>X\<^sub>j * \<cdots> * X\<^sub>j\<^sub>' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>i\<close>.
 
-\<^item> By contrast, in \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>1 * \<cdots> * Y\<^sub>m \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_conversion' False\<close>,
+\<^item> By contrast, in \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>1 * \<cdots> * Y\<^sub>m \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' False\<close>,
   the reasoner does not reason the conversion between different \<phi>-Types, that is,
   the reasoning success only if for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close> there is another
   \<^term>\<open>X\<^sub>j\<close> that unifies \<^term>\<open>Y\<^sub>i\<close>.
 \<close>
 
 lemma (in \<phi>spec)
-  [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_conversion' ?mode\<close>]:
-  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_conversion' mode\<close>
+  [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' ?mode\<close>]:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' mode\<close>
   unfolding Action_Tag_def using \<phi>view_refl .
 
 
@@ -184,7 +213,7 @@ paragraph \<open>Cast\<close>
 
 lemma "_\<phi>cast_internal_rule_":
   " CurrentConstruction mode blk H T
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_conversion
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> CurrentConstruction mode blk H T'"
@@ -194,7 +223,7 @@ lemma "_\<phi>cast_internal_rule_":
 
 lemma "_\<phi>cast_internal_rule_'":
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> (\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w T v \<longmapsto> T' v \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_conversion)
+\<Longrightarrow> (\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w T v \<longmapsto> T' v \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
@@ -225,7 +254,7 @@ end
 
 lemma "_\<phi>cast_implication_":
   \<open> x \<in> S
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_conversion
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> x \<in> T\<close>

@@ -1,5 +1,5 @@
 theory PhiSem_Min
-  imports "Phi_System.Sys"
+  imports "Phi_System.Sys" Phi_System.PhiSem_Formalization_Tools
 begin
 
 chapter \<open>Minimal Semantics\<close>
@@ -67,7 +67,7 @@ begin
 lemma Valid_Types[simp]:
   \<open>Valid_Type (\<tau>Int n)\<close>
   unfolding Inhabited_def
-  apply (simp)
+  apply simp
   using less_exp by blast
 
 sublocale R_var: partial_map_resource \<open>{vars. finite (dom vars)}\<close> R_var
@@ -76,13 +76,13 @@ sublocale R_var: partial_map_resource \<open>{vars. finite (dom vars)}\<close> R
 end
 
 fiction_space (in \<phi>min_sem) \<phi>min_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> =
-  FIC_var :: \<open>R_var.raw_basic_fiction fiction.it\<close>
+  FIC_var :: \<open>R_var.raw_basic_fiction \<F>_it\<close>
 
 locale \<phi>min =
   \<phi>min_fic where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
                             \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
-    and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
-    and TYPE'REP = \<open>TYPE('FIC::sep_algebra)\<close> 
+    and TYPE'FNAME = \<open>TYPE('FIC_N)\<close>
+    and TYPE'FREP = \<open>TYPE('FIC::sep_algebra)\<close> 
 + \<phi>empty where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                           \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
                           \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
@@ -110,7 +110,7 @@ paragraph \<open>Natural Number\<close>
 definition \<phi>Nat :: "nat \<Rightarrow> ('VAL, nat) \<phi>" ("\<nat>[_]")
   where "\<nat>[b] x = (if x < 2^b then { V_int.mk (b,x) } else {})"
 
-abbreviation \<open>Size \<equiv> \<nat>[addrspace_bits]\<close>
+(* abbreviation \<open>Size \<equiv> \<nat>[addrspace_bits]\<close> *)
 
 lemma \<phi>Nat_expn[\<phi>expns]:
   "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (b,x)) \<and> x < 2 ^ Big b"
@@ -290,16 +290,16 @@ lemma Var_SubjTyp[simp]:
   \<open>EqualAddress (xa \<Ztypecolon> Var var Ta) (xb \<Ztypecolon> Var var Tb)\<close>
   unfolding EqualAddress_def .. *)
 
-lemma [\<phi>reason 1305 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
+lemma [\<phi>reason 1305 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " CHK_SUBGOAL G
 \<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> R\<heavy_comma> \<blangle> x' \<Ztypecolon> Var var T' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> R\<heavy_comma> \<blangle> x' \<Ztypecolon> Var var T' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding GOAL_CTXT_def FOCUS_TAG_def
   by (simp add: Var_view_shift \<phi>frame_view) 
 
-lemma [\<phi>reason 1300 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' ?mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
+lemma [\<phi>reason 1300 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' ?mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " CHK_SUBGOAL G
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> R\<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> R\<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding GOAL_CTXT_def FOCUS_TAG_def
   by (simp add: Var_view_shift \<phi>frame_view view_shift_id) 
 
@@ -319,18 +319,18 @@ lemma [\<phi>reason 1200 for \<open>PROP Branch_Convergence_Type_Pattern (Var ?v
   \<open> PROP Branch_Convergence_Type_Pattern (Var v T) (Var v T')\<close>
   unfolding Branch_Convergence_Type_Pattern_def ..
 
-lemma [\<phi>reason 1500 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?x \<Ztypecolon> Var ?var ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1500 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?x \<Ztypecolon> Var ?var ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
     \<comment> \<open>attempts the immediate cell\<close>
   " CHK_SUBGOAL G
 \<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> R \<heavy_comma> \<blangle> x' \<Ztypecolon> Var var T' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> R \<heavy_comma> \<blangle> x' \<Ztypecolon> Var var T' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding GOAL_CTXT_def FOCUS_TAG_def
   by (simp add: Var_view_shift \<phi>frame_view)
 
-lemma [\<phi>reason 1450 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?x \<Ztypecolon> Var ?var ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' ?mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' \<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> H \<longmapsto> R' \<heavy_comma> H \<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning' mode  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  using assertion_level_reasoning_skip[OF CHK_SUBGOAL_I] .
+lemma [\<phi>reason 1450 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?x \<Ztypecolon> Var ?var ?T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' ?mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' \<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> H \<longmapsto> R' \<heavy_comma> H \<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' mode  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  using ToSA_skip[OF CHK_SUBGOAL_I] .
 
 
 subsubsection \<open>Application Methods for Subtyping\<close>
@@ -384,10 +384,11 @@ subsubsection \<open>Integer arithmetic\<close>
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc"
   where "op_const_int bits const = Return (sem_value (V_int.mk (bits,const)))"
 
-definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc"
+(* definition op_const_size_t :: "nat \<Rightarrow> ('VAL,'VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
                           \<ggreater> Return (sem_value (V_int.mk (addrspace_bits,c)))"
   \<comment> \<open> `op_const_size_t` checks the overflow during the compilation towards certain decided platform.  \<close>
+*)
 
 definition op_add :: "nat \<Rightarrow> ('VAL \<times> 'VAL, 'VAL, 'VAL, 'RES_N, 'RES) proc'"
   where "op_add bits =

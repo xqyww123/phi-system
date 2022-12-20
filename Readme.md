@@ -1,9 +1,13 @@
 The current version works on Isabelle-2021-1.
 
-Some additional symbols are required. Please **copy lines** in file `symbols` into your Isabelle symbol file `$HOME/.isabelle/Isabelle2021-1/etc/symbols`.
-You may also need to install the *Symbola* font given in directory `fonts`.
+## Install \& Cofiguration
+
+1. Some additional symbols are required. Please **copy lines** in file `symbols` into your Isabelle symbol file `$HOME/.isabelle/Isabelle2021-1/etc/symbols`.
+2. You may also need to install the *Symbola* font given in directory `fonts`.
+3. You also need to add the root path of the system into the `$HOME/.isabelle/Isabelle2021-1/etc/components`
 
 ------------------
+
 
 The cleaning is working in progress, so the root directory now is a big mess!
 

@@ -1,6 +1,9 @@
 \documentclass{llncs}
 \input{./lib/phi.sty}
 \input{./lib/phi-paper.sty}
+\usepackage{float}
+\floatstyle{boxed}
+\restylefloat{figure}
 
 \begin{document}
 
@@ -11,14 +14,18 @@
 
 \begin{abstract}
 Programming Interactively on Hoare Logic (φ-SL)
-          --- Another Approach for Certified Programming Language.
+          --- Another Approach for Certified Programming for especially imperative languages.
 \end{abstract}
 
 \input{./sections/introduction.tex}
-\input{./sections/background.tex}
 \input{./sections/monad.tex}
+\input{./sections/background.tex}
 \input{./sections/assertion.tex}
 \input{./sections/rules.tex}
 \input{./sections/process.tex}
+\input{./sections/automation.tex}
+
+\bibliographystyle{splncs04}
+\bibliography{./lib/bib.bib}
 
 \end{document}

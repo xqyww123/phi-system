@@ -4,8 +4,10 @@
 \usepackage{stmaryrd}
 \usepackage{hyperref}
 \usepackage{cleveref}
+\usepackage{mathabx}
 \crefname{section}{§\!}{§§\!}
 \Crefname{section}{§\!}{§§\!}
+\usepackage{footnote}
 
 \newunicodechar{⊢}{\vdash}
 \newunicodechar{⋅}{\cdot}
@@ -23,3 +25,16 @@
 \newunicodechar{ℕ}{\mathbb{N}}
 \newunicodechar{𝒜}{\mathcal{A}}
 \newcommand{\wand}{\mathbin{{-}\!\!\ast}}
+\newunicodechar{ε}{\text{\Symbola ε}}
+\newcommand{\xepsilon}{ε}
+\newunicodechar{⦂}{\text{\Symbola ⦂}}
+\newcommand{\tycolon}{\mathbin{⦂}}
+
+%\newcommand{\wpm}[3]{\langle #1 \rangle\{#2\}\{#3\}}
+\newcommand{\wpm}[2]{[#1]\{#2\}}
+
+
+\theoremstyle{definition}
+\newtheorem{algorithm}{Algorithm}
+
+\crefname{remark}{remark}{remark}

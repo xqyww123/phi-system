@@ -1,164 +1,184 @@
-\section{Process of Construction}\label{sec:process}
+\subsection{Process of Construction}\label{sec:process}
 
-%TODO: move
-%The reasoning in the construction follows in logic programming by φ-LPR~\cite{PLPR}, and consequences of CoP sequents are represented in Hereditary Harrop Formula.
+With the formal system of CoP, the section elaborates how the programming on CoP exactly works via \emph{CoP automaton}, an infinite-state push-down automaton where the \textbf{state} is a CoP sequent and the \textbf{stack} is used in \emph{nested construction}.
 
-The model of the programming in CoP resembles a deterministic push-down automaton equipped with two stacks and a set.
-A \textbf{state} of the CoP automaton is a CoP sequent.
-The two \textbf{stacks} are \emph{assembly stack} $\{\mathcal{A}_j\}_{1 \leq j \leq n}$, and \emph{environment stack} $\{\mathcal{E}_j\}_{1 \leq i \leq m}$.
-The \text{set} is \emph{lemmata store} $\mathcal{L}$.
+We first introduce operations in CoP automaton for constructing sequential fragment of programs, which does not access the stack and not relate to nested construction so we defer the explication of them two later.
+%which roughly corresponds to each rule of CoP:
+%denoted by $\{\mathcal{E}_j\}_{1 \leq i \leq m}$ stores state sequents of suspended constructions of outer procedures when constructing a sub-procedure.
+%The \text{set} is \emph{lemmata store} $\mathcal{L}$.
 
-On state sequent $P_0 \mbar S ⊢ P_n$ where $S = S_1 ; \cdots ; S_n$ with each $S_j = (C_j, v_j)$.
-the assembly stack $\{\mathcal{A}_j\}_{1 \leq j \leq n}$ stores $n$
-sequents, which are the sequents of the wp-modalities for each step of procedure $C_j$,
- \[  \mathcal{A}_j = (P_0 \mbar S_1 ; \cdots ; S_{j-1} ⊢ [C_j]\{P_j\}\{E_j\}) \]
-$\mathcal{A}_j$ is used when assembling the procedure $C_j$ by ASSEMBLE rule.
+%On state sequent $P_0 \mbar S ⊢ P_n$ where $S = S_1 ; \cdots ; S_n$ with each $S_j = (C_j, v_j)$.
+%the assembly stack $\{\mathcal{A}_j\}_{1 \leq j \leq n}$ stores $n$
+%sequents, which are the [$C$]-modalities for each step of procedure $C_j$
+%that is used when assembling $C_j$ by ASMBL rule,
+% \[  \mathcal{A}_j = (P_0 \mbar S_1 ; \cdots ; S_{j-1} ⊢ [C_j]\{P_j\}). \]
 
-As suggested by the name, lemmata store $\mathcal{L}$ stores pure
+%The explication of the environment stack is deferred to the next section expounding nested construction.
+%This section first introduces operations in CoP automaton for constructing sequential fragment of programs, which roughly correspond to the outline given in the previous section:
 
-The environment stack $\{\mathcal{E}_i\}_{1 \leq i \leq m}$ supports construction of nested procedures. It stores the state sequents and the assembly stacks of the suspended constructions of the outer procedures when constructing a nested procedure, $\mathcal{E}_i \in \text{State-Sequent} \times \text{Assembly-Stack}$.
-When opening a nested construction environment for constructing a nested procedure, the state sequent and the current assembly stack are pushed into the environment stack as a frame.
+\textbf{Init} initiates the automaton with empty assembly stack and empty environment stack, and with an initial state sequent $P_0 \mbar ⋅ ⊢ P_0$ for the given precondition $P_0$ of the procedure to be constructed.
 
-Now we introduce the operations of the programming, which fall in two sorts, operations constructing statements of a procedure successively, and operations opening and closing sub-environments for constructing nested procedure.
+%Now we introduce the operations of the programming, which fall in two sorts, operations constructing statements of a procedure successively, and operations opening and closing sub-environments for constructing sub-procedure.
 
-\subsection{Operations for Constructing Successive Statements}\label{sec:op-succ}
+\textbf{Appl}.  To apply a procedure $C$, or speaking intuitively,
+to write down a statement $C$, given a specification theorem $A \Longrightarrow \{P'\}C\{Q\}$ (cf. \cref{ACF}),
+the automaton on state sequent $P_0 \mbar S ⊢ P_n$
+deduces and moves to the following state sequent by APP and CSQ rule with the two stacks unchanged.
+\[ P_0 \mbar S ⊢ (P_n \longrightarrow\; ?R \ast P') \Longrightarrow A \Longrightarrow [C]\{v.\;?R \ast Q\,v\} \]
+Note the leading antecedent is exactly a VCG-ToA problem (cf. \cref{VCG-ToA}) if $P_n, P'$ are in MTF.
+%\[ P_0 \mbar S_1 ; \cdots ; S_n ⊢ [C]\{(P_n \wand P') \ast Q\}\{(P_n \wand P') \ast E\} \]
 
-\subsubsection{Initialization}
+\textbf{Resolution} solves the leading antecedent $A$ on a state sequent $P_0 \mbar S \vdash A \Longrightarrow H $ with a given resolution rule $A' \Longrightarrow A$. The automaton moves to $P_0 \mbar S \vdash A' \Longrightarrow H$, or $P_0 \mbar S \vdash H$ if $A'$ is trivially $\top$.
 
-Given the precondition $P_0$ of the procedure to be constructed,
-by axiom \ref{Ax} the initial state sequent is $P_0 \mbar ⋅ ⊢ P_0$,
-and both the initial assembly stack and the initial environment stack are empty.
+By resolution, a solver of VCG-ToA can be applied to reduce the above $(P_n \longrightarrow\; ?R \ast P')$ to a pure and abstract proof obligation $V_C$.
 
-\subsubsection{Application}
-
-To apply a procedure specified by $\{P'\}C\{Q\}\{E\}$, or intuitively speaking,
-to write a new statement $C$, given the specification theorem $\{P'\}C\{Q\}\{E\}$,
-the automaton on state sequent $P_0 \mbar S_1 ; \cdots ; S_n ⊢ P_n$
-moves to the following state sequent by APP rule with the two stacks unchanged.
-\[ P_0 \mbar S_1 ; \cdots ; S_n ⊢ [C]\{(P_n \wand P') \ast Q\}\{(P_n \wand P') \ast E\} \]
-
-There can be alternative transition. 
-In φ-BI, where we intend to leverage the data refinement
-as much as possible, wand $P_n \wand P'$ is not recommended to be used because of indirect reflection of non-intuitive data refinement.
-It is preferable to instead move to
-\[ P_0 \mbar S_1 ; \cdots ; S_n ⊢ P_n \longrightarrow\; ?R \ast P' \Longrightarrow [C]\{v.\;?R \ast Q\,v\}\{v.\;?R \ast E\,v\} \]
-which preserves Multi-Term Form~\cite{???} (the canonical form of φ-BI reasoner, which ensures a direct reflection of intuitive data refinement) and the antecedent $P_n \longrightarrow\; ?R \ast P'$ is a typical problem handled by φ-BI reasoner~\cite{???}.
+\begin{remark}\label{antecedent}
+\emph{Antecedents in the state sequent has a procedural interpretation like a `to do' list of pending works.}
+Pure antecedents such as $V_C$ denote pending proof works to be solved by user. User can eliminate them by resolution operation with their proofs.
+Antecedents in form $\{P\}?C\{Q\}$ denote pending programming works to build a procedure satisfying the specification if $?C$ is a free variable, or if not, to verify the concrete program $C$ against the specification $\{P\}C\{Q\}$.
+They are often seen in control flow combinators such as the \texttt{IF} given in \cref{sec:wp}.
+After applying the \texttt{IF}, the state sequent becomes $P_0 \mbar S \vdash \{P\}B_T\{Q_T\} \Longrightarrow \cdots$ which tangibly asks users to program the body of the branch.
+The way to program such sub-procedures is later given in operation ???.
+\end{remark}
 
 
-\subsubsection{Acceptance}
+\textbf{Transformation} operation on state sequent $P_1 \mbar S \vdash P_n$ deduces and moves to $P_0 \mbar S \vdash P'$ with a given rule $P_n \vdash P'$. It enables transformations of abstraction when $P_n, P'$ are in MTF.
 
-On state sequent
-\begin{equation}
-  P_0 \mbar S_1 ; \cdots ; S_n ⊢ [C_{n+1}]\{P_{n+1}\}\{E_{n+1}\} \label{Acc-1}
-\end{equation}
-by ACCEPT rule the operation moves the automaton to the state sequent,
-\[ P_0 \mbar S_1 ; \cdots ; S_n ; S_{n+1} ⊢ P_{n+1}\,v_{n+1} \quad\text{\parbox{6cm}{where $S_{n+1} = (C_{n+1}, v_{n+1})$
-and $v_{n+1}$ is a fresh variable}} \]
-with pushing the sequent (\ref{Acc-1}) into the assembly stack.
+%Given an implication rule $P_n \longrightarrow P'_n$, on the state sequent $ P_0 \mbar S ⊢ P_n $
+%the automaton deduces the state sequent to $P_0 \mbar S ⊢ P'_n$, by CSQ rule.
+%
+%On the state sequent $P_0 \mbar S ⊢ [C_n]\{P_n\}\{E_n\}$,
+%given rule $∀r.\; P_n\,r \longrightarrow P'_n\,r$ and $∀r.\; E_n\,r \longrightarrow E'_n\,r$,
+%the automaton moves to the state sequent $P_0 \mbar S ⊢ [C_n]\{P'_n\}\{E'_n\}$, by wp-CSQ rule.
 
-The operation results the automaton into a state that is ready for the operation Application.
-Repeating the operation Acceptance and the Application, any sequential composition can be built.
 
-\subsubsection{Transformations} of specifications is feasible.
+\textbf{Acceptance} on state sequent $P_0 \mbar S_1 ; \cdots ; S_n ⊢ [C_{n+1}]\{P_{n+1}\}$ deduces and moves to 
+$P_0 \mbar S_1 ; \cdots ; S_n ; (C_{n+1}, v_{n+1}) ⊢ P_{n+1}\,v_{n+1}$ where $v_{n+1}$ is a fresh variable never used.
+The operation results the automaton into a state that is ready for Application operation.
+Repeating Application and Acceptance, together with Resolution to solve antecedents, any sequential fragment of program can be built.
 
-Given an implication rule $P_n \longrightarrow P'_n$, on the state sequent $ P_0 \mbar S ⊢ P_n $
-the automaton deduces the state sequent to $P_0 \mbar S ⊢ P'_n$, by CSQ rule.
-
-On the state sequent $P_0 \mbar S ⊢ [C_n]\{P_n\}\{E_n\}$,
-given rule $∀r.\; P_n\,r \longrightarrow P'_n\,r$ and $∀r.\; E_n\,r \longrightarrow E'_n\,r$,
-the automaton moves to the state sequent $P_0 \mbar S ⊢ [C_n]\{P'_n\}\{E'_n\}$, by wp-CSQ rule.
-
-\subsubsection{Assembly}
-
-In the end of the construction, the Assembly operation is invoked repeatedly to assemble
-the final monadic program and its specification.
-
-On state sequent $P_0 \mbar S ⊢ P_n$,
-the automaton first assembles the last and the innermost {\it return} statement.
-It collects values to be returned from $P_n$ by $r = Free(P_n) \cap \{ v : (any,v) ∈ S\}$.
-Then by axiom ASSEMBLE-0, the automaton deduces the next state sequent,
-\[ P_0 \mbar S ⊢ [\mathrm{return}\;v]\{P'_n\}\{e.\,⊥ \}  \]
-
-On state sequent $P_0 \mbar S_1 ; \cdots ; S_{n-1} ; S_n ⊢ [C]\{P\}\{E\}$ where $S_n = (C_n, v_n)$,
-the automaton pops out the assembly sequent from the assembly stack,
-\[ P_0 \mbar S_1 ; \cdots ; S_{n-1} ⊢ [C_n]\{any\}\{E_n\} \]
-and with it deduces the next state sequent
-\[ P_0 \mbar S_1 ; \cdots ; S_{n-1} ⊢ [C_n \bind \lambda v_n.\; C]\{P\}\{e.\; E_n\,e ∨ (∃v_n.\; E\,e)\} \]
-
-On state sequent $P_0 \mbar ⋅ ⊢ [C]\{P\}\{E\}$ the automaton outputs $\{P_0\}C\{P\}\{E\}$.
-
-\subsection{Operations for Environments of Nested Procedures}
-
-Operations in \cref{sec:op-succ} enable us to construct sequential composition of monadic programs.
-However, in real programs, control flow structures includes branch, loop, and exception more than just sequential composition.
-
-Recall specifications of control flow combinators are HHFs where specifications of procedure parameters are antecedents.
-
-Antecedents in specification theorems of procedures are preserved during the APPLY operation.
-An antecedent $A$ in a specification theorem $A \Longrightarrow \{P\}C\{Q\}\{E\}$ is first compacted into the
-pre-condition, to be $\{P \land !!A\} C \{Q\}\{E\}$ where $!!A ≜ ∀w. @_w A$.
-After the APPLY operation, from either state sequent
-\begin{align*}
-& P_0 \mbar S ⊢ [C]\{(P_n \wand (P \land !!A)) \ast Q\}\{(P_n \wand (P \land !!A)) \ast E\} \quad\text{or} \\
-& P_0 \mbar S ⊢ P_n \longrightarrow\; ?R \ast (P \land !!A) \Longrightarrow [C]\{v.\;?R \ast Q\,v\}\{v.\;?R \ast E\,v\}
-\end{align*}
-the automaton then deduces the state sequent $P_0 \mbar S ⊢ A \Longrightarrow \cdots$
-\begin{align*}
-& P_0 \mbar S ⊢ A \Longrightarrow [C]\{(P_n \wand P) \ast Q\}\{(P_n \wand P) \ast E\} \quad\text{or correspondingly} \\
-& P_0 \mbar S ⊢ A \Longrightarrow P_n \longrightarrow\; ?R \ast P \Longrightarrow [C]\{v.\; ?R \ast Q\,v\}\{v.\; ?R \ast E\,v\}
-\end{align*}
-Therefore, antecedents in HHFs are preserved. When apply a control flow combinator, the resulted state sequent is a HHF where antecedents are specifications of nested procedures intended to be written.
-
-To construct a control flow structure, the suer should apply the control flow combinator first.
-For example, to write a branch statement \texttt{if (c) \{ Bt \} else \{ Bf \}}, on CoP automaton a user first calls APPLY operation with (the specification theorem of) the branch combinator, to intuitively `write the line \texttt{if (c)}', causing the automaton moving to
-\[ P_0 \mbar S ⊢ \{P\}?B_T\{Q_T\}\{E_T\} \Longrightarrow \{P\}?B_F\{Q_F\}\{E_F\} \Longrightarrow \cdots \]
-
-We assign the semantics of such formulas:
-\textbf{If an antecedent of the state sequent is a procedure specification $\{P\}?C\{Q\}\{E\}$,
-the antecedent represents, the programming is on a state expecting users to write a
-sub-procedure $?C$ nested in the current construction and satisfying the specification $\{P\}?C\{Q\}\{E\}$.}
-We name the antecedents which are a procedure specification, as \emph{procedural antecedent}.
-If in a procedural antecedent $\{P\}C\{Q\}\{E\}$ the $C$ is not a variable but a constant,
-users are expected to verify the sub-procedure $C$ meets the specification $\{P\}C\{Q\}\{E\}$.
-
-Continuing the example above, the state sequent expresses it is the time for the user to write the body $?B_T$ first and $?B_F$ later, which are done by in order,
+\textbf{Assembly} finalizes the construction by deducing $\{P\}C\{Q'\}$ from the state sequent $P \mbar S \vdash Q$ where $C = \seminterp{S}_r$, $r = \mathrm{Free}(Q) \cap \mathrm{Vals}(S)$, and $Q' = \lambda r.\; Q$ as elaborated in \cref{CoP-sem}.
+It is done by five steps:
 \begin{enumerate}
-\item the operation \textit{Enter Sub-scope} opening a sub-environment for constructing nested procedures
-\item the construction of successive statements of the nested procedure in this sub-environment by means of the operations given in \cref{sec:op-succ}
-\item the operation \textit{Enter Sub-scope} closing the sub-environment and solving the procedural antecedent by the constructed nested procedure.
+\item collecting all values occurring in $P_n$ as a tuple $r$ of return values;
+\item rewriting $Q \equiv Q'\,r$ where $r$ are not free in $Q'$, which deduces $P \mbar S \vdash Q'\,r$;
+\item applying ASMBL-0 rule, which deduces $P \mbar S \vdash [\mathrm{return}\,r]\{Q'\}$;
+\item repeating applying ASMBL rule exhaustively, which deduces $P \mbar \cdot \vdash [C]\{Q'\}$;
+\item deducing $\vdash \{P\}C\{Q'\}$ by CoP rule.
 \end{enumerate}
 
-\subsubsection{Enter Sub-scope}
+Now we consider nested construction for programming sub-procedures (cf. \cref{sec:prog-sem}), 
+where the state sequent specifies the inner-most sub-procedure and constructions of outer procedures are suspended and saved in the automaton stack.
 
-The operation can be seen writing the left bracket '\texttt{\{}' in the source \texttt{if (c) \{ Bt \} else \{ Bf \}}.
+%which is identical to constructing normal procedures except that constructions of outer procedures are suspended and saved in the automaton stack.
 
-On state sequent $P_0 \mbar S ⊢ \{P\}?C\{Q\}\{E\} \Longrightarrow Y$, the automaton first pushes the state sequent and the assembly stack into the environment stack as a frame. Then it sets the assembly stack to empty, and sets the state sequent to
-\[ @_{s''} P_0 \land P \mbar \cdot \vdash P \qquad\text{$s''$ is a fresh free variable} \]
-Note the hypothesis inherits the $P_0$ from the state sequent $P_0 \mbar S ⊢ \{P\}?C\{Q\}\{E\} \Longrightarrow Y$ of the outer procedure. $s''$ denotes the input state of the outer procedure $S$, which $P_0$ specifies. on a fresh computation state $s''$ irrelevant with the execution of $S$.
+Specifically, on state sequent $P \mbar S \vdash \{P'\}?C\{Q'\} \Longrightarrow R$ which hints users, as mentioned in \cref{antecedent}, to program a sub-procedure $?C$ satisfying $\{P'\}?C\{Q'\}$, operation \textbf{Sub} pushes the state sequent into the stack, and then set the state sequent to $P' \mbar \cdot \vdash P'$.
+It initiates the construction of the sub-procedure $?C$, and from then on the construction has no difference with that of a non-sub-procedure, using the operations above in the identical way.
 
-TODO: the motivation of CoP: a CPL on SL, imperative, resources, effectful etc.
-TODO: Hybrid-BI, seemly is necessary even without $⦂$. Explain
+Additionally at the end of any construction, \textbf{Assembly} operation which finalizes the construction, \emph{also} checks if the stack is empty. If empty, it is a global end so Assembly halts the automaton with the final triplet output. If not empty, it is the end of a nested construction. In this case, Assembly first obtains the resulted triplet $\vdash \{P'\}C\{Q''\}$, and pops out the saved state sequent of the outer procedure from the stack, $P \mbar S \vdash \{P'\}?C\{Q'\} \Longrightarrow R$. Combining them two by resolution, the automaton deduces and moves to the next state sequent $P \mbar S \vdash R\theta$ where $\theta$ is the unifier for $\{P'\}C\{Q''\}$ and $\{P'\}?C\{Q'\}$ used in the resolution.
+If the unification between $Q'$ and $Q''$ fails, the automaton may generate a ToA problem $Q'' \longrightarrow Q'$, or simply fails because the program written by user fails to meet the required specification.
+
+As control flow structure is combination of a control flow combinator and sub-procedures, 
+nested construction enabling constructing sub-procedures enables constructing control flow structures.
+As both sequential structure and control flow structures are supported, the automaton is able to construct any imperative programs.
+
+%the triplet of the sub-procedure is obtained and the saved state sequent of the outer procedure is pop
+%
+%constructions for multiple procedures are involved for each nest level.
+%The construction of the sub-procedure itself is identical to the way above but only the automaton stack is used to stack the suspended construction of the outer procedures
+%
+%--- when initiating a nested construction for sub-procedure $C_s$ from the construction of outer procedure $C_o$, the state sequent 
+%
+%
+%It uses the automaton stack to stack the construction environments for each outer procedure.
+%
+%
+%The stack of CoP automaton is used here for stacking 
+%
+%
+%
+%when the automaton is on a state sequent like $P_0 \mbar S \vdash \{P\}B_T\{Q_T\} \Longrightarrow \cdots$ in which the leading antecedent, as mentioned in \cref{antecedent}, asks users to program the sub-procedure (e.g. $B_T$ here).
+%
+%%
 
 
-
-Until now we have not used the environment stack ${ℰ_i}$, which is prepared for nested
-construction that is going to be discussed in this section.
-
-Nested procedures are commonly bodies in branch statements or loops
-
-\subsubsection{Exit Sub-scope}
-
-
-
-
-As a summary for writing structural control flows on CoP,
-
-
-▸ Antecedents are preserved in APPLY operation. CoP automaton uses the antecedents of
-  procedural parameters to represent the programming state when
-  a sub-procedure is expected to be written.
-
-▸ The operation \texttt{Enter Sub-scope} and \texttt{Exit Sub-scope} build sub-procedures.
-
-
-DRPL
+%\subsection{Operations for Environments of Nested Procedures}
+%
+%The environment stack $\{\mathcal{E}_i\}_{1 \leq i \leq m}$ provides supports for constructing sub-procedures.
+%It stores the suspended construction state of the outer procedures.
+%Specifically, the state sequents and the assembly stacks for each suspended construction, $\mathcal{E}_i \in \text{State-Sequent} \times \text{Assembly-Stack}$.
+%When opening a nested environment to construct a sub-procedure, the state sequent and the assembly stack are saved in the environment stack as a frame.
+%
+%Operations in \cref{sec:op-succ} enable us to construct sequential composition of monadic programs.
+%However, in real programs, control flow structures includes branch, loop, and exception more than just sequential composition.
+%
+%Recall specifications of control flow combinators are HHFs where specifications of procedure parameters are antecedents.
+%
+%Antecedents in specification theorems of procedures are preserved during the APPLY operation.
+%An antecedent $A$ in a specification theorem $A \Longrightarrow \{P\}C\{Q\}\{E\}$ is first compacted into the
+%pre-condition, to be $\{P \land !!A\} C \{Q\}\{E\}$ where $!!A ≜ ∀w. @_w A$.
+%After the APPLY operation, from either state sequent
+%\begin{align*}
+%& P_0 \mbar S ⊢ [C]\{(P_n \wand (P \land !!A)) \ast Q\}\{(P_n \wand (P \land !!A)) \ast E\} \quad\text{or} \\
+%& P_0 \mbar S ⊢ P_n \longrightarrow\; ?R \ast (P \land !!A) \Longrightarrow [C]\{v.\;?R \ast Q\,v\}\{v.\;?R \ast E\,v\}
+%\end{align*}
+%the automaton then deduces the state sequent $P_0 \mbar S ⊢ A \Longrightarrow \cdots$
+%\begin{align*}
+%& P_0 \mbar S ⊢ A \Longrightarrow [C]\{(P_n \wand P) \ast Q\}\{(P_n \wand P) \ast E\} \quad\text{or correspondingly} \\
+%& P_0 \mbar S ⊢ A \Longrightarrow P_n \longrightarrow\; ?R \ast P \Longrightarrow [C]\{v.\; ?R \ast Q\,v\}\{v.\; ?R \ast E\,v\}
+%\end{align*}
+%Therefore, antecedents in HHFs are preserved. When apply a control flow combinator, the resulted state sequent is a HHF where antecedents are specifications of sub-procedures intended to be written.
+%
+%To construct a control flow structure, the suer should apply the control flow combinator first.
+%For example, to write a branch statement \texttt{if (c) \{ Bt \} else \{ Bf \}}, on CoP automaton a user first calls APPLY operation with (the specification theorem of) the branch combinator, to intuitively `write the line \texttt{if (c)}', causing the automaton moving to
+%\[ P_0 \mbar S ⊢ \{P\}?B_T\{Q_T\}\{E_T\} \Longrightarrow \{P\}?B_F\{Q_F\}\{E_F\} \Longrightarrow \cdots \]
+%
+%We assign the semantics of such formulas:
+%\textbf{If an antecedent of the state sequent is a procedure specification $\{P\}?C\{Q\}\{E\}$,
+%the antecedent represents, the programming is on a state expecting users to write a
+%sub-procedure $?C$ nested in the current construction and satisfying the specification $\{P\}?C\{Q\}\{E\}$.}
+%We name the antecedents which are a procedure specification, as \emph{procedural antecedent}.
+%If in a procedural antecedent $\{P\}C\{Q\}\{E\}$ the $C$ is not a variable but a constant,
+%users are expected to verify the sub-procedure $C$ meets the specification $\{P\}C\{Q\}\{E\}$.
+%
+%Continuing the example above, the state sequent expresses it is the time for the user to write the body $?B_T$ first and $?B_F$ later, which are done by in order,
+%\begin{enumerate}
+%\item the operation \textit{Enter Sub-scope} opening a sub-environment for constructing sub-procedures
+%\item the construction of successive statements of the sub-procedure in this sub-environment by means of the operations given in \cref{sec:op-succ}
+%\item the operation \textit{Enter Sub-scope} closing the sub-environment and solving the procedural antecedent by the constructed sub-procedure.
+%\end{enumerate}
+%
+%\subsubsection{Enter Sub-scope}
+%
+%The operation can be seen writing the left bracket '\texttt{\{}' in the source \texttt{if (c) \{ Bt \} else \{ Bf \}}.
+%
+%On state sequent $P_0 \mbar S ⊢ \{P\}?C\{Q\}\{E\} \Longrightarrow Y$, the automaton first pushes the state sequent and the assembly stack into the environment stack as a frame. Then it sets the assembly stack to empty, and sets the state sequent to
+%\[ @_{s''} P_0 \land P \mbar \cdot \vdash P \qquad\text{$s''$ is a fresh free variable} \]
+%Note the hypothesis inherits the $P_0$ from the state sequent $P_0 \mbar S ⊢ \{P\}?C\{Q\}\{E\} \Longrightarrow Y$ of the outer procedure. $s''$ denotes the input state of the outer procedure $S$, which $P_0$ specifies. on a fresh computation state $s''$ irrelevant with the execution of $S$.
+%
+%TODO: the motivation of CoP: a CPL on SL, imperative, resources, effectful etc.
+%TODO: Hybrid-BI, seemly is necessary even without $⦂$. Explain
+%
+%
+%
+%Until now we have not used the environment stack ${ℰ_i}$, which is prepared for nested
+%construction that is going to be discussed in this section.
+%
+%Nested procedures are commonly bodies in branch statements or loops
+%
+%\subsubsection{Exit Sub-scope}
+%
+%
+%
+%
+%As a summary for writing structural control flows on CoP,
+%
+%
+%▸ Antecedents are preserved in APPLY operation. CoP automaton uses the antecedents of
+%  procedural parameters to represent the programming state when
+%  a sub-procedure is expected to be written.
+%
+%▸ The operation \texttt{Enter Sub-scope} and \texttt{Exit Sub-scope} build sub-procedures.
+%
+%
+%DRPL
