@@ -8,7 +8,6 @@ type_synonym ('RES_N,'RES) assn = "('RES_N \<Rightarrow> 'RES) set" \<comment> \
 
 subsection \<open>Specification of Monadic States\<close>
 
-context \<phi>resource_sem begin
 
 definition StrictStateTy :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
                           \<Rightarrow> ('ex  sem_value \<Rightarrow> ('RES_N,'RES) assn)
@@ -90,8 +89,6 @@ lemma StrictStateTy_plus[iff]:
 (*  \<open>!\<S> (A + B) E   = !\<S> A E  + !\<S> B E\<close> *)
   \<open>!\<S> X (\<lambda>v. EA v + EB v) = !\<S> X EA + !\<S> X EB\<close>
   unfolding set_eq_iff StrictStateTy_def by simp_all
-
-end
 
 abbreviation (in \<phi>spec) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
 

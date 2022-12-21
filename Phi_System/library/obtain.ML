@@ -9,19 +9,48 @@ fun eliminate_term ctxt xs thm =
   let open NuBasics PhiSyntax NuHelp
     val tm = Thm.prop_of thm
     val vs = map (dest_Free o Thm.term_of) xs;
-    val bads = Term.fold_aterms (fn t as Free v =>
-      if member (op =) vs v then insert (op aconv) t else I | _ => I) tm [];
+    fun collect tm = Term.fold_aterms (fn t as Free v =>
+                        if member (op =) vs v then insert (op =) v else I | _ => I) tm []
+    val bads = collect tm;
   in
     if null bads then thm
-    else let
-      val typing' = dest_current_nu thm
-            |> list_mk_binder @{const_name ExSet} bads
-            |> Syntax.check_term ctxt |> Thm.cterm_of ctxt
-    in
-      NuSys.cast typing' (ctxt,thm)
-        |> Nu_Reasoners.safer_obligation_solver'
-        |> snd
-    end
+    else case Thm.prop_of thm
+      of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.CurrentConstruction\<close>, _)
+                              $ _ $ _ $ _ $ _ $ _ $ _)
+      => let
+        val rule = Proof_Context.get_thm ctxt "introduce_Ex"
+        fun generalize x thm =
+          case Thm.prop_of thm
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.CurrentConstruction\<close>, _)
+                                    $ _ $ _ $ _ $ _ $ _ $ P)
+            => thm RS Drule.infer_instantiate ctxt [(("S",0), Thm.cterm_of ctxt (absfree x P))] rule
+        in fold_rev generalize bads thm
+        end
+      |  \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.PendingConstruction\<close>, _)
+                                  $ _ $ _ $ _ $ _ $ _ $ Q $ E)
+      => let
+        val bad_Q = collect Q
+        val bad_E = collect E
+        val rule_Q = Proof_Context.get_thm ctxt "introduce_Ex_pending"
+        val rule_E = Proof_Context.get_thm ctxt "introduce_Ex_pending_E"
+        fun generalize_Q x thm =
+          case Thm.prop_of thm
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.PendingConstruction\<close>, _)
+                                    $ _ $ _ $ _ $ _ $ _ $ Q $ _)
+            => thm RS Drule.infer_instantiate ctxt
+                          [(("Q",0), Thm.cterm_of ctxt (absfree x Q))] rule_Q
+        fun generalize_E x thm =
+          case Thm.prop_of thm
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.PendingConstruction\<close>, _)
+                                    $ _ $ _ $ _ $ _ $ _ $ _ $ E)
+            => thm RS Drule.infer_instantiate ctxt
+                          [(("E",0), Thm.cterm_of ctxt (absfree x E))] rule_E
+        in fold_rev generalize_E bad_E (fold_rev generalize_Q bad_Q thm)
+        end
+      | _ => raise THM (
+          "General Elimination fails because locally fixed variables(s) occurs in the sequent",
+          0, thm :: map Drule.mk_term xs
+        )
   end;
 
 fun eliminate ctxt rule xs As thm'' =

@@ -137,7 +137,6 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>\<
               of Context.Theory _ => []
                | Context.Proof ctxt =>
                    ( Proof_Context.get_thms ctxt "\<phi>implication"
-                   @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
                    @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>useful\<close>)
           )))
 

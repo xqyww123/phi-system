@@ -1770,11 +1770,11 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (option term >> (Toplevel.proof' o NuToplevel.end_block_cmd))
+    (option (\<^keyword>\<open>for\<close> |-- term) >> (Toplevel.proof' o NuToplevel.end_block_cmd))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
-    (((option term >> (fn cast => fn int =>
+    (((option (\<^keyword>\<open>for\<close> |-- term) >> (fn cast => fn int =>
         NuToplevel.end_block_cmd cast int
     #> (fn s => Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>") s)
     #> Proof.local_future_terminal_proof
@@ -1918,12 +1918,6 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
   in
     raise Bypass (SOME(ctxt', sequent))
   end)\<close>
-
-notepad
-begin
-  assume A: \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> A3 \<Longrightarrow> A4 \<Longrightarrow> A5 \<Longrightarrow> C\<close>
-  ML_val \<open>Thm.permute_prems 0 1 @{thm A}\<close>
-end
 
 
 \<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
@@ -3475,7 +3469,7 @@ lemma \<phi>Init_cast[\<phi>reason for \<open>?x \<Ztypecolon> \<phi>Init ?TY ?T
 \<Longrightarrow> x \<Ztypecolon> \<phi>Init TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>Init TY U \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>Init ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'a::{implication,structural} action)\<close>]:
+lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>Init ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'aa::{implication,structural} action)\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act
 \<Longrightarrow> x \<Ztypecolon> \<phi>Init TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>Init TY U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close>
   for Act :: \<open>'a::{implication,structural} action\<close>
@@ -3665,7 +3659,7 @@ subsubsection \<open>General Simplification for Assertions\<close>
 
 lemmas [assertion_simps] =
   mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left zero_fun
-  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_const FOCUS_TAG_def
+  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_const FOCUS_TAG_def ExSet_0
 
 
 
@@ -3818,6 +3812,7 @@ lemma [\<phi>reason 2000
 lemma [\<phi>reason 2100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?var_Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' ?mode\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' mode\<close>
   unfolding Action_Tag_def using view_shift_id .
+
 
 subsubsection \<open>Termination\<close>
 
@@ -6367,7 +6362,7 @@ lemma \<phi>M_getV_raw[\<phi>reason!]:
    \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_raw VDT_dest (sem_value v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem_value v) A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_raw_def Premise_def
-  by (clarsimp simp add: \<phi>expns)
+  by (clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
 
 declare \<phi>M_getV_raw[where X=1, simplified, \<phi>reason!]
 
@@ -6377,7 +6372,7 @@ lemma \<phi>M_getV[\<phi>reason!]:
 \<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest (sem_value v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem_value v) A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_def Premise_def
-  by (clarsimp simp add: \<phi>expns)
+  by (clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
 
 declare \<phi>M_getV[where X=1, simplified, \<phi>reason!]
 

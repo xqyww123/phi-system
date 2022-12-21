@@ -59,10 +59,9 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val (ctxt,sequent') = NuApply.apply [op_var_scope'] (ctxt,sequent)
                 |> apsnd (
                       (fn th => @{thm Premise_True} RS th)
-                   #> Thm.permute_prems 0 1
-                   #> Goal.protect (num_sets + arity))
-                |> Nu_Reasoner.reason ~1
-                |> (fn x => case x of SOME y => apsnd Goal.conclude y
+                   #> Thm.permute_prems 0 1)
+                |> Nu_Reasoner.reason (num_sets + arity)
+                |> (fn x => case x of SOME y => y
                                     | _ => error (
     "Fail to assign variable(s). Typically, it is due to incorrect representation types."))
                 |> apsnd (fn th => th RS @{thm conjunct1})

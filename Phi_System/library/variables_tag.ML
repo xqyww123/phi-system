@@ -71,7 +71,7 @@ fun gen_vary prep_vars prep_pattern prep_subj
 
     val forall = forall_expansion origin_names ctxt
     val exNu = ExNu_expansion origin_names ctxt
-    val Subjection_simp_proc_arg = Proof_Context.get_thm ctxt "local.Subjection_simp_proc_arg"
+    val Subjection_simp_proc_arg = Proof_Context.get_thm ctxt "local.Subjection_simp_proc_arg_metaeq"
   in
     (var_tag_th RS sequent)
       |> schematic_var_expansion ctxt

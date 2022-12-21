@@ -398,7 +398,7 @@ val attr_del_elim = Thm.declaration_attribute del_elim_rule
 
 val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Args Scan Parse 
-  fun read_prop_mode mode ctxt = Syntax.read_prop (Proof_Context.set_mode mode ctxt)
+  fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
   val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
   fun pos_parser x = (Token.pos_of (hd x), x)

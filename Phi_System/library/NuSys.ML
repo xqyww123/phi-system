@@ -156,45 +156,59 @@ fun param_type sequent =
 
 
 fun set_param' ctxt term sequent =
-    (term |> Thm.cterm_of ctxt |> NuBasics.intro_param)
+    (term |> Thm.cterm_of ctxt
+          |> NuBasics.intro_param)
       RS sequent
 
 fun set_param term' (ctxt,sequent) =
   let
+    val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
     val (\<^const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>ParamTag\<close>, _) $ X)) = Thm.major_prem_of sequent
-    val term = term' |> Type.constraint (param_type sequent) |> Syntax.check_term ctxt
+    val term = term' |> Type.constraint (param_type sequent) |> Syntax.check_term ctxt_parse
+    fun has_multiple_ex_quantification X
+      = case X of (Const(\<^const_name>\<open>ExSet\<close>, _) $ (Abs (_,_,(Const(\<^const_name>\<open>ExSet\<close>, _) $ _))))
+                    => true
+                | _ => false
+    fun has_only_one_ex_quantification X =
+          case X of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ => not (has_multiple_ex_quantification X)
+                  | _ => false
   in
-    case X
-      of Const(\<^const_name>\<open>ExSet\<close>, _) $ (Abs (_,_,(Const(\<^const_name>\<open>ExSet\<close>, _) $ _)))
-            => (ctxt, set_param' ctxt term  sequent)
-       | Const(\<^const_name>\<open>ExSet\<close>, _) $ _ =>
-            let
-              val (N,term') = QuantExpansion.aggregate_variables_quantification term
-            in (ctxt, set_param' ctxt term' sequent
-                        |> Raw_Simplifier.rewrite_rule ctxt
-                              (QuantExpansion.ExNu_expansion N ctxt
-                            :: QuantExpansion.forall_expansion N ctxt
-                            :: QuantExpansion.pure_All_expansion N ctxt
-                            :: QuantExpansion.exists_expansion N ctxt
-                            :: QuantExpansion.aux_expansions ctxt))
-            end
-       | _ => (ctxt, set_param' ctxt term sequent)
+    if has_multiple_ex_quantification term andalso
+       has_only_one_ex_quantification X
+    then (* We aggregate the user input `term` into a single ex quantification *)
+          let
+            val (N,term') = QuantExpansion.aggregate_variables_quantification term
+          in (ctxt, set_param' ctxt_parse term' sequent
+                      |> Raw_Simplifier.rewrite_rule ctxt
+                            (QuantExpansion.ExNu_expansion     N ctxt
+                          :: QuantExpansion.forall_expansion   N ctxt
+                          :: QuantExpansion.pure_All_expansion N ctxt
+                          :: QuantExpansion.exists_expansion   N ctxt
+                          :: QuantExpansion.aux_expansions       ctxt))
+          end
+    else (ctxt, set_param' ctxt_parse term sequent)
   end
 
-fun set_param_cmd term (ctxt,sequent) =
+fun set_param_cmd xterm (ctxt,sequent) =
   case try (dest_funT #> apfst PhiSyntax.dest_named) (param_type sequent)
     of SOME (name_and_tys, rng) =>
         let
           val fixes = map (fn (name,ty) =>
                 (Binding.name name, (if ty = dummyT then NONE else SOME ty), NoSyn)) name_and_tys
           val (fixed_names, ctxt) = Proof_Context.add_fixes fixes ctxt
-          val term = Syntax.parse_term ctxt term
+          val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
+          val term = Syntax.parse_term ctxt_parse xterm
                       |> NuHelp.tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
                       |> NuHelp.mk_monop @{const_name case_named}
         in
           set_param term (ctxt,sequent)
         end
-     | NONE => set_param (Syntax.parse_term ctxt term) (ctxt,sequent)
+     | NONE =>
+        let
+          val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern ctxt 
+        in
+          set_param (Syntax.parse_term ctxt_parse xterm) (ctxt,sequent)
+        end
 
 fun set_label name (ctxt,sequent) = (ctxt, mk_label_thm name RS sequent)
 

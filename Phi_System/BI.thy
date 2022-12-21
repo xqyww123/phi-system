@@ -233,7 +233,7 @@ lemma [\<phi>reason 300]:
 \<Longrightarrow> (ExSet S) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns, blast)
 
-lemma [\<phi>reason]:
+lemma ExSet_imp_I[\<phi>reason]:
   \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' x \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (ExSet S') \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast)
@@ -243,6 +243,9 @@ lemma [\<phi>reason]:
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d (Ex P)\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast)
 
+lemma ExSet_0[simp]:
+  \<open>ExSet 0 = 0\<close> \<open>ExSet (\<lambda>_. 0) = 0\<close>
+  by (simp_all add: ExSet_def)
 
 subsection \<open>Universal Quantification\<close>
 

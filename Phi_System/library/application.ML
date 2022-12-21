@@ -55,7 +55,7 @@ fun start_reasoning (ctxt,sequent) =
                  (("Result",0), result)]
     val successful_app = Synchronized.var "\<phi>applicant_ctxt" []
     val ctxt' = AppContext.put successful_app ctxt
-    val _ = case Nu_Reasoner.reason (ctxt', sequent')
+    val _ = case Nu_Reasoner.reason ~1 (ctxt', sequent')
               of SOME _ => error bad_rule_msg
                | NONE => ()
   in
@@ -94,7 +94,7 @@ fun try_apply [] (ctxt,sequent) = NONE
                            Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
         val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
       in
-        Nu_Reasoner.reason (ctxt,sequent')
+        Nu_Reasoner.reason ~1 (ctxt,sequent')
           |> Option.map (apsnd (Goal.conclude))
       end
 

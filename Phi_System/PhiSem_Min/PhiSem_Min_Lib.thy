@@ -514,7 +514,9 @@ proc \<phi>__synthesis_eq[
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 F2
+  note [[\<phi>trace_reasoning]]
+  ;; = \<medium_right_bracket>. .
 
 
 
@@ -620,31 +622,19 @@ throws E
 
 proc while:
   assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x)\<close>
-  assumes V: "\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x) \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any"
+  assumes V[unfolded Action_Tag_def]:
+           "\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x) \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA"
+    and    \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True\<close>
     and C: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<lbrace> X x \<longmapsto> X x'\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l cond \<Ztypecolon> Predicate_About x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>"
     and B: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>"
   argument \<open>X'\<close>
   return \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
-  \<medium_left_bracket> 
-  ;; V \<exists>x C \<exists>x1 branch \<medium_left_bracket>  do_while
-  note [[\<phi>trace_reasoning]]
-  ;; \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> cond vars\<close>
-  ;; \<medium_left_bracket> B \<exists>xxx thm \<phi> ;; C ;; thm \<phi> \<medium_right_bracket>. \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket> \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> \<not> cond vars\<close> ..
-  ;; thm \<phi> 
+  \<medium_left_bracket> V \<exists>x C \<exists>x1 branch \<medium_left_bracket>
+    do_while \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> cond vars\<close>
+      \<medium_left_bracket> B \<exists>x2 C \<medium_right_bracket>.
+    \<medium_right_bracket>.
+    \<medium_left_bracket> \<medium_right_bracket> for \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> \<not> cond vars\<close> ..
   \<medium_right_bracket> using \<phi> by simp .
-
-
-proc while:
-  assumes V: "Variant_Cast vars X' X"
-    and C: "\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<lbrace> X x \<longmapsto> X x\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l cond \<Ztypecolon> Predicate_About x \<rbrace>"
-    and B: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. True \<rbrace>"
-  argument \<open>X'\<close>
-  return \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
-  \<medium_left_bracket> unfold V[unfolded Variant_Cast_def]
-    C
-    branch \<medium_left_bracket> do_while vars \<open>cond vars\<close> \<medium_left_bracket> B \<exists>vars' C \<medium_right_bracket>. \<medium_right_bracket>.
-           \<medium_left_bracket> \<medium_right_bracket> var vars subj \<open>\<not> cond vars\<close> using \<phi> by simp
-  \<medium_right_bracket>. .
 
 
 (*Example*)
@@ -671,14 +661,17 @@ proc XX:
     if \<medium_left_bracket> \<open>0 < $varx\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$varx - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0::nat\<close> \<medium_right_bracket>.
     (* the cartouche like \<open>0 < $varx\<close> invokes a synthesis process
        to make that value automatically *)
-  \<medium_right_bracket> using \<phi> by  simp .
+  \<medium_right_bracket> using \<phi> by simp .
 
 proc
   premises \<open>x < 10\<close>
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket> \<rightarrow> v ;;
-    while x invar \<open>x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
+    while
+  note [[\<phi>trace_reasoning]]
+  ;; \<open>x \<Ztypecolon> _ \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
+  ;;
     \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>. (*condition body of the loop*)
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*) ;; (* this ;; leads an empty statement which does nothing but simplification *)
     $v

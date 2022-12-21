@@ -121,7 +121,7 @@ lemma \<phi>apply_proc:
 \<Longrightarrow>(\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)"
   unfolding \<phi>Procedure_def CurrentConstruction_def PendingConstruction_def bind_def by (auto 0 5)
 
-lemma
+(* lemma
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> CodeBlock s s' f ret
 \<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret\<close>
@@ -148,7 +148,7 @@ lemma
   unfolding CurrentConstruction_def PendingConstruction_def bind_def subset_iff CodeBlock_def
   apply clarsimp subgoal for s s'
   by (cases s; simp; cases s'; simp add: split_state_All ring_distribs plus_fun) .
-
+*)
 lemma \<phi>accept_proc: \<comment> \<open>Depreciated!\<close>
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1
 \<Longrightarrow> (\<And>s' ret. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (g ret) \<^bold>o\<^bold>n s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2)
@@ -198,18 +198,44 @@ lemma \<phi>make_view_shift:
   unfolding CurrentConstruction_def View_Shift_def
   by (simp add: INTERP_SPEC_subj Subjection_expn)
 
+subsubsection \<open>Construct Implication\<close>
 
-subsubsection \<open>Modification\<close>
+lemma (in -) "\<phi>make_implication":
+  \<open>(\<And>x. x \<in> S \<Longrightarrow> x \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def by (simp add: \<phi>expns)
 
-paragraph \<open>Rename Procedure\<close>
 
-lemma \<phi>rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>" by fast
+subsubsection \<open>Cast\<close>
 
-lemma \<phi>rename_proc_with_goal:
-  \<open>f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def using \<phi>rename_proc .
+lemma "\<phi>cast":
+  "CurrentConstruction mode blk H T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> CurrentConstruction mode blk H T'"
+  unfolding CurrentConstruction_def Imply_def
+  by (simp_all add: split_paired_all \<phi>expns) blast
 
-paragraph \<open>Cast\<close>
+lemma "\<phi>cast_P":
+  "CurrentConstruction mode blk H T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> (CurrentConstruction mode blk H T') \<and> P"
+  unfolding CurrentConstruction_def Imply_def
+  by (simp_all add: split_paired_all \<phi>expns) blast
+
+lemma \<phi>cast_pending:
+  "PendingConstruction f blk H T E \<Longrightarrow> (\<And>x. T x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' x \<^bold>a\<^bold>n\<^bold>d P) \<Longrightarrow> PendingConstruction f blk H T' E"
+  unfolding PendingConstruction_def Imply_def
+  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All) meson
+
+lemma \<phi>cast_pending_E:
+  "PendingConstruction f blk H T E \<Longrightarrow> (\<And>x. E x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' x \<^bold>a\<^bold>n\<^bold>d P) \<Longrightarrow> PendingConstruction f blk H T E'"
+  unfolding PendingConstruction_def Imply_def
+  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All) meson
+
+lemma \<phi>apply_view_shift_P:
+  "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
+  unfolding CurrentConstruction_def View_Shift_def
+  by (simp_all add: split_paired_all \<phi>expns)
+
+lemma \<phi>apply_view_shift:
+  "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> CurrentConstruction mode blk R S'"
+  unfolding CurrentConstruction_def View_Shift_def
+  by (simp_all add: split_paired_all \<phi>expns)
 
 lemma "_\<phi>cast_internal_rule_":
   " CurrentConstruction mode blk H T
@@ -229,8 +255,7 @@ lemma "_\<phi>cast_internal_rule_'":
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
   unfolding Imply_def PendingConstruction_def bind_def GOAL_CTXT_def
     Action_Tag_def View_Shift_def
-  apply (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff)
-  subgoal for x by (cases x; simp; fastforce) .
+  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All)
 
 (*TODO: \<Longrightarrow> (\<And>v. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>v\<^bold>i\<^bold>e\<^bold>w E v \<longmapsto> E' v)*)
 lemma "_\<phi>cast_exception_":
@@ -239,8 +264,8 @@ lemma "_\<phi>cast_exception_":
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'"
   unfolding Imply_def PendingConstruction_def bind_def GOAL_CTXT_def
     View_Shift_def
-  apply (simp add: \<phi>expns LooseStateTy_expn' subset_iff; rule)
-  subgoal for x by (cases x; simp; fastforce) .
+  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All)
+
 
 lemma "_\<phi>cast_exception_rule_":
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
@@ -250,9 +275,8 @@ lemma "_\<phi>cast_exception_rule_":
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'"
   using "_\<phi>cast_exception_" .
 
-end
 
-lemma "_\<phi>cast_implication_":
+lemma (in -) "_\<phi>cast_implication_":
   \<open> x \<in> S
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
 \<Longrightarrow> \<r>Success
@@ -260,53 +284,27 @@ lemma "_\<phi>cast_implication_":
 \<Longrightarrow> x \<in> T\<close>
   unfolding Action_Tag_def Imply_def by blast
 
-context \<phi>spec begin
+subsubsection \<open>Misc\<close>
 
-subsubsection \<open>Application of View Shift \& Subtyping\<close>
+paragraph \<open>Inhabitance\<close>
 
-lemma \<phi>apply_view_shift_P:
-  "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
-  unfolding CurrentConstruction_def View_Shift_def
-  by (simp_all add: split_paired_all \<phi>expns)
-
-lemma \<phi>apply_view_shift:
-  "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> CurrentConstruction mode blk R S'"
-  unfolding CurrentConstruction_def View_Shift_def
-  by (simp_all add: split_paired_all \<phi>expns)
-
-lemma "\<phi>cast":
-  "CurrentConstruction mode blk H T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> CurrentConstruction mode blk H T'"
-  unfolding CurrentConstruction_def Imply_def
-  by (simp_all add: split_paired_all \<phi>expns) blast
-
-lemma "\<phi>cast_P":
-  "CurrentConstruction mode blk H T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> (CurrentConstruction mode blk H T') \<and> P"
-  unfolding CurrentConstruction_def Imply_def
-  by (simp_all add: split_paired_all \<phi>expns) blast
-
-end
-
-subsubsection \<open>Construct Implication\<close>
-
-lemma "\<phi>make_implication":
-  \<open>(\<And>x. x \<in> S \<Longrightarrow> x \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding Imply_def by (simp add: \<phi>expns)
-
-subsubsection \<open>Essential Rules for Reasoning\<close>
-
-paragraph \<open>Inhabit Rule\<close>
-
-lemma Implication_Inhabited_rule:
+lemma (in -) Implication_Inhabited_rule:
   \<open>x \<in> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by blast
-
-context \<phi>spec begin
 
 lemma CurrentConstruction_Inhabited_rule:
   "CurrentConstruction mode s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
   using CurrentConstruction_D by blast
 
-paragraph \<open>Simplification in the Programming\<close>
+paragraph \<open>Rename\<close>
+
+lemma \<phi>rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>" by fast
+
+lemma \<phi>rename_proc_with_goal:
+  \<open>f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding GOAL_CTXT_def using \<phi>rename_proc .
+
+paragraph \<open>Fact Store\<close>
 
 lemma [simp]:
   "CurrentConstruction mode s H (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> P"
@@ -316,23 +314,43 @@ lemma [simp]:
   "(CurrentConstruction mode s H T \<and> B) \<and> C \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> (B \<and> C)"
   by simp
 
-declare Subjection_expn[simp]
+declare (in -) Subjection_expn[\<phi>programming_simps]
 
-lemma [\<phi>programming_simps]:
+lemma (in -) [\<phi>programming_simps]:
   \<open>((s \<in> T) \<and> B) \<and> C \<longleftrightarrow> (s \<in> T) \<and> (B \<and> C)\<close>
   by simp
-  
+
+paragraph \<open>Fixing Existentially Quantified Variable\<close>
 
 lemma \<phi>ExTyp_strip:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExSet T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T c)"
   unfolding CurrentConstruction_def atomize_eq by (simp_all add: \<phi>expns split_paired_all)
 
-lemma Subjection_simp_proc_arg'[simp]:
+paragraph \<open>Introducing Existential Quantification\<close>
+
+lemma introduce_Ex:
+  \<open>CurrentConstruction mode blk H (S x) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S)\<close>
+  using \<phi>cast[OF _ ExSet_imp_I[OF implies_refl]] .
+
+lemma introduce_Ex_pending:
+  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. Q x v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. \<exists>*x. Q x v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  using \<phi>cast_pending[OF _ ExSet_imp_I[OF implies_refl]] .
+
+lemma introduce_Ex_pending_E:
+  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E x v)
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. \<exists>*x. E x v)\<close>
+  using \<phi>cast_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
+
+
+paragraph \<open>Normalizing Conjunction in Precondition\<close>
+
+lemma Subjection_simp_proc_arg:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)"
   (* and Subjection_simp_func_arg[simp]: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<and>\<^sup>s P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<longmapsto> Y \<rbrace>)" *)
   unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
 
-lemmas Subjection_simp_proc_arg[unfolded atomize_eq[symmetric]] = Subjection_simp_proc_arg'
+lemmas Subjection_simp_proc_arg_metaeq[unfolded atomize_eq[symmetric]] = Subjection_simp_proc_arg
 
 end
 

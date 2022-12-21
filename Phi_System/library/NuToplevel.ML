@@ -330,7 +330,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         val forall = forall_expansion origin_names ctxt''
         val recursion_thm = Proof_Context.get_thm ctxt'' "local.__op_recursion__"
         val Subjection_simp_proc_arg =
-              Proof_Context.get_thm ctxt'' "local.Subjection_simp_proc_arg"
+              Proof_Context.get_thm ctxt'' "local.Subjection_simp_proc_arg_metaeq"
         val (_,proof0) = goal0
             |> Syntax.check_term ctxt'' |> Thm.cterm_of ctxt''
             |> Goal.init
