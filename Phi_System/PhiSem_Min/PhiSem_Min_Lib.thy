@@ -446,7 +446,7 @@ proc [
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x > y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 F2
-    \<open>\<v>\<a>\<l>1\<close> \<open>\<v>\<a>\<l>0\<close> <
+  ;;  \<open>\<v>\<a>\<l>1\<close> ;; \<open>\<v>\<a>\<l>0\<close> <
   \<medium_right_bracket>. .
 
 (* Service Obligation !!!!! Last Day!!!! *)
@@ -610,14 +610,10 @@ assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bo
 argument \<open>X\<close>
 return   \<open>X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x'\<close>
 throws E
-  \<medium_left_bracket> 
-  V[unfolded Action_Tag_def]
-  thm "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j invariant x'\<close>, simplified]
-  ;;
-    "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j invariant x'\<close>, simplified]
-  thm \<phi>
   \<medium_left_bracket>
-  ;; B \<medium_right_bracket>.
+  V[unfolded Action_Tag_def]
+  "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j invariant x'\<close>, simplified]
+  \<medium_left_bracket> B \<medium_right_bracket>.
   \<medium_right_bracket> by simp .
 
 proc while:
@@ -629,12 +625,13 @@ proc while:
     and B: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>"
   argument \<open>X'\<close>
   return \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
-  \<medium_left_bracket> V \<exists>x C \<exists>x1 branch \<medium_left_bracket>
-    do_while \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> cond vars\<close>
-      \<medium_left_bracket> B \<exists>x2 C \<medium_right_bracket>.
+  \<medium_left_bracket> V C
+    branch \<medium_left_bracket>
+      do_while \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> cond vars\<close>
+      \<medium_left_bracket> B C \<medium_right_bracket>.
     \<medium_right_bracket>.
     \<medium_left_bracket> \<medium_right_bracket> for \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> \<not> cond vars\<close> ..
-  \<medium_right_bracket> using \<phi> by simp .
+  \<medium_right_bracket>. .
 
 
 (*Example*)
@@ -668,9 +665,7 @@ proc
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket> \<rightarrow> v ;;
-    while
-  note [[\<phi>trace_reasoning]]
-  ;; \<open>x \<Ztypecolon> _ \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
+    while \<open>x \<Ztypecolon> _ \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
   ;;
     \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>. (*condition body of the loop*)
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*) ;; (* this ;; leads an empty statement which does nothing but simplification *)

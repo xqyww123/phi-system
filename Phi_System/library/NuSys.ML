@@ -126,24 +126,28 @@ fun inc_val_counter ctxt =
 
 fun accept_proc (ctxt,sequent) =
   let open PhiSyntax
-    val accept_proc_thm = Proof_Context.get_thm ctxt "local.\<phi>accept_proc"
-    val rule = (@{print} sequent) RS accept_proc_thm
-    val ([(s_name', s_ty), (_, ret_ty)], \<^const>\<open>Pure.imp\<close> $ sequent'_term $ _) =
+    val rule = sequent RS Proof_Context.get_thm ctxt "local.\<phi>assemble_proc"
+    val ([(s_name', s_ty), (_, ret_ty)], \<^const>\<open>Pure.imp\<close> $ codeblk_term $ _) =
           NuHelp.strip_binder_raw \<^const_name>\<open>Pure.all\<close> (hd (Thm.prems_of rule))
     val ([s_name,ret_name],ctxt') =
             inc_val_counter ctxt |-> (fn i => Proof_Context.add_fixes
                 [(Binding.name s_name', NONE, NoSyn),
                  (Binding.name ("\<v>\<a>\<l>" ^ string_of_int i), SOME ret_ty, NoSyn)])
-    val sequent'_cterm =
-          Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name,s_ty)], sequent'_term)
+    val codeblk_cterm =
+          Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name,s_ty)], codeblk_term)
               |> Thm.cterm_of ctxt
     val param_cterms = [Free (s_name,s_ty), Free (ret_name, ret_ty)]
               |> map (Thm.cterm_of ctxt)
+    
+    val _ = if Term.maxidx_of_typ ret_ty <> ~1
+            then raise TYPE ("The arity of the return has to be fixed.", [ret_ty], [])
+            else ()
 
-    val ([sequent'],ctxt'2) = Assumption.add_assms
-          (fn _ => fn [assm] => (export_codeblock ctxt' param_cterms rule assm, I)) [sequent'_cterm] ctxt'
+    val ([codeblk],ctxt'2) = Assumption.add_assms
+            (fn _ => fn [assm] => (export_codeblock ctxt' param_cterms rule assm, I))
+            [codeblk_cterm] ctxt'
   in
-    (ctxt'2, sequent')
+    (ctxt'2, Proof_Context.get_thm ctxt "local.\<phi>accept_proc" OF [sequent, codeblk])
   end
 
 (*Param & Label*)

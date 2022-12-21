@@ -100,10 +100,6 @@ fun choose inst_names stat =
   let open NuBasics NuHelp HOLogic Term Conv
     val major = NuBasics.the_nu_fact stat
     val ctxt = Proof.context_of stat
-    fun map_name_result f b c =
-          (f (Binding.name_of b) c) |>> (fn s => Binding.map_name (K s) b)
-    val (inst_names,_) =
-      fold_map (map_name_result Name.variant) inst_names (Name.make_context [])
     val N = length inst_names
     val ExTyp_strip = Proof_Context.get_thm ctxt "local.\<phi>ExTyp_strip"
     fun exBI_strip 0 = all_conv
@@ -134,15 +130,18 @@ fun normlize_name name =
 
 fun auto_choose stat =
   let
-    val vars = PhiSyntax.dest_current_nu (NuBasics.the_nu_fact stat)
+    val var_names = PhiSyntax.dest_current_nu (NuBasics.the_nu_fact stat)
           |> NuHelp.strip_binder_vars @{const_name ExSet}
-          |> map (Binding.name o normlize_name o fst)
-     val _ = tracing ("Fixed existential variables "
-                      ^ String.concatWith ", " (map Binding.print vars)
-                      ^ " implicitly. You may want use '!!' to disable this automatic behavior, "
-                      ^ "or '\<exists> <names>' to fix them by explicit names.")
+          |> map (normlize_name o fst)
+    val (var_names', _) =
+      fold_map Name.variant var_names (Variable.names_of (Proof.context_of stat))
+(* Binding.name o  *)
+    val _ = tracing ("Automatically fixing existential variable(s) "
+                     ^ String.concatWith ", " var_names'
+                     ^ ". You may want to disable automatic behavior by '!!', "
+                     ^ "or use '\<exists> <names>' to fix them by explicit names.")
   in
-    choose vars stat
+    choose (map Binding.name var_names') stat
   end
 
 end

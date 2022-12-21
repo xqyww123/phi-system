@@ -767,7 +767,7 @@ lemma [\<phi>reason 30
     for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>v. ?S2\<heavy_comma> SYNTHESIS ?X' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_nil \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> SYNTHESIS X' \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> SYNTHESIS X' \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def by simp
 
 paragraph \<open>Construction on View Shifting\<close>
@@ -3512,20 +3512,24 @@ subsection \<open>Misc.\<close>
 definition Function_over :: \<open>('a,'b) \<phi> \<Rightarrow> 'c \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<phi>\<close> (infix "<func-over>" 40)
   where \<open>(T <func-over> x) = (\<lambda>f. f x \<Ztypecolon> T)\<close>
 
-text \<open>\<^term>\<open>f \<Ztypecolon> T <func-over> x\<close> constrains the abstract object f is a function about x.
-  It seems redundant considering \<^term>\<open>f x \<Ztypecolon> T\<close>. Nonetheless, it is useful when given some
-    pattern \<^schematic_term>\<open>?f x \<Ztypecolon> T\<close> and trying to match it by some \<^term>\<open>g x \<Ztypecolon> T\<close>.
-  Note such match has multiple solutions (e.g. \<^term>\<open>f = g\<close> or \<^term>\<open>f = (\<lambda>_. g x)\<close>), so
-    the usual reasoning cannot determine which solution should be chosen.
-  By contrast, \<^term>\<open>f \<Ztypecolon> T <func-over> x\<close> has specially designed sub-typing rule converting
-    from \<^term>\<open>fx \<Ztypecolon> T\<close>,
+text \<open>
+  \<^term>\<open>f \<Ztypecolon> T <func-over> x\<close> constrains f is a function about x,
+    i.e. \<^prop>\<open>f \<Ztypecolon> T <func-over> x \<equiv> f x \<Ztypecolon> T\<close>.
+  It is useful to circumvent nondeterminacy in the higher-order unification between
+    \<^schematic_term>\<open>?f x \<Ztypecolon> T\<close> and \<^term>\<open>g x \<Ztypecolon> T\<close> which has multiple solutions
+    including \<^term>\<open>f = g\<close> or \<^term>\<open>f = (\<lambda>_. g x)\<close>.
+  Concerning this, \<^term>\<open>f \<Ztypecolon> T <func-over> x\<close> clarifies the ambiguity by a specialized reasoner
+    that forces the exhaustive solution, i.e., the residue of \<^schematic_term>\<open>?f\<close> contains no
+    free occurrence of \<^term>\<open>x\<close>.
+
+  This specialized reasoner is \<^term>\<open>lambda_abstraction x fx f\<close> as,
 
 \<^prop>\<open> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s fx \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> lambda_abstraction x fx f
-\<Longrightarrow> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s f \<Ztypecolon> T <func-over> x \<^bold>a\<^bold>n\<^bold>d P\<close>,
+\<Longrightarrow> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s f \<Ztypecolon> T <func-over> x \<^bold>a\<^bold>n\<^bold>d P\<close>
 
-    which using \<^term>\<open>lambda_abstraction\<close>, always abstracts any occurrences of x in fx exhaustively, e.g.
-    always resulting in \<^term>\<open>f = g\<close> instead of \<^term>\<open>f = (\<lambda>_. g x)\<close>\<close>
+  which does the lambda abstraction, \<open>f = \<lambda>x. fx\<close>.
+\<close>
 
 lemma Function_over_expn[\<phi>expns]:
   \<open>(f \<Ztypecolon> T <func-over> x) = (f x \<Ztypecolon> T)\<close>
@@ -3548,19 +3552,21 @@ lemma [\<phi>reason 2000]:
 \<Longrightarrow> f \<Ztypecolon> T <func-over> x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns)
 
-lemma (in \<phi>empty) [\<phi>reason 2000]:
+context \<phi>spec begin
+
+lemma [\<phi>reason 2000]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> fx \<Ztypecolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
 \<Longrightarrow> lambda_abstraction x fx f
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> f \<Ztypecolon> T <func-over> x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding lambda_abstraction_def by (simp add: \<phi>expns)
 
-lemma (in \<phi>empty) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w f x \<Ztypecolon> T \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w f \<Ztypecolon> T <func-over> x \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding lambda_abstraction_def by (simp add: \<phi>expns)
 
 
-lemma (in \<phi>empty) [\<phi>reason 1200 for
+lemma [\<phi>reason 1200 for
   \<open>PROP Synthesis_Parse ?input (\<lambda>v. ?f \<Ztypecolon> ?T v <func-over> ?x :: ('FIC_N,'FIC)assn)\<close>
 ]:
   \<open> PROP Synthesis_Parse input (\<lambda>v. fx \<Ztypecolon> T v)
@@ -3568,13 +3574,12 @@ lemma (in \<phi>empty) [\<phi>reason 1200 for
 \<Longrightarrow> PROP Synthesis_Parse input (\<lambda>v. f \<Ztypecolon> T v <func-over> x :: ('FIC_N,'FIC)assn)\<close>
   unfolding Synthesis_Parse_def ..
 
-
-lemma (in \<phi>empty) [\<phi>reason 1200]:
+lemma [\<phi>reason 1200]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> SYNTHESIS f x \<Ztypecolon> T v \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> SYNTHESIS f \<Ztypecolon> T v <func-over> x \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P\<close>
   unfolding Synthesis_def lambda_abstraction_def by (simp add: \<phi>expns)
 
-
+end
 
 
 section \<open>Reasoning \& Programming\<close>
