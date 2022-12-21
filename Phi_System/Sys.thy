@@ -1867,7 +1867,13 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
   let
     val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
                         |> Config.put phi_synthesis_parsing true
+    val binds = Variable.binds_of ctxt_parser
     val term = Syntax.parse_term ctxt_parser raw_term
+                  |> Term.map_aterms (
+                        fn X as Var (name, _) =>
+                            (case Vartab.lookup binds name of SOME (_,Y) => Y | _ => X)
+                         | X => X
+                     )
                   |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
    in
@@ -3420,9 +3426,7 @@ lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Nonsepable ?T \<^bold>i\<^b
   for Act :: \<open>'a::{structural, implication} action\<close>
   unfolding Action_Tag_def using Nonsepable_cast .
 
-subsubsection \<open>Initialized or Not\<close>
-
-paragraph \<open>Algebra to represent uninitialized data\<close>
+subsection \<open>Potentially Uninitialized Structure\<close>
 
 datatype 'V uninit = initialized 'V | uninitialized
 
@@ -3433,47 +3437,47 @@ end
 
 paragraph \<open>Definition\<close>
 
-text \<open>\<phi>Init T relates a value with T if the value is initialized; or if not, it relates the zero
+text \<open>\<phi>MayInit T relates a value with T if the value is initialized; or if not, it relates the zero
   value of that type with T.\<close>
 
 context \<phi>empty_sem begin
 
-definition \<phi>Init :: \<open>'TY \<Rightarrow> ('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
-  where \<open>\<phi>Init TY T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T))) + initialized ` (x \<Ztypecolon> T <of-type> TY)\<close>
+definition \<phi>MayInit :: \<open>'TY \<Rightarrow> ('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
+  where \<open>\<phi>MayInit TY T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T))) + initialized ` (x \<Ztypecolon> T <of-type> TY)\<close>
 
 abbreviation \<phi>Share_Some_Init ("\<fish_eye>\<lbrakk>_\<rbrakk> _" [0, 91] 90)
-  where \<open>\<phi>Share_Some_Init TY T \<equiv> \<fish_eye> \<phi>Init TY T\<close>
+  where \<open>\<phi>Share_Some_Init TY T \<equiv> \<fish_eye> \<phi>MayInit TY T\<close>
 
-lemma \<phi>Inited_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Init TY T) \<longleftrightarrow> (p = uninitialized \<and> (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T)) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T <of-type> TY)))\<close>
-  unfolding \<phi>Type_def \<phi>Init_def by (simp add: \<phi>expns, blast)
+lemma \<phi>MayInited_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>MayInit TY T) \<longleftrightarrow> (p = uninitialized \<and> (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T)) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T <of-type> TY)))\<close>
+  unfolding \<phi>Type_def \<phi>MayInit_def by (simp add: \<phi>expns, blast)
   
-lemma \<phi>Inited_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Init TY T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma \<phi>MayInited_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>MayInit TY T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
 paragraph \<open>Conversions\<close>
 
 lemma [simp]:
-  \<open>\<phi>Init TY (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<phi>Init TY T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  \<open>\<phi>MayInit TY (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<phi>MayInit TY T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; blast)
 
 lemma [simp]:
-  \<open>\<phi>Init TY (ExTyp T) = (\<exists>\<phi> c. \<phi>Init TY (T c))\<close>
+  \<open>\<phi>MayInit TY (ExTyp T) = (\<exists>\<phi> c. \<phi>MayInit TY (T c))\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; blast)
 
 paragraph \<open>Rules\<close>
 
-lemma \<phi>Init_cast[\<phi>reason for \<open>?x \<Ztypecolon> \<phi>Init ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<phi>Init ?TY' ?U \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+lemma \<phi>MayInit_cast[\<phi>reason for \<open>?x \<Ztypecolon> \<phi>MayInit ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<phi>MayInit ?TY' ?U \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> x \<Ztypecolon> \<phi>Init TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>Init TY U \<^bold>a\<^bold>n\<^bold>d P\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi>MayInit TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>MayInit TY U \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>Init ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'aa::{implication,structural} action)\<close>]:
+lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>MayInit ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'aa::{implication,structural} action)\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act
-\<Longrightarrow> x \<Ztypecolon> \<phi>Init TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>Init TY U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi>MayInit TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>MayInit TY U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close>
   for Act :: \<open>'a::{implication,structural} action\<close>
-  unfolding Action_Tag_def using \<phi>Init_cast .
+  unfolding Action_Tag_def using \<phi>MayInit_cast .
 
 end
 

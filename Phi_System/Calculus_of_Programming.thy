@@ -361,6 +361,7 @@ definition Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow
   where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
 
 subsubsection \<open>Syntax\<close>
+(* TODO: move this *)
 
 consts anonymous_val :: \<open>'a sem_value\<close>
   \<comment> \<open>Any anonymous_val will be translated into a unique value during the parsing\<close>
@@ -375,6 +376,8 @@ setup \<open>(Sign.add_trrules (let open Ast
         Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x",
                 Appl [Constant \<^const_syntax>\<open>Val\<close>, Constant \<^const_name>\<open>anonymous_val\<close>, Variable "T"]])
   ] end))\<close>
+
+term \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
 
 ML_file \<open>library/procedure_syntax.ML\<close>
 

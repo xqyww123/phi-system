@@ -1,13 +1,32 @@
 signature PROCEDURE_SYNTAX = sig
-  val translate_ret : term -> term
+(*
+Translate a term X containing values V (including anonymous values) into (\<lambda>vs. X\<theta>),
+  where vs is a tuple aggregating values V,
+  \<theta> is a substitution mapping the ith value in V to the ith projection of vs.
+
+Values of identical name are considered identical. Any anonymous value is considered unique.
+*)
   val abstract_return_vals :
        string (*name of the lambda variable*)
-        -> bool (*true for Right-to-Left; false for Left-to-Right*)
-        -> term -> term * term
+        -> bool (*the order of values V in tuple vs.
+                  true for Right-to-Left; false for Left-to-Right*)
+        -> term
+        -> term * term
+
+(* Syntax translation during parse of the post-condition,
+   roughly identical to (abstract_return_vals "\<r>\<e>\<t>" true).
+*)
+val translate_ret : term -> term
+
+  
 end
 
 structure Procedure_Syntax : PROCEDURE_SYNTAX = struct
 
+(*
+Syntax translation during parsing of the pre-condition is simply replacing
+all anonymous values by a name \<a>\<r>\<g>i for the ith value from left to right.
+*)
 fun translate_arg cnt (Const (\<^const_name>\<open>anonymous_val\<close>, _))
       = (cnt+1, Free ("\<a>\<r>\<g>" ^ (string_of_int cnt), dummyT))
   | translate_arg cnt (A $ B)
@@ -25,8 +44,6 @@ fun dest_prodT (Type (\<^type_name>\<open>sem_value\<close>, [Type ("Product_Typ
   | dest_prodT T = raise TYPE("bug #fsahofew", [T], [])
 fun mk_prodT (Type (\<^type_name>\<open>sem_value\<close>, [T1]), Type (\<^type_name>\<open>sem_value\<close>, [T2]))
       = Type (\<^type_name>\<open>sem_value\<close>, [HOLogic.mk_prodT (T1,T2)])
-  | mk_prodT (Type ("dummy", []), _) = dummyT
-  | mk_prodT (_, Type ("dummy", [])) = dummyT
   | mk_prodT (T1,T2) = raise TYPE("bug #geasr89", [T1,T2], [])
 
 fun mk_tuple _ [] = \<^term>\<open>sem_value ()\<close>
@@ -53,23 +70,23 @@ fun nth_project [_] 0 term = term
       nth_project (tys::tyss) (i-1) (Const (\<^const_name>\<open>\<phi>V_snd\<close>, ty --> tys) $ term)
 
 
-fun gen_collect_and_map R2L (*from right to left*) =
+fun gen_collect_and_map R2L (*whether in an order from right to left or reversely*) =
 let
-fun collect_ret Vs (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)) = v::Vs
-  | collect_ret Vs (v as Free (_, Type(\<^type_name>\<open>sem_value\<close>, _))) = insert (op = ) v Vs
-  | collect_ret Vs (v as Var (_, Type(\<^type_name>\<open>sem_value\<close>, _)))  = insert (op = ) v Vs
-  | collect_ret Vs (v as Const ("_type_constraint_", Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
-      = insert (op = ) v Vs
-  | collect_ret Vs (Const (\<^const_name>\<open>Val\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)))
-      = v::Vs
-  | collect_ret Vs (Const (\<^const_name>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
-  | collect_ret Vs (Abs (_,_,X)) = collect_ret Vs X
-  | collect_ret Vs (X $ Y) =
-      if R2L
-      then collect_ret (collect_ret Vs X) Y
-      else collect_ret (collect_ret Vs Y) X
-  | collect_ret Vs _ = Vs
 
+fun collect_vals Vs (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)) = v::Vs
+  | collect_vals Vs (v as Free (_, Type(\<^type_name>\<open>sem_value\<close>, _))) = insert (op = ) v Vs
+  | collect_vals Vs (v as Var (_, Type(\<^type_name>\<open>sem_value\<close>, _)))  = insert (op = ) v Vs
+  | collect_vals Vs (v as Const ("_type_constraint_", Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
+      = insert (op = ) v Vs
+  | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)))
+      = v::Vs
+  | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
+  | collect_vals Vs (Abs (_,_,X)) = collect_vals Vs X
+  | collect_vals Vs (X $ Y) =
+      if R2L
+      then collect_vals (collect_vals Vs X) Y
+      else collect_vals (collect_vals Vs Y) X
+  | collect_vals Vs _ = Vs
 
 fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous_val\<close>, _))
       = (j + 1, Vs, nth_project Tys j (Bound i))
@@ -105,8 +122,26 @@ fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous_val\<close>, _))
                     (j'',Vs'', X' $ Y')))
   | map_ret _ b (j,Vs,Bound a) = (j, Vs, Bound (if b <= a then a+1 else a)) 
   | map_ret _ _ jVX = jVX
-in (collect_ret, map_ret) end
+in (collect_vals, map_ret) end
 
+val dummyT_sem = Type (\<^type_name>\<open>sem_value\<close>, [dummyT])
+fun ex_fastype_of TM =
+  let val T = fastype_of TM in if T = dummyT then dummyT_sem else T end
+  handle TERM _ => dummyT_sem
+
+fun abstract_return_vals name _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
+      = (\<^term>\<open>undefined :: unreachable sem_value\<close>,
+         Abs (name, \<^typ>\<open>unreachable sem_value\<close>, term))
+| abstract_return_vals name R2L term =
+  let
+    val (collect_vals, map_ret) = gen_collect_and_map R2L
+    val Vs = collect_vals [] term
+    val Tys = fold_rev (fn T => (fn [] => [T]
+                                  | L as T'::_ => mk_prodT (T,T') :: L))
+              (map ex_fastype_of Vs) []
+    val T = if null Tys then \<^typ>\<open>unit sem_value\<close> else hd Tys
+  in (mk_tuple Tys Vs, Abs(name, T, #3(map_ret Tys 0 (0,[],term))))
+  end
 
 fun translate_ret (term as (Abs _)) = term
   | translate_ret (term as (Var _)) = term
@@ -114,31 +149,7 @@ fun translate_ret (term as (Abs _)) = term
   | translate_ret (Const ("_type_constraint_", ty) $ X)
       = Const ("_type_constraint_", ty) $ translate_ret X
   | translate_ret term =
-      let
-        val (collect_ret, map_ret) = gen_collect_and_map true
-        val Vs = collect_ret [] term
-        val Tys = map (K dummyT) Vs
-                    |> fold_rev (fn T => (fn [] => [T]
-                                           | L as T'::_ => mk_prodT (T,T') :: L)) []
-        val T = if null Tys then \<^typ>\<open>unit\<close> else hd Tys
-        val T' = Type(\<^type_name>\<open>sem_value\<close>, [T])
-      in Abs ("\<r>\<e>\<t>", T',
-           if null Vs then term else #3(map_ret Tys 0 (0,[],term)))
-      end
-
-fun abstract_return_vals name _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
-      = (\<^term>\<open>undefined :: unreachable sem_value\<close>,
-         Abs (name, \<^typ>\<open>unreachable sem_value\<close>, term))
-| abstract_return_vals name R2L term =
-  let
-    val (collect_ret, map_ret) = gen_collect_and_map R2L
-    val Vs = collect_ret [] term
-    val Tys = fold_rev (fn T => (fn [] => [T]
-                                  | L as T'::_ => mk_prodT (T,T') :: L))
-              (map fastype_of Vs) []
-    val T = if null Tys then \<^typ>\<open>unit sem_value\<close> else hd Tys
-  in (mk_tuple Tys Vs, Abs(name, T, #3(map_ret Tys 0 (0,[],term))))
-  end
+      snd (abstract_return_vals "\<r>\<e>\<t>" true term)
 
 
 (* fun translate_num term =

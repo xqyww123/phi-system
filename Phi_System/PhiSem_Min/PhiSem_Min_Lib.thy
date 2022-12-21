@@ -119,7 +119,7 @@ paragraph \<open>Declare New Variables\<close>
 proc (in \<phi>min) op_var_scope:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
-                        \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>\<close>
+                    \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>\<close>
   argument \<open>X\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
   return   \<open>Y\<close>
   throws   E
@@ -127,10 +127,10 @@ proc (in \<phi>min) op_var_scope:
     try'' \<medium_left_bracket> BLK to_Identity op_free_var \<medium_right_bracket>. \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>. \<medium_right_bracket>. .
 
 lemma "__\<phi>op_var_scope__":
-  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y (ret::'aa sem_value) \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
+  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y (ret::'a sem_value) \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
                 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) TY F raw \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Val raw T) \<longmapsto> Y (ret::'aa sem_value) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) TY F raw \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Val raw T) \<longmapsto> Y (ret::'a sem_value) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding mult.assoc[symmetric]
   using op_var_scope_\<phi>app[where X=\<open>R\<heavy_comma> X\<close> and x = x and T = T and TY = TY and F=F and y=y,
             of Y U E \<open>raw\<close>, simplified]
@@ -660,14 +660,51 @@ proc XX:
        to make that value automatically *)
   \<medium_right_bracket> using \<phi> by simp .
 
+notepad
+begin
+
+  let \<open>?x + ?a\<close> = \<open>1 + 3\<close> and ?z = \<open>2\<close>
+  term \<open>?x + ?z\<close>
+
+end
+
+end
+
+ML \<open>Syntax.parse_term @{context} "int"\<close>
+hide_const (open) int
+term \<open>Int.int\<close>
+term \<open>float\<close>
+
+notepad
+begin
+term ?aaaaa
+end
+
+
+
 proc
   premises \<open>x < 10\<close>
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket> \<rightarrow> v ;;
+  \<medium_left_bracket>
+  ;; \<rightarrow> v
+  ;; $v
+  ;; 
+  let ?x = \<v>\<a>\<l>0
+  term \<open>?x\<close>
+  note [[\<phi>trace_reasoning]]
+ML_val \<open>Proof_Context.expand_abbrevs (Proof_Context.set_mode Proof_Context.mode_schematic @{context})
+(Var (("f",0), \<^typ>\<open>'VAL sem_value \<Rightarrow> bool\<close>) $ Var (("x",0), \<^typ>\<open>'VAL sem_value\<close>))\<close>
+  ;; \<open>?x\<close>
+  ;; ?x \<rightarrow> ?v
+  ;; ?x 
+  ;;  \<open>x\<close> \<rightarrow> v ;;
     while \<open>x \<Ztypecolon> _ \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
   ;;
-    \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>. (*condition body of the loop*)
+  let
+  \<medium_left_bracket>
+  ML_val \<open>Syntax.parse_term @{context} "$v"\<close>
+  ;; \<open>$v < 10\<close> \<medium_right_bracket>. (*condition body of the loop*)
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*) ;; (* this ;; leads an empty statement which does nothing but simplification *)
     $v
   \<medium_right_bracket>. .

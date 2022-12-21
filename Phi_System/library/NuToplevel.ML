@@ -554,7 +554,8 @@ fun prove_prem int stat =
     stat |> setup_proof (print_results int) Proof_Context.mode_schematic false ""
               NONE after_qed [] [] [[(goal,[])]]
          |> apsnd (
-              Proof.refine (Method.Basic (fn ctxt => Method.SIMPLE_METHOD (
+              Proof.map_context (Proof_Context.set_mode Proof_Context.mode_default)
+           #> Proof.refine (Method.Basic (fn ctxt => Method.SIMPLE_METHOD (
                 HEADGOAL (resolve_tac ctxt @{thms Premise_I})
               ))) #> Seq.the_result "should never fail"
             )
@@ -649,6 +650,7 @@ fun gen_begin_block prep_attr bindings int stat =
           "" NONE after_qed []
           (bindings ~~ (map (single o rpair []) prems))
           [(Binding.empty_atts, [(goal,[])])] |> #2
+      |> Proof.map_context (Proof_Context.set_mode Proof_Context.mode_default)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
       |> Seq.the_result "never fail"
