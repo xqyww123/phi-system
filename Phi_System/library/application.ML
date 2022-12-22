@@ -8,6 +8,9 @@ signature NU_APPLICATION = sig
   val try_apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state option
   val apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state
 
+  (*Advanced Modus Pones using logic programming conducted by \<^term>\<open>\<phi>Application_Conv\<close>
+    which infers various conversion of applicants.
+   *)
   val MPs : Proof.context -> thm list -> thm -> thm
   val MP  : Proof.context -> thm -> thm -> thm
 
@@ -93,6 +96,7 @@ fun try_apply [] (ctxt,sequent) = NONE
                           Drule.comp_no_flatten (b,0) 1 (
                            Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
         val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
+        val _ = Nu_Reasoner.debug_info ctxt (fn _ => "Reasoning generic applications...")
       in
         Nu_Reasoner.reason ~1 (ctxt,sequent')
           |> Option.map (apsnd (Goal.conclude))
@@ -124,11 +128,13 @@ fun MPs ctxt th1s' th2 =
      |> pair ctxt |> Seq.single
      |> pair 0
      ) th1s
+    val _ = Nu_Reasoner.debug_info ctxt (fn _ => "Reasoning modus pones...")
+    fun obligation_fail S = raise Nu_Reasoners.Attemption_Fail S
   in 
-    Seq.pull (Nu_Reasoner.reason_s ctxt stats)
-     |> Option.map (Nu_Reasoners.safer_obligation_solver' o fst)
-     |> (fn SOME (_, ret) => ret
-          | NONE => error("Reasoning Fails. You may turn on \<phi>trace_reasoning to debug where the reasoning fails."))
+    case Seq.pull (Nu_Reasoner.reason_s ctxt stats)
+      of SOME (stat, _) => snd (Nu_Reasoners.safer_obligation_solver' obligation_fail stat)
+       | NONE => error(
+            "Reasoning Fails. You may turn on \<phi>trace_reasoning to debug where the reasoning fails.")
   end
 
 fun MP ctxt th1' th2 =

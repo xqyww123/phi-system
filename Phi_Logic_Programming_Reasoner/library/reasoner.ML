@@ -27,6 +27,9 @@ signature NU_REASONER = sig
 
   val trace : bool Config.T (*Prints the state of every reasoning step.*)
   val trace_candidates : bool Config.T (*Prints the candidates at each step.*)
+  val debug_info: Proof.context -> (unit -> string) -> unit
+  val debug_pretty: Proof.context -> (unit -> Pretty.T) -> unit
+            (*Prints any debug info when the flag \<phi>trace_reasoning is turned on.*)
 
   (* auto level: 2 - fully auto, 1 - partially auto, 0 - fully manual *)
   val auto_level : int Config.T
@@ -91,6 +94,9 @@ fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning\<close> (K false);
 val trace_candidates = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning_candidates\<close> (K false);
+fun debug_info ctxt G =
+  if Config.get ctxt trace then tracing (G ()) else ()
+fun debug_pretty ctxt G = debug_info ctxt (fn _ => Pretty.string_of (G ()))
 
 val conclusion_tag = Free("Conclusion", \<^typ>\<open>prop \<Rightarrow> prop\<close>)
 val condition_tag = Free("Condition", \<^typ>\<open>prop \<Rightarrow> prop\<close>)

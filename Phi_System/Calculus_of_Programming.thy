@@ -73,6 +73,8 @@ end
 
 subsection \<open>Forward Declaration of Reasoner\<close>
 
+paragraph \<open>Transformation of State Abstraction (ToSA)\<close>
+
 text \<open>Before we enter any deep discussion, a \<phi>-LPR reasoner tag for
   Transformation of State Abstraction (ToSA) is required to be declared first.
   Remarked as \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close> or \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close>,
@@ -85,7 +87,10 @@ text \<open>Before we enter any deep discussion, a \<phi>-LPR reasoner tag for
     destined \<phi>-type. This behavior can be overrode.
 \<close>
 
-consts ToSA' :: \<open>bool \<comment> \<open>whether to transform \<phi>-types\<close> \<Rightarrow> mode\<close>
+consts ToSA' :: \<open>bool \<comment> \<open>whether to reason deeper transformation for each desired \<phi>-type
+                          by invoking more time-consuming logic programming reasoning process,
+                          or just apply unification to match the desired.\<close>
+              \<Rightarrow> mode\<close>
 
 abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
 
@@ -357,14 +362,13 @@ end
 
 subsection \<open>Representation of Value in Assertions\<close>
 
-definition Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close>
+definition Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
   where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
 
 subsubsection \<open>Syntax\<close>
 (* TODO: move this *)
 
-consts anonymous_val :: \<open>'a sem_value\<close>
-  \<comment> \<open>Any anonymous_val will be translated into a unique value during the parsing\<close>
+consts anonymous :: 'a
 
 syntax val_syntax :: "logic \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>l _" [18] 17)
 
@@ -374,10 +378,11 @@ setup \<open>(Sign.add_trrules (let open Ast
         Appl [Constant \<^syntax_const>\<open>val_syntax\<close>,
                 Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x", Variable "T"]],
         Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Variable "x",
-                Appl [Constant \<^const_syntax>\<open>Val\<close>, Constant \<^const_name>\<open>anonymous_val\<close>, Variable "T"]])
+                Appl [Constant \<^const_syntax>\<open>Val\<close>, Constant \<^const_name>\<open>anonymous\<close>, Variable "T"]])
   ] end))\<close>
 
 term \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
+term \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[AA] Y\<close>
 
 ML_file \<open>library/procedure_syntax.ML\<close>
 

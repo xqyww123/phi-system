@@ -81,6 +81,7 @@ fun reason_programming_implication mode ctxt sequent =
     val inhabited_rule = #inhabited_rule mode ctxt
     val stat = SOME (ctxt, (sequent RS inhabited_rule))
                handle THM _ => NONE
+    val _ = Nu_Reasoner.debug_info ctxt (fn _ => "extracting implied pure facts...")
   in case Option.mapPartial (Nu_Reasoner.reason ~1) stat
        of SOME (_, result) => [result]
         | _ => []

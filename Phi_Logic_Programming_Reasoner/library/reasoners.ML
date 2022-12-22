@@ -3,9 +3,11 @@ signature NU_REASONERS = sig
 
   val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
   val auto_obligation_solver : Proof.context -> thm -> thm Seq.seq
-  val auto_obligation_solver' : Proof.context * thm -> Proof.context * thm
+  val auto_obligation_solver' : (Proof.context * thm -> Proof.context * thm) (*failure callback*)
+                              -> Proof.context * thm -> Proof.context * thm
   val safer_obligation_solver : Proof.context -> thm -> thm Seq.seq
-  val safer_obligation_solver' : Proof.context * thm -> Proof.context * thm
+  val safer_obligation_solver': (Proof.context * thm -> Proof.context * thm) (*failure callback*)
+                              -> Proof.context * thm -> Proof.context * thm
 
   val defer_obligation_tac : Proof.context -> thm -> thm Seq.seq
   val asm_simp_tac : Proof.context -> thm -> thm Seq.seq
@@ -62,10 +64,10 @@ fun raw_auto ctxt =
   
   If the schematic variables are not able to be chosen arbitrarily, additional mechanisms have
   to be applied previously.*)
-fun context_tactic_to_state_transition tac (ctxt, sequent) =
+fun context_tactic_to_state_transition tac fail (ctxt, sequent) =
   case Seq.pull (tac ctxt sequent)
     of SOME (th', _) => (ctxt, th')
-     | NONE => raise Attemption_Fail (ctxt, sequent)
+     | NONE => fail (ctxt, sequent)
 
 (*** Premise tac ***)
 

@@ -118,7 +118,7 @@ paragraph \<open>Declare New Variables\<close>
 
 proc (in \<phi>min) op_var_scope:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
+    and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY)
                     \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>\<close>
   argument \<open>X\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<close>
   return   \<open>Y\<close>
@@ -127,13 +127,13 @@ proc (in \<phi>min) op_var_scope:
     try'' \<medium_left_bracket> BLK to_Identity op_free_var \<medium_right_bracket>. \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>. \<medium_right_bracket>. .
 
 lemma "__\<phi>op_var_scope__":
-  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y (ret::'a sem_value) \<heavy_comma> y \<Ztypecolon> Var var (U <of-type> TY)
+  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y (ret::'a sem_value) \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY)
                 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) TY F raw \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Val raw T) \<longmapsto> Y (ret::'a sem_value) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding mult.assoc[symmetric]
-  using op_var_scope_\<phi>app[where X=\<open>R\<heavy_comma> X\<close> and x = x and T = T and TY = TY and F=F and y=y,
-            of Y U E \<open>raw\<close>, simplified]
+  using op_var_scope_\<phi>app[where X=\<open>R\<heavy_comma> X\<close> and x = x and T = T and TY = TY and F=F,
+            of Y E \<open>raw\<close>, simplified]
   by (smt (verit, best) ab_semigroup_mult_class.mult_ac(1) mult.commute)
 
 lemma "__\<phi>op_set_var__":
@@ -563,13 +563,19 @@ end
 
 section \<open>Procedures and Operations\<close>
 
-context \<phi>min begin
-
 subsection \<open>Control Flow\<close>
+
+subsubsection \<open>Syntax for Annotations\<close>
+
+consts Invariant :: \<open>bool \<Rightarrow> bool\<close> ("Inv: _" [37] 36)
+consts Guard :: \<open>bool \<Rightarrow> bool\<close> ("Guard: _" [37] 36)
+
 
 subsubsection \<open>Loops\<close>
 
-lemma (in \<phi>min) "__DoWhile__rule_\<phi>app":
+context \<phi>min begin
+
+lemma "__DoWhile__rule_\<phi>app":
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l P x' \<Ztypecolon> \<bool>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>"
   unfolding op_do_while_def \<phi>Procedure_def
@@ -602,7 +608,7 @@ lemma (in \<phi>min)
 
 
 proc (in \<phi>min) (nodef) do_while:
-assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X' x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> cond x)\<close>
+assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X' x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x)\<close>
     and V: \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> ( X' x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> cond x) \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close>
     and    \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True\<close>
 assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x
@@ -616,18 +622,29 @@ throws E
   \<medium_left_bracket> B \<medium_right_bracket>.
   \<medium_right_bracket> by simp .
 
+(*
+We fail to infer the abstract loop guard automatically but require users to give.
+The main problem is about nondeterminancy in higher-order unification.
+In the below rule, in \<^term>\<open>cond x' \<Ztypecolon> \<bool>\<close>, both \<open>cond\<close> and \<open>x'\<close> are schematic variables,
+which means we cannot determine either of them via unification.
+Even though the abstract state \<open>x'\<close> may be determined possibly in the unification of \<open>X x'\<close>,
+to infer \<open>cond x'\<close> it is still a problem especially when \<open>x'\<close> is not a variable but a composite
+term and its composite expression may be shattered in the expression of \<open>cond\<close> after
+rewrites and simplifications, causing it is very difficult to recover the actual abstract guard
+\<open>cond\<close> from simplified composition \<open>cond x'\<close>.
+*)
 proc while:
-  assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x)\<close>
+  assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x)\<close>
   assumes V[unfolded Action_Tag_def]:
            "\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x) \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA"
     and    \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True\<close>
-    and C: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<lbrace> X x \<longmapsto> X x'\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l cond \<Ztypecolon> Predicate_About x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>"
+    and C: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<lbrace> X x \<longmapsto> X x'\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l cond x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>"
     and B: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>"
   argument \<open>X'\<close>
-  return \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. \<not> cond x\<close>
+  return \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> \<not> cond x\<close>
   \<medium_left_bracket> V C
     branch \<medium_left_bracket>
-      do_while \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> cond vars\<close>
+      do_while \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. Inv: invariant vars \<and> Guard: cond vars\<close>
       \<medium_left_bracket> B C \<medium_right_bracket>.
     \<medium_right_bracket>.
     \<medium_left_bracket> \<medium_right_bracket> for \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> \<not> cond vars\<close> ..
@@ -664,50 +681,30 @@ notepad
 begin
 
   let \<open>?x + ?a\<close> = \<open>1 + 3\<close> and ?z = \<open>2\<close>
+  let \<open>?x\<close> = \<open>444\<close>
   term \<open>?x + ?z\<close>
 
 end
-
-end
-
-ML \<open>Syntax.parse_term @{context} "int"\<close>
-hide_const (open) int
-term \<open>Int.int\<close>
-term \<open>float\<close>
-
-notepad
-begin
-term ?aaaaa
-end
-
 
 
 proc
   premises \<open>x < 10\<close>
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket>
-  ;; \<rightarrow> v
-  ;; $v
-  ;; 
-  let ?x = \<v>\<a>\<l>0
-  term \<open>?x\<close>
-  note [[\<phi>trace_reasoning]]
-ML_val \<open>Proof_Context.expand_abbrevs (Proof_Context.set_mode Proof_Context.mode_schematic @{context})
-(Var (("f",0), \<^typ>\<open>'VAL sem_value \<Rightarrow> bool\<close>) $ Var (("x",0), \<^typ>\<open>'VAL sem_value\<close>))\<close>
-  ;; \<open>?x\<close>
-  ;; ?x \<rightarrow> ?v
-  ;; ?x 
-  ;;  \<open>x\<close> \<rightarrow> v ;;
-    while \<open>x \<Ztypecolon> _ \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. x \<le> 10\<close> (* x is variable during the loop and it meets an invariant x \<le> 10  *)
-  ;;
-  let
-  \<medium_left_bracket>
-  ML_val \<open>Syntax.parse_term @{context} "$v"\<close>
-  ;; \<open>$v < 10\<close> \<medium_right_bracket>. (*condition body of the loop*)
-    \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*) ;; (* this ;; leads an empty statement which does nothing but simplification *)
-    $v
-  \<medium_right_bracket>. .
+  \<medium_left_bracket> \<rightarrow> v ;;
+    while
+note [[\<phi>trace_reasoning, \<phi>trace_processing]]
+;; \<open>x \<Ztypecolon> ?X \<^bold>s\<^bold>u\<^bold>b\<^bold>j x y. Inv: (x \<le> 10 \<and> 20 < y) \<and> Guard: x < 10\<close> 
+  \<medium_left_bracket> 
+  note [[\<phi>trace_reasoning, \<phi>trace_processing]]
+  ;;\<open>$v < 10\<close>
+  \<medium_right_bracket>. (*condition body of the loop*)
+    \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*)
+    thm \<phi>
+    ;; (* this ;; leads an empty statement which does nothing but simplification *)
+      $v
+    thm \<phi>implication
+    \<medium_right_bracket>. .
 
 end
 

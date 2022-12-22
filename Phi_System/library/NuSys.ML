@@ -229,6 +229,7 @@ fun synthesis term (ctxt, sequent) =
           |> Drule.infer_instantiate ctxt [(("X",i_s + i_t), Thm.incr_indexes_cterm i_s term),
                                            (("sequent",i_s + i_t), Thm.cprop_of sequent)]
           |> (fn rule => Thm.implies_elim rule sequent)
+    val _ = Nu_Reasoner.debug_info ctxt (fn _ => "reasoning synthesis...")
   in
     case Nu_Reasoner.reason ~1 (ctxt, sequent')
       of SOME ret => ret

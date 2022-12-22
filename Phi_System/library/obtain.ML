@@ -124,15 +124,12 @@ fun choose inst_names stat =
          |> NuBasics.set_nu_fact meta'
   end
 
-fun normlize_name name =
-  if String.isSuffix "__" name then String.substring (name,0, size name - 2)
-  else name
 
 fun auto_choose stat =
   let
     val var_names = PhiSyntax.dest_current_nu (NuBasics.the_nu_fact stat)
           |> NuHelp.strip_binder_vars @{const_name ExSet}
-          |> map (normlize_name o fst)
+          |> map (Name.clean o fst)
     val (var_names', _) =
       fold_map Name.variant var_names (Variable.names_of (Proof.context_of stat))
 (* Binding.name o  *)

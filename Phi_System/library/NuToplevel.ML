@@ -473,7 +473,7 @@ local
 
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
 
-fun gen_finish_proc prep_term qed target int stat =
+fun gen_finish_proc prep_term qed spec int stat =
   let
     val ctxt_ = Proof.context_of stat
     val goal = get_thesis ctxt_
@@ -486,33 +486,68 @@ fun gen_finish_proc prep_term qed target int stat =
         val sequent =
           if Thm.no_prems sequent_pre1
           then sequent_pre1
-          else Nu_Reasoner.reason1 ~1 (ctxt,sequent_pre1) |> snd
+          else (
+            Nu_Reasoner.debug_info ctxt (fn _ =>
+              "solving pending antecedents before closing the programming block...");
+            Nu_Reasoner.reason1 ~1 (ctxt,sequent_pre1) |> snd
+          )
         val (ctxt',sequent') = NuSys.move_lemmata (ctxt, sequent)
         val (ctxt'',sequent'') = (ctxt',sequent')
-              |> (case target
+              |> (case spec
                     of NONE => I
                      | SOME term =>
                         let val ctxt'' = Proof_Context.set_mode (Proof_Context.mode_pattern) ctxt'
-                         in NuSys.cast (prep_term ctxt'' term |> Thm.cterm_of ctxt'')
-                         #> Nu_Reasoners.auto_obligation_solver'
-                         end)
+                            val aim = Thm.cterm_of ctxt'' (prep_term ctxt'' term)
+                            val _ = Nu_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+                               Pretty.str "transforming to the given specification ",
+                               Syntax.pretty_term ctxt'' (Thm.term_of aim)
+                            ])
+                        in NuSys.cast aim
+                        #> Nu_Reasoners.auto_obligation_solver' (fn (ctxt,sequent) =>
+                             error (Pretty.string_of (Pretty.chunks [
+                               Pretty.str ("Fail to solve the proof obligation generated during "^
+                                           "the cast towards the given specification:"),
+                               Syntax.pretty_term ctxt'' (NuHelp.leading_antecedent' sequent),
+                               Pretty.block [
+                                 Pretty.str ("Tailing specification of a programming block is "^
+                                 "only sufficient for simple transformations having simple "^
+                                 "proof obligations. More complicated transformation should use "),
+                                 Pretty.keyword2 "assert", Pretty.str "command instead."
+                               ]
+                           ])))
+                        end)
               |> #before_finish mode goal
         val desired_nu = #return_spec_c mode ctxt' goal
+        val _ = Nu_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+                  Pretty.str "casting to the destined post-condition ",
+                  Syntax.pretty_term ctxt'' (Thm.term_of desired_nu)
+                ])
       in
         (ctxt'',sequent'')
           (* |> invoke_Block_End_Hook *)
           |> NuSys.cast desired_nu
           |> swap
+        (*The transformation shall generate a poof obligation*)
       end
     )
+        (*and the proof obligation is presented to users here.*)
     |-> NuSys.obligation_proof (print_results int) Proof_Context.mode_default false "" NONE
           (fn sequent => fn stat =>
       let
         val ctxt = Proof.context_of stat
-        val end_tac = basic_method (fn ctxt' =>
-              NuApply.MP ctxt' (singleton (Proof_Context.export ctxt ctxt') sequent)
-            )
-        val _ = TextIO.output (TextIO.stdErr, "aaaaaaaaa")
+        val end_tac = basic_method (fn ctxt' => fn goal => (
+            let
+              val sequent' = singleton (Proof_Context.export ctxt ctxt') sequent
+              val _ = Nu_Reasoner.debug_info ctxt' (fn _ =>
+                  Pretty.string_of (Pretty.chunks [
+                    Pretty.str "Solving the goal by the resulted sequent from the programming.",
+                    Pretty.item [Pretty.str "goal:"],
+                    Syntax.pretty_term ctxt' (fst (Logic.dest_implies (Thm.prop_of goal))),
+                    Pretty.item [Pretty.str "resulted sequent:"],
+                    Thm.pretty_thm ctxt' sequent'
+                  ]))
+              in NuApply.MP ctxt' sequent' goal end
+            ))
        in
         stat
           |> Proof.set_facts [] 
@@ -581,7 +616,7 @@ fun gen_begin_block prep_attr bindings int stat =
                                           @{thms GOAL_CTXT_def Argument_strip_top SMorphism_def[folded atomize_eq]}))
                                     THEN HEADGOAL (Object_Logic.full_atomize_tac ctxt)
                                )), Position.no_range)
-                |> Seq.the_result "cannot atomize the first subgoal"
+                |> Seq.the_result "cannot atomize the leading subgoal"
           else stat
     val sequent =
           if is_top
@@ -595,13 +630,18 @@ fun gen_begin_block prep_attr bindings int stat =
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)
                   |> begin_block
 
-    val (vars, goal) = prop_of sequent
-                        |> Logic.dest_implies |> #1
-                        |> dest_Trueprop |> strip_binder_raw @{const_name All}
+    (*Assuming the proof state is in the normal hhf, or else the operation fails.*)
+    val (vars, goal) =
+          case fst (Logic.dest_implies (prop_of sequent))
+            of \<^const>\<open>Trueprop\<close> $ X => strip_binder_raw @{const_name All} X
+             | X => error (Pretty.string_of (Pretty.chunks [
+                 Pretty.str "fail to atomize the leading goal",
+                 Syntax.pretty_term ctxt X
+               ]))
     val (var_names, stat) = stat
           |> Proof.map_context_result (Proof_Context.add_fixes
               (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars))
-    val vars = map (Free o apsnd snd) (var_names ~~ vars)
+    val vars = map Free (var_names ~~ map snd vars)
     val goal = subst_bounds (rev vars, goal)
     val prems_goal = strip_binop_r @{const_name implies} goal
     val (prems, goal) = (front prems_goal, last prems_goal)
@@ -615,26 +655,28 @@ fun gen_begin_block prep_attr bindings int stat =
     
     val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
     
-    fun after_qed (ctxt',[[th]]) stat =
-      end_block stat |> (fn stat =>
-          let val ctxt'' = context_of stat
-              fun gen_sequent sequent =
-                let
-                  val (th'::vars') = (th::map (Drule.mk_term o cterm_of ctxt') vars)
-                                        |> Proof_Context.export ctxt' ctxt''
-                  val th'' = th'
-                          |> Drule.forall_intr_list (map Drule.dest_term vars')
-                          |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
-                in NuApply.MP ctxt'' th'' sequent
-                end
-          in if is_top
-             then stat
-                    |> enter_backward
-                    |> apply (Method.Basic (fn _ => Method.SIMPLE_METHOD (Seq.single o gen_sequent)),
-                              Position.no_range)
-                    |> Seq.the_result "never fail"
-             else NuBasics.set_nu_fact (gen_sequent sequent) stat
-          end)
+    fun after_qed (ctxt',[[th]]) stat0 =
+      let val stat = end_block stat0
+          val ctxt'' = context_of stat
+          fun gen_sequent sequent =
+            let
+              val (th'::vars') = (th::map (Drule.mk_term o cterm_of ctxt') vars)
+                                    |> Proof_Context.export ctxt' ctxt''
+              val th'' = th'
+                      |> Drule.forall_intr_list (map Drule.dest_term vars')
+                      |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
+            in case Seq.pull (biresolution (SOME ctxt'') false [(false, th'')] 1 sequent)
+                 of SOME (th, _) => Thm.solve_constraints th
+                  | _ => raise THM ("RSN: no unifiers", 1, [th'', sequent])
+            end
+      in if is_top
+         then stat
+                |> enter_backward
+                |> apply (Method.Basic (fn _ => Method.SIMPLE_METHOD (Seq.single o gen_sequent)),
+                          Position.no_range)
+                |> Seq.the_result "never fail"
+         else NuBasics.set_nu_fact (gen_sequent sequent) stat
+      end
 
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()

@@ -19,7 +19,15 @@ fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
   | dest_Var _ = NONE
 
 fun local_value_export ctxt rule vars sequent =
+let
+fun comp incremented th1 th2 =
+  Thm.bicompose (SOME ctxt) {flatten = true, match = false, incremented = incremented}
+    (false, th1, 0) 1 th2
+  |> Seq.list_of |> distinct Thm.eq_thm
+  |> (fn [th] => Thm.solve_constraints th | _ => raise THM ("COMP", 1, [th1, th2]));
+in
   NuApply.MP ctxt (Drule.forall_intr_list vars sequent) rule
+end
 
 datatype operation = Set_Var of cterm | New_Var of Binding.binding
 
@@ -111,8 +119,10 @@ let open Ast PhiSyntax
       val value = Thm.prop_of (NuBasics.the_construction ctxt)
                   |> dest_CurrentConstruction |> #4
                   |> strip_separations
-                  |> get_first (dest_Var #> Option.mapPartial (fn (name',(x,_)) =>
-                                                        if name' = name then SOME x else NONE))
+                  |> get_first (Envir.beta_eta_contract
+                             #> dest_Var
+                             #> Option.mapPartial (fn (name',(x,_)) =>
+                                    if name' = name then SOME x else NONE))
       fun tag v = if Config.get ctxt parse_var_add_tag orelse Config.get ctxt phi_synthesis_parsing
                   then Const (\<^const_name>\<open>Variable_of\<close>, dummyT) $ v $ Free (name, dummyT)
                   else v

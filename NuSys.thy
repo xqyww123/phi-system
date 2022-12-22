@@ -1624,14 +1624,14 @@ paragraph \<open>Applying on a Block / End a Block\<close>
 
 (*TODO: Not stable. Need better improvement or depreciation.*)
 
-definition \<open>Exhaustive_Abstract f f' \<longleftrightarrow> (f = f')\<close>
+definition \<open>Exhaustive_HO_Unification f f' \<longleftrightarrow> (f = f')\<close>
 
-lemma Exhaustive_Abstract_I:
+lemma Exhaustive_HO_Unification_I:
   \<open> Premise procedure_simplification (f = f')
-\<Longrightarrow> Exhaustive_Abstract f f'\<close>
-  unfolding Exhaustive_Abstract_def Premise_def by simp
+\<Longrightarrow> Exhaustive_HO_Unification f f'\<close>
+  unfolding Exhaustive_HO_Unification_def Premise_def by simp
 
-\<phi>reasoner_ML Exhaustive_Abstract 1200 (conclusion \<open>Exhaustive_Abstract ?f ?f'\<close>) = \<open>
+\<phi>reasoner_ML Exhaustive_HO_Unification 1200 (conclusion \<open>Exhaustive_HO_Unification ?f ?f'\<close>) = \<open>
 let
 
 fun inc_bound 0 X = X
@@ -1663,7 +1663,7 @@ fun my_abstract_over _ (v as Free (name,ty)) body =
 fun strip btys (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, ty, x)) = strip (ty::btys) x
   | strip btys (\<^const>\<open>Pure.imp\<close> $ _ $ x) = strip btys x
   | strip btys (\<^const>\<open>Trueprop\<close> $ x) = (btys, x)
-  | strip _ x = raise TERM ("Exhaustive_Abstract/strip", [x])
+  | strip _ x = raise TERM ("Exhaustive_HO_Unification/strip", [x])
 
 fun dec_bound_level d [] = []
   | dec_bound_level d (h::l) = inc_bound (d+1) h :: (dec_bound_level (d+1) l)
@@ -1671,7 +1671,7 @@ fun dec_bound_level d [] = []
 in
   fn (ctxt,sequent) =>
     let
-      val (btys, Const (\<^const_name>\<open>Exhaustive_Abstract\<close>, _) $ f $ f')
+      val (btys, Const (\<^const_name>\<open>Exhaustive_HO_Unification\<close>, _) $ f $ f')
         = strip [] (hd (Thm.prems_of sequent))
     in (case Term.strip_comb (Envir.beta_eta_contract f') of (Var v, args) =>
          Thm.instantiate (TVars.empty, Vars.make [
@@ -1679,7 +1679,7 @@ in
                                               (dec_bound_level (~ (length args)) args) f))])
            sequent
         | _ => sequent)
-       |> (fn seq => Seq.single (ctxt, @{thm Exhaustive_Abstract_I} RS seq))
+       |> (fn seq => Seq.single (ctxt, @{thm Exhaustive_HO_Unification_I} RS seq))
     end
 end
 \<close>
@@ -1687,12 +1687,12 @@ end
 lemma (in \<phi>fiction) [\<phi>reason 1200 for \<open>
   PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X \<longmapsto> ?Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f' \<lbrace> ?X' \<longmapsto> ?Y' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' \<rbrace>))
 \<close>]:
-  \<open> Exhaustive_Abstract f f'
+  \<open> Exhaustive_HO_Unification f f'
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any1 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning
 \<Longrightarrow> (\<And>ret. \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y ret \<longmapsto> Y' ret \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning)
 \<Longrightarrow> (\<And>ex.  \<^bold>v\<^bold>i\<^bold>e\<^bold>w E ex \<longmapsto> E' ex \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any3 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning)
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> Y' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>))\<close>
-  unfolding \<phi>Application_Conv_def Exhaustive_Abstract_def GOAL_CTXT_def FOCUS_TAG_def
+  unfolding \<phi>Application_Conv_def Exhaustive_HO_Unification_def GOAL_CTXT_def FOCUS_TAG_def
     Action_Tag_def
   using \<phi>CONSEQ by blast
 
@@ -1706,7 +1706,7 @@ lemma (in \<phi>fiction) [\<phi>reason 1200 for \<open>
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> assertion_level_reasoning
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (Any1 \<and> Any2 \<and> P \<longrightarrow> P')
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)) (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P'))\<close>
-  unfolding \<phi>Application_Conv_def Exhaustive_Abstract_def GOAL_CTXT_def FOCUS_TAG_def
+  unfolding \<phi>Application_Conv_def Exhaustive_HO_Unification_def GOAL_CTXT_def FOCUS_TAG_def
     Action_Tag_def View_Shift_def
   by blast
 
@@ -3866,47 +3866,47 @@ end
 
 paragraph \<open>Definition\<close>
 
-text \<open>\<phi>Init T relates a value with T if the value is initialized; or if not, it relates the zero
+text \<open>\<phi>MayInit T relates a value with T if the value is initialized; or if not, it relates the zero
   value of that type with T.\<close>
 
 context \<phi>empty_sem begin
 
-definition \<phi>Init :: \<open>'TY \<Rightarrow> ('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
-  where \<open>\<phi>Init TY T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T))) + initialized ` (x \<Ztypecolon> T <of-type> TY)\<close>
+definition \<phi>MayInit :: \<open>'TY \<Rightarrow> ('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
+  where \<open>\<phi>MayInit TY T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T))) + initialized ` (x \<Ztypecolon> T <of-type> TY)\<close>
 
 abbreviation \<phi>Share_Some_Init ("\<fish_eye>\<lbrakk>_\<rbrakk> _" [0, 91] 90)
-  where \<open>\<phi>Share_Some_Init TY T \<equiv> \<fish_eye> \<phi>Init TY T\<close>
+  where \<open>\<phi>Share_Some_Init TY T \<equiv> \<fish_eye> \<phi>MayInit TY T\<close>
 
-lemma \<phi>Inited_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Init TY T) \<longleftrightarrow> (p = uninitialized \<and> (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T)) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T <of-type> TY)))\<close>
-  unfolding \<phi>Type_def \<phi>Init_def by (simp add: \<phi>expns, blast)
+lemma \<phi>MayInit_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>MayInit TY T) \<longleftrightarrow> (p = uninitialized \<and> (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T)) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T <of-type> TY)))\<close>
+  unfolding \<phi>Type_def \<phi>MayInit_def by (simp add: \<phi>expns, blast)
   
-lemma \<phi>Inited_inhabited[\<phi>reason_elim!, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Init TY T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma \<phi>MayInit_inhabited[\<phi>reason_elim!, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>MayInit TY T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
 paragraph \<open>Conversions\<close>
 
 lemma [simp]:
-  \<open>\<phi>Init TY (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<phi>Init TY T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  \<open>\<phi>MayInit TY (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<phi>MayInit TY T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; blast)
 
 lemma [simp]:
-  \<open>\<phi>Init TY (ExTyp T) = (\<exists>\<phi> c. \<phi>Init TY (T c))\<close>
+  \<open>\<phi>MayInit TY (ExTyp T) = (\<exists>\<phi> c. \<phi>MayInit TY (T c))\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; blast)
 
 paragraph \<open>Rules\<close>
 
-lemma \<phi>Init_cast[\<phi>reason for \<open>?x \<Ztypecolon> \<phi>Init ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<phi>Init ?TY' ?U \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+lemma \<phi>MayInit_cast[\<phi>reason for \<open>?x \<Ztypecolon> \<phi>MayInit ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<phi>MayInit ?TY' ?U \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> x \<Ztypecolon> \<phi>Init TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>Init TY U \<^bold>a\<^bold>n\<^bold>d P\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi>MayInit TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>MayInit TY U \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>Init ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'a::{implication,structural} action)\<close>]:
+lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>MayInit ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'a::{implication,structural} action)\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act
-\<Longrightarrow> x \<Ztypecolon> \<phi>Init TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>Init TY U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi>MayInit TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>MayInit TY U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close>
   for Act :: \<open>'a::{implication,structural} action\<close>
-  unfolding Action_Tag_def using \<phi>Init_cast .
+  unfolding Action_Tag_def using \<phi>MayInit_cast .
 
 end
 

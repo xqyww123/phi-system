@@ -30,7 +30,14 @@ signature NU_HELP = sig
   (* map all Free term to the Fixed term if the name is fixed.*)
   val free_to_fix : Proof.context -> term -> term
 
-  val headgoal : thm -> term
+
+  val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
+                              * term list (*premises of the antecedent*)
+                              * term
+  val leading_antecedent' : thm -> term
+  val leading_antecedent : term -> (string * typ) list (*quantified variables*)
+                                 * term list (*premises of the antecedent*)
+                                 * term
 
   val string_of_term_generic : Context.generic -> term -> string
 
@@ -122,10 +129,17 @@ fun repeat f x = repeat f (f x) handle TERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
 
-fun headgoal thm =
-  if Thm.no_prems thm
-  then Thm.prop_of thm
-  else Logic.concl_of_goal (Thm.prop_of thm) 1
+fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))
+
+fun strip_meta_hhf term =
+  let
+    fun strip (V,P) (Const("Pure.imp", _) $ H $ B) = strip (V,H::P) B
+      | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) = strip ((a,T)::V,P) B
+      | strip (V,P) X = (rev V, rev P, X)
+  in strip ([],[]) term end
+
+fun leading_antecedent (Const("Pure.imp", _) $ H $ _) = strip_meta_hhf H
+  | leading_antecedent X = raise TERM ("has no antecedent", [X])
 
 type state = Proof.state
 exception NotFree of term

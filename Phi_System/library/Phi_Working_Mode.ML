@@ -77,6 +77,7 @@ fun mode ctxt = case Mode.get ctxt
 
 fun generic_cast rule place desired_nu (ctxt,sequent) =
   let
+    val _ = Nu_Reasoner.debug_info ctxt (fn _ => "reasoning cast...")
     val (ctxt', sequent') =
           case Nu_Reasoner.reason ~1 (ctxt, sequent RS rule)
             of SOME ret => ret

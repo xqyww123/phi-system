@@ -27,7 +27,7 @@ structure Procedure_Syntax : PROCEDURE_SYNTAX = struct
 Syntax translation during parsing of the pre-condition is simply replacing
 all anonymous values by a name \<a>\<r>\<g>i for the ith value from left to right.
 *)
-fun translate_arg cnt (Const (\<^const_name>\<open>anonymous_val\<close>, _))
+fun translate_arg cnt (Const (\<^const_name>\<open>anonymous\<close>, _))
       = (cnt+1, Free ("\<a>\<r>\<g>" ^ (string_of_int cnt), dummyT))
   | translate_arg cnt (A $ B)
       = (case translate_arg cnt  A of (cnt', A') =>
@@ -73,12 +73,12 @@ fun nth_project [_] 0 term = term
 fun gen_collect_and_map R2L (*whether in an order from right to left or reversely*) =
 let
 
-fun collect_vals Vs (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)) = v::Vs
+fun collect_vals Vs (v as Const (\<^const_name>\<open>anonymous\<close>, _)) = v::Vs
   | collect_vals Vs (v as Free (_, Type(\<^type_name>\<open>sem_value\<close>, _))) = insert (op = ) v Vs
   | collect_vals Vs (v as Var (_, Type(\<^type_name>\<open>sem_value\<close>, _)))  = insert (op = ) v Vs
   | collect_vals Vs (v as Const ("_type_constraint_", Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
       = insert (op = ) v Vs
-  | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous_val\<close>, _)))
+  | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous\<close>, _)))
       = v::Vs
   | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
   | collect_vals Vs (Abs (_,_,X)) = collect_vals Vs X
@@ -88,7 +88,7 @@ fun collect_vals Vs (v as Const (\<^const_name>\<open>anonymous_val\<close>, _))
       else collect_vals (collect_vals Vs Y) X
   | collect_vals Vs _ = Vs
 
-fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous_val\<close>, _))
+fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous\<close>, _))
       = (j + 1, Vs, nth_project Tys j (Bound i))
   | map_ret Tys i (j, Vs, v as Const ("_type_constraint_",
                                            Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
@@ -103,7 +103,7 @@ fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous_val\<close>, _))
       = (case AList.lookup (op =) Vs v
            of SOME k => (j, Vs, nth_project Tys k (Bound i))
             | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
-  | map_ret Tys i (j, Vs, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous_val\<close>, _))
+  | map_ret Tys i (j, Vs, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
       = (j + 1, Vs, h $ nth_project Tys j (Bound i))
   | map_ret Tys i (j, Vs, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
       = (case AList.lookup (op =) Vs v
@@ -160,7 +160,7 @@ fun translate_ret (term as (Abs _)) = term
 fun need_translate_ret (Abs (_,_,_)) = false
   | need_translate_ret _ = true
 
-fun need_translate_arg (Const (\<^const_name>\<open>anonymous_val\<close>, _)) = true
+fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = true
   | need_translate_arg (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
   | need_translate_arg (A $ B) = need_translate_arg A orelse need_translate_arg B
   | need_translate_arg (Abs (_, _, X)) = need_translate_arg X

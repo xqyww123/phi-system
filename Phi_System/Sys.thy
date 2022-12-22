@@ -287,13 +287,19 @@ lemma [\<phi>reason 1200 for \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
 \<Longrightarrow> lambda_abstraction (x,y) fx (case_prod f2)\<close>
   unfolding lambda_abstraction_def by simp
 
+ML \<open>Name.variant "" Name.context\<close>
+
 \<phi>reasoner_ML lambda_abstraction 1100 (conclusion "lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
   let
-    val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _)
-      = Thm.major_prem_of sequent
+    val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _))
+      = NuHelp.leading_antecedent (Thm.prop_of sequent)
     val Y' = Abs("", fastype_of x, abstract_over (x, Y))
+    val idx = Thm.maxidx_of sequent
+    val vars = map Var (List.tabulate (length Vs, (fn i => ("v", i+idx))) ~~ map snd Vs)
+    fun subst X = Term.subst_bounds (vars, X)
     val rule = Drule.infer_instantiate ctxt
-          (map (apsnd (Thm.cterm_of ctxt)) [(("x",0),x), (("Y'",0),Y')]) @{thm lambda_abstraction}
+                  (map (apsnd (Thm.cterm_of ctxt)) [(("x",0), subst x), (("Y'",0),subst Y')])
+                  @{thm lambda_abstraction}
   in
     Seq.single (ctxt, rule RS sequent)
   end
@@ -1188,16 +1194,30 @@ end
 
 paragraph \<open>Applying on a Block / End a Block\<close>
 
-(*TODO: Not stable. Need better improvement or depreciation.*)
+definition \<open>Simple_HO_Unification f f' \<longleftrightarrow> (f = f')\<close>
 
-definition \<open>Exhaustive_Abstract f f' \<longleftrightarrow> (f = f')\<close>
+text \<open>\<^schematic_prop>\<open>Simple_HO_Unification A (?f x\<^sub>1 \<dots> x\<^sub>n)\<close> encodes a higher order unification
+  having two restrictions that terms \<open>x\<^sub>1, \<dots>, x\<^sub>n\<close> cannot occur free in \<open>?f\<close>
+  and \<open>?A\<close> does not contain \<open>?f\<close>.
+  It has the most general unifier when \<open>x\<^sub>1, \<dots>, x\<^sub>n\<close> are all variables.
+To prove this, we show there is a unique \<open>f\<close> such that \<open>f x \<equiv> A\<close> if \<open>x\<close> is a variable not free in \<open>f\<close>.
+  Assume \<open>f\<^sub>1 x \<equiv> A\<close> and \<open>f\<^sub>2 x \<equiv> A\<close> then we have \<open>f\<^sub>1 x \<equiv> f\<^sub>2 x\<close>
+  and then \<open>(\<lambda>x. f\<^sub>1 x) \<equiv> (\<lambda>x. f\<^sub>2 x)\<close>.
+  Because x is not free in \<open>f\<^sub>1, f\<^sub>2\<close>, by eta-contraction, we have \<open>f\<^sub>1 \<equiv> f\<^sub>2\<close>.
+The \<open>\<equiv>\<close> here means alpha-beta-eta equivalence.
 
-lemma Exhaustive_Abstract_I:
+Although the reasoner using the same strategy
+  does support the case when \<open>x\<^sub>1, \<dots>, x\<^sub>n\<close> are not all variables,
+  the outcome is not guaranteed to be the most general.
+The reasoner works only when \<open>?A\<close> does not contain \<open>?f\<close>.
+\<close>
+
+lemma Simple_HO_Unification_I:
   \<open> Premise procedure_simplification (f = f')
-\<Longrightarrow> Exhaustive_Abstract f f'\<close>
-  unfolding Exhaustive_Abstract_def Premise_def by simp
+\<Longrightarrow> Simple_HO_Unification f f'\<close>
+  unfolding Simple_HO_Unification_def Premise_def by simp
 
-\<phi>reasoner_ML Exhaustive_Abstract 1200 (conclusion \<open>Exhaustive_Abstract ?f ?f'\<close>) = \<open>
+\<phi>reasoner_ML Simple_HO_Unification 1200 (conclusion \<open>Simple_HO_Unification ?f ?f'\<close>) = \<open>
 let
 
 fun inc_bound 0 X = X
@@ -1223,13 +1243,10 @@ fun my_abstract_over _ (v as Free (name,ty)) body =
       Abs (name, ty, abstract_over (v,body))
   | my_abstract_over btys (Bound i) body =
       Abs ("", nth btys i, abstract_bound_over (Bound i,body))
+  | my_abstract_over _ (v as Const (_,ty)) body =
+      Abs ("", ty, abstract_over (v,body))
   | my_abstract_over _ v body =
       Abs ("", fastype_of v, abstract_bound_over (v,body))
-
-fun strip btys (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, ty, x)) = strip (ty::btys) x
-  | strip btys (\<^const>\<open>Pure.imp\<close> $ _ $ x) = strip btys x
-  | strip btys (\<^const>\<open>Trueprop\<close> $ x) = (btys, x)
-  | strip _ x = raise TERM ("Exhaustive_Abstract/strip", [x])
 
 fun dec_bound_level d [] = []
   | dec_bound_level d (h::l) = inc_bound (d+1) h :: (dec_bound_level (d+1) l)
@@ -1237,15 +1254,17 @@ fun dec_bound_level d [] = []
 in
   fn (ctxt,sequent) =>
     let
-      val (btys, Const (\<^const_name>\<open>Exhaustive_Abstract\<close>, _) $ f $ f')
-        = strip [] (hd (Thm.prems_of sequent))
-    in (case Term.strip_comb (Envir.beta_eta_contract f') of (Var v, args) =>
+      val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Simple_HO_Unification\<close>, _) $ f $ f'))
+        = NuHelp.leading_antecedent (Thm.prop_of sequent)
+      val btys = rev (map snd Vs)
+      val f' = Envir.beta_eta_contract f'
+    in (case Term.strip_comb f' of (Var v, args) =>
          Thm.instantiate (TVars.empty, Vars.make [
               (v, Thm.cterm_of ctxt (fold_rev (my_abstract_over btys)
                                               (dec_bound_level (~ (length args)) args) f))])
            sequent
         | _ => sequent)
-       |> (fn seq => Seq.single (ctxt, @{thm Exhaustive_Abstract_I} RS seq))
+       |> (fn seq => Seq.single (ctxt, @{thm Simple_HO_Unification_I} RS seq))
     end
 end
 \<close>
@@ -1253,12 +1272,12 @@ end
 lemma (in \<phi>spec) [\<phi>reason 1200 for \<open>
   PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X \<longmapsto> ?Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f' \<lbrace> ?X' \<longmapsto> ?Y' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' \<rbrace>))
 \<close>]:
-  \<open> Exhaustive_Abstract f f'
+  \<open> Simple_HO_Unification f f'
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any1 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
 \<Longrightarrow> (\<And>ret. \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y ret \<longmapsto> Y' ret \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA)
 \<Longrightarrow> (\<And>ex.  \<^bold>v\<^bold>i\<^bold>e\<^bold>w E ex \<longmapsto> E' ex \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any3 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA)
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> Y' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>))\<close>
-  unfolding \<phi>Application_Conv_def Exhaustive_Abstract_def GOAL_CTXT_def FOCUS_TAG_def
+  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def GOAL_CTXT_def FOCUS_TAG_def
     Action_Tag_def
   using \<phi>CONSEQ by blast
 
@@ -1272,7 +1291,7 @@ lemma (in \<phi>spec) [\<phi>reason 1200 for \<open>
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (Any1 \<and> Any2 \<and> P \<longrightarrow> P')
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)) (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P'))\<close>
-  unfolding \<phi>Application_Conv_def Exhaustive_Abstract_def GOAL_CTXT_def FOCUS_TAG_def
+  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def GOAL_CTXT_def FOCUS_TAG_def
     Action_Tag_def View_Shift_def
   by blast
 
@@ -1927,11 +1946,14 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 
 \<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
-\<open>fn (ctxt,sequent) => Scan.succeed (fn _ =>
-  case Nu_Reasoner.reason 1 (ctxt, sequent)
-    of SOME (ctxt',sequent') => (ctxt', sequent')
-     | NONE => raise Bypass (SOME (ctxt,sequent))
-)\<close>
+\<open>fn (ctxt,sequent) => Scan.succeed (fn _ => (
+  Nu_Reasoner.debug_info ctxt (fn _ => "reasoning the leading antecedent of the state sequent.");
+  if Config.get ctxt Nu_Reasoner.auto_level >= 1
+  then case Nu_Reasoner.reason 1 (ctxt, sequent)
+         of SOME (ctxt',sequent') => (ctxt', sequent')
+          | NONE => raise Bypass (SOME (ctxt,sequent))
+  else raise Bypass NONE
+))\<close>
 
 \<phi>processor auto_obligation_solver 800 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
@@ -3448,11 +3470,11 @@ definition \<phi>MayInit :: \<open>'TY \<Rightarrow> ('VAL, 'x) \<phi> \<Rightar
 abbreviation \<phi>Share_Some_Init ("\<fish_eye>\<lbrakk>_\<rbrakk> _" [0, 91] 90)
   where \<open>\<phi>Share_Some_Init TY T \<equiv> \<fish_eye> \<phi>MayInit TY T\<close>
 
-lemma \<phi>MayInited_expn[\<phi>expns]:
+lemma \<phi>MayInit_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>MayInit TY T) \<longleftrightarrow> (p = uninitialized \<and> (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T)) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T <of-type> TY)))\<close>
   unfolding \<phi>Type_def \<phi>MayInit_def by (simp add: \<phi>expns, blast)
   
-lemma \<phi>MayInited_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>MayInit_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>MayInit TY T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
