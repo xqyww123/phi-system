@@ -750,6 +750,8 @@ definition SUBGOAL :: "subgoal \<Rightarrow> subgoal \<Rightarrow> bool" where "
 
 subsubsection \<open>Implementation of the Subgoal Reasoners\<close>
 
+lemma GOAL_CTXT_I: \<open>PROP P \<Longrightarrow> PROP P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L A\<close> unfolding GOAL_CTXT_def .
+
 lemma SUBGOAL_I[iff]: "SUBGOAL ROOT NEWGOAL" unfolding SUBGOAL_def ..
 lemma CHK_SUBGOAL_I[iff]: "CHK_SUBGOAL X" unfolding CHK_SUBGOAL_def ..
 lemma SOLVE_SUBGOAL_I[iff]: "SOLVE_SUBGOAL X" unfolding SOLVE_SUBGOAL_def ..

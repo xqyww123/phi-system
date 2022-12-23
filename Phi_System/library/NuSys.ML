@@ -127,12 +127,15 @@ fun inc_val_counter ctxt =
 fun accept_proc (ctxt,sequent) =
   let open PhiSyntax
     val rule = sequent RS Proof_Context.get_thm ctxt "local.\<phi>assemble_proc"
-    val ([(s_name', s_ty), (_, ret_ty)], \<^const>\<open>Pure.imp\<close> $ codeblk_term $ _) =
-          NuHelp.strip_binder_raw \<^const_name>\<open>Pure.all\<close> (hd (Thm.prems_of rule))
+    val Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, s_ty,
+          Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, ret_ty,
+            \<^const>\<open>Pure.imp\<close> $ codeblk_term $ _))
+        = NuHelp.leading_antecedent' rule
     val ([s_name,ret_name],ctxt') =
-            inc_val_counter ctxt |-> (fn i => Proof_Context.add_fixes
-                [(Binding.name s_name', NONE, NoSyn),
-                 (Binding.name ("\<v>\<a>\<l>" ^ string_of_int i), SOME ret_ty, NoSyn)])
+            inc_val_counter ctxt |-> (fn i =>
+            Proof_Context.add_fixes
+                [(Binding.name "\<s>", NONE, NoSyn),
+                 (Binding.name ("\<v>" ^ string_of_int i), SOME ret_ty, NoSyn)])
     val codeblk_cterm =
           Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name,s_ty)], codeblk_term)
               |> Thm.cterm_of ctxt
@@ -140,7 +143,15 @@ fun accept_proc (ctxt,sequent) =
               |> map (Thm.cterm_of ctxt)
     
     val _ = if Term.maxidx_of_typ ret_ty <> ~1
-            then raise TYPE ("The arity of the return has to be fixed.", [ret_ty], [])
+            then let val (f,_,_,_,_) =
+                            PhiSyntax.dest_PendingConstruction (Thm.major_prem_of sequent)
+              in error (Pretty.string_of (Pretty.block [
+                    Pretty.str "Fail to accept procedure ",
+                    Syntax.pretty_term ctxt f, Pretty.str ".\n",
+                    Pretty.str "The arity of the return has to be fixed, but a variable ",
+                    Syntax.pretty_typ ctxt ret_ty, Pretty.str " is given."
+                 ]))
+              end
             else ()
 
     val ([codeblk],ctxt'2) = Assumption.add_assms
@@ -177,9 +188,8 @@ fun set_param term' (ctxt,sequent) =
           case X of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ => not (has_multiple_ex_quantification X)
                   | _ => false
   in
-    if has_multiple_ex_quantification term andalso
-       has_only_one_ex_quantification X
-    then (* We aggregate the user input `term` into a single ex quantification *)
+    if has_only_one_ex_quantification X
+    then (* We aggregate the user input `term` into a single ex quantification with name preserved*)
           let
             val (N,term') = QuantExpansion.aggregate_variables_quantification term
           in (ctxt, set_param' ctxt_parse term' sequent

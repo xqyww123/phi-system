@@ -116,6 +116,9 @@ throws   E
 
 paragraph \<open>Declare New Variables\<close>
 
+
+declare [[ML_print_depth=1000, eta_contract=false]]
+
 proc (in \<phi>min) op_var_scope:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY)
@@ -446,7 +449,7 @@ proc [
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x > y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 F2
-  ;;  \<open>\<v>\<a>\<l>1\<close> ;; \<open>\<v>\<a>\<l>0\<close> <
+  ;;  \<open>\<v>1\<close> ;; \<open>\<v>0\<close> <
   \<medium_right_bracket>. .
 
 (* Service Obligation !!!!! Last Day!!!! *)
@@ -480,7 +483,7 @@ proc [
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1
     F2
-    \<open>\<v>\<a>\<l>1\<close> \<open>\<v>\<a>\<l>0\<close> \<le> \<medium_right_bracket>. .
+    \<open>\<v>1\<close> \<open>\<v>0\<close> \<le> \<medium_right_bracket>. .
 
 
 subsubsection \<open>General Arithmetic\<close>
@@ -666,7 +669,7 @@ thm AA_\<phi>compilation
 (*
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
-proc XX:
+proc
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l x - 1 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket>  \<rightarrow> varx
@@ -677,14 +680,6 @@ proc XX:
        to make that value automatically *)
   \<medium_right_bracket> using \<phi> by simp .
 
-notepad
-begin
-
-  let \<open>?x + ?a\<close> = \<open>1 + 3\<close> and ?z = \<open>2\<close>
-  let \<open>?x\<close> = \<open>444\<close>
-  term \<open>?x + ?z\<close>
-
-end
 
 
 proc
@@ -692,19 +687,11 @@ proc
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket> \<rightarrow> v ;;
-    while
-note [[\<phi>trace_reasoning, \<phi>trace_processing]]
-;; \<open>x \<Ztypecolon> ?X \<^bold>s\<^bold>u\<^bold>b\<^bold>j x y. Inv: (x \<le> 10 \<and> 20 < y) \<and> Guard: x < 10\<close> 
-  \<medium_left_bracket> 
-  note [[\<phi>trace_reasoning, \<phi>trace_processing]]
-  ;;\<open>$v < 10\<close>
-  \<medium_right_bracket>. (*condition body of the loop*)
+    while \<open>xxx \<Ztypecolon> ?X \<^bold>s\<^bold>u\<^bold>b\<^bold>j xxx. Inv: (xxx \<le> 10) \<and> Guard: xxx < 10\<close> (*specification*)
+    \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>. (*guard*)
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*)
-    thm \<phi>
-    ;; (* this ;; leads an empty statement which does nothing but simplification *)
-      $v
-    thm \<phi>implication
-    \<medium_right_bracket>. .
+    $v
+  \<medium_right_bracket>. .
 
 end
 

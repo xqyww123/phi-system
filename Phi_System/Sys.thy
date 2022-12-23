@@ -1903,14 +1903,17 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
   \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
       raise Process_State_Call' (toks, stat, NuObtain.choose insts), []))\<close>
 
-\<phi>processor (in \<phi>spec) implicit_existential_elimination 800 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
-  \<open>fn stat => Scan.succeed (fn () =>
+\<phi>processor (in \<phi>spec) automatic_existential_elimination 800 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
+  \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
     let
-      val _ $ X = PhiSyntax.dest_CurrentConstruction (Thm.concl_of (snd stat)) |> #4
+      val _ = if Config.get ctxt NuObtain.enable_auto
+              andalso Config.get ctxt Nu_Reasoner.auto_level >= 2
+              then () else raise Bypass NONE
+      val _ $ X = PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent) |> #4
       fun is_Abs (Abs _) = true | is_Abs _ = false
     in
-      if is_Abs X andalso Config.get (#1 stat) Nu_Reasoner.auto_level >= 2
-      then raise Process_State_Call (stat, NuObtain.auto_choose)
+      if is_Abs X
+      then raise Process_State_Call ((ctxt,sequent), NuObtain.auto_choose)
       else raise Bypass NONE
     end)\<close>
 
@@ -5578,10 +5581,10 @@ lemma Structural_Extract_to_mult
 \<Longrightarrow> Structural_Extract' A C (X * Y) (WX * WY) (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close>
   unfolding Structural_Extract_def Simplify_def Action_Tag_def Structural_Extract'_def Try_def
+            GOAL_CTXT_def
   \<medium_left_bracket> premises L and R
-    fold mult.assoc
-    L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
-    R[THEN implies_right_prod]
+  ;;  L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
+  ;;  R[THEN implies_right_prod]
   \<medium_right_bracket>. .
 
 lemma Structural_Extract_\<phi>Prod_right
@@ -5605,6 +5608,7 @@ lemma Structural_Extract_from_mult[\<phi>reason 1200 for
 \<Longrightarrow> Structural_Extract' (L * X) (R * R2) Y Wr2 (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close>
   unfolding Structural_Extract_def Simplify_def Structural_Extract'_def Try_def
+            GOAL_CTXT_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
     L[THEN implies_right_prod]
@@ -5619,7 +5623,8 @@ lemma Structural_Extract_\<phi>Prod_left [\<phi>reason 1200 for
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m S1 \<or> S2
 \<Longrightarrow> Structural_Extract' ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2 (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
-  unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Action_Tag_def Structural_Extract'_def Try_def
+  unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Action_Tag_def Structural_Extract'_def
+            Try_def GOAL_CTXT_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
     L[THEN implies_right_prod]
@@ -5978,7 +5983,7 @@ lemma Structural_Extract_share_half
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> half(m / 2) \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Structural_Extract'_def half_def
+  unfolding Structural_Extract_def Structural_Extract'_def half_def GOAL_CTXT_def
   \<medium_left_bracket> premises [\<phi>reason] and X
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
@@ -6060,7 +6065,7 @@ lemma Structural_Extract_share_ge
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Structural_Extract'_def \<phi>Prod_expn'
+  unfolding Structural_Extract_def Structural_Extract'_def \<phi>Prod_expn' GOAL_CTXT_def
   \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and [\<phi>reason] and _ and X
     share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
@@ -6081,7 +6086,7 @@ lemma Structural_Extract_share_le
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def \<phi>Prod_expn' Structural_Extract'_def
+  unfolding Structural_Extract_def \<phi>Prod_expn' Structural_Extract'_def GOAL_CTXT_def
   \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and _ and X
     X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_left_prod, folded mult.assoc]
@@ -6685,7 +6690,7 @@ lemma ToSA_by_structural_extraction:
   \<medium_left_bracket> premises SI and Q and _ and SE and _ and A
     have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
     ;; A[THEN \<phi>frame_view_right]
-       SE[THEN mp, OF \<open>Q'\<close>]
+       SE[OF \<open>Q'\<close>]
   \<medium_right_bracket>
   using \<phi>
   by simp
@@ -6705,11 +6710,11 @@ lemma ToSA_by_structural_extraction__reverse_morphism:
       (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (\<^bold>v\<^bold>i\<^bold>e\<^bold>w R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> \<phi> T' \<brangle> \<longmapsto> A'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1' \<and> P2') \<and> P1 \<and> P2)
     \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding Premise_def GOAL_CTXT_def FOCUS_TAG_def Structural_Extract_def Simplify_def
-            Action_Tag_def Morphism_def Compact_Antecedent_def Try_def
+            Action_Tag_def Morphism_def Compact_Antecedent_def Try_def GOAL_CTXT_def
   \<medium_left_bracket> premises SI and Q and _ and SE and _ and A
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-    ;; A[THEN \<phi>frame_view_right]
-       SE[THEN mp, OF \<open>Q'\<close>]
+  ;; A[THEN \<phi>frame_view_right]
+     SE[OF \<open>Q'\<close>]
   \<medium_right_bracket> apply (simp add: \<phi>)
   \<medium_left_bracket>
     have A : \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w R2' \<heavy_comma> W' \<longmapsto> A' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1'\<close> using \<phi>_previous by simp

@@ -464,12 +464,7 @@ fun invoke_Block_End_Hook (ctxt,sequent) =
 
 
 
-
 local
-
-
-
-
 
 fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
 
@@ -531,7 +526,7 @@ fun gen_finish_proc prep_term qed spec int stat =
       end
     )
         (*and the proof obligation is presented to users here.*)
-    |-> NuSys.obligation_proof (print_results int) Proof_Context.mode_default false "" NONE
+    |-> NuSys.obligation_proof (print_results int) Proof_Context.mode_schematic false "" NONE
           (fn sequent => fn stat =>
       let
         val ctxt = Proof.context_of stat
@@ -546,7 +541,8 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Pretty.item [Pretty.str "resulted sequent:"],
                     Thm.pretty_thm ctxt' sequent'
                   ]))
-              in NuApply.MP ctxt' sequent' goal end
+                val result = NuApply.MP ctxt' sequent' goal
+              in result end
             ))
        in
         stat
@@ -608,42 +604,32 @@ fun gen_begin_block prep_attr bindings int stat =
     val ctxt = context_of stat
 
     val is_top = not (NuBasics.under_programming_environ ctxt) orelse is_backward_mode stat
+    val normalize_tac =
+          REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt @{thms GOAL_CTXT_I Argument_I allI impI}))
     val stat =
           if is_top
           then stat
-                |> Proof.apply (Method.Basic (fn ctxt => Method.SIMPLE_METHOD (
-                                    TRY (HEADGOAL (Raw_Simplifier.rewrite_goal_tac ctxt
-                                          @{thms GOAL_CTXT_def Argument_strip_top SMorphism_def[folded atomize_eq]}))
-                                    THEN HEADGOAL (Object_Logic.full_atomize_tac ctxt)
-                               )), Position.no_range)
-                |> Seq.the_result "cannot atomize the leading subgoal"
+                |> Proof.apply (
+                      Method.Basic (K (Method.SIMPLE_METHOD normalize_tac)), Position.no_range)
+                |> Seq.the_result "impossible"
           else stat
     val sequent =
           if is_top
           then #goal (Proof.raw_goal stat)
           else the_nu_fact stat
-                  |> Conv.fconv_rule (Conv.prems_conv 1 (
-                        Conv.repeat_changed_conv (Raw_Simplifier.rewrite ctxt false
-                            @{thms GOAL_CTXT_def Argument_strip_top SMorphism_def[folded atomize_eq]})
-              then_conv Conv.repeat_changed_conv (Object_Logic.atomize ctxt)
-                     ))
+                  |> Tactic.rule_by_tactic ctxt normalize_tac
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)
                   |> begin_block
 
     (*Assuming the proof state is in the normal hhf, or else the operation fails.*)
     val (vars, goal) =
-          case fst (Logic.dest_implies (prop_of sequent))
-            of \<^const>\<open>Trueprop\<close> $ X => strip_binder_raw @{const_name All} X
-             | X => error (Pretty.string_of (Pretty.chunks [
-                 Pretty.str "fail to atomize the leading goal",
-                 Syntax.pretty_term ctxt X
-               ]))
-    val (var_names, stat) = stat
-          |> Proof.map_context_result (Proof_Context.add_fixes
-              (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars))
+          strip_binder_raw @{const_name Pure.all} (leading_antecedent' sequent)
+    val (var_names, stat) =
+          Proof.map_context_result (Proof_Context.add_fixes
+            (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars)) stat
     val vars = map Free (var_names ~~ map snd vars)
     val goal = subst_bounds (rev vars, goal)
-    val prems_goal = strip_binop_r @{const_name implies} goal
+    val prems_goal = strip_binop_r @{const_name Pure.imp} goal
     val (prems, goal) = (front prems_goal, last prems_goal)
 
     val mode = Phi_Working_Mode.working_mode_on1 ctxt goal
@@ -652,23 +638,33 @@ fun gen_begin_block prep_attr bindings int stat =
     val blk_name = #block_name_of mode goal
     val (level, stat) = Proof.map_context_result inc_blk_level stat
     val blk_name = "\<L>" ^ (Int.toString level) ^ "_" ^ blk_name
-    
-    val (prems, goal) = (map mk_Trueprop prems, mk_Trueprop goal)
-    
+
     fun after_qed (ctxt',[[th]]) stat0 =
       let val stat = end_block stat0
           val ctxt'' = context_of stat
+          val th0 = Drule.eta_contraction_rule th
+          val (th1::vars') = (th0::map (Drule.mk_term o cterm_of ctxt') vars)
+                                   |> Proof_Context.export ctxt' ctxt''
+          val th2 = Drule.forall_intr_list (map Drule.dest_term vars') th1
+
           fun gen_sequent sequent =
-            let
-              val (th'::vars') = (th::map (Drule.mk_term o cterm_of ctxt') vars)
-                                    |> Proof_Context.export ctxt' ctxt''
-              val th'' = th'
-                      |> Drule.forall_intr_list (map Drule.dest_term vars')
-                      |> Raw_Simplifier.rewrite_rule ctxt'' @{thms atomize_imp atomize_all}
-            in case Seq.pull (biresolution (SOME ctxt'') false [(false, th'')] 1 sequent)
-                 of SOME (th, _) => Thm.solve_constraints th
-                  | _ => raise THM ("RSN: no unifiers", 1, [th'', sequent])
-            end
+            let val insts =
+                      Pattern.match (Proof_Context.theory_of ctxt'')
+                                    (NuHelp.leading_antecedent' sequent, Thm.prop_of th2)
+                                    (Vartab.empty, Vartab.empty)
+                      |> NuHelp.env_to_table ctxt''
+                handle Pattern.Pattern => error (Pretty.string_of (Pretty.chunks [
+                      Pretty.str "The higher-order pattern match fails",
+                      Pretty.block [Pretty.str "from ",
+                                    Syntax.pretty_term ctxt'' (NuHelp.leading_antecedent' sequent)],
+                      Pretty.block [Pretty.str "to ",
+                                    Syntax.pretty_term ctxt'' (Thm.prop_of th2)],
+                      Pretty.str "which usually means some schematic variable is instantiated to\
+                        \some universally quantified variables that it has no access."
+                    ]))
+                val sequent' = Thm.instantiate insts sequent
+             in Thm.implies_elim (NuHelp.beta_eta_contract sequent')
+                                 (NuHelp.beta_eta_contract th2) end
       in if is_top
          then stat
                 |> enter_backward
@@ -694,7 +690,7 @@ fun gen_begin_block prep_attr bindings int stat =
           [(Binding.empty_atts, [(goal,[])])] |> #2
       |> Proof.map_context (Proof_Context.set_mode Proof_Context.mode_default)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
-            Context_Tactic.CONTEXT_TACTIC Tactical.all_tac), Position.no_range))
+            Context_Tactic.CONTEXT_TACTIC all_tac), Position.no_range))
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
