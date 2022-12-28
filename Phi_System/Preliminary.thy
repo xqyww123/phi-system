@@ -2,14 +2,16 @@ section \<open>Preliminary\<close>
 
 theory Preliminary
   imports Main "Phi_Algebras.Algebras"
+          Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner
 begin
 
 subsection \<open>Named Theorems\<close>
 
 named_theorems \<phi>expns \<open>Semantics Expansions, used to expand assertions semantically.\<close>
 and \<phi>inhabited \<open>Inhabitance lemmas, of form \<open>Inhabited P \<longleftrightarrow> Expansion\<close>\<close>
+and \<phi>programming_simps \<open>Simplification rules used in the deductive programming\<close>
 
-declare set_mult_expn[\<phi>expns]
+declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 
 subsection \<open>Error Mechanism\<close>
 

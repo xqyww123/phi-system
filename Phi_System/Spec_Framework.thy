@@ -159,6 +159,7 @@ in [
     (Const("\<^const>local.\<phi>Procedure_no_exception", dummyT) $ tag_E f $ T $ U)))
 ] end\<close>
 
+
 subsection \<open>View Shift\<close>
 
 context \<phi>spec begin
@@ -171,7 +172,6 @@ abbreviation Simple_View_Shift
     :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _)"  [13,13] 12)
   where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
 
-
 lemma View_Shift_imply_P:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
 \<Longrightarrow> (P1 \<longrightarrow> P2)
@@ -179,6 +179,50 @@ lemma View_Shift_imply_P:
   unfolding View_Shift_def
   by blast
 
+lemma View_Shift_by_Implication[intro?]:
+  \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding Imply_def View_Shift_def INTERP_SPEC_def
+  by (clarsimp, metis set_mult_expn)
+
+lemma view_shift_0[\<phi>reason 2000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> X\<close>
+  by (blast intro: View_Shift_by_Implication zero_implies_any)
+
+lemma view_shift_id[\<phi>reason 2000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<longmapsto> ?B \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> A"
+  by (blast intro: View_Shift_by_Implication implies_refl)
+
+lemma view_shift_id_ty[\<phi>reason 30 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?x \<Ztypecolon> ?T \<longmapsto> ?y \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = y \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> T"
+  by (blast intro: View_Shift_by_Implication implies_refl_ty)
+
+lemma view_shift_union[\<phi>reason 800]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X + Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X + Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  by (simp add: View_Shift_def distrib_left)+
+
+lemma \<phi>view_shift_trans:
+  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+    \<Longrightarrow> (P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q)
+    \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q"
+  unfolding View_Shift_def by blast
+
+lemma \<phi>frame_view:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R * A \<longmapsto> R * B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding View_Shift_def
+  by (metis (no_types, lifting) mult.assoc)
+
+lemma \<phi>view_shift_intro_frame:
+  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R * U' \<longmapsto> R * U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P "
+  by (simp add: \<phi>frame_view)
+
+lemma \<phi>view_shift_intro_frame_R:
+  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w U' * R \<longmapsto> U * R \<^bold>w\<^bold>i\<^bold>t\<^bold>h P "
+  by (simp add: \<phi>frame_view mult.commute)
 
 
 subsection \<open>Fundamental Hoare Rules \& SL Rules\<close>
@@ -204,12 +248,6 @@ lemma \<phi>frame:
 lemma \<phi>frame0:
   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace>"
   using \<phi>frame[where E=0, simplified, folded zero_fun_def] .
-
-lemma \<phi>frame_view:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R * A \<longmapsto> R * B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
-  unfolding View_Shift_def
-  by (metis (no_types, lifting) mult.assoc)
 
 lemma \<phi>frame_view_right:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
@@ -243,13 +281,19 @@ lemma \<phi>CONSEQ:
   apply clarsimp
   by (smt (verit, del_insts) LooseStateTy_expn')
 
+lemma \<phi>CONSEQ'E:
+   "(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w E v \<longmapsto> E' v \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
+  using \<phi>CONSEQ view_shift_id by blast
+
 end
 
 subsection \<open>Specify Properties of Value\<close>
 
 context \<phi>empty_sem begin
 
-paragraph \<open>Semantic Type\<close>
+subsubsection \<open>Semantic Type\<close>
 
 definition \<phi>SemType :: "'VAL set \<Rightarrow> 'TY \<Rightarrow> bool"
   where \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
@@ -274,12 +318,17 @@ lemma SemTyp_Of_I[intro!, simp]:
   unfolding SemTyp_Of_def
   using \<phi>SemType_unique by blast 
 
-paragraph \<open>Zero Value\<close>
+lemma (in \<phi>empty_sem) [\<phi>reason]:
+  \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
+\<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
+  ..
+
+subsubsection \<open>Zero Value\<close>
 
 definition \<phi>Zero :: "'TY \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
   where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
 
-paragraph \<open>Equality\<close>
+subsubsection \<open>Equality\<close>
 
 definition \<phi>Equal :: "('VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool"
   where "\<phi>Equal T can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 res.
@@ -288,7 +337,7 @@ definition \<phi>Equal :: "('VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \
 
 end
 
-paragraph \<open>Functional\<close>
+subsubsection \<open>Functional\<close>
 
 lemma is_singletonI'':
   \<open> \<exists>p. p \<in> A

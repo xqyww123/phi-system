@@ -29,7 +29,6 @@ signature NU_BASICS = sig
   val mk_label : string -> term
   val mk_label_c : string -> cterm
   val mk_labelled : string -> term -> term
-  val mk_name_hint : string -> term -> term
   val mk_label_thm : string -> thm
 
   val intro_param : cterm -> thm
@@ -192,7 +191,7 @@ fun mk_label_c name = renamed_term (mk_label name) label_c
 fun mk_label_thm name = 
   Thm.instantiate (TVars.empty, Vars.make [((("x",0),\<^typ>\<open>label\<close>), mk_label_c name)]) @{thm LabelTag}
 fun mk_labelled name tm = Const(@{const_name Labelled}, dummyT) $ mk_label name $ tm
-fun mk_name_hint name tm = Const(@{const_name NameHint}, dummyT) $ mk_label name $ tm
+
 
 val labelled_name = @{const_name "Labelled"}
 val dest_labelled = dest_binop labelled_name #> apfst dest_label

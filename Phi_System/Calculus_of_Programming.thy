@@ -4,8 +4,6 @@ theory Calculus_of_Programming
   imports Spec_Framework
 begin
 
-named_theorems \<phi>programming_simps \<open>Simplification rules used in the deductive programming\<close>
-
 subsection \<open>Implementing CoP Sequent\<close>
 
 text \<open>CoP sequent \<open>P | S |- Q\<close> for \<open>S = (C\<^sub>1,v\<^sub>1); \<cdots> ; (C\<^sub>n,v\<^sub>n)\<close> is implemented as
@@ -234,12 +232,16 @@ lemma \<phi>cast_pending_E:
   by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All) meson
 
 lemma \<phi>apply_view_shift_P:
-  "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
+  " CurrentConstruction mode blk R S
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
   unfolding CurrentConstruction_def View_Shift_def
   by (simp_all add: split_paired_all \<phi>expns)
 
 lemma \<phi>apply_view_shift:
-  "CurrentConstruction mode blk R S \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> CurrentConstruction mode blk R S'"
+  " CurrentConstruction mode blk R S
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> CurrentConstruction mode blk R S'"
   unfolding CurrentConstruction_def View_Shift_def
   by (simp_all add: split_paired_all \<phi>expns)
 
