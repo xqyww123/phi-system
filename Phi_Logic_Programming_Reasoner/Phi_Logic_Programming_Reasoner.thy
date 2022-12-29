@@ -419,22 +419,6 @@ text \<open>A general technical tag used in the reasoning, usually represents th
 definition FOCUS_TAG :: " 'a \<Rightarrow> 'a "  ("\<blangle> _ \<brangle>") where [iff]: "\<blangle> x \<brangle> = x"
 
 
-subsubsection \<open>Useless Tag\<close> \<comment> \<open>It is useful, but needs to be moved somewhere else. \<phi>-LPR doesn't use it!\<close>
-
-text \<open>Simplification is a transformation preserving all information.
-  It is powerful while sometimes we expect the transformation can be weaker by disposing
-  some useless information that we do not need.
-
-  \<open>\<open>Useless\<close>\<close> tag is proposed for wrapping those unnecessary terms .... TBD!
-  These information can be wrapped by a Useless tag to annotate this.
-  In \<phi>-Programming, any extracted lemmas wrapped by this tag will not be added into
-    proof environment and dropped simply.\<close>
-
-definition USELESS :: \<open>bool \<Rightarrow> bool\<close> where \<open>USELESS x = x\<close>
-
-lemma [simp]: \<open>USELESS True\<close> unfolding USELESS_def ..
-
-
 
 subsection \<open>General Rules\<close>
 

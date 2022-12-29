@@ -31,7 +31,7 @@ lemma (in \<phi>fiction) throw_\<phi>app[\<phi>reason! for \<open>\<^bold>p\<^bo
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<rbrace>\<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Filter_Out_Free_Values_def Imply_def
   apply clarsimp
-  by (meson Imply_def View_Shift_def \<phi>view_shift_by_implication)
+  by (meson Imply_def View_Shift_def view_shift_by_implication)
 
 definition op_try :: "('ret,'ex,'RES_N,'RES) proc
                     \<Rightarrow> ('ex sem_value \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc)

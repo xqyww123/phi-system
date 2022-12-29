@@ -1,4 +1,6 @@
 signature PHI_SYNTAX = sig
+include PHI_SYNTAX
+
   val dest_name_tylabels : typ -> string list (* 'i \<times> 'j \<times> 'k -> ["i","j","k"] *)
   val mk_name_tylabels : string list -> typ (* ["i","j","k"] -> 'i \<times> 'j \<times> 'k *)
   val mk_name_tag_ast : (Ast.ast * string list) -> Ast.ast
@@ -10,6 +12,7 @@ signature PHI_SYNTAX = sig
 end
 
 structure PhiSyntax : PHI_SYNTAX = struct
+open PhiSyntax
 
 val tylabel_name = prefix "'\<phi>name_"
 fun mk_name_tylabels names =

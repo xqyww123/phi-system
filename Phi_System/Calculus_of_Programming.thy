@@ -362,12 +362,23 @@ lemmas Subjection_simp_proc_arg_metaeq[unfolded atomize_eq[symmetric]] = Subject
 
 end
 
-subsection \<open>Representation of Value in Assertions\<close>
+subsection \<open>Primitive \<phi>-Types\<close>
+
+subsubsection \<open>Value\<close>
 
 definition Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
   where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
 
-subsubsection \<open>Syntax\<close>
+lemma Val_expn [\<phi>expns]:
+  \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
+  unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
+
+lemma Val_inhabited [\<phi>reason_elim, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> Val val T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns) blast
+
+
+paragraph \<open>Syntax\<close>
 (* TODO: move this *)
 
 consts anonymous :: 'a

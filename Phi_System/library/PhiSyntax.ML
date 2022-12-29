@@ -1,5 +1,4 @@
 signature PHI_SYNTAX = sig
-include PHI_SYNTAX
 
   val get_types : Proof.context ->
         {TY_N: typ, TY: typ, VAL_N: typ, VAL: typ, RES_N: typ, RES: typ, FIC_N: typ, FIC: typ}
@@ -49,7 +48,7 @@ include PHI_SYNTAX
 end
 
 structure PhiSyntax : PHI_SYNTAX = struct
-open Thm Term HOLogic NuHelp PhiSyntax
+open Thm Term HOLogic NuHelp
 
 (*TODO*)
 val types = {

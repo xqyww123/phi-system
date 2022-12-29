@@ -1,3 +1,27 @@
+(* Phi_Simp_Congruence.ML
+   Author: Qiyuan Xu
+
+The module gives a generic simplification procedure for quasi-congruence rules
+of container \<phi>-types in the following form,
+
+    x\<^sub>1 : T\<^sub>1 \<equiv> y\<^sub>1 : U\<^sub>1
+\<Longrightarrow> \<dots>
+\<Longrightarrow> x\<^sub>n : T\<^sub>n \<equiv> y\<^sub>n : U\<^sub>n
+\<Longrightarrow> f(x\<^sub>1,\<dots>,x\<^sub>n) : F(T\<^sub>1,\<dots>,T\<^sub>n) \<equiv> g(y\<^sub>1,\<dots>,y\<^sub>n) : G(T\<^sub>1,\<dots>,T\<^sub>n)
+
+A typical usage is, for example,
+
+```isabelle
+
+simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
+  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>Val_simp_cong} ctxt)
+\<close>
+
+```
+where \<phi>Val_simp_cong is a quasi-congruence rule of the above form.
+
+*)
+
 signature NU_SIMP_CONG = sig
   val simproc : thm -> Proof.context -> cterm -> thm option
   val simproc_qualifier : thm -> Proof.context -> cterm -> thm option

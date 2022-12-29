@@ -163,16 +163,14 @@ fun accept_proc (ctxt,sequent) =
 
 (*Param & Label*)
 fun param_type sequent =
-  NuBasics.param_type sequent
+  PhiSyntax.param_type sequent
     |> map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty)
   (* TODO: how to parse (check) the term of a desired type pattern
   * (schematic type variable)? *)
 
-
-
 fun set_param' ctxt term sequent =
     (term |> Thm.cterm_of ctxt
-          |> NuBasics.intro_param)
+          |> PhiSyntax.intro_param)
       RS sequent
 
 fun set_param term' (ctxt,sequent) =
@@ -224,7 +222,7 @@ fun set_param_cmd xterm (ctxt,sequent) =
           set_param (Syntax.parse_term ctxt_parse xterm) (ctxt,sequent)
         end
 
-fun set_label name (ctxt,sequent) = (ctxt, mk_label_thm name RS sequent)
+fun set_label name (ctxt,sequent) = (ctxt, PhiSyntax.mk_label_thm name RS sequent)
 
 
 

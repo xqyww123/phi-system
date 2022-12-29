@@ -18,7 +18,7 @@ signature QUANT_EXPANSION = sig
 end
 
 structure QuantExpansion : QUANT_EXPANSION = struct
-open NuHelp NuBasics PhiSyntax
+open NuHelp PhiSyntax
 
 fun mk_cases_named names tm = Const (@{const_name case_named},
       (dummyT --> dummyT) --> Type (@{type_name named}, [dummyT, mk_name_tylabels names]) --> dummyT) $ tm

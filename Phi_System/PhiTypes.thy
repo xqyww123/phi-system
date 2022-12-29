@@ -1,17 +1,120 @@
+chapter \<open>Pre-built \<phi>-Types\<close>
+
 theory PhiTypes
-  imports Spec_Framework
+  imports IDE_CP
 begin
 
-section \<open>Elementary \<phi>-Types\<close>
+section \<open>Basics\<close>
 
 subsection \<open>Syntax Sugars\<close>
 
 text \<open>Sometimes, we do not want to verbosely write a semantic type if it is known syntactically.
-  We use syntax translation to achieve a sugar to do this.\<close>
+  We use syntax translation to achieve a sugar to do this.
+
+This is a planning feature has not been implemented\<close>
 
 syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> 'TY\<close> ("TY'_of'_\<phi>")
 
-subsection \<open>Type Level Subjection\<close>
+
+subsection \<open>Identity\<close>
+
+definition Identity :: " ('a,'a) \<phi> " where "Identity x = {x}"
+
+lemma Identity_expn[\<phi>expns]:
+  "p \<in> (x \<Ztypecolon> Identity) \<longleftrightarrow> p = x"
+  unfolding \<phi>Type_def Identity_def by auto
+
+lemma Identity_inhabited[elim!,\<phi>reason_elim!]:
+  \<open>Inhabited (x \<Ztypecolon> Identity) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
+lemma Identity_functional[\<phi>reason]:
+  \<open>is_singleton (x \<Ztypecolon> Identity)\<close>
+  by (rule is_singletonI''; simp add: \<phi>expns)
+
+lemma Identity_E[\<phi>reason for \<open>?v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?x \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T\<close>
+  unfolding Imply_def Premise_def by (simp add: \<phi>expns)
+
+lemma (in \<phi>empty_sem) [simp]:
+  \<open> v \<in> Well_Type TY
+\<Longrightarrow> SemTyp_Of (v \<Ztypecolon> Identity) = TY\<close>
+  unfolding \<phi>Type_def Identity_def
+  by (simp add: \<phi>SemType_def)
+
+lemma (in \<phi>spec) Identity_E_vs[\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?v \<Ztypecolon> Identity \<longmapsto> ?x \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w v \<Ztypecolon> Identity \<longmapsto> x \<Ztypecolon> T\<close>
+  by (simp add: Identity_E View_Shift_by_Implication)
+
+(*
+lemma Action_to_Identity[\<phi>reason 80 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>]:
+  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (v \<Ztypecolon> Identity \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j v. v \<in> X) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>
+  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns) *)
+
+lemma Action_from_Identity:
+  \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> X \<Longrightarrow> v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> from_Identity\<close>
+  unfolding Imply_def Premise_def Action_Tag_def by (simp add: \<phi>expns)
+
+
+subsection \<open>Any\<close>
+
+definition \<phi>Any :: \<open>('x, unit) \<phi>\<close>
+  where \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
+
+lemma \<phi>Any_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>Any)\<close>
+  unfolding \<phi>Any_def \<phi>Type_def by simp
+
+lemma \<phi>Any_inhabited[\<phi>reason_elim, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>Any) \<Longrightarrow> C \<Longrightarrow> C\<close>
+  .
+
+lemma \<phi>Any_cast [\<phi>reason 1200 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?x \<Ztypecolon> \<phi>Any \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi>Any\<close>
+  unfolding Imply_def by (simp add: \<phi>expns)
+
+lemma (in \<phi>empty) \<phi>Any_vs [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?x \<Ztypecolon> \<phi>Any \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> x \<Ztypecolon> \<phi>Any\<close>
+  by (simp add: View_Shift_by_Implication \<phi>Any_cast)
+
+
+subsection \<open>Black Hole\<close>
+
+text \<open>The system is a Classical Separation Logic.
+  For some situation like garbage collection, Intuitionistic Separation Logic can be more convenient.
+  Therefore, we employ a `Black Hole' which can contain arbitrary resources to simulate the
+    Intuitionistic Separation Logic\<close>
+
+abbreviation (in \<phi>spec) Black_Hole :: \<open>('FIC_N \<Rightarrow> 'FIC) set\<close>
+  where \<open>Black_Hole \<equiv> UNIV\<close>
+
+lemma UNIV_subty [\<phi>reason for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s UNIV \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s UNIV\<close>
+  unfolding Imply_def by simp
+
+lemma (in \<phi>spec) UNIV_view_shift [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> UNIV \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> UNIV\<close>
+  using UNIV_subty View_Shift_by_Implication by blast
+
+
+subsection \<open>Stepwise Abstraction\<close>
+
+definition \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 75)
+  where \<open>\<phi>Composition T U = (\<lambda>x. (y \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j y. y \<in> U x))\<close>
+
+lemma \<phi>Composition_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>
+  unfolding \<phi>Composition_def \<phi>Type_def by (simp add: \<phi>expns)
+
+lemma \<phi>Composition_inhabited[elim,\<phi>reason_elim!]:
+  \<open>Inhabited (x \<Ztypecolon> T \<Zcomp> U) \<Longrightarrow> (\<And>y. Inhabited (x \<Ztypecolon> U) \<Longrightarrow> Inhabited (y \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns) blast
+
+
+
+
+section \<open>Logical Connectives\<close>
+
+subsection \<open>Subjection as a Type\<close>
 
 definition SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 25)
   where \<open> (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<lambda>x. x \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<close>
@@ -31,7 +134,7 @@ lemma SubjectionTY_inhabited_expn[\<phi>inhabited]:
   unfolding SubjectionTY_expn by (simp add: \<phi>inhabited)
 
 
-subsection \<open>Type Level Existential Quantification\<close>
+subsection \<open>Existential Quantification as a Type\<close>
 
 definition ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
   where \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
@@ -47,11 +150,11 @@ parse_ast_translation \<open>
     fun parse_SetcomprPhiTy ctxt [Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, x, T],idts,P] =
           Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
                 idts_to_abs x idts,
-                Appl [Constant "\<^const>Sys.ExTyp_binder", idts,
+                Appl [Constant "\<^const>PhiTypes.ExTyp_binder", idts,
                       (case P of (Appl [Constant "_constrain", Variable "True", _]) => T
                                | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, T, P])]]
       | parse_SetcomprPhiTy ctxt [X,idts,P] =
-          Appl [Constant "\<^const>Sys.ExTyp_binder", idts,
+          Appl [Constant "\<^const>PhiTypes.ExTyp_binder", idts,
                 (case P of (Appl [Constant "_constrain", Variable "True", _]) => X
                          | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
   in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
@@ -85,43 +188,6 @@ lemma ExTyp_inhabited_expn[\<phi>inhabited]:
 
 
 
-subsection \<open>Identity\<close>
-
-definition Identity :: " ('a,'a) \<phi> " where "Identity x = {x}"
-
-lemma Identity_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> Identity) \<longleftrightarrow> p = x"
-  unfolding \<phi>Type_def Identity_def by auto
-
-lemma Identity_inhabited[elim!,\<phi>reason_elim!]:
-  \<open>Inhabited (x \<Ztypecolon> Identity) \<Longrightarrow> C \<Longrightarrow> C\<close> .
-
-lemma Identity_functional[\<phi>reason]:
-  \<open>is_singleton (x \<Ztypecolon> Identity)\<close>
-  by (rule is_singletonI''; simp add: \<phi>expns)
-
-lemma Identity_E[\<phi>reason for \<open>?v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?x \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T\<close>
-  unfolding Imply_def Premise_def by (simp add: \<phi>expns)
-
-lemma (in \<phi>empty_sem) [simp]:
-  \<open> v \<in> Well_Type TY
-\<Longrightarrow> SemTyp_Of (v \<Ztypecolon> Identity) = TY\<close>
-  unfolding \<phi>Type_def Identity_def
-  by (simp add: \<phi>SemType_def)
-
-lemma (in \<phi>empty) Identity_E_vs[\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?v \<Ztypecolon> Identity \<longmapsto> ?x \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
-  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w v \<Ztypecolon> Identity \<longmapsto> x \<Ztypecolon> T\<close>
-  by (simp add: Identity_E View_Shift_by_Implication)
-
-lemma Action_to_Identity[\<phi>reason 80 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>]:
-  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (v \<Ztypecolon> Identity \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j v. v \<in> X) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>
-  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
-
-lemma Action_from_Identity:
-  \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> X \<Longrightarrow> v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> from_Identity\<close>
-  unfolding Imply_def Premise_def Action_Tag_def by (simp add: \<phi>expns)
-
 
 subsection \<open>Inter\<close>
 
@@ -136,6 +202,8 @@ lemma \<phi>Inter_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited ((x,y) \<Ztypecolon> (T \<inter>\<^sub>\<phi> U)) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (y \<Ztypecolon> U) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
 
+
+section \<open>Structural Connectives\<close>
 
 subsection \<open>None\<close>
 
@@ -359,55 +427,7 @@ lemma [simp]:
   unfolding set_eq_iff by (simp add: \<phi>Optional_expn)
 
 
-subsection \<open>Stepwise Abstraction\<close>
 
-definition \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 75)
-  where \<open>\<phi>Composition T U = (\<lambda>x. (y \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j y. y \<in> U x))\<close>
-
-lemma \<phi>Composition_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>
-  unfolding \<phi>Composition_def \<phi>Type_def by (simp add: \<phi>expns)
-
-lemma \<phi>Composition_inhabited[elim,\<phi>reason_elim!]:
-  \<open>Inhabited (x \<Ztypecolon> T \<Zcomp> U) \<Longrightarrow> (\<And>y. Inhabited (x \<Ztypecolon> U) \<Longrightarrow> Inhabited (y \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns) blast
-
-
-
-subsection \<open>Refinement\<close>
-
-definition NuRefine :: " ('a, 'b) \<phi> \<Rightarrow> 'b set \<Rightarrow> ('a, 'b) \<phi> " (infixl "<where>" 80)
-  where "(N <where> T) x = {p. (x \<in> T \<and>p \<in> (x \<Ztypecolon> N))}"
-
-lemma NuRefine_expn[simp]:
-  " p \<in> (x \<Ztypecolon> N <where> P) \<longleftrightarrow> x \<in> P \<and> p \<in> (x \<Ztypecolon> N)"
-  unfolding NuRefine_def \<phi>Type_def by simp
-
-lemma NuRefine_inhabited[elim!,\<phi>reason_elim!]:
-  "Inhabited (x \<Ztypecolon> N <where> P) \<Longrightarrow> (x \<in> P \<Longrightarrow> Inhabited (x \<Ztypecolon> N) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason]:
-  " x \<Ztypecolon> M \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> M' \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x' \<in> S
-\<Longrightarrow> x \<Ztypecolon> M \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> M' <where> S \<^bold>a\<^bold>n\<^bold>d P"
-  unfolding Imply_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 30 for \<open>?x \<Ztypecolon> ?T <where> ?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P''\<close>, \<phi>overload D]:
-  "x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
-    \<Longrightarrow> x \<Ztypecolon> T <where> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<and> x \<in> S"
-  unfolding Imply_def by (simp add: \<phi>expns) blast
-
-lemma refine_\<phi>app:
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<in> P \<Longrightarrow> x \<Ztypecolon> N \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> (N <where> P)"
-  unfolding Imply_def by (simp add: \<phi>expns)
-
-
-subsection \<open>Forward Simulation\<close>
-
-definition \<phi>F_simulation :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> (('av \<times> 'bv) set, ('a \<times> 'b) set) \<phi>\<close> (infixr "\<Rrightarrow>\<^sub>r" 25)
-    \<comment> \<open>Forward Simulation\<close>
-  where \<open>(T \<Rrightarrow>\<^sub>r U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>u y. (v,u) \<in> g \<and> (x,y) \<in> f \<and> u \<in> (y \<Ztypecolon> U)) })\<close>
 
 
 subsection \<open>Mapping\<close>
@@ -423,6 +443,7 @@ lemma \<phi>Mapping_expn[\<phi>expns]:
 lemma \<phi>Mapping_inhabited[\<phi>expns]:
   \<open>Inhabited (f \<Ztypecolon> T \<Rrightarrow> U) \<Longrightarrow> ((\<And>x. Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (f x \<Ztypecolon> U)) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
+
 
 subsection \<open>Point on a Mapping\<close>
 
@@ -649,38 +670,9 @@ lemma "x \<Ztypecolon> N \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\
   unfolding \<phi>Equal_def by (auto 0 6) *)
 *)
 
-subsection \<open>Any\<close>
-
-definition \<phi>Any :: \<open>('x, unit) \<phi>\<close>
-  where \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
-
-lemma \<phi>Any_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Any)\<close>
-  unfolding \<phi>Any_def \<phi>Type_def by simp
-
-lemma \<phi>Any_inhabited[\<phi>reason_elim, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Any) \<Longrightarrow> C \<Longrightarrow> C\<close>
-  .
-
-lemma \<phi>Any_cast [\<phi>reason 1200 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?x \<Ztypecolon> \<phi>Any \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi>Any\<close>
-  unfolding Imply_def by (simp add: \<phi>expns)
-
-lemma (in \<phi>empty) \<phi>Any_vs [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?x \<Ztypecolon> \<phi>Any \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
-  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> x \<Ztypecolon> \<phi>Any\<close>
-  by (simp add: View_Shift_by_Implication \<phi>Any_cast)
-  
+section \<open>Semantics Related\<close>
 
 subsection \<open>Value\<close>
-
-lemma Val_expn [\<phi>expns]:
-  \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
-  unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
-
-lemma Val_inhabited [\<phi>reason_elim, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> Val val T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns) blast
-
 
 subsubsection \<open>Syntax to fetch the latest n-th Val\<close>
 
@@ -736,6 +728,7 @@ setup \<open>let open Ast PhiSyntax
       map (fn x => if has_get_val x then map_get_val ctxt x else x)))
 end\<close>
 
+
 subsubsection \<open>Reasoning Rules\<close>
 
 paragraph \<open>Implication\<close>
@@ -747,10 +740,10 @@ lemma Val_cast [\<phi>reason]:
 
 paragraph \<open>Action\<close>
 
-lemma [\<phi>reason 1200 for \<open>?y \<Ztypecolon> Val ?v ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'a::{implication, structural} action)\<close>]:
+lemma [\<phi>reason 1200 for \<open>?y \<Ztypecolon> Val ?v ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'a::structural action)\<close>]:
   \<open> y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act
 \<Longrightarrow> y \<Ztypecolon> Val v U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Val v T \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close>
-  for Act :: \<open>'a::{implication, structural} action\<close>
+  for Act :: \<open>'a::structural action\<close>
   unfolding Action_Tag_def
   using Val_cast .
 
@@ -764,7 +757,6 @@ lemma [\<phi>programming_simps]:
     \<open>Val raw (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (Val raw T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   by (rule \<phi>Type_eqI) (simp add: \<phi>expns)
 
-
 lemma \<phi>Val_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> Val v T) = (x' \<Ztypecolon> Val v T')\<close>
@@ -775,6 +767,8 @@ simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
 \<close>
 
 subsubsection \<open>Application Methods for Subtyping\<close>
+
+(*TODO: I don't like this. It is not generic.*)
 
 context \<phi>spec begin
 
@@ -815,15 +809,15 @@ lemma [\<phi>reason 2000 for \<open>
 subsubsection \<open>Synthesis\<close>
 
 lemma [\<phi>reason 1200 for
-  \<open>PROP Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> 'VAL set)) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+  \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> 'VAL set)) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
 ]:
-  \<open>PROP Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
+  \<open>Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason 1200 for
-  \<open>PROP Synthesis_Parse (?raw::?'a sem_value) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+  \<open>Synthesis_Parse (?raw::?'a sem_value) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
 ]:
-  \<open>PROP Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
+  \<open>Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Val ?raw ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
@@ -844,13 +838,14 @@ end
 
 subsubsection \<open>Auto unfolding for value list\<close>
 
-lemma [simp]:
+lemma [\<phi>programming_simps]:
   \<open>(\<exists>*x. x \<Ztypecolon> Val rawv Empty_List) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS (rawv = \<phi>V_nil))\<close>
   unfolding set_eq_iff USELESS_def
   by (cases rawv; simp add: \<phi>expns)
 
-lemma [simp]:
-  \<open>(\<exists>*x. x \<Ztypecolon> Val rawv (List_Item T)) = (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS (\<exists>v. rawv = \<phi>V_cons v \<phi>V_nil))\<close>
+lemma [\<phi>programming_simps]:
+  \<open>(\<exists>*x. x \<Ztypecolon> Val rawv (List_Item T))
+ = (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS (\<exists>v. rawv = \<phi>V_cons v \<phi>V_nil))\<close>
   unfolding set_eq_iff \<phi>V_cons_def USELESS_def
   apply (cases rawv; clarsimp simp add: \<phi>expns \<phi>V_tl_def \<phi>V_hd_def times_list_def; rule;
           clarsimp simp add: sem_value_All sem_value_exists)
@@ -859,10 +854,11 @@ lemma [simp]:
 lemma [simp]:
   \<open> [] \<notin> (\<exists>*x. x \<Ztypecolon> L)
 \<Longrightarrow> ((\<exists>*x. x \<Ztypecolon> Val rawv (List_Item T \<^emph> L)) :: 'a::sep_algebra set)
-      = ((\<exists>*x. x \<Ztypecolon> Val (\<phi>V_tl rawv) L) * (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T))\<close>
+  = ((\<exists>*x. x \<Ztypecolon> Val (\<phi>V_tl rawv) L) * (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T))\<close>
   unfolding set_eq_iff
   apply (cases rawv; clarsimp simp add: \<phi>expns \<phi>V_tl_def \<phi>V_hd_def times_list_def)
-  by (metis (no_types, opaque_lifting) append_Cons append_Nil list.exhaust_sel list.sel(1) list.sel(2) list.sel(3))
+  by (metis (no_types, opaque_lifting) append_Cons append_Nil list.exhaust_sel
+            list.sel(1) list.sel(2) list.sel(3))
 
 lemma [simp]:
   \<open>[] \<notin> (\<exists>*x. x \<Ztypecolon> (List_Item T \<^emph> L))\<close>
@@ -874,7 +870,7 @@ lemma [simp]:
 
 
 
-subsection \<open>Semantic Type Tagging\<close>
+subsection \<open>Semantic Type Annotation\<close>
 
 paragraph \<open>Annotation for Single One\<close>
 
@@ -916,6 +912,9 @@ lemma [\<phi>reason_elim, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
 end
+
+
+section \<open>Permission \& Share\<close>
 
 subsection \<open>Share \& Option\<close>
 
@@ -1446,6 +1445,9 @@ lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Nonsepable ?T \<^bold>i\<^b
   for Act :: \<open>'a::{structural, implication} action\<close>
   unfolding Action_Tag_def using Nonsepable_cast .
 
+
+section \<open>Specifc Structures\<close>
+
 subsection \<open>Potentially Uninitialized Structure\<close>
 
 datatype 'V uninit = initialized 'V | uninitialized
@@ -1512,26 +1514,17 @@ lemma \<phi>Uninit_inhabited[\<phi>reason_elim!, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 
-subsection \<open>Black Hole\<close>
+section \<open>Misc.\<close>
 
-text \<open>Essentially, the system is a Classical Separation Logic.
-  For some situation like garbage collection, Intuitionistic Separation Logic can be more convenient.
-  Therefore, we employ a `Black Hole' which can contain arbitrary resources to simulate the
-    Intuitionistic Separation Logic\<close>
+subsection \<open>Forward Simulation\<close>
 
-abbreviation (in \<phi>spec) Black_Hole :: \<open>('FIC_N \<Rightarrow> 'FIC) set\<close>
-  where \<open>Black_Hole \<equiv> UNIV\<close>
-
-lemma UNIV_subty [\<phi>reason for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s UNIV \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s UNIV\<close>
-  unfolding Imply_def by simp
-
-lemma (in \<phi>spec) UNIV_view_shift [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> UNIV \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
-  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> UNIV\<close>
-  using UNIV_subty View_Shift_by_Implication by blast
+definition \<phi>F_simulation
+    :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> (('av \<times> 'bv) set, ('a \<times> 'b) set) \<phi>\<close> (infixr "\<Rrightarrow>\<^sub>r" 25)
+    \<comment> \<open>Forward Simulation\<close>
+  where \<open>(T \<Rrightarrow>\<^sub>r U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>u y. (v,u) \<in> g \<and> (x,y) \<in> f \<and> u \<in> (y \<Ztypecolon> U)) })\<close>
 
 
-subsection \<open>Misc.\<close>
+subsection \<open>Function_over\<close>
 
 definition Function_over :: \<open>('a,'b) \<phi> \<Rightarrow> 'c \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<phi>\<close> (infix "<func-over>" 40)
   where \<open>(T <func-over> x) = (\<lambda>f. f x \<Ztypecolon> T)\<close>
@@ -1591,11 +1584,11 @@ lemma [\<phi>reason 2000]:
 
 
 lemma [\<phi>reason 1200 for
-  \<open>PROP Synthesis_Parse ?input (\<lambda>v. ?f \<Ztypecolon> ?T v <func-over> ?x :: ('FIC_N,'FIC)assn)\<close>
+  \<open>Synthesis_Parse ?input (\<lambda>v. ?f \<Ztypecolon> ?T v <func-over> ?x :: ('FIC_N,'FIC)assn)\<close>
 ]:
-  \<open> PROP Synthesis_Parse input (\<lambda>v. fx \<Ztypecolon> T v)
+  \<open> Synthesis_Parse input (\<lambda>v. fx \<Ztypecolon> T v)
 \<Longrightarrow> lambda_abstraction x fx f
-\<Longrightarrow> PROP Synthesis_Parse input (\<lambda>v. f \<Ztypecolon> T v <func-over> x :: ('FIC_N,'FIC)assn)\<close>
+\<Longrightarrow> Synthesis_Parse input (\<lambda>v. f \<Ztypecolon> T v <func-over> x :: ('FIC_N,'FIC)assn)\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason 1200]:

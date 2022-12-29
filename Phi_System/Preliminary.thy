@@ -1,3 +1,5 @@
+chapter \<open>Theoretical Foundations\<close>
+
 section \<open>Preliminary\<close>
 
 theory Preliminary

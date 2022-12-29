@@ -19,25 +19,8 @@ signature NU_BASICS = sig
   val enter_programming_environ : thm -> Proof.state -> Proof.state
   val update_programming_sequent' : thm -> Proof.context -> Proof.context
 
-
-  val dest_param : term -> term
-  val param_type : thm -> typ
-  val dest_labelled_opt : term -> string option * term (* Labelled name, x -> (name,x) *)
-  val label_ty : typ
-  val label_cty : ctyp
-  val dest_label : term -> string
-  val mk_label : string -> term
-  val mk_label_c : string -> cterm
-  val mk_labelled : string -> term -> term
-  val mk_label_thm : string -> thm
-
-  val intro_param : cterm -> thm
-  val intro_param_name : string -> thm
-
-  val param_set_free_var_name : Proof.context -> string -> thm -> thm
-  (* val auto_fusion_arity : term -> int *)
-
 end
+
 structure NuBasics : NU_BASICS = struct
 open Thm Term HOLogic NuHelp
 exception NDBG of thm
@@ -167,58 +150,17 @@ fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
                                       | TERM _ => raise TERM (msg, [prop_of th])
 
-val dest_param = perhaps (try dest_Trueprop) #> dest_monop @{const_name "ParamTag"}
-val dest_param_c = dest_monop_c @{const_name "ParamTag"}
-fun param_type_c th = cprem_of th 1 |> dest_param_c |> ctyp_of_cterm
-fun param_type th = major_prem_of th |> dest_param |> type_of
-val unit_const_name = @{const_name "Product_Type.Unity"}
-val label_ty = Type (@{type_name "label"}, [])
-val label_cty = @{ctyp "label"}
-val label_const_name = @{const_name "LABEL_TAG"}
-val unit_ty = Type (@{type_name "Product_Type.unit"}, [])
-val unit_const = Const("Product_Type.Unity", unit_ty)
-val label_const = Const (label_const_name, (unit_ty --> unit_ty) --> label_ty)
-val dest_label_raw   = dest_monop label_const_name
-val dest_label_raw_c = dest_monop_c label_const_name
-fun dest_Abs (Abs x) =  x
-  | dest_Abs t = raise TERM("dest_Abs", [t]);
-fun dest_label tm =
-  tm |> Type.strip_constraints |> dest_label_raw |> dest_Abs |> #1
-    handle TERM _ => raise TERM ("dest_label", [tm])
-val label_c = @{cterm "LABEL name"}
-fun mk_label name = label_const $ Abs (name, unit_ty, unit_const)
-fun mk_label_c name = renamed_term (mk_label name) label_c
-fun mk_label_thm name = 
-  Thm.instantiate (TVars.empty, Vars.make [((("x",0),\<^typ>\<open>label\<close>), mk_label_c name)]) @{thm LabelTag}
-fun mk_labelled name tm = Const(@{const_name Labelled}, dummyT) $ mk_label name $ tm
-
-
-val labelled_name = @{const_name "Labelled"}
-val dest_labelled = dest_binop labelled_name #> apfst dest_label
-fun dest_labelled_opt tm =
-  case try (dest_binop labelled_name) tm of
-     SOME (v,tm) => (SOME (dest_label v), tm)
-   | NONE => (NONE, tm)
 
 
 
 
 
-val thm_ParamTag = @{thm ParamTag}
-fun param_set_free_var_name ctx name thm =
-  let
-    val param_var as (_, param_ty) = prems_of thm |> hd |> dest_param |> dest_Var
-  in
-    instantiate (TVars.empty, Vars.make [(param_var, cterm_of ctx (Free (name, param_ty)))]) thm
-      |> (fn x => thm_ParamTag RS x)
-  end
 
 
-val vx = ("x",0) and va = ("'a",0)
-fun intro_param tm =
-  Thm.instantiate (TVars.make [((("'a",0), ["HOL.type"]), ctyp_of_cterm tm)],
-                   Vars.make  [((("x",0), typ_of (ctyp_of_cterm tm)), tm)]) @{thm ParamTag}
-val intro_param_name = intro_param o mk_label_c
+
+
+
+
 
 
 

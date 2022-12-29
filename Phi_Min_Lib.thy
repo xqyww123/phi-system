@@ -45,9 +45,9 @@ definition Set_Variable :: \<open>varname \<Rightarrow> 'a \<Rightarrow> 'a\<clo
   where [iff]: \<open>($x := y) = y\<close>
 
 lemma (in \<phi>min) [\<phi>reason 2000 for
-  \<open>PROP Synthesis_Parse (?var::varname) (?Y::?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+  \<open>Synthesis_Parse (?var::varname) (?Y::?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
 ]:
-  \<open>PROP Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T :: ('FIC_N,'FIC) assn)\<close>
+  \<open>Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T :: ('FIC_N,'FIC) assn)\<close>
   unfolding Synthesis_Parse_def ..
 
 
@@ -230,22 +230,22 @@ lemma op_const_int_\<phi>app:
   by \<phi>reason
 
 lemma [\<phi>reason 1200
-    for \<open>PROP Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
-       \<open>PROP Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
-       \<open>PROP Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+    for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+       \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+       \<open>Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
 ]:
-  \<open> PROP Synthesis_Parse (n \<Ztypecolon> \<nat>[32]) X
-\<Longrightarrow> PROP Synthesis_Parse n X\<close>
+  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>[32]) X
+\<Longrightarrow> Synthesis_Parse n X\<close>
   for X :: \<open>'ret \<Rightarrow> ('FIC_N,'FIC) assn\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason 1200
-    for \<open>PROP Synthesis_Parse ((numeral ?n::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
-       \<open>PROP Synthesis_Parse ((1::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
-       \<open>PROP Synthesis_Parse ((0::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+    for \<open>Synthesis_Parse ((numeral ?n::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+       \<open>Synthesis_Parse ((1::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+       \<open>Synthesis_Parse ((0::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
 ]:
-  \<open> PROP Synthesis_Parse (n \<Ztypecolon> \<nat>[b]) X
-\<Longrightarrow> PROP Synthesis_Parse (n <bits> b) X\<close>
+  \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>[b]) X
+\<Longrightarrow> Synthesis_Parse (n <bits> b) X\<close>
   for X :: \<open>'ret \<Rightarrow> ('FIC_N,'FIC) assn\<close>
   unfolding Synthesis_Parse_def ..
 
