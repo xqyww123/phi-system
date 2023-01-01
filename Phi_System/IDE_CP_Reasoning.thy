@@ -78,7 +78,7 @@ lemma (in \<phi>empty) [\<phi>reason 2000 on \<open>OBJ ?X \<^bold>i\<^bold>m\<^
 subsubsection \<open>General Simplification for Assertions\<close>
 
 \<phi>reasoner assertion_simplification 1200
-  (conclusion \<open>Simplify assertion_simplification ?X' ?X\<close>)
+  (\<open>Simplify assertion_simplification ?X' ?X\<close>)
   = ((simp only: assertion_simps)?, rule Simplify_I)
 
 lemmas [assertion_simps] =
@@ -1241,7 +1241,7 @@ text \<open>The merging recognize two existential quantifier are identical if th
   or else the right side is expanded first.\<close>
 
 \<phi>reasoner_ML (in \<phi>spec) Merge_Existential 2000
-  (conclusion \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>) =
+  (\<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>) =
 \<open>fn (ctxt,sequent) =>
   let
     val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
@@ -1253,7 +1253,7 @@ text \<open>The merging recognize two existential quantifier are identical if th
   in Seq.single (ctxt, sequent')
   end\<close>
 
-\<phi>reasoner_ML Merge_Existential_imp 2000 (conclusion \<open>If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X\<close>) =
+\<phi>reasoner_ML Merge_Existential_imp 2000 (\<open>If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X\<close>) =
 \<open>fn (ctxt,sequent) =>
   let
     val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
@@ -1522,7 +1522,7 @@ lemma Filter_Out_Free_Values'_reject_val:
   unfolding Filter_Out_Free_Values'_def Imply_def by (simp add: \<phi>expns)
 
 \<phi>reasoner_ML Filter_Out_Free_Values'_reject_val 1200
-  (conclusion \<open>PROP Filter_Out_Free_Values' ?R ?Y (?x \<Ztypecolon> Val ?raw ?T) ?Z\<close>) = \<open>
+  (\<open>PROP Filter_Out_Free_Values' ?R ?Y (?x \<Ztypecolon> Val ?raw ?T) ?Z\<close>) = \<open>
 fn (ctxt, sequent) =>
   let
     val Const (\<^const_name>\<open>Filter_Out_Free_Values'\<close>, _) $ R $ _

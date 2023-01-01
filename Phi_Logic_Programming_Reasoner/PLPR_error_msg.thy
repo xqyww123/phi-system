@@ -92,7 +92,7 @@ definition TRACING :: \<open>text \<Rightarrow> prop\<close>
 lemma TRACING_I: \<open>PROP TRACING x\<close>
   unfolding TRACING_def ..
 
-\<phi>reasoner_ML TRACING 1200 (conclusion \<open>PROP TRACING ?x\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML TRACING 1200 (\<open>PROP TRACING ?x\<close>) = \<open>fn (ctxt,sequent) =>
   let
     val \<^const>\<open>TRACING\<close> $ text = Thm.major_prem_of sequent
     val str = Encode_Text.decode_text ctxt text
@@ -108,7 +108,7 @@ definition WARNING :: \<open>text \<Rightarrow> prop\<close>
 lemma WARNING_I: \<open>PROP WARNING x\<close>
   unfolding WARNING_def ..
 
-\<phi>reasoner_ML WARNING 1200 (conclusion \<open>PROP WARNING ?x\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML WARNING 1200 (\<open>PROP WARNING ?x\<close>) = \<open>fn (ctxt,sequent) =>
   let
     val \<^const>\<open>WARNING\<close> $ text = Thm.major_prem_of sequent
     val str = Encode_Text.decode_text ctxt text
@@ -124,7 +124,7 @@ definition ERROR :: \<open>text \<Rightarrow> prop\<close>
 lemma ERROR_I: \<open>PROP ERROR x\<close>
   unfolding ERROR_def ..
 
-\<phi>reasoner_ML ERROR 1200 (conclusion \<open>PROP ERROR ?x\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML ERROR 1200 (\<open>PROP ERROR ?x\<close>) = \<open>fn (ctxt,sequent) =>
   let
     val \<^const>\<open>ERROR\<close> $ text = Thm.major_prem_of sequent
     val str = Encode_Text.decode_text ctxt text

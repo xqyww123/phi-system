@@ -61,18 +61,18 @@ fun the_implication i ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_impli
 fun reason_programming_implication mode ctxt sequent =
   let
     val inhabited_rule = #inhabited_rule mode ctxt
-    val stat = SOME (ctxt, (sequent RS inhabited_rule))
-               handle THM _ => NONE
+    val thm = SOME (sequent RS inhabited_rule)
+              handle THM _ => NONE
     val _ = Nu_Reasoner.debug_info ctxt (fn _ => "extracting implied pure facts...")
-  in case Option.mapPartial (Nu_Reasoner.reason ~1) stat
-       of SOME (_, result) => [result]
-        | _ => []
+    val erules = Named_Theorems.get ctxt @{named_theorems \<phi>inhabitance_rule}
+    open Tactical Tactic
+  in Option.map (rule_by_tactic ctxt (TRY (HEADGOAL (eresolve_tac ctxt erules)))) thm
   end
 
 fun gen_update_programming_sequent' put sequent ctxt =
   case Phi_Working_Mode.working_mode_on ctxt (Thm.concl_of sequent)
     of SOME mode => put ctxt (sequent, sequent, Lazy.lazy (fn () =>
-                                              reason_programming_implication mode ctxt sequent))
+                                      the_list (reason_programming_implication mode ctxt sequent)))
      | _ => case Programming_Sequent.get ctxt
               of (_, construction, implication)::_ => put ctxt (sequent, construction, implication)
                | [] => put ctxt (sequent, sequent, Lazy.value [])

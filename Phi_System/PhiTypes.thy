@@ -24,7 +24,7 @@ lemma Identity_expn[\<phi>expns]:
   "p \<in> (x \<Ztypecolon> Identity) \<longleftrightarrow> p = x"
   unfolding \<phi>Type_def Identity_def by auto
 
-lemma Identity_inhabited[elim!,\<phi>reason_elim!]:
+lemma Identity_inhabited[elim!,\<phi>inhabitance_rule]:
   \<open>Inhabited (x \<Ztypecolon> Identity) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 lemma Identity_functional[\<phi>reason]:
@@ -43,12 +43,9 @@ lemma (in \<phi>empty_sem) [simp]:
 
 lemma (in \<phi>spec) Identity_E_vs[\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?v \<Ztypecolon> Identity \<longmapsto> ?x \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w v \<Ztypecolon> Identity \<longmapsto> x \<Ztypecolon> T\<close>
-  by (simp add: Identity_E View_Shift_by_Implication)
+  by (simp add: Identity_E view_shift_by_implication)
 
-(*
-lemma Action_to_Identity[\<phi>reason 80 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>]:
-  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (v \<Ztypecolon> Identity \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j v. v \<in> X) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>
-  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns) *)
+
 
 lemma Action_from_Identity:
   \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> X \<Longrightarrow> v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> from_Identity\<close>
@@ -64,7 +61,7 @@ lemma \<phi>Any_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Any)\<close>
   unfolding \<phi>Any_def \<phi>Type_def by simp
 
-lemma \<phi>Any_inhabited[\<phi>reason_elim, elim!]:
+lemma \<phi>Any_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Any) \<Longrightarrow> C \<Longrightarrow> C\<close>
   .
 
@@ -74,7 +71,7 @@ lemma \<phi>Any_cast [\<phi>reason 1200 for \<open>?X \<^bold>i\<^bold>m\<^bold>
 
 lemma (in \<phi>empty) \<phi>Any_vs [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?x \<Ztypecolon> \<phi>Any \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> x \<Ztypecolon> \<phi>Any\<close>
-  by (simp add: View_Shift_by_Implication \<phi>Any_cast)
+  by (simp add: view_shift_by_implication \<phi>Any_cast)
 
 
 subsection \<open>Black Hole\<close>
@@ -93,7 +90,7 @@ lemma UNIV_subty [\<phi>reason for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>
 
 lemma (in \<phi>spec) UNIV_view_shift [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> UNIV \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> UNIV\<close>
-  using UNIV_subty View_Shift_by_Implication by blast
+  using UNIV_subty view_shift_by_implication by blast
 
 
 subsection \<open>Stepwise Abstraction\<close>
@@ -105,7 +102,7 @@ lemma \<phi>Composition_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>
   unfolding \<phi>Composition_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma \<phi>Composition_inhabited[elim,\<phi>reason_elim!]:
+lemma \<phi>Composition_inhabited[elim,\<phi>inhabitance_rule]:
   \<open>Inhabited (x \<Ztypecolon> T \<Zcomp> U) \<Longrightarrow> (\<And>y. Inhabited (x \<Ztypecolon> U) \<Longrightarrow> Inhabited (y \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
@@ -125,7 +122,7 @@ lemma SubjectionTY_expn[\<phi>programming_simps, \<phi>expns]:
   \<open>(x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (x \<Ztypecolon> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   unfolding set_eq_iff SubjectionTY_def \<phi>Type_def by simp
 
-lemma SubjectionTY_inhabited[\<phi>reason_elim!, elim!]:
+lemma SubjectionTY_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding SubjectionTY_expn using Subjection_inhabited .
 
@@ -178,7 +175,7 @@ lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
   \<open>(x \<Ztypecolon> ExTyp T) = (\<exists>*a. x a \<Ztypecolon> T a)\<close>
   unfolding set_eq_iff ExTyp_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma ExTyp_inhabited[elim!, \<phi>reason_elim!]:
+lemma ExTyp_inhabited[elim!, \<phi>inhabitance_rule]:
   \<open>Inhabited (x \<Ztypecolon> ExTyp T) \<Longrightarrow> (Inhabited (\<exists>*a. x a \<Ztypecolon> T a) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding ExTyp_expn .
 
@@ -187,7 +184,9 @@ lemma ExTyp_inhabited_expn[\<phi>inhabited]:
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 
-
+lemma Action_to_Identity[\<phi>reason 80 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>]:
+  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (v \<Ztypecolon> Identity \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j v. v \<in> X) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> to_Identity\<close>
+  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
 
 subsection \<open>Inter\<close>
 
@@ -198,7 +197,7 @@ lemma \<phi>Inter_expn[\<phi>expns]:
   \<open>((x,y) \<Ztypecolon> (T \<inter>\<^sub>\<phi> U)) = (x \<Ztypecolon> T) \<inter> (y \<Ztypecolon> U)\<close>
   unfolding set_eq_iff \<phi>Type_def \<phi>Inter_def by simp
 
-lemma \<phi>Inter_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>Inter_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited ((x,y) \<Ztypecolon> (T \<inter>\<^sub>\<phi> U)) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (y \<Ztypecolon> U) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
 
@@ -214,7 +213,7 @@ lemma \<phi>None_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>None) \<longleftrightarrow> p = 1\<close>
   unfolding \<phi>None_def \<phi>Type_def by simp
 
-lemma \<phi>None_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>None_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 
@@ -245,7 +244,7 @@ lemma \<phi>Prod_expn':
   \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
-lemma \<phi>Prod_inhabited[elim!,\<phi>reason_elim!]:
+lemma \<phi>Prod_inhabited[elim!,\<phi>inhabitance_rule]:
   "Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<Longrightarrow> (Inhabited (x1 \<Ztypecolon> T1) \<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
@@ -380,7 +379,7 @@ lemma List_Item_expn[\<phi>expns]:
  \<open>p \<in> (x \<Ztypecolon> List_Item T) \<longleftrightarrow> (\<exists>v. p = [v] \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding List_Item_def \<phi>Type_def by simp
 
-lemma List_Item_inhabited[\<phi>reason_elim!, elim!]:
+lemma List_Item_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> List_Item T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -399,7 +398,7 @@ lemma [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> Empty_List) \<longleftrightarrow> p = []\<close>
   unfolding Empty_List_def \<phi>Type_def by simp
 
-lemma [\<phi>reason_elim!, elim!]:
+lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> Empty_List) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 
@@ -412,7 +411,7 @@ lemma \<phi>Optional_expn[\<phi>expns]:
   \<open>(x \<Ztypecolon> T ?\<^sub>\<phi> C) = (if C then x \<Ztypecolon> T else 1)\<close>
   unfolding \<phi>Type_def \<phi>Optional_def by simp
 
-lemma \<phi>Optional_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>Optional_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T ?\<^sub>\<phi> C) \<Longrightarrow> ((C \<Longrightarrow> Inhabited (x \<Ztypecolon> T)) \<Longrightarrow> Z) \<Longrightarrow> Z\<close>
   unfolding Inhabited_def by (cases C; clarsimp simp add: \<phi>expns)
 
@@ -456,7 +455,7 @@ lemma \<phi>MapAt_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> key \<^bold>\<rightarrow> T) \<longleftrightarrow> (\<exists>v. p = 1(key := v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>MapAt_def \<phi>Type_def by simp
 
-lemma [\<phi>reason_elim!, elim!]:
+lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> field \<^bold>\<rightarrow> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -527,7 +526,7 @@ lemma \<phi>MapAt_L_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) \<longleftrightarrow> (\<exists>v. p = push_map k v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def \<phi>MapAt_L_def by simp
 
-lemma \<phi>MapAt_L_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>MapAt_L_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -605,7 +604,7 @@ definition DownLift :: "('a, 'b) \<phi> \<Rightarrow> ('c \<Rightarrow> 'b) \<Ri
 lemma DownLift_expn[simp]: " p \<in> (x \<Ztypecolon> N <down-lift> g) \<longleftrightarrow> p \<in> (g x \<Ztypecolon> N) "
   unfolding DownLift_def \<phi>Type_def by simp
 
-lemma [elim!,\<phi>reason_elim!]:
+lemma [elim!,\<phi>inhabitance_rule]:
   "Inhabited (x \<Ztypecolon> N <down-lift> g) \<Longrightarrow> (Inhabited (g x \<Ztypecolon> N) \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -633,7 +632,7 @@ lemma UpLift_expn[simp]:
   " p \<in> (x \<Ztypecolon> N <up-lift> f) \<longleftrightarrow> (\<exists>y. (f y = x) \<and> p \<in> (y \<Ztypecolon> N))"
   unfolding UpLift_def \<phi>Type_def by auto
 
-lemma UpLift_inhabited[elim,\<phi>reason_elim]:
+lemma UpLift_inhabited[elim,\<phi>inhabitance_rule]:
   "Inhabited (x \<Ztypecolon> N <up-lift> f) \<Longrightarrow> (\<And>y. f y = x \<Longrightarrow> Inhabited (y \<Ztypecolon> N) \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
@@ -883,7 +882,7 @@ lemma [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> T <of-type> TY) \<longleftrightarrow> p \<in> (x \<Ztypecolon> T) \<and> p \<in> Well_Type TY\<close>
   unfolding Of_Type_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason_elim, elim!]:
+lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T <of-type> TY) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C \<close>
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
@@ -907,7 +906,7 @@ lemma [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> T <of-types> TYs) \<longleftrightarrow> p \<in> (x \<Ztypecolon> T) \<and> list_all2 (\<lambda>v t. v \<in> Well_Type t) p TYs\<close>
   unfolding Of_Types_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason_elim, elim!]:
+lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T <of-types> TYs) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C \<close>
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
@@ -945,7 +944,7 @@ lemma (in perm_transformer) [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>perm_transformer_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma \<phi>perm_transformer_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>perm_transformer_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>perm_transformer \<psi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
@@ -1036,7 +1035,7 @@ lemma \<phi>Share_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> n \<Znrres> T) \<longleftrightarrow> (\<exists>v. p = share n v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n )\<close>
   unfolding \<phi>Share_def \<phi>Type_def by simp
 
-lemma \<phi>Share_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>Share_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> n \<Znrres> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -1185,7 +1184,7 @@ lemma \<phi>Some_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Some T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def \<phi>Some_def by simp
 
-lemma \<phi>Some_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>Some_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Some T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -1352,7 +1351,7 @@ lemma Agreement_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> Agreement T) \<longleftrightarrow> (\<exists>v. p = Some (agree v) \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def Agreement_def by simp
 
-lemma Agreement_inhabited[\<phi>reason_elim!, elim!]:
+lemma Agreement_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> Agreement T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -1416,7 +1415,7 @@ lemma Nonsepable_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> Nonsepable T) \<longleftrightarrow> (\<exists>v. p = nonsepable v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def Nonsepable_def by blast
 
-lemma Nonsepable_inhabited[\<phi>reason_elim!, elim!]:
+lemma Nonsepable_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> Nonsepable T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -1474,7 +1473,7 @@ lemma \<phi>MayInit_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>MayInit TY T) \<longleftrightarrow> (p = uninitialized \<and> (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T)) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T <of-type> TY)))\<close>
   unfolding \<phi>Type_def \<phi>MayInit_def by (simp add: \<phi>expns, blast)
   
-lemma \<phi>MayInit_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>MayInit_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>MayInit TY T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)
 
@@ -1510,7 +1509,7 @@ lemma \<phi>Uninit_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Uninit) \<longleftrightarrow> p = uninitialized\<close>
   unfolding \<phi>Type_def \<phi>Uninit_def by simp
 
-lemma \<phi>Uninit_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>Uninit_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 

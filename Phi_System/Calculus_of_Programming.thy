@@ -373,7 +373,7 @@ lemma Val_expn [\<phi>expns]:
   \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
   unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma Val_inhabited [\<phi>reason_elim, elim!]:
+lemma Val_inhabited [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> Val val T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 

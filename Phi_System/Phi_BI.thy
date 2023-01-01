@@ -145,7 +145,7 @@ lemma Subjection_expn[\<phi>expns]:
   "p \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> p \<in> T \<and> P"
   unfolding Subjection_def by simp
 
-lemma Subjection_inhabited[elim!,\<phi>reason_elim!]:
+lemma Subjection_inhabited[elim!,\<phi>inhabitance_rule]:
   \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -193,7 +193,7 @@ notation ExSet (binder "\<exists>\<^sup>s" 10)
 
 lemma [\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
 
-lemma ExSet_inhabited[\<phi>reason_elim!, elim!]:
+lemma ExSet_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (ExSet S) \<Longrightarrow> (\<And>x. Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 

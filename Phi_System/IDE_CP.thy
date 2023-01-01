@@ -53,9 +53,9 @@ lemma [\<phi>programming_simps]:
 
 end
 
-declare set_mult_inhabited[\<phi>reason_elim!]
+declare set_mult_inhabited[\<phi>inhabitance_rule]
 
-lemma [\<phi>reason_elim!, elim!]:
+lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 subsubsection \<open>Syntax\<close>
@@ -73,6 +73,41 @@ definition \<open>Filter_Out_Free_Values (T::'a set) (T'::'a set) \<equiv> Truep
 
 consts assertion_simplification :: mode
 named_theorems assertion_simps
+
+subsubsection \<open>Finalization Rewrites\<close>
+
+consts procedure_simplification :: mode
+named_theorems procedure_simps
+
+declare proc_bind_SKIP[procedure_simps]
+  proc_bind_SKIP'[procedure_simps]
+  proc_bind_assoc[procedure_simps]
+  proc_bind_return_none[procedure_simps]
+
+\<phi>reasoner procedure_equivalent 1200 (\<open>Premise procedure_simplification ?P\<close>)
+  = (rule Premise_I; simp only: procedure_simps; fail)
+
+\<phi>reasoner procedure_simplification 1200
+    (\<open>?Q = ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification\<close>)
+  = ((simp only: procedure_simps)?, rule Conv_Action_Tag_I; fail)
+
+context \<phi>spec begin
+
+lemma "\<phi>__final_proc_rewrite__":
+  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>\<close>
+  unfolding Action_Tag_def by simp
+
+lemma "\<phi>__final_proc_rewrite__'":
+  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Action_Tag_def by simp
+
+end
 
 
 
@@ -208,7 +243,7 @@ text (in \<phi>spec)
   \<phi>-Processor `set_param` processes this antecedent.\<close>
 
 lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" unfolding ParamTag_def using TrueI .
-lemma [elim!,\<phi>reason_elim!]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" .
+lemma [elim!,\<phi>inhabitance_rule]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" .
 lemma [cong]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<longleftrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" \<comment> \<open>Disable simplification on parameters\<close> ..
 
 ML_file \<open>library/syntax/param.ML\<close>
@@ -266,7 +301,7 @@ text \<open>The \<^term>\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x\<
   The \<phi>-processor `set_label` processes the \<^term>\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x\<close> antecedent.\<close>
 
 lemma LabelTag: "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x" unfolding LabelTag_def ..
-lemma [elim!,\<phi>reason_elim!]: "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x \<Longrightarrow> C \<Longrightarrow> C" by auto
+lemma [elim!,\<phi>inhabitance_rule]: "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x \<Longrightarrow> C \<Longrightarrow> C" by auto
 
 
 paragraph \<open>Label Binding Objects\<close> (*depreciated*)
@@ -357,7 +392,7 @@ consts MODE_\<phi>EXPN :: mode \<comment> \<open>relating to named_theorems \<op
 
 abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>expn_Premise \<equiv> Premise MODE_\<phi>EXPN\<close>
 
-\<phi>reasoner \<phi>expn_Premise 10 (conclusion \<open><\<phi>expn> ?P\<close>)
+\<phi>reasoner \<phi>expn_Premise 10 (\<open><\<phi>expn> ?P\<close>)
   = (rule Premise_I; simp add: \<phi>expns)
 
 text \<open>Antecedent \<^prop>\<open><\<phi>expn> P\<close> indicates the reasoner solving the premise \<^prop>\<open>P\<close> using
@@ -374,7 +409,7 @@ lemma rename_abstraction:
   \<open>rename_abstraction name X X\<close>
   unfolding rename_abstraction_def ..
 
-\<phi>reasoner_ML rename_abstraction 1100 (conclusion "rename_abstraction TYPE(?'name) ?Y ?Y'") =
+\<phi>reasoner_ML rename_abstraction 1100 (\<open>rename_abstraction TYPE(?'name) ?Y ?Y'\<close>) =
 \<open>fn (ctxt, sequent) =>
   case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>rename_abstraction\<close>, _)
@@ -410,7 +445,7 @@ lemma [\<phi>reason 1200 for \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
 
 ML \<open>Name.variant "" Name.context\<close>
 
-\<phi>reasoner_ML lambda_abstraction 1100 (conclusion "lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
+\<phi>reasoner_ML lambda_abstraction 1100 ("lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
   let
     val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _))
       = NuHelp.leading_antecedent (Thm.prop_of sequent)
@@ -443,7 +478,7 @@ declare mult.assoc[symmetric, frame_var_rewrs]
 
 consts frame_var_rewrs :: mode
 
-\<phi>reasoner Subty_Simplify 2000 (conclusion \<open>Simplify frame_var_rewrs ?x ?y\<close>)
+\<phi>reasoner Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
   = ((simp only: frame_var_rewrs)?, rule Simplify_I)
 
 
@@ -493,7 +528,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   unfolding \<phi>IntroFrameVar'_def by blast
 
 
-\<phi>reasoner_ML \<phi>IntroFrameVar 1000 (conclusion "\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
+\<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
 \<open>fn (ctxt, sequent) =>
   let
     val (Const (\<^const_name>\<open>\<phi>spec.\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
@@ -505,7 +540,7 @@ lemma \<phi>IntroFrameVar'_Yes:
     else Seq.single (ctxt, Proof_Context.get_thm ctxt "local.\<phi>IntroFrameVar_Yes" RS sequent)
   end\<close>
 
-\<phi>reasoner_ML \<phi>IntroFrameVar' 1000 (conclusion "\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
+\<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
 \<open>fn (ctxt, sequent) =>
   let
     val (Const (\<^const_name>\<open>\<phi>spec.\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
@@ -661,7 +696,7 @@ paragraph \<open>Construction on Programming\<close>
 lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S1)) ?RET\<close>
 ]:
-  " Synthesis_Parse X X'
+  " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> SYNTHESIS X' v \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<r>Success
@@ -689,7 +724,7 @@ text \<open>On view shifting mode, the synthesis operation tries to find a view 
 lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?blk [?H] \<^bold>i\<^bold>s ?S1)) ?RET\<close>
 ]:
-  " Synthesis_Parse X X'
+  " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<r>Success
@@ -741,13 +776,13 @@ lemma [\<phi>reason 1200]:
 context \<phi>spec begin
 
 lemma [\<phi>reason 1210]:
-  \<open> Synthesis_Parse X' X
+  \<open> \<r>CALL Synthesis_Parse X' X
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS X ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS X ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Synthesis_by_def .
 
 lemma [\<phi>reason 1200]:
-  \<open> Synthesis_Parse X' X
+  \<open> \<r>CALL Synthesis_Parse X' X
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> SYNTHESIS X ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> X ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Synthesis_by_def Synthesis_def .
@@ -834,10 +869,10 @@ lemma \<phi>Application_Conv:
 
 ML_file \<open>library/application.ML\<close>
 
-\<phi>reasoner_ML \<phi>Application 2000 (conclusion \<open>PROP \<phi>Application (PROP ?App) (PROP ?State) (PROP ?Result)\<close>) =
+\<phi>reasoner_ML \<phi>Application 2000 (\<open>PROP \<phi>Application (PROP ?App) (PROP ?State) (PROP ?Result)\<close>) =
   \<open>NuApply.start_reasoning\<close>
 
-\<phi>reasoner_ML \<phi>Application_Success 2000 (conclusion \<open>PROP \<phi>Application_Success\<close>) =
+\<phi>reasoner_ML \<phi>Application_Success 2000 (\<open>PROP \<phi>Application_Success\<close>) =
   \<open>NuApply.success_application\<close>
 
 
@@ -1097,7 +1132,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
     using \<phi>apply_proc[OF \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _\<close>,
           OF \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>\<close>[THEN \<phi>frame[where R=R],
               THEN \<phi>CONSEQ[rotated 1, OF \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>,
-                OF view_shift_id, OF View_Shift_by_Implication[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
+                OF view_shift_id, OF view_shift_by_implication[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
                 simplified prems(1), unfolded \<open>E''' = E''\<close>, simplified prems(1)]]] .
   by (meson \<phi>apply_view_shift_P)
 
@@ -1125,11 +1160,11 @@ The reasoner works only when \<open>?A\<close> does not contain \<open>?f\<close
 \<close>
 
 lemma Simple_HO_Unification_I:
-  \<open> Premise procedure_simplification (f = f')
+  \<open> Premise procedure_simplification(f = f')
 \<Longrightarrow> Simple_HO_Unification f f'\<close>
   unfolding Simple_HO_Unification_def Premise_def by simp
 
-\<phi>reasoner_ML Simple_HO_Unification 1200 (conclusion \<open>Simple_HO_Unification ?f ?f'\<close>) = \<open>
+\<phi>reasoner_ML Simple_HO_Unification 1200 (\<open>Simple_HO_Unification ?f ?f'\<close>) = \<open>
 let
 
 fun inc_bound 0 X = X
@@ -1313,7 +1348,7 @@ lemma [\<phi>reason 2000]:
 paragraph \<open>Second way, by Synthesis\<close>
 
 lemma [\<phi>reason 1400]:
-  \<open> Synthesis_Parse action action'
+  \<open> \<r>CALL Synthesis_Parse action action'
 \<Longrightarrow> PROP Do_Action action' sequent result
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
@@ -1612,44 +1647,6 @@ consts action_shrink :: \<open>action_shrink_typ action\<close>
 lemma dup_\<phi>app:    \<open>PROP Call_Action action_dup\<close>    using Call_Action_I .
 lemma drop_\<phi>app:   \<open>PROP Call_Action action_drop\<close>   using Call_Action_I .
 lemma shrink_\<phi>app: \<open>PROP Call_Action action_shrink\<close> using Call_Action_I .
-
-subsection \<open>Misc.\<close>
-
-subsubsection \<open>Finalization Rewrites\<close>
-
-consts procedure_simplification :: mode
-named_theorems procedure_simps
-
-declare proc_bind_SKIP[procedure_simps]
-  proc_bind_SKIP'[procedure_simps]
-  proc_bind_assoc[procedure_simps]
-  proc_bind_return_none[procedure_simps]
-
-\<phi>reasoner procedure_equivalent 1200 (conclusion \<open>Premise procedure_simplification ?P\<close>)
-  = (rule Premise_I; simp only: procedure_simps; fail)
-
-\<phi>reasoner procedure_simplification 1200
-    (conclusion \<open>?Q = ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification\<close>)
-  = ((simp only: procedure_simps)?, rule Conv_Action_Tag_I; fail)
-
-context \<phi>spec begin
-
-lemma "\<phi>__final_proc_rewrite__":
-  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>\<close>
-  unfolding Action_Tag_def by simp
-
-lemma "\<phi>__final_proc_rewrite__'":
-  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Action_Tag_def by simp
-
-end
-
 
 
 

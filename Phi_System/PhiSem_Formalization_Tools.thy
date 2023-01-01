@@ -30,9 +30,9 @@ subsection \<open>Reasoning for Elementary Constructions\<close>
 
 context \<phi>empty begin
 
-declare \<phi>SEQ[\<phi>reason!]
+declare \<phi>SEQ[intro!]
 
-lemma \<phi>M_assert[\<phi>reason! for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_assert ?P \<lbrace> ?A \<longmapsto> ?B \<rbrace>\<close>]:
+lemma \<phi>M_assert[intro!]:
   \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace>\<close>
   unfolding \<phi>Procedure_def \<phi>M_assert_def Return_def det_lift_def
   by (clarsimp simp add: \<phi>expns Inhabited_def, blast)
@@ -45,7 +45,7 @@ lemma \<phi>M_assert':
   \<open>P \<Longrightarrow> Q (F args) \<Longrightarrow> Q ((\<phi>M_assert P \<ggreater> F) args)\<close>
   unfolding \<phi>M_assert_def bind_def Return_def det_lift_def by simp
 
-lemma \<phi>M_assume[\<phi>reason!]:
+lemma \<phi>M_assume[intro!]:
   \<open>(P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def \<phi>M_assume_def bind_def Return_def det_lift_def
   by clarsimp
@@ -53,42 +53,41 @@ lemma \<phi>M_assume[\<phi>reason!]:
 lemma \<phi>M_tail_left:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
 lemma \<phi>M_tail_right: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1 \<heavy_comma> Y v \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
 lemma \<phi>M_tail_right_right: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. Y v\<heavy_comma> 1 \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
-lemma \<phi>M_detail_left[\<phi>reason 2200000]:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace>\<close> by simp
-lemma \<phi>M_detail_right[\<phi>reason 2200000]: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1\<heavy_comma> Y v \<rbrace>\<close> by simp
+lemma \<phi>M_detail_left[intro!]:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace>\<close> by simp
+lemma \<phi>M_detail_right[intro!]: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1\<heavy_comma> Y v \<rbrace>\<close> by simp
 
 
-lemma \<phi>M_getV_raw[\<phi>reason!]:
+lemma \<phi>M_getV_raw[intro!]:
    \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_raw VDT_dest (sem_value v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem_value v) A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_raw_def Premise_def
   by (clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
 
-declare \<phi>M_getV_raw[where X=1, simplified, \<phi>reason!]
+declare \<phi>M_getV_raw[where X=1, simplified, intro!]
 
-lemma \<phi>M_getV[\<phi>reason!]:
+lemma \<phi>M_getV[intro!]:
    \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> <\<phi>expn> v \<in> Well_Type TY)
-\<Longrightarrow> \<r>Cut
 \<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest (sem_value v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem_value v) A \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_getV_def Premise_def
   by (clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
 
-declare \<phi>M_getV[where X=1, simplified, \<phi>reason!]
+declare \<phi>M_getV[where X=1, simplified, intro!]
 
-lemma \<phi>M_caseV[\<phi>reason!]:
+lemma \<phi>M_caseV[intro!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F va vb \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_caseV F (\<phi>V_pair va vb) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_caseV_def \<phi>V_pair_def by simp
 
-lemma \<phi>M_Success[\<phi>reason!]:
+lemma \<phi>M_Success[intro!]:
   \<open> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem_value v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: \<phi>expns)
 
-declare \<phi>M_Success[where X=1, simplified, \<phi>reason!]
+declare \<phi>M_Success[where X=1, simplified, intro!]
 
-lemma \<phi>M_Success'[\<phi>reason 1100000 for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> ?X \<longmapsto> ?X' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>\<close>]:
+lemma \<phi>M_Success'[intro!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
   unfolding Return_def \<phi>Procedure_def det_lift_def by (clarsimp simp add: \<phi>expns)
 
@@ -178,7 +177,7 @@ lemma (in \<phi>spec) \<phi>Procedure_\<phi>Res_Spec:
 
 paragraph \<open>Weakest Precondition Transformer for \<phi>Res_Spec\<close>
 
-lemma (in \<phi>resource_sem) \<phi>M_RS_WP_SEQ[\<phi>reason!]:
+lemma (in \<phi>resource_sem) \<phi>M_RS_WP_SEQ[intro!]:
   \<open> F res \<subseteq> \<S> P E
 \<Longrightarrow> (\<And>ret res. res \<in> P ret \<Longrightarrow> G ret res \<subseteq> \<S> Q E)
 \<Longrightarrow> (F \<bind> G) res \<subseteq> \<S> Q E\<close>
@@ -279,7 +278,7 @@ lemma \<phi>_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = mk v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def \<phi>_def by simp
 
-lemma \<phi>_inhabited[\<phi>reason_elim!, elim!]:
+lemma \<phi>_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -299,11 +298,6 @@ lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z \<^
 
 lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>]:
   \<open>(x \<Ztypecolon> \<phi> \<circle>) = 1 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>_\<phi>None by simp
-
-
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> \<phi>None_simps\<close>]:
-  \<open>(x \<Ztypecolon> \<phi> \<circle>) = (() \<Ztypecolon> \<circle>) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> \<phi>None_simps\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None by simp
 
 
@@ -1265,7 +1259,7 @@ text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exce
 
 definition \<open>throw raw = det_lift (Exception raw)\<close>
 
-lemma (in \<phi>spec) throw_\<phi>app[\<phi>reason! for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c throw ?excep \<lbrace> ?X \<longmapsto> ?Any \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?X' \<rbrace>\<close>]:
+lemma (in \<phi>spec) throw_\<phi>app[intro!]:
   \<open> (\<And>v. PROP Filter_Out_Free_Values (X v) (X' v))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<rbrace>\<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Filter_Out_Free_Values_def Imply_def
@@ -1326,7 +1320,7 @@ lemma Union_the_Same_Or_Arbitrary_when_Var__Arbitrary:
   unfolding Union_the_Same_Or_Arbitrary_when_Var_def by blast
 
 \<phi>reasoner_ML Union_the_Same_Or_Arbitrary_when_Var 1200
-  (conclusion \<open>Union_the_Same_Or_Arbitrary_when_Var ?Z ?X ?Y\<close>) = \<open>
+  (\<open>Union_the_Same_Or_Arbitrary_when_Var ?Z ?X ?Y\<close>) = \<open>
 fn (ctxt,sequent) =>
   let
     val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Union_the_Same_Or_Arbitrary_when_Var\<close>, _)
@@ -1385,7 +1379,7 @@ definition (in resource)
     \<phi>R_get_res :: \<open>('T \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc) \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
   where \<open>\<phi>R_get_res F = (\<lambda>res. F (get res) res)\<close>
 
-lemma (in resource) \<phi>R_get_res[\<phi>reason!]:
+lemma (in resource) \<phi>R_get_res[intro!]:
   \<open> get res = v
 \<Longrightarrow> F v res \<subseteq> \<S> Y E
 \<Longrightarrow> \<phi>R_get_res F res \<subseteq> \<S> Y E\<close>
@@ -1410,7 +1404,7 @@ definition (in partial_map_resource)
   where \<open>\<phi>R_get_res_entry k F = \<phi>R_get_res (\<lambda>res.
     case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
-lemma (in partial_map_resource) \<phi>R_get_res_entry[\<phi>reason!]:
+lemma (in partial_map_resource) \<phi>R_get_res_entry[intro!]:
   \<open> get res k = Some v
 \<Longrightarrow> F v res \<subseteq> \<S> Y E
 \<Longrightarrow> \<phi>R_get_res_entry k F res \<subseteq> \<S> Y E\<close>
@@ -1420,7 +1414,7 @@ subparagraph \<open>share_fiction_for_partial_mapping_resource\<close>
 
 
 
-lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[\<phi>reason!]:
+lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
       \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
@@ -1438,13 +1432,13 @@ definition (in partial_map_resource2)
   where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
     case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
-lemma (in partial_map_resource2) \<phi>R_get_res_entry[\<phi>reason!]:
+lemma (in partial_map_resource2) \<phi>R_get_res_entry[intro!]:
   \<open> get res k k2 = Some v
 \<Longrightarrow> F v res \<subseteq> \<S> Y E
 \<Longrightarrow> \<phi>R_get_res_entry k k2 F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
-lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[\<phi>reason!]:
+lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
       \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
@@ -1455,7 +1449,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[\<p
   apply simp
   by blast
 
-lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry1[\<phi>reason!]:
+lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry1[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
       \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
@@ -1497,7 +1491,7 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_set_res":
 
 paragraph \<open>partial_map_resource2\<close>
 
-lemma (in partial_map_resource2) \<phi>R_set_res[\<phi>reason!]:
+lemma (in partial_map_resource2) \<phi>R_set_res[intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in> Valid)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := 1(k2 \<mapsto> any)))}
@@ -1524,7 +1518,7 @@ subsubsection \<open>Dispose\<close>
 
 paragraph \<open>partial_map_resource\<close>
 
-lemma (in partial_map_resource) \<phi>R_dispose_res[\<phi>reason!]:
+lemma (in partial_map_resource) \<phi>R_dispose_res[intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k \<mapsto> any))})
@@ -1546,7 +1540,7 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_dispose_res":
 
 paragraph \<open>partial_map_resource2\<close>
 
-lemma (in partial_map_resource2) \<phi>R_dispose_res[\<phi>reason!]:
+lemma (in partial_map_resource2) \<phi>R_dispose_res[intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in> Valid)
 \<Longrightarrow> dom (get res k) = dom any
 \<Longrightarrow> P (get res)
@@ -1591,7 +1585,7 @@ definition (in mapping_resource)
         \<ggreater> F k
 )\<close>
 
-lemma (in mapping_resource) \<phi>R_set_res_new[\<phi>reason!]:
+lemma (in mapping_resource) \<phi>R_set_res_new[intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> m(k := u) \<in> Valid)
 \<Longrightarrow> k \<notin> dom1 (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
@@ -1600,7 +1594,7 @@ lemma (in mapping_resource) \<phi>R_set_res_new[\<phi>reason!]:
   unfolding \<phi>R_set_res_def
   by (simp add: \<phi>expns "__new_rule__" \<phi>Res_Spec_mult_homo del: set_mult_expn)
 
-lemma (in mapping_resource) \<phi>R_allocate_res_entry[\<phi>reason!]:
+lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
 \<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in> Valid \<longrightarrow> m(k := init) \<in> Valid)
 \<Longrightarrow> (\<And>k res. res \<in> \<phi>Res_Spec (R * {mk (1(k := init))} \<^bold>s\<^bold>u\<^bold>b\<^bold>j P k)

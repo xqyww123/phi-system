@@ -21,7 +21,7 @@ lemma Currency_expn[\<phi>expns]:
   unfolding Currency_def
   ..
 
-lemma [\<phi>reason_elim!, elim!]:
+lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> Currency) \<Longrightarrow> (x \<le> Total_Supply \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def
   by (simp add: \<phi>expns)

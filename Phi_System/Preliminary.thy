@@ -12,6 +12,8 @@ subsection \<open>Named Theorems\<close>
 named_theorems \<phi>expns \<open>Semantics Expansions, used to expand assertions semantically.\<close>
 and \<phi>inhabited \<open>Inhabitance lemmas, of form \<open>Inhabited P \<longleftrightarrow> Expansion\<close>\<close>
 and \<phi>programming_simps \<open>Simplification rules used in the deductive programming\<close>
+and \<phi>inhabitance_rule \<open>General Elimination rules for extracting pure facts from
+  an inhabited BI assertion \<open>Inhabited assertion\<close>\<close>
 
 declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 

@@ -176,7 +176,7 @@ lemma (in \<phi>min) op_not[\<phi>overload \<not>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not raw \<lbrace> x \<Ztypecolon> Val raw \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
   including unfold_Big
-  by (cases raw, simp, \<phi>reason)
+  by (cases raw, simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 
 proc [
@@ -193,7 +193,8 @@ paragraph \<open>And\<close>
 lemma op_and[\<phi>overload \<and>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> Val va \<bool>\<heavy_comma> b \<Ztypecolon> Val vb \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l a \<and> b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def including unfold_Big
-  by (cases va; cases vb; simp, \<phi>reason)
+  by (cases va; cases vb; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns)
 
 proc [
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x \<and> ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -211,7 +212,8 @@ paragraph \<open>Or\<close>
 lemma op_or[\<phi>overload \<or>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> Val va \<bool>\<heavy_comma> b \<Ztypecolon> Val vb \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l a \<or> b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def including unfold_Big
-  by (cases va; cases vb, simp, \<phi>reason)
+  by(cases va; cases vb, simp, rule, rule, simp add: \<phi>expns, rule,
+      simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 proc [
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x \<or> ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -230,7 +232,7 @@ subsubsection \<open>Constant Integer\<close>
 lemma op_const_int_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2 ^ Big b \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_const_int_def Premise_def Synthesis_def
-  by \<phi>reason
+  by (rule, simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200
     for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
@@ -296,7 +298,8 @@ lemma op_add[\<phi>overload +]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2 ^ Big b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_add_def Premise_def including unfold_Big
-  by (cases vx; cases vy; simp, \<phi>reason)
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
+      simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 proc [
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x + ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -314,7 +317,8 @@ proc [
 lemma op_add_mod:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (x + y) mod 2 ^ Big b \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_add_def including unfold_Big
-  by (cases vx; cases vy; simp, \<phi>reason)
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
+      simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 
 
@@ -324,8 +328,8 @@ lemma (in \<phi>min) op_sub[\<phi>overload -]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_sub_def Premise_def including unfold_Big
-  apply (cases vx; cases vy; simp, \<phi>reason)
-  apply (simp add: \<phi>expns)
+  apply (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
   by (metis Nat.add_diff_assoc2 add.commute less_imp_diff_less mod_add_self2 mod_less)
 
 proc [
@@ -347,7 +351,8 @@ lemma op_omul[\<phi>overload *]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * y < 2^b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_umul b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x * y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_umul_def Premise_def including unfold_Big
-  by (cases vx; cases vy; simp, \<phi>reason)
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 proc [
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x * ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -368,7 +373,8 @@ paragraph \<open>Division\<close>
 lemma op_udiv[\<phi>overload /]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_udiv_def Premise_def
-  apply (cases vx; cases vy; simp, \<phi>reason) apply (simp add: \<phi>expns)
+  apply (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns)
   using div_le_dividend le_less_trans by blast
 
 proc [
@@ -387,14 +393,16 @@ paragraph \<open>Shift\<close>
 lemma op_lshr_nat_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lshr b1 b2 (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> Val raw1 \<nat>[b1] \<heavy_comma> y \<Ztypecolon> Val raw2 \<nat>[b2] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div 2 ^ Big y \<Ztypecolon> \<nat>[b1] \<rbrace>\<close>
   unfolding op_lshr_def
-  apply (cases raw1; cases raw2; simp; \<phi>reason; simp add: \<phi>expns Big_def)
+  apply (cases raw1; cases raw2; simp; rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns Big_def)
   using div_le_dividend le_less_trans by blast
 
 lemma op_lshl_nat_\<phi>app:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * 2 ^ Big y < 2 ^ Big b1
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lshl b1 b2 (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> Val raw1 \<nat>[b1] \<heavy_comma> y \<Ztypecolon> Val raw2 \<nat>[b2] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x * 2 ^ Big y \<Ztypecolon> \<nat>[b1] \<rbrace>\<close>
   unfolding op_lshl_def
-  by (cases raw1; cases raw2; simp; \<phi>reason; simp add: \<phi>expns Big_def)
+  by (cases raw1; cases raw2; simp; rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns Big_def)
 
 proc [
     \<phi>reason 1300 for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x LSHR ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -425,7 +433,8 @@ paragraph \<open>Less Than\<close>
 lemma op_lt[\<phi>overload <]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt b (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> Val rawx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val rawy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_lt_def
-  by (cases rawx; cases rawy; simp, \<phi>reason)
+  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns, rule,
+      simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 
 proc [
@@ -459,7 +468,8 @@ paragraph \<open>Less Equal\<close>
 lemma op_le[\<phi>overload \<le>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le b (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> Val rawx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val rawy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_le_def
-  by (cases rawx; cases rawy; simp, \<phi>reason)
+  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 proc [
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x \<le> ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -497,12 +507,11 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e can_eq a b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal TY (\<phi>V_pair rawb rawa) \<lbrace> a \<Ztypecolon> Val rawa T\<heavy_comma> b \<Ztypecolon> Val rawb T \<longmapsto> \<^bold>v\<^bold>a\<^bold>l eq a b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_equal_def
-  apply (cases rawa; cases rawb; simp, \<phi>reason)
-    apply (simp add: \<phi>SemType_def subset_iff Premise_def, \<phi>reason)
-    apply (simp add: \<phi>SemType_def subset_iff Premise_def, \<phi>reason)
+  apply (cases rawa; cases rawb; simp, rule, rule)
+    apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
+    apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
    apply (unfold \<phi>Equal_def Premise_def, simp)
-  apply (rule \<phi>M_Success')
-  by (\<phi>reason)
+  by (rule \<phi>M_Success', rule, simp add: \<phi>expns)
 
 proc \<phi>__synthesis_eq[
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x = ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -517,9 +526,7 @@ proc \<phi>__synthesis_eq[
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 F2
-  note [[\<phi>trace_reasoning]]
-  ;; = \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
 
 
 
@@ -537,7 +544,9 @@ lemma op_sel_\<phi>app:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sel TY (\<phi>V_pair rawc (\<phi>V_pair rawb rawa))
       \<lbrace> a \<Ztypecolon> Val rawa A\<heavy_comma> b \<Ztypecolon> Val rawb B\<heavy_comma> c \<Ztypecolon> Val rawc \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (if c then a else b) \<Ztypecolon> (if c then A else B) \<rbrace>\<close>
   unfolding op_sel_def including unfold_Big
-  by (cases rawc; cases rawb; cases rawa; cases c; simp add: \<phi>SemType_def subset_iff, \<phi>reason)
+  by (cases rawc; cases rawb; cases rawa; cases c; simp add: \<phi>SemType_def subset_iff,
+      rule, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns)
 
 lemma branch_\<phi>app:
   \<open> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e   C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T \<rbrace>)
@@ -546,7 +555,7 @@ lemma branch_\<phi>app:
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if br\<^sub>T br\<^sub>F rawc \<lbrace> X\<heavy_comma> C \<Ztypecolon> Val rawc \<bool> \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. (E\<^sub>T e \<^bold>s\<^bold>u\<^bold>b\<^bold>j C) + (E\<^sub>F e \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> C) \<rbrace>\<close>
   unfolding op_if_def Premise_def Action_Tag_def including unfold_Big
-  apply (cases rawc; cases C; simp; \<phi>reason; simp add: \<phi>expns plus_fun_def)
+  apply (cases rawc; cases C; simp; rule; simp add: \<phi>expns)
   using \<phi>CONSEQ view_shift_id by blast+
 
 

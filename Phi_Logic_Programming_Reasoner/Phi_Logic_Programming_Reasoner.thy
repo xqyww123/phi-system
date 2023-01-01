@@ -152,17 +152,15 @@ different pruning optimization strategy.
   assertive (in the sense that no alternative search branch will be attempted).
 
 \<^enum> When the highest priority of the candidates $\geq$ 100,000,
-  this candidate becomes a \<^emph>\<open>global cut\<close>. No backtrack will be propagated at the global cut.
-  Global cut has a semantics of that certain milestone in the reasoning has been achieved, and
-  all the later reasoning should start from this point, and forget all the previous search history
-  (reset the root of the search tree to the global cut).
-  Once the later reasoning fails, the engine returns this global cut.
+  this candidate becomes a \<^emph>\<open>global cut\<close>, which forgets all the previous search history.
+  No backtrack will be propagated to the past before the global cut so it improves the performance.
+  Once the reasoning of the branch of the cut fails, the whole reasoning fails.
 
 Reasoners of priority $\geq$ 1000 are named \<^emph>\<open>assertive reasoners\<close> and others are
 \<^emph>\<open>submissive reasoners\<close>.
 
-\<^emph>\<open>Remark\<close>: a local cut reasoner can throw \<^verbatim>\<open>Global_Cut state\<close> to trigger a global cut with the
-  reasoning \<^verbatim>\<open>state\<close>.
+\<^emph>\<open>Remark\<close>: a local cut reasoner can throw \<^verbatim>\<open>Global_Cut s\<close> to trigger a global cut with the
+  reasoning state \<^verbatim>\<open>s\<close>.
 
 \<close>
 
@@ -171,7 +169,8 @@ paragraph \<open>Termination\<close>
 
 text \<open>The reasoning terminates when:
 
-\<^item> Any reasoning state has no antecedent any more. This reasoning state is returned.
+\<^item> Any reasoning state has no antecedent any more or all its designated leading
+    antecedents are solved. This reasoning state is returned.
 \<^item> Any reasoner throws \<^verbatim>\<open>Success result\<close>.
 \<^item> All accessible search paths are traversed.
 \<close>
@@ -191,9 +190,10 @@ paragraph \<open>Output\<close>
 
 text \<open>The output reasoning state can be:
 
-\<^item> The first traversed reasoning state that has no antecedent.
+\<^item> The first traversed reasoning state that has no antecedent or all the designated leading
+    antecedents are solved.
 \<^item> The \<^verbatim>\<open>result\<close> threw out by \<^verbatim>\<open>Success result\<close>.
-\<^item> The latest global cut.
+
 \<close>
 
 text \<open>If none of the above are reached during a reasoning process, the process returns nothing
@@ -212,21 +212,17 @@ text \<open>\xphi-LPR can be augmented by user reasoners.
 The system predefines a resolution based reasoner using introducing rules and elimination rules.
 Other arbitrary reasoners can also be built from tactics or ML code.\<close>
 
-subsection \<open>Introduction Rule \& Elimination Rule\<close>
+subsection \<open>Reasoning by Rules\<close>
 
-text \<open>Two attributes are provided to provide introduction reasoning rules and elimination
-  reasoning rules respectively.
-Introduction rules are used to deduce the conclusion of an antecedent, and
-elimination rules are used to simplify a condition of the antecedent.
+text \<open>Attributes @{attribute_def \<phi>reason} is provided for introducing resolution rules.
 
   \begin{matharray}{rcl}
-    @{attribute_def \<phi>reason} & : & \<open>attribute\<close> \\
-    @{attribute_def \<phi>reason_elim} & : & \<open>attribute\<close> \\
+    @{attribute_def \<phi>reason} & : & \<open>attribute\<close>
   \end{matharray}
 
   \small
   \<^rail>\<open>
-    (@@{attribute \<phi>reason} | @@{attribute \<phi>reason_elim}) (@{syntax add_rule} | 'add' @{syntax add_rule} | 'del')
+    @@{attribute \<phi>reason} (@{syntax add_rule} | 'add' @{syntax add_rule} | 'del')
     ;
     @{syntax_def add_rule}: @{syntax priority}?
     ('for' @{syntax patterns})? ('except' @{syntax blacklist})?
@@ -239,11 +235,9 @@ elimination rules are used to simplify a condition of the antecedent.
   \<close>
   \normalsize
 
-\<^descr> @{attribute \<phi>reason}~\<^verbatim>\<open>add\<close> declares introduction rules, and
-  @{attribute \<phi>reason_elim}~\<^verbatim>\<open>add\<close> declares elimination rules.
-  @{attribute \<phi>reason}~\<^verbatim>\<open>del\<close> and @{attribute \<phi>reason_elim}~\<^verbatim>\<open>del\<close> remove the introduction rule
-  and the elimination rule respectively.
-  If no keyword \<^verbatim>\<open>add\<close> or \<^verbatim>\<open>del\<close> is given, by default the attributes declare new rules.
+\<^descr> @{attribute \<phi>reason}~\<^verbatim>\<open>add\<close> declares reasoning rules used in \<phi>-LPR.
+  @{attribute \<phi>reason}~\<^verbatim>\<open>del\<close> removes the reasoning rule.
+  If no keyword \<^verbatim>\<open>add\<close> or \<^verbatim>\<open>del\<close> is given, \<^verbatim>\<open>add\<close> is the default option.
 
 \<^descr> The @{syntax patterns} and @{syntax blacklist} are that described in \cref{sec:patterns}.
   For introduction rules, the patterns and the blacklist match only the conclusion of the
@@ -258,18 +252,15 @@ elimination rules are used to simplify a condition of the antecedent.
   If the priority is not given explicitly, by default it is 100.
 \<close>
 
-text \<open>  A global cut rule represents the rule is safe and any further reasoning should start from
-  the result of the global cut rule, which means it never backtracks.
-Global cuts are often seen in elimination rules.
-\<close>
-
 text \<open>\<^emph>\<open>Remark\<close>: Rules of priority $\geq$ 1000 are named \<^emph>\<open>assertive rules\<close> and others are
 \<^emph>\<open>submissive rules\<close>.\<close>
 
-text \<open>\<^emph>\<open>Remark\<close>: The concise attribute expression [[\<phi>reason]] and [[\<phi>reason_elim]] are valid
-  and denote for [[\<phi>reason add]] and [[\<phi>reason_elim add]]. However, they are not recommended
-  because of technical reasons that the attribute cannot get the position of the rule, and
-  therefore the position cannot be displayed in the debug printing.\<close>
+text \<open>\<^emph>\<open>Remark\<close>: Attribute @{attribute \<phi>reason} can be used without any argument.
+  \<^verbatim>\<open>[[\<phi>reason]]\<close> denotes \<^verbatim>\<open>[[\<phi>reason add]]\<close> exactly.
+  However, the usage of empty arguments is not recommended
+  due to technical reasons that in this case of empty argument
+  the attribute cannot get the position of the associated reasoning rule, and
+  this position is displayed in debug printing.\<close>
 
 paragraph \<open>Example\<close>
 
@@ -294,7 +285,7 @@ whereas previously the condition is only determined on the patterns and the blac
 not expressive enough.
 \<close>
 
-subsection \<open>Reasoners by Methods and ML code\<close>
+subsection \<open>Reasoners by Isar Methods and ML code\<close>
 
 text \<open>
 There are two commands defining reasoners, respectively by Eisbach expression and by ML code.
@@ -309,7 +300,7 @@ There are two commands defining reasoners, respectively by Eisbach expression an
     ;
     @@{command \<phi>reasoner_ML} @{syntax name} @{syntax priority} @{syntax patterns'} '=' @{syntax ML_code}
     ;
-    @{syntax_def patterns'}: '(' (('conclusion' @{syntax term} | 'premises' @{syntax term}) + '\<bar>') ')'
+    @{syntax_def patterns'}: '(' (@{syntax term} + '\<bar>') ')'
   \<close>
 
 \<^descr> @{command \<phi>reasoner} defines a reasoner using an Eisabach expression. The Eisabach expression
@@ -318,9 +309,6 @@ There are two commands defining reasoners, respectively by Eisbach expression an
 
 \<^descr> @{command \<phi>reasoner_ML} defines a reasoner from ML code. The given code should be a ML function
   of type \<^verbatim>\<open>context_state -> context_state Seq.seq\<close>, i.e., a contextual tactic.
-
-\<^descr> Pattern \<^verbatim>\<open>conclusion\<close>~\<open>term\<close> match the conclusion of an antecedent and \<^verbatim>\<open>premises\<close>~\<open>term\<close> match
-  conditions of an antecedent.
 
 \<close>
 
@@ -504,7 +492,7 @@ definition Matches :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> wher
 
 lemma Matches_I: \<open>Matches pattern term\<close> unfolding Matches_def ..
 
-\<phi>reasoner_ML Matches 2000 (conclusion \<open>Matches ?pattern ?term\<close>) =
+\<phi>reasoner_ML Matches 2000 (\<open>Matches ?pattern ?term\<close>) =
   \<open>fn (ctxt, sequent) =>
     let
       val (\<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Matches\<close>,_) $ pattern $ term))
@@ -517,7 +505,7 @@ lemma Matches_I: \<open>Matches pattern term\<close> unfolding Matches_def ..
 
 lemma NO_MATCH_I: "NO_MATCH A B" unfolding NO_MATCH_def ..
 
-\<phi>reasoner_ML NO_MATCH 0 (conclusion "NO_MATCH ?A ?B") = \<open>
+\<phi>reasoner_ML NO_MATCH 0 ("NO_MATCH ?A ?B") = \<open>
   fn (ctxt,th) =>
   let
     val (\<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>NO_MATCH\<close>, _) $ a $ b)) = Thm.major_prem_of th
@@ -533,8 +521,7 @@ subsection \<open>Cut\<close>
 
 text \<open>The cuts have been introduced in \cref{sec:cut}.
 
-Antecedent \<open>\<r>Cut\<close> triggers a global cut marking the reasoning state a milestone and disposing
-all previous search history (cannot backtrack beyond the state).
+Antecedent \<open>\<r>Cut\<close> triggers a global cut.
 \<close>
 
 definition \<r>Cut :: bool where \<open>\<r>Cut = True\<close>
@@ -547,7 +534,7 @@ the result.\<close>
 definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
 lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
 
-\<phi>reasoner_ML \<r>Success 10000 (conclusion \<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
   raise Nu_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
 
 text \<open>\<open>\<r>Feasible\<close> has been introduced in \cref{sec:rFeasible}. The following rules relate
@@ -555,7 +542,7 @@ to the internal implementation. We refer interesting readers to \<^file>\<open>l
 
 lemma \<r>Feasible_I: \<open>\<r>Feasible\<close> unfolding \<r>Feasible_def ..
 
-\<phi>reasoner_ML \<r>Feasible 10000 (conclusion \<open>\<r>Feasible\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML \<r>Feasible 10000 (\<open>\<r>Feasible\<close>) = \<open>fn (ctxt,sequent) =>
   raise Nu_Reasoner.Success (ctxt, @{thm \<r>Feasible_I} RS sequent)\<close>
 
 
@@ -655,7 +642,7 @@ lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
   unfolding Premise_def ..
 
 
-\<phi>reasoner Simp_Premise 10 (conclusion \<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m ?P\<close>)
+\<phi>reasoner Simp_Premise 10 (\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m ?P\<close>)
   = (rule Premise_I; simp; fail)
 
 lemma contract_obligations:
@@ -680,9 +667,68 @@ named_theorems useful \<open>theorems to be inserted in the automatic proving,
 ML_file \<open>library/PLPR_Syntax.ML\<close>
 ML_file "library/reasoners.ML"
 
-\<phi>reasoner_ML Normal_Premise 10 (conclusion \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P\<close> | conclusion \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P\<close>)
+\<phi>reasoner_ML Normal_Premise 10 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P\<close> | \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P\<close>)
   = \<open>Nu_Reasoners.wrap Nu_Reasoners.defer_obligation_tac\<close>
 
+
+subsection \<open>Reasoning Frame\<close>
+
+definition \<open>\<r>BEGIN \<longleftrightarrow> True\<close>
+definition \<open>\<r>END \<longleftrightarrow> True\<close>
+
+text \<open>Antecedents \<^prop>\<open>\<r>BEGIN\<close> and \<^prop>\<open>\<r>END\<close> conform a nested reasoning scope
+resembling a subroutine for specific reasoning tasks or problems.
+\[ \<open>\<dots> \<Longrightarrow> \<r>BEGIN \<Longrightarrow> Nested \<Longrightarrow> Reasoning \<Longrightarrow> \<r>END \<Longrightarrow> \<dots>\<close> \]
+The scoped antecedents should be regarded as a \<^emph>\<open>unit antecedent\<close>
+invoking a nested \<phi>-LPR reasoning process and returning \<^emph>\<open>only\<close> the first reached solution (
+just as the behaviour of \<phi>-LPR engine).
+During backtracking, search branches before the unit will be backtracked but sub-optimal solutions
+of the unit are not backtracked.
+In addition, cut is confined among the search paths in the scope as a unit.
+Because of the cut and the reduced backtrack behavior, the performance is improved.
+
+Sometimes a cut is admissible (green) as an expected behavior among several rules and reasoners
+which constitute a loosely-gathered module for a specific problem.
+However the cut is still not safe to be used because an external rule using the reasoning module
+may demand the behavior of backtracking but the cut inside the module prevents
+backtracks in the external rule.
+In this case, the reasoning scope is helpful to wrap the loosely-gathered module to be confined
+by closing side effects like cuts.
+
+Specifically, any search path that reaches \<^prop>\<open>\<r>BEGIN\<close> opens a new \<^emph>\<open>frame\<close> namely a space
+of search paths.
+The sub-searches continuing the path and before reaching
+the paired \<^prop>\<open>\<r>END\<close> are in this frame.
+As \<phi>-LPR works in BFS, a frame can contain another frame just if the search in the frame
+encounters another \<^prop>\<open>\<r>BEGIN\<close>.
+\[ \<open>\<dots> \<Longrightarrow> \<r>BEGIN \<Longrightarrow> A\<^sub>1 \<Longrightarrow> \<r>BEGIN \<Longrightarrow> A\<^sub>2 \<Longrightarrow> \<r>END \<Longrightarrow> A\<^sub>3 \<Longrightarrow> \<r>END \<Longrightarrow> \<dots>\<close> \]
+Once any search path encounters a \<^prop>\<open>\<r>END\<close>, the innermost frame is closed and the sequent of the
+search path is returned with dropping all other branches in the frame.
+The mechanism checks whether all \<^prop>\<open>\<r>BEGIN\<close> and \<^prop>\<open>\<r>END\<close> are paired.
+
+Any global cut cuts all and only all search branches in the innermost frame to which the cut
+belongs. \<^prop>\<open>\<r>Success\<close> is prohibited in the nested scope because we do not know how to process
+the remain antecedents after the \<^prop>\<open>\<r>Success\<close> and how to return them into the outer scope.
+\<close>
+
+definition \<r>Call_Frame :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CALL _" [3] 2)
+  where \<open>\<r>Call_Frame P \<equiv> PROP P\<close>
+  \<comment> \<open>Call the antecedent \<^prop>\<open>P\<close> in a frame\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> \<r>BEGIN
+\<Longrightarrow> PROP P
+\<Longrightarrow> \<r>END
+\<Longrightarrow> \<r>CALL PROP P\<close>
+  unfolding \<r>Call_Frame_def .
+
+lemma \<r>BEGIN_I: \<open>\<r>BEGIN\<close> unfolding \<r>BEGIN_def ..
+lemma \<r>END_I: \<open>\<r>END\<close> unfolding \<r>END_def ..
+
+ML_file \<open>library/nested.ML\<close>
+
+\<phi>reasoner_ML \<r>BEGIN 1000 (\<open>\<r>BEGIN\<close>) = \<open>PLPR_Nested_Reasoning.enter_scope\<close>
+\<phi>reasoner_ML \<r>END 1000 (\<open>\<r>END\<close>) = \<open>PLPR_Nested_Reasoning.exit_scope\<close>
 
 
 subsection \<open>Pruning\<close>
@@ -742,9 +788,9 @@ lemma SOLVE_SUBGOAL_I[iff]: "SOLVE_SUBGOAL X" unfolding SOLVE_SUBGOAL_def ..
 
 ML_file \<open>library/Subgoal_Env.ML\<close>
 
-\<phi>reasoner_ML SUBGOAL 2000 (conclusion \<open>SUBGOAL ?ROOT ?NEWGOAL\<close>) = \<open>Subgoal_Env.subgoal\<close>
-\<phi>reasoner_ML CHK_SUBGOAL 2000 (conclusion \<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal\<close>
-\<phi>reasoner_ML SOLVE_SUBGOAL 9900 (conclusion \<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal\<close>
+\<phi>reasoner_ML SUBGOAL 2000 (\<open>SUBGOAL ?ROOT ?NEWGOAL\<close>) = \<open>Subgoal_Env.subgoal\<close>
+\<phi>reasoner_ML CHK_SUBGOAL 2000 (\<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal\<close>
+\<phi>reasoner_ML SOLVE_SUBGOAL 9900 (\<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal\<close>
 
 lemma [\<phi>reason 800 for \<open>Try ?S ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
@@ -858,7 +904,7 @@ subsubsection \<open>Default Simplifier\<close>
 abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y _ : _" [1000,10] 9)
   where "Default_Simplify \<equiv> Simplify default"
 
-\<phi>reasoner Default_Simplify 1000 (conclusion \<open>Default_Simplify ?x ?y\<close>)
+\<phi>reasoner Default_Simplify 1000 (\<open>Default_Simplify ?x ?y\<close>)
   = (simp?, rule Simplify_I)
 
 
@@ -879,7 +925,7 @@ lemma Obtain_I:
   \<open>P x \<Longrightarrow> Obtain x P\<close>
   unfolding Obtain_def .
 
-\<phi>reasoner_ML Obtain 1200 (conclusion \<open>Obtain ?x ?P\<close>) = \<open>
+\<phi>reasoner_ML Obtain 1200 (\<open>Obtain ?x ?P\<close>) = \<open>
 fn (ctxt, sequent) =>
   let
     val obtain_goal = Thm.major_prem_of sequent
@@ -901,7 +947,7 @@ fn (ctxt, sequent) =>
   end
 \<close>
 
-\<phi>reasoner_ML DO_OBTAIN 1200 (conclusion \<open>PROP DO_OBTAIN\<close>) = \<open>
+\<phi>reasoner_ML DO_OBTAIN 1200 (\<open>PROP DO_OBTAIN\<close>) = \<open>
 fn (ctxt, sequent') => Seq.make (fn _ =>
   let
     val sequent'' = @{thm DO_OBTAIN_I} RS sequent'
@@ -979,7 +1025,7 @@ text \<open>It collects all schematic variables matching type \<^typ>\<open>'a\<
 lemma Collect_Schematic_I: \<open>PROP Collect_Schematic TY sch Term\<close>
   unfolding Collect_Schematic_def ..
 
-\<phi>reasoner_ML Collect_Schematic 1200 (conclusion \<open>PROP Collect_Schematic TYPE(?'a) ?sch ?Term\<close>) = \<open>
+\<phi>reasoner_ML Collect_Schematic 1200 (\<open>PROP Collect_Schematic TYPE(?'a) ?sch ?Term\<close>) = \<open>
   fn (ctxt, sequent) =>
     let
       val (Const (\<^const_name>\<open>Collect_Schematic\<close>, _)

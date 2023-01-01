@@ -1,5 +1,5 @@
 theory PhiSem_Min
-  imports "Phi_System.Sys" Phi_System.PhiSem_Formalization_Tools
+  imports Phi_System.PhiSem_Formalization_Tools
 begin
 
 chapter \<open>Minimal Semantics\<close>
@@ -116,7 +116,7 @@ lemma \<phi>Nat_expn[\<phi>expns]:
   "p \<in> (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> (p = V_int.mk (b,x)) \<and> x < 2 ^ Big b"
   unfolding \<phi>Type_def Big_def by (simp add: \<phi>Nat_def)
 
-lemma \<phi>Nat_elim[elim!,\<phi>reason_elim!]:
+lemma \<phi>Nat_elim[elim!,\<phi>inhabitance_rule]:
   "Inhabited (x \<Ztypecolon> \<nat>[b]) \<Longrightarrow> (x < 2 ^ Big b \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -174,7 +174,7 @@ lemma \<phi>Int_expn[\<phi>expns]:
                       \<and> x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0)"
   unfolding \<phi>Type_def by (simp add: \<phi>Int_def)
 
-lemma \<phi>Int_inhabited[elim!,\<phi>reason_elim!]:
+lemma \<phi>Int_inhabited[elim!,\<phi>inhabitance_rule]:
   "Inhabited (x \<Ztypecolon> \<int>[b]) \<Longrightarrow> (x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0) \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns) 
 
@@ -225,7 +225,7 @@ lemma \<phi>Bool_expn[\<phi>expns]:
   " p \<in> (x \<Ztypecolon> \<bool>) \<longleftrightarrow> p = V_int.mk (1, (if x then 1 else 0))"
   unfolding \<phi>Type_def \<phi>Bool_def by simp
 
-lemma \<phi>Bool_inhabited[\<phi>reason_elim, elim!]:
+lemma \<phi>Bool_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<bool>) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 lemma \<phi>Bool_eqcmp[\<phi>reason for \<open>\<phi>Equal \<bool> ?c ?eq\<close>]:
@@ -258,7 +258,7 @@ context \<phi>min begin
 abbreviation Var :: \<open>varname \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set\<close>
   where \<open>Var vname T \<equiv> (FIC_var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> T))\<close>
 
-lemma Var_inhabited[\<phi>reason_elim!,elim!]:
+lemma Var_inhabited[\<phi>inhabitance_rule,elim!]:
   \<open>Inhabited (x \<Ztypecolon> Var vname T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
@@ -530,7 +530,7 @@ definition op_var_scope' :: "'TY
     R_var.\<phi>R_allocate_res_entry (\<lambda>_. True) (Some v) F
   )"
 
-lemma (in \<phi>min) \<phi>M_get_var[\<phi>reason!]:
+lemma (in \<phi>min) \<phi>M_get_var[intro!]:
   \<open> v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_var vname TY F \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<rbrace>\<close>
@@ -538,7 +538,7 @@ lemma (in \<phi>min) \<phi>M_get_var[\<phi>reason!]:
   by (clarsimp simp add: \<phi>expns FIC_var.expand simp del: set_mult_expn del: subsetI;
       rule R_var.\<phi>R_get_res_entry[where v=v]; simp)
 
-lemma (in \<phi>min) \<phi>M_set_var[\<phi>reason!]:
+lemma (in \<phi>min) \<phi>M_set_var[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c R_var.\<phi>R_set_res (\<lambda>f. f(vname \<mapsto> u)) \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   thm  FIC_var.expand_subj[where x=\<open>1(vname \<mapsto> u)\<close>]
@@ -551,7 +551,7 @@ lemma (in \<phi>min) op_get_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var vname TY \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> v \<Ztypecolon> Var vname Identity \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity \<rbrace>\<close>
   unfolding op_get_var_def Premise_def
-  by (\<phi>reason, assumption, \<phi>reason)
+  by (rule,assumption,rule,simp add: \<phi>expns)
 
 end
 
@@ -561,14 +561,14 @@ lemma (in \<phi>min) op_set_var''_\<phi>app:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var vname TY rawv \<lbrace> v \<Ztypecolon> Var vname Identity\<heavy_comma> u \<Ztypecolon> Val rawv Identity \<longmapsto> u \<Ztypecolon> Var vname Identity \<rbrace>\<close>
   unfolding op_set_var_def Premise_def
-  by (cases rawv; simp, \<phi>reason, assumption, simp add: \<phi>expns, \<phi>reason)
+  by (cases rawv; simp, rule, simp add: \<phi>expns, rule, assumption, simp add: \<phi>expns, rule)
 
 lemma (in \<phi>min) op_var_scope':
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> (\<And>vname. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vname \<lbrace> X\<heavy_comma> v \<Ztypecolon> Var vname Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F rawv \<lbrace> X\<heavy_comma> v \<Ztypecolon> Val rawv Identity \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding op_var_scope'_def Premise_def
-  apply (cases rawv; simp, \<phi>reason)
+  apply (cases rawv; simp, rule, simp add: \<phi>expns)
   apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec simp del: set_mult_expn del: subsetI)
   subgoal for r res c
   apply (rule R_var.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])

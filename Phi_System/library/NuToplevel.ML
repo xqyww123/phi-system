@@ -484,7 +484,10 @@ fun gen_finish_proc prep_term qed spec int stat =
           else (
             Nu_Reasoner.debug_info ctxt (fn _ =>
               "solving pending antecedents before closing the programming block...");
-            Nu_Reasoner.reason1 ~1 (ctxt,sequent_pre1) |> snd
+            snd (Nu_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
+                    Pretty.str "Fail to solve pending antecedents:",
+                    Thm.pretty_thm ctxt sequent_pre1
+                ])) ~1 (ctxt,sequent_pre1))
           )
         val (ctxt',sequent') = NuSys.move_lemmata (ctxt, sequent)
         val (ctxt'',sequent'') = (ctxt',sequent')

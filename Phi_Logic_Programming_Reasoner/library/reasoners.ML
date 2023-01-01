@@ -10,7 +10,7 @@ signature NU_REASONERS = sig
                               -> Proof.context * thm -> Proof.context * thm
 
   val defer_obligation_tac : Proof.context -> thm -> thm Seq.seq
-  val asm_simp_tac : Proof.context -> thm -> thm Seq.seq
+
 end
 
 structure Nu_Reasoners : NU_REASONERS = struct
@@ -115,11 +115,5 @@ fun defer_obligation_tac ctxt thm =
                      else raise Fail "BUG!!!")
       |> Seq.single
   end
-
-
-fun asm_simp_tac ctxt =
-  REPEAT (HEADGOAL (resolve_tac ctxt @{thms Premise_I})) THEN
-  HEADGOAL (SOLVED' (Simplifier.asm_simp_tac (ctxt addsimps aux_thms ctxt)))
-
 
 end
