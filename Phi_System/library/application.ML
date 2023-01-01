@@ -5,6 +5,8 @@ signature NU_APPLICATION = sig
   val start_reasoning: context_state -> context_state Seq.seq
   val success_application : context_state -> context_state Seq.seq
 
+(*The resulted sequent always has an additional obligation antecedent at the last
+of the antecedent list, no matter whether any real obligations are generated during ToSA.*)
   val try_apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state option
   val apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state
 
@@ -58,7 +60,7 @@ fun start_reasoning (ctxt,sequent) =
                  (("Result",0), result)]
     val successful_app = Synchronized.var "\<phi>applicant_ctxt" []
     val ctxt' = AppContext.put successful_app ctxt
-    val _ = case Nu_Reasoner.reason ~1 (ctxt', sequent')
+    val _ = case Nu_Reasoner.reason NONE (ctxt', sequent')
               of SOME _ => error bad_rule_msg
                | NONE => ()
   in
@@ -98,7 +100,7 @@ fun try_apply [] (ctxt,sequent) = NONE
         val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
         val _ = Nu_Reasoner.debug_info ctxt (fn _ => "Reasoning generic applications...")
       in
-        Nu_Reasoner.reason ~1 (ctxt,sequent')
+        Nu_Reasoner.reason NONE (ctxt,sequent')
           |> Option.map (apsnd (Goal.conclude))
       end
 

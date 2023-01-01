@@ -7,10 +7,32 @@ most of imperative languages.\<close>
 
 section \<open>Specifications on Fictional \<phi>-SL\<close>
 
+text \<open>\begin{remark}[Source \& Target]
+As both ToA and view shift constitutes a morphism,
+\[ \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
+\[ \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close> \]
+we name the above \<open>X\<close> and \<open>Y\<close> as \<^emph>\<open>source\<close> and \<^emph>\<open>target\<close> respectively.
+We also name the \<open>P\<close> \<^emph>\<open>side fact\<close> as it is a side effect generated during the transformation.
+\end{remark}\<close>
+
+text \<open>
+\begin{remark}[Multi-Term Form (MTF)]
+\[ \<open>(x\<^sub>1 \<Ztypecolon> T\<^sub>1) * \<dots> * (x\<^sub>n \<Ztypecolon> T\<^sub>n) \<^bold>s\<^bold>u\<^bold>b\<^bold>j a\<^sub>1 \<dots> a\<^sub>m. P\<close> \]
+We call \<open>x\<^sub>i \<Ztypecolon> T\<^sub>i\<close> for \<open>1 \<le> i \<le> n\<close> an \<^emph>\<open>item\<close> in the MTF.
+\end{remark}
+
+\begin{remark}[Simple Multi-Term Form]
+We call a MTF that does not have any existence and conjunction as \<^emph>\<open>simple MTF\<close>.
+\[ \<open>(x\<^sub>1 \<Ztypecolon> T\<^sub>1) * \<dots> * (x\<^sub>n \<Ztypecolon> T\<^sub>n)\<close> \]
+\end{remark}
+\<close>
+
+
+
 chapter \<open>Integrated Deduction Environment for Certified Programming\<close>
 
 theory Chapter_System
-  imports "../Sys"
+  imports "../IDE_CP"
 begin
 
 context \<phi>empty begin
@@ -227,6 +249,23 @@ subsection \<open>Commands Opening and Closing Programming Context\<close>
 
 subsection \<open>The Command Writing Statements\<close>
 
+section \<open>Antecedent Jobs for User Input\<close>
+
+text \<open>Antecedent jobs can be classified in two sorts
+\<^item> programming job for user input
+\<^item> reasoning job for a specific problem, invoking the related reasoning process\<close>
+
+text \<open>The section introduces the first sort that for user input, and leaves that about
+reasoning to \cref{sec:reasoning}.\<close>
+
+subsection \<open>Parameter\<close>
+
+subsection \<open>Rule as an Argument\<close>
+
+subsection \<open>Label of Text\<close>
+
+
+
 section \<open>Applying Procedures \& Other Constructs\<close>
 
 paragraph \<open>Procedure\<close>
@@ -240,9 +279,9 @@ text \<open>is a bundle of operations \<close>
 
 subsubsection \<open>Extend by User Specified Application Method\<close>
 
-section \<open>Antecedent Jobs\<close>
-
 section \<open>Program Synthesis\<close>
+
+section \<open>Reasoning \label{sec:reasoning}\<close>
 
 end
 

@@ -250,7 +250,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process de
                 (lthy, (th RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
                           handle THM _  => (th RSN (3,
                               Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
-                  |> Nu_Reasoner.reason ~1
+                  |> Nu_Reasoner.reason NONE
                   |> (fn SOME (lthy', th) => post_process lthy' th
                        | NONE => error("Fail to simplify finally the procedure.\n"^
                                        "It is a rare error and you may check the simplification "^
@@ -339,7 +339,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                        (All::forall::Subjection_simp_proc_arg::
                         Named_Theorems.get ctxt'' @{named_theorems named_expansion})
                       #> Seq.single))
-            |> Seq.maps (Nu_Reasoner.reason_tac ~1 ctxt'' o pair ctxt'')
+            |> Seq.maps (Nu_Reasoner.reason_tac NONE ctxt'' o pair ctxt'')
             |> Seq.the_result "fail to reason sematic type of the procedure."
 
         val goal' = Thm.cprem_of proof0 1 |> Thm.term_of |> dest_Trueprop
@@ -387,7 +387,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                         (th' RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
                           handle THM _  => (th' RSN (3,
                               Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
-                   |> Nu_Reasoner.reason ~1
+                   |> Nu_Reasoner.reason NONE
                    |> (fn SOME (_, th) => th
                         | NONE => error("Fail to simplify finally the procedure.\n"^
                                         "It is a rare error and you may check the simplification "^
@@ -475,20 +475,26 @@ fun gen_finish_proc prep_term qed spec int stat =
     val mode = Phi_Working_Mode.working_mode_on1 ctxt_ (Thm.term_of goal)
   in stat
   |> Proof.map_context (dec_blk_level #> snd)
-  |> Proof.map_context_result (fn ctxt =>
+  |> Proof.map_context_result (fn ctxt_pre1 =>
       let
-        val sequent_pre1 = NuBasics.the_programming_sequent' ctxt
-        val sequent =
+        val sequent_pre1 = NuBasics.the_programming_sequent' ctxt_pre1
+        val (ctxt,sequent) =
           if Thm.no_prems sequent_pre1
-          then sequent_pre1
-          else (
-            Nu_Reasoner.debug_info ctxt (fn _ =>
-              "solving pending antecedents before closing the programming block...");
-            snd (Nu_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
+          then (ctxt_pre1,sequent_pre1)
+          else let
+            val _ = Nu_Reasoner.debug_info ctxt_pre1 (fn _ =>
+                      "solving pending antecedents before closing the programming block...")
+            fun attack_obligations (ctxt,sequent) =
+              case try Thm.major_prem_of sequent
+                of SOME (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ _)) =>
+                    attack_obligations (Nu_Reasoners.auto_obligation_solver1 (ctxt,sequent))
+                 | _ => (ctxt,sequent)
+            val (ctxt_pre2, sequent_pre2) = attack_obligations (ctxt_pre1, sequent_pre1)
+            in Nu_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
                     Pretty.str "Fail to solve pending antecedents:",
-                    Thm.pretty_thm ctxt sequent_pre1
-                ])) ~1 (ctxt,sequent_pre1))
-          )
+                    Thm.pretty_thm ctxt_pre2 sequent_pre2
+               ])) NONE (ctxt_pre2,sequent_pre2)
+            end
         val (ctxt',sequent') = NuSys.move_lemmata (ctxt, sequent)
         val (ctxt'',sequent'') = (ctxt',sequent')
               |> (case spec

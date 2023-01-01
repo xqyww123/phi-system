@@ -249,7 +249,7 @@ lemma [cong]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<longleftrightar
 ML_file \<open>library/syntax/param.ML\<close>
 
 
-subsubsection \<open>Argument\<close>
+subsubsection \<open>Rule as an Argument\<close>
 
 definition Argument :: "'a \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where "Argument x = x"
 
@@ -319,6 +319,21 @@ lemma [simp]: "x \<in> Labelled name S \<longleftrightarrow> x \<in> S" unfoldin
 ML_file \<open>library/syntax/label.ML\<close>
 
 
+
+subsection \<open>Reasoning Job done by \<phi>-LPR\<close>
+
+subsubsection \<open>Mode\<close>
+
+consts MODE_\<phi>EXPN :: mode \<comment> \<open>relating to named_theorems \<open>\<phi>expn\<close>\<close>
+
+abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>expn_Premise \<equiv> Premise MODE_\<phi>EXPN\<close>
+
+\<phi>reasoner \<phi>expn_Premise 10 (\<open><\<phi>expn> ?P\<close>)
+  = (rule Premise_I; simp add: \<phi>expns)
+
+text \<open>Antecedent \<^prop>\<open><\<phi>expn> P\<close> indicates the reasoner solving the premise \<^prop>\<open>P\<close> using
+  simplification rules of \<open>\<phi>expns\<close>.\<close>
+
 subsubsection \<open>Name tag by type\<close>
 
 (*TODO: elaborate this*)
@@ -343,7 +358,10 @@ text (in \<phi>empty) \<open>It is a tool to annotate names on a term, e.g. \<^t
   We use free type variable to annotate it because it is most stable. No transformation
     changes the name of a free type variable.
 
-  This feature is mostly used in Variable Extraction (see ???).\<close>
+  This feature is mostly used in \<^emph>\<open>Expansion of Quantification\<close> given in the immediate subsection.
+  Therefore we put this part in the subsection of reasoning jobs, though itself is not related to
+  any reasoning work.
+\<close>
 
 
 lemma named_forall: "All P \<longleftrightarrow> (\<forall>x. P (tag x))" by (metis named.exhaust)
@@ -381,23 +399,6 @@ simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow
 
 simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
   \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
-
-
-
-subsection \<open>Reasoning Job done by \<phi>-LPR\<close>
-
-subsubsection \<open>Mode\<close>
-
-consts MODE_\<phi>EXPN :: mode \<comment> \<open>relating to named_theorems \<open>\<phi>expn\<close>\<close>
-
-abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>expn_Premise \<equiv> Premise MODE_\<phi>EXPN\<close>
-
-\<phi>reasoner \<phi>expn_Premise 10 (\<open><\<phi>expn> ?P\<close>)
-  = (rule Premise_I; simp add: \<phi>expns)
-
-text \<open>Antecedent \<^prop>\<open><\<phi>expn> P\<close> indicates the reasoner solving the premise \<^prop>\<open>P\<close> using
-  simplification rules of \<open>\<phi>expns\<close>.\<close>
-
 
 
 subsubsection \<open>Rename \<lambda>-Abstraction\<close>
@@ -986,6 +987,22 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Applying on Procedure Mode\<close>
 
+text \<open>TODO: move this to user manual.
+
+\begin{convention}
+In an application, source \<^schematic_term>\<open>?X\<close> denotes the pattern matching the whole state
+and the frame rule is not used by which \<^schematic_term>\<open>?X\<close> can actually match any leading items,
+whereas source \<^schematic_term>\<open>?x \<Ztypecolon> ?T\<close> matches only the first \<phi>-type.
+In this way, we differentiate the representation of the purpose for transforming the whole state
+and that for only the single leading item.
+\end{convention}
+
+\begin{convention}
+The construction in a ready state should always be specified by a simple MTF.
+\end{convention}
+\<close>
+
+
 context \<phi>spec begin
 
 paragraph \<open>Transformation Methods\<close>
@@ -1009,7 +1026,7 @@ lemma \<phi>apply_subtyping_fast[\<phi>reason 1800 for \<open>
   \<open> PROP \<phi>Application_Success
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk R S))
-      (Trueprop ((CurrentConstruction mode blk R T) \<and> P))\<close>
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using "\<phi>cast_P" .
 
@@ -1020,20 +1037,21 @@ lemma [\<phi>reason 1500 for \<open>
   \<open> PROP \<phi>Application_Success
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
-      (Trueprop ((CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P))\<close>
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using "\<phi>cast_P" implies_left_prod by blast
 
-lemma \<phi>apply_subtyping_fully[\<phi>reason for \<open>
+lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
   PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
 \<Longrightarrow> PROP \<phi>Application_Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk RR S))
-      (Trueprop ((CurrentConstruction mode blk RR T) \<and> P))"
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
   by (meson \<phi>cast_P implies_left_prod \<phi>apply_view_shift_P)
@@ -1060,7 +1078,7 @@ lemma \<phi>apply_view_shift_fast[\<phi>reason 1800 for \<open>
   \<open> PROP \<phi>Application_Success
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P))
       (Trueprop (CurrentConstruction mode blk R S))
-      (Trueprop ((CurrentConstruction mode blk R T) \<and> P))\<close>
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using "\<phi>apply_view_shift_P" .
 
@@ -1071,7 +1089,7 @@ lemma [\<phi>reason 1500 for \<open>
   \<open> PROP \<phi>Application_Success
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P))
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
-      (Trueprop ((CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P))\<close>
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame by blast
 
@@ -1085,7 +1103,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w S' \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2))
       (Trueprop (CurrentConstruction mode blk RR S))
-      (Trueprop ((CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2)))"
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
   using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame
@@ -1105,7 +1123,7 @@ lemma apply_proc_fast[\<phi>reason 2000 for \<open>
   \<open> PROP \<phi>Application_Success
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>))
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S))
-      (Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))\<close>
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
   using \<phi>apply_proc .
 
@@ -1122,7 +1140,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>))
     (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S))
-    (Trueprop ((\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) \<and> P))\<close>
+    (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def \<phi>IntroFrameVar'_def
     GOAL_CTXT_def FOCUS_TAG_def Simplify_def Action_Tag_def
     Simplify_def Filter_Out_Free_Values_def
@@ -1284,7 +1302,7 @@ lemma (in \<phi>spec) [\<phi>reason 1200 for \<open>
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (\<^bold>v\<^bold>i\<^bold>e\<^bold>w S' \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> morphism_mode)
       (Trueprop (CurrentConstruction mode blk RR S))
-      (Trueprop ((CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2)))"
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def Simplify_def
   using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame
@@ -1880,10 +1898,6 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
 
 subsubsection \<open>Simplifiers \& Reasoners\<close>
 
-\<phi>processor enter_proof 5000 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
-  \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
-      raise Terminate_Process (stat, snd o NuToplevel.prove_prem false))\<close>
-
 \<phi>processor \<phi>simplifier 100 (\<open>\<phi>spec.CurrentConstruction _ _ ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
   \<open>NuProcessors.simplifier\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
@@ -1913,11 +1927,15 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 \<open>fn (ctxt,sequent) => Scan.succeed (fn _ => (
   Nu_Reasoner.debug_info ctxt (fn _ => "reasoning the leading antecedent of the state sequent.");
   if Config.get ctxt Nu_Reasoner.auto_level >= 1
-  then case Nu_Reasoner.reason 1 (ctxt, sequent)
+  then case Nu_Reasoner.reason (SOME 1) (ctxt, sequent)
          of SOME (ctxt',sequent') => (ctxt', sequent')
           | NONE => raise Bypass (SOME (ctxt,sequent))
   else raise Bypass NONE
 ))\<close>
+
+\<phi>processor enter_proof 790 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
+  \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
+      raise Terminate_Process (stat, snd o NuToplevel.prove_prem false))\<close>
 
 \<phi>processor auto_obligation_solver 800 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
@@ -1957,7 +1975,7 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 section \<open>Predefined Applications\<close>
 
-lemma assert_\<phi>app: (*TODO: application target: global*)
+lemma assert_\<phi>app:
   \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Y \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<close>
   unfolding Action_Tag_def
   using implies_weaken by blast
@@ -1975,11 +1993,7 @@ lemma view_shift_whole_\<phi>app:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Argument_def .
 
+
 end
-
-
-
-
-
 
 end

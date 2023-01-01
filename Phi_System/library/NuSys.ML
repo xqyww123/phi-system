@@ -239,7 +239,7 @@ fun synthesis term (ctxt, sequent) =
           |> (fn rule => Thm.implies_elim rule sequent)
     val _ = Nu_Reasoner.debug_info ctxt (fn _ => "reasoning synthesis...")
   in
-    case Nu_Reasoner.reason ~1 (ctxt, sequent')
+    case Nu_Reasoner.reason NONE (ctxt, sequent')
       of SOME ret => ret
        | NONE => error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
   end

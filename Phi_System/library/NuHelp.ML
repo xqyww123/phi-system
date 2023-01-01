@@ -16,11 +16,11 @@ signature NU_HELP = sig
 
   val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
                               * term list (*premises of the antecedent*)
-                              * term
+                              * term (*conclusion containing loose bound*)
   val leading_antecedent' : thm -> term
   val leading_antecedent : term -> (string * typ) list (*quantified variables*)
                                  * term list (*premises of the antecedent*)
-                                 * term
+                                 * term (*conclusion containing loose bound*)
 
   val string_of_term_generic : Context.generic -> term -> string
 

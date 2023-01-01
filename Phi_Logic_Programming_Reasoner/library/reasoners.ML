@@ -5,9 +5,12 @@ signature NU_REASONERS = sig
   val auto_obligation_solver : Proof.context -> thm -> thm Seq.seq
   val auto_obligation_solver' : (Proof.context * thm -> Proof.context * thm) (*failure callback*)
                               -> Proof.context * thm -> Proof.context * thm
+  val auto_obligation_solver1 : Proof.context * thm -> Proof.context * thm
+
   val safer_obligation_solver : Proof.context -> thm -> thm Seq.seq
   val safer_obligation_solver': (Proof.context * thm -> Proof.context * thm) (*failure callback*)
                               -> Proof.context * thm -> Proof.context * thm
+  val safer_obligation_solver1: Proof.context * thm -> Proof.context * thm
 
   val defer_obligation_tac : Proof.context -> thm -> thm Seq.seq
 
@@ -81,6 +84,23 @@ fun auto_obligation_solver ctxt th =
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
 
+fun auto_obligation_solver1 (ctxt,sequent) =
+  case Thm.major_prem_of sequent
+    of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
+        Nu_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+            Pretty.str "Solving the following goal using \<open>auto\<close> method...",
+            Syntax.pretty_term ctxt Goal
+        ]);
+        auto_obligation_solver' (fn _ =>
+          error (Pretty.string_of (Pretty.chunks [
+              Pretty.str "Fail to solve the proof obligation automatically:",
+              Syntax.pretty_term ctxt Goal
+        ]))) (ctxt,sequent)
+     )
+     | _ => raise THM ("auto_obligation_solver1: The leading antecedent of the given sequent \
+              \is not a proof obligation.", 1, [sequent])
+
+
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
 fun safer_obligation_solver ctxt th =
@@ -90,6 +110,22 @@ fun safer_obligation_solver ctxt th =
      | NONE => Seq.single th
 
 val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver
+
+fun safer_obligation_solver1 (ctxt,sequent) =
+  case Thm.major_prem_of sequent
+    of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
+        Nu_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+            Pretty.str "Solving the following goal using \<open>clarsimp\<close> method...",
+            Syntax.pretty_term ctxt Goal
+        ]);
+        safer_obligation_solver' (fn _ =>
+          error (Pretty.string_of (Pretty.chunks [
+              Pretty.str "Fail to solve the proof obligation automatically:",
+              Syntax.pretty_term ctxt Goal
+        ]))) (ctxt,sequent)
+     )
+     | _ => raise THM ("auto_obligation_solver1: The leading antecedent of the given sequent \
+              \is not a proof obligation.", 1, [sequent])
 
 fun contract_obligations ctxt thm = let open Conv in
   gconv_rule (bottom_conv (K (try_conv (rewrs_conv

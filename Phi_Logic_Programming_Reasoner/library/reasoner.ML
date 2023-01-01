@@ -39,14 +39,16 @@ signature NU_REASONER = sig
   val reasoner_net : Proof.context -> reasoner Cost_Net.T
 
   (* Interfaces for Reasoning *)
-  (*N: number of premises to be attacked at most. ~1 means to attack all.*)
-  val reason  : int (*N*) -> context_state -> context_state option
+  (*N: number of premises to be attacked at most, if it is positive;
+       to attack all if it is None;
+       to attack until a sequent remains at most |N| premises, if N is negative*)
+  val reason  : int option (*N*) -> context_state -> context_state option
   val reason1 : (unit -> string) (*error message*)
-             -> int (*N*) -> context_state -> context_state
+             -> int option (*N*) -> context_state -> context_state
   val reason_s : Proof.context (*the context for accessing reasoner db*)
               -> (priority * context_state Seq.seq) list -> context_state Seq.seq
   (*Note it returns at most one state in the returned sequence.*)
-  val reason_tac : int (*N*)
+  val reason_tac : int option (*N*)
                 -> Proof.context (*the context for accessing reasoner db*)
                 -> context_tactic
   
@@ -230,11 +232,12 @@ fun gen_reason' N trace tactics states =
       gen_reason N trace 0 tactics (map (map (fn (a,b) => (~a,Position.none,b))) states)
       handle Success ret => SOME ret
 
-fun num_of_protected_prems thm ~1 = 0
-  | num_of_protected_prems thm num_of_attack_prems =
-      Thm.nprems_of thm - num_of_attack_prems
+fun num_of_protected_prems thm NONE = 0
+  | num_of_protected_prems thm (SOME N) =
+      if N >= 0 then Thm.nprems_of thm - N else ~N
 
-fun reason N (ctxt,sequent) =
+fun reason (SOME 0) S = SOME S
+  | reason N (ctxt,sequent) =
       gen_reason' (num_of_protected_prems sequent N)
                   (Config.get ctxt trace)
                   (Reasoners.get (Context.Proof ctxt))
@@ -355,7 +358,7 @@ fun intro_reasoner pos priority patterns blacklist rule =
             case Seq.pull (HEADGOAL (Tactic.resolve_tac ctxt [rule]) th)
               of SOME (ret, _) =>
                   if has_feasible
-                  then reason ~1 (ctxt, ret) |> Option.map (rpair Seq.empty)
+                  then reason NONE (ctxt, ret) |> Option.map (rpair Seq.empty)
                   else SOME ((ctxt, ret), Seq.empty)
                | _ => NONE))
       }
@@ -391,7 +394,7 @@ end)
 
 #> Method.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Scan Parse in
-  Scan.lift (Scan.optional Parse.nat ~1) --|
+  Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
                                     Method.modifier (attr_add_intro (pos,(100,([],[])))) \<^here>),

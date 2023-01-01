@@ -21,7 +21,7 @@ fun enter_scope (ctxt,sequent) =
   val sequent' = @{thm \<r>BEGIN_I} RS sequent
   val _ = Nu_Reasoner.debug_info ctxt (fn _ =>
             "entering nested \<phi>-LPR reasoning "^string_of_int S)
-  in case Nu_Reasoner.reason ~1 (ctxt',sequent')
+  in case Nu_Reasoner.reason NONE (ctxt',sequent')
        of SOME (ctxt'',sequent'') =>
           if Scope.get ctxt'' = S
           then Seq.single (ctxt'',sequent'')

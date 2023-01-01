@@ -40,7 +40,6 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val blk_var as (Free (blk_name,_)) = current_block_var sequent
     val blk_name = Variable.revert_fixed ctxt blk_name
     val names = rev names'''
-    val arity = length names
     val ex_vars = Thm.prop_of sequent
                   |> dest_CurrentConstruction |> #4
                   |> strip_separations
@@ -51,7 +50,6 @@ fun mk_var_scope names''' (ctxt,sequent) =
             of SOME (true, iname) => Set_Var (Thm.cterm_of ctxt (Free (iname, \<^typ>\<open>varname\<close>)))
              | _ => New_Var name
     val oprs = map check_name names
-    val num_sets = length_of_sets 0 oprs
 
     val init = Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>))
     val op_var_scope = Proof_Context.get_thm ctxt "local.__\<phi>op_var_scope__"
@@ -65,13 +63,18 @@ fun mk_var_scope names''' (ctxt,sequent) =
                         | New_Var _ => op_var_scope RS th) oprs
           |> (fn thm => op_var_scope0 RS thm)
     val (ctxt,sequent') = NuApply.apply [op_var_scope'] (ctxt,sequent)
-                |> apsnd (
-                      (fn th => @{thm Premise_True} RS th)
-                   #> Thm.permute_prems 0 1)
-                |> Nu_Reasoner.reason (num_sets + arity)
-                |> (fn x => case x of SOME y => y
-                                    | _ => error (
-    "Fail to assign variable(s). Typically, it is due to incorrect representation types."))
+                |> apsnd (fn th =>
+                    let
+                      fun is_body (Abs (_,_,X)) = is_body X
+                        | is_body (\<^const>\<open>Trueprop\<close> $ X) = is_body X
+                        | is_body (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_body X
+                        | is_body (X $ _) = is_body X
+                        | is_body (Const (\<^const_name>\<open>\<phi>spec.\<phi>Procedure\<close>, _)) = true
+                        | is_body _ = false
+                    in Thm.permute_prems 0 (1 + find_index is_body (Thm.prems_of th)) th end)
+                |> Nu_Reasoner.reason1 (fn _ => 
+                    "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
+                   ) (SOME ~1)
                 |> apsnd (fn th => th RS @{thm conjunct1})
 
     val prem = Thm.cprem_of sequent' 1
