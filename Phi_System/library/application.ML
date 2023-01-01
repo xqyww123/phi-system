@@ -7,11 +7,11 @@ signature NU_APPLICATION = sig
 
 (*The resulted sequent always has an additional obligation antecedent at the last
 of the antecedent list, no matter whether any real obligations are generated during ToSA.*)
-  val try_apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state option
-  val apply : thm list (*applicants*) -> context_state (*sequent*) -> context_state
+  val try_apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state option
+  val apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state
 
-  (*Advanced Modus Pones using logic programming conducted by \<^term>\<open>\<phi>Application_Conv\<close>
-    which infers various conversion of applicants.
+  (*Advanced Modus Pones using logic programming about antecedent \<^term>\<open>\<phi>Application_Conv\<close>
+    where the inferences relate to various conversions of applied rules.
    *)
   val MPs : Proof.context -> thm list -> thm -> thm
   val MP  : Proof.context -> thm -> thm -> thm
@@ -29,7 +29,7 @@ val expand_appliant =
 fun apply_proc_naive proc (ctxt,sequent) =
   (ctxt, expand_appliant proc RS (sequent RS (Proof_Context.get_thm ctxt "local.\<phi>apply_proc")))
 
-val empty_var = Synchronized.var "\<phi>applicant_ctxt" [] : thm list Synchronized.var
+val empty_var = Synchronized.var "\<phi>application_ctxt" [] : thm list Synchronized.var
 
 structure AppContext = Proof_Data (
   type T = thm list (*successful application*) Synchronized.var
@@ -58,7 +58,7 @@ fun start_reasoning (ctxt,sequent) =
                 [(("Apps",0), app),
                  (("State",0), state),
                  (("Result",0), result)]
-    val successful_app = Synchronized.var "\<phi>applicant_ctxt" []
+    val successful_app = Synchronized.var "\<phi>application_ctxt" []
     val ctxt' = AppContext.put successful_app ctxt
     val _ = case Nu_Reasoner.reason NONE (ctxt', sequent')
               of SOME _ => error bad_rule_msg
@@ -91,9 +91,9 @@ fun success_application (ctxt,sequent) =
   end
 
 fun try_apply [] (ctxt,sequent) = NONE
-  | try_apply applicants (ctxt,sequent) =
+  | try_apply applications (ctxt,sequent) =
       let
-        val apps = applicants
+        val apps = applications
                     |> foldl1 (fn (a,b) =>
                           Drule.comp_no_flatten (b,0) 1 (
                            Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
@@ -104,10 +104,10 @@ fun try_apply [] (ctxt,sequent) = NONE
           |> Option.map (apsnd (Goal.conclude))
       end
 
-fun apply applicants stat =
-  case try_apply applicants stat
+fun apply applications stat =
+  case try_apply applications stat
     of SOME stat' => stat'
-     | NONE => raise THM ("Application Fail", 0, (snd stat)::applicants)
+     | NONE => raise THM ("Application Fail", 0, (snd stat)::applications)
 
 
 fun comp_no_flatten_matched (th, n) i rule =

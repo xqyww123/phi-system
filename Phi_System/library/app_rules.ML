@@ -1,17 +1,17 @@
-signature NU_APPLICANT = sig
-  val applicant_thms : Proof.context -> (Facts.ref * Token.src list) -> thm list
+signature PHI_APP_RULES = sig
+  val app_rules : Proof.context -> (Facts.ref * Token.src list) -> thm list
   val declare_overloading : binding -> string (*comment*) -> local_theory -> string * local_theory
   val overload : thm -> (string * Position.T) -> Context.generic -> Context.generic
   val parser : (Facts.ref * Token.src list) parser
   val name_position : (string * Position.T) parser
 end
 
-structure NuApplicant : NU_APPLICANT = struct
+structure Phi_App_Rules : PHI_APP_RULES = struct
 
 fun suffix_fact suf (Facts.Fact thm) = Facts.Fact thm
   | suffix_fact suf (Facts.Named ((name,pos),int)) = Facts.Named ((suffix suf name,pos),int)
 
-fun applicant_thms ctxt fact =
+fun app_rules ctxt fact =
   Attrib.eval_thms ctxt [apfst (suffix_fact "_\<phi>app") fact]
   handle ERROR _ => Attrib.eval_thms ctxt [fact]
 

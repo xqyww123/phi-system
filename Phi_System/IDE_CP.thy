@@ -561,10 +561,10 @@ section \<open>Mechanisms\<close>
 
 subsection \<open>Ad-hoc Overload\<close>
 
-ML_file \<open>library/applicant.ML\<close>
+ML_file \<open>library/app_rules.ML\<close>
 
-attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 NuApplicant.name_position) >> (fn bindings => 
-  Thm.declaration_attribute (fn th => fold (NuApplicant.overload th) bindings))\<close>
+attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_position) >> (fn bindings => 
+  Thm.declaration_attribute (fn th => fold (Phi_App_Rules.overload th) bindings))\<close>
 
 \<phi>overloads D \<open>Destructive subtyping rules\<close>
 \<phi>overloads cast \<open>Transform the content of a container\<close>
@@ -819,7 +819,7 @@ These general things named \<^emph>\<open>application\<close> includes
 \<close>
 
 definition \<phi>Application :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
-  where \<open>\<phi>Application Applicants State Result \<equiv> (PROP State \<Longrightarrow> PROP Applicants \<Longrightarrow> PROP Result)\<close>
+  where \<open>\<phi>Application App_Rules State Result \<equiv> (PROP State \<Longrightarrow> PROP App_Rules \<Longrightarrow> PROP Result)\<close>
 
 definition \<phi>Application_Method :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
   where \<open>\<phi>Application_Method \<equiv> \<phi>Application\<close>
@@ -1839,8 +1839,8 @@ subsubsection \<open>Constructive\<close>
 \<phi>processor (in \<phi>spec) accept_call 500 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>)
   \<open>fn stat => Scan.succeed (fn _ => NuSys.accept_proc stat)\<close>
 
-\<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => NuApplicant.parser >> (fn xnames => fn _ =>
-  (NuApply.apply (NuApplicant.applicant_thms ctxt xnames) (ctxt, sequent)))\<close>
+\<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
+  (NuApply.apply (Phi_App_Rules.app_rules ctxt xnames) (ctxt, sequent)))\<close>
 
 \<phi>processor set_param 5000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
   NuSys.set_param_cmd term stat)\<close>
@@ -1849,9 +1849,9 @@ subsubsection \<open>Constructive\<close>
   NuSys.set_label name stat)\<close>
 
 \<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
-  \<open>fn (ctxt, sequent) => NuApplicant.parser >> (fn thms => fn _ =>
+  \<open>fn (ctxt, sequent) => Phi_App_Rules.parser >> (fn thms => fn _ =>
     let open NuBasics
-    val apps = NuApplicant.applicant_thms ctxt thms
+    val apps = Phi_App_Rules.app_rules ctxt thms
     val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
     in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
          of SOME (th, _) => (ctxt,th)
