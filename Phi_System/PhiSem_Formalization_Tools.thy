@@ -139,20 +139,20 @@ end
 
 
 lemma (in \<phi>spec) \<phi>INTERP_RES_\<phi>Res_Spec:
-  \<open>res \<in> INTERP_RES fic \<longleftrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP fic) \<and> Fic_Space fic\<close>
+  \<open>res \<in> INTERP_RES fic \<longleftrightarrow> res \<in> \<phi>Res_Spec (\<I> F.INTERP fic) \<and> Fic_Space fic\<close>
   unfolding In_INTERP_RES \<phi>Res_Spec_def by simp blast
 
 lemma (in \<phi>spec) \<phi>Procedure_\<phi>Res_Spec:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space (r * p) \<and> r ## p)
-      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space (r * q) \<and> r ## q))
-                    (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E v \<and> Fic_Space (r * e) \<and> r ## e)))\<close>
+\<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> F.INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space (r * p) \<and> r ## p)
+      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> F.INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space (r * q) \<and> r ## q))
+                    (\<lambda>v. \<phi>Res_Spec (\<I> F.INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E v \<and> Fic_Space (r * e) \<and> r ## e)))\<close>
   apply rule
    apply (unfold \<phi>Procedure_alt INTERP_SPEC \<phi>Res_Spec_def subset_iff)
    apply (clarsimp simp add: times_set_def \<phi>expns In_INTERP_RES)
   thm In_INTERP_RES
   subgoal premises prems for r res s c proof-
-    have t1: \<open>(\<exists>fic. (\<exists>y. fic = r * y \<and> y \<in> P \<and> r ## y) \<and> res \<in> Valid_Resource \<and> Fic_Space fic \<and> res \<in> \<I> INTERP fic)\<close>
+    have t1: \<open>(\<exists>fic. (\<exists>y. fic = r * y \<and> y \<in> P \<and> r ## y) \<and> res \<in> Valid_Resource \<and> Fic_Space fic \<and> res \<in> \<I> F.INTERP fic)\<close>
       using Fic_Space_Un prems by blast
     show ?thesis
       apply (insert prems(1)[THEN spec[where x=res], THEN spec[where x=r], THEN mp, OF t1,
@@ -163,7 +163,7 @@ lemma (in \<phi>spec) \<phi>Procedure_\<phi>Res_Spec:
   qed
   apply (clarsimp simp add: times_set_def \<phi>expns In_INTERP_RES)
   subgoal premises prems for res r s c proof-
-    have t1: \<open>res \<in> Valid_Resource \<and> (\<exists>c. res \<in> \<I> INTERP (r * c) \<and> c \<in> P \<and> Fic_Space (r * c) \<and> r ## c)\<close>
+    have t1: \<open>res \<in> Valid_Resource \<and> (\<exists>c. res \<in> \<I> F.INTERP (r * c) \<and> c \<in> P \<and> Fic_Space (r * c) \<and> r ## c)\<close>
       using prems Fic_Space_Un by blast
     show ?thesis
       apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, OF t1,
@@ -467,7 +467,7 @@ sublocale basic_fiction Valid \<open>\<F>_functional perm_transformer\<close> ..
 
 lemma sep_disj_fiction:
   \<open> Fic_Space r
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> F.INTERP r) * \<phi>Res_Spec { R.mk x }
 \<Longrightarrow> r ## mk (perm_transformer x)\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
@@ -479,8 +479,8 @@ lemma sep_disj_fiction:
 
 lemma expand_subj:
   \<open> Fic_Space r
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk (perm_transformer x))
-  = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
+\<Longrightarrow> \<phi>Res_Spec (\<I> F.INTERP (r * mk (perm_transformer x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk (perm_transformer x))
+  = \<phi>Res_Spec (\<I> F.INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify, rule)
@@ -509,15 +509,15 @@ lemma expand_subj:
 lemma expand:
   \<open>Fic_Space r
 \<Longrightarrow> r ## mk (perm_transformer x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x))) =
-    \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
+\<Longrightarrow> \<phi>Res_Spec (\<I> F.INTERP (r * mk (perm_transformer x))) =
+    \<phi>Res_Spec (\<I> F.INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
 lemma expand_conj:
   \<open> Fic_Space r
-\<Longrightarrow> a \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x))) \<and> r ## mk (perm_transformer x)
-\<longleftrightarrow> a \<in> \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
+\<Longrightarrow> a \<in> \<phi>Res_Spec (\<I> F.INTERP (r * mk (perm_transformer x))) \<and> r ## mk (perm_transformer x)
+\<longleftrightarrow> a \<in> \<phi>Res_Spec (\<I> F.INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, OF prems(1), unfolded set_eq_iff]
       by (simp add: \<phi>expns) .
@@ -528,7 +528,7 @@ lemma partial_implies_raw:
   \<open> Fic_Space r
 \<Longrightarrow> 0 < n 
 \<Longrightarrow> r ## mk (share n (perm_transformer x))
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (share n (perm_transformer x))))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> F.INTERP (r * mk (share n (perm_transformer x))))
 \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
@@ -603,8 +603,8 @@ fixes perm_transformer :: \<open>'T \<Rightarrow> 'U\<close>
   and R_dom :: \<open>'T set\<close>
 assumes \<open>Fic_Space r
 \<Longrightarrow> x \<in> R_dom
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x)))
-  = \<phi>Res_Spec (\<I> INTERP r * { R.mk x})\<close>
+\<Longrightarrow> \<phi>Res_Spec (\<I> F.INTERP (r * mk (perm_transformer x)))
+  = \<phi>Res_Spec (\<I> F.INTERP r * { R.mk x})\<close>
 
 begin
 
@@ -630,7 +630,7 @@ sublocale basic_fiction where I = \<open>\<F>_it\<close> ..
 
 lemma sep_disj_fiction:
   \<open> Fic_Space r
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> F.INTERP r) * \<phi>Res_Spec { R.mk x }
 \<Longrightarrow> r ## mk x\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
@@ -643,7 +643,7 @@ lemma sep_disj_fiction:
 
 lemma expand_subj:
   \<open> Fic_Space r
-\<Longrightarrow> (\<phi>Res_Spec (\<I> INTERP (r * mk x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk x) = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
+\<Longrightarrow> (\<phi>Res_Spec (\<I> F.INTERP (r * mk x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk x) = \<phi>Res_Spec (\<I> F.INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify; rule; clarsimp simp add: \<phi>expns R.raw_basic_fiction_\<I> interp_split')
@@ -655,7 +655,7 @@ lemma expand_subj:
 lemma expand:
   \<open> Fic_Space r
 \<Longrightarrow> r ## mk x
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk x)) = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
+\<Longrightarrow> \<phi>Res_Spec (\<I> F.INTERP (r * mk x)) = \<phi>Res_Spec (\<I> F.INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
@@ -704,7 +704,7 @@ sublocale basic_fiction \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
 lemma partial_implies:
   \<open> Fic_Space r
 \<Longrightarrow> r ## mk (Some (agree (nonsepable x)))
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Some (agree (nonsepable x)))))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> F.INTERP (r * mk (Some (agree (nonsepable x)))))
 \<Longrightarrow> R.get res = Some (nonsepable x)\<close>
   unfolding \<phi>Res_Spec_def apply (clarsimp simp add: interp_split'
      R.fiction_agree_def R.raw_basic_fiction_\<I> \<phi>expns R.\<r>_valid_split'

@@ -59,7 +59,7 @@ lemma MemAddrState_add_I1[intro]: " h1 \<^bold>a\<^bold>t a \<^bold>i\<^bold>s T
 
 *)
 
-subsection \<open>General Rules \& Tools\<close>
+section \<open>Small Processes\<close>
 
 
 (* subsubsection \<open>General Rules\<close>
@@ -75,7 +75,7 @@ lemma (in \<phi>empty) [\<phi>reason 2000 on \<open>OBJ ?X \<^bold>i\<^bold>m\<^
   unfolding Imply_def by (simp add: \<phi>expns, blast) *)
 
 
-subsubsection \<open>General Simplification for Assertions\<close>
+subsection \<open>General Simplification for Assertions\<close>
 
 \<phi>reasoner assertion_simplification 1200
   (\<open>Simplify assertion_simplification ?X' ?X\<close>)
@@ -87,7 +87,7 @@ lemmas [assertion_simps] =
 
 
 
-subsubsection \<open>Case Analysis\<close>
+subsection \<open>Case Analysis\<close>
 
 
 lemma [\<phi>reason 1200]: "Premise mode (A = B x y) \<Longrightarrow> Premise mode (A = case_prod B (x,y))" by simp
@@ -111,7 +111,7 @@ lemma [elim!]:
 
 
 
-subsubsection \<open>Same \<phi>-Type\<close>
+subsection \<open>Same \<phi>-Type\<close>
 
 definition SameNuTy :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " where "SameNuTy A B = True"
 text \<open>Technical tag for reasoner converges \<phi>-types of two typings.\<close>
@@ -132,7 +132,7 @@ lemma [\<phi>reason 1000]: "SameNuTy A A" \<comment> \<open>The fallback\<close>
   unfolding SameNuTy_def ..
 
 
-subsection \<open>Process of Cleaning\<close>
+subsection \<open>Cleaning\<close>
 
 definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>\<r>Clean S \<longleftrightarrow> (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1)\<close>
 
@@ -150,7 +150,7 @@ lemma [\<phi>reason 3000 for \<open>\<r>Clean (?x \<Ztypecolon> ?T ?\<^sub>\<phi
   \<open> \<r>Clean (x \<Ztypecolon> T ?\<^sub>\<phi> False) \<close>
   unfolding \<r>Clean_def Imply_def by simp
 
-paragraph \<open>Structural Node\<close>
+subsubsection \<open>Structural Node\<close>
 
 lemma [\<phi>reason 1200]:
   \<open> \<r>Clean A
@@ -192,7 +192,82 @@ lemma [\<phi>reason 1200]:
   using share_right_one by blast
 
 
-subsection \<open>Transformation of State Abstraction (ToSA)\<close>
+subsection \<open>Unification of \<lambda>-Abstraction\<close>
+
+definition Function_over :: \<open>('a,'b) \<phi> \<Rightarrow> 'c \<Rightarrow> ('a, 'c \<Rightarrow> 'b) \<phi>\<close> (infix "<func-over>" 40)
+  where \<open>(T <func-over> x) = (\<lambda>f. f x \<Ztypecolon> T)\<close>
+
+text \<open>
+  \<^term>\<open>f \<Ztypecolon> T <func-over> x\<close> constrains f is a function about x,
+    i.e. \<^prop>\<open>f \<Ztypecolon> T <func-over> x \<equiv> f x \<Ztypecolon> T\<close>.
+  It is useful to circumvent nondeterminacy in the higher-order unification between
+    \<^schematic_term>\<open>?f x \<Ztypecolon> T\<close> and \<^term>\<open>g x \<Ztypecolon> T\<close> which has multiple solutions
+    including \<^term>\<open>f = g\<close> or \<^term>\<open>f = (\<lambda>_. g x)\<close>.
+  Concerning this, \<^term>\<open>f \<Ztypecolon> T <func-over> x\<close> clarifies the ambiguity by a specialized reasoner
+    that forces the exhaustive solution, i.e., the residue of \<^schematic_term>\<open>?f\<close> contains no
+    free occurrence of \<^term>\<open>x\<close>.
+
+  This specialized reasoner is \<^term>\<open>lambda_abstraction x fx f\<close> as,
+
+\<^prop>\<open> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s fx \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s f \<Ztypecolon> T <func-over> x \<^bold>a\<^bold>n\<^bold>d P\<close>
+
+  which does the lambda abstraction, \<open>f = \<lambda>x. fx\<close>.
+\<close>
+
+lemma Function_over_expn[\<phi>expns]:
+  \<open>(f \<Ztypecolon> T <func-over> x) = (f x \<Ztypecolon> T)\<close>
+  unfolding Function_over_def \<phi>Type_def by simp
+
+lemma Function_over_case_named[simp]:
+  \<open>(case_named f \<Ztypecolon> T <func-over> tag x) = (f \<Ztypecolon> T <func-over> x)\<close>
+  by (simp add: \<phi>expns)
+
+lemmas [unfolded atomize_eq[symmetric], named_expansion] = Function_over_case_named
+
+lemma [\<phi>reason 2000]:
+  \<open> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s fx \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s f \<Ztypecolon> T <func-over> x \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def lambda_abstraction_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 2000]:
+  \<open> f x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> f \<Ztypecolon> T <func-over> x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def by (simp add: \<phi>expns)
+
+context \<phi>spec begin
+
+lemma [\<phi>reason 2000]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> fx \<Ztypecolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> f \<Ztypecolon> T <func-over> x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding lambda_abstraction_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 2000]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w f x \<Ztypecolon> T \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w f \<Ztypecolon> T <func-over> x \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  unfolding lambda_abstraction_def by (simp add: \<phi>expns)
+
+
+lemma [\<phi>reason 1200 for
+  \<open>Synthesis_Parse ?input (\<lambda>v. ?f \<Ztypecolon> ?T v <func-over> ?x :: ('FIC_N,'FIC)assn)\<close>
+]:
+  \<open> Synthesis_Parse input (\<lambda>v. fx \<Ztypecolon> T v)
+\<Longrightarrow> lambda_abstraction x fx f
+\<Longrightarrow> Synthesis_Parse input (\<lambda>v. f \<Ztypecolon> T v <func-over> x :: ('FIC_N,'FIC)assn)\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason 1200]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> SYNTHESIS f x \<Ztypecolon> T v \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> SYNTHESIS f \<Ztypecolon> T v <func-over> x \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P\<close>
+  unfolding Synthesis_def lambda_abstraction_def by (simp add: \<phi>expns)
+
+end
+
+
+section \<open>Transformation of State Abstraction (ToSA)\<close>
 
 text \<open>This is a reasoning procedure for transformations of abstraction of the whole computation
   state, which we name \<^emph>\<open>Transformation of State Abstraction (ToSA)\<close>.
@@ -559,7 +634,7 @@ lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding Structural
 
 
 
-subsection \<open>ToSA for View Shift\<close>
+section \<open>ToSA for View Shift\<close>
 
 text \<open>This is a counterpart of the ToSA for view shifts.\<close>
 
@@ -1012,9 +1087,7 @@ lemma [\<phi>intro 13000]: "False \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\
 
 
 
-
-
-subsection \<open>Convergence of Branches\<close>
+section \<open>Convergence of Branches\<close>
 
 text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the canonical \<phi>-BI form \<^term>\<open>C\<close>.
 

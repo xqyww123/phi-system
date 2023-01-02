@@ -74,11 +74,11 @@ locale \<phi>empty_sem =
   \<phi>empty_ty  where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
             and TYPE'REP  = \<open>TYPE('TY)\<close>
-+ \<phi>empty_val where CONS_OF   = VAL_CONS_OF
++ V: \<phi>empty_val where CONS_OF   = VAL_CONS_OF
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
             and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
-+ \<phi>empty_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
++ R: \<phi>empty_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
             and TYPE'REP  = \<open>TYPE('RES::sep_algebra)\<close>
@@ -116,16 +116,16 @@ subsubsection \<open>Fiction\<close>
 
 locale \<phi>spec =
   \<phi>resource_sem Resource_Validator
-+ fictional_space INTERPRET
++ F: fictional_space INTERPRET
 for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::sep_algebra set"
 and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 'RES::sep_algebra) interp"
 begin
 
-definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> {_. Fic_Space fic} \<inter> \<I> INTERP fic"
+definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> {_. Fic_Space fic} \<inter> \<I> F.INTERP fic"
   \<comment> \<open>Interpret a fiction\<close>
 
 lemma In_INTERP_RES:
-  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> Valid_Resource \<and> Fic_Space fic \<and> r \<in> \<I> INTERP fic\<close>
+  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> Valid_Resource \<and> Fic_Space fic \<and> r \<in> \<I> F.INTERP fic\<close>
   unfolding INTERP_RES_def by simp
 
 definition INTERP_SPEC :: \<open>('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('RES_N \<Rightarrow> 'RES) set\<close>
@@ -157,11 +157,11 @@ lemma INTERP_mult:
 \<Longrightarrow> Fic_Space f2
 \<Longrightarrow> dom1 r1 \<inter> dom1 r2 = {}
 \<Longrightarrow> dom1 f1 \<inter> dom1 f2 = {}
-\<Longrightarrow> r1 \<in> \<I> INTERP f1
-\<Longrightarrow> r2 \<in> \<I> INTERP f2
+\<Longrightarrow> r1 \<in> \<I> F.INTERP f1
+\<Longrightarrow> r2 \<in> \<I> F.INTERP f2
 \<Longrightarrow> f1 ## f2
-\<Longrightarrow> r1 * r2 \<in> \<I> INTERP (f1 * f2) \<and> r1 ## r2\<close>
-  unfolding INTERP_def Fic_Space_def
+\<Longrightarrow> r1 * r2 \<in> \<I> F.INTERP (f1 * f2) \<and> r1 ## r2\<close>
+  unfolding F.INTERP_def Fic_Space_def
   by (simp add: dom1_sep_mult_disjoint times_fun prod.union_disjoint
                 disjoint_dom1_eq_1[of f1 f2],
       meson dom1_disjoint_sep_disj times_set_I)
@@ -182,7 +182,7 @@ and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 
 
 
 (*lemma FIC_var_split: \<open>Fic_Space fic \<Longrightarrow>
-    \<I> INTERP (fic * FIC_var.mk vars) = \<I> INTERP fic * {R_var.mk vars}\<close>
+    \<I> F.INTERP (fic * FIC_var.mk vars) = \<I> F.INTERP fic * {R_var.mk vars}\<close>
   apply (subst FIC_var.interp_split; simp add: exclusive_var_def R_var.mk_homo_mult)
   by (subst FIC_var.interp_split[where f = fic]; simp add: exclusive_var_def
       set_mult_single[symmetric] mult.assoc)

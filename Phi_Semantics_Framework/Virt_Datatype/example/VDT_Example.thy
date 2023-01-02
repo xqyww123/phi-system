@@ -119,8 +119,6 @@ virtual_datatype T1 :: plus =
 
 text \<open>The essence of a VDT is a locale.\<close>
 
-print_locale T1
-
 locale T1_demo =
   fixes CONS_OF :: "'rep::plus \<Rightarrow> 'CONS_NAME"
     and C1 :: "('CONS_NAME, 'rep, nat)  Virtual_Datatype.Field"
@@ -157,19 +155,19 @@ typ \<open>'rep :: plus\<close>
 
 subsubsection \<open>Constructor\<close>
 
-term \<open>C1.mk 42 :: 'rep\<close> \<comment> \<open>Make an instance by constructor \<^term>\<open>C1\<close>\<close>
+term \<open>C1.mk 42 :: 'rep\<close> \<comment> \<open>Make an instance by constructor \<^term>\<open>\<f>\<i>\<e>\<l>\<d>_C1\<close>\<close>
 
-lemma \<open>C1.mk = Virtual_Datatype.Field.inject C1\<close>
+lemma \<open>C1.mk = Virtual_Datatype.Field.inject \<f>\<i>\<e>\<l>\<d>_C1\<close>
   \<comment> \<open>\<open>C1.mk\<close> is merely a syntax sugar of \<open>Virtual_Datatype.Field.inject C1\<close>\<close>
   by simp
 
-ML \<open>@{term C1.mk} = @{term \<open>Virtual_Datatype.Field.inject C1\<close>}\<close> \<comment> \<open>is True!\<close>
+ML \<open>@{term C1.mk} = @{term \<open>Virtual_Datatype.Field.inject \<f>\<i>\<e>\<l>\<d>_C1\<close>}\<close> \<comment> \<open>is True!\<close>
 
 subsubsection \<open>Destructor\<close>
 
-term \<open>C1.dest :: 'rep \<Rightarrow> nat\<close> \<comment> \<open>Destructor corresponding to \<^term>\<open>C1\<close>\<close>
+term \<open>C1.dest :: 'rep \<Rightarrow> nat\<close> \<comment> \<open>Destructor corresponding to \<^term>\<open>\<f>\<i>\<e>\<l>\<d>_C1\<close>\<close>
 
-lemma \<open>C1.dest = Virtual_Datatype.Field.project C1\<close>
+lemma \<open>C1.dest = Virtual_Datatype.Field.project \<f>\<i>\<e>\<l>\<d>_C1\<close>
   \<comment> \<open>Yet another syntax sugar\<close>
   by simp
 
@@ -179,9 +177,9 @@ lemma \<open>C1.dest (C1.mk x) = x\<close>
 
 subsubsection \<open>Constructor Name\<close>
 
-term \<open>C1.name :: 'CONS_NAME\<close> \<comment> \<open>The name of the constructor \<open>C1\<close>\<close>
+term \<open>C1.name :: 'CONS_NAME\<close> \<comment> \<open>The name of the constructor \<open>\<f>\<i>\<e>\<l>\<d>_C1\<close>\<close>
 
-lemma \<open>C1.name = Virtual_Datatype.Field.name C1\<close>
+lemma \<open>C1.name = Virtual_Datatype.Field.name \<f>\<i>\<e>\<l>\<d>_C1\<close>
   \<comment> \<open>Yet another syntax sugar\<close>
   by simp
 
@@ -221,8 +219,6 @@ virtual_datatype T2 = T1 +
   C3 :: int
 
 text \<open>The locale of @{locale T2} extends all locales of its parents.\<close>
-
-print_locale T2
 
 locale T2_demo =
   fixes CONS_OF :: "'rep::plus \<Rightarrow> 'CONS_NAME"
@@ -311,7 +307,7 @@ subsection \<open>Interpretation of VDT locale\<close>
 datatype cons_names = MY_R_NIL | MY_R_CONS
 
 interpretation interp1: TR
-  "(\<lambda>l. case l of [] \<Rightarrow> MY_R_NIL | _ \<Rightarrow> MY_R_CONS)"
+  "(\<lambda>l. case l of [] \<Rightarrow> MY_R_NIL | _ \<Rightarrow> MY_R_CONS)" _ _
   \<open>Virtual_Datatype.Field MY_R_NIL (\<lambda>_. ()) (\<lambda>_. [])\<close>
   \<open>Virtual_Datatype.Field MY_R_CONS (\<lambda>l. case l of (a#l') \<Rightarrow> (a,l')) (\<lambda>(a,l'). a#l')\<close>
   by unfold_locales (auto split: list.split unit.split)

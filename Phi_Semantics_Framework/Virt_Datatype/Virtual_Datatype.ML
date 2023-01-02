@@ -87,6 +87,7 @@ val CONS_OF_N = "CONS_OF"
 val constructor_locale_N = "_names"
 val fields_locale_N = "_prjs"
 val TVAR_N = "TYPE"
+val fieldN = "\<f>\<i>\<e>\<l>\<d>_"
 
 val project_injectL_default = \<^locale>\<open>project_inject\<close>
 
@@ -309,19 +310,21 @@ fun get_dist_thm2 ctxt x y =
   in 
     result
   end)
-    
-       
+
+
 fun get_comp' ctxt name =
-  mk_free (Context.proof_of ctxt) name 
+  let val vname = fieldN ^ name in
+  mk_free (Context.proof_of ctxt) vname
   |> Option.mapPartial (fn t => 
        let
          val declinfo = #declinfo (ConstructorData.get ctxt)
        in 
          case Termtab.lookup declinfo t of
            NONE => (* during syntax phase, types of fixes might not yet be constrained completely *) 
-             AList.lookup (fn (x, Free (n,_)) => n = x | _ => false) (Termtab.dest declinfo) name
+             AList.lookup (fn (x, Free (n,_)) => n = x | _ => false) (Termtab.dest declinfo) vname
          | some => some
        end)
+  end
 
 (* legacy wrapper *)
 fun get_comp ctxt name =
@@ -513,11 +516,14 @@ fun VDT_definition value_sort project_injectL
     val locs = (Binding.name nameTN,  SOME (Term.itselfT nameT),  NoSyn) ::
                (Binding.name valueTN, SOME (Term.itselfT valueT), NoSyn) ::
                (Binding.name CONS_OF_N, SOME (valueT --> nameT), NoSyn) ::
-               maps (fn (n,T) => [(Binding.name n, NONE, NoSyn)]) all_comps @
-               map (fn (N,Ty) => (Binding.name N, SOME Ty, NoSyn) ) TVARS
+               maps (fn (n,T) => [(Binding.name (n), NONE, NoSyn)]) all_comps @
+               map (fn (N,Ty) => (Binding.name (N), SOME Ty, NoSyn) ) TVARS
     val name_insts = map (fn (n,T) =>
           (n, Const (\<^const_name>\<open>Field.name\<close>, fieldT T --> nameT)
-                $ Free (n, fieldT T))) all_comps
+                $ Free (fieldN^n, fieldT T))) all_comps
+    val proj_insts = map (fn (n,T) =>
+          (n, Free (fieldN^n, fieldT T))) all_comps
+    val vars = (map (fn (n,T) => (Binding.make (fieldN^n,pos), NONE, NoSyn)) all_comps)
 
     fun interprete_parent_valuetypes (prefix, (Ts, pname, comps)) thy =
       let
@@ -574,10 +580,10 @@ fun VDT_definition value_sort project_injectL
                    (Expression.Named ((typeN, TYPE_TY)::name_insts)
                    ,[]))),
                 (suffix fields_locale_N full_name,
-                  (("",false),(Expression.Named [(nameTN, TYPE_TY),(valueTN, VALUE_TY)], []))
+                  (("",false),(Expression.Named ([(nameTN, TYPE_TY),(valueTN, VALUE_TY)] @ proj_insts), []))
                 )],
                [(Binding.name nameTN,  SOME nameTT,  NoSyn),
-                (Binding.name valueTN, SOME valueTT, NoSyn)])
+                (Binding.name valueTN, SOME valueTT, NoSyn)] @ vars)
             []
      |> Proof_Context.theory_of
      |> fold interprete_parent parents
