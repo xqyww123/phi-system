@@ -6,6 +6,10 @@ chapter \<open>Minimal Semantics\<close>
 
 text \<open>This minimal semantics contains integer and variable.\<close>
 
+section \<open>Preliminary\<close>
+
+no_notation inter (infixl "Int" 70) and union (infixl "Un" 65)
+
 section \<open>Semantic\<close>
 
 subsection \<open>Models\<close>
@@ -20,6 +24,8 @@ abbreviation int where \<open>int \<equiv> int.mk\<close>
 end
 
 subsubsection \<open>Value\<close>
+
+term \<open>Int(a)\<close>
 
 virtual_datatype 'TY \<phi>min_val :: "nonsepable_semigroup" = 'TY \<phi>empty_val +
   Int     :: \<open>nat \<times> nat\<close> \<comment> \<open>bits \<times> value\<close>
@@ -44,8 +50,7 @@ resource_space ('VAL::nonsepable_semigroup,'TY) \<phi>min_res = ('VAL,'TY) \<phi
 subsubsection \<open>Pure Semantics\<close>
 
 locale \<phi>min_sem =
-  \<phi>empty_sem where TYPES = TYPES
-+ \<phi>min_ty  where CONS_OF   = TY_CONS_OF
+  \<phi>min_ty  where CONS_OF   = TY_CONS_OF
             and TYPE'NAME = \<open>TYPE('TY_N)\<close>
             and TYPE'REP  = \<open>TYPE('TY)\<close>
 + V: \<phi>min_val where CONS_OF   = VAL_CONS_OF
@@ -56,6 +61,7 @@ locale \<phi>min_sem =
             and TYPE'TY   = \<open>TYPE('TY)\<close>
             and TYPE'NAME = \<open>TYPE('RES_N)\<close>
             and TYPE'REP  = \<open>TYPE('RES::sep_algebra)\<close>
++ \<phi>empty_sem where TYPES = TYPES
 + \<phi>resource_sem where Resource_Validator = Resource_Validator
 for TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
                 \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
@@ -93,14 +99,118 @@ locale \<phi>min =
 + \<phi>empty where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
                           \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
                           \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra)
-                          \<times> ('FIC_N \<Rightarrow> 'FIC))\<close>
+                          \<times> ('FIC_N \<Rightarrow> 'FIC::sep_algebra))\<close>
 + fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
 begin
 
-sublocale FIC_var: identity_fiction \<open>{vars. finite (dom vars)}\<close> R_var
+sublocale FIC_varx: identity_fiction \<open>{vars. finite (dom vars)}\<close> R_var
     Resource_Validator INTERPRET FIC_var ..
 
 end
+
+print_locale \<phi>min_sem
+ML \<open>Locale.params_of @{theory} @{locale \<phi>min_sem}\<close>
+
+typedecl TY_N
+typedecl TY
+typedecl VAL_N
+typedecl VAL
+typedecl FIC_N
+typedecl FIC
+typedecl RES_N
+typedecl RES
+
+axiomatization where VAL: \<open>OFCLASS(VAL, nonsepable_semigroup_class)\<close>
+and FIC: \<open>OFCLASS(FIC, sep_algebra_class)\<close>
+and RES: \<open>OFCLASS(RES, sep_algebra_class)\<close>
+
+ML \<open>@{term \<open>OFCLASS(FIC, sep_algebra_class)\<close>}\<close>
+ML \<open>Sign.full_bname @{theory} "a"\<close>
+
+setup \<open>Axclass.add_arity @{thm VAL}
+#> Axclass.add_arity @{thm FIC}
+#> Axclass.add_arity @{thm RES}
+\<close>
+
+
+axiomatization \<f>\<i>\<e>\<l>\<d>_int :: "(TY_N, TY, nat) Virtual_Datatype.Field"
+and  T_tup :: "(TY_N, TY, TY list) Virtual_Datatype.Field"
+and  T_array :: "(TY_N, TY, TY \<times> nat) Virtual_Datatype.Field"
+and  \<f>\<i>\<e>\<l>\<d>_Int :: "(VAL_N, VAL, nat \<times> nat) Virtual_Datatype.Field"
+and  V_Tup :: "(VAL_N, VAL, VAL list) Virtual_Datatype.Field"
+and  V_Array :: "(VAL_N, VAL, TY \<times> VAL list) Virtual_Datatype.Field"
+and  INTERPRET :: "FIC_N \<Rightarrow> (FIC, RES_N \<Rightarrow> RES) interp"
+and  FIC_var :: "(FIC_N, FIC, varname \<Rightarrow> VAL option) Virtual_Datatype.Field"
+and  TY_CONS_OF :: "TY \<Rightarrow> TY_N"
+and  VAL_CONS_OF :: "VAL \<Rightarrow> VAL_N"
+and  Resource_Validator :: "RES_N \<Rightarrow> RES set"
+and  Well_Type :: "TY \<Rightarrow> VAL set"
+and  Can_EqCompare :: "(RES_N \<Rightarrow> RES) \<Rightarrow> VAL \<Rightarrow> VAL \<Rightarrow> bool"
+and  EqCompare :: "VAL \<Rightarrow> VAL \<Rightarrow> bool"
+and  Zero :: "TY \<Rightarrow> VAL option"
+and  R_var :: "(RES_N, RES, varname \<Rightarrow> VAL option) Virtual_Datatype.Field"
+where XXX: \<open>\<phi>min_sem \<f>\<i>\<e>\<l>\<d>_int \<f>\<i>\<e>\<l>\<d>_Int R_var TY_CONS_OF VAL_CONS_OF Resource_Validator Well_Type Can_EqCompare
+      EqCompare Zero\<close>
+
+print_locale \<phi>min_sem
+
+global_interpretation mm: \<phi>min_sem \<f>\<i>\<e>\<l>\<d>_int \<f>\<i>\<e>\<l>\<d>_Int R_var TY_CONS_OF VAL_CONS_OF Resource_Validator Well_Type Can_EqCompare
+      EqCompare Zero
+  using XXX .
+
+
+
+
+axiomatization \<f>\<i>\<e>\<l>\<d>_int :: "(TY_N, TY, nat) Virtual_Datatype.Field"
+and  T_tup :: "(TY_N, TY, TY list) Virtual_Datatype.Field"
+and  T_array :: "(TY_N, TY, TY \<times> nat) Virtual_Datatype.Field"
+and  \<f>\<i>\<e>\<l>\<d>_Int :: "(VAL_N, VAL, nat \<times> nat) Virtual_Datatype.Field"
+and  V_Tup :: "(VAL_N, VAL, VAL list) Virtual_Datatype.Field"
+and  V_Array :: "(VAL_N, VAL, TY \<times> VAL list) Virtual_Datatype.Field"
+and  INTERPRET :: "FIC_N \<Rightarrow> (FIC, RES_N \<Rightarrow> RES) interp"
+and  FIC_var :: "(FIC_N, FIC, varname \<Rightarrow> VAL option) Virtual_Datatype.Field"
+and  TY_CONS_OF :: "TY \<Rightarrow> TY_N"
+and  VAL_CONS_OF :: "VAL \<Rightarrow> VAL_N"
+and  Resource_Validator :: "RES_N \<Rightarrow> RES set"
+and  Well_Type :: "TY \<Rightarrow> VAL set"
+and  Can_EqCompare :: "(RES_N \<Rightarrow> RES) \<Rightarrow> VAL \<Rightarrow> VAL \<Rightarrow> bool"
+and  EqCompare :: "VAL \<Rightarrow> VAL \<Rightarrow> bool"
+and  Zero :: "TY \<Rightarrow> VAL option"
+and  R_var :: "(RES_N, RES, varname \<Rightarrow> VAL option) Virtual_Datatype.Field"
+where XXX: \<open>\<phi>min \<f>\<i>\<e>\<l>\<d>_int \<f>\<i>\<e>\<l>\<d>_Int R_var TY_CONS_OF VAL_CONS_OF Resource_Validator Well_Type Can_EqCompare
+      EqCompare Zero INTERPRET FIC_var\<close>
+
+print_locale \<phi>min
+
+global_interpretation mm: \<phi>min \<f>\<i>\<e>\<l>\<d>_int \<f>\<i>\<e>\<l>\<d>_Int R_var TY_CONS_OF VAL_CONS_OF Resource_Validator Well_Type Can_EqCompare
+      EqCompare Zero INTERPRET FIC_var
+  using XXX .
+
+
+
+
+axiomatization T_int :: "(TY_N, TY, nat) Virtual_Datatype.Field"
+and  T_tup :: "(TY_N, TY, TY list) Virtual_Datatype.Field"
+and  T_array :: "(TY_N, TY, TY \<times> nat) Virtual_Datatype.Field"
+and  V_int :: "(VAL_N, VAL, nat \<times> nat) Virtual_Datatype.Field"
+and  V_Tup :: "(VAL_N, VAL, VAL list) Virtual_Datatype.Field"
+and  V_Array :: "(VAL_N, VAL, TY \<times> VAL list) Virtual_Datatype.Field"
+and  INTERPRET :: "FIC_N \<Rightarrow> (FIC, RES_N \<Rightarrow> RES) interp"
+and  FIC_var :: "(FIC_N, FIC, varname \<Rightarrow> VAL option) Virtual_Datatype.Field"
+and  TY_CONS_OF :: "TY \<Rightarrow> TY_N"
+and  VAL_CONS_OF :: "VAL \<Rightarrow> VAL_N"
+and  Resource_Validator :: "RES_N \<Rightarrow> RES set"
+and  Well_Type :: "TY \<Rightarrow> VAL set"
+and  Can_EqCompare :: "(RES_N \<Rightarrow> RES) \<Rightarrow> VAL \<Rightarrow> VAL \<Rightarrow> bool"
+and  EqCompare :: "VAL \<Rightarrow> VAL \<Rightarrow> bool"
+and  Zero :: "TY \<Rightarrow> VAL option"
+and  R_var :: "(RES_N, RES, varname \<Rightarrow> VAL option) Virtual_Datatype.Field"
+where XXX: \<open>\<phi>min TY_CONS_OF VAL_CONS_OF Resource_Validator Well_Type Can_EqCompare
+      EqCompare Zero \<f>\<i>\<e>\<l>\<d>_int \<f>\<i>\<e>\<l>\<d>_Int R_var INTERPRET FIC_var\<close>
+
+interpretation mm: \<phi>min TY_CONS_OF VAL_CONS_OF Resource_Validator Well_Type Can_EqCompare
+      EqCompare Zero T_int V_int R_var INTERPRET FIC_var
+  using XXX .
 
 
 section \<open>\<phi>-Types\<close>
