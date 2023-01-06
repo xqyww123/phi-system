@@ -506,7 +506,7 @@ fun VDT_definition value_sort project_injectL
           (\<^locale>\<open>virtual_datatype\<close>, (("",false),
                 (Expression.Positional [SOME cons_of],[]))) ::
           map (fn (n,T) => (project_injectL,
-                    ((n,false),(Expression.Positional
+                    ((n,true),(Expression.Positional
                          [SOME cons_of,
                           SOME (Free (n, fieldT T))]
                     ,[])))) all_comps
@@ -576,7 +576,7 @@ fun VDT_definition value_sort project_injectL
      |> fold interprete_parent_valuetypes parents
      |> add_locale name_b
             (  [(suffix constructor_locale_N full_name,
-                  (("",false),
+                  ((name ^ "_" ^ constructor_locale_N, true),
                    (Expression.Named ((typeN, TYPE_TY)::name_insts)
                    ,[]))),
                 (suffix fields_locale_N full_name,

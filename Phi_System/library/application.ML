@@ -27,7 +27,7 @@ val expand_appliant =
   repeat (fn th => th RS @{thm spec})
 
 fun apply_proc_naive proc (ctxt,sequent) =
-  (ctxt, expand_appliant proc RS (sequent RS (Proof_Context.get_thm ctxt "local.\<phi>apply_proc")))
+  (ctxt, expand_appliant proc RS (sequent RS @{thm \<phi>apply_proc}))
 
 val empty_var = Synchronized.var "\<phi>application_ctxt" [] : thm list Synchronized.var
 

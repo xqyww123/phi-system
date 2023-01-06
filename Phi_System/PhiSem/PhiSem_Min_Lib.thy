@@ -44,14 +44,14 @@ definition Variable_of :: \<open>'a \<Rightarrow> varname \<Rightarrow> 'a\<clos
 definition Set_Variable :: \<open>varname \<Rightarrow> 'a \<Rightarrow> 'a\<close> ("$_ := _" [1000, 51] 50)
   where [iff]: \<open>($x := y) = y\<close>
 
-lemma (in \<phi>min) [\<phi>reason 2000 for
-  \<open>Synthesis_Parse (?var::varname) (?Y::?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+lemma [\<phi>reason 2000 for
+  \<open>Synthesis_Parse (?var::varname) (?Y::?'ret \<Rightarrow> assn)\<close>
 ]:
-  \<open>Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T :: ('FIC_N,'FIC) assn)\<close>
+  \<open>Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T :: assn)\<close>
   unfolding Synthesis_Parse_def ..
 
 
-\<phi>processor (in \<phi>min) get_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
+\<phi>processor get_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.term >> (fn var => fn () =>
     let
       val ctxt_parse = Config.put phi_synthesis_parsing true ctxt
@@ -65,10 +65,6 @@ lemma (in \<phi>min) [\<phi>reason 2000 for
 
 
 subsubsection \<open>Operations\<close>
-
-ML_file_debug "library/local_value.ML"
-
-context \<phi>min begin
 
 paragraph \<open>Get Variable\<close>
 
@@ -119,7 +115,7 @@ paragraph \<open>Declare New Variables\<close>
 
 declare [[ML_print_depth=1000, eta_contract=false]]
 
-proc (in \<phi>min) op_var_scope:
+proc op_var_scope:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and BLK: \<open>\<forall>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> x \<Ztypecolon> Var var T \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY)
                     \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>\<close>
@@ -130,10 +126,10 @@ proc (in \<phi>min) op_var_scope:
     try'' \<medium_left_bracket> BLK to_Identity op_free_var \<medium_right_bracket>. \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>. \<medium_right_bracket>. .
 
 lemma "__\<phi>op_var_scope__":
-  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> Y (ret::'a sem_value) \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY)
+  \<open> (\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> R\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma>  X \<longmapsto> \<lambda>ret. Y ret \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY)
                 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var (\<phi>Any <of-type> TY) \<rbrace>)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) TY F raw \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Val raw T) \<longmapsto> Y (ret::'a sem_value) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) TY F raw \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Val raw T) \<longmapsto> \<lambda>ret. Y ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding mult.assoc[symmetric]
   using op_var_scope_\<phi>app[where X=\<open>R\<heavy_comma> X\<close> and x = x and T = T and TY = TY and F=F,
             of Y E \<open>raw\<close>, simplified]
@@ -148,11 +144,12 @@ lemma "__\<phi>op_set_var__":
     op_set_var G \<medium_right_bracket>. .
 
 
-
 lemma "__\<phi>op_var_scope__0":
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   by fastforce
+
+ML_file_debug "library/local_value.ML"
 
 \<phi>processor assign_variable 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
   fn (ctxt,sequent) => ((\<^keyword>\<open>\<rightarrow>\<close> |-- Parse.list1 Parse.binding)
@@ -172,7 +169,7 @@ paragraph \<open>Not\<close>
 
 bundle unfold_Big = Big_def[iff]
 
-lemma (in \<phi>min) op_not[\<phi>overload \<not>]:
+lemma op_not[\<phi>overload \<not>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not raw \<lbrace> x \<Ztypecolon> Val raw \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
   including unfold_Big
@@ -235,23 +232,23 @@ lemma op_const_int_\<phi>app:
   by (rule, simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200
-    for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
-       \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
-       \<open>Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+    for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
+       \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
+       \<open>Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>[32]) X
 \<Longrightarrow> Synthesis_Parse n X\<close>
-  for X :: \<open>'ret \<Rightarrow> ('FIC_N,'FIC) assn\<close>
+  for X :: \<open>'ret \<Rightarrow> assn\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason 1200
-    for \<open>Synthesis_Parse ((numeral ?n::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
-       \<open>Synthesis_Parse ((1::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
-       \<open>Synthesis_Parse ((0::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> ('FIC_N,'FIC) assn)\<close>
+    for \<open>Synthesis_Parse ((numeral ?n::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> assn)\<close>
+       \<open>Synthesis_Parse ((1::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> assn)\<close>
+       \<open>Synthesis_Parse ((0::nat) <bits> ?b) (?X :: ?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open> Synthesis_Parse (n \<Ztypecolon> \<nat>[b]) X
 \<Longrightarrow> Synthesis_Parse (n <bits> b) X\<close>
-  for X :: \<open>'ret \<Rightarrow> ('FIC_N,'FIC) assn\<close>
+  for X :: \<open>'ret \<Rightarrow> assn\<close>
   unfolding Synthesis_Parse_def ..
 
 
@@ -324,7 +321,7 @@ lemma op_add_mod:
 
 paragraph \<open>Subtraction\<close>
 
-lemma (in \<phi>min) op_sub[\<phi>overload -]:
+lemma op_sub[\<phi>overload -]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub b (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> Val vx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val vy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<nat>[b] \<rbrace>\<close>
   unfolding op_sub_def Premise_def including unfold_Big
@@ -530,12 +527,7 @@ proc \<phi>__synthesis_eq[
 
 
 
-end
-
-
 subsection \<open>Branches & Loops\<close>
-
-context \<phi>min begin
 
 
 lemma op_sel_\<phi>app:
@@ -569,8 +561,6 @@ proc "if":
   throws \<open>\<lambda>e. E e + (E\<^sub>T e \<^bold>s\<^bold>u\<^bold>b\<^bold>j C) + (E\<^sub>F e \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> C)\<close>
   \<medium_left_bracket> C branch brT brF \<medium_right_bracket>. .
 
-end
-
 
 section \<open>Procedures and Operations\<close>
 
@@ -583,8 +573,6 @@ consts Guard :: \<open>bool \<Rightarrow> bool\<close> ("Guard: _" [37] 36)
 
 
 subsubsection \<open>Loops\<close>
-
-context \<phi>min begin
 
 lemma "__DoWhile__rule_\<phi>app":
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l P x' \<Ztypecolon> \<bool>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
@@ -609,16 +597,13 @@ lemma "__DoWhile__rule_\<phi>app":
 text \<open>Note the While rule we mentioned in the paper is just a special case of the above
       __DoWhile__rule_\<phi>app\<close>
 
-
-
-lemma (in \<phi>min)
+lemma
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l P x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x'\<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. I x \<and> P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<and> \<not> P x' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. I x' \<rbrace>"
   using "__DoWhile__rule_\<phi>app"[where X=\<open>\<lambda>x. X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j I x\<close> and P=P,
             simplified Subjection_times, simplified] .
 
-
-proc (in \<phi>min) (nodef) do_while:
+proc (nodef) do_while:
 assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X' x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x)\<close>
     and V: \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> ( X' x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> cond x) \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close>
 assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x
@@ -652,8 +637,6 @@ proc while:
   argument \<open>X'\<close>
   return \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> \<not> cond x\<close>
   \<medium_left_bracket> V C
-  note [[\<phi>trace_reasoning]]
-  ;;
     branch \<medium_left_bracket>
       do_while \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. Inv: invariant vars \<and> Guard: cond vars\<close>
       \<medium_left_bracket> B C \<medium_right_bracket>.
@@ -699,7 +682,5 @@ proc
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*)
     $v
   \<medium_right_bracket>. .
-
-end
 
 end

@@ -94,7 +94,7 @@ val pure_All_expansion =
   gen_general_expansion @{const_name Pure.all} @{thms split_paired_all named_All} (SOME \<^typ>\<open>prop\<close>)
 fun ExNu_expansion names ctxt =
   gen_general_expansion @{const_name ExSet} @{thms ExSet_pair named_ExSet}
-    (SOME (PhiSyntax.mk_assnT ctxt)) names ctxt
+    (SOME \<^typ>\<open>assn\<close>) names ctxt
 
 fun aux_expansions ctxt = Named_Theorems.get ctxt @{named_theorems named_expansion}
 

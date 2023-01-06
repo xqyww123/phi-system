@@ -52,16 +52,14 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val oprs = map check_name names
 
     val init = Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>))
-    val op_var_scope = Proof_Context.get_thm ctxt "local.__\<phi>op_var_scope__"
-    val op_set_var   = Proof_Context.get_thm ctxt "local.__\<phi>op_set_var__"
-    val op_var_scope0= Proof_Context.get_thm ctxt "local.__\<phi>op_var_scope__0"
     val op_var_scope' = init
           |> fold (fn v => fn th =>
                 case v of Set_Var vterm =>
                             (Drule.infer_instantiate ctxt
-                                  [(("var",0), Thm.incr_indexes_cterm 1 vterm)] op_set_var) RS th
-                        | New_Var _ => op_var_scope RS th) oprs
-          |> (fn thm => op_var_scope0 RS thm)
+                                  [(("var",0), Thm.incr_indexes_cterm 1 vterm)]
+                                  @{thm "__\<phi>op_set_var__"}) RS th
+                        | New_Var _ => @{thm "__\<phi>op_var_scope__"} RS th) oprs
+          |> (fn thm => @{thm "__\<phi>op_var_scope__0"} RS thm)
     val (ctxt,sequent') = NuApply.apply [op_var_scope'] (ctxt,sequent)
                 |> apsnd (fn th =>
                     let
@@ -69,7 +67,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
                         | is_body (\<^const>\<open>Trueprop\<close> $ X) = is_body X
                         | is_body (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_body X
                         | is_body (X $ _) = is_body X
-                        | is_body (Const (\<^const_name>\<open>\<phi>spec.\<phi>Procedure\<close>, _)) = true
+                        | is_body (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _)) = true
                         | is_body _ = false
                     in Thm.permute_prems 0 (1 + find_index is_body (Thm.prems_of th)) th end)
                 |> Nu_Reasoner.reason1 (fn _ => 

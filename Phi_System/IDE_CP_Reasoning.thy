@@ -237,8 +237,6 @@ lemma [\<phi>reason 2000]:
 \<Longrightarrow> f \<Ztypecolon> T <func-over> x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns)
 
-context \<phi>spec begin
-
 lemma [\<phi>reason 2000]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> fx \<Ztypecolon> T \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
 \<Longrightarrow> lambda_abstraction x fx f
@@ -250,21 +248,18 @@ lemma [\<phi>reason 2000]:
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w f \<Ztypecolon> T <func-over> x \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding lambda_abstraction_def by (simp add: \<phi>expns)
 
-
 lemma [\<phi>reason 1200 for
-  \<open>Synthesis_Parse ?input (\<lambda>v. ?f \<Ztypecolon> ?T v <func-over> ?x :: ('FIC_N,'FIC)assn)\<close>
+  \<open>Synthesis_Parse ?input (\<lambda>v. ?f \<Ztypecolon> ?T v <func-over> ?x :: assn)\<close>
 ]:
   \<open> Synthesis_Parse input (\<lambda>v. fx \<Ztypecolon> T v)
 \<Longrightarrow> lambda_abstraction x fx f
-\<Longrightarrow> Synthesis_Parse input (\<lambda>v. f \<Ztypecolon> T v <func-over> x :: ('FIC_N,'FIC)assn)\<close>
+\<Longrightarrow> Synthesis_Parse input (\<lambda>v. f \<Ztypecolon> T v <func-over> x :: assn)\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason 1200]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> SYNTHESIS f x \<Ztypecolon> T v \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R1 \<longmapsto> \<lambda>v. R2\<heavy_comma> SYNTHESIS f \<Ztypecolon> T v <func-over> x \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L P\<close>
   unfolding Synthesis_def lambda_abstraction_def by (simp add: \<phi>expns)
-
-end
 
 
 section \<open>Transformation of State Abstraction (ToSA)\<close>
@@ -435,12 +430,12 @@ paragraph \<open>Divide Schematic Variable\<close>
 
 definition \<open>ALSTR_Divide_Assertion_U_Imp X A B \<equiv> Trueprop ( A + B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X)\<close>
 
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U_Imp (?var_Z::('FIC_N,'FIC) assn) ?A ?B\<close>]:
+lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U_Imp (?var_Z::assn) ?A ?B\<close>]:
   \<open>PROP ALSTR_Divide_Assertion_U_Imp (A + B) A B\<close>
   unfolding ALSTR_Divide_Assertion_U_Imp_def
   by (simp add: implies_refl) 
 
-lemma [\<phi>reason for \<open>PROP ALSTR_Divide_Assertion_U_Imp (?Z::('FIC_N,'FIC) assn) ?A ?B\<close>]:
+lemma [\<phi>reason for \<open>PROP ALSTR_Divide_Assertion_U_Imp (?Z::assn) ?A ?B\<close>]:
   \<open>PROP ALSTR_Divide_Assertion_U_Imp A A A\<close>
   unfolding ALSTR_Divide_Assertion_U_Imp_def
   by (simp add: implies_refl)
@@ -656,7 +651,6 @@ text \<open>Priority Convention:
 \<^item> \<le> 1999: Rules for search specific object like value, variable, etc.
 \<close>
 
-context \<phi>spec begin
 
 subsubsection \<open>Initialization\<close>
 
@@ -831,15 +825,15 @@ paragraph \<open>Divide Schematic Variable\<close>
 
 definition \<open>ALSTR_Divide_Assertion_U X A B \<equiv> Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w A + B \<longmapsto> X)\<close>
 
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (?var_Z::('FIC_N,'FIC) assn) ?A ?B\<close>]:
+lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (?var_Z::assn) ?A ?B\<close>]:
   \<open>PROP ALSTR_Divide_Assertion_U (A + B) A B\<close>
-  for A :: \<open>('FIC_N,'FIC) assn\<close>
+  for A :: \<open>assn\<close>
   unfolding ALSTR_Divide_Assertion_U_def
   by (simp add: view_shift_id) 
 
-lemma [\<phi>reason for \<open>PROP ALSTR_Divide_Assertion_U (?Z::('FIC_N,'FIC) assn) ?A ?B\<close>]:
+lemma [\<phi>reason for \<open>PROP ALSTR_Divide_Assertion_U (?Z::assn) ?A ?B\<close>]:
   \<open>PROP ALSTR_Divide_Assertion_U A A A\<close>
-  for A :: \<open>('FIC_N,'FIC) assn\<close>
+  for A :: \<open>assn\<close>
   unfolding ALSTR_Divide_Assertion_U_def
   by (simp add: view_shift_id)
 
@@ -850,32 +844,32 @@ lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (?ZR \<heavy_c
   unfolding ALSTR_Divide_Assertion_U_def
   by (smt (z3) INTERP_SPEC_plus View_Shift_def distrib_left mult.commute mult.left_commute plus_set_in_iff)
 
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (0::('FIC_N,'FIC) assn) ?A ?B\<close>]:
-  \<open>PROP ALSTR_Divide_Assertion_U 0 0 (0::('FIC_N,'FIC) assn)\<close>
+lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (0::assn) ?A ?B\<close>]:
+  \<open>PROP ALSTR_Divide_Assertion_U 0 0 (0::assn)\<close>
   unfolding ALSTR_Divide_Assertion_U_def
   by (simp add: view_shift_0)
 
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (ExSet ?Z::('FIC_N,'FIC) assn) ?A ?B\<close>]:
+lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (ExSet ?Z::assn) ?A ?B\<close>]:
   \<open>(\<And>c. PROP ALSTR_Divide_Assertion_U (Z c) (A c) (B c))
 \<Longrightarrow> PROP ALSTR_Divide_Assertion_U (ExSet Z) (ExSet A) (ExSet B)\<close>
-  for A :: \<open>'c \<Rightarrow> ('FIC_N,'FIC) assn\<close>
+  for A :: \<open>'c \<Rightarrow> assn\<close>
   unfolding ALSTR_Divide_Assertion_U_def Imply_def plus_set_def View_Shift_def
   apply (clarsimp simp add: \<phi>expns)
   by (smt (z3) Fic_Space_Un) 
 
 lemma [\<phi>reason 1200
-    for \<open>PROP ALSTR_Divide_Assertion_U (?Z \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?P :: ('FIC_N,'FIC) assn) ?A ?B\<close>
+    for \<open>PROP ALSTR_Divide_Assertion_U (?Z \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?P :: assn) ?A ?B\<close>
 ]:
   \<open> PROP ALSTR_Divide_Assertion_U Z A B
 \<Longrightarrow> PROP ALSTR_Divide_Assertion_U (Z \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) (B \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  for A :: \<open>('FIC_N,'FIC) assn\<close>
+  for A :: \<open>assn\<close>
   unfolding ALSTR_Divide_Assertion_U_def plus_set_def View_Shift_def
   by (simp add: \<phi>expns) blast
 
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U \<blangle> ?Z \<brangle> ?A (?B::('FIC_N,'FIC) assn)\<close>]:
+lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U \<blangle> ?Z \<brangle> ?A (?B::assn)\<close>]:
   \<open> PROP ALSTR_Divide_Assertion_U Z A B
 \<Longrightarrow> PROP ALSTR_Divide_Assertion_U \<blangle> Z \<brangle>  \<blangle> A \<brangle>  \<blangle> B \<brangle>\<close>
-  for A :: \<open>('FIC_N,'FIC) assn\<close>
+  for A :: \<open>assn\<close>
   unfolding ALSTR_Divide_Assertion_U_def plus_set_def by (simp add: \<phi>expns)
 
 
@@ -1068,7 +1062,6 @@ lemma [\<phi>reason 2000]:
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> \<blangle> R \<heavy_comma> (X1 \<heavy_comma> X2) \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' mode \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding mult.assoc[symmetric] .
 
-end
 
 
 (*
@@ -1125,7 +1118,7 @@ lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' = ?X \<^bold><\<^bold>a\<^bold
   "If P A A = A \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by simp
 
-lemma (in \<phi>spec) [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?A ?A'' \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?A ?A'' \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w If P A A \<longmapsto> A \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by (simp add: view_shift_id)
 
@@ -1135,14 +1128,12 @@ lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' \<^bold>i\<^bold>m\<^bold>p\<^
 
 subsubsection \<open>Zero\<close>
 
-lemma (in \<phi>spec)
-  [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?A 0 \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?A 0 \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w If P A 0 \<longmapsto> (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def View_Shift_def
   by simp
 
-lemma (in \<phi>spec)
-  [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P 0 ?A \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P 0 ?A \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w If P 0 A \<longmapsto> (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def View_Shift_def
   by simp
@@ -1176,7 +1167,7 @@ lemma [\<phi>reason for \<open>If ?P (?a \<Zinj> ?x) (?b \<Zinj> ?y) = ?X \<^bol
 \<Longrightarrow> If P (a \<Zinj> x) (b \<Zinj> y) = (aa \<Zinj> z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by force
 
- lemma (in \<phi>spec) branch_convergence_skip:
+ lemma branch_convergence_skip:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (R1 * X) (N * Y * \<blangle> R2 \<brangle>) \<longmapsto> R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (R1 * X) (N * \<blangle> R2 * Y \<brangle>) \<longmapsto> R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   unfolding FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
@@ -1214,17 +1205,17 @@ lemma [\<phi>reason 1400]:
 \<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
   unfolding Subjection_Subjection .
 
-lemma (in \<phi>spec) [\<phi>reason 1400]:
+lemma [\<phi>reason 1400]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) R \<longmapsto> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) R \<longmapsto> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
   unfolding Subjection_Subjection .
 
-lemma (in \<phi>spec) [\<phi>reason 1400]:
+lemma [\<phi>reason 1400]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) \<longmapsto> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) \<longmapsto> Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
   unfolding Subjection_Subjection .
 
-lemma (in \<phi>spec)
+lemma
   [\<phi>reason 1300 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   " If P QL QR = Q \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
@@ -1245,7 +1236,7 @@ lemma [\<phi>reason 1200
 \<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Imply_def Action_Tag_def by (simp add: \<phi>expns)
 
-lemma (in \<phi>spec) [\<phi>reason 1200
+lemma [\<phi>reason 1200
     for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
 ]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
@@ -1260,8 +1251,7 @@ lemma [\<phi>reason 1200 for \<open>If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^b
 \<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
 
-lemma (in \<phi>spec)
-  [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<longmapsto> (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
@@ -1271,7 +1261,7 @@ lemma (in \<phi>spec)
 
 subsubsection \<open>Existential\<close>
 
-lemma (in \<phi>spec) Conv_Merge_Ex_both:
+lemma Conv_Merge_Ex_both:
   "(\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L x) (R x) \<longmapsto> X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (\<exists>* x. L x) (\<exists>* x. R x) \<longmapsto> (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def View_Shift_def
@@ -1283,7 +1273,7 @@ lemma Conv_Merge_Ex_both_imp:
   unfolding Action_Tag_def Imply_def
   by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; blast)
 
-lemma (in \<phi>spec) Conv_Merge_Ex_R
+lemma Conv_Merge_Ex_R
   [\<phi>reason 1100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P ?L (\<exists>* x. ?R x) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   "(\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R x) \<longmapsto> X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (\<exists>* x. R x) \<longmapsto> (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
@@ -1297,8 +1287,7 @@ lemma Conv_Merge_Ex_R_imp
   unfolding Action_Tag_def Imply_def
   by (cases P; simp add: set_eq_iff \<phi>expns; blast)
 
-lemma (in \<phi>spec)
-  [\<phi>reason 1100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (\<exists>* x. ?L x) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+lemma [\<phi>reason 1100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (\<exists>* x. ?L x) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   "(\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L x) R \<longmapsto> X x \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (\<exists>* x. L x) R \<longmapsto> (\<exists>* x. X x) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def View_Shift_def
@@ -1313,7 +1302,7 @@ text \<open>The merging recognize two existential quantifier are identical if th
   are the same. If so it uses Conv_Merge_Ex_both to merge the quantification,
   or else the right side is expanded first.\<close>
 
-\<phi>reasoner_ML (in \<phi>spec) Merge_Existential 2000
+\<phi>reasoner_ML Merge_Existential 2000
   (\<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>) =
 \<open>fn (ctxt,sequent) =>
   let
@@ -1348,7 +1337,7 @@ lemma [\<phi>reason 2000 for \<open>If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolo
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (z \<Ztypecolon> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def Imply_def by (cases P; simp)
 
-lemma (in \<phi>spec)
+lemma
   [\<phi>reason 2000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   " If P x y = z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> If P T U = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
@@ -1377,8 +1366,7 @@ lemma [\<phi>reason 1200 for \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bol
   unfolding Action_Tag_def Action_Tag_def GOAL_CTXT_def FOCUS_TAG_def
   by (smt (z3) Imply_def implies_right_prod)
 
-lemma (in \<phi>spec)
-  [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
+lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
   \<open> PROP Branch_Convergence_Type_Pattern T T'
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
@@ -1441,7 +1429,7 @@ lemma [\<phi>reason]:
 
 subsubsection \<open>Unfold\<close>
 
-lemma (in \<phi>spec) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (N \<heavy_comma> R1 \<heavy_comma> R2) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (N \<heavy_comma> (R1 \<heavy_comma> R2)) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by (metis mult.assoc)
@@ -1458,7 +1446,7 @@ lemma [\<phi>reason 2000]:
   for R :: \<open>'a::sep_semigroup set\<close>
   unfolding Action_Tag_def by (metis mult.assoc)
 
-lemma (in \<phi>spec) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L1 \<heavy_comma> L2 \<heavy_comma> L3) R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L1 \<heavy_comma> (L2 \<heavy_comma> L3)) R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by (metis mult.assoc)
@@ -1489,22 +1477,22 @@ lemma [\<phi>reason 2000]:
   for R :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
-lemma (in \<phi>spec) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R \<heavy_comma> 1) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by (cases P; simp)
 
-lemma (in \<phi>spec) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (1 \<heavy_comma> R) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by (cases P; simp)
 
-lemma (in \<phi>spec) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R' \<heavy_comma> R) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L (R' \<heavy_comma> 1 \<heavy_comma> R) \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by (cases P; simp)
 
-lemma (in \<phi>spec) [\<phi>reason 2000]:
+lemma [\<phi>reason 2000]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L \<heavy_comma> 1) R \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence"
   unfolding Action_Tag_def by (cases P; simp)
@@ -1884,9 +1872,6 @@ lemma Structural_Extract_exact [\<phi>reason 3000
   unfolding Structural_Extract_def Structural_Extract'_def
       mult_1_left \<phi>None_itself_is_one mult_1_right GOAL_CTXT_def
   using implies_refl .
-
-
-
 
 
 
@@ -2804,7 +2789,5 @@ lemma [\<phi>reason 2011 for \<open>Structural_Extract (?y \<Ztypecolon> ?n \<Zn
       (Automatic_Morphism RP (Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   by simp
-
-
 
 end

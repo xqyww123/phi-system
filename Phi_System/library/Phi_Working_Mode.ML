@@ -140,22 +140,21 @@ val procedure : working_mode =
 
     fun finish_proc hyp (ctxt,sequent) =
       let open PhiSyntax
-        val reassemble_proc_final = Proof_Context.get_thm ctxt "local.\<phi>reassemble_proc_final"
         val (_,s',H',_) = dest_CurrentConstruction_c hyp
       in
         sequent
           |> Thm.implies_intr hyp
           |> Thm.forall_intr H'
           |> Thm.forall_intr s'
-          |> (fn th => th COMP reassemble_proc_final)
+          |> (fn th => th COMP @{thm \<phi>reassemble_proc_final})
       end
     
     fun start_proc blk_name arg ctxt =
       let open PhiSyntax
         val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
-        val stat_var = Free (blk_name, mk_resourceT ctxt)
+        val stat_var = Free (blk_name, \<^typ>\<open>resource\<close>)
         val ctxt = Variable.declare_constraints stat_var ctxt
-        val init = Const("local.CurrentConstruction",
+        val init = Const(\<^const_name>\<open>CurrentConstruction\<close>,
                           \<^typ>\<open>mode\<close>
                       --> fastype_of stat_var
                       --> dummyT
@@ -185,7 +184,7 @@ val procedure : working_mode =
                      |> apfst (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
                      |> apsnd (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
             val idx_delt = 1 + Int.max (Thm.maxidx_of_cterm ins, Thm.maxidx_of_cterm current_nu)
-            val return_rule = Proof_Context.get_thm ctxt "local.\<phi>return"
+            val return_rule = @{thm \<phi>return}
                            |> Thm.incr_indexes idx_delt
                            |> Drule.infer_instantiate ctxt
                                   [(("T",idx_delt),current_nu),(("ret",idx_delt),ins)]
@@ -223,8 +222,7 @@ val procedure : working_mode =
     return_spec = return_spec,
     return_spec_c = return_spec_c,
     argument_spec = argument_spec,
-    inhabited_rule = (fn ctxt =>
-        Proof_Context.get_thm ctxt "local.CurrentConstruction_Inhabited_rule"),
+    inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_proc,
     block_name_of = (fn term => 
         case #1 (PhiSyntax.dest_procedure term)
@@ -235,8 +233,8 @@ val procedure : working_mode =
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule =
          (if can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
-          then Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
-          else Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_'")
+          then @{thm "_\<phi>cast_internal_rule_"}
+          else @{thm "_\<phi>cast_internal_rule_'"})
             |> Thm.incr_indexes idx
             |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
        in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
@@ -247,7 +245,7 @@ val procedure : working_mode =
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule =
          (if can (PhiSyntax.dest_PendingConstruction) (Thm.prop_of sequent)
-          then Proof_Context.get_thm ctxt "local._\<phi>cast_exception_rule_"
+          then @{thm "_\<phi>cast_exception_rule_"}
           else cannot_cast_exception sequent)
             |> Thm.incr_indexes idx
             |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
@@ -274,22 +272,21 @@ let
 
   fun finish_view_shift hyp (ctxt,sequent) =
     let open PhiSyntax
-      val reassemble_proc_final = Proof_Context.get_thm ctxt "local.\<phi>make_view_shift"
       val (_,s',H',_) = dest_CurrentConstruction_c hyp
     in
       sequent
         |> Thm.implies_intr hyp
         |> Thm.forall_intr H'
         |> Thm.forall_intr s'
-        |> (fn th => th COMP reassemble_proc_final)
+        |> (fn th => th COMP @{thm \<phi>make_view_shift})
     end
 
   fun start_view_shift blk_name arg ctxt =
     let open PhiSyntax
       val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
-      val stat_var = Free (blk_name, mk_resourceT ctxt)
+      val stat_var = Free (blk_name, \<^typ>\<open>resource\<close>)
       val ctxt = Variable.declare_constraints stat_var ctxt
-      val init = Const("local.CurrentConstruction",
+      val init = Const(\<^const_name>\<open>CurrentConstruction\<close>,
                         \<^typ>\<open>mode\<close>
                     --> fastype_of stat_var
                     --> dummyT
@@ -312,8 +309,7 @@ in
     return_spec = return_spec,
     return_spec_c = return_spec_c,
     argument_spec = #1 o PhiSyntax.dest_view_shift,
-    inhabited_rule = (fn ctxt =>
-      Proof_Context.get_thm ctxt "local.CurrentConstruction_Inhabited_rule"),
+    inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_view_shift,
     block_name_of = (fn term => 
         case #1 (PhiSyntax.dest_view_shift term)
@@ -322,7 +318,7 @@ in
     cast = (fn desired => fn (ctxt, sequent) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
-        val rule = Proof_Context.get_thm ctxt "local._\<phi>cast_internal_rule_"
+        val rule = @{thm "_\<phi>cast_internal_rule_"}
           |> Thm.incr_indexes idx
           |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
       in

@@ -1,14 +1,5 @@
 signature PHI_SYNTAX = sig
 
-  val get_types : Proof.context ->
-        {TY_N: typ, TY: typ, VAL_N: typ, VAL: typ, RES_N: typ, RES: typ, FIC_N: typ, FIC: typ}
-  val get_assn_typ : Proof.context -> typ
-
-  val mk_stateT : Proof.context -> typ -> typ
-  val mk_resourceT : Proof.context -> typ
-  val mk_assnT : Proof.context -> typ
-  val mk_procT : Proof.context -> typ -> typ
-
   val dest_nuTy : term -> term * term
   val dest_nuTy_c : cterm -> cterm * cterm
   val mk_nuTy : term * term -> term
@@ -50,72 +41,19 @@ end
 structure PhiSyntax : PHI_SYNTAX = struct
 open Thm Term HOLogic NuHelp
 
-(*TODO*)
-val types = {
-  TY_N = TFree("'TY_N", \<^sort>\<open>type\<close>),
-  TY   = TFree("'TY", \<^sort>\<open>type\<close>),
-  VAL_N= TFree("'VAL_N", \<^sort>\<open>type\<close>),
-  VAL  = TFree("'VAL", \<^sort>\<open>nonsepable_semigroup\<close>),
-  RES_N= TFree("'RES_N", \<^sort>\<open>type\<close>),
-  RES  = TFree("'RES", \<^sort>\<open>sep_algebra\<close>),
-  FIC_N= TFree("'FIC_N", \<^sort>\<open>type\<close>),
-  FIC  = TFree("'FIC", \<^sort>\<open>sep_algebra\<close>)
-}
-
-fun get_types ctxt = types
-
-fun get_assn_typ ctxt =
-  let val {FIC_N,FIC,...} = get_types ctxt
-   in Type (\<^type_name>\<open>set\<close>, [Type("fun", [FIC_N, FIC])]) end
-
-
-fun mk_stateT ctxt T =
-  let
-    val {RES_N,RES,...} = get_types ctxt
-  in
-    Type(@{type_name "state"}, [T,RES_N,RES])
-  end
-
-fun mk_resourceT ctxt =
-  let
-    val {RES_N,RES,...} = get_types ctxt
-  in
-    Type(@{type_name "fun"}, [RES_N, RES])
-  end
-
-fun mk_assnT ctxt =
-  let
-    val {FIC_N,FIC,...} = get_types ctxt
-  in
-    Type(@{type_abbrev "assn"}, [FIC_N,FIC])
-  end
-
-fun mk_procT ctxt T =
-  let
-    val {VAL,RES_N,RES,...} = get_types ctxt
-  in
-    Type(@{type_abbrev "proc"}, [T,RES_N,RES])
-  end
-
-
-fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
-fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
-                                      | TERM _ => raise TERM (msg, [prop_of th])
-
-
 val dest_nuTy = dest_binop @{const_name "\<phi>Type"}
 val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}
 val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 
 val dest_CurrentConstruction   =
-      perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name "\<phi>spec.CurrentConstruction"}
+      perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name CurrentConstruction}
 val dest_CurrentConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name "\<phi>spec.CurrentConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quadop_c @{const_name CurrentConstruction}
 val dest_PendingConstruction   =
-      perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name "\<phi>spec.PendingConstruction"}
+      perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name PendingConstruction}
 val dest_PendingConstruction_c =
-      perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name "\<phi>spec.PendingConstruction"}
+      perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name PendingConstruction}
 fun is_construction_mode mode tm =
   case try dest_CurrentConstruction tm
     of SOME (m,_,_,_) => mode = m
@@ -166,17 +104,17 @@ val dest_tags_c =
 
 val dest_procedure   =
      dest_tags
-  #> dest_quadop @{const_name "\<phi>spec.\<phi>Procedure"}
+  #> dest_quadop @{const_name \<phi>Procedure}
 val dest_procedure_c =
      dest_tags_c
-  #> dest_quadop_c @{const_name "\<phi>spec.\<phi>Procedure"}
+  #> dest_quadop_c @{const_name \<phi>Procedure}
 
 val dest_view_shift    =
          dest_tags
-      #> dest_triop @{const_name "\<phi>spec.View_Shift"}
+      #> dest_triop @{const_name View_Shift}
 val dest_view_shift_c  =
          dest_tags_c
-      #> dest_triop_c @{const_name "\<phi>spec.View_Shift"}
+      #> dest_triop_c @{const_name View_Shift}
 
 val dest_implication   =
          dest_tags

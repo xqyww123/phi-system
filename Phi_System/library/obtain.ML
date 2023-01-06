@@ -15,44 +15,36 @@ fun eliminate_term ctxt xs thm =
     val bads = collect tm;
   in
     if null bads then thm
-    else case Thm.prop_of thm
-      of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.CurrentConstruction\<close>, _)
-                              $ _ $ _ $ _ $ _ $ _ $ _)
-      => let
+    else if can PhiSyntax.dest_CurrentConstruction (Thm.prop_of thm)
+    then let
         val rule = Proof_Context.get_thm ctxt "introduce_Ex"
         fun generalize x thm =
-          case Thm.prop_of thm
-            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.CurrentConstruction\<close>, _)
-                                    $ _ $ _ $ _ $ _ $ _ $ P)
+          case PhiSyntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,P)
             => thm RS Drule.infer_instantiate ctxt [(("S",0), Thm.cterm_of ctxt (absfree x P))] rule
         in fold_rev generalize bads thm
         end
-      |  \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.PendingConstruction\<close>, _)
-                                  $ _ $ _ $ _ $ _ $ _ $ Q $ E)
-      => let
+    else if can PhiSyntax.dest_PendingConstruction (Thm.prop_of thm)
+    then let
+        val (_,_,_,Q,E) = PhiSyntax.dest_PendingConstruction (Thm.prop_of thm)
         val bad_Q = collect Q
         val bad_E = collect E
         val rule_Q = Proof_Context.get_thm ctxt "introduce_Ex_pending"
         val rule_E = Proof_Context.get_thm ctxt "introduce_Ex_pending_E"
         fun generalize_Q x thm =
-          case Thm.prop_of thm
-            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.PendingConstruction\<close>, _)
-                                    $ _ $ _ $ _ $ _ $ _ $ Q $ _)
-            => thm RS Drule.infer_instantiate ctxt
-                          [(("Q",0), Thm.cterm_of ctxt (absfree x Q))] rule_Q
+          case PhiSyntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,Q,_)
+            => thm RS
+                 Drule.infer_instantiate ctxt [(("Q",0), Thm.cterm_of ctxt (absfree x Q))] rule_Q
         fun generalize_E x thm =
-          case Thm.prop_of thm
-            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>\<phi>spec.PendingConstruction\<close>, _)
-                                    $ _ $ _ $ _ $ _ $ _ $ _ $ E)
-            => thm RS Drule.infer_instantiate ctxt
-                          [(("E",0), Thm.cterm_of ctxt (absfree x E))] rule_E
+          case PhiSyntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,E)
+            => thm RS
+                 Drule.infer_instantiate ctxt [(("E",0), Thm.cterm_of ctxt (absfree x E))] rule_E
         in fold_rev generalize_E bad_E (fold_rev generalize_Q bad_Q thm)
         end
-      | _ => raise THM (
+    else raise THM (
           "General Elimination fails because locally fixed variables(s) occurs in the sequent",
           0, thm :: map Drule.mk_term xs
         )
-  end;
+  end
 
 fun eliminate ctxt rule xs As thm'' =
   let
@@ -102,7 +94,7 @@ fun choose inst_names stat =
     val major = NuBasics.the_nu_fact stat
     val ctxt = Proof.context_of stat
     val N = length inst_names
-    val ExTyp_strip = Proof_Context.get_thm ctxt "local.\<phi>ExTyp_strip"
+    val ExTyp_strip = @{thm \<phi>ExTyp_strip}
     fun exBI_strip 0 _ = all_conv
       | exBI_strip 1 _ = rewr_conv ExTyp_strip
       | exBI_strip N ctxt = rewr_conv ExTyp_strip

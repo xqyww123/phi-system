@@ -13,7 +13,7 @@ text \<open>Sometimes, we do not want to verbosely write a semantic type if it i
 
 This is a planning feature has not been implemented\<close>
 
-syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> 'TY\<close> ("TY'_of'_\<phi>")
+syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_\<phi>")
 
 
 subsection \<open>Identity\<close>
@@ -35,13 +35,13 @@ lemma Identity_E[\<phi>reason for \<open>?v \<Ztypecolon> Identity \<^bold>i\<^b
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Identity \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T\<close>
   unfolding Imply_def Premise_def by (simp add: \<phi>expns)
 
-lemma (in \<phi>empty_sem) [simp]:
+lemma [simp]:
   \<open> v \<in> Well_Type TY
 \<Longrightarrow> SemTyp_Of (v \<Ztypecolon> Identity) = TY\<close>
   unfolding \<phi>Type_def Identity_def
   by (simp add: \<phi>SemType_def)
 
-lemma (in \<phi>spec) Identity_E_vs[\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?v \<Ztypecolon> Identity \<longmapsto> ?x \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+lemma Identity_E_vs[\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?v \<Ztypecolon> Identity \<longmapsto> ?x \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w v \<Ztypecolon> Identity \<longmapsto> x \<Ztypecolon> T\<close>
   by (simp add: Identity_E view_shift_by_implication)
 
@@ -69,7 +69,7 @@ lemma \<phi>Any_cast [\<phi>reason 1200 for \<open>?X \<^bold>i\<^bold>m\<^bold>
   \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi>Any\<close>
   unfolding Imply_def by (simp add: \<phi>expns)
 
-lemma (in \<phi>empty) \<phi>Any_vs [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?x \<Ztypecolon> \<phi>Any \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+lemma \<phi>Any_vs [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?x \<Ztypecolon> \<phi>Any \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> x \<Ztypecolon> \<phi>Any\<close>
   by (simp add: view_shift_by_implication \<phi>Any_cast)
 
@@ -81,14 +81,14 @@ text \<open>The system is a Classical Separation Logic.
   Therefore, we employ a `Black Hole' which can contain arbitrary resources to simulate the
     Intuitionistic Separation Logic\<close>
 
-abbreviation (in \<phi>spec) Black_Hole :: \<open>('FIC_N \<Rightarrow> 'FIC) set\<close>
+abbreviation Black_Hole :: \<open>('FIC_N \<Rightarrow> 'FIC) set\<close>
   where \<open>Black_Hole \<equiv> UNIV\<close>
 
 lemma UNIV_subty [\<phi>reason for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s UNIV \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s UNIV\<close>
   unfolding Imply_def by simp
 
-lemma (in \<phi>spec) UNIV_view_shift [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> UNIV \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+lemma UNIV_view_shift [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> UNIV \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> UNIV\<close>
   using UNIV_subty view_shift_by_implication by blast
 
@@ -268,7 +268,7 @@ subsubsection \<open>Reasoning Rules\<close>
 
 paragraph \<open>View Shift\<close>
 
-lemma (in \<phi>empty) [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w (?x,?y) \<Ztypecolon> ?N \<^emph> ?M \<longmapsto> (?x',?y') \<Ztypecolon> ?N' \<^emph> ?M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
+lemma [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w (?x,?y) \<Ztypecolon> ?N \<^emph> ?M \<longmapsto> (?x',?y') \<Ztypecolon> ?N' \<^emph> ?M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> N \<longmapsto> x' \<Ztypecolon> N' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w y \<Ztypecolon> M \<longmapsto> y' \<Ztypecolon> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w (x,y) \<Ztypecolon> N \<^emph> M \<longmapsto> (x',y') \<Ztypecolon> N' \<^emph> M' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2"
@@ -769,8 +769,6 @@ subsubsection \<open>Application Methods for Subtyping\<close>
 
 (*TODO: I don't like this. It is not generic.*)
 
-context \<phi>spec begin
-
 lemma [\<phi>reason 2100 for \<open>
   PROP \<phi>Application_Method (Trueprop (?x \<Ztypecolon> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> ?U \<^bold>a\<^bold>n\<^bold>d ?P))
           (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R\<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T)) ?Result
@@ -808,13 +806,13 @@ lemma [\<phi>reason 2000 for \<open>
 subsubsection \<open>Synthesis\<close>
 
 lemma [\<phi>reason 1200 for
-  \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> 'VAL set)) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+  \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> VAL set)) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
   unfolding Synthesis_Parse_def ..
 
 lemma [\<phi>reason 1200 for
-  \<open>Synthesis_Parse (?raw::?'a sem_value) (?X::?'ret \<Rightarrow> ('FIC_N,'FIC)assn)\<close>
+  \<open>Synthesis_Parse (?raw::?'a sem_value) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
   unfolding Synthesis_Parse_def ..
@@ -833,7 +831,6 @@ lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::?'a sem_value) (Tru
             \<phi>Procedure_def View_Shift_def Return_def det_lift_def
   by simp
 
-end
 
 subsubsection \<open>Auto unfolding for value list\<close>
 
@@ -873,9 +870,7 @@ subsection \<open>Semantic Type Annotation\<close>
 
 paragraph \<open>Annotation for Single One\<close>
 
-context \<phi>empty_sem begin
-
-definition Of_Type :: \<open>('VAL,'a) \<phi> \<Rightarrow> 'TY \<Rightarrow> ('VAL,'a) \<phi>\<close> (infix "<of-type>" 23)
+definition Of_Type :: \<open>(VAL,'a) \<phi> \<Rightarrow> TY \<Rightarrow> (VAL,'a) \<phi>\<close> (infix "<of-type>" 23)
   where \<open>(T <of-type> TY) = (\<lambda>x. (x \<Ztypecolon> T) \<inter> Well_Type TY)\<close>
 
 lemma [\<phi>expns]:
@@ -899,7 +894,7 @@ lemma [\<phi>reason]:
 
 paragraph \<open>Annotation for a List\<close>
 
-definition Of_Types :: \<open>('VAL list,'a) \<phi> \<Rightarrow> 'TY list \<Rightarrow> ('VAL list,'a) \<phi>\<close> (infix "<of-types>" 23)
+definition Of_Types :: \<open>(VAL list,'a) \<phi> \<Rightarrow> TY list \<Rightarrow> (VAL list,'a) \<phi>\<close> (infix "<of-types>" 23)
   where \<open>(T <of-types> TYs) = (\<lambda>x. (x \<Ztypecolon> T) \<inter> {p. list_all2 (\<lambda>v t. v \<in> Well_Type t) p TYs})\<close>
 
 lemma [\<phi>expns]:
@@ -909,8 +904,6 @@ lemma [\<phi>expns]:
 lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T <of-types> TYs) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C \<close>
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
-
-end
 
 
 section \<open>Permission \& Share\<close>
@@ -1461,9 +1454,7 @@ paragraph \<open>Definition\<close>
 text \<open>\<phi>MayInit T relates a value with T if the value is initialized; or if not, it relates the zero
   value of that type with T.\<close>
 
-context \<phi>empty_sem begin
-
-definition \<phi>MayInit :: \<open>'TY \<Rightarrow> ('VAL, 'x) \<phi> \<Rightarrow> ('VAL uninit, 'x) \<phi>\<close>
+definition \<phi>MayInit :: \<open>TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarrow> (VAL uninit, 'x) \<phi>\<close>
   where \<open>\<phi>MayInit TY T x = ({uninitialized} \<^bold>s\<^bold>u\<^bold>b\<^bold>j (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T))) + initialized ` (x \<Ztypecolon> T <of-type> TY)\<close>
 
 abbreviation \<phi>Share_Some_Init ("\<fish_eye>\<lbrakk>_\<rbrakk> _" [0, 91] 90)
@@ -1500,8 +1491,6 @@ lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>MayInit ?TY ?T \<^bol
   for Act :: \<open>'a::{implication,structural} action\<close>
   unfolding Action_Tag_def using \<phi>MayInit_cast .
 
-end
-
 definition \<phi>Uninit :: \<open>('v uninit, unit) \<phi>\<close>
   where \<open>\<phi>Uninit x = {uninitialized}\<close>
 
@@ -1521,6 +1510,5 @@ definition \<phi>F_simulation
     :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> (('av \<times> 'bv) set, ('a \<times> 'b) set) \<phi>\<close> (infixr "\<Rrightarrow>\<^sub>r" 25)
     \<comment> \<open>Forward Simulation\<close>
   where \<open>(T \<Rrightarrow>\<^sub>r U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>u y. (v,u) \<in> g \<and> (x,y) \<in> f \<and> u \<in> (y \<Ztypecolon> U)) })\<close>
-
 
 end

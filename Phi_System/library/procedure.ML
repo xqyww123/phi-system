@@ -178,11 +178,9 @@ fun gen_define def_const (binding,attrs) sequent lthy =
                                           ,Binding.suffix_name app_suffix binding)
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
-    val rename_proc = Proof_Context.get_thm lthy "local.\<phi>rename_proc"
-    val rename_proc' = Proof_Context.get_thm lthy "local.\<phi>rename_proc_with_goal"
     fun rename def proc_th =
-          (proc_th RS (def RS rename_proc))
-          handle THM _ => (proc_th RS (def RS rename_proc'))
+          (proc_th RS (def RS @{thm \<phi>rename_proc}))
+          handle THM _ => (proc_th RS (def RS @{thm \<phi>rename_proc_with_goal}))
 
     val (lthy, sequent'') =
       if Binding.is_empty binding orelse not def_const

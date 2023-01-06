@@ -4,33 +4,41 @@ theory Spec_Framework
   imports Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
 begin
 
-type_synonym ('RES_N,'RES) assn = "('RES_N \<Rightarrow> 'RES) set" \<comment> \<open>assertion\<close>
-
 subsection \<open>Specification of Monadic States\<close>
 
 
-definition StrictStateTy :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
-                          \<Rightarrow> ('ex  sem_value \<Rightarrow> ('RES_N,'RES) assn)
-                          \<Rightarrow> ('ret,'ex,'RES_N,'RES) state set" ("!\<S>")
-  where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception val x \<Rightarrow> x \<in> E val
-                              | Invalid \<Rightarrow> False | PartialCorrect \<Rightarrow> False}"
+definition StrictStateTy :: "('ret sem_value \<Rightarrow> rassn)
+                          \<Rightarrow> (VAL sem_value \<Rightarrow> rassn)
+                          \<Rightarrow> 'ret state set" ("!\<S>")
+  where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
+                              | Exception val x \<Rightarrow> x \<in> E val
+                              | Invalid \<Rightarrow> False
+                              | PartialCorrect \<Rightarrow> False}"
 
-definition LooseStateTy  :: "('ret sem_value \<Rightarrow> ('RES_N,'RES) assn)
-                          \<Rightarrow> ('ex  sem_value \<Rightarrow> ('RES_N,'RES) assn)
-                          \<Rightarrow> ('ret,'ex,'RES_N,'RES) state set" ("\<S>")
-  where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val | Exception val x \<Rightarrow> x \<in> E val
-                              | Invalid \<Rightarrow> False | PartialCorrect \<Rightarrow> True}"
+definition LooseStateTy  :: "('ret sem_value \<Rightarrow> rassn)
+                          \<Rightarrow> (VAL sem_value \<Rightarrow> rassn)
+                          \<Rightarrow> 'ret state set" ("\<S>")
+  where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
+                              | Exception val x \<Rightarrow> x \<in> E val
+                              | Invalid \<Rightarrow> False
+                              | PartialCorrect \<Rightarrow> True}"
 
 lemma StrictStateTy_expn[iff]:
-        "Success vs x \<in> !\<S> T E \<equiv> x \<in> T vs" "Exception v x \<in> !\<S> T E \<equiv> x \<in> E v"
-        "\<not> (Invalid \<in> !\<S> T E)"  "\<not> (PartialCorrect \<in> !\<S> T E)"
+        "Success vs x \<in> !\<S> T E \<equiv> x \<in> T vs"
+        "Exception v x \<in> !\<S> T E \<equiv> x \<in> E v"
+        "\<not> (Invalid \<in> !\<S> T E)"
+        "\<not> (PartialCorrect \<in> !\<S> T E)"
   and LooseStateTy_expn[iff]:
-        "Success vs x \<in> \<S> T E \<equiv> x \<in> T vs" "Exception v x \<in> \<S> T E \<equiv> x \<in> E v"
-        "\<not> (Invalid \<in> \<S> T E)"  "(PartialCorrect \<in> \<S> T E)"
+        "Success vs x \<in> \<S> T E \<equiv> x \<in> T vs"
+        "Exception v x \<in> \<S> T E \<equiv> x \<in> E v"
+        "\<not> (Invalid \<in> \<S> T E)"
+        "(PartialCorrect \<in> \<S> T E)"
   by (simp_all add: StrictStateTy_def LooseStateTy_def)
 
 lemma LooseStateTy_expn' :
-    "x \<in> \<S> T E \<longleftrightarrow> x = PartialCorrect \<or> (\<exists>x' v. x = Success v x' \<and> x' \<in> T v) \<or> (\<exists>x' v. x = Exception v x' \<and> x' \<in> E v)"
+    "x \<in> \<S> T E \<longleftrightarrow> x = PartialCorrect
+                 \<or> (\<exists>x' v. x = Success v x' \<and> x' \<in> T v)
+                 \<or> (\<exists>x' v. x = Exception v x' \<and> x' \<in> E v)"
   by (cases x) simp_all
 
 lemma StrictStateTy_elim[elim]:
@@ -90,12 +98,10 @@ lemma StrictStateTy_plus[iff]:
   \<open>!\<S> X (\<lambda>v. EA v + EB v) = !\<S> X EA + !\<S> X EB\<close>
   unfolding set_eq_iff StrictStateTy_def by simp_all
 
-abbreviation (in \<phi>spec) \<open>Void \<equiv> (1::('FIC_N,'FIC) assn)\<close>
+abbreviation \<open>Void \<equiv> (1::assn)\<close>
 
 
 subsection \<open>Specification of Fictional Resource\<close>
-
-context \<phi>spec begin
 
 declare INTERP_SPEC[\<phi>expns]
 
@@ -108,16 +114,16 @@ lemma  INTERP_SPEC_ex[\<phi>expns]:
   unfolding INTERP_SPEC_def by (simp add: \<phi>expns set_eq_iff, blast)
 
 abbreviation COMMA
-  :: \<open>('FIC_N,'FIC) assn \<Rightarrow> ('FIC_N,'FIC) assn \<Rightarrow> ('FIC_N,'FIC) assn\<close> (infixl "\<heavy_comma>" 13)
+  :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> (infixl "\<heavy_comma>" 13)
   where \<open>COMMA \<equiv> (*)\<close>
 
 
 subsection \<open>Specification of Computation\<close>
 
-definition \<phi>Procedure :: "('ret,'ex,'RES_N,'RES) proc
-                        \<Rightarrow> ('FIC_N,'FIC) assn
-                        \<Rightarrow> ('ret sem_value \<Rightarrow> ('FIC_N,'FIC) assn)
-                        \<Rightarrow> ('ex  sem_value \<Rightarrow> ('FIC_N,'FIC) assn)
+definition \<phi>Procedure :: "'ret proc
+                        \<Rightarrow> assn
+                        \<Rightarrow> ('ret sem_value \<Rightarrow> assn)
+                        \<Rightarrow> (VAL sem_value \<Rightarrow> assn)
                         \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<rbrace>))" [101,2,2,2] 100)
   where "\<phi>Procedure f T U E \<longleftrightarrow>
@@ -137,15 +143,14 @@ lemma \<phi>Procedure_alt:
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
-end
 
-
+(*
 subsubsection \<open>Syntax\<close>
 
 parse_translation \<open> let
   val typ_tag = Const (\<^type_syntax>\<open>proc\<close>, dummyT)
         $ Const (\<^type_syntax>\<open>dummy\<close>, dummyT)
-        $ Free ("'VAL", dummyT)
+        $ Free ("VAL", dummyT)
         $ Const (\<^type_syntax>\<open>dummy\<close>, dummyT)
         $ Const (\<^type_syntax>\<open>dummy\<close>, dummyT)
   fun do_tag_E E = Const (\<^syntax_const>\<open>_constrain\<close>, dummyT) $ E $ typ_tag
@@ -157,19 +162,17 @@ in [
     (Const("\<^const>local.\<phi>Procedure", dummyT) $ tag_E f $ T $ U $ E))),
   ("\<^const>local.\<phi>Procedure_no_exception", (fn ctxt => fn [f,T,U] =>
     (Const("\<^const>local.\<phi>Procedure_no_exception", dummyT) $ tag_E f $ T $ U)))
-] end\<close>
+] end\<close> *)
 
 
 subsection \<open>View Shift\<close>
 
-context \<phi>spec begin
-
 definition View_Shift
-    :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
+    :: "assn \<Rightarrow> assn \<Rightarrow> bool \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
   where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<in> INTERP_SPEC (R * T) \<longrightarrow> x \<in> INTERP_SPEC (R * U) \<and> P)"
 
 abbreviation Simple_View_Shift
-    :: "('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _)"  [13,13] 12)
+    :: "assn \<Rightarrow> assn \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _)"  [13,13] 12)
   where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
 
 lemma View_Shift_imply_P:
@@ -281,19 +284,16 @@ lemma \<phi>CONSEQ'E:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
   using \<phi>CONSEQ view_shift_id by blast
 
-end
 
 subsection \<open>Specify Properties of Value\<close>
 
-context \<phi>empty_sem begin
-
 subsubsection \<open>Semantic Type\<close>
 
-definition \<phi>SemType :: "'VAL set \<Rightarrow> 'TY \<Rightarrow> bool"
+definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
   where \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
   \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
 
-abbreviation \<phi>\<phi>SemType :: "('VAL, 'a) \<phi> \<Rightarrow> 'TY \<Rightarrow> bool"
+abbreviation \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> TY \<Rightarrow> bool"
   where \<open>\<phi>\<phi>SemType T TY \<equiv> (\<forall>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
 
 lemma \<phi>SemType_unique:
@@ -304,7 +304,7 @@ lemma \<phi>SemType_unique:
   unfolding \<phi>SemType_def subset_iff
   using Well_Type_unique by blast
 
-definition SemTyp_Of :: \<open>'VAL set \<Rightarrow> 'TY\<close>
+definition SemTyp_Of :: \<open>VAL set \<Rightarrow> TY\<close>
   where \<open>SemTyp_Of S = (@TY. \<phi>SemType S TY)\<close>
 
 lemma SemTyp_Of_I[intro!, simp]:
@@ -312,24 +312,23 @@ lemma SemTyp_Of_I[intro!, simp]:
   unfolding SemTyp_Of_def
   using \<phi>SemType_unique by blast 
 
-lemma (in \<phi>empty_sem) [\<phi>reason]:
+lemma [\<phi>reason]:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
   ..
 
 subsubsection \<open>Zero Value\<close>
 
-definition \<phi>Zero :: "'TY \<Rightarrow> ('VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
+definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
   where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
 
 subsubsection \<open>Equality\<close>
 
-definition \<phi>Equal :: "('VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool"
+definition \<phi>Equal :: "(VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool"
   where "\<phi>Equal T can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 res.
     can_eq x1 x2 \<and> p1 \<in> (x1 \<Ztypecolon> T) \<and> p2 \<in> (x2 \<Ztypecolon> T)
       \<longrightarrow> Can_EqCompare res p1 p2 \<and> (EqCompare p1 p2 = eq x1 x2))"
 
-end
 
 subsubsection \<open>Functional\<close>
 
@@ -338,6 +337,5 @@ lemma is_singletonI'':
 \<Longrightarrow> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
 \<Longrightarrow> is_singleton A\<close>
   by (metis equals0D is_singletonI')
-
 
 end

@@ -121,10 +121,6 @@ lemma mk_inj[simp]: \<open>mk a = mk b \<longleftrightarrow> a = b\<close>
 lemma inj_homo_one[simp]: \<open>inject x = 1 \<longleftrightarrow> x = 1\<close>
   by (metis inj.homo_one proj_inj)
 
-lemmas proj_homo_one  = prj.homo_one
-lemmas proj_homo_mult = prj.homo_mult
-lemmas inj_homo_mult = inj.homo_mult
-
 lemmas split = fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP]
 
 lemma mult_strip_inject_011: \<open>
@@ -210,15 +206,8 @@ locale fictional_project_inject =
   for INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
   and FK :: "('FNAME,'FREP,'T::sep_algebra) Virtual_Datatype.Field"
 + fixes I :: "('T,'RES) interp"
-  assumes proj_inj[simp]: "Field.project FK (Field.inject FK x) = x"
-    and interpret_reduct[simp]: "\<I> (INTERPRET (Field.name FK)) = \<I> I o Field.project FK"
+  assumes interpret_reduct[simp]: "\<I> (INTERPRET (Field.name FK)) = \<I> I o Field.project FK"
 begin
-
-lemmas inj_homo_mult[simp] = inj.homo_mult[symmetric]
-lemmas inj_homo_one = inj.homo_one
-lemmas prj_homo_mult[simp] = prj.homo_mult
-lemmas prj_homo_one = prj.homo_one
-
 
 lemma inject_assoc_homo[simp]:
   "R ## inject x \<and> R * inject x ## inject y

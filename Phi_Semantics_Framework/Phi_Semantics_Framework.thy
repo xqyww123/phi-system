@@ -13,7 +13,7 @@ supporting most of control flows and therefore most of (imperative) languages.
 \<close>
 
 theory Phi_Semantics_Framework
-  imports Main Resource_Space
+  imports Main Resource_Space Debt_Axiom.Debt_Axiom
   abbrevs "<:>" = "\<Ztypecolon>"
     and "<throws>" = "\<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s"
     and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
@@ -35,25 +35,54 @@ specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by auto
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype \<phi>empty_ty \<comment> \<open>Base of type formalization\<close>
+virtual_datatype \<phi>empty_ty \<comment> \<open>base of type formalization\<close>
+
+unspecified_type TY
+unspecified_type TY_N
+type_synonym 'T type_entry = \<open>(TY_N, TY, 'T) Virtual_Datatype.Field\<close>
+
+consts TY_CONS_OF :: \<open>TY \<Rightarrow> TY_N\<close>
+
+interpretation \<phi>empty_ty TY_CONS_OF by standard simp
+
 
 subsubsection \<open>Value\<close>
 
-virtual_datatype 'TY \<phi>empty_val :: "nonsepable_semigroup"
-  \<comment> \<open>Base of value formalization, parameterized by \<^typ>\<open>'TY\<close> modelling the type semantics.\<close>
+virtual_datatype \<phi>empty_val :: "nonsepable_semigroup" \<comment> \<open>base of value formalization\<close>
+
+unspecified_type VAL
+unspecified_type VAL_N
+type_synonym 'T value_entry = \<open>(VAL_N, VAL, 'T) Virtual_Datatype.Field\<close>
+
+consts VAL_CONS_OF :: \<open>VAL \<Rightarrow> VAL_N\<close>
+
+instantiation VAL :: nonsepable_semigroup begin
+definition sep_disj_VAL :: \<open>VAL \<Rightarrow> VAL \<Rightarrow> bool\<close>
+  where [simp]: \<open>sep_disj_VAL x y = False\<close>
+instance by standard simp
+end
+
+interpretation \<phi>empty_val VAL_CONS_OF by standard simp
+
 
 subsubsection \<open>Resource\<close>
 
-resource_space ('VAL::"nonsepable_semigroup",'TY) \<phi>empty_res
-  \<comment> \<open>Base of resource formalization, parametereized by \<^typ>\<open>'TY\<close> modelling the types and
-    \<^typ>\<open>'VAL\<close> modelling the values.\<close>
+resource_space \<phi>empty_res \<comment> \<open>base of resource formalization\<close>
 
-locale \<phi>resource_sem =
-  fixes Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
-  assumes Resource_Validator_mult_homo:
+unspecified_type RES
+unspecified_type RES_N
+type_synonym resource = \<open>RES_N \<Rightarrow> RES\<close>
+
+debt_axiomatization RES_sort: \<open>OFCLASS(RES, sep_algebra_class)\<close>
+
+instance RES :: sep_algebra using RES_sort .
+
+interpretation \<phi>empty_res \<open>TYPE(RES_N)\<close> \<open>TYPE(RES)\<close> by standard simp
+
+debt_axiomatization Resource_Validator :: \<open>RES_N \<Rightarrow> RES set\<close>
+  where Resource_Validator_mult_homo:
       \<open>\<And>N. A N ## B N \<Longrightarrow> A N * B N \<in> Resource_Validator N \<longleftrightarrow> A N \<in> Resource_Validator N \<and> B N \<in> Resource_Validator N\<close>
-    and   Resource_Validator_1: \<open>\<And>N. 1 \<in> Resource_Validator N\<close>
-begin
+  and   Resource_Validator_1: \<open>\<And>N. 1 \<in> Resource_Validator N\<close>
 
 definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
 
@@ -66,43 +95,22 @@ lemma Valid_Resource_mult_homo:
   unfolding Valid_Resource_def
   by (simp add: times_fun sep_disj_fun_def Resource_Validator_mult_homo; blast)
 
-end
 
 subsubsection \<open>All-in-One Semantics\<close>
 
-locale \<phi>empty_sem =
-  \<phi>empty_ty  where CONS_OF   = TY_CONS_OF
-            and TYPE'NAME = \<open>TYPE('TY_N)\<close>
-            and TYPE'REP  = \<open>TYPE('TY)\<close>
-+ V: \<phi>empty_val where CONS_OF   = VAL_CONS_OF
-            and TYPE'TY   = \<open>TYPE('TY)\<close>
-            and TYPE'NAME = \<open>TYPE('VAL_N)\<close>
-            and TYPE'REP  = \<open>TYPE('VAL::nonsepable_semigroup)\<close>
-+ R: \<phi>empty_res where TYPE'VAL  = \<open>TYPE('VAL)\<close>
-            and TYPE'TY   = \<open>TYPE('TY)\<close>
-            and TYPE'NAME = \<open>TYPE('RES_N)\<close>
-            and TYPE'REP  = \<open>TYPE('RES::sep_algebra)\<close>
-+ \<phi>resource_sem where Resource_Validator = Resource_Validator
-for TY_CONS_OF and VAL_CONS_OF
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::sep_algebra set\<close>
-+ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY)
-                \<times> ('VAL_N => 'VAL::nonsepable_semigroup)
-                \<times> ('RES_N => 'RES)) itself\<close>
+debt_axiomatization Well_Type :: \<open>TY \<Rightarrow> VAL set\<close>
+  where Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
 
-fixes Well_Type :: \<open>'TY \<Rightarrow> 'VAL set\<close>
-assumes Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
+debt_axiomatization Can_EqCompare :: \<open>resource \<Rightarrow> VAL \<Rightarrow> VAL \<Rightarrow> bool\<close>
+  where can_eqcmp_sym: "Can_EqCompare res A B \<longleftrightarrow> Can_EqCompare res B A"
 
-fixes Can_EqCompare :: \<open>('RES_N \<Rightarrow> 'RES) \<Rightarrow> 'VAL \<Rightarrow> 'VAL \<Rightarrow> bool\<close>
-assumes can_eqcmp_sym: "Can_EqCompare res A B \<longleftrightarrow> Can_EqCompare res B A"
-
-fixes EqCompare :: \<open>'VAL \<Rightarrow> 'VAL \<Rightarrow> bool\<close>
+consts EqCompare :: \<open>VAL \<Rightarrow> VAL \<Rightarrow> bool\<close>
 (*  and   eqcmp_refl:  "EqCompare A A"
     and   eqcmp_sym:   "EqCompare A B \<longleftrightarrow> EqCompare B A"
     and   eqcmp_trans: "EqCompare A B \<Longrightarrow> EqCompare B C \<Longrightarrow> EqCompare A C" *)
 
-fixes Zero :: \<open>'TY \<Rightarrow> 'VAL option\<close>
-assumes zero_well_typ: "pred_option (\<lambda>v. v \<in> Well_Type T) (Zero T)"
-begin
+debt_axiomatization Zero :: \<open>TY \<Rightarrow> VAL option\<close>
+  where zero_well_typ: "pred_option (\<lambda>v. v \<in> Well_Type T) (Zero T)"
 
 lemma Well_Type_unique:
   \<open>v \<in> Well_Type ta \<Longrightarrow> v \<in> Well_Type tb \<Longrightarrow> ta = tb\<close>
@@ -110,25 +118,33 @@ lemma Well_Type_unique:
 
 abbreviation \<open>Valid_Type T \<equiv> Inhabited (Well_Type T)\<close>
 
-end
 
 subsubsection \<open>Fiction\<close>
 
-locale \<phi>spec =
-  \<phi>resource_sem Resource_Validator
-+ F: fictional_space INTERPRET
-for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::sep_algebra set"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 'RES::sep_algebra) interp"
-begin
+unspecified_type FIC
+unspecified_type FIC_N
 
-definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> {_. Fic_Space fic} \<inter> \<I> F.INTERP fic"
+type_synonym fiction = \<open>FIC_N \<Rightarrow> FIC\<close>
+type_synonym  assn = \<open>fiction set\<close>
+type_synonym rassn = \<open>resource set\<close>
+type_synonym vassn = \<open>VAL set\<close>
+
+debt_axiomatization FIC_sort: \<open>OFCLASS(FIC, sep_algebra_class)\<close>
+
+instance FIC :: sep_algebra using FIC_sort .
+
+consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) interp\<close>
+
+interpretation fictional_space INTERPRET .
+
+definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> {_. Fic_Space fic} \<inter> \<I> INTERP fic"
   \<comment> \<open>Interpret a fiction\<close>
 
 lemma In_INTERP_RES:
-  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> Valid_Resource \<and> Fic_Space fic \<and> r \<in> \<I> F.INTERP fic\<close>
+  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> Valid_Resource \<and> Fic_Space fic \<and> r \<in> \<I> INTERP fic\<close>
   unfolding INTERP_RES_def by simp
 
-definition INTERP_SPEC :: \<open>('FIC_N \<Rightarrow> 'FIC) set \<Rightarrow> ('RES_N \<Rightarrow> 'RES) set\<close>
+definition INTERP_SPEC :: \<open>assn \<Rightarrow> rassn\<close>
   \<comment> \<open>Interpret a fictional specification\<close>
   where "INTERP_SPEC T = { res. \<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic }"
 
@@ -157,83 +173,15 @@ lemma INTERP_mult:
 \<Longrightarrow> Fic_Space f2
 \<Longrightarrow> dom1 r1 \<inter> dom1 r2 = {}
 \<Longrightarrow> dom1 f1 \<inter> dom1 f2 = {}
-\<Longrightarrow> r1 \<in> \<I> F.INTERP f1
-\<Longrightarrow> r2 \<in> \<I> F.INTERP f2
+\<Longrightarrow> r1 \<in> \<I> INTERP f1
+\<Longrightarrow> r2 \<in> \<I> INTERP f2
 \<Longrightarrow> f1 ## f2
-\<Longrightarrow> r1 * r2 \<in> \<I> F.INTERP (f1 * f2) \<and> r1 ## r2\<close>
-  unfolding F.INTERP_def Fic_Space_def
+\<Longrightarrow> r1 * r2 \<in> \<I> INTERP (f1 * f2) \<and> r1 ## r2\<close>
+  unfolding INTERP_def Fic_Space_def
   by (simp add: dom1_sep_mult_disjoint times_fun prod.union_disjoint
                 disjoint_dom1_eq_1[of f1 f2],
       meson dom1_disjoint_sep_disj times_set_I)
 
-end
-
-subsubsection \<open>All-in-One Module\<close>
-
-locale \<phi>empty =
-  \<phi>spec Resource_Validator INTERPRET
-+ \<phi>empty_sem where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                               \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
-                               \<times> ('RES_N \<Rightarrow> 'RES::sep_algebra))\<close>
-             and Resource_Validator = Resource_Validator
-for Resource_Validator :: "'RES_N \<Rightarrow> 'RES::sep_algebra set"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::sep_algebra, 'RES_N \<Rightarrow> 'RES::sep_algebra) interp"
-+ fixes TYPES :: \<open>(('TY_N \<Rightarrow> 'TY) \<times> ('VAL_N \<Rightarrow> 'VAL) \<times> ('RES_N \<Rightarrow> 'RES) \<times> ('FIC_N \<Rightarrow> 'FIC)) itself\<close>
-
-
-(*lemma FIC_var_split: \<open>Fic_Space fic \<Longrightarrow>
-    \<I> F.INTERP (fic * FIC_var.mk vars) = \<I> F.INTERP fic * {R_var.mk vars}\<close>
-  apply (subst FIC_var.interp_split; simp add: exclusive_var_def R_var.mk_homo_mult)
-  by (subst FIC_var.interp_split[where f = fic]; simp add: exclusive_var_def
-      set_mult_single[symmetric] mult.assoc)
-
-lemma R_var_valid_split: \<open>res \<in> Valid_Resource \<longleftrightarrow>
-    R_var.clean res \<in> Valid_Resource \<and> (\<exists>vars. res R_var.name = R_var.inject (Fine vars) \<and> finite (dom vars))\<close>
-  by (subst R_var.split, simp add: Valid_Resource_def times_fun_def res_valid_var one_fine_def) blast
-
-lemma R_var_valid_split':
-   \<open>NO_MATCH (R_var.clean res') res \<Longrightarrow> res \<in> Valid_Resource \<longleftrightarrow>
-    R_var.clean res \<in> Valid_Resource \<and> (\<exists>vars. res R_var.name = R_var.inject (Fine vars) \<and> finite (dom vars))\<close>
-  using R_var_valid_split .
-*)
-
-(*
-lemma \<open>Fic_Space fic \<Longrightarrow>
-      res \<in> INTERP_RES (fic * FIC_mem.mk (1(seg := Fine (push_map idx (to_share o Mapof_Val val)))))
-  \<longrightarrow> (\<exists>m v. R_mem.get res = Fine m \<and> m seg = Some v \<and> v \<in> Well_Type (segidx.layout seg) \<and> index_value idx v = val)\<close>
-
- 
-lemma \<open>Fic_Space fic \<Longrightarrow> n \<noteq> 0 \<Longrightarrow>
-      res \<in> INTERP_RES (fic * FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val val))))))
-  \<longrightarrow> (\<exists>m v. R_mem.get res = Fine m \<and> m seg = Some v \<and> v \<in> Well_Type (segidx.layout seg) \<and> index_value idx v = val)\<close>
-  apply (subst FIC_mem.interp_split; simp add: share_mem_def times_set_def)
-  apply (subst R_mem_valid_split)
-  apply (auto simp add: R_mem.proj_homo_mult Valid_Mem_def R_mem.mult_strip_inject_011
-                        mult_strip_fine_011 times_fun[where x = seg] )
-  subgoal premises prems for remain_res mem remain proof -
-    note [simp] = mult_strip_fine_011 times_fun[where x = seg]
-    have \<open>remain seg ## mem seg\<close> using \<open>remain ## mem\<close> by (simp add: sep_disj_fun_def) 
-    show ?thesis
-      apply (insert \<open>\<forall>x. \<exists>y. _\<close>[THEN spec[where x = seg], simplified]
-                    \<open>remain seg ## mem seg\<close>
-                    \<open>\<forall>seg \<in> dom _. _\<close>[unfolded Ball_def, THEN spec[where x= seg], simplified])
-      apply (auto simp add: share_val_fiction \<open>n \<noteq> 0\<close>)
-      subgoal premises prems2 for other_part Val proof -
-        let \<open>?lhs = ?rhs\<close> = \<open>to_share \<circ> Mapof_Val Val = other_part * push_map idx (share n (to_share \<circ> Mapof_Val val))\<close>
-        from \<open>?lhs = ?rhs\<close> have \<open>strip_share o pull_map idx ?lhs = strip_share o pull_map idx ?rhs\<close> by fastforce
-        note this[simplified pull_map_to_share Mapof_Val_pull strip_share_share_funcomp
-                             pull_map_homo_mult pull_push_map]
-        thm prems2
-        term Valof_Map
-
-  thm times_fun[where x = seg]
-  thm R_mem.split
-
-*)
-
-
-
-(* type_synonym logaddr = "nat memaddr" *)
 
 subsection \<open>Formalization of Computation\<close>
 
@@ -310,10 +258,14 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
   which belongs to the trust base already.
 \<close>
 
-datatype ('ret,'ex,'RES_N,'RES) state =
-      Success \<open>'ret sem_value\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
-    | Exception \<open>'ex sem_value\<close> (resource: "('RES_N \<Rightarrow> 'RES)")
+declare [ [typedef_overloaded] ]
+
+datatype 'ret state =
+      Success \<open>'ret sem_value\<close> (resource: resource)
+    | Exception \<open>VAL sem_value\<close> (resource: resource)
     | Invalid | PartialCorrect
+
+declare [ [typedef_overloaded = false] ]
 
 
 lemma split_state_All:
@@ -362,20 +314,24 @@ is expressed by returning \<open>Invalid\<close>.
 % TODO: value annotation and slightly-shallow representation.
  \<close>
 
-type_synonym ('ret,'ex,'RES_N,'RES) proc = "('RES_N \<Rightarrow> 'RES) \<Rightarrow> ('ret,'ex,'RES_N,'RES) state set"
-type_synonym ('arg,'ret,'ex,'RES_N,'RES) proc' = "'arg sem_value \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc"
+type_synonym 'ret proc = "resource \<Rightarrow> 'ret state set"
+type_synonym ('arg,'ret) proc' = "'arg sem_value \<Rightarrow> 'ret proc"
 
 
-definition bind :: "('a,'e,'RES_N,'RES) proc \<Rightarrow> ('a,'b,'e,'RES_N,'RES) proc' \<Rightarrow> ('b,'e,'RES_N,'RES) proc"  ("_ \<bind>/ _" [75,76] 75)
-  where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x | Exception v x \<Rightarrow> {Exception v x}
-                                       | Invalid \<Rightarrow> {Invalid} | PartialCorrect \<Rightarrow> {PartialCorrect}) ` f res))"
+definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"  ("_ \<bind>/ _" [75,76] 75)
+  where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
+                                           | Exception v x \<Rightarrow> {Exception v x}
+                                           | Invalid \<Rightarrow> {Invalid}
+                                           | PartialCorrect \<Rightarrow> {PartialCorrect}) ` f res))"
 
 abbreviation bind' ("_ \<ggreater>/ _" [75,76] 75)
   where \<open>bind' f g \<equiv> (f \<bind> (\<lambda>_. g))\<close>
 
 definition \<open>det_lift f x = {f x}\<close>
+
 definition \<open>Return = det_lift o Success\<close>
-definition Nondet :: \<open>('ret,'ex,'RES_N,'RES) proc \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc \<Rightarrow> ('ret,'ex,'RES_N,'RES) proc\<close>
+
+definition Nondet :: \<open>'ret proc \<Rightarrow> 'ret proc \<Rightarrow> 'ret proc\<close>
   where \<open>Nondet f g = (\<lambda>res. f res \<union> g res)\<close>
 
 lemma proc_bind_SKIP'[simp]:
@@ -388,7 +344,7 @@ lemma proc_bind_SKIP'[simp]:
 
 lemma proc_bind_return_none[simp]:
   "f_nil \<ggreater> Return \<phi>V_none \<equiv> f_nil"
-  for f_nil :: \<open>(unit,'ex,'RES_N,'RES) proc\<close>
+  for f_nil :: \<open>unit proc\<close>
   unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
   apply (clarsimp)
   subgoal for x y
@@ -406,7 +362,5 @@ lemma proc_bind_assoc[simp]:
   "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
   unfolding bind_def fun_eq_iff det_lift_def set_eq_iff
   by clarsimp
-
-
 
 end

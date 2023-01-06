@@ -143,14 +143,6 @@ fun dec_blk_level ctxt =
 
 
 
-
-
-
-
-
-
-
-
 fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
       binding arg ret throws rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt
       int ctxt =
@@ -227,13 +219,14 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process de
         val (arg, ret, throws', preconds) = prep_Nu ctxt arg_ret_throws_conds
         (*val _ = debug_term ctxt "arg " arg
         val _ = debug_term ctxt "ret " ret*)
+        val arg = Procedure_Syntax.translate_arg arg
         val ret = Procedure_Syntax.translate_ret ret
-        val v_proc = Var (v_proc_var, dummyT --> Type(@{type_name set}, [Type(@{type_name state}, [dummyT, TFree("'VAL", dummyS), dummyT, dummyT])]))
+        val v_proc = Var (v_proc_var, dummyT)
         val throws = if throws' = Term.dummy
                      then Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT)
                      else throws'
         val goal = mk_Trueprop
-          (Const ("local.\<phi>Procedure", dummyT) $ v_proc $ arg $ ret $ throws)
+          (Const (@{const_name \<phi>Procedure}, dummyT) $ v_proc $ arg $ ret $ throws)
 
         fun constr_process stat =
           let
@@ -247,9 +240,8 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process de
         fun post_process' binding int lthy th =
           lthy
             |> NuProcedure.define def_const binding (
-                (lthy, (th RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
-                          handle THM _  => (th RSN (3,
-                              Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
+                (lthy, (th RSN (3, @{thm "\<phi>__final_proc_rewrite__"})
+                          handle THM _  => (th RSN (3, @{thm "\<phi>__final_proc_rewrite__'"}))))
                   |> Nu_Reasoner.reason NONE
                   |> (fn SOME (lthy', th) => post_process lthy' th
                        | NONE => error("Fail to simplify finally the procedure.\n"^
@@ -287,7 +279,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         val var_names = take (length raw_vars) fixed_names
         val vars = origin_names ~~ (map (rpair dummyT) var_names)
 
-        val arg = raw_arg
+        val arg = Procedure_Syntax.translate_arg raw_arg
         val ret = Procedure_Syntax.translate_ret raw_ret
         val throws = raw_throws
 
@@ -311,8 +303,8 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
 
         val goal0 = mk_Trueprop (
               Const (@{const_name All}, dummyT) $ Abs("x", dummyT,
-                (Const ("local.\<phi>Procedure", dummyT)
-                  $ (Const ("local.op_recursion", dummyT)
+                (Const (@{const_name \<phi>Procedure}, dummyT)
+                  $ (Const ("local.op_recursion", dummyT) (*TODO ! ! ! BUG !*)
                       $ Var ((tArg,0), dummyT)
                       $ Var ((tRet,0), dummyT)
                       $ Var ((func_name,0), dummyT))
@@ -328,15 +320,13 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
 
         val All = pure_All_expansion origin_names ctxt''
         val forall = forall_expansion origin_names ctxt''
-        val recursion_thm = Proof_Context.get_thm ctxt'' "local.__op_recursion__"
-        val Subjection_simp_proc_arg =
-              Proof_Context.get_thm ctxt'' "local.Subjection_simp_proc_arg_metaeq"
+        val recursion_thm = Proof_Context.get_thm ctxt'' "local.__op_recursion__" (*TODO*)
         val (_,proof0) = goal0
             |> Syntax.check_term ctxt'' |> Thm.cterm_of ctxt''
             |> Goal.init
             |> (HEADGOAL (resolve_tac ctxt'' [recursion_thm])
                 THEN (Raw_Simplifier.rewrite_rule ctxt'' (*improve this!*)
-                       (All::forall::Subjection_simp_proc_arg::
+                       (All::forall:: @{thm Subjection_simp_proc_arg_metaeq} ::
                         Named_Theorems.get ctxt'' @{named_theorems named_expansion})
                       #> Seq.single))
             |> Seq.maps (Nu_Reasoner.reason_tac NONE ctxt'' o pair ctxt'')
@@ -384,9 +374,8 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                    |> Goal.conclude
                    |> Object_Logic.rulify lthy
                  |> (fn th' => (lthy,
-                        (th' RSN (3, Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__")
-                          handle THM _  => (th' RSN (3,
-                              Proof_Context.get_thm lthy "local.\<phi>__final_proc_rewrite__'"))))
+                        (th' RSN (3, @{thm "\<phi>__final_proc_rewrite__"})
+                          handle THM _  => (th' RSN (3, @{thm "\<phi>__final_proc_rewrite__'"}))))
                    |> Nu_Reasoner.reason NONE
                    |> (fn SOME (_, th) => th
                         | NONE => error("Fail to simplify finally the procedure.\n"^
@@ -418,7 +407,7 @@ fun gen_begin_view_shift_cmd prep_term prep_prop prep_typ prep_var
                                 of SOME x => prep_term ctxt x
                                  | _ => @{term True}
         val goal = mk_Trueprop
-          (Const ("local.View_Shift", dummyT) $ arg $ ret $ additional_prop)
+          (Const (@{const_name View_Shift}, dummyT) $ arg $ ret $ additional_prop)
         fun constr_process stat =
           let
             val ctxt = Proof.context_of stat

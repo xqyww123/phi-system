@@ -591,7 +591,7 @@ fun Fiction_Space_definition rep_sort project_injectL
      |> fold interprete_parent_valuetypes parents
      |> add_locale name_b
             (  [(suffix namesN full_name,
-                  (("",false),
+                  ((name ^ "_" ^ namesN, true),
                    (Expression.Named ((typeN, NAME_TY)::name_insts)
                    ,[]))),
                 (suffix fields_locale_N full_name,

@@ -183,7 +183,8 @@ fun list_debts thy =
     writeln (chunks (
       if null debts
       then [str "Good job! No axiom debt is recorded."]
-      else map (fn (N,TH) => Pretty.item [str N, str " : ", Syntax.pretty_term_global thy TH]) debts
+      else map (fn (N,TH) => item [chunks [block [str N, str " : "],
+                                           Syntax.pretty_term_global thy TH]]) debts
     ))
   end
 

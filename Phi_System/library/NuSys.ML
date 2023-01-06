@@ -126,7 +126,7 @@ fun inc_val_counter ctxt =
 
 fun accept_proc (ctxt,sequent) =
   let open PhiSyntax
-    val rule = sequent RS Proof_Context.get_thm ctxt "local.\<phi>assemble_proc"
+    val rule = sequent RS @{thm \<phi>assemble_proc}
     val Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, s_ty,
           Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, ret_ty,
             \<^const>\<open>Pure.imp\<close> $ codeblk_term $ _))
@@ -158,7 +158,7 @@ fun accept_proc (ctxt,sequent) =
             (fn _ => fn [assm] => (export_codeblock ctxt' param_cterms rule assm, I))
             [codeblk_cterm] ctxt'
   in
-    (ctxt'2, Proof_Context.get_thm ctxt "local.\<phi>accept_proc" OF [sequent, codeblk])
+    (ctxt'2, @{thm \<phi>accept_proc} OF [sequent, codeblk])
   end
 
 (*Param & Label*)
