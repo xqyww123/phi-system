@@ -89,7 +89,7 @@ val fields_locale_N = "_prjs"
 val TVAR_N = "TYPE"
 val fieldN = "\<f>\<i>\<e>\<l>\<d>_"
 
-val project_injectL_default = \<^locale>\<open>VDT_field\<close>
+val project_injectL_default = \<^locale>\<open>field_entry\<close>
 
 
 

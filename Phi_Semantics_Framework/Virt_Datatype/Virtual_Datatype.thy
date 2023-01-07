@@ -19,17 +19,13 @@ hide_const (open) name project inject
 
 
 locale VDT_field =
-  "virtual_datatype" CONS_OF
-  for CONS_OF :: "'value \<Rightarrow> 'CONS_NAME"
-+ fixes field :: "('CONS_NAME,'value,'a) Field"
-assumes name_of[simp]: "CONS_OF (Field.inject field x) = Field.name field"
-  and dest_mk[simp]: "Field.project field (Field.inject field x) = x"
+  fixes field :: "('CONS_NAME,'value,'a) Field"
+  assumes dest_mk[simp]: "Field.project field (Field.inject field x) = x"
 begin
 
 abbreviation "mk \<equiv> Field.inject field"
 abbreviation "dest \<equiv> Field.project field"
 abbreviation "name \<equiv> Field.name field"
-definition "is_instance v \<longleftrightarrow> (\<exists>x. v = mk x)"
 
 lemma dest_mk_id[simp]: "dest o mk = id"
   using dest_mk destr_contstr_comp_id by blast
@@ -40,22 +36,33 @@ lemma dest_mk_cancle[simp]: "f o dest o mk = f"
 lemma mk_inj[iff]: "mk x = mk y \<longleftrightarrow> x = y"
   by (metis dest_mk)
 
-lemma is_instanceE[elim!]: "is_instance v \<Longrightarrow> (\<And>x. v = mk x \<Longrightarrow> C) \<Longrightarrow> C"
-  using is_instance_def by blast
+definition "domain = {v. (\<exists>x. v = mk x)}"
 
-lemma is_instance_mk[simp,intro]: "is_instance (mk x)" using is_instance_def by blast
+lemma in_domainE[elim!]: "v \<in> domain \<Longrightarrow> (\<And>x. v = mk x \<Longrightarrow> C) \<Longrightarrow> C"
+  using domain_def by blast
 
-lemma not_constructor_not_instance[simp]: \<open>CONS_OF v \<noteq> name \<Longrightarrow> \<not> is_instance v \<equiv> True\<close>
-  unfolding atomize_eq using name_of by blast
-  
-lemma is_instance_cons[simp]: "is_instance v \<Longrightarrow> CONS_OF v = name"
-  using name_of is_instance_def by force
-
-lemma is_instance_mk_dest[simp]: "is_instance v \<Longrightarrow> mk (dest v) = v"
-  using is_instance_def dest_mk by fastforce 
+lemma mk_in_domain[simp,intro]: "mk x \<in> domain" using domain_def by blast
 
 end
 
+locale field_entry =
+  "virtual_datatype" CONS_OF + VDT_field field
+  for CONS_OF :: "'value \<Rightarrow> 'CONS_NAME"
+  and field :: "('CONS_NAME,'value,'a) Field"
++ assumes name_of[simp]: "CONS_OF (Field.inject field x) = Field.name field"
+begin
+
+lemma not_constructor_not_instance[simp]:
+  \<open>CONS_OF v \<noteq> name \<Longrightarrow> v \<notin> domain \<equiv> True\<close>
+  unfolding atomize_eq using name_of by blast
+  
+lemma in_domain_cons[simp]: "v \<in> domain \<Longrightarrow> CONS_OF v = name"
+  using name_of domain_def by force
+
+lemma in_domain_mk_dest[simp]: "v \<in> domain \<Longrightarrow> mk (dest v) = v"
+  using domain_def dest_mk by fastforce 
+
+end
 
 ML_file_debug \<open>Virtual_Datatype.ML\<close>
 
