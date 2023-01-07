@@ -4,6 +4,9 @@ begin
 
 section \<open>Tools for Formalizing Instructions\<close>
 
+named_theorems discharging_semantic_debt
+  \<open>Theorems that discharges or helps to discharge the debt axioms for semantic formalization.\<close>
+
 subsection \<open>Definitions of Elementary Constructions\<close>
 
 definition \<phi>M_assert :: \<open>bool \<Rightarrow> unit proc\<close>

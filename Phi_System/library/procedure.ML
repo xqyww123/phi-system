@@ -37,7 +37,7 @@ structure Interfaces = Theory_Data(
   type T = interface Symtab.table Symtab.table;
   val empty = Symtab.empty;
   val extend = I;
-  val merge = Symtab.merge (K false)
+  val merge = Symtab.merge (K true)
 )
 
 (*All interfaces to be exported in *a* theory*)
@@ -45,7 +45,7 @@ structure Procedures = Generic_Data(
   type T = string list Symtab.table;
   val empty = Symtab.empty;
   val extend = I;
-  val merge = Symtab.merge (K false)
+  val merge = Symtab.merge (K true)
 )
 
 val thy_name_of_ctxt = Context.theory_long_name o Context.the_theory

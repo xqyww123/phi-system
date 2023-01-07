@@ -47,7 +47,7 @@ type working_mode = {
 structure Data = Generic_Data(
   type T = working_mode Symtab.table
   val empty = Symtab.empty
-  val merge = Symtab.merge (K false)
+  val merge = Symtab.merge (K true)
 )
 
 fun working_mode_on ctxt goal =

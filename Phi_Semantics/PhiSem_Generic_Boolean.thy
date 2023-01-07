@@ -1,3 +1,5 @@
+chapter \<open>Generic Boolean\<close>
+
 theory PhiSem_Generic_Boolean
   imports Phi_System.PhiSem_Formalization_Tools
 begin
@@ -12,10 +14,10 @@ debt_axiomatization V_bool :: \<open>bool value_entry\<close>
 interpretation V_bool: VDT_field V_bool using V_bool_ax .
 
 debt_axiomatization
-      can_eq_bool[simp]: \<open>Can_EqCompare res (V_bool.mk x1) (V_bool.mk x2)\<close>
-  and eq_bool[simp]: \<open>EqCompare (V_bool.mk x1) (V_bool.mk x2) = (x1 = x2)\<close>
-  and zero_bool[simp]: \<open>Zero bool = Some (V_bool.mk False)\<close>
-  and WT_bool[simp]: \<open>Well_Type bool = { V_bool.mk x |x. True }\<close>
+      can_eq_bool: \<open>Can_EqCompare res (V_bool.mk x1) (V_bool.mk x2)\<close>
+  and eq_bool:     \<open>EqCompare (V_bool.mk x1) (V_bool.mk x2) = (x1 = x2)\<close>
+  and zero_bool:   \<open>Zero bool = Some (V_bool.mk False)\<close>
+  and WT_bool:     \<open>Well_Type bool = { V_bool.mk x |x. True }\<close>
 
 section \<open>Instructions\<close>
 
@@ -65,16 +67,16 @@ lemma \<phi>Bool_inhabited[\<phi>inhabitance_rule, elim!]:
 
 lemma \<phi>Bool_eqcmp[\<phi>reason for \<open>\<phi>Equal \<bool> ?c ?eq\<close>]:
   "\<phi>Equal \<bool> (\<lambda>x y. True) (=)"
-  unfolding \<phi>Equal_def by (simp add: \<phi>expns)
+  unfolding \<phi>Equal_def by (simp add: \<phi>expns can_eq_bool eq_bool)
 
 lemma \<phi>Bool_zero[\<phi>reason for \<open>\<phi>Zero bool \<bool> ?z\<close>]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e TY = bool \<Longrightarrow> \<phi>Zero TY \<bool> False"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_bool)
 
 lemma \<phi>Bool_semty[\<phi>reason for \<open>\<phi>SemType (?x \<Ztypecolon> \<bool>) ?ty\<close>]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) bool\<close>
   unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns)
+  by (simp add: \<phi>expns WT_bool)
 
 lemma [\<phi>reason]:
   \<open>is_singleton (x \<Ztypecolon> \<bool>)\<close>
@@ -83,28 +85,76 @@ lemma [\<phi>reason]:
 abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
 
 
-section \<open>Procedure Abstractions\<close>
+section \<open>Abstractions of Boolean Arithmetic\<close>
 
-\<phi>overloads "\<not>" and "\<and>" and "\<or>"
+\<phi>overloads "=" and "\<not>" and "\<and>" and "\<or>"
+
+paragraph \<open>Not\<close>
 
 lemma op_not[\<phi>overload \<not>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not raw \<lbrace> x \<Ztypecolon> Val raw \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
-  by (cases raw, simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases raw, simp, rule, simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns)
 
 schematic_goal
+  [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R1\<heavy_comma> SYNTHESIS \<not>?b \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?G \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l \<not>b \<Ztypecolon> \<bool> \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   \<medium_left_bracket> F1 \<not> \<medium_right_bracket> .. .
 
-proc [
-    \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R1\<heavy_comma> SYNTHESIS \<not>?b \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+paragraph \<open>And\<close>
+
+lemma op_and[\<phi>overload \<and>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_and_def
+  by (cases va; cases vb; simp, rule, rule, simp add: \<phi>expns WT_bool, rule,
+      simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
+
+schematic_goal
+  [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x \<and> ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?G \<lbrace> R \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<and> y) \<Ztypecolon> \<bool> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 + E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  \<medium_left_bracket> F1 F2 \<and> \<medium_right_bracket>. .
+
+paragraph \<open>Or\<close>
+
+lemma op_or[\<phi>overload \<or>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_or_def
+  by(cases va; cases vb, simp, rule, rule, simp add: \<phi>expns WT_bool, rule,
+      simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
+
+
+paragraph \<open>Equal\<close>
+
+lemma op_equal_\<phi>app[\<phi>overload =]:
+  \<open> \<phi>SemType (a \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (b \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Equal T can_eq eq
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e can_eq a b
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal TY (\<phi>V_pair rawb rawa) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawa] T\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<bool> \<rbrace>\<close>
+  unfolding op_equal_def
+  apply (cases rawa; cases rawb; simp, rule, rule)
+    apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
+    apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
+   apply (unfold \<phi>Equal_def Premise_def, simp)
+  by (rule \<phi>M_Success', rule, simp add: \<phi>expns)
+
+proc \<phi>__synthesis_eq[
+    \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x = ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  assumes [\<phi>reason for \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+    and   [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
+    and   [\<phi>reason for \<open>\<phi>Equal T ?can_eq ?eq\<close>]: \<open>\<phi>Equal T can_eq (=)\<close>
+  premises \<open>can_eq x y\<close>
   goal G
   argument \<open>R\<close>
-  return   \<open>R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l \<not>b \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> F1 \<not> \<medium_right_bracket> .. .
+  return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
+  throws \<open>E1 + E2\<close>
+  \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
 
 
 end

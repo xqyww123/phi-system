@@ -372,9 +372,11 @@ paragraph \<open>Syntax\<close>
 
 consts anonymous :: 'a
 
-syntax val_syntax :: "logic \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>l _" [18] 17)
+syntax val_syntax :: "logic \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>l _" [22] 21)
 
-translations "\<^bold>v\<^bold>a\<^bold>l (x \<Ztypecolon> T)" => "x \<Ztypecolon> CONST Val (CONST anonymous) T"
+translations
+  "\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Val (CONST anonymous) T"
+  "\<^bold>v\<^bold>a\<^bold>l T" => "CONST Val (CONST anonymous) T"
 
 declare [ [ML_debugger]]
 

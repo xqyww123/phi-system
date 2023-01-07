@@ -7,6 +7,8 @@ theory Phi_Preliminary
           Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner
 begin
 
+declare [ [ML_debugger, ML_exception_debugger]]
+
 subsection \<open>Named Theorems\<close>
 
 named_theorems \<phi>expns \<open>Semantics Expansions, used to expand assertions semantically.\<close>

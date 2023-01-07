@@ -12,11 +12,21 @@ lemma [simp]: "CONS_OF x \<noteq> CONS_OF y \<equiv> True \<Longrightarrow> x \<
 
 end
 
-datatype ('CONS_NAME,'VAL,'T) Field =
-  Field (name: 'CONS_NAME) (project: "'VAL \<Rightarrow> 'T") (inject: "'T \<Rightarrow> 'VAL")
+datatype ('CONS_NAME,'REP,'ABS) Field =
+  Field (name: 'CONS_NAME) (project: "'REP \<Rightarrow> 'ABS") (inject: "'ABS \<Rightarrow> 'REP")
 
 hide_const (open) name project inject
 
+definition lift_Field :: \<open>('ABS \<Rightarrow> 'ABS')
+                       \<Rightarrow> ('ABS' \<Rightarrow> 'ABS)
+                       \<Rightarrow> ('CONS_NAME,'REP,'ABS) Field
+                       \<Rightarrow> ('CONS_NAME,'REP,'ABS') Field\<close>
+  where \<open>lift_Field f g field = (case field of Field name projector injector \<Rightarrow>
+            Field name (f o projector) (injector o g))\<close>
+
+lemma lift_Field[simp]:
+  \<open>lift_Field f g (Field name projector injector) = Field name (f o projector) (injector o g)\<close>
+  unfolding lift_Field_def by simp
 
 locale VDT_field =
   fixes field :: "('CONS_NAME,'value,'a) Field"
@@ -44,6 +54,12 @@ lemma in_domainE[elim!]: "v \<in> domain \<Longrightarrow> (\<And>x. v = mk x \<
 lemma mk_in_domain[simp,intro]: "mk x \<in> domain" using domain_def by blast
 
 end
+
+lemma VDT_field_lift:
+  \<open>(\<And>x. f (g x) = x) \<Longrightarrow> VDT_field field \<Longrightarrow> VDT_field (lift_Field f g field)\<close>
+  unfolding VDT_field_def
+  by (cases field; simp)
+
 
 locale field_entry =
   "virtual_datatype" CONS_OF + VDT_field field
