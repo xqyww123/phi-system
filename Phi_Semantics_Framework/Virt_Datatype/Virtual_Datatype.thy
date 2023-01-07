@@ -18,7 +18,7 @@ datatype ('CONS_NAME,'VAL,'T) Field =
 hide_const (open) name project inject
 
 
-locale project_inject =
+locale VDT_field =
   "virtual_datatype" CONS_OF
   for CONS_OF :: "'value \<Rightarrow> 'CONS_NAME"
 + fixes field :: "('CONS_NAME,'value,'a) Field"

@@ -48,7 +48,7 @@ interpretation \<phi>empty_ty TY_CONS_OF by standard simp
 
 subsubsection \<open>Value\<close>
 
-virtual_datatype \<phi>empty_val :: "nonsepable_semigroup" \<comment> \<open>base of value formalization\<close>
+virtual_datatype \<phi>empty_val :: sep_magma \<comment> \<open>base of value formalization\<close>
 
 unspecified_type VAL
 unspecified_type VAL_N
@@ -56,11 +56,7 @@ type_synonym 'T value_entry = \<open>(VAL_N, VAL, 'T) Virtual_Datatype.Field\<cl
 
 consts VAL_CONS_OF :: \<open>VAL \<Rightarrow> VAL_N\<close>
 
-instantiation VAL :: nonsepable_semigroup begin
-definition sep_disj_VAL :: \<open>VAL \<Rightarrow> VAL \<Rightarrow> bool\<close>
-  where [simp]: \<open>sep_disj_VAL x y = False\<close>
-instance by standard simp
-end
+instance VAL :: sep_magma ..
 
 interpretation \<phi>empty_val VAL_CONS_OF by standard simp
 

@@ -181,10 +181,11 @@ fun list_debts thy =
     val debts = Symtab.dest (Debt_Axiom_Kernel.debts thy)
   in
     writeln (chunks (
-      if null debts
-      then [str "Good job! No axiom debt is recorded."]
-      else map (fn (N,TH) => item [chunks [block [str N, str " : "],
-                                           Syntax.pretty_term_global thy TH]]) debts
+      block [if null debts
+             then str "Good job! No debt axiom is recorded."
+             else block [str (string_of_int (length debts)), str " axiom debts are recorded:"]]
+   :: map (fn (N,TH) => item [chunks [block [str N, str " : "],
+                                      Syntax.pretty_term_global thy TH]]) debts
     ))
   end
 
