@@ -14,7 +14,7 @@ A typical usage is, for example,
 ```isabelle
 
 simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
-  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>Val_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Val_simp_cong} ctxt)
 \<close>
 
 ```
@@ -22,13 +22,13 @@ where \<phi>Val_simp_cong is a quasi-congruence rule of the above form.
 
 *)
 
-signature NU_SIMP_CONG = sig
+signature PHI_SIMP_CONG = sig
   val simproc : thm -> Proof.context -> cterm -> thm option
   val simproc_qualifier : thm -> Proof.context -> cterm -> thm option
 end
 
-structure NuSimpCong : NU_SIMP_CONG = struct
-open NuHelp
+structure Phi_SimpCong : PHI_SIMP_CONG = struct
+open Phi_Help
 
 fun chk_simplified NONE = NONE
   | chk_simplified (SOME th) =

@@ -1,11 +1,11 @@
-(*  Title:      NuBasics.ML
+(*  Title:      Phi_Basics.ML
 
 Basic supports for the nu-system.
 
 *)
 infix 0 MP MP_BY
 
-signature NU_BASICS = sig
+signature PHI_BASICS = sig
   exception NDBG of thm
 
   val under_programming_environ : Proof.context -> bool
@@ -21,8 +21,8 @@ signature NU_BASICS = sig
 
 end
 
-structure NuBasics : NU_BASICS = struct
-open Thm Term HOLogic NuHelp
+structure Phi_Basics : PHI_BASICS = struct
+open Thm Term HOLogic Phi_Help
 exception NDBG of thm
 
 structure Programming_Sequent = Proof_Data (

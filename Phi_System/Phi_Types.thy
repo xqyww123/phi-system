@@ -1,6 +1,6 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
-theory PhiTypes
+theory Phi_Types
   imports IDE_CP
 begin
 
@@ -147,11 +147,11 @@ parse_ast_translation \<open>
     fun parse_SetcomprPhiTy ctxt [Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, x, T],idts,P] =
           Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
                 idts_to_abs x idts,
-                Appl [Constant "\<^const>PhiTypes.ExTyp_binder", idts,
+                Appl [Constant "\<^const>Phi_Types.ExTyp_binder", idts,
                       (case P of (Appl [Constant "_constrain", Variable "True", _]) => T
                                | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, T, P])]]
       | parse_SetcomprPhiTy ctxt [X,idts,P] =
-          Appl [Constant "\<^const>PhiTypes.ExTyp_binder", idts,
+          Appl [Constant "\<^const>Phi_Types.ExTyp_binder", idts,
                 (case P of (Appl [Constant "_constrain", Variable "True", _]) => X
                          | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
   in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
@@ -345,7 +345,7 @@ lemma \<phi>Prod_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>Prod_simp_cong ("(x,y) \<Ztypecolon> (T \<^emph> U)") = \<open>
-  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>Prod_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Prod_simp_cong} ctxt)
 \<close>
 
 lemma [simp]:
@@ -484,7 +484,7 @@ lemma \<phi>MapAt_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>MapAt_simp_cong ("(x \<Ztypecolon> k \<^bold>\<rightarrow> T)") = \<open>
-  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>MapAt_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>MapAt_simp_cong} ctxt)
 \<close>
 
 paragraph \<open>Implication \& Action rules\<close>
@@ -565,7 +565,7 @@ lemma \<phi>MapAt_L_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>MapAt_L_simp_cong ("x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T") = \<open>
-  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>MapAt_L_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>MapAt_L_simp_cong} ctxt)
 \<close>
 
 lemma \<phi>MapAt_L_At:
@@ -694,7 +694,7 @@ in [(\<^syntax_const>\<open>__get_val__\<close>, (fn ctxt => fn [A] =>
 ))] end\<close>
 
 
-setup \<open>let open Ast PhiSyntax
+setup \<open>let open Ast Phi_Syntax
   fun strip_constrain (Const ("_constrain", _) $ x $ _) = strip_constrain x
     | strip_constrain (Const ("_type_constraint_", _) $ x) = strip_constrain x
     | strip_constrain x = x
@@ -705,7 +705,7 @@ setup \<open>let open Ast PhiSyntax
 
   fun get_val ctxt ind =
     let
-      val values = Thm.prop_of (NuBasics.the_construction ctxt)
+      val values = Thm.prop_of (Phi_Basics.the_construction ctxt)
                   |> dest_CurrentConstruction |> #4
                   |> strip_separations
                   |> map_filter name_of_Val
@@ -762,7 +762,7 @@ lemma \<phi>Val_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
-  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>Val_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Val_simp_cong} ctxt)
 \<close>
 
 subsubsection \<open>Application Methods for Subtyping\<close>
@@ -972,7 +972,7 @@ lemma \<phi>perm_transformer_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>perm_transformer_simp_cong ("x \<Ztypecolon> \<phi>perm_transformer \<psi> T") = \<open>
-  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>perm_transformer_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>perm_transformer_simp_cong} ctxt)
 \<close>
 
 
@@ -1087,7 +1087,7 @@ lemma \<phi>Share_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>Share_simp_cong ("x \<Ztypecolon> n \<Znrres> T") = \<open>
-  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>Share_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Share_simp_cong} ctxt)
 \<close>
 
 subparagraph \<open>Structural Conversions\<close>
@@ -1208,7 +1208,7 @@ lemma \<phi>Some_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>Some_simp_cong ("x \<Ztypecolon> \<black_circle> T") = \<open>
-  K (fn ctxt => NuSimpCong.simproc @{thm \<phi>Some_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Some_simp_cong} ctxt)
 \<close>
 
 

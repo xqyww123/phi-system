@@ -18,13 +18,13 @@ signature QUANT_EXPANSION = sig
 end
 
 structure QuantExpansion : QUANT_EXPANSION = struct
-open NuHelp PhiSyntax
+open Phi_Help Phi_Syntax
 
 fun mk_cases_named names tm = Const (@{const_name case_named},
       (dummyT --> dummyT) --> Type (@{type_name named}, [dummyT, mk_name_tylabels names]) --> dummyT) $ tm
 
 fun const_dest_named T names =
-  Const (@{const_name case_named}, (T --> T) --> PhiSyntax.mk_namedT T names --> T)
+  Const (@{const_name case_named}, (T --> T) --> Phi_Syntax.mk_namedT T names --> T)
     $ Const (@{const_name id}, T --> T)
 
 fun mk_cases_named_fullty names tm =
@@ -180,7 +180,7 @@ fun aggregate_variables_raw names tys body =
       | tr M (X $ Y) = (tr M X $ tr M Y)
       | tr M (Abs (n,t,X)) = Abs (n,t, tr (M+1) X)
       | tr _ X = X
-  in (names, Abs ("", PhiSyntax.mk_namedT T names, tr 0 body))
+  in (names, Abs ("", Phi_Syntax.mk_namedT T names, tr 0 body))
   end
 
 fun aggregate_variables_lambda term =

@@ -1,10 +1,10 @@
-(*  Title:      NuHelp.ML
+(*  Title:      Phi_Help.ML
 
 Application-irrelevant basic tools.
 
 *)
 
-signature NU_HELP = sig
+signature PHI_HELP = sig
 
 (**** Basic Operations ****)
   val last : 'a list -> 'a
@@ -85,7 +85,8 @@ signature NU_HELP = sig
   val dest_Trueprop_c : cterm -> cterm
 
 end
-structure NuHelp : NU_HELP = struct
+
+structure Phi_Help : PHI_HELP = struct
 
 fun last [] = raise Fail "last"
   | last [x] = x

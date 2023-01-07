@@ -1,5 +1,5 @@
 (* The Signature *)
-signature NU_SYS = sig
+signature PHI_SYS = sig
   (** Basic Operations **)
   val cast : cterm -> Proof.context * thm -> Proof.context * thm
   val cast_exception : cterm -> Proof.context * thm -> Proof.context * thm
@@ -30,8 +30,8 @@ signature NU_SYS = sig
 end
 
 (* The Structure *)
-structure NuSys : NU_SYS = struct
-open Thm NuBasics Term
+structure Phi_Sys : PHI_SYS = struct
+open Thm Phi_Basics Term
 
 (*fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))
@@ -125,12 +125,12 @@ fun inc_val_counter ctxt =
 
 
 fun accept_proc (ctxt,sequent) =
-  let open PhiSyntax
+  let open Phi_Syntax
     val rule = sequent RS @{thm \<phi>assemble_proc}
     val Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, s_ty,
           Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, ret_ty,
             \<^const>\<open>Pure.imp\<close> $ codeblk_term $ _))
-        = NuHelp.leading_antecedent' rule
+        = Phi_Help.leading_antecedent' rule
     val ([s_name,ret_name],ctxt') =
             inc_val_counter ctxt |-> (fn i =>
             Proof_Context.add_fixes
@@ -144,7 +144,7 @@ fun accept_proc (ctxt,sequent) =
     
     val _ = if Term.maxidx_of_typ ret_ty <> ~1
             then let val (f,_,_,_,_) =
-                            PhiSyntax.dest_PendingConstruction (Thm.major_prem_of sequent)
+                            Phi_Syntax.dest_PendingConstruction (Thm.major_prem_of sequent)
               in error (Pretty.string_of (Pretty.block [
                     Pretty.str "Fail to accept procedure ",
                     Syntax.pretty_term ctxt f, Pretty.str ".\n",
@@ -163,14 +163,14 @@ fun accept_proc (ctxt,sequent) =
 
 (*Param & Label*)
 fun param_type sequent =
-  PhiSyntax.param_type sequent
+  Phi_Syntax.param_type sequent
     |> map_atyps (fn ty => case ty of TVar _ => dummyT | _ => ty)
   (* TODO: how to parse (check) the term of a desired type pattern
   * (schematic type variable)? *)
 
 fun set_param' ctxt term sequent =
     (term |> Thm.cterm_of ctxt
-          |> PhiSyntax.intro_param)
+          |> Phi_Syntax.intro_param)
       RS sequent
 
 fun set_param term' (ctxt,sequent) =
@@ -202,7 +202,7 @@ fun set_param term' (ctxt,sequent) =
   end
 
 fun set_param_cmd xterm (ctxt,sequent) =
-  case try (dest_funT #> apfst PhiSyntax.dest_named) (param_type sequent)
+  case try (dest_funT #> apfst Phi_Syntax.dest_named) (param_type sequent)
     of SOME (name_and_tys, rng) =>
         let
           val fixes = map (fn (name,ty) =>
@@ -210,8 +210,8 @@ fun set_param_cmd xterm (ctxt,sequent) =
           val (fixed_names, ctxt) = Proof_Context.add_fixes fixes ctxt
           val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
           val term = Syntax.parse_term ctxt_parse xterm
-                      |> NuHelp.tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
-                      |> NuHelp.mk_monop @{const_name case_named}
+                      |> Phi_Help.tuple_abs (map fst name_and_tys ~~ map (rpair dummyT) fixed_names)
+                      |> Phi_Help.mk_monop @{const_name case_named}
         in
           set_param term (ctxt,sequent)
         end
@@ -222,7 +222,7 @@ fun set_param_cmd xterm (ctxt,sequent) =
           set_param (Syntax.parse_term ctxt_parse xterm) (ctxt,sequent)
         end
 
-fun set_label name (ctxt,sequent) = (ctxt, PhiSyntax.mk_label_thm name RS sequent)
+fun set_label name (ctxt,sequent) = (ctxt, Phi_Syntax.mk_label_thm name RS sequent)
 
 
 
@@ -255,7 +255,7 @@ fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes a
       |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
             (map (pair Binding.empty_atts) gl)
       (* |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat)
-      * "NuSys.useful") stat) *)
+      * "Phi_Sys.useful") stat) *)
   end
 
 fun obligations_of (\<^const>\<open>Pure.imp\<close>

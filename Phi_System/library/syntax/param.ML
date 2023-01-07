@@ -9,10 +9,10 @@ include PHI_SYNTAX
 
 end
 
-structure PhiSyntax : PHI_SYNTAX = struct
-open PhiSyntax
+structure Phi_Syntax : PHI_SYNTAX = struct
+open Phi_Syntax
 
-local open NuHelp in
+local open Phi_Help in
 
 val dest_param = perhaps (try HOLogic.dest_Trueprop)
               #> dest_monop @{const_name "ParamTag"}

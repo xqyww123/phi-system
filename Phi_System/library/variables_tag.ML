@@ -5,7 +5,7 @@ signature NU_VARIABLE_FACTOR = sig
 end
 
 structure Nu_Variable_Factor : NU_VARIABLE_FACTOR = struct
-open NuHelp NuBasics QuantExpansion
+open Phi_Help Phi_Basics QuantExpansion
 
 (* TODO: replace all dummyT and Syntax.check_term by decided types.*)
 

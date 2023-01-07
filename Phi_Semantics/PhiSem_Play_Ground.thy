@@ -33,7 +33,7 @@ proc
   premises \<open>x < 10\<close>
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket> \<rightarrow> v ;;
+  \<medium_left_bracket> \<open>\<a>\<r>\<g>0\<close> \<rightarrow> v ;;
     while \<open>xxx \<Ztypecolon> ?X \<^bold>s\<^bold>u\<^bold>b\<^bold>j xxx. Inv: (xxx \<le> 10) \<and> Guard: xxx < 10\<close> (*specification*)
     \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>. (*guard*)
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*)

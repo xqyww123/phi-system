@@ -1,4 +1,4 @@
-(*  Title:      NuToplevel.ML
+(*  Title:      Phi_Toplevel.ML
 
 The toplevel structure of the ν-system.
 
@@ -7,7 +7,7 @@ The toplevel structure of the ν-system.
 
 *)
 
-signature NU_TOPLEVEL = sig
+signature PHI_TOPLEVEL = sig
   datatype cond_kind = Premise | Requirement
     (* Premise is automatically prefixed by @{term Premise} and added to
      * @{named_theorems useful}; Requirement is not. *)
@@ -67,8 +67,8 @@ signature NU_TOPLEVEL = sig
   (*val export_LLVM : theory -> theory *)
 end
 
-structure NuToplevel : NU_TOPLEVEL = struct
-open NuHelp NuBasics Term HOLogic Thm NuSys
+structure Phi_Toplevel : PHI_TOPLEVEL = struct
+open Phi_Help Phi_Basics Term HOLogic Thm Phi_Sys
 
 (* fun mk_Trueprop (tm as (Const (@{const_name Trueprop}, _) $ _)) = tm
   | mk_Trueprop tm = HOLogic.mk_Trueprop tm *)
@@ -286,7 +286,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         val conds' = map (snd #> fst #> perhaps (try dest_Trueprop)) conds
         val arg' = arg
               |> fold_rev (fn c => fn Nu =>
-                    NuHelp.mk_binop @{const_name Subjection} (Nu,c)) conds'
+                    Phi_Help.mk_binop @{const_name Subjection} (Nu,c)) conds'
               |> tuple_abs vars
               |> mk_cases_named origin_names
               |> (fn tm => tm $ Bound 0)
@@ -422,7 +422,7 @@ fun gen_begin_view_shift_cmd prep_term prep_prop prep_typ prep_var
                   Proof_Context.add_assms Assumption.assume_export
                       [(Binding.empty_atts, [(sequent_term,[])])]) stat
           in
-            (*NuBasics.set_nu_fact sequent*)
+            (*Phi_Basics.set_nu_fact sequent*)
             stat
           end
         fun post_process binding int lthy th =
@@ -466,7 +466,7 @@ fun gen_finish_proc prep_term qed spec int stat =
   |> Proof.map_context (dec_blk_level #> snd)
   |> Proof.map_context_result (fn ctxt_pre1 =>
       let
-        val sequent_pre1 = NuBasics.the_programming_sequent' ctxt_pre1
+        val sequent_pre1 = Phi_Basics.the_programming_sequent' ctxt_pre1
         val (ctxt,sequent) =
           if Thm.no_prems sequent_pre1
           then (ctxt_pre1,sequent_pre1)
@@ -484,7 +484,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Thm.pretty_thm ctxt_pre2 sequent_pre2
                ])) NONE (ctxt_pre2,sequent_pre2)
             end
-        val (ctxt',sequent') = NuSys.move_lemmata (ctxt, sequent)
+        val (ctxt',sequent') = Phi_Sys.move_lemmata (ctxt, sequent)
         val (ctxt'',sequent'') = (ctxt',sequent')
               |> (case spec
                     of NONE => I
@@ -495,12 +495,12 @@ fun gen_finish_proc prep_term qed spec int stat =
                                Pretty.str "transforming to the given specification ",
                                Syntax.pretty_term ctxt'' (Thm.term_of aim)
                             ])
-                        in NuSys.cast aim
+                        in Phi_Sys.cast aim
                         #> Nu_Reasoners.auto_obligation_solver' (fn (ctxt,sequent) =>
                              error (Pretty.string_of (Pretty.chunks [
                                Pretty.str ("Fail to solve the proof obligation generated during "^
                                            "the cast towards the given specification:"),
-                               Syntax.pretty_term ctxt'' (NuHelp.leading_antecedent' sequent),
+                               Syntax.pretty_term ctxt'' (Phi_Help.leading_antecedent' sequent),
                                Pretty.block [
                                  Pretty.str ("Tailing specification of a programming block is "^
                                  "only sufficient for simple transformations having simple "^
@@ -518,13 +518,13 @@ fun gen_finish_proc prep_term qed spec int stat =
       in
         (ctxt'',sequent'')
           (* |> invoke_Block_End_Hook *)
-          |> NuSys.cast desired_nu
+          |> Phi_Sys.cast desired_nu
           |> swap
         (*The transformation shall generate a poof obligation*)
       end
     )
         (*and the proof obligation is presented to users here.*)
-    |-> NuSys.obligation_proof (print_results int) Proof_Context.mode_schematic false "" NONE
+    |-> Phi_Sys.obligation_proof (print_results int) Proof_Context.mode_schematic false "" NONE
           (fn sequent => fn stat =>
       let
         val ctxt = Proof.context_of stat
@@ -577,7 +577,7 @@ fun prove_prem int stat =
                     #> (fn ctxt => NuProcessor.process_no_input (ctxt, th RS specthm))
                     #> apfst (Config.put Nu_Reasoner.auto_level original_auto_level)
                     #> swap)
-             |-> NuBasics.set_nu_fact
+             |-> Phi_Basics.set_nu_fact
       end
   in
     stat |> setup_proof (print_results int) Proof_Context.mode_schematic false ""
@@ -601,7 +601,7 @@ fun gen_begin_block prep_attr bindings int stat =
   let open Proof
     val ctxt = context_of stat
 
-    val is_top = not (NuBasics.under_programming_environ ctxt) orelse is_backward_mode stat
+    val is_top = not (Phi_Basics.under_programming_environ ctxt) orelse is_backward_mode stat
     val normalize_tac =
           REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt @{thms GOAL_CTXT_I Argument_I allI impI}))
     val stat =
@@ -648,28 +648,28 @@ fun gen_begin_block prep_attr bindings int stat =
           fun gen_sequent sequent =
             let val insts =
                       Pattern.match (Proof_Context.theory_of ctxt'')
-                                    (NuHelp.leading_antecedent' sequent, Thm.prop_of th2)
+                                    (Phi_Help.leading_antecedent' sequent, Thm.prop_of th2)
                                     (Vartab.empty, Vartab.empty)
-                      |> NuHelp.env_to_table ctxt''
+                      |> Phi_Help.env_to_table ctxt''
                 handle Pattern.Pattern => error (Pretty.string_of (Pretty.chunks [
                       Pretty.str "The higher-order pattern match fails",
                       Pretty.block [Pretty.str "from ",
-                                    Syntax.pretty_term ctxt'' (NuHelp.leading_antecedent' sequent)],
+                                    Syntax.pretty_term ctxt'' (Phi_Help.leading_antecedent' sequent)],
                       Pretty.block [Pretty.str "to ",
                                     Syntax.pretty_term ctxt'' (Thm.prop_of th2)],
                       Pretty.str "which usually means some schematic variable is instantiated to\
                         \some universally quantified variables that it has no access."
                     ]))
                 val sequent' = Thm.instantiate insts sequent
-             in Thm.implies_elim (NuHelp.beta_eta_contract sequent')
-                                 (NuHelp.beta_eta_contract th2) end
+             in Thm.implies_elim (Phi_Help.beta_eta_contract sequent')
+                                 (Phi_Help.beta_eta_contract th2) end
       in if is_top
          then stat
                 |> enter_backward
                 |> apply (Method.Basic (fn _ => Method.SIMPLE_METHOD (Seq.single o gen_sequent)),
                           Position.no_range)
                 |> Seq.the_result "never fail"
-         else NuBasics.set_nu_fact (gen_sequent sequent) stat
+         else Phi_Basics.set_nu_fact (gen_sequent sequent) stat
       end
 
     val delta = length prems - length bindings
@@ -693,7 +693,7 @@ fun gen_begin_block prep_attr bindings int stat =
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
       |> Proof.map_context_result (#initial_sequent mode blk_name (cterm_of ctxt arg) #> swap)
-      |-> (if is_top then NuBasics.enter_programming_environ else NuBasics.set_nu_fact)
+      |-> (if is_top then Phi_Basics.enter_programming_environ else Phi_Basics.set_nu_fact)
       |> Proof.map_context (fn ctxt => ctxt
             |> Proof_Context.put_thms false ("\<phi>thesis",
                   SOME [Drule.mk_term (cterm_of ctxt goal)]) 

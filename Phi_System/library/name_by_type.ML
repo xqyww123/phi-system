@@ -11,8 +11,8 @@ include PHI_SYNTAX
 
 end
 
-structure PhiSyntax : PHI_SYNTAX = struct
-open PhiSyntax
+structure Phi_Syntax : PHI_SYNTAX = struct
+open Phi_Syntax
 
 val tylabel_name = prefix "'\<phi>name_"
 fun mk_name_tylabels names =

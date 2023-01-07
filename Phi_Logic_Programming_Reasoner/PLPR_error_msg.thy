@@ -1,3 +1,9 @@
+(*There is still a design under consideration.
+
+It intends to give a rich way with term quotations to represent and report
+  error messages in the logic programming based reasoning.
+*)
+
 theory PLPR_error_msg
   imports Phi_Logic_Programming_Reasoner
 begin

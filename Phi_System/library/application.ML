@@ -19,7 +19,7 @@ of the antecedent list, no matter whether any real obligations are generated dur
 end
 
 structure NuApply : NU_APPLICATION = struct
-open NuHelp
+open Phi_Help
 
 val expand_appliant = 
   repeat (fn th => th RS @{thm spec}) #>

@@ -19,7 +19,7 @@ signature NU_PROCEDURE = sig
 end
 
 structure NuProcedure : NU_PROCEDURE = struct
-open NuBasics
+open Phi_Basics
 
 val app_suffix = "_\<phi>app"
 val compilation_suffix = "_\<phi>compilation"
@@ -95,7 +95,7 @@ fun add_procedure name ctxt =
           the_default (TVar (("'a",0), @{sort lrep}), TVar (("'b",0), @{sort lrep}))
                       (Option.map (apply2 (modify_tail o Syntax.parse_typ ctxt)) tys)
     val goal = mk_Trueprop (Const (@{const_name Prog_Interface}, dummyT)
-                $ NuBasics.mk_label (Binding.name_of name)
+                $ Phi_Basics.mk_label (Binding.name_of name)
                 $ Logic.mk_type ty_args
                 $ Logic.mk_type ty_rets
                 $ Var(("proc_or_func", 0), dummyT))
@@ -165,7 +165,7 @@ fun gen_define def_const (binding,attrs) sequent lthy =
   let
     val sequent' = sequent
           |> Drule.zero_var_indexes
-    val (f,_,_,_) = Thm.concl_of sequent' |> concl_of |> PhiSyntax.dest_procedure 
+    val (f,_,_,_) = Thm.concl_of sequent' |> concl_of |> Phi_Syntax.dest_procedure 
 
 
     (*all variables in the procedure body*)
@@ -197,9 +197,9 @@ fun gen_define def_const (binding,attrs) sequent lthy =
     (*val sequent = sequent
           |> Raw_Simplifier.rewrite_rule lthy @{thms atomize_imp}
           |> Raw_Simplifier.rewrite_rule lthy
-              (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite")
+              (Proof_Context.get_thms lthy "Phi_Sys.final_proc_rewrite")
           |> Raw_Simplifier.rewrite_rule lthy
-              (Proof_Context.get_thms lthy "NuSys.final_proc_rewrite2") *)
+              (Proof_Context.get_thms lthy "Phi_Sys.final_proc_rewrite2") *)
   in lthy |> Local_Theory.notes_kind procedure_kind
                 [((proc_binding,attrs), [([sequent''],[])])]
           |> apfst (fn [(_,[sequent''''])] => sequent'''')

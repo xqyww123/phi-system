@@ -378,7 +378,7 @@ translations "\<^bold>v\<^bold>a\<^bold>l (x \<Ztypecolon> T)" => "x \<Ztypecolo
 
 declare [ [ML_debugger]]
 
-ML_file \<open>library/procedure_syntax.ML\<close>
+ML_file \<open>library/syntax/procedure.ML\<close>
 
 
 end

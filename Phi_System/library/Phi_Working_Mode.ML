@@ -102,7 +102,7 @@ fun collect_free_variables vars term = inter (op =) vars (Term.add_frees term []
   else
 
 fun eliminate_term ctxt xs thm =
-  let open NuBasics PhiSyntax NuHelp
+  let open Phi_Basics Phi_Syntax Phi_Help
     val tm = Thm.prop_of thm
     val vs = map (dest_Free o Thm.term_of) xs;
     val bads = Term.fold_aterms (fn t as Free v =>
@@ -114,7 +114,7 @@ fun eliminate_term ctxt xs thm =
             |> list_mk_binder @{const_name ExSet} bads
             |> Syntax.check_term ctxt |> Thm.cterm_of ctxt
     in
-      NuSys.cast typing' (ctxt,thm)
+      Phi_Sys.cast typing' (ctxt,thm)
         |> Nu_Reasoners.naive_obligation_solver'
         |> snd
     end
@@ -127,19 +127,19 @@ fun eliminate_term ctxt xs thm =
 val procedure : working_mode = 
   let
     val return_spec =
-          orelse_opt (try (#4 o PhiSyntax.dest_CurrentConstruction))
-         (orelse_opt (try (#3 o PhiSyntax.dest_procedure))
-             (#4 o PhiSyntax.dest_PendingConstruction))
+          orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
+         (orelse_opt (try (#3 o Phi_Syntax.dest_procedure))
+             (#4 o Phi_Syntax.dest_PendingConstruction))
     val return_spec_c = K (
-          orelse_opt (try (#4 o PhiSyntax.dest_CurrentConstruction_c))
-         (orelse_opt (try (#3 o PhiSyntax.dest_procedure_c))
-             (#4 o PhiSyntax.dest_PendingConstruction_c)))
-    val argument_spec = orelse_opt (try (#3 o PhiSyntax.dest_CurrentConstruction))
-         (orelse_opt (try (#2 o PhiSyntax.dest_procedure))
-             (#3 o PhiSyntax.dest_PendingConstruction))
+          orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction_c))
+         (orelse_opt (try (#3 o Phi_Syntax.dest_procedure_c))
+             (#4 o Phi_Syntax.dest_PendingConstruction_c)))
+    val argument_spec = orelse_opt (try (#3 o Phi_Syntax.dest_CurrentConstruction))
+         (orelse_opt (try (#2 o Phi_Syntax.dest_procedure))
+             (#3 o Phi_Syntax.dest_PendingConstruction))
 
     fun finish_proc hyp (ctxt,sequent) =
-      let open PhiSyntax
+      let open Phi_Syntax
         val (_,s',H',_) = dest_CurrentConstruction_c hyp
       in
         sequent
@@ -150,7 +150,7 @@ val procedure : working_mode =
       end
     
     fun start_proc blk_name arg ctxt =
-      let open PhiSyntax
+      let open Phi_Syntax
         val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
         val stat_var = Free (blk_name, \<^typ>\<open>resource\<close>)
         val ctxt = Variable.declare_constraints stat_var ctxt
@@ -175,7 +175,7 @@ val procedure : working_mode =
     fun before_finish goal (ctxt,sequent) =
       let
         val sequent' =
-          if can PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent)
+          if can Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)
           then let
             val (ins,current_nu) =
                   return_spec_c ctxt (Thm.cprop_of sequent)
@@ -195,10 +195,10 @@ val procedure : working_mode =
           else sequent
         val desired_nu = return_spec_c ctxt goal
         val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
-                              |> PhiSyntax.dest_sem_value_T
+                              |> Phi_Syntax.dest_sem_value_T
         val current_phi = return_spec_c ctxt (Thm.cprop_of sequent')
         val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
-                              |> PhiSyntax.dest_sem_value_T
+                              |> Phi_Syntax.dest_sem_value_T
         val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
                                                     (current_arg_T, desired_arg_T)) Envir.init
                         then sequent'
@@ -216,8 +216,8 @@ val procedure : working_mode =
 
   in {
     domain = (fn _ => fn tm =>
-               can PhiSyntax.dest_procedure tm
-        orelse PhiSyntax.is_construction_mode \<^const>\<open>programming_mode\<close> tm
+               can Phi_Syntax.dest_procedure tm
+        orelse Phi_Syntax.is_construction_mode \<^const>\<open>programming_mode\<close> tm
     ),
     return_spec = return_spec,
     return_spec_c = return_spec_c,
@@ -225,14 +225,14 @@ val procedure : working_mode =
     inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_proc,
     block_name_of = (fn term => 
-        case #1 (PhiSyntax.dest_procedure term)
+        case #1 (Phi_Syntax.dest_procedure term)
           of (Var ((x,_),_)) => x
            | _ => "block"),
     cast = (fn desired => fn (ctxt, sequent) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule =
-         (if can (PhiSyntax.dest_CurrentConstruction) (Thm.prop_of sequent)
+         (if can (Phi_Syntax.dest_CurrentConstruction) (Thm.prop_of sequent)
           then @{thm "_\<phi>cast_internal_rule_"}
           else @{thm "_\<phi>cast_internal_rule_'"})
             |> Thm.incr_indexes idx
@@ -244,7 +244,7 @@ val procedure : working_mode =
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule =
-         (if can (PhiSyntax.dest_PendingConstruction) (Thm.prop_of sequent)
+         (if can (Phi_Syntax.dest_PendingConstruction) (Thm.prop_of sequent)
           then @{thm "_\<phi>cast_exception_rule_"}
           else cannot_cast_exception sequent)
             |> Thm.incr_indexes idx
@@ -263,7 +263,7 @@ val view_shift : working_mode =
 let
   fun return_spec term =
     let
-      val (_,T,P) = PhiSyntax.dest_view_shift term
+      val (_,T,P) = Phi_Syntax.dest_view_shift term
     in
       Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
     end
@@ -271,7 +271,7 @@ let
   fun return_spec_c ctxt = Thm.term_of #> return_spec #> Thm.cterm_of ctxt
 
   fun finish_view_shift hyp (ctxt,sequent) =
-    let open PhiSyntax
+    let open Phi_Syntax
       val (_,s',H',_) = dest_CurrentConstruction_c hyp
     in
       sequent
@@ -282,7 +282,7 @@ let
     end
 
   fun start_view_shift blk_name arg ctxt =
-    let open PhiSyntax
+    let open Phi_Syntax
       val ([blk_name, RR],ctxt) = Variable.add_fixes [blk_name, "\<RR>"] ctxt
       val stat_var = Free (blk_name, \<^typ>\<open>resource\<close>)
       val ctxt = Variable.declare_constraints stat_var ctxt
@@ -304,15 +304,15 @@ let
     end
 in
 {
-    domain = (fn _ => fn x => can PhiSyntax.dest_view_shift x
-                       orelse PhiSyntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> x),
+    domain = (fn _ => fn x => can Phi_Syntax.dest_view_shift x
+                       orelse Phi_Syntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> x),
     return_spec = return_spec,
     return_spec_c = return_spec_c,
-    argument_spec = #1 o PhiSyntax.dest_view_shift,
+    argument_spec = #1 o Phi_Syntax.dest_view_shift,
     inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_view_shift,
     block_name_of = (fn term => 
-        case #1 (PhiSyntax.dest_view_shift term)
+        case #1 (Phi_Syntax.dest_view_shift term)
           of (Var ((x,_),_)) => x
            | _ => "\<V>\<S>"),
     cast = (fn desired => fn (ctxt, sequent) =>
@@ -337,18 +337,18 @@ val implication : working_mode =
 let
   fun return_spec term =
     let
-      val (_,T,P) = PhiSyntax.dest_implication term
+      val (_,T,P) = Phi_Syntax.dest_implication term
     in
       Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
     end
   (*TODO: optimize this*)
   fun return_spec_c ctxt = Thm.term_of #> return_spec #> Thm.cterm_of ctxt
 
-  val argument_spec = (#1 o PhiSyntax.dest_implication)
+  val argument_spec = (#1 o Phi_Syntax.dest_implication)
 
   fun finish_implication hyp (ctxt,sequent) =
     let
-      val (s,_) = PhiSyntax.dest_Set_member_c hyp
+      val (s,_) = Phi_Syntax.dest_Set_member_c hyp
     in
       sequent
         |> Thm.implies_intr hyp
@@ -357,7 +357,7 @@ let
     end
   
   fun start_implication blk_name arg_phiTy ctxt =
-    let open PhiSyntax
+    let open Phi_Syntax
       val ([blk_name],ctxt) = Variable.add_fixes [blk_name] ctxt
       val Type (\<^type_name>\<open>set\<close>, [T]) = Thm.typ_of_cterm arg_phiTy
       val stat_var = Free (blk_name, T)
@@ -372,8 +372,8 @@ let
     end
 in
 {
-    domain = (fn _ => fn x => can PhiSyntax.dest_implication x
-                       orelse can PhiSyntax.dest_Set_member  x),
+    domain = (fn _ => fn x => can Phi_Syntax.dest_implication x
+                       orelse can Phi_Syntax.dest_Set_member  x),
     return_spec = return_spec,
     return_spec_c = return_spec_c,
     argument_spec = argument_spec,

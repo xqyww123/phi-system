@@ -2,7 +2,7 @@ chapter \<open>Theoretical Foundations\<close>
 
 section \<open>Preliminary\<close>
 
-theory Preliminary
+theory Phi_Preliminary
   imports Main "Phi_Algebras.Algebras"
           Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner
 begin
@@ -25,7 +25,7 @@ ML_file \<open>library/Phi_Error.ML\<close>
 
 subsection \<open>Helper ML\<close>
 
-ML_file \<open>library/NuHelp.ML\<close>
+ML_file \<open>library/Phi_Help.ML\<close>
 
 subsection \<open>Helper Lemmas\<close>
 

@@ -45,7 +45,7 @@ lemma [\<phi>reason 2000 for
                   |> Syntax.check_term ctxt_parse
                   |> Thm.cterm_of ctxt
     in
-      NuSys.synthesis term (ctxt,sequent)
+      Phi_Sys.synthesis term (ctxt,sequent)
     end)
 \<close>
 

@@ -41,7 +41,7 @@ signature NU_PROCESSOR = sig
 end
 
 structure NuProcessor : NU_PROCESSOR = struct
-open Thm NuBasics
+open Thm Phi_Basics
 
 exception Bypass of context_state option
 type binding = Binding.binding
@@ -161,15 +161,15 @@ fun powerful_process toks stat =
             (internal_process (ctxt,sequent) --| Scan.catch Parse.eof) toks
               |> (fn ((ctxt,sequent),_) => (sequent,ctxt))
           )
-      |-> NuBasics.set_nu_fact
+      |-> Phi_Basics.set_nu_fact
     handle Process_State_Call' (toks,(ctxt,sequent),f) =>
               powerful_process toks (stat |> Proof.map_context (K ctxt)
-                                          |> NuBasics.set_nu_fact sequent
+                                          |> Phi_Basics.set_nu_fact sequent
                                           |> f)
          | Terminate_Process' (toks,(ctxt,sequent),f) =>
               (Scan.catch Parse.eof toks;
                stat |> Proof.map_context (K ctxt)
-                    |> NuBasics.set_nu_fact sequent
+                    |> Phi_Basics.set_nu_fact sequent
                     |> f)
   end
 
@@ -229,7 +229,7 @@ fun not_safe f (ctxt,sequent) =
       if Config.get ctxt Nu_Reasoner.auto_level >= 2 then f (ctxt,sequent) else raise Bypass NONE
 
 fun parse_auto_level (proc:proc) (ctxt,sequent) =
-  NuParse.auto_level #-> (fn auto_level' =>
+  Phi_Parse.auto_level #-> (fn auto_level' =>
     proc (Nu_Reasoner.reduce_auto_level auto_level' ctxt, sequent))
 
 fun apply_attr (attr:attribute) (ctxt, sequent) =

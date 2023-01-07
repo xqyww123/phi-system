@@ -6,7 +6,7 @@ signature LOCAL_VALUE = sig
 end
 
 structure Local_Value : LOCAL_VALUE = struct
-open NuHelp PhiSyntax NuSys
+open Phi_Help Phi_Syntax Phi_Sys
 
 fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
                 $ x
@@ -88,7 +88,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val ([], ctxt) =
       Proof_Context.add_assms (fn _ => fn [] => (local_value_export ctxt sequent' vterms, I)) [] ctxt
 
-    val goal = NuToplevel.get_thesis ctxt
+    val goal = Phi_Toplevel.get_thesis ctxt
     val (trueprop, goal_term) = Thm.dest_comb goal
     val ((goal_F_arg,goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
     fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
@@ -100,7 +100,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val goal_ret' = Drule.infer_instantiate ctxt [(R,goal_ret)] (Drule.mk_term ret_phi')
                       |> Drule.dest_term
     val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E)
-    val ctxt = NuToplevel.put_thesis goal' ctxt
+    val ctxt = Phi_Toplevel.put_thesis goal' ctxt
   in
     #initial_sequent Phi_Working_Mode.procedure blk_name arg_phi ctxt
   end
@@ -110,14 +110,14 @@ val parse_var_add_tag = Attrib.setup_config_bool \<^binding>\<open>\<phi>parse_v
 
 (* Syntax *)
 val _ = Theory.setup (
-let open Ast PhiSyntax
+let open Ast Phi_Syntax
   fun strip_constrain (Const ("_constrain", _) $ x $ _) = strip_constrain x
     | strip_constrain (Const ("_type_constraint_", _) $ x) = strip_constrain x
     | strip_constrain x = x
 
   fun mk_GetVar ctxt name =
     let
-      val value = Thm.prop_of (NuBasics.the_construction ctxt)
+      val value = Thm.prop_of (Phi_Basics.the_construction ctxt)
                   |> dest_CurrentConstruction |> #4
                   |> strip_separations
                   |> get_first (Envir.beta_eta_contract

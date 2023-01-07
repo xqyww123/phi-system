@@ -7,7 +7,7 @@ signature NU_PROCESSORS = sig
 end
 
 structure NuProcessors : NU_PROCESSORS = struct
-open NuBasics NuHelp NuProcessor
+open Phi_Basics Phi_Help NuProcessor
 
 val simplifier = almost_safe (fn (ctxt, sequent) =>
   Scan.succeed (fn _ => let

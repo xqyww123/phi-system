@@ -1,10 +1,10 @@
-signature NU_PARSE = sig
+signature PHI_PARSE = sig
   val $$$ : string -> string parser
   val auto_level : int parser
   val auto_level_force : int parser
   val repeat_N : int -> ('a -> 'b * 'a) -> 'a -> 'b list * 'a
 end
-structure NuParse = struct
+structure Phi_Parse = struct
 open Parse
 
 fun $$$ key =

@@ -108,7 +108,7 @@ lemma Var_simp_cong:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup Var_simp_cong ("x \<Ztypecolon> Var v T") = \<open>
-  K (NuSimpCong.simproc @{thm Var_simp_cong[folded atomize_eq]})
+  K (Phi_SimpCong.simproc @{thm Var_simp_cong[folded atomize_eq]})
 \<close>
 
 

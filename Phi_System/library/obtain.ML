@@ -7,7 +7,7 @@ end
 structure NuObtain : NU_OBTAIN = struct
 
 fun eliminate_term ctxt xs thm =
-  let open NuBasics PhiSyntax NuHelp
+  let open Phi_Basics Phi_Syntax Phi_Help
     val tm = Thm.prop_of thm
     val vs = map (dest_Free o Thm.term_of) xs;
     fun collect tm = Term.fold_aterms (fn t as Free v =>
@@ -15,27 +15,27 @@ fun eliminate_term ctxt xs thm =
     val bads = collect tm;
   in
     if null bads then thm
-    else if can PhiSyntax.dest_CurrentConstruction (Thm.prop_of thm)
+    else if can Phi_Syntax.dest_CurrentConstruction (Thm.prop_of thm)
     then let
         val rule = Proof_Context.get_thm ctxt "introduce_Ex"
         fun generalize x thm =
-          case PhiSyntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,P)
+          case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,P)
             => thm RS Drule.infer_instantiate ctxt [(("S",0), Thm.cterm_of ctxt (absfree x P))] rule
         in fold_rev generalize bads thm
         end
-    else if can PhiSyntax.dest_PendingConstruction (Thm.prop_of thm)
+    else if can Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm)
     then let
-        val (_,_,_,Q,E) = PhiSyntax.dest_PendingConstruction (Thm.prop_of thm)
+        val (_,_,_,Q,E) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm)
         val bad_Q = collect Q
         val bad_E = collect E
         val rule_Q = Proof_Context.get_thm ctxt "introduce_Ex_pending"
         val rule_E = Proof_Context.get_thm ctxt "introduce_Ex_pending_E"
         fun generalize_Q x thm =
-          case PhiSyntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,Q,_)
+          case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,Q,_)
             => thm RS
                  Drule.infer_instantiate ctxt [(("Q",0), Thm.cterm_of ctxt (absfree x Q))] rule_Q
         fun generalize_E x thm =
-          case PhiSyntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,E)
+          case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,E)
             => thm RS
                  Drule.infer_instantiate ctxt [(("E",0), Thm.cterm_of ctxt (absfree x E))] rule_E
         in fold_rev generalize_E bad_E (fold_rev generalize_Q bad_Q thm)
@@ -90,8 +90,8 @@ in
 
 
 fun choose inst_names stat =
-  let open NuBasics NuHelp HOLogic Term Conv
-    val major = NuBasics.the_nu_fact stat
+  let open Phi_Basics Phi_Help HOLogic Term Conv
+    val major = Phi_Basics.the_nu_fact stat
     val ctxt = Proof.context_of stat
     val N = length inst_names
     val ExTyp_strip = @{thm \<phi>ExTyp_strip}
@@ -116,15 +116,15 @@ fun choose inst_names stat =
   in
     stat |> Proof.map_context
               (Assumption.add_assms (obtain_export ctxt rule cinsts) [meta'_term] #> snd)
-         |> NuBasics.set_nu_fact meta'
+         |> Phi_Basics.set_nu_fact meta'
   end
 
 val enable_auto = Attrib.setup_config_bool \<^binding>\<open>\<phi>auto_\<exists>fix\<close> (K true)
 
 fun auto_choose stat =
   let
-    val var_names = PhiSyntax.dest_current_nu (NuBasics.the_nu_fact stat)
-          |> NuHelp.strip_binder_vars @{const_name ExSet}
+    val var_names = Phi_Syntax.dest_current_nu (Phi_Basics.the_nu_fact stat)
+          |> Phi_Help.strip_binder_vars @{const_name ExSet}
           |> map (Name.clean o fst)
     val (var_names', _) =
       fold_map Name.variant var_names (Variable.names_of (Proof.context_of stat))

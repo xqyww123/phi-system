@@ -4,7 +4,6 @@ theory Algebras
   abbrevs "!!" = "!!"
 begin
 
-
 section \<open>Algebra Structures\<close>
 
 subsection \<open>Preliminary Structures\<close>

@@ -12,10 +12,10 @@ include PHI_SYNTAX
 
 end
 
-structure PhiSyntax : PHI_SYNTAX = struct
-open PhiSyntax
+structure Phi_Syntax : PHI_SYNTAX = struct
+open Phi_Syntax
 
-local open NuHelp in
+local open Phi_Help in
 
 val unit_const_name = @{const_name "Product_Type.Unity"}
 val label_ty = Type (@{type_name "label"}, [])

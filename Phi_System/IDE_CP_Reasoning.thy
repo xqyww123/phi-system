@@ -1,7 +1,7 @@
 chapter \<open>Predefined Reasoning Procedures\<close>
 
 theory IDE_CP_Reasoning
-  imports PhiTypes
+  imports Phi_Types
 begin
 
 
@@ -574,11 +574,12 @@ lemma [\<phi>reason 2300 for \<open> ?R * ?V \<^bold>i\<^bold>m\<^bold>p\<^bold>
   by (simp add: implies_refl)
 
 
+
 subsubsection \<open>General Search\<close>
 
 lemma [\<phi>reason 100 for \<open> ?R * ?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R''' * \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " CHK_SUBGOAL G
-\<Longrightarrow> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H' * X \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
+\<Longrightarrow> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H' * X \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> R * H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * H' * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   for H :: \<open>'a::sep_semigroup set\<close>
   unfolding cast_def Action_Tag_def
@@ -1308,7 +1309,7 @@ text \<open>The merging recognize two existential quantifier are identical if th
   let
     val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
                                         $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))), _, _)
-        = PhiSyntax.dest_view_shift (Thm.major_prem_of sequent)
+        = Phi_Syntax.dest_view_shift (Thm.major_prem_of sequent)
     val sequent' = if exa = exb andalso tya = tyb
                    then @{thm Conv_Merge_Ex_both} RS sequent
                    else @{thm Conv_Merge_Ex_R} RS sequent
@@ -1320,7 +1321,7 @@ text \<open>The merging recognize two existential quantifier are identical if th
   let
     val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
                                          $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))), _, _)
-        = PhiSyntax.dest_implication (Thm.major_prem_of sequent)
+        = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
     val sequent' = if exa = exb andalso tya = tyb
                    then @{thm Conv_Merge_Ex_both_imp} RS sequent
                    else @{thm Conv_Merge_Ex_R_imp} RS sequent
@@ -1635,7 +1636,7 @@ ML_file_debug \<open>library/variables_tag.ML\<close>
 
 \<phi>processor vars_by_pattern 3000 (\<open>Variant_Cast ?vars ?X ?X' \<Longrightarrow> PROP ?P\<close>)
 \<open>fn (ctxt, sequent) => 
-let open Parse Scan NuHelp NuBasics
+let open Parse Scan Phi_Help Phi_Basics
   fun pattern_match ((vars, pattern), always) _ =
     (ctxt, Nu_Variable_Factor.vary_by_pattern vars pattern always ctxt sequent)
   fun var_term (vars, always) _ =
@@ -2447,7 +2448,7 @@ lemma Structural_Extract_share_half
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
     X[THEN implies_right_prod]
-  \<medium_right_bracket>. .
+   \<medium_right_bracket>. .
 
 lemma Structural_Extract_share_half_rev:
   \<open> \<phi>Sep_Disj_Identical T

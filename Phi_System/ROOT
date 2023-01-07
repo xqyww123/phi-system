@@ -5,7 +5,12 @@ session "Phi_System" = "Phi_Semantics_Framework" +
     "Phi_Semantics_Framework"
     "Phi_Logic_Programming_Reasoner"
   theories
-    Sys
+    Calculus_of_Programming
+    IDE_CP
+    IDE_CP_Reasoning
+    Phi_Preliminary
+    Phi_Types
+    PhiSem_Formalization_Tools
   document_files (in "~~/src/Doc/")
     "pdfsetup.sty"
     "iman.sty"

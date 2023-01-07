@@ -56,7 +56,7 @@ Specifically, in this minimal specialized BI:
 \<close>
 
 theory Phi_BI
-  imports "Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner" Preliminary
+  imports "Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner" Phi_Preliminary
   abbrevs "<implies>" = "\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s"
       and "<and>"  = "\<^bold>a\<^bold>n\<^bold>d"
       and "<subj>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>j"
@@ -75,7 +75,7 @@ lemma \<phi>Type_eqI:
   \<open>(\<forall>x p. p \<in> (x \<Ztypecolon> a) \<longleftrightarrow> p \<in> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
   unfolding \<phi>Type_def by blast
 
-ML_file \<open>library/NuSimpCongruence.ML\<close>
+ML_file \<open>library/Phi_SimpCongruence.ML\<close>
 
 text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
 

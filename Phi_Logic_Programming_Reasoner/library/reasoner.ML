@@ -20,6 +20,7 @@ signature NU_REASONER = sig
 
   val trace : bool Config.T (*Prints the state of every reasoning step.*)
   val trace_candidates : bool Config.T (*Prints the candidates at each step.*)
+  val step_limit : int Config.T (*limit of the number of reasoning steps*)
   val debug_info: Proof.context -> (unit -> string) -> unit
   val debug_pretty: Proof.context -> (unit -> Pretty.T) -> unit
             (*Prints any debug info only when the flag \<phi>trace_reasoning is turned on.*)
@@ -86,6 +87,8 @@ fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning\<close> (K false);
 val trace_candidates = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning_candidates\<close> (K false);
+
+val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_limit\<close> (K 1000);
 
 (* Debug Info *)
 fun debug_info ctxt G =
@@ -189,13 +192,18 @@ fun call_tactics N ctxt tactics th =
     handle Local_Cut ret => [ret]
   end
 
-fun gen_reason N _ _ _ [] = NONE
-  | gen_reason N trace iter tactics ([]::L) =
+fun gen_reason _ _ _ _ _ [] = NONE
+  | gen_reason N trace limit iter tactics ([]::L) =
       (if trace then tracing ("Backtracking...") else ();
-       gen_reason N trace iter tactics L)
-  | gen_reason N trace iter tactics (((cost,pos,seq)::L')::L) =
+       gen_reason N trace limit iter tactics L)
+  | gen_reason N trace limit iter tactics (((cost,pos,seq)::L')::L) =
   let
-    val _ = if iter > 1000 then raise Fail "Nu_Reasoner: Too Much Tries" else ()
+    val _ = if iter > limit
+            then error "The reasoning reaches the limit of the number of reasoning steps.\n\
+                       \Perhaps an infinite loop is encountered.\nOtherwise, \
+                       \you can set \<phi>reasoning_step_limit to increase the limit of the steps\
+                       \if it is too small."
+            else ()
   in
     case Seq.pull seq
       of SOME ((ctxt,th), seq') =>
@@ -220,16 +228,16 @@ fun gen_reason N _ _ _ [] = NONE
                           [[(0,pos, Seq.single stat)]]
                         end
           in
-            gen_reason N trace (iter+1) tactics Z
+            gen_reason N trace limit (iter+1) tactics Z
           end)
-       | NONE => gen_reason N trace iter tactics (L'::L)
+       | NONE => gen_reason N trace limit iter tactics (L'::L)
   end
 
 
 (* Various Interfaces for Invoking Reasoning *)
 
-fun gen_reason' N trace tactics states =
-      gen_reason N trace 0 tactics (map (map (fn (a,b) => (~a,Position.none,b))) states)
+fun gen_reason' N trace limit tactics states =
+      gen_reason N trace limit 0 tactics (map (map (fn (a,b) => (~a,Position.none,b))) states)
       handle Success ret => SOME ret
 
 fun num_of_protected_prems thm NONE = 0
@@ -240,6 +248,7 @@ fun reason (SOME 0) S = SOME S
   | reason N (ctxt,sequent) =
       gen_reason' (num_of_protected_prems sequent N)
                   (Config.get ctxt trace)
+                  (Config.get ctxt step_limit)
                   (Reasoners.get (Context.Proof ctxt))
                   [[(0, Seq.single (ctxt, sequent))]]
 
@@ -250,6 +259,7 @@ fun reason1 G N stat =
 fun reason_s ctxt seqs = Seq.make (fn () =>
       gen_reason' 0
                   (Config.get ctxt trace)
+                  (Config.get ctxt step_limit)
                   (Reasoners.get (Context.Proof ctxt))
                   [seqs]
         |> Option.map (rpair Seq.empty)
@@ -258,6 +268,7 @@ fun reason_s ctxt seqs = Seq.make (fn () =>
 fun reason_tac N ctxt stat = Seq.make (fn () =>
       gen_reason' (num_of_protected_prems (snd stat) N)
                   (Config.get ctxt trace)
+                  (Config.get ctxt step_limit)
                   (Reasoners.get (Context.Proof ctxt))
                   [[(0, Seq.single stat)]]
        |> Option.map (rpair Seq.empty o Seq.Result)

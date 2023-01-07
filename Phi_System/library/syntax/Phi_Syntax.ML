@@ -38,8 +38,8 @@ signature PHI_SYNTAX = sig
   val mk_sem_value_T: typ -> typ
 end
 
-structure PhiSyntax : PHI_SYNTAX = struct
-open Thm Term HOLogic NuHelp
+structure Phi_Syntax : PHI_SYNTAX = struct
+open Thm Term HOLogic Phi_Help
 
 val dest_nuTy = dest_binop @{const_name "\<phi>Type"}
 val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}

@@ -56,9 +56,9 @@ lemma [\<phi>inhabitance_rule, elim!]:
 
 subsubsection \<open>Syntax\<close>
 
-ML_file \<open>library/PhiSyntax.ML\<close>
+ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
 ML_file \<open>library/Phi_Working_Mode.ML\<close>
-ML_file \<open>library/NuBasics.ML\<close>
+ML_file \<open>library/Phi_Basics.ML\<close>
 
 
 subsubsection \<open>Forward Declaration of Reasoning Tags\<close>
@@ -405,7 +405,7 @@ lemma rename_abstraction:
                 $ Abs(_,ty,body)
                 $ Var Y'') =>
       let
-        val name = case PhiSyntax.dest_name_tylabels name'
+        val name = case Phi_Syntax.dest_name_tylabels name'
                      of [x] => x
                       | _ => raise TYPE ("only one name is expected", [name'], [])
         val Y' = Abs(name, ty, body) |> Thm.cterm_of ctxt
@@ -436,7 +436,7 @@ ML \<open>Name.variant "" Name.context\<close>
 \<phi>reasoner_ML lambda_abstraction 1100 ("lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
   let
     val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _))
-      = NuHelp.leading_antecedent (Thm.prop_of sequent)
+      = Phi_Help.leading_antecedent (Thm.prop_of sequent)
     val Y' = Abs("", fastype_of x, abstract_over (x, Y))
     val idx = Thm.maxidx_of sequent
     val vars = map Var (List.tabulate (length Vs, (fn i => ("v", i+idx))) ~~ map snd Vs)
@@ -515,7 +515,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   let
     val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = PhiSyntax.strip_separations S |> NuHelp.last
+    val tail = Phi_Syntax.strip_separations S |> Phi_Help.last
   in
     if is_Var tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
@@ -527,7 +527,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   let
     val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = PhiSyntax.strip_separations S |> NuHelp.last
+    val tail = Phi_Syntax.strip_separations S |> Phi_Help.last
   in
     if is_Var tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
@@ -1183,7 +1183,7 @@ in
   fn (ctxt,sequent) =>
     let
       val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Simple_HO_Unification\<close>, _) $ f $ f'))
-        = NuHelp.leading_antecedent (Thm.prop_of sequent)
+        = Phi_Help.leading_antecedent (Thm.prop_of sequent)
       val btys = rev (map snd Vs)
       val f' = Envir.beta_eta_contract f'
     in (case Term.strip_comb f' of (Var v, args) =>
@@ -1644,17 +1644,17 @@ text \<open>\<phi>Processor realizes specific facilities for programming in a st
 subsection \<open>ML codes\<close>
 
 ML_file "./library/instructions.ML"
-ML_file "./general/parser.ML"
+ML_file "./library/parse.ML"
 ML_file "./library/processor.ML"
 ML_file "./library/procedure.ML"
 
 
-ML_file \<open>library/NuSys.ML\<close>
+ML_file \<open>library/Phi_Sys.ML\<close>
 ML_file "./library/processors.ML"
 ML_file "./library/obtain.ML"
 ML_file "./library/generalization.ML"
 (* ML_file "./codegen/compilation.ML" *)
-ML_file \<open>library/NuToplevel.ML\<close>
+ML_file \<open>library/Phi_Toplevel.ML\<close>
 
 
 subsection \<open>Isar Commands \& Attributes\<close>
@@ -1673,7 +1673,7 @@ attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_p
 
 ML \<open>
 
-local open Scan NuToplevel NuSys Parse 
+local open Scan Phi_Toplevel Phi_Sys Parse 
 (*val nustatement = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- opt_attribs -- Scan.repeat1 Parse.propp);
 val structured_statement =
   nustatement -- Parse_Spec.if_statement' -- Parse.for_fixes
@@ -1681,8 +1681,8 @@ val structured_statement =
 val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
 val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
 val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
-val precond_statement = Scan.repeat ((premises_statement >> map (pair NuToplevel.Premise))
-                || (requires_statement >> map (pair NuToplevel.Requirement))) >> flat;
+val precond_statement = Scan.repeat ((premises_statement >> map (pair Phi_Toplevel.Premise))
+                || (requires_statement >> map (pair Phi_Toplevel.Requirement))) >> flat;
 (* val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term); *)
 val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
         Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
@@ -1695,7 +1695,7 @@ val arg = Parse.term
 val arg_ret = (\<^keyword>\<open>argument\<close> |-- arg --| \<^keyword>\<open>return\<close> -- arg -- option (\<^keyword>\<open>throws\<close> |-- arg))
 
 val def_const_flag =
-  Scan.optional ((\<^keyword>\<open>(\<close> |-- NuParse.$$$ "nodef" --| \<^keyword>\<open>)\<close>) >> (K false)) true
+  Scan.optional ((\<^keyword>\<open>(\<close> |-- Phi_Parse.$$$ "nodef" --| \<^keyword>\<open>)\<close>) >> (K false)) true
 
 in
 
@@ -1729,18 +1729,18 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
    (((optional (\<^keyword>\<open>premises\<close> |--
             and_list (binding -- opt_attribs || Parse.attribs >> pair Binding.empty)) []
-      >> NuToplevel.begin_block_cmd)
+      >> Phi_Toplevel.begin_block_cmd)
    -- NuProcessor.powerful_process_p_inert)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (option (\<^keyword>\<open>for\<close> |-- term) >> (Toplevel.proof' o NuToplevel.end_block_cmd))
+    (option (\<^keyword>\<open>for\<close> |-- term) >> (Toplevel.proof' o Phi_Toplevel.end_block_cmd))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
     (((option (\<^keyword>\<open>for\<close> |-- term) >> (fn cast => fn int =>
-        NuToplevel.end_block_cmd cast int
+        Phi_Toplevel.end_block_cmd cast int
     #> (fn s => Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>") s)
     #> Proof.local_future_terminal_proof
           ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
@@ -1762,7 +1762,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>export_llvm\<close> "export LLVM target"
-      (Scan.succeed (Toplevel.theory (NuToplevel.export_LLVM))) *)
+      (Scan.succeed (Toplevel.theory (Phi_Toplevel.export_LLVM))) *)
 
 end
 \<close>
@@ -1779,7 +1779,7 @@ text \<open>Convention of priorities:
 
 subsubsection \<open>Controls\<close>
 
-\<phi>processor set_auto_level 10 (\<open>PROP ?P\<close>) \<open>(fn (ctxt, sequent) => NuParse.auto_level_force >>
+\<phi>processor set_auto_level 10 (\<open>PROP ?P\<close>) \<open>(fn (ctxt, sequent) => Phi_Parse.auto_level_force >>
   (fn auto_level' => fn _ => (Config.put Nu_Reasoner.auto_level auto_level' ctxt, sequent)))\<close>
   \<open>Note the declared auto-level is only valid during the current statement.
    In the next statement, the auto-level will be reset to the default fully-automated level.\<close>
@@ -1796,20 +1796,20 @@ subsubsection \<open>Controls\<close>
 subsubsection \<open>Constructive\<close>
 
 \<phi>processor accept_call 500 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>)
-  \<open>fn stat => Scan.succeed (fn _ => NuSys.accept_proc stat)\<close>
+  \<open>fn stat => Scan.succeed (fn _ => Phi_Sys.accept_proc stat)\<close>
 
 \<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
   (NuApply.apply (Phi_App_Rules.app_rules ctxt xnames) (ctxt, sequent)))\<close>
 
 \<phi>processor set_param 5000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
-  NuSys.set_param_cmd term stat)\<close>
+  Phi_Sys.set_param_cmd term stat)\<close>
 
 \<phi>processor set_label 5000 (\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>
-  NuSys.set_label name stat)\<close>
+  Phi_Sys.set_label name stat)\<close>
 
 \<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt, sequent) => Phi_App_Rules.parser >> (fn thms => fn _ =>
-    let open NuBasics
+    let open Phi_Basics
     val apps = Phi_App_Rules.app_rules ctxt thms
     val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
     in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
@@ -1834,7 +1834,7 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
                   |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
    in
-    NuSys.synthesis term (ctxt, sequent)
+    Phi_Sys.synthesis term (ctxt, sequent)
   end)\<close>
 
 \<phi>processor existential_elimination 150 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
@@ -1847,7 +1847,7 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
       val _ = if Config.get ctxt NuObtain.enable_auto
               andalso Config.get ctxt Nu_Reasoner.auto_level >= 2
               then () else raise Bypass NONE
-      val _ $ X = PhiSyntax.dest_CurrentConstruction (Thm.concl_of sequent) |> #4
+      val _ $ X = Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent) |> #4
       fun is_Abs (Abs _) = true | is_Abs _ = false
     in
       if is_Abs X
@@ -1862,13 +1862,13 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
 
 \<phi>processor move_fact1  90 (\<open>?Any \<and> ?P\<close>)
-\<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (NuSys.move_lemmata stat)))\<close>
+\<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (Phi_Sys.move_lemmata stat)))\<close>
 
 \<phi>processor move_fact2 110 (\<open>?Any \<and> ?P\<close>)
-\<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (NuSys.move_lemmata stat)))\<close>
+\<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (Phi_Sys.move_lemmata stat)))\<close>
 
 \<phi>processor automatic_morphism 90 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
-\<open>not_safe (fn stat => Scan.succeed (fn _ => NuSys.apply_automatic_morphism stat
+\<open>not_safe (fn stat => Scan.succeed (fn _ => Phi_Sys.apply_automatic_morphism stat
       handle Empty => raise Bypass NONE))\<close>
 
 (* Any simplification should finish before priority 999, or else
@@ -1876,7 +1876,7 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 \<phi>processor set_\<phi>this 999 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
 \<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
   let
-    val ctxt' = NuBasics.update_programming_sequent' sequent ctxt
+    val ctxt' = Phi_Basics.update_programming_sequent' sequent ctxt
   in
     raise Bypass (SOME(ctxt', sequent))
   end)\<close>
@@ -1894,7 +1894,7 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 \<phi>processor enter_proof 790 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
-      raise Terminate_Process (stat, snd o NuToplevel.prove_prem false))\<close>
+      raise Terminate_Process (stat, snd o Phi_Toplevel.prove_prem false))\<close>
 
 \<phi>processor auto_obligation_solver 800 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
@@ -1905,12 +1905,12 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
     else raise Bypass NONE)\<close>
 
 \<phi>processor fold 2000 (\<open>PROP ?P\<close>) \<open>
-  fn (ctxt, sequent) => NuParse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
+  fn (ctxt, sequent) => Phi_Parse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (ctxt, Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent)
 )\<close>
 
 \<phi>processor unfold 2000 (\<open>PROP ?P\<close>) \<open>
-  fn (ctxt, sequent) => NuParse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
+  fn (ctxt, sequent) => Phi_Parse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
 )\<close>
 
@@ -1924,11 +1924,11 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
   fn (ctxt, sequent) => Parse.$$$ "goal" >> (fn _ => fn _ =>
     let
       val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
-      val (_,_,desired_nu) = PhiSyntax.dest_procedure_c goal
+      val (_,_,desired_nu) = Phi_Syntax.dest_procedure_c goal
       val ty = Thm.typ_of_cterm desired_nu
       val prot = Const (\<^const_name>\<open>Implicit_Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
       val ctxt = Config.put Nu_Reasoner.auto_level 1 ctxt
-    in NuSys.cast (Thm.apply prot desired_nu) (ctxt,sequent) end
+    in Phi_Sys.cast (Thm.apply prot desired_nu) (ctxt,sequent) end
 )\<close> *)
 
 

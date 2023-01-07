@@ -141,7 +141,7 @@ lemma sep_disj_clean[simp]:
 
 end
 
-ML_file_debug \<open>Resource_Space.ML\<close>
+ML_file \<open>resource_space.ML\<close>
 
 subsection \<open>Fiction Space\<close>
 
@@ -243,6 +243,6 @@ lemma Fic_Space_mm[simp]: "Fic_Space (f * mk x) \<longleftrightarrow> Fic_Space 
 
 end
 
-ML_file_debug \<open>fiction_space.ML\<close>
+ML_file \<open>fiction_space.ML\<close>
 
 end
