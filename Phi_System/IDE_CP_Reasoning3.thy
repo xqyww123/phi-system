@@ -1,7 +1,10 @@
-chapter \<open>Predefined Reasoning Procedures\<close>
+chapter \<open>Reasoning Processes in IDE-CP - Part III\<close>
 
-theory IDE_CP_Reasoning
-  imports Phi_Types
+text \<open>Here we give the implementation of all large reasoning processes that are declared in
+the previous part I.\<close>
+
+theory IDE_CP_Reasoning3
+  imports IDE_CP_Applications1
 begin
 
 
@@ -9,7 +12,7 @@ begin
 
 definition "addr_allocated heap addr \<longleftrightarrow> MemAddress addr \<in> dom heap"
 adhoc_overloading allocated addr_allocated
-
+                                                         
 (* lemma addr_allocated_mono[dest]: "h \<subseteq>\<^sub>m h' \<Longrightarrow> addr_allocated h addr \<Longrightarrow> addr_allocated h' addr"
   unfolding addr_allocated_def by auto
 lemma [iff]: "addr_allocated (h(k \<mapsto> v)) addr \<longleftrightarrow> k = MemAddress addr \<or> addr_allocated h addr"
@@ -73,17 +76,6 @@ lemma (in \<phi>empty) [\<phi>reason 2000 on \<open>OBJ ?X \<^bold>i\<^bold>m\<^
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> OBJ X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s OBJ Y \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns, blast) *)
-
-
-subsection \<open>General Simplification for Assertions\<close>
-
-\<phi>reasoner assertion_simplification 1200
-  (\<open>Simplify assertion_simplification ?X' ?X\<close>)
-  = ((simp only: assertion_simps)?, rule Simplify_I)
-
-lemmas [assertion_simps] =
-  mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left zero_fun
-  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_const FOCUS_TAG_def ExSet_0
 
 
 
@@ -1512,100 +1504,6 @@ lemma Prog_Interface_func:
   unfolding Prog_Interface_def ..
 *)
 
-subsection \<open>Filter Out Values\<close>
-
-text \<open>Given an assertion X, antecedent \<^term>\<open>Filter_Out_Free_Values X X'\<close>
-  returns X' where all free value assertions \<^term>\<open>x \<Ztypecolon> Val raw T\<close> filtered out, where \<^term>\<open>raw\<close>
-  contains at least one free variable of \<^typ>\<open>'a sem_value\<close>.
-
-  It is typically used in exception. When a computation triggers an exception at state X,
-    the state recorded in the exception is exactly X' where value assertions are filtered out.\<close>
-
-definition \<open>Filter_Out_Free_Values' (remain::'a::sep_magma set) (keep::'a set) (check::'a set) (ret::'a set)
-              \<equiv> Trueprop (keep = check \<longrightarrow> (remain * keep \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ret))\<close>
-
-(* lemma [\<phi>reason for \<open>PROP Filter_Out_Free_Values ?ex ?var_X ?Z\<close>]:
-  \<open>PROP Filter_Out_Free_Values ex X X\<close>
-  unfolding Filter_Out_Free_Values_def using implies_refl . *)
-
-lemma [\<phi>reason 1200 for \<open>PROP Filter_Out_Free_Values (ExSet ?T) ?T'\<close>]:
-  \<open>(\<And>c. PROP Filter_Out_Free_Values (T c) (T' c))
-\<Longrightarrow> PROP Filter_Out_Free_Values (ExSet T) (ExSet T')\<close>
-  unfolding Filter_Out_Free_Values_def Imply_def
-  by (simp add: \<phi>expns) blast
-
-lemma [\<phi>reason 1200 for \<open>PROP Filter_Out_Free_Values (?T \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?P) ?T'\<close>]:
-  \<open> PROP Filter_Out_Free_Values T T'
-\<Longrightarrow> PROP Filter_Out_Free_Values (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) (T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  unfolding Filter_Out_Free_Values_def Imply_def
-  by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200 for \<open>PROP Filter_Out_Free_Values (?R * ?X) ?Z\<close>]:
-  \<open> PROP Filter_Out_Free_Values R R'
-\<Longrightarrow> PROP Filter_Out_Free_Values'  R' X X Z
-\<Longrightarrow> PROP Filter_Out_Free_Values (R * X) Z\<close>
-  unfolding Filter_Out_Free_Values_def Imply_def Filter_Out_Free_Values'_def
-  by (simp add: \<phi>expns) blast
-
-lemma [\<phi>reason 1100 for \<open>PROP Filter_Out_Free_Values ?R ?Z\<close>]:
-  \<open> PROP Filter_Out_Free_Values'  1 R R Z
-\<Longrightarrow> PROP Filter_Out_Free_Values R Z\<close>
-  for R :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Filter_Out_Free_Values_def Filter_Out_Free_Values'_def Imply_def
-  by simp
-
-lemma [\<phi>reason 1200 for \<open>PROP Filter_Out_Free_Values' ?R ?Y (SYNTHESIS ?X) ?Z\<close>]:
-  \<open> PROP Filter_Out_Free_Values' R Y X Z
-\<Longrightarrow> PROP Filter_Out_Free_Values' R Y (SYNTHESIS X) Z\<close>
-  unfolding Filter_Out_Free_Values'_def Synthesis_def .
-
-(* lemma [\<phi>reason 1200 for \<open>PROP Filter_Out_Free_Values' ?R ?Y (FIX ?X) ?Z\<close>]:
-  \<open> PROP Filter_Out_Free_Values' R Y X Z
-\<Longrightarrow> PROP Filter_Out_Free_Values' R Y (FIX X) Z\<close>
-  unfolding Filter_Out_Free_Values'_def Fix_def . *)
-
-lemma [\<phi>reason 1100 for \<open>PROP Filter_Out_Free_Values' 1 ?Y ?X ?Z\<close>]:
-  \<open>PROP Filter_Out_Free_Values' 1 Y X Y\<close>
-  for Y :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Filter_Out_Free_Values'_def Imply_def by simp
-
-lemma Filter_Out_Free_Values'_accept_1[\<phi>reason 1110 for \<open>PROP Filter_Out_Free_Values' 1 ?Y ?X ?Z\<close>]:
-  \<open>PROP Filter_Out_Free_Values' 1 Y X Y\<close>
-  for Y :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Filter_Out_Free_Values'_def Imply_def by simp
-
-lemma Filter_Out_Free_Values'_accept[\<phi>reason 1100 for \<open>PROP Filter_Out_Free_Values' ?R ?Y ?X ?Z\<close>]:
-  \<open>PROP Filter_Out_Free_Values' R Y X (R * Y)\<close>
-  unfolding Filter_Out_Free_Values'_def Imply_def by simp
-
-lemma Filter_Out_Free_Values'_reject_val:
-  \<open>PROP Filter_Out_Free_Values' R Y (x \<Ztypecolon> Val raw T) R\<close>
-  for R :: \<open>'a::sep_algebra set\<close>
-  unfolding Filter_Out_Free_Values'_def Imply_def by (simp add: \<phi>expns)
-
-\<phi>reasoner_ML Filter_Out_Free_Values'_reject_val 1200
-  (\<open>PROP Filter_Out_Free_Values' ?R ?Y (?x \<Ztypecolon> Val ?raw ?T) ?Z\<close>) = \<open>
-fn (ctxt, sequent) =>
-  let
-    val Const (\<^const_name>\<open>Filter_Out_Free_Values'\<close>, _) $ R $ _
-          $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const (\<^const_name>\<open>Val\<close>, _) $ raw $ _))
-          $ _ = Thm.major_prem_of sequent
-    fun has_free_val (Free (_, Type (\<^type_name>\<open>sem_value\<close>, [_]))) = true
-      | has_free_val (A $ B) = has_free_val A orelse has_free_val B
-      | has_free_val (Abs (_,_,X)) = has_free_val X
-      | has_free_val _ = false
-    val rule =
-      if has_free_val raw
-      then @{thm Filter_Out_Free_Values'_reject_val}
-      else (case R of Const (\<^const_name>\<open>one_class.one\<close>, _) => @{thm Filter_Out_Free_Values'_accept_1}
-                    | _ => @{thm Filter_Out_Free_Values'_accept})
-  in
-    Seq.single (ctxt, rule RS sequent)
-  end
-\<close>
-
-
-
 subsection \<open>Variable Extraction\<close>
 
 definition Variant_Cast :: "'vars \<Rightarrow> 'a set \<Rightarrow> ('vars \<Rightarrow> 'a set) \<Rightarrow> bool" ("\<^bold>v\<^bold>a\<^bold>r\<^bold>y _ \<^bold>i\<^bold>n _/ \<longmapsto> _" )
@@ -1649,7 +1547,7 @@ let open Parse Scan Phi_Help Phi_Basics
   val syn_var_term = (list1 term -- Scan.option (\<^keyword>\<open>invar\<close> |-- term)) >> var_term
 in syn_pattern_match || syn_var_term end\<close>
 
-(*  \<open>Nu_Reasoners.wrap (fn ctxt => Nu_Reasoners.asm_simp_tac (ctxt addsimps Proof_Context.get_thms ctxt "\<phi>expns"))\<close> *)
+(*  \<open>Phi_Reasoners.wrap (fn ctxt => Phi_Reasoners.asm_simp_tac (ctxt addsimps Proof_Context.get_thms ctxt "\<phi>expns"))\<close> *)
 
 
 

@@ -18,7 +18,6 @@ Values of identical name are considered identical. Any anonymous value is consid
 *)
 val translate_ret : term -> term
 val translate_arg : term -> term
-
   
 end
 
@@ -29,7 +28,7 @@ Syntax translation during parsing of the pre-condition is simply replacing
 all anonymous values by a name \<a>\<r>\<g>i for the ith value from left to right.
 *)
 fun translate_arg' cnt (Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (cnt+1, Free ("\<a>\<r>\<g>" ^ (string_of_int cnt), dummyT))
+      = (cnt+1, Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT))
   | translate_arg' cnt (A $ B)
       = (case translate_arg' cnt  A of (cnt', A') =>
          case translate_arg' cnt' B of (cnt'', B') =>
@@ -39,6 +38,7 @@ fun translate_arg' cnt (Const (\<^const_name>\<open>anonymous\<close>, _))
            (cnt', Abs (name,ty,X')))
   | translate_arg' cnt X = (cnt, X)
 val translate_arg = translate_arg' 0 #> snd
+
 
 fun dest_prodT (Type (\<^type_name>\<open>sem_value\<close>, [Type ("Product_Type.prod", [A, B])]))
       = (Type (\<^type_name>\<open>sem_value\<close>, [A]), Type (\<^type_name>\<open>sem_value\<close>, [B]))

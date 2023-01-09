@@ -42,7 +42,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
     val names = rev names'''
     val ex_vars = Thm.prop_of sequent
                   |> dest_CurrentConstruction |> #4
-                  |> strip_separations
+                  |> strip_separations |> rev
                   |> map_filter (dest_Var)
     fun check_name name =
           case Option.map (` (AList.defined (op =) ex_vars))
@@ -70,7 +70,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
                         | is_body (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _)) = true
                         | is_body _ = false
                     in Thm.permute_prems 0 (1 + find_index is_body (Thm.prems_of th)) th end)
-                |> Nu_Reasoner.reason1 (fn _ => 
+                |> Phi_Reasoner.reason1 (fn _ => 
                     "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
                    ) (SOME ~1)
                 |> apsnd (fn th => th RS @{thm conjunct1})
@@ -119,13 +119,13 @@ let open Ast Phi_Syntax
     let
       val value = Thm.prop_of (Phi_Basics.the_construction ctxt)
                   |> dest_CurrentConstruction |> #4
-                  |> strip_separations
+                  |> strip_separations |> rev
                   |> get_first (Envir.beta_eta_contract
                              #> dest_Var
                              #> Option.mapPartial (fn (name',(x,_)) =>
                                     if name' = name then SOME x else NONE))
       fun tag v = if Config.get ctxt parse_var_add_tag orelse Config.get ctxt phi_synthesis_parsing
-                  then Const (\<^const_name>\<open>Variable_of\<close>, dummyT) $ v $ Free (name, dummyT)
+                  then Const (\<^const_name>\<open>Value_of\<close>, dummyT) $ v $ Free (name, dummyT)
                   else v
     in case value of SOME v => tag v
                    | NONE => error ("No variable named "^quote name^" is found.")

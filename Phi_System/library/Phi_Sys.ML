@@ -112,17 +112,6 @@ fun export_codeblock _ param_cterms rule assm sequent =
              |> Drule.forall_intr_list param_cterms
              |> (fn th => th COMP_INCR rule)
 
-structure Val_Counter = Proof_Data (
-  type T = int
-  val init = K 0
-)
-
-fun inc_val_counter ctxt =
-  let
-    val n = Val_Counter.get ctxt
-  in (n, Val_Counter.put (n+1) ctxt)
-  end
-
 
 fun accept_proc (ctxt,sequent) =
   let open Phi_Syntax
@@ -131,11 +120,9 @@ fun accept_proc (ctxt,sequent) =
           Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, ret_ty,
             \<^const>\<open>Pure.imp\<close> $ codeblk_term $ _))
         = Phi_Help.leading_antecedent' rule
-    val ([s_name,ret_name],ctxt') =
-            inc_val_counter ctxt |-> (fn i =>
-            Proof_Context.add_fixes
-                [(Binding.name "\<s>", NONE, NoSyn),
-                 (Binding.name ("\<v>" ^ string_of_int i), SOME ret_ty, NoSyn)])
+    val (ret_name, ctxt'1) = Value_Access_Syntax.assign_local_val (SOME ret_ty) ctxt
+    val ([s_name],ctxt') =
+            Proof_Context.add_fixes [(Binding.name "\<s>", NONE, NoSyn)] ctxt'1
     val codeblk_cterm =
           Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name,s_ty)], codeblk_term)
               |> Thm.cterm_of ctxt
@@ -237,9 +224,9 @@ fun synthesis term (ctxt, sequent) =
           |> Drule.infer_instantiate ctxt [(("X",i_s + i_t), Thm.incr_indexes_cterm i_s term),
                                            (("sequent",i_s + i_t), Thm.cprop_of sequent)]
           |> (fn rule => Thm.implies_elim rule sequent)
-    val _ = Nu_Reasoner.debug_info ctxt (fn _ => "reasoning synthesis...")
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "reasoning synthesis...")
   in
-    case Nu_Reasoner.reason NONE (ctxt, sequent')
+    case Phi_Reasoner.reason NONE (ctxt, sequent')
       of SOME ret => ret
        | NONE => error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
   end

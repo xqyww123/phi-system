@@ -1,9 +1,8 @@
-chapter \<open>Type-free Variable\<close>
+chapter \<open>Typed Variable\<close>
 
-text \<open>Variables are not typed, and their value can be in any type.\<close>
+text \<open>Values of the variables are optionally restricted in designated semantic types.\<close>
 
-
-theory PhiSem_Variable
+theory PhiSem_Typed_Variable
   imports Phi_System.PhiSem_Formalization_Tools
   abbrevs "<var>" = "\<^bold>v\<^bold>a\<^bold>r"
 begin
@@ -14,14 +13,20 @@ subsection \<open>Models\<close>
 
 subsubsection \<open>Resource\<close>
 
-typedef varname = \<open>UNIV::nat set\<close> ..
+declare [ [typedef_overloaded] ]
+datatype varname = varname nat \<comment> \<open>nonce\<close> (type: \<open>TY option\<close>) \<comment> \<open>None denotes no type restriction.\<close>
+hide_const (open) type
+declare [ [typedef_overloaded = false] ]
 
 type_synonym R_var = \<open>varname \<rightharpoonup> VAL option nonsepable\<close>
   \<comment> \<open>NONE: declared but not initialized.\<close>
 
 lemma infinite_varname:
-  \<open>infinite (UNIV::varname set)\<close>
-  by (metis (mono_tags, opaque_lifting) Rep_varname_cases UNIV_I finite_imageI infinite_UNIV_char_0 surj_def)  
+  \<open>infinite {k. varname.type k = TY}\<close>
+  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>{k. varname.type k = TY}\<close>
+        and f = \<open>\<lambda>n. varname n TY\<close>]
+  using inj_def by fastforce
+  
 
 resource_space \<phi>min_res = \<phi>empty_res +
   R_var :: R_var
@@ -187,27 +192,30 @@ section \<open>Instructions\<close>
 
 subsection \<open>Variable Operations\<close>
 
-definition \<phi>M_get_var :: "varname \<Rightarrow> (VAL \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
-  where "\<phi>M_get_var vname F = R_var.\<phi>R_get_res_entry vname ((\<lambda>val.
-            \<phi>M_assert (val \<noteq> None) \<ggreater> F (the val)) o nonsepable.dest)"
+definition \<phi>M_get_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
+  where "\<phi>M_get_var vname TY F = R_var.\<phi>R_get_res_entry vname ((\<lambda>val.
+            \<phi>M_assert (val \<in> Some ` Well_Type TY) \<ggreater> F (the val)) o nonsepable.dest)"
 
-definition op_get_var :: "varname \<Rightarrow> VAL proc"
-  where "op_get_var vname = \<phi>M_get_var vname (\<lambda>x. Return (sem_value x))"
+definition op_get_var :: "varname \<Rightarrow> TY \<Rightarrow> VAL proc"
+  where "op_get_var vname TY = \<phi>M_get_var vname TY (\<lambda>x. Return (sem_value x))"
 
-definition op_set_var :: "varname \<Rightarrow> (VAL,unit) proc'"
-  where "op_set_var vname v =
-          R_var.\<phi>R_set_res (\<lambda>f. f(vname := Some (nonsepable (Some (sem_value.dest v)))))"
+definition op_set_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL,unit) proc'"
+  where "op_set_var vname TY v =
+          \<phi>M_assert (pred_option (\<lambda>TY'. TY = TY') (varname.type vname)) \<ggreater>
+          \<phi>M_getV TY id v (\<lambda>v.
+          R_var.\<phi>R_set_res (\<lambda>f. f(vname := Some (nonsepable (Some v)))))"
 
 definition op_free_var :: "varname \<Rightarrow> unit proc"
   where "op_free_var vname = R_var.\<phi>R_set_res (\<lambda>f. f(vname := None))"
 
-definition op_var_scope' :: "(varname \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
-  where "op_var_scope' F =
-    R_var.\<phi>R_allocate_res_entry (\<lambda>v. True) (Some (nonsepable None)) F"
+definition op_var_scope' :: "TY option \<Rightarrow> (varname \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
+  where "op_var_scope' TY F =
+    R_var.\<phi>R_allocate_res_entry (\<lambda>v. varname.type v = TY) (Some (nonsepable None)) F"
 
 lemma \<phi>M_get_var[intro!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<longmapsto> Y \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_var var F \<lbrace> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<longmapsto> Y \<rbrace>\<close>
+  \<open> v \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<longmapsto> Y \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_var var TY F \<lbrace> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec \<phi>M_get_var_def
   by (clarsimp simp add: \<phi>expns FIC_var.expand simp del: set_mult_expn del: subsetI,
       rule R_var.\<phi>R_get_res_entry[where v=\<open>nonsepable (Some v)\<close>]; simp)
@@ -222,32 +230,38 @@ lemma \<phi>M_set_var[intro!]:
       rule R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp)
 
 lemma op_get_var''_\<phi>app:
-   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var \<lbrace> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<longmapsto> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity \<rbrace>\<close>
+   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<longmapsto> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity \<rbrace>\<close>
   unfolding op_get_var_def Premise_def
-  by (rule,rule,simp add: \<phi>expns)
+  by (rule; rule; simp add: \<phi>expns)
 
 
 lemma op_set_var''_\<phi>app:
-   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var var raw \<lbrace> v \<Ztypecolon> Var var Identity\<heavy_comma> u \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] Identity \<longmapsto> u \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<rbrace>\<close>
+   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e pred_option (\<lambda>TY'. TY = TY') (varname.type var)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var var TY raw \<lbrace> v \<Ztypecolon> Var var Identity\<heavy_comma> u \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] Identity \<longmapsto> u \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<rbrace>\<close>
   unfolding op_set_var_def Premise_def
-  by (cases raw; clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
+  by (cases raw; simp; rule; simp add: \<phi>expns; rule)
 
+lemma finite_map_freshness':
+  \<open>finite (dom f) \<Longrightarrow> infinite P \<Longrightarrow> \<exists>x. f x = None \<and> x \<in> P\<close>
+  by (meson domIff finite_subset subsetI)
 
 lemma op_var_scope':
-   \<open>(\<And>var. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var] \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+   \<open>(\<And>var. varname.type var \<equiv> TY \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var] \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> )
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding op_var_scope'_def Premise_def
   apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec simp del: set_mult_expn del: subsetI)
   subgoal for r res c
   apply (rule R_var.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])
-    apply (clarsimp) using finite_map_freshness infinite_varname apply blast
+    apply (clarsimp) using finite_map_freshness' infinite_varname apply blast
       apply (clarsimp)
 
   apply (clarsimp simp add: Subjection_expn
                   simp del: \<phi>Res_Spec_mult_homo set_mult_expn del: subsetI)
   subgoal premises prems for k res'
   apply (rule prems(1)[THEN spec[where x=r], THEN spec[where x=res'],
-              simplified prems, simplified, THEN mp])
+              simplified prems, simplified, THEN mp], simp)
   apply (rule exI[where x=\<open>c * FIC_var.mk (1(k \<mapsto> nonsepable None))\<close>])
   apply (simp add: \<phi>expns prems)
     by (smt (verit, best) FIC_var.expand FIC_var.sep_disj_fiction Fic_Space_Un Fic_Space_mm \<phi>Res_Spec_mult_homo prems(3) prems(4) prems(5) prems(6) prems(7) sep_disj_multD2 sep_disj_multI2 sep_mult_assoc)

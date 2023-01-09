@@ -5,6 +5,7 @@ section \<open>Preliminary\<close>
 theory Phi_Preliminary
   imports Main "Phi_Algebras.Algebras"
           Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner
+          Phi_Logic_Programming_Reasoner.PLPR_error_msg
 begin
 
 declare [ [ML_debugger, ML_exception_debugger]]
@@ -28,6 +29,9 @@ ML_file \<open>library/Phi_Error.ML\<close>
 subsection \<open>Helper ML\<close>
 
 ML_file \<open>library/Phi_Help.ML\<close>
+
+ML \<open>signature PHI_SYNTAX = sig end
+structure Phi_Syntax : PHI_SYNTAX = struct end\<close>
 
 subsection \<open>Helper Lemmas\<close>
 
@@ -99,7 +103,8 @@ lemma CONV_GE_phase_1:
   \<open>(\<forall>x. P x \<longrightarrow> CONV_GE) \<equiv> (CONV_GE_Ex P \<longrightarrow> CONV_GE)\<close>
   \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj A (B' x)) \<equiv> CONV_GE_conj A (CONV_GE_Ex B')\<close>
   \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj (A' x) B) \<equiv> CONV_GE_conj (CONV_GE_Ex A') B\<close>
-  \<open>(Q \<longrightarrow> CONV_GE) \<longrightarrow> CONV_GE \<equiv> Q\<close>
+  \<open>(Q \<longrightarrow> CONV_GE) \<longrightarrow> Q' \<equiv> Q \<or> Q'\<close>
+  \<open>Q \<or> CONV_GE \<equiv> Q\<close>
   \<open>CONV_GE \<longrightarrow> CONV_GE \<equiv> True\<close>
   unfolding atomize_eq CONV_GE_Ex_def CONV_GE_def CONV_GE_conj_def by blast+
 
@@ -107,20 +112,25 @@ lemma CONV_GE_phase_2:
   \<open>Trueprop (CONV_GE_conj A B) \<equiv> (A &&& B)\<close>
   unfolding CONV_GE_conj_def atomize_conj .
 
+lemma CONV_GE_phase_3:
+  \<open>CONV_GE_conj A B \<equiv> A \<and> B\<close>
+  unfolding CONV_GE_conj_def atomize_conj .
+
 ML \<open>
+(*If no  disjunction: split the conjunction into a list
+  If has disjunction: convert to Disjunctive Normal Form*)
 fun conv_GE_to_plain_conjunction ctxt thm =
   let
-    val V = case Thm.prop_of thm
-      of \<^const>\<open>Pure.imp\<close> $ _ $ (\<^const>\<open>Trueprop\<close> $ Var V) => V
+    val V = case Thm.concl_of thm
+      of (\<^const>\<open>Trueprop\<close> $ Var V) => V
        | _ => raise THM ("Not a Generalized Elimination rule", 0, [thm])
     val thm' = Thm.instantiate (TVars.empty, Vars.make [(V, \<^cterm>\<open>CONV_GE\<close>)]) thm
   in
     thm'
       |> Raw_Simplifier.rewrite_rule ctxt @{thms atomize_all atomize_imp atomize_eq atomize_conj CONV_GE_phase_1}
       |> Raw_Simplifier.rewrite_rule ctxt @{thms CONV_GE_Ex_def CONV_GE_phase_2}
+      |> Raw_Simplifier.rewrite_rule ctxt @{thms CONV_GE_Ex_def CONV_GE_phase_3}
       |> Conjunction.elim_conjunctions
   end
 \<close>
-
-
 end

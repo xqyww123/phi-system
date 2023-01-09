@@ -2,8 +2,8 @@ signature PHI_WORKING_MODE = sig
 
 type working_mode = {
   domain: Proof.context -> term -> bool,
-  argument_spec: term (*term of the current sequent*) -> term,
-  return_spec:   term (*term of the current sequent*) -> term,
+  argument_spec: term (*proposition of a goal or a state sequent*) -> term,
+  return_spec:   term (*proposition of a goal*) -> term,
   return_spec_c: Proof.context -> cterm (*term of the current sequent*) -> cterm,
   inhabited_rule: Proof.context -> thm,
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
@@ -53,6 +53,7 @@ structure Data = Generic_Data(
 fun working_mode_on ctxt goal =
       Symtab.get_first (fn (_,mode) => if #domain mode ctxt goal then SOME mode else NONE)
         (Data.get (Context.Proof ctxt))
+
 fun working_mode_on1 ctxt goal =
       case working_mode_on ctxt goal of SOME x => x
          | NONE => error ("Do not know how to handle goal " ^ Syntax.string_of_term ctxt goal)
@@ -77,9 +78,9 @@ fun mode ctxt = case Mode.get ctxt
 
 fun generic_cast rule place desired_nu (ctxt,sequent) =
   let
-    val _ = Nu_Reasoner.debug_info ctxt (fn _ => "reasoning cast...")
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "reasoning cast...")
     val (ctxt', sequent') =
-          case Nu_Reasoner.reason NONE (ctxt, sequent RS rule)
+          case Phi_Reasoner.reason NONE (ctxt, sequent RS rule)
             of SOME ret => ret
              | NONE => raise Phi_Error.CastFail (place, desired_nu, sequent)
     val _ = case Thm.prop_of sequent'
@@ -94,9 +95,10 @@ fun cannot_cast_exception sequent =
   raise THM("cannot cast the exception of the sequent", 0, [sequent])
 
 
+(*
 fun collect_free_variables vars term = inter (op =) vars (Term.add_frees term [])
 
-(*fun generic_existential_generalization cast vars spec stat =
+fun generic_existential_generalization cast vars spec stat =
   if null vars
   then state
   else
@@ -115,7 +117,7 @@ fun eliminate_term ctxt xs thm =
             |> Syntax.check_term ctxt |> Thm.cterm_of ctxt
     in
       Phi_Sys.cast typing' (ctxt,thm)
-        |> Nu_Reasoners.naive_obligation_solver'
+        |> Phi_Reasoners.naive_obligation_solver'
         |> snd
     end
   end *)
@@ -134,9 +136,9 @@ val procedure : working_mode =
           orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction_c))
          (orelse_opt (try (#3 o Phi_Syntax.dest_procedure_c))
              (#4 o Phi_Syntax.dest_PendingConstruction_c)))
-    val argument_spec = orelse_opt (try (#3 o Phi_Syntax.dest_CurrentConstruction))
+    val argument_spec = orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
          (orelse_opt (try (#2 o Phi_Syntax.dest_procedure))
-             (#3 o Phi_Syntax.dest_PendingConstruction))
+             (#4 o Phi_Syntax.dest_PendingConstruction))
 
     fun finish_proc hyp (ctxt,sequent) =
       let open Phi_Syntax
@@ -308,7 +310,8 @@ in
                        orelse Phi_Syntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> x),
     return_spec = return_spec,
     return_spec_c = return_spec_c,
-    argument_spec = #1 o Phi_Syntax.dest_view_shift,
+    argument_spec = orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
+                                    (#1 o Phi_Syntax.dest_view_shift),
     inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_view_shift,
     block_name_of = (fn term => 
@@ -344,7 +347,8 @@ let
   (*TODO: optimize this*)
   fun return_spec_c ctxt = Thm.term_of #> return_spec #> Thm.cterm_of ctxt
 
-  val argument_spec = (#1 o Phi_Syntax.dest_implication)
+  val argument_spec = orelse_opt (try (#2 o Phi_Syntax.dest_set_member))
+                                      (#1 o Phi_Syntax.dest_implication)
 
   fun finish_implication hyp (ctxt,sequent) =
     let

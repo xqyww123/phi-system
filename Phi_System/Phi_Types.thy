@@ -675,25 +675,7 @@ subsection \<open>Value\<close>
 
 subsubsection \<open>Syntax to fetch the latest n-th Val\<close>
 
-syntax "__get_val__" :: "logic \<Rightarrow> logic" ("V$_" [1000] 999)
-consts "\<phi>__get_val" :: "nat \<Rightarrow> 'b"
-
-parse_ast_translation \<open>let open Ast
-fun parse_num (Constant \<^const_syntax>\<open>zero_class.zero\<close>) = Variable "0"
-  | parse_num (Constant \<^const_syntax>\<open>one_class.one\<close>) = Variable "1"
-  | parse_num (Appl [Constant \<^syntax_const>\<open>_Numeral\<close>, A])
-      = parse_num A
-  | parse_num (Appl [Constant "_constrain", A, B])
-      = Appl [Constant "_constrain", parse_num A, B]
-  | parse_num (Appl [Constant "_type_constraint_", x])
-      = Appl [Constant "_type_constraint_", parse_num x]
-  | parse_num (Constant X) = Variable X
-  | parse_num X = X
-in [(\<^syntax_const>\<open>__get_val__\<close>, (fn ctxt => fn [A] =>
-  @{print} (Appl [Constant \<^const_syntax>\<open>\<phi>__get_val\<close>, parse_num (@{print} A)])
-))] end\<close>
-
-
+(*
 setup \<open>let open Ast Phi_Syntax
   fun strip_constrain (Const ("_constrain", _) $ x $ _) = strip_constrain x
     | strip_constrain (Const ("_type_constraint_", _) $ x) = strip_constrain x
@@ -707,11 +689,11 @@ setup \<open>let open Ast Phi_Syntax
     let
       val values = Thm.prop_of (Phi_Basics.the_construction ctxt)
                   |> dest_CurrentConstruction |> #4
-                  |> strip_separations
+                  |> strip_separations |> rev
                   |> map_filter name_of_Val
     in if ind < length values
        then List.nth (values, ind)
-       else error ("Refer a value that does not exists.")
+       else error ("Referring a value that does not exists.")
     end
 
   fun has_get_val (Const (\<^const_name>\<open>\<phi>__get_val\<close>, _)) = true
@@ -725,145 +707,7 @@ setup \<open>let open Ast Phi_Syntax
     | map_get_val ctxt x = x
  in Context.theory_map (Syntax_Phases.term_check ~10 "\<phi>valiable" (fn ctxt =>
       map (fn x => if has_get_val x then map_get_val ctxt x else x)))
-end\<close>
-
-
-subsubsection \<open>Reasoning Rules\<close>
-
-paragraph \<open>Implication\<close>
-
-lemma Val_cast [\<phi>reason]:
-  \<open> y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> y \<Ztypecolon> Val v U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Val v T \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding Imply_def by (simp add: \<phi>expns)
-
-paragraph \<open>Action\<close>
-
-lemma [\<phi>reason 1200 for \<open>?y \<Ztypecolon> Val ?v ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> (?Act::?'a::structural action)\<close>]:
-  \<open> y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act
-\<Longrightarrow> y \<Ztypecolon> Val v U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Val v T \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> Act\<close>
-  for Act :: \<open>'a::structural action\<close>
-  unfolding Action_Tag_def
-  using Val_cast .
-
-paragraph \<open>Simplification\<close>
-
-lemma [\<phi>programming_simps]:
-    \<open>Val raw (ExTyp T) = (\<exists>\<phi> c. Val raw (T c))\<close>
-  by (rule \<phi>Type_eqI) (simp add: \<phi>expns)
-
-lemma [\<phi>programming_simps]:
-    \<open>Val raw (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (Val raw T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  by (rule \<phi>Type_eqI) (simp add: \<phi>expns)
-
-lemma \<phi>Val_simp_cong[folded atomize_eq]:
-  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
-\<Longrightarrow> (x \<Ztypecolon> Val v T) = (x' \<Ztypecolon> Val v T')\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Val_simp_cong} ctxt)
-\<close>
-
-subsubsection \<open>Application Methods for Subtyping\<close>
-
-(*TODO: I don't like this. It is not generic.*)
-
-lemma [\<phi>reason 2100 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?x \<Ztypecolon> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> ?U \<^bold>a\<^bold>n\<^bold>d ?P))
-          (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R\<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T)) ?Result
-\<close> except \<open>
-  PROP \<phi>Application_Method (Trueprop (?x \<Ztypecolon> Val ?raw ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> ?U \<^bold>a\<^bold>n\<^bold>d ?P))
-          (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R)) ?Result
-\<close>]:
-  \<open> PROP \<phi>Application_Success
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P))
-      (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Val raw T))
-      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
-  unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Val_cast implies_left_prod by metis
-
-
-lemma [\<phi>reason 2000 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?x' \<Ztypecolon> ?T' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> ?U \<^bold>a\<^bold>n\<^bold>d ?P))
-      (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R\<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T)) ?Result
-\<close> except \<open>
-  PROP \<phi>Application_Method (Trueprop (?x \<Ztypecolon> Val ?raw ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> ?U \<^bold>a\<^bold>n\<^bold>d ?P))
-          (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?R)) ?Result
-\<close>]:
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d Any
-\<Longrightarrow> SOLVE_SUBGOAL G
-\<Longrightarrow> PROP \<phi>Application_Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (x' \<Ztypecolon> T' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P))
-      (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Val raw T))
-      (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
-  unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Val_cast implies_left_prod by metis
-
-
-subsubsection \<open>Synthesis\<close>
-
-lemma [\<phi>reason 1200 for
-  \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> VAL set)) (?X::?'ret \<Rightarrow> assn)\<close>
-]:
-  \<open>Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
-  unfolding Synthesis_Parse_def ..
-
-lemma [\<phi>reason 1200 for
-  \<open>Synthesis_Parse (?raw::?'a sem_value) (?X::?'ret \<Rightarrow> assn)\<close>
-]:
-  \<open>Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
-  unfolding Synthesis_Parse_def ..
-
-lemma [\<phi>reason for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Val ?raw ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> x \<Ztypecolon> Val raw T \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> Val raw T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def Action_Tag_def View_Shift_def Synthesis_def
-  by blast
-
-lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::?'a sem_value) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R1 \<longmapsto> R2\<heavy_comma> x \<Ztypecolon> Val raw T \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
-\<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  for raw :: \<open>'a sem_value\<close>
-  unfolding Synthesis_by_def Action_Tag_def GOAL_CTXT_def
-            \<phi>Procedure_def View_Shift_def Return_def det_lift_def
-  by simp
-
-
-subsubsection \<open>Auto unfolding for value list\<close>
-
-lemma [\<phi>programming_simps]:
-  \<open>(\<exists>*x. x \<Ztypecolon> Val rawv Empty_List) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS (rawv = \<phi>V_nil))\<close>
-  unfolding set_eq_iff USELESS_def
-  by (cases rawv; simp add: \<phi>expns)
-
-lemma [\<phi>programming_simps]:
-  \<open>(\<exists>*x. x \<Ztypecolon> Val rawv (List_Item T))
- = (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS (\<exists>v. rawv = \<phi>V_cons v \<phi>V_nil))\<close>
-  unfolding set_eq_iff \<phi>V_cons_def USELESS_def
-  apply (cases rawv; clarsimp simp add: \<phi>expns \<phi>V_tl_def \<phi>V_hd_def times_list_def; rule;
-          clarsimp simp add: sem_value_All sem_value_exists)
-  by blast+
-
-lemma [simp]:
-  \<open> [] \<notin> (\<exists>*x. x \<Ztypecolon> L)
-\<Longrightarrow> ((\<exists>*x. x \<Ztypecolon> Val rawv (List_Item T \<^emph> L)) :: 'a::sep_algebra set)
-  = ((\<exists>*x. x \<Ztypecolon> Val (\<phi>V_tl rawv) L) * (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T))\<close>
-  unfolding set_eq_iff
-  apply (cases rawv; clarsimp simp add: \<phi>expns \<phi>V_tl_def \<phi>V_hd_def times_list_def)
-  by (metis (no_types, opaque_lifting) append_Cons append_Nil list.exhaust_sel
-            list.sel(1) list.sel(2) list.sel(3))
-
-lemma [simp]:
-  \<open>[] \<notin> (\<exists>*x. x \<Ztypecolon> (List_Item T \<^emph> L))\<close>
-  by (rule; clarsimp simp add: \<phi>expns times_list_def)
-
-lemma [simp]:
-  \<open>[] \<notin> (\<exists>*x. x \<Ztypecolon> List_Item T)\<close>
-  by (rule; clarsimp simp add: \<phi>expns times_list_def)
-
+end\<close> *)
 
 
 subsection \<open>Semantic Type Annotation\<close>

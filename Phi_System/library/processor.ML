@@ -174,14 +174,14 @@ fun powerful_process toks stat =
   end
 
 fun powerful_process_p toks =
-      (Proof.map_context (Config.put Nu_Reasoner.auto_level 2) #>
+      (Proof.map_context (Config.put Phi_Reasoner.auto_level 2) #>
           powerful_process (toks @ [Token.eof])
       ,if hd toks |> Token.is_eof then [Token.eof] else [])
 
 fun powerful_process_p_inert toks =
       (if hd toks |> Token.is_eof
         then I
-        else Proof.map_context (Config.put Nu_Reasoner.auto_level 2)
+        else Proof.map_context (Config.put Phi_Reasoner.auto_level 2)
           #> powerful_process (toks @ [Token.eof])
       ,if hd toks |> Token.is_eof then [Token.eof] else [])
 
@@ -223,14 +223,14 @@ fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) ctxt =
 
 
 fun almost_safe f (ctxt,sequent) =
-      if Config.get ctxt Nu_Reasoner.auto_level >= 1 then f (ctxt,sequent) else raise Bypass NONE
+      if Config.get ctxt Phi_Reasoner.auto_level >= 1 then f (ctxt,sequent) else raise Bypass NONE
 
 fun not_safe f (ctxt,sequent) =
-      if Config.get ctxt Nu_Reasoner.auto_level >= 2 then f (ctxt,sequent) else raise Bypass NONE
+      if Config.get ctxt Phi_Reasoner.auto_level >= 2 then f (ctxt,sequent) else raise Bypass NONE
 
 fun parse_auto_level (proc:proc) (ctxt,sequent) =
   Phi_Parse.auto_level #-> (fn auto_level' =>
-    proc (Nu_Reasoner.reduce_auto_level auto_level' ctxt, sequent))
+    proc (Phi_Reasoner.reduce_auto_level auto_level' ctxt, sequent))
 
 fun apply_attr (attr:attribute) (ctxt, sequent) =
   attr (Context.Proof ctxt, sequent)

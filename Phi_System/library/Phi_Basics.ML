@@ -19,6 +19,9 @@ signature PHI_BASICS = sig
   val enter_programming_environ : thm -> Proof.state -> Proof.state
   val update_programming_sequent' : thm -> Proof.context -> Proof.context
 
+  val reason_programming_implication : Proof.context
+                                    -> thm list (*elimination rules*)
+                                    -> thm -> thm
 end
 
 structure Phi_Basics : PHI_BASICS = struct
@@ -58,21 +61,29 @@ fun the_implication_GE i ctxt =
 fun the_implication i ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_implication_GE i ctxt)
 
 (* Reason pure facts that the given sequent implies. *)
-fun reason_programming_implication mode ctxt sequent =
+fun gen_reason_programming_implication erules (mode:Phi_Working_Mode.working_mode) ctxt sequent =
   let
     val inhabited_rule = #inhabited_rule mode ctxt
-    val thm = SOME (sequent RS inhabited_rule)
-              handle THM _ => NONE
-    val _ = Nu_Reasoner.debug_info ctxt (fn _ => "extracting implied pure facts...")
-    val erules = Named_Theorems.get ctxt @{named_theorems \<phi>inhabitance_rule}
+    val thm = sequent RS inhabited_rule
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "extracting implied pure facts...")
     open Tactical Tactic
-  in Option.map (rule_by_tactic ctxt (TRY (HEADGOAL (eresolve_tac ctxt erules)))) thm
+  in rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt erules))) thm
   end
+
+fun reason_programming_implication ctxt erules sequent =
+  gen_reason_programming_implication erules
+    (Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent))
+    ctxt sequent
+
+fun reason_programming_implication' mode ctxt sequent =
+  [gen_reason_programming_implication
+    (Named_Theorems.get ctxt @{named_theorems \<phi>inhabitance_rule}) mode ctxt sequent]
+  handle THM _ => []
 
 fun gen_update_programming_sequent' put sequent ctxt =
   case Phi_Working_Mode.working_mode_on ctxt (Thm.concl_of sequent)
     of SOME mode => put ctxt (sequent, sequent, Lazy.lazy (fn () =>
-                                      the_list (reason_programming_implication mode ctxt sequent)))
+                                        reason_programming_implication' mode ctxt sequent))
      | _ => case Programming_Sequent.get ctxt
               of (_, construction, implication)::_ => put ctxt (sequent, construction, implication)
                | [] => put ctxt (sequent, sequent, Lazy.value [])

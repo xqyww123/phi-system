@@ -170,9 +170,9 @@ val strip_binop_r_last = strip_bin_r_assoc_last o dest_binop
 val strip_binop_r_c = strip_bin_r_assoc o dest_binop_c
 val strip_binop_ty   = strip_bin_r_assoc o dest_binop_ty
 val strip_binop_ty_c = strip_bin_r_assoc o dest_binop_ty_c
-fun strip_bin_l_assoc strip tm =
-  case try strip tm of SOME (a,b) => b :: (strip_bin_l_assoc strip a) | _ => [tm]
-val strip_binop_l = strip_bin_l_assoc o dest_binop
+fun strip_bin_l_assoc L strip tm =
+  case try strip tm of SOME (a,b) => (strip_bin_l_assoc (b :: L) strip a) | _ => (tm :: L)
+val strip_binop_l = strip_bin_l_assoc [] o dest_binop
 
 fun dest_triop const (tm as h $ a $ b $ c) =
       if has_head const h then (a,b,c) else raise TERM ("dest_triop "^const, [tm] )

@@ -3,11 +3,10 @@ chapter \<open>Integrated Deduction Environment for Programming (IDE-P)\<close>
 theory IDE_CP
   imports
     "Phi_Semantics_Framework.Phi_Semantics_Framework"
-    "Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner"
     "HOL-Library.Adhoc_Overloading"
-    Spec_Framework
     "Phi_Algebras.Map_of_Tree"
     Calculus_of_Programming
+    IDE_CP_Reasoning1
   keywords
     "proc" "rec_proc" (*"\<phi>cast"*) :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
@@ -54,50 +53,12 @@ declare set_mult_inhabited[\<phi>inhabitance_rule]
 lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+
 subsubsection \<open>Syntax\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
 ML_file \<open>library/Phi_Working_Mode.ML\<close>
 ML_file \<open>library/Phi_Basics.ML\<close>
-
-
-subsubsection \<open>Forward Declaration of Reasoning Tags\<close>
-
-definition \<open>Filter_Out_Free_Values (T::'a set) (T'::'a set) \<equiv> Trueprop (T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T')\<close>
-
-consts assertion_simplification :: mode
-named_theorems assertion_simps
-
-subsubsection \<open>Finalization Rewrites\<close>
-
-consts procedure_simplification :: mode
-named_theorems procedure_simps
-
-declare proc_bind_SKIP[procedure_simps]
-  proc_bind_SKIP'[procedure_simps]
-  proc_bind_assoc[procedure_simps]
-  proc_bind_return_none[procedure_simps]
-
-\<phi>reasoner procedure_equivalent 1200 (\<open>Premise procedure_simplification ?P\<close>)
-  = (rule Premise_I; simp only: procedure_simps; fail)
-
-\<phi>reasoner procedure_simplification 1200
-    (\<open>?Q = ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification\<close>)
-  = ((simp only: procedure_simps)?, rule Conv_Action_Tag_I; fail)
-
-lemma "\<phi>__final_proc_rewrite__":
-  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>\<close>
-  unfolding Action_Tag_def by simp
-
-lemma "\<phi>__final_proc_rewrite__'":
-  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Action_Tag_def by simp
 
 
 section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
@@ -133,23 +94,6 @@ lemma (in \<phi>spec) [\<phi>reason 2000]:
   unfolding Imply_def Argument_def Fix_def
   by (simp_all add: \<phi>expns, blast) *)
 *)
-
-subsubsection \<open>Matches\<close>
-
-definition TyMatches :: \<open>'a set \<Rightarrow> 'a set \<Rightarrow> 'a set\<close> (infixl "<matches>" 18)
-  where \<open>(S <matches> pattern) = S\<close>
-
-text \<open>The annotation marking on a target \<^term>\<open>Y <matches> A\<close> in a ToA or a view shift
-  restricts that the source have to first match pattern \<open>A\<close>.\<close>
-
-lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (Y <matches> A) \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding TyMatches_def .
-
-lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> (Y <matches> A) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
-  unfolding TyMatches_def .
-
 
 subsubsection \<open>Useless Tag\<close>
 
@@ -309,153 +253,6 @@ ML_file \<open>library/syntax/label.ML\<close>
 
 subsection \<open>Reasoning Job done by \<phi>-LPR\<close>
 
-subsubsection \<open>Mode\<close>
-
-consts MODE_\<phi>EXPN :: mode \<comment> \<open>relating to named_theorems \<open>\<phi>expn\<close>\<close>
-
-abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>expn_Premise \<equiv> Premise MODE_\<phi>EXPN\<close>
-
-\<phi>reasoner \<phi>expn_Premise 10 (\<open><\<phi>expn> ?P\<close>)
-  = (rule Premise_I; simp add: \<phi>expns)
-
-text \<open>Antecedent \<^prop>\<open><\<phi>expn> P\<close> indicates the reasoner solving the premise \<^prop>\<open>P\<close> using
-  simplification rules of \<open>\<phi>expns\<close>.\<close>
-
-subsubsection \<open>Name tag by type\<close>
-
-(*TODO: elaborate this*)
-
-datatype ('x, 'name) named (infix "<named>" 30) = tag 'x
-
-syntax "__named__" :: \<open>logic \<Rightarrow> tuple_args \<Rightarrow> logic\<close> (infix "<<named>>" 25)
-
-
-ML_file \<open>library/name_by_type.ML\<close>
-
-text \<open>It is a tool to annotate names on a term, e.g. \<^term>\<open>x <<named>> a, b\<close>.
-  The name tag is useful in lambda abstraction (including quantification) because the
-  name of an abstraction variable is not preserved in many transformation especially
-  simplifications. The name can be useful in the deductive programming, e.g. universally
-  quantified variables in a sub-procedure like
-  \[ \<open>\<forall>x y. proc f \<lbrace> VAL x \<Ztypecolon> T\<heavy_comma> VAL y \<Ztypecolon> U \<longmapsto> any \<rbrace> \<Longrightarrow> any'\<close> \]
-  When starting to write the sub-procedure f by command \<open>\<medium_left_bracket>\<close>, \<phi>-system fixes variables x and y
-    with the name of x and y. The name of x and y then are significant for programming.
-  To preserve the name, we use \<^typ>\<open>'any <named> '\<phi>name_x \<times> '\<phi>name_y\<close>,
-    \<^prop>\<open>\<forall>(x :: 'any <named> '\<phi>name_x). sth\<close>.
-  We use free type variable to annotate it because it is most stable. No transformation
-    changes the name of a free type variable.
-
-  This feature is mostly used in \<^emph>\<open>Expansion of Quantification\<close> given in the immediate subsection.
-  Therefore we put this part in the subsection of reasoning jobs, though itself is not related to
-  any reasoning work.
-\<close>
-
-lemma named_forall: "All P \<longleftrightarrow> (\<forall>x. P (tag x))" by (metis named.exhaust)
-lemma named_exists: "Ex P \<longleftrightarrow> (\<exists>x. P (tag x))" by (metis named.exhaust)
-lemma [simp]: "tag (case x of tag x \<Rightarrow> x) = x" by (cases x) simp
-lemma named_All: "(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (tag x))"
-proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
-next fix x :: "'a <named> 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
-qed
-
-lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists \<phi>expns)
-
-
-subsubsection \<open>Expansion of Quantification\<close>
-
-definition \<open>eoq__fst = fst\<close>
-definition \<open>eoq__snd = snd\<close>
-
-named_theorems named_expansion \<open>Rewriting rules expanding named quantification.\<close>
-
-lemma eoq__fst[unfolded atomize_eq[symmetric], named_expansion]:
-        \<open>eoq__fst (x,y) = x\<close> unfolding eoq__fst_def by simp
-lemma eoq__snd[unfolded atomize_eq[symmetric], named_expansion]:
-        \<open>eoq__snd (x,y) = y\<close> unfolding eoq__snd_def by simp
-
-lemmas [unfolded atomize_eq[symmetric], named_expansion] =
-  Product_Type.prod.case named.case id_apply
-
-ML_file "./library/QuantExpansion.ML"
-
-simproc_setup named_forall_expansion ("All (P :: 'a <named> 'names \<Rightarrow> bool)") =
-  \<open>K (QuantExpansion.simproc_of QuantExpansion.forall_expansion)\<close>
-
-simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow> 'b set)") =
-  \<open>K (fn ctx => fn cterms => QuantExpansion.simproc_of QuantExpansion.ExNu_expansion ctx cterms)\<close>
-
-simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
-  \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
-
-
-subsubsection \<open>Rename \<lambda>-Abstraction\<close>
-
-definition rename_abstraction :: \<open>'\<phi>name_name itself \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool\<close>
-  where \<open>rename_abstraction name origin_abs named_abs \<longleftrightarrow> (origin_abs = named_abs)\<close>
-
-lemma rename_abstraction:
-  \<open>rename_abstraction name X X\<close>
-  unfolding rename_abstraction_def ..
-
-\<phi>reasoner_ML rename_abstraction 1100 (\<open>rename_abstraction TYPE(?'name) ?Y ?Y'\<close>) =
-\<open>fn (ctxt, sequent) =>
-  case Thm.major_prem_of sequent
-    of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>rename_abstraction\<close>, _)
-                $ (Const (\<^const_name>\<open>Pure.type\<close>, Type(\<^type_name>\<open>itself\<close>, [name'])))
-                $ Abs(_,ty,body)
-                $ Var Y'') =>
-      let
-        val name = case Phi_Syntax.dest_name_tylabels name'
-                     of [x] => x
-                      | _ => raise TYPE ("only one name is expected", [name'], [])
-        val Y' = Abs(name, ty, body) |> Thm.cterm_of ctxt
-        val sequent = @{thm rename_abstraction} RS Thm.instantiate (TVars.empty, Vars.make [(Y'',Y')]) sequent
-      in
-        Seq.single (ctxt, sequent)
-      end
-     | term => raise THM ("Bad shape of rename_abstraction antecedent", 0, [sequent])
-\<close>
-
-
-subsubsection \<open>\<lambda>-Abstraction Tag\<close>
-
-definition "lambda_abstraction" :: " 'a \<Rightarrow> 'b \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool "
-  where "lambda_abstraction x Y Y' \<longleftrightarrow> Y' x = Y"
-
-lemma lambda_abstraction: "lambda_abstraction x (Y' x) Y'"
-  unfolding lambda_abstraction_def ..
-
-lemma [\<phi>reason 1200 for \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
-  \<open> lambda_abstraction y fx f1
-\<Longrightarrow> lambda_abstraction x f1 f2
-\<Longrightarrow> lambda_abstraction (x,y) fx (case_prod f2)\<close>
-  unfolding lambda_abstraction_def by simp
-
-ML \<open>Name.variant "" Name.context\<close>
-
-\<phi>reasoner_ML lambda_abstraction 1100 ("lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
-  let
-    val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _))
-      = Phi_Help.leading_antecedent (Thm.prop_of sequent)
-    val Y' = Abs("", fastype_of x, abstract_over (x, Y))
-    val idx = Thm.maxidx_of sequent
-    val vars = map Var (List.tabulate (length Vs, (fn i => ("v", i+idx))) ~~ map snd Vs)
-    fun subst X = Term.subst_bounds (vars, X)
-    val rule = Drule.infer_instantiate ctxt
-                  (map (apsnd (Thm.cterm_of ctxt)) [(("x",0), subst x), (("Y'",0),subst Y')])
-                  @{thm lambda_abstraction}
-  in
-    Seq.single (ctxt, rule RS sequent)
-  end
-\<close>
-
-lemma [\<phi>reason 1200 for \<open>lambda_abstraction (tag ?x) ?fx ?f\<close>]:
-  \<open> lambda_abstraction x fx f
-\<Longrightarrow> rename_abstraction TYPE('name) f f'
-\<Longrightarrow> lambda_abstraction (tag x :: 'any <named> 'name) fx (case_named f')\<close>
-  unfolding lambda_abstraction_def rename_abstraction_def by simp
-
-
 subsubsection \<open>Introduce Frame Variable\<close>
 
 named_theorems frame_var_rewrs \<open>Rewriting rules to normalize after inserting the frame variable\<close>
@@ -515,7 +312,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   let
     val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = Phi_Syntax.strip_separations S |> Phi_Help.last
+    val tail = hd (Phi_Syntax.strip_separations S)
   in
     if is_Var tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
@@ -527,7 +324,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   let
     val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = Phi_Syntax.strip_separations S |> Phi_Help.last
+    val tail = hd (Phi_Syntax.strip_separations S)
   in
     if is_Var tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
@@ -685,7 +482,7 @@ text \<open>On programming mode, the synthesis operation always tries to find a 
   View shifts have to be wrapped in a procedure. The following is an automatic wrapper. \<close>
 
 lemma [\<phi>reason 30
-    for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>v. ?S2\<heavy_comma> SYNTHESIS ?X' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+    for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>v. ?S2\<heavy_comma> SYNTHESIS ?X' v \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> SYNTHESIS X' \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
@@ -1100,7 +897,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
   \<open> \<phi>IntroFrameVar' R S'' S' T T' E'' E'
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
 \<Longrightarrow> Simplify assertion_simplification E''' E''
-\<Longrightarrow> (\<And>v. PROP Filter_Out_Free_Values (E''' v) (E v))
+\<Longrightarrow> (\<And>v. Remove_Values (E''' v) (E v))
 \<Longrightarrow> PROP \<phi>Application_Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>))
@@ -1108,7 +905,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
     (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def \<phi>IntroFrameVar'_def
     GOAL_CTXT_def FOCUS_TAG_def Simplify_def Action_Tag_def
-    Simplify_def Filter_Out_Free_Values_def
+    Simplify_def Remove_Values_def
   apply rule
   subgoal premises prems
     apply (simp only: prems(1))
@@ -1584,7 +1381,9 @@ lemma [\<phi>reason 1100]:
 *)
 
 
+
 subsection \<open>Actions\<close>
+(*TODO: move this*)
 
 subsubsection \<open>Identity\<close>
 
@@ -1624,6 +1423,62 @@ consts action_shrink :: \<open>action_shrink_typ action\<close>
 lemma dup_\<phi>app:    \<open>PROP Call_Action action_dup\<close>    using Call_Action_I .
 lemma drop_\<phi>app:   \<open>PROP Call_Action action_drop\<close>   using Call_Action_I .
 lemma shrink_\<phi>app: \<open>PROP Call_Action action_shrink\<close> using Call_Action_I .
+
+
+subsection \<open>Generic Assignment \& Access\<close>
+
+subsubsection \<open>Annotation\<close>
+
+definition Value_of :: \<open>'x \<Rightarrow> 'v \<Rightarrow> 'x\<close> (infix "<val-of>" 22)
+  where [iff]: \<open>(x <val-of> v) = x\<close>
+  \<comment> \<open>This tag annotates that \<open>x\<close> is the value of \<open>Var v\<close> or \<open>Val v\<close>.
+
+    One usage is during synthesis of variable access.
+    When user types in \<open>$var\<close> meaning to synthesis the value of variable \<open>var\<close>,
+    the system reasons \<open>?x <val-of> var \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l ?T\<close> which is semantically identical to
+    \<open>?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close> but is annotated that what we want is not arbitrary \<open>?x\<close> but, the value
+    of the variable \<open>var\<close>. With the syntactical annotation, the reasoning can be properly
+    configured to synthesis the desired value.\<close>
+
+definition Set_Value :: \<open>'x \<Rightarrow> 'v \<Rightarrow> 'x\<close> ("_ <set-to> _" [51, 1000] 50)
+  where [iff]: \<open>(y <set-to> x) = y\<close>
+  \<comment> \<open>This tag is mainly used in synthesis, annotating the action of assigning some value
+      container \<open>x\<close> like a variable with value \<open>y\<close>.
+     As the evaluation of the \<close>
+
+
+subsubsection \<open>Syntax\<close>
+
+nonterminal \<phi>identifier
+
+syntax
+  "_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$\"_" [991] 990)
+  "_get_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$_" [991] 990)
+  "_set_identifier_" :: "\<phi>identifier \<Rightarrow> logic \<Rightarrow> logic" ("$_ := _" [991, 51] 50)
+  "_identifier_id_" :: \<open>id \<Rightarrow> \<phi>identifier\<close> ("_" [992] 991)
+  "_identifier_num_" :: \<open>num_token \<Rightarrow> \<phi>identifier\<close> ("_" [992] 991)
+  "_identifier_1_" :: \<open>\<phi>identifier\<close> ("1")
+  "_identifier_logic_" :: \<open>logic \<Rightarrow> \<phi>identifier\<close> ("'(_')" [992] 991)
+
+consts \<phi>identifier :: "unit \<Rightarrow> unit" \<comment> \<open>used only in syntax parsing\<close>
+
+ML_file \<open>library/syntax/value_access.ML\<close>
+
+ML_file \<open>library/value_access.ML\<close>
+
+(*
+(*TODO*)
+\<phi>processor get_val 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
+  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.term >> (fn var => fn () =>
+    let
+      val ctxt_parse = Config.put phi_synthesis_parsing true ctxt
+      val term = Const(\<^const_name>\<open>get_var____\<phi>\<close>, dummyT) $ Syntax.parse_term ctxt_parse var
+                  |> Syntax.check_term ctxt_parse
+                  |> Thm.cterm_of ctxt
+    in
+      Phi_Sys.synthesis term (ctxt,sequent)
+    end)
+\<close> *)
 
 
 
@@ -1780,7 +1635,7 @@ text \<open>Convention of priorities:
 subsubsection \<open>Controls\<close>
 
 \<phi>processor set_auto_level 10 (\<open>PROP ?P\<close>) \<open>(fn (ctxt, sequent) => Phi_Parse.auto_level_force >>
-  (fn auto_level' => fn _ => (Config.put Nu_Reasoner.auto_level auto_level' ctxt, sequent)))\<close>
+  (fn auto_level' => fn _ => (Config.put Phi_Reasoner.auto_level auto_level' ctxt, sequent)))\<close>
   \<open>Note the declared auto-level is only valid during the current statement.
    In the next statement, the auto-level will be reset to the default fully-automated level.\<close>
 
@@ -1845,7 +1700,7 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
     let
       val _ = if Config.get ctxt NuObtain.enable_auto
-              andalso Config.get ctxt Nu_Reasoner.auto_level >= 2
+              andalso Config.get ctxt Phi_Reasoner.auto_level >= 2
               then () else raise Bypass NONE
       val _ $ X = Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent) |> #4
       fun is_Abs (Abs _) = true | is_Abs _ = false
@@ -1884,9 +1739,13 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 \<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
 \<open>fn (ctxt,sequent) => Scan.succeed (fn _ => (
-  Nu_Reasoner.debug_info ctxt (fn _ => "reasoning the leading antecedent of the state sequent.");
-  if Config.get ctxt Nu_Reasoner.auto_level >= 1
-  then case Nu_Reasoner.reason (SOME 1) (ctxt, sequent)
+  Phi_Reasoner.debug_info ctxt (fn _ => "reasoning the leading antecedent of the state sequent.");
+  if Config.get ctxt Phi_Reasoner.auto_level >= 1
+    andalso (case Thm.major_prem_of sequent
+               of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _)
+                    => false
+                | _ => true)
+  then case Phi_Reasoner.reason (SOME 1) (ctxt, sequent)
          of SOME (ctxt',sequent') => (ctxt', sequent')
           | NONE => raise Bypass (SOME (ctxt,sequent))
   else raise Bypass NONE
@@ -1898,8 +1757,8 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 \<phi>processor auto_obligation_solver 800 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
-    if Config.get ctxt Nu_Reasoner.auto_level >= 2
-    then case Seq.pull (Nu_Reasoners.auto_obligation_solver ctxt sequent)
+    if Config.get ctxt Phi_Reasoner.auto_level >= 2
+    then case Seq.pull (Phi_Reasoners.auto_obligation_solver ctxt sequent)
            of SOME (ret, _) => (ctxt, ret)
             | NONE => raise Bypass NONE
     else raise Bypass NONE)\<close>
@@ -1927,7 +1786,7 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
       val (_,_,desired_nu) = Phi_Syntax.dest_procedure_c goal
       val ty = Thm.typ_of_cterm desired_nu
       val prot = Const (\<^const_name>\<open>Implicit_Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
-      val ctxt = Config.put Nu_Reasoner.auto_level 1 ctxt
+      val ctxt = Config.put Phi_Reasoner.auto_level 1 ctxt
     in Phi_Sys.cast (Thm.apply prot desired_nu) (ctxt,sequent) end
 )\<close> *)
 

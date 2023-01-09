@@ -53,8 +53,10 @@ signature NU_REASONER = sig
                 -> Proof.context (*the context for accessing reasoner db*)
                 -> context_tactic
   
-  val add_intro_rule : Position.T -> priority -> term list * term list -> thm -> Context.generic -> Context.generic
-  val add_intro_rules: (thm list * Position.T * priority * term list * term list) list -> Proof.context -> Proof.context
+  val add_intro_rule : Position.T -> priority -> term list * term list -> thm
+                    -> Context.generic -> Context.generic
+  val add_intro_rules: (thm * Position.T * priority * term list * term list) list
+                    -> Context.generic -> Context.generic
   val del_intro_rule : thm -> Context.generic -> Context.generic
   val attr_add_intro : (Position.T * (int * (term list * term list))) -> attribute
   val attr_del_intro : attribute
@@ -67,7 +69,7 @@ signature NU_REASONER = sig
 end
 
 
-structure Nu_Reasoner : NU_REASONER = struct
+structure Phi_Reasoner : NU_REASONER = struct
 
 (** Preliminaries **)
 
@@ -118,6 +120,7 @@ structure Reasoners = Generic_Data (
 fun reasoners ctxt = Cost_Net.content (Reasoners.get (Context.Proof ctxt)) |> map (apfst ~)
 fun reasoner_net ctxt = Reasoners.get (Context.Proof ctxt)
 fun add (priority,reasoner) = Reasoners.map (Cost_Net.update (~priority,reasoner));
+fun adds reasoners = Reasoners.map (fold (Cost_Net.update o apfst (op ~)) reasoners)
 fun add_lthy cost_reasoner =
    Local_Theory.background_theory (Context.theory_map (add cost_reasoner))
 #> Local_Theory.map_contexts (K (Context.proof_map (add cost_reasoner)))
@@ -312,7 +315,7 @@ fun setup_cmd ((((name,pos),cost),patterns),tactic_src) lthy =
     lthy |> Context.proof_map (
       ML_Context.expression (Input.pos_of tactic_src)
         (ML_Lex.read
-          ("Theory.local_setup (Nu_Reasoner.add_lthy (" ^
+          ("Theory.local_setup (Phi_Reasoner.add_lthy (" ^
           ML_Syntax.print_int cost ^ ", {name=(" ^
           ML_Syntax.print_term name ^ "), pos=("^
           ML_Syntax.print_position pos ^ "), pattern=(" ^
@@ -378,8 +381,9 @@ fun intro_reasoner pos priority patterns blacklist rule =
 fun add_intro_rule pos priority (pattern,blacklist) rule =
       add (priority, intro_reasoner pos priority pattern blacklist rule)
 fun add_intro_rules rules =
-  fold (fn (rules,pos,priority,pattern,blacklist) =>
-    fold (Context.proof_map o add_intro_rule pos priority (pattern,blacklist)) rules) rules
+  if null rules then I
+  else adds (map (fn (rule,pos,priority,pattern,blacklist) =>
+              (priority, intro_reasoner pos priority pattern blacklist rule)) rules)
 fun del_intro_rule rule = del (name_of_intro_reasoner rule)
 
 fun attr_add_intro (pos, (priority, (pattern, blacklist))) =

@@ -19,22 +19,22 @@ fun enter_scope (ctxt,sequent) =
   val S = Scope.get ctxt
   val ctxt' = Scope.map (fn x => x + 1) ctxt
   val sequent' = @{thm \<r>BEGIN_I} RS sequent
-  val _ = Nu_Reasoner.debug_info ctxt (fn _ =>
+  val _ = Phi_Reasoner.debug_info ctxt (fn _ =>
             "entering nested \<phi>-LPR reasoning "^string_of_int S)
-  in case Nu_Reasoner.reason NONE (ctxt',sequent')
+  in case Phi_Reasoner.reason NONE (ctxt',sequent')
        of SOME (ctxt'',sequent'') =>
           if Scope.get ctxt'' = S
           then Seq.single (ctxt'',sequent'')
-          else Nu_Reasoner.error "The stack of nested \<phi>-LPR reasoning is inbalanced.\n\
+          else Phi_Reasoner.error "The stack of nested \<phi>-LPR reasoning is inbalanced.\n\
             \Most likely some reasoner or reasoning rule invoked \<r>Success terminating\
             \the reasoning immediately, which is prohibited in nested \<phi>-LPR reasoning."
-        | NONE => Nu_Reasoner.error "Reasoning (nested \<phi>-LPR environment) fails."
+        | NONE => Phi_Reasoner.error "Reasoning (nested \<phi>-LPR environment) fails."
   end
 
 fun exit_scope (ctxt,sequent) = (
-  Nu_Reasoner.debug_info ctxt (fn _ =>
+  Phi_Reasoner.debug_info ctxt (fn _ =>
     "exiting the nested \<phi>-LPR reasoning "^ string_of_int (Scope.get ctxt - 1));
-  raise Nu_Reasoner.Success (Scope.map (fn x => x - 1) ctxt,
+  raise Phi_Reasoner.Success (Scope.map (fn x => x - 1) ctxt,
                              @{thm \<r>END_I} RS sequent)
 )
 

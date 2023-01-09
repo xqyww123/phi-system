@@ -1,10 +1,10 @@
-section \<open>Implementation of CoP\<close>
+chapter \<open>Calculus of Programming\<close>
 
 theory Calculus_of_Programming
-  imports Spec_Framework
+  imports Spec_Framework IDE_CP_Reasoning1
 begin
 
-subsection \<open>Implementing CoP Sequent\<close>
+section \<open>Implementing CoP Sequent\<close>
 
 text \<open>CoP sequent \<open>P | S |- Q\<close> for \<open>S = (C\<^sub>1,v\<^sub>1); \<cdots> ; (C\<^sub>n,v\<^sub>n)\<close> is implemented as
 \begin{align*}
@@ -62,51 +62,9 @@ lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> I
   unfolding CurrentConstruction_def Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
 
 
-subsection \<open>Forward Declaration of Reasoner\<close>
+section \<open>Rules for Constructing Programs\<close>
 
-paragraph \<open>Transformation of State Abstraction (ToSA)\<close>
-
-text \<open>Before we enter any deep discussion, a \<phi>-LPR reasoner tag for
-  Transformation of State Abstraction (ToSA) is required to be declared first.
-  Remarked as \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close> or \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close>,
-  it annotates the Transformation of Abstraction (ToA) is about (fictional)
-  computation state.
-
-  Particularly, reasoner for it
-  \<^enum> handles MTF and particularly its leading existential quantification and conjunction
-  \<^enum> regards separated \<phi>-types independently and invokes ToA reasoning for each
-    destined \<phi>-type. This behavior can be overrode.
-\<close>
-
-consts ToSA' :: \<open>bool \<comment> \<open>whether to reason deeper transformation for each desired \<phi>-type
-                          by invoking more time-consuming logic programming reasoning process,
-                          or just apply unification to match the desired.\<close>
-              \<Rightarrow> mode\<close>
-
-abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
-
-text \<open>The boolean argument indicates whether to attempt transformation of \<phi>-types or keep them
-unchanged.
-
-\<^item> In \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>1 * \<cdots> * Y\<^sub>m \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' True\<close>,
-  for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close> to be obtained, the reasoner
-  tries to for each source \<phi>-Type \<^term>\<open>X\<^sub>j\<close> find a way to cast some several \<^term>\<open>X\<^sub>j\<close> to the
-  desired \<^term>\<open>Y\<^sub>i\<close>, by reasoning some rule like \<open>X\<^sub>j * \<cdots> * X\<^sub>j\<^sub>' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>i\<close>.
-
-\<^item> By contrast, in \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>1 * \<cdots> * Y\<^sub>m \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' False\<close>,
-  the reasoner does not reason the conversion between different \<phi>-Types, that is,
-  the reasoning success only if for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close> there is another
-  \<^term>\<open>X\<^sub>j\<close> that unifies \<^term>\<open>Y\<^sub>i\<close>.
-\<close>
-
-lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' ?mode\<close>]:
-  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA' mode\<close>
-  unfolding Action_Tag_def using \<phi>view_refl .
-
-
-subsection \<open>Rules for Constructing Programs\<close>
-
-subsubsection \<open>Construct Procedure\<close>
+subsection \<open>Construct Procedure\<close>
 
 lemma \<phi>apply_proc:
   "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
@@ -184,7 +142,8 @@ lemma "\<phi>__Return_rule__":
   unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def
   by clarsimp
 
-subsubsection \<open>Construct View Shift\<close>
+
+subsection \<open>Construct View Shift\<close>
 
 lemma \<phi>make_view_shift:
   \<open> (\<And>s R. \<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S \<Longrightarrow> (\<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P))
@@ -192,14 +151,15 @@ lemma \<phi>make_view_shift:
   unfolding CurrentConstruction_def View_Shift_def
   by (simp add: INTERP_SPEC_subj Subjection_expn)
 
-subsubsection \<open>Construct Implication\<close>
+
+subsection \<open>Construct Implication\<close>
 
 lemma (in -) "\<phi>make_implication":
   \<open>(\<And>x. x \<in> S \<Longrightarrow> x \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns)
 
 
-subsubsection \<open>Cast\<close>
+subsection \<open>Cast\<close>
 
 lemma "\<phi>cast":
   "CurrentConstruction mode blk H T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> CurrentConstruction mode blk H T'"
@@ -282,7 +242,43 @@ lemma "_\<phi>cast_implication_":
 \<Longrightarrow> x \<in> T\<close>
   unfolding Action_Tag_def Imply_def by blast
 
-subsubsection \<open>Misc\<close>
+
+subsection \<open>Finalization Rewrites\<close>
+
+text \<open>Rules showing the obtained procedure is identical to the desired goal
+  in the end of the construction.\<close>
+
+consts procedure_simplification :: mode
+named_theorems procedure_simps
+
+declare proc_bind_SKIP[procedure_simps]
+  proc_bind_SKIP'[procedure_simps]
+  proc_bind_assoc[procedure_simps]
+  proc_bind_return_none[procedure_simps]
+
+\<phi>reasoner procedure_equivalent 1200 (\<open>Premise procedure_simplification ?P\<close>)
+  = (rule Premise_I; simp only: procedure_simps; fail)
+
+\<phi>reasoner procedure_simplification 1200
+    (\<open>?Q = ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification\<close>)
+  = ((simp only: procedure_simps)?, rule Conv_Action_Tag_I; fail)
+
+lemma "\<phi>__final_proc_rewrite__":
+  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace>\<close>
+  unfolding Action_Tag_def by simp
+
+lemma "\<phi>__final_proc_rewrite__'":
+  \<open> f = f' \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> procedure_simplification
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding Action_Tag_def by simp
+
+
+subsection \<open>Misc\<close>
 
 paragraph \<open>Inhabitance\<close>
 
@@ -350,37 +346,6 @@ lemma Subjection_simp_proc_arg:
 
 lemmas Subjection_simp_proc_arg_metaeq[unfolded atomize_eq[symmetric]] = Subjection_simp_proc_arg
 
-
-subsection \<open>Primitive \<phi>-Types\<close>
-
-subsubsection \<open>Value\<close>
-
-definition Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
-  where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
-
-lemma Val_expn [\<phi>expns]:
-  \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j dest_sem_value val \<in> (x \<Ztypecolon> T))\<close>
-  unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
-
-lemma Val_inhabited [\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> Val val T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns) blast
-
-
-paragraph \<open>Syntax\<close>
-(* TODO: move this *)
-
-consts anonymous :: 'a
-
-syntax val_syntax :: "logic \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>l _" [22] 21)
-
-translations
-  "\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Val (CONST anonymous) T"
-  "\<^bold>v\<^bold>a\<^bold>l T" => "CONST Val (CONST anonymous) T"
-
-declare [ [ML_debugger]]
-
-ML_file \<open>library/syntax/procedure.ML\<close>
 
 
 end
