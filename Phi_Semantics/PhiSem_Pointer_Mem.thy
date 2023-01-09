@@ -1,5 +1,5 @@
-theory Phi_Mem
-  imports Phi_System.PhiSem_Formalization_Tools
+theory PhiSem_Pointer_Mem
+  imports Phi_System.PhiSem_Formalization_Tools "HOL-Library.Word"
 begin
 
 section \<open>Semantic\<close>
@@ -8,18 +8,28 @@ subsection \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype mem_ty = std_ty +
+virtual_datatype \<phi>mem_ty = \<phi>empty_ty +
   T_pointer :: unit
 
-context mem_ty begin
-abbreviation \<open>\<tau>Pointer \<equiv> T_pointer.mk ()\<close>
+context \<phi>mem_ty begin
+abbreviation \<open>pointer \<equiv> T_pointer.mk ()\<close>
 end
+
+debt_axiomatization T_pointer :: \<open>unit type_entry\<close>
+  where \<phi>mem_ty_ax: \<open>\<phi>mem_ty TY_CONS_OF T_pointer\<close>
+
+interpretation \<phi>mem_ty TY_CONS_OF _ _ T_pointer using \<phi>mem_ty_ax .
+
 
 subsubsection \<open>Value\<close>
 
 paragraph \<open>Memory Address\<close>
 
+consts addrspace_bits :: "nat" \<comment> \<open>The bit length of the memory address space, in unit of bits\<close>
+specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by auto
+
 typedecl addr_cap
+
 
 instantiation addr_cap :: len begin
 definition [simp]: "len_of_addr_cap (_::addr_cap itself) = addrspace_bits"
@@ -30,24 +40,29 @@ type_synonym size_t = \<open>addr_cap word\<close>
 abbreviation to_size_t :: \<open>nat \<Rightarrow> size_t\<close> where \<open>to_size_t \<equiv> of_nat\<close>
 
 
-datatype ('TY) segidx = Null | Segment nat \<comment> \<open>nonce\<close> (layout: 'TY)
-declare segidx.map_id0[simp]
+declare [ [typedef_overloaded] ]
+
+datatype segidx = Null | Segment nat \<comment> \<open>nonce\<close> (layout: TY)
+  \<comment> \<open>The nonce itself is not an identifier, but (nonce \<times> layout) is.\<close>
 
 hide_const (open) layout
 
-datatype ('index,'TY) memaddr = memaddr (segment: "'TY segidx") (index: 'index ) (infixl "|:" 60)
+datatype 'index memaddr = memaddr (segment: segidx) (index: 'index ) (infixl "|:" 60)
+
+declare [ [typedef_overloaded = false] ]
+
 declare memaddr.sel[iff]
 hide_const (open) segment index
 
-type_synonym 'TY logaddr = "(nat list, 'TY) memaddr" (* the index of logaddr is non empty *)
-type_synonym 'TY rawaddr = \<open>(size_t, 'TY) memaddr\<close>
+type_synonym logaddr = \<open>nat list memaddr\<close> (* the index of logaddr is non empty *)
+type_synonym rawaddr = \<open>size_t memaddr\<close>
 
-instantiation segidx :: (type) zero begin
+instantiation segidx :: zero begin
 definition [simp]: "zero_segidx = Null"
 instance ..
 end
 
-instantiation memaddr :: (zero, type) zero begin
+instantiation memaddr :: (zero) zero begin
 definition "zero_memaddr = (0 |: 0)"
 instance ..
 end
@@ -66,8 +81,8 @@ proof
 qed
 
 lemma segidx_infinite[simp]:
-  \<open>infinite (UNIV :: 'a segidx set)\<close>
-  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>(UNIV :: 'a segidx set)\<close>
+  \<open>infinite (UNIV :: segidx set)\<close>
+  using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>(UNIV :: segidx set)\<close>
         and f = \<open>\<lambda>n. Segment n undefined\<close>]
   by (meson infinite_UNIV_char_0 injI segidx.inject top_greatest)
 
@@ -78,8 +93,8 @@ lemma segidx_infinite_TY:
   using inj_def by fastforce
 
 
-abbreviation shift_addr :: "('idx,'TY) memaddr \<Rightarrow> ('idx::monoid_add) \<Rightarrow> ('idx,'TY) memaddr" (infixl "||+" 60)
-  where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) id addr"
+abbreviation shift_addr :: "'idx memaddr \<Rightarrow> ('idx::monoid_add) \<Rightarrow> 'idx memaddr" (infixl "||+" 60)
+  where "shift_addr addr delta \<equiv> map_memaddr (\<lambda>x. x + delta) addr"
 
 lemma mem_shift_shift[simp]: "a ||+ i ||+ j = a ||+ (i + j)" by (cases a) (simp add: add.assoc)
 
@@ -99,17 +114,28 @@ lemma mem_shift_add_cancel[simp]:
 
 paragraph \<open>Model\<close>
 
-virtual_datatype 'TY mem_val :: "nonsepable_semigroup" = 'TY std_val +
-  V_pointer :: \<open>'TY rawaddr\<close>
+virtual_datatype \<phi>mem_val :: "sep_magma" = \<phi>empty_val +
+  V_pointer :: rawaddr
+
+debt_axiomatization V_pointer :: \<open>rawaddr value_entry\<close>
+  where \<phi>mem_val_ax: \<open>\<phi>mem_val VAL_CONS_OF V_pointer\<close>
+
+interpretation \<phi>mem_val VAL_CONS_OF _ _ V_pointer using \<phi>mem_val_ax .
+
 
 
 subsubsection \<open>Resource\<close>
 
-type_synonym ('TY,'VAL) R_mem' = \<open>('TY segidx \<rightharpoonup> 'VAL)\<close>
-type_synonym ('TY,'VAL) R_mem = \<open>('TY,'VAL) R_mem' ?\<close>
+type_synonym R_mem = \<open>(segidx \<rightharpoonup> VAL nonsepable)\<close>
 
-resource_space ('VAL::"nonsepable_semigroup",'TY) mem_res = ('VAL,'TY) std_res
-  R_mem :: \<open>('TY,'VAL) R_mem\<close>
+resource_space \<phi>mem_res = \<phi>empty_res +
+  R_mem :: R_mem
+
+debt_axiomatization R_mem :: \<open>R_mem resource_entry\<close>
+  where R_mem_ax: \<open>\<phi>mem_res R_mem\<close>
+
+interpretation \<phi>mem_res R_mem using R_mem_ax .
+
 
 
 subsection \<open>Semantics\<close>

@@ -67,7 +67,7 @@ section \<open>The Engine \& The Concepts\<close>
 text \<open>
 The engine is implemented in \<^verbatim>\<open>library/reasoner.ML\<close>.
 
-\<^verbatim>\<open>structure Nu_Reasoner = struct
+\<^verbatim>\<open>structure Phi_Reasoner = struct
 
 (*Reasoning state*)
 type context_state = Proof.context * thm
@@ -314,7 +314,7 @@ There are two commands defining reasoners, respectively by Eisbach expression an
 
 subsection \<open>Apply the Engine\<close>
 
-text \<open>There are two ways to use the reasoning engine, from ML code by using \<^verbatim>\<open>Nu_Reasoner.reason\<close>,
+text \<open>There are two ways to use the reasoning engine, from ML code by using \<^verbatim>\<open>Phi_Reasoner.reason\<close>,
 and as a proof method.\<close>
 
 subsubsection \<open>Proof Method\<close>
@@ -535,7 +535,7 @@ definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
 lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
 
 \<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
-  raise Nu_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
+  raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
 
 text \<open>\<open>\<r>Feasible\<close> has been introduced in \cref{sec:rFeasible}. The following rules relate
 to the internal implementation. We refer interesting readers to \<^file>\<open>library/reasoner.ML\<close>.\<close>
@@ -543,7 +543,7 @@ to the internal implementation. We refer interesting readers to \<^file>\<open>l
 lemma \<r>Feasible_I: \<open>\<r>Feasible\<close> unfolding \<r>Feasible_def ..
 
 \<phi>reasoner_ML \<r>Feasible 10000 (\<open>\<r>Feasible\<close>) = \<open>fn (ctxt,sequent) =>
-  raise Nu_Reasoner.Success (ctxt, @{thm \<r>Feasible_I} RS sequent)\<close>
+  raise Phi_Reasoner.Success (ctxt, @{thm \<r>Feasible_I} RS sequent)\<close>
 
 
 
@@ -668,7 +668,7 @@ ML_file \<open>library/PLPR_Syntax.ML\<close>
 ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P\<close> | \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P\<close>)
-  = \<open>Nu_Reasoners.wrap Nu_Reasoners.defer_obligation_tac\<close>
+  = \<open>Phi_Reasoners.wrap Phi_Reasoners.defer_obligation_tac\<close>
 
 
 subsection \<open>Reasoning Frame\<close>

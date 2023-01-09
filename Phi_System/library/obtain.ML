@@ -19,8 +19,8 @@ fun eliminate_term ctxt xs thm =
     then let
         val rule = Proof_Context.get_thm ctxt "introduce_Ex"
         fun generalize x thm =
-          case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,P)
-            => thm RS Drule.infer_instantiate ctxt [(("S",0), Thm.cterm_of ctxt (absfree x P))] rule
+          case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,E)
+            => thm RS Drule.infer_instantiate ctxt [(("S",0), Thm.cterm_of ctxt (absfree x E))] rule
         in fold_rev generalize bads thm
         end
     else if can Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm)

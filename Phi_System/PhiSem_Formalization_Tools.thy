@@ -1,5 +1,5 @@
 theory PhiSem_Formalization_Tools
-  imports IDE_CP_Reasoning
+  imports IDE_CP_Reasoning3
 begin
 
 section \<open>Tools for Formalizing Instructions\<close>
@@ -16,11 +16,11 @@ definition \<phi>M_assume :: \<open>bool \<Rightarrow> unit proc\<close>
   where \<open>\<phi>M_assume P = (\<lambda>s. if P then Return \<phi>V_none s else {PartialCorrect})\<close>
 
 definition \<phi>M_getV_raw :: \<open>(VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem_value \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
-  where \<open>\<phi>M_getV_raw VDT_dest v F = F (VDT_dest (dest_sem_value v))\<close>
+  where \<open>\<phi>M_getV_raw VDT_dest v F = F (VDT_dest (sem_value.dest v))\<close>
 
 definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem_value \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
-    (\<phi>M_assert (dest_sem_value v \<in> Well_Type TY) \<ggreater> F (VDT_dest (dest_sem_value v)))\<close>
+    (\<phi>M_assert (sem_value.dest v \<in> Well_Type TY) \<ggreater> F (VDT_dest (sem_value.dest v)))\<close>
 
 definition \<phi>M_caseV :: \<open>(VAL sem_value \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr,'ret) proc'\<close>
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of sem_value (a1,a2) \<Rightarrow> F (sem_value a1) (sem_value a2))\<close>
@@ -1220,9 +1220,9 @@ text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exce
 definition \<open>throw raw = det_lift (Exception raw)\<close>
 
 lemma throw_\<phi>app[intro!]:
-  \<open> (\<And>v. PROP Filter_Out_Free_Values (X v) (X' v))
+  \<open> (\<And>v. Remove_Values (X v) (X' v))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<rbrace>\<close>
-  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Filter_Out_Free_Values_def Imply_def
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Imply_def
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
 
@@ -1299,7 +1299,11 @@ proc (nodef) try'':
   argument X
   return YY
   throws EE2
-  \<medium_left_bracket> "__op_try__" F G \<medium_right_bracket>. .
+  \<medium_left_bracket>
+  ;; "__op_try__"
+  ;; F 
+  ;;G
+  ;; \<medium_right_bracket>. .
 
 proc (nodef) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>

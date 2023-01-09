@@ -60,7 +60,7 @@ fun start_reasoning (ctxt,sequent) =
                  (("Result",0), result)]
     val successful_app = Synchronized.var "\<phi>application_ctxt" []
     val ctxt' = AppContext.put successful_app ctxt
-    val _ = case Nu_Reasoner.reason NONE (ctxt', sequent')
+    val _ = case Phi_Reasoner.reason NONE (ctxt', sequent')
               of SOME _ => error bad_rule_msg
                | NONE => ()
   in
@@ -98,9 +98,9 @@ fun try_apply [] (ctxt,sequent) = NONE
                           Drule.comp_no_flatten (b,0) 1 (
                            Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
         val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
-        val _ = Nu_Reasoner.debug_info ctxt (fn _ => "Reasoning generic applications...")
+        val _ = Phi_Reasoner.debug_info ctxt (fn _ => "Reasoning generic applications...")
       in
-        Nu_Reasoner.reason NONE (ctxt,sequent')
+        Phi_Reasoner.reason NONE (ctxt,sequent')
           |> Option.map (apsnd (Goal.conclude))
       end
 
@@ -130,11 +130,11 @@ fun MPs ctxt th1s' th2 =
      |> pair ctxt |> Seq.single
      |> pair 0
      ) th1s
-    val _ = Nu_Reasoner.debug_info ctxt (fn _ => "Reasoning modus pones...")
-    fun obligation_fail S = raise Nu_Reasoners.Attemption_Fail S
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "Reasoning modus pones...")
+    fun obligation_fail S = raise Phi_Reasoners.Attemption_Fail S
   in 
-    case Seq.pull (Nu_Reasoner.reason_s ctxt stats)
-      of SOME (stat, _) => snd (Nu_Reasoners.safer_obligation_solver' obligation_fail stat)
+    case Seq.pull (Phi_Reasoner.reason_s ctxt stats)
+      of SOME (stat, _) => snd (Phi_Reasoners.safer_obligation_solver' obligation_fail stat)
        | NONE => error(
             "Reasoning Fails. You may turn on \<phi>trace_reasoning to debug where the reasoning fails.")
   end

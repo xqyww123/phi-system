@@ -1,4 +1,5 @@
 signature PHI_SYNTAX = sig
+include PHI_SYNTAX
 
   val dest_nuTy : term -> term * term
   val dest_nuTy_c : cterm -> cterm * cterm
@@ -10,7 +11,9 @@ signature PHI_SYNTAX = sig
   val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm * cterm
   val dest_PendingConstruction : term -> term * term * term * term * term
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm * cterm
-  val dest_current_nu   : thm -> term
+  val dest_set_member   :  term ->  term * term
+  val dest_set_member_c : cterm -> cterm * cterm
+  val dest_current_nu   : thm -> term (*depreciated, use #argument_spec in Working Mode instead.*)
   val dest_current_nu_c : thm -> cterm
 
   val block_var_of_Constuction : term  -> term
@@ -39,12 +42,29 @@ signature PHI_SYNTAX = sig
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
-open Thm Term HOLogic Phi_Help
+open Thm Term HOLogic Phi_Help Phi_Syntax
 
 val dest_nuTy = dest_binop @{const_name "\<phi>Type"}
 val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}
 val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
+
+val dest_goal_ctxt   = dest_binop   \<^const_name>\<open>GOAL_CTXT\<close> #> #1
+val dest_goal_ctxt_c = dest_binop_c \<^const_name>\<open>GOAL_CTXT\<close> #> #1
+
+val dest_action_tag   = dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
+val dest_action_tag_c = dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
+
+
+fun dest_tags X = X
+  |> perhaps (try dest_goal_ctxt)
+  |> perhaps (try dest_action_tag)
+  |> perhaps (try dest_Trueprop)
+fun dest_tags_c X = X
+  |> perhaps (try dest_goal_ctxt_c)
+  |> perhaps (try dest_action_tag_c)
+  |> perhaps (try dest_Trueprop_c)
+
 
 val dest_CurrentConstruction   =
       perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name CurrentConstruction}
@@ -54,6 +74,9 @@ val dest_PendingConstruction   =
       perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name PendingConstruction}
 val dest_PendingConstruction_c =
       perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name PendingConstruction}
+val dest_set_member   = dest_tags   #> dest_binop   @{const_name Set.member}
+val dest_set_member_c = dest_tags_c #> dest_binop_c @{const_name Set.member}
+
 fun is_construction_mode mode tm =
   case try dest_CurrentConstruction tm
     of SOME (m,_,_,_) => mode = m
@@ -86,21 +109,6 @@ val current_block_var =
     #> perhaps (try Logic.strip_assums_concl)
     #> perhaps (try dest_Trueprop)
     #> block_var_of_Constuction
-
-val dest_goal_ctxt   = dest_binop   \<^const_name>\<open>GOAL_CTXT\<close> #> #1
-val dest_goal_ctxt_c = dest_binop_c \<^const_name>\<open>GOAL_CTXT\<close> #> #1
-
-val dest_action_tag   = dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
-val dest_action_tag_c = dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
-
-val dest_tags =
-     perhaps (try dest_goal_ctxt)
-  #> perhaps (try dest_action_tag)
-  #> perhaps (try dest_Trueprop)
-val dest_tags_c =
-     perhaps (try dest_goal_ctxt_c)
-  #> perhaps (try dest_action_tag_c)
-  #> perhaps (try dest_Trueprop_c)
 
 val dest_procedure   =
      dest_tags

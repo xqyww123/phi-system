@@ -10,7 +10,7 @@ signature NU_REASONERS = sig
   val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
 end
 
-structure Nu_Reasoners : NU_REASONERS = struct
+structure Phi_Reasoners : NU_REASONERS = struct
 open Thm Term
 
 (** Preliminary **)

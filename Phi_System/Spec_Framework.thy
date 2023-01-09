@@ -1,11 +1,95 @@
-section \<open>Specification Framework\<close>
+chapter \<open>Specification Framework\<close>
 
 theory Spec_Framework
   imports Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
 begin
 
-subsection \<open>Specification of Monadic States\<close>
+section \<open>Specification of Value\<close>
 
+subsection \<open>Primitive \<phi>-Types\<close>
+
+subsubsection \<open>Value\<close>
+
+definition Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
+  where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem_value.dest val \<in> (x \<Ztypecolon> T))\<close>
+
+lemma Val_expn [\<phi>expns]:
+  \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem_value.dest val \<in> (x \<Ztypecolon> T))\<close>
+  unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
+
+lemma Val_inhabited [\<phi>inhabitance_rule, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> Val val T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns) blast
+
+
+paragraph \<open>Syntax\<close>
+(* TODO: move this *)
+
+consts anonymous :: 'a
+
+syntax val_syntax :: "logic \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>l _" [22] 21)
+
+translations
+  "\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Val (CONST anonymous) T"
+  "\<^bold>v\<^bold>a\<^bold>l T" => "CONST Val (CONST anonymous) T"
+
+
+subsection \<open>Properties\<close>
+
+subsubsection \<open>Semantic Type\<close>
+
+definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
+  where \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
+  \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
+
+abbreviation \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> TY \<Rightarrow> bool"
+  where \<open>\<phi>\<phi>SemType T TY \<equiv> (\<forall>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
+
+lemma \<phi>SemType_unique:
+  \<open> S \<noteq> {}
+\<Longrightarrow> \<phi>SemType S T1
+\<Longrightarrow> \<phi>SemType S T2
+\<Longrightarrow> T1 = T2\<close>
+  unfolding \<phi>SemType_def subset_iff
+  using Well_Type_unique by blast
+
+definition SemTyp_Of :: \<open>VAL set \<Rightarrow> TY\<close>
+  where \<open>SemTyp_Of S = (@TY. \<phi>SemType S TY)\<close>
+
+lemma SemTyp_Of_I[intro!, simp]:
+  \<open>S \<noteq> {} \<Longrightarrow> \<phi>SemType S TY \<Longrightarrow> SemTyp_Of S = TY\<close>
+  unfolding SemTyp_Of_def
+  using \<phi>SemType_unique by blast 
+
+lemma [\<phi>reason]:
+  \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
+\<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
+  ..
+
+subsubsection \<open>Zero Value\<close>
+
+definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
+  where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
+
+subsubsection \<open>Equality\<close>
+
+definition \<phi>Equal :: "(VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool"
+  where "\<phi>Equal T can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 res.
+    can_eq x1 x2 \<and> p1 \<in> (x1 \<Ztypecolon> T) \<and> p2 \<in> (x2 \<Ztypecolon> T)
+      \<longrightarrow> Can_EqCompare res p1 p2 \<and> (EqCompare p1 p2 = eq x1 x2))"
+
+
+subsubsection \<open>Functional\<close>
+
+lemma is_singletonI'':
+  \<open> \<exists>p. p \<in> A
+\<Longrightarrow> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
+\<Longrightarrow> is_singleton A\<close>
+  by (metis equals0D is_singletonI')
+
+
+
+section \<open>Specification of Monadic States\<close>
 
 definition StrictStateTy :: "('ret sem_value \<Rightarrow> rassn)
                           \<Rightarrow> (VAL sem_value \<Rightarrow> rassn)
@@ -101,7 +185,7 @@ lemma StrictStateTy_plus[iff]:
 abbreviation \<open>Void \<equiv> (1::assn)\<close>
 
 
-subsection \<open>Specification of Fictional Resource\<close>
+section \<open>Specification of Fictional Resource\<close>
 
 declare INTERP_SPEC[\<phi>expns]
 
@@ -118,7 +202,7 @@ abbreviation COMMA
   where \<open>COMMA \<equiv> (*)\<close>
 
 
-subsection \<open>Specification of Computation\<close>
+section \<open>Specification of Computation\<close>
 
 definition \<phi>Procedure :: "'ret proc
                         \<Rightarrow> assn
@@ -143,6 +227,9 @@ lemma \<phi>Procedure_alt:
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
+subsubsection \<open>Syntax\<close>
+
+ML_file \<open>library/syntax/procedure.ML\<close>
 
 (*
 subsubsection \<open>Syntax\<close>
@@ -165,7 +252,7 @@ in [
 ] end\<close> *)
 
 
-subsection \<open>View Shift\<close>
+section \<open>View Shift\<close>
 
 definition View_Shift
     :: "assn \<Rightarrow> assn \<Rightarrow> bool \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
@@ -228,7 +315,7 @@ lemma \<phi>view_shift_intro_frame_R:
   by (simp add: \<phi>frame_view mult.commute)
 
 
-subsection \<open>Fundamental Hoare Rules \& SL Rules\<close>
+section \<open>Fundamental Hoare Rules \& SL Rules\<close>
 
 lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift (Success v) \<lbrace> T v \<longmapsto> T \<rbrace>"
   unfolding \<phi>Procedure_def det_lift_def by clarsimp
@@ -284,58 +371,5 @@ lemma \<phi>CONSEQ'E:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>"
   using \<phi>CONSEQ view_shift_id by blast
 
-
-subsection \<open>Specify Properties of Value\<close>
-
-subsubsection \<open>Semantic Type\<close>
-
-definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
-  where \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
-  \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
-
-abbreviation \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> TY \<Rightarrow> bool"
-  where \<open>\<phi>\<phi>SemType T TY \<equiv> (\<forall>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
-
-lemma \<phi>SemType_unique:
-  \<open> S \<noteq> {}
-\<Longrightarrow> \<phi>SemType S T1
-\<Longrightarrow> \<phi>SemType S T2
-\<Longrightarrow> T1 = T2\<close>
-  unfolding \<phi>SemType_def subset_iff
-  using Well_Type_unique by blast
-
-definition SemTyp_Of :: \<open>VAL set \<Rightarrow> TY\<close>
-  where \<open>SemTyp_Of S = (@TY. \<phi>SemType S TY)\<close>
-
-lemma SemTyp_Of_I[intro!, simp]:
-  \<open>S \<noteq> {} \<Longrightarrow> \<phi>SemType S TY \<Longrightarrow> SemTyp_Of S = TY\<close>
-  unfolding SemTyp_Of_def
-  using \<phi>SemType_unique by blast 
-
-lemma [\<phi>reason]:
-  \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
-\<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
-  ..
-
-subsubsection \<open>Zero Value\<close>
-
-definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
-  where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
-
-subsubsection \<open>Equality\<close>
-
-definition \<phi>Equal :: "(VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool"
-  where "\<phi>Equal T can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 res.
-    can_eq x1 x2 \<and> p1 \<in> (x1 \<Ztypecolon> T) \<and> p2 \<in> (x2 \<Ztypecolon> T)
-      \<longrightarrow> Can_EqCompare res p1 p2 \<and> (EqCompare p1 p2 = eq x1 x2))"
-
-
-subsubsection \<open>Functional\<close>
-
-lemma is_singletonI'':
-  \<open> \<exists>p. p \<in> A
-\<Longrightarrow> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
-\<Longrightarrow> is_singleton A\<close>
-  by (metis equals0D is_singletonI')
 
 end

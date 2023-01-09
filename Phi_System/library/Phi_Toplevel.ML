@@ -242,7 +242,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process de
             |> NuProcedure.define def_const binding (
                 (lthy, (th RSN (3, @{thm "\<phi>__final_proc_rewrite__"})
                           handle THM _  => (th RSN (3, @{thm "\<phi>__final_proc_rewrite__'"}))))
-                  |> Nu_Reasoner.reason NONE
+                  |> Phi_Reasoner.reason NONE
                   |> (fn SOME (lthy', th) => post_process lthy' th
                        | NONE => error("Fail to simplify finally the procedure.\n"^
                                        "It is a rare error and you may check the simplification "^
@@ -329,7 +329,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                        (All::forall:: @{thm Subjection_simp_proc_arg_metaeq} ::
                         Named_Theorems.get ctxt'' @{named_theorems named_expansion})
                       #> Seq.single))
-            |> Seq.maps (Nu_Reasoner.reason_tac NONE ctxt'' o pair ctxt'')
+            |> Seq.maps (Phi_Reasoner.reason_tac NONE ctxt'' o pair ctxt'')
             |> Seq.the_result "fail to reason sematic type of the procedure."
 
         val goal' = Thm.cprem_of proof0 1 |> Thm.term_of |> dest_Trueprop
@@ -376,7 +376,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                  |> (fn th' => (lthy,
                         (th' RSN (3, @{thm "\<phi>__final_proc_rewrite__"})
                           handle THM _  => (th' RSN (3, @{thm "\<phi>__final_proc_rewrite__'"}))))
-                   |> Nu_Reasoner.reason NONE
+                   |> Phi_Reasoner.reason NONE
                    |> (fn SOME (_, th) => th
                         | NONE => error("Fail to simplify finally the procedure.\n"^
                                         "It is a rare error and you may check the simplification "^
@@ -471,15 +471,15 @@ fun gen_finish_proc prep_term qed spec int stat =
           if Thm.no_prems sequent_pre1
           then (ctxt_pre1,sequent_pre1)
           else let
-            val _ = Nu_Reasoner.debug_info ctxt_pre1 (fn _ =>
+            val _ = Phi_Reasoner.debug_info ctxt_pre1 (fn _ =>
                       "solving pending antecedents before closing the programming block...")
             fun attack_obligations (ctxt,sequent) =
               case try Thm.major_prem_of sequent
                 of SOME (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ _)) =>
-                    attack_obligations (Nu_Reasoners.auto_obligation_solver1 (ctxt,sequent))
+                    attack_obligations (Phi_Reasoners.auto_obligation_solver1 (ctxt,sequent))
                  | _ => (ctxt,sequent)
             val (ctxt_pre2, sequent_pre2) = attack_obligations (ctxt_pre1, sequent_pre1)
-            in Nu_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
+            in Phi_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
                     Pretty.str "Fail to solve pending antecedents:",
                     Thm.pretty_thm ctxt_pre2 sequent_pre2
                ])) NONE (ctxt_pre2,sequent_pre2)
@@ -491,12 +491,12 @@ fun gen_finish_proc prep_term qed spec int stat =
                      | SOME term =>
                         let val ctxt'' = Proof_Context.set_mode (Proof_Context.mode_pattern) ctxt'
                             val aim = Thm.cterm_of ctxt'' (prep_term ctxt'' term)
-                            val _ = Nu_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+                            val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                                Pretty.str "transforming to the given specification ",
                                Syntax.pretty_term ctxt'' (Thm.term_of aim)
                             ])
                         in Phi_Sys.cast aim
-                        #> Nu_Reasoners.auto_obligation_solver' (fn (ctxt,sequent) =>
+                        #> Phi_Reasoners.auto_obligation_solver' (fn (ctxt,sequent) =>
                              error (Pretty.string_of (Pretty.chunks [
                                Pretty.str ("Fail to solve the proof obligation generated during "^
                                            "the cast towards the given specification:"),
@@ -511,7 +511,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                         end)
               |> #before_finish mode goal
         val desired_nu = #return_spec_c mode ctxt' goal
-        val _ = Nu_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+        val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                   Pretty.str "casting to the destined post-condition ",
                   Syntax.pretty_term ctxt'' (Thm.term_of desired_nu)
                 ])
@@ -531,7 +531,7 @@ fun gen_finish_proc prep_term qed spec int stat =
         val end_tac = basic_method (fn ctxt' => fn goal => (
             let
               val sequent' = singleton (Proof_Context.export ctxt ctxt') sequent
-              val _ = Nu_Reasoner.debug_info ctxt' (fn _ =>
+              val _ = Phi_Reasoner.debug_info ctxt' (fn _ =>
                   Pretty.string_of (Pretty.chunks [
                     Pretty.str "Solving the goal by the resulted sequent from the programming.",
                     Pretty.item [Pretty.str "goal:"],
@@ -569,13 +569,13 @@ fun prove_prem int stat =
     fun after_qed (ctxt',[[th]]) stat =
       let
         val [th] = Proof_Context.export ctxt' (context_of stat) [th]
-        val original_auto_level = Config.get (Proof.context_of stat) Nu_Reasoner.auto_level
+        val original_auto_level = Config.get (Proof.context_of stat) Phi_Reasoner.auto_level
         (* val th = th RS @{thm NuPrime.Premise_I} *)
       in
         stat |> Proof.map_context_result
-                  (Config.put Nu_Reasoner.auto_level 0
+                  (Config.put Phi_Reasoner.auto_level 0
                     #> (fn ctxt => NuProcessor.process_no_input (ctxt, th RS specthm))
-                    #> apfst (Config.put Nu_Reasoner.auto_level original_auto_level)
+                    #> apfst (Config.put Phi_Reasoner.auto_level original_auto_level)
                     #> swap)
              |-> Phi_Basics.set_nu_fact
       end
@@ -699,6 +699,7 @@ fun gen_begin_block prep_attr bindings int stat =
                   SOME [Drule.mk_term (cterm_of ctxt goal)]) 
             |> Phi_Working_Mode.set mode
           )
+      |> Value_Access.open_value_context' Position.none
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end
 val begin_block_cmd = gen_begin_block Attrib.attribute_cmd

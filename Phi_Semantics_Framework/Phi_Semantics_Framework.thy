@@ -26,13 +26,6 @@ subsection \<open>Empty Semantic of Computation States\<close>
 text \<open>The section provides the initial empty semantics of computation states
   serving as the base for any further substantial formalization.\<close>
 
-(*subsubsection \<open>Global Parameter\<close>
-
-(*TODO: move this!*)
-consts addrspace_bits :: "nat" \<comment> \<open>The bit length of the memory address space, in unit of bits\<close>
-specification (addrspace_bits) addrspace_bits_L0: "0 < addrspace_bits" by auto
-*)
-
 subsubsection \<open>Type\<close>
 
 virtual_datatype \<phi>empty_ty \<comment> \<open>base of type formalization\<close>
@@ -187,7 +180,8 @@ text \<open>Arguments and Returns are wrapped by sem_value type.
   For sure this wrap is not necessary, but it helps the programming framework and syntax parser
   to recognize which entity is an argument or a return.\<close>
 
-datatype 'a sem_value = sem_value (dest_sem_value: 'a)
+datatype 'a sem_value = sem_value (dest: 'a)
+hide_const (open) dest
 typedecl unreachable
 
 lemma sem_value_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (sem_value x))\<close> by (metis sem_value.exhaust)
@@ -197,17 +191,17 @@ proof
   fix x :: 'a assume A: \<open>(\<And>x. PROP P x)\<close> then show \<open>PROP P (sem_value x)\<close> .
 next
   fix x :: \<open>'a sem_value\<close> assume A: \<open>\<And>x. PROP P (sem_value x)\<close>
-  from \<open>PROP P (sem_value (dest_sem_value x))\<close> show "PROP P x" by simp
+  from \<open>PROP P (sem_value (sem_value.dest x))\<close> show "PROP P x" by simp
 qed
 
 abbreviation \<open>\<phi>V_none \<equiv> sem_value ()\<close>
-definition \<open>\<phi>V_pair x y = sem_value (dest_sem_value x, dest_sem_value y)\<close>
+definition \<open>\<phi>V_pair x y = sem_value (sem_value.dest x, sem_value.dest y)\<close>
 definition \<open>\<phi>V_fst x = map_sem_value fst x\<close>
 definition \<open>\<phi>V_snd x = map_sem_value snd x\<close>
 abbreviation \<open>\<phi>V_nil \<equiv> sem_value []\<close>
-definition \<open>\<phi>V_cons h l = sem_value (dest_sem_value h # dest_sem_value l)\<close>
-definition \<open>\<phi>V_hd l = sem_value (hd (dest_sem_value l))\<close>
-definition \<open>\<phi>V_tl l = sem_value (tl (dest_sem_value l))\<close>
+definition \<open>\<phi>V_cons h l = sem_value (sem_value.dest h # sem_value.dest l)\<close>
+definition \<open>\<phi>V_hd l = sem_value (hd (sem_value.dest l))\<close>
+definition \<open>\<phi>V_tl l = sem_value (tl (sem_value.dest l))\<close>
 
 lemma \<phi>V_simps[simp]:
   \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
