@@ -4,15 +4,23 @@ type working_mode = {
   domain: Proof.context -> term -> bool,
   argument_spec: term (*proposition of a goal or a state sequent*) -> term,
   return_spec:   term (*proposition of a goal*) -> term,
-  return_spec_c: Proof.context -> cterm (*term of the current sequent*) -> cterm,
+  return_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm,
   inhabited_rule: Proof.context -> thm,
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
   block_name_of: term -> string,
+  transform_rule : thm,
+  view_shift_rule: thm option,
   cast: cterm (*desired*) -> Proof.context * thm (*sequent*) -> Proof.context * thm,
   cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
   before_finish: cterm -> Proof.context * thm -> Proof.context * thm
 }
+(*
+cast operation: transform to the desired assertion.
+If successful, it results in \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P \<Longrightarrow> Result\<close>
+which always has a leading obligation P no matter whether it is trivially true.
+cast exception is the version for casting an exception assertion.
+*)
 
 val working_mode_on  : Proof.context -> term -> working_mode option
 val working_mode_on1 : Proof.context -> term -> working_mode
@@ -32,13 +40,15 @@ structure Phi_Working_Mode : PHI_WORKING_MODE = struct
 
 type working_mode = {
   domain: Proof.context -> term -> bool,
-  argument_spec: term (*term of the current sequent*) -> term,
-  return_spec: term (*term of the current sequent*) -> term,
-  return_spec_c: Proof.context -> cterm (*term of the current sequent*) -> cterm,
+  argument_spec: term (*proposition of a goal or a state sequent*) -> term,
+  return_spec: term (*term of the state sequent*) -> term,
+  return_spec_c: Proof.context -> cterm (*term of the state sequent*) -> cterm,
   inhabited_rule: Proof.context -> thm,
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
   block_name_of: term -> string,
+  transform_rule : thm,
+  view_shift_rule: thm option,
   cast: cterm -> Proof.context * thm -> Proof.context * thm,
   cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
   before_finish: cterm -> Proof.context * thm -> Proof.context * thm
@@ -93,7 +103,6 @@ fun generic_cast rule place desired_nu (ctxt,sequent) =
 
 fun cannot_cast_exception sequent =
   raise THM("cannot cast the exception of the sequent", 0, [sequent])
-
 
 (*
 fun collect_free_variables vars term = inter (op =) vars (Term.add_frees term [])
@@ -183,8 +192,7 @@ val procedure : working_mode =
                   return_spec_c ctxt (Thm.cprop_of sequent)
                      |> Thm.term_of
                      |> Procedure_Syntax.abstract_return_vals "\<r>\<e>\<t>" true
-                     |> apfst (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
-                     |> apsnd (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
+                     |> apply2 (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
             val idx_delt = 1 + Int.max (Thm.maxidx_of_cterm ins, Thm.maxidx_of_cterm current_nu)
             val return_rule = @{thm \<phi>return}
                            |> Thm.incr_indexes idx_delt
@@ -230,6 +238,8 @@ val procedure : working_mode =
         case #1 (Phi_Syntax.dest_procedure term)
           of (Var ((x,_),_)) => x
            | _ => "block"),
+    transform_rule  = @{thm \<phi>apply_implication},
+    view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = (fn desired => fn (ctxt, sequent) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
@@ -318,6 +328,8 @@ in
         case #1 (Phi_Syntax.dest_view_shift term)
           of (Var ((x,_),_)) => x
            | _ => "\<V>\<S>"),
+    transform_rule  = @{thm \<phi>apply_implication},
+    view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = (fn desired => fn (ctxt, sequent) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
@@ -384,6 +396,8 @@ in
     inhabited_rule = K @{thm Implication_Inhabited_rule},
     initial_sequent = start_implication,
     block_name_of = (K "\<chi>"),
+    transform_rule  = @{thm \<phi>apply_implication_impl},
+    view_shift_rule = NONE,
     cast = (fn desired => fn (ctxt,sequent) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired

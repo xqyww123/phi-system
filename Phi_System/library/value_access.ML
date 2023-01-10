@@ -6,36 +6,30 @@
 
 signature VALUE_ACCESS = sig
 
-val all_value_terms : term (*\<phi>-BI assertion*) -> term list
-val all_value_spec_thms : Proof.context -> thm (*sequent*) -> thm list
+val collect_and_clean_value : Proof.context -> thm (*sequent*)
+                           -> thm (*sequent*) * thm list (*specs of value*)
 
 val register_value_spec_thms : Position.T -> thm list -> Context.generic -> Context.generic
   (*so that the values can be synthesised*)
 
-val open_value_context  : Position.T -> thm -> Proof.context -> Proof.context
-val open_value_context' : Position.T -> Proof.state -> Proof.state
+val open_value_context  : Position.T -> context_state -> context_state
+(*val open_value_context' : Position.T -> Proof.state -> Proof.state *)
 
 end
 
 structure Value_Access : VALUE_ACCESS = struct
 
-fun all_value_terms assertion =
-      Phi_Syntax.strip_separations assertion
-   |> map_filter (fn (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const (\<^const_name>\<open>Val\<close>, _) $ V $ _))
-                       => SOME V
-                   | _ => NONE)
-
-fun all_value_spec_thms ctxt sequent =
-     Phi_Basics.reason_programming_implication ctxt
-       @{thms ExSet_inhabited Subjection_inhabited Val_inhabited_collect set_mult_inhabited}
-       sequent
-  |> conv_GE_to_plain_conjunction ctxt
-  |> filter (fn th => case Thm.prop_of th
-                        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
-                                                $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ _)
-                                                $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _))
-                              => true
-                          | _ => false)
+fun collect_and_clean_value ctxt sequent =
+  let
+    val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent)
+  in (ctxt, @{thm apply_collect_clean_value} RS (sequent COMP #transform_rule mode))
+  |> Phi_Reasoner.reason NONE
+  |> (fn SOME (_, sequent') => sequent'
+                            |> HOLogic.conj_elim ctxt
+                            |> apsnd (fn th => th |> HOLogic.conj_elims ctxt |> rev
+                                                  |> tl (*the head is always True*))
+       | NONE => Phi_Reasoner.error "Internal bug #vb7iop23")
+  end
 
 fun register_value_spec_thms pos rules =
   Phi_Reasoner.add_intro_rules (map (fn rule =>
@@ -53,11 +47,17 @@ fun register_value_spec_thms pos rules =
     in (rule, pos, 1000, [pattern], []) end
   ) rules)
 
-fun open_value_context pos sequent ctxt =
+fun open_value_context pos (ctxt,sequent) =
   let
     val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.prop_of sequent)
-    val args = all_value_terms (#argument_spec mode (Thm.prop_of sequent))
-    val rules = all_value_spec_thms ctxt sequent
+    val (sequent', rules) = collect_and_clean_value ctxt sequent
+    val args = rules |> map (fn th =>
+          case Thm.prop_of th
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+                                  $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ V)
+                                  $ _)
+                 => V
+             | _ => error "Internal Bug q34v6 nu89p")
     val binds = rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
@@ -76,10 +76,12 @@ fun open_value_context pos sequent ctxt =
   |> Value_Access_Syntax.open_value_context args
   |> Context.proof_map (register_value_spec_thms pos rules)
   |> Value_Access_Syntax.bind_local_vals (binds' @ binds)
+  |> rpair sequent'
   end
 
+(*
 fun open_value_context' pos stat =
   Proof.map_context (open_value_context pos (Phi_Basics.the_nu_fact stat)) stat
-  
+  *)
 
 end

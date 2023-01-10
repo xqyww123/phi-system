@@ -132,7 +132,27 @@ lemma WARNING_I: \<open>WARNING x\<close>
   in Seq.single (ctxt, @{thm WARNING_I} RS sequent)
   end\<close>
 
+subsubsection \<open>Fail\<close>
+
+text \<open>Fail ends the current search branch but does not terminate
+ the whole reasoning.\<close>
+
+definition FAIL :: \<open>text \<Rightarrow> bool\<close>
+  where [iff]: \<open>FAIL x \<longleftrightarrow> False\<close>
+
+\<phi>reasoner_ML FAIL 1200 (\<open>FAIL ?x\<close>) = \<open>fn (ctxt,sequent) =>
+  let
+    val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ text)
+          = Thm.major_prem_of sequent
+    val str = Encode_Text.decode_text_str ctxt text
+    val _ = warning str
+  in Seq.empty
+  end\<close>
+
+
 subsubsection \<open>Error\<close>
+
+text \<open>Fail terminates the whole reasoning.\<close>
 
 definition ERROR :: \<open>text \<Rightarrow> bool\<close>
   where [iff]: \<open>ERROR x \<longleftrightarrow> False\<close>

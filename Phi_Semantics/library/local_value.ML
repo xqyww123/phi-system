@@ -57,15 +57,16 @@ fun mk_var_scope names''' (ctxt,sequent) =
                 case v of Set_Var vterm =>
                             (Drule.infer_instantiate ctxt
                                   [(("var",0), Thm.incr_indexes_cterm 1 vterm)]
-                                  @{thm "__\<phi>op_set_var__"}) RS th
-                        | New_Var _ => @{thm "__\<phi>op_var_scope__"} RS th) oprs
-          |> (fn thm => @{thm "__\<phi>op_var_scope__0"} RS thm)
+                                  @{thm "__set_var_rule__"}) RS th
+                        | New_Var _ => @{thm "__set_new_var_rule__"} RS th) oprs
+          |> (fn thm => @{thm "__value_access_0__"} RS thm)
     val (ctxt,sequent') = NuApply.apply [op_var_scope'] (ctxt,sequent)
                 |> apsnd (fn th =>
                     let
                       fun is_body (Abs (_,_,X)) = is_body X
                         | is_body (\<^const>\<open>Trueprop\<close> $ X) = is_body X
                         | is_body (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_body X
+                        | is_body (\<^const>\<open>Pure.imp\<close> $ _ $ X) = is_body X
                         | is_body (X $ _) = is_body X
                         | is_body (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _)) = true
                         | is_body _ = false
@@ -108,6 +109,7 @@ fun mk_var_scope names''' (ctxt,sequent) =
 
 val parse_var_add_tag = Attrib.setup_config_bool \<^binding>\<open>\<phi>parse_var_add_tag\<close> (K false);
 
+(*
 (* Syntax *)
 val _ = Theory.setup (
 let open Ast Phi_Syntax
@@ -143,7 +145,7 @@ let open Ast Phi_Syntax
  in Context.theory_map (Syntax_Phases.term_check ~10 "\<phi>variable" (fn ctxt =>
       map (fn x => if has_get_var x then map_get_var ctxt x else x)))
 end
-)
+) *)
 
 end
 

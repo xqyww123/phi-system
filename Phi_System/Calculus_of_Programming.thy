@@ -161,39 +161,40 @@ lemma (in -) "\<phi>make_implication":
 
 subsection \<open>Cast\<close>
 
-lemma "\<phi>cast":
-  "CurrentConstruction mode blk H T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> CurrentConstruction mode blk H T'"
-  unfolding CurrentConstruction_def Imply_def
-  by (simp_all add: split_paired_all \<phi>expns) blast
-
-lemma "\<phi>cast_P":
-  "CurrentConstruction mode blk H T \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> (CurrentConstruction mode blk H T') \<and> P"
-  unfolding CurrentConstruction_def Imply_def
-  by (simp_all add: split_paired_all \<phi>expns) blast
-
-lemma \<phi>cast_pending:
-  "PendingConstruction f blk H T E \<Longrightarrow> (\<And>x. T x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' x \<^bold>a\<^bold>n\<^bold>d P) \<Longrightarrow> PendingConstruction f blk H T' E"
-  unfolding PendingConstruction_def Imply_def
-  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All) meson
-
-lemma \<phi>cast_pending_E:
-  "PendingConstruction f blk H T E \<Longrightarrow> (\<And>x. E x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' x \<^bold>a\<^bold>n\<^bold>d P) \<Longrightarrow> PendingConstruction f blk H T E'"
-  unfolding PendingConstruction_def Imply_def
-  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All) meson
-
-lemma \<phi>apply_view_shift_P:
+lemma \<phi>apply_view_shift:
   " CurrentConstruction mode blk R S
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
 \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
   unfolding CurrentConstruction_def View_Shift_def
   by (simp_all add: split_paired_all \<phi>expns)
 
-lemma \<phi>apply_view_shift:
-  " CurrentConstruction mode blk R S
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> CurrentConstruction mode blk R S'"
-  unfolding CurrentConstruction_def View_Shift_def
-  by (simp_all add: split_paired_all \<phi>expns)
+lemmas \<phi>apply_implication = \<phi>apply_view_shift[OF _ view_shift_by_implication]
+
+lemma \<phi>apply_view_shift_pending:
+  " PendingConstruction f blk H T E
+\<Longrightarrow> (\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w T x \<longmapsto> T' x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+\<Longrightarrow> PendingConstruction f blk H T' E"
+  unfolding PendingConstruction_def View_Shift_def
+  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All)
+
+lemma \<phi>apply_view_shift_pending_E:
+  " PendingConstruction f blk H T E
+\<Longrightarrow> (\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w E x \<longmapsto> E' x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+\<Longrightarrow> PendingConstruction f blk H T E'"
+  unfolding PendingConstruction_def View_Shift_def
+  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All)
+
+lemmas \<phi>apply_implication_pending =
+  \<phi>apply_view_shift_pending[OF _ view_shift_by_implication]
+
+lemmas \<phi>apply_implication_pending_E =
+  \<phi>apply_view_shift_pending_E[OF _ view_shift_by_implication]
+
+lemma \<phi>apply_implication_impl:
+  \<open> s \<in> S
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> s \<in> S' \<and> P\<close>
+  unfolding Imply_def by blast
 
 lemma "_\<phi>cast_internal_rule_":
   " CurrentConstruction mode blk H T
@@ -324,17 +325,17 @@ paragraph \<open>Introducing Existential Quantification\<close>
 
 lemma introduce_Ex:
   \<open>CurrentConstruction mode blk H (S x) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S)\<close>
-  using \<phi>cast[OF _ ExSet_imp_I[OF implies_refl]] .
+  using \<phi>apply_implication[OF _ ExSet_imp_I[OF implies_refl], THEN conjunct1] .
 
 lemma introduce_Ex_pending:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. Q x v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. \<exists>*x. Q x v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
-  using \<phi>cast_pending[OF _ ExSet_imp_I[OF implies_refl]] .
+  using \<phi>apply_implication_pending[OF _ ExSet_imp_I[OF implies_refl]] .
 
 lemma introduce_Ex_pending_E:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E x v)
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. \<exists>*x. E x v)\<close>
-  using \<phi>cast_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
+  using \<phi>apply_implication_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
 
 
 paragraph \<open>Normalizing Conjunction in Precondition\<close>

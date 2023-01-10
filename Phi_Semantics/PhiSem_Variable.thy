@@ -159,8 +159,7 @@ lemma [\<phi>reason 2000 for \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Var var T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def] implies_left_prod
-  by (smt (z3) Var_view_shift \<phi>apply_view_shift_P \<phi>frame_view)
+  by (meson Var_view_shift \<phi>apply_view_shift \<phi>frame_view)
 
 
 lemma [\<phi>reason 2000 for \<open>
@@ -179,8 +178,7 @@ lemma [\<phi>reason 2000 for \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Var var T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Var_cast_\<phi>app[unfolded Argument_def] implies_left_prod
-  by (smt (z3) CurrentConstruction_Inhabited_rule Imply_def Inhabited_def Var_subty \<phi>apply_view_shift \<phi>view_shift_intro_frame implies_weaken set_mult_inhabited)
+  by (meson Var_view_shift \<phi>apply_view_shift \<phi>frame_view)
 
 
 section \<open>Instructions\<close>

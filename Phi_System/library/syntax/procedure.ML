@@ -48,7 +48,7 @@ fun mk_prodT (Type (\<^type_name>\<open>sem_value\<close>, [T1]), Type (\<^type_
       = Type (\<^type_name>\<open>sem_value\<close>, [HOLogic.mk_prodT (T1,T2)])
   | mk_prodT (T1,T2) = raise TYPE("bug #geasr89", [T1,T2], [])
 
-fun mk_tuple _ [] = \<^term>\<open>sem_value ()\<close>
+fun mk_tuple _ [] = \<^term>\<open>\<phi>V_none\<close>
   | mk_tuple _ [tm] = tm
   | mk_tuple (Type (\<^type_name>\<open>sem_value\<close>, [T])::tys) (tm::tms)
       = Const (\<^const_name>\<open>\<phi>V_pair\<close>, Type (\<^type_name>\<open>sem_value\<close>, [fst (HOLogic.dest_prodT T)])

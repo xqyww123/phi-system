@@ -504,7 +504,7 @@ lemma [\<phi>reason 1200
       (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S1))
       (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S2\<heavy_comma> X'))"
   unfolding Synthesis_def GOAL_CTXT_def DoSynthesis_def
-  using \<phi>apply_view_shift .
+  using \<phi>apply_view_shift by blast
 
 paragraph \<open>Solving an antecedent by Synthesis\<close>
 
@@ -790,7 +790,7 @@ lemma \<phi>apply_subtyping_fast[\<phi>reason 1800 for \<open>
       (Trueprop (CurrentConstruction mode blk R S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" .
+  using \<phi>apply_implication .
 
 lemma [\<phi>reason 1500 for \<open>
   PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
@@ -801,7 +801,7 @@ lemma [\<phi>reason 1500 for \<open>
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" implies_left_prod by blast
+  using \<phi>apply_implication implies_left_prod by blast
 
 lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
   PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P))
@@ -816,7 +816,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
-  by (meson \<phi>cast_P implies_left_prod \<phi>apply_view_shift_P)
+  by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
   
 
 paragraph \<open>View Shift Methods\<close>
@@ -842,7 +842,7 @@ lemma \<phi>apply_view_shift_fast[\<phi>reason 1800 for \<open>
       (Trueprop (CurrentConstruction mode blk R S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>apply_view_shift_P" .
+  using "\<phi>apply_view_shift" .
 
 lemma [\<phi>reason 1500 for \<open>
   PROP \<phi>Application_Method (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S' \<longmapsto> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P))
@@ -853,7 +853,7 @@ lemma [\<phi>reason 1500 for \<open>
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame by blast
+  using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame by blast
 
 lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
   PROP \<phi>Application_Method (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S' \<longmapsto> ?T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P))
@@ -868,7 +868,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
-  using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame
+  using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
   by (metis (no_types, lifting))
 
 
@@ -914,7 +914,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
               THEN \<phi>CONSEQ[rotated 1, OF \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>,
                 OF view_shift_id, OF view_shift_by_implication[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
                 simplified prems(1), unfolded \<open>E''' = E''\<close>, simplified prems(1)]]] .
-  by (meson \<phi>apply_view_shift_P)
+  by (meson \<phi>apply_view_shift)
 
 
 subsubsection \<open>Applying on a Block / End a Block\<close>
@@ -1065,7 +1065,7 @@ lemma [\<phi>reason 1200 for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def Simplify_def
-  using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame
+  using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
   by (metis (no_types, lifting))
 
 
@@ -1197,7 +1197,7 @@ lemma [\<phi>reason 1100 for \<open>PROP Do_Action (?action::?'a::view_shift act
       (Trueprop (CurrentConstruction mode s R (R1\<heavy_comma> Y) \<and> (Any \<and> Any2)))\<close>
   for action :: \<open>('a::view_shift) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+  using \<phi>apply_view_shift \<phi>frame_view by blast
 
 lemma [\<phi>reason 1200
     for \<open>PROP Do_Action (?action::?'a::{view_shift, whole_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1209,7 +1209,7 @@ lemma [\<phi>reason 1200
       (Trueprop (CurrentConstruction mode s H Y \<and> Any))\<close>
   for action :: \<open>('a::{view_shift, whole_target}) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+  using \<phi>apply_view_shift \<phi>frame_view by blast
 
 lemma [\<phi>reason 1200
     for \<open>PROP Do_Action (?action::?'a::{view_shift, single_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1222,7 +1222,7 @@ lemma [\<phi>reason 1200
       (Trueprop (CurrentConstruction mode s H Y \<and> Any))\<close>
   for action :: \<open>('a::{view_shift, single_target}) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+  using \<phi>apply_view_shift \<phi>frame_view by blast
 
 lemma [\<phi>reason 1200
     for \<open>PROP Do_Action (?action::?'a::{view_shift, single_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Result\<close>
@@ -1234,7 +1234,7 @@ lemma [\<phi>reason 1200
       (Trueprop (CurrentConstruction mode s H (R \<heavy_comma> Y) \<and> Any))\<close>
   for action :: \<open>('a::{view_shift, single_target}) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+  using \<phi>apply_view_shift \<phi>frame_view by blast
 
 
 lemma [\<phi>reason 1200 for \<open>PROP Do_Action (?action::?'a::{multi_args_fixed_first,view_shift} action) (Trueprop (CurrentConstruction ?mode ?s ?R ?X)) ?Result\<close>]:
@@ -1246,7 +1246,7 @@ lemma [\<phi>reason 1200 for \<open>PROP Do_Action (?action::?'a::{multi_args_fi
       (Trueprop (CurrentConstruction mode s H (R1\<heavy_comma> Y) \<and> Any \<and> Any2))\<close>
   for action :: \<open>('a::{multi_args_fixed_first,view_shift}) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>apply_view_shift_P \<phi>view_shift_intro_frame \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1))
+  by (metis (no_types, lifting) \<phi>apply_view_shift \<phi>view_shift_intro_frame \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1))
 
 
 paragraph \<open>Action by Implication\<close>
@@ -1262,7 +1262,7 @@ lemma [\<phi>reason 1090 for \<open>PROP Do_Action (?action::?'a::implication ac
       (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> (P2 \<and> P)))\<close>
   for action :: \<open>'a::implication action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1190
     for \<open>PROP Do_Action (?action::?'a::{whole_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1274,7 +1274,7 @@ lemma [\<phi>reason 1190
       (Trueprop (CurrentConstruction mode s H Y \<and> P))\<close>
   for action :: \<open>'a::{whole_target,implication} action\<close>
   unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1190
     for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1287,7 +1287,7 @@ lemma [\<phi>reason 1190
       (Trueprop (CurrentConstruction mode s H Y \<and> P))\<close>
   for action :: \<open>'a::{single_target,implication} action\<close>
   unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1190
     for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Result\<close>
@@ -1299,7 +1299,7 @@ lemma [\<phi>reason 1190
       (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> P))\<close>
   for action :: \<open>'a::{single_target,implication} action\<close>
   unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1190 for \<open>PROP Do_Action (?action::?'a::{implication,multi_args_fixed_first} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?RR \<heavy_comma> ?X))) ?Result\<close>]:
   \<open> Xr \<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action
@@ -1310,7 +1310,8 @@ lemma [\<phi>reason 1190 for \<open>PROP Do_Action (?action::?'a::{implication,m
       (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> P2 \<and> P))\<close>
   for action :: \<open>'a::{implication,multi_args_fixed_first} action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>cast_P \<phi>apply_view_shift_P \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
+  by (metis (no_types, lifting) \<phi>apply_implication \<phi>apply_view_shift \<phi>view_shift_intro_frame_R
+                                ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
 
 (* No need to provide general search rule because the rule of
 \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action
@@ -1364,7 +1365,7 @@ lemma [\<phi>reason 1190 on \<open>PROP Do_Action (?action::?'a::{implication,mu
       (Trueprop (s \<in> (R * Y) \<and> P))\<close>
   for action :: \<open>'a::{implication,multi_args_fixed_first} action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>cast_P \<phi>spec.\<phi>apply_view_shift_P \<phi>spec_axioms \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
+  by (metis (no_types, lifting) \<phi>apply_implication \<phi>spec.\<phi>apply_view_shift \<phi>spec_axioms \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
 *)
 
 
@@ -1377,7 +1378,7 @@ lemma [\<phi>reason 1100]:
       (Trueprop (s \<in> (R * Y) \<and> P2 \<and> P))\<close>
   for action :: \<open>'a::implication action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 *)
 
 

@@ -135,6 +135,6 @@ lemma apply_extract_a_value:
 \<Longrightarrow> Extract_a_Value S S' V
 \<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S') \<and> V\<close>
   unfolding Extract_a_Value_def
-  using \<phi>cast_P .
+  using \<phi>apply_implication .
 
 end

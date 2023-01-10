@@ -63,7 +63,7 @@ lemma [\<phi>reason 2100 for \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Val_cast implies_left_prod by metis
+  using \<phi>apply_implication Val_cast implies_left_prod by metis
 
 
 lemma [\<phi>reason 2000 for \<open>
@@ -82,7 +82,7 @@ lemma [\<phi>reason 2000 for \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Val_cast implies_left_prod by metis
+  using \<phi>apply_implication Val_cast implies_left_prod by metis
 
 
 subsection \<open>Synthesis\<close>
@@ -116,18 +116,17 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<l
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x <set-to> raw \<Ztypecolon> T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   by simp
 
-lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::?'a sem_value) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL sem_value) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  for raw :: \<open>'a sem_value\<close>
   unfolding Synthesis_by_def Action_Tag_def GOAL_CTXT_def
             \<phi>Procedure_def Return_def det_lift_def
   by (cases raw; simp add: Val_expn)
 
 
 
-
-
+(*
+TODO: fix this feature
 subsubsection \<open>Auto unfolding for value list\<close>
 
 lemma [\<phi>programming_simps]:
@@ -159,7 +158,7 @@ lemma [simp]:
 lemma [simp]:
   \<open>[] \<notin> (\<exists>*x. x \<Ztypecolon> List_Item T)\<close>
   by (rule; clarsimp simp add: \<phi>expns times_list_def)
-
+*)
 
 
 

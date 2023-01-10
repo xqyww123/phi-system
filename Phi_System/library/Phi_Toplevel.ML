@@ -692,14 +692,15 @@ fun gen_begin_block prep_attr bindings int stat =
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
-      |> Proof.map_context_result (#initial_sequent mode blk_name (cterm_of ctxt arg) #> swap)
-      |-> (if is_top then Phi_Basics.enter_programming_environ else Phi_Basics.set_nu_fact)
-      |> Proof.map_context (fn ctxt => ctxt
-            |> Proof_Context.put_thms false ("\<phi>thesis",
-                  SOME [Drule.mk_term (cterm_of ctxt goal)]) 
+      |> Proof.map_context_result (fn ctxt => ctxt
             |> Phi_Working_Mode.set mode
-          )
-      |> Value_Access.open_value_context' Position.none
+            |> Proof_Context.put_thms false ("\<phi>thesis",
+                          SOME [Drule.mk_term (cterm_of ctxt goal)])
+            |> #initial_sequent mode blk_name (cterm_of ctxt arg)
+            |> Value_Access.open_value_context Position.none
+            |> swap)
+      |-> (if is_top then Phi_Basics.enter_programming_environ else Phi_Basics.set_nu_fact)
+(*      |> Value_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end
 val begin_block_cmd = gen_begin_block Attrib.attribute_cmd

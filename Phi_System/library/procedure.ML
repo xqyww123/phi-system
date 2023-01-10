@@ -121,7 +121,7 @@ fun norm_def ctxt (m,n,instance) def = let
         |> map (fn (_, ty) => Thm.cterm_of ctxt (Const ("Pure.type", ty)))
   val normal_vars = take n (drop m vars)
         |> map (fn (name,ty) => Thm.var ((name,0), Thm.ctyp_of ctxt ty))
-  val insts = ty_vars @ normal_vars @ [Thm.cterm_of ctxt instance]
+  val insts = ty_vars @ normal_vars @ (map (Thm.cterm_of ctxt) instance)
   in
     fold (fn a => fn b => Thm.combination b a) (map Thm.reflexive insts) def
       |> Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>V_simps[folded atomize_eq]}
@@ -144,7 +144,10 @@ fun closure ctxt f =
                      ) tvars
     val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f
 
-    val (instance,f'') = Procedure_Syntax.abstract_return_vals "\<a>\<r>\<g>" false f'
+    fun trim ((i as \<^term>\<open>\<phi>V_none\<close>), (x as Abs (_, \<^typ>\<open>unit sem_value\<close>, X)))
+          = if exists_subterm (fn Bound 0 => true | _ => false) X then ([], X) else ([i], x)
+      | trim (i,x) = ([i],x)
+    val (instance,f'') = Procedure_Syntax.abstract_return_vals "\<a>\<r>\<g>" false f' |> trim
     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
                              | _ => I) f'' []
     fun abst i (Var v) =
