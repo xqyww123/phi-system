@@ -1,3 +1,9 @@
+(* value_access.ML
+   AUTHOR: Qiyuan Xu
+
+   Access (get and set) local values or variables.
+*)
+
 signature VALUE_ACCESS = sig
 
 val all_value_terms : term (*\<phi>-BI assertion*) -> term list
@@ -52,9 +58,24 @@ fun open_value_context pos sequent ctxt =
     val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.prop_of sequent)
     val args = all_value_terms (#argument_spec mode (Thm.prop_of sequent))
     val rules = all_value_spec_thms ctxt sequent
+    val binds = rules |> map_filter (fn th =>
+          case Thm.prop_of th
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+                                  $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ V)
+                                  $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Free (N,_) $ _))
+                 => SOME (N, V)
+             | _ => NONE)
+    val binds'= rules |> map_filter (fn th =>
+          case Thm.prop_of th
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+                                  $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ (V as Free (N,_)))
+                                  $ _)
+                 => SOME (N, V)
+             | _ => NONE)
   in ctxt
   |> Value_Access_Syntax.open_value_context args
   |> Context.proof_map (register_value_spec_thms pos rules)
+  |> Value_Access_Syntax.bind_local_vals (binds' @ binds)
   end
 
 fun open_value_context' pos stat =

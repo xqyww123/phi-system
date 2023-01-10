@@ -1466,21 +1466,6 @@ ML_file \<open>library/syntax/value_access.ML\<close>
 
 ML_file \<open>library/value_access.ML\<close>
 
-(*
-(*TODO*)
-\<phi>processor get_val 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
-  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.term >> (fn var => fn () =>
-    let
-      val ctxt_parse = Config.put phi_synthesis_parsing true ctxt
-      val term = Const(\<^const_name>\<open>get_var____\<phi>\<close>, dummyT) $ Syntax.parse_term ctxt_parse var
-                  |> Syntax.check_term ctxt_parse
-                  |> Thm.cterm_of ctxt
-    in
-      Phi_Sys.synthesis term (ctxt,sequent)
-    end)
-\<close> *)
-
-
 
 section \<open>Implementing the Interactive Environment\<close>
 
@@ -1685,12 +1670,26 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
                         fn X as Var (name, _) =>
                             (case Vartab.lookup binds name of SOME (_,Y) => Y | _ => X)
                          | X => X
-                     )
+                     ) (*patch to enable term binding*)
                   |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
    in
     Phi_Sys.synthesis term (ctxt, sequent)
   end)\<close>
+
+\<phi>processor get_val 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>?s \<in> ?S'\<close>)  \<open>
+  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- (Parse.short_ident || Parse.long_ident || Parse.number)
+  >> (fn var => fn () =>
+    let
+      val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
+                          |> Config.put phi_synthesis_parsing true
+      val term = Syntax.parse_term ctxt_parser ("$" ^ var)
+                  |> Syntax.check_term ctxt_parser
+                  |> Thm.cterm_of ctxt
+    in
+      Phi_Sys.synthesis term (ctxt,sequent)
+    end)
+\<close>
 
 \<phi>processor existential_elimination 150 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
   \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
@@ -1709,6 +1708,8 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
       then raise Process_State_Call ((ctxt,sequent), NuObtain.auto_choose)
       else raise Bypass NONE
     end)\<close>
+
+
 
 subsubsection \<open>Simplifiers \& Reasoners\<close>
 

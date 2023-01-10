@@ -413,6 +413,7 @@ fun cast desired (ctxt,sequent) =
   in
     #cast mode desired (ctxt,sequent)
   end
+
 fun cast_exception desired (ctxt,sequent) =
   let
     val mode = mode ctxt

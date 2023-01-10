@@ -11,7 +11,8 @@ proc
   argument \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   return \<open>xxxx\<close>
   \<medium_left_bracket>
-  ;; \<open>$1\<close> \<open>$1\<close>
+  ;;  $\<a>\<r>\<g>1
+  ;; \<open>$1\<close> \<open>$(\<a>\<r>\<g>1)\<close>
   ;; \<open>$2 := xx\<close>
 
 subsubsection \<open>Syntax\<close>

@@ -238,7 +238,16 @@ definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarro
 text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> removes value assertions \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
   from the assertion \<open>Input\<close>. Bounded values such the return value of a procedure are not removed.\<close>
 
+
 subsection \<open>Collects all Values in an Assertion / from the State Sequent\<close>
+
+consts collect_value :: \<open>unit action\<close>
+
+lemma apply_collect_value:
+  \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> collect_value
+\<Longrightarrow> PROP Pure.prop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V)\<close>
+  unfolding 
+
 
 lemma Val_inhabited_collect:
   \<open> Inhabited (x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T) \<Longrightarrow> (sem_value.dest v \<in> (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C \<close>

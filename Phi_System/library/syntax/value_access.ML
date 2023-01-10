@@ -3,6 +3,7 @@ signature VALUE_ACCESS_SYNTAX = sig
 (* Value Context *)
 val open_value_context : term list (*arguments*) -> Proof.context -> Proof.context
 val assign_local_val : typ option -> Proof.context -> string * Proof.context
+val bind_local_vals  : (string (*internal name*) * term) list -> Proof.context -> Proof.context
 
 (* Parser *)
 type value_parser_key =
@@ -31,10 +32,14 @@ structure Value_Ctxt = Proof_Data (
   val init = K NONE
 )
 
+fun bad_ctxt () = raise Fail "Value context has not been set. Not under a programming context."
+
 fun value_context_of ctxt =
-  case Value_Ctxt.get ctxt
-    of SOME c => c
-     | _ => raise Fail "Value context has not been set. Not under a programming context."
+  case Value_Ctxt.get ctxt of SOME c => c | _ => bad_ctxt ()
+
+fun map_value_context f =
+  Value_Ctxt.map (fn SOME x => SOME (f x)
+                   | NONE => bad_ctxt())
 
 fun open_value_context arguments =
   Value_Ctxt.map (fn SOME (_, LV, CNT) => SOME (arguments, LV, CNT)
@@ -49,6 +54,9 @@ fun assign_local_val ty ctxt =
     |> Proof_Context.add_fixes [(Binding.name name, ty, NoSyn)]
     |> apfst hd
   end
+
+fun bind_local_vals vals =
+  map_value_context (fn (A,V,N) => (A, fold Symtab.update vals V ,N))
 
 (*** Parsers ***)
 
@@ -89,6 +97,7 @@ fun index_val ctxt i =
   end
 
 
+exception NO_PARSE
 fun fallback_trans ctxt (V as Free (s, _)) =
       if can Value.parse_int s
       then index_val ctxt (Value.parse_int s)
@@ -96,9 +105,11 @@ fun fallback_trans ctxt (V as Free (s, _)) =
               of SOME s' => s'
                | _ => error (Pretty.string_of (Pretty.block [
                      Pretty.str "Variable or local value named ",
-                     Syntax.pretty_term ctxt V, Pretty.str "is not found."
+                     Syntax.pretty_term ctxt V, Pretty.str " is not found."
                     ])))
-  | fallback_trans _ X = X
+  | fallback_trans ctxt (Const ("_constrain", _) $ X $ _)
+      = fallback_trans ctxt X
+  | fallback_trans _ _ = raise NO_PARSE
 
 
 fun translate_value ctxt X =
@@ -108,7 +119,13 @@ fun translate_value ctxt X =
     case ParserTab.fold_rev (fn (_, f) => (fn NONE => f ctxt X
                                             | some => some)) tab NONE
       of SOME ast => ast
-       | _ => fallback_trans ctxt X
+       | _ => (fallback_trans ctxt X
+               handle NO_PARSE =>
+                  error (Pretty.string_of (Pretty.block [
+                     Pretty.str "There is no value or variable bound on term ",
+                     Syntax.pretty_term ctxt X, Pretty.str "."
+                  ]))
+              )
   end
 
 
