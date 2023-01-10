@@ -10,7 +10,7 @@ subsection \<open>Primitive \<phi>-Types\<close>
 
 subsubsection \<open>Value\<close>
 
-definition Val :: \<open>'v sem_value \<Rightarrow> ('v, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
+definition Val :: \<open>VAL sem_value \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
   where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem_value.dest val \<in> (x \<Ztypecolon> T))\<close>
 
 lemma Val_expn [\<phi>expns]:
@@ -65,6 +65,11 @@ lemma [\<phi>reason]:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
   ..
+
+lemma [\<phi>reason 1]:
+  \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
+\<Longrightarrow> \<phi>SemType X Any\<close>
+  by blast
 
 subsubsection \<open>Zero Value\<close>
 

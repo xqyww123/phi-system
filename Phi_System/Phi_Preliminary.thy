@@ -29,6 +29,7 @@ ML_file \<open>library/Phi_Error.ML\<close>
 subsection \<open>Helper ML\<close>
 
 ML_file \<open>library/Phi_Help.ML\<close>
+ML_file \<open>library/Hook.ML\<close>
 
 ML \<open>signature PHI_SYNTAX = sig end
 structure Phi_Syntax : PHI_SYNTAX = struct end\<close>
@@ -71,7 +72,7 @@ lemma [iff]:
 
 
 
-subsection \<open>Document Antiquotations\<close>
+subsection \<open>Helper Antiquotations\<close>
 
 setup \<open>
 let

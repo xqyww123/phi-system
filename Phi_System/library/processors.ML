@@ -1,13 +1,13 @@
 signature NU_PROCESSORS = sig
-  type proc = NuProcessor.proc
+  type proc = Phi_Processor.proc
   val simplifier :   proc
 
   (* it loads all aux facts and codeblocks in the spec thm *)
   (* val open_spec : proc -> proc *)
 end
 
-structure NuProcessors : NU_PROCESSORS = struct
-open Phi_Basics Phi_Help NuProcessor
+structure Phi_Processors : NU_PROCESSORS = struct
+open Phi_Basics Phi_Help Phi_Processor
 
 val simplifier = almost_safe (fn (ctxt, sequent) =>
   Scan.succeed (fn _ => let

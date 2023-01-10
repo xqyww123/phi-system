@@ -76,18 +76,6 @@ lemma \<phi>M_caseV[intro!]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_caseV F (\<phi>V_pair va vb) \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>M_caseV_def \<phi>V_pair_def by simp
 
-lemma \<phi>M_Success[intro!]:
-  \<open> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem_value v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
-  unfolding \<phi>Procedure_def det_lift_def Return_def
-  by (clarsimp simp add: \<phi>expns)
-
-declare \<phi>M_Success[where X=1, simplified, intro!]
-
-lemma \<phi>M_Success'[intro!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
-  unfolding Return_def \<phi>Procedure_def det_lift_def by (clarsimp simp add: \<phi>expns)
-
 
 subsection \<open>Elementary Constructions for Reasoning underlying Fictional Separation Logic\<close>
 
@@ -1299,11 +1287,10 @@ proc (nodef) try'':
   argument X
   return YY
   throws EE2
-  \<medium_left_bracket>
-  ;; "__op_try__"
-  ;; F 
-  ;;G
-  ;; \<medium_right_bracket>. .
+  \<medium_left_bracket> "__op_try__"
+    F 
+    G
+  \<medium_right_bracket>. .
 
 proc (nodef) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>

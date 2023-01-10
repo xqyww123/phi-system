@@ -1,7 +1,7 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
 theory Phi_Types
-  imports IDE_CP
+  imports IDE_CP_Reasoning2
 begin
 
 section \<open>Basics\<close>

@@ -1,4 +1,4 @@
-signature NU_REASONERS = sig
+signature PHI_REASONERS = sig
   exception Attemption_Fail of Proof.context * thm
 
   val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
@@ -16,7 +16,7 @@ signature NU_REASONERS = sig
 
 end
 
-structure Phi_Reasoners : NU_REASONERS = struct
+structure Phi_Reasoners : PHI_REASONERS = struct
 open Thm Term
 
 (** Preliminary **)

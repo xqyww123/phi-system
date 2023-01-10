@@ -8,13 +8,7 @@ The toplevel structure of the ν-system.
 *)
 
 signature PHI_TOPLEVEL = sig
-  datatype cond_kind = Premise | Requirement
-    (* Premise is automatically prefixed by @{term Premise} and added to
-     * @{named_theorems useful}; Requirement is not. *)
-  val register_Block_End_Hook : (context_state -> context_state) -> Proof.context -> Proof.context
-
-  val put_thesis : cterm -> Proof.context -> Proof.context
-  val get_thesis : Proof.context -> cterm
+  datatype cond_kind = Premise | Assumption
 
   val begin_proc_cmd : bool (*whether to define a new constant*)
         -> Attrib.binding (*name*)
@@ -62,7 +56,9 @@ signature PHI_TOPLEVEL = sig
   val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
   val end_block_cmd : string option -> bool -> Proof.state -> Proof.state
-  
+
+  val statement_cmd : (Proof.state -> Proof.state) parser
+
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
   (*val export_LLVM : theory -> theory *)
 end
@@ -97,12 +93,6 @@ val v_goal_name = "\<phi>goal"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 val top_blk_name = "\<t>\<o>\<p>_\<b>\<l>\<o>\<c>\<k>"
 
-fun put_thesis thesis = 
-      Proof_Context.put_thms false ("\<phi>thesis", SOME [Drule.mk_term thesis])
-fun get_thesis ctxt =
-      Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
-
-
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
 
 fun prep_decls prep_var raw_vars ctxt =
@@ -114,7 +104,7 @@ fun prep_decls prep_var raw_vars ctxt =
       ||> Context_Position.restore_visible ctxt'
   in ((vars, xs), ctxt'') end
 
-datatype cond_kind = Premise | Requirement
+datatype cond_kind = Premise | Assumption
 
 
 
@@ -170,7 +160,7 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
           prep_attrterm (mk_monop @{const_abbrev Normal_Premise}) c
             |> apfst (apsnd (fn attrs =>
                   @{attributes [TRY_THEN Premise_D, useful]} @ attrs))
-      | prep_precond (Requirement, c) =
+      | prep_precond (Assumption, c) =
           prep_attrterm I c
     val preconds = map prep_precond raw_preconds
 
@@ -422,7 +412,7 @@ fun gen_begin_view_shift_cmd prep_term prep_prop prep_typ prep_var
                   Proof_Context.add_assms Assumption.assume_export
                       [(Binding.empty_atts, [(sequent_term,[])])]) stat
           in
-            (*Phi_Basics.set_nu_fact sequent*)
+            (*Phi_Basics.set_state_sequent sequent*)
             stat
           end
         fun post_process binding int lthy th =
@@ -441,15 +431,12 @@ val begin_view_shift_cmd =
 
 
 
-structure Block_End_Hook = Proof_Data (
+(* structure Statement_Begin_Hook *)
+(*
+structure Procedure_Begin_Hook = Generic_Data (
   type T = (context_state -> context_state) list
   val init = K []
-)
-
-fun register_Block_End_Hook hook = Block_End_Hook.map (fn L => hook::L)
-fun invoke_Block_End_Hook (ctxt,sequent) =
-  fold (fn hook => fn stat => hook stat) (Block_End_Hook.get ctxt) (ctxt,sequent)
-
+) *)
 
 
 
@@ -563,7 +550,7 @@ end
 
 fun prove_prem int stat =
   let open Proof
-    val specthm = the_nu_fact stat
+    val specthm = the_state_sequent stat
     val goal = Thm.prop_of specthm
                 |> Logic.dest_implies |> #1 (* |> dest_premise_tag |> mk_Trueprop *)
     fun after_qed (ctxt',[[th]]) stat =
@@ -574,10 +561,10 @@ fun prove_prem int stat =
       in
         stat |> Proof.map_context_result
                   (Config.put Phi_Reasoner.auto_level 0
-                    #> (fn ctxt => NuProcessor.process_no_input (ctxt, th RS specthm))
+                    #> (fn ctxt => Phi_Processor.process_no_input (ctxt, th RS specthm))
                     #> apfst (Config.put Phi_Reasoner.auto_level original_auto_level)
                     #> swap)
-             |-> Phi_Basics.set_nu_fact
+             |-> Phi_Basics.set_state_sequent
       end
   in
     stat |> setup_proof (print_results int) Proof_Context.mode_schematic false ""
@@ -614,7 +601,7 @@ fun gen_begin_block prep_attr bindings int stat =
     val sequent =
           if is_top
           then #goal (Proof.raw_goal stat)
-          else the_nu_fact stat
+          else the_state_sequent stat
                   |> Tactic.rule_by_tactic ctxt normalize_tac
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)
                   |> begin_block
@@ -669,7 +656,7 @@ fun gen_begin_block prep_attr bindings int stat =
                 |> apply (Method.Basic (fn _ => Method.SIMPLE_METHOD (Seq.single o gen_sequent)),
                           Position.no_range)
                 |> Seq.the_result "never fail"
-         else Phi_Basics.set_nu_fact (gen_sequent sequent) stat
+         else Phi_Basics.set_state_sequent (gen_sequent sequent) stat
       end
 
     val delta = length prems - length bindings
@@ -692,19 +679,31 @@ fun gen_begin_block prep_attr bindings int stat =
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
-      |> Proof.map_context_result (#initial_sequent mode blk_name (cterm_of ctxt arg) #> swap)
-      |-> (if is_top then Phi_Basics.enter_programming_environ else Phi_Basics.set_nu_fact)
-      |> Proof.map_context (fn ctxt => ctxt
-            |> Proof_Context.put_thms false ("\<phi>thesis",
-                  SOME [Drule.mk_term (cterm_of ctxt goal)]) 
+      |> Proof.map_context_result (fn ctxt => ctxt
             |> Phi_Working_Mode.set mode
-          )
-      |> Value_Access.open_value_context' Position.none
+            |> Proof_Context.put_thms false ("\<phi>thesis",
+                          SOME [Drule.mk_term (cterm_of ctxt goal)])
+            |> #initial_sequent mode blk_name (cterm_of ctxt arg)
+            |> Generic_Variable_Access.open_value_context' Position.none
+            |> swap)
+      |-> (if is_top then Phi_Basics.enter_programming_environ else Phi_Basics.set_state_sequent)
+(*      |> Generic_Variable_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end
 val begin_block_cmd = gen_begin_block Attrib.attribute_cmd
 val begin_block = gen_begin_block (K I)
 end
+
+
+val statement_cmd =
+  Phi_Processor.powerful_process_p >> (fn f => fn stat =>
+    stat |> Phi_Basics.map_state_sequent (fn (ctxt,sequent) =>
+                (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst))
+         |> f
+  )
+
+
+
 
 (* fun export_LLVM thy =
   let

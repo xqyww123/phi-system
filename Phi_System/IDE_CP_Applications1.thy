@@ -63,7 +63,7 @@ lemma [\<phi>reason 2100 for \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Val_cast implies_left_prod by metis
+  using \<phi>apply_implication Val_cast implies_left_prod by metis
 
 
 lemma [\<phi>reason 2000 for \<open>
@@ -82,7 +82,7 @@ lemma [\<phi>reason 2000 for \<open>
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (Trueprop ((\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" Val_cast implies_left_prod by metis
+  using \<phi>apply_implication Val_cast implies_left_prod by metis
 
 
 subsection \<open>Synthesis\<close>
@@ -105,29 +105,58 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<l
   unfolding GOAL_CTXT_def
   by (cases raw; simp add: Val_expn view_shift_id)
 
-lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x <val-of> (?raw::?'a sem_value) \<Ztypecolon> ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL sem_value) \<Ztypecolon> ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> Val raw T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding GOAL_CTXT_def
   by (cases raw; simp add: Val_expn view_shift_id)
 
-lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x <set-to> ?raw \<Ztypecolon> ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1300 for
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL sem_value) \<Ztypecolon> ?T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  apply (rule Synthesis_Proc_fallback_VS)
+  unfolding GOAL_CTXT_def
+  by (cases raw; simp add: Val_expn view_shift_id)
+
+lemma [\<phi>reason 1200 for
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL sem_value. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL sem_value) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
+  \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+  unfolding GOAL_CTXT_def
+  by (cases raw; simp add: \<phi>M_Success)
+
+
+lemma [\<phi>reason 1200 for
+    \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x <set-to> (?raw::VAL sem_value) \<Ztypecolon> ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
   \<open> ERROR TEXT(\<open>Local value is immutable. Cannot assign to\<close> raw)
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x <set-to> raw \<Ztypecolon> T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x <set-to> (raw::VAL sem_value) \<Ztypecolon> T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   by simp
 
-lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::?'a sem_value) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL sem_value) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  for raw :: \<open>'a sem_value\<close>
   unfolding Synthesis_by_def Action_Tag_def GOAL_CTXT_def
             \<phi>Procedure_def Return_def det_lift_def
   by (cases raw; simp add: Val_expn)
 
 
+subsection \<open>Assignment\<close>
+
+lemma "__set_value_rule__":
+  \<open> (sem_value.dest v \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> R' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<longmapsto> R' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  unfolding \<phi>Procedure_def
+  by (clarsimp simp add: \<phi>expns)
 
 
 
+
+(*
+TODO: fix this feature
 subsubsection \<open>Auto unfolding for value list\<close>
 
 lemma [\<phi>programming_simps]:
@@ -159,7 +188,7 @@ lemma [simp]:
 lemma [simp]:
   \<open>[] \<notin> (\<exists>*x. x \<Ztypecolon> List_Item T)\<close>
   by (rule; clarsimp simp add: \<phi>expns times_list_def)
-
+*)
 
 
 

@@ -481,7 +481,7 @@ lemma [\<phi>reason 1200
 text \<open>On programming mode, the synthesis operation always tries to find a procedure.
   View shifts have to be wrapped in a procedure. The following is an automatic wrapper. \<close>
 
-lemma [\<phi>reason 30
+lemma Synthesis_Proc_fallback_VS [\<phi>reason 30
     for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>v. ?S2\<heavy_comma> SYNTHESIS ?X' v \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
@@ -504,7 +504,7 @@ lemma [\<phi>reason 1200
       (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S1))
       (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S2\<heavy_comma> X'))"
   unfolding Synthesis_def GOAL_CTXT_def DoSynthesis_def
-  using \<phi>apply_view_shift .
+  using \<phi>apply_view_shift by blast
 
 paragraph \<open>Solving an antecedent by Synthesis\<close>
 
@@ -790,7 +790,7 @@ lemma \<phi>apply_subtyping_fast[\<phi>reason 1800 for \<open>
       (Trueprop (CurrentConstruction mode blk R S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" .
+  using \<phi>apply_implication .
 
 lemma [\<phi>reason 1500 for \<open>
   PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
@@ -801,7 +801,7 @@ lemma [\<phi>reason 1500 for \<open>
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>cast_P" implies_left_prod by blast
+  using \<phi>apply_implication implies_left_prod by blast
 
 lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
   PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P))
@@ -816,7 +816,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
-  by (meson \<phi>cast_P implies_left_prod \<phi>apply_view_shift_P)
+  by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
   
 
 paragraph \<open>View Shift Methods\<close>
@@ -842,7 +842,7 @@ lemma \<phi>apply_view_shift_fast[\<phi>reason 1800 for \<open>
       (Trueprop (CurrentConstruction mode blk R S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>apply_view_shift_P" .
+  using "\<phi>apply_view_shift" .
 
 lemma [\<phi>reason 1500 for \<open>
   PROP \<phi>Application_Method (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S' \<longmapsto> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P))
@@ -853,7 +853,7 @@ lemma [\<phi>reason 1500 for \<open>
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def
-  using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame by blast
+  using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame by blast
 
 lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
   PROP \<phi>Application_Method (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S' \<longmapsto> ?T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P))
@@ -868,7 +868,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
-  using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame
+  using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
   by (metis (no_types, lifting))
 
 
@@ -914,7 +914,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
               THEN \<phi>CONSEQ[rotated 1, OF \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>,
                 OF view_shift_id, OF view_shift_by_implication[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
                 simplified prems(1), unfolded \<open>E''' = E''\<close>, simplified prems(1)]]] .
-  by (meson \<phi>apply_view_shift_P)
+  by (meson \<phi>apply_view_shift)
 
 
 subsubsection \<open>Applying on a Block / End a Block\<close>
@@ -1065,7 +1065,7 @@ lemma [\<phi>reason 1200 for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
     GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def Simplify_def
-  using "\<phi>apply_view_shift_P" \<phi>view_shift_intro_frame
+  using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
   by (metis (no_types, lifting))
 
 
@@ -1197,7 +1197,7 @@ lemma [\<phi>reason 1100 for \<open>PROP Do_Action (?action::?'a::view_shift act
       (Trueprop (CurrentConstruction mode s R (R1\<heavy_comma> Y) \<and> (Any \<and> Any2)))\<close>
   for action :: \<open>('a::view_shift) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+  using \<phi>apply_view_shift \<phi>frame_view by blast
 
 lemma [\<phi>reason 1200
     for \<open>PROP Do_Action (?action::?'a::{view_shift, whole_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1209,7 +1209,7 @@ lemma [\<phi>reason 1200
       (Trueprop (CurrentConstruction mode s H Y \<and> Any))\<close>
   for action :: \<open>('a::{view_shift, whole_target}) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+  using \<phi>apply_view_shift \<phi>frame_view by blast
 
 lemma [\<phi>reason 1200
     for \<open>PROP Do_Action (?action::?'a::{view_shift, single_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1222,7 +1222,7 @@ lemma [\<phi>reason 1200
       (Trueprop (CurrentConstruction mode s H Y \<and> Any))\<close>
   for action :: \<open>('a::{view_shift, single_target}) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+  using \<phi>apply_view_shift \<phi>frame_view by blast
 
 lemma [\<phi>reason 1200
     for \<open>PROP Do_Action (?action::?'a::{view_shift, single_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Result\<close>
@@ -1234,7 +1234,7 @@ lemma [\<phi>reason 1200
       (Trueprop (CurrentConstruction mode s H (R \<heavy_comma> Y) \<and> Any))\<close>
   for action :: \<open>('a::{view_shift, single_target}) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P \<phi>frame_view by blast
+  using \<phi>apply_view_shift \<phi>frame_view by blast
 
 
 lemma [\<phi>reason 1200 for \<open>PROP Do_Action (?action::?'a::{multi_args_fixed_first,view_shift} action) (Trueprop (CurrentConstruction ?mode ?s ?R ?X)) ?Result\<close>]:
@@ -1246,7 +1246,7 @@ lemma [\<phi>reason 1200 for \<open>PROP Do_Action (?action::?'a::{multi_args_fi
       (Trueprop (CurrentConstruction mode s H (R1\<heavy_comma> Y) \<and> Any \<and> Any2))\<close>
   for action :: \<open>('a::{multi_args_fixed_first,view_shift}) action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>apply_view_shift_P \<phi>view_shift_intro_frame \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1))
+  by (metis (no_types, lifting) \<phi>apply_view_shift \<phi>view_shift_intro_frame \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1))
 
 
 paragraph \<open>Action by Implication\<close>
@@ -1262,7 +1262,7 @@ lemma [\<phi>reason 1090 for \<open>PROP Do_Action (?action::?'a::implication ac
       (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> (P2 \<and> P)))\<close>
   for action :: \<open>'a::implication action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1190
     for \<open>PROP Do_Action (?action::?'a::{whole_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1274,7 +1274,7 @@ lemma [\<phi>reason 1190
       (Trueprop (CurrentConstruction mode s H Y \<and> P))\<close>
   for action :: \<open>'a::{whole_target,implication} action\<close>
   unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1190
     for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
@@ -1287,7 +1287,7 @@ lemma [\<phi>reason 1190
       (Trueprop (CurrentConstruction mode s H Y \<and> P))\<close>
   for action :: \<open>'a::{single_target,implication} action\<close>
   unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1190
     for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Result\<close>
@@ -1299,7 +1299,7 @@ lemma [\<phi>reason 1190
       (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> P))\<close>
   for action :: \<open>'a::{single_target,implication} action\<close>
   unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 
 lemma [\<phi>reason 1190 for \<open>PROP Do_Action (?action::?'a::{implication,multi_args_fixed_first} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?RR \<heavy_comma> ?X))) ?Result\<close>]:
   \<open> Xr \<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action
@@ -1310,7 +1310,8 @@ lemma [\<phi>reason 1190 for \<open>PROP Do_Action (?action::?'a::{implication,m
       (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> P2 \<and> P))\<close>
   for action :: \<open>'a::{implication,multi_args_fixed_first} action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>cast_P \<phi>apply_view_shift_P \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
+  by (metis (no_types, lifting) \<phi>apply_implication \<phi>apply_view_shift \<phi>view_shift_intro_frame_R
+                                ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
 
 (* No need to provide general search rule because the rule of
 \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> action
@@ -1364,7 +1365,7 @@ lemma [\<phi>reason 1190 on \<open>PROP Do_Action (?action::?'a::{implication,mu
       (Trueprop (s \<in> (R * Y) \<and> P))\<close>
   for action :: \<open>'a::{implication,multi_args_fixed_first} action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>cast_P \<phi>spec.\<phi>apply_view_shift_P \<phi>spec_axioms \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
+  by (metis (no_types, lifting) \<phi>apply_implication \<phi>spec.\<phi>apply_view_shift \<phi>spec_axioms \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
 *)
 
 
@@ -1377,7 +1378,7 @@ lemma [\<phi>reason 1100]:
       (Trueprop (s \<in> (R * Y) \<and> P2 \<and> P))\<close>
   for action :: \<open>'a::implication action\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift_P view_shift_by_implication implies_left_prod by blast
+  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
 *)
 
 
@@ -1462,24 +1463,19 @@ syntax
 
 consts \<phi>identifier :: "unit \<Rightarrow> unit" \<comment> \<open>used only in syntax parsing\<close>
 
-ML_file \<open>library/syntax/value_access.ML\<close>
+subsubsection \<open>Rule \& Implementation\<close>
 
-ML_file \<open>library/value_access.ML\<close>
+lemma "__value_access_0__":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  by fastforce
 
-(*
-(*TODO*)
-\<phi>processor get_val 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
-  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.term >> (fn var => fn () =>
-    let
-      val ctxt_parse = Config.put phi_synthesis_parsing true ctxt
-      val term = Const(\<^const_name>\<open>get_var____\<phi>\<close>, dummyT) $ Syntax.parse_term ctxt_parse var
-                  |> Syntax.check_term ctxt_parse
-                  |> Thm.cterm_of ctxt
-    in
-      Phi_Sys.synthesis term (ctxt,sequent)
-    end)
-\<close> *)
+ML_file \<open>library/generic_variable_access.ML\<close>
 
+lemma [\<phi>reason 2000]:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (x <val-of> any \<Ztypecolon> T) TY\<close>
+  unfolding Value_of_def .
 
 
 section \<open>Implementing the Interactive Environment\<close>
@@ -1520,8 +1516,8 @@ attribute_setup \<phi>instr = \<open>Scan.succeed (Thm.declaration_attribute NuI
   \<open>Instructions of \<phi>-system\<close>
 
 attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_position --| Parse.$$$ ")") #>
-    (fn (name,(ctx,toks)) => Scan.lift (NuProcessor.get_attr ctx name) (ctx,toks))
-  || Scan.lift NuProcessor.process_attr\<close>
+    (fn (name,(ctx,toks)) => Scan.lift (Phi_Processor.get_attr ctx name) (ctx,toks))
+  || Scan.lift Phi_Processor.process_attr\<close>
   \<open>Evaluate the IDE-CP process on the target theorem.
   Particular processor can be specified to be invoked alone.\<close>
 
@@ -1536,8 +1532,9 @@ val structured_statement =
 val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
 val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
 val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
-val precond_statement = Scan.repeat ((premises_statement >> map (pair Phi_Toplevel.Premise))
-                || (requires_statement >> map (pair Phi_Toplevel.Requirement))) >> flat;
+val precond_statement =
+      Scan.repeat ((premises_statement >> map (pair Phi_Toplevel.Premise))
+                || (requires_statement >> map (pair Phi_Toplevel.Assumption))) >> flat;
 (* val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term); *)
 val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
         Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
@@ -1578,14 +1575,14 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (NuProcessor.powerful_process_p >> Toplevel.proof)
+    (Phi_Toplevel.statement_cmd >> Toplevel.proof)
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
    (((optional (\<^keyword>\<open>premises\<close> |--
             and_list (binding -- opt_attribs || Parse.attribs >> pair Binding.empty)) []
       >> Phi_Toplevel.begin_block_cmd)
-   -- NuProcessor.powerful_process_p_inert)
+   -- Phi_Processor.powerful_process_p_inert)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
@@ -1600,7 +1597,7 @@ val _ =
     #> Proof.local_future_terminal_proof
           ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
           ,NONE)))
-   -- NuProcessor.powerful_process_p_inert)
+   -- Phi_Processor.powerful_process_p_inert)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
@@ -1608,7 +1605,7 @@ val _ =
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
           -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
           -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
-        >> NuProcessor.setup_cmd)
+        >> Phi_Processor.setup_cmd)
 
 (* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
@@ -1643,7 +1640,7 @@ subsubsection \<open>Controls\<close>
   in fn (ctxt, sequent) =>
     Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*") >> (fn (tok,n) => fn () =>
         (case Int.fromString n of SOME n => funpow n | _ => error ("should be a number: "^n))
-          (NuProcessor.process_by_input [tok]) (ctxt, sequent)
+          (Phi_Processor.process_by_input [tok]) (ctxt, sequent)
     )
   end\<close>
 
@@ -1685,12 +1682,40 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
                         fn X as Var (name, _) =>
                             (case Vartab.lookup binds name of SOME (_,Y) => Y | _ => X)
                          | X => X
-                     )
+                     ) (*patch to enable term binding*)
                   |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
    in
     Phi_Sys.synthesis term (ctxt, sequent)
   end)\<close>
+
+\<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>?s \<in> ?S'\<close>)  \<open>
+  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- (Parse.short_ident || Parse.long_ident || Parse.number)
+  >> (fn var => fn () =>
+    let
+      val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
+                          |> Config.put phi_synthesis_parsing true
+      val term = Syntax.parse_term ctxt_parser ("$" ^ var)
+                  |> Syntax.check_term ctxt_parser
+                  |> Thm.cterm_of ctxt
+    in
+      Phi_Sys.synthesis term (ctxt,sequent)
+    end)
+\<close>
+
+\<phi>processor assign_var 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
+  fn (ctxt,sequent) => (\<^keyword>\<open>\<rightarrow>\<close> |--
+          Parse.list1 (Scan.option \<^keyword>\<open>$\<close> |-- Scan.option Parse.keyword
+                       --| Scan.option \<^keyword>\<open>$\<close> -- Parse.binding))
+>> (fn vars => fn () =>
+  let
+    val (vars', _ ) =
+          fold_map (fn (NONE,b)    => (fn k' => ((k',b),k'))
+                     | (SOME k, b) => (fn _  => ((SOME k, b), SOME k))) vars NONE
+  in Generic_Variable_Access.assignment vars' (ctxt,sequent)
+  end
+)\<close>
+
 
 \<phi>processor existential_elimination 150 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
   \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
@@ -1710,11 +1735,13 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
       else raise Bypass NONE
     end)\<close>
 
+
+
 subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 \<phi>processor \<phi>simplifier 100 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
-  \<open>NuProcessors.simplifier\<close>
-(* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
+  \<open>Phi_Processors.simplifier\<close>
+(* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>Phi_Processors.simplifier []\<close> *)
 
 \<phi>processor move_fact1  90 (\<open>?Any \<and> ?P\<close>)
 \<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (Phi_Sys.move_lemmata stat)))\<close>

@@ -14,14 +14,20 @@ signature PHI_BASICS = sig
 
   val the_construction : Proof.context -> thm
   val the_programming_sequent' : Proof.context -> thm
-  val the_nu_fact : Proof.state -> thm
-  val set_nu_fact : thm -> Proof.state -> Proof.state
+  val the_state_sequent : Proof.state -> thm
+  val set_state_sequent : thm -> Proof.state -> Proof.state
+  val map_state_sequent : (context_state -> context_state) -> Proof.state -> Proof.state
   val enter_programming_environ : thm -> Proof.state -> Proof.state
   val update_programming_sequent' : thm -> Proof.context -> Proof.context
 
   val reason_programming_implication : Proof.context
                                     -> thm list (*elimination rules*)
                                     -> thm -> thm
+
+  (*The goal in a programming context*)
+  val put_thesis : cterm -> Proof.context -> Proof.context
+  val get_thesis : Proof.context -> cterm
+
 end
 
 structure Phi_Basics : PHI_BASICS = struct
@@ -49,7 +55,7 @@ fun the_programming_sequent' ctxt =
   case Programming_Sequent.get ctxt of (thm, _, _)::_ => thm
                                      | [] => (err_bad_env (); Drule.dummy_thm)
 
-val the_nu_fact = the_programming_sequent' o Proof.context_of
+val the_state_sequent = the_programming_sequent' o Proof.context_of
 
 fun the_implication_GE i ctxt =
   let val L = Programming_Sequent.get ctxt
@@ -98,7 +104,13 @@ fun gen_set_nu_fact updt sequent stat = stat
   |> Proof.set_facts [sequent]
   |> Proof.map_context (updt sequent);
 
-val set_nu_fact = gen_set_nu_fact update_programming_sequent'
+val set_state_sequent = gen_set_nu_fact update_programming_sequent'
+fun map_state_sequent f s =
+  s |> Proof.map_context_result (fn ctxt => (ctxt, the_state_sequent s)
+                                         |> f
+                                         |> swap)
+    |-> set_state_sequent
+
 val enter_programming_environ = gen_set_nu_fact enter_programming_environ'
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>this\<close>,
@@ -163,6 +175,10 @@ fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
 
 
 
+fun put_thesis thesis = 
+      Proof_Context.put_thms false ("\<phi>thesis", SOME [Drule.mk_term thesis])
+fun get_thesis ctxt =
+      Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
 
 
 

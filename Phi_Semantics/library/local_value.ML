@@ -1,12 +1,13 @@
-signature LOCAL_VALUE = sig
-  val parse_var_add_tag : bool Config.T
+signature PHI_VARIABLE = sig
 
-  val mk_var_scope : Binding.binding list -> context_state -> context_state
+  val variable_is_typed : bool Config.T
   val dest_Var : term -> (string * (term * term)) option
+
 end
 
-structure Local_Value : LOCAL_VALUE = struct
-open Phi_Help Phi_Syntax Phi_Sys
+structure Phi_Variable : PHI_VARIABLE = struct
+
+val variable_is_typed = Config.declare_bool ("\<phi>variable_is_typed", \<^here>) (K false)
 
 fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
                 $ x
@@ -18,132 +19,47 @@ fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
       = SOME (name, (x,T))
   | dest_Var _ = NONE
 
-fun local_value_export ctxt rule vars sequent =
-let
-fun comp incremented th1 th2 =
-  Thm.bicompose (SOME ctxt) {flatten = true, match = false, incremented = incremented}
-    (false, th1, 0) 1 th2
-  |> Seq.list_of |> distinct Thm.eq_thm
-  |> (fn [th] => Thm.solve_constraints th | _ => raise THM ("COMP", 1, [th1, th2]));
-in
-  NuApply.MP ctxt (Drule.forall_intr_list vars sequent) rule
-end
+fun find_Var var (Const (\<^const_name>\<open>times\<close>, _) $ R $ X) =
+     (case dest_Var X
+        of SOME (name, xT) => if name = var then SOME xT else find_Var var R
+         | NONE => find_Var var R)
+  | find_Var var X =
+      case dest_Var X
+        of SOME (name, xT) => if name = var then SOME xT else NONE
+         | NONE => NONE
 
-datatype operation = Set_Var of cterm | New_Var of Binding.binding
-
-fun length_of_sets ret [] = ret
-  | length_of_sets ret (Set_Var _ :: r) = length_of_sets (1+ret) r 
-  | length_of_sets ret (New_Var _ :: r) = length_of_sets ret r
-
-fun mk_var_scope names''' (ctxt,sequent) =
+fun variable_assigner b (ctxt,sequent) =
   let
-    val blk_var as (Free (blk_name,_)) = current_block_var sequent
-    val blk_name = Variable.revert_fixed ctxt blk_name
-    val names = rev names'''
-    val ex_vars = Thm.prop_of sequent
-                  |> dest_CurrentConstruction |> #4
-                  |> strip_separations |> rev
-                  |> map_filter (dest_Var)
-    fun check_name name =
-          case Option.map (` (AList.defined (op =) ex_vars))
-                  (Variable.lookup_fixed ctxt (Variable.check_name name))
-            of SOME (true, iname) => Set_Var (Thm.cterm_of ctxt (Free (iname, \<^typ>\<open>varname\<close>)))
-             | _ => New_Var name
-    val oprs = map check_name names
-
-    val init = Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>))
-    val op_var_scope' = init
-          |> fold (fn v => fn th =>
-                case v of Set_Var vterm =>
-                            (Drule.infer_instantiate ctxt
-                                  [(("var",0), Thm.incr_indexes_cterm 1 vterm)]
-                                  @{thm "__\<phi>op_set_var__"}) RS th
-                        | New_Var _ => @{thm "__\<phi>op_var_scope__"} RS th) oprs
-          |> (fn thm => @{thm "__\<phi>op_var_scope__0"} RS thm)
-    val (ctxt,sequent') = NuApply.apply [op_var_scope'] (ctxt,sequent)
-                |> apsnd (fn th =>
-                    let
-                      fun is_body (Abs (_,_,X)) = is_body X
-                        | is_body (\<^const>\<open>Trueprop\<close> $ X) = is_body X
-                        | is_body (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_body X
-                        | is_body (X $ _) = is_body X
-                        | is_body (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _)) = true
-                        | is_body _ = false
-                    in Thm.permute_prems 0 (1 + find_index is_body (Thm.prems_of th)) th end)
-                |> Phi_Reasoner.reason1 (fn _ => 
-                    "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
-                   ) (SOME ~1)
-                |> apsnd (fn th => th RS @{thm conjunct1})
-
-    val prem = Thm.cprem_of sequent' 1
-    val (vnames,ctxt) =
-          Proof_Context.add_fixes (oprs
-                                   |> map_filter (fn x => case x of New_Var b => SOME b | _ => NONE)
-                                   |> map (fn x => (x, SOME \<^typ>\<open>varname\<close>, NoSyn))) ctxt
-
-    val vterms = map (fn name => Thm.cterm_of ctxt (Free (name, \<^typ>\<open>varname\<close>))) vnames
-    val prem' = fold (fn v => fn prem => Drule.beta_conv (Thm.dest_arg prem) v) vterms prem
-    val (_,arg_phi,ret_phi,E) = dest_procedure_c prem'
-
-    val ([], ctxt) =
-      Proof_Context.add_assms (fn _ => fn [] => (local_value_export ctxt sequent' vterms, I)) [] ctxt
-
-    val goal = Phi_Toplevel.get_thesis ctxt
-    val (trueprop, goal_term) = Thm.dest_comb goal
-    val ((goal_F_arg,goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
-    fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
-      | left_most X = X
-    val ret_phi' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) ret_phi
-    val Var (R,_) = case Thm.term_of ret_phi'
-                      of Abs (_,_,X) => left_most X |> dest_comb |> fst
-                       | X => left_most X
-    val goal_ret' = Drule.infer_instantiate ctxt [(R,goal_ret)] (Drule.mk_term ret_phi')
-                      |> Drule.dest_term
-    val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E)
-    val ctxt = Phi_Toplevel.put_thesis goal' ctxt
-  in
-    #initial_sequent Phi_Working_Mode.procedure blk_name arg_phi ctxt
+  val existed = find_Var (Variable.intern_fixed ctxt (Binding.name_of b))
+                         (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
+                 |> is_some
+  fun declare rule =
+    let
+    val pattern = case Thm.prop_of rule
+                    of Const (\<^const_name>\<open>Pure.eq\<close>, (T1 as Type ("fun", [T,_]))) $ V1 $ _ =>
+                        Const (\<^const_name>\<open>Pure.eq\<close>, T1)
+                          $ V1 $ Var (("out", maxidx_of_term V1 + 1), T)
+                     | _ => raise THM ("Bad rule.", 0, [rule])
+     in Context.proof_map (Phi_Reasoner.add_intro_rule (Binding.pos_of b) 1000 ([pattern], []) rule)
+    end
+  in if existed
+     then (@{thm "__set_var_rule__"}, ctxt, [], [])
+     else let
+          val rule = if Config.get ctxt variable_is_typed
+                     then @{thm "__set_new_var_rule__"}
+                     else @{thm "__set_new_var_noty_rule__"}
+          val ([vname],ctxt) = Proof_Context.add_fixes [(b, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
+          val ctxt = Generic_Variable_Access.bind_local_vals
+                        [(Binding.name_of b, Free (Binding.name_of b, @{typ varname}))] ctxt
+          in (rule, ctxt, [Thm.cterm_of ctxt (Free (vname, @{typ varname}))], [declare])
+          end
   end
 
-
-val parse_var_add_tag = Attrib.setup_config_bool \<^binding>\<open>\<phi>parse_var_add_tag\<close> (K false);
-
-(* Syntax *)
 val _ = Theory.setup (
-let open Ast Phi_Syntax
-  fun strip_constrain (Const ("_constrain", _) $ x $ _) = strip_constrain x
-    | strip_constrain (Const ("_type_constraint_", _) $ x) = strip_constrain x
-    | strip_constrain x = x
+            Generic_Variable_Access.register_assigner ("var", \<^type_name>\<open>varname\<close>,
+                "to assign to a new variable", variable_assigner))
 
-  fun mk_GetVar ctxt name =
-    let
-      val value = Thm.prop_of (Phi_Basics.the_construction ctxt)
-                  |> dest_CurrentConstruction |> #4
-                  |> strip_separations |> rev
-                  |> get_first (Envir.beta_eta_contract
-                             #> dest_Var
-                             #> Option.mapPartial (fn (name',(x,_)) =>
-                                    if name' = name then SOME x else NONE))
-      fun tag v = if Config.get ctxt parse_var_add_tag orelse Config.get ctxt phi_synthesis_parsing
-                  then Const (\<^const_name>\<open>Value_of\<close>, dummyT) $ v $ Free (name, dummyT)
-                  else v
-    in case value of SOME v => tag v
-                   | NONE => error ("No variable named "^quote name^" is found.")
-    end
 
-  fun has_get_var (Const (\<^const_name>\<open>get_var____\<phi>\<close>, _)) = true
-    | has_get_var (A $ B) = has_get_var A orelse has_get_var B
-    | has_get_var (Abs (_,_,X)) = has_get_var X
-    | has_get_var _ = false
-  fun map_get_var ctxt (Const (\<^const_name>\<open>get_var____\<phi>\<close>, _) $ X)
-        = mk_GetVar ctxt (Term.term_name (strip_constrain X))
-    | map_get_var ctxt (A $ B) = map_get_var ctxt A $ map_get_var ctxt B
-    | map_get_var ctxt (Abs (name,ty,X)) = Abs (name,ty, map_get_var ctxt X)
-    | map_get_var ctxt x = x
- in Context.theory_map (Syntax_Phases.term_check ~10 "\<phi>variable" (fn ctxt =>
-      map (fn x => if has_get_var x then map_get_var ctxt x else x)))
-end
-)
 
 end
 
