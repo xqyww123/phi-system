@@ -84,6 +84,10 @@ signature PHI_HELP = sig
   val mk_Trueprop : term -> term
   val dest_Trueprop_c : cterm -> cterm
 
+  val comp_rule : Proof.context -> bool -> thm -> thm -> thm
+  val comp_rule_incr_left  : Proof.context -> thm -> thm -> thm
+  val comp_rule_incr_right : Proof.context -> thm -> thm -> thm
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -276,5 +280,15 @@ fun caseprod (tm as (Abs (_,_, Abs (_,_, _)))) = prodconst $ tm
   | caseprod (tm as (Abs (_,_, Const (@{const_name case_prod}, _) $ _))) = prodconst $ tm
   | caseprod tm = tm
 val tuple_abs = fold_rev (caseprod oo absfree'')
-    
+   
+
+fun comp_rule ctxt incremented th1 th2 =
+  Thm.bicompose (SOME ctxt) {flatten = true, match = false, incremented = incremented}
+    (false, th1, 0) 1 th2
+  |> Seq.list_of |> distinct Thm.eq_thm
+  |> (fn [th] => Thm.solve_constraints th | _ => raise THM ("COMP", 1, [th1, th2]));
+
+fun comp_rule_incr_left  ctxt th1 th2 = comp_rule ctxt true (Drule.incr_indexes th2 th1) th2
+fun comp_rule_incr_right ctxt th1 th2 = comp_rule ctxt true th1 (Drule.incr_indexes th1 th2)
+
 end

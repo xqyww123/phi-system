@@ -71,7 +71,7 @@ lemma [iff]:
 
 
 
-subsection \<open>Document Antiquotations\<close>
+subsection \<open>Helper Antiquotations\<close>
 
 setup \<open>
 let

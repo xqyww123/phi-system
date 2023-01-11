@@ -135,8 +135,7 @@ fun MPs ctxt th1s' th2 =
   in 
     case Seq.pull (Phi_Reasoner.reason_s ctxt stats)
       of SOME (stat, _) => snd (Phi_Reasoners.safer_obligation_solver' obligation_fail stat)
-       | NONE => error(
-            "Reasoning Fails. You may turn on \<phi>trace_reasoning to debug where the reasoning fails.")
+       | NONE => Phi_Reasoner.error "Meta Modus Pones"
   end
 
 fun MP ctxt th1' th2 =

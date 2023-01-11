@@ -22,6 +22,11 @@ signature PHI_BASICS = sig
   val reason_programming_implication : Proof.context
                                     -> thm list (*elimination rules*)
                                     -> thm -> thm
+
+  (*The goal in a programming context*)
+  val put_thesis : cterm -> Proof.context -> Proof.context
+  val get_thesis : Proof.context -> cterm
+
 end
 
 structure Phi_Basics : PHI_BASICS = struct
@@ -163,6 +168,10 @@ fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
 
 
 
+fun put_thesis thesis = 
+      Proof_Context.put_thms false ("\<phi>thesis", SOME [Drule.mk_term thesis])
+fun get_thesis ctxt =
+      Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
 
 
 

@@ -5,6 +5,8 @@ type working_mode = {
   argument_spec: term (*proposition of a goal or a state sequent*) -> term,
   return_spec:   term (*proposition of a goal*) -> term,
   return_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm,
+  exception_spec  : term (*proposition of a goal*) -> term option,
+  exception_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option,
   inhabited_rule: Proof.context -> thm,
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
@@ -43,6 +45,8 @@ type working_mode = {
   argument_spec: term (*proposition of a goal or a state sequent*) -> term,
   return_spec: term (*term of the state sequent*) -> term,
   return_spec_c: Proof.context -> cterm (*term of the state sequent*) -> cterm,
+  exception_spec  : term (*proposition of a goal*) -> term option,
+  exception_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option,
   inhabited_rule: Proof.context -> thm,
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
@@ -145,6 +149,12 @@ val procedure : working_mode =
           orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction_c))
          (orelse_opt (try (#3 o Phi_Syntax.dest_procedure_c))
              (#4 o Phi_Syntax.dest_PendingConstruction_c)))
+    val exception_spec = 
+          orelse_opt (try (#4 o Phi_Syntax.dest_procedure))
+             (#5 o Phi_Syntax.dest_PendingConstruction) #> SOME
+    val exception_spec_c = K (
+          orelse_opt (try (#4 o Phi_Syntax.dest_procedure_c))
+             (#5 o Phi_Syntax.dest_PendingConstruction_c) #> SOME)
     val argument_spec = orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
          (orelse_opt (try (#2 o Phi_Syntax.dest_procedure))
              (#4 o Phi_Syntax.dest_PendingConstruction))
@@ -232,6 +242,8 @@ val procedure : working_mode =
     return_spec = return_spec,
     return_spec_c = return_spec_c,
     argument_spec = argument_spec,
+    exception_spec = exception_spec,
+    exception_spec_c = exception_spec_c,
     inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_proc,
     block_name_of = (fn term => 
@@ -244,7 +256,7 @@ val procedure : working_mode =
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule =
-         (if can (Phi_Syntax.dest_CurrentConstruction) (Thm.prop_of sequent)
+         (if can (Phi_Syntax.dest_CurrentConstruction) (Thm.concl_of sequent)
           then @{thm "_\<phi>cast_internal_rule_"}
           else @{thm "_\<phi>cast_internal_rule_'"})
             |> Thm.incr_indexes idx
@@ -256,11 +268,11 @@ val procedure : working_mode =
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule =
-         (if can (Phi_Syntax.dest_PendingConstruction) (Thm.prop_of sequent)
+         (if can (Phi_Syntax.dest_PendingConstruction) (Thm.concl_of sequent)
           then @{thm "_\<phi>cast_exception_rule_"}
           else cannot_cast_exception sequent)
             |> Thm.incr_indexes idx
-            |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
+            |> Drule.infer_instantiate ctxt [(("E'",idx),desired)]
        in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
        end
     ),
@@ -322,6 +334,8 @@ in
     return_spec_c = return_spec_c,
     argument_spec = orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
                                     (#1 o Phi_Syntax.dest_view_shift),
+    exception_spec = K NONE,
+    exception_spec_c = K (K NONE),
     inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_view_shift,
     block_name_of = (fn term => 
@@ -393,6 +407,8 @@ in
     return_spec = return_spec,
     return_spec_c = return_spec_c,
     argument_spec = argument_spec,
+    exception_spec = K NONE,
+    exception_spec_c = K (K NONE),
     inhabited_rule = K @{thm Implication_Inhabited_rule},
     initial_sequent = start_implication,
     block_name_of = (K "\<chi>"),

@@ -13,9 +13,6 @@ signature PHI_TOPLEVEL = sig
      * @{named_theorems useful}; Requirement is not. *)
   val register_Block_End_Hook : (context_state -> context_state) -> Proof.context -> Proof.context
 
-  val put_thesis : cterm -> Proof.context -> Proof.context
-  val get_thesis : Proof.context -> cterm
-
   val begin_proc_cmd : bool (*whether to define a new constant*)
         -> Attrib.binding (*name*)
         -> xstring (*argument*)
@@ -96,12 +93,6 @@ val v_lrep_var = "\<l>\<r>\<e>\<p>"
 val v_goal_name = "\<phi>goal"
 val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
 val top_blk_name = "\<t>\<o>\<p>_\<b>\<l>\<o>\<c>\<k>"
-
-fun put_thesis thesis = 
-      Proof_Context.put_thms false ("\<phi>thesis", SOME [Drule.mk_term thesis])
-fun get_thesis ctxt =
-      Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
-
 
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
 
@@ -574,7 +565,7 @@ fun prove_prem int stat =
       in
         stat |> Proof.map_context_result
                   (Config.put Phi_Reasoner.auto_level 0
-                    #> (fn ctxt => NuProcessor.process_no_input (ctxt, th RS specthm))
+                    #> (fn ctxt => Phi_Processor.process_no_input (ctxt, th RS specthm))
                     #> apfst (Config.put Phi_Reasoner.auto_level original_auto_level)
                     #> swap)
              |-> Phi_Basics.set_nu_fact
@@ -697,7 +688,7 @@ fun gen_begin_block prep_attr bindings int stat =
             |> Proof_Context.put_thms false ("\<phi>thesis",
                           SOME [Drule.mk_term (cterm_of ctxt goal)])
             |> #initial_sequent mode blk_name (cterm_of ctxt arg)
-            |> Value_Access.open_value_context Position.none
+            |> Value_Access.open_value_context' Position.none
             |> swap)
       |-> (if is_top then Phi_Basics.enter_programming_environ else Phi_Basics.set_nu_fact)
 (*      |> Value_Access.open_value_context' Position.none *)
@@ -706,6 +697,11 @@ fun gen_begin_block prep_attr bindings int stat =
 val begin_block_cmd = gen_begin_block Attrib.attribute_cmd
 val begin_block = gen_begin_block (K I)
 end
+
+
+
+
+
 
 (* fun export_LLVM thy =
   let

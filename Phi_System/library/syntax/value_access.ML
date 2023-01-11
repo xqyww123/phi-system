@@ -64,7 +64,7 @@ fun bind_local_vals vals =
 
 type value_parser_key =
   ( int (*priority, descend order, the higher one is attempted first*)
-  * string (*name*))
+  * string (*full name*))
 
 val value_parser_key_ord = prod_ord int_ord string_ord
 

@@ -1463,7 +1463,12 @@ syntax
 
 consts \<phi>identifier :: "unit \<Rightarrow> unit" \<comment> \<open>used only in syntax parsing\<close>
 
-ML_file \<open>library/syntax/value_access.ML\<close>
+subsubsection \<open>Rule \& Implementation\<close>
+
+lemma "__value_access_0__":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  by fastforce
 
 ML_file \<open>library/value_access.ML\<close>
 
@@ -1506,8 +1511,8 @@ attribute_setup \<phi>instr = \<open>Scan.succeed (Thm.declaration_attribute NuI
   \<open>Instructions of \<phi>-system\<close>
 
 attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_position --| Parse.$$$ ")") #>
-    (fn (name,(ctx,toks)) => Scan.lift (NuProcessor.get_attr ctx name) (ctx,toks))
-  || Scan.lift NuProcessor.process_attr\<close>
+    (fn (name,(ctx,toks)) => Scan.lift (Phi_Processor.get_attr ctx name) (ctx,toks))
+  || Scan.lift Phi_Processor.process_attr\<close>
   \<open>Evaluate the IDE-CP process on the target theorem.
   Particular processor can be specified to be invoked alone.\<close>
 
@@ -1564,14 +1569,14 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (NuProcessor.powerful_process_p >> Toplevel.proof)
+    (Phi_Processor.powerful_process_p >> Toplevel.proof)
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
    (((optional (\<^keyword>\<open>premises\<close> |--
             and_list (binding -- opt_attribs || Parse.attribs >> pair Binding.empty)) []
       >> Phi_Toplevel.begin_block_cmd)
-   -- NuProcessor.powerful_process_p_inert)
+   -- Phi_Processor.powerful_process_p_inert)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
@@ -1586,7 +1591,7 @@ val _ =
     #> Proof.local_future_terminal_proof
           ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
           ,NONE)))
-   -- NuProcessor.powerful_process_p_inert)
+   -- Phi_Processor.powerful_process_p_inert)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
@@ -1594,7 +1599,7 @@ val _ =
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
           -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
           -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
-        >> NuProcessor.setup_cmd)
+        >> Phi_Processor.setup_cmd)
 
 (* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
@@ -1629,7 +1634,7 @@ subsubsection \<open>Controls\<close>
   in fn (ctxt, sequent) =>
     Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*") >> (fn (tok,n) => fn () =>
         (case Int.fromString n of SOME n => funpow n | _ => error ("should be a number: "^n))
-          (NuProcessor.process_by_input [tok]) (ctxt, sequent)
+          (Phi_Processor.process_by_input [tok]) (ctxt, sequent)
     )
   end\<close>
 
@@ -1678,7 +1683,7 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
     Phi_Sys.synthesis term (ctxt, sequent)
   end)\<close>
 
-\<phi>processor get_val 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>?s \<in> ?S'\<close>)  \<open>
+\<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>?s \<in> ?S'\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- (Parse.short_ident || Parse.long_ident || Parse.number)
   >> (fn var => fn () =>
     let
@@ -1691,6 +1696,17 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
       Phi_Sys.synthesis term (ctxt,sequent)
     end)
 \<close>
+
+\<phi>processor assign_variable 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
+  fn (ctxt,sequent) => (\<^keyword>\<open>\<rightarrow>\<close> |-- Parse.list1 (Scan.option Parse.keyword -- Parse.binding))
+>> (fn vars => fn () =>
+  let
+    val (vars', _ ) = fold_map (fn (NONE,b)    => (fn k' => ((k',b),k'))
+                                 | (SOME k, b) => (fn _  => ((SOME k, b), SOME k))) vars NONE
+  in Value_Access.assignment vars' (ctxt,sequent)
+  end
+)\<close>
+
 
 \<phi>processor existential_elimination 150 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
   \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
@@ -1715,8 +1731,8 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
 subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 \<phi>processor \<phi>simplifier 100 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
-  \<open>NuProcessors.simplifier\<close>
-(* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>NuProcessors.simplifier []\<close> *)
+  \<open>Phi_Processors.simplifier\<close>
+(* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>Phi_Processors.simplifier []\<close> *)
 
 \<phi>processor move_fact1  90 (\<open>?Any \<and> ?P\<close>)
 \<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (Phi_Sys.move_lemmata stat)))\<close>

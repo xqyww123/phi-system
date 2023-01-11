@@ -66,6 +66,11 @@ lemma [\<phi>reason]:
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
   ..
 
+lemma [\<phi>reason 1]:
+  \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
+\<Longrightarrow> \<phi>SemType X Any\<close>
+  by blast
+
 subsubsection \<open>Zero Value\<close>
 
 definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"

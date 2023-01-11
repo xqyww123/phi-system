@@ -13,7 +13,8 @@ subsection \<open>Variable\<close>
 
 subsubsection \<open>Syntax\<close>
 
-\<phi>processor decl_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
+
+(* \<phi>processor decl_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>var\<close> |-- Parse.term >> (fn var => fn () =>
     let
       val ctxt_parse = Config.put phi_synthesis_parsing true ctxt
@@ -23,7 +24,7 @@ subsubsection \<open>Syntax\<close>
     in
       Phi_Sys.synthesis term (ctxt,sequent)
     end)
-\<close>
+\<close> *)
 
 
 (*
@@ -180,10 +181,25 @@ lemma "__set_new_var_noty_rule__":
   \<medium_right_bracket>. .
 
 
-lemma "__value_access_0__":
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  by fastforce
+
+
+ML_file "library/local_value.ML"
+
+proc
+  assumes [\<phi>reason for \<open>\<phi>SemType (x \<Ztypecolon> T) _ \<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+      and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) _ \<close>]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY'\<close>
+  argument \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
+  return \<open>Void\<close>
+  \<medium_left_bracket>
+    $x $y $x \<rightarrow> var xx, yy, zz
+  ;;    $xx
+  \<medium_right_bracket>. .
+
+
+lemma
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_. Y \<rbrace> \<equiv> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y\<close>
+  unfolding \<phi>Procedure_def View_Shift_def Return_def det_lift_def
+  by (simp add: \<phi>expns)
 
 lemma
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_. Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s Any \<rbrace>
@@ -191,7 +207,7 @@ lemma
   unfolding \<phi>Procedure_def View_Shift_def Return_def det_lift_def
   by (simp add: \<phi>expns)
 
-lemma
+lemma "__set_value_rule__":
   \<open> (sem_value.dest v \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> R' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<longmapsto> R' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   unfolding \<phi>Procedure_def
@@ -210,25 +226,16 @@ thm "__\<phi>op_set_var__"[OF "__\<phi>op_set_var__" [OF "__\<phi>op_var_scope__
 term \<open>x.x.x.x := xx\<close>
 
 
-ML_file_debug "library/local_value.ML"
+
 
 \<phi>processor assign_variable 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
   fn (ctxt,sequent) => ((\<^keyword>\<open>\<rightarrow>\<close> |-- Parse.list1 Parse.binding)
 >> (fn vars => fn () =>
-  raise NuProcessor.Terminate_Process (Local_Value.mk_var_scope vars (ctxt,sequent), I)))
+  raise Phi_Processor.Terminate_Process (Local_Value.mk_var_scope vars (ctxt,sequent), I)))
 \<close>
 
-lemma [\<phi>reason 1]:
-  \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
-\<Longrightarrow> \<phi>SemType X Any\<close>
-  by blast
 
-proc
-  assumes [\<phi>reason for \<open>\<phi>SemType (x \<Ztypecolon> T) _ \<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  argument \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
-  return \<open>xxxx\<close>
-  \<medium_left_bracket>
-  ;; $x \<rightarrow> xx
+
   ;;  $\<a>\<r>\<g>1
   ;; \<open>$1\<close> \<open>$(\<a>\<r>\<g>1)\<close>
   ;; \<open>$2 := xx\<close>

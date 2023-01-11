@@ -19,6 +19,7 @@ signature NU_PROCESSOR = sig
   val powerful_process : Token.T list -> Proof.state -> Proof.state
   val powerful_process_p : (Proof.state -> Proof.state) parser
   val powerful_process_p_inert : (Proof.state -> Proof.state) parser
+          (*if the input is empty, then powerful_process_p_inert does nothing*)
   val process_by_input : Token.T list -> context_state -> context_state
   val process_no_input : context_state -> context_state
   val process_attr : attribute parser
@@ -40,7 +41,7 @@ signature NU_PROCESSOR = sig
         * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
 end
 
-structure NuProcessor : NU_PROCESSOR = struct
+structure Phi_Processor : NU_PROCESSOR = struct
 open Thm Phi_Basics
 
 exception Bypass of context_state option
@@ -176,14 +177,14 @@ fun powerful_process toks stat =
 fun powerful_process_p toks =
       (Proof.map_context (Config.put Phi_Reasoner.auto_level 2) #>
           powerful_process (toks @ [Token.eof])
-      ,if hd toks |> Token.is_eof then [Token.eof] else [])
+      ,if Token.is_eof (hd toks) then [Token.eof] else [])
 
 fun powerful_process_p_inert toks =
-      (if hd toks |> Token.is_eof
+      (if Token.is_eof (hd toks)
         then I
         else Proof.map_context (Config.put Phi_Reasoner.auto_level 2)
           #> powerful_process (toks @ [Token.eof])
-      ,if hd toks |> Token.is_eof then [Token.eof] else [])
+      ,if Token.is_eof (hd toks) then [Token.eof] else [])
 
 
 val process_attr = wrap_attr (fn stat => simple_process stat #> apfst K)
@@ -213,9 +214,9 @@ fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) ctxt =
     ctxt |> Context.proof_map (
       ML_Context.expression (Input.pos_of proc)
         (ML_Lex.read
-          ("Theory.local_setup (NuProcessor.setup (" ^
+          ("Theory.local_setup (Phi_Processor.setup (" ^
           ML_Syntax.make_binding binding ^ ") (" ^ ML_Syntax.print_int precedence ^ ") ("
-          ^ ML_Syntax.print_list ML_Syntax.print_term prop ^ ") (let open NuProcessor NuProcessors in ") @
+          ^ ML_Syntax.print_list ML_Syntax.print_term prop ^ ") (let open Phi_Processor Phi_Processors in ") @
           ML_Lex.read_source proc @
           ML_Lex.read (" end) " ^ ML_Syntax.print_string comment ^ ")"))
     )
