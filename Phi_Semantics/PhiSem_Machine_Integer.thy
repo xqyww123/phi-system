@@ -335,6 +335,7 @@ lemma op_add[\<phi>overload +]:
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
+
 proc [
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x + ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
@@ -478,6 +479,7 @@ proc [
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> F1 F2 < \<medium_right_bracket>. .
 
+
 proc [
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x > ?y) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
@@ -487,8 +489,9 @@ proc [
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x > y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 F2
-  ;;  \<open>\<v>1\<close> ;; \<open>\<v>0\<close> <
+  \<medium_left_bracket> F1 \<rightarrow> val v1
+    F2 \<rightarrow> val v2
+    $v2 $v1 <
   \<medium_right_bracket>. .
 
 (* Service Obligation !!!!! Last Day!!!! *)
@@ -522,9 +525,10 @@ proc [
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<ge> y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1
-    F2
-    \<open>\<v>1\<close> \<open>\<v>0\<close> \<le> \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 \<rightarrow> val v1
+    F2 \<rightarrow> val v2
+    $v2 $v1 \<le>
+  \<medium_right_bracket>. .
 
 
 

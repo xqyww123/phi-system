@@ -87,10 +87,10 @@ val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation
 fun auto_obligation_solver1 (ctxt,sequent) =
   case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
-        Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+        Phi_Reasoner.debug_pretty ctxt (fn _ => (\<^here>, Pretty.chunks [
             Pretty.str "Solving the following goal using \<open>auto\<close> method...",
             Syntax.pretty_term ctxt Goal
-        ]);
+        ]));
         auto_obligation_solver' (fn _ =>
           error (Pretty.string_of (Pretty.chunks [
               Pretty.str "Fail to solve the proof obligation automatically:",
@@ -114,10 +114,10 @@ val safer_obligation_solver' = context_tactic_to_state_transition safer_obligati
 fun safer_obligation_solver1 (ctxt,sequent) =
   case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
-        Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+        Phi_Reasoner.debug_pretty ctxt (fn _ => (\<^here>, Pretty.chunks [
             Pretty.str "Solving the following goal using \<open>clarsimp\<close> method...",
             Syntax.pretty_term ctxt Goal
-        ]);
+        ]));
         safer_obligation_solver' (fn _ =>
           error (Pretty.string_of (Pretty.chunks [
               Pretty.str "Fail to solve the proof obligation automatically:",

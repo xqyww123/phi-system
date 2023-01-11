@@ -57,6 +57,8 @@ signature PHI_TOPLEVEL = sig
         -> bool -> Proof.state -> Proof.state
   val end_block_cmd : string option -> bool -> Proof.state -> Proof.state
 
+  val statement_clean_values : bool Config.T (*controls whether the statement command \<^bold>;
+        cleans all values at its beginning.*)
   val statement_cmd : (Proof.state -> Proof.state) parser
 
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
@@ -459,7 +461,7 @@ fun gen_finish_proc prep_term qed spec int stat =
           then (ctxt_pre1,sequent_pre1)
           else let
             val _ = Phi_Reasoner.debug_info ctxt_pre1 (fn _ =>
-                      "solving pending antecedents before closing the programming block...")
+                      (\<^here>, "solving pending antecedents before closing the programming block..."))
             fun attack_obligations (ctxt,sequent) =
               case try Thm.major_prem_of sequent
                 of SOME (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ _)) =>
@@ -481,7 +483,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                             val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                                Pretty.str "transforming to the given specification ",
                                Syntax.pretty_term ctxt'' (Thm.term_of aim)
-                            ])
+                            ] |> pair \<^here>)
                         in Phi_Sys.cast aim
                         #> Phi_Reasoners.auto_obligation_solver' (fn (ctxt,sequent) =>
                              error (Pretty.string_of (Pretty.chunks [
@@ -501,7 +503,7 @@ fun gen_finish_proc prep_term qed spec int stat =
         val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                   Pretty.str "casting to the destined post-condition ",
                   Syntax.pretty_term ctxt'' (Thm.term_of desired_nu)
-                ])
+                ] |> pair \<^here>)
       in
         (ctxt'',sequent'')
           (* |> invoke_Block_End_Hook *)
@@ -525,7 +527,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Syntax.pretty_term ctxt' (fst (Logic.dest_implies (Thm.prop_of goal))),
                     Pretty.item [Pretty.str "resulted sequent:"],
                     Thm.pretty_thm ctxt' sequent'
-                  ]))
+                  ]) |> pair \<^here>)
                 val result = NuApply.MP ctxt' sequent' goal
               in result end
             ))
@@ -695,10 +697,18 @@ val begin_block = gen_begin_block (K I)
 end
 
 
+(*Whether to remove all values at the beginning of the command \<^bold>;*)
+val statement_clean_values = Attrib.setup_config_bool \<^binding>\<open>\<phi>statement_clean_values\<close> (K true)
+
+fun clean_values (ctxt,sequent) =
+      if can Phi_Syntax.dest_CurrentConstruction (Thm.prop_of sequent)
+         andalso Config.get ctxt statement_clean_values
+      then (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst)
+      else (ctxt, sequent)
+
 val statement_cmd =
   Phi_Processor.powerful_process_p >> (fn f => fn stat =>
-    stat |> Phi_Basics.map_state_sequent (fn (ctxt,sequent) =>
-                (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst))
+    stat |> Phi_Basics.map_state_sequent clean_values
          |> f
   )
 

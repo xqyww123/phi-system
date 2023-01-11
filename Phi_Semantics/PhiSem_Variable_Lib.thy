@@ -7,43 +7,7 @@ section \<open>Basic Operations\<close>
 
 subsection \<open>Variable\<close>
 
-(*
-
- *)
-
 subsubsection \<open>Syntax\<close>
-
-
-(* \<phi>processor decl_variable 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close>)  \<open>
-  fn (ctxt,sequent) => \<^keyword>\<open>var\<close> |-- Parse.term >> (fn var => fn () =>
-    let
-      val ctxt_parse = Config.put phi_synthesis_parsing true ctxt
-      val term = Const(\<^const_name>\<open>get_var____\<phi>\<close>, dummyT) $ Syntax.parse_term ctxt_parse var
-                  |> Syntax.check_term ctxt_parse
-                  |> Thm.cterm_of ctxt
-    in
-      Phi_Sys.synthesis term (ctxt,sequent)
-    end)
-\<close> *)
-
-
-(*
-syntax "__var__" :: "idt \<Rightarrow> logic" ("\<^bold>v\<^bold>a\<^bold>r _" [1000] 999)
-
-parse_ast_translation \<open>
-  let open Ast
-    fun mk_Var name =
-      Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>,
-        Appl [Variable "Var", name, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>]]
-   in [(\<^syntax_const>\<open>__var__\<close>, fn ctxt => fn [name] => mk_Var name)]
-  end
-\<close> *)
-
-(* syntax "__get_var__" :: "idt \<Rightarrow> logic" ("$_" [1000] 999)
-consts "get_var____\<phi>" :: "varname \<Rightarrow> 'b"
-
-translations "$x" => "CONST get_var____\<phi> x"
-*)
 
 lemma [\<phi>reason 2000 for
   \<open>Synthesis_Parse (?var::varname) (?Y::?'ret \<Rightarrow> assn)\<close>
@@ -74,6 +38,7 @@ lemma [\<phi>reason 1200 for
   unfolding Action_Tag_def
   \<medium_left_bracket> premises _ and GetVar and _ and [\<phi>reason for \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]
     GetVar op_get_var \<medium_right_bracket>. .
+
 
 
 
@@ -144,17 +109,25 @@ proc op_var_scope:
       BLK to_Identity op_free_var
     \<medium_right_bracket>.
     \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>.
-    \<medium_right_bracket>. .
+  \<medium_right_bracket>. .
 
-  thm op_var_scope_\<phi>compilation
+lemma "__new_var_rule__":
+  \<open> (\<And>var. varname.type var \<equiv> TY
+              \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g var \<lbrace> R\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var]\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
+                             \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) TY g \<lbrace> R\<heavy_comma> X \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  \<medium_left_bracket> premises G
+    op_var_scope[where TY=\<open>TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>] G \<medium_right_bracket>.
+  \<medium_right_bracket>. .
+
 
 lemma "__set_var_rule__":
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> pred_option (\<lambda>TY'. TY = TY') (varname.type var) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> infer_var_type
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and P and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) ?TY\<close>]
-    op_set_var P G \<medium_right_bracket>. .
+    op_set_var P G  \<medium_right_bracket>. .
 
 lemma "__set_new_var_rule__":
   \<open> (\<And>var. varname.type var \<equiv> Some TY
@@ -162,7 +135,7 @@ lemma "__set_new_var_rule__":
                              \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) (Some TY) (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
-     \<lbrace> R\<heavy_comma> (X \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+     \<lbrace> R\<heavy_comma> (y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=\<open>Some TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
       $y op_set_var G
@@ -175,7 +148,7 @@ lemma "__set_new_var_noty_rule__":
                              \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) None (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
-     \<lbrace> R\<heavy_comma> (X \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+     \<lbrace> R\<heavy_comma> (y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) _\<close>]
     op_var_scope[where TY=None] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
       $y op_set_var G
@@ -184,21 +157,23 @@ lemma "__set_new_var_noty_rule__":
 
 
 
-
 ML_file "library/local_value.ML"
 
 proc
   assumes [\<phi>reason for \<open>\<phi>SemType (x \<Ztypecolon> T) _ \<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
       and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) _ \<close>]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY'\<close>
+      and [\<phi>reason for \<open>\<phi>SemType (z \<Ztypecolon> Z) _ \<close>]: \<open>\<phi>SemType (z \<Ztypecolon> Z) TY''\<close>
+  and X: \<open>x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s z \<Ztypecolon> Z\<close>
   argument \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
-  return \<open>Void\<close>
+  return \<open>\<lambda>_::unit sem_value. Void\<close>
   \<medium_left_bracket>
+    var va, vb :: TY, vc :: TY''
     $x $y $x \<rightarrow> var xx, yy, zz
   ;; $x $x $xx  ;;
-     \<open>$yy := $x\<close> ;;
+    $x \<rightarrow> xx
   \<medium_right_bracket>. .
 
-
+(*
 lemma
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_. Y \<rbrace> \<equiv> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y\<close>
   unfolding \<phi>Procedure_def View_Shift_def Return_def det_lift_def
@@ -237,6 +212,6 @@ term \<open>x.x.x.x := xx\<close>
 
   ;;  $\<a>\<r>\<g>1
   ;; \<open>$1\<close> \<open>$(\<a>\<r>\<g>1)\<close>
-  ;; \<open>$2 := xx\<close>
+  ;; \<open>$2 := xx\<close> *)
 
 end

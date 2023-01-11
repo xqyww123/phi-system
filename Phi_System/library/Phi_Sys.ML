@@ -131,7 +131,7 @@ fun accept_proc (ctxt,sequent) =
     
     val _ = if Term.maxidx_of_typ ret_ty <> ~1
             then let val (f,_,_,_,_) =
-                            Phi_Syntax.dest_PendingConstruction (Thm.major_prem_of sequent)
+                            Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
               in error (Pretty.string_of (Pretty.block [
                     Pretty.str "Fail to accept procedure ",
                     Syntax.pretty_term ctxt f, Pretty.str ".\n",
@@ -224,7 +224,7 @@ fun synthesis term (ctxt, sequent) =
           |> Drule.infer_instantiate ctxt [(("X",i_s + i_t), Thm.incr_indexes_cterm i_s term),
                                            (("sequent",i_s + i_t), Thm.cprop_of sequent)]
           |> (fn rule => Thm.implies_elim rule sequent)
-    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "reasoning synthesis...")
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ => (\<^here>, "reasoning synthesis..."))
   in
     case Phi_Reasoner.reason NONE (ctxt, sequent')
       of SOME ret => ret

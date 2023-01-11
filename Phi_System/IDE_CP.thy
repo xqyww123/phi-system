@@ -1668,7 +1668,7 @@ subsubsection \<open>Constructive\<close>
          of SOME (th, _) => (ctxt,th)
           | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
 
-ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_parsing", \<^here>) (K false)\<close>
+ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)\<close>
 
 \<phi>processor synthesis 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)
   \<open>fn (ctxt, sequent) => Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number))
@@ -1703,7 +1703,7 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
     end)
 \<close>
 
-\<phi>processor assign_var 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
+\<phi>processor assign_var 5000 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
   fn (ctxt,sequent) => (\<^keyword>\<open>\<rightarrow>\<close> |--
           Parse.list1 (Scan.option \<^keyword>\<open>$\<close> |-- Scan.option Parse.keyword
                        --| Scan.option \<^keyword>\<open>$\<close> -- Parse.binding))
@@ -1712,7 +1712,7 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
     val (vars', _ ) =
           fold_map (fn (NONE,b)    => (fn k' => ((k',b),k'))
                      | (SOME k, b) => (fn _  => ((SOME k, b), SOME k))) vars NONE
-  in Generic_Variable_Access.assignment vars' (ctxt,sequent)
+  in Generic_Variable_Access.assignment_cmd vars' (ctxt,sequent)
   end
 )\<close>
 

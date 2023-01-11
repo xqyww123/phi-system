@@ -1,7 +1,8 @@
-(*value_access.ML
+(* library/generic variable access.ML
    AUTHOR: Qiyuan Xu
 
-   Access (get and set) local values or generic variables.
+   Access (get and set) generic variables.
+   A generic variable can be a local value, a variable, or any other registered thing.
 *)
 
 (*** Signature ***)
@@ -44,7 +45,8 @@ type assigner = binding (*name of the value or variable*)
                   * (thm -> Proof.context -> Proof.context) list
                       (*declare the condition, coinciding with the order of the conditions*))
 
-val assignment : (string (*kind*) option * binding (*of generic variables*)) list
+val assignment : (binding * assigner) list -> Proof.context * thm -> Proof.context * thm
+val assignment_cmd : (string (*kind*) option * binding (*of generic variables*)) list
       -> Proof.context * thm -> Proof.context * thm
 
 val register_assigner : Symtab.key * Symtab.key * string * assigner -> theory -> theory
@@ -56,10 +58,11 @@ structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
 (*** Value Context ***)
 
 type value_context =
-        ( term list (*values of arguments, of type 'a sem_value*)
+        ( term list (*values of arguments, of type 'a sem_value.*)
         * term Symtab.table (*binding table of local values,
                               key: external name of the fixed variable*)
         * int (*a counter assigning identities to intermediate local values*))
+       (*Free variables in the term must use external names, just as what user inputs directly.*)
 
 structure Value_Ctxt = Proof_Data (
   type T = value_context option
@@ -132,7 +135,6 @@ fun index_val ctxt i =
   end
 
 
-exception NO_PARSE
 fun fallback_trans ctxt (V as Free (s, _)) =
       if can Value.parse_int s
       then index_val ctxt (Value.parse_int s)
@@ -144,7 +146,11 @@ fun fallback_trans ctxt (V as Free (s, _)) =
                     ])))
   | fallback_trans ctxt (Const ("_constrain", _) $ X $ _)
       = fallback_trans ctxt X
-  | fallback_trans _ _ = raise NO_PARSE
+  | fallback_trans ctxt X =
+      error (Pretty.string_of (Pretty.block [
+         Pretty.str "There is no value or variable bound on term ",
+         Syntax.pretty_term ctxt X
+      ]))
 
 
 fun translate_value ctxt X =
@@ -154,13 +160,7 @@ fun translate_value ctxt X =
     case ParserTab.fold_rev (fn (_, f) => (fn NONE => f ctxt X
                                             | some => some)) tab NONE
       of SOME ast => ast
-       | _ => (fallback_trans ctxt X
-               handle NO_PARSE =>
-                  error (Pretty.string_of (Pretty.block [
-                     Pretty.str "There is no value or variable bound on term ",
-                     Syntax.pretty_term ctxt X, Pretty.str "."
-                  ]))
-              )
+       | _ => fallback_trans ctxt X
   end
 
 
@@ -219,6 +219,7 @@ fun register_value_spec_thms pos rules =
     in (rule, pos, 1000, [pattern], []) end
   ) rules)
 
+
 fun open_value_context' pos (ctxt,sequent) =
   let
     val (sequent', rules) = collect_and_clean_value true ctxt sequent
@@ -250,12 +251,6 @@ fun open_value_context' pos (ctxt,sequent) =
   |> rpair sequent'
   end
 
-(*
-fun open_value_context' pos stat =
-  Proof.map_context (open_value_context pos (Phi_Basics.the_state_sequent stat)) stat
-  *)
-
-
 
 (*** Assignment ***)
 
@@ -280,9 +275,9 @@ structure Assigner = Theory_Data (
         (Symtab.merge (K true) (a1,a2), Symtab.merge (op =) (b1,b2))
 )
 
-fun register_assigner (kind, typ_const, descr, assigner) =
+fun register_assigner (keyword, typ_const, descr, assigner) =
   Assigner.map (fn (A,K) => (Symtab.update_new (typ_const, assigner) A,
-                             Symtab.update_new (kind, (typ_const, descr)) K))
+                             Symtab.update_new (keyword, (typ_const, descr)) K))
 
 fun parse_assigner ctxt =
   let
@@ -317,11 +312,6 @@ fun parse_assigner ctxt =
   end
   
 
-(*
-fun assigner_of ty_name ctxt =
-  case Symtab.lookup (Assigner.get ctxt) *)
-  
-
 
 fun strip_imp_prems_rev ret ct =
   let val (cA, cB) = Thm.dest_implies ct
@@ -330,19 +320,20 @@ fun strip_imp_prems_rev ret ct =
 
 
 (*TODO*)
-fun local_value_export ctxt rule vars sequent =
+fun concact_sequent ctxt rule vars sequent =
   Phi_Help.comp_rule_incr_left ctxt (Drule.forall_intr_list vars sequent) rule
 
-fun gneric_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
+fun assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
   let
   (*make the assignment procedure*)
-  val (rule', ctxt', vterms', rev_decl) = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
+  val (rule', ctxt', vterms', decl') = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
         |> fold (fn (name,f) => fn (proc, ctxt, vterms, Asm) =>
               let val (rule, ctxt', vterms', Asm') = f name (ctxt,sequent)
                in (rule RS proc, ctxt', rev vterms' @ vterms, rev Asm' @ Asm) end
            ) name_assigner
   val rule = @{thm "__value_access_0__"} RS rule'
   val vterms = rev vterms'
+  val decl = rev decl'
 
   (*apply the assignment procedure*)
   val (ctxt, proc) = NuApply.apply [rule] (ctxt',sequent)
@@ -366,45 +357,44 @@ fun gneric_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
 
   (*insert a callback frame for concatenating sequents*)
   val (_, ctxt) = Assumption.add_assms
-                          (fn _ => fn _ => (local_value_export ctxt proc vterms, I)) [] ctxt
+                        (fn _ => fn _ => (concact_sequent ctxt proc vterms, I)) [] ctxt
 
   val (rev_hyps, proc_cterm) = Thm.cprem_of proc 1
            |> fold (fn v => fn prem => Drule.beta_conv (Thm.dest_arg prem) v) vterms
            |> strip_imp_prems_rev []
 
   (*Now we change the goal of the programming context to add the *)
-  val (_,arg_phi,ret_phi,E_phi) = Phi_Syntax.dest_procedure_c proc_cterm
+  val (_,arg_spec,ret_spec,E_spec) = Phi_Syntax.dest_procedure_c proc_cterm
   val goal = Phi_Basics.get_thesis ctxt
   val (trueprop, goal_term) = Thm.dest_comb goal
   val ((goal_F_arg,goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
-  fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
-    | left_most X = X
-  val ret_phi' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) ret_phi
-  val E_phi'   = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) E_phi
-  val R = case (case Thm.term_of ret_phi'
-                  of Abs (_,_,X) => left_most X |> dest_comb |> fst
-                   | X => left_most X)
-            of Var (R, _) => R
-             | _ => error "At least one of the assignment rules is configured wrongly."
-  val RE= case (case Thm.term_of E_phi'
-                  of Abs (_,_,X) => left_most X |> dest_comb |> fst
-                   | X => left_most X)
-            of Var (R, _) => R
-             | _ => error "At least one of the assignment rules is configured wrongly."
-  val goal_ret' = Drule.infer_instantiate ctxt [(R,goal_ret)] (Drule.mk_term ret_phi')
-                    |> Drule.dest_term
-  val goal_E'   = Drule.infer_instantiate ctxt [(RE,goal_E)] (Drule.mk_term E_phi')
-                    |> Drule.dest_term
+  fun instantiate_R inst spec =
+    let
+      fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
+        | left_most X = X
+      val spec' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) spec
+      val R = case (case Thm.term_of spec'
+                      of Abs (_,_,X) => left_most X |> dest_comb |> fst
+                       | X => left_most X)
+                of Var (R, _) => R
+                 | _ => error "At least one of the assignment rules is not configured properly."
+    in spec'
+    |> Drule.mk_term
+    |> Drule.infer_instantiate ctxt [(R,inst)]
+    |> Drule.dest_term
+    end
+  val goal_ret' = instantiate_R goal_ret ret_spec
+  val goal_E'   = instantiate_R goal_E   E_spec
   val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E')
   val ctxt = Phi_Basics.put_thesis goal' ctxt
 
   (*declare every hypothesis*)
   val (Hs,ctxt) = Assumption.add_assms Assumption.presume_export (rev rev_hyps) ctxt
-  val ctxt = fold2 (fn H => fn D => D H) Hs (rev rev_decl) ctxt
+  val ctxt = fold2 (fn H => fn D => D H) Hs decl ctxt
 
   (*make the new initial sequent*)
   val blk_name = Variable.revert_fixed ctxt (Term.term_name (Phi_Syntax.current_block_var sequent))
-  val (ctxt, sequent') = #initial_sequent Phi_Working_Mode.procedure blk_name arg_phi ctxt
+  val (ctxt, sequent') = #initial_sequent Phi_Working_Mode.procedure blk_name arg_spec ctxt
 
   val (_, ctxt) = Assumption.add_assms (fn _ => fn _ =>
             ((fn sequentx => #cast_exception Phi_Working_Mode.procedure goal_E' (ctxt, sequentx)
@@ -414,8 +404,8 @@ fun gneric_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
   in (ctxt, sequent')
   end
 
-fun assignment binds (ctxt,sequent) =
-      gneric_assignment (parse_assigner ctxt binds) (ctxt,sequent)
+fun assignment_cmd binds (ctxt,sequent) =
+      assignment (parse_assigner ctxt binds) (ctxt,sequent)
 
 
 end

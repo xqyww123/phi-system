@@ -1205,7 +1205,8 @@ subsection \<open>Exception\<close>
 
 text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
 
-definition \<open>throw raw = det_lift (Exception raw)\<close>
+definition throw :: \<open>(VAL,unit) proc'\<close>
+  where \<open>throw raw = det_lift (Exception raw)\<close>
 
 lemma throw_\<phi>app[intro!]:
   \<open> (\<And>v. Remove_Values (X v) (X' v))

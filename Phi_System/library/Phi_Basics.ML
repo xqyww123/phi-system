@@ -71,7 +71,7 @@ fun gen_reason_programming_implication erules (mode:Phi_Working_Mode.working_mod
   let
     val inhabited_rule = #inhabited_rule mode ctxt
     val thm = sequent RS inhabited_rule
-    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "extracting implied pure facts...")
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ => (\<^here>, "extracting implied pure facts..."))
     open Tactical Tactic
   in rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt erules))) thm
   end
