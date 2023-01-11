@@ -280,9 +280,9 @@ structure Assigner = Theory_Data (
         (Symtab.merge (K true) (a1,a2), Symtab.merge (op =) (b1,b2))
 )
 
-fun register_assigner (kind, typ_const, descr, assigner) =
+fun register_assigner (keyword, typ_const, descr, assigner) =
   Assigner.map (fn (A,K) => (Symtab.update_new (typ_const, assigner) A,
-                             Symtab.update_new (kind, (typ_const, descr)) K))
+                             Symtab.update_new (keyword, (typ_const, descr)) K))
 
 fun parse_assigner ctxt =
   let
@@ -336,13 +336,14 @@ fun local_value_export ctxt rule vars sequent =
 fun gneric_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
   let
   (*make the assignment procedure*)
-  val (rule', ctxt', vterms', rev_decl) = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
+  val (rule', ctxt', vterms', decl') = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
         |> fold (fn (name,f) => fn (proc, ctxt, vterms, Asm) =>
               let val (rule, ctxt', vterms', Asm') = f name (ctxt,sequent)
                in (rule RS proc, ctxt', rev vterms' @ vterms, rev Asm' @ Asm) end
            ) name_assigner
   val rule = @{thm "__value_access_0__"} RS rule'
   val vterms = rev vterms'
+  val decl = rev decl'
 
   (*apply the assignment procedure*)
   val (ctxt, proc) = NuApply.apply [rule] (ctxt',sequent)
@@ -400,7 +401,7 @@ fun gneric_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
 
   (*declare every hypothesis*)
   val (Hs,ctxt) = Assumption.add_assms Assumption.presume_export (rev rev_hyps) ctxt
-  val ctxt = fold2 (fn H => fn D => D H) Hs (rev rev_decl) ctxt
+  val ctxt = fold2 (fn H => fn D => D H) Hs decl ctxt
 
   (*make the new initial sequent*)
   val blk_name = Variable.revert_fixed ctxt (Term.term_name (Phi_Syntax.current_block_var sequent))

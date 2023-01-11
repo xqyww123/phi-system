@@ -36,6 +36,7 @@ signature NU_REASONER = sig
   val add : priority * reasoner -> Context.generic -> Context.generic
   val add_lthy : priority * reasoner -> local_theory -> local_theory
   val del : name -> Context.generic -> Context.generic
+  val has : term -> Context.generic -> bool
   val reasoners : Proof.context -> (priority * reasoner) list
   val reasoner_net : Proof.context -> reasoner Cost_Net.T
 
@@ -57,6 +58,7 @@ signature NU_REASONER = sig
                     -> Context.generic -> Context.generic
   val add_intro_rules: (thm * Position.T * priority * term list * term list) list
                     -> Context.generic -> Context.generic
+  val has_intro_rule : thm -> Context.generic -> bool
   val del_intro_rule : thm -> Context.generic -> Context.generic
   val attr_add_intro : (Position.T * (int * (term list * term list))) -> attribute
   val attr_del_intro : attribute
@@ -128,7 +130,8 @@ fun add_lthy cost_reasoner =
 fun del name = Reasoners.map (Cost_Net.remove(
       {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty}))
 
-
+fun has name ctxt = Cost_Net.member (Reasoners.get ctxt) (
+      {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty})
 
 (** Implementing Functions **)
 
@@ -385,6 +388,7 @@ fun add_intro_rules rules =
   else adds (map (fn (rule,pos,priority,pattern,blacklist) =>
               (priority, intro_reasoner pos priority pattern blacklist rule)) rules)
 fun del_intro_rule rule = del (name_of_intro_reasoner rule)
+fun has_intro_rule rule = has (name_of_intro_reasoner rule)
 
 fun attr_add_intro (pos, (priority, (pattern, blacklist))) =
   Thm.declaration_attribute (add_intro_rule pos priority (pattern,blacklist))

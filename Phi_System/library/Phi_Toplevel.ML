@@ -695,10 +695,14 @@ val begin_block = gen_begin_block (K I)
 end
 
 
+fun clean_values (ctxt,sequent) =
+      if can Phi_Syntax.dest_CurrentConstruction (Thm.prop_of sequent)
+      then (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst)
+      else (ctxt, sequent)
+
 val statement_cmd =
   Phi_Processor.powerful_process_p >> (fn f => fn stat =>
-    stat |> Phi_Basics.map_state_sequent (fn (ctxt,sequent) =>
-                (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst))
+    stat |> Phi_Basics.map_state_sequent clean_values
          |> f
   )
 

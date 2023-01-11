@@ -152,9 +152,9 @@ lemma "__set_var_rule__":
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>
 \<Longrightarrow> pred_option (\<lambda>TY'. TY = TY') (varname.type var) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> infer_var_type
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (X\<heavy_comma> x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and P and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) ?TY\<close>]
-    op_set_var P G \<medium_right_bracket>. .
+    op_set_var P G  \<medium_right_bracket>. .
 
 lemma "__set_new_var_rule__":
   \<open> (\<And>var. varname.type var \<equiv> Some TY
@@ -162,7 +162,7 @@ lemma "__set_new_var_rule__":
                              \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) (Some TY) (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
-     \<lbrace> R\<heavy_comma> (X \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+     \<lbrace> R\<heavy_comma> (y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=\<open>Some TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
       $y op_set_var G
@@ -175,7 +175,7 @@ lemma "__set_new_var_noty_rule__":
                              \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) None (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
-     \<lbrace> R\<heavy_comma> (X \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+     \<lbrace> R\<heavy_comma> (y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) _\<close>]
     op_var_scope[where TY=None] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
       $y op_set_var G
@@ -190,12 +190,18 @@ ML_file "library/local_value.ML"
 proc
   assumes [\<phi>reason for \<open>\<phi>SemType (x \<Ztypecolon> T) _ \<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
       and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) _ \<close>]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY'\<close>
+      and [\<phi>reason for \<open>\<phi>SemType (z \<Ztypecolon> Z) _ \<close>]: \<open>\<phi>SemType (z \<Ztypecolon> Z) TY''\<close>
+  and X: \<open>x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s z \<Ztypecolon> Z\<close>
   argument \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   return \<open>Void\<close>
   \<medium_left_bracket>
+    $x \<rightarrow> val qq
+  ;;  $qq X $x $x \<rightarrow> val qq, qqq, var pp
+  ;; $qq
+  ;;
     $x $y $x \<rightarrow> var xx, yy, zz
   ;; $x $x $xx  ;;
-     \<open>$yy := $x\<close> ;;
+    $x \<rightarrow> xx
   \<medium_right_bracket>. .
 
 
