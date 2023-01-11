@@ -292,3 +292,8 @@ fun comp_rule_incr_left  ctxt th1 th2 = comp_rule ctxt true (Drule.incr_indexes 
 fun comp_rule_incr_right ctxt th1 th2 = comp_rule ctxt true th1 (Drule.incr_indexes th1 th2)
 
 end
+
+structure PriorityTab = Table (
+  type key = int * Context.theory_id
+  val ord = prod_ord int_ord Context.theory_id_ord
+)

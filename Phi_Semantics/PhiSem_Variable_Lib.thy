@@ -63,7 +63,9 @@ proc (nodef) op_get_var:
   return   \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
   \<medium_left_bracket> to_Identity op_get_var'' \<medium_right_bracket> using \<phi> by simp .
 
-lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ?x <val-of> ?var \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
+lemma [\<phi>reason 1200 for
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ?x <val-of> ?var \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+]:
   \<open> SUBGOAL G G2
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y\<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2
 \<Longrightarrow> SOLVE_SUBGOAL G2
@@ -113,13 +115,13 @@ proc (nodef) op_set_var:
     op_set_var'' 
   \<medium_right_bracket>. .
 
-schematic_goal op_set_var__synthesis[
-  \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS (?y <set-to> ?var) \<Ztypecolon> ?U ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
+schematic_goal op_set_var__synthesis [\<phi>reason 1200 for 
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS (?y <set-to> ?var) \<Ztypecolon> ?U ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
 assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> X1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G \<close>
-  and S[unfolded Action_Tag_def]:
-         \<open>\<And>vy. \<^bold>v\<^bold>i\<^bold>e\<^bold>w X1\<heavy_comma> y \<Ztypecolon> Val vy U \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> Val vy U \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close>
   and P: \<open>pred_option (\<lambda>TY'. TY = TY') (varname.type var) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> infer_var_type\<close>
+  and S[unfolded Action_Tag_def]:
+         \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X1 \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> Var var T \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA\<close>
   and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) ?TY\<close>]:
          \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
 shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?FF \<lbrace> X \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U \<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (y <set-to> var) \<Ztypecolon> U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
@@ -156,10 +158,10 @@ lemma "__set_var_rule__":
 
 lemma "__set_new_var_rule__":
   \<open> (\<And>var. varname.type var \<equiv> Some TY
-              \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
-                         \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
+              \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g var \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
+                             \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) (Some TY) (\<lambda>var. op_set_var var TY raw \<ggreater> g)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) (Some TY) (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
      \<lbrace> R\<heavy_comma> (X \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=\<open>Some TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
@@ -169,10 +171,10 @@ lemma "__set_new_var_rule__":
 
 lemma "__set_new_var_noty_rule__":
   \<open> (\<And>var. varname.type var \<equiv> None
-              \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
-                         \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
+              \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g var \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
+                             \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>)
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) None (\<lambda>var. op_set_var var TY raw \<ggreater> g)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) None (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
      \<lbrace> R\<heavy_comma> (X \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) _\<close>]
     op_var_scope[where TY=None] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
@@ -192,7 +194,8 @@ proc
   return \<open>Void\<close>
   \<medium_left_bracket>
     $x $y $x \<rightarrow> var xx, yy, zz
-  ;;    $xx
+  ;; $x $x $xx  ;;
+     \<open>$yy := $x\<close> ;;
   \<medium_right_bracket>. .
 
 
@@ -207,11 +210,7 @@ lemma
   unfolding \<phi>Procedure_def View_Shift_def Return_def det_lift_def
   by (simp add: \<phi>expns)
 
-lemma "__set_value_rule__":
-  \<open> (sem_value.dest v \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> R' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<longmapsto> R' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
-  unfolding \<phi>Procedure_def
-  by (clarsimp simp add: \<phi>expns)
+
 
 
 lemma

@@ -155,22 +155,22 @@ fun simple_process stat toks =
 
 fun powerful_process toks stat =
   let
-    val sequent = the_nu_fact stat
+    val sequent = the_state_sequent stat
   in
     stat
       |> Proof.map_context_result (fn ctxt =>
             (internal_process (ctxt,sequent) --| Scan.catch Parse.eof) toks
               |> (fn ((ctxt,sequent),_) => (sequent,ctxt))
           )
-      |-> Phi_Basics.set_nu_fact
+      |-> Phi_Basics.set_state_sequent
     handle Process_State_Call' (toks,(ctxt,sequent),f) =>
               powerful_process toks (stat |> Proof.map_context (K ctxt)
-                                          |> Phi_Basics.set_nu_fact sequent
+                                          |> Phi_Basics.set_state_sequent sequent
                                           |> f)
          | Terminate_Process' (toks,(ctxt,sequent),f) =>
               (Scan.catch Parse.eof toks;
                stat |> Proof.map_context (K ctxt)
-                    |> Phi_Basics.set_nu_fact sequent
+                    |> Phi_Basics.set_state_sequent sequent
                     |> f)
   end
 

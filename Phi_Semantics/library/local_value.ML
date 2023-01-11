@@ -1,11 +1,11 @@
-signature VARIABLE = sig
+signature PHI_VARIABLE = sig
 
   val variable_is_typed : bool Config.T
   val dest_Var : term -> (string * (term * term)) option
 
 end
 
-structure Variable : VARIABLE = struct
+structure Phi_Variable : PHI_VARIABLE = struct
 
 val variable_is_typed = Config.declare_bool ("\<phi>variable_is_typed", \<^here>) (K false)
 
@@ -30,7 +30,9 @@ fun find_Var var (Const (\<^const_name>\<open>times\<close>, _) $ R $ X) =
 
 fun variable_assigner b (ctxt,sequent) =
   let
-  val existed = find_Var (Binding.name_of b) (Thm.concl_of sequent) |> is_some
+  val existed = find_Var (Variable.intern_fixed ctxt (Binding.name_of b))
+                         (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
+                 |> is_some
   fun declare rule =
     let
     val pattern = case Thm.prop_of rule
@@ -41,20 +43,20 @@ fun variable_assigner b (ctxt,sequent) =
      in Context.proof_map (Phi_Reasoner.add_intro_rule (Binding.pos_of b) 1000 ([pattern], []) rule)
     end
   in if existed
-     then (@{thm "__set_var_rule__"}, ctxt, [], [declare])
+     then (@{thm "__set_var_rule__"}, ctxt, [], [])
      else let
           val rule = if Config.get ctxt variable_is_typed
                      then @{thm "__set_new_var_rule__"}
                      else @{thm "__set_new_var_noty_rule__"}
           val ([vname],ctxt) = Proof_Context.add_fixes [(b, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
-          val ctxt = Value_Access.bind_local_vals
+          val ctxt = Generic_Variable_Access.bind_local_vals
                         [(Binding.name_of b, Free (Binding.name_of b, @{typ varname}))] ctxt
           in (rule, ctxt, [Thm.cterm_of ctxt (Free (vname, @{typ varname}))], [declare])
           end
   end
 
 val _ = Theory.setup (
-            Value_Access.register_assigner ("var", \<^type_name>\<open>varname\<close>,
+            Generic_Variable_Access.register_assigner ("var", \<^type_name>\<open>varname\<close>,
                 "to assign to a new variable", variable_assigner))
 
 

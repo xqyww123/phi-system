@@ -5,7 +5,7 @@
 *)
 
 (*** Signature ***)
-signature VALUE_ACCESS = sig
+signature GENERIC_VARIABLE_ACCESS = sig
 
 (** Value Context **)
 val open_value_context : term list (*arguments*) -> Proof.context -> Proof.context
@@ -51,7 +51,7 @@ val register_assigner : Symtab.key * Symtab.key * string * assigner -> theory ->
 
 end
 
-structure Value_Access : VALUE_ACCESS = struct
+structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
 
 (*** Value Context ***)
 
@@ -252,7 +252,7 @@ fun open_value_context' pos (ctxt,sequent) =
 
 (*
 fun open_value_context' pos stat =
-  Proof.map_context (open_value_context pos (Phi_Basics.the_nu_fact stat)) stat
+  Proof.map_context (open_value_context pos (Phi_Basics.the_state_sequent stat)) stat
   *)
 
 

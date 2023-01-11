@@ -481,7 +481,7 @@ lemma [\<phi>reason 1200
 text \<open>On programming mode, the synthesis operation always tries to find a procedure.
   View shifts have to be wrapped in a procedure. The following is an automatic wrapper. \<close>
 
-lemma [\<phi>reason 30
+lemma Synthesis_Proc_fallback_VS [\<phi>reason 30
     for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>v. ?S2\<heavy_comma> SYNTHESIS ?X' v \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S1 \<longmapsto> S2\<heavy_comma> SYNTHESIS X' \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
@@ -1470,7 +1470,12 @@ lemma "__value_access_0__":
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   by fastforce
 
-ML_file \<open>library/value_access.ML\<close>
+ML_file \<open>library/generic_variable_access.ML\<close>
+
+lemma [\<phi>reason 2000]:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (x <val-of> any \<Ztypecolon> T) TY\<close>
+  unfolding Value_of_def .
 
 
 section \<open>Implementing the Interactive Environment\<close>
@@ -1527,8 +1532,9 @@ val structured_statement =
 val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
 val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
 val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
-val precond_statement = Scan.repeat ((premises_statement >> map (pair Phi_Toplevel.Premise))
-                || (requires_statement >> map (pair Phi_Toplevel.Requirement))) >> flat;
+val precond_statement =
+      Scan.repeat ((premises_statement >> map (pair Phi_Toplevel.Premise))
+                || (requires_statement >> map (pair Phi_Toplevel.Assumption))) >> flat;
 (* val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term); *)
 val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
         Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
@@ -1569,7 +1575,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (Phi_Processor.powerful_process_p >> Toplevel.proof)
+    (Phi_Toplevel.statement_cmd >> Toplevel.proof)
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
@@ -1697,13 +1703,16 @@ ML \<open>val phi_synthesis_parsing = Config.declare_bool ("\<phi>_synthesis_par
     end)
 \<close>
 
-\<phi>processor assign_variable 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
-  fn (ctxt,sequent) => (\<^keyword>\<open>\<rightarrow>\<close> |-- Parse.list1 (Scan.option Parse.keyword -- Parse.binding))
+\<phi>processor assign_var 7500 (\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>) \<open>
+  fn (ctxt,sequent) => (\<^keyword>\<open>\<rightarrow>\<close> |--
+          Parse.list1 (Scan.option \<^keyword>\<open>$\<close> |-- Scan.option Parse.keyword
+                       --| Scan.option \<^keyword>\<open>$\<close> -- Parse.binding))
 >> (fn vars => fn () =>
   let
-    val (vars', _ ) = fold_map (fn (NONE,b)    => (fn k' => ((k',b),k'))
-                                 | (SOME k, b) => (fn _  => ((SOME k, b), SOME k))) vars NONE
-  in Value_Access.assignment vars' (ctxt,sequent)
+    val (vars', _ ) =
+          fold_map (fn (NONE,b)    => (fn k' => ((k',b),k'))
+                     | (SOME k, b) => (fn _  => ((SOME k, b), SOME k))) vars NONE
+  in Generic_Variable_Access.assignment vars' (ctxt,sequent)
   end
 )\<close>
 

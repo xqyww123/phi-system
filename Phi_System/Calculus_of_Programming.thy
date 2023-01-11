@@ -348,5 +348,19 @@ lemma Subjection_simp_proc_arg:
 lemmas Subjection_simp_proc_arg_metaeq[unfolded atomize_eq[symmetric]] = Subjection_simp_proc_arg
 
 
+paragraph \<open>Return\<close>
+
+lemma \<phi>M_Success[intro!]:
+  \<open> v \<in> (y \<Ztypecolon> T)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem_value v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
+  unfolding \<phi>Procedure_def det_lift_def Return_def
+  by (clarsimp simp add: \<phi>expns)
+
+declare \<phi>M_Success[where X=1, simplified, intro!]
+
+lemma \<phi>M_Success'[intro!]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
+  unfolding Return_def \<phi>Procedure_def det_lift_def by (clarsimp simp add: \<phi>expns)
+
 
 end
