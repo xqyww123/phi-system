@@ -73,9 +73,12 @@ fun variable_declarer TY b (ctxt,sequent) =
       [declare_rule (Binding.pos_of b)])
   end
 
+val variable_assigner_id = \<^here>
+
 val _ = Theory.setup (
    Generic_Variable_Access.register_assigner
-     ("var", \<^type_name>\<open>varname\<close>, "to declare a new variable", variable_assigner)
+     ("var", \<^type_name>\<open>varname\<close>, "to declare a new variable",
+                (variable_assigner_id, variable_assigner))
 #> Phi_Processor.setup_global
     \<^binding>\<open>declare_variable\<close> 5000 [\<^prop_pattern>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>]
     (fn (ctxt,sequent) => \<^keyword>\<open>var\<close> |--
@@ -92,7 +95,7 @@ val _ = Theory.setup (
                                                  \Please use syntax \<open>var name :: type\<close> to indicate\
                                                  \the semantic types of the variables."
                                       else Thm.cterm_of ctxt (@{const None (TY)})))
-            |> uncurry (map2 (fn vs => fn TY => map (fn V => (V, variable_declarer TY)) vs))
+            |> uncurry (map2 (fn vs => fn TY => map (fn V => (V, (\<^here>, variable_declarer TY))) vs))
             |> flat
       in Generic_Variable_Access.assignment assigners (ctxt,sequent) end
    )) ""

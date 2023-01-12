@@ -293,7 +293,3 @@ fun comp_rule_incr_right ctxt th1 th2 = comp_rule ctxt true th1 (Drule.incr_inde
 
 end
 
-structure PriorityTab = Table (
-  type key = int * Context.theory_id
-  val ord = prod_ord int_ord Context.theory_id_ord
-)
