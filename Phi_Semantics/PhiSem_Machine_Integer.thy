@@ -525,7 +525,8 @@ proc [
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<ge> y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 \<rightarrow> val v1
+  \<medium_left_bracket> 
+    F1 \<rightarrow> val v1
     F2 \<rightarrow> val v2
     $v2 $v1 \<le>
   \<medium_right_bracket>. .

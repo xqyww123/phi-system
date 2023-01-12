@@ -179,7 +179,19 @@ lemma [\<phi>reason 1200 for
   by (cases raw; simp add: \<phi>M_Success)
 
 
-ML_file \<open>library/value_access.ML\<close>
+lemma "__fast_assign_val__":
+  \<open> R\<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> R\<heavy_comma> (x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<heavy_comma> X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' \<^bold>a\<^bold>n\<^bold>d sem_value.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<and> P\<close>
+  unfolding Imply_def
+  by (clarsimp simp add: Val_expn Subjection_expn)
+
+lemma "__fast_assign_val_0__":
+  \<open> R\<heavy_comma> Void \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<close>
+  by (simp add: implies_refl)
+
+thm "__fast_assign_val__"[OF "__fast_assign_val__", OF "__fast_assign_val__", OF "__fast_assign_val_0__"]
+
+ML_file \<open>library/local_value.ML\<close>
 
 
 (*

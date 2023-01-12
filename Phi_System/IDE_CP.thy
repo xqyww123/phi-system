@@ -1478,6 +1478,8 @@ lemma "__value_access_0__":
 
 ML_file \<open>library/generic_variable_access.ML\<close>
 
+hide_fact "__value_access_0__"
+
 lemma [\<phi>reason 2000]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (x <val-of> any \<Ztypecolon> T) TY\<close>

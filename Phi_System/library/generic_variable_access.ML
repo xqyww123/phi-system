@@ -37,20 +37,30 @@ val open_value_context'  : Position.T -> context_state -> context_state
 
 (** Assignment **)
 
-type assigner = binding (*name of the value or variable*)
+type assigner = Position.T (*identifier of the assigner*)
+             * (binding (*name of the value or variable*)
                -> context_state
                -> ( thm (*rule*)
                   * Proof.context
                   * cterm list (*fixed quantified variables in the rule*)
-                  * (thm -> Proof.context -> Proof.context) list
+                  * (thm -> Proof.context -> Proof.context) list)
                       (*declare the condition, coinciding with the order of the conditions*))
 
-val assignment : (binding * assigner) list -> Proof.context * thm -> Proof.context * thm
-val assignment_cmd : (string (*kind*) option * binding (*of generic variables*)) list
+val assignment : (binding * assigner) list
+              -> Proof.context * thm -> Proof.context * thm
+val assignment_cmd : (string (*keyword*) option * binding (*of generic variables*)) list
       -> Proof.context * thm -> Proof.context * thm
 
-val register_assigner : Symtab.key * Symtab.key * string * assigner -> theory -> theory
+val register_assigner : string (*keyword that the assigner binds*)
+                      * string (*type name of the generic variable*)
+                      * string (*description for display*)
+                      * assigner -> theory -> theory
 
+structure Assignment_Hooks : HOOKS
+
+end
+
+structure Generic_Variable_Access = struct
 end
 
 structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
@@ -254,21 +264,20 @@ fun open_value_context' pos (ctxt,sequent) =
 
 (*** Assignment ***)
 
-type assigner = binding (*name of the value or variable*)
+type assigner = Position.T (*identifier of the assigner*)
+             * (binding (*name of the value or variable*)
                -> context_state
                -> ( thm (*rule*)
                   * Proof.context
                   * cterm list (*fixed quantified variables in the rule*)
-                  * (thm -> Proof.context -> Proof.context) list
+                  * (thm -> Proof.context -> Proof.context) list)
                       (*declare the condition, coinciding with the order of the conditions*))
 
 structure Assigner = Theory_Data (
   type T = (
-             assigner Symtab.table
-             (*key: full name of the type constant that the assigner is bound on*)
-           * ( string (*full name of the type constant*)
-             * string (*description*)
-             ) Symtab.table (*key: kind*)
+             ( string (*description*)
+             * assigner) Symtab.table (*key: kind, also the keyword used in the programming*)
+           * string Symtab.table (*from full name of the type of the generic variable to its kind*)
            )
   val empty = (Symtab.empty, Symtab.empty)
   fun merge ((a1,b1),(a2,b2)) =
@@ -276,19 +285,19 @@ structure Assigner = Theory_Data (
 )
 
 fun register_assigner (keyword, typ_const, descr, assigner) =
-  Assigner.map (fn (A,K) => (Symtab.update_new (typ_const, assigner) A,
-                             Symtab.update_new (keyword, (typ_const, descr)) K))
+  Assigner.map (fn (A,K) => (Symtab.update_new (keyword, (descr, assigner)) A,
+                             Symtab.update_new (typ_const, keyword) K))
 
 fun parse_assigner ctxt =
   let
-    val (assigner, keywords) = Assigner.get (Proof_Context.theory_of ctxt)
+    val (assigner, type_map) = Assigner.get (Proof_Context.theory_of ctxt)
     fun not_defined name = let open Pretty in
         error (string_of (chunks (
           block [Binding.pretty name, str " is not an existing local value or variable."] ::
           str "Use the following syntax:" ::
-          (map (fn (key, (_,descr)) =>
+          (map (fn (key, (descr,_)) =>
                     item [keyword1 key, str " ", Binding.pretty name, str ", ", str descr])
-               (Symtab.dest keywords))
+               (Symtab.dest assigner))
         )))
       end
     fun find name =
@@ -296,14 +305,14 @@ fun parse_assigner ctxt =
             |> Option.mapPartial (Variable.default_type ctxt)
         of SOME (Type ("dummy", [])) => not_defined name
          | SOME (Type (T, _)) =>
-            (case Symtab.lookup assigner T
-               of SOME a => a
+            (case Symtab.lookup type_map T
+               of SOME key => key
                 | NONE => not_defined name)
          | _ => not_defined name
-    fun parse (NONE, name) = (name, find name)
+    fun parse (NONE, name) = parse (SOME (find name), name)
       | parse (SOME key, name) =
-          case Symtab.lookup keywords key
-            of SOME (T, _) => (name, the (Symtab.lookup assigner T))
+          case Symtab.lookup assigner key
+            of SOME (_, A) => (name, A)
              | _ => let open Pretty
                      in error (string_of (block [
                           keyword1 key, str " is not associated with any assignment rule."
@@ -323,11 +332,11 @@ fun strip_imp_prems_rev ret ct =
 fun concact_sequent ctxt rule vars sequent =
   Phi_Help.comp_rule_incr_left ctxt (Drule.forall_intr_list vars sequent) rule
 
-fun assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
+fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
   let
   (*make the assignment procedure*)
   val (rule', ctxt', vterms', decl') = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
-        |> fold (fn (name,f) => fn (proc, ctxt, vterms, Asm) =>
+        |> fold (fn (name,(_,f)) => fn (proc, ctxt, vterms, Asm) =>
               let val (rule, ctxt', vterms', Asm') = f name (ctxt,sequent)
                in (rule RS proc, ctxt', rev vterms' @ vterms, rev Asm' @ Asm) end
            ) name_assigner
@@ -403,6 +412,10 @@ fun assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
              I)) [] ctxt
   in (ctxt, sequent')
   end
+
+structure Assignment_Hooks = Hooks(type arg = (binding * assigner) list)
+
+val assignment = Assignment_Hooks.invoke_until_success default_assignment
 
 fun assignment_cmd binds (ctxt,sequent) =
       assignment (parse_assigner ctxt binds) (ctxt,sequent)

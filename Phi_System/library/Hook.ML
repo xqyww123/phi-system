@@ -1,19 +1,48 @@
-signature HOOK = sig
-val add: int -> (context_state -> context_state) -> Context.generic -> Context.generic
-val invoke : context_state -> context_state
+signature HOOK_ARG = sig
+type arg
 end
 
-structure Hook : HOOK = struct
+signature HOOKS = sig
+type arg
+val add: int -> (arg -> context_state -> context_state) -> Context.generic -> Context.generic
+val remove: int * string (*theory name*) -> Context.generic -> Context.generic
+val invoke : arg -> context_state -> context_state
+
+exception Success of context_state
+val invoke_until_success : (arg -> context_state -> context_state) (*fallback*)
+                        ->  arg -> context_state -> context_state
+end
+
+functor Hooks (Arg : HOOK_ARG) : HOOKS = struct
+
+type arg = Arg.arg
+
+structure PriorityTab = Table (
+  type key = int * serial
+  val ord = prod_ord int_ord int_ord
+)
+
 structure Data = Generic_Data (
-  type T = (context_state -> context_state) PriorityTab.table
+  type T = (arg -> context_state -> context_state) PriorityTab.table
   val empty = PriorityTab.empty
   val merge = PriorityTab.merge (K true)
 )
 
 fun add priority f ctxt =
-  Data.map (PriorityTab.update_new ((priority, Context.theory_id (Context.theory_of ctxt)), f)) ctxt
+  Data.map (PriorityTab.update_new (
+      (priority, Context.theory_identifier (Context.theory_of ctxt)), f)) ctxt
 
-fun invoke (ctxt,sequent) =
-      PriorityTab.fold (fn (_,f) => fn s => f s) (Data.get (Context.Proof ctxt)) (ctxt,sequent)
+fun remove (priority,thy) =
+  Data.map (PriorityTab.delete_safe (priority, Context.theory_identifier (Thy_Info.get_theory thy)))
+
+fun invoke arg (ctxt,sequent) =
+      PriorityTab.fold (fn (_,f) => fn s => f arg s) (Data.get (Context.Proof ctxt)) (ctxt,sequent)
+
+exception Success of context_state
+
+fun invoke_until_success fallback arg (ctxt,sequent) =
+  (PriorityTab.fold (fn (_,f) => fn s => f arg s) (Data.get (Context.Proof ctxt)) (ctxt,sequent)
+   |> fallback arg)
+  handle Success ret => ret
 
 end

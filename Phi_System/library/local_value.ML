@@ -66,7 +66,7 @@ fun update_val b rule ctxt = ctxt
      |> Generic_Variable_Access.bind_local_vals [(Binding.name_of b, valterm_of ctxt rule)]
 
 
-
+val value_assigner_id = \<^here>
 fun value_assigner b (ctxt,_) =
   let
   val xname = Binding.name_of b
@@ -78,8 +78,42 @@ fun value_assigner b (ctxt,_) =
         |> Thm.instantiate (TVars.empty, Vars.make [((("name",0), \<^typ>\<open>valname\<close>), vterm)])
   in (rule, ctxt, [], [update_val b]) end
 
-val _ = Theory.setup (Generic_Variable_Access.register_assigner
-          ("val", \<^type_name>\<open>valname\<close>, "to declare a new local value", value_assigner))
+
+(*An optimization if all assignments are to values*)
+fun value_optimization bs stat =
+  let
+    fun fast_assign bs (ctxt, sequent) =
+      let
+        val (vnames, ctxt) = fold_map (fn (b,_) => fn ctxt =>
+              if has_val (Binding.name_of b) ctxt
+              then (Variable.intern_fixed ctxt (Binding.name_of b), ctxt)
+              else Proof_Context.add_fixes [(b, SOME \<^typ>\<open>valname\<close>, NoSyn)] ctxt |> apfst hd) bs ctxt
+        val vterms = map (fn V => Thm.cterm_of ctxt (Free (V, \<^typ>\<open>valname\<close>))) vnames
+        val rule = Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>))
+              |> fold (fn V => fn rule =>
+                    Thm.instantiate (TVars.empty, Vars.make [((("name",0),\<^typ>\<open>valname\<close>),V)])
+                                    @{thm "__fast_assign_val__"} RS rule) vterms
+              |> (fn rule => @{thm "__fast_assign_val_0__"} RS rule)
+        val (ctxt,sequent) = NuApply.apply [rule] (ctxt,sequent)
+              |> Phi_Reasoners.safer_obligation_solver1
+              |> Phi_Reasoners.safer_obligation_solver1
+        val (sequent, vals) = HOLogic.conj_elim ctxt sequent
+        val vals = HOLogic.conj_elims ctxt vals
+              |> Phi_Help.front
+      in fold2 (update_val o fst) bs vals ctxt
+      |> rpair sequent
+      end
+  in if forall (fn (_,(id,_)) => id = value_assigner_id) bs
+     then raise Generic_Variable_Access.Assignment_Hooks.Success (fast_assign bs stat)
+     else stat
+  end
+
+
+val _ = Theory.setup (
+   Generic_Variable_Access.register_assigner
+      ("val", \<^type_name>\<open>valname\<close>, "to declare a new local value", (value_assigner_id, value_assigner))
+#> Context.theory_map (Generic_Variable_Access.Assignment_Hooks.add 100 value_optimization)
+)
 
 (*
 if existed

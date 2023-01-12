@@ -21,15 +21,12 @@ subsubsection \<open>Operations\<close>
 
 paragraph \<open>Get Variable\<close>
 
-declare [[\<phi>trace_reasoning]]
 
 proc (nodef) op_get_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   argument \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<close>
   return   \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
-  \<medium_left_bracket> to_Identity op_get_var''
-  \<medium_right_bracket>
-    using \<phi> by simp .
+  \<medium_left_bracket> to_Identity op_get_var'' \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200 for
     \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ?x <val-of> ?var \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -161,8 +158,9 @@ lemma "__set_new_var_noty_rule__":
 
 
 
-ML_file "library/local_value.ML"
+ML_file "library/variable.ML"
 
+(*
 proc
   assumes [\<phi>reason for \<open>\<phi>SemType (x \<Ztypecolon> T) _ \<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
       and [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> U) _ \<close>]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY'\<close>
@@ -176,7 +174,7 @@ proc
   ;; $x $x $xx  ;;
     $x \<rightarrow> xx
   \<medium_right_bracket>. .
-
+*)
 (*
 lemma
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_. Y \<rbrace> \<equiv> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y\<close>
