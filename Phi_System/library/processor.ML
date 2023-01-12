@@ -33,6 +33,8 @@ signature NU_PROCESSOR = sig
 
   val setup : binding -> int (*precedence*) -> term (*pattern*) list -> proc ->
         string (*comment*) -> local_theory -> local_theory
+  val setup_global : binding -> int (*precedence*) -> term (*pattern*) list -> proc ->
+        string (*comment*) -> theory -> theory
   val setup' : binding -> int (*precedence*) ->
         (string (*pattern*) list * (binding * string option * mixfix) list) -> proc ->
         string (*comment*) -> local_theory -> local_theory
@@ -83,6 +85,9 @@ val ops_processor = {get_data = Data.get, put_data = Data.put}
 
 fun define binding precedence pat proc =
       Entity.define ops_processor binding (mk_processor (binding, precedence, pat, proc)) #> #2
+
+fun define_global binding precedence pat proc =
+      Entity.define_global ops_processor binding (mk_processor (binding, precedence, pat, proc)) #> #2
 
 val list = Data.get #> Name_Space.dest_table
       #> map (fn (name, Processor {binding,pattern, ...}) => (Binding.name name,pattern))
@@ -197,6 +202,9 @@ val read_prop_pattern = Syntax.read_props o Proof_Context.set_mode Proof_Context
 
 fun setup binding precedence term proc (comment:string) =
   define binding precedence term proc
+
+fun setup_global binding precedence term proc (comment:string) =
+  define_global binding precedence term proc
 
 fun setup' binding precedence (raw_term,fixes) proc (comment:string) lthy =
   let

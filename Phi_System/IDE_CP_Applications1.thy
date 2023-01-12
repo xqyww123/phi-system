@@ -5,6 +5,7 @@ text \<open>In this part, we build simple applications based on IDE-CP directly,
 
 theory IDE_CP_Applications1
   imports Phi_Types
+  keywords "val" :: quasi_command
 begin
 
 section \<open>Value \& Its Settings\<close>

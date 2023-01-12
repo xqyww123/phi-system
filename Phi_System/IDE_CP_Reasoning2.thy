@@ -82,9 +82,10 @@ lemma Remove_Values'_reject_val:
   (\<open>Remove_Values' ?R ?Y (?x \<Ztypecolon> Val ?raw ?T) ?Z\<close>) = \<open>
 fn (ctxt, sequent) =>
   let
-    val Const (\<^const_name>\<open>Remove_Values'\<close>, _) $ R $ _
-          $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const (\<^const_name>\<open>Val\<close>, _) $ raw $ _))
-          $ _ = Thm.major_prem_of sequent
+    val \<^const>\<open>Trueprop\<close> $ (\<^Const>\<open>Remove_Values'\<close>
+          $ R $ _
+          $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ \<^Const>\<open>Val _ _ for raw _\<close>)
+          $ _) = Thm.major_prem_of sequent
     fun has_free_val (Free (_, Type (\<^type_name>\<open>sem_value\<close>, [_]))) = true
       | has_free_val (A $ B) = has_free_val A orelse has_free_val B
       | has_free_val (Abs (_,_,X)) = has_free_val X

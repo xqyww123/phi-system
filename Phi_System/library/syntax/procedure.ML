@@ -1,3 +1,17 @@
+(* library/syntax/procedure.ML
+   Author: Qiyuan Xu
+
+   The syntax parser for procedure specification.
+
+It is invoked once there is an anonymous value in the argument specification,
+or once the return specification is not a lambda abstraction nor an atom (a variable or a constant).
+For translation in argument specification, all anonymous values are replaces by a free variable
+  generated automatically.
+For return specification, it collects all semantic values have \<^typ>\<open>'a sem_value\<close> in the spec,
+  and wrap the spec by a lambda abstraction over the semantic values, using the pair encoding
+  of multi-return-values.
+*)
+
 signature PROCEDURE_SYNTAX = sig
 (*
 Translate a term X containing values V (including anonymous values) into (\<lambda>vs. X\<theta>),
@@ -27,17 +41,28 @@ structure Procedure_Syntax : PROCEDURE_SYNTAX = struct
 Syntax translation during parsing of the pre-condition is simply replacing
 all anonymous values by a name \<a>\<r>\<g>i for the ith value from left to right.
 *)
-fun translate_arg' cnt (Const (\<^const_name>\<open>anonymous\<close>, _))
-      = (cnt+1, Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT))
-  | translate_arg' cnt (A $ B)
-      = (case translate_arg' cnt  A of (cnt', A') =>
-         case translate_arg' cnt' B of (cnt'', B') =>
-          (cnt'', A' $ B'))
-  | translate_arg' cnt (Abs (name,ty, X))
-      = (case translate_arg' cnt X of (cnt', X') =>
-           (cnt', Abs (name,ty,X')))
-  | translate_arg' cnt X = (cnt, X)
-val translate_arg = translate_arg' 0 #> snd
+fun translate_arg' cnt s ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>, _))
+                              $ X $ ( (C2 as Const (\<^const_name>\<open>Val\<close>, _))
+                                       $ Const (\<^const_name>\<open>anonymous\<close>, _)
+                                       $ X2))
+      = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
+  | translate_arg' cnt s (Const (\<^const_name>\<open>anonymous\<close>, _))
+      = (cnt, Symbol.bump_string s, Free ("\<a>\<r>\<g>" ^ s, dummyT))
+  | translate_arg' cnt s (A $ B)
+      = (case translate_arg' cnt  s  A of (cnt',s', A') =>
+         case translate_arg' cnt' s' B of (cnt'',s'', B') =>
+          (cnt'', s'', A' $ B'))
+  | translate_arg' cnt s (Abs (name,ty, X))
+      = (case translate_arg' cnt s X of (cnt',s', X') =>
+           (cnt', s', Abs (name,ty,X')))
+  | translate_arg' cnt s X = (cnt,s, X)
+fun translate_arg X = #3 (translate_arg' 0 "\<a>\<r>\<g>_a" X)
+
+fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = true
+  | need_translate_arg (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
+  | need_translate_arg (A $ B) = need_translate_arg A orelse need_translate_arg B
+  | need_translate_arg (Abs (_, _, X)) = need_translate_arg X
+  | need_translate_arg _ = false
 
 
 fun dest_prodT (Type (\<^type_name>\<open>sem_value\<close>, [Type ("Product_Type.prod", [A, B])]))
@@ -70,6 +95,7 @@ fun nth_project [_] 0 term = term
       = Const (\<^const_name>\<open>\<phi>V_fst\<close>, ty --> fst (dest_prodT ty)) $ term
   | nth_project (ty::tys::tyss) i term =
       nth_project (tys::tyss) (i-1) (Const (\<^const_name>\<open>\<phi>V_snd\<close>, ty --> tys) $ term)
+  | nth_project _ _ _ = error "Internal bug #bq3 ni8op["
 
 
 fun gen_collect_and_map R2L (*whether in an order from right to left or reversely*) =
@@ -163,9 +189,11 @@ fun abstract_return_vals name _ (term as Const (\<^const_name>\<open>Groups.zero
   in (mk_tuple Tys Vs, Abs(name, T, #3(map_ret Tys 0 (0,[],term))))
   end
 
+
 fun translate_ret (term as (Abs _)) = term
   | translate_ret (term as (Var _)) = term
   | translate_ret (term as (Free _)) = term
+  | translate_ret (term as (Const _)) = term
   | translate_ret (Const ("_constrain", ty) $ X $ Y)
       = Const ("_constrain", ty) $ translate_ret X $ Y
   | translate_ret (Const ("_type_constraint_", ty) $ X)
@@ -182,58 +210,31 @@ fun translate_ret (term as (Abs _)) = term
            | _ => I) term 0 *)
 
 fun need_translate_ret (Abs (_,_,_)) = false
-  | need_translate_ret (Const ("_constrain", ty) $ X $ Y)
+  | need_translate_ret (Free _) = false
+  | need_translate_ret (Var  _) = false
+  | need_translate_ret (Const  _) = false
+  | need_translate_ret (Const ("_constrain", _) $ X $ _)
       = need_translate_ret X
-  | need_translate_ret (Const ("_type_constraint_", ty) $ X)
+  | need_translate_ret (Const ("_type_constraint_", _) $ X)
       = need_translate_ret X
-  | need_translate_ret (Const ("_constrainAbs", ty) $ X $ Y)
+  | need_translate_ret (Const ("_constrainAbs", _) $ X $ _)
       = need_translate_ret X
   | need_translate_ret _ = true
 
-fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = true
-  | need_translate_arg (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
-  | need_translate_arg (A $ B) = need_translate_arg A orelse need_translate_arg B
-  | need_translate_arg (Abs (_, _, X)) = need_translate_arg X
-  | need_translate_arg _ = false
-
-fun need_translate (Const (\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, _) $ _ $ Arg $ Ret) =
-      need_translate_arg Arg orelse need_translate_ret Ret
-| need_translate (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ Arg $ Ret $ _) =
-      need_translate_arg Arg orelse need_translate_ret Ret
-| need_translate (A $ B) = need_translate A orelse need_translate B
-| need_translate (Abs (_, _, X)) = need_translate X
-| need_translate _ = false
-
-
-fun translate_procedure
-  (Const (\<^const_name>\<open>\<phi>Procedure\<close>, t1) $ f $ Arg $ Ret $ E) =
-    (Const (\<^const_name>\<open>\<phi>Procedure\<close>, t1)
-        $ f $ translate_arg Arg $ translate_ret Ret $ E)
-  | translate_procedure (Const (\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, t1) $ f $ Arg $ Ret) =
-    (Const (\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, t1)
-        $ f $ translate_arg Arg $ translate_ret Ret)
-  | translate_procedure (A $ B) = (translate_procedure A $ translate_procedure B)
-  | translate_procedure (Abs (name,ty,X))
-      = Abs (name, ty, translate_procedure X)
-  | translate_procedure X = X
-
+(*
+The parse translation is invoked once there is an anonymous value in the argument specification,
+or once the return specification is not a lambda abstraction nor an atom (a variable or a constant)
+*)
 val _ = Theory.setup (Sign.parse_translation [
-    (\<^const_syntax>\<open>\<phi>Procedure\<close>, (fn ctxt => fn [f,Arg,Ret,E] =>
+    (\<^const_syntax>\<open>\<phi>Procedure\<close>, (fn _ => fn [f,Arg,Ret,E] =>
         Const (\<^const_name>\<open>\<phi>Procedure\<close>, dummyT) $ f
           $ (if need_translate_arg Arg then translate_arg Arg else Arg)
           $ (if need_translate_ret Ret then translate_ret Ret else Ret)
           $ E)),
-    (\<^const_syntax>\<open>\<phi>Procedure_no_exception\<close>, (fn ctxt => fn [f,Arg,Ret] =>
+    (\<^const_syntax>\<open>\<phi>Procedure_no_exception\<close>, (fn _ => fn [f,Arg,Ret] =>
         Const (\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, dummyT) $ f
           $ (if need_translate_arg Arg then translate_arg Arg else Arg)
           $ (if need_translate_ret Ret then translate_ret Ret else Ret)))
 ])
-
-(*val _ = Theory.setup (
-  Context.theory_map (Syntax_Phases.term_check ~10 "\<phi>variable" (fn _ =>
-    map (fn term => if need_translate term
-                    then translate_procedure term
-                    else term)))
-)*)
 
 end

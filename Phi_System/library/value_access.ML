@@ -79,7 +79,7 @@ fun value_assigner b (ctxt,_) =
   in (rule, ctxt, [], [update_val b]) end
 
 val _ = Theory.setup (Generic_Variable_Access.register_assigner
-          ("val", \<^type_name>\<open>valname\<close>, "to assign to a new local value", value_assigner))
+          ("val", \<^type_name>\<open>valname\<close>, "to declare a new local value", value_assigner))
 
 (*
 if existed

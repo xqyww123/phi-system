@@ -92,7 +92,7 @@ fun mode ctxt = case Mode.get ctxt
 
 fun generic_cast rule place desired_nu (ctxt,sequent) =
   let
-    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "reasoning cast...")
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ => (\<^here>, "reasoning cast..."))
     val (ctxt', sequent') =
           case Phi_Reasoner.reason NONE (ctxt, sequent RS rule)
             of SOME ret => ret

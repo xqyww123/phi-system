@@ -21,8 +21,8 @@ signature NU_REASONER = sig
   val trace : bool Config.T (*Prints the state of every reasoning step.*)
   val trace_candidates : bool Config.T (*Prints the candidates at each step.*)
   val step_limit : int Config.T (*limit of the number of reasoning steps*)
-  val debug_info: Proof.context -> (unit -> string) -> unit
-  val debug_pretty: Proof.context -> (unit -> Pretty.T) -> unit
+  val debug_info: Proof.context -> (unit -> Position.T * string) -> unit
+  val debug_pretty: Proof.context -> (unit -> Position.T * Pretty.T) -> unit
             (*Prints any debug info only when the flag \<phi>trace_reasoning is turned on.*)
   val error : string -> 'a
 
@@ -95,9 +95,11 @@ val trace_candidates = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_re
 val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_limit\<close> (K 1000);
 
 (* Debug Info *)
-fun debug_info ctxt G =
-  if Config.get ctxt trace then tracing (G ()) else ()
-fun debug_pretty ctxt G = debug_info ctxt (fn _ =>Pretty.string_of (G ()))
+fun debug_pretty ctxt G =
+  if Config.get ctxt trace
+  then tracing (case G () of (pos,msg) => Pretty.string_of (Pretty.block (msg:: Pretty.here pos)))  
+  else ()
+fun debug_info ctxt G = debug_pretty ctxt (G #> apsnd Pretty.str)
 
 fun error msg = Exn.error (msg ^ "\nReasoning Fail! You may turn on \<phi>reasoning_tracing and \
       \\<phi>reasoning_tracing_condidates to debug.")
