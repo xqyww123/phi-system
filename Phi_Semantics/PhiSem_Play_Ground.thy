@@ -1,5 +1,5 @@
 theory PhiSem_Play_Ground
-  imports PhiSem_Machine_Integer_Lib
+  imports PhiSem_Machine_Integer
     PhiSem_Variable_Lib
     PhiSem_Basic_Control_Flow
 begin
@@ -13,11 +13,10 @@ proc
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l x - 1 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket>
-    if \<medium_left_bracket> \<open>0 < $x\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0::nat\<close> \<medium_right_bracket>.
+    if \<medium_left_bracket> \<open>0 < $x\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0 \<Ztypecolon> \<nat>[32]\<close> \<medium_right_bracket>.
     (* the cartouche like \<open>0 < $varx\<close> invokes a synthesis process
        to make a value satisfying that specification *)
   \<medium_right_bracket> using \<phi> by simp .
-
 
 proc
   premises \<open>x < 10\<close>

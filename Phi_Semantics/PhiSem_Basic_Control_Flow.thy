@@ -172,15 +172,17 @@ proc while:
   \<medium_right_bracket>. .
 
 (*
-We fail to infer the abstract loop guard automatically but require users to give.
-The main problem is about nondeterminancy in higher-order unification.
-In the below rule, in \<^term>\<open>cond x' \<Ztypecolon> \<bool>\<close>, both \<open>cond\<close> and \<open>x'\<close> are schematic variables,
+We fail to infer the abstraction of the loop guard automatically but
+require users to give by an annotation.
+The main difficulty is about the nondeterminancy in higher-order unification.
+In \<^term>\<open>cond x' \<Ztypecolon> \<bool>\<close> in the above rule, both \<open>cond\<close> and \<open>x'\<close> are schematic variables,
 which means we cannot determine either of them via unification.
 Even though the abstract state \<open>x'\<close> may be determined possibly in the unification of \<open>X x'\<close>,
-to infer \<open>cond x'\<close> it is still a problem especially when \<open>x'\<close> is not a variable but a composite
-term and its composite expression may be shattered in the expression of \<open>cond\<close> after
-rewrites and simplifications, causing it is very difficult to recover the actual abstract guard
-\<open>cond\<close> from simplified composition \<open>cond x'\<close>.
+to infer \<open>cond x'\<close> it is still a problem especially when \<open>x'\<close> is not a variable but a compounded
+term and its expression may be shattered in and mixed up with the expression of \<open>cond\<close> after
+simplifications like beta reduction,
+causing it is very difficult to recover the actual abstract guard
+\<open>cond\<close> from the reduced composition \<open>cond x'\<close>.
 *)
 
 end
