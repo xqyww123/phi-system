@@ -36,7 +36,6 @@ abbrevs
   and "<is>" = "\<^bold>i\<^bold>s"
 begin
 
-
 section \<open>Preliminary Configuration\<close>
 
 named_theorems \<phi>lemmata \<open>Contextual facts during the programming. They are automatically
@@ -445,19 +444,26 @@ lemma [\<phi>reason 20
   ..
 
 
-subsubsection \<open>Tagging the part a construction can synthesis\<close>
+subsubsection \<open>Tagging the target of a synthesis rule\<close>
 
 definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
 
-text \<open>
-  Occurring in a rule, SYNTHESIS tags a part of the post \<phi>-type of a triple or a view shifting,
-    representing this part can be synthesised by this construction.
-  For example, \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace>\<close> represents the procedure f generates
-    something that meets Z.
+consts synthesis :: \<open>subgoal \<Rightarrow> unit action\<close>
 
-  Occurring during reasoning, like \<^schematic_prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace> \<Longrightarrow> C\<close>,
-    it represents the reasoner needs to find some construction (here it specifies it must be a
-    procedure) ?f that generates something meeting Z.
+text \<open>
+  Occurring in the post-condition of a rule (either a procedure specification or a view shift
+    or an implication), SYNTHESIS tags the target of the rule, i.e., the construct that this
+    procedure or this transformation synthesises.
+  For example, \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> synthesis G\<close>
+    represents the procedure f generates
+    something that meets Z, and it is a synthesis rule for synthesising the target \<open>Z\<close>.
+
+  Occurring during reasoning, antecedent like
+    \<^schematic_prop>\<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> SYNTHESIS Z \<rbrace> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> synthesis G \<Longrightarrow> C\<close>,
+  represents a reasoning task to find some procedure or some transformation to synthesis
+  something meeting Z.
+
+TODO: replace <@GOAL> G to \<open>\<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> synthesis G\<close>
 \<close>
 
 subsubsection \<open>Synthesis Operations\<close>
@@ -1543,8 +1549,8 @@ val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
 val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
            where_statement -- defines_statement  -- precond_statement -- goal;
 
-val arg = Parse.term
-val arg_ret = (\<^keyword>\<open>argument\<close> |-- arg --| \<^keyword>\<open>return\<close> -- arg -- option (\<^keyword>\<open>throws\<close> |-- arg))
+val spec = Parse.term
+val arg_ret = (\<^keyword>\<open>argument\<close> |-- spec --| \<^keyword>\<open>return\<close> -- spec -- option (\<^keyword>\<open>throws\<close> |-- spec))
 
 val def_const_flag =
   Scan.optional ((\<^keyword>\<open>(\<close> |-- Phi_Parse.$$$ "nodef" --| \<^keyword>\<open>)\<close>) >> (K false)) true
@@ -1766,7 +1772,8 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 \<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
 \<open>fn (ctxt,sequent) => Scan.succeed (fn _ => (
-  Phi_Reasoner.debug_info ctxt (fn _ => "reasoning the leading antecedent of the state sequent.");
+  Phi_Reasoner.debug_info ctxt (fn _ =>
+      (\<^here>, "reasoning the leading antecedent of the state sequent."));
   if Config.get ctxt Phi_Reasoner.auto_level >= 1
     andalso (case Thm.major_prem_of sequent
                of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _)
