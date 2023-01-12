@@ -75,7 +75,7 @@ lemma \<phi>Type_eqI:
   \<open>(\<forall>x p. p \<in> (x \<Ztypecolon> a) \<longleftrightarrow> p \<in> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
   unfolding \<phi>Type_def by blast
 
-ML_file \<open>library/Phi_SimpCongruence.ML\<close>
+ML_file \<open>library/tools/simp_congruence.ML\<close>
 
 text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
 

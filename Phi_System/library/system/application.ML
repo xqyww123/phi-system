@@ -1,3 +1,12 @@
+(* FILE: library/system/application.ML
+   AUTHOR: Qiyuan Xu
+
+   The module contains reasoning infrastructure for applying application rules.
+   An application rule can be a specification theorem for a procedure, a rule of view shift
+   or transformation of abstraction, or any arbitrary things whose application methods are
+   registered to the \<phi>-LPR reasoner.
+*)
+
 signature NU_APPLICATION = sig
 
   val apply_proc_naive : thm (*proc*) -> context_state -> context_state

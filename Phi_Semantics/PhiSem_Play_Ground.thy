@@ -1,6 +1,6 @@
 theory PhiSem_Play_Ground
   imports PhiSem_Machine_Integer
-    PhiSem_Variable_Lib
+    PhiSem_Variable
     PhiSem_Basic_Control_Flow
 begin
 

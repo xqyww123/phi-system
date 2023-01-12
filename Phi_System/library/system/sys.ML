@@ -1,4 +1,9 @@
-(* The Signature *)
+(* FILE: library/system/sys.ML
+   AUTHOR: Qiyuan Xu
+
+   Several core operations in IDE-CP.
+*)
+
 signature PHI_SYS = sig
   (** Basic Operations **)
   val cast : cterm -> Proof.context * thm -> Proof.context * thm
@@ -29,7 +34,6 @@ signature PHI_SYS = sig
         -> thm -> Proof.state -> thm list * Proof.state
 end
 
-(* The Structure *)
 structure Phi_Sys : PHI_SYS = struct
 open Thm Phi_Basics Term
 
@@ -210,7 +214,6 @@ fun set_param_cmd xterm (ctxt,sequent) =
         end
 
 fun set_label name (ctxt,sequent) = (ctxt, Phi_Syntax.mk_label_thm name RS sequent)
-
 
 
 

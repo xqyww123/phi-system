@@ -1,3 +1,10 @@
+(* FILE: library/tools/quant_expansion.ML
+   AUTHOR: Qiyuan Xu
+
+   Expand compact quantification whose quantifier is a tuple tagged names of each projection
+   using named tag type.
+*)
+
 signature QUANT_EXPANSION = sig
   val forall_expansion : string list -> Proof.context -> thm
   val pure_All_expansion : string list -> Proof.context -> thm

@@ -47,15 +47,15 @@ fun compile_proc' c (Const ("Pure.eq",_) $ Const (name, _) $ B)
 fun compile_proc c = compile_proc' c o Thm.prop_of
 
 
-fun compile_interf c (i:NuProcedure.interface) = w "\n#> " #> compile_body 0 c (Thm.prop_of(#thm i))
+fun compile_interf c (i:Phi_Procedure.interface) = w "\n#> " #> compile_body 0 c (Thm.prop_of(#thm i))
 
 fun compile thy =
   let val c = {name_space = Context.theory_name thy}
       val gen = w "structure NuCG_" #> w (Context.theory_name thy) #> w " = struct\n"
-        #> fold (compile_proc c o NuProcedure.compilation_thm_of thy)
-              (NuProcedure.procedures_of (Context.Theory thy) |> rev)
+        #> fold (compile_proc c o Phi_Procedure.compilation_thm_of thy)
+              (Phi_Procedure.procedures_of (Context.Theory thy) |> rev)
         #> w "val gen = I"
-        #> fold (compile_interf c o #2) (NuProcedure.interfaces_of thy |> Symtab.dest)
+        #> fold (compile_interf c o #2) (Phi_Procedure.interfaces_of thy |> Symtab.dest)
         #> w "\nend"
   in String.concat (rev (gen [])) end
 

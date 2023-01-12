@@ -24,12 +24,12 @@ subsection \<open>Error Mechanism\<close>
 
 declare [ [ML_debugger, ML_exception_debugger] ]
 
-ML_file \<open>library/Phi_Error.ML\<close>
+ML_file \<open>library/tools/error.ML\<close>
 
 subsection \<open>Helper ML\<close>
 
-ML_file \<open>library/Phi_Help.ML\<close>
-ML_file \<open>library/Hook.ML\<close>
+ML_file \<open>library/tools/Phi_Help.ML\<close>
+ML_file \<open>library/tools/Hook.ML\<close>
 
 ML \<open>signature PHI_SYNTAX = sig end
 structure Phi_Syntax : PHI_SYNTAX = struct end\<close>

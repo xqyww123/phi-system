@@ -191,7 +191,7 @@ lemma "__fast_assign_val_0__":
 
 thm "__fast_assign_val__"[OF "__fast_assign_val__", OF "__fast_assign_val__", OF "__fast_assign_val_0__"]
 
-ML_file \<open>library/local_value.ML\<close>
+ML_file \<open>library/additions/local_value.ML\<close>
 
 
 (*

@@ -1,3 +1,9 @@
+(* FILE: library/syntax/name_by_type.ML
+   AUTHOR: Qiyuan Xu
+
+   Syntax tools for named type tag.
+*)
+
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 

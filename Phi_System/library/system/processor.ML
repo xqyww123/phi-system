@@ -1,3 +1,10 @@
+(* FILE: library/system/processor.ML
+   AUTHOR: Qiyuan Xu
+
+   Processor of IDE-CP. Processor is the core unit implementing the constructs in the programming
+   of IDE-CP.
+*)
+
 signature NU_PROCESSOR = sig
   type binding = Binding.binding
   exception Bypass of context_state option
@@ -41,6 +48,9 @@ signature NU_PROCESSOR = sig
   val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string (*pattern*) list)
         * (binding * string option * mixfix) list)
         * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
+
+  (*An example processor*)
+  val simplifier : proc
 end
 
 structure Phi_Processor : NU_PROCESSOR = struct
@@ -75,10 +85,9 @@ fun mk_processor (binding, precedence, pat, proc) =
 
 structure Data = Generic_Data
 (
-  type T = processor Name_Space.table;
-  val empty: T = Name_Space.empty_table "\<phi>processor";
-  val extend = I;
-  fun merge data : T = Name_Space.merge_tables data;
+  type T = processor Name_Space.table
+  val empty: T = Name_Space.empty_table "\<phi>processor"
+  fun merge data : T = Name_Space.merge_tables data
 );
 
 val ops_processor = {get_data = Data.get, put_data = Data.put}
@@ -90,9 +99,7 @@ fun define_global binding precedence pat proc =
       Entity.define_global ops_processor binding (mk_processor (binding, precedence, pat, proc)) #> #2
 
 val list = Data.get #> Name_Space.dest_table
-      #> map (fn (name, Processor {binding,pattern, ...}) => (Binding.name name,pattern))
-
-val get = Data.get #> Name_Space.get
+      #> map (fn (name, Processor {pattern, ...}) => (Binding.name name,pattern))
 
 fun wrap_attr (proc:proc) : attribute parser =
   Parse.args >> (fn toks => fn (ctxt, thm) =>
@@ -139,8 +146,6 @@ fun process_impl procs (stat,toks) limit =
               | Bypass (SOME stat') => stat'
               | Processed stat_toks => raise Processed stat_toks
               | Process_State_Call' arg => raise Process_State_Call' arg
-              | ex => (@{print} (ctxt,sequent); @{print} binding; Exn.reraise (@{print} ex))
-            (* | ex => Exn.reraise (ProcessFail (binding,th,ex)) *)
           else (ctxt,sequent)) procs stat
       in (stat',toks)
       end
@@ -155,8 +160,8 @@ fun internal_process (ctxt,sequent) toks =
 
 fun simple_process stat toks =
   internal_process stat toks
-  handle Process_State_Call' (toks,stat,f) => (stat,toks)
-       | Terminate_Process'  (toks,stat,f) => (stat,toks)
+  handle Process_State_Call' (toks,stat,_) => (stat,toks)
+       | Terminate_Process'  (toks,stat,_) => (stat,toks)
 
 fun powerful_process toks stat =
   let
@@ -224,7 +229,7 @@ fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) ctxt =
         (ML_Lex.read
           ("Theory.local_setup (Phi_Processor.setup (" ^
           ML_Syntax.make_binding binding ^ ") (" ^ ML_Syntax.print_int precedence ^ ") ("
-          ^ ML_Syntax.print_list ML_Syntax.print_term prop ^ ") (let open Phi_Processor Phi_Processors in ") @
+          ^ ML_Syntax.print_list ML_Syntax.print_term prop ^ ") (let open Phi_Processor in ") @
           ML_Lex.read_source proc @
           ML_Lex.read (" end) " ^ ML_Syntax.print_string comment ^ ")"))
     )
@@ -238,15 +243,19 @@ fun not_safe f (ctxt,sequent) =
       if Config.get ctxt Phi_Reasoner.auto_level >= 2 then f (ctxt,sequent) else raise Bypass NONE
 
 fun parse_auto_level (proc:proc) (ctxt,sequent) =
-  Phi_Parse.auto_level #-> (fn auto_level' =>
-    proc (Phi_Reasoner.reduce_auto_level auto_level' ctxt, sequent))
+    proc (Phi_Reasoner.reduce_auto_level (Config.get ctxt Phi_Reasoner.auto_level) ctxt, sequent)
 
 fun apply_attr (attr:attribute) (ctxt, sequent) =
   attr (Context.Proof ctxt, sequent)
     |> apfst (Context.proof_of o the)
     |> apsnd the
 
-(* fun processor_parser (ctxt,tokens) =
-val processor_attr = Scan.lift (Parse.named_position >> #1) --  *)
+val simplifier = almost_safe (fn (ctxt, sequent) =>
+  Scan.succeed (fn _ => let
+    val simps = Named_Theorems.get ctxt \<^named_theorems>\<open>useful\<close>
+    val simps'= Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>programming_simps\<close>
+    val ctxt' = Raw_Simplifier.addsimps (ctxt, simps @ simps')
+    in raise Bypass (SOME (ctxt, Simplifier.full_simplify ctxt' sequent))
+    end))
   
 end

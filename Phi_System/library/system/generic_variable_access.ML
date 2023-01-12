@@ -1,4 +1,4 @@
-(* library/generic variable access.ML
+(* library/system/generic variable access.ML
    AUTHOR: Qiyuan Xu
 
    Access (get and set) generic variables.

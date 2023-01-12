@@ -1,4 +1,10 @@
-signature NU_PROCEDURE = sig
+(* FILE: library/system/procedure.ML
+   AUTHOR: Qiyuan Xu
+
+   Defining procedures in IDE-CP.
+*)
+
+signature PHI_PROCEDURE = sig
   val procedure_kind : string
   val cast_kind : string
   val app_suffix : string
@@ -18,7 +24,7 @@ signature NU_PROCEDURE = sig
   * option -> theory -> theory *)
 end
 
-structure NuProcedure : NU_PROCEDURE = struct
+structure Phi_Procedure : PHI_PROCEDURE = struct
 open Phi_Basics
 
 val app_suffix = "_\<phi>app"

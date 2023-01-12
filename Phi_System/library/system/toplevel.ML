@@ -1,10 +1,7 @@
-(*  Title:      Phi_Toplevel.ML
+(* FILE: library/system/toplevel.ML
+   AUTHOR: Qiyuan Xu
 
-The toplevel structure of the ν-system.
-
-`begin_proc (argument-statement, for-fixes, including bundles)`
-    starts the block for procedure construction. The block is based on `notepad`. 
-
+   Definition of Isar commands for IDE-CP.
 *)
 
 signature PHI_TOPLEVEL = sig
@@ -231,7 +228,7 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process de
           end
         fun post_process' binding int lthy th =
           lthy
-            |> NuProcedure.define def_const binding (
+            |> Phi_Procedure.define def_const binding (
                 (lthy, (th RSN (3, @{thm "\<phi>__final_proc_rewrite__"})
                           handle THM _  => (th RSN (3, @{thm "\<phi>__final_proc_rewrite__'"}))))
                   |> Phi_Reasoner.reason NONE
@@ -353,7 +350,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
           end
         fun post_process' binding int lthy th =
           lthy
-            |> NuProcedure.define def_const binding (
+            |> Phi_Procedure.define def_const binding (
                 th |> Drule.forall_intr_list
                         (map ( Thm.cterm_of lthy
                              o map_types (map_type_tvar (fn ((name,_),s) => TVar ((name,0),s)))

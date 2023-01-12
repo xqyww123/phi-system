@@ -56,8 +56,8 @@ lemma [\<phi>inhabitance_rule, elim!]:
 subsubsection \<open>Syntax\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
-ML_file \<open>library/Phi_Working_Mode.ML\<close>
-ML_file \<open>library/Phi_Basics.ML\<close>
+ML_file \<open>library/system/Phi_Working_Mode.ML\<close>
+ML_file \<open>library/system/Phi_Basics.ML\<close>
 
 
 section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
@@ -336,7 +336,7 @@ section \<open>Mechanisms\<close>
 
 subsection \<open>Ad-hoc Overload\<close>
 
-ML_file \<open>library/app_rules.ML\<close>
+ML_file \<open>library/system/app_rules.ML\<close>
 
 attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_position) >> (fn bindings => 
   Thm.declaration_attribute (fn th => fold (Phi_App_Rules.overload th) bindings))\<close>
@@ -637,8 +637,7 @@ lemma \<phi>Application_Conv:
 \<Longrightarrow> PROP Q\<close>
   unfolding \<phi>Application_Conv_def .
 
-
-ML_file \<open>library/application.ML\<close>
+ML_file \<open>library/system/application.ML\<close>
 
 \<phi>reasoner_ML \<phi>Application 2000 (\<open>PROP \<phi>Application (PROP ?App) (PROP ?State) (PROP ?Result)\<close>) =
   \<open>NuApply.start_reasoning\<close>
@@ -1476,7 +1475,7 @@ lemma "__value_access_0__":
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   by fastforce
 
-ML_file \<open>library/generic_variable_access.ML\<close>
+ML_file \<open>library/system/generic_variable_access.ML\<close>
 
 hide_fact "__value_access_0__"
 
@@ -1502,18 +1501,14 @@ text \<open>\<phi>Processor realizes specific facilities for programming in a st
 
 subsection \<open>ML codes\<close>
 
-ML_file "./library/instructions.ML"
-ML_file "./library/parse.ML"
-ML_file "./library/processor.ML"
-ML_file "./library/procedure.ML"
-
-
-ML_file \<open>library/Phi_Sys.ML\<close>
-ML_file "./library/processors.ML"
-ML_file "./library/obtain.ML"
-ML_file "./library/generalization.ML"
+ML_file "library/instructions.ML"
+ML_file "library/tools/parse.ML"
+ML_file "library/system/processor.ML"
+ML_file "library/system/procedure.ML"
+ML_file \<open>library/system/sys.ML\<close>
+ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
-ML_file \<open>library/Phi_Toplevel.ML\<close>
+ML_file \<open>library/system/toplevel.ML\<close>
 
 
 subsection \<open>Isar Commands \& Attributes\<close>
@@ -1618,7 +1613,7 @@ val _ =
 (* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
       (Parse.binding --| $$$ "=" -- Parse.const -- option ($$$ ":" |-- Parse.typ --| $$$ "\<longmapsto>" -- Parse.typ)
-        >> (Toplevel.theory o NuProcedure.add_interface_command))
+        >> (Toplevel.theory o Phi_Procedure.add_interface_command))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>export_llvm\<close> "export LLVM target"
@@ -1748,7 +1743,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
 subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 \<phi>processor \<phi>simplifier 100 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
-  \<open>Phi_Processors.simplifier\<close>
+  \<open>Phi_Processor.simplifier\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>Phi_Processors.simplifier []\<close> *)
 
 \<phi>processor move_fact1  90 (\<open>?Any \<and> ?P\<close>)

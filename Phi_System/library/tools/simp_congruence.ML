@@ -1,4 +1,4 @@
-(* Phi_Simp_Congruence.ML
+(* FILE: library/tools/simp_congruence.ML
    Author: Qiyuan Xu
 
 The module gives a generic simplification procedure for quasi-congruence rules

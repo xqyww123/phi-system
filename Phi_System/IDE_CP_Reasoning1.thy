@@ -67,7 +67,7 @@ datatype ('x, 'name) named (infix "<named>" 30) = tag 'x
 syntax "__named__" :: \<open>logic \<Rightarrow> tuple_args \<Rightarrow> logic\<close> (infix "<<named>>" 25)
 
 
-ML_file \<open>library/name_by_type.ML\<close>
+ML_file \<open>library/syntax/name_by_type.ML\<close>
 
 text \<open>It is a tool to annotate names on a term, e.g. \<^term>\<open>x <<named>> a, b\<close>.
   The name tag is useful in lambda abstraction (including quantification) because the
@@ -113,7 +113,7 @@ lemma eoq__snd[unfolded atomize_eq[symmetric], named_expansion]:
 lemmas [unfolded atomize_eq[symmetric], named_expansion] =
   Product_Type.prod.case named.case id_apply
 
-ML_file "./library/QuantExpansion.ML"
+ML_file "./library/tools/quant_expansion.ML"
 
 simproc_setup named_forall_expansion ("All (P :: 'a <named> 'names \<Rightarrow> bool)") =
   \<open>K (QuantExpansion.simproc_of QuantExpansion.forall_expansion)\<close>

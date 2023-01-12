@@ -1,3 +1,9 @@
+(* The old kernel for a programming language on IDE-CP.
+ It collects all instructions of a semantic formalization and
+  verifies whether a program is built using those instructions only, so
+  the the program is valid without using invalid (non-registered) instructions.
+*)
+
 signature NU_INSTRUCTIONS = sig
   val list : Context.generic -> string list
   val list_definitions : Context.generic -> (string * thm) list

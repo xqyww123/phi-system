@@ -1530,53 +1530,6 @@ lemma Prog_Interface_func:
   unfolding Prog_Interface_def ..
 *)
 
-subsection \<open>Variable Extraction\<close>
-
-definition Variant_Cast :: "'vars \<Rightarrow> 'a set \<Rightarrow> ('vars \<Rightarrow> 'a set) \<Rightarrow> bool" ("\<^bold>v\<^bold>a\<^bold>r\<^bold>y _ \<^bold>i\<^bold>n _/ \<longmapsto> _" )
-  where "Variant_Cast insts X X' \<longleftrightarrow> X = X' insts"
-
-text \<open>The main usage of this reasoning is for loop and recursion.
-  Given an assertion X, \<^prop>\<open>Variant_Cast vars X X'\<close> tries under instruction from user to
-    extract the variable part \<^term>\<open>vars\<close> in the assertion. This part typically will be
-    universally quantified inside loop bodies.
-
-  There are two syntax for instructing this extraction.
-  One is 'v1 v2 ...' instructing all occurrence of free variables v1 v2... in X will be such generalized.
-  Another is 'v1 v2 in pattern' instructing to first pattern match X and then v1 v2 in the matched
-    pattern will be generalized.\<close>
-
-lemma Variant_Cast_I: "X = X' vars \<Longrightarrow> Variant_Cast vars X X' "
-  unfolding Variant_Cast_def by auto
-
-lemma Variant_Cast_I_always:
-  "X = X' vars \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e always vars \<Longrightarrow>
-  Variant_Cast vars X (\<lambda>vars. X' vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j always vars)"
-  unfolding Variant_Cast_def by (auto simp add: \<phi>expns)
-
-lemma case_prod_expn_I: "A = B x y \<Longrightarrow> A = case_prod B (x,y)" by simp
-lemma case_named_expn_I: "A = B x \<Longrightarrow> A = case_named B (tag x)" by simp
-
-ML_file_debug \<open>library/variables_tag.ML\<close>
-
-\<phi>processor vars_by_pattern 3000 (\<open>Variant_Cast ?vars ?X ?X' \<Longrightarrow> PROP ?P\<close>)
-\<open>fn (ctxt, sequent) => 
-let open Parse Scan Phi_Help Phi_Basics
-  fun pattern_match ((vars, pattern), always) _ =
-    (ctxt, Nu_Variable_Factor.vary_by_pattern vars pattern always ctxt sequent)
-  fun var_term (vars, always) _ =
-    (ctxt, Nu_Variable_Factor.vary_by_parts vars always ctxt sequent)
-  val none = Scan.succeed []
-  val params = (list Parse.params) >> flat
-  val syn_pattern_match =
-    (params --| \<^keyword>\<open>in\<close> -- term -- option (\<^keyword>\<open>invar\<close> |-- term))
-    >> pattern_match
-  val syn_var_term = (list1 term -- Scan.option (\<^keyword>\<open>invar\<close> |-- term)) >> var_term
-in syn_pattern_match || syn_var_term end\<close>
-
-(*  \<open>Phi_Reasoners.wrap (fn ctxt => Phi_Reasoners.asm_simp_tac (ctxt addsimps Proof_Context.get_thms ctxt "\<phi>expns"))\<close> *)
-
-
-
 subsection \<open>Automation for Sharing Permission\<close>
 
 subsubsection \<open>Structure Info\<close>

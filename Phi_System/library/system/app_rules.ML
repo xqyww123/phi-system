@@ -1,3 +1,10 @@
+(* FILE: library/system/app_rules.ML
+   AUTHOR: Qiyuan Xu
+
+   The module manages application rules in the system, like name convention,
+   parser, and overloading.
+*)
+
 signature PHI_APP_RULES = sig
   val app_rules : Proof.context -> (Facts.ref * Token.src list) -> thm list
   val declare_overloading : binding -> string (*comment*) -> local_theory -> string * local_theory
@@ -8,7 +15,7 @@ end
 
 structure Phi_App_Rules : PHI_APP_RULES = struct
 
-fun suffix_fact suf (Facts.Fact thm) = Facts.Fact thm
+fun suffix_fact _   (Facts.Fact thm) = Facts.Fact thm
   | suffix_fact suf (Facts.Named ((name,pos),int)) = Facts.Named ((suffix suf name,pos),int)
 
 fun app_rules ctxt fact =

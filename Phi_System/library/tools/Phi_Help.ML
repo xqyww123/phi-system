@@ -87,7 +87,6 @@ signature PHI_HELP = sig
   val comp_rule : Proof.context -> bool -> thm -> thm -> thm
   val comp_rule_incr_left  : Proof.context -> thm -> thm -> thm
   val comp_rule_incr_right : Proof.context -> thm -> thm -> thm
-
 end
 
 structure Phi_Help : PHI_HELP = struct

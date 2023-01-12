@@ -1,3 +1,9 @@
+(* FILE: library/system/obtain.ML
+   AUTHOR: Qiyuan Xu
+
+   Existential elimination in the IDE-CP.
+*)
+
 signature NU_OBTAIN = sig
   val choose : binding list -> Proof.state -> Proof.state
   val auto_choose : Proof.state -> Proof.state

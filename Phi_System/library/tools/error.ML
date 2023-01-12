@@ -1,3 +1,9 @@
+(* FILE: library/tools/error.ML
+   AUTHOR: Qiyuan Xu
+
+   An unfinished error mechanism for IDE-CP.
+*)
+
 signature PHI_ERROR = sig
 
 exception CastFail of (*place*) string * (*desired*) cterm * (*sequent*) thm

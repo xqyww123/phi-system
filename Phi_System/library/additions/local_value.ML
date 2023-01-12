@@ -1,3 +1,9 @@
+(* FILE: library/additions/local_value.ML
+   AUTHOR: Qiyuan XU
+
+   Access and assignment for local value.
+*)
+
 signature PHI_VALUE = sig
 
 val has_val : string (*external name*) -> Proof.context -> bool
@@ -114,18 +120,5 @@ val _ = Theory.setup (
       ("val", \<^type_name>\<open>valname\<close>, "to declare a new local value", (value_assigner_id, value_assigner))
 #> Context.theory_map (Generic_Variable_Access.Assignment_Hooks.add 100 value_optimization)
 )
-
-(*
-if existed
-     then (@{thm "__set_var_rule__"}, ctxt, [], [])
-     else let
-          val rule = if Config.get ctxt variable_is_typed
-                     then @{thm "__set_new_var_rule__"}
-                     else @{thm "__set_new_var_noty_rule__"}
-          val ([vname],ctxt) = Proof_Context.add_fixes [(b, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
-          val ctxt = Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free (Binding.name_of b, @{typ varname}))] ctxt
-          in (rule, ctxt, [Thm.cterm_of ctxt (Free (vname, @{typ varname}))], [declare])
-          end *)
 
 end
