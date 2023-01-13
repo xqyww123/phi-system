@@ -15,7 +15,6 @@ signature PHI_TOPLEVEL = sig
         -> xstring option (*throws*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
-        -> (indexname list * string) list (*let patterns*)
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> string option
@@ -29,7 +28,6 @@ signature PHI_TOPLEVEL = sig
         -> ((binding * string option * mixfix) list * (*variants*)
             (binding * string option * mixfix) list   (*for fixes*))
         -> (xstring * Position.T) list (*includes*)
-        -> (indexname list * string) list (*let patterns*)
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> string option
@@ -96,17 +94,16 @@ fun dec_blk_level ctxt =
 
 
 fun gen_constr_envir prep_term prep_prop prep_var prep_ctxt mk_Goal
-      binding arg ret throws rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt
+      binding arg ret throws rawfixes includes raw_defines raw_preconds raw_goal_ctxt
       int lthy =
   let
-    val ((fixes,var_names), ctxt_parse) = prep_decls prep_var rawfixes (prep_ctxt lthy)
+    val includes = includes |> map (Bundle.check lthy)
+    val ((fixes,var_names), ctxt_parse) = prep_ctxt lthy
+                                       |> not (null includes) ? Bundle.includes includes
+                                       |> prep_decls prep_var rawfixes
     val binding = binding |> apsnd (map (Attrib.check_src lthy))
     val parse_term = prep_term ctxt_parse
     val parse_prop = prep_prop ctxt_parse
-
-    val lets = maps (fn (vs,t) => map (rpair (parse_term t)) vs) raw_lets
-    val parse_term = parse_term #> Term.subst_Vars lets
-    val parse_prop = parse_prop #> Term.subst_Vars lets
 
     fun prep_attrterm prep =
          (apfst (apsnd (map (Attrib.check_src lthy))) #>
@@ -138,8 +135,6 @@ fun gen_constr_envir prep_term prep_prop prep_var prep_ctxt mk_Goal
                               $ goal'
                               $ parse_term G
 
-    val includes = includes |> map (Bundle.check lthy)
-
     val elems = [Element.Fixes fixes',
                  Element.Defines defines,
                  Element.Assumes (map (apsnd single) preconds')]
@@ -148,16 +143,7 @@ fun gen_constr_envir prep_term prep_prop prep_var prep_ctxt mk_Goal
   in
     lthy |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
               includes elems concls int
-         |> Proof.map_context (
-             let
-               fun fetch names ctxt =
-                 map (snd o Proof_Context.get_fact_generic ctxt o Facts.named) names |> flat
-               fun bind_lets ctxt =
-                 fold Proof_Context.bind_term (map (apsnd (Syntax.check_term ctxt)) lets) ctxt
-             in
-               bind_lets #>
-               Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)
-             end)
+         |> Proof.map_context (Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>))
          |> constr_process
   end
 
@@ -654,19 +640,19 @@ local open Scan Phi_Sys Parse
 val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
 val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
 val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
-val precond_statement =
+val precond_statements =
       Scan.repeat ((premises_statement >> map (pair Premise))
                 || (requires_statement >> map (pair Assumption))) >> flat;
 (* val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term); *)
-val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
-        Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
-val defines_statement = Scan.optional ($$$ "defines" |-- Parse.!!! statement1) [];
+val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |-- Parse.!!! statement1) [];
 val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
-val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
-           where_statement -- defines_statement  -- precond_statement -- goal;
 
-val spec = Parse.term
-val arg_ret = (\<^keyword>\<open>argument\<close> |-- spec --| \<^keyword>\<open>return\<close> -- spec -- option (\<^keyword>\<open>throws\<close> |-- spec))
+val includes = Scan.optional Parse_Spec.includes []
+val argument = \<^keyword>\<open>argument\<close> |-- Parse.term
+val return   = \<^keyword>\<open>return\<close>   |-- Parse.term
+val throws   = Scan.option (\<^keyword>\<open>throws\<close> |-- Parse.term)
+
+val rec_vars = \<^keyword>\<open>var\<close> |-- !!! vars;
 
 val def_const_flag =
   Scan.optional ((\<^keyword>\<open>(\<close> |-- Phi_Parse.$$$ "nodef" --| \<^keyword>\<open>)\<close>) >> (K false)) true
@@ -675,17 +661,36 @@ in
 
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((def_const_flag -- Parse_Spec.opt_thm_name ":" -- nu_statements -- arg_ret) >>
-        (fn (((def_const, b),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
-            (begin_proc_cmd def_const b arg ret throws fixes includes lets defs preconds G)));
+    ((def_const_flag -- Parse_Spec.opt_thm_name ":"
+      -- includes
+      -- precond_statements
+      -- argument
+      -- precond_statements
+      -- return
+      -- throws
+      -- goal
+      -- where_statement
+      -- Parse.for_fixes) >>
+      (fn ((((((((((def_const,b),includes),prec1),arg),prec2),ret),throws),G),defs),fixes) =>
+        begin_proc_cmd def_const b arg ret throws fixes includes defs (prec1 @ prec2) G))
 
-val loop_variables = $$$ "var" |-- !!! vars;
 val _ =
   Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close>
     "begin a recursive procedure construction"
-    (((def_const_flag -- Parse_Spec.opt_thm_name ":") -- loop_variables -- nu_statements -- arg_ret) >>
-        (fn ((((def_const,b),vars),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
-            (begin_rec_proc_cmd def_const b arg ret throws (vars,fixes) includes lets defs preconds G)));
+    ((def_const_flag -- Parse_Spec.opt_thm_name ":"
+      -- includes
+      -- precond_statements
+      -- argument
+      -- rec_vars
+      -- precond_statements
+      -- return
+      -- throws
+      -- goal
+      -- where_statement
+      -- Parse.for_fixes
+     ) >> (
+     fn (((((((((((def_const,b),includes),prec1),arg),vars),prec2),ret),throws),G),defs),fixes) =>
+        begin_rec_proc_cmd def_const b arg ret throws (vars,fixes) includes defs (prec1 @ prec2) G))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"

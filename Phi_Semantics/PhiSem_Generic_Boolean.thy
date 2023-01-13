@@ -146,17 +146,15 @@ proc \<phi>__synthesis_eq[
 ]:
   assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
     and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  assumes [\<phi>reason]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+    and   [\<phi>reason]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason for \<open>\<phi>Equal T ?can_eq ?eq\<close>]: \<open>\<phi>Equal T can_eq (=)\<close>
-  premises \<open>can_eq x y\<close>
-  goal G
   argument \<open>R\<close>
+  premises \<open>can_eq x y\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 F2 =
-  thm useful
-  \<medium_right_bracket>. .
+  goal G
+  \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
 
 
 end

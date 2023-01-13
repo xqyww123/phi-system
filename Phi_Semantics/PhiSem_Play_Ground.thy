@@ -28,9 +28,8 @@ proc
   \<medium_right_bracket> using \<phi> by simp .
 
 proc
-  where ?ten = 10
-  premises \<open>x < ?ten\<close>
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
+  premises \<open>x < 10\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket>
     $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
