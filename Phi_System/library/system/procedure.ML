@@ -144,7 +144,7 @@ fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = 
   | concl_of x = x
 
 
-fun closure ctxt f =
+fun closure _ f =
   let
     val tvars = Term.add_tvars f []
     val (subst,_) = Term.fold_types Term.declare_typ_names f Name.context
@@ -157,7 +157,7 @@ fun closure ctxt f =
     val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f
 
     fun trim ((i as \<^term>\<open>\<phi>V_none\<close>), (x as Abs (_, \<^typ>\<open>unit sem_value\<close>, X)))
-          = if exists_subterm (fn Bound 0 => true | _ => false) X then ([], X) else ([i], x)
+          = if Term.is_open X then ([i], x) else ([], X)
       | trim (i,x) = ([i],x)
     val (instance,f'') = Procedure_Syntax.abstract_return_vals "\<a>\<r>\<g>" false f' |> trim
     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
