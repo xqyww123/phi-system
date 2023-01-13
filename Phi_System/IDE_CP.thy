@@ -1680,7 +1680,7 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 \<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
 \<open>fn (ctxt,sequent) => Scan.succeed (fn _ => (
   Phi_Reasoner.debug_info ctxt (fn _ =>
-      (\<^here>, "reasoning the leading antecedent of the state sequent."));
+      "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
   if Config.get ctxt Phi_Reasoner.auto_level >= 1
     andalso (case Thm.major_prem_of sequent
                of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _)

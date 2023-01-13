@@ -107,7 +107,8 @@ fun try_apply [] (ctxt,sequent) = NONE
                           Drule.comp_no_flatten (b,0) 1 (
                            Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
         val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
-        val _ = Phi_Reasoner.debug_info ctxt (fn _ => (\<^here>, "Reasoning generic applications..."))
+        val _ = Phi_Reasoner.debug_info ctxt (fn _ =>
+                    "Reasoning generic applications..." ^ Position.here \<^here>)
       in
         Phi_Reasoner.reason NONE (ctxt,sequent')
           |> Option.map (apsnd (Goal.conclude))
@@ -139,7 +140,7 @@ fun MPs ctxt th1s' th2 =
      |> pair ctxt |> Seq.single
      |> pair 0
      ) th1s
-    val _ = Phi_Reasoner.debug_info ctxt (fn _ => (\<^here>, "Reasoning modus pones..."))
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "Reasoning modus pones..." ^ Position.here \<^here>)
     fun obligation_fail S = raise Phi_Reasoners.Attemption_Fail S
   in 
     case Seq.pull (Phi_Reasoner.reason_s ctxt stats)

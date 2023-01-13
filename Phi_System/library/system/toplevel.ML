@@ -360,7 +360,8 @@ fun gen_finish_proc prep_term qed spec int stat =
           then (ctxt_pre1,sequent_pre1)
           else let
             val _ = Phi_Reasoner.debug_info ctxt_pre1 (fn _ =>
-                      (\<^here>, "solving pending antecedents before closing the programming block..."))
+                      "solving pending antecedents before closing the programming block..."
+                      ^ Position.here \<^here>)
             fun attack_obligations (ctxt,sequent) =
               case try Thm.major_prem_of sequent
                 of SOME (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ _)) =>
@@ -381,8 +382,9 @@ fun gen_finish_proc prep_term qed spec int stat =
                             val aim = Thm.cterm_of ctxt'' (prep_term ctxt'' term)
                             val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                                Pretty.str "transforming to the given specification ",
-                               Syntax.pretty_term ctxt'' (Thm.term_of aim)
-                            ] |> pair \<^here>)
+                               Syntax.pretty_term ctxt'' (Thm.term_of aim),
+                               Pretty.block (Pretty.here \<^here>)
+                            ])
                         in Phi_Sys.cast aim
                         #> Phi_Reasoners.auto_obligation_solver' (fn (ctxt,sequent) =>
                              error (Pretty.string_of (Pretty.chunks [
@@ -401,8 +403,9 @@ fun gen_finish_proc prep_term qed spec int stat =
         val desired_nu = #return_spec_c mode ctxt' goal
         val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                   Pretty.str "casting to the destined post-condition ",
-                  Syntax.pretty_term ctxt'' (Thm.term_of desired_nu)
-                ] |> pair \<^here>)
+                  Syntax.pretty_term ctxt'' (Thm.term_of desired_nu),
+                  Pretty.block (Pretty.here \<^here>)
+                ])
       in
         (ctxt'',sequent'')
           (* |> invoke_Block_End_Hook *)
@@ -425,8 +428,9 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Pretty.item [Pretty.str "goal:"],
                     Syntax.pretty_term ctxt' (fst (Logic.dest_implies (Thm.prop_of goal))),
                     Pretty.item [Pretty.str "resulted sequent:"],
-                    Thm.pretty_thm ctxt' sequent'
-                  ]) |> pair \<^here>)
+                    Thm.pretty_thm ctxt' sequent',
+                    Pretty.block (Pretty.here \<^here>)
+                  ]))
                 val result = NuApply.MP ctxt' sequent' goal
               in result end
             ))

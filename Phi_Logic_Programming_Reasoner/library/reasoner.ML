@@ -21,9 +21,10 @@ signature NU_REASONER = sig
   val trace : bool Config.T (*Prints the state of every reasoning step.*)
   val trace_candidates : bool Config.T (*Prints the candidates at each step.*)
   val step_limit : int Config.T (*limit of the number of reasoning steps*)
-  val debug_info: Proof.context -> (unit -> Position.T * string) -> unit
-  val debug_pretty: Proof.context -> (unit -> Position.T * Pretty.T) -> unit
+  val debug_info: Proof.context -> (unit -> string) -> unit
+  val debug_pretty: Proof.context -> (unit -> Pretty.T) -> unit
             (*Prints any debug info only when the flag \<phi>trace_reasoning is turned on.*)
+  val debug_pretty_generic : Context.generic -> (unit -> Pretty.T) -> unit
   val error : string -> 'a
 
   (*auto level: 2 - fully auto, 1 - partially auto, 0 - fully manual*)
@@ -109,9 +110,14 @@ val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_
 (* Debug Info *)
 fun debug_pretty ctxt G =
   if Config.get ctxt trace
-  then tracing (case G () of (pos,msg) => Pretty.string_of (Pretty.block (msg:: Pretty.here pos)))  
+  then tracing (Pretty.string_of (G ()))  
   else ()
-fun debug_info ctxt G = debug_pretty ctxt (G #> apsnd Pretty.str)
+fun debug_info ctxt G = debug_pretty ctxt (G #> Pretty.str)
+
+fun debug_pretty_generic ctxt G =
+  if Config.get_generic ctxt trace
+  then tracing (Pretty.string_of (G ()))  
+  else ()
 
 fun error msg = Exn.error (msg ^ "\nReasoning Fail! You may turn on \<phi>reasoning_tracing and \
       \\<phi>reasoning_tracing_condidates to debug.")
@@ -417,16 +423,17 @@ val _ =
 
 (*** Reasoner for Introduction Reasoning Rule ***)
 
-fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
-fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
-
-
 fun name_of_intro_reasoner rule = Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Thm.prop_of rule
 fun intro_reasoner ctxt pos priority patterns blacklist rule =
   let
     val rule = Thm.trim_context rule
     val pats = if null patterns
-               then [the_default_pattern_of ctxt (Thm.concl_of rule)]
+               then let val pat = the_default_pattern_of ctxt (Thm.concl_of rule)
+                        val _ = debug_pretty_generic ctxt (fn () => Pretty.chunks [
+                                Pretty.str "No pattern is given, use the default pattern:",
+                                Syntax.pretty_term (Context.proof_of ctxt) pat
+                            ])
+                    in [pat] end
                else patterns
     val f_num = length (filter (fn \<^prop>\<open>\<r>Feasible\<close> => true | _ => false) (Thm.prems_of rule))
     val has_feasible =
