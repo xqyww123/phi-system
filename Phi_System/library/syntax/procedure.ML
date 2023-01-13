@@ -46,7 +46,14 @@ fun translate_arg' cnt s ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>
                                        $ Const (\<^const_name>\<open>anonymous\<close>, _)
                                        $ X2))
       = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
+  | translate_arg' cnt s ( (C1 as Const (\<^const_syntax>\<open>\<phi>Type\<close>, _))
+                              $ X $ ( (C2 as Const (\<^const_syntax>\<open>Val\<close>, _))
+                                       $ Const (\<^const_syntax>\<open>anonymous\<close>, _)
+                                       $ X2))
+      = (cnt+1, s, C1 $ X $ (C2 $ Free ("\<a>\<r>\<g>" ^ (string_of_int (cnt+1)), dummyT) $ X2))
   | translate_arg' cnt s (Const (\<^const_name>\<open>anonymous\<close>, _))
+      = (cnt, Symbol.bump_string s, Free ("\<a>\<r>\<g>" ^ s, dummyT))
+  | translate_arg' cnt s (Const (\<^const_syntax>\<open>anonymous\<close>, _))
       = (cnt, Symbol.bump_string s, Free ("\<a>\<r>\<g>" ^ s, dummyT))
   | translate_arg' cnt s (A $ B)
       = (case translate_arg' cnt  s  A of (cnt',s', A') =>
@@ -59,7 +66,9 @@ fun translate_arg' cnt s ( (C1 as Const (\<^const_name>\<open>\<phi>Type\<close>
 fun translate_arg X = #3 (translate_arg' 0 "\<a>\<r>\<g>_a" X)
 
 fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = true
+  | need_translate_arg (Const (\<^const_syntax>\<open>anonymous\<close>, _)) = true
   | need_translate_arg (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
+  | need_translate_arg (Const (\<^const_syntax>\<open>\<phi>Type\<close>, _) $ _ $ X) = need_translate_arg X
   | need_translate_arg (A $ B) = need_translate_arg A orelse need_translate_arg B
   | need_translate_arg (Abs (_, _, X)) = need_translate_arg X
   | need_translate_arg _ = false

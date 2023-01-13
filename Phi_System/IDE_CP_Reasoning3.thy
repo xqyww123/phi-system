@@ -1883,7 +1883,7 @@ lemma Structural_Extract_aggrement_from:
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Feasible_def
             Structural_Extract'_def
   apply (cases C; simp)
-  \<medium_left_bracket> premises A
+   \<medium_left_bracket> premises A
     Agreement_cast[OF A]
     Agreement_shrink
   \<medium_right_bracket>.

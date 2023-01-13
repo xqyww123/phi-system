@@ -32,13 +32,7 @@ translations
   "\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T" => "x \<Ztypecolon> CONST Val (CONST anonymous) T"
   "\<^bold>v\<^bold>a\<^bold>l T" => "CONST Val (CONST anonymous) T"
 
-term \<open>x \<Ztypecolon> Val anonymous T\<close>
-
 ML_file \<open>library/syntax/value.ML\<close>
-
-declare [[\<phi>display_value_internal_name = false]]
-
-term \<open>x \<Ztypecolon> Val \<v>asd T\<close>
 
 subsection \<open>Properties\<close>
 

@@ -286,6 +286,9 @@ section \<open>Access Value or Variable\<close>
 
 (*Notice*)
 text \<open>Internal representation of the values and their names are hidden by default during the
-  programming, but you can turn on \<^verbatim>\<open>[[\<phi>display_value_internal_name = true]]\<close> to display them.\<close>
+  programming, but you can turn on @{attribute \<phi>display_value_internal_name} to display them.\<close>
+
+text \<open>By default, remaining values in the previous statement will be removed in the successive
+  statement. You can turn off @{attribute \<phi>statement_clean_values} to disable this behavior.\<close>
 
 end

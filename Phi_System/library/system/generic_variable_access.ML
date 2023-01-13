@@ -33,7 +33,13 @@ val collect_and_clean_value : bool (*whether to clean the Val \<phi>-types from 
 val register_value_spec_thms : Position.T -> thm list -> Context.generic -> Context.generic
   (*so that the values can be synthesised*)
 
-val open_value_context'  : Position.T -> context_state -> context_state
+type process_of_argument = context_state -> context_state
+
+val to_value_and_clean : process_of_argument
+val to_value_no_clean  : process_of_argument
+
+structure Process_of_Argument : GENERIC_DATA
+
 
 (** Assignment **)
 
@@ -58,9 +64,6 @@ val register_assigner : string (*keyword that the assigner binds*)
 
 structure Assignment_Hooks : HOOKS
 
-end
-
-structure Generic_Variable_Access = struct
 end
 
 structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
@@ -194,9 +197,9 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
 
 end
   
+(*** Initial Process for Arguments ***)
 
-
-(*** Initial Arguments ***)
+(** Predefined Processes **)
 
 fun collect_and_clean_value whether_clean ctxt sequent =
   let
@@ -230,29 +233,31 @@ fun register_value_spec_thms pos rules =
   ) rules)
 
 
-fun open_value_context' pos (ctxt,sequent) =
+fun gen_default_process' clean pos (ctxt,sequent) =
   let
-    val (sequent', rules) = collect_and_clean_value true ctxt sequent
+    val (sequent', rules) = collect_and_clean_value clean ctxt sequent
+    val revert_frees = map_aterms (fn Free (N,T) => Free (Variable.revert_fixed ctxt N, T)
+                                    | X => X)
     val args = rules |> map (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ V)
                                   $ _)
-                 => V
+                 => revert_frees V
              | _ => error "Internal Bug q34v6 nu89p")
     val binds = rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ V)
                                   $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Free (N,_) $ _))
-                 => SOME (N, V)
+                 => SOME (Variable.revert_fixed ctxt N, revert_frees V)
              | _ => NONE)
     val binds'= rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ (V as Free (N,_)))
                                   $ _)
-                 => SOME (N, V)
+                 => SOME (Variable.revert_fixed ctxt N, revert_frees V)
              | _ => NONE)
   in ctxt
   |> open_value_context args
@@ -261,8 +266,35 @@ fun open_value_context' pos (ctxt,sequent) =
   |> rpair sequent'
   end
 
+fun is_value (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const (\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true
+  | is_value _ = false
+fun has_value (Const (\<^const_name>\<open>times\<close>,_) $ R $ X) = is_value X orelse has_value R
+  | has_value X = is_value X
+
+fun gen_default_process clean pos (ctxt,sequent) =
+  if has_value (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
+  then gen_default_process' clean pos (ctxt,sequent)
+  else (open_value_context [] ctxt, sequent)
+
+(** Mechanism **)
+
+type process_of_argument = context_state -> context_state
+
+val to_value_and_clean = gen_default_process true  Position.none
+val to_value_no_clean  = gen_default_process false Position.none
+
+structure Process_of_Argument = Generic_Data (
+  type T = process_of_argument option
+  val empty = NONE
+  val merge = merge_options
+)
+
 val _ = Theory.setup (Context.theory_map (
-  Phi_Basics.Enter_Programming_Environ.add 20 (K (open_value_context' Position.none))
+Phi_Basics.Enter_Programming_Environ.add 20 (K (fn (ctxt,sequent) =>
+  if #domain Phi_Working_Mode.procedure ctxt (Thm.concl_of sequent)
+  then the_default to_value_and_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
+  else (ctxt,sequent)
+))
 ))
 
 (*** Assignment ***)
