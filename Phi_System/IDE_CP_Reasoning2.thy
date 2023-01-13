@@ -4,7 +4,7 @@ text \<open>The part includes some reasoning processes that can already be defin
   after the IDE-CP is ready.\<close>
 
 theory IDE_CP_Reasoning2
-  imports IDE_CP
+  imports IDE_CP_Core
 begin
 
 section \<open>Extracts Values\<close>

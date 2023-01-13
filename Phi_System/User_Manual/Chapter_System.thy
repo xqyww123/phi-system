@@ -35,8 +35,6 @@ theory Chapter_System
   imports "../IDE_CP"
 begin
 
-context \<phi>empty begin
-
 text \<open>The major component for programming in \<phi>-System is
 Integrated Deduction Environment for Certified Programming (IDE-CP).
 The environment is an extensible framework targeting on the core monadic language.
@@ -283,6 +281,11 @@ section \<open>Program Synthesis\<close>
 
 section \<open>Reasoning \label{sec:reasoning}\<close>
 
-end
+
+section \<open>Access Value or Variable\<close>
+
+(*Notice*)
+text \<open>Internal representation of the values and their names are hidden by default during the
+  programming, but you can turn on \<^verbatim>\<open>[[\<phi>display_value_internal_name = true]]\<close> to display them.\<close>
 
 end

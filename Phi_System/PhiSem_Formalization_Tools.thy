@@ -1,5 +1,5 @@
 theory PhiSem_Formalization_Tools
-  imports IDE_CP_Reasoning3
+  imports IDE_CP
 begin
 
 section \<open>Tools for Formalizing Instructions\<close>
