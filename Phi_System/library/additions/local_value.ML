@@ -119,6 +119,10 @@ val _ = Theory.setup (
    Generic_Variable_Access.register_assigner
       ("val", \<^type_name>\<open>valname\<close>, "to declare a new local value", (value_assigner_id, value_assigner))
 #> Context.theory_map (Generic_Variable_Access.Assignment_Hooks.add 100 value_optimization)
+#> Context.theory_map (Phi_Basics.Enter_Programming_Environ.add 0 (fn level => fn (ctxt,sequent) =>
+      if level = 0
+      then (Config.put phi_display_value_internal_name false ctxt, sequent)
+      else (ctxt,sequent)))
 )
 
 end

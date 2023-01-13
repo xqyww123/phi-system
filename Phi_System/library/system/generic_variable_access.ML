@@ -261,6 +261,9 @@ fun open_value_context' pos (ctxt,sequent) =
   |> rpair sequent'
   end
 
+val _ = Theory.setup (Context.theory_map (
+  Phi_Basics.Enter_Programming_Environ.add 20 (K (open_value_context' Position.none))
+))
 
 (*** Assignment ***)
 

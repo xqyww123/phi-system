@@ -10,14 +10,14 @@ signature PHI_BASICS = sig
 
   val under_programming_environ : Proof.context -> bool
   val exit_programming_environ : Proof.context -> Proof.context
-  val enter_programming_environ' : thm -> Proof.context -> Proof.context
+  val enter_programming_environ' : context_state -> context_state
+  val enter_programming_environ  : thm -> Proof.state -> Proof.state
 
   val the_construction : Proof.context -> thm
   val the_programming_sequent' : Proof.context -> thm
   val the_state_sequent : Proof.state -> thm
   val set_state_sequent : thm -> Proof.state -> Proof.state
   val map_state_sequent : (context_state -> context_state) -> Proof.state -> Proof.state
-  val enter_programming_environ : thm -> Proof.state -> Proof.state
   val update_programming_sequent' : thm -> Proof.context -> Proof.context
 
   val reason_programming_implication : Proof.context
@@ -27,6 +27,8 @@ signature PHI_BASICS = sig
   (*The goal in a programming context*)
   val put_thesis : cterm -> Proof.context -> Proof.context
   val get_thesis : Proof.context -> cterm
+
+  structure Enter_Programming_Environ : HOOKS
 
 end
 
@@ -87,6 +89,7 @@ fun reason_programming_implication' mode ctxt sequent =
     (Named_Theorems.get ctxt @{named_theorems \<phi>inhabitance_rule}) mode ctxt sequent]
   handle THM _ => []
 
+
 fun gen_update_programming_sequent' put sequent ctxt =
   case Phi_Working_Mode.working_mode_on ctxt (Thm.concl_of sequent)
     of SOME mode => put ctxt (sequent, sequent, Lazy.lazy (fn () =>
@@ -97,22 +100,35 @@ fun gen_update_programming_sequent' put sequent ctxt =
 
 val update_programming_sequent' = gen_update_programming_sequent'
         (fn ctxt => fn data => Programming_Sequent.map (fn L => data::tl L) ctxt)
-val enter_programming_environ' = gen_update_programming_sequent'
-        (fn ctxt => fn data => Programming_Sequent.map (fn L => data::L) ctxt)
-  
 
-fun gen_set_nu_fact updt sequent stat = stat
+
+structure Enter_Programming_Environ =
+              Hooks (type arg = int (*level of the environ, starting from 0*))
+
+fun enter_programming_environ' stat =
+  let
+    val level = length (Programming_Sequent.get (fst stat))
+    val (ctxt',sequent') = Enter_Programming_Environ.invoke level stat
+  in gen_update_programming_sequent'
+          (fn ctxt => fn data => Programming_Sequent.map (fn L => data::L) ctxt)
+          sequent' ctxt'
+  |> rpair sequent'
+  end
+
+fun enter_programming_environ sequent s = s
+  |> Proof.map_context_result (fn ctxt => enter_programming_environ' (ctxt,sequent) |> swap)
+  |-> Proof.set_facts o single
+
+fun set_state_sequent sequent stat = stat
   |> Proof.set_facts [sequent]
-  |> Proof.map_context (updt sequent);
+  |> Proof.map_context (update_programming_sequent' sequent);
 
-val set_state_sequent = gen_set_nu_fact update_programming_sequent'
 fun map_state_sequent f s =
   s |> Proof.map_context_result (fn ctxt => (ctxt, the_state_sequent s)
                                          |> f
                                          |> swap)
     |-> set_state_sequent
 
-val enter_programming_environ = gen_set_nu_fact enter_programming_environ'
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>this\<close>,
           fn genric =>

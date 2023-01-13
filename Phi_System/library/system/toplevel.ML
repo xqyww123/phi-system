@@ -411,6 +411,7 @@ fun gen_finish_proc prep_term qed spec int stat =
           (* |> invoke_Block_End_Hook *)
           |> Phi_Sys.cast desired_nu
           |> swap
+          ||> Phi_Basics.exit_programming_environ
         (*The transformation shall generate a poof obligation*)
       end
     )
@@ -590,9 +591,8 @@ fun gen_begin_block prep_attr bindings int stat =
             |> Proof_Context.put_thms false ("\<phi>thesis",
                           SOME [Drule.mk_term (Thm.cterm_of ctxt goal)])
             |> #initial_sequent mode blk_name (Thm.cterm_of ctxt arg)
-            |> Generic_Variable_Access.open_value_context' Position.none
             |> swap)
-      |-> (if is_top then Phi_Basics.enter_programming_environ else Phi_Basics.set_state_sequent)
+      |-> Phi_Basics.enter_programming_environ
 (*      |> Generic_Variable_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end
