@@ -49,19 +49,14 @@ val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}
 val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
 fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 
-val dest_goal_ctxt   = dest_binop   \<^const_name>\<open>GOAL_CTXT\<close> #> #1
-val dest_goal_ctxt_c = dest_binop_c \<^const_name>\<open>GOAL_CTXT\<close> #> #1
-
 val dest_action_tag   = dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
 val dest_action_tag_c = dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
 
 
 fun dest_tags X = X
-  |> perhaps (try dest_goal_ctxt)
   |> perhaps (try dest_action_tag)
   |> perhaps (try dest_Trueprop)
 fun dest_tags_c X = X
-  |> perhaps (try dest_goal_ctxt_c)
   |> perhaps (try dest_action_tag_c)
   |> perhaps (try dest_Trueprop_c)
 

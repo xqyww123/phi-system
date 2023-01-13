@@ -757,8 +757,10 @@ A subgoal is represented by an unspecified type which only has a syntactic effec
 
 typedecl "subgoal"
 
-definition GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
-  where [iff]: "(PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> A"
+consts subgoal_context :: \<open>subgoal \<Rightarrow> unit action\<close>
+
+abbreviation GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
+  where "(PROP P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> (PROP P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> subgoal_context G)"
 
 definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
   where "CHK_SUBGOAL X \<longleftrightarrow> True"
@@ -779,8 +781,6 @@ definition SUBGOAL :: "subgoal \<Rightarrow> subgoal \<Rightarrow> bool" where "
 
 
 subsubsection \<open>Implementation of the Subgoal Reasoners\<close>
-
-lemma GOAL_CTXT_I: \<open>PROP P \<Longrightarrow> PROP P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L A\<close> unfolding GOAL_CTXT_def .
 
 lemma SUBGOAL_I[iff]: "SUBGOAL ROOT NEWGOAL" unfolding SUBGOAL_def ..
 lemma CHK_SUBGOAL_I[iff]: "CHK_SUBGOAL X" unfolding CHK_SUBGOAL_def ..
@@ -816,18 +816,18 @@ lemma [\<phi>reason 1000]:
   \<open> SUBGOAL TOP_GOAL G
 \<Longrightarrow> PROP A ||| PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
 \<Longrightarrow> PROP A ||| PROP B\<close>
-  unfolding GOAL_CTXT_def .
+  unfolding Action_Tag_def .
 
 lemma [\<phi>reason for \<open>PROP ?A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close> except \<open>PROP ?X ||| PROP ?Y \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close>]:
   \<open> PROP A
 \<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
-  unfolding GOAL_CTXT_def .
+  unfolding Action_Tag_def .
 
 lemma [\<phi>reason add]:
   \<open> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
 \<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
-  unfolding GOAL_CTXT_def Branch_def
+  unfolding Action_Tag_def Branch_def
 proof -
   assume A: \<open>PROP A\<close>
   show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
@@ -840,7 +840,7 @@ qed
 lemma [\<phi>reason 10]:
   \<open> PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
 \<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
-  unfolding GOAL_CTXT_def Branch_def
+  unfolding Action_Tag_def Branch_def
 proof -
   assume B: \<open>PROP B\<close>
   show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -

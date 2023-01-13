@@ -305,7 +305,7 @@ lemma [\<phi>reason 4000 for \<open>?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bo
   and [\<phi>reason 4000 for \<open>?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R * \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA ?mode ?G\<close>]:
       "X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 * \<blangle> X \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G"
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding mult_1_left FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  unfolding mult_1_left FOCUS_TAG_def Action_Tag_def
   using implies_refl by this+
 
 subsubsection \<open>Void Holes\<close> \<comment> \<open>eliminate 1 holes generated during the reasoning \<close>
@@ -352,7 +352,7 @@ lemma [\<phi>reason 1050 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bo
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA True G\<close>
   \<comment> \<open>If it doesn't have one, it cannot be reasoned by this procedure, so
       a fallback here handles it.\<close>
-  unfolding FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def .
+  unfolding FOCUS_TAG_def Action_Tag_def .
 
 
 subsubsection \<open>Subjection\<close>
@@ -385,9 +385,7 @@ lemma [\<phi>reason 3000]:
 lemma [\<phi>reason 3000]:
   "(\<And>x.  T x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G) \<Longrightarrow>
     ExSet T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G"
-  unfolding Imply_def GOAL_CTXT_def
-  apply (simp add: \<phi>expns)
-  by fastforce
+  unfolding Imply_def by (simp add: \<phi>expns) fastforce
 
 (* subsubsection \<open>Tailling\<close> \<comment> \<open>\<close>
 
@@ -700,31 +698,31 @@ lemma [\<phi>reason 4010 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<lo
       "\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> \<blangle> H \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G"
   and [\<phi>reason 4010 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R * \<blangle> ?H2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA ?mode ?G\<close>]:
       "\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> 1 * \<blangle> H \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G"
-  unfolding mult_1_left FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  unfolding mult_1_left FOCUS_TAG_def Action_Tag_def
   using view_shift_id by this+
 
 lemma [\<phi>reason 4000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA ?mode ?G\<close>]:
   \<open> \<r>Clean H
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> \<blangle> Void \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G\<close>
-  unfolding \<r>Clean_def FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  unfolding \<r>Clean_def FOCUS_TAG_def Action_Tag_def
   using view_shift_by_implication .
 
 lemma [\<phi>reason 4010 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> Void \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA ?mode ?G\<close>]:
   \<open> \<r>Clean H
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> Void \<heavy_comma> \<blangle> Void \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G\<close>
-  unfolding \<r>Clean_def FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  unfolding \<r>Clean_def FOCUS_TAG_def Action_Tag_def
   by (simp add: view_shift_by_implication)
 
 lemma [\<phi>reason 4000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA ?mode ?G\<close>]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H \<heavy_comma> \<blangle> Void \<brangle> \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G\<close>
-  unfolding FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  unfolding FOCUS_TAG_def Action_Tag_def
   by (simp add: \<phi>view_refl)
 
 lemma [\<phi>reason 4011 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h (Automatic_Morphism ?RP ?RX \<and> ?P)
         \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA ?mode ?G\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> H \<heavy_comma> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Automatic_Morphism True (\<^bold>v\<^bold>i\<^bold>e\<^bold>w H'\<heavy_comma> \<blangle> Void \<brangle> \<longmapsto> H' ) \<and> True
      \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G\<close>
-  unfolding FOCUS_TAG_def GOAL_CTXT_def Morphism_def Action_Tag_def
+  unfolding FOCUS_TAG_def Morphism_def Action_Tag_def
   by (simp add: \<phi>view_refl)
 
 
@@ -793,9 +791,8 @@ lemma [\<phi>reason 3000]:
 lemma [\<phi>reason 3000]:
   "(\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w T x \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G) \<Longrightarrow>
    \<^bold>v\<^bold>i\<^bold>e\<^bold>w ExSet T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G"
-  unfolding View_Shift_def GOAL_CTXT_def Action_Tag_def
-  apply (simp add: \<phi>expns)
-  by fastforce
+  unfolding View_Shift_def Action_Tag_def
+  by (simp add: \<phi>expns) fastforce
 
 (* subsubsection \<open>Tailling\<close> \<comment> \<open>\<close>
 
@@ -1022,7 +1019,7 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<he
 ]:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] V \<longmapsto> R' \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] V \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G"
-  unfolding GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
+  unfolding FOCUS_TAG_def Action_Tag_def
   by (smt (verit, best) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
 
 lemma ToSA_skip
@@ -1030,7 +1027,7 @@ lemma ToSA_skip
   " CHK_SUBGOAL G
   \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G
   \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> H \<longmapsto> R' \<heavy_comma> H \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> reason_ToSA mode G "
-  unfolding GOAL_CTXT_def FOCUS_TAG_def
+  unfolding FOCUS_TAG_def
   by (simp add: \<phi>view_shift_intro_frame mult.commute mult.left_commute)
 
 
@@ -1189,14 +1186,14 @@ lemma [\<phi>reason for \<open>If ?P (?a \<Zinj> ?x) (?b \<Zinj> ?y) = ?X \<^bol
  lemma branch_convergence_skip:
   " \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (R1 * X) (N * Y * \<blangle> R2 \<brangle>) \<longmapsto> R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (R1 * X) (N * \<blangle> R2 * Y \<brangle>) \<longmapsto> R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  unfolding FOCUS_TAG_def Action_Tag_def Action_Tag_def
   by (metis mult.assoc mult.commute)
 
 lemma branch_convergence_skip_imp:
   " If P (R1 * X) (N * Y * \<blangle> R2 \<brangle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> If P (R1 * X) (N * \<blangle> R2 * Y \<brangle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
   for R :: \<open>'a::sep_algebra set\<close>
-  unfolding FOCUS_TAG_def GOAL_CTXT_def Action_Tag_def
+  unfolding FOCUS_TAG_def Action_Tag_def Action_Tag_def
   by (metis mult.assoc mult.commute)
 *)
 
@@ -1382,7 +1379,7 @@ lemma [\<phi>reason 1200 for \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bol
 \<Longrightarrow> If P T T' = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> If P L R' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * (z \<Ztypecolon> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
-  unfolding Action_Tag_def Action_Tag_def GOAL_CTXT_def FOCUS_TAG_def
+  unfolding Action_Tag_def Action_Tag_def FOCUS_TAG_def
   by (smt (z3) Imply_def implies_right_prod)
 
 lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<longmapsto> ?X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>]:
@@ -1393,7 +1390,7 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If ?P (
 \<Longrightarrow> If P T T' = Z \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P L R' \<longmapsto> X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w If P (L * (x \<Ztypecolon> T)) R \<longmapsto> X * (z \<Ztypecolon> Z) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> branch_convergence\<close>
-  unfolding Action_Tag_def Action_Tag_def GOAL_CTXT_def FOCUS_TAG_def
+  unfolding Action_Tag_def Action_Tag_def FOCUS_TAG_def
   by (smt (z3) View_Shift_def mult.commute mult.left_commute)
 
 
@@ -1711,7 +1708,7 @@ lemma Structural_Extract_\<phi>None_right [\<phi>reason 3000
 ]: \<comment> \<open>No further extraction is demanded.\<close>
   \<open>Structural_Extract X X (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right GOAL_CTXT_def
+  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
   using implies_refl .
 
 lemma Structural_Extract_\<phi>None_left [\<phi>reason 3000
@@ -1719,7 +1716,7 @@ lemma Structural_Extract_\<phi>None_left [\<phi>reason 3000
 ]: \<comment> \<open>No further extraction is demanded.\<close>
   \<open>Structural_Extract (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) X X True \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right GOAL_CTXT_def
+  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
   using implies_refl .
 
 
@@ -1728,7 +1725,7 @@ lemma Structural_Extract_1_right [\<phi>reason 3000
 ]: \<comment> \<open>No further extraction is demanded.\<close>
   \<open>Structural_Extract X X 1 1 True \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right GOAL_CTXT_def
+  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
   using implies_refl .
 
 lemma Structural_Extract_1_left [\<phi>reason 3000
@@ -1736,7 +1733,7 @@ lemma Structural_Extract_1_left [\<phi>reason 3000
 ]: \<comment> \<open>No further extraction is demanded.\<close>
   \<open>Structural_Extract 1 1 X X True \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right GOAL_CTXT_def
+  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
   using implies_refl .
 
 
@@ -1748,7 +1745,7 @@ lemma Structural_Extract_exact [\<phi>reason 3000
   \<open>Structural_Extract' X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding Structural_Extract_def Structural_Extract'_def
-      mult_1_left \<phi>None_itself_is_one mult_1_right GOAL_CTXT_def
+      mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
   using implies_refl .
 
 
@@ -1760,9 +1757,9 @@ lemma [\<phi>reason 3011
    (Automatic_Morphism True (Structural_Extract (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) X' X' True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>None_left [unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>None_right[unfolded GOAL_CTXT_def]
+  unfolding Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>None_left [unfolded Action_Tag_def]
+                   Structural_Extract_\<phi>None_right[unfolded Action_Tag_def]
                    Structural_Extract_reverse_morphism_I)
 
 lemma [\<phi>reason 3011
@@ -1772,9 +1769,9 @@ lemma [\<phi>reason 3011
     (Automatic_Morphism True (Structural_Extract X' X' (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>None_left [unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>None_right[unfolded GOAL_CTXT_def]
+  unfolding Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>None_left [unfolded Action_Tag_def]
+                   Structural_Extract_\<phi>None_right[unfolded Action_Tag_def]
                    Structural_Extract_reverse_morphism_I)
 
 lemma [\<phi>reason 3011
@@ -1783,9 +1780,9 @@ lemma [\<phi>reason 3011
   \<open>Structural_Extract X X 1 1 (Automatic_Morphism True (Structural_Extract 1 1 X' X' True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding GOAL_CTXT_def
-  by (blast intro: Structural_Extract_1_left [unfolded GOAL_CTXT_def]
-                   Structural_Extract_1_right[unfolded GOAL_CTXT_def]
+  unfolding Action_Tag_def
+  by (blast intro: Structural_Extract_1_left [unfolded Action_Tag_def]
+                   Structural_Extract_1_right[unfolded Action_Tag_def]
                    Structural_Extract_reverse_morphism_I)
 
 lemma [\<phi>reason 3011
@@ -1794,9 +1791,9 @@ lemma [\<phi>reason 3011
   \<open>Structural_Extract 1 1 X X (Automatic_Morphism True (Structural_Extract X' X' 1 1 True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding GOAL_CTXT_def
-  by (blast intro: Structural_Extract_1_left [unfolded GOAL_CTXT_def]
-                   Structural_Extract_1_right[unfolded GOAL_CTXT_def]
+  unfolding Action_Tag_def
+  by (blast intro: Structural_Extract_1_left [unfolded Action_Tag_def]
+                   Structural_Extract_1_right[unfolded Action_Tag_def]
                    Structural_Extract_reverse_morphism_I)
 
 lemma [\<phi>reason 3011
@@ -1806,8 +1803,8 @@ lemma [\<phi>reason 3011
     (Automatic_Morphism True (Structural_Extract' X' (() \<Ztypecolon> \<phi>None) X' (() \<Ztypecolon> \<phi>None) True) \<and> True)
    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding GOAL_CTXT_def
-  by (blast intro: Structural_Extract_exact [unfolded GOAL_CTXT_def]
+  unfolding Action_Tag_def
+  by (blast intro: Structural_Extract_exact [unfolded Action_Tag_def]
                    Structural_Extract'_reverse_morphism_I)
 
 
@@ -1820,7 +1817,7 @@ lemma Structural_Extract_fallback
 \<Longrightarrow> Try False (Structural_Extract X X Y Y True)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_ab_semigroup set\<close>
   unfolding Structural_Extract_def Structural_Extract'_def
-      \<phi>None_itself_is_one mult_1_left GOAL_CTXT_def Try_def
+      \<phi>None_itself_is_one mult_1_left Action_Tag_def Try_def
   by (simp add: implies_refl mult.commute)
 
 lemma [\<phi>reason 10 for \<open>Try ?S (Structural_Extract ?X ?X' ?Y ?Y' (Automatic_Morphism ?RP ?RX \<and> ?P)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
@@ -1829,8 +1826,8 @@ lemma [\<phi>reason 10 for \<open>Try ?S (Structural_Extract ?X ?X' ?Y ?Y' (Auto
       (Automatic_Morphism True (Structural_Extract X' X' Y' Y' True) \<and> True))
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_ab_semigroup set\<close> and X' :: \<open>'aa::sep_ab_semigroup set\<close>
-  unfolding GOAL_CTXT_def Try_def
-  by (blast intro: Structural_Extract_fallback[unfolded GOAL_CTXT_def Try_def]
+  unfolding Action_Tag_def Try_def
+  by (blast intro: Structural_Extract_fallback[unfolded Action_Tag_def Try_def]
                    Structural_Extract_reverse_morphism_I)
 
 
@@ -1842,7 +1839,7 @@ lemma Structural_Extract_\<phi>Some
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left GOAL_CTXT_def
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def
             Structural_Extract'_def
   using \<phi>Some_cast .
 
@@ -1856,8 +1853,8 @@ lemma [\<phi>reason 1211 for
             (Structural_Extract (y' \<Ztypecolon> \<black_circle> U') (() \<Ztypecolon> \<phi>None) (x' \<Ztypecolon> \<black_circle> T') (() \<Ztypecolon> \<phi>None) P')
       \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>Some[unfolded GOAL_CTXT_def]
+  unfolding Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>Some[unfolded Action_Tag_def]
                    Structural_Extract_reverse_morphism_I)
 
 (*TODO: According to @{thm Agreement_times}, there must be a reasoning mechanism for \<inter>\<^sub>\<phi>
@@ -1870,7 +1867,7 @@ lemma Structural_Extract_aggrement_to
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left GOAL_CTXT_def \<r>Feasible_def
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Feasible_def
             Structural_Extract'_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
@@ -1883,7 +1880,7 @@ lemma Structural_Extract_aggrement_from:
   \<open> y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> Structural_Extract (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left GOAL_CTXT_def \<r>Feasible_def
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Feasible_def
             Structural_Extract'_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
@@ -1901,9 +1898,9 @@ lemma [\<phi>reason 1211 for \<open>Structural_Extract (?x \<Ztypecolon> Agreeme
           (Structural_Extract (y' \<Ztypecolon> Agreement U') (() \<Ztypecolon> \<circle>) (x' \<Ztypecolon> Agreement T') (x' \<Ztypecolon> Agreement T' ?\<^sub>\<phi> C') P')
       \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def
-  by (blast intro: Structural_Extract_aggrement_to  [unfolded GOAL_CTXT_def]
-                   Structural_Extract_aggrement_from[unfolded GOAL_CTXT_def]
+  unfolding Action_Tag_def
+  by (blast intro: Structural_Extract_aggrement_to  [unfolded Action_Tag_def]
+                   Structural_Extract_aggrement_from[unfolded Action_Tag_def]
                    Structural_Extract_reverse_morphism_I)
 
 
@@ -1918,7 +1915,6 @@ lemma Structural_Extract_to_mult
 \<Longrightarrow> Structural_Extract' A C (X * Y) (WX * WY) (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close>
   unfolding Structural_Extract_def Simplify_def Action_Tag_def Structural_Extract'_def Try_def
-            GOAL_CTXT_def
   \<medium_left_bracket> premises L and R
   ;;  L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
   ;;  R[THEN implies_right_prod]
@@ -1945,7 +1941,7 @@ lemma Structural_Extract_from_mult[\<phi>reason 1200 for
 \<Longrightarrow> Structural_Extract' (L * X) (R * R2) Y Wr2 (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close>
   unfolding Structural_Extract_def Simplify_def Structural_Extract'_def Try_def
-            GOAL_CTXT_def
+            Action_Tag_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
     L[THEN implies_right_prod]
@@ -1961,7 +1957,7 @@ lemma Structural_Extract_\<phi>Prod_left [\<phi>reason 1200 for
 \<Longrightarrow> Structural_Extract' ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2 (P1 \<and> P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Action_Tag_def Structural_Extract'_def
-            Try_def GOAL_CTXT_def
+            Try_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
     L[THEN implies_right_prod]
@@ -1985,9 +1981,9 @@ lemma [\<phi>reason 1211 for
       \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for A :: \<open>'a::sep_algebra set\<close> and A' :: \<open>'aa::sep_algebra set\<close>
-  unfolding GOAL_CTXT_def Morphism_def Compact_Antecedent_def Try_def
-  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded GOAL_CTXT_def Try_def]
-                   Structural_Extract_\<phi>Prod_left [unfolded GOAL_CTXT_def Try_def]
+  unfolding Morphism_def Compact_Antecedent_def Try_def Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded Action_Tag_def Try_def]
+                   Structural_Extract_\<phi>Prod_left [unfolded Action_Tag_def Try_def]
                    Structural_Extract'_imply_P)
 
 lemma [\<phi>reason 1211 for
@@ -2003,9 +1999,9 @@ lemma [\<phi>reason 1211 for
       (Automatic_Morphism (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract' Y' W2' ((x',y') \<Ztypecolon> T' \<^emph> U') ((r2',r') \<Ztypecolon> (R2' \<^emph> R')) (P1' \<and> P2')) \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for Y :: \<open>'a::sep_algebra set\<close> and Y' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Morphism_def Compact_Antecedent_def GOAL_CTXT_def Try_def
-  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded GOAL_CTXT_def Try_def]
-                   Structural_Extract_\<phi>Prod_left [unfolded GOAL_CTXT_def Try_def]
+  unfolding Morphism_def Compact_Antecedent_def Action_Tag_def Try_def
+  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded Action_Tag_def Try_def]
+                   Structural_Extract_\<phi>Prod_left [unfolded Action_Tag_def Try_def]
                    Structural_Extract'_imply_P)
 
 lemma [\<phi>reason 1211 for
@@ -2021,9 +2017,9 @@ lemma [\<phi>reason 1211 for
       (Automatic_Morphism (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract' (X' * Y') (WX' * WY') A' C' (P1' \<and> P2')) \<and> P1 \<and> P2)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for X :: \<open>'a::sep_algebra set\<close> and X' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Morphism_def Compact_Antecedent_def GOAL_CTXT_def Try_def
-  by (blast intro: Structural_Extract_to_mult  [unfolded GOAL_CTXT_def Try_def]
-                   Structural_Extract_from_mult[unfolded GOAL_CTXT_def Try_def]
+  unfolding Morphism_def Compact_Antecedent_def Action_Tag_def Try_def
+  by (blast intro: Structural_Extract_to_mult  [unfolded Action_Tag_def Try_def]
+                   Structural_Extract_from_mult[unfolded Action_Tag_def Try_def]
                    Structural_Extract'_imply_P)
 
 (*TODO
@@ -2069,8 +2065,8 @@ lemma [\<phi>reason 1211 for
       (Automatic_Morphism RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') (w' \<Ztypecolon> k \<^bold>\<rightarrow> W') (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') (r' \<Ztypecolon> k \<^bold>\<rightarrow> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Morphism_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>MapAt[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>MapAt[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 
@@ -2100,8 +2096,8 @@ lemma [\<phi>reason 1211 for
       (Automatic_Morphism RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (yr' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ Ur') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
 for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>MapAt_L[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>MapAt_L[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 
@@ -2159,9 +2155,9 @@ lemma [\<phi>reason 1183 for
       (Automatic_Morphism RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Morphism_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>MapAt_L_pad_left [unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>MapAt_L_pad_right[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>MapAt_L_pad_left [unfolded Action_Tag_def]
+                   Structural_Extract_\<phi>MapAt_L_pad_right[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 lemma [\<phi>reason 1153 for
@@ -2179,9 +2175,9 @@ lemma [\<phi>reason 1153 for
       (Automatic_Morphism RP (Structural_Extract' (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Morphism_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>MapAt_L_pad_left [unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>MapAt_L_pad_right[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>MapAt_L_pad_left [unfolded Action_Tag_def]
+                   Structural_Extract_\<phi>MapAt_L_pad_right[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 
@@ -2208,9 +2204,9 @@ lemma [\<phi>reason 1211 for \<open>
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) W
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Morphism_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>Map_L_norm_left [unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def]
+                   Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
 
 lemma [\<phi>reason 1211 for
@@ -2222,9 +2218,9 @@ lemma [\<phi>reason 1211 for
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) W
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Morphism_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>Map_L_norm_left [unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def]
+                   Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
 
 
@@ -2262,8 +2258,8 @@ lemma [\<phi>reason 1211
                         (r' \<Ztypecolon> \<phi>perm_transformer \<psi> R')
                         P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Morphism_def GOAL_CTXT_def Compact_Antecedent_def
-  by (blast intro: Structural_Extract_\<phi>perm_transformer[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def Compact_Antecedent_def
+  by (blast intro: Structural_Extract_\<phi>perm_transformer[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 
@@ -2294,9 +2290,9 @@ lemma [\<phi>reason 1211 for \<open>Structural_Extract (?x \<Ztypecolon> ?T ?\<^
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
  \<comment> \<open>If the mechanism requires to extract something nontrivial (note 1 and \<^term>\<open>() \<Ztypecolon> \<phi>None\<close>
       have been considered by more prior rule), claim the optional \<phi>-type.\<close>
-  unfolding Morphism_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_\<phi>Optional_left [unfolded GOAL_CTXT_def]
-                   Structural_Extract_\<phi>Optional_right[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def
+  by (blast intro: Structural_Extract_\<phi>Optional_left [unfolded Action_Tag_def]
+                   Structural_Extract_\<phi>Optional_right[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
 
 
@@ -2320,7 +2316,7 @@ lemma Structural_Extract_share_half
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> half(m / 2) \<Znrres> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Structural_Extract'_def half_def GOAL_CTXT_def
+  unfolding Structural_Extract_def Structural_Extract'_def half_def Action_Tag_def
   \<medium_left_bracket> premises [\<phi>reason] and X
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
@@ -2332,7 +2328,7 @@ lemma Structural_Extract_share_half_rev:
 \<Longrightarrow> Structural_Extract (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract'_def Structural_Extract_def GOAL_CTXT_def \<phi>Prod_expn'
+  unfolding Structural_Extract'_def Structural_Extract_def Action_Tag_def \<phi>Prod_expn'
   \<medium_left_bracket> premises [\<phi>reason] and X
   have t1: \<open>(r \<Ztypecolon> R) * (x \<Ztypecolon> m / 2 \<Znrres> T) * (y \<Ztypecolon> m / 2 \<Znrres> U) = (r \<Ztypecolon> R) * (y \<Ztypecolon> m / 2 \<Znrres> U) * (x \<Ztypecolon> m / 2 \<Znrres> T)\<close>
     by (metis (mono_tags, lifting) mult.assoc mult.commute)
@@ -2355,9 +2351,9 @@ lemma
         (Structural_Extract' (y' \<Ztypecolon> half (m / 2) \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m \<Znrres> T') ((x',r') \<Ztypecolon> m / 2 \<Znrres> T' \<^emph> R') P')
     \<and> P) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def GOAL_CTXT_def Compact_Antecedent_def half_def
-  by (blast intro: Structural_Extract_share_half    [unfolded GOAL_CTXT_def half_def]
-                   Structural_Extract_share_half_rev[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def Compact_Antecedent_def half_def
+  by (blast intro: Structural_Extract_share_half    [unfolded Action_Tag_def half_def]
+                   Structural_Extract_share_half_rev[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 
@@ -2386,8 +2382,8 @@ lemma [\<phi>reason 1211 for \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Z
       (Automatic_Morphism RP (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> m \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def GOAL_CTXT_def
-  by (blast intro: Structural_Extract_share_eq[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Action_Tag_def
+  by (blast intro: Structural_Extract_share_eq[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 
@@ -2402,7 +2398,7 @@ lemma Structural_Extract_share_ge
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Structural_Extract'_def \<phi>Prod_expn' GOAL_CTXT_def
+  unfolding Structural_Extract_def Structural_Extract'_def \<phi>Prod_expn' Action_Tag_def
   \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and [\<phi>reason] and _ and X
     share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
@@ -2423,7 +2419,7 @@ lemma Structural_Extract_share_le
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract' (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def \<phi>Prod_expn' Structural_Extract'_def GOAL_CTXT_def
+  unfolding Structural_Extract_def \<phi>Prod_expn' Structural_Extract'_def Action_Tag_def
   \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and _ and X
     X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_left_prod, folded mult.assoc]
@@ -2453,9 +2449,9 @@ lemma [\<phi>reason 1183 for \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Z
         (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> n \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') ((r',x') \<Ztypecolon> (n \<Znrres> R' \<^emph> mn \<Znrres> T')) P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def Compact_Antecedent_def GOAL_CTXT_def Premise_def
-  by (blast intro: Structural_Extract_share_ge[unfolded GOAL_CTXT_def]
-                   Structural_Extract_share_le[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Compact_Antecedent_def Action_Tag_def Premise_def
+  by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def]
+                   Structural_Extract_share_le[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 lemma [\<phi>reason 1173 for \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 (Automatic_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
@@ -2471,9 +2467,9 @@ lemma [\<phi>reason 1173 for \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Z
         (Structural_Extract' (y' \<Ztypecolon> n \<Znrres> U') ((w',y') \<Ztypecolon> m \<Znrres> W' \<^emph> nm \<Znrres> U') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def Compact_Antecedent_def GOAL_CTXT_def Premise_def
-  by (blast intro: Structural_Extract_share_ge[unfolded GOAL_CTXT_def]
-                   Structural_Extract_share_le[unfolded GOAL_CTXT_def]
+  unfolding Morphism_def Compact_Antecedent_def Action_Tag_def Premise_def
+  by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def]
+                   Structural_Extract_share_le[unfolded Action_Tag_def]
                    Structural_Extract'_imply_P)
 
 
@@ -2503,7 +2499,7 @@ lemma [\<phi>reason 2011 for
       (Automatic_Morphism RP (Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> (T' \<^emph> U')) W' X' R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>Prod
+  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 lemma [\<phi>reason 2011 for
@@ -2516,7 +2512,7 @@ lemma [\<phi>reason 2011 for
       (Automatic_Morphism RP (Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>Prod
+  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 
@@ -2541,7 +2537,7 @@ lemma [\<phi>reason 2011 for \<open>Structural_Extract ?X ?R (?x \<Ztypecolon> ?
       (Automatic_Morphism RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T') W' X' R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>MapAt
+  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
 lemma [\<phi>reason 2011 for \<open>Structural_Extract (?x' \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow> ?T') ?W' ?X' ?R' (Automatic_Morphism ?RP ?RX \<and> ?P)\<close>]:
@@ -2552,7 +2548,7 @@ lemma [\<phi>reason 2011 for \<open>Structural_Extract (?x' \<Ztypecolon> ?n \<Z
       (Automatic_Morphism RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>MapAt
+  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
 
@@ -2577,7 +2573,7 @@ lemma [\<phi>reason 2011 for \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Zn
       (Automatic_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>MapAt_L
+  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
 lemma [\<phi>reason 2011 for \<open>Structural_Extract ?Y ?W (?x \<Ztypecolon> ?n \<Znrres> ?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?R (Automatic_Morphism ?RP ?RX \<and> ?P)\<close>]:
@@ -2588,7 +2584,7 @@ lemma [\<phi>reason 2011 for \<open>Structural_Extract ?Y ?W (?x \<Ztypecolon> ?
       (Automatic_Morphism RP (Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W P) \<and> P')
     \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj GOAL_CTXT_def Premise_def \<phi>Share_\<phi>MapAt_L
+  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
 
@@ -2604,7 +2600,7 @@ lemma [\<phi>reason 2000]:
 lemma [\<phi>reason 2000]:
   \<open> Structural_Extract (x \<Ztypecolon> n * m \<Znrres> T) R Y W P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) R Y W P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Structural_Extract_def GOAL_CTXT_def
+  unfolding Structural_Extract_def Action_Tag_def
   by (metis Implication_Inhabited_rule Imply_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
 
 lemma [\<phi>reason 2011 for \<open>Structural_Extract ?X ?R (?x \<Ztypecolon> ?n \<Znrres> ?m \<Znrres> ?T) ?W (Automatic_Morphism ?RP ?RX \<and> ?P)\<close>]:

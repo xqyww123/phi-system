@@ -153,7 +153,7 @@ proc \<phi>__synthesis_eq[
   premises \<open>can_eq x y\<close>
   output \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
 
 

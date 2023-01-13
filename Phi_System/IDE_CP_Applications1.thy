@@ -103,13 +103,13 @@ lemma [\<phi>reason 1200 for
 lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Val ?raw ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def
+  unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn view_shift_id)
 
 lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL sem_value) \<Ztypecolon> ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def
+  unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn view_shift_id)
 
 lemma [\<phi>reason 1300 for
@@ -118,7 +118,7 @@ lemma [\<phi>reason 1300 for
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   apply (rule Synthesis_Proc_fallback_VS)
-  unfolding GOAL_CTXT_def
+  unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn view_shift_id)
 
 lemma [\<phi>reason 1200 for
@@ -126,7 +126,7 @@ lemma [\<phi>reason 1200 for
 ]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def
+  unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
 
@@ -140,8 +140,7 @@ lemma [\<phi>reason 1200 for
 lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL sem_value) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_by_def Action_Tag_def GOAL_CTXT_def
-            \<phi>Procedure_def Return_def det_lift_def
+  unfolding Synthesis_by_def Action_Tag_def \<phi>Procedure_def Return_def det_lift_def
   by (cases raw; simp add: Val_expn)
 
 
@@ -158,7 +157,7 @@ lemma "__set_value_rule__":
 lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?S1 \<longmapsto> ?S2\<heavy_comma> SYNTHESIS ?x <val-of> (?name::valname) \<Ztypecolon> ?T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> sem_value.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def
+  unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn view_shift_id)
 
 lemma [\<phi>reason 1300 for
@@ -167,7 +166,7 @@ lemma [\<phi>reason 1300 for
   \<open> sem_value.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   apply (rule Synthesis_Proc_fallback_VS)
-  unfolding GOAL_CTXT_def
+  unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn view_shift_id)
 
 lemma [\<phi>reason 1200 for
@@ -175,7 +174,7 @@ lemma [\<phi>reason 1200 for
 ]:
   \<open> sem_value.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding GOAL_CTXT_def
+  unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
 

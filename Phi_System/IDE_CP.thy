@@ -481,7 +481,7 @@ lemma [\<phi>reason 1200
 \<Longrightarrow> PROP DoSynthesis X
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S1))
       (Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. S2\<heavy_comma> X' v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))"
-  unfolding Synthesis_def GOAL_CTXT_def DoSynthesis_def
+  unfolding Synthesis_def Action_Tag_def DoSynthesis_def
   using \<phi>apply_proc .
 
 text \<open>On programming mode, the synthesis operation always tries to find a procedure.
@@ -509,7 +509,7 @@ lemma [\<phi>reason 1200
 \<Longrightarrow> PROP DoSynthesis X
       (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S1))
       (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S2\<heavy_comma> X'))"
-  unfolding Synthesis_def GOAL_CTXT_def DoSynthesis_def
+  unfolding Synthesis_def Action_Tag_def DoSynthesis_def
   using \<phi>apply_view_shift by blast
 
 paragraph \<open>Solving an antecedent by Synthesis\<close>
@@ -536,7 +536,7 @@ lemma [\<phi>reason 1200
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X (PROP P \<Longrightarrow> PROP Q) (PROP Q)"
-  unfolding DoSynthesis_def Synthesis_by_def GOAL_CTXT_def .
+  unfolding DoSynthesis_def Synthesis_by_def Action_Tag_def .
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>x. PROP Synthesis_by X (PROP P x))
@@ -563,12 +563,12 @@ lemma [\<phi>reason 1200]:
 lemma [\<phi>reason 1200]:
   \<open> (\<And>x. PROP Synthesis_by X (Trueprop (P x)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)
 \<Longrightarrow> PROP Synthesis_by X (Trueprop (All P)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_by_def GOAL_CTXT_def ..
+  unfolding Synthesis_by_def Action_Tag_def ..
 
 lemma [\<phi>reason 1200]:
   \<open> (P \<Longrightarrow> PROP Synthesis_by X (Trueprop Q) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)
 \<Longrightarrow> PROP Synthesis_by X (Trueprop (P \<longrightarrow> Q)) \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_by_def GOAL_CTXT_def ..
+  unfolding Synthesis_by_def Action_Tag_def ..
 
 
 subsubsection \<open>General Synthesis Rules\<close>
@@ -702,7 +702,7 @@ lemma [\<phi>reason 1200 for \<open>
 lemma [\<phi>reason 1200]:
   \<open> PROP \<phi>Application_Method (Trueprop App) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application_Method (App \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) State (PROP Result)\<close>
-  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def GOAL_CTXT_def
+  unfolding prop_def \<phi>Application_def \<phi>Application_Method_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2) prems(3)] . .
 
 
@@ -819,8 +819,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
-    GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
   by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
   
 
@@ -871,8 +870,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w S' \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
-    GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
   using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
   by (metis (no_types, lifting))
 
@@ -909,8 +907,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
     (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S))
     (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) \<and> P)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def \<phi>IntroFrameVar'_def
-    GOAL_CTXT_def FOCUS_TAG_def Simplify_def Action_Tag_def
-    Simplify_def Remove_Values_def
+    FOCUS_TAG_def Simplify_def Action_Tag_def Simplify_def Remove_Values_def
   apply rule
   subgoal premises prems
     apply (simp only: prems(1))
@@ -1007,8 +1004,7 @@ lemma [\<phi>reason 1200 for \<open>
 \<Longrightarrow> (\<And>ret. \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y ret \<longmapsto> Y' ret \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA)
 \<Longrightarrow> (\<And>ex.  \<^bold>v\<^bold>i\<^bold>e\<^bold>w E ex \<longmapsto> E' ex \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any3 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA)
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> Y' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<rbrace>))\<close>
-  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def GOAL_CTXT_def FOCUS_TAG_def
-    Action_Tag_def
+  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def FOCUS_TAG_def Action_Tag_def
   using \<phi>CONSEQ by blast
 
 
@@ -1021,7 +1017,7 @@ lemma [\<phi>reason 1200 for \<open>
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2 \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> ToSA
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (Any1 \<and> Any2 \<and> P \<longrightarrow> P')
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)) (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P'))\<close>
-  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def GOAL_CTXT_def FOCUS_TAG_def
+  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def FOCUS_TAG_def
     Action_Tag_def View_Shift_def
   by blast
 
@@ -1069,7 +1065,7 @@ lemma [\<phi>reason 1200 for \<open>
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def \<phi>Application_def
-    GOAL_CTXT_def FOCUS_TAG_def Action_Tag_def Simplify_def
+    FOCUS_TAG_def Action_Tag_def Simplify_def
   using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
   by (metis (no_types, lifting))
 

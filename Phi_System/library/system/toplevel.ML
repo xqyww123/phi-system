@@ -131,9 +131,7 @@ fun gen_constr_envir prep_term prep_prop prep_var prep_ctxt mk_Goal
                    preconds)
 
     val goal = case raw_goal_ctxt of NONE => goal'
-                  | SOME G => Const (\<^const_name>\<open>GOAL_CTXT\<close>, dummyT)
-                              $ goal'
-                              $ parse_term G
+                  | SOME G => \<^Const>\<open>Action_Tag dummyT\<close> $ goal' $ parse_term G
 
     val elems = [Element.Fixes fixes',
                  Element.Defines defines,
@@ -495,7 +493,7 @@ fun gen_begin_block prep_attr bindings int stat =
 
     val is_top = not (Phi_Basics.under_programming_environ ctxt) orelse is_backward_mode stat
     val normalize_tac =
-          REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt @{thms GOAL_CTXT_I Argument_I allI impI}))
+          REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt @{thms Action_Tag_I Argument_I allI impI}))
     val stat =
           if is_top
           then stat

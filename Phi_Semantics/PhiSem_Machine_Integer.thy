@@ -296,7 +296,7 @@ lemma [\<phi>reason 1200
 ]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2 ^ Big b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int b n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_def GOAL_CTXT_def
+  unfolding Synthesis_def Action_Tag_def
   using op_const_int_\<phi>app[THEN \<phi>frame, simplified] .
 
 
@@ -320,7 +320,7 @@ lemma [\<phi>reason 1200
        \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X' \<longmapsto> ?X\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l 1 \<Ztypecolon> Size \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
 ]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_size_t n \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> Size \<rbrace> \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  unfolding Synthesis_def GOAL_CTXT_def
+  unfolding Synthesis_def Action_Tag_def
   using op_const_size_t[THEN \<phi>frame, simplified] . *)
 
 
@@ -345,7 +345,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x + y) \<Ztypecolon> \<nat>[b]\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 + \<medium_right_bracket>. .
 
 lemma op_add_mod:
@@ -373,7 +373,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x - y) \<Ztypecolon> \<nat>[b]\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 - \<medium_right_bracket>. .
 
 
@@ -395,7 +395,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x * y) \<Ztypecolon> \<nat>[b]\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 * \<medium_right_bracket>. .
 
 
@@ -416,7 +416,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x div y) \<Ztypecolon> \<nat>[b]\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 / \<medium_right_bracket>. .
 
 paragraph \<open>Shift\<close>
@@ -443,7 +443,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x LSHR y) \<Ztypecolon> \<nat>[b1]\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 op_lshr_nat \<medium_right_bracket>. .
 
 proc [
@@ -455,7 +455,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x LSHL y) \<Ztypecolon> \<nat>[b1]\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 op_lshl_nat \<medium_right_bracket>. .
 
 
@@ -476,7 +476,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x < y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 < \<medium_right_bracket>. .
 
 
@@ -488,7 +488,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x > y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 \<rightarrow> val v1
     F2 \<rightarrow> val v2
     $v2 $v1 <
@@ -512,7 +512,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<le> y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> F1 F2 \<le> \<medium_right_bracket>. .
 
 
@@ -524,7 +524,7 @@ proc [
   input \<open>R\<close>
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<ge> y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  goal G
+  goal \<open>subgoal_context G\<close>
   \<medium_left_bracket> 
     F1 \<rightarrow> val v1
     F2 \<rightarrow> val v2
