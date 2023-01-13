@@ -199,11 +199,11 @@ lemma EmptyTuple_reduce[simp]:
   apply (clarsimp; rule; clarsimp simp add: \<phi>expns V_tup_mult)
   by (metis V_tup_mult V_tup_sep_disj append_Cons append_Nil)
 
-lemma \<phi>Field_zero  [\<phi>reason for \<open>\<phi>Zero (tup [?ty]) (\<phi>Field ?T) ?x\<close>]:
+lemma \<phi>Field_zero  [\<phi>reason 1000]:
   \<open>\<phi>Zero ty T x \<Longrightarrow> \<phi>Zero (tup [ty]) (\<clubsuit> T) x \<close>
   unfolding \<phi>Zero_def by (clarsimp simp add: \<phi>expns)
 
-lemma \<phi>Field_zeros [\<phi>reason for \<open>\<phi>Zero (tup [?ty]) (\<phi>Field ?T) ?x\<close>]:
+lemma \<phi>Field_zeros [\<phi>reason 1000]:
   \<open>\<phi>Zero ty T x
     \<Longrightarrow> \<phi>Zero (tup tys) Ts xs
     \<Longrightarrow> \<phi>Zero (tup (ty#tys)) (\<clubsuit> T \<^emph> Ts) (x,xs) \<close>
@@ -212,12 +212,12 @@ lemma \<phi>Field_zeros [\<phi>reason for \<open>\<phi>Zero (tup [?ty]) (\<phi>F
   using V_tup_sep_disj by blast
   
 
-lemma \<phi>Field_semty[\<phi>reason for \<open>\<phi>SemType (?x \<Ztypecolon> \<clubsuit> ?T) ?ty\<close>]:
+lemma \<phi>Field_semty[\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<clubsuit> T) (tup [TY])\<close>
   unfolding \<phi>SemType_def subset_iff
   by (clarsimp simp add: \<phi>expns)
 
-lemma \<phi>Field_semtsy[\<phi>reason for \<open>\<phi>SemType (?x \<Ztypecolon> \<clubsuit> ?T \<^emph> ?Ts) ?ty\<close>]:
+lemma \<phi>Field_semtsy[\<phi>reason 1000]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (tup TYs)
 \<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<clubsuit> T \<^emph> Ts)) (tup (TY#TYs))\<close>
@@ -272,13 +272,13 @@ lemma Array_inhabited[\<phi>inhabitance_rule, elim!]:
 \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth) blast
 
-lemma Array_semty[\<phi>reason for \<open>\<phi>SemType (?x \<Ztypecolon> Array ?N ?T) ?ty\<close>]:
+lemma Array_semty[\<phi>reason 1000]:
   \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY) \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
   apply (clarsimp simp add: \<phi>expns list_all_length list_all2_conv_all_nth \<phi>SemType_def subset_iff
           Inhabited_def)
   using Well_Type_unique by blast
   
-lemma Array_zero[\<phi>reason for \<open>\<phi>Zero (array ?N ?TY) (Array ?N ?T) ?x\<close>]:
+lemma Array_zero[\<phi>reason 1000]:
   \<open>\<phi>Zero TY T zero \<Longrightarrow> \<phi>\<phi>SemType T TY \<Longrightarrow> \<phi>Zero (array N TY) (Array N T) (replicate N zero)\<close>
   unfolding \<phi>Zero_def
   by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth Inhabited_def image_iff; blast)

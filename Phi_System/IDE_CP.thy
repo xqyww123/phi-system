@@ -1479,7 +1479,7 @@ ML_file \<open>library/system/generic_variable_access.ML\<close>
 
 hide_fact "__value_access_0__"
 
-lemma [\<phi>reason 2000]:
+lemma [\<phi>reason 1000]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (x <val-of> any \<Ztypecolon> T) TY\<close>
   unfolding Value_of_def .
@@ -1523,104 +1523,6 @@ attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_p
   || Scan.lift Phi_Processor.process_attr\<close>
   \<open>Evaluate the IDE-CP process on the target theorem.
   Particular processor can be specified to be invoked alone.\<close>
-
-
-ML \<open>
-
-local open Scan Phi_Toplevel Phi_Sys Parse 
-(*val nustatement = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- opt_attribs -- Scan.repeat1 Parse.propp);
-val structured_statement =
-  nustatement -- Parse_Spec.if_statement' -- Parse.for_fixes
-    >> (fn ((shows, assumes), fixes) => (fixes, assumes, shows)); *)
-val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
-val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
-val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
-val precond_statement =
-      Scan.repeat ((premises_statement >> map (pair Phi_Toplevel.Premise))
-                || (requires_statement >> map (pair Phi_Toplevel.Assumption))) >> flat;
-(* val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term); *)
-val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
-        Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
-val defines_statement = Scan.optional ($$$ "defines" |-- Parse.!!! statement1) [];
-val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
-val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
-           where_statement -- defines_statement  -- precond_statement -- goal;
-
-val spec = Parse.term
-val arg_ret = (\<^keyword>\<open>argument\<close> |-- spec --| \<^keyword>\<open>return\<close> -- spec -- option (\<^keyword>\<open>throws\<close> |-- spec))
-
-val def_const_flag =
-  Scan.optional ((\<^keyword>\<open>(\<close> |-- Phi_Parse.$$$ "nodef" --| \<^keyword>\<open>)\<close>) >> (K false)) true
-
-in
-
-(* val _ = Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>exty_simproc\<close> "setup the pecific simproc for \<^const>\<open>ExTy\<close>"
-  (Parse.binding >> NuExTyp.set_simproc_cmd) *)
-
-val _ =
-  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
-    ((def_const_flag -- Parse_Spec.opt_thm_name ":" -- nu_statements -- arg_ret) >>
-        (fn (((def_const, b),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
-            (begin_proc_cmd def_const b arg ret throws fixes includes lets defs preconds G)));
-
-val loop_variables = $$$ "var" |-- !!! vars;
-val _ =
-  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close> "begin a recursive procedure construction"
-    (((def_const_flag -- Parse_Spec.opt_thm_name ":") -- loop_variables -- nu_statements -- arg_ret) >>
-        (fn ((((def_const,b),vars),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
-            (begin_rec_proc_cmd def_const b arg ret throws (vars,fixes) includes lets defs preconds G)));
-
-(* val _ =
-  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>\<phi>cast\<close> "begin a procedure construction"
-    ((Parse_Spec.thm_name ":" -- option ($$$ "and" |-- Parse.term) -- nu_statements - arg_ret) >>
-        (fn ((b,(((((fixes,includes),lets),defs),preconds),G)), (arg,ret)) =>
-            (begin_cast_cmd b arg ret fixes includes lets defs preconds G))); *)
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (Phi_Toplevel.statement_cmd >> Toplevel.proof)
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
-   (((optional (\<^keyword>\<open>premises\<close> |--
-            and_list (binding -- opt_attribs || Parse.attribs >> pair Binding.empty)) []
-      >> Phi_Toplevel.begin_block_cmd)
-   -- Phi_Processor.powerful_process_p_inert)
-   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (option (\<^keyword>\<open>for\<close> |-- term) >> (Toplevel.proof' o Phi_Toplevel.end_block_cmd))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
-    (((option (\<^keyword>\<open>for\<close> |-- term) >> (fn cast => fn int =>
-        Phi_Toplevel.end_block_cmd cast int
-    #> (fn s => Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>") s)
-    #> Proof.local_future_terminal_proof
-          ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
-          ,NONE)))
-   -- Phi_Processor.powerful_process_p_inert)
-   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
-
-val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
-      (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
-          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
-          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
-        >> Phi_Processor.setup_cmd)
-
-(* val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
-      (Parse.binding --| $$$ "=" -- Parse.const -- option ($$$ ":" |-- Parse.typ --| $$$ "\<longmapsto>" -- Parse.typ)
-        >> (Toplevel.theory o Phi_Procedure.add_interface_command))
-
-val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>\<phi>export_llvm\<close> "export LLVM target"
-      (Scan.succeed (Toplevel.theory (Phi_Toplevel.export_LLVM))) *)
-
-end
-\<close>
 
 
 subsection \<open>IDE Processors\<close>

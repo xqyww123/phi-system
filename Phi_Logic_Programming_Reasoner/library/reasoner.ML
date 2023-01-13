@@ -68,12 +68,19 @@ signature NU_REASONER = sig
                       * string (*pattern term*)) list
                   ) * Input.source (* tactic source*)
         -> local_theory -> local_theory
+
+  (* Default Pattern of Introduction Rule *)
+  val add_default_pattern : (term (*pattern P*) * term (*the default pattern X*)) list
+                         -> Context.generic -> Context.generic
+      (*The default pattern of an introduction rule whose conclusion matches P is X.*)
+  val remove_default_pattern : term * term -> Context.generic -> Context.generic
+  val the_default_pattern_of : Context.generic -> term -> term
 end
 
 
 structure Phi_Reasoner : NU_REASONER = struct
 
-(** Preliminaries **)
+(*** Preliminaries ***)
 
 (* Types *)
 type priority = int
@@ -84,6 +91,11 @@ type reasoner = {name: term,
                  pattern: term list,
                  blacklist: term list,
                  tactic: (context_state -> context_state Seq.seq)}
+
+fun transform_reasoner phi ({name,pos,pattern,blacklist,tactic}:reasoner) =
+  ({name=name, pos=pos, pattern = map (Morphism.term phi) pattern,
+    blacklist = map (Morphism.term phi) blacklist, tactic = tactic}:reasoner)
+  
 
 (* Attributes *)
 val auto_level = Attrib.setup_config_int \<^binding>\<open>\<phi>auto_level\<close> (K 2)
@@ -110,7 +122,7 @@ exception Global_Cut of context_state
 exception Local_Cut of (priority * Position.T * context_state Seq.seq)
 
 
-(** Reasoner Registry **)
+(*** Reasoner Registry ***)
 fun reasoner_eq ({name,pattern,...}, {name=name',pattern=pattern',...}) =
   (name = name')
 
@@ -126,8 +138,9 @@ fun reasoner_net ctxt = Reasoners.get (Context.Proof ctxt)
 fun add (priority,reasoner) = Reasoners.map (Cost_Net.update (~priority,reasoner));
 fun adds reasoners = Reasoners.map (fold (Cost_Net.update o apfst (op ~)) reasoners)
 fun add_lthy cost_reasoner =
-   Local_Theory.background_theory (Context.theory_map (add cost_reasoner))
-#> Local_Theory.map_contexts (K (Context.proof_map (add cost_reasoner)))
+  Local_Theory.declaration {syntax=false, pervasive=false} (fn phi =>
+    add (apsnd (transform_reasoner phi) cost_reasoner)
+  )
 
 fun del name = Reasoners.map (Cost_Net.remove(
       {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty}))
@@ -135,7 +148,7 @@ fun del name = Reasoners.map (Cost_Net.remove(
 fun has name ctxt = Cost_Net.member (Reasoners.get ctxt) (
       {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty})
 
-(** Implementing Functions **)
+(*** Implementing Functions ***)
 
 (* Main Reasoning Function *)
 
@@ -284,7 +297,7 @@ fun reason_tac N ctxt stat = Seq.make (fn () =>
 
 
 
-(** Command Interface **)
+(*** Command Interface ***)
 
 fun setup_method_cmd (((name,cost),patterns),method) lthy =
   let
@@ -299,11 +312,9 @@ fun setup_method_cmd (((name,cost),patterns),method) lthy =
     val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (ctxt,thm) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
-    val lthy'' = add_lthy (cost, {name=name', pos=Binding.pos_of name,
-                                  pattern=pos_pats, blacklist=neg_pats, tactic=method'''}) lthy'
-  in
-    lthy''
-end
+  in add_lthy (cost, {name=name', pos=Binding.pos_of name,
+                      pattern=pos_pats, blacklist=neg_pats, tactic=method'''}) lthy'
+  end
 
 fun setup_cmd ((((name,pos),cost),patterns),tactic_src) lthy =
   let
@@ -350,17 +361,73 @@ val _ =
       >> setup_method_cmd)
 
 
-(* Predefined Reasoners *)
+(*** Default Pattern for Introduction Reasoning Rule ***)
+
+fun pat_pat_eq ((a1,b1),(a2,b2)) = a1 aconv a2 andalso b1 aconv b2
+
+structure Default_Pattern = Generic_Data (
+  type T = (term (*pattern P*) * term (*the default pattern X*)) Net.net
+  (*It gives the default pattern P of an introduction rule whose conclusion matches some pattern P*)
+  val empty = Net.empty
+(* Item_Net.init 
+                            (single o fst) *)
+  val merge = Net.merge pat_pat_eq
+)
+
+fun add_default_pattern pat_pats ctxt =
+      Default_Pattern.map (fold (fn (p1,p2) =>
+              Net.insert_term pat_pat_eq (p1,(p1,p2))) pat_pats) ctxt
+      handle Net.INSERT => Exn.error ("Some pattern clashes with existing entries.")
+fun remove_default_pattern (p1,p2) =
+      Default_Pattern.map (Net.delete_term_safe pat_pat_eq (p1,(p1,p2)))
+
+fun calc_pattern thy term (pat, pat_ret) =
+ (SOME (Envir.subst_term (Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)) pat_ret))
+  handle Pattern.MATCH => NONE
+
+fun the_default_pattern_of ctxt term =
+  Net.match_term (Default_Pattern.get ctxt) term
+    |> map_filter (calc_pattern (Context.theory_of ctxt) term)
+    |> (fn [] => term
+         | [ret] => ret
+         | ls => error (Pretty.string_of (Pretty.chunks (
+                    [Pretty.str "Multiple default patterns are available:"] @
+                    (map (Syntax.pretty_term (Context.proof_of ctxt)) ls) @
+                    [Pretty.str "Fail to determine which pattern is preferable. \
+                                \Please indicate the pattern manually using syntax \
+                                \\<open>\<phi>reason for \<open>pattern\<close>\<close>"]
+                 ))))
+
+fun set_reason_rule_default_pattern_cmd raw_pat_pats lthy =
+  let
+    fun wrap2L f (x,y) = case f [x,y] of [x',y'] => (x',y')
+    val ctxt_p = Proof_Context.set_mode Proof_Context.mode_pattern lthy
+    val pat_pats = map ( apply2 (Syntax.parse_prop ctxt_p)
+                      #> wrap2L (Syntax.check_props ctxt_p)) raw_pat_pats
+  in Local_Theory.declaration {syntax=false,pervasive=false} (fn phi =>
+        add_default_pattern (map (apply2 (Morphism.term phi)) pat_pats)) lthy
+  end
+
+val _ =
+  Outer_Syntax.local_theory @{command_keyword \<phi>setup_reason_rule_default_pattern}
+    "set the default pattern of a reasoning rule once its conclusion matches some pattern"
+    (Parse.and_list1 (Parse.prop --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.prop)
+      >> set_reason_rule_default_pattern_cmd)
+
+
+(*** Reasoner for Introduction Reasoning Rule ***)
 
 fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty)))
 
 
 fun name_of_intro_reasoner rule = Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Thm.prop_of rule
-fun intro_reasoner pos priority patterns blacklist rule =
+fun intro_reasoner ctxt pos priority patterns blacklist rule =
   let
     val rule = Thm.trim_context rule
-    val pats = if null patterns then [Thm.concl_of rule] else patterns
+    val pats = if null patterns
+               then [the_default_pattern_of ctxt (Thm.concl_of rule)]
+               else patterns
     val f_num = length (filter (fn \<^prop>\<open>\<r>Feasible\<close> => true | _ => false) (Thm.prems_of rule))
     val has_feasible =
           if f_num > 0 andalso priority < 1000
@@ -383,12 +450,12 @@ fun intro_reasoner pos priority patterns blacklist rule =
       }
   end
 
-fun add_intro_rule pos priority (pattern,blacklist) rule =
-      add (priority, intro_reasoner pos priority pattern blacklist rule)
-fun add_intro_rules rules =
-  if null rules then I
+fun add_intro_rule pos priority (pattern,blacklist) rule ctxt =
+      add (priority, intro_reasoner ctxt pos priority pattern blacklist rule) ctxt
+fun add_intro_rules rules ctxt =
+  if null rules then ctxt
   else adds (map (fn (rule,pos,priority,pattern,blacklist) =>
-              (priority, intro_reasoner pos priority pattern blacklist rule)) rules)
+              (priority, intro_reasoner ctxt pos priority pattern blacklist rule)) rules) ctxt
 fun del_intro_rule rule = del (name_of_intro_reasoner rule)
 fun has_intro_rule rule = has (name_of_intro_reasoner rule)
 

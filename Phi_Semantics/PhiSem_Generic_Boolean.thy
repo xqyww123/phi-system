@@ -69,11 +69,11 @@ lemma \<phi>Bool_eqcmp[\<phi>reason for \<open>\<phi>Equal \<bool> ?c ?eq\<close
   "\<phi>Equal \<bool> (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (simp add: \<phi>expns can_eq_bool eq_bool)
 
-lemma \<phi>Bool_zero[\<phi>reason for \<open>\<phi>Zero bool \<bool> ?z\<close>]:
+lemma \<phi>Bool_zero[\<phi>reason 1000]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e TY = bool \<Longrightarrow> \<phi>Zero TY \<bool> False"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_bool)
 
-lemma \<phi>Bool_semty[\<phi>reason for \<open>\<phi>SemType (?x \<Ztypecolon> \<bool>) ?ty\<close>]:
+lemma \<phi>Bool_semty[\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) bool\<close>
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns WT_bool)
@@ -146,15 +146,17 @@ proc \<phi>__synthesis_eq[
 ]:
   assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T  \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
     and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<rbrace>  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  assumes [\<phi>reason for \<open>\<phi>SemType (x \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and   [\<phi>reason for \<open>\<phi>SemType (y \<Ztypecolon> T) ?TY\<close>]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
+  assumes [\<phi>reason]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+    and   [\<phi>reason]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason for \<open>\<phi>Equal T ?can_eq ?eq\<close>]: \<open>\<phi>Equal T can_eq (=)\<close>
   premises \<open>can_eq x y\<close>
   goal G
   argument \<open>R\<close>
   return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 F2 =
+  thm useful
+  \<medium_right_bracket>. .
 
 
 end

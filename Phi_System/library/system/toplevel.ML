@@ -5,6 +5,7 @@
 *)
 
 signature PHI_TOPLEVEL = sig
+
   datatype cond_kind = Premise | Assumption
 
   val begin_proc_cmd : bool (*whether to define a new constant*)
@@ -18,7 +19,8 @@ signature PHI_TOPLEVEL = sig
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> string option
-        -> bool -> Proof.context -> Proof.state
+        -> bool -> local_theory -> Proof.state
+
   val begin_rec_proc_cmd : bool (*whether to define a new constant*)
         -> Attrib.binding 
         -> xstring (*argument*)
@@ -31,25 +33,8 @@ signature PHI_TOPLEVEL = sig
         -> (Attrib.binding * (string * string list)) list (*local definitions*)
         -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
         -> string option
-        -> bool -> Proof.context -> Proof.state
-  val begin_view_shift_cmd : Attrib.binding
-        -> xstring (*domain*)
-        -> xstring (*image*)
-        -> xstring option (*addtional_prop,   cast domain |--> image with additional_prop*)
-        -> (binding * string option * mixfix) list (*for fixes*)
-        -> (xstring * Position.T) list (*includes*)
-        -> (indexname list * string) list (*let patterns*)
-        -> (Attrib.binding * (string * string list)) list (*local definitions*)
-        -> (cond_kind * (Attrib.binding * (string * string list))) list (*preconditions*)
-        -> string option
-        -> bool -> Proof.context -> Proof.state
-  (* val begin_rec_proc_cmd : Attrib.binding 
-        -> xstring (*argument and return*)
-        -> (binding * string option * mixfix) list (*loop variables fixes*)
-        -> (binding * string option * mixfix) list (*for fixes*)
-        -> (xstring * Position.T) list (*includes*)
-        -> xstring option (*pre-conditions*)
-        -> bool -> Proof.context -> Proof.state *)
+        -> bool -> local_theory -> Proof.state
+
   val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
   val end_block_cmd : string option -> bool -> Proof.state -> Proof.state
@@ -63,34 +48,16 @@ signature PHI_TOPLEVEL = sig
 end
 
 structure Phi_Toplevel : PHI_TOPLEVEL = struct
-open Phi_Help Phi_Basics Term HOLogic Thm Phi_Sys
-
-(* fun mk_Trueprop (tm as (Const (@{const_name Trueprop}, _) $ _)) = tm
-  | mk_Trueprop tm = HOLogic.mk_Trueprop tm *)
-
-type context = Proof.context
-type state = Proof.state
-val register_label_head = "\<upsilon>"
-val delimiter_name = "NuPrime.Stack_Delimiter"
-val eof_ctx_stack_name = "NuPrime.End_of_Contextual_Stack"
-fun mk_eof_ctx_stack tm = Const(eof_ctx_stack_name, dummyT) $ tm
-val mk_register_collection = I
-val elim_premise = [Thm.rule_attribute [] (fn _ => fn th =>
-      if can PLPR_Syntax.dest_premise_tag (concl_of th) then th RS @{thm Premise_D} else th)]
-(* fun mk_register_collection tm = Const(@{const_name RegisterCollection},
-* dummyT) $ tm *)
-
-(** proc command **)
-
-val indTy = Type ("Nat.ind", [])
-val arg_stat_term_name = "\<ss>"
 
 
 val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
-val v_lrep_var = "\<l>\<r>\<e>\<p>"
-val v_goal_name = "\<phi>goal"
-val vv_proc_const_name = "?\<p>\<r>\<o>\<c>"
-val top_blk_name = "\<t>\<o>\<p>_\<b>\<l>\<o>\<c>\<k>"
+
+
+(* Library *)
+
+val elim_premise = Thm.rule_attribute [] (fn _ => fn th =>
+      if can PLPR_Syntax.dest_premise_tag (Thm.concl_of th) then th RS @{thm Premise_D} else th)
+val attr_useful = map (Attrib.attribute @{context}) @{attributes [useful]}
 
 fun print_results int = Proof_Display.print_results int (Position.thread_data ())
 
@@ -128,43 +95,39 @@ fun dec_blk_level ctxt =
 
 
 
-
-
-
-
-fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
+fun gen_constr_envir prep_term prep_prop prep_var prep_ctxt mk_Goal
       binding arg ret throws rawfixes includes raw_lets raw_defines raw_preconds raw_goal_ctxt
-      int ctxt =
+      int lthy =
   let
-    val ((fixes,var_names), ctx_parse) = prep_decls prep_var rawfixes (prep_ctx ctxt)
-    val binding = binding |> apsnd (map (Attrib.check_src ctxt))
-    val pos = Binding.pos_of (fst binding)
-    val parse_term = prep_term ctx_parse
-    val parse_prop = prep_prop ctx_parse
-    val parse_typ = prep_typ ctx_parse
+    val ((fixes,var_names), ctxt_parse) = prep_decls prep_var rawfixes (prep_ctxt lthy)
+    val binding = binding |> apsnd (map (Attrib.check_src lthy))
+    val parse_term = prep_term ctxt_parse
+    val parse_prop = prep_prop ctxt_parse
 
     val lets = maps (fn (vs,t) => map (rpair (parse_term t)) vs) raw_lets
     val parse_term = parse_term #> Term.subst_Vars lets
     val parse_prop = parse_prop #> Term.subst_Vars lets
 
-    fun map_trueprop f (Const (@{const_name Trueprop}, _) $ tm) = mk_Trueprop (f tm)
-      | map_trueprop f tm = f tm
     fun prep_attrterm prep =
-         (apfst (apsnd (map (Attrib.check_src ctxt))) #>
-          apsnd (apfst (parse_prop #> map_trueprop prep)
-                  #> apsnd (map parse_term)))
-    val defines = map (prep_attrterm I) raw_defines
+         (apfst (apsnd (map (Attrib.check_src lthy))) #>
+          apsnd (fn (prop, binds) => (prep prop, map parse_term binds)))
+    val defines = map (prep_attrterm parse_prop) raw_defines
 
     fun prep_precond (Premise, c) =
-          prep_attrterm (mk_monop @{const_abbrev Normal_Premise}) c
+          prep_attrterm (parse_prop #>
+                  (fn (Const (@{const_name Trueprop}, _) $ tm)
+                        => \<^const>\<open>Trueprop\<close> $ (Const (@{const_abbrev Normal_Premise}, dummyT) $ tm)
+                    | _ => error "Premise must be atomic HOL assertion (meaning you cannot use \
+                                 \meta connectivities like \<open>\<Longrightarrow>\<close> or \<open>\<And>\<close>). You may want to \
+                                 \use keyword \<open>assume\<close> for introducing advanced arbitrary \
+                                 \antecedents.")) c
             |> apfst (apsnd (fn attrs =>
-                  @{attributes [TRY_THEN Premise_D, useful]} @ attrs))
-      | prep_precond (Assumption, c) =
-          prep_attrterm I c
+                  @{attributes [useful]} @ [Attrib.internal (K elim_premise)] @ attrs))
+      | prep_precond (Assumption, c) = prep_attrterm parse_prop c
     val preconds = map prep_precond raw_preconds
 
     val (goal', constr_process, post_process, fixes', preconds') =
-          mk_Goal (ctx_parse,fixes,var_names)
+          mk_Goal (ctxt_parse,fixes,var_names)
                   (parse_term arg,
                    parse_term ret,
                    (case throws of SOME thr => parse_term thr | NONE => Term.dummy),
@@ -175,17 +138,15 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
                               $ goal'
                               $ parse_term G
 
-    (* val [arg,ret] = Syntax.check_terms ctx_parse [arg,ret]
-    val ctx_parse = ctx_parse |> Variable.declare_term arg |> Variable.declare_term ret *)
-    val includes = includes |> map (Bundle.check ctxt)
-    (* val (goal,th) = begin_proc ctx_parse (arg,ret)  *)
+    val includes = includes |> map (Bundle.check lthy)
+
     val elems = [Element.Fixes fixes',
                  Element.Defines defines,
                  Element.Assumes (map (apsnd single) preconds')]
     val concls = Element.Shows [(Binding.empty_atts,[(goal,[])])]
     fun after_qed [[th]] lthy = post_process binding int lthy th
   in
-    ctxt |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
+    lthy |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
               includes elems concls int
          |> Proof.map_context (
              let
@@ -200,22 +161,21 @@ fun gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
          |> constr_process
   end
 
-fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process def_const =
+
+fun gen_begin_proc prep_term prep_prop prep_var prep_specs post_process def_const =
   let
-    val prep_ctx = I
+    val prep_ctxt = I
     fun mk_Goal (ctxt,fixes,_) arg_ret_throws_conds =
       let
-        val (arg, ret, throws', preconds) = prep_Nu ctxt arg_ret_throws_conds
-        (*val _ = debug_term ctxt "arg " arg
-        val _ = debug_term ctxt "ret " ret*)
+        val (arg, ret, throws', preconds) = prep_specs ctxt arg_ret_throws_conds
         val arg = Procedure_Syntax.translate_arg arg
         val ret = Procedure_Syntax.translate_ret ret
         val v_proc = Var (v_proc_var, dummyT)
         val throws = if throws' = Term.dummy
                      then Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT)
                      else throws'
-        val goal = mk_Trueprop
-          (Const (@{const_name \<phi>Procedure}, dummyT) $ v_proc $ arg $ ret $ throws)
+        val goal = \<^const>\<open>Trueprop\<close> $
+                      (Const (@{const_name \<phi>Procedure}, dummyT) $ v_proc $ arg $ ret $ throws)
 
         fun constr_process stat =
           let
@@ -223,9 +183,10 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process de
                          |> Drule.strip_imp_concl
           in
             stat
-              |> Proof.map_context (put_thesis goal_proc)
+              |> Proof.map_context (Phi_Basics.put_thesis goal_proc)
 
           end
+
         fun post_process' binding int lthy th =
           lthy
             |> Phi_Procedure.define def_const binding (
@@ -243,21 +204,22 @@ fun gen_begin_proc prep_term prep_prop prep_typ prep_var prep_Nu post_process de
         (goal, constr_process, post_process', fixes, preconds)
       end
   in
-    gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
+    gen_constr_envir prep_term prep_prop prep_var prep_ctxt mk_Goal
   end
     
 val begin_proc =
-      gen_begin_proc (K I) (K I) (K I) Proof_Context.cert_var (K I) (K I)
+      gen_begin_proc (K I) (K I) Proof_Context.cert_var (K I) (K I)
 val begin_proc_cmd =
-      gen_begin_proc Syntax.parse_term Syntax.parse_prop Syntax.parse_typ Proof_Context.read_var
+      gen_begin_proc Syntax.parse_term Syntax.parse_prop Proof_Context.read_var
         (fn ctxt => fn (arg,ret,throws,conds) =>
           (arg, ret, throws, conds)
         ) (K I)
 
-fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
+
+fun gen_begin_rec_proc prep_term prep_prop prep_var
       def_const (binding,attr) raw_arg raw_ret raw_throw (raw_vars, raw_fixes) =
   let open QuantExpansion
-    val prep_ctx = I
+    val prep_ctxt = I
     val func_name = Binding.name_of binding
     fun mk_Goal (ctxt,fixes,fixed_names) (raw_arg,raw_ret,raw_throws,conds) = 
       let
@@ -272,25 +234,25 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         val ret = Procedure_Syntax.translate_ret raw_ret
         val throws = raw_throws
 
-        val conds' = map (snd #> fst #> perhaps (try dest_Trueprop)) conds
+        val conds' = map (snd #> fst #> perhaps (try HOLogic.dest_Trueprop)) conds
         val arg' = arg
               |> fold_rev (fn c => fn Nu =>
                     Phi_Help.mk_binop @{const_name Subjection} (Nu,c)) conds'
-              |> tuple_abs vars
+              |> Phi_Help.tuple_abs vars
               |> mk_cases_named origin_names
               |> (fn tm => tm $ Bound 0)
         val ret' = ret
-              |> tuple_abs vars
+              |> Phi_Help.tuple_abs vars
               |> mk_cases_named origin_names
               |> (fn tm => tm $ Bound 0)
         val throws' = (if throws = Term.dummy
                        then Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT)
                        else throws)
-              |> tuple_abs vars
+              |> Phi_Help.tuple_abs vars
               |> mk_cases_named origin_names
               |> (fn tm => tm $ Bound 0)
 
-        val goal0 = mk_Trueprop (
+        val goal0 = \<^const>\<open>Trueprop\<close> $ (
               Const (@{const_name All}, dummyT) $ Abs("x", dummyT,
                 (Const (@{const_name \<phi>Procedure}, dummyT)
                   $ (Const ("local.op_recursion", dummyT) (*TODO ! ! ! BUG !*)
@@ -321,9 +283,9 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
             |> Seq.maps (Phi_Reasoner.reason_tac NONE ctxt'' o pair ctxt'')
             |> Seq.the_result "fail to reason sematic type of the procedure."
 
-        val goal' = Thm.cprem_of proof0 1 |> Thm.term_of |> dest_Trueprop
+        val goal' = Thm.cprem_of proof0 1 |> Thm.term_of |> HOLogic.dest_Trueprop
         
-        val vars' = strip_binder_vars @{const_name All} goal'
+        val vars' = Phi_Help.strip_binder_vars @{const_name All} goal'
         val vars'_fix = map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars'
         val (var_names',ctxt''') = Proof_Context.add_fixes (take 1 vars'_fix) ctxt''
                                     |> apfst (fn vn => vn @ map fst (drop 1 vars'))
@@ -331,10 +293,10 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
 
         val prems_goal =
           subst_bounds (rev (map Free vars''),
-            strip_binder_raw_body @{const_name All} goal')
-          |> strip_binop_r @{const_name "HOL.implies"}
-          |> map mk_Trueprop
-        val (prems, goal) = (front prems_goal, last prems_goal)
+            Phi_Help.strip_binder_raw_body @{const_name All} goal')
+          |> Phi_Help.strip_binop_r @{const_name "HOL.implies"}
+          |> map HOLogic.mk_Trueprop
+        val (prems, goal) = (Phi_Help.front prems_goal, Phi_Help.last prems_goal)
 
         val conds' = ((Binding.name func_name,[]),(hd prems,[])) ::
               (map (fn (tm,(b,(_,is))) => (b,(tm,is))) (tl prems ~~ conds))
@@ -345,7 +307,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
                          |> Drule.strip_imp_concl
           in
             stat
-              |> Proof.map_context (put_thesis goal_proc)
+              |> Proof.map_context (Phi_Basics.put_thesis goal_proc)
 
           end
         fun post_process' binding int lthy th =
@@ -378,56 +340,12 @@ fun gen_begin_rec_proc prep_term prep_prop prep_typ prep_var
         (goal, constr_process, post_process', vars'_fix @ drop (length raw_vars) fixes, conds')
       end
   in
-    gen_constr_envir prep_term prep_prop prep_typ prep_var prep_ctx mk_Goal
+    gen_constr_envir prep_term prep_prop prep_var prep_ctxt mk_Goal
         (binding,attr) raw_arg raw_ret raw_throw (raw_vars @ raw_fixes)
   end
 
-val begin_rec_proc_cmd = gen_begin_rec_proc
-      Syntax.parse_term Syntax.parse_prop Syntax.parse_typ Proof_Context.read_var
-
-fun gen_begin_view_shift_cmd prep_term prep_prop prep_typ prep_var
-      binding arg ret additional_prop =
-  let
-    fun mk_Goal (ctxt,fixes,_) (arg, ret, _, preconds) =
-      let
-        val arg = arg
-        val ret = ret
-        val additional_prop = case additional_prop
-                                of SOME x => prep_term ctxt x
-                                 | _ => @{term True}
-        val goal = mk_Trueprop
-          (Const (@{const_name View_Shift}, dummyT) $ arg $ ret $ additional_prop)
-        fun constr_process stat =
-          let
-            val ctxt = Proof.context_of stat
-            val arg = Syntax.check_term ctxt arg
-            val Type (@{type_name set}, [ty]) = fastype_of arg
-            val ([lrep_name],stat) = Proof.map_context_result (Proof_Context.add_fixes
-                                        [(Binding.name v_lrep_var, SOME ty, NoSyn)]) stat
-            val sequent_term = mk_Trueprop (
-                  Const (@{const_name Set.member}, dummyT) $ Free (lrep_name, ty) $ arg)
-                    |> Syntax.check_prop ctxt
-            val ([(_,[sequent])],stat) = Proof.map_context_result (
-                  Proof_Context.add_assms Assumption.assume_export
-                      [(Binding.empty_atts, [(sequent_term,[])])]) stat
-          in
-            (*Phi_Basics.set_state_sequent sequent*)
-            stat
-          end
-        fun post_process binding int lthy th =
-          (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
-            (("\<phi> view shift", ""), [("", [th])]); lthy)
-      in
-        (goal, constr_process, post_process, fixes, preconds)
-      end
-  in
-    gen_constr_envir prep_term prep_prop prep_typ prep_var I mk_Goal binding arg ret NONE
-  end
-
-val begin_view_shift_cmd =
-      gen_begin_view_shift_cmd Syntax.parse_term Syntax.parse_prop Syntax.parse_typ
-      Proof_Context.read_var
-
+val begin_rec_proc_cmd =
+      gen_begin_rec_proc Syntax.parse_term Syntax.parse_prop Proof_Context.read_var
 
 
 (* structure Statement_Begin_Hook *)
@@ -446,7 +364,7 @@ fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE 
 fun gen_finish_proc prep_term qed spec int stat =
   let
     val ctxt_ = Proof.context_of stat
-    val goal = get_thesis ctxt_
+    val goal = Phi_Basics.get_thesis ctxt_
     val mode = Phi_Working_Mode.working_mode_on1 ctxt_ (Thm.term_of goal)
   in stat
   |> Proof.map_context (dec_blk_level #> snd)
@@ -547,9 +465,10 @@ val finish_proc_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
 end
 
 
+
 fun prove_prem int stat =
   let open Proof
-    val specthm = the_state_sequent stat
+    val specthm = Phi_Basics.the_state_sequent stat
     val goal = Thm.prop_of specthm
                 |> Logic.dest_implies |> #1 (* |> dest_premise_tag |> mk_Trueprop *)
     fun after_qed (ctxt',[[th]]) stat =
@@ -566,7 +485,7 @@ fun prove_prem int stat =
              |-> Phi_Basics.set_state_sequent
       end
   in
-    stat |> setup_proof (print_results int) Proof_Context.mode_schematic false ""
+    stat |> Phi_Sys.setup_proof (print_results int) Proof_Context.mode_schematic false ""
               NONE after_qed [] [] [[(goal,[])]]
          |> apsnd (
               Proof.map_context (Proof_Context.set_mode Proof_Context.mode_default)
@@ -577,8 +496,9 @@ fun prove_prem int stat =
   end
 
 
+
+
 local
-val attr_useful = map (Attrib.attribute @{context}) @{attributes [useful]}
 fun is_backward_mode s = (Proof.assert_backward s; true)
       handle ERROR _ => false
 in
@@ -600,21 +520,21 @@ fun gen_begin_block prep_attr bindings int stat =
     val sequent =
           if is_top
           then #goal (Proof.raw_goal stat)
-          else the_state_sequent stat
+          else Phi_Basics.the_state_sequent stat
                   |> Tactic.rule_by_tactic ctxt normalize_tac
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)
                   |> begin_block
 
     (*Assuming the proof state is in the normal hhf, or else the operation fails.*)
     val (vars, goal) =
-          strip_binder_raw @{const_name Pure.all} (leading_antecedent' sequent)
+          Phi_Help.strip_binder_raw @{const_name Pure.all} (Phi_Help.leading_antecedent' sequent)
     val (var_names, stat) =
           Proof.map_context_result (Proof_Context.add_fixes
             (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars)) stat
     val vars = map Free (var_names ~~ map snd vars)
     val goal = subst_bounds (rev vars, goal)
-    val prems_goal = strip_binop_r @{const_name Pure.imp} goal
-    val (prems, goal) = (front prems_goal, last prems_goal)
+    val prems_goal = Phi_Help.strip_binop_r @{const_name Pure.imp} goal
+    val (prems, goal) = (Phi_Help.front prems_goal, Phi_Help.last prems_goal)
 
     val mode = Phi_Working_Mode.working_mode_on1 ctxt goal
 
@@ -627,7 +547,7 @@ fun gen_begin_block prep_attr bindings int stat =
       let val stat = end_block stat0
           val ctxt'' = context_of stat
           val th0 = Drule.eta_contraction_rule th
-          val (th1::vars') = (th0::map (Drule.mk_term o cterm_of ctxt') vars)
+          val (th1::vars') = (th0::map (Drule.mk_term o Thm.cterm_of ctxt') vars)
                                    |> Proof_Context.export ctxt' ctxt''
           val th2 = Drule.forall_intr_list (map Drule.dest_term vars') th1
 
@@ -658,14 +578,13 @@ fun gen_begin_block prep_attr bindings int stat =
          else Phi_Basics.set_state_sequent (gen_sequent sequent) stat
       end
 
+    val bindings_given = map (fn (b,attrs) =>
+                                ((if Binding.name_of b = "_" then Binding.empty else b),
+                                 map (prep_attr ctxt) attrs)) bindings
     val delta = length prems - length bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
-    val bindings =
-      ((map (apsnd (map (prep_attr ctxt))
-          #> apfst (fn x => if Binding.name_of x = "_" then Binding.empty else x)
-            ) bindings)
-          @ (List.tabulate (delta, K (Binding.empty, attr_useful))))
-        |> map (apsnd (fn x => elim_premise @ x))
+    val bindings = (bindings_given @ (List.tabulate (delta, K (Binding.empty, attr_useful))))
+          |> map (apsnd (fn x => elim_premise :: x))
   in
     stat
       |> internal_goal (print_results int) Proof_Context.mode_schematic false 
@@ -681,8 +600,8 @@ fun gen_begin_block prep_attr bindings int stat =
       |> Proof.map_context_result (fn ctxt => ctxt
             |> Phi_Working_Mode.set mode
             |> Proof_Context.put_thms false ("\<phi>thesis",
-                          SOME [Drule.mk_term (cterm_of ctxt goal)])
-            |> #initial_sequent mode blk_name (cterm_of ctxt arg)
+                          SOME [Drule.mk_term (Thm.cterm_of ctxt goal)])
+            |> #initial_sequent mode blk_name (Thm.cterm_of ctxt arg)
             |> Generic_Variable_Access.open_value_context' Position.none
             |> swap)
       |-> (if is_top then Phi_Basics.enter_programming_environ else Phi_Basics.set_state_sequent)
@@ -727,5 +646,91 @@ val statement_cmd =
     thy |> Context.theory_map (eval (NuCompilation.compile thy(* |> (fn s => (tracing s; s))*)))
         |> Context.theory_map codegen
   end *)
+
+
+
+local open Scan Phi_Sys Parse 
+
+val statement1 = Parse.and_list1 (Parse_Spec.opt_thm_name ":" -- Parse.propp);
+val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
+val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
+val precond_statement =
+      Scan.repeat ((premises_statement >> map (pair Premise))
+                || (requires_statement >> map (pair Assumption))) >> flat;
+(* val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term); *)
+val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |--
+        Parse.and_list1 (Scan.repeat Args.var --| Parse.$$$ "=" -- Parse.term)) [];
+val defines_statement = Scan.optional ($$$ "defines" |-- Parse.!!! statement1) [];
+val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
+val nu_statements = Parse.for_fixes -- Scan.optional Parse_Spec.includes [] --
+           where_statement -- defines_statement  -- precond_statement -- goal;
+
+val spec = Parse.term
+val arg_ret = (\<^keyword>\<open>argument\<close> |-- spec --| \<^keyword>\<open>return\<close> -- spec -- option (\<^keyword>\<open>throws\<close> |-- spec))
+
+val def_const_flag =
+  Scan.optional ((\<^keyword>\<open>(\<close> |-- Phi_Parse.$$$ "nodef" --| \<^keyword>\<open>)\<close>) >> (K false)) true
+
+in
+
+val _ =
+  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>proc\<close> "begin a procedure construction"
+    ((def_const_flag -- Parse_Spec.opt_thm_name ":" -- nu_statements -- arg_ret) >>
+        (fn (((def_const, b),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
+            (begin_proc_cmd def_const b arg ret throws fixes includes lets defs preconds G)));
+
+val loop_variables = $$$ "var" |-- !!! vars;
+val _ =
+  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>rec_proc\<close>
+    "begin a recursive procedure construction"
+    (((def_const_flag -- Parse_Spec.opt_thm_name ":") -- loop_variables -- nu_statements -- arg_ret) >>
+        (fn ((((def_const,b),vars),(((((fixes,includes),lets),defs),preconds),G)), ((arg,ret),throws)) =>  
+            (begin_rec_proc_cmd def_const b arg ret throws (vars,fixes) includes lets defs preconds G)));
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
+    (statement_cmd >> Toplevel.proof)
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
+   (((optional (\<^keyword>\<open>premises\<close> |--
+            and_list (binding -- opt_attribs || Parse.attribs >> pair Binding.empty)) []
+      >> begin_block_cmd)
+   -- Phi_Processor.powerful_process_p_inert)
+   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
+    (option (\<^keyword>\<open>for\<close> |-- term) >> (Toplevel.proof' o end_block_cmd))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
+    (((option (\<^keyword>\<open>for\<close> |-- term) >> (fn cast => fn int => fn stat =>
+       stat
+    |> end_block_cmd cast int
+    |> (fn s => Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>") s)
+    |> Proof.local_future_terminal_proof
+          ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
+          ,NONE)))
+   -- Phi_Processor.powerful_process_p_inert)
+   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
+
+val _ =
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
+      (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
+          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
+          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
+        >> Phi_Processor.setup_cmd)
+
+(* val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
+      (Parse.binding --| $$$ "=" -- Parse.const -- option ($$$ ":" |-- Parse.typ --| $$$ "\<longmapsto>" -- Parse.typ)
+        >> (Toplevel.theory o Phi_Procedure.add_interface_command))
+
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>\<phi>export_llvm\<close> "export LLVM target"
+      (Scan.succeed (Toplevel.theory (Phi_Toplevel.export_LLVM))) *)
+
+end
 
 end

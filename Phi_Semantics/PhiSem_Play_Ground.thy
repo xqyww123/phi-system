@@ -7,6 +7,15 @@ begin
 (*Example*)
 
 (*
+proc
+  assumes [\<phi>reason]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  assumes [\<phi>reason]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY'\<close>
+  argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U\<close>
+  return \<open>Any\<close>
+  \<medium_left_bracket> $x \<rightarrow> var z
+  ;; $y \<rightarrow> z
+ *)
+(*
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
 proc
@@ -19,10 +28,12 @@ proc
   \<medium_right_bracket> using \<phi> by simp .
 
 proc
-  premises \<open>x < 10\<close>
+  where ?ten = 10
+  premises \<open>x < ?ten\<close>
   argument \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   return \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket> $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
+  \<medium_left_bracket>
+    $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
     while \<open>x \<Ztypecolon> ?T \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: (x \<le> 10) \<and> Guard: x < 10\<close> (*annotation*)
     \<medium_left_bracket> \<open>$v < 10\<close> \<medium_right_bracket>. (*guard*)
     \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v \<medium_right_bracket>. (*loop body*)

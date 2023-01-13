@@ -71,10 +71,14 @@ lemma [\<phi>reason 1]:
 \<Longrightarrow> \<phi>SemType X Any\<close>
   by blast
 
+\<phi>setup_reason_rule_default_pattern \<open>\<phi>SemType ?S ?TY\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close>
+
 subsubsection \<open>Zero Value\<close>
 
 definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
   where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
+
+\<phi>setup_reason_rule_default_pattern \<open>\<phi>Zero ?TY ?T ?x\<close> \<Rightarrow> \<open>\<phi>Zero ?TY ?T _\<close>
 
 subsubsection \<open>Equality\<close>
 

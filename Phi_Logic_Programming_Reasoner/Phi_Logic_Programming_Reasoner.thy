@@ -1,7 +1,7 @@
 theory Phi_Logic_Programming_Reasoner
   imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
   keywords "except" :: quasi_command
-    and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
+    and "\<phi>reasoner" "\<phi>reasoner_ML" "\<phi>setup_reason_rule_default_pattern" :: thy_decl % "ML"
   abbrevs
       "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"

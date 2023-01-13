@@ -219,12 +219,12 @@ fun setup' binding precedence (raw_term,fixes) proc (comment:string) lthy =
     define binding precedence prop proc lthy
   end
 
-fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) ctxt =
+fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) lthy =
   let
-    val (_, ctxt') = Proof_Context.add_fixes_cmd fixes ctxt
+    val (_, ctxt') = Proof_Context.add_fixes_cmd fixes lthy
     val prop = read_prop_pattern ctxt' raw_term
   in
-    ctxt |> Context.proof_map (
+    lthy |> Context.proof_map (
       ML_Context.expression (Input.pos_of proc)
         (ML_Lex.read
           ("Theory.local_setup (Phi_Processor.setup (" ^

@@ -36,7 +36,7 @@ lemma Currency_I[\<phi>reason on \<open>?y \<Ztypecolon> \<nat>[?b] \<^bold>i\<^
 \<Longrightarrow> x \<Ztypecolon> \<nat>[256] \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> Currency\<close>
   unfolding Currency_expn \<medium_left_bracket> \<medium_right_bracket>. .
 
-lemma [\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Currency) ?TY\<close>]:
+lemma [\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> Currency) (\<tau>Int 256)\<close>
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns)

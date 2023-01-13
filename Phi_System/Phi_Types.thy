@@ -725,7 +725,7 @@ lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T <of-type> TY) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C \<close>
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
-lemma [\<phi>reason 1200 for \<open>\<phi>SemType (?x \<Ztypecolon> ?T <of-type> ?TY) ?TY'\<close>]:
+lemma [\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> T <of-type> TY) TY\<close>
   unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns)
 

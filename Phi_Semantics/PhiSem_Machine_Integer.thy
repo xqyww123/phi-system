@@ -79,7 +79,7 @@ lemma \<phi>Nat_elim[elim!,\<phi>inhabitance_rule]:
 lemma \<open>Inhabited (x \<Ztypecolon> \<nat>[b]) \<longleftrightarrow> x < 2^Big b\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
-lemma \<phi>Nat_semty[\<phi>reason for \<open>\<phi>SemType (?x \<Ztypecolon> \<nat>[?b]) ?ty\<close>]:
+lemma \<phi>Nat_semty[\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<nat>[b]) (int b)\<close>
   unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns Big_def)
 
@@ -87,7 +87,7 @@ lemma [\<phi>reason for \<open>\<phi>Equal (\<nat>[?b]) ?c ?eq\<close>]:
   "\<phi>Equal (\<nat>[b]) (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (auto simp add: \<phi>expns)
 
-lemma [\<phi>reason for \<open>\<phi>Zero (int ?b) (\<nat>[?b]) ?zero\<close>]:
+lemma [\<phi>reason 1000]:
   "\<phi>Zero (int b) (\<nat>[b]) 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason]:
@@ -107,11 +107,11 @@ lemma \<phi>NatRound_expn[\<phi>expns]:
 lemma \<open>Inhabited (x \<Ztypecolon> \<nat>\<^sup>r[b]) \<longleftrightarrow> True\<close>
   unfolding Inhabited_def by (auto simp add: \<phi>expns)
 
-lemma [\<phi>reason for \<open>\<phi>Zero (int ?b) \<nat>\<^sup>r[?b] ?z\<close>]:
+lemma [\<phi>reason 1000]:
   "\<phi>Zero (int b) (\<nat>\<^sup>r[b]) 0"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
-lemma \<phi>NatRound_semty[\<phi>reason for \<open>\<phi>SemType (?x \<Ztypecolon> \<nat>\<^sup>r[?b]) ?ty\<close>]:
+lemma \<phi>NatRound_semty[\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<nat>\<^sup>r[b]) (int b)\<close>
   unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns)
 
@@ -139,12 +139,12 @@ lemma [\<phi>reason for \<open>\<phi>Equal \<int>[b] ?c ?eq\<close>]:
     "\<phi>Equal \<int>[b] (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (cases b) (auto simp add: \<phi>expns eq_nat_nat_iff)
 
-lemma [\<phi>reason for \<open>\<phi>Zero (int ?b) \<int>[?b] ?x\<close>]:
+lemma [\<phi>reason 1000]:
     "\<phi>Zero (int b) \<int>[b] 0"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
 
-lemma \<phi>Int_semty[\<phi>reason for \<open>\<phi>SemType (?x \<Ztypecolon> \<int>[?b]) ?ty\<close>]:
+lemma \<phi>Int_semty[\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<int>[b]) (int b)\<close>
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns Big_def) (smt (verit, ccfv_SIG) diff_le_self power_increasing_iff)

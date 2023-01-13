@@ -14,10 +14,10 @@ signature PHI_PROCEDURE = sig
         -> Attrib.binding -> thm -> local_theory -> thm * local_theory
 
   type interface = {name: Binding.binding, thm: thm}
-  (*interfaces introduced in this given theory, excluding others inherited from father theories*)
+  (*interfaces introduced in this given theory, excluding others inherited from parent theories*)
   val interfaces_of : theory -> interface Symtab.table
-  (*procedures introduced in this given theory, excluding others inherited from father theories*)
-  val procedures_of : Context.generic -> string list (*names*)
+  (* (*procedures introduced in this given theory, excluding others inherited from parent theories*)
+  val procedures_of : Context.generic -> string list (*names*) *)
   val compilation_thm_of : theory -> string (*name*) -> thm
   val add_interface : interface -> theory -> theory
   (* val add_interface_command : (Binding.binding * string) * (string * string)
@@ -46,6 +46,18 @@ structure Interfaces = Theory_Data(
   val merge = Symtab.merge (K true)
 )
 
+fun interfaces_of thy =
+  the_default Symtab.empty (Symtab.lookup (Interfaces.get thy) (Context.theory_long_name thy))
+
+fun add_interface intrf thy =
+  Interfaces.map (Symtab.map_default 
+    (Context.theory_long_name thy, Symtab.empty)
+    (Symtab.insert (K false) (Binding.name_of (#name intrf), intrf))) thy
+
+fun compilation_thm_of thy name =
+      Global_Theory.get_thm thy (suffix compilation_suffix name)
+
+(* do not remove
 (*All interfaces to be exported in *a* theory*)
 structure Procedures = Generic_Data(
   type T = string list Symtab.table;
@@ -56,21 +68,15 @@ structure Procedures = Generic_Data(
 
 val thy_name_of_ctxt = Context.theory_long_name o Context.the_theory
 
-fun interfaces_of thy =
-  the_default Symtab.empty (Symtab.lookup (Interfaces.get thy) (Context.theory_long_name thy))
 fun procedures_of ctxt =
   the_default [] (Symtab.lookup (Procedures.get ctxt) (thy_name_of_ctxt ctxt))
-fun compilation_thm_of thy name =
-      Global_Theory.get_thm thy (suffix compilation_suffix name)
-fun add_interface intrf thy =
-  Interfaces.map (Symtab.map_default 
-    (Context.theory_long_name thy, Symtab.empty)
-    (Symtab.insert (K false) (Binding.name_of (#name intrf), intrf))) thy
 fun add_procedure name ctxt =
   Procedures.map (Symtab.map_default (thy_name_of_ctxt ctxt, [])
-    (fn l => name :: l)) ctxt
+    (fn l => name :: l)) ctxt *)
 
-(* fun add_interface_command ((name,const),tys) thy =
+(* do not remove
+
+ fun add_interface_command ((name,const),tys) thy =
   let
     val ctxt = Proof_Context.init_global thy
           |> Proof_Context.set_mode Proof_Context.mode_schematic
@@ -198,8 +204,8 @@ fun gen_define def_const (binding,attrs) sequent lthy =
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
             |-> (fn (tm,(_,def)) => fn lthy_x => 
                 lthy_x
-                  |> Local_Theory.background_theory
-                        (Context.theory_map (add_procedure (Binding.name_of binding)))
+                  (* |> Local_Theory.background_theory
+                        (Context.theory_map (add_procedure (Binding.name_of binding))) *)
                   |> rpair (rename (norm_def lthy_x arity_ins def) sequent')
                 )
 
