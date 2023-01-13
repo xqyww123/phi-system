@@ -6,7 +6,6 @@ theory Phi_Logic_Programming_Reasoner
       "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
-  and "<action>" = "\<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>>"
 begin
 
 ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
@@ -360,11 +359,11 @@ The purpose is denoted by \<open>action\<close> type, which is an unspecified ty
 
 typedecl 'category action
 
-definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> _" [2,3] 2)
+definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  @action _" [2,3] 2)
   where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
 
 text \<open>
-\<open>\<open>P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close>\<close> tags antecedent \<^prop>\<open>P\<close> by the specific purpose denoted by \<^term>\<open>A\<close>.
+\<open>\<open>P @action A\<close>\<close> tags antecedent \<^prop>\<open>P\<close> by the specific purpose denoted by \<^term>\<open>A\<close>.
 
   The type variable \<^typ>\<open>'category\<close> enables to classify actions by types and type classes.
   For example, some operation may be designed for any generic action \<open>?act :: (?'ty::cls) action\<close>
@@ -376,11 +375,11 @@ text \<open>
   Maybe classification should be done by some term-level structure. Let's think when have time!\<close>\<close>
 
 lemma Action_Tag_I:
-  \<open>P \<Longrightarrow> P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close>
+  \<open>P \<Longrightarrow> P @action A\<close>
   unfolding Action_Tag_def .
 
 lemma Conv_Action_Tag_I:
-  \<open>X = X \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> A\<close>
+  \<open>X = X @action A\<close>
   unfolding Action_Tag_def ..
 
 subsubsection \<open>Mode\<close>
@@ -760,7 +759,7 @@ typedecl "subgoal"
 consts subgoal_context :: \<open>subgoal \<Rightarrow> unit action\<close>
 
 abbreviation GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
-  where "(PROP P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> (PROP P \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> subgoal_context G)"
+  where "(PROP P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> (PROP P @action subgoal_context G)"
 
 definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
   where "CHK_SUBGOAL X \<longleftrightarrow> True"

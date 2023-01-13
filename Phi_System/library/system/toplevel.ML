@@ -643,7 +643,7 @@ val precond_statements =
                 || (requires_statement >> map (pair Assumption))) >> flat;
 (* val requires_opt1 = Scan.option (\<^keyword>\<open>assumes\<close> |-- Parse.term); *)
 val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |-- Parse.!!! statement1) [];
-val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
+val goal = Scan.option (\<^keyword>\<open>@action\<close> |-- Parse.term)
 
 val includes = Scan.optional Parse_Spec.includes []
 val input  = \<^keyword>\<open>input\<close>  |-- Parse.term
