@@ -11,7 +11,7 @@ theory IDE_CP
     "proc" "rec_proc" (*"\<phi>cast"*) :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
     "var" "invar" "\<Longrightarrow>" "goal" "\<exists>" "throws"
-    "argument" "return" "affirm" :: quasi_command
+    "input" "affirm" :: quasi_command
   and "\<medium_left_bracket>" :: prf_decl % "proof"
   and ";;" :: prf_decl % "proof"
   and "\<medium_right_bracket>." :: prf_decl % "proof"

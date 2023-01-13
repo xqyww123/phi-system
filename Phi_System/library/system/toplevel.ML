@@ -10,8 +10,8 @@ signature PHI_TOPLEVEL = sig
 
   val begin_proc_cmd : bool (*whether to define a new constant*)
         -> Attrib.binding (*name*)
-        -> xstring (*argument*)
-        -> xstring (*return*)
+        -> xstring (*input*)
+        -> xstring (*output*)
         -> xstring option (*throws*)
         -> (binding * string option * mixfix) list (*for fixes*)
         -> (xstring * Position.T) list (*includes*)
@@ -22,8 +22,8 @@ signature PHI_TOPLEVEL = sig
 
   val begin_rec_proc_cmd : bool (*whether to define a new constant*)
         -> Attrib.binding 
-        -> xstring (*argument*)
-        -> xstring (*return*)
+        -> xstring (*input*)
+        -> xstring (*output*)
         -> xstring option (*throws*)
         -> ((binding * string option * mixfix) list * (*variants*)
             (binding * string option * mixfix) list   (*for fixes*))
@@ -648,9 +648,9 @@ val where_statement = Scan.optional (\<^keyword>\<open>where\<close> |-- Parse.!
 val goal = Scan.option (\<^keyword>\<open>goal\<close> |-- Parse.term)
 
 val includes = Scan.optional Parse_Spec.includes []
-val argument = \<^keyword>\<open>argument\<close> |-- Parse.term
-val return   = \<^keyword>\<open>return\<close>   |-- Parse.term
-val throws   = Scan.option (\<^keyword>\<open>throws\<close> |-- Parse.term)
+val input  = \<^keyword>\<open>input\<close>  |-- Parse.term
+val output = \<^keyword>\<open>output\<close> |-- Parse.term
+val throws = Scan.option (\<^keyword>\<open>throws\<close> |-- Parse.term)
 
 val rec_vars = \<^keyword>\<open>var\<close> |-- !!! vars;
 
@@ -664,9 +664,9 @@ val _ =
     ((def_const_flag -- Parse_Spec.opt_thm_name ":"
       -- includes
       -- precond_statements
-      -- argument
+      -- input
       -- precond_statements
-      -- return
+      -- output
       -- throws
       -- goal
       -- where_statement
@@ -680,10 +680,10 @@ val _ =
     ((def_const_flag -- Parse_Spec.opt_thm_name ":"
       -- includes
       -- precond_statements
-      -- argument
+      -- input
       -- rec_vars
       -- precond_statements
-      -- return
+      -- output
       -- throws
       -- goal
       -- where_statement

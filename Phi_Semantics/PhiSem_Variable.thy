@@ -328,8 +328,8 @@ subsubsection \<open>Get\<close>
 
 proc (nodef) op_get_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  argument \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<close>
-  return   \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
+  input  \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<close>
+  output \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
   \<medium_left_bracket> to_Identity op_get_var'' \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200 for
@@ -353,8 +353,8 @@ proc (nodef) op_set_var:
       \<open>pred_option (\<lambda>TY'. TY = TY') (varname.type var) \<^bold><\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n\<^bold>> infer_var_type\<close>
   assumes [unfolded \<phi>SemType_def subset_iff, useful]:
       \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
-  argument \<open>x \<Ztypecolon> Var var T\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U\<close>
-  return   \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<close>
+  input  \<open>x \<Ztypecolon> Var var T\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U\<close>
+  output \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<close>
   \<medium_left_bracket> to_Identity 
     $y to_Identity
     op_set_var'' 
@@ -378,9 +378,9 @@ proc op_var_scope:
   assumes BLK: \<open>\<And>var. varname.type var \<equiv> TY
                   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var] \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
                       \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>\<close>
-  argument \<open>X\<close>
-  return   \<open>Y\<close>
-  throws   E
+  input  \<open>X\<close>
+  output \<open>Y\<close>
+  throws  E
   \<medium_left_bracket> op_var_scope'[where TY=TY]
     try''
     \<medium_left_bracket> premises [\<phi>reason]

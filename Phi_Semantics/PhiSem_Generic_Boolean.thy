@@ -149,9 +149,9 @@ proc \<phi>__synthesis_eq[
     and   [\<phi>reason]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason for \<open>\<phi>Equal T ?can_eq ?eq\<close>]: \<open>\<phi>Equal T can_eq (=)\<close>
-  argument \<open>R\<close>
+  input \<open>R\<close>
   premises \<open>can_eq x y\<close>
-  return   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
+  output \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
   goal G
   \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
