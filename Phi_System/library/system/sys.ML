@@ -35,7 +35,7 @@ signature PHI_SYS = sig
 end
 
 structure Phi_Sys : PHI_SYS = struct
-open Thm Phi_Basics Term
+open Thm Phi_Envir Term
 
 (*fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))

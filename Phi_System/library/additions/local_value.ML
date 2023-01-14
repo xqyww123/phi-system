@@ -72,7 +72,7 @@ fun update_val b rule ctxt = ctxt
      |> Generic_Variable_Access.bind_local_vals [(Binding.name_of b, valterm_of ctxt rule)]
 
 
-val value_assigner_id = \<^here>
+val value_assigner_id = "val"
 fun value_assigner b (ctxt,_) =
   let
   val xname = Binding.name_of b
@@ -119,7 +119,7 @@ val _ = Theory.setup (
    Generic_Variable_Access.register_assigner
       ("val", \<^type_name>\<open>valname\<close>, "to declare a new local value", (value_assigner_id, value_assigner))
 #> Context.theory_map (Generic_Variable_Access.Assignment_Hooks.add 100 value_optimization)
-#> Context.theory_map (Phi_Basics.Enter_Programming_Environ.add 0 (fn level => fn (ctxt,sequent) =>
+#> Context.theory_map (Phi_Envir.Enter_Programming_Environ.add 0 (fn level => fn (ctxt,sequent) =>
       if level = 0
       then (Config.put phi_display_value_internal_name false ctxt, sequent)
       else (ctxt,sequent)))

@@ -13,7 +13,7 @@ end
 structure NuObtain : NU_OBTAIN = struct
 
 fun eliminate_term ctxt xs thm =
-  let open Phi_Basics Phi_Syntax Phi_Help
+  let open Phi_Envir Phi_Syntax Phi_Help
     val tm = Thm.prop_of thm
     val vs = map (dest_Free o Thm.term_of) xs;
     fun collect tm = Term.fold_aterms (fn t as Free v =>
@@ -96,8 +96,8 @@ in
 
 
 fun choose inst_names stat =
-  let open Phi_Basics Phi_Help HOLogic Term Conv
-    val major = Phi_Basics.the_state_sequent stat
+  let open Phi_Envir Phi_Help HOLogic Term Conv
+    val major = Phi_Envir.the_state_sequent stat
     val ctxt = Proof.context_of stat
     val N = length inst_names
     val ExTyp_strip = @{thm \<phi>ExTyp_strip}
@@ -122,14 +122,14 @@ fun choose inst_names stat =
   in
     stat |> Proof.map_context
               (Assumption.add_assms (obtain_export ctxt rule cinsts) [meta'_term] #> snd)
-         |> Phi_Basics.set_state_sequent meta'
+         |> Phi_Envir.set_state_sequent meta'
   end
 
 val enable_auto = Attrib.setup_config_bool \<^binding>\<open>\<phi>auto_\<exists>fix\<close> (K true)
 
 fun auto_choose stat =
   let
-    val var_names = Phi_Syntax.dest_current_nu (Phi_Basics.the_state_sequent stat)
+    val var_names = Phi_Syntax.dest_current_nu (Phi_Envir.the_state_sequent stat)
           |> Phi_Help.strip_binder_vars @{const_name ExSet}
           |> map (Name.clean o fst)
     val (var_names', _) =

@@ -687,7 +687,7 @@ setup \<open>let open Ast Phi_Syntax
 
   fun get_val ctxt ind =
     let
-      val values = Thm.prop_of (Phi_Basics.the_construction ctxt)
+      val values = Thm.prop_of (Phi_Envir.the_construction ctxt)
                   |> dest_CurrentConstruction |> #4
                   |> strip_separations |> rev
                   |> map_filter name_of_Val

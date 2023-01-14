@@ -43,7 +43,7 @@ structure Process_of_Argument : GENERIC_DATA
 
 (** Assignment **)
 
-type assigner = Position.T (*identifier of the assigner*)
+type assigner = string (*identifier of the assigner*)
              * (binding (*name of the value or variable*)
                -> context_state
                -> ( thm (*rule*)
@@ -290,16 +290,16 @@ structure Process_of_Argument = Generic_Data (
 )
 
 val _ = Theory.setup (Context.theory_map (
-Phi_Basics.Enter_Programming_Environ.add 20 (K (fn (ctxt,sequent) =>
-  if #domain Phi_Working_Mode.procedure ctxt (Thm.concl_of sequent)
+Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
+  if level = 0
+  andalso #domain Phi_Working_Mode.procedure ctxt (Thm.concl_of sequent)
   then the_default to_value_and_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
   else (ctxt,sequent)
-))
-))
+)))
 
 (*** Assignment ***)
 
-type assigner = Position.T (*identifier of the assigner*)
+type assigner = string (*identifier of the assigner*)
              * (binding (*name of the value or variable*)
                -> context_state
                -> ( thm (*rule*)
@@ -409,7 +409,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
 
   (*Now we change the goal of the programming context to add the *)
   val (_,arg_spec,ret_spec,E_spec) = Phi_Syntax.dest_procedure_c proc_cterm
-  val goal = Phi_Basics.get_thesis ctxt
+  val goal = Phi_Envir.get_thesis ctxt
   val (trueprop, goal_term) = Thm.dest_comb goal
   val ((goal_F_arg,goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
   fun instantiate_R inst spec =
@@ -430,7 +430,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
   val goal_ret' = instantiate_R goal_ret ret_spec
   val goal_E'   = instantiate_R goal_E   E_spec
   val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E')
-  val ctxt = Phi_Basics.put_thesis goal' ctxt
+  val ctxt = Phi_Envir.put_thesis goal' ctxt
 
   (*declare every hypothesis*)
   val (Hs,ctxt) = Assumption.add_assms Assumption.presume_export (rev rev_hyps) ctxt

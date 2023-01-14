@@ -25,7 +25,7 @@ signature PHI_PROCEDURE = sig
 end
 
 structure Phi_Procedure : PHI_PROCEDURE = struct
-open Phi_Basics
+open Phi_Envir
 
 val app_suffix = "_\<phi>app"
 val compilation_suffix = "_\<phi>compilation"
@@ -107,7 +107,7 @@ fun add_procedure name ctxt =
           the_default (TVar (("'a",0), @{sort lrep}), TVar (("'b",0), @{sort lrep}))
                       (Option.map (apply2 (modify_tail o Syntax.parse_typ ctxt)) tys)
     val goal = mk_Trueprop (Const (@{const_name Prog_Interface}, dummyT)
-                $ Phi_Basics.mk_label (Binding.name_of name)
+                $ Phi_Envir.mk_label (Binding.name_of name)
                 $ Logic.mk_type ty_args
                 $ Logic.mk_type ty_rets
                 $ Var(("proc_or_func", 0), dummyT))

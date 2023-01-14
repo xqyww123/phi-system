@@ -418,7 +418,7 @@ lemma "__set_new_var_rule__":
      \<lbrace> R\<heavy_comma> (y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=\<open>Some TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
-      $y op_set_var G
+      op_set_var G
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
@@ -431,7 +431,7 @@ lemma "__set_new_var_noty_rule__":
      \<lbrace> R\<heavy_comma> (y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=None] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
-      $y op_set_var G
+      op_set_var G
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 

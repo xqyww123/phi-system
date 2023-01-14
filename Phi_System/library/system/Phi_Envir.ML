@@ -1,11 +1,11 @@
-(*  Title:      Phi_Basics.ML
+(*  Title:      Phi_Envir.ML
 
 Basic supports for the nu-system.
 
 *)
 infix 0 MP MP_BY
 
-signature PHI_BASICS = sig
+signature PHI_ENVIR = sig
   exception NDBG of thm
 
   val under_programming_environ : Proof.context -> bool
@@ -32,7 +32,7 @@ signature PHI_BASICS = sig
 
 end
 
-structure Phi_Basics : PHI_BASICS = struct
+structure Phi_Envir : PHI_ENVIR = struct
 open Thm Term HOLogic Phi_Help
 exception NDBG of thm
 

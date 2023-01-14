@@ -167,7 +167,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_specs post_process def_cons
                          |> Drule.strip_imp_concl
           in
             stat
-              |> Proof.map_context (Phi_Basics.put_thesis goal_proc)
+              |> Proof.map_context (Phi_Envir.put_thesis goal_proc)
 
           end
 
@@ -291,7 +291,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_var
                          |> Drule.strip_imp_concl
           in
             stat
-              |> Proof.map_context (Phi_Basics.put_thesis goal_proc)
+              |> Proof.map_context (Phi_Envir.put_thesis goal_proc)
 
           end
         fun post_process' binding int lthy th =
@@ -348,13 +348,13 @@ fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE 
 fun gen_finish_proc prep_term qed spec int stat =
   let
     val ctxt_ = Proof.context_of stat
-    val goal = Phi_Basics.get_thesis ctxt_
+    val goal = Phi_Envir.get_thesis ctxt_
     val mode = Phi_Working_Mode.working_mode_on1 ctxt_ (Thm.term_of goal)
   in stat
   |> Proof.map_context (dec_blk_level #> snd)
   |> Proof.map_context_result (fn ctxt_pre1 =>
       let
-        val sequent_pre1 = Phi_Basics.the_programming_sequent' ctxt_pre1
+        val sequent_pre1 = Phi_Envir.the_programming_sequent' ctxt_pre1
         val (ctxt,sequent) =
           if Thm.no_prems sequent_pre1
           then (ctxt_pre1,sequent_pre1)
@@ -411,7 +411,7 @@ fun gen_finish_proc prep_term qed spec int stat =
           (* |> invoke_Block_End_Hook *)
           |> Phi_Sys.cast desired_nu
           |> swap
-          ||> Phi_Basics.exit_programming_environ
+          ||> Phi_Envir.exit_programming_environ
         (*The transformation shall generate a poof obligation*)
       end
     )
@@ -457,7 +457,7 @@ end
 
 fun prove_prem int stat =
   let open Proof
-    val specthm = Phi_Basics.the_state_sequent stat
+    val specthm = Phi_Envir.the_state_sequent stat
     val goal = Thm.prop_of specthm
                 |> Logic.dest_implies |> #1 (* |> dest_premise_tag |> mk_Trueprop *)
     fun after_qed (ctxt',[[th]]) stat =
@@ -471,7 +471,7 @@ fun prove_prem int stat =
                     #> (fn ctxt => Phi_Processor.process_no_input (ctxt, th RS specthm))
                     #> apfst (Config.put Phi_Reasoner.auto_level original_auto_level)
                     #> swap)
-             |-> Phi_Basics.set_state_sequent
+             |-> Phi_Envir.set_state_sequent
       end
   in
     stat |> Phi_Sys.setup_proof (print_results int) Proof_Context.mode_schematic false ""
@@ -496,7 +496,7 @@ fun gen_begin_block prep_attr bindings int stat =
   let open Proof
     val ctxt = context_of stat
 
-    val is_top = not (Phi_Basics.under_programming_environ ctxt) orelse is_backward_mode stat
+    val is_top = not (Phi_Envir.under_programming_environ ctxt) orelse is_backward_mode stat
     val normalize_tac =
           REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt @{thms Action_Tag_I Argument_I allI impI}))
     val stat =
@@ -509,7 +509,7 @@ fun gen_begin_block prep_attr bindings int stat =
     val sequent =
           if is_top
           then #goal (Proof.raw_goal stat)
-          else Phi_Basics.the_state_sequent stat
+          else Phi_Envir.the_state_sequent stat
                   |> Tactic.rule_by_tactic ctxt normalize_tac
     val stat = (if is_top then enter_forward (assert_backward stat) else stat)
                   |> begin_block
@@ -564,7 +564,7 @@ fun gen_begin_block prep_attr bindings int stat =
                 |> apply (Method.Basic (fn _ => Method.SIMPLE_METHOD (Seq.single o gen_sequent)),
                           Position.no_range)
                 |> Seq.the_result "never fail"
-         else Phi_Basics.set_state_sequent (gen_sequent sequent) stat
+         else Phi_Envir.set_state_sequent (gen_sequent sequent) stat
       end
 
     val bindings_given = map (fn (b,attrs) =>
@@ -592,7 +592,7 @@ fun gen_begin_block prep_attr bindings int stat =
                           SOME [Drule.mk_term (Thm.cterm_of ctxt goal)])
             |> #initial_sequent mode blk_name (Thm.cterm_of ctxt arg)
             |> swap)
-      |-> Phi_Basics.enter_programming_environ
+      |-> Phi_Envir.enter_programming_environ
 (*      |> Generic_Variable_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end
@@ -612,7 +612,7 @@ fun clean_values (ctxt,sequent) =
 
 val statement_cmd =
   Phi_Processor.powerful_process_p >> (fn f => fn stat =>
-    stat |> Phi_Basics.map_state_sequent clean_values
+    stat |> Phi_Envir.map_state_sequent clean_values
          |> f
   )
 

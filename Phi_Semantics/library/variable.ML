@@ -38,7 +38,7 @@ fun declare_rule pos rule =
    in Context.proof_map (Phi_Reasoner.add_intro_rule pos 1000 ([pattern], []) rule)
   end
 
-fun variable_assigner b (ctxt,sequent) =
+fun variable_assigner' b (ctxt,sequent) =
   let
   val iname = Variable.intern_fixed ctxt (Binding.name_of b)
   val existed = find_Var iname (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
@@ -60,8 +60,9 @@ fun variable_assigner b (ctxt,sequent) =
               [declare_rule (Binding.pos_of b)])
           end
   end
+val variable_assigner : Generic_Variable_Access.assigner = ("var", variable_assigner')
 
-fun variable_declarer TY b (ctxt,sequent) =
+fun variable_declarer' TY b (ctxt,sequent) =
   let
     val ([vname],ctxt) = Proof_Context.add_fixes [(b, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
     val ctxt = Generic_Variable_Access.bind_local_vals
@@ -73,12 +74,11 @@ fun variable_declarer TY b (ctxt,sequent) =
       [declare_rule (Binding.pos_of b)])
   end
 
-val variable_assigner_id = \<^here>
+fun variable_declarer TY : Generic_Variable_Access.assigner = ("new_var", variable_declarer' TY) 
 
 val _ = Theory.setup (
    Generic_Variable_Access.register_assigner
-     ("var", \<^type_name>\<open>varname\<close>, "to declare a new variable",
-                (variable_assigner_id, variable_assigner))
+     ("var", \<^type_name>\<open>varname\<close>, "to declare a new variable", variable_assigner)
 #> Phi_Processor.setup_global
     \<^binding>\<open>declare_variable\<close> 5000 [\<^prop_pattern>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>]
     (fn (ctxt,sequent) => \<^keyword>\<open>var\<close> |--
@@ -95,11 +95,33 @@ val _ = Theory.setup (
                                                  \Please use syntax \<open>var name :: type\<close> to indicate\
                                                  \the semantic types of the variables."
                                       else Thm.cterm_of ctxt (@{const None (TY)})))
-            |> uncurry (map2 (fn vs => fn TY => map (fn V => (V, (\<^here>, variable_declarer TY))) vs))
+            |> uncurry (map2 (fn vs => fn TY => map (fn V => (V, variable_declarer TY)) vs))
             |> flat
       in Generic_Variable_Access.assignment assigners (ctxt,sequent) end
    )) ""
 )
+
+
+(*
+fun process_arguments_to_variables (ctxt, sequent) =
+  let
+    val items = Phi_Syntax.strip_separations
+                      (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
+         |> filter (fn (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const (\<^const_name>\<open>Val\<close>, _) $ _ $ _))
+                         => true
+                     | _ => false)
+         |> map_index I
+         |> map_filter (fn (_, (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _
+                                  $ (Const (\<^const_name>\<open>Val\<close>, _)
+                                      $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (N, _))
+                                      $ _)))
+                              => Variable.revert_fixed ctxt N
+                         | (_, (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _
+                                  $ (Const (\<^const_name>\<open>Val\<close>, _)
+                                      $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (N, _))
+                                      $ _)))
+  in ()
+  end *)
 
 (* ) *)
 

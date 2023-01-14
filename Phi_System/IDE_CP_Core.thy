@@ -57,7 +57,7 @@ subsubsection \<open>Syntax\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
 ML_file \<open>library/system/Phi_Working_Mode.ML\<close>
-ML_file \<open>library/system/Phi_Basics.ML\<close>
+ML_file \<open>library/system/Phi_Envir.ML\<close>
 
 
 section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
@@ -1574,7 +1574,7 @@ subsubsection \<open>Constructive\<close>
 
 \<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt, sequent) => Phi_App_Rules.parser >> (fn thms => fn _ =>
-    let open Phi_Basics
+    let open Phi_Envir
     val apps = Phi_App_Rules.app_rules ctxt thms
     val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
     in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
@@ -1671,7 +1671,7 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 \<phi>processor set_\<phi>this 999 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
 \<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
   let
-    val ctxt' = Phi_Basics.update_programming_sequent' sequent ctxt
+    val ctxt' = Phi_Envir.update_programming_sequent' sequent ctxt
   in
     raise Bypass (SOME(ctxt', sequent))
   end)\<close>

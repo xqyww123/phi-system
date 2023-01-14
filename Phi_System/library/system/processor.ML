@@ -54,7 +54,7 @@ signature NU_PROCESSOR = sig
 end
 
 structure Phi_Processor : NU_PROCESSOR = struct
-open Thm Phi_Basics
+open Thm Phi_Envir
 
 exception Bypass of context_state option
 type binding = Binding.binding
@@ -172,15 +172,15 @@ fun powerful_process toks stat =
             (internal_process (ctxt,sequent) --| Scan.catch Parse.eof) toks
               |> (fn ((ctxt,sequent),_) => (sequent,ctxt))
           )
-      |-> Phi_Basics.set_state_sequent
+      |-> Phi_Envir.set_state_sequent
     handle Process_State_Call' (toks,(ctxt,sequent),f) =>
               powerful_process toks (stat |> Proof.map_context (K ctxt)
-                                          |> Phi_Basics.set_state_sequent sequent
+                                          |> Phi_Envir.set_state_sequent sequent
                                           |> f)
          | Terminate_Process' (toks,(ctxt,sequent),f) =>
               (Scan.catch Parse.eof toks;
                stat |> Proof.map_context (K ctxt)
-                    |> Phi_Basics.set_state_sequent sequent
+                    |> Phi_Envir.set_state_sequent sequent
                     |> f)
   end
 

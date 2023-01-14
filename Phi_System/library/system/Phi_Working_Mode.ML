@@ -117,7 +117,7 @@ fun generic_existential_generalization cast vars spec stat =
   else
 
 fun eliminate_term ctxt xs thm =
-  let open Phi_Basics Phi_Syntax Phi_Help
+  let open Phi_Envir Phi_Syntax Phi_Help
     val tm = Thm.prop_of thm
     val vs = map (dest_Free o Thm.term_of) xs;
     val bads = Term.fold_aterms (fn t as Free v =>
