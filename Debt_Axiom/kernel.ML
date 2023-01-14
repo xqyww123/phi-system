@@ -50,8 +50,9 @@ fun instantiate_type N N' B RN AN thy =
       val (R,A) = (Const (RN, T --> T'), Const (AN, T' --> T))
       val ax = Logic.mk_conjunction (Logic.mk_equals (A $ (R $ v), v),
                                      Logic.mk_equals (R $ (A $ u), u))
-  in thy |> Theory.add_deps_type N
-         |> Theory.add_deps_const RN |> Theory.add_deps_const AN
+  in thy |> Theory.add_deps_global "" ((Defs.Type ,N ), args) [((Defs.Type,N'), args)]
+         |> Theory.add_deps_global "" ((Defs.Const,RN), args) [((Defs.Type,N ), args)]
+         |> Theory.add_deps_global "" ((Defs.Const,AN), args) [((Defs.Type,N ), args)]
          |> Theory.add_axiom (Proof_Context.init_global thy) (B, ax)
   end
 

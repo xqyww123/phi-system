@@ -10,7 +10,7 @@ text \<open>Debt Axiom provides an approach to safely declare an axiom early, bu
   They are recorded in a ledger so we name them, \<^emph>\<open>debt axioms\<close>.
   A ML kernel validates the certificate and especially it does not depend on
   any declared debt axioms, so the certification is valid and it is a safe way to declare axioms.
-  The ML kernel is tiny, consisting of 28 lines of code only, and depending only on
+  The ML kernel is tiny, consisting of 30 lines of code only, and depending only on
   Isabelle's kernel.
 
   It resembles Locale which enables local assumptions, but we do not use locales and they are
@@ -123,5 +123,8 @@ discharge_debt_axiom mk_int_inj : mk_int_inj'
 
 print_debt_axiom \<comment> \<open>Good job! No debt axiom is recorded.\<close>
 
+
+text \<open>It rejects impredicativeness properly thanking to the circular dependence checking by
+  Isabelle's kernel.\<close>
 
 end
