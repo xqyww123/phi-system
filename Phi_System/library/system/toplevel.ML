@@ -349,7 +349,7 @@ fun gen_finish_proc prep_term qed spec int stat =
   let
     val ctxt_ = Proof.context_of stat
     val goal = Phi_Envir.get_thesis ctxt_
-    val mode = Phi_Working_Mode.working_mode_on1 ctxt_ (Thm.term_of goal)
+    val mode = Phi_Working_Mode.mode ctxt_
   in stat
   |> Proof.map_context (dec_blk_level #> snd)
   |> Proof.map_context_result (fn ctxt_pre1 =>
