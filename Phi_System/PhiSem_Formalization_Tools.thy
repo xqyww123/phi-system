@@ -1205,7 +1205,7 @@ subsection \<open>Exception\<close>
 
 text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
 
-definition throw :: \<open>(ERR,unit) proc'\<close>
+definition throw :: \<open>(ABNM,unit) proc'\<close>
   where \<open>throw raw = det_lift (Exception raw)\<close>
 
 lemma throw_\<phi>app[intro!]:
@@ -1215,7 +1215,7 @@ lemma throw_\<phi>app[intro!]:
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
 
-definition op_try :: "'ret proc \<Rightarrow> (ERR sem \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
+definition op_try :: "'ret proc \<Rightarrow> (ABNM sem \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'}
                                        | Exception v s' \<Rightarrow> g v s'
                                        | PartialCorrect \<Rightarrow> {PartialCorrect}

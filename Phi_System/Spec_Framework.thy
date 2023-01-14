@@ -102,7 +102,7 @@ lemma is_singletonI'':
 section \<open>Specification of Monadic States\<close>
 
 definition StrictStateTy :: "('ret sem \<Rightarrow> rassn)
-                          \<Rightarrow> (ERR sem \<Rightarrow> rassn)
+                          \<Rightarrow> (ABNM sem \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Exception val x \<Rightarrow> x \<in> E val
@@ -110,7 +110,7 @@ definition StrictStateTy :: "('ret sem \<Rightarrow> rassn)
                               | PartialCorrect \<Rightarrow> False}"
 
 definition LooseStateTy  :: "('ret sem \<Rightarrow> rassn)
-                          \<Rightarrow> (ERR sem \<Rightarrow> rassn)
+                          \<Rightarrow> (ABNM sem \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Exception val x \<Rightarrow> x \<in> E val
@@ -217,7 +217,7 @@ section \<open>Specification of Computation\<close>
 definition \<phi>Procedure :: "'ret proc
                         \<Rightarrow> assn
                         \<Rightarrow> ('ret sem \<Rightarrow> assn)
-                        \<Rightarrow> (ERR sem \<Rightarrow> assn)
+                        \<Rightarrow> (ABNM sem \<Rightarrow> assn)
                         \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _)" [101,2,2,2] 100)
   where "\<phi>Procedure f T U E \<longleftrightarrow>

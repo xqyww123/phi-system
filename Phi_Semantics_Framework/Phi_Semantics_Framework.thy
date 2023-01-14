@@ -124,13 +124,13 @@ subsection \<open>Exception\<close>
 
 virtual_datatype \<phi>empty_abnormal
 
-unspecified_type ERR
-unspecified_type ERR_N
-type_synonym 'T error_entry = \<open>(ERR_N, ERR, 'T) Virtual_Datatype.Field\<close>
+unspecified_type ABNM
+unspecified_type ABNM_N
+type_synonym 'T abnormal_entry = \<open>(ABNM_N, ABNM, 'T) Virtual_Datatype.Field\<close>
 
-consts ERR_CONS_OF :: \<open>ERR \<Rightarrow> ERR_N\<close>
+consts ABNM_CONS_OF :: \<open>ABNM \<Rightarrow> ABNM_N\<close>
 
-interpretation \<phi>empty_abnormal ERR_CONS_OF by standard simp
+interpretation \<phi>empty_abnormal ABNM_CONS_OF by standard simp
 
 
 subsection \<open>All-in-One Semantics\<close>
@@ -300,7 +300,7 @@ declare [ [typedef_overloaded] ]
 
 datatype 'ret state =
       Success \<open>'ret sem\<close> (resource: resource)
-    | Exception \<open>ERR sem\<close> (resource: resource)
+    | Exception \<open>ABNM sem\<close> (resource: resource)
     | Invalid | PartialCorrect
 
 declare [ [typedef_overloaded = false] ]
