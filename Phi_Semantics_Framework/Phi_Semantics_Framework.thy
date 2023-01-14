@@ -21,12 +21,11 @@ theory Phi_Semantics_Framework
     and "<with>" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"
 begin
 
-subsection \<open>Empty Semantic of Computation States\<close>
 
 text \<open>The section provides the initial empty semantics of computation states
   serving as the base for any further substantial formalization.\<close>
 
-subsubsection \<open>Type\<close>
+subsection \<open>Type\<close>
 
 virtual_datatype \<phi>empty_ty \<comment> \<open>base of type formalization\<close>
 
@@ -39,7 +38,7 @@ consts TY_CONS_OF :: \<open>TY \<Rightarrow> TY_N\<close>
 interpretation \<phi>empty_ty TY_CONS_OF by standard simp
 
 
-subsubsection \<open>Value\<close>
+subsection \<open>Value\<close>
 
 virtual_datatype \<phi>empty_val :: sep_magma \<comment> \<open>base of value formalization\<close>
 
@@ -54,7 +53,43 @@ instance VAL :: sep_magma ..
 interpretation \<phi>empty_val VAL_CONS_OF by standard simp
 
 
-subsubsection \<open>Resource\<close>
+subsubsection \<open>Deep Representation of Values of Variable Length\<close>
+
+
+class VALs =
+  fixes to_vals    :: \<open>'a \<Rightarrow> VAL list\<close>
+    and from_vals  :: \<open>VAL list \<Rightarrow> 'a\<close>
+    and vals_arity :: \<open>'a itself \<Rightarrow> nat\<close>
+  assumes from_to_vals[simp]: \<open>from_vals (to_vals x) = x\<close>
+    and length_to_vals[simp]: \<open>length (to_vals x) = vals_arity TYPE('a)\<close>
+
+instantiation VAL :: VALs begin
+definition to_vals_VAL    :: \<open>VAL \<Rightarrow> VAL list\<close>   where \<open>to_vals_VAL v  = [v]\<close>
+definition from_vals_VAL  :: \<open>VAL list \<Rightarrow> VAL\<close>   where \<open>from_vals_VAL  = hd\<close>
+definition vals_arity_VAL :: \<open>VAL itself \<Rightarrow> nat\<close> where \<open>vals_arity_VAL _ = 1\<close>
+instance by standard (simp_all add: to_vals_VAL_def from_vals_VAL_def vals_arity_VAL_def)
+end
+
+instantiation prod :: (VALs, VALs) VALs begin
+
+definition to_vals_prod    :: \<open>'a \<times> 'b \<Rightarrow> VAL list\<close>
+  where \<open>to_vals_prod v = (case v of (v1,v2) \<Rightarrow> to_vals v1 @ to_vals v2)\<close>
+definition from_vals_prod  :: \<open>VAL list \<Rightarrow> 'a \<times> 'b\<close>
+  where \<open>from_vals_prod vs = (@v. to_vals v = vs)\<close>
+definition vals_arity_prod :: \<open>('a \<times> 'b) itself \<Rightarrow> nat\<close>
+  where \<open>vals_arity_prod _ = vals_arity TYPE('a) + vals_arity TYPE('b)\<close>
+
+instance apply standard
+  apply (clarsimp simp add: to_vals_prod_def from_vals_prod_def)
+  apply (smt (verit) Eps_case_prod_eq Eps_cong append_eq_append_conv from_to_vals length_to_vals split_def)
+  by (clarsimp simp add: to_vals_prod_def vals_arity_prod_def)
+
+end
+  
+
+
+
+subsection \<open>Resource\<close>
 
 resource_space \<phi>empty_res \<comment> \<open>base of resource formalization\<close>
 
@@ -85,7 +120,20 @@ lemma Valid_Resource_mult_homo:
   by (simp add: times_fun sep_disj_fun_def Resource_Validator_mult_homo; blast)
 
 
-subsubsection \<open>All-in-One Semantics\<close>
+subsection \<open>Exception\<close>
+
+virtual_datatype \<phi>empty_abnormal
+
+unspecified_type ERR
+unspecified_type ERR_N
+type_synonym 'T error_entry = \<open>(ERR_N, ERR, 'T) Virtual_Datatype.Field\<close>
+
+consts ERR_CONS_OF :: \<open>ERR \<Rightarrow> ERR_N\<close>
+
+interpretation \<phi>empty_abnormal ERR_CONS_OF by standard simp
+
+
+subsection \<open>All-in-One Semantics\<close>
 
 debt_axiomatization Well_Type :: \<open>TY \<Rightarrow> VAL set\<close>
   where Well_Type_disjoint: \<open>ta \<noteq> tb \<Longrightarrow> Well_Type ta \<inter> Well_Type tb = {}\<close>
@@ -108,7 +156,7 @@ lemma Well_Type_unique:
 abbreviation \<open>Valid_Type T \<equiv> Inhabited (Well_Type T)\<close>
 
 
-subsubsection \<open>Fiction\<close>
+subsection \<open>Fiction\<close>
 
 unspecified_type FIC
 unspecified_type FIC_N

@@ -12,33 +12,33 @@ subsection \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype \<phi>min_ty = \<phi>empty_ty +
+virtual_datatype \<phi>machine_int_ty = \<phi>empty_ty +
   T_int     :: nat \<comment> \<open>in unit of bits\<close>
 
-context \<phi>min_ty begin
+context \<phi>machine_int_ty begin
 abbreviation int where \<open>int \<equiv> T_int.mk\<close>
 end
 
 debt_axiomatization T_int :: \<open>nat type_entry\<close>
-  where \<phi>min_ty_ax: \<open>\<phi>min_ty TY_CONS_OF T_int\<close>
+  where \<phi>machine_int_ty_ax: \<open>\<phi>machine_int_ty TY_CONS_OF T_int\<close>
 
-interpretation \<phi>min_ty TY_CONS_OF _ _ T_int using \<phi>min_ty_ax .
+interpretation \<phi>machine_int_ty TY_CONS_OF _ _ T_int using \<phi>machine_int_ty_ax .
 
-hide_fact \<phi>min_ty_ax \<phi>min_ty_axioms \<phi>min_ty_names_def \<phi>min_ty_def
-  \<phi>min_ty_prjs_axioms \<phi>min_ty_prjs_def \<phi>min_ty.axioms \<phi>min_ty.intro
-  \<phi>min_ty__names.\<phi>min_ty_names_axioms \<phi>min_ty_prjs.axioms
+hide_fact \<phi>machine_int_ty_ax \<phi>machine_int_ty_axioms \<phi>machine_int_ty_names_def \<phi>machine_int_ty_def
+  \<phi>machine_int_ty_prjs_axioms \<phi>machine_int_ty_prjs_def \<phi>machine_int_ty.axioms \<phi>machine_int_ty.intro
+  \<phi>machine_int_ty__names.\<phi>machine_int_ty_names_axioms \<phi>machine_int_ty_prjs.axioms
 
 subsubsection \<open>Value\<close>
 
-virtual_datatype \<phi>min_val = \<phi>empty_val +
+virtual_datatype \<phi>machine_int_val = \<phi>empty_val +
   V_int     :: \<open>nat \<times> nat\<close> \<comment> \<open>bits \<times> value\<close>
 
 debt_axiomatization V_int :: \<open>(nat \<times> nat) value_entry\<close>
-  where \<phi>min_val_ax: \<open>\<phi>min_val VAL_CONS_OF V_int\<close>
+  where \<phi>machine_int_val_ax: \<open>\<phi>machine_int_val VAL_CONS_OF V_int\<close>
 
-interpretation \<phi>min_val VAL_CONS_OF _ _ V_int using \<phi>min_val_ax .
+interpretation \<phi>machine_int_val VAL_CONS_OF _ _ V_int using \<phi>machine_int_val_ax .
 
-hide_fact \<phi>min_val_ax \<phi>min_val_axioms
+hide_fact \<phi>machine_int_val_ax \<phi>machine_int_val_axioms
 
 subsubsection \<open>Semantics\<close>
 
