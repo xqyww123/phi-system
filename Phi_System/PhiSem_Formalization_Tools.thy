@@ -18,13 +18,12 @@ definition \<phi>M_assume :: \<open>bool \<Rightarrow> unit proc\<close>
 definition \<phi>M_getV_raw :: \<open>(VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
   where \<open>\<phi>M_getV_raw VDT_dest v F = F (VDT_dest (sem.dest v))\<close>
 
-definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
+definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y::VALs proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
     (\<phi>M_assert (sem.dest v \<in> Well_Type TY) \<ggreater> F (VDT_dest (sem.dest v)))\<close>
 
 definition \<phi>M_caseV :: \<open>(VAL sem \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr,'ret) proc'\<close>
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of sem (a1,a2) \<Rightarrow> F (sem a1) (sem a2))\<close>
-
 
 subsection \<open>Reasoning for Elementary Constructions\<close>
 
@@ -227,11 +226,9 @@ lemma implies_part:
 end
 
 
-subsection \<open>Resources using Fine\<close>
+subsection \<open>Fictions\<close>
 
-subsubsection \<open>Locale for Resource\<close>
-
-subsubsection \<open>Basic Locale for Interp of Fine Resource\<close>
+subsubsection \<open>Basic Fiction\<close>
 
 locale basic_fiction =
    R: resource Res Valid
@@ -421,7 +418,7 @@ lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace>
 end
 
 
-subsubsection \<open>Permission Interp\<close>
+subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
    R: resource Res Valid
@@ -585,7 +582,7 @@ end *)
 
 
 
-subsubsection \<open>Identity Interp\<close>
+subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction =
    R: resource Res
@@ -877,8 +874,22 @@ lemma raw_unit_assertion_implies[simp]:
 
 end
 
+subsubsection \<open>Identity Fiction\<close>
 
-subsubsection \<open>Sharing Interp\<close>
+locale identity_fiction_for_partial_mapping_resource =
+   R: partial_map_resource Valid Res
++  fictional_project_inject INTERPRET Fic \<open>R.raw_basic_fiction \<F>_it\<close>
+for Valid :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) set"
+and Res :: "('key \<Rightarrow> 'val option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'val option) fiction_entry"
+begin
+
+sublocale identity_fiction Valid Res Fic ..
+
+end
+
+
+subsubsection \<open>Permission Fiction\<close>
 
 locale share_fiction_for_partial_mapping_resource =
    R: partial_map_resource Valid Res
@@ -1144,7 +1155,7 @@ lemma raw_unit_assertion_implies''[simp]:
 
 end
 
-subsubsection \<open>Locale For Sharing Interp\<close>
+subsubsection \<open>Permission Fiction\<close>
 
 locale share_fiction_for_partial_mapping_resource2 =
    R: partial_map_resource2 Valid Res
@@ -1203,19 +1214,17 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<he
 
 subsection \<open>Exception\<close>
 
-text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
-
-definition throw :: \<open>(ABNM,unit) proc'\<close>
+definition throw :: \<open>(ABNM,'ret::VALs) proc'\<close>
   where \<open>throw raw = det_lift (Exception raw)\<close>
 
 lemma throw_\<phi>app[intro!]:
   \<open> (\<And>v. Remove_Values (X v) (X' v))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (throw excep :: 'ret::VALs proc) \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Imply_def
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
 
-definition op_try :: "'ret proc \<Rightarrow> (ABNM sem \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
+definition op_try :: "'ret proc \<Rightarrow> (ABNM sem \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'}
                                        | Exception v s' \<Rightarrow> g v s'
                                        | PartialCorrect \<Rightarrow> {PartialCorrect}
@@ -1312,7 +1321,7 @@ subsubsection \<open>Legacy\<close>
 definition \<phi>M_get_res :: \<open>(resource \<Rightarrow> 'a) \<Rightarrow> ('a \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>M_get_res R F = (\<lambda>res. F (R res) res)\<close>
 
-definition \<phi>M_get_res_entry :: \<open>(resource \<Rightarrow> ('k \<rightharpoonup> 'a)) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
+definition \<phi>M_get_res_entry :: \<open>(resource \<Rightarrow> ('k \<rightharpoonup> 'a)) \<Rightarrow> 'k \<Rightarrow> ('a \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc\<close>
   where \<open>\<phi>M_get_res_entry R k F =
     \<phi>M_get_res R (\<lambda>res. case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
@@ -1321,7 +1330,7 @@ definition \<phi>M_set_res :: \<open> (('x \<Rightarrow> 'x) \<Rightarrow> resou
 
 subsubsection \<open>Getters\<close>
 
-paragraph \<open>fine_resource\<close>
+paragraph \<open>basic resource\<close>
 
 definition (in resource) \<phi>R_get_res :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>R_get_res F = (\<lambda>res. F (get res) res)\<close>
@@ -1334,7 +1343,7 @@ lemma (in resource) \<phi>R_get_res[intro!]:
 
 paragraph \<open>nonsepable_mono_resource\<close>
 
-definition (in nonsepable_mono_resource) \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
+definition (in nonsepable_mono_resource) \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc\<close>
   where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nonsepable.dest v')
                                                       | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
@@ -1347,7 +1356,7 @@ lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
 paragraph \<open>partial_map_resource\<close>
 
 definition (in partial_map_resource)
-    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
+    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc\<close>
   where \<open>\<phi>R_get_res_entry k F =
     \<phi>R_get_res (\<lambda>res. case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
@@ -1357,9 +1366,18 @@ lemma (in partial_map_resource) \<phi>R_get_res_entry[intro!]:
 \<Longrightarrow> \<phi>R_get_res_entry k F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
+subparagraph \<open>identity_fiction_for_partial_mapping_resource\<close>
+
+lemma (in identity_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[intro!]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
+      \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
+      \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  by (clarsimp simp add: \<phi>expns expand simp del: set_mult_expn del: subsetI;
+      rule R.\<phi>R_get_res_entry[where v=v]; simp)
+
 subparagraph \<open>share_fiction_for_partial_mapping_resource\<close>
-
-
 
 lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
@@ -1375,7 +1393,7 @@ lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[intr
 paragraph \<open>partial_map_resource2\<close>
 
 definition (in partial_map_resource2)
-    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
+    \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc\<close>
   where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
     case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
@@ -1421,7 +1439,21 @@ lemma (in partial_map_resource) \<phi>R_set_res:
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := u))}) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__" del: set_mult_expn)
 
-lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_set_res":
+lemma (in identity_fiction_for_partial_mapping_resource) \<phi>R_set_res[intro!]:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
+\<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def
+          expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
+          expand_subj[where x=\<open>1(k \<mapsto> u)\<close>, simplified] simp del: set_mult_expn
+          del: subsetI)
+  subgoal for r res
+    by (rule R.\<phi>R_set_res[where k=k and res=res], assumption,
+        simp add: \<phi>Res_Spec_mult_homo, assumption) .
+
+lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
@@ -1524,7 +1556,7 @@ definition (in mapping_resource)
     \<phi>R_allocate_res_entry :: \<open>('key \<Rightarrow> bool)
                            \<Rightarrow> 'val
                            \<Rightarrow> ('key \<Rightarrow> 'ret proc)
-                           \<Rightarrow> 'ret proc\<close>
+                           \<Rightarrow> 'ret::VALs proc\<close>
   where \<open>\<phi>R_allocate_res_entry P init F =
     \<phi>R_get_res (\<lambda>res.
     let k = (@k. res k = 1 \<and> P k)

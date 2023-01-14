@@ -101,7 +101,7 @@ lemma is_singletonI'':
 
 section \<open>Specification of Monadic States\<close>
 
-definition StrictStateTy :: "('ret sem \<Rightarrow> rassn)
+definition StrictStateTy :: "('ret::VALs sem \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM sem \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
@@ -109,7 +109,7 @@ definition StrictStateTy :: "('ret sem \<Rightarrow> rassn)
                               | Invalid \<Rightarrow> False
                               | PartialCorrect \<Rightarrow> False}"
 
-definition LooseStateTy  :: "('ret sem \<Rightarrow> rassn)
+definition LooseStateTy  :: "('ret::VALs sem \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM sem \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
@@ -143,7 +143,7 @@ lemma StrictStateTy_elim[elim]:
 
 lemma StrictStateTy_intro[intro]:
     " x \<in> T v \<Longrightarrow> Success v x \<in> !\<S> T E"
-    " x \<in> E v \<Longrightarrow> Exception v x \<in> !\<S> T E"
+    " x \<in> E a \<Longrightarrow> Exception a x \<in> !\<S> T E"
   by simp_all
 
 lemma LooseStateTy_E[elim]:
@@ -156,7 +156,7 @@ lemma LooseStateTy_E[elim]:
 
 lemma LooseStateTy_I[intro]:
   "x \<in> T v \<Longrightarrow> Success v x \<in> \<S> T E"
-  "x \<in> E v \<Longrightarrow> Exception v x \<in> \<S> T E"
+  "x \<in> E a \<Longrightarrow> Exception a x \<in> \<S> T E"
   "PartialCorrect \<in> \<S> T E"
   by simp_all
 
@@ -214,7 +214,7 @@ abbreviation COMMA
 
 section \<open>Specification of Computation\<close>
 
-definition \<phi>Procedure :: "'ret proc
+definition \<phi>Procedure :: "'ret::VALs proc
                         \<Rightarrow> assn
                         \<Rightarrow> ('ret sem \<Rightarrow> assn)
                         \<Rightarrow> (ABNM sem \<Rightarrow> assn)

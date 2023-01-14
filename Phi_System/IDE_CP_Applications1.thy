@@ -6,6 +6,7 @@ text \<open>In this part, we build simple applications based on IDE-CP directly,
 theory IDE_CP_Applications1
   imports Phi_Types
   keywords "val" :: quasi_command
+  abbrevs "<vals>" = "\<^bold>v\<^bold>a\<^bold>l\<^bold>s"
 begin
 
 section \<open>Value \& Its Settings\<close>
@@ -192,6 +193,13 @@ thm "__fast_assign_val__"[OF "__fast_assign_val__", OF "__fast_assign_val__", OF
 
 ML_file \<open>library/additions/local_value.ML\<close>
 
+
+subsection \<open>Deep Representation of Values\<close>
+
+abbreviation Vals :: \<open>(VAL, 'a) \<phi> \<Rightarrow> (VAL list, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l\<^bold>s _" [51] 50)
+  where \<open>Vals \<equiv> List_Item\<close>
+
+translations "(CONST Vals T) \<^emph> (CONST Vals U)" == "XCONST Vals (T \<^emph> U)"
 
 (*
 TODO: fix this feature

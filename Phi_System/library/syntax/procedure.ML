@@ -185,7 +185,7 @@ fun ex_fastype_of TM =
   handle TERM _ => dummyT_sem
 
 fun abstract_return_vals name _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
-      = (\<^term>\<open>undefined :: unreachable sem\<close>,
+      = (\<^term>\<open>sem unreachable :: unreachable sem\<close>,
          Abs (name, \<^typ>\<open>unreachable sem\<close>, term))
 | abstract_return_vals name R2L term =
   let

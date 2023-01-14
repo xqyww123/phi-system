@@ -23,7 +23,7 @@ fun eliminate_term ctxt xs thm =
     if null bads then thm
     else if can Phi_Syntax.dest_CurrentConstruction (Thm.prop_of thm)
     then let
-        val rule = Proof_Context.get_thm ctxt "introduce_Ex"
+        val rule = @{thm introduce_Ex}
         fun generalize x thm =
           case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,E)
             => thm RS Drule.infer_instantiate ctxt [(("S",0), Thm.cterm_of ctxt (absfree x E))] rule
@@ -34,8 +34,8 @@ fun eliminate_term ctxt xs thm =
         val (_,_,_,Q,E) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm)
         val bad_Q = collect Q
         val bad_E = collect E
-        val rule_Q = Proof_Context.get_thm ctxt "introduce_Ex_pending"
-        val rule_E = Proof_Context.get_thm ctxt "introduce_Ex_pending_E"
+        val rule_Q = @{thm introduce_Ex_pending}
+        val rule_E = @{thm introduce_Ex_pending_E}
         fun generalize_Q x thm =
           case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,Q,_)
             => thm RS

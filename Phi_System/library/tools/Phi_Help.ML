@@ -87,6 +87,8 @@ signature PHI_HELP = sig
   val comp_rule : Proof.context -> bool -> thm -> thm -> thm
   val comp_rule_incr_left  : Proof.context -> thm -> thm -> thm
   val comp_rule_incr_right : Proof.context -> thm -> thm -> thm
+
+  val debug_RS : Proof.context -> thm -> thm -> thm
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -289,6 +291,14 @@ fun comp_rule ctxt incremented th1 th2 =
 
 fun comp_rule_incr_left  ctxt th1 th2 = comp_rule ctxt true (Drule.incr_indexes th2 th1) th2
 fun comp_rule_incr_right ctxt th1 th2 = comp_rule ctxt true th1 (Drule.incr_indexes th1 th2)
+
+fun debug_RS ctxt tha thb =
+  (case Seq.chop 2 (Thm.biresolution (SOME (Config.put Pattern.unify_trace_failure true ctxt))
+                                     false [(false, tha)] 1 thb) of
+    ([th], _) => Thm.solve_constraints th
+  | ([], _) => raise THM ("RSN: no unifiers", 1, [tha, thb])
+  | _ => raise THM ("RSN: multiple unifiers", 1, [tha, thb]));
+
 
 end
 

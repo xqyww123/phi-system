@@ -20,7 +20,7 @@ paragraph \<open>Branch\<close>
 
 definition op_if :: "'ret proc
                   \<Rightarrow> 'ret proc
-                  \<Rightarrow> (VAL,'ret) proc'"
+                  \<Rightarrow> (VAL,'ret::VALs) proc'"
   where "op_if brT brF v =
     \<phi>M_getV bool V_bool.dest v (\<lambda>c. (if c then brT else brF))"
 
@@ -109,7 +109,7 @@ proc "if":
       and [\<phi>reason 9999 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If C (Y\<^sub>T ?v) (Y\<^sub>F ?v) \<longmapsto> ?Y @action branch_convergence\<close>]:
               \<open>(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If C (Y\<^sub>T v) (Y\<^sub>F v) \<longmapsto> Y v @action branch_convergence)\<close>
   input  \<open>X\<close>
-  output \<open>Y (ret::'a sem)\<close>
+  output \<open>Y (ret::'a::VALs sem)\<close>
   throws \<open>\<lambda>e. E e + (E\<^sub>T e \<^bold>s\<^bold>u\<^bold>b\<^bold>j C) + (E\<^sub>F e \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> C)\<close>
   \<medium_left_bracket> C branch brT brF \<medium_right_bracket>. .
 

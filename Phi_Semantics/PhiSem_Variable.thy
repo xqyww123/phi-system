@@ -60,7 +60,7 @@ interpretation \<phi>min_fic INTERPRET FIC_var using \<phi>min_fic_ax .
 
 hide_fact \<phi>min_fic_ax \<phi>min_fic_axioms
 
-interpretation FIC_var: identity_fiction \<open>{vars. finite (dom vars)}\<close> R_var FIC_var ..
+interpretation FIC_var: identity_fiction_for_partial_mapping_resource \<open>{vars. finite (dom vars)}\<close> R_var FIC_var ..
 
 
 section \<open>\<phi>-Types\<close>
@@ -97,6 +97,18 @@ lemma Var_cast_\<phi>app[\<phi>overload cast]:
   unfolding Argument_def
   unfolding Imply_def View_Shift_def
   by (clarsimp simp add: \<phi>expns, metis)
+
+lemma RawInited_Var_identity_eq:
+  \<open>(raw \<Ztypecolon> Var v Identity) = (nonsepable raw \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
+lemma UnInited_Var_identity_eq:
+  \<open>(\<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[v]) = (nonsepable None \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
+lemma Inited_Var_identity_eq:
+  \<open>(raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[v] Identity) = (nonsepable (Some raw) \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
 
 (* lemma Var_ExTyp[simp]:
   \<open>(x \<Ztypecolon> Var vname (ExTyp T)) = (\<exists>*a. x a \<Ztypecolon> Var vname (T a))\<close>
@@ -199,7 +211,7 @@ section \<open>Instructions\<close>
 
 subsection \<open>Variable Operations\<close>
 
-definition \<phi>M_get_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
+definition \<phi>M_get_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
   where "\<phi>M_get_var vname TY F = R_var.\<phi>R_get_res_entry vname ((\<lambda>val.
             \<phi>M_assert (val \<in> Some ` Well_Type TY) \<ggreater> F (the val)) o nonsepable.dest)"
 
@@ -215,7 +227,7 @@ definition op_set_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL,unit) proc
 definition op_free_var :: "varname \<Rightarrow> unit proc"
   where "op_free_var vname = R_var.\<phi>R_set_res (\<lambda>f. f(vname := None))"
 
-definition op_var_scope' :: "TY option \<Rightarrow> (varname \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
+definition op_var_scope' :: "TY option \<Rightarrow> (varname \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
   where "op_var_scope' TY F =
     R_var.\<phi>R_allocate_res_entry (\<lambda>v. varname.type v = TY) (Some (nonsepable None)) F"
 
@@ -223,18 +235,16 @@ lemma \<phi>M_get_var[intro!]:
   \<open> v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<longmapsto> Y \<rbrace>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_var var TY F \<lbrace> v \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] Identity \<longmapsto> Y \<rbrace>\<close>
-  unfolding \<phi>Procedure_\<phi>Res_Spec \<phi>M_get_var_def
-  by (clarsimp simp add: \<phi>expns FIC_var.expand simp del: set_mult_expn del: subsetI,
-      rule R_var.\<phi>R_get_res_entry[where v=\<open>nonsepable (Some v)\<close>]; simp)
+  unfolding \<phi>M_get_var_def Inited_Var_identity_eq
+  by (rule FIC_var.\<phi>R_get_res_entry; simp)
 
 lemma \<phi>M_set_var[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c R_var.\<phi>R_set_res (\<lambda>f. f(vname \<mapsto> nonsepable (Some u)))
       \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. u \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[vname] Identity \<rbrace>\<close>
-  unfolding \<phi>Procedure_\<phi>Res_Spec
-  by (clarsimp simp add: \<phi>expns FIC_var.expand[where x=\<open>1(vname \<mapsto> nonsepable v)\<close>]
-                                FIC_var.expand_subj[where x=\<open>1(vname \<mapsto> nonsepable (Some u))\<close>]
-               simp del: set_mult_expn del: subsetI;
-      rule R_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp)
+  unfolding Inited_Var_identity_eq
+  unfolding RawInited_Var_identity_eq
+  thm FIC_var.\<phi>R_set_res
+  by (rule FIC_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp)
 
 lemma op_get_var''_\<phi>app:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
@@ -386,7 +396,7 @@ proc op_var_scope:
     \<medium_left_bracket> premises [\<phi>reason]
       BLK to_Identity op_free_var
     \<medium_right_bracket>.
-    \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>.
+    \<medium_left_bracket> to_Identity op_free_var throw[where 'ret=unit] \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
 subsection \<open>Implementing IDE-CP Generic Variable Access\<close>
@@ -394,8 +404,8 @@ subsection \<open>Implementing IDE-CP Generic Variable Access\<close>
 lemma "__new_var_rule__":
   \<open> (\<And>var. varname.type var \<equiv> TY
               \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g var \<lbrace> R\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var]\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
-                             \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any )
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) TY g \<lbrace> R\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+                             \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a::VALs) TY g \<lbrace> R\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   \<medium_left_bracket> premises G
     op_var_scope[where TY=\<open>TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>] G \<medium_right_bracket>.
   \<medium_right_bracket>. .
@@ -412,9 +422,9 @@ lemma "__set_var_rule__":
 lemma "__set_new_var_rule__":
   \<open> (\<And>var. varname.type var \<equiv> Some TY
               \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g var \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
-                             \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any )
+                             \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any ))
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) (Some TY) (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a::VALs) (Some TY) (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
      \<lbrace> R\<heavy_comma> (y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=\<open>Some TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
@@ -425,9 +435,9 @@ lemma "__set_new_var_rule__":
 lemma "__set_new_var_noty_rule__":
   \<open> (\<And>var. varname.type var \<equiv> None
               \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g var \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
-                             \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any )
+                             \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any))
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a) None (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a::VALs) None (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
      \<lbrace> R\<heavy_comma> (y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=None] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]

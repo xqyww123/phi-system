@@ -63,6 +63,13 @@ class VALs =
   assumes from_to_vals[simp]: \<open>from_vals (to_vals x) = x\<close>
     and length_to_vals[simp]: \<open>length (to_vals x) = vals_arity TYPE('a)\<close>
 
+instantiation unit :: VALs begin
+definition to_vals_unit    :: \<open>unit \<Rightarrow> VAL list\<close>   where \<open>to_vals_unit v  = []\<close>
+definition from_vals_unit  :: \<open>VAL list \<Rightarrow> unit\<close>   where \<open>from_vals_unit _ = ()\<close>
+definition vals_arity_unit :: \<open>unit itself \<Rightarrow> nat\<close> where \<open>vals_arity_unit _ = 0\<close>
+instance by standard (simp_all add: vals_arity_unit_def to_vals_unit_def)
+end
+
 instantiation VAL :: VALs begin
 definition to_vals_VAL    :: \<open>VAL \<Rightarrow> VAL list\<close>   where \<open>to_vals_VAL v  = [v]\<close>
 definition from_vals_VAL  :: \<open>VAL list \<Rightarrow> VAL\<close>   where \<open>from_vals_VAL  = hd\<close>
@@ -230,7 +237,7 @@ text \<open>Arguments and Returns are wrapped by sem type.
 
 datatype 'a sem = sem (dest: 'a)
 hide_const (open) dest
-typedecl unreachable
+
 
 lemma sem_value_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (sem x))\<close> by (metis sem.exhaust)
 lemma sem_value_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (sem x))\<close> by (metis sem.exhaust)
@@ -263,6 +270,20 @@ lemma \<phi>V_simps[simp]:
      apply (cases v, simp)
      apply (cases v, simp)
     apply simp apply simp apply simp .
+
+
+datatype unreachable = unreachable
+
+instantiation unreachable :: VALs begin
+definition to_vals_unreachable :: \<open>unreachable \<Rightarrow> VAL list\<close> where \<open>to_vals_unreachable _ = undefined\<close>
+definition from_vals_unreachable :: \<open>VAL list \<Rightarrow> unreachable\<close> where \<open>from_vals_unreachable _ = unreachable\<close>
+definition vals_arity_unreachable :: \<open>unreachable itself \<Rightarrow> nat\<close>
+  where \<open>vals_arity_unreachable _ = length (undefined::VAL list)\<close>
+
+instance apply standard
+  apply (simp_all add: to_vals_unreachable_def from_vals_unreachable_def vals_arity_unreachable_def)
+  by (metis unreachable.exhaust)
+end
 
 
 subsubsection \<open>Monadic Formalization\<close>
@@ -299,7 +320,7 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
 declare [ [typedef_overloaded] ]
 
 datatype 'ret state =
-      Success \<open>'ret sem\<close> (resource: resource)
+      Success \<open>'ret::VALs sem\<close> (resource: resource)
     | Exception \<open>ABNM sem\<close> (resource: resource)
     | Invalid | PartialCorrect
 
@@ -356,7 +377,7 @@ type_synonym 'ret proc = "resource \<Rightarrow> 'ret state set"
 type_synonym ('arg,'ret) proc' = "'arg sem \<Rightarrow> 'ret proc"
 
 
-definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"  ("_ \<bind>/ _" [75,76] 75)
+definition bind :: "'a::VALs proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b::VALs proc"  ("_ \<bind>/ _" [75,76] 75)
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
                                            | Exception v x \<Rightarrow> {Exception v x}
                                            | Invalid \<Rightarrow> {Invalid}

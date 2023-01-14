@@ -225,11 +225,11 @@ val procedure : working_mode =
                                                     (current_arg_T, desired_arg_T)) Envir.init
                         then sequent'
                         else if current_arg_T = @{typ "unreachable"}
-                        then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_when_unreachable"
+                        then sequent' RS @{thm "\<phi>return_when_unreachable"}
                         else if can (Pattern.unify_types (Context.Proof ctxt)
                                   (HOLogic.mk_prodT (current_arg_T, @{typ unit}), desired_arg_T))
                                   Envir.init
-                        then sequent' RS Proof_Context.get_thm ctxt "\<phi>return_additional_unit"
+                        then sequent' RS @{thm "\<phi>return_additional_unit"}
                         else error ("Current block expects returning "^
                                 Syntax.string_of_typ ctxt desired_arg_T^
                                 " but it actually returns "^

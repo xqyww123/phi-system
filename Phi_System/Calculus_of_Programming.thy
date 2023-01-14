@@ -47,7 +47,7 @@ abbreviation Programming_CurrentConstruction ("\<^bold>c\<^bold>u\<^bold>r\<^bol
 abbreviation View_Shift_CurrentConstruction ("\<^bold>v\<^bold>i\<^bold>e\<^bold>w _ [_]/ \<^bold>i\<^bold>s _" [1000,1000,11] 10)
   where \<open>View_Shift_CurrentConstruction \<equiv> CurrentConstruction view_shift_mode\<close>
 
-definition PendingConstruction :: " 'ret proc
+definition PendingConstruction :: " 'ret::VALs proc
                                   \<Rightarrow> resource
                                   \<Rightarrow> assn
                                   \<Rightarrow> ('ret sem \<Rightarrow> assn)
