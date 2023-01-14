@@ -71,7 +71,7 @@ structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
 (*** Value Context ***)
 
 type value_context =
-        ( term list (*values of arguments, of type 'a sem_value.*)
+        ( term list (*values of arguments, of type 'a sem.*)
         * term Symtab.table (*binding table of local values,
                               key: external name of the fixed variable*)
         * int (*a counter assigning identities to intermediate local values*))
@@ -223,10 +223,10 @@ fun register_value_spec_thms pos rules =
       val pattern = 
             (case Thm.prop_of rule
                of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
-                                  $ (Const (\<^const_name>\<open>sem_value.dest\<close>, T2) $ V)
+                                  $ (Const (\<^const_name>\<open>sem.dest\<close>, T2) $ V)
                                   $ TM )
                 => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
-                                   $ (Const (\<^const_name>\<open>sem_value.dest\<close>, T2) $ V)
+                                   $ (Const (\<^const_name>\<open>sem.dest\<close>, T2) $ V)
                                    $ Var (("spec",i), fastype_of TM) )
             | _ => raise THM ("Not a specification theorem of a value!", 0, [rule]))
     in (rule, pos, 1000, [pattern], []) end
@@ -241,21 +241,21 @@ fun gen_default_process' clean pos (ctxt,sequent) =
     val args = rules |> map (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
-                                  $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ V)
+                                  $ (Const (\<^const_name>\<open>sem.dest\<close>, _) $ V)
                                   $ _)
                  => revert_frees V
              | _ => error "Internal Bug q34v6 nu89p")
     val binds = rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
-                                  $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ V)
+                                  $ (Const (\<^const_name>\<open>sem.dest\<close>, _) $ V)
                                   $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Free (N,_) $ _))
                  => SOME (Variable.revert_fixed ctxt N, revert_frees V)
              | _ => NONE)
     val binds'= rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
-                                  $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _) $ (V as Free (N,_)))
+                                  $ (Const (\<^const_name>\<open>sem.dest\<close>, _) $ (V as Free (N,_)))
                                   $ _)
                  => SOME (Variable.revert_fixed ctxt N, revert_frees V)
              | _ => NONE)

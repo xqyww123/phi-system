@@ -14,7 +14,7 @@ definition op_sel :: "TY \<Rightarrow> (VAL \<times> VAL \<times> VAL, VAL) proc
     \<phi>M_getV bool V_bool.dest vc (\<lambda>c.
     \<phi>M_getV TY id va (\<lambda>a.
     \<phi>M_getV TY id vb (\<lambda>b.
-    Return (sem_value (if c then b else a)))))))"
+    Return (sem (if c then b else a)))))))"
 
 paragraph \<open>Branch\<close>
 
@@ -27,15 +27,15 @@ definition op_if :: "'ret proc
 paragraph \<open>While Loop\<close>
 
 inductive SemDoWhile :: "VAL proc \<Rightarrow> resource \<Rightarrow> unit state \<Rightarrow> bool" where
-  "Success (sem_value (V_bool.mk False)) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (sem_value ()) res)"
-| "Success (sem_value (V_bool.mk True)) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
+  "Success (sem (V_bool.mk False)) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (sem ()) res)"
+| "Success (sem (V_bool.mk True)) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
 | "Exception v e \<in> f s \<Longrightarrow> SemDoWhile f s (Exception v e)"
 | "PartialCorrect \<in> f s \<Longrightarrow> SemDoWhile f s PartialCorrect"
 | "Invalid \<in> f s \<Longrightarrow> SemDoWhile f s Invalid"
 
-lemma "\<nexists> y. SemDoWhile ((\<lambda>res. Return (sem_value (V_bool.mk True)) res) :: VAL proc) res y"
+lemma "\<nexists> y. SemDoWhile ((\<lambda>res. Return (sem (V_bool.mk True)) res) :: VAL proc) res y"
   apply rule apply (elim exE) subgoal for y
-    apply (induct "((\<lambda>res. Return (sem_value (V_bool.mk True)) (res::resource)) :: VAL proc)" res y
+    apply (induct "((\<lambda>res. Return (sem (V_bool.mk True)) (res::resource)) :: VAL proc)" res y
            rule: SemDoWhile.induct)
        apply (simp_all add: Return_def det_lift_def) . .
 
@@ -62,7 +62,7 @@ lemma SemDoWhile_deterministic2:
 paragraph \<open>Recursion\<close>
 
 inductive SemRec :: "(('a,'a) proc' \<Rightarrow> ('a,'a) proc')
-            \<Rightarrow> 'a sem_value \<Rightarrow> resource \<Rightarrow> 'a state set \<Rightarrow> bool"
+            \<Rightarrow> 'a sem \<Rightarrow> resource \<Rightarrow> 'a state set \<Rightarrow> bool"
 where
   SemRec_I0: "(\<And>g. F g x res = y) \<Longrightarrow> SemRec F x res y"
 | SemRec_IS: "SemRec (F o F) x res y \<Longrightarrow> SemRec F x res y"
@@ -104,12 +104,12 @@ lemma branch_\<phi>app:
 
 proc "if":
   assumes C: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c cond \<lbrace> X \<longmapsto> X1\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l C \<Ztypecolon> \<bool> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-      and brT: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e   C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brT \<lbrace> X1 \<longmapsto> Y\<^sub>T (ret::'a sem_value) \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T \<close>
-      and brF: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brF \<lbrace> X1 \<longmapsto> Y\<^sub>F (ret::'a sem_value) \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>F \<close>
+      and brT: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e   C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brT \<lbrace> X1 \<longmapsto> Y\<^sub>T (ret::'a sem) \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T \<close>
+      and brF: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brF \<lbrace> X1 \<longmapsto> Y\<^sub>F (ret::'a sem) \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>F \<close>
       and [\<phi>reason 9999 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w If C (Y\<^sub>T ?v) (Y\<^sub>F ?v) \<longmapsto> ?Y @action branch_convergence\<close>]:
               \<open>(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If C (Y\<^sub>T v) (Y\<^sub>F v) \<longmapsto> Y v @action branch_convergence)\<close>
   input  \<open>X\<close>
-  output \<open>Y (ret::'a sem_value)\<close>
+  output \<open>Y (ret::'a sem)\<close>
   throws \<open>\<lambda>e. E e + (E\<^sub>T e \<^bold>s\<^bold>u\<^bold>b\<^bold>j C) + (E\<^sub>F e \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> C)\<close>
   \<medium_left_bracket> C branch brT brF \<medium_right_bracket>. .
 

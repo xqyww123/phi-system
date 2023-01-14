@@ -224,38 +224,38 @@ subsection \<open>Formalization of Computation\<close>
 
 subsubsection \<open>Explicit Annotation of Semantic Arguments and Returns\<close>
 
-text \<open>Arguments and Returns are wrapped by sem_value type.
+text \<open>Arguments and Returns are wrapped by sem type.
   For sure this wrap is not necessary, but it helps the programming framework and syntax parser
   to recognize which entity is an argument or a return.\<close>
 
-datatype 'a sem_value = sem_value (dest: 'a)
+datatype 'a sem = sem (dest: 'a)
 hide_const (open) dest
 typedecl unreachable
 
-lemma sem_value_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (sem_value x))\<close> by (metis sem_value.exhaust)
-lemma sem_value_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (sem_value x))\<close> by (metis sem_value.exhaust)
-lemma sem_value_All: \<open>(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (sem_value x))\<close>
+lemma sem_value_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (sem x))\<close> by (metis sem.exhaust)
+lemma sem_value_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (sem x))\<close> by (metis sem.exhaust)
+lemma sem_value_All: \<open>(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (sem x))\<close>
 proof
-  fix x :: 'a assume A: \<open>(\<And>x. PROP P x)\<close> then show \<open>PROP P (sem_value x)\<close> .
+  fix x :: 'a assume A: \<open>(\<And>x. PROP P x)\<close> then show \<open>PROP P (sem x)\<close> .
 next
-  fix x :: \<open>'a sem_value\<close> assume A: \<open>\<And>x. PROP P (sem_value x)\<close>
-  from \<open>PROP P (sem_value (sem_value.dest x))\<close> show "PROP P x" by simp
+  fix x :: \<open>'a sem\<close> assume A: \<open>\<And>x. PROP P (sem x)\<close>
+  from \<open>PROP P (sem (sem.dest x))\<close> show "PROP P x" by simp
 qed
 
-abbreviation \<open>\<phi>V_none \<equiv> sem_value ()\<close>
-definition \<open>\<phi>V_pair x y = sem_value (sem_value.dest x, sem_value.dest y)\<close>
-definition \<open>\<phi>V_fst x = map_sem_value fst x\<close>
-definition \<open>\<phi>V_snd x = map_sem_value snd x\<close>
-abbreviation \<open>\<phi>V_nil \<equiv> sem_value []\<close>
-definition \<open>\<phi>V_cons h l = sem_value (sem_value.dest h # sem_value.dest l)\<close>
-definition \<open>\<phi>V_hd l = sem_value (hd (sem_value.dest l))\<close>
-definition \<open>\<phi>V_tl l = sem_value (tl (sem_value.dest l))\<close>
+abbreviation \<open>\<phi>V_none \<equiv> sem ()\<close>
+definition \<open>\<phi>V_pair x y = sem (sem.dest x, sem.dest y)\<close>
+definition \<open>\<phi>V_fst x = map_sem fst x\<close>
+definition \<open>\<phi>V_snd x = map_sem snd x\<close>
+abbreviation \<open>\<phi>V_nil \<equiv> sem []\<close>
+definition \<open>\<phi>V_cons h l = sem (sem.dest h # sem.dest l)\<close>
+definition \<open>\<phi>V_hd l = sem (hd (sem.dest l))\<close>
+definition \<open>\<phi>V_tl l = sem (tl (sem.dest l))\<close>
 
 lemma \<phi>V_simps[simp]:
   \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
   \<open>\<phi>V_fst (\<phi>V_pair u y) = u\<close>
   \<open>\<phi>V_snd (\<phi>V_pair x u) = u\<close>
-  \<open>\<phi>V_cons (sem_value h) (sem_value l) = sem_value (h#l)\<close>
+  \<open>\<phi>V_cons (sem h) (sem l) = sem (h#l)\<close>
   \<open>\<phi>V_hd (\<phi>V_cons hv lv) = hv\<close>
   \<open>\<phi>V_tl (\<phi>V_cons hv lv) = lv\<close>
   unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def
@@ -299,8 +299,8 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
 declare [ [typedef_overloaded] ]
 
 datatype 'ret state =
-      Success \<open>'ret sem_value\<close> (resource: resource)
-    | Exception \<open>VAL sem_value\<close> (resource: resource)
+      Success \<open>'ret sem\<close> (resource: resource)
+    | Exception \<open>ERR sem\<close> (resource: resource)
     | Invalid | PartialCorrect
 
 declare [ [typedef_overloaded = false] ]
@@ -353,7 +353,7 @@ is expressed by returning \<open>Invalid\<close>.
  \<close>
 
 type_synonym 'ret proc = "resource \<Rightarrow> 'ret state set"
-type_synonym ('arg,'ret) proc' = "'arg sem_value \<Rightarrow> 'ret proc"
+type_synonym ('arg,'ret) proc' = "'arg sem \<Rightarrow> 'ret proc"
 
 
 definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"  ("_ \<bind>/ _" [75,76] 75)

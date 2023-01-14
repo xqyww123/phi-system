@@ -7,7 +7,7 @@ It is invoked once there is an anonymous value in the argument specification,
 or once the return specification is not a lambda abstraction nor an atom (a variable or a constant).
 For translation in argument specification, all anonymous values are replaces by a free variable
   generated automatically.
-For return specification, it collects all semantic values have \<^typ>\<open>'a sem_value\<close> in the spec,
+For return specification, it collects all semantic values have \<^typ>\<open>'a sem\<close> in the spec,
   and wrap the spec by a lambda abstraction over the semantic values, using the pair encoding
   of multi-return-values.
 *)
@@ -74,29 +74,29 @@ fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = tru
   | need_translate_arg _ = false
 
 
-fun dest_prodT (Type (\<^type_name>\<open>sem_value\<close>, [Type ("Product_Type.prod", [A, B])]))
-      = (Type (\<^type_name>\<open>sem_value\<close>, [A]), Type (\<^type_name>\<open>sem_value\<close>, [B]))
+fun dest_prodT (Type (\<^type_name>\<open>sem\<close>, [Type ("Product_Type.prod", [A, B])]))
+      = (Type (\<^type_name>\<open>sem\<close>, [A]), Type (\<^type_name>\<open>sem\<close>, [B]))
   | dest_prodT (Type ("dummy", [])) = (dummyT,dummyT)
   | dest_prodT T = raise TYPE("bug #fsahofew", [T], [])
-fun mk_prodT (Type (\<^type_name>\<open>sem_value\<close>, [T1]), Type (\<^type_name>\<open>sem_value\<close>, [T2]))
-      = Type (\<^type_name>\<open>sem_value\<close>, [HOLogic.mk_prodT (T1,T2)])
+fun mk_prodT (Type (\<^type_name>\<open>sem\<close>, [T1]), Type (\<^type_name>\<open>sem\<close>, [T2]))
+      = Type (\<^type_name>\<open>sem\<close>, [HOLogic.mk_prodT (T1,T2)])
   | mk_prodT (T1,T2) = raise TYPE("bug #geasr89", [T1,T2], [])
 
 fun mk_tuple _ [] = \<^term>\<open>\<phi>V_none\<close>
   | mk_tuple _ [tm] = tm
-  | mk_tuple (Type (\<^type_name>\<open>sem_value\<close>, [T])::tys) (tm::tms)
-      = Const (\<^const_name>\<open>\<phi>V_pair\<close>, Type (\<^type_name>\<open>sem_value\<close>, [fst (HOLogic.dest_prodT T)])
-                                 --> Type (\<^type_name>\<open>sem_value\<close>, [snd (HOLogic.dest_prodT T)])
-                                 --> Type (\<^type_name>\<open>sem_value\<close>, [T]))
+  | mk_tuple (Type (\<^type_name>\<open>sem\<close>, [T])::tys) (tm::tms)
+      = Const (\<^const_name>\<open>\<phi>V_pair\<close>, Type (\<^type_name>\<open>sem\<close>, [fst (HOLogic.dest_prodT T)])
+                                 --> Type (\<^type_name>\<open>sem\<close>, [snd (HOLogic.dest_prodT T)])
+                                 --> Type (\<^type_name>\<open>sem\<close>, [T]))
           $ tm $ mk_tuple tys tms
   | mk_tuple tys tms = raise TYPE ("bug #vq4t4", tys, tms)
 
-(* fun mk_prodT []  = \<^typ>\<open>unit sem_value\<close>
+(* fun mk_prodT []  = \<^typ>\<open>unit sem\<close>
   | mk_prodT (Type ("dummy", []) :: _) = dummyT
   | mk_prodT [T] = T
-  | mk_prodT (Type (\<^type_name>\<open>sem_value\<close>, [T])::Ts) =
-      (case mk_prodT Ts of Type (\<^type_name>\<open>sem_value\<close>, [Ts']) =>
-          Type (\<^type_name>\<open>sem_value\<close>, [HOLogic.mk_prodT (T,Ts')]))
+  | mk_prodT (Type (\<^type_name>\<open>sem\<close>, [T])::Ts) =
+      (case mk_prodT Ts of Type (\<^type_name>\<open>sem\<close>, [Ts']) =>
+          Type (\<^type_name>\<open>sem\<close>, [HOLogic.mk_prodT (T,Ts')]))
   | mk_prodT T = raise TYPE("bug #g4389h", T, []) *)
 
 fun nth_project [_] 0 term = term
@@ -112,11 +112,11 @@ let
 
 fun collect_vals Vs (v as Const (\<^const_name>\<open>anonymous\<close>, _)) = v::Vs
   | collect_vals Vs (v as Const (\<^const_syntax>\<open>anonymous\<close>, _)) = v::Vs
-  | collect_vals Vs (v as Free (_, Type(\<^type_name>\<open>sem_value\<close>, _))) = insert (op = ) v Vs
-  | collect_vals Vs (v as Var (_, Type(\<^type_name>\<open>sem_value\<close>, _)))  = insert (op = ) v Vs
-  | collect_vals Vs (v as Const ("_type_constraint_", Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
+  | collect_vals Vs (v as Free (_, Type(\<^type_name>\<open>sem\<close>, _))) = insert (op = ) v Vs
+  | collect_vals Vs (v as Var (_, Type(\<^type_name>\<open>sem\<close>, _)))  = insert (op = ) v Vs
+  | collect_vals Vs (v as Const ("_type_constraint_", Type("fun", [Type(\<^type_name>\<open>sem\<close>, _),_])) $ _)
       = insert (op = ) v Vs
-  | collect_vals Vs (v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>sem_value\<close>, _) $ _))
+  | collect_vals Vs (v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>sem\<close>, _) $ _))
       = insert (op = ) v Vs
   | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ (v as Const (\<^const_name>\<open>anonymous\<close>, _)))
       = v::Vs
@@ -136,19 +136,19 @@ fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous\<close>, _))
   | map_ret Tys i (j, Vs, Const (\<^const_syntax>\<open>anonymous\<close>, _))
       = (j + 1, Vs, nth_project Tys j (Bound i))
   | map_ret Tys i (j, Vs, v as Const ("_type_constraint_",
-                                      Type("fun", [Type(\<^type_name>\<open>sem_value\<close>, _),_])) $ _)
+                                      Type("fun", [Type(\<^type_name>\<open>sem\<close>, _),_])) $ _)
       = (case AList.lookup (op =) Vs v
            of SOME k => (j, Vs, nth_project Tys k (Bound i))
             | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
-  | map_ret Tys i (j, Vs, v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>sem_value\<close>, _) $ _))
+  | map_ret Tys i (j, Vs, v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>sem\<close>, _) $ _))
       = (case AList.lookup (op =) Vs v
            of SOME k => (j, Vs, nth_project Tys k (Bound i))
             | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
-  | map_ret Tys i (j, Vs, v as Free (_, Type(\<^type_name>\<open>sem_value\<close>, _)))
+  | map_ret Tys i (j, Vs, v as Free (_, Type(\<^type_name>\<open>sem\<close>, _)))
       = (case AList.lookup (op =) Vs v
            of SOME k => (j, Vs, nth_project Tys k (Bound i))
             | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
-  | map_ret Tys i (j, Vs, v as Var (_, Type(\<^type_name>\<open>sem_value\<close>, _)))
+  | map_ret Tys i (j, Vs, v as Var (_, Type(\<^type_name>\<open>sem\<close>, _)))
       = (case AList.lookup (op =) Vs v
            of SOME k => (j, Vs, nth_project Tys k (Bound i))
             | NONE => (j + 1, (v,j)::Vs, nth_project Tys j (Bound i)))
@@ -179,14 +179,14 @@ fun map_ret Tys i (j, Vs, Const (\<^const_name>\<open>anonymous\<close>, _))
   | map_ret _ _ jVX = jVX
 in (collect_vals, map_ret) end
 
-val dummyT_sem = Type (\<^type_name>\<open>sem_value\<close>, [dummyT])
+val dummyT_sem = Type (\<^type_name>\<open>sem\<close>, [dummyT])
 fun ex_fastype_of TM =
   let val T = fastype_of TM in if T = dummyT then dummyT_sem else T end
   handle TERM _ => dummyT_sem
 
 fun abstract_return_vals name _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
-      = (\<^term>\<open>undefined :: unreachable sem_value\<close>,
-         Abs (name, \<^typ>\<open>unreachable sem_value\<close>, term))
+      = (\<^term>\<open>undefined :: unreachable sem\<close>,
+         Abs (name, \<^typ>\<open>unreachable sem\<close>, term))
 | abstract_return_vals name R2L term =
   let
     val (collect_vals, map_ret) = gen_collect_and_map R2L
@@ -194,7 +194,7 @@ fun abstract_return_vals name _ (term as Const (\<^const_name>\<open>Groups.zero
     val Tys = fold_rev (fn T => (fn [] => [T]
                                   | L as T'::_ => mk_prodT (T,T') :: L))
               (map ex_fastype_of Vs) []
-    val T = if null Tys then \<^typ>\<open>unit sem_value\<close> else hd Tys
+    val T = if null Tys then \<^typ>\<open>unit sem\<close> else hd Tys
   in (mk_tuple Tys Vs, Abs(name, T, #3(map_ret Tys 0 (0,[],term))))
   end
 

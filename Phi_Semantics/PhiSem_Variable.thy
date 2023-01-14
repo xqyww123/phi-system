@@ -204,7 +204,7 @@ definition \<phi>M_get_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL \<Rig
             \<phi>M_assert (val \<in> Some ` Well_Type TY) \<ggreater> F (the val)) o nonsepable.dest)"
 
 definition op_get_var :: "varname \<Rightarrow> TY \<Rightarrow> VAL proc"
-  where "op_get_var vname TY = \<phi>M_get_var vname TY (\<lambda>x. Return (sem_value x))"
+  where "op_get_var vname TY = \<phi>M_get_var vname TY (\<lambda>x. Return (sem x))"
 
 definition op_set_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL,unit) proc'"
   where "op_set_var vname TY v =

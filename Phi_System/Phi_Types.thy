@@ -81,7 +81,7 @@ text \<open>The system is a Classical Separation Logic.
   Therefore, we employ a `Black Hole' which can contain arbitrary resources to simulate the
     Intuitionistic Separation Logic\<close>
 
-abbreviation Black_Hole :: \<open>('FIC_N \<Rightarrow> 'FIC) set\<close>
+abbreviation Black_Hole :: \<open>(FIC_N \<Rightarrow> FIC) set\<close>
   where \<open>Black_Hole \<equiv> UNIV\<close>
 
 lemma UNIV_subty [\<phi>reason for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s UNIV \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:

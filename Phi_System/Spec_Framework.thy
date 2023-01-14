@@ -10,11 +10,11 @@ subsection \<open>Primitive \<phi>-Types\<close>
 
 subsubsection \<open>Value\<close>
 
-definition Val :: \<open>VAL sem_value \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
-  where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem_value.dest val \<in> (x \<Ztypecolon> T))\<close>
+definition Val :: \<open>VAL sem \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
+  where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem.dest val \<in> (x \<Ztypecolon> T))\<close>
 
 lemma Val_expn [\<phi>expns]:
-  \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem_value.dest val \<in> (x \<Ztypecolon> T))\<close>
+  \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem.dest val \<in> (x \<Ztypecolon> T))\<close>
   unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma Val_inhabited [\<phi>inhabitance_rule, elim!]:
@@ -101,16 +101,16 @@ lemma is_singletonI'':
 
 section \<open>Specification of Monadic States\<close>
 
-definition StrictStateTy :: "('ret sem_value \<Rightarrow> rassn)
-                          \<Rightarrow> (VAL sem_value \<Rightarrow> rassn)
+definition StrictStateTy :: "('ret sem \<Rightarrow> rassn)
+                          \<Rightarrow> (ERR sem \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Exception val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
                               | PartialCorrect \<Rightarrow> False}"
 
-definition LooseStateTy  :: "('ret sem_value \<Rightarrow> rassn)
-                          \<Rightarrow> (VAL sem_value \<Rightarrow> rassn)
+definition LooseStateTy  :: "('ret sem \<Rightarrow> rassn)
+                          \<Rightarrow> (ERR sem \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Exception val x \<Rightarrow> x \<in> E val
@@ -216,8 +216,8 @@ section \<open>Specification of Computation\<close>
 
 definition \<phi>Procedure :: "'ret proc
                         \<Rightarrow> assn
-                        \<Rightarrow> ('ret sem_value \<Rightarrow> assn)
-                        \<Rightarrow> (VAL sem_value \<Rightarrow> assn)
+                        \<Rightarrow> ('ret sem \<Rightarrow> assn)
+                        \<Rightarrow> (ERR sem \<Rightarrow> assn)
                         \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _)" [101,2,2,2] 100)
   where "\<phi>Procedure f T U E \<longleftrightarrow>
@@ -240,27 +240,6 @@ lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 subsubsection \<open>Syntax\<close>
 
 ML_file \<open>library/syntax/procedure.ML\<close>
-
-(*
-subsubsection \<open>Syntax\<close>
-
-parse_translation \<open> let
-  val typ_tag = Const (\<^type_syntax>\<open>proc\<close>, dummyT)
-        $ Const (\<^type_syntax>\<open>dummy\<close>, dummyT)
-        $ Free ("VAL", dummyT)
-        $ Const (\<^type_syntax>\<open>dummy\<close>, dummyT)
-        $ Const (\<^type_syntax>\<open>dummy\<close>, dummyT)
-  fun do_tag_E E = Const (\<^syntax_const>\<open>_constrain\<close>, dummyT) $ E $ typ_tag
-  fun tag_E (E as Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free _ $ _) = do_tag_E E
-    | tag_E (E as Const (\<^syntax_const>\<open>_constrain\<close>, _) $ _ $ _) = E
-    | tag_E E = do_tag_E E
-in [
-  ("\<^const>local.\<phi>Procedure", (fn ctxt => fn [f,T,U,E] =>
-    (Const("\<^const>local.\<phi>Procedure", dummyT) $ tag_E f $ T $ U $ E))),
-  ("\<^const>local.\<phi>Procedure_no_exception", (fn ctxt => fn [f,T,U] =>
-    (Const("\<^const>local.\<phi>Procedure_no_exception", dummyT) $ tag_E f $ T $ U)))
-] end\<close> *)
-
 
 section \<open>View Shift\<close>
 

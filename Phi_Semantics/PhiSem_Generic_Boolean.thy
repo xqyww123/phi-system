@@ -24,7 +24,7 @@ section \<open>Instructions\<close>
 definition op_not :: "(VAL, VAL) proc'"
   where "op_not v =
     \<phi>M_getV bool V_bool.dest v (\<lambda>v.
-    Return (sem_value (V_bool.mk (\<not> v)))
+    Return (sem (V_bool.mk (\<not> v)))
   )"
 
 definition op_and :: "(VAL \<times> VAL, VAL) proc'"
@@ -32,7 +32,7 @@ definition op_and :: "(VAL \<times> VAL, VAL) proc'"
     \<phi>M_caseV (\<lambda>va vb.
     \<phi>M_getV bool V_bool.dest va (\<lambda>v.
     \<phi>M_getV bool V_bool.dest vb (\<lambda>u.
-    Return (sem_value (V_bool.mk (v \<and> u)))
+    Return (sem (V_bool.mk (v \<and> u)))
   )))"
 
 definition op_or :: "(VAL \<times> VAL, VAL) proc'"
@@ -40,7 +40,7 @@ definition op_or :: "(VAL \<times> VAL, VAL) proc'"
     \<phi>M_caseV (\<lambda>va vb.
     \<phi>M_getV bool V_bool.dest va (\<lambda>v.
     \<phi>M_getV bool V_bool.dest vb (\<lambda>u.
-    Return (sem_value (V_bool.mk (v \<or> u)))
+    Return (sem (V_bool.mk (v \<or> u)))
   )))"
 
 definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -49,7 +49,7 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
     \<phi>M_getV TY id va (\<lambda>v.
     \<phi>M_getV TY id vb (\<lambda>u.
     (\<lambda>res. \<phi>M_assert (Can_EqCompare res u v) res) \<ggreater>
-    Return (sem_value (V_bool.mk (EqCompare u v)))
+    Return (sem (V_bool.mk (EqCompare u v)))
 )))"
 
 

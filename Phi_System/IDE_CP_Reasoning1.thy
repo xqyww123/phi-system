@@ -250,12 +250,12 @@ lemma apply_collect_clean_value:
 
 lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value True\<close>]:
   \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V @action collect_clean_value True
-\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d sem_value.dest v \<in> (x \<Ztypecolon> T) \<and> V @action collect_clean_value True\<close>
+\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d sem.dest v \<in> (x \<Ztypecolon> T) \<and> V @action collect_clean_value True\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value False\<close>]:
   \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V @action collect_clean_value False
-\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>a\<^bold>n\<^bold>d sem_value.dest v \<in> (x \<Ztypecolon> T) \<and> V
+\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>a\<^bold>n\<^bold>d sem.dest v \<in> (x \<Ztypecolon> T) \<and> V
     @action collect_clean_value False\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 
@@ -265,12 +265,12 @@ lemma [\<phi>reason 1100 for \<open>?S\<heavy_comma> ?X \<^bold>i\<^bold>m\<^bol
   unfolding Action_Tag_def using implies_right_prod .
 
 lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value True\<close>]:
-  \<open> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Void \<^bold>a\<^bold>n\<^bold>d sem_value.dest v \<in> (x \<Ztypecolon> T) \<and> True
+  \<open> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Void \<^bold>a\<^bold>n\<^bold>d sem.dest v \<in> (x \<Ztypecolon> T) \<and> True
     @action collect_clean_value True\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 
 lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value False\<close>]:
-  \<open> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>a\<^bold>n\<^bold>d sem_value.dest v \<in> (x \<Ztypecolon> T) \<and> True
+  \<open> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>a\<^bold>n\<^bold>d sem.dest v \<in> (x \<Ztypecolon> T) \<and> True
     @action collect_clean_value False\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 

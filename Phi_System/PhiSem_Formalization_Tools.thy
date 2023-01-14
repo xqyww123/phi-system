@@ -15,15 +15,15 @@ definition \<phi>M_assert :: \<open>bool \<Rightarrow> unit proc\<close>
 definition \<phi>M_assume :: \<open>bool \<Rightarrow> unit proc\<close>
   where \<open>\<phi>M_assume P = (\<lambda>s. if P then Return \<phi>V_none s else {PartialCorrect})\<close>
 
-definition \<phi>M_getV_raw :: \<open>(VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem_value \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
-  where \<open>\<phi>M_getV_raw VDT_dest v F = F (VDT_dest (sem_value.dest v))\<close>
+definition \<phi>M_getV_raw :: \<open>(VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
+  where \<open>\<phi>M_getV_raw VDT_dest v F = F (VDT_dest (sem.dest v))\<close>
 
-definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem_value \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
+definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Rightarrow> VAL sem \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
   where \<open>\<phi>M_getV TY VDT_dest v F =
-    (\<phi>M_assert (sem_value.dest v \<in> Well_Type TY) \<ggreater> F (VDT_dest (sem_value.dest v)))\<close>
+    (\<phi>M_assert (sem.dest v \<in> Well_Type TY) \<ggreater> F (VDT_dest (sem.dest v)))\<close>
 
-definition \<phi>M_caseV :: \<open>(VAL sem_value \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr,'ret) proc'\<close>
-  where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of sem_value (a1,a2) \<Rightarrow> F (sem_value a1) (sem_value a2))\<close>
+definition \<phi>M_caseV :: \<open>(VAL sem \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr,'ret) proc'\<close>
+  where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of sem (a1,a2) \<Rightarrow> F (sem a1) (sem a2))\<close>
 
 
 subsection \<open>Reasoning for Elementary Constructions\<close>
@@ -56,7 +56,7 @@ lemma \<phi>M_detail_right[intro!]: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c 
 
 lemma \<phi>M_getV_raw[intro!]:
    \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  )
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_raw VDT_dest (sem_value v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem_value v) A \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_raw VDT_dest (sem v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem v) A \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>M_getV_raw_def Premise_def
   by (clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
 
@@ -65,7 +65,7 @@ declare \<phi>M_getV_raw[where X=1, simplified, intro!]
 lemma \<phi>M_getV[intro!]:
    \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> <\<phi>expn> v \<in> Well_Type TY)
 \<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  )
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest (sem_value v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem_value v) A \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest (sem v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem v) A \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>M_getV_def Premise_def
   by (clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
 
@@ -1205,7 +1205,7 @@ subsection \<open>Exception\<close>
 
 text \<open>The opcode for throwing an exception is directly \<^term>\<open>Exception\<close>\<close>
 
-definition throw :: \<open>(VAL,unit) proc'\<close>
+definition throw :: \<open>(ERR,unit) proc'\<close>
   where \<open>throw raw = det_lift (Exception raw)\<close>
 
 lemma throw_\<phi>app[intro!]:
@@ -1215,7 +1215,7 @@ lemma throw_\<phi>app[intro!]:
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
 
-definition op_try :: "'ret proc \<Rightarrow> (VAL sem_value \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
+definition op_try :: "'ret proc \<Rightarrow> (ERR sem \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'}
                                        | Exception v s' \<Rightarrow> g v s'
                                        | PartialCorrect \<Rightarrow> {PartialCorrect}
@@ -1317,7 +1317,7 @@ definition \<phi>M_get_res_entry :: \<open>(resource \<Rightarrow> ('k \<rightha
     \<phi>M_get_res R (\<lambda>res. case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 definition \<phi>M_set_res :: \<open> (('x \<Rightarrow> 'x) \<Rightarrow> resource \<Rightarrow> resource) \<Rightarrow> ('x \<Rightarrow> 'x) \<Rightarrow> unit proc \<close>
-  where \<open>\<phi>M_set_res Updt F = (\<lambda>res. {Success (sem_value ()) (Updt F res)})\<close>
+  where \<open>\<phi>M_set_res Updt F = (\<lambda>res. {Success (sem ()) (Updt F res)})\<close>
 
 subsubsection \<open>Getters\<close>
 
@@ -1409,7 +1409,7 @@ subsubsection \<open>Setters\<close>
 paragraph \<open>fine_resource\<close>
 
 definition (in resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> unit proc\<close>
-  where \<open>\<phi>R_set_res F = (\<lambda>res. {Success (sem_value ()) (updt F res)})\<close>
+  where \<open>\<phi>R_set_res F = (\<lambda>res. {Success (sem ()) (updt F res)})\<close>
 
 paragraph \<open>partial_map_resource\<close>
 

@@ -15,7 +15,7 @@ subsection \<open>Removing Values\<close>
 
 text \<open>Given an assertion X, antecedent \<^term>\<open>Remove_Values X X'\<close>
   returns X' where all free value assertions \<^term>\<open>x \<Ztypecolon> Val raw T\<close> filtered out, where \<^term>\<open>raw\<close>
-  contains at least one free variable of \<^typ>\<open>'a sem_value\<close>.
+  contains at least one free variable of \<^typ>\<open>'a sem\<close>.
 
   It is typically used in exception. When a computation triggers an exception at state X,
     the state recorded in the exception is exactly X' where value assertions are filtered out.\<close>
@@ -86,7 +86,7 @@ fn (ctxt, sequent) =>
           $ R $ _
           $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ \<^Const>\<open>Val _ _ for raw _\<close>)
           $ _) = Thm.major_prem_of sequent
-    fun has_free_val (Free (_, Type (\<^type_name>\<open>sem_value\<close>, [_]))) = true
+    fun has_free_val (Free (_, Type (\<^type_name>\<open>sem\<close>, [_]))) = true
       | has_free_val (A $ B) = has_free_val A orelse has_free_val B
       | has_free_val (Abs (_,_,X)) = has_free_val X
       | has_free_val _ = false
@@ -110,13 +110,13 @@ text \<open>\<^prop>\<open>Extract_a_Value S_in S_out val_out\<close> removes th
 
   The process is used during assigning a local value to a binding which
     enables user to access the value later.
-  The specification theorem of the value is in form \<^prop>\<open>sem_value.dest raw_val \<in> (x \<Ztypecolon> T)\<close>.
+  The specification theorem of the value is in form \<^prop>\<open>sem.dest raw_val \<in> (x \<Ztypecolon> T)\<close>.
   The binding is bound with this theorem which is used when later loading this value back
     to the state sequent when user is accessing the value.
 \<close>
 
 lemma [\<phi>reason 1200 for \<open>Extract_a_Value (?R \<heavy_comma> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T) ?R ?V\<close>]:
-  \<open>Extract_a_Value (R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T) R (sem_value.dest v \<in> (x \<Ztypecolon> T))\<close>
+  \<open>Extract_a_Value (R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T) R (sem.dest v \<in> (x \<Ztypecolon> T))\<close>
   unfolding Extract_a_Value_def Imply_def
   by (simp add: \<phi>expns)
 

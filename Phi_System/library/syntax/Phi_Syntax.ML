@@ -152,7 +152,7 @@ fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separati
   | strip_separations (Abs (_, _, T)) = strip_separations T
   | strip_separations T = strip_binop_l @{const_name times} T
 
-val dest_sem_value_T = dest_monop_ty \<^type_name>\<open>sem_value\<close>
-fun mk_sem_value_T T = Type(\<^type_name>\<open>sem_value\<close>, [T])
+val dest_sem_value_T = dest_monop_ty \<^type_name>\<open>sem\<close>
+fun mk_sem_value_T T = Type(\<^type_name>\<open>sem\<close>, [T])
 
 end

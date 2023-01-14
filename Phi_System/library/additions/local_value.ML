@@ -9,7 +9,7 @@ signature PHI_VALUE = sig
 val has_val : string (*external name*) -> Proof.context -> bool
 val delete_val : string (*external name*) -> Proof.context -> Proof.context
 val update_val : binding -> thm (*rule*) -> Proof.context -> Proof.context
-      (*a rule in form \<open>(sem_value.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)\<close>*)
+      (*a rule in form \<open>(sem.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)\<close>*)
 
 end
 
@@ -17,7 +17,7 @@ structure Phi_Value : PHI_VALUE = struct
 
 structure Values = Proof_Data (
   type T = thm Symtab.table
-              (*rules in form \<open>(sem_value.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)\<close>*)
+              (*rules in form \<open>(sem.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)\<close>*)
   val init = K Symtab.empty
 )
 
@@ -39,13 +39,13 @@ fun pattern_of ctxt xname rule =
   in case Thm.prop_of rule
        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>,
                                 (T1 as Type ("fun", [_, Type ("fun", [T,_])])))
-              $ (Const (\<^const_name>\<open>sem_value.dest\<close>, T2)
+              $ (Const (\<^const_name>\<open>sem.dest\<close>, T2)
                               $ (Const (\<^const_name>\<open>Value_of\<close>, T3) $ V1 $ Free (vname, T4)))
               $ _)
              => if vname = iname
                 then
                   \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
-                    $ (Const (\<^const_name>\<open>sem_value.dest\<close>, T2)
+                    $ (Const (\<^const_name>\<open>sem.dest\<close>, T2)
                           $ (Const (\<^const_name>\<open>Value_of\<close>, T3) $ Var (("val", i), fastype_of V1)
                                                               $ Free (vname, T4)))
                     $ Var (("out", i), T))
@@ -56,7 +56,7 @@ fun pattern_of ctxt xname rule =
 fun valterm_of ctxt rule =
   case Thm.prop_of rule
     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
-          $ (Const (\<^const_name>\<open>sem_value.dest\<close>, _)
+          $ (Const (\<^const_name>\<open>sem.dest\<close>, _)
                        $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (vname, T)))
           $ _)
          => Free (Variable.revert_fixed ctxt vname, T)

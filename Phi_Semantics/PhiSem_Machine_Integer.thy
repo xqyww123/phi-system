@@ -170,11 +170,11 @@ subsection \<open>Arithmetic Operations\<close>
 subsubsection \<open>Integer arithmetic\<close>
 
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> VAL proc"
-  where "op_const_int bits const = Return (sem_value (V_int.mk (bits,const)))"
+  where "op_const_int bits const = Return (sem (V_int.mk (bits,const)))"
 
 (* definition op_const_size_t :: "nat \<Rightarrow> (VAL,VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
-                          \<ggreater> Return (sem_value (V_int.mk (addrspace_bits,c)))"
+                          \<ggreater> Return (sem (V_int.mk (addrspace_bits,c)))"
   \<comment> \<open> `op_const_size_t` checks the overflow during the compilation towards certain decided platform.  \<close>
 *)
 
@@ -183,7 +183,7 @@ definition op_add :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>vb va.
       \<phi>M_getV (int bits) (snd o V_int.dest) vb (\<lambda>val_b.
       \<phi>M_getV (int bits) (snd o V_int.dest) va (\<lambda>val_a.
-      Return (sem_value (V_int.mk (bits, ((val_a + val_b) mod 2^bits))))
+      Return (sem (V_int.mk (bits, ((val_a + val_b) mod 2^bits))))
   )))"
 
 definition op_sub :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -191,7 +191,7 @@ definition op_sub :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (sem_value (V_int.mk (bits, ((2^bits + val_b - val_a) mod 2^bits))))
+      Return (sem (V_int.mk (bits, ((2^bits + val_b - val_a) mod 2^bits))))
   )))"
 
 definition op_umul :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -199,7 +199,7 @@ definition op_umul :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (sem_value (V_int.mk (bits, ((val_b * val_a) mod 2^bits))))
+      Return (sem (V_int.mk (bits, ((val_b * val_a) mod 2^bits))))
   )))"
 
 definition op_udiv :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -207,7 +207,7 @@ definition op_udiv :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (sem_value (V_int.mk (bits, (val_b div val_a))))
+      Return (sem (V_int.mk (bits, (val_b div val_a))))
   )))"
 
 definition op_lshr :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -215,7 +215,7 @@ definition op_lshr :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VA
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (int b_a) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (int b_b) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (sem_value (V_int.mk (b_b, (val_b div 2 ^ val_a))))
+      Return (sem (V_int.mk (b_b, (val_b div 2 ^ val_a))))
   )))"
 
 definition op_lshl :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -223,7 +223,7 @@ definition op_lshl :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VA
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (int b_a) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (int b_b) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (sem_value (V_int.mk (b_b, (val_b * 2 ^ val_a))))
+      Return (sem (V_int.mk (b_b, (val_b * 2 ^ val_a))))
   )))"
 
 definition op_lt :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -231,7 +231,7 @@ definition op_lt :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (sem_value (V_bool.mk (val_b < val_a)))
+      Return (sem (V_bool.mk (val_b < val_a)))
   )))"
 
 definition op_le :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -239,7 +239,7 @@ definition op_le :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (int bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (int bits) (snd o V_int.dest) vb (\<lambda>val_b.
-      Return (sem_value (V_bool.mk (val_b \<le> val_a)))
+      Return (sem (V_bool.mk (val_b \<le> val_a)))
   )))"
 
 
