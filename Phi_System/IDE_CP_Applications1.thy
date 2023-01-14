@@ -122,7 +122,7 @@ lemma [\<phi>reason 1300 for
   by (cases raw; simp add: Val_expn view_shift_id)
 
 lemma [\<phi>reason 1200 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL sem_value. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL sem_value) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>  @action synthesis ?G\<close>
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL sem_value. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL sem_value) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E   @action synthesis ?G\<close>
 ]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<rbrace>  @action synthesis G\<close>
@@ -137,7 +137,7 @@ lemma [\<phi>reason 1200 for
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R\<heavy_comma> SYNTHESIS x <set-to> (raw::VAL sem_value) \<Ztypecolon> T  @action synthesis G\<close>
   by simp
 
-lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL sem_value) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>)) @action synthesis ?G\<close>]:
+lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL sem_value) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E )) @action synthesis ?G\<close>]:
   \<open> sem_value.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>)) @action synthesis G\<close>
   unfolding Synthesis_by_def Action_Tag_def \<phi>Procedure_def Return_def det_lift_def
@@ -149,8 +149,8 @@ subsection \<open>Assignment\<close>
 typedecl valname
 
 lemma "__set_value_rule__":
-  \<open> (sem_value.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> X \<longmapsto> R' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> (x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<heavy_comma> X) \<longmapsto> R' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>
+  \<open> (sem_value.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> X \<longmapsto> R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E )
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> (x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<heavy_comma> X) \<longmapsto> R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>Procedure_def Value_of_def
   by (clarsimp simp add: \<phi>expns)
 
@@ -170,7 +170,7 @@ lemma [\<phi>reason 1300 for
   by (cases raw; simp add: Val_expn view_shift_id)
 
 lemma [\<phi>reason 1200 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL sem_value. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?name::valname) \<Ztypecolon> ?T ret \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E \<rbrace>  @action synthesis ?G\<close>
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL sem_value. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?name::valname) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E   @action synthesis ?G\<close>
 ]:
   \<open> sem_value.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<rbrace>  @action synthesis G\<close>

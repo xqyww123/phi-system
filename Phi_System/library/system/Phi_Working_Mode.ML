@@ -1,6 +1,7 @@
 signature PHI_WORKING_MODE = sig
 
 type working_mode = {
+  name: string,
   domain: Proof.context -> term -> bool,
   argument_spec: term (*proposition of a goal or a state sequent*) -> term,
   return_spec:   term (*proposition of a goal*) -> term,
@@ -41,6 +42,7 @@ end
 structure Phi_Working_Mode : PHI_WORKING_MODE = struct
 
 type working_mode = {
+  name: string,
   domain: Proof.context -> term -> bool,
   argument_spec: term (*proposition of a goal or a state sequent*) -> term,
   return_spec: term (*term of the state sequent*) -> term,
@@ -235,6 +237,7 @@ val procedure : working_mode =
       in (ctxt,sequent'') end
 
   in {
+    name = "procedure",
     domain = (fn _ => fn tm =>
                can Phi_Syntax.dest_procedure tm
         orelse Phi_Syntax.is_construction_mode \<^const>\<open>programming_mode\<close> tm
@@ -328,6 +331,7 @@ let
     end
 in
 {
+    name = "view shift",
     domain = (fn _ => fn x => can Phi_Syntax.dest_view_shift x
                        orelse Phi_Syntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> x),
     return_spec = return_spec,
@@ -402,6 +406,7 @@ let
     end
 in
 {
+    name = "implication",
     domain = (fn _ => fn x => can Phi_Syntax.dest_implication x
                        orelse can Phi_Syntax.dest_Set_member  x),
     return_spec = return_spec,
