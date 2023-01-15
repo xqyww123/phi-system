@@ -104,6 +104,8 @@ definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) pro
   \<ggreater> throw (sem (ABN_break.mk ()))
 )\<close>
 
+definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> Brk_Frame l)\<close>
+definition \<open>sift_brking_frame = sift_brking_frame'\<close>
 
 context begin
 
@@ -121,9 +123,9 @@ private lemma dispose_brk_scope:
 
 lemma brk_scope:
   \<open> (\<And>l. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f l \<lbrace> X\<heavy_comma> Brk_Frame l \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> Brk_Frame l \<rbrace>
-    \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>a. (Brking_Frame l Y') + (E a\<heavy_comma> Brk_Frame l)))
+    \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>a. sift_brking_frame l Y' (E a)))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_brk_scope f \<lbrace> X \<longmapsto> \<lambda>ret. Y ret + Y' ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
-  unfolding op_brk_scope_def
+  unfolding op_brk_scope_def sift_brking_frame_def sift_brking_frame'_def
   apply (rule, rule, rule, assumption, rule)
   apply (rule \<phi>CONSEQ'E0, rule dispose_brk_scope[THEN \<phi>frame, simplified], rule)
   apply (rule \<phi>CASE)
@@ -131,7 +133,7 @@ lemma brk_scope:
   apply (rule FIC_brk_frame.\<phi>R_dispose_res_frm[where P=\<open>\<lambda>_. True\<close>]; simp)
   apply (rule)
   apply (simp only: Brk_Frame_eq_identity, rule, simp, rule)
-   apply (rule \<phi>CONSEQ'E0, rule FIC_brk_frame.\<phi>R_dispose_res_frm[where P=\<open>\<lambda>_. True\<close>]; simp)
+  apply (rule \<phi>CONSEQ'E0, rule FIC_brk_frame.\<phi>R_dispose_res_frm[where P=\<open>\<lambda>_. True\<close>]; simp)
   by (rule, rule implies_refl)
 
 lemma op_break_\<phi>app:
@@ -144,27 +146,53 @@ end
 
 
 
-definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> Brk_Frame l)\<close>
-definition \<open>sift_brking_frame = sift_brking_frame'\<close>
+
+\<phi>setup_reason_rule_default_pattern
+     \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
+  \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>
+ and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
+  \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simplification] Y' : Y
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simplification] E' : E
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
+  unfolding sift_brking_frame_def Simplify_def by simp
 
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
   unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_plus by clarify
 
-lemma
+lemma [\<phi>reason 1000]:
   \<open> X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y1 E1
 \<Longrightarrow> X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y2 E2
 \<Longrightarrow> (X1 + X2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
   unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right
-  \<medium_left_bracket> ;; ;; cases'
-  apply (clarsimp simp add: \<phi>expns Brking_Frame_plus)
+  \<medium_left_bracket> premises X1 and X2
+    cases' \<medium_left_bracket> X1 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
+           \<medium_left_bracket> X2 \<medium_right_bracket>.
+  \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200]:
+  \<open> X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
+\<Longrightarrow> X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
+\<Longrightarrow> X1 + X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E\<close>
+  using \<phi>CASE_IMP by fastforce 
+
+lemma [\<phi>reason 1000]:
+  \<open>Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y 0\<close>
+  unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<heavy_comma> Brk_Frame l @action ToSA' False
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l 0 E\<close>
+  unfolding sift_brking_frame'_def
+  \<medium_left_bracket> premises X
+    X
+  \<medium_right_bracket>. .
 
 
 hide_fact Brking_Frame_plus
 
-
-  notepad
-begin
-  define xx where \<open>xx \<equiv> 10\<close>
-  term xx
 end
