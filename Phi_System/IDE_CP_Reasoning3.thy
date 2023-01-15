@@ -1883,9 +1883,11 @@ lemma Structural_Extract_aggrement_from:
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Feasible_def
             Structural_Extract'_def
   apply (cases C; simp)
-   \<medium_left_bracket> premises A
+  \<medium_left_bracket> premises A
+  ;;
+  ;;
     Agreement_cast[OF A]
-    Agreement_shrink
+  ;; Agreement_shrink
   \<medium_right_bracket>.
   using Agreement_cast .
 
@@ -2601,7 +2603,7 @@ lemma [\<phi>reason 2000]:
   \<open> Structural_Extract (x \<Ztypecolon> n * m \<Znrres> T) R Y W P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) R Y W P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Structural_Extract_def Action_Tag_def
-  by (metis Implication_Inhabited_rule Imply_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
+  by (metis ToA_Construction_Inhabited_rule Imply_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
 
 lemma [\<phi>reason 2011 for \<open>Structural_Extract ?X ?R (?x \<Ztypecolon> ?n \<Znrres> ?m \<Znrres> ?T) ?W (Automatic_Morphism ?RP ?RX \<and> ?P)\<close>]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m

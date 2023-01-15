@@ -61,6 +61,9 @@ definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
 
+definition ToA_Construction :: \<open>'a \<Rightarrow> 'a set \<Rightarrow> bool\<close> ("\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n'(_') \<^bold>i\<^bold>s _" [11,11] 10)
+  where \<open>ToA_Construction = (\<in>)\<close>
+
 
 section \<open>Rules for Constructing Programs\<close>
 
@@ -154,8 +157,9 @@ lemma \<phi>make_view_shift:
 subsection \<open>Construct Implication\<close>
 
 lemma (in -) "\<phi>make_implication":
-  \<open>(\<And>x. x \<in> S \<Longrightarrow> x \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding Imply_def by (simp add: \<phi>expns)
+  \<open>(\<And>x. \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def ToA_Construction_def
+  by (simp add: \<phi>expns)
 
 
 subsection \<open>Cast\<close>
@@ -190,10 +194,10 @@ lemmas \<phi>apply_implication_pending_E =
   \<phi>apply_view_shift_pending_E[OF _ view_shift_by_implication]
 
 lemma \<phi>apply_implication_impl:
-  \<open> s \<in> S
+  \<open> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s S
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> s \<in> S' \<and> P\<close>
-  unfolding Imply_def by blast
+\<Longrightarrow>(\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s S') \<and> P\<close>
+  unfolding ToA_Construction_def Imply_def by blast
 
 lemma "_\<phi>cast_internal_rule_":
   " CurrentConstruction mode blk H T
@@ -232,12 +236,12 @@ lemma "_\<phi>cast_exception_rule_":
 
 
 lemma "_\<phi>cast_implication_":
-  \<open> x \<in> S
+  \<open> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> x \<in> T\<close>
-  unfolding Action_Tag_def Imply_def by blast
+\<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T\<close>
+  unfolding ToA_Construction_def Action_Tag_def Imply_def by blast
 
 
 subsection \<open>Finalization Rewrites\<close>
@@ -279,9 +283,9 @@ subsection \<open>Misc\<close>
 
 paragraph \<open>Inhabitance\<close>
 
-lemma Implication_Inhabited_rule:
-  \<open>x \<in> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by blast
+lemma ToA_Construction_Inhabited_rule:
+  \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding ToA_Construction_def Inhabited_def by blast
 
 lemma CurrentConstruction_Inhabited_rule:
   "CurrentConstruction mode s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
@@ -308,7 +312,7 @@ lemma [simp]:
 declare Subjection_expn[\<phi>programming_simps]
 
 lemma [\<phi>programming_simps]:
-  \<open>((s \<in> T) \<and> B) \<and> C \<longleftrightarrow> (s \<in> T) \<and> (B \<and> C)\<close>
+  \<open>((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> (B \<and> C)\<close>
   by simp
 
 paragraph \<open>Fixing Existentially Quantified Variable\<close>

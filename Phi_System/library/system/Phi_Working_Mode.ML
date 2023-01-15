@@ -382,7 +382,7 @@ let
 
   fun finish_implication hyp (ctxt,sequent) =
     let
-      val (s,_) = Phi_Syntax.dest_Set_member_c hyp
+      val (s,_) = Phi_Syntax.dest_ToA_Construction_c hyp
     in
       sequent
         |> Thm.implies_intr hyp
@@ -396,7 +396,7 @@ let
       val Type (\<^type_name>\<open>set\<close>, [T]) = Thm.typ_of_cterm arg_phiTy
       val stat_var = Free (blk_name, T)
       val ctxt = Variable.declare_constraints stat_var ctxt
-      val init = Const(\<^const_name>\<open>Set.member\<close>, dummyT) $ stat_var
+      val init = Const(\<^const_name>\<open>ToA_Construction\<close>, dummyT) $ stat_var
       val init = Thm.cterm_of ctxt (Syntax.check_term ctxt init)
       val init = Thm.apply @{cterm Trueprop} (Thm.apply init arg_phiTy)
       val ([init],ctxt) = Assumption.add_assms
@@ -408,13 +408,13 @@ in
 {
     name = "implication",
     domain = (fn _ => fn x => can Phi_Syntax.dest_implication x
-                       orelse can Phi_Syntax.dest_Set_member  x),
+                       orelse can Phi_Syntax.dest_ToA_Construction  x),
     return_spec = return_spec,
     return_spec_c = return_spec_c,
     argument_spec = argument_spec,
     exception_spec = K NONE,
     exception_spec_c = K (K NONE),
-    inhabited_rule = K @{thm Implication_Inhabited_rule},
+    inhabited_rule = K @{thm ToA_Construction_Inhabited_rule},
     initial_sequent = start_implication,
     block_name_of = (K "\<chi>"),
     transform_rule  = @{thm \<phi>apply_implication_impl},

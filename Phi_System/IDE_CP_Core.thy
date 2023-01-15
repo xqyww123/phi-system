@@ -1037,22 +1037,26 @@ lemma [\<phi>reason 1200 for \<open>
 subsubsection \<open>Applying on Transformation Mode\<close>
 
 lemma apply_cast_on_imply_exact[\<phi>reason 2000 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P)) (Trueprop (?x \<in> ?S')) ?Result
+  PROP \<phi>Application_Method (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+                           (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?x) \<^bold>i\<^bold>s ?S')) ?Result
 \<close>]:
   \<open> PROP \<phi>Application_Success
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P)) (Trueprop (x \<in> S)) (Trueprop (x \<in> T \<and> P))\<close>
-  unfolding \<phi>Application_Method_def \<phi>Application_def Imply_def
+\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+                             (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S))
+                             (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def Imply_def ToA_Construction_def
   by blast
 
 lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P)) (Trueprop (?x \<in> ?R * ?S')) ?Result
+  PROP \<phi>Application_Method (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+                           (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?x) \<^bold>i\<^bold>s ?R * ?S')) ?Result
 \<close>]:
   \<open> PROP \<phi>Application_Success
 \<Longrightarrow> PROP \<phi>Application_Method
             (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
-            (Trueprop (x \<in> R * S))
-            (Trueprop (x \<in> R * T \<and> P))\<close>
-  unfolding \<phi>Application_Method_def \<phi>Application_def
+            (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s R * S))
+            (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s R * T) \<and> P))\<close>
+  unfolding \<phi>Application_Method_def \<phi>Application_def ToA_Construction_def
   using implies_left_prod
   by (metis Imply_def)
 
@@ -1331,43 +1335,46 @@ lemma [\<phi>reason 1190 for \<open>PROP Do_Action (?action::?'a::{implication,m
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action action\<close>
 (see paragraph Generalization) converts all general search of view_shift for implication. *)
 
-subparagraph \<open>On \<open>x \<in> P\<close>\<close>
+subparagraph \<open>On \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s P\<close>\<close>
 
 lemma [\<phi>reason 1100
-    for \<open>PROP Do_Action (?action::?'a::{implication, single_target} action) (Trueprop (?s \<in> ?X)) ?Result\<close>
-    except \<open>PROP Do_Action ?action (Trueprop (?s \<in> (?R * ?X))) ?Result\<close>
+    for \<open>PROP Do_Action (?action::?'a::{implication, single_target} action)
+                        (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s ?X)) ?Result\<close>
+    except \<open>PROP Do_Action ?action (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s (?R * ?X))) ?Result\<close>
 ]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> PROP Do_Action action
-      (Trueprop (s \<in> X))
-      (Trueprop (s \<in> Y \<and> P))\<close>
+      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s X))
+      (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s Y) \<and> P))\<close>
   for action :: \<open>'a::{implication,single_target} action\<close>
-  unfolding Do_Action_def Action_Tag_def Imply_def by blast
+  unfolding Do_Action_def Action_Tag_def Imply_def ToA_Construction_def by blast
 
 lemma [\<phi>reason 1200
-    for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action) (Trueprop (?s \<in> (?R * ?X))) ?Result\<close>
+    for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action)
+                        (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s (?R * ?X))) ?Result\<close>
 ]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> PROP Do_Action action
-      (Trueprop (s \<in> (R * X)))
-      (Trueprop (s \<in> (R * Y) \<and> P))\<close>
+      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s R * X))
+      (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s R * Y) \<and> P))\<close>
   for action :: \<open>'a::{implication,single_target} action\<close>
-  unfolding Do_Action_def Action_Tag_def
+  unfolding Do_Action_def Action_Tag_def ToA_Construction_def
   by (meson Imply_def implies_left_prod)
 
 lemma [\<phi>reason 1200
-    for \<open>PROP Do_Action (?action::?'a::{implication, whole_target} action) (Trueprop (?s \<in> ?X)) ?Result\<close>
-    except \<open>PROP Do_Action ?action (Trueprop (?s \<in> (?R * ?X))) ?Result\<close>
+    for \<open>PROP Do_Action (?action::?'a::{implication, whole_target} action)
+                        (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s ?X)) ?Result\<close>
+    except \<open>PROP Do_Action ?action (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s (?R * ?X))) ?Result\<close>
 ]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
 \<Longrightarrow> \<r>Feasible
 \<Longrightarrow> PROP Do_Action action
-      (Trueprop (s \<in> X))
-      (Trueprop (s \<in> Y \<and> P))\<close>
+      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s X))
+      (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s Y) \<and> P))\<close>
   for action :: \<open>'a::{implication,whole_target} action\<close>
-  unfolding Do_Action_def Action_Tag_def Imply_def by blast
+  unfolding Do_Action_def Action_Tag_def Imply_def ToA_Construction_def by blast
 
 (* TODO!
 lemma [\<phi>reason 1190 on \<open>PROP Do_Action (?action::?'a::{implication,multi_args_fixed_first} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?RR \<heavy_comma> ?X))) ?Result\<close>]:
@@ -1602,7 +1609,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
     Phi_Sys.synthesis term (ctxt, sequent)
   end)\<close>
 
-\<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>?s \<in> ?S'\<close>)  \<open>
+\<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s ?S'\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- (Parse.short_ident || Parse.long_ident || Parse.number)
   >> (fn var => fn () =>
     let
@@ -1652,7 +1659,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
 
 subsubsection \<open>Simplifiers \& Reasoners\<close>
 
-\<phi>processor \<phi>simplifier 100 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
+\<phi>processor \<phi>simplifier 100 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?x) \<^bold>i\<^bold>s ?S\<close>)
   \<open>Phi_Processor.simplifier\<close>
 (* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>Phi_Processors.simplifier []\<close> *)
 
@@ -1662,13 +1669,13 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 \<phi>processor move_fact2 110 (\<open>?Any \<and> ?P\<close>)
 \<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (Phi_Sys.move_lemmata stat)))\<close>
 
-\<phi>processor automatic_morphism 90 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
+\<phi>processor automatic_morphism 90 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?x) \<^bold>i\<^bold>s ?S\<close>)
 \<open>not_safe (fn stat => Scan.succeed (fn _ => Phi_Sys.apply_automatic_morphism stat
       handle Empty => raise Bypass NONE))\<close>
 
 (* Any simplification should finish before priority 999, or else
  *  this processor will be triggered unnecessarily frequently.*)
-\<phi>processor set_\<phi>this 999 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>?x \<in> ?S\<close>)
+\<phi>processor set_\<phi>this 999 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?x) \<^bold>i\<^bold>s ?S\<close>)
 \<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
   let
     val ctxt' = Phi_Envir.update_programming_sequent' sequent ctxt

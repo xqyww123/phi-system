@@ -32,8 +32,8 @@ include PHI_SYNTAX
 
   val dest_implication   : term  -> term * term * term
   val dest_implication_c : cterm -> cterm * cterm * cterm
-  val dest_Set_member    : term  -> term * term
-  val dest_Set_member_c  : cterm -> cterm * cterm
+  val dest_ToA_Construction    : term  -> term * term
+  val dest_ToA_Construction_c  : cterm -> cterm * cterm
 
   val strip_separations : term -> term list
 
@@ -126,12 +126,12 @@ val dest_implication_c =
          dest_tags_c
       #> dest_triop_c @{const_name "Imply"}
 
-val dest_Set_member =
+val dest_ToA_Construction =
          dest_tags
-      #> dest_binop @{const_name "Set.member"}
-val dest_Set_member_c =
+      #> dest_binop   @{const_name ToA_Construction}
+val dest_ToA_Construction_c =
          dest_tags_c
-      #> dest_binop_c @{const_name "Set.member"}
+      #> dest_binop_c @{const_name ToA_Construction}
 
 
 fun dest_destined_phityp term =
