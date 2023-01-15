@@ -192,7 +192,7 @@ text \<open>Predicate \<open>Fic_Space\<close> characterizes instances of fictio
       Recall unit \<open>1\<close> represents empty and none resource. In the case of \<open>\<alpha> option\<close>,
       \<open>1 \<triangleq> None\<close>.\<close>
 
-lemma Fic_Space_Un[simp]:
+lemma Fic_Space_Un:
   \<open>a ## b \<Longrightarrow> Fic_Space (a*b) \<longleftrightarrow> Fic_Space a \<and> Fic_Space b\<close>
   unfolding Fic_Space_def by (simp add: dom1_sep_mult_disjoint)
 

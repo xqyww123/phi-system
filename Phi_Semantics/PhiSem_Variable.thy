@@ -98,7 +98,7 @@ lemma Var_cast_\<phi>app[\<phi>overload cast]:
   unfolding Imply_def View_Shift_def
   by (clarsimp simp add: \<phi>expns, metis)
 
-lemma RawInited_Var_identity_eq:
+lemma Raw_Var_identity_eq:
   \<open>(raw \<Ztypecolon> Var v Identity) = (nonsepable raw \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
@@ -242,7 +242,7 @@ lemma \<phi>M_set_var[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c R_var.\<phi>R_set_res (\<lambda>f. f(vname \<mapsto> nonsepable (Some u)))
       \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. u \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[vname] Identity \<rbrace>\<close>
   unfolding Inited_Var_identity_eq
-  unfolding RawInited_Var_identity_eq
+  unfolding Raw_Var_identity_eq
   thm FIC_var.\<phi>R_set_res
   by (rule FIC_var.\<phi>R_set_res[where P=\<open>\<lambda>_. True\<close>]; simp)
 
@@ -267,29 +267,15 @@ lemma finite_map_freshness':
 lemma op_var_scope':
    \<open>(\<And>var. varname.type var \<equiv> TY \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var] \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope' TY F \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-  unfolding op_var_scope'_def Premise_def
-  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec simp del: set_mult_expn del: subsetI)
-  subgoal for r res c
-  apply (rule R_var.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])
-    apply (clarsimp) using finite_map_freshness' infinite_varname apply blast
-      apply (clarsimp)
-
-  apply (clarsimp simp add: Subjection_expn
-                  simp del: \<phi>Res_Spec_mult_homo set_mult_expn del: subsetI)
-  subgoal premises prems for k res'
-  apply (rule prems(1)[THEN spec[where x=r], THEN spec[where x=res'],
-              simplified prems, simplified, THEN mp], simp)
-  apply (rule exI[where x=\<open>c * FIC_var.mk (1(k \<mapsto> nonsepable None))\<close>])
-  apply (simp add: \<phi>expns prems)
-    by (smt (verit, best) FIC_var.expand FIC_var.sep_disj_fiction Fic_Space_Un Fic_Space_mm \<phi>Res_Spec_mult_homo prems(3) prems(4) prems(5) prems(6) prems(7) sep_disj_multD2 sep_disj_multI2 sep_mult_assoc)
-  . .
+  unfolding op_var_scope'_def UnInited_Var_identity_eq
+  thm FIC_var.\<phi>R_allocate_res_entry
+  apply (rule FIC_var.\<phi>R_allocate_res_entry; simp)
+  using finite_map_freshness' infinite_varname by blast
 
 lemma op_free_var:
-   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_var vname \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> 1 \<rbrace>\<close>
-  unfolding op_free_var_def \<phi>Procedure_\<phi>Res_Spec
-  by (clarsimp simp add: \<phi>expns FIC_var.expand simp del: set_mult_expn del: subsetI;
-      rule R_var.\<phi>R_dispose_res[where any=\<open>nonsepable v\<close> and P=\<open>\<lambda>_. True\<close>];
-      clarsimp simp add: \<phi>Res_Spec_mult_homo)
+   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_var vname \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
+  unfolding op_free_var_def Raw_Var_identity_eq
+  by (rule FIC_var.\<phi>R_dispose_res[where P=\<open>\<lambda>_. True\<close>]; simp)
 
 
 
@@ -387,7 +373,7 @@ subsubsection \<open>Declare New Variables\<close>
 proc op_var_scope:
   assumes BLK: \<open>\<And>var. varname.type var \<equiv> TY
                   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var] \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
-                      \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<close>
+                      \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any) \<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws  E
@@ -396,7 +382,7 @@ proc op_var_scope:
     \<medium_left_bracket> premises [\<phi>reason]
       BLK to_Identity op_free_var
     \<medium_right_bracket>.
-    \<medium_left_bracket> to_Identity op_free_var throw[where 'ret=unit] \<medium_right_bracket>.
+    \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
 subsection \<open>Implementing IDE-CP Generic Variable Access\<close>

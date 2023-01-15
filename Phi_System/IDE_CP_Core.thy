@@ -258,7 +258,7 @@ named_theorems frame_var_rewrs \<open>Rewriting rules to normalize after inserti
 
 declare mult.assoc[symmetric, frame_var_rewrs]
   Subjection_times[frame_var_rewrs]
-  ExSet_times[frame_var_rewrs]
+  ExSet_times_right[frame_var_rewrs]
 
 consts frame_var_rewrs :: mode
 
@@ -1749,5 +1749,8 @@ lemma as_\<phi>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X' \<Longrigh
 lemma view_shift_whole_\<phi>app:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P"
   unfolding Argument_def .
+
+lemmas cases_\<phi>app  = \<phi>CASE_VS
+lemmas cases'_\<phi>app = \<phi>CASE_IMP
 
 end

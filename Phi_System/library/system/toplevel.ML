@@ -261,7 +261,7 @@ fun gen_begin_rec_proc prep_term prep_prop prep_var
             |> Goal.init
             |> (HEADGOAL (resolve_tac ctxt'' [recursion_thm])
                 THEN (Raw_Simplifier.rewrite_rule ctxt'' (*improve this!*)
-                       (All::forall:: @{thm Subjection_simp_proc_arg_metaeq} ::
+                       (All::forall:: @{thm norm_precond_conj_metaeq} ::
                         Named_Theorems.get ctxt'' @{named_theorems named_expansion})
                       #> Seq.single))
             |> Seq.maps (Phi_Reasoner.reason_tac NONE ctxt'' o pair ctxt'')

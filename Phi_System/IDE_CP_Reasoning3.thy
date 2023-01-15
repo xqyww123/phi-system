@@ -895,21 +895,21 @@ paragraph \<open>Main Rules\<close> *)
 
 lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A + ?B \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> SUBGOAL G G1
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 @action reason_ToSA mode G1
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 @action reason_ToSA mode G1
 \<Longrightarrow> SOLVE_SUBGOAL G1
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 @action reason_ToSA mode G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A + B \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<or> P2 @action reason_ToSA mode G\<close>
   unfolding Action_Tag_def
-  by (simp add: View_Shift_def distrib_left)
+  using \<phi>CASE_VS .
 
 lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R\<heavy_comma> (?A + ?B) \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> SUBGOAL G G1
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> B \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 @action reason_ToSA mode G1
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> B \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 @action reason_ToSA mode G1
 \<Longrightarrow> SOLVE_SUBGOAL G1
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> A \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2 @action reason_ToSA mode G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> A \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> A + B \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<or> P2 @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def
-  by (simp add: View_Shift_def distrib_left)
+  unfolding distrib_left Action_Tag_def
+  using \<phi>CASE_VS .
 
 lemma [\<phi>reason 800]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> \<blangle> A \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G

@@ -835,16 +835,16 @@ lemma zero_fun[simp]: "0 x = 0" unfolding zero_fun_def by simp
 lemmas zero_fun_eta[simp] = zero_fun_def[symmetric]
 
 instantiation "fun" :: (type, no_inverse) no_inverse begin
-instance by (standard, simp add: one_fun_def times_fun_def fun_eq_iff, blast) 
+instance by (standard, simp add: one_fun_def times_fun fun_eq_iff, blast) 
 end
 
 instantiation "fun" :: (type, no_negative) no_negative begin
-instance by (standard, simp del: zero_fun_eta add: zero_fun_def plus_fun_def fun_eq_iff, blast) 
+instance by (standard, simp del: zero_fun_eta add: zero_fun_def plus_fun fun_eq_iff, blast) 
 end
 
 instantiation "fun" :: (type, semigroup_mult) semigroup_mult begin
 instance apply standard
-  by (simp add: mult.assoc times_fun_def) 
+  by (simp add: mult.assoc times_fun_def)
 end
 
 instantiation "fun" :: (type,sep_disj) sep_disj begin
@@ -853,7 +853,7 @@ instance ..
 end
 
 instantiation "fun" :: (type,comm_sep_disj) comm_sep_disj begin
-instance by (standard, simp_all add: sep_disj_fun_def times_fun_def fun_eq_iff
+instance by (standard, simp_all add: sep_disj_fun_def times_fun fun_eq_iff
                                 add: sep_disj_commute sep_mult_commute )
 end
 

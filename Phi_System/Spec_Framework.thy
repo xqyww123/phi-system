@@ -304,7 +304,9 @@ lemma \<phi>view_shift_intro_frame_R:
   by (simp add: \<phi>frame_view mult.commute)
 
 
-section \<open>Fundamental Hoare Rules \& SL Rules\<close>
+section \<open>Hoare Rules \& SL Rules\<close>
+
+subsection \<open>Fundamental Rules\<close>
 
 lemma \<phi>SKIP[simp,intro!]: "\<^bold>p\<^bold>r\<^bold>o\<^bold>c det_lift (Success v) \<lbrace> T v \<longmapsto> T \<rbrace>"
   unfolding \<phi>Procedure_def det_lift_def by clarsimp
@@ -318,15 +320,20 @@ lemma \<phi>SEQ:
     apply (cases s; clarsimp; cases x; clarsimp; blast) . .
 
 lemma \<phi>frame:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>ex. R * E ex "
+  " \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>ex. R * E ex "
   unfolding \<phi>Procedure_def subset_iff
   apply clarify subgoal premises prems for comp R' s
     using prems(1)[THEN spec[where x=comp], THEN spec[where x=\<open>R' * R\<close>],
           simplified mult.assoc, THEN mp, OF prems(2)] prems(3) by blast .
 
-lemma \<phi>frame0:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace>"
-  using \<phi>frame[where E=0, simplified, folded zero_fun_def] .
+lemma \<phi>Inhabited:
+  \<open>(Inhabited X \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  unfolding \<phi>Procedure_def Inhabited_def
+  by (meson INTERP_SPEC set_mult_expn)
+
+subsubsection \<open>View Shift\<close>
 
 lemma \<phi>frame_view_right:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
@@ -354,11 +361,56 @@ lemma \<phi>CONSEQ:
   apply clarsimp
   by (smt (verit, del_insts) LooseStateTy_expn')
 
+subsection \<open>Helper Rules\<close>
+
+lemma \<phi>frame0:
+  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace>"
+  using \<phi>frame[where E=0, simplified, folded zero_fun_def] .
+
 lemma \<phi>CONSEQ'E:
    "(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w E v \<longmapsto> E' v \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' "
   using \<phi>CONSEQ view_shift_id by blast
+
+lemmas \<phi>CONSEQ'E0 = \<phi>CONSEQ'E[OF view_shift_0, unfolded zero_fun_eta]
+
+subsubsection \<open>Case Analysis\<close>
+
+lemma \<phi>CASE:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> C \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> B \<longmapsto> C \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A + B \<longmapsto> C \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  unfolding \<phi>Procedure_def
+  by (simp add: distrib_left)
+
+lemma \<phi>CASE_VS:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A + B \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<or> P2\<close>
+  unfolding View_Shift_def
+  by (simp add: distrib_left)
+
+lemma \<phi>CASE_IMP:
+  \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P1
+\<Longrightarrow> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P2
+\<Longrightarrow> A + B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P1 \<or> P2\<close>
+  unfolding Imply_def
+  by (simp add: distrib_left)
+
+
+subsubsection \<open>Normalization in Precondition\<close>
+
+lemma norm_precond_conj:
+  "(\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E )"
+  unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
+
+lemmas norm_precond_conj_metaeq[unfolded atomize_eq[symmetric]] = norm_precond_conj
+
+lemma norm_precond_ex:
+  "(\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> ExSet X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) = (\<forall>x. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X x \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)"
+  unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
+
 
 
 end

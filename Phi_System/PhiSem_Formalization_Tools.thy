@@ -7,7 +7,7 @@ section \<open>Tools for Formalizing Instructions\<close>
 named_theorems discharging_semantic_debt
   \<open>Theorems that discharges or helps to discharge the debt axioms for semantic formalization.\<close>
 
-subsection \<open>Definitions of Elementary Constructions\<close>
+subsection \<open>Elementary Constructions for Formalizing Instructions\<close>
 
 definition \<phi>M_assert :: \<open>bool \<Rightarrow> unit proc\<close>
   where \<open>\<phi>M_assert P = (\<lambda>s. if P then Return \<phi>V_none s else {Invalid})\<close>
@@ -31,8 +31,8 @@ declare \<phi>SEQ[intro!]
 
 lemma \<phi>M_assert[intro!]:
   \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace>\<close>
-  unfolding \<phi>Procedure_def \<phi>M_assert_def Return_def det_lift_def
-  by (clarsimp simp add: \<phi>expns Inhabited_def, blast)
+  unfolding \<phi>M_assert_def
+  by (rule \<phi>Inhabited; simp; rule)
 
 lemma \<phi>M_assert_True[simp]:
   \<open>\<phi>M_assert True = Return \<phi>V_none\<close>
@@ -57,7 +57,7 @@ lemma \<phi>M_getV_raw[intro!]:
    \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_raw VDT_dest (sem v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem v) A \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>M_getV_raw_def Premise_def
-  by (clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
+  by (clarsimp simp add: \<phi>expns norm_precond_conj)
 
 declare \<phi>M_getV_raw[where X=1, simplified, intro!]
 
@@ -66,7 +66,7 @@ lemma \<phi>M_getV[intro!]:
 \<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest (sem v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (sem v) A \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>M_getV_def Premise_def
-  by (clarsimp simp add: \<phi>expns Subjection_simp_proc_arg)
+  by (clarsimp simp add: \<phi>expns norm_precond_conj)
 
 declare \<phi>M_getV[where X=1, simplified, intro!]
 
@@ -76,7 +76,7 @@ lemma \<phi>M_caseV[intro!]:
   unfolding \<phi>M_caseV_def \<phi>V_pair_def by simp
 
 
-subsection \<open>Elementary Constructions for Reasoning underlying Fictional Separation Logic\<close>
+subsection \<open>Elementary Constructions for Reasoning Fictions\<close>
 
 definition \<phi>Res_Spec :: \<open>rassn \<Rightarrow> rassn\<close>
   where \<open>\<phi>Res_Spec P = (Valid_Resource \<inter> P)\<close>
@@ -120,10 +120,10 @@ lemma \<phi>INTERP_RES_\<phi>Res_Spec:
   unfolding In_INTERP_RES \<phi>Res_Spec_def by simp blast
 
 lemma \<phi>Procedure_\<phi>Res_Spec:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
-\<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space (r * p) \<and> r ## p)
-      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space (r * q) \<and> r ## q))
-                    (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E v \<and> Fic_Space (r * e) \<and> r ## e)))\<close>
+  \<open> (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E )
+\<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space r \<and> Fic_Space p \<and> r ## p)
+      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space r \<and> Fic_Space q \<and> r ## q))
+                    (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E v \<and> Fic_Space r \<and> Fic_Space e \<and> r ## e)))\<close>
   apply rule
    apply (unfold \<phi>Procedure_alt INTERP_SPEC \<phi>Res_Spec_def subset_iff)
    apply (clarsimp simp add: times_set_def \<phi>expns In_INTERP_RES)
@@ -134,13 +134,13 @@ lemma \<phi>Procedure_\<phi>Res_Spec:
     show ?thesis
       apply (insert prems(1)[THEN spec[where x=res], THEN spec[where x=r], THEN mp, OF t1,
               THEN spec[where x=s], THEN mp, OF \<open>s \<in> f res\<close>])
-      apply (cases s; clarsimp simp add: \<phi>expns In_INTERP_RES)
+      apply (cases s; clarsimp simp add: \<phi>expns In_INTERP_RES Fic_Space_Un)
       apply force
       using Fic_Space_Un by blast
   qed
   apply (clarsimp simp add: times_set_def \<phi>expns In_INTERP_RES)
   subgoal premises prems for res r s c proof-
-    have t1: \<open>res \<in> Valid_Resource \<and> (\<exists>c. res \<in> \<I> INTERP (r * c) \<and> c \<in> P \<and> Fic_Space (r * c) \<and> r ## c)\<close>
+    have t1: \<open>res \<in> Valid_Resource \<and> (\<exists>c. res \<in> \<I> INTERP (r * c) \<and> c \<in> P \<and> Fic_Space r \<and> Fic_Space c \<and> r ## c)\<close>
       using prems Fic_Space_Un by blast
     show ?thesis
       apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, OF t1,
@@ -150,6 +150,23 @@ lemma \<phi>Procedure_\<phi>Res_Spec:
       using Fic_Space_Un by blast
   qed .
 
+lemma \<phi>Res_Spec_expn_R:
+  \<open>\<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> (R \<heavy_comma> X) \<and> Fic_Space r \<and> Fic_Space p \<and> r ## p)
+ = \<phi>Res_Spec (\<I> INTERP (r * u * x) \<^bold>s\<^bold>u\<^bold>b\<^bold>j u x. u \<in> R \<and> x \<in> X \<and> Fic_Space (r * u) \<and> Fic_Space x
+                                           \<and> r ## u \<and> (r * u) ## x)\<close>
+  unfolding set_eq_iff
+  apply (clarsimp simp add: \<phi>expns; rule; clarify)
+  apply (metis Fic_Space_Un sep_disj_multD1 sep_disj_multI1 sep_mult_assoc')
+  by (metis Fic_Space_Un sep_disj_multD2 sep_disj_multI2 sep_mult_assoc)
+
+lemma \<phi>Res_Spec_expn_impEx:
+  \<open>(x \<in> \<phi>Res_Spec (ExSet A) \<longrightarrow> P) \<longleftrightarrow> (\<forall>a. x \<in> \<phi>Res_Spec (A a) \<longrightarrow> P)\<close>
+  by (simp add: ExSet_def \<phi>Res_Spec_def)
+
+lemma \<phi>Res_Spec_expn_impSubj:
+  \<open>(x \<in> \<phi>Res_Spec (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j B) \<longrightarrow> P) \<longleftrightarrow> (B \<longrightarrow> x \<in> \<phi>Res_Spec A \<longrightarrow> P)\<close>
+  by (metis Subjection_expn \<phi>Res_Spec_subj)
+  
 
 paragraph \<open>Weakest Precondition Transformer for \<phi>Res_Spec\<close>
 
@@ -1217,9 +1234,16 @@ subsection \<open>Exception\<close>
 definition throw :: \<open>(ABNM,'ret::VALs) proc'\<close>
   where \<open>throw raw = det_lift (Exception raw)\<close>
 
+lemma "__throw_rule__"[intro!]:
+  \<open> (\<And>a. X a \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' a)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (throw excep :: 'ret::VALs proc) \<lbrace> X excep \<longmapsto> Any \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X'\<close>
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Imply_def
+  apply clarsimp
+  by (meson Imply_def View_Shift_def view_shift_by_implication)
+
 lemma throw_\<phi>app[intro!]:
   \<open> (\<And>v. Remove_Values (X v) (X' v))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (throw excep :: 'ret::VALs proc) \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (throw excep :: unreachable proc) \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Imply_def
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
@@ -1230,7 +1254,7 @@ definition op_try :: "'ret proc \<Rightarrow> (ABNM sem \<Rightarrow> 'ret proc)
                                        | PartialCorrect \<Rightarrow> {PartialCorrect}
                                        | Invalid \<Rightarrow> {Invalid}) ` f s)\<close>
 
-lemma "__op_try__":
+lemma "__op_try__"[intro!]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E v) 
 \<Longrightarrow> (\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> Y2 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> \<lambda>v. Y1 v + Y2 v \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2  \<close>
@@ -1368,27 +1392,41 @@ lemma (in partial_map_resource) \<phi>R_get_res_entry[intro!]:
 
 subparagraph \<open>identity_fiction_for_partial_mapping_resource\<close>
 
-lemma (in identity_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[intro!]:
+context identity_fiction_for_partial_mapping_resource begin
+
+lemma \<phi>R_get_res_entry_frm[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
-      \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
+    \<phi>Res_Spec_expn_R \<phi>Res_Spec_expn_impEx \<phi>Res_Spec_expn_impSubj imp_conjL
   by (clarsimp simp add: \<phi>expns expand simp del: set_mult_expn del: subsetI;
       rule R.\<phi>R_get_res_entry[where v=v]; simp)
 
+lemmas \<phi>R_get_res_entry[intro!] = \<phi>R_get_res_entry_frm[where R=1, simplified]
+
+end
+
 subparagraph \<open>share_fiction_for_partial_mapping_resource\<close>
 
-lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_get_res_entry[intro!]:
+context share_fiction_for_partial_mapping_resource begin
+
+lemma \<phi>R_get_res_entry_frm[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
-      \<lbrace> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
+    \<phi>Res_Spec_expn_R \<phi>Res_Spec_expn_impEx \<phi>Res_Spec_expn_impSubj imp_conjL
   apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
   apply (rule R.\<phi>R_get_res_entry[where v=v])
   apply simp
   by blast
+
+lemmas \<phi>R_get_res_entry[intro!] = \<phi>R_get_res_entry_frm[where R=1, simplified]
+
+end
 
 paragraph \<open>partial_map_resource2\<close>
 
@@ -1439,7 +1477,9 @@ lemma (in partial_map_resource) \<phi>R_set_res:
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := u))}) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__" del: set_mult_expn)
 
-lemma (in identity_fiction_for_partial_mapping_resource) \<phi>R_set_res[intro!]:
+context identity_fiction_for_partial_mapping_resource begin
+
+lemma \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
@@ -1453,7 +1493,12 @@ lemma (in identity_fiction_for_partial_mapping_resource) \<phi>R_set_res[intro!]
     by (rule R.\<phi>R_set_res[where k=k and res=res], assumption,
         simp add: \<phi>Res_Spec_mult_homo, assumption) .
 
-lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_set_res:
+declare \<phi>R_set_res[THEN \<phi>CONSEQ'E0, intro!]
+lemmas \<phi>R_set_res_frm[intro!] = \<phi>R_set_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+end
+
+context share_fiction_for_partial_mapping_resource begin
+lemma \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
@@ -1467,6 +1512,10 @@ lemma (in share_fiction_for_partial_mapping_resource) \<phi>R_set_res:
     by (rule R.\<phi>R_set_res[where k=k and res=res], assumption,
         simp add: \<phi>Res_Spec_mult_homo, assumption) .
 
+declare \<phi>R_set_res[THEN \<phi>CONSEQ'E0, intro!]
+lemmas \<phi>R_set_res_frm[intro!] = \<phi>R_set_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+end
+
 
 paragraph \<open>partial_map_resource2\<close>
 
@@ -1478,7 +1527,7 @@ lemma (in partial_map_resource2) \<phi>R_set_res[intro!]:
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := 1(k2 := u)))}) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__" del: set_mult_expn)
 
-lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res":
+lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res"[THEN \<phi>CONSEQ'E0, intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k := 1(k2 \<mapsto> v)))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
@@ -1505,7 +1554,25 @@ lemma (in partial_map_resource) \<phi>R_dispose_res[intro!]:
       \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__" \<phi>Res_Spec_mult_homo)
 
-lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_dispose_res":
+context identity_fiction_for_partial_mapping_resource begin
+lemma \<phi>R_dispose_res:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
+\<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := None))
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
+  unfolding \<phi>Procedure_\<phi>Res_Spec
+  apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
+                  simp del: set_mult_expn del: subsetI)
+  subgoal for r res
+    by (rule R.\<phi>R_dispose_res, assumption, simp add: \<phi>Res_Spec_mult_homo, simp add: \<phi>Res_Spec_mult_homo) .
+
+declare \<phi>R_dispose_res[THEN \<phi>CONSEQ'E0, intro!]
+lemmas \<phi>R_dispose_res_frm[intro!] = \<phi>R_dispose_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+end
+
+context share_fiction_for_partial_mapping_resource begin
+
+lemma \<phi>R_dispose_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := None))
@@ -1516,6 +1583,9 @@ lemma (in share_fiction_for_partial_mapping_resource) "\<phi>R_dispose_res":
   subgoal for r res
     by (rule R.\<phi>R_dispose_res, assumption, simp add: \<phi>Res_Spec_mult_homo, simp add: \<phi>Res_Spec_mult_homo) .
 
+declare \<phi>R_dispose_res[THEN \<phi>CONSEQ'E0, intro!]
+lemmas \<phi>R_dispose_res_frm[intro!] = \<phi>R_dispose_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+end
 
 paragraph \<open>partial_map_resource2\<close>
 
@@ -1527,7 +1597,7 @@ lemma (in partial_map_resource2) \<phi>R_dispose_res[intro!]:
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := 1)) res \<subseteq> \<S> (\<lambda>_. \<phi>Res_Spec R) Any\<close>
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__" \<phi>Res_Spec_mult_homo)
 
-lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res":
+lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res"[THEN \<phi>CONSEQ'E0, intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k := f))})
       \<Longrightarrow> P (R.get res) \<and> dom f = dom (R.get res k))
@@ -1597,7 +1667,31 @@ lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
       by (simp add: prems(3))
   qed .
 
+lemma (in identity_fiction_for_partial_mapping_resource) "\<phi>R_allocate_res_entry"[intro!]:
+  \<open> (\<forall>m. m \<in> Valid \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
+\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in> Valid \<longrightarrow> m(k \<mapsto> init) \<in> Valid)
+\<Longrightarrow> (\<And>new. P new \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F new \<lbrace> X \<heavy_comma> init \<Ztypecolon> \<phi> (new \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_allocate_res_entry P (Some init) F \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+ apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec simp del: set_mult_expn del: subsetI)
+  subgoal for r res c
+  apply (rule R.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])
+  apply (clarsimp)
+      apply (clarsimp)
+  apply (clarsimp simp add: Subjection_expn
+                  simp del: \<phi>Res_Spec_mult_homo set_mult_expn del: subsetI)
+  subgoal premises prems for k res'
+  apply (rule prems(3)[OF \<open>P _\<close>, THEN spec[where x=r], THEN spec[where x=res'],
+              simplified prems, simplified, THEN mp])
+    apply (rule exI[where x=\<open>c * mk (1(k \<mapsto> init))\<close>])
+    apply (simp add: \<phi>expns prems)
+    apply rule
+    apply (metis Fic_Space_Un Subjection_expn \<phi>Res_Spec_mult_homo expand_subj prems(6) prems(7) prems(8) prems(9) sep_mult_assoc)
+    apply rule
+    using Fic_Space_Un \<phi>Res_Spec_mult_homo prems(5) prems(6) prems(7) prems(8) prems(9) sep_disj_fiction sep_disj_multD2 apply blast
+    using Fic_Space_Un \<phi>Res_Spec_mult_homo prems(6) prems(7) prems(8) prems(9) sep_disj_fiction sep_disj_multI2 by blast
+  . .
 
+  
 
 (*
 

@@ -20,7 +20,7 @@ named_theorems assertion_simps \<open>Simplification rules normalizing an assert
 
 lemmas [assertion_simps] =
   mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left zero_fun
-  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_const FOCUS_TAG_def ExSet_0
+  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_simps FOCUS_TAG_def ExSet_0
 
 
 section \<open>Annotations Guiding the Reasoning\<close>

@@ -334,28 +334,20 @@ lemma introduce_Ex_pending_E:
   using \<phi>apply_implication_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
 
 
-paragraph \<open>Normalizing Conjunction in Precondition\<close>
-
-lemma Subjection_simp_proc_arg:
-  "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  = (P \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> T \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E )"
-  (* and Subjection_simp_func_arg[simp]: "\<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<and>\<^sup>s P \<longmapsto> Y \<rbrace> = (P \<longrightarrow> \<^bold>f\<^bold>u\<^bold>n\<^bold>c f' \<lbrace> T \<longmapsto> Y \<rbrace>)" *)
-  unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
-
-lemmas Subjection_simp_proc_arg_metaeq[unfolded atomize_eq[symmetric]] = Subjection_simp_proc_arg
-
 
 paragraph \<open>Return\<close>
 
+
 lemma \<phi>M_Success[intro!]:
   \<open> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (sem v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: \<phi>expns)
 
 declare \<phi>M_Success[where X=1, simplified, intro!]
 
 lemma \<phi>M_Success'[intro!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<close>
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return vs \<lbrace> X vs \<longmapsto> X \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s Any \<close>
   unfolding Return_def \<phi>Procedure_def det_lift_def by (clarsimp simp add: \<phi>expns)
 
 

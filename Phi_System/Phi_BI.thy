@@ -184,6 +184,9 @@ lemma Subjection_times[simp]:
   \<open>T * (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (T * S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   unfolding Subjection_def times_set_def set_eq_iff by blast+
 
+lemma Subjection_plus:
+  \<open>(A + B \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) + (B \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns) blast
 
 subsection \<open>Existential Quantification\<close>
 
@@ -223,20 +226,19 @@ lemma (in \<phi>empty_sem) [simp]: "p \<in> !\<S> (ExSet T) \<longleftrightarrow
 (* lemma (in \<phi>empty) [simp]: "(VAL ExSet T) = (\<exists>*c. VAL T c)" by (simp add: \<phi>expns set_eq_iff) blast
 lemma (in \<phi>empty) [simp]: "(OBJ ExSet T) = (\<exists>*c. OBJ T c)" by (simp add: \<phi>expns set_eq_iff) *)
 
-lemma [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: \<phi>expns set_eq_iff, blast)
-lemma ExSet_times[simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
+lemma ExSet_times_left [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: \<phi>expns set_eq_iff, blast)
+lemma ExSet_times_right[simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
 
-lemma ExSet_const[simp]: \<open>ExSet (\<lambda>_. T) = T\<close> unfolding set_eq_iff by (simp add: \<phi>expns)
-lemma [simp]: \<open>(\<exists>* x. F x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x = y \<and> P x) = (F y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P y)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-lemma ExSet_ExSet[simp]:
-  \<open>(X a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a b. P a b \<and> Q b)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns, blast)
-
-lemma ExSet_SubjSet[simp]:
+lemma ExSet_simps[simp]:
+  \<open>ExSet (\<lambda>_. T) = T\<close>
+  \<open>(\<exists>* x. F x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x = y \<and> P x) = (F y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P y)\<close>
   \<open>(X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j P b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. P b \<and> Q b)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
+  \<open>(X2 a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P2 a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X2 a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a b. P2 a b \<and> Q b)\<close>
+  unfolding set_eq_iff by (simp_all add: \<phi>expns) blast
+
+lemma ExSet_0[simp]:
+  \<open>ExSet 0 = 0\<close> \<open>ExSet (\<lambda>_. 0) = 0\<close>
+  by (simp_all add: ExSet_def)
 
 lemma [\<phi>reason 200]: (*depreciated*)
    "(\<And>c. T c \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P c)
@@ -258,9 +260,10 @@ lemma [\<phi>reason]:
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d (Ex P)\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast)
 
-lemma ExSet_0[simp]:
-  \<open>ExSet 0 = 0\<close> \<open>ExSet (\<lambda>_. 0) = 0\<close>
-  by (simp_all add: ExSet_def)
+lemma ExSet_plus:
+  \<open>(\<exists>*x. A x + B x) = ExSet A + ExSet B\<close>
+  \<open>ExSet (A + B) = ExSet A + ExSet B\<close>
+  unfolding set_eq_iff by (simp_all add: \<phi>expns plus_fun) blast+
 
 subsection \<open>Universal Quantification\<close>
 
