@@ -221,11 +221,11 @@ val procedure : working_mode =
         val current_phi = return_spec_c ctxt (Thm.cprop_of sequent')
         val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
                               |> Phi_Syntax.dest_sem_value_T
-        val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
+        val sequent'' = if current_arg_T = @{typ "unreachable"}
+                        then sequent' RS @{thm "\<phi>return_when_unreachable"}
+                        else if can (Pattern.unify_types (Context.Proof ctxt)
                                                     (current_arg_T, desired_arg_T)) Envir.init
                         then sequent'
-                        else if current_arg_T = @{typ "unreachable"}
-                        then sequent' RS @{thm "\<phi>return_when_unreachable"}
                         else if can (Pattern.unify_types (Context.Proof ctxt)
                                   (HOLogic.mk_prodT (current_arg_T, @{typ unit}), desired_arg_T))
                                   Envir.init

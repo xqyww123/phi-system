@@ -160,11 +160,17 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def by simp
 
+lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?Any @action reason_ToSA ?G ?mode\<close>]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
+  unfolding FOCUS_TAG_def Action_Tag_def
+  using view_shift_by_implication .
+
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
   unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_plus by clarify
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason 1200]:
   \<open> X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y1 E1
 \<Longrightarrow> X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y2 E2
 \<Longrightarrow> (X1 + X2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
@@ -174,13 +180,13 @@ lemma [\<phi>reason 1000]:
            \<medium_left_bracket> X2 \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 1200]:
+(* lemma [\<phi>reason 1200]:
   \<open> X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
 \<Longrightarrow> X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
 \<Longrightarrow> X1 + X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E\<close>
-  using \<phi>CASE_IMP by fastforce 
-
-lemma [\<phi>reason 1000]:
+  using \<phi>CASE_IMP by fastforce *)
+declare [[\<phi>trace_reasoning]]
+lemma [\<phi>reason 1200]:
   \<open>Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y 0\<close>
   unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>. .
 
@@ -193,6 +199,22 @@ lemma [\<phi>reason 1000]:
   \<medium_right_bracket>. .
 
 
+
 hide_fact Brking_Frame_plus
+
+declare [[\<phi>trace_reasoning, \<phi>display_value_internal_name=true]]
+
+proc
+  input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
+  output \<open>Any\<close>
+  \<medium_left_bracket> brk_scope 
+  note [[\<phi>display_value_internal_name=true]]
+  \<medium_left_bracket> 
+  thm op_break_\<phi>app[of l \<a>\<r>\<g>1 \<open>\<lambda>v. x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<close>]
+    ;; $x op_break[of l, where vs=\<a>\<r>\<g>1 and S=\<open>\<lambda>v. x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<close>]
+    \<medium_right_bracket> .. ;;
+  \<medium_right_bracket>
+
+
 
 end

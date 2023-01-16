@@ -663,7 +663,6 @@ subsubsection \<open>Initialization\<close>
 
 lemma [\<phi>reason 2010
     for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?Y @action ToSA' ?mode\<close>
-    except \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?Y \<heavy_comma> \<blangle> ?YY \<brangle> @action ToSA' ?mode\<close>
 ]:
   \<open> Simplify assertion_simplification X' X
 \<Longrightarrow> Simplify assertion_simplification Y' Y
@@ -676,7 +675,6 @@ lemma [\<phi>reason 2010
 
 lemma [\<phi>reason 2000
     for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action ToSA' ?mode\<close>
-    except \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?Y \<heavy_comma> \<blangle> ?YY \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action ToSA' ?mode\<close>
 ]:
   \<open> Simplify assertion_simplification X' X
 \<Longrightarrow> Simplify assertion_simplification Y' Y
@@ -687,7 +685,8 @@ lemma [\<phi>reason 2000
   unfolding Action_Tag_def Simplify_def FOCUS_TAG_def
   by simp
 
-lemma [\<phi>reason 2100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?var_Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action ToSA' ?mode\<close>]:
+lemma [\<phi>reason 2100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?var_Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action ToSA' ?mode\<close>
+                        \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action ToSA' ?mode\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X @action ToSA' mode\<close>
   unfolding Action_Tag_def using view_shift_id .
 
@@ -729,12 +728,12 @@ lemma [\<phi>reason 4011 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<lo
 
 subsubsection \<open>Void Holes\<close> \<comment> \<open>eliminate 1 holes generated during the reasoning \<close>
 
-lemma [\<phi>reason 3000 ]:
+lemma [\<phi>reason 3100 ]:
   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G \<Longrightarrow>
    \<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> \<blangle> X \<heavy_comma> 1 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G"
   unfolding mult_1_right .
 
-lemma [\<phi>reason 3000]:
+lemma [\<phi>reason 3100]:
   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G \<Longrightarrow>
    \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> Void \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G"
   unfolding mult_1_right .
@@ -763,19 +762,19 @@ lemma [\<phi>reason 2500
 
 subsubsection \<open>Subjection\<close>
 
-lemma [\<phi>reason 3000]:
+lemma [\<phi>reason 3100]:
   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> \<blangle> U \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G \<Longrightarrow>
    (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
    \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> \<blangle> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G"
   unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 3000]:
+lemma [\<phi>reason 3100]:
   "\<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> \<blangle> R \<heavy_comma> U \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G \<Longrightarrow>
    (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
    \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> \<blangle> R \<heavy_comma> (U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G"
   unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 3000]:
+lemma [\<phi>reason 2900]:
   "(Q \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G) \<Longrightarrow>
    \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G"
   unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns) blast
@@ -809,31 +808,31 @@ lemma [\<phi>intro 1100]: \<comment> \<open>tail the step\<close>
 
 subsubsection \<open>Zero\<close>
 
-lemma [\<phi>reason 3100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?var_X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>
+lemma [\<phi>reason 3200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?var_X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>
                         \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?var_Y \<longmapsto> 0 \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> 0 @action reason_ToSA mode G\<close>
   unfolding View_Shift_def zero_set_def Action_Tag_def by simp
 
 
-lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>
+lemma [\<phi>reason 3100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>
                         \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?var_Y \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> X @action reason_ToSA mode G\<close>
   unfolding View_Shift_def zero_set_def Action_Tag_def by simp
 
-lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R\<heavy_comma> 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 3100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R\<heavy_comma> 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w R\<heavy_comma> 0 \<longmapsto> X @action reason_ToSA mode G\<close>
   unfolding View_Shift_def zero_set_def Action_Tag_def by simp
 
-lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0\<heavy_comma> ?R \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 3100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0\<heavy_comma> ?R \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0\<heavy_comma> R \<longmapsto> X @action reason_ToSA mode G\<close>
   unfolding View_Shift_def zero_set_def Action_Tag_def by simp
 
-lemma [\<phi>reason 3000]:
+lemma [\<phi>reason 3100]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y + 0 \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
   unfolding View_Shift_def Action_Tag_def by simp
 
-lemma [\<phi>reason 3000]:
+lemma [\<phi>reason 3100]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 + Y \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
   unfolding View_Shift_def by simp
