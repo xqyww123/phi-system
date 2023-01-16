@@ -33,7 +33,8 @@ signature PHI_TOPLEVEL = sig
         -> string option
         -> bool -> local_theory -> Proof.state
 
-  val begin_block_cmd : Attrib.binding list (*bindings of conditions*)
+  val begin_block_cmd :   binding list option (*fixed variables*)
+                        * Attrib.binding list (*bindings of conditions*)
         -> bool -> Proof.state -> Proof.state
   val end_block_cmd : string option -> bool -> Proof.state -> Proof.state
 
@@ -492,7 +493,7 @@ fun is_backward_mode s = (Proof.assert_backward s; true)
       handle ERROR _ => false
 in
 
-fun gen_begin_block prep_attr bindings int stat =
+fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
   let open Proof
     val ctxt = context_of stat
 
@@ -519,7 +520,11 @@ fun gen_begin_block prep_attr bindings int stat =
           Phi_Help.strip_binder_raw @{const_name Pure.all} (Phi_Help.leading_antecedent' sequent)
     val (var_names, stat) =
           Proof.map_context_result (Proof_Context.add_fixes
-            (map (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars)) stat
+            (case var_bindings
+               of SOME bs => map2 (fn (_,ty) => fn b => (b, SOME ty, NoSyn)) vars bs
+                | NONE    => map  (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) vars
+            )
+          ) stat
     val vars = map Free (var_names ~~ map snd vars)
     val goal = subst_bounds (rev vars, goal)
     val prems_goal = Phi_Help.strip_binop_r @{const_name Pure.imp} goal
@@ -569,8 +574,8 @@ fun gen_begin_block prep_attr bindings int stat =
 
     val bindings_given = map (fn (b,attrs) =>
                                 ((if Binding.name_of b = "_" then Binding.empty else b),
-                                 map (prep_attr ctxt) attrs)) bindings
-    val delta = length prems - length bindings
+                                 map (prep_attr ctxt) attrs)) prem_bindings
+    val delta = length prems - length prem_bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
     val bindings = (bindings_given @ (List.tabulate (delta, K (Binding.empty, attr_useful))))
           |> map (apsnd (fn x => elim_premise :: x))
@@ -700,7 +705,8 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
-   (((optional (\<^keyword>\<open>premises\<close> |--
+   (((  option (\<^keyword>\<open>for\<close> |-- list1 Parse.binding)
+     -- optional (\<^keyword>\<open>premises\<close> |--
             and_list (binding -- opt_attribs || Parse.attribs >> pair Binding.empty)) []
       >> begin_block_cmd)
    -- Phi_Processor.powerful_process_p_inert)

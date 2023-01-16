@@ -209,9 +209,9 @@ proc
   output \<open>Any\<close>
   \<medium_left_bracket> brk_scope 
   note [[\<phi>display_value_internal_name=true]]
-  \<medium_left_bracket> 
-  thm op_break_\<phi>app[of l \<a>\<r>\<g>1 \<open>\<lambda>v. x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<close>]
-    ;; $x op_break[of l, where vs=\<a>\<r>\<g>1 and S=\<open>\<lambda>v. x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<close>]
+  \<medium_left_bracket> for ll
+  thm op_break_\<phi>app[of ll \<a>\<r>\<g>1 \<open>\<lambda>v. x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<close>]
+    ;; $x op_break[of ll, where vs=\<a>\<r>\<g>1 and S=\<open>\<lambda>v. x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<close>]
     \<medium_right_bracket> .. ;;
   \<medium_right_bracket>
 
