@@ -68,9 +68,11 @@ abbreviation Brk_Frame' :: \<open>brk_label \<Rightarrow> (VAL list option,'a) \
 definition Brk_Frame :: \<open>brk_label \<Rightarrow> assn\<close>
   where \<open>Brk_Frame label \<equiv> () \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable \<circle>))\<close>
 
-definition Brking_Frame :: \<open>brk_label \<Rightarrow> ('v::VALs sem \<Rightarrow> assn) \<Rightarrow> assn\<close>
-  where \<open>Brking_Frame label S \<equiv>
-    (\<exists>*v. S v\<heavy_comma> to_vals (sem.dest v) \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable (\<black_circle> Identity))))\<close>
+definition Brking_Frame' :: \<open>brk_label \<Rightarrow> ('v::VALs sem \<Rightarrow> assn) \<Rightarrow> assn\<close>
+  where \<open>Brking_Frame' label S =
+     (\<exists>*v. S v\<heavy_comma> to_vals (sem.dest v) \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable (\<black_circle> Identity))))\<close>
+
+abbreviation \<open>Brking_Frame l S \<equiv> TAIL (Brking_Frame' l S)\<close>
 
 lemma Brk_Frame_eq_identity:
   \<open>Brk_Frame l = (nonsepable None \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
@@ -79,7 +81,7 @@ lemma Brk_Frame_eq_identity:
 
 lemma Brking_Frame_eq_identity:
   \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nonsepable (Some (to_vals (sem.dest v))) \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
-  unfolding set_eq_iff Brking_Frame_def
+  unfolding set_eq_iff Brking_Frame'_def TAIL_def
   by (simp add: \<phi>expns)
 
 
@@ -137,15 +139,19 @@ lemma brk_scope:
   by (rule, rule implies_refl)
 
 lemma op_break_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break l vs \<lbrace> S vs\<heavy_comma> Brk_Frame l \<longmapsto> (0 :: unreachable sem \<Rightarrow> _) \<rbrace>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break l vs \<lbrace> collect_return_values S vs\<heavy_comma> Brk_Frame l \<longmapsto> (0 :: unreachable sem \<Rightarrow> _) \<rbrace>
    \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame l S)\<close>
   unfolding op_break_def Brking_Frame_eq_identity Brk_Frame_eq_identity
+            collect_return_values'_def
+  unfolding TAIL_def
   by (rule, rule, simp, simp, simp, rule, \<phi>reason)
 
 end
 
 
+section \<open>Reasoning Processes\<close>
 
+subsection \<open>sift brking frame\<close>
 
 \<phi>setup_reason_rule_default_pattern
      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
@@ -168,7 +174,7 @@ lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<lo
 
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
-  unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_plus by clarify
+  unfolding set_eq_iff Brking_Frame'_def plus_fun_def distrib_right ExSet_plus TAIL_def by clarify
 
 lemma [\<phi>reason 1200]:
   \<open> X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y1 E1
@@ -185,7 +191,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
 \<Longrightarrow> X1 + X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E\<close>
   using \<phi>CASE_IMP by fastforce *)
-declare [[\<phi>trace_reasoning]]
+
 lemma [\<phi>reason 1200]:
   \<open>Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y 0\<close>
   unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>. .
@@ -198,22 +204,48 @@ lemma [\<phi>reason 1000]:
     X
   \<medium_right_bracket>. .
 
-
-
 hide_fact Brking_Frame_plus
 
-declare [[\<phi>trace_reasoning, \<phi>display_value_internal_name=true]]
+subsection \<open>ToSA through Brking_Frame\<close>
 
+lemma [\<phi>reason 2000]:
+  \<open> Brking_Frame l (\<lambda>v. S v\<heavy_comma> A v\<heavy_comma> B v) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+\<Longrightarrow> Brking_Frame l (\<lambda>v. S v\<heavy_comma> (A v\<heavy_comma> B v)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
+  unfolding mult.assoc .
+
+lemma [\<phi>reason 2000]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l (\<lambda>v. S v\<heavy_comma> A v\<heavy_comma> B v) \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l (\<lambda>v. S v\<heavy_comma> (A v\<heavy_comma> B v)) \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
+  unfolding mult.assoc .
+
+lemma [\<phi>reason 1200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+  \<open> (\<And>v. S v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G)
+\<Longrightarrow> Brking_Frame l S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
+  unfolding Brking_Frame'_def TAIL_def Action_Tag_def FOCUS_TAG_def
+  \<medium_left_bracket> premises X
+    X[THEN implies_right_prod]
+  \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame ?l ?S \<longmapsto> ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
+  \<open>(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w S v \<longmapsto> R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G)
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l S \<longmapsto> Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
+  unfolding Brking_Frame'_def TAIL_def Action_Tag_def FOCUS_TAG_def
+  \<medium_left_bracket> premises X
+    X
+  \<medium_right_bracket>. .
+
+
+
+ 
 proc
-  input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
-  output \<open>Any\<close>
-  \<medium_left_bracket> brk_scope 
-  note [[\<phi>display_value_internal_name=true]]
-  \<medium_left_bracket> for ll
-  thm op_break_\<phi>app[of ll \<a>\<r>\<g>1 \<open>\<lambda>v. x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<close>]
-    ;; $x op_break[of ll, where vs=\<a>\<r>\<g>1 and S=\<open>\<lambda>v. x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T\<close>]
-    \<medium_right_bracket> .. ;;
-  \<medium_right_bracket>
+  input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
+  output \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
+  \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
+      brk_scope \<medium_left_bracket> for l2
+      $x op_break[of l1]
+    \<medium_right_bracket>. $y
+    \<medium_right_bracket>.
+  \<medium_right_bracket>. .
 
 
 

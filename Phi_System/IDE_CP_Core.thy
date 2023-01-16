@@ -265,23 +265,27 @@ consts frame_var_rewrs :: mode
 \<phi>reasoner Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
   = ((simp only: frame_var_rewrs)?, rule Simplify_I)
 
-
 definition \<phi>IntroFrameVar :: "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool"
   where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> S' = (R * S) \<and> T' = R * T "
 
 definition \<phi>IntroFrameVar' ::
-  "assn
-\<Rightarrow> assn \<Rightarrow> assn
-\<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ret \<Rightarrow> assn)
-\<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn)
-\<Rightarrow> bool"
+  "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> bool"
   where "\<phi>IntroFrameVar' R S' S T' T E' E \<longleftrightarrow> S' = (R * S) \<and> T' = (\<lambda>ret. R * T ret) \<and> E' = (\<lambda>ex. R * E ex) "
+
+definition TAIL :: \<open>assn \<Rightarrow> assn\<close> where \<open>TAIL S = S\<close>
 
 text \<open>Antecedent \<^schematic_prop>\<open>\<phi>IntroFrameVar ?R ?S' S ?T' T\<close> appends a frame variable
   \<^schematic_term>\<open>?R\<close> to the source MTF \<^term>\<open>S\<close> if the items in \<^term>\<open>S\<close> do not have an ending
-  frame variable already. If so, the reasoner returns \<open>?S' := ?R * S\<close> for a schematic \<open>?R\<close>,
+  frame variable already nor the ending item is not tagged by \<open>TAIL\<close>.
+  If so, the reasoner returns \<open>?S' := ?R * S\<close> for a schematic \<open>?R\<close>,
   or else, the \<open>S\<close> is returned unchanged \<open>?S' := ?S\<close>.
   \<open>\<phi>IntroFrameVar'\<close> is similar.
+
+  Tag \<open>TAIL\<close> is meaningful only when it tags the last item of a \<open>\<^emph>\<close>-sequence.
+  It has a meaning of `the remaining everything' like, the target (RHS) item tagged by this
+  means the item matches the whole remaining part of the source (LHS) part.
+  \<open>TAIL\<close> also means, the tagged item is at the end and has a sense of ending, so no further
+  padding is required (e.g. padding-of-void during ToSA reasoning).
 \<close>
 
 lemma \<phi>IntroFrameVar_No:
@@ -312,8 +316,11 @@ lemma \<phi>IntroFrameVar'_Yes:
     val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
     val tail = hd (Phi_Syntax.strip_separations S)
+    fun suppressed (Var _) = true
+      | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
+      | suppressed _ = false
   in
-    if is_Var tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
+    if suppressed tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
     else Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
   end\<close>
@@ -324,8 +331,11 @@ lemma \<phi>IntroFrameVar'_Yes:
     val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
     val tail = hd (Phi_Syntax.strip_separations S)
+    fun suppressed (Var _) = true
+      | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
+      | suppressed _ = false
   in
-    if is_Var tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
+    if suppressed tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
     else Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_Yes} RS sequent)
   end\<close>
@@ -1637,22 +1647,26 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
 )\<close>
 
 
-\<phi>processor existential_elimination 150 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
+\<phi>processor existential_elimination 150 ( \<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close> |
+                                         \<open>ToA_Construction ?s (ExSet ?S)\<close>)
   \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn () =>
       raise Process_State_Call' (toks, stat, NuObtain.choose insts), []))\<close>
 
-\<phi>processor automatic_existential_elimination 800 (\<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>)
+\<phi>processor automatic_existential_elimination 800 ( \<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close> |
+                                                   \<open>ToA_Construction ?s (ExSet ?S)\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
     let
       val _ = if Config.get ctxt NuObtain.enable_auto
               andalso Config.get ctxt Phi_Reasoner.auto_level >= 2
               then () else raise Bypass NONE
-      val _ $ X = Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent) |> #4
-      fun is_Abs (Abs _) = true | is_Abs _ = false
+      val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent)
     in
-      if is_Abs X
-      then raise Process_State_Call ((ctxt,sequent), NuObtain.auto_choose)
-      else raise Bypass NONE
+      case #spec_of mode (Thm.concl_of sequent)
+        of Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs _ =>
+            (* the auto choose works only when the lambda variable is given explicitly,
+               i.e. no eta contract. *)
+            raise Process_State_Call ((ctxt,sequent), NuObtain.auto_choose)
+         | _ => raise Bypass NONE
     end)\<close>
 
 

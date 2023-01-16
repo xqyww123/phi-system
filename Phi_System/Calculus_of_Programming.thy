@@ -318,8 +318,12 @@ lemma [\<phi>programming_simps]:
 paragraph \<open>Fixing Existentially Quantified Variable\<close>
 
 lemma \<phi>ExTyp_strip:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (ExSet T)) \<equiv> (\<exists>c. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t p [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T c)"
+  "(CurrentConstruction mode p H (ExSet T)) \<equiv> (\<exists>c. CurrentConstruction mode p H (T c))"
   unfolding CurrentConstruction_def atomize_eq by (simp_all add: \<phi>expns split_paired_all)
+
+lemma \<phi>ExTyp_strip_imp:
+  \<open>ToA_Construction s (ExSet T) \<equiv> (\<exists>c. ToA_Construction s (T c))\<close>
+  unfolding ToA_Construction_def by (simp add: \<phi>expns)
 
 paragraph \<open>Introducing Existential Quantification\<close>
 
@@ -337,6 +341,10 @@ lemma introduce_Ex_pending_E:
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. \<exists>*x. E x v)\<close>
   using \<phi>apply_implication_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
 
+lemma introduce_Ex_ToA:
+  \<open> ToA_Construction s (S x)
+\<Longrightarrow> ToA_Construction s (ExSet S) \<close>
+  using \<phi>ExTyp_strip_imp by fastforce
 
 
 paragraph \<open>Return\<close>

@@ -240,10 +240,10 @@ lemma ExSet_0[simp]:
   \<open>ExSet 0 = 0\<close> \<open>ExSet (\<lambda>_. 0) = 0\<close>
   by (simp_all add: ExSet_def)
 
-lemma [\<phi>reason 200]: (*depreciated*)
+(*lemma [\<phi>reason 200]: (*depreciated*)
    "(\<And>c. T c \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P c)
 \<Longrightarrow> (ExSet T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d (\<exists>c. P c)"
-  unfolding Imply_def by (simp add: \<phi>expns) blast
+  unfolding Imply_def by (simp add: \<phi>expns) blast *)
 
 lemma [\<phi>reason 300]:
   \<open>(\<And>c. S c \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P)

@@ -120,31 +120,38 @@ fun export_codeblock _ param_cterms rule assm sequent =
 fun accept_proc (ctxt,sequent) =
   let open Phi_Syntax
     val rule = sequent RS @{thm \<phi>assemble_proc}
-    val Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, s_ty,
-          Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, ret_ty,
-            \<^const>\<open>Pure.imp\<close> $ codeblk_term $ _))
+    val \<^Const_>\<open>Pure.all _\<close> $ Abs (_, _, \<^Const_>\<open>Pure.all _\<close> $ Abs (_, ret_ty,
+            \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
         = Phi_Help.leading_antecedent' rule
-    val (ret_name, ctxt'1) = Generic_Variable_Access.assign_local_val (SOME ret_ty) ctxt
-    val ([s_name],ctxt') =
-            Proof_Context.add_fixes [(Binding.name "\<s>", NONE, NoSyn)] ctxt'1
-    val codeblk_cterm =
-          Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name,s_ty)], codeblk_term)
-              |> Thm.cterm_of ctxt
-    val param_cterms = [Free (s_name,s_ty), Free (ret_name, ret_ty)]
-              |> map (Thm.cterm_of ctxt)
-    
-    val _ = if Term.maxidx_of_typ ret_ty <> ~1
-            then let val (f,_,_,_,_) =
-                            Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
-              in error (Pretty.string_of (Pretty.block [
-                    Pretty.str "Fail to accept procedure ",
-                    Syntax.pretty_term ctxt f, Pretty.str ".\n",
-                    Pretty.str "The arity of the return has to be fixed, but a variable ",
-                    Syntax.pretty_typ ctxt ret_ty, Pretty.str " is given."
-                 ]))
-              end
-            else ()
 
+    val rule =
+          if Term.maxidx_of_typ ret_ty <> ~1
+          then(case ret_ty
+                 of Type (\<^type_name>\<open>sem\<close>, [TVar V]) =>
+                      let val (f,_,_,_,_) =
+                              Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
+                          val _ = warning "The return arity of a procedure is not fixed.\
+                                          \ Regard it to none."
+                          val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+                              Pretty.block [Pretty.str "In procedure ", Syntax.pretty_term ctxt f],
+                              Pretty.block [
+                                Pretty.str "the arity of the return is not fixed, but a variable ",
+                                Syntax.pretty_typ ctxt ret_ty]
+                           ])
+                      in Thm.instantiate (TVars.make [(V,\<^ctyp>\<open>unit\<close>)], Vars.empty) rule
+                      end)
+          else rule
+    val \<^Const_>\<open>Pure.all _\<close> $ Abs (_, _, \<^Const_>\<open>Pure.all _\<close> $ Abs (_, ret_ty,
+            \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
+        = Phi_Help.leading_antecedent' rule
+
+    val (ret_name, ctxt'1) = Generic_Variable_Access.assign_local_val (SOME ret_ty) ctxt
+    val ([s_name], ctxt') = Proof_Context.add_fixes [(Binding.name "\<s>", NONE, NoSyn)] ctxt'1
+    val codeblk_cterm =
+          Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name, \<^typ>\<open>resource\<close>)], codeblk_term)
+              |> Thm.cterm_of ctxt
+    val param_cterms = [Free (s_name, \<^typ>\<open>resource\<close>), Free (ret_name, ret_ty)]
+              |> map (Thm.cterm_of ctxt)
     val ([codeblk],ctxt'2) = Assumption.add_assms
             (fn _ => fn [assm] => (export_codeblock ctxt' param_cterms rule assm, I))
             [codeblk_cterm] ctxt'

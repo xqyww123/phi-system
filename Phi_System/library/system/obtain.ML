@@ -15,41 +15,12 @@ structure NuObtain : NU_OBTAIN = struct
 fun eliminate_term ctxt xs thm =
   let open Phi_Envir Phi_Syntax Phi_Help
     val tm = Thm.prop_of thm
+    val mode = Phi_Working_Mode.working_mode_on1 ctxt tm
     val vs = map (dest_Free o Thm.term_of) xs;
-    fun collect tm = Term.fold_aterms (fn t as Free v =>
+    fun collect vs tm = Term.fold_aterms (fn t as Free v =>
                         if member (op =) vs v then insert (op =) v else I | _ => I) tm []
-    val bads = collect tm;
-  in
-    if null bads then thm
-    else if can Phi_Syntax.dest_CurrentConstruction (Thm.prop_of thm)
-    then let
-        val rule = @{thm introduce_Ex}
-        fun generalize x thm =
-          case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,E)
-            => thm RS Drule.infer_instantiate ctxt [(("S",0), Thm.cterm_of ctxt (absfree x E))] rule
-        in fold_rev generalize bads thm
-        end
-    else if can Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm)
-    then let
-        val (_,_,_,Q,E) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm)
-        val bad_Q = collect Q
-        val bad_E = collect E
-        val rule_Q = @{thm introduce_Ex_pending}
-        val rule_E = @{thm introduce_Ex_pending_E}
-        fun generalize_Q x thm =
-          case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,Q,_)
-            => thm RS
-                 Drule.infer_instantiate ctxt [(("Q",0), Thm.cterm_of ctxt (absfree x Q))] rule_Q
-        fun generalize_E x thm =
-          case Phi_Syntax.dest_PendingConstruction (Thm.prop_of thm) of (_,_,_,_,E)
-            => thm RS
-                 Drule.infer_instantiate ctxt [(("E",0), Thm.cterm_of ctxt (absfree x E))] rule_E
-        in fold_rev generalize_E bad_E (fold_rev generalize_Q bad_Q thm)
-        end
-    else raise THM (
-          "General Elimination fails because locally fixed variables(s) occurs in the sequent",
-          0, thm :: map Drule.mk_term xs
-        )
+    val bads = collect vs tm
+  in #introduce_existence mode bads (ctxt, thm) |> snd
   end
 
 fun eliminate ctxt rule xs As thm'' =
@@ -100,10 +71,10 @@ fun choose inst_names stat =
     val major = Phi_Envir.the_state_sequent stat
     val ctxt = Proof.context_of stat
     val N = length inst_names
-    val ExTyp_strip = @{thm \<phi>ExTyp_strip}
+    val ExTyp_strip = @{thms \<phi>ExTyp_strip \<phi>ExTyp_strip_imp}
     fun exBI_strip 0 _ = all_conv
-      | exBI_strip 1 _ = rewr_conv ExTyp_strip
-      | exBI_strip N ctxt = rewr_conv ExTyp_strip
+      | exBI_strip 1 _ = rewrs_conv ExTyp_strip
+      | exBI_strip N ctxt = rewrs_conv ExTyp_strip
                   then_conv binder_conv (exBI_strip (N-1) o snd) ctxt
     val major = fconv_rule (arg_conv (exBI_strip N ctxt)) major
     val (vars,body) = Thm.prop_of major |> dest_Trueprop |> strip_binder_raw "HOL.Ex"
@@ -129,7 +100,10 @@ val enable_auto = Attrib.setup_config_bool \<^binding>\<open>\<phi>auto_\<exists
 
 fun auto_choose stat =
   let
-    val var_names = Phi_Syntax.dest_current_nu (Phi_Envir.the_state_sequent stat)
+    val ctxt = Proof.context_of stat
+    val sequent = Phi_Envir.the_state_sequent stat
+    val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent)
+    val var_names = #spec_of mode (Thm.concl_of sequent)
           |> Phi_Help.strip_binder_vars @{const_name ExSet}
           |> map (Name.clean o fst)
     val (var_names', _) =

@@ -25,7 +25,7 @@ Values of identical name are considered identical. Any anonymous value is consid
         -> bool (*the order of values V in tuple vs.
                   true for Right-to-Left; false for Left-to-Right*)
         -> term
-        -> term * term
+        -> term (*values*) * term (*lambda abstraction*)
 
 (* Syntax translation during parse of the post-condition,
    roughly identical to (abstract_return_vals "\<r>\<e>\<t>" true).
