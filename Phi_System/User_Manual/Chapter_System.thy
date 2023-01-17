@@ -301,7 +301,7 @@ text \<open>
     By turning on this option, values will be displayed as \<^term>\<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[internal] T\<close>
     by contrast to the default display \<^term>\<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>.
     This \<^term>\<open>internal\<close> is the internal semantic representation of value.
-
+\<^descr> \<phi>display_brk_frame displays the internal and technical separation items for breaking frame.
 \<close>
 
 end

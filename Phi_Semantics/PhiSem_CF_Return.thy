@@ -107,7 +107,8 @@ definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) pro
 )\<close>
 
 definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> Brk_Frame l)\<close>
-definition \<open>sift_brking_frame = sift_brking_frame'\<close>
+definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _ \<^bold>o\<^bold>r _" [4,4,3] 3)
+  where \<open>sift_brking_frame = sift_brking_frame'\<close>
 
 context begin
 
@@ -242,7 +243,8 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_
     X
   \<medium_right_bracket>. .
 
-declare [[\<phi>display_value_internal_name]]
+
+subsection \<open>Syntax hiding technical separation items\<close>
 
 ML \<open>
 val phi_display_brk_frame = Attrib.setup_config_bool \<^binding>\<open>\<phi>display_brk_frame\<close> (K false)
@@ -256,7 +258,7 @@ val _ = Theory.setup (
 )))
 \<close>
 
-
+section \<open>Example\<close>
 
 proc
   input  \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
@@ -268,7 +270,6 @@ proc
       assert \<bottom> (*this place is unreachable!*)
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
-
 
 
 end
