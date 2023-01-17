@@ -127,7 +127,7 @@ fun accept_proc' (ctxt,sequent) =
     val rule =
           if Term.maxidx_of_typ ret_ty <> ~1
           then(case ret_ty
-                 of Type (\<^type_name>\<open>sem\<close>, [TVar V]) =>
+                 of Type (\<^type_name>\<open>\<phi>arg\<close>, [TVar V]) =>
                       let val (f,_,_,_,_) = Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
                           val _ = warning "The return arity of a procedure is not fixed.\
                                           \ Regard it to none."

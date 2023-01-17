@@ -156,7 +156,7 @@ fun closure _ f =
                      ) tvars
     val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f
 
-    fun trim ((i as \<^term>\<open>\<phi>V_none\<close>), (x as Abs (_, \<^typ>\<open>unit sem\<close>, X)))
+    fun trim ((i as \<^term>\<open>\<phi>V_none\<close>), (x as Abs (_, \<^typ>\<open>unit \<phi>arg\<close>, X)))
           = if Term.is_open X then ([i], x) else ([], X)
       | trim (i,x) = ([i],x)
     val (instance,f'') = Procedure_Syntax.abstract_return_vals "\<a>\<r>\<g>" dummyT false f' |> trim

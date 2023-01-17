@@ -10,11 +10,11 @@ subsection \<open>Primitive \<phi>-Types\<close>
 
 subsubsection \<open>Value\<close>
 
-definition Val :: \<open>VAL sem \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
-  where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem.dest val \<in> (x \<Ztypecolon> T))\<close>
+definition Val :: \<open>VAL \<phi>arg \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>l[_] _" [22,22] 21)
+  where \<open>Val val T = (\<lambda>x. 1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<phi>arg.dest val \<in> (x \<Ztypecolon> T))\<close>
 
 lemma Val_expn [\<phi>expns]:
-  \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j sem.dest val \<in> (x \<Ztypecolon> T))\<close>
+  \<open>(x \<Ztypecolon> Val val T) = (1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<phi>arg.dest val \<in> (x \<Ztypecolon> T))\<close>
   unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma Val_inhabited [\<phi>inhabitance_rule, elim!]:
@@ -101,7 +101,7 @@ lemma is_singletonI'':
 
 section \<open>Specification of Monadic States\<close>
 
-definition StrictStateTy :: "('ret::VALs sem \<Rightarrow> rassn)
+definition StrictStateTy :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
@@ -109,7 +109,7 @@ definition StrictStateTy :: "('ret::VALs sem \<Rightarrow> rassn)
                               | Invalid \<Rightarrow> False
                               | PartialCorrect \<Rightarrow> False}"
 
-definition LooseStateTy  :: "('ret::VALs sem \<Rightarrow> rassn)
+definition LooseStateTy  :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
@@ -216,7 +216,7 @@ section \<open>Specification of Computation\<close>
 
 definition \<phi>Procedure :: "'ret::VALs proc
                         \<Rightarrow> assn
-                        \<Rightarrow> ('ret sem \<Rightarrow> assn)
+                        \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
                         \<Rightarrow> (ABNM \<Rightarrow> assn)
                         \<Rightarrow> bool"
     ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _)" [101,2,2,2] 100)

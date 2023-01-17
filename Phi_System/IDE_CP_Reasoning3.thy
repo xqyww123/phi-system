@@ -2690,12 +2690,12 @@ section \<open>Small Process - II\<close>
 
 subsection \<open>Collect Return Values\<close>
 
-definition collect_return_values' :: \<open>('vs::VALs sem \<Rightarrow> assn) \<Rightarrow> 'vs::VALs sem \<Rightarrow> assn\<close>
+definition collect_return_values' :: \<open>('vs::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> 'vs::VALs \<phi>arg \<Rightarrow> assn\<close>
   where \<open>collect_return_values' S vs = S vs\<close>
 
 abbreviation \<open>collect_return_values S vs \<equiv> TAIL (collect_return_values' S vs)\<close>
 
-definition Collect_Return_Values :: \<open>assn \<Rightarrow> ('vs::VALs sem \<Rightarrow> assn) \<Rightarrow> 'vs::VALs sem \<Rightarrow> bool\<close>
+definition Collect_Return_Values :: \<open>assn \<Rightarrow> ('vs::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> 'vs::VALs \<phi>arg \<Rightarrow> bool\<close>
   where \<open>Collect_Return_Values S S_out V_out \<longleftrightarrow> S = S_out V_out\<close>
 
 lemma Collect_Return_Values_I: \<open>Collect_Return_Values (S V) S V\<close>

@@ -68,9 +68,9 @@ abbreviation Brk_Frame' :: \<open>brk_label \<Rightarrow> (VAL list option,'a) \
 definition Brk_Frame :: \<open>brk_label \<Rightarrow> assn\<close>
   where \<open>Brk_Frame label \<equiv> () \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable \<circle>))\<close>
 
-definition Brking_Frame' :: \<open>brk_label \<Rightarrow> ('v::VALs sem \<Rightarrow> assn) \<Rightarrow> assn\<close>
+definition Brking_Frame' :: \<open>brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close>
   where \<open>Brking_Frame' label S =
-     (\<exists>*v. S v\<heavy_comma> to_vals (sem.dest v) \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable (\<black_circle> Identity))))\<close>
+     (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable (\<black_circle> Identity))))\<close>
 
 abbreviation \<open>Brking_Frame l S \<equiv> TAIL (Brking_Frame' l S)\<close>
 
@@ -80,7 +80,7 @@ lemma Brk_Frame_eq_identity:
   by (simp add: \<phi>expns)
 
 lemma Brking_Frame_eq_identity:
-  \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nonsepable (Some (to_vals (sem.dest v))) \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nonsepable (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff Brking_Frame'_def TAIL_def
   by (simp add: \<phi>expns)
 
@@ -95,14 +95,14 @@ definition op_brk_scope :: \<open>(brk_label \<Rightarrow> ('a::VALs) proc) \<Ri
     (F l \<bind> (\<lambda>ret. R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l := None)) \<ggreater> Return ret))
     (\<lambda>a. R_brk_frame.\<phi>R_get_res_entry l (\<lambda>brk.
       R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l := None)) \<ggreater>
-     (case nonsepable.dest brk of Some vs \<Rightarrow> Return (sem (from_vals vs))
+     (case nonsepable.dest brk of Some vs \<Rightarrow> Return (\<phi>arg (from_vals vs))
                                 | None \<Rightarrow> throw a)
 )))
 \<close>
 
 definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) proc'\<close>
   where \<open>op_break l = (\<lambda>vs.
-     R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l \<mapsto> nonsepable (Some (to_vals (sem.dest vs)))))
+     R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l \<mapsto> nonsepable (Some (to_vals (\<phi>arg.dest vs)))))
   \<ggreater> throw (ABN_break.mk ())
 )\<close>
 
@@ -201,7 +201,7 @@ lemma [\<phi>reason 1180]:
 \<Longrightarrow> ERROR TEXT(\<open>The exits of scope\<close> l \<open>mismach in return type. One is\<close>
                     TYPE('a) \<open>while another is\<close> TYPE('b))
 \<Longrightarrow> Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y' 0\<close>
-  for Y :: \<open>'a::VALs sem \<Rightarrow> _\<close> and Y' :: \<open>'b::VALs sem \<Rightarrow> _\<close>
+  for Y :: \<open>'a::VALs \<phi>arg \<Rightarrow> _\<close> and Y' :: \<open>'b::VALs \<phi>arg \<Rightarrow> _\<close>
   by blast
 
 lemma [\<phi>reason 1000]:
@@ -244,15 +244,16 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_
 
 
 declare [[\<phi>trace_reasoning]]
- 
+
+
 proc
   input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   output \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
       $x op_break[of l1]
-    \<medium_right_bracket>. ;;  $y op_break[of l1 \<open>\<a>\<r>\<g>2\<close>]
-    \<medium_right_bracket> ..
+    \<medium_right_bracket>. assert 0
+    \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
 
