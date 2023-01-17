@@ -382,7 +382,7 @@ proc op_var_scope:
     \<medium_left_bracket> premises [\<phi>reason]
       BLK to_Identity op_free_var
     \<medium_right_bracket>.
-    \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>.
+    \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>. 
   \<medium_right_bracket>. .
 
 subsection \<open>Implementing IDE-CP Generic Variable Access\<close>

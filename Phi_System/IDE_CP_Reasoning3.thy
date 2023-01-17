@@ -265,7 +265,8 @@ text \<open>This is a reasoning procedure for transformations of abstraction of 
 
 text \<open>Priority Convention:
 \<^item> 4000: Termination
-\<^item> 3100: Safe Normalization
+\<^item> 3200: Very Safe Normalization
+\<^item> 3150: Assigning Zeros
 \<^item> 3000: Normalization
 \<^item> 2800: Divergent reasoning in pre-condition
 \<^item> 2700: Fixing existentially quantified variables
@@ -420,24 +421,21 @@ lemma [\<phi>intro 1100]: \<comment> \<open>tail the step\<close>
 
 subsubsection \<open>Zero\<close>
 
-lemma [\<phi>reason 3200 for \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?var_X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-                        \<open> ?var_Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> 0 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> 0 \<brangle> @action reason_ToSA mode G\<close>
-  unfolding Imply_def zero_set_def by simp
-
-lemma [\<phi>reason 3200 for \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?R\<heavy_comma> ?var_X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 3150 for \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?R\<heavy_comma> ?var_X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R \<brangle> @action reason_ToSA mode G
 \<Longrightarrow> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R\<heavy_comma> 0 \<brangle> @action reason_ToSA mode G\<close>
   unfolding Imply_def zero_set_def by simp
 
-lemma [\<phi>reason 3190 for \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?R\<heavy_comma> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 3140 for \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?R\<heavy_comma> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R \<brangle> @action reason_ToSA mode G
 \<Longrightarrow> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R\<heavy_comma> X \<brangle> @action reason_ToSA mode G\<close>
   unfolding Imply_def zero_set_def by simp
 
+lemma [\<phi>reason 3130 for \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?var_X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+  \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> 0 \<brangle> @action reason_ToSA mode G\<close>
+  unfolding Imply_def zero_set_def by simp
 
-lemma [\<phi>reason 3100 for \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-                        \<open> ?var_Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 3100 for \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action reason_ToSA mode G\<close>
   unfolding Imply_def zero_set_def by simp
 
@@ -825,23 +823,21 @@ lemma [\<phi>intro 1100]: \<comment> \<open>tail the step\<close>
 
 subsubsection \<open>Zero\<close>
 
-lemma [\<phi>reason 3200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> ?var_X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>
-                        \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?var_Y \<longmapsto> \<blangle> 0 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> 0 \<brangle> @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def zero_set_def Action_Tag_def by simp
-
-lemma [\<phi>reason 3200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> ?R\<heavy_comma> ?var_X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 3150 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> ?R\<heavy_comma> ?var_X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> R \<brangle> @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> R\<heavy_comma> 0 \<brangle> @action reason_ToSA mode G\<close>
   unfolding View_Shift_def zero_set_def Action_Tag_def by simp
 
-lemma [\<phi>reason 3190 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> ?R\<heavy_comma> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 3140 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> ?R\<heavy_comma> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> R \<brangle> @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> R\<heavy_comma> X \<brangle> @action reason_ToSA mode G\<close>
   unfolding View_Shift_def zero_set_def Action_Tag_def by simp
 
-lemma [\<phi>reason 3100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>
-                        \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?var_Y \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 3130 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> ?var_X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
+  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> 0 \<brangle> @action reason_ToSA mode G\<close>
+  unfolding View_Shift_def zero_set_def Action_Tag_def by simp
+
+lemma [\<phi>reason 3100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> X @action reason_ToSA mode G\<close>
   unfolding View_Shift_def zero_set_def Action_Tag_def by simp
 
@@ -2710,7 +2706,8 @@ lemma Collect_Return_Values_I: \<open>Collect_Return_Values (S V) S V\<close>
   let
     val \<^const>\<open>Trueprop\<close> $ (\<^Const_>\<open>Collect_Return_Values _\<close> $ S $ Var S' $ Var V')
           = Thm.major_prem_of sequent
-    val (V'',S'') = Procedure_Syntax.abstract_return_vals "\<v>\<s>" true S
+    val (V'',S'') = Procedure_Syntax.abstract_return_vals
+                            "\<v>\<s>" (TVar (("ret", Thm.maxidx_of sequent),\<^sort>\<open>VALs\<close>)) true S
           |> apply2 (Thm.cterm_of ctxt)
    in Drule.infer_instantiate_types ctxt [(S',S''),(V',V'')] sequent
           |> (fn th => @{thm Collect_Return_Values_I} RS th)
@@ -2721,6 +2718,12 @@ lemma Collect_Return_Values_I: \<open>Collect_Return_Values (S V) S V\<close>
 lemma [\<phi>reason 2550 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> \<blangle> collect_return_values ?S ?vs \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?Any @action reason_ToSA ?mode ?G\<close>]:
   \<open> Collect_Return_Values X S vs
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> \<blangle> collect_return_values S vs \<brangle> @action reason_ToSA mode G\<close>
+  unfolding Collect_Return_Values_def collect_return_values'_def FOCUS_TAG_def Action_Tag_def
+            TAIL_def
+  by (simp add: view_shift_id)
+
+lemma [\<phi>reason 3200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> collect_return_values ?S ?vs \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?Any @action reason_ToSA ?mode ?G\<close>]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> \<blangle> collect_return_values 0 \<phi>V_none \<brangle> @action reason_ToSA mode G\<close>
   unfolding Collect_Return_Values_def collect_return_values'_def FOCUS_TAG_def Action_Tag_def
             TAIL_def
   by (simp add: view_shift_id)

@@ -1,11 +1,6 @@
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
-  val dest_nuTy : term -> term * term
-  val dest_nuTy_c : cterm -> cterm * cterm
-  val mk_nuTy : term * term -> term
-  val mk_Nu_ty : typ * typ -> typ
-
   val is_construction_mode: term -> term -> bool
   val dest_CurrentConstruction   :  term -> term * term * term * term
   val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm * cterm
@@ -24,9 +19,6 @@ include PHI_SYNTAX
   val dest_procedure   : term -> term * term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm * cterm
 
-  val dest_destined_phityp   : term -> term
-  val dest_destined_phityp_c : cterm -> cterm
-
   val dest_view_shift   : term  -> term * term * term
   val dest_view_shift_c : cterm -> cterm * cterm * cterm
 
@@ -35,19 +27,18 @@ include PHI_SYNTAX
   val dest_ToA_Construction    : term  -> term * term
   val dest_ToA_Construction_c  : cterm -> cterm * cterm
 
+  val dest_CodeBlock   : term -> term * term * term * term
+  val dest_CodeBlock_c : cterm -> cterm * cterm * cterm * cterm
+
   val strip_separations : term -> term list
 
   val dest_sem_value_T: typ -> typ
   val mk_sem_value_T: typ -> typ
+
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Thm Term HOLogic Phi_Help Phi_Syntax
-
-val dest_nuTy = dest_binop @{const_name "\<phi>Type"}
-val dest_nuTy_c = dest_binop_c @{const_name "\<phi>Type"}
-val mk_nuTy = mk_binop @{const_name "\<phi>Type"}
-fun mk_Nu_ty (tya,tyb) = tyb --> Type(@{type_name Set.set}, [tya])
 
 val dest_action_tag   = dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
 val dest_action_tag_c = dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
@@ -71,6 +62,9 @@ val dest_PendingConstruction_c =
       perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name PendingConstruction}
 val dest_set_member   = dest_tags   #> dest_binop   @{const_name Set.member}
 val dest_set_member_c = dest_tags_c #> dest_binop_c @{const_name Set.member}
+
+val dest_CodeBlock   = perhaps (try dest_Trueprop)   #> dest_quadop   \<^const_name>\<open>CodeBlock\<close>
+val dest_CodeBlock_c = perhaps (try dest_Trueprop_c) #> dest_quadop_c \<^const_name>\<open>CodeBlock\<close>
 
 fun is_construction_mode mode tm =
   case try dest_CurrentConstruction tm
@@ -132,20 +126,6 @@ val dest_ToA_Construction =
 val dest_ToA_Construction_c =
          dest_tags_c
       #> dest_binop_c @{const_name ToA_Construction}
-
-
-fun dest_destined_phityp term =
-  case try dest_procedure term
-    of SOME (_,_,ty,_) => ty | _ => 
-  case try dest_implication term
-    of SOME (_,ty,_) => ty | _ => raise TERM ("dest_destined_phityp", [term])
-
-fun dest_destined_phityp_c term =
-  case try dest_procedure_c term
-    of SOME (_,_,ty,_) => ty | _ => 
-  case try dest_implication_c term
-    of SOME (_,ty,_) => ty | _ => raise CTERM ("dest_destined_phityp", [term])
-
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T

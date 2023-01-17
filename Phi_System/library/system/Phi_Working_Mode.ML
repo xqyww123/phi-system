@@ -258,8 +258,9 @@ fun before_finish goal (ctxt,sequent) =
         val (ins,current_nu) =
               return_spec_c ctxt (Thm.cprop_of sequent)
                  |> Thm.term_of
-                 |> Procedure_Syntax.abstract_return_vals "\<r>\<e>\<t>" true
-                 |> apply2 (Syntax.check_term ctxt #> Thm.cterm_of ctxt)
+                 |> Procedure_Syntax.abstract_return_vals "\<r>\<e>\<t>"
+                              (TVar (("ret", Thm.maxidx_of sequent), \<^sort>\<open>VALs\<close>)) true
+                 |> apply2 (Thm.cterm_of ctxt)
         val idx_delt = 1 + Int.max (Thm.maxidx_of_cterm ins, Thm.maxidx_of_cterm current_nu)
         val return_rule = @{thm \<phi>return}
                        |> Thm.incr_indexes idx_delt
@@ -276,9 +277,7 @@ fun before_finish goal (ctxt,sequent) =
     val current_phi = return_spec_c ctxt (Thm.cprop_of sequent')
     val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
                           |> Phi_Syntax.dest_sem_value_T
-    val sequent'' = if current_arg_T = @{typ "unreachable"}
-                    then sequent' RS @{thm "\<phi>return_when_unreachable"}
-                    else if can (Pattern.unify_types (Context.Proof ctxt)
+    val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
                                                 (current_arg_T, desired_arg_T)) Envir.init
                     then sequent'
                     else if can (Pattern.unify_types (Context.Proof ctxt)

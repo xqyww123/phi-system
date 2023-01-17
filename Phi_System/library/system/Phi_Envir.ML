@@ -197,35 +197,4 @@ fun put_thesis thesis =
 fun get_thesis ctxt =
       Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
 
-
-
-
-
-
-
-
-
-
-
-
-
-(* val auto_fusion_arity =
-  Logic.strip_assums_concl #> perhaps (try dest_Trueprop) #> perhaps_try (dest_procedure #> #2)
-  #> perhaps_try (dest_binop "NuPrime.Stack_Delimiter" #> #2)
-  #> perhaps (try dest_RepSet) #> perhaps_try (dest_nuTy #> #2)
-  #> repeat (dest_binop "NuBasicAbstractors.NuRefine" #> #1)
-  #> repeat (dest_binop "NuBasicAbstractors.SchemaCondition" #> #1)
-  #> repeat (dest_binop "NuBasicAbstractors.Schema" #> #1)
-  #> strip_binop_r "NuLLReps.AutoFusion" #> length *)
-
-(*default type remander*)
-(* val default_ty_R = TFree ("'\<RR>", [@{class "stack"}]) *)
-(*translate tail of a stack type to `ty_R`, if it ends with void*)
-
-
-
-
-
-
-
 end

@@ -53,31 +53,43 @@ instance VAL :: sep_magma ..
 interpretation \<phi>empty_val VAL_CONS_OF by standard simp
 
 
-subsubsection \<open>Deep Representation of Values of Variable Length\<close>
+subsubsection \<open>Deep Representation of Aggregated Values\<close>
 
+class VAL =
+  fixes to_val   :: \<open>'a \<Rightarrow> VAL\<close>
+    and from_val :: \<open>VAL \<Rightarrow> 'a\<close>
+  assumes from_to_val[simp]: \<open>from_val (to_val x) = x\<close>
 
 class VALs =
   fixes to_vals    :: \<open>'a \<Rightarrow> VAL list\<close>
     and from_vals  :: \<open>VAL list \<Rightarrow> 'a\<close>
-    and vals_arity :: \<open>'a itself \<Rightarrow> nat\<close>
   assumes from_to_vals[simp]: \<open>from_vals (to_vals x) = x\<close>
-    and length_to_vals[simp]: \<open>length (to_vals x) = vals_arity TYPE('a)\<close>
 
-instantiation unit :: VALs begin
+class FIX_ARITY_VALs = VALs +
+  fixes vals_arity :: \<open>'a itself \<Rightarrow> nat\<close>
+  assumes length_to_vals[simp]: \<open>length (to_vals x) = vals_arity TYPE('a)\<close>
+
+instantiation VAL :: VAL begin
+definition to_val_VAL :: \<open>VAL \<Rightarrow> VAL\<close> where \<open>to_val_VAL = id\<close>
+definition from_val_VAL :: \<open>VAL \<Rightarrow> VAL\<close> where \<open>from_val_VAL = id\<close>
+instance by standard (simp add: to_val_VAL_def from_val_VAL_def)
+end
+
+instantiation unit :: FIX_ARITY_VALs begin
 definition to_vals_unit    :: \<open>unit \<Rightarrow> VAL list\<close>   where \<open>to_vals_unit v  = []\<close>
 definition from_vals_unit  :: \<open>VAL list \<Rightarrow> unit\<close>   where \<open>from_vals_unit _ = ()\<close>
 definition vals_arity_unit :: \<open>unit itself \<Rightarrow> nat\<close> where \<open>vals_arity_unit _ = 0\<close>
 instance by standard (simp_all add: vals_arity_unit_def to_vals_unit_def)
 end
 
-instantiation VAL :: VALs begin
+instantiation VAL :: FIX_ARITY_VALs begin
 definition to_vals_VAL    :: \<open>VAL \<Rightarrow> VAL list\<close>   where \<open>to_vals_VAL v  = [v]\<close>
 definition from_vals_VAL  :: \<open>VAL list \<Rightarrow> VAL\<close>   where \<open>from_vals_VAL  = hd\<close>
 definition vals_arity_VAL :: \<open>VAL itself \<Rightarrow> nat\<close> where \<open>vals_arity_VAL _ = 1\<close>
 instance by standard (simp_all add: to_vals_VAL_def from_vals_VAL_def vals_arity_VAL_def)
 end
 
-instantiation prod :: (VALs, VALs) VALs begin
+instantiation prod :: (FIX_ARITY_VALs, FIX_ARITY_VALs) FIX_ARITY_VALs begin
 
 definition to_vals_prod    :: \<open>'a \<times> 'b \<Rightarrow> VAL list\<close>
   where \<open>to_vals_prod v = (case v of (v1,v2) \<Rightarrow> to_vals v1 @ to_vals v2)\<close>
@@ -92,7 +104,12 @@ instance apply standard
   by (clarsimp simp add: to_vals_prod_def vals_arity_prod_def)
 
 end
-  
+
+instantiation list :: (VAL) VALs begin
+definition to_vals_list :: \<open>'a list \<Rightarrow> VAL list\<close> where \<open>to_vals_list = map to_val\<close>
+definition from_vals_list :: \<open>VAL list \<Rightarrow> 'a list\<close> where \<open>from_vals_list = map from_val\<close>
+instance by standard (induct_tac x; simp add: to_vals_list_def from_vals_list_def)
+end
 
 
 
@@ -235,7 +252,7 @@ text \<open>Arguments and Returns are wrapped by sem type.
   For sure this wrap is not necessary, but it helps the programming framework and syntax parser
   to recognize which entity is an argument or a return.\<close>
 
-datatype 'a sem = sem (dest: 'a)
+datatype ('a::VALs) sem = sem (dest: 'a)
 hide_const (open) dest
 
 
@@ -269,10 +286,11 @@ lemma \<phi>V_simps[simp]:
      apply (cases v, simp)
      apply (cases v, simp)
      apply (cases v, simp)
-    apply simp apply simp apply simp .
+     apply simp apply simp apply simp .
 
+definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
 
-datatype unreachable = unreachable
+(* datatype unreachable = unreachable
 
 instantiation unreachable :: VALs begin
 definition to_vals_unreachable :: \<open>unreachable \<Rightarrow> VAL list\<close> where \<open>to_vals_unreachable _ = undefined\<close>
@@ -284,7 +302,7 @@ instance apply standard
   apply (simp_all add: to_vals_unreachable_def from_vals_unreachable_def vals_arity_unreachable_def)
   by (metis unreachable.exhaust)
 end
-
+*)
 
 subsubsection \<open>Monadic Formalization\<close>
 
@@ -321,7 +339,7 @@ declare [ [typedef_overloaded] ]
 
 datatype 'ret state =
       Success \<open>'ret::VALs sem\<close> (resource: resource)
-    | Exception \<open>ABNM sem\<close> (resource: resource)
+    | Exception \<open>ABNM\<close> (resource: resource)
     | Invalid | PartialCorrect
 
 declare [ [typedef_overloaded = false] ]

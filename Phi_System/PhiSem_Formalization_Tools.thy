@@ -22,7 +22,7 @@ definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Righ
   where \<open>\<phi>M_getV TY VDT_dest v F =
     (\<phi>M_assert (sem.dest v \<in> Well_Type TY) \<ggreater> F (VDT_dest (sem.dest v)))\<close>
 
-definition \<phi>M_caseV :: \<open>(VAL sem \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr,'ret) proc'\<close>
+definition \<phi>M_caseV :: \<open>(VAL sem \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr::FIX_ARITY_VALs,'ret) proc'\<close>
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of sem (a1,a2) \<Rightarrow> F (sem a1) (sem a2))\<close>
 
 subsection \<open>Reasoning for Elementary Constructions\<close>
@@ -1231,7 +1231,7 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<he
 
 subsection \<open>Exception\<close>
 
-definition throw :: \<open>(ABNM,'ret::VALs) proc'\<close>
+definition throw :: \<open>ABNM \<Rightarrow> 'ret::VALs proc\<close>
   where \<open>throw raw = det_lift (Exception raw)\<close>
 
 lemma "__throw_rule__"[intro!]:
@@ -1243,12 +1243,12 @@ lemma "__throw_rule__"[intro!]:
 
 lemma throw_\<phi>app[intro!]:
   \<open> (\<And>v. Remove_Values (X v) (X' v))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (throw excep :: unreachable proc) \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Imply_def
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
 
-definition op_try :: "'ret proc \<Rightarrow> (ABNM sem \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
+definition op_try :: "'ret proc \<Rightarrow> (ABNM \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'}
                                        | Exception v s' \<Rightarrow> g v s'
                                        | PartialCorrect \<Rightarrow> {PartialCorrect}

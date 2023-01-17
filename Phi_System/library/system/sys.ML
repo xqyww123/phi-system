@@ -119,10 +119,10 @@ fun export_codeblock _ param_cterms rule assm sequent =
 
 fun accept_proc (ctxt,sequent) =
   let open Phi_Syntax
-    val rule = sequent RS @{thm \<phi>assemble_proc}
+    val rule' = sequent RS @{thm \<phi>assemble_proc}
     val \<^Const_>\<open>Pure.all _\<close> $ Abs (_, _, \<^Const_>\<open>Pure.all _\<close> $ Abs (_, ret_ty,
             \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
-        = Phi_Help.leading_antecedent' rule
+        = Phi_Help.leading_antecedent' rule'
 
     val rule =
           if Term.maxidx_of_typ ret_ty <> ~1
@@ -138,9 +138,9 @@ fun accept_proc (ctxt,sequent) =
                                 Pretty.str "the arity of the return is not fixed, but a variable ",
                                 Syntax.pretty_typ ctxt ret_ty]
                            ])
-                      in Thm.instantiate (TVars.make [(V,\<^ctyp>\<open>unit\<close>)], Vars.empty) rule
+                      in Thm.instantiate (TVars.make [(V,\<^ctyp>\<open>unit\<close>)], Vars.empty) rule'
                       end)
-          else rule
+          else rule'
     val \<^Const_>\<open>Pure.all _\<close> $ Abs (_, _, \<^Const_>\<open>Pure.all _\<close> $ Abs (_, ret_ty,
             \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
         = Phi_Help.leading_antecedent' rule
@@ -152,6 +152,16 @@ fun accept_proc (ctxt,sequent) =
               |> Thm.cterm_of ctxt
     val param_cterms = [Free (s_name, \<^typ>\<open>resource\<close>), Free (ret_name, ret_ty)]
               |> map (Thm.cterm_of ctxt)
+
+    val (_,_,f,_) = Phi_Syntax.dest_CodeBlock_c codeblk_cterm
+    val _ = if Thm.maxidx_of_cterm f <> ~1
+            then error (Pretty.string_of (Pretty.chunks [
+                    Pretty.str "The pending procedure to be accepted has schematic variable(s)!",
+                    Syntax.pretty_term ctxt (Thm.term_of f)
+                 ]))
+            else ()
+                  
+
     val ([codeblk],ctxt'2) = Assumption.add_assms
             (fn _ => fn [assm] => (export_codeblock ctxt' param_cterms rule assm, I))
             [codeblk_cterm] ctxt'

@@ -103,7 +103,7 @@ definition op_brk_scope :: \<open>(brk_label \<Rightarrow> ('a::VALs) proc) \<Ri
 definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) proc'\<close>
   where \<open>op_break l = (\<lambda>vs.
      R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l \<mapsto> nonsepable (Some (to_vals (sem.dest vs)))))
-  \<ggreater> throw (sem (ABN_break.mk ()))
+  \<ggreater> throw (ABN_break.mk ())
 )\<close>
 
 definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> Brk_Frame l)\<close>
@@ -139,7 +139,7 @@ lemma brk_scope:
   by (rule, rule implies_refl)
 
 lemma op_break_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break l vs \<lbrace> collect_return_values S vs\<heavy_comma> Brk_Frame l \<longmapsto> (0 :: unreachable sem \<Rightarrow> _) \<rbrace>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break l vs \<lbrace> collect_return_values S vs\<heavy_comma> Brk_Frame l \<longmapsto> 0 \<rbrace>
    \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame l S)\<close>
   unfolding op_break_def Brking_Frame_eq_identity Brk_Frame_eq_identity
             collect_return_values'_def
@@ -235,7 +235,7 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_
   \<medium_right_bracket>. .
 
 
-
+declare [[\<phi>trace_reasoning]]
  
 proc
   input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
@@ -243,8 +243,8 @@ proc
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
       $x op_break[of l1]
-    \<medium_right_bracket>. $y
-    \<medium_right_bracket>.
+    \<medium_right_bracket>. ;;  $y op_break[of l1]
+    \<medium_right_bracket> ..
   \<medium_right_bracket>. .
 
 

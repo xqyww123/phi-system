@@ -22,6 +22,7 @@ Values of identical name are considered identical. Any anonymous value is consid
 *)
   val abstract_return_vals :
        string (*name of the lambda variable*)
+        -> typ (*type of the return when the spec is 0*)
         -> bool (*the order of values V in tuple vs.
                   true for Right-to-Left; false for Left-to-Right*)
         -> term
@@ -184,10 +185,9 @@ fun ex_fastype_of TM =
   let val T = fastype_of TM in if T = dummyT then dummyT_sem else T end
   handle TERM _ => dummyT_sem
 
-fun abstract_return_vals name _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
-      = (\<^term>\<open>sem unreachable :: unreachable sem\<close>,
-         Abs (name, \<^typ>\<open>unreachable sem\<close>, term))
-| abstract_return_vals name R2L term =
+fun abstract_return_vals name zero_ty _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
+      = (\<^Const>\<open>sem zero_ty\<close> $ \<^Const>\<open>unreachable zero_ty\<close>, Abs (name, \<^Type>\<open>sem zero_ty\<close>, term))
+| abstract_return_vals name _ R2L term =
   let
     val (collect_vals, map_ret) = gen_collect_and_map R2L
     val Vs = collect_vals [] term
@@ -210,7 +210,7 @@ fun translate_ret (term as (Abs _)) = term
   | translate_ret (Const ("_constrainAbs", ty) $ X $ Y)
       = Const ("_constrainAbs", ty) $ translate_ret X $ Y
   | translate_ret term =
-      snd (abstract_return_vals "\<r>\<e>\<t>" true term)
+      snd (abstract_return_vals "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> true term)
 
 
 (* fun translate_num term =
