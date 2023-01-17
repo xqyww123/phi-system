@@ -117,19 +117,18 @@ fun export_codeblock _ param_cterms rule assm sequent =
              |> (fn th => th COMP_INCR rule)
 
 
-fun accept_proc (ctxt,sequent) =
+fun accept_proc' (ctxt,sequent) =
   let open Phi_Syntax
     val rule' = sequent RS @{thm \<phi>assemble_proc}
     val \<^Const_>\<open>Pure.all _\<close> $ Abs (_, _, \<^Const_>\<open>Pure.all _\<close> $ Abs (_, ret_ty,
-            \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
-        = Phi_Help.leading_antecedent' rule'
+            \<^Const_>\<open> Pure.imp for _ _ \<close>))
+        = Phi_Help.leading_antecedent' rule' 
 
     val rule =
           if Term.maxidx_of_typ ret_ty <> ~1
           then(case ret_ty
                  of Type (\<^type_name>\<open>sem\<close>, [TVar V]) =>
-                      let val (f,_,_,_,_) =
-                              Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
+                      let val (f,_,_,_,_) = Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
                           val _ = warning "The return arity of a procedure is not fixed.\
                                           \ Regard it to none."
                           val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
@@ -167,6 +166,14 @@ fun accept_proc (ctxt,sequent) =
             [codeblk_cterm] ctxt'
   in
     (ctxt'2, @{thm \<phi>accept_proc} OF [sequent, codeblk])
+  end
+
+fun accept_proc (ctxt,sequent) =
+  let
+    val (f,_,_,_,_) = Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
+  in if f = \<^term>\<open>Return \<phi>V_none\<close>
+     then (ctxt, sequent RS @{thm \<phi>accept_proc_optimize_\<phi>V_none})
+     else accept_proc' (ctxt,sequent)
   end
 
 (*Param & Label*)
