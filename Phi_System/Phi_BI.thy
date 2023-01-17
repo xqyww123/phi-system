@@ -62,6 +62,10 @@ theory Phi_BI
       and "<subj>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>j"
 begin
 
+subsection \<open>Bottom\<close>
+
+abbreviation Bottom ("\<bottom>") where \<open>Bottom \<equiv> (0::'a set)\<close>
+
 subsection \<open>\<phi>-Type\<close>
 
 type_synonym ('concrete,'abstract) \<phi> = " 'abstract \<Rightarrow> 'concrete set "

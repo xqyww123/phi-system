@@ -242,17 +242,14 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_
     X
   \<medium_right_bracket>. .
 
-
-declare [[\<phi>trace_reasoning]]
-
-
 proc
-  input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
-  output \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
+  input  \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
+  output \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
-      $x op_break[of l1]
-    \<medium_right_bracket>. assert 0
+        $y op_break[of l1]
+      \<medium_right_bracket>.
+      assert \<bottom> (*this place is unreachable!*)
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 

@@ -1137,7 +1137,7 @@ lemma Inhabited_I:
 
 
 instantiation set :: (type) zero begin
-definition "zero_set = {}"
+definition zero_set where "zero_set = {}"
 instance ..
 end
 
