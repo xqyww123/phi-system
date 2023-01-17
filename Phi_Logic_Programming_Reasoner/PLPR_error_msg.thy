@@ -15,6 +15,7 @@ subsection \<open>Encoding of Text\<close>
 typedecl "text"
 consts literal_text :: \<open>(text \<Rightarrow> text) \<Rightarrow> text\<close>
        term_text :: \<open>'a \<Rightarrow> text\<close>
+       type_text :: \<open>'a itself \<Rightarrow> text\<close>
        cat_text :: \<open>text \<Rightarrow> text \<Rightarrow> text\<close>
       "text" :: \<open>text \<Rightarrow> text\<close>
 text \<open>We use the name of a lambda variable to encode an arbitrary string text.\<close>
@@ -22,8 +23,10 @@ text \<open>We use the name of a lambda variable to encode an arbitrary string t
 nonterminal "text_"
 syntax "_text_" :: \<open>text_ \<Rightarrow> text\<close> ("TEXT'(_')" [1] 1000)
 syntax "_text_literal_" :: \<open>cartouche \<Rightarrow> text_\<close> ("_")
-syntax "_text_term_" :: \<open>logic \<Rightarrow> text_\<close> ("_" [1000] 999)
+syntax "_text_term_" :: \<open>term \<Rightarrow> text_\<close> ("_" [1000] 999)
 syntax "_text_cat_" :: \<open>text_ \<Rightarrow> text_ \<Rightarrow> text_\<close> ("_ _" [1,2] 1)
+
+declare [[ML_debugger]]
 
 ML \<open>
 structure Encode_Text = struct
@@ -41,6 +44,8 @@ fun decode_text_ast' ret (Appl [Constant \<^const_syntax>\<open>literal_text\<cl
       = Variable (cartouche (dest_literal x))::ret
   | decode_text_ast' ret (Appl [Constant \<^const_syntax>\<open>term_text\<close>, tm])
       = tm::ret
+  | decode_text_ast' ret (Appl [Constant \<^const_syntax>\<open>type_text\<close>, tm])
+      = tm::ret
   | decode_text_ast' ret (Appl [Constant \<^const_syntax>\<open>cat_text\<close>, tmA, tmB])
       = decode_text_ast' (decode_text_ast' ret tmB) tmA
   | decode_text_ast' _ ast = raise AST ("decode_text_ast", [ast])
@@ -49,6 +54,8 @@ in
 
 fun decode_text _ (\<^const>\<open>literal_text\<close> $ Abs (text, _, _)) = [Pretty.str (recovery_string text)]
   | decode_text ctxt (Const (\<^const_name>\<open>term_text\<close>, _) $ x) = [Syntax.pretty_term ctxt x]
+  | decode_text ctxt (Const (\<^const_name>\<open>type_text\<close>, _) $ \<^Const_>\<open>Pure.type T\<close>) =
+      [Syntax.pretty_typ ctxt T]
   | decode_text ctxt (\<^const>\<open>cat_text\<close> $ A $ B) =
       decode_text ctxt A @ decode_text ctxt B
   | decode_text ctxt (\<^const>\<open>text\<close> $ X) = decode_text ctxt X
@@ -83,6 +90,9 @@ let open Ast
             Constant \<^const_syntax>\<open>undefined\<close>,
             Constant \<^type_syntax>\<open>text\<close>]]]
   fun parse (Appl [Constant \<^syntax_const>\<open>_text_literal_\<close>, tm]) = encode_literal (dest_literal tm)
+    | parse (Appl [Constant \<^syntax_const>\<open>_text_term_\<close>,
+                       (tm as Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, _])]) =
+        Appl [Constant \<^const_syntax>\<open>type_text\<close>, tm]
     | parse (Appl [Constant \<^syntax_const>\<open>_text_term_\<close>, tm]) =
         Appl [Constant \<^const_syntax>\<open>term_text\<close>, tm]
     | parse (Appl [Constant \<^syntax_const>\<open>_text_cat_\<close>, tmA, tmB]) =

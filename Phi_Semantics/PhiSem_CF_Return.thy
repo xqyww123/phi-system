@@ -196,6 +196,14 @@ lemma [\<phi>reason 1200]:
   \<open>Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y 0\<close>
   unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>. .
 
+lemma [\<phi>reason 1180]:
+  \<open> NO_MATCH TYPE('a) TYPE('b)
+\<Longrightarrow> ERROR TEXT(\<open>The exits of scope\<close> l \<open>mismach in return type. One is\<close>
+                    TYPE('a) \<open>while another is\<close> TYPE('b))
+\<Longrightarrow> Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y' 0\<close>
+  for Y :: \<open>'a::VALs sem \<Rightarrow> _\<close> and Y' :: \<open>'b::VALs sem \<Rightarrow> _\<close>
+  by blast
+
 lemma [\<phi>reason 1000]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<heavy_comma> Brk_Frame l @action ToSA' False
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l 0 E\<close>
@@ -243,7 +251,7 @@ proc
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
       $x op_break[of l1]
-    \<medium_right_bracket>. ;;  $y op_break[of l1]
+    \<medium_right_bracket>. ;;  $y op_break[of l1 \<open>\<a>\<r>\<g>2\<close>]
     \<medium_right_bracket> ..
   \<medium_right_bracket>. .
 
