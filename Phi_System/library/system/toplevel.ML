@@ -732,7 +732,7 @@ val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
           -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
-          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.text ""
+          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.embedded ""
         >> Phi_Processor.setup_cmd)
 
 (* val _ =

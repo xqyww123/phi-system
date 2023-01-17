@@ -41,7 +41,7 @@ val parser =
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword \<phi>overloads} "declare procedure overloads"
-    (and_list1 (binding -- Scan.optional Parse.text "") >>
+    (and_list1 (binding -- Scan.optional Parse.embedded "") >>
         (fold (fn (b,s) => declare_overloading b s #> #2)))
 
 end

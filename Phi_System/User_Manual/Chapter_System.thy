@@ -185,7 +185,7 @@ In the programming, the proposition of a state sequent falls in two sorts of for
   is finished, the computation state is now as specified by \<open>P\<close>, and the system is ready for
   the next construction.
 \<^item> \<^emph>\<open>pending state\<close> like \<^prop>\<open>\<A> \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g F \<^bold>o\<^bold>n state [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
-  is deduced after applying a procedure \<^prop>\<open>\<A> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> P \<longmapsto> Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close> on the ready state.
+  is deduced after applying a procedure \<^prop>\<open>\<A> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close> on the ready state.
   It represents the application of \<open>F\<close> is pending the finish of antecedent jobs \<open>\<A>\<close>.
 
 \begin{remark}
@@ -290,5 +290,18 @@ text \<open>Internal representation of the values and their names are hidden by 
 
 text \<open>By default, remaining values in the previous statement will be removed in the successive
   statement. You can turn off @{attribute \<phi>statement_clean_values} to disable this behavior.\<close>
+
+
+(*Unsorted*)
+
+subsection \<open>Options enabling Expert Display\<close>
+
+text \<open>
+\<^descr> @{attribute \<phi>display_value_internal_name} enables the display of internal names of values.
+    By turning on this option, values will be displayed as \<^term>\<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[internal] T\<close>
+    by contrast to the default display \<^term>\<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>.
+    This \<^term>\<open>internal\<close> is the internal semantic representation of value.
+
+\<close>
 
 end
