@@ -56,9 +56,9 @@ lemma [\<phi>inhabitance_rule, elim!]:
 subsubsection \<open>Syntax\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
+ML_file \<open>library/syntax/procedure2.ML\<close>
 ML_file \<open>library/system/Phi_Working_Mode.ML\<close>
 ML_file \<open>library/system/Phi_Envir.ML\<close>
-
 
 section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
 

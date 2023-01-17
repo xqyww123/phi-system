@@ -38,6 +38,8 @@ end
 
 structure Procedure_Syntax : PROCEDURE_SYNTAX = struct
 
+(*** Parser ***)
+
 (*
 Syntax translation during parsing of the pre-condition is simply replacing
 all anonymous values by a name \<a>\<r>\<g>i for the ith value from left to right.
@@ -245,5 +247,6 @@ val _ = Theory.setup (Sign.parse_translation [
           $ (if need_translate_arg Arg then translate_arg Arg else Arg)
           $ (if need_translate_ret Ret then translate_ret Ret else Ret)))
 ])
+
 
 end

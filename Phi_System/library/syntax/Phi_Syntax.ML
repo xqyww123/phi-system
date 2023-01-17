@@ -31,6 +31,7 @@ include PHI_SYNTAX
   val dest_CodeBlock_c : cterm -> cterm * cterm * cterm * cterm
 
   val strip_separations : term -> term list
+  val mk_separations : term list -> term
 
   val dest_sem_value_T: typ -> typ
   val mk_sem_value_T: typ -> typ
@@ -131,6 +132,9 @@ fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separati
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
   | strip_separations (Abs (_, _, T)) = strip_separations T
   | strip_separations T = strip_binop_l @{const_name times} T
+
+fun mk_separations [] = \<^term>\<open>Void\<close>
+  | mk_separations L = foldr1 (fn (A,X) => @{const times(assn)} $ A $ X) L
 
 val dest_sem_value_T = dest_monop_ty \<^type_name>\<open>\<phi>arg\<close>
 fun mk_sem_value_T T = Type(\<^type_name>\<open>\<phi>arg\<close>, [T])

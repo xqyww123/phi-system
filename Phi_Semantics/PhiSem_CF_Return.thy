@@ -244,6 +244,20 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_
 
 declare [[\<phi>display_value_internal_name]]
 
+ML \<open>
+val phi_display_brk_frame = Attrib.setup_config_bool \<^binding>\<open>\<phi>display_brk_frame\<close> (K false)
+
+val _ = Theory.setup (
+  Procedure_Syntax.add_item_printer (\<^const_syntax>\<open>Brk_Frame\<close>, (fn m => fn ctxt => fn X =>
+    if Config.get ctxt phi_display_brk_frame
+    then raise Match
+    else (case m of Phi_Kind.Procedure => NONE
+                  | Phi_Kind.Construction => NONE)
+)))
+\<close>
+
+
+
 proc
   input  \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   output \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
@@ -255,58 +269,6 @@ proc
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
-(*
-syntax HIDDEN :: logic
-consts HIDDEN' :: 'a
 
-
-(*
-setup \<open>let open Ast Syntax in
-Sign.add_trrules [
-  Print_Rule (Variable "A",
-              Appl [Constant \<^const_syntax>\<open>COMMA\<close>, Variable "A", Constant \<^syntax_const>\<open>HIDDEN\<close>])
-]
-end\<close> *)
-
-ML \<open>
-val _ = Theory.setup (Sign.print_ast_translation (let open Ast in
-  [(\<^const_syntax>\<open>COMMA\<close>, (fn ctxt =>
-      (fn [A, Constant \<^syntax_const>\<open>HIDDEN\<close>] => A
-        | [A, Constant \<^const_syntax>\<open>HIDDEN'\<close>] => A)))
-  ]
-end))
-\<close>
-
-ML \<open>
-val _ = Theory.setup (Sign.print_ast_translation (let open Ast in
-  [(\<^const_syntax>\<open>COMMA\<close>, (fn ctxt =>
-      (fn [A, Constant \<^syntax_const>\<open>HIDDEN\<close>] => A
-        | [A, Constant \<^const_syntax>\<open>HIDDEN'\<close>] =>
-              Appl [Constant \<^const_syntax>\<open>COMMA\<close>, Constant \<^const_syntax>\<open>HIDDEN'\<close>])))
-  ]
-end))
-\<close>
-
-term \<open>A\<heavy_comma> HIDDEN'\<close>
-
-ML \<open>
-val phi_display_brk_frame = Attrib.setup_config_bool \<^binding>\<open>\<phi>display_brk_frame\<close> (K false)
-
-val _ = Theory.setup (Sign.print_ast_translation (let open Ast in
-  [(\<^const_syntax>\<open>Brk_Frame\<close>, (fn ctxt => fn _ =>
-      if Config.get ctxt phi_display_brk_frame
-      then raise Match
-      else Constant \<^syntax_const>\<open>HIDDEN\<close>))
-  ]
-end))
-
-\<close>
-
-term \<open>A\<heavy_comma> Brk_Frame X\<close>
-
-translations "A" <= "A\<heavy_comma> CONST HIDDEN"
-             "XCONST Void" <= "CONST HIDDEN"
-
-*)
 
 end

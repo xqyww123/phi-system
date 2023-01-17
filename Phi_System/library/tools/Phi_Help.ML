@@ -4,6 +4,10 @@ Application-irrelevant basic tools.
 
 *)
 
+structure Phi_Kind = struct
+  datatype T = Procedure | View_Shift | Implication | Construction
+end
+
 signature PHI_HELP = sig
 
 (**** Basic Operations ****)
@@ -301,4 +305,3 @@ fun debug_RS ctxt tha thb =
 
 
 end
-
