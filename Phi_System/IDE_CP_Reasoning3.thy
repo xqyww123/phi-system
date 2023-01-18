@@ -317,15 +317,78 @@ lemma [\<phi>reason 2100 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bo
   \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action ToSA' mode\<close>
   unfolding Action_Tag_def using implies_refl .
 
+
 subsubsection \<open>Termination\<close>
 
-lemma [\<phi>reason 4000 for \<open>?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-      "H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> H \<brangle> @action reason_ToSA mode G"
-  and [\<phi>reason 4000 for \<open>?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R * \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-      "X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 * \<blangle> X \<brangle> @action reason_ToSA mode G"
+lemma ToSA_finish:  "H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> H \<brangle> @action reason_ToSA mode G"
+  and ToSA_finish': "X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 * \<blangle> X \<brangle> @action reason_ToSA mode G"
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding mult_1_left FOCUS_TAG_def Action_Tag_def
   using implies_refl by this+
+
+lemma ToSA_finish'':
+  \<open> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H'
+\<Longrightarrow> H' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action reason_ToSA mode G
+\<Longrightarrow> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action reason_ToSA mode G\<close>
+  unfolding Action_Tag_def using implies_trans by fastforce
+
+ML \<open>
+fun ToSA_unification rule1 rule2 (ctxt,sequent) =
+  let
+    val _ (*@action*) $ ( _ (*Trueprop*) $ ( _ (*VS*) $ _ $ X $ _ )) $ _
+        = Thm.major_prem_of sequent
+  in case X of Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ _ =>
+                  Seq.single (ctxt, rule1 RS sequent)
+             | _ (*times*) $ (_ (*FOCUS*) $ _) =>
+                  Seq.single (ctxt, rule2 RS sequent)
+  end
+
+fun ToSA_existential_unification rule1 rule2 rule3 (ctxt,sequent) =
+  ToSA_unification rule1 rule2 (ctxt,sequent)
+  handle THM _ =>
+  let
+    (*for performance, we do not check the constants*)
+    val _ (*@action*) $ ( _ (*Trueprop*) $ ( _ (*VS*) $ H $ X $ _ )) $ _
+        = Thm.major_prem_of sequent
+    val H2 = case X of Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ H2 => H2
+                     | _ (*times*) $ (_ (*FOCUS*) $ H2) => H2
+    fun is_Var_and_bs (Var _) = true
+      | is_Var_and_bs (X $ Bound _) = is_Var_and_bs X
+      | is_Var_and_bs _ = false
+  in if is_Var_and_bs H2
+     then let
+          val (vars,_,_) = Phi_Help.strip_meta_hhf (Phi_Help.leading_antecedent' sequent)
+          val N = length vars
+          val bs2 = snd (strip_comb H2)
+                      |> map_filter (fn Bound i => SOME i | _ => NONE)
+          val bads = subtract (op =) bs2 (loose_bnos H)
+                |> map (fn i => (i, List.nth (vars, N - 1 - i) |> snd))
+          val idx = Thm.maxidx_of sequent
+
+          fun subst_bvar k (Bound i) = (case find_index (fn (b,_) => b = i-k) bads
+                                          of ~1 => Var (("x", idx + i - k),
+                                                        List.nth (vars, N - 1 - (i - k)) |> snd)
+                                           | j  => Bound (k + j))
+            | subst_bvar k (f$t) = subst_bvar k f $ subst_bvar k t
+            | subst_bvar k (Abs(N,T,X)) = Abs (N,T,subst_bvar (k+1) X)
+            | subst_bvar _ X = X
+          val H' = subst_bvar 0 H
+              |> fold (fn (_,T) => fn X => \<^Const>\<open>ExSet T \<^typ>\<open>FIC_N \<Rightarrow> FIC\<close>\<close> $ Abs ("", T, X)) bads
+              |> Thm.cterm_of ctxt
+          val rule = Drule.infer_instantiate ctxt [(("H'",0), H')] rule3
+          val sequent' = (rule RS sequent)
+              |> funpow (length bads) (fn th => @{thm ExSet_imp_I} RS th)
+              |> (fn th => @{thm implies_refl} RS th)
+          in ToSA_unification rule1 rule2 (ctxt, sequent')
+          end
+     else Seq.empty
+  end
+\<close>
+
+\<phi>reasoner_ML ToSA_finish 4000 (\<open>?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close> |
+                              \<open>?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R * \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>)
+  = \<open>ToSA_existential_unification @{thm ToSA_finish} @{thm ToSA_finish'} @{thm ToSA_finish''}\<close>
+
 
 subsubsection \<open>Void Holes\<close> \<comment> \<open>eliminate 1 holes generated during the reasoning \<close>
 
@@ -599,15 +662,13 @@ lemma [\<phi>reason 2000 for \<open> ?R * (SYNTHESIS ?Y) \<^bold>i\<^bold>m\<^bo
   unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All
   by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 2300 for \<open> ?R * ?V \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R' * \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  " R * X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * \<blangle> X \<brangle> @action reason_ToSA mode G"
-      \<comment> \<open>successful termination of the step-by-step search\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All
-  by (simp add: implies_refl)
-
-
 
 subsubsection \<open>General Search\<close>
+
+lemma [\<phi>reason 800 for \<open> ?R * ?V \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R' * \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+  " R * X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * \<blangle> X \<brangle> @action reason_ToSA mode G"
+  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All
+  by (simp add: implies_refl)
 
 lemma [\<phi>reason 80 for \<open> ?R * ?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R''' * \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " CHK_SUBGOAL G
@@ -709,12 +770,24 @@ lemma [\<phi>reason 2100 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<lo
 
 subsubsection \<open>Termination\<close>
 
-lemma [\<phi>reason 4010 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> \<blangle> ?H2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
-      "\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> \<blangle> H \<brangle> @action reason_ToSA mode G"
-  and [\<phi>reason 4010 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R * \<blangle> ?H2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
-      "\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> 1 * \<blangle> H \<brangle> @action reason_ToSA mode G"
+lemma ToSA_VS_finish : "\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> \<blangle> H \<brangle> @action reason_ToSA mode G"
+  and ToSA_VS_finish': "\<^bold>v\<^bold>i\<^bold>e\<^bold>w H \<longmapsto> 1 * \<blangle> H \<brangle> @action reason_ToSA mode G"
   unfolding mult_1_left FOCUS_TAG_def Action_Tag_def
   using view_shift_id by this+
+
+lemma ToSA_VS_finish'':
+  \<open> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H'
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H' \<longmapsto> Y @action reason_ToSA mode G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w H  \<longmapsto> Y @action reason_ToSA mode G\<close>
+  unfolding Action_Tag_def
+  using View_Shift_def view_shift_by_implication by force
+
+\<phi>reasoner_ML ToSA_VS_finish 4000 (\<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> \<blangle> ?H2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close> |
+                                 \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R * \<blangle> ?H2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>)
+  = \<open>ToSA_existential_unification @{thm ToSA_VS_finish} @{thm ToSA_VS_finish'}
+                                  @{thm ToSA_VS_finish''}\<close>
+
+
 
 lemma [\<phi>reason 4000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> \<r>Clean H
@@ -1000,12 +1073,6 @@ lemma [\<phi>reason 2000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R\<hea
   unfolding Action_Tag_def FOCUS_TAG_def split_paired_All
   by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 2300 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?V \<longmapsto> ?R' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
-  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> X \<longmapsto> R \<heavy_comma> \<blangle> X \<brangle> @action reason_ToSA mode G"
-      \<comment> \<open>successful termination of the step-by-step search\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def split_paired_All
-  by (simp add: view_shift_id)
-
 lemma [\<phi>reason 2000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<longmapsto> ?R2\<heavy_comma> \<blangle> SMORPH ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R2 \<heavy_comma> \<blangle> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Automatic_Morphism RP RX \<and> P @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<longmapsto> R2 \<heavy_comma> \<blangle> SMORPH X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Automatic_Morphism RP RX \<and> P @action reason_ToSA mode G\<close>
@@ -1052,10 +1119,17 @@ lemma ToSA_skip
   by (simp add: \<phi>view_shift_intro_frame mult.commute mult.left_commute)
 
 
-(* 
-We don't need general search any more, because every resource locale configures its reasoning rules.
-
 subsubsection \<open>General Search\<close>
+
+lemma [\<phi>reason 800 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?V \<longmapsto> ?R' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
+  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w R \<heavy_comma> X \<longmapsto> R \<heavy_comma> \<blangle> X \<brangle> @action reason_ToSA mode G"
+      \<comment> \<open>successful termination of the step-by-step search\<close>
+  unfolding Action_Tag_def FOCUS_TAG_def split_paired_All
+  by (simp add: view_shift_id)
+
+(* 
+We don't need other general searches any more, because every resource locale configures its reasoning rules.
+
 
 lemma [\<phi>reason 100 on \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?R \<heavy_comma> ?H \<longmapsto> ?R''' * \<blangle> ?X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " CHK_SUBGOAL G

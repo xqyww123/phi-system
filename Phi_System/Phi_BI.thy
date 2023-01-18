@@ -209,7 +209,7 @@ lemma ExSet_inhabited_expn[\<phi>inhabited]:
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 syntax
-  "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _" [3,0,4] 3)
+  "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _" [4,0,5] 4)
 
 translations
   " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P " \<rightleftharpoons> "\<exists>* idts. X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P"
@@ -220,7 +220,6 @@ text \<open>Semantically, an existential quantification in BI actually represent
 
 lemma " Union { S x |x. P x } = (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x) "
   by (simp add: set_eq_iff \<phi>expns) blast
-
 
 
 lemma ExSet_pair: "ExSet T = (\<exists>*c1 c2. T (c1,c2) )" by (auto simp add: \<phi>expns)

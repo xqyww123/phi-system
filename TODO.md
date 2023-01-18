@@ -1,0 +1,2 @@
+- Distance cut in Application reasoning
+- Default attribute for premises

@@ -1,4 +1,4 @@
-theory PhiSem_CF_Return
+theory PhiSem_CF_Break
   imports Phi_System.PhiSem_Formalization_Tools
 begin
 
@@ -72,7 +72,8 @@ definition Brking_Frame' :: \<open>brk_label \<Rightarrow> ('v::VALs \<phi>arg \
   where \<open>Brking_Frame' label S =
      (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable (\<black_circle> Identity))))\<close>
 
-abbreviation \<open>Brking_Frame l S \<equiv> TAIL (Brking_Frame' l S)\<close>
+abbreviation Brking_Frame ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _" [1000,10] 3)
+  where \<open>Brking_Frame l S \<equiv> TAIL (Brking_Frame' l S)\<close>
 
 lemma Brk_Frame_eq_identity:
   \<open>Brk_Frame l = (nonsepable None \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
@@ -107,7 +108,7 @@ definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) pro
 )\<close>
 
 definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> Brk_Frame l)\<close>
-definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _ \<^bold>o\<^bold>r _" [4,4,3] 3)
+definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _ \<^bold>o\<^bold>r _" [1000,10,3] 3)
   where \<open>sift_brking_frame = sift_brking_frame'\<close>
 
 context begin
@@ -258,6 +259,7 @@ val _ = Theory.setup (
 )))
 \<close>
 
+(*
 section \<open>Example\<close>
 
 proc
@@ -270,6 +272,8 @@ proc
       assert \<bottom> (*this place is unreachable!*)
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
+
+thm brk_scope *)
 
 
 end

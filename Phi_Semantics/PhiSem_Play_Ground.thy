@@ -1,7 +1,7 @@
 theory PhiSem_Play_Ground
   imports PhiSem_Machine_Integer
     PhiSem_Variable
-    PhiSem_Basic_Control_Flow
+    PhiSem_CF_Basic
 begin
 
 (*
