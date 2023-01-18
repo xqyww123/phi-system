@@ -207,8 +207,7 @@ lemma  INTERP_SPEC_ex[\<phi>expns]:
   \<open> INTERP_SPEC (ExSet S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
   unfolding INTERP_SPEC_def by (simp add: \<phi>expns set_eq_iff, blast)
 
-abbreviation COMMA
-  :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> (infixl "\<heavy_comma>" 13)
+abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [13,14] 13)
   where \<open>COMMA \<equiv> (*)\<close>
 
 
@@ -219,11 +218,11 @@ definition \<phi>Procedure :: "'ret::VALs proc
                         \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
                         \<Rightarrow> (ABNM \<Rightarrow> assn)
                         \<Rightarrow> bool"
-    ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _)" [101,2,2,2] 100)
+    ("\<^bold>p\<^bold>r\<^bold>o\<^bold>c (2_)/ (0\<lbrace> _/ \<longmapsto> _ \<rbrace>)/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (100_)/ " [101,2,2,2] 100)
   where "\<phi>Procedure f T U E \<longleftrightarrow>
     (\<forall>comp R. comp \<in> INTERP_SPEC (R * T) \<longrightarrow> f comp \<subseteq> \<S> (\<lambda>v. INTERP_SPEC (R * U v)) (\<lambda>v. INTERP_SPEC (R * E v)))"
 
-abbreviation \<phi>Procedure_no_exception ("(2\<^bold>p\<^bold>r\<^bold>o\<^bold>c _/ (2\<lbrace> _/ \<longmapsto> _ \<rbrace>))" [101,2,2] 100)
+abbreviation \<phi>Procedure_no_exception ("\<^bold>p\<^bold>r\<^bold>o\<^bold>c (2_)/ \<lbrace> (2_) \<longmapsto>/ (2_) \<rbrace>/ " [101,2,2] 100)
   where \<open>\<phi>Procedure_no_exception f T U \<equiv> \<phi>Procedure f T U 0\<close>
 
 lemma \<phi>Procedure_alt:

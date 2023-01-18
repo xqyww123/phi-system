@@ -2,6 +2,7 @@ signature SUBGOAL_ENV = sig
   val subgoal : context_state -> context_state Seq.seq
   val chk_subgoal : context_state -> context_state Seq.seq
   val solve_subgoal : context_state -> context_state Seq.seq
+  val is_sub : Proof.context -> term (*a*) * term (*b*) -> bool (*a \<le> b*)
 end
 
 structure Subgoal_Env : SUBGOAL_ENV = struct
@@ -32,6 +33,13 @@ fun fetch_goal ctxt goal =
   case Symtab.lookup (Subgoal.get ctxt |> #1) (name_of_goal goal)
     of SOME X => X
      | NONE => raise TERM ("The goal does not exist!", [goal])
+
+fun is_subgoal (Topgoal, _) = true
+  | is_subgoal (_, Topgoal) = false
+  | is_subgoal ((s1 as Subgoal (i1,_,_)), Subgoal (i2,p,_))
+      = (i1 = i2 orelse is_subgoal (s1,p))
+fun is_sub ctxt = is_subgoal o apply2 (fetch_goal ctxt)
+  
 
 fun subgoal (ctxt,sequent) =
   let

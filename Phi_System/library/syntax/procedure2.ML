@@ -63,12 +63,12 @@ fun need_tr_item ctxt tab mode (\<^Const_>\<open>\<phi>Type _ _\<close> $ _ $ C)
   | need_tr_item ctxt tab mode X
       = need_tr_item' ctxt tab mode (head_of X) X
 
-fun strip_separations (Const (\<^const_name>\<open>times\<close>, _) $ A $ X) = A :: (strip_separations X)
-  | strip_separations (Const (\<^const_syntax>\<open>COMMA\<close>, _) $ A $ X) = A :: (strip_separations X)
+fun strip_separations (Const (\<^const_name>\<open>times\<close>, _) $ A $ X) = X :: (strip_separations A)
+  | strip_separations (Const (\<^const_syntax>\<open>COMMA\<close>, _) $ A $ X) = X :: (strip_separations A)
   | strip_separations X = [X]
 
 fun mk_separations [] = Const (\<^const_syntax>\<open>Void\<close>, dummyT)
-  | mk_separations L = foldr1 (fn (A,X) => Const (\<^const_syntax>\<open>COMMA\<close>, dummyT) $ A $ X) L
+  | mk_separations L = foldr1 (fn (A,X) => Const (\<^const_syntax>\<open>COMMA\<close>, dummyT) $ X $ A) L
 
 
 (*ctxt: the context to retrieve Item_Printers*)

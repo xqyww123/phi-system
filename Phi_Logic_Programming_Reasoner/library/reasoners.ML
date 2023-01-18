@@ -131,7 +131,7 @@ fun safer_obligation_solver1 (ctxt,sequent) =
 
 fun contract_obligations ctxt thm = let open Conv in
   gconv_rule (bottom_conv (K (try_conv (rewrs_conv
-    @{thms contract_premise_true
+    @{thms contract_premise_true Action_Tag_def
            contract_premise_imp contract_premise_all
      }))) ctxt) 1 thm
   |> fconv_rule (rewr_conv @{thm contract_obligations})

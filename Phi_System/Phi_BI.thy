@@ -85,10 +85,10 @@ text \<open>The implementation represents BI assertions by sets simply, in shall
 
 subsection \<open>Implication\<close>
 
-definition Imply :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool " ("(2_/ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _/ \<^bold>a\<^bold>n\<^bold>d _)" [13,13,13] 12)
+definition Imply :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool " ("(2_)/ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (2_)/ \<^bold>a\<^bold>n\<^bold>d (2_)" [13,13,13] 12)
   where "(A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P) \<longleftrightarrow> (\<forall>v. v \<in> A \<longrightarrow> v \<in> B \<and> P)"
 
-abbreviation SimpleImply :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2_/ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _)" [13,13] 12)
+abbreviation SimpleImply :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2_)/ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (2_)" [13,13] 12)
   where \<open>SimpleImply T U \<equiv> Imply T U True\<close>
 
 subsubsection \<open>Proof \& Reasoning Rules\<close>
@@ -139,6 +139,11 @@ lemma implies_right_prod:
   "U' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> U' * R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U * R \<^bold>a\<^bold>n\<^bold>d P "
   unfolding Imply_def split_paired_All times_set_def by blast
 
+lemma assertion_eq_intro:
+  \<open> P \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Q
+\<Longrightarrow> Q \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s P
+\<Longrightarrow> P = Q\<close>
+  unfolding Imply_def by blast
 
 subsection \<open>Specialized Additive Conjunction\<close>
 
@@ -151,24 +156,33 @@ lemma Subjection_expn[\<phi>expns]:
 
 lemma Subjection_inhabited[elim!,\<phi>inhabitance_rule]:
   \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  unfolding Inhabited_def by (simp add: Subjection_expn)
 
 lemma Subjection_inhabited_expn[\<phi>inhabited]:
   \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> Inhabited S \<and> P\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  unfolding Inhabited_def by (simp add: Subjection_expn)
 
 lemma Subjection_cong[cong]:
   \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> S \<equiv> S') \<Longrightarrow> (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<equiv> (S' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P')\<close>
-  unfolding atomize_eq set_eq_iff by (simp add: \<phi>expns, blast)
+  unfolding atomize_eq set_eq_iff by (simp add: Subjection_expn, blast)
 
 lemma [\<phi>reason]:
   " T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q)
 \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<^bold>a\<^bold>n\<^bold>d P"
-  unfolding Imply_def Premise_def by (simp add: \<phi>expns)
+  unfolding Imply_def Premise_def by (simp add: Subjection_expn)
 
-lemma Subjection_True [simp]: "(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j True) = T"  unfolding set_eq_iff by (simp add: \<phi>expns)
-lemma Subjection_Flase[simp]: \<open>(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j False) = 0\<close> unfolding set_eq_iff by (simp add: \<phi>expns zero_set_def)
+lemma Subjection_imp_I:
+  \<open> P
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d Q
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<^bold>a\<^bold>n\<^bold>d Q\<close>
+  unfolding Imply_def by (simp add: Subjection_expn)
+
+lemma Subjection_True [simp]: "(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j True) = T"
+  unfolding set_eq_iff by (simp add: Subjection_expn)
+
+lemma Subjection_Flase[simp]: \<open>(T \<^bold>s\<^bold>u\<^bold>b\<^bold>j False) = 0\<close>
+  unfolding set_eq_iff by (simp add: Subjection_expn zero_set_def)
 
 lemma Subjection_Subjection:
   \<open>(S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) = (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<and> Q)\<close>

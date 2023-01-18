@@ -378,6 +378,10 @@ lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
   unfolding Action_Tag_def .
 
+lemma Action_Tag_D:
+  \<open>P @action A \<Longrightarrow> P\<close>
+  unfolding Action_Tag_def .
+
 lemma Conv_Action_Tag_I:
   \<open>X = X @action A\<close>
   unfolding Action_Tag_def ..
@@ -888,7 +892,7 @@ text \<open>\<open>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i
   We implement a \<open>default\<close> mode where the system simple-set is used to simplify
   \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
 
-definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[_] _ : _" [10,1000,10] 9)
+definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[_] _ :/ _" [10,1000,10] 9)
   where "Simplify setting result origin \<longleftrightarrow> result = origin"
 
 lemma [cong]: "A = A' \<Longrightarrow> Simplify s x A = Simplify s x A' "

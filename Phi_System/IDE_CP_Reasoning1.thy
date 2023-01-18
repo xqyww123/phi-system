@@ -7,23 +7,12 @@ theory IDE_CP_Reasoning1
   imports Spec_Framework
 begin
 
-section \<open>Normalization of Assertions\<close>
-
-consts assertion_simplification :: mode
-
-named_theorems assertion_simps \<open>Simplification rules normalizing an assertion.
-  It is applied before ToSA process.\<close>
-
-\<phi>reasoner assertion_simplification 1200
-  (\<open>Simplify assertion_simplification ?X' ?X\<close>)
-  = ((simp only: assertion_simps)?, rule Simplify_I)
-
-lemmas [assertion_simps] =
-  mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left zero_fun
-  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_simps FOCUS_TAG_def ExSet_0
-
-
 section \<open>Annotations Guiding the Reasoning\<close>
+
+subsection \<open>General Tags\<close>
+
+consts SOURCE :: mode
+       TARGET :: mode
 
 subsection \<open>Small Annotations\<close>
 
@@ -42,6 +31,53 @@ lemma [\<phi>reason 2000]:
 lemma [\<phi>reason 2000]:
   \<open>Matches X A \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> (Y <matches> A) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
   unfolding Assertion_Matches_def .
+
+
+
+section \<open>Normalization of Assertions\<close>
+
+consts assertion_simps :: \<open>mode \<Rightarrow> mode\<close>
+
+named_theorems assertion_simps \<open>Simplification rules normalizing an assertion.
+                                It is applied before ToSA process.\<close>
+  and assertion_simps_source \<open>Simp rules normalizing particularly source part of an assertion.\<close>
+  and assertion_simps_target \<open>Simp rules normalizing particularly target part of an assertion.\<close>
+
+\<phi>reasoner_ML assertion_simp_source 1300
+  (\<open>Simplify (assertion_simps SOURCE) ?X' ?X\<close>)
+  = \<open>fn (ctxt,sequent) =>
+  let val ctxt' = Raw_Simplifier.clear_simpset ctxt
+                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
+                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps_source\<close>
+  in Tactical.HEADGOAL (Simplifier.simp_tac ctxt') sequent
+  |> Seq.map (fn th => (ctxt, @{thm Simplify_I} RS th))
+  end
+\<close>
+
+\<phi>reasoner_ML assertion_simp_target 1300
+  (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
+  = \<open>fn (ctxt,sequent) =>
+  let val ctxt' = Raw_Simplifier.clear_simpset ctxt
+                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
+                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps_target\<close>
+  in Tactical.HEADGOAL (Simplifier.simp_tac ctxt') sequent
+  |> Seq.map (fn th => (ctxt, @{thm Simplify_I} RS th))
+  end
+\<close>
+
+\<phi>reasoner_ML assertion_simp 1300
+  (\<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close>)
+  = \<open>fn (ctxt,sequent) =>
+  let val ctxt' = Raw_Simplifier.clear_simpset ctxt
+                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
+  in Tactical.HEADGOAL (Simplifier.simp_tac ctxt') sequent
+  |> Seq.map (fn th => (ctxt, @{thm Simplify_I} RS th))
+  end
+\<close>
+
+lemmas [assertion_simps] =
+  mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left zero_fun
+  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_simps FOCUS_TAG_def ExSet_0
 
 
 section \<open>Small Reasoning Process\<close>

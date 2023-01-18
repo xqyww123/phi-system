@@ -108,8 +108,17 @@ definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) pro
 )\<close>
 
 definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> Brk_Frame l)\<close>
-definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _ \<^bold>o\<^bold>r _" [1000,10,3] 3)
+definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _/ \<^bold>o\<^bold>r _" [1000,10,3] 3)
   where \<open>sift_brking_frame = sift_brking_frame'\<close>
+
+term \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> \<lambda>\<r>\<e>\<t>. X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>
+      \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lb
+                       \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_. X x'\<heavy_comma> Brk_Frame (continue_label lc) \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')
+                       \<^bold>o\<^bold>r \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k (continue_label lc)
+                       \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_. X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x')
+                       \<^bold>o\<^bold>r E2 e\<close>
+
+declare sift_brking_frame'_def[folded sift_brking_frame_def, assertion_simps_source]
 
 context begin
 
@@ -163,8 +172,8 @@ subsection \<open>sift brking frame\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
-\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simplification] Y' : Y
-\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simplification] E' : E
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simps undefined] Y' : Y
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simps undefined] E' : E
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def by simp
 
@@ -198,6 +207,12 @@ lemma [\<phi>reason 1200]:
   \<open>Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y 0\<close>
   unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>. .
 
+lemma Brking_Frame_absorb_item[assertion_simps]:
+  \<open>((Brking_Frame l Y)\<heavy_comma> X) = Brking_Frame l (\<lambda>v. Y v \<heavy_comma> X)\<close>
+  unfolding Brking_Frame'_def TAIL_def
+  apply (intro assertion_eq_intro)
+  \<medium_left_bracket> ;; \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. .
+
 lemma [\<phi>reason 1180]:
   \<open> NO_MATCH TYPE('a) TYPE('b)
 \<Longrightarrow> ERROR TEXT(\<open>The exits of scope\<close> l \<open>mismach in return type. One is\<close>
@@ -207,12 +222,27 @@ lemma [\<phi>reason 1180]:
   by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<heavy_comma> Brk_Frame l @action ToSA' False
+  \<open> SUBGOAL TOP_GOAL G
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<heavy_comma> \<blangle> Brk_Frame l \<brangle> \<^bold>a\<^bold>n\<^bold>d Any @action reason_ToSA False G
+\<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l 0 E\<close>
-  unfolding sift_brking_frame'_def
-  \<medium_left_bracket> premises X
+  unfolding sift_brking_frame'_def FOCUS_TAG_def
+  \<medium_left_bracket> premises _ and X and _
     X
   \<medium_right_bracket>. .
+
+(*It doesn't matter if the structure of sift_brking_frame is broken in the source part.*)
+(*
+lemma [\<phi>reason 3000]:
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l Y + (E\<heavy_comma> Brk_Frame l) \<longmapsto> Z \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w sift_brking_frame l Y E \<longmapsto> Z \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
+  unfolding sift_brking_frame_def sift_brking_frame'_def .
+
+lemma [\<phi>reason 3000]:
+  \<open> Brking_Frame l Y + (E\<heavy_comma> Brk_Frame l) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+\<Longrightarrow> sift_brking_frame l Y E \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
+  unfolding sift_brking_frame_def sift_brking_frame'_def .
+*)
 
 hide_fact Brking_Frame_plus
 
@@ -229,7 +259,7 @@ lemma [\<phi>reason 2000]:
   unfolding mult.assoc .
 
 lemma [\<phi>reason 1200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> (\<And>v. S v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G)
+  \<open> (\<And>v. S v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R v \<heavy_comma> Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' mode)
 \<Longrightarrow> Brking_Frame l S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
   unfolding Brking_Frame'_def TAIL_def Action_Tag_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
@@ -247,6 +277,11 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_
 
 subsection \<open>Syntax hiding technical separation items\<close>
 
+translations
+  "R" <= "R \<heavy_comma> CONST Brk_Frame l"
+  "XCONST Void" <= "CONST Brk_Frame l"
+
+(*
 ML \<open>
 val phi_display_brk_frame = Attrib.setup_config_bool \<^binding>\<open>\<phi>display_brk_frame\<close> (K false)
 
@@ -257,9 +292,9 @@ val _ = Theory.setup (
     else (case m of Phi_Kind.Procedure => NONE
                   | Phi_Kind.Construction => NONE)
 )))
-\<close>
+\<close> *)
 
-(*
+
 section \<open>Example\<close>
 
 proc
@@ -273,7 +308,7 @@ proc
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
-thm brk_scope *)
+thm brk_scope
 
 
 end

@@ -76,6 +76,13 @@ signature NU_REASONER = sig
       (*The default pattern of an introduction rule whose conclusion matches P is X.*)
   val remove_default_pattern : term * term -> Context.generic -> Context.generic
   val the_default_pattern_of : Context.generic -> term -> term
+
+  (* Helpful Tools *)
+  val chop_seq_head' : 'a Seq.seq -> 'a option
+  val chop_seq_head  : 'a Seq.seq -> 'a Seq.seq
+  val single_RS' : thm (*rule*) -> context_state -> context_state option
+  val single_RS  : thm (*rule*) -> context_state -> context_state Seq.seq
+        (*The resolution that returns at most one solution.*)
 end
 
 
@@ -423,6 +430,26 @@ val _ =
 
 (*** Reasoner for Introduction Reasoning Rule ***)
 
+fun chop_seq_head' seq =
+  case Seq.chop 2 seq
+    of ([ret], _) => SOME ret
+       | ([], _) => NONE
+       | (ret::_, _) => (warning "Multi Resolution! For performance consideration, PLPR only takes\
+                                 \ the first solution and discards the remains.";
+                         SOME ret)
+
+fun chop_seq_head seq =
+  Seq.make (fn _ => Option.map (rpair Seq.empty) (chop_seq_head' seq))
+
+fun single_RS' rule (ctxt,thm) =
+  HEADGOAL (Tactic.resolve_tac ctxt [rule]) thm
+    |> chop_seq_head'
+    |> Option.map (pair ctxt)
+
+fun single_RS rule (ctxt,thm) =
+  Seq.make (fn _ => Option.map (rpair Seq.empty) (single_RS' rule (ctxt,thm)))
+
+
 fun name_of_intro_reasoner rule = Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Thm.prop_of rule
 fun intro_reasoner ctxt pos priority patterns blacklist rule =
   let
@@ -446,14 +473,11 @@ fun intro_reasoner ctxt pos priority patterns blacklist rule =
       pos = pos,
       pattern = pats,
       blacklist = blacklist,
-      tactic = (fn (ctxt, th) =>
-          Seq.make (fn _ =>
-            case Seq.pull (HEADGOAL (Tactic.resolve_tac ctxt [rule]) th)
-              of SOME (ret, _) =>
-                  if has_feasible
-                  then reason NONE (ctxt, ret) |> Option.map (rpair Seq.empty)
-                  else SOME ((ctxt, ret), Seq.empty)
-               | _ => NONE))
+      tactic = (fn s => Seq.make (fn _ =>
+                  single_RS' rule s
+                    |> has_feasible ? Option.mapPartial (reason NONE)
+                    |> Option.map (rpair Seq.empty)
+                ))
       }
   end
 

@@ -272,9 +272,10 @@ text \<open>Priority Convention:
 \<^item> 2700: Fixing existentially quantified variables
 \<^item> 2500: Padding void holes after the last item. Rules capturing the last item in
         the \<open>\<^emph>\<close>-sequence should have priority higher than this.
-\<^item> 2000: The framework of step-by-step searching
-\<^item> 2100: Prior rules for specific patterns in the step-by-step searching
+\<^item> 2000~2300: Step-by-step searching
 \<^item> 2300: Termination of the step-by-step searching
+\<^item> 2100: Prior rules for specific patterns in the step-by-step searching
+\<^item> 2000: Main rule of step-by-step searching
 \<^item> \<le> 1999: Rules for searching specific object like value, variable, etc.
 \<^item> \<le> 80: Rules for general searching. This feature is disabled in view shift
           because most of the global-state-level components are configured
@@ -282,7 +283,9 @@ text \<open>Priority Convention:
 \<close>
 
 
-consts reason_ToSA :: \<open>bool \<Rightarrow> subgoal \<Rightarrow> unit action\<close>
+consts reason_ToSA  :: \<open>bool \<Rightarrow> subgoal \<Rightarrow> unit action\<close>
+       subj_premise :: \<open>subgoal \<Rightarrow> mode\<close>
+
 
 subsubsection \<open>Initialization\<close>
 
@@ -290,8 +293,8 @@ lemma [\<phi>reason 2020
     for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y @action ToSA' ?mode\<close>
     except \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y * \<blangle> ?YX \<brangle> @action ToSA' ?mode\<close>
 ]:
-  \<open> Simplify assertion_simplification X' X
-\<Longrightarrow> Simplify assertion_simplification Y' Y
+  \<open> Simplify (assertion_simps SOURCE) X' X
+\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> Y' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any @action reason_ToSA mode G
 \<Longrightarrow> SOLVE_SUBGOAL G
@@ -304,8 +307,8 @@ lemma [\<phi>reason 2000
     for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>
     except \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y * \<blangle> ?YX \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>
 ]:
-  \<open> Simplify assertion_simplification X' X
-\<Longrightarrow> Simplify assertion_simplification Y' Y
+  \<open> Simplify (assertion_simps SOURCE) X' X
+\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> Y' \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
 \<Longrightarrow> SOLVE_SUBGOAL G
@@ -332,31 +335,65 @@ lemma ToSA_finish'':
 \<Longrightarrow> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action reason_ToSA mode G\<close>
   unfolding Action_Tag_def using implies_trans by fastforce
 
+lemma ToSA_finish''':
+  \<open> R1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+\<Longrightarrow> R1\<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2\<heavy_comma> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P  @action reason_ToSA mode G\<close>
+  unfolding Action_Tag_def FOCUS_TAG_def
+  using implies_right_prod .
+
 ML \<open>
+local
 fun ToSA_unification rule1 rule2 (ctxt,sequent) =
   let
     val _ (*@action*) $ ( _ (*Trueprop*) $ ( _ (*VS*) $ _ $ X $ _ )) $ _
         = Thm.major_prem_of sequent
   in case X of Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ _ =>
-                  Seq.single (ctxt, rule1 RS sequent)
+                  Phi_Reasoner.single_RS' rule1 (ctxt,sequent)
              | _ (*times*) $ (_ (*FOCUS*) $ _) =>
-                  Seq.single (ctxt, rule2 RS sequent)
+                  Phi_Reasoner.single_RS' rule2 (ctxt,sequent)
   end
 
-fun ToSA_existential_unification rule1 rule2 rule3 (ctxt,sequent) =
-  ToSA_unification rule1 rule2 (ctxt,sequent)
-  handle THM _ =>
+fun has_subjs ctxt sequent =
+  let
+  val (_,prems, concl) = Phi_Help.strip_meta_hhf (Phi_Help.leading_antecedent' sequent)
+  val (_ (*@action*) $ _ $ (_ $ _ $ G) (*reason_ToSA mode G*)) = concl
+  in prems
+  |> exists (fn (Const (\<^const_name>\<open>Action_Tag\<close>, _) $ _
+                    $ (Const (\<^const_name>\<open>subj_premise\<close>, _) $ G'))
+                  => Subgoal_Env.is_sub ctxt (G',G)
+              | _ => false)
+  end
+
+fun collect_subjs ctxt sequent =
+  let
+  val (_,prems, concl) = Phi_Help.strip_meta_hhf (Phi_Help.leading_antecedent' sequent)
+  val (_ (*@action*) $ _ $ (_ $ _ $ G) (*reason_ToSA mode G*)) = concl
+  in prems
+  |> map_filter (fn (Const (\<^const_name>\<open>Action_Tag\<close>, _) $ (\<^const>\<open>Trueprop\<close> $ P)
+                        $ (Const (\<^const_name>\<open>subj_premise\<close>, _) $ G'))
+                      => if Subgoal_Env.is_sub ctxt (G',G)
+                         then SOME P
+                         else NONE
+                  | _ => NONE)
+  end
+
+fun is_Var_and_bs (Var _) = true
+      | is_Var_and_bs (X $ Bound _) = is_Var_and_bs X
+      | is_Var_and_bs (X $ Free _) = is_Var_and_bs X
+      | is_Var_and_bs _ = false
+
+fun ToSA_existential_unification' rule1 rule2 rule3 (ctxt,sequent) =
   let
     (*for performance, we do not check the constants*)
     val _ (*@action*) $ ( _ (*Trueprop*) $ ( _ (*VS*) $ H $ X $ _ )) $ _
         = Thm.major_prem_of sequent
     val H2 = case X of Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ H2 => H2
                      | _ (*times*) $ (_ (*FOCUS*) $ H2) => H2
-    fun is_Var_and_bs (Var _) = true
-      | is_Var_and_bs (X $ Bound _) = is_Var_and_bs X
-      | is_Var_and_bs _ = false
   in if is_Var_and_bs H2
-     then let
+     then Seq.make (fn _ =>
+          let
+          val subjs = collect_subjs ctxt sequent
+
           val (vars,_,_) = Phi_Help.strip_meta_hhf (Phi_Help.leading_antecedent' sequent)
           val N = length vars
           val bs2 = snd (strip_comb H2)
@@ -372,23 +409,65 @@ fun ToSA_existential_unification rule1 rule2 rule3 (ctxt,sequent) =
             | subst_bvar k (f$t) = subst_bvar k f $ subst_bvar k t
             | subst_bvar k (Abs(N,T,X)) = Abs (N,T,subst_bvar (k+1) X)
             | subst_bvar _ X = X
-          val H' = subst_bvar 0 H
+          val H' = H
+              |> fold_rev (fn subj => fn X => @{const Subjection(\<open>FIC_N \<Rightarrow> FIC\<close>)} $ X $ subj) subjs
+              |> not (null bads) ? subst_bvar 0
+                  (*TODO: the order of the existential quantifiers is not preserved*)
               |> fold (fn (_,T) => fn X => \<^Const>\<open>ExSet T \<^typ>\<open>FIC_N \<Rightarrow> FIC\<close>\<close> $ Abs ("", T, X)) bads
               |> Thm.cterm_of ctxt
+
           val rule = Drule.infer_instantiate ctxt [(("H'",0), H')] rule3
           val sequent' = (rule RS sequent)
               |> funpow (length bads) (fn th => @{thm ExSet_imp_I} RS th)
+              |> funpow (length subjs) (fn th =>
+                      (@{thm Action_Tag_D} RS (@{thm Subjection_imp_I} RS th))
+                        |> Thm.assumption (SOME ctxt) 1
+                        |> Seq.hd)
               |> (fn th => @{thm implies_refl} RS th)
           in ToSA_unification rule1 rule2 (ctxt, sequent')
-          end
+          |> Option.map (rpair Seq.empty)
+          end)
      else Seq.empty
   end
+
+fun tail_is_var (Const (\<^const_name>\<open>times\<close>, _) $ X $ _) = tail_is_var X
+  | tail_is_var (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = tail_is_var X
+  | tail_is_var (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (_,_,X)) = tail_is_var X
+  | tail_is_var X = is_Var_and_bs X
+
+in
+fun ToSA_existential_unification rule1 rule2 rule3 rule4 (s as (ctxt,sequent)) =
+  let
+  val _ (*@action*) $ ( _ (*Trueprop*) $ ( _ (*VS*) $ _ $ X $ _ )) $ _
+        = Thm.major_prem_of sequent
+  val H2 = case X of Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ H2 => H2
+                     | _ (*times*) $ (_ (*FOCUS*) $ H2) => H2
+  in Seq.make (fn _ =>
+      case ToSA_unification rule1 rule2 s
+        of SOME s' =>
+            (*for performance, the check is put later than the unification*)
+            if has_subjs ctxt sequent (*it is the initial sequent!*)
+               andalso tail_is_var H2
+            then REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt [rule4])
+                             #> Phi_Reasoner.chop_seq_head) sequent
+                  |> Seq.maps (ToSA_existential_unification' rule1 rule2 rule3 o pair ctxt)
+                  |> Seq.pull
+            else SOME (s', Seq.empty)
+        | NONE =>
+            if is_Var_and_bs H2
+            then Seq.pull (ToSA_existential_unification' rule1 rule2 rule3 s)
+            else NONE)
+  end
+end
 \<close>
+
 
 \<phi>reasoner_ML ToSA_finish 4000 (\<open>?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close> |
                               \<open>?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R * \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>)
-  = \<open>ToSA_existential_unification @{thm ToSA_finish} @{thm ToSA_finish'} @{thm ToSA_finish''}\<close>
+  = \<open>ToSA_existential_unification @{thm ToSA_finish} @{thm ToSA_finish'}
+                                  @{thm ToSA_finish''} @{thm ToSA_finish'''}\<close>
 
+hide_fact ToSA_finish ToSA_finish' ToSA_finish'' ToSA_finish'''
 
 subsubsection \<open>Void Holes\<close> \<comment> \<open>eliminate 1 holes generated during the reasoning \<close>
 
@@ -452,7 +531,7 @@ lemma [\<phi>reason 3200]:
   unfolding Imply_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 3200]:
-  "(Q \<Longrightarrow>  T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G) \<Longrightarrow>
+  "(Q @action subj_premise G \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G) \<Longrightarrow>
     T \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
   unfolding Imply_def by (simp add: \<phi>expns) blast
 
@@ -741,8 +820,8 @@ subsubsection \<open>Initialization\<close>
 lemma [\<phi>reason 2010
     for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?Y @action ToSA' ?mode\<close>
 ]:
-  \<open> Simplify assertion_simplification X' X
-\<Longrightarrow> Simplify assertion_simplification Y' Y
+  \<open> Simplify (assertion_simps SOURCE) X' X
+\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> \<blangle> Y' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any @action reason_ToSA mode G
 \<Longrightarrow> SOLVE_SUBGOAL G
@@ -753,8 +832,8 @@ lemma [\<phi>reason 2010
 lemma [\<phi>reason 2000
     for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action ToSA' ?mode\<close>
 ]:
-  \<open> Simplify assertion_simplification X' X
-\<Longrightarrow> Simplify assertion_simplification Y' Y
+  \<open> Simplify (assertion_simps SOURCE) X' X
+\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X' \<longmapsto> \<blangle> Y' \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
 \<Longrightarrow> SOLVE_SUBGOAL G
@@ -782,11 +861,18 @@ lemma ToSA_VS_finish'':
   unfolding Action_Tag_def
   using View_Shift_def view_shift_by_implication by force
 
+lemma ToSA_VS_finish''':
+  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R1 \<longmapsto> \<blangle> R2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R1\<heavy_comma> X \<longmapsto> \<blangle> R2\<heavy_comma> X \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P  @action reason_ToSA mode G\<close>
+  unfolding Action_Tag_def FOCUS_TAG_def
+  using \<phi>view_shift_intro_frame_R .
+
 \<phi>reasoner_ML ToSA_VS_finish 4000 (\<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> \<blangle> ?H2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close> |
                                  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> ?R * \<blangle> ?H2 \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>)
   = \<open>ToSA_existential_unification @{thm ToSA_VS_finish} @{thm ToSA_VS_finish'}
-                                  @{thm ToSA_VS_finish''}\<close>
+                                  @{thm ToSA_VS_finish''} @{thm ToSA_VS_finish'''}\<close>
 
+hide_fact ToSA_VS_finish ToSA_VS_finish' ToSA_VS_finish'' ToSA_VS_finish'''
 
 
 lemma [\<phi>reason 4000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?H \<longmapsto> \<blangle> Void \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
@@ -863,7 +949,7 @@ lemma [\<phi>reason 3200]:
   unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 2900]:
-  "(Q \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G) \<Longrightarrow>
+  "(Q @action subj_premise G \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G) \<Longrightarrow>
    \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G"
   unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns) blast
 

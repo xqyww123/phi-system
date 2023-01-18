@@ -921,7 +921,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
 ]:
   \<open> \<phi>IntroFrameVar' R S'' S' T T' E'' E'
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S'' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action ToSA
-\<Longrightarrow> Simplify assertion_simplification E''' E''
+\<Longrightarrow> Simplify (assertion_simps undefined) E''' E''
 \<Longrightarrow> (\<And>v. Remove_Values (E''' v) (E v))
 \<Longrightarrow> PROP \<phi>Application_Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
@@ -1580,6 +1580,21 @@ subsubsection \<open>Constructive\<close>
 \<phi>processor accept_call 500 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>)
   \<open>fn stat => Scan.succeed (fn _ => Phi_Sys.accept_proc stat)\<close>
 
+lemma \<phi>cast_exception_UI:
+  " PendingConstruction f blk H T E
+\<Longrightarrow> (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<^bold>v\<^bold>i\<^bold>e\<^bold>w E a \<longmapsto> E' a)
+\<Longrightarrow> PendingConstruction f blk H T E'"
+  unfolding Argument_def
+  using \<phi>apply_view_shift_pending_E .
+
+(*immediately before the accept call*)
+\<phi>processor throws 490 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>)
+  \<open>fn (ctxt, sequent) => \<^keyword>\<open>throws\<close> >> (fn _ => fn () =>
+    (ctxt, sequent RS @{thm "\<phi>cast_exception_UI"})
+)\<close>
+
+hide_fact \<phi>cast_exception_UI
+
 \<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
   (NuApply.apply (Phi_App_Rules.app_rules ctxt xnames) (ctxt, sequent)))\<close>
 
@@ -1735,11 +1750,6 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
     (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
 )\<close>
 
-(*immediately before the accept call*)
-\<phi>processor throws 490 (\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g ?f \<^bold>o\<^bold>n ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>)
-  \<open>fn (ctxt, sequent) => \<^keyword>\<open>throws\<close> >> (fn _ => fn () =>
-    (ctxt, sequent RS @{thm "_\<phi>cast_exception_"})
-)\<close>
 
 (* \<phi>processor goal 1300 \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?T\<close> \<open>
   fn (ctxt, sequent) => Parse.$$$ "goal" >> (fn _ => fn _ =>
