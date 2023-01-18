@@ -86,7 +86,6 @@ lemma Brking_Frame_eq_identity:
   by (simp add: \<phi>expns)
 
 
-
 section \<open>Instruction\<close>
 
 definition op_brk_scope :: \<open>(brk_label \<Rightarrow> ('a::VALs) proc) \<Rightarrow> 'a proc\<close>
@@ -111,7 +110,7 @@ definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comm
 definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _/ \<^bold>o\<^bold>r _" [1000,10,3] 3)
   where \<open>sift_brking_frame = sift_brking_frame'\<close>
 
-declare sift_brking_frame'_def[folded sift_brking_frame_def, assertion_simps_source]
+(*declare sift_brking_frame'_def[folded sift_brking_frame_def, assertion_simps_source] *)
 
 context begin
 
@@ -158,21 +157,21 @@ section \<open>Reasoning Processes\<close>
 subsection \<open>sift brking frame\<close>
 
 \<phi>setup_reason_rule_default_pattern
-     \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
-  \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>
- and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
-  \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>
+     \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?mode ?G\<close>
+  \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l _ _ \<^bold>a\<^bold>n\<^bold>d _ @action reason_ToSA ?mode ?G\<close>
+ and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?mode ?G\<close>
+  \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l _ _ \<^bold>a\<^bold>n\<^bold>d _ @action reason_ToSA ?mode ?G\<close>
 
-lemma [\<phi>reason 1000]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
+lemma [\<phi>reason 3000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simps undefined] Y' : Y
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simps undefined] E' : E
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E' @action reason_ToSA mode G\<close>
   unfolding sift_brking_frame_def Simplify_def by simp
 
-lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?Any @action reason_ToSA ?G ?mode\<close>]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
+lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?Any @action reason_ToSA ?mode ?G\<close>]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E @action reason_ToSA mode G
+\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA mode G\<close>
   unfolding FOCUS_TAG_def Action_Tag_def
   using view_shift_by_implication .
 
@@ -180,11 +179,11 @@ lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
   unfolding set_eq_iff Brking_Frame'_def plus_fun_def distrib_right ExSet_plus TAIL_def by clarify
 
-lemma [\<phi>reason 1200]:
-  \<open> X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y1 E1
-\<Longrightarrow> X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y2 E2
-\<Longrightarrow> (X1 + X2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
-  unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right
+lemma [\<phi>reason 3003]:
+  \<open> X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y1 E1 @action reason_ToSA mode G
+\<Longrightarrow> X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y2 E2 @action reason_ToSA mode G
+\<Longrightarrow> (X1 + X2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l (Y1 + Y2) (E1 + E2) @action reason_ToSA mode G\<close>
+  unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right Action_Tag_def
   \<medium_left_bracket> premises X1 and X2
     cases' \<medium_left_bracket> X1 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
            \<medium_left_bracket> X2 \<medium_right_bracket>.
@@ -196,9 +195,28 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> X1 + X2 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E\<close>
   using \<phi>CASE_IMP by fastforce *)
 
-lemma [\<phi>reason 1200]:
-  \<open>Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y 0\<close>
+lemma [\<phi>reason 3002]:
+  \<open>Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y 0 @action reason_ToSA mode G\<close>
   unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 3001]:
+  \<open> NO_MATCH TYPE('a) TYPE('b)
+\<Longrightarrow> ERROR TEXT(\<open>The exits of scope\<close> l \<open>mismach in return type. One is\<close>
+                    TYPE('a) \<open>while another is\<close> TYPE('b))
+\<Longrightarrow> Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y' 0 @action reason_ToSA mode G\<close>
+  for Y :: \<open>'a::VALs \<phi>arg \<Rightarrow> _\<close> and Y' :: \<open>'b::VALs \<phi>arg \<Rightarrow> _\<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason 3000]:
+  \<open> SUBGOAL G G2
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<heavy_comma> \<blangle> Brk_Frame l \<brangle> \<^bold>a\<^bold>n\<^bold>d Any @action reason_ToSA False G2
+\<Longrightarrow> SOLVE_SUBGOAL G2
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l 0 E @action reason_ToSA mode G\<close>
+  unfolding sift_brking_frame'_def FOCUS_TAG_def
+  \<medium_left_bracket> premises _ and X and _
+    X
+  \<medium_right_bracket>. .
 
 lemma Brking_Frame_absorb_item[assertion_simps]:
   \<open>((Brking_Frame l Y)\<heavy_comma> X) = Brking_Frame l (\<lambda>v. Y v \<heavy_comma> X)\<close>
@@ -206,36 +224,18 @@ lemma Brking_Frame_absorb_item[assertion_simps]:
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> ;; \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. .
 
-lemma [\<phi>reason 1180]:
-  \<open> NO_MATCH TYPE('a) TYPE('b)
-\<Longrightarrow> ERROR TEXT(\<open>The exits of scope\<close> l \<open>mismach in return type. One is\<close>
-                    TYPE('a) \<open>while another is\<close> TYPE('b))
-\<Longrightarrow> Brking_Frame l Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y' 0\<close>
-  for Y :: \<open>'a::VALs \<phi>arg \<Rightarrow> _\<close> and Y' :: \<open>'b::VALs \<phi>arg \<Rightarrow> _\<close>
-  by blast
-
-lemma [\<phi>reason 1000]:
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<heavy_comma> \<blangle> Brk_Frame l \<brangle> \<^bold>a\<^bold>n\<^bold>d Any @action reason_ToSA False G
-\<Longrightarrow> SOLVE_SUBGOAL G
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l 0 E\<close>
-  unfolding sift_brking_frame'_def FOCUS_TAG_def
-  \<medium_left_bracket> premises _ and X and _
-    X
-  \<medium_right_bracket>. .
-
 (*It doesn't matter if the structure of sift_brking_frame is broken in the source part.*)
-(*
-lemma [\<phi>reason 3000]:
+
+lemma [\<phi>reason 3004]:
   \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l Y + (E\<heavy_comma> Brk_Frame l) \<longmapsto> Z \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w sift_brking_frame l Y E \<longmapsto> Z \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
   unfolding sift_brking_frame_def sift_brking_frame'_def .
 
-lemma [\<phi>reason 3000]:
+lemma [\<phi>reason 3004]:
   \<open> Brking_Frame l Y + (E\<heavy_comma> Brk_Frame l) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
 \<Longrightarrow> sift_brking_frame l Y E \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
   unfolding sift_brking_frame_def sift_brking_frame'_def .
-*)
+
 
 hide_fact Brking_Frame_plus
 
@@ -275,7 +275,7 @@ optional_translations (\<phi>hide_brk_frame)
   "XCONST Void" <= "CONST Brk_Frame l"
   \<open>Hides technical SL assertions for control flowing breaking\<close>
 
-declare [[\<phi>hide_brk_frame]]
+(* declare [[\<phi>hide_brk_frame]] *)
 
 (*
 ML \<open>

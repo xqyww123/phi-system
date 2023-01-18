@@ -1,8 +1,11 @@
 theory PhiSem_Play_Ground
-  imports PhiSem_Machine_Integer
+  imports
+    PhiSem_CF_Breakable
+    PhiSem_Machine_Integer
     PhiSem_Variable
-    PhiSem_CF_Basic
 begin
+
+thm while_\<phi>app
 
 (*
 proc
@@ -28,8 +31,7 @@ proc
 
 (*
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
-            (SOME Generic_Variable_Access.to_value_no_clean))\<close> *)
-
+           (SOME Generic_Variable_Access.to_value_no_clean))\<close> *)
 
 proc
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>

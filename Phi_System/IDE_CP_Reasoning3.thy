@@ -268,7 +268,7 @@ text \<open>Priority Convention:
 \<^item> 3200: Very Safe Normalization
 \<^item> 3150: Assigning Zeros
 \<^item> 3000: Normalization
-\<^item> 2800: Divergent reasoning in pre-condition
+\<^item> 2800: Disjunction in source part
 \<^item> 2700: Fixing existentially quantified variables
 \<^item> 2500: Padding void holes after the last item. Rules capturing the last item in
         the \<open>\<^emph>\<close>-sequence should have priority higher than this.
@@ -277,6 +277,7 @@ text \<open>Priority Convention:
 \<^item> 2100: Prior rules for specific patterns in the step-by-step searching
 \<^item> 2000: Main rule of step-by-step searching
 \<^item> \<le> 1999: Rules for searching specific object like value, variable, etc.
+\<^item> 800:  Disjunction in target part
 \<^item> \<le> 80: Rules for general searching. This feature is disabled in view shift
           because most of the global-state-level components are configured
           with properly search rules so the general search is not required.
@@ -599,7 +600,7 @@ lemma [\<phi>reason 3100]:
 \<Longrightarrow>  0 + Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
   unfolding Imply_def by simp
 
-subsubsection \<open>Divergence of Union\<close>
+subsubsection \<open>Divergence of Disjunction\<close>
 
 (*
 paragraph \<open>Divide Schematic Variable\<close>

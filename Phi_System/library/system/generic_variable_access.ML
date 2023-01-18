@@ -428,8 +428,8 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
     |> Drule.dest_term
     end
   val goal_ret' = instantiate_R goal_ret ret_spec
-  val goal_E'   = instantiate_R goal_E   E_spec
-  val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E')
+(*  val goal_E'   = instantiate_R goal_E   E_spec *)
+  val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E)
   val ctxt = Phi_Envir.put_thesis goal' ctxt
 
   (*declare every hypothesis*)
@@ -441,7 +441,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
   val (ctxt, sequent') = #initial_sequent Phi_Working_Mode.procedure blk_name arg_spec ctxt
 
   val (_, ctxt) = Assumption.add_assms (fn _ => fn _ =>
-            ((fn sequentx => #cast_exception Phi_Working_Mode.procedure goal_E' (ctxt, sequentx)
+            ((fn sequentx => #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx)
                                 |> Phi_Reasoners.safer_obligation_solver1
                                 |> snd),
              I)) [] ctxt

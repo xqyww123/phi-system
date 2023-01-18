@@ -7,6 +7,14 @@ thm while_\<phi>app
 definition continue_label :: \<open>brk_label \<Rightarrow> brk_label\<close>
   where \<open>continue_label x = x\<close>
 
+lemma continue_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break (continue_label l) vs
+    \<lbrace> collect_return_values S vs\<heavy_comma> Brk_Frame (continue_label l) \<longmapsto> 0 \<rbrace>
+   \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame l S)\<close>
+  unfolding continue_label_def
+  using op_break_\<phi>app .
+
+thm op_break_\<phi>app[]
 thm brk_scope
 
 declare distrib_right[assertion_simps]
@@ -40,16 +48,6 @@ proc while:
     \<medium_right_bracket> for \<open>(X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')\<heavy_comma> Brk_Frame lb\<close> .. ;;
   \<medium_right_bracket>. .
 
-thm while_def
-
-term \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> \<lambda>\<r>\<e>\<t>. X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>
-      \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lb
-                       \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_. X x'\<heavy_comma> Brk_Frame (continue_label lc) \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')
-                       \<^bold>o\<^bold>r \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k (continue_label lc)
-                       \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_. X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x')
-                       \<^bold>o\<^bold>r E2 e\<close>
-        thm \<phi>
-
-        term \<open>A \<Longrightarrow> B\<close>
+hide_const (open) PhiSem_CF_Basic.while
 
 end
