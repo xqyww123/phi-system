@@ -267,23 +267,22 @@ declare proc_bind_SKIP[procedure_simps]
 \<phi>reasoner procedure_equivalent 1200 (\<open>Premise procedure_simplification ?P\<close>)
   = (rule Premise_I; simp only: procedure_simps; fail)
 
-\<phi>reasoner procedure_simplification 1200
-    (\<open>?Q = ?P @action procedure_simplification\<close>)
-  = ((simp only: procedure_simps)?, rule Conv_Action_Tag_I; fail)
+\<phi>reasoner procedure_simplification 1000 (\<open>Simplify procedure_simplification ?x ?y\<close>)
+  = ((simp only: procedure_simps)?, rule Simplify_I)
 
 lemma "\<phi>__final_proc_rewrite__":
-  \<open> f = f' @action procedure_simplification
+  \<open> Simplify procedure_simplification f' f
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
-  unfolding Action_Tag_def by simp
+  unfolding Action_Tag_def Simplify_def by simp
 
 lemma "\<phi>__final_proc_rewrite__'":
-  \<open> f = f' @action procedure_simplification
+  \<open> Simplify procedure_simplification f' f
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action A
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action A\<close>
-  unfolding Action_Tag_def by simp
+  unfolding Action_Tag_def Simplify_def by simp
 
 
 subsection \<open>Misc\<close>

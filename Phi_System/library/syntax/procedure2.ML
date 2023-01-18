@@ -1,3 +1,4 @@
+(*
 signature PROCEDURE_SYNTAX = sig
 include PROCEDURE_SYNTAX
 
@@ -156,3 +157,4 @@ val _ = Theory.setup (Sign.typed_print_translation [
 ])
 
 end
+*)

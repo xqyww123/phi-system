@@ -962,7 +962,7 @@ The reasoner works only when \<open>?A\<close> does not contain \<open>?f\<close
 \<close>
 
 lemma Simple_HO_Unification_I:
-  \<open> Premise procedure_simplification(f = f')
+  \<open> Premise procedure_simplification (f = f')
 \<Longrightarrow> Simple_HO_Unification f f'\<close>
   unfolding Simple_HO_Unification_def Premise_def by simp
 

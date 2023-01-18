@@ -9,14 +9,13 @@ definition continue_label :: \<open>brk_label \<Rightarrow> brk_label\<close>
 
 thm brk_scope
 
-declare [[\<phi>trace_reasoning]]
 declare distrib_right[assertion_simps]
 thm assertion_simps
 
-
+ 
 proc while:
   assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x)\<close>
-  and CT: \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w U \<longmapsto> (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x) @action ToSA\<close>
+  and S: \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w U \<longmapsto> (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x) @action ToSA\<close>
   and C: "\<And>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<Longrightarrow>
                   \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<lbrace> X x \<longmapsto> X x'\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l cond x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1"
   and B: "\<And>x lb lc. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<Longrightarrow>
@@ -30,7 +29,7 @@ proc while:
   input \<open>U\<close>
   output \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> \<not> cond x\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> CT
+  \<medium_left_bracket> S
     brk_scope \<medium_left_bracket> for lb
       PhiSem_CF_Basic.while \<open>Brk_Frame lb\<heavy_comma> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x\<close>
       \<medium_left_bracket> C \<medium_right_bracket>.
@@ -40,6 +39,8 @@ proc while:
       \<medium_right_bracket>. ;;
     \<medium_right_bracket> for \<open>(X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')\<heavy_comma> Brk_Frame lb\<close> .. ;;
   \<medium_right_bracket>. .
+
+thm while_def
 
 term \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> \<lambda>\<r>\<e>\<t>. X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace>
       \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lb

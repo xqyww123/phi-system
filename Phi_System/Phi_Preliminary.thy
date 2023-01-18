@@ -6,6 +6,7 @@ theory Phi_Preliminary
   imports Main "Phi_Algebras.Algebras"
           Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
+  keywords "optional_translations" :: thy_decl
 begin
 
 declare [ [ML_debugger, ML_exception_debugger]]
@@ -92,8 +93,12 @@ in
 #> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop_pattern) pretty_term_style
 end\<close>
 
+subsection \<open>Helper Isar Commands\<close>
+
+ML_file \<open>library/tools/optional_translation.ML\<close>
+
 (*TODO: Move this*)
-subsubsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
+subsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
 
 definition \<open>CONV_GE \<longleftrightarrow> False\<close>
 definition \<open>CONV_GE_Ex \<equiv> Ex\<close>

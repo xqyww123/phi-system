@@ -28,7 +28,7 @@ structure Phi_Procedure : PHI_PROCEDURE = struct
 open Phi_Envir
 
 val app_suffix = "_\<phi>app"
-val compilation_suffix = "_\<phi>compilation"
+val compilation_suffix = "_def"
 val procedure_kind = "\<phi>procedure"
 val cast_kind = "\<phi>cast"
 (* val compilation_thm = gen_get_thm compilation_suffix
