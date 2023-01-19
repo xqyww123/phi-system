@@ -6,7 +6,7 @@ session "Phi_Semantics" = "Phi_System" +
     "Phi_System"
   theories
     PhiSem_Aggregate
-    PhiSem_Basic_Control_Flow
+    PhiSem_CF_Basic
     PhiSem_Generic_Boolean
     PhiSem_Machine_Integer
     PhiSem_Variable

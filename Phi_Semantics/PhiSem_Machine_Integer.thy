@@ -1,14 +1,10 @@
 theory PhiSem_Machine_Integer
-  imports Phi_System.PhiSem_Formalization_Tools PhiSem_Generic_Boolean
+  imports PhiSem_Common_Int PhiSem_Generic_Boolean
 begin
 
 chapter \<open>Semantics for Machine Integers\<close>
 
-section \<open>Preliminary\<close>
-
-no_notation inter (infixl "Int" 70) and union (infixl "Un" 65)
-
-subsection \<open>Models\<close>
+section \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
@@ -56,8 +52,6 @@ lemma Valid_Types[simp]:
 
 
 section \<open>\<phi>-Types\<close>
-
-\<phi>overloads nat and int
 
 subsection \<open>Integer\<close>
 
@@ -116,7 +110,7 @@ lemma \<phi>NatRound_semty[\<phi>reason 1000]:
   unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns)
 
 
-subsubsection \<open>Integer in the normal sense\<close>
+subsection \<open>Integer\<close>
 
 definition \<phi>Int :: "nat \<Rightarrow> (VAL, int) \<phi>" ("\<int>[_]")
   where "\<phi>Int b x =(if x < 2^(b - 1) \<and> -(2^(b-1)) \<le> x \<and> (b = 0 \<longrightarrow> x = 0)
