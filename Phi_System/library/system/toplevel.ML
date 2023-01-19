@@ -538,7 +538,7 @@ fun red_var tys (Abs (N,T,X)) = Abs (N,T, red_var tys X)
 fun reduce_var X =
   let val tys = collect_var_red [] X
       val tys'= filter (fn (N,T) => forall (fn (N',T') => N <> N' orelse T = T') tys) tys
-   in red_var tys' X end
+   in if null tys' then X else red_var tys' X end
 
 in
 
