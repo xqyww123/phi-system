@@ -14,8 +14,7 @@ supporting most of control flows and therefore most of (imperative) languages.
 
 theory Phi_Semantics_Framework
   imports Main Resource_Space Debt_Axiom.Debt_Axiom
-  abbrevs "<:>" = "\<Ztypecolon>"
-    and "<throws>" = "\<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s"
+  abbrevs "<throws>" = "\<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s"
     and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
     and "<view>" = "\<^bold>v\<^bold>i\<^bold>e\<^bold>w"
     and "<with>" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"

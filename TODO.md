@@ -2,3 +2,4 @@
 - Default attribute for premises
 - Hide scaffolding rules, to optimize sledgeharmer.
 - Change the syntax of view shift
+- Synthesis processes in machine integer is wrong!

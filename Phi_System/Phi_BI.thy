@@ -57,7 +57,8 @@ Specifically, in this minimal specialized BI:
 
 theory Phi_BI
   imports "Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner" Phi_Preliminary
-  abbrevs "<implies>" = "\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s"
+  abbrevs "<:>" = "\<Ztypecolon>"
+      and "<implies>" = "\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s"
       and "<and>"  = "\<^bold>a\<^bold>n\<^bold>d"
       and "<subj>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>j"
 begin
@@ -80,6 +81,15 @@ lemma \<phi>Type_eqI:
   unfolding \<phi>Type_def by blast
 
 ML_file \<open>library/tools/simp_congruence.ML\<close>
+
+lemma declare_phi_Type:
+  \<open>T = T' \<Longrightarrow> (x \<Ztypecolon> T) = T' x\<close>
+  \<open>T \<equiv> T' \<Longrightarrow> (x \<Ztypecolon> T) \<equiv> T' x\<close>
+  unfolding \<phi>Type_def by simp_all
+
+ML_file \<open>library/syntax/declare_phi_Type.ML\<close>
+
+hide_fact declare_phi_Type
 
 text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
 

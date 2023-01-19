@@ -240,18 +240,9 @@ definition op_le :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
 
 section \<open>Abstraction of Instructions\<close>
 
-declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
-
-abbreviation LshR (infixl "LSHR" 70) where \<open>x LSHR y \<equiv> x div 2 ^ Big y\<close>
-abbreviation LshL (infixl "LSHL" 70) where \<open>x LSHL y \<equiv> x  *  2 ^ Big y\<close>
-
 definition Bits_Tag :: \<open>'a \<Rightarrow> nat \<Rightarrow> 'a\<close> (infix "<bits>" 25) where [iff]: \<open>(x <bits> n) = x\<close>
 
-
 subsection \<open>Arithmetic Operations\<close>
-
-\<phi>overloads "+" and "-" and "*" and "/" and "<" and "\<le>" and ">" and "\<ge>" and "=" and "\<not>"
-  and "\<and>" and "\<or>"
 
 bundle unfold_Big = Big_def[iff]
 
