@@ -493,6 +493,53 @@ fun prove_prem int stat =
 local
 fun is_backward_mode s = (Proof.assert_backward s; true)
       handle ERROR _ => false
+
+fun strip_fun_args \<^Type>\<open>fun T T'\<close> = T :: strip_fun_args T'
+  | strip_fun_args _ = []
+fun strip_fun_ret \<^Type>\<open>fun _ T'\<close> = strip_fun_ret T'
+  | strip_fun_ret T' = T'
+
+fun collect_var_red L (Const _) = L
+  | collect_var_red L (Free _) = L
+  | collect_var_red L (Var _) = L
+  | collect_var_red L (Bound _) = L
+  | collect_var_red L (Abs (_,_,X)) = collect_var_red L X
+  | collect_var_red L (X as _ $ _) =
+      case strip_comb X of (Var (N, T), args) =>
+            let val n = length args
+                val Targs  = strip_fun_args T
+                val Targs' = fold2 (fn t => (fn Bound _ => (fn L => t::L)
+                                              | _ => I)) (List.take (Targs, n)) args []
+                val T' = strip_fun_ret T
+                      |> fold_rev (fn t => fn T => t --> T ) (List.drop (Targs, n))
+                      |> fold (fn t => fn T => t --> T ) Targs'
+            in (N,T')::L
+            |> fold (fn arg => fn L => collect_var_red L arg) args
+            end
+        | (H,args) => collect_var_red L H
+                   |> fold (fn arg => fn L => collect_var_red L arg) args
+
+fun red_var tys (Abs (N,T,X)) = Abs (N,T, red_var tys X)
+  | red_var tys (X as _ $ _) =
+     (case strip_comb X of ((H as Var (N,_)), args) =>
+        (case AList.lookup (op =) tys N
+           of SOME T' => list_comb (Var (N,T'),
+                            filter (fn Bound _ => true | _ => false) (map (red_var tys) args))
+            | NONE => list_comb (H, map (red_var tys) args))
+        | (H,args) => list_comb (H, map (red_var tys) args))
+  | red_var _ X = X
+
+(* Because we fix universally quantified variables during opening a programming context,
+   the quantified variables which are parameters of schematic variables are also fixed.
+   (\<And>x1 x2. P (?z x1 x2))  becomes   P (?z x1 x2)
+   Since it is meaningless for a schematic variables to be parameterized by fixed variables,
+   this ML function trims all such fixed variables parameterizing schematic variables.
+   The above example will be trimmed to (P ?z). *)
+fun reduce_var X =
+  let val tys = collect_var_red [] X
+      val tys'= filter (fn (N,T) => forall (fn (N',T') => N <> N' orelse T = T') tys) tys
+   in red_var tys' X end
+
 in
 
 fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
@@ -596,7 +643,7 @@ fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
       |> Proof.map_context_result (fn ctxt => ctxt
             |> Phi_Working_Mode.set mode
             |> Proof_Context.put_thms false ("\<phi>thesis",
-                          SOME [Drule.mk_term (Thm.cterm_of ctxt goal)])
+                          SOME [Drule.mk_term (Thm.cterm_of ctxt (reduce_var goal))])
             |> #initial_sequent mode blk_name (Thm.cterm_of ctxt arg)
             |> swap)
       |-> Phi_Envir.enter_programming_environ

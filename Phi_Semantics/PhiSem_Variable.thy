@@ -378,7 +378,7 @@ proc op_var_scope:
   output \<open>Y\<close>
   throws  E
   \<medium_left_bracket> op_var_scope'[where TY=TY]
-    try''
+    try'' 
     \<medium_left_bracket> premises [\<phi>reason]
       BLK to_Identity op_free_var
     \<medium_right_bracket>.
