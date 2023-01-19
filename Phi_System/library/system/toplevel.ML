@@ -421,6 +421,9 @@ fun gen_finish_proc prep_term qed spec int stat =
           (fn sequent => fn stat =>
       let
         val ctxt = Proof.context_of stat
+        val stat' = stat
+          |> Proof.set_facts []
+          |> Proof.end_block
         val end_tac = basic_method (fn ctxt' => fn goal => (
             let
               val sequent' = singleton (Proof_Context.export ctxt ctxt') sequent
@@ -437,8 +440,7 @@ fun gen_finish_proc prep_term qed spec int stat =
               in result end
             ))
        in
-        stat
-          |> Proof.set_facts [] 
+        stat'
           |> qed (SOME (end_tac, Position.no_range), false)
        end) [] []
      |> snd
@@ -598,6 +600,7 @@ fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
             |> #initial_sequent mode blk_name (Thm.cterm_of ctxt arg)
             |> swap)
       |-> Phi_Envir.enter_programming_environ
+      |> Proof.begin_block
 (*      |> Generic_Variable_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end

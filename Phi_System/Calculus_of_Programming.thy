@@ -337,6 +337,10 @@ lemma introduce_Ex:
   \<open>CurrentConstruction mode blk H (S x) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S)\<close>
   using \<phi>apply_implication[OF _ ExSet_imp_I[OF implies_refl], THEN conjunct1] .
 
+lemma introduce_Ex_subj:
+  \<open>CurrentConstruction mode blk H (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)\<close>
+  by (metis Subjection_True Subjection_cong introduce_Ex)
+
 lemma introduce_Ex_pending:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. Q x v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. \<exists>*x. Q x v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
@@ -351,6 +355,11 @@ lemma introduce_Ex_ToA:
   \<open> ToA_Construction s (S x)
 \<Longrightarrow> ToA_Construction s (ExSet S) \<close>
   using \<phi>ExTyp_strip_imp by fastforce
+
+lemma introduce_Ex_ToA_subj:
+  \<open> ToA_Construction s (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)
+\<Longrightarrow> ToA_Construction s (ExSet S \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<close>
+  by (metis Subjection_Flase Subjection_True introduce_Ex_ToA)
 
 
 paragraph \<open>Return\<close>

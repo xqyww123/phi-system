@@ -9,8 +9,8 @@ definition continue_label :: \<open>brk_label \<Rightarrow> brk_label\<close>
 
 lemma continue_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break (continue_label l) vs
-    \<lbrace> collect_return_values S vs\<heavy_comma> Brk_Frame (continue_label l) \<longmapsto> 0 \<rbrace>
-   \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame l S)\<close>
+    \<lbrace> collect_return_values S vs\<heavy_comma> Brk_Frame (continue_label l) \<longmapsto> (0 :: unit \<phi>arg \<Rightarrow> _) \<rbrace>
+   \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame (continue_label l) S)\<close>
   unfolding continue_label_def
   using op_break_\<phi>app .
 

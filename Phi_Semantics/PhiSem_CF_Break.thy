@@ -163,18 +163,36 @@ subsection \<open>sift brking frame\<close>
  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
   \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason 1010 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?var_Y' ?var_E'\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simps undefined] Y' : Y
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simps undefined] E' : E
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def by simp
 
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
+\<Longrightarrow> (\<And>v. Y v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y' v @action ToSA)
+\<Longrightarrow> E \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' @action ToSA
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
+  unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
+            TAIL_def Brking_Frame'_def
+  \<medium_left_bracket> premises X and Y and E
+    X cases' \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> Brk_Frame l)\<close> ..
+             \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..
+  \<medium_right_bracket>. .
+  
+
 lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?Any @action reason_ToSA ?G ?mode\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
 \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
   unfolding FOCUS_TAG_def Action_Tag_def
   using view_shift_by_implication .
+
+lemma [\<phi>reason 3000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?G ?mode\<close>]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
+  unfolding FOCUS_TAG_def Action_Tag_def .
 
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
@@ -186,8 +204,8 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> (X1 + X2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
   unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right
   \<medium_left_bracket> premises X1 and X2
-    cases' \<medium_left_bracket> X1 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
-           \<medium_left_bracket> X2 \<medium_right_bracket>.
+    cases' \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
+           \<medium_left_bracket> X1 \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
 (* lemma [\<phi>reason 1200]:
@@ -275,7 +293,7 @@ optional_translations (\<phi>hide_brk_frame)
   "XCONST Void" <= "CONST Brk_Frame l"
   \<open>Hides technical SL assertions for control flowing breaking\<close>
 
-declare [[\<phi>hide_brk_frame]]
+(*declare [[\<phi>hide_brk_frame]] *)
 
 (*
 ML \<open>

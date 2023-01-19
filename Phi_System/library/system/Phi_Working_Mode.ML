@@ -19,7 +19,9 @@ type working_mode = {
   cast: cterm (*desired*) -> Proof.context * thm (*sequent*) -> Proof.context * thm,
   cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
   before_finish: cterm -> Proof.context * thm -> Proof.context * thm,
-  introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm
+  introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
+  introduce_existence_during_finalization:
+      (string * typ) list -> Proof.context * thm -> Proof.context * thm
 }
 (*
 cast operation: transform to the desired assertion.
@@ -63,7 +65,9 @@ type working_mode = {
   cast: cterm -> Proof.context * thm -> Proof.context * thm,
   cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
   before_finish: cterm -> Proof.context * thm -> Proof.context * thm,
-  introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm
+  introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
+  introduce_existence_during_finalization:
+      (string * typ) list -> Proof.context * thm -> Proof.context * thm
 }
 
 structure Data = Generic_Data(
@@ -149,24 +153,23 @@ fun eliminate_term ctxt xs thm =
 fun collect vs tm = Term.fold_aterms (fn t as Free v =>
                     if member (op =) vs v then insert (op =) v else I | _ => I) tm []
 
-fun introduce_ex_ToA xs (ctxt, sequent) =
+fun introduce_ex_ToA extract rule xs (ctxt, sequent) =
   let
     fun generalize x sequent =
       case Phi_Syntax.dest_ToA_Construction (Thm.concl_of sequent) of (_, S)
         => sequent RS Drule.infer_instantiate ctxt
-                              [(("S",0), Thm.cterm_of ctxt (absfree x S))] @{thm introduce_Ex_ToA}
+                              [(("S",0), Thm.cterm_of ctxt (absfree x (extract S)))] rule
         | _ => bad_sequent sequent
   in fold_rev generalize xs sequent |> pair ctxt
   end
 
-fun introduce_existence_cc xs (ctxt,sequent) =
+fun introduce_existence_cc extract rule xs (ctxt,sequent) =
   if can Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)
   then let
-      val rule = @{thm introduce_Ex}
       fun generalize x sequent =
         case Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent) of (_,_,_,_,E)
           => sequent RS Drule.infer_instantiate ctxt
-                                    [(("S",0), Thm.cterm_of ctxt (absfree x E))] rule
+                                    [(("S",0), Thm.cterm_of ctxt (absfree x (extract E)))] rule
           | _ => bad_sequent sequent
       in fold_rev generalize xs sequent |> pair ctxt
       end
@@ -340,7 +343,8 @@ val procedure : working_mode =
        end
     ),
     before_finish = before_finish,
-    introduce_existence = introduce_existence_cc
+    introduce_existence = introduce_existence_cc I @{thm introduce_Ex},
+    introduce_existence_during_finalization = introduce_existence_cc I @{thm introduce_Ex}
 }
 end
 
@@ -424,7 +428,11 @@ in
     ),
     cast_exception = K (cannot_cast_exception o snd),
     before_finish = (K I),
-    introduce_existence = introduce_existence_cc
+    introduce_existence = introduce_existence_cc I @{thm introduce_Ex},
+    introduce_existence_during_finalization =
+      introduce_existence_cc (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
+                               | _ => error ("bad form of the finalizing sequent"))
+                             @{thm introduce_Ex_subj}
 }
 end
 
@@ -498,7 +506,11 @@ in
     ),
     cast_exception = K (cannot_cast_exception o snd),
     before_finish = (K I),
-    introduce_existence = introduce_ex_ToA
+    introduce_existence = introduce_ex_ToA I @{thm introduce_Ex_ToA},
+    introduce_existence_during_finalization =
+        introduce_ex_ToA (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
+                           | _ => error ("bad form of the finalizing sequent"))
+                         @{thm introduce_Ex_ToA_subj}
 }
 end
 

@@ -185,8 +185,8 @@ lemma [\<phi>reason 3003]:
 \<Longrightarrow> (X1 + X2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l (Y1 + Y2) (E1 + E2) @action reason_ToSA mode G\<close>
   unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right Action_Tag_def
   \<medium_left_bracket> premises X1 and X2
-    cases' \<medium_left_bracket> X1 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
-           \<medium_left_bracket> X2 \<medium_right_bracket>.
+    cases' \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
+           \<medium_left_bracket> X1 \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
 (* lemma [\<phi>reason 1200]:

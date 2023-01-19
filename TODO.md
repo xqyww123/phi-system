@@ -1,3 +1,4 @@
 - Distance cut in Application reasoning
 - Default attribute for premises
 - Hide scaffolding rules, to optimize sledgeharmer.
+- Change the syntax of view shift
