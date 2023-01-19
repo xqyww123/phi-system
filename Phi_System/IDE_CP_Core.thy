@@ -1502,8 +1502,6 @@ lemma "__value_access_0__":
 
 ML_file \<open>library/system/generic_variable_access.ML\<close>
 
-hide_fact "__value_access_0__"
-
 lemma [\<phi>reason 1000]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (x <val-of> any \<Ztypecolon> T) TY\<close>
@@ -1531,10 +1529,12 @@ ML_file "library/tools/parse.ML"
 ML_file "library/system/processor.ML"
 ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys.ML\<close>
+ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
 ML_file \<open>library/system/toplevel.ML\<close>
 
+hide_fact "__value_access_0__"
 
 subsection \<open>Isar Commands \& Attributes\<close>
 

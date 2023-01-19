@@ -153,7 +153,6 @@ lemma "\<phi>__Return_rule__":
   unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def
   by clarsimp
 
-
 subsection \<open>Construct View Shift\<close>
 
 lemma \<phi>make_view_shift:
