@@ -4,6 +4,7 @@ session Phi_Semantics_Framework = Main +
     Phi_Statespace
     Virtual_Datatype
     Phi_Algebras
+    Debt_Axiom
   theories
     Phi_Semantics_Framework
   document_files (in "~~/src/Doc/")

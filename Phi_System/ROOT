@@ -4,10 +4,13 @@ session "Phi_System" = "Phi_Semantics_Framework" +
     "Phi_Algebras"
     "Phi_Semantics_Framework"
     "Phi_Logic_Programming_Reasoner"
+    "Debt_Axiom"
   theories
     Calculus_of_Programming
     IDE_CP
-    IDE_CP_Reasoning
+    IDE_CP_Reasoning1
+    IDE_CP_Reasoning2
+    IDE_CP_Reasoning3
     Phi_Preliminary
     Phi_Types
     PhiSem_Formalization_Tools
