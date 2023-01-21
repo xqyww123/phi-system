@@ -312,6 +312,7 @@ lemma [\<phi>reason 1000 for \<open>pred_option ((=) ?TY') (Some ?TY) @action in
   \<comment> \<open>the output TY equals to that TY in \<open>Some TY\<close> exactly.\<close>
   by simp
 
+
 lemma
   \<open>pred_option (\<lambda>TY'. TY = TY') None\<close>
   \<open>pred_option (\<lambda>TY'. TY = TY') (Some TY)\<close>
@@ -344,7 +345,18 @@ lemma [\<phi>reason 1200 for
 
 subsubsection \<open>Set\<close>
 
-proc (nodef) op_set_var:
+lemma op_set_var_\<phi>app:
+  assumes [unfolded Action_Tag_def, useful]:
+      \<open>pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type\<close>
+  assumes [unfolded \<phi>SemType_def subset_iff, useful]:
+      \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+  shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var var TY \<a>\<r>\<g> \<lbrace> x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<a>\<r>\<g>] U \<longmapsto> \<lambda>\<r>\<e>\<t>. y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U \<rbrace> \<close>
+  \<medium_left_bracket> to_Identity 
+    $y to_Identity
+    op_set_var'' 
+  \<medium_right_bracket>. .
+
+(* proc (nodef) op_set_var:
   assumes [unfolded Action_Tag_def, useful]:
       \<open>pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type\<close>
   assumes [unfolded \<phi>SemType_def subset_iff, useful]:
@@ -355,7 +367,7 @@ proc (nodef) op_set_var:
     $y to_Identity
     op_set_var'' 
   \<medium_right_bracket>. .
-
+*)
 schematic_goal op_set_var__synthesis [\<phi>reason 1200 for 
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS (?y <set-to> ?var) \<Ztypecolon> ?U ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
 ]:
@@ -370,6 +382,8 @@ shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?FF \<lbrace> X \<longmapsto> 
 
 subsubsection \<open>Declare New Variables\<close>
 
+declare [[eta_contract=false]]
+
 proc op_var_scope:
   assumes BLK: \<open>\<And>var. varname.type var \<equiv> TY
                   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var] \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
@@ -382,7 +396,7 @@ proc op_var_scope:
     \<medium_left_bracket> premises [\<phi>reason]
       BLK to_Identity op_free_var
     \<medium_right_bracket>.
-    \<medium_left_bracket> to_Identity op_free_var throw \<medium_right_bracket>. 
+    \<medium_left_bracket> to_Identity op_free_var throw  \<medium_right_bracket>. 
   \<medium_right_bracket>. .
 
 subsection \<open>Implementing IDE-CP Generic Variable Access\<close>
@@ -394,16 +408,8 @@ lemma "__new_var_rule__":
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_var_scope TYPE('a::VALs) TY g \<lbrace> R\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   \<medium_left_bracket> premises G
     op_var_scope[where TY=\<open>TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>] G \<medium_right_bracket>.
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .. .
 
-
-lemma "__set_var_rule__":
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
-\<Longrightarrow> pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type
-\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-  \<medium_left_bracket> premises G and P and [\<phi>reason]
-    op_set_var P G  \<medium_right_bracket>. .
 
 lemma "__set_new_var_rule__":
   \<open> (\<And>var. varname.type var \<equiv> Some TY
@@ -431,8 +437,18 @@ lemma "__set_new_var_noty_rule__":
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
-ML_file "library/variable.ML"
+lemma "__set_var_rule__":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+\<Longrightarrow> pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type
+\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+  \<medium_left_bracket> premises G and P and [\<phi>reason]
+    op_set_var P G
+  \<medium_right_bracket> .. .
 
+(*
+ML_file "library/variable.ML"
+*)
 
 end
 

@@ -417,7 +417,7 @@ fun gen_finish_proc prep_term qed spec int stat =
       end
     )
         (*and the proof obligation is presented to users here.*)
-    |-> Phi_Sys.obligation_proof (print_results int) Proof_Context.mode_schematic false "" NONE
+    |-> Phi_Sys.obligation_proof (print_results int) Proof_Context.mode_schematic "" NONE
           (fn sequent => fn stat =>
       let
         val ctxt = Proof.context_of stat
@@ -477,7 +477,7 @@ fun prove_prem int stat =
              |-> Phi_Envir.set_state_sequent
       end
   in
-    stat |> Phi_Sys.setup_proof (print_results int) Proof_Context.mode_schematic false ""
+    stat |> Phi_Sys.setup_proof (print_results int) Proof_Context.mode_schematic ""
               NONE after_qed [] [] [[(goal,[])]]
          |> apsnd (
               Proof.map_context (Proof_Context.set_mode Proof_Context.mode_default)
@@ -594,13 +594,14 @@ fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
                                    |> Proof_Context.export ctxt' ctxt''
           val th2 = Drule.forall_intr_list (map Drule.dest_term vars') th1
 
-          fun gen_sequent sequent =
-            let val insts =
+          fun gen_sequent sequent0 =
+            let val sequent = Phi_Help.beta_eta_contract_leading_antecedent sequent0
+                val insts =
                       Pattern.match (Proof_Context.theory_of ctxt'')
                                     (Phi_Help.leading_antecedent' sequent, Thm.prop_of th2)
                                     (Vartab.empty, Vartab.empty)
                       |> Phi_Help.env_to_table ctxt''
-                handle Pattern.Pattern => error (Pretty.string_of (Pretty.chunks [
+                handle Pattern.MATCH => error (Pretty.string_of (Pretty.chunks [
                       Pretty.str "The higher-order pattern match fails",
                       Pretty.block [Pretty.str "from ",
                                     Syntax.pretty_term ctxt'' (Phi_Help.leading_antecedent' sequent)],
@@ -610,8 +611,8 @@ fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
                         \some universally quantified variables that it has no access."
                     ]))
                 val sequent' = Thm.instantiate insts sequent
-             in Thm.implies_elim (Phi_Help.beta_eta_contract sequent')
-                                 (Phi_Help.beta_eta_contract th2) end
+             in Thm.implies_elim (Phi_Help.beta_eta_contract_leading_antecedent sequent')
+                                 (Phi_Help.beta_eta_contract th2)end
       in if is_top
          then stat
                 |> enter_backward
@@ -630,7 +631,7 @@ fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
           |> map (apsnd (fn x => elim_premise :: x))
   in
     stat
-      |> internal_goal (print_results int) Proof_Context.mode_schematic false 
+      |> internal_goal (print_results int) Proof_Context.mode_schematic true 
           "" NONE after_qed []
           (bindings ~~ (map (single o rpair []) prems))
           [(Binding.empty_atts, [(goal,[])])] |> #2

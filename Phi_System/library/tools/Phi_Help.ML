@@ -34,6 +34,7 @@ signature PHI_HELP = sig
                                    -> (ctyp TVars.table * cterm Vars.table)
 
   val beta_eta_contract : thm -> thm
+  val beta_eta_contract_leading_antecedent : thm -> thm
 
   val dest_monop_ty: string (* const name *) -> typ -> typ
   val dest_monop   : string (* const name *) -> term -> term
@@ -143,6 +144,8 @@ fun env_to_table ctxt (TY,TM)
 fun beta_eta_contract th =
   Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
 
+fun beta_eta_contract_leading_antecedent th =
+  Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion Conv.all_conv (Thm.cprop_of th)) th
 
 fun has_head c (Const (c', _)) = (c = c')
   | has_head c (h $ _) = has_head c h

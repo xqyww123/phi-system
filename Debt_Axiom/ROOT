@@ -2,7 +2,6 @@ session Debt_Axiom = Pure +
   theories Debt_Axiom
 
 session Debt_Axiom_Doc in example = Main +
-  options [document = pdf, document_output = "output"]
   sessions Debt_Axiom
   theories Debt_Axiom_Doc
   document_files

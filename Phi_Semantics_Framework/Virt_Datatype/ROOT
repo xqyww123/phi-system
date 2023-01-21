@@ -5,7 +5,7 @@ session Virtual_Datatype = Phi_Statespace +
     Virtual_Datatype
 
 session Virtual_Datatype_Doc in example = Virtual_Datatype +
-  options [document = pdf, document_output = "output", document_build = build]
+  options [document_build = build]
   sessions
     Virtual_Datatype
     Phi_Document

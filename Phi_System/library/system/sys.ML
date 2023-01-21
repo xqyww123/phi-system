@@ -20,14 +20,14 @@ signature PHI_SYS = sig
   val synthesis : cterm -> context_state -> context_state
 
   val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
-        -> Proof_Context.mode -> bool -> string -> Method.text option
+        -> Proof_Context.mode -> string -> Method.text option
         -> (Proof.context * thm list list -> Proof.state -> Proof.state)
         -> (binding * typ option * mixfix) list (*fixes*)
         -> (Thm.binding * (term * term list) list) list (*premis*)
         -> (term * term list) list list (*no binding is allowed*)
         -> Proof.state -> thm list * Proof.state
   val obligation_proof :  (Proof.context -> (string * string) * (string * thm list) list -> unit)
-        -> Proof_Context.mode -> bool -> string -> Method.text option
+        -> Proof_Context.mode -> string -> Method.text option
         -> (thm -> Proof.state -> Proof.state)
         -> (binding * typ option * mixfix) list
         -> (Thm.binding * (term * term list) list) list
@@ -259,14 +259,14 @@ fun synthesis term (ctxt, sequent) =
   end
 
 
-fun setup_proof print_results mode strict_asm kind before_qed after_qed' fixes assumes gl stat =
+fun setup_proof print_results mode kind before_qed after_qed' fixes assumes gl stat =
   let open Proof
     fun after_qed ctxthms stat =
       stat |> end_block 
            |> after_qed' ctxthms
   in
     stat |> begin_block
-      |> internal_goal print_results mode strict_asm kind before_qed after_qed fixes assumes
+      |> internal_goal print_results mode true kind before_qed after_qed fixes assumes
             (map (pair Binding.empty_atts) gl)
       (* |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat)
       * "Phi_Sys.useful") stat) *)
@@ -277,7 +277,7 @@ fun obligations_of (\<^const>\<open>Pure.imp\<close>
                     $ P) = G :: obligations_of P
   | obligations_of _ = []
 
-fun obligation_proof print_results mode strict_asm kind before_qed after_qed fixes assumes sequent =
+fun obligation_proof print_results mode kind before_qed after_qed fixes assumes sequent =
   let
     val oblgs = obligations_of (Thm.prop_of sequent)
     fun after_qed' (ctxt, thmss) stat =
@@ -288,7 +288,7 @@ fun obligation_proof print_results mode strict_asm kind before_qed after_qed fix
        in after_qed sequent' stat
       end
   in
-    Proof.internal_goal print_results mode strict_asm kind before_qed after_qed' fixes assumes
+    Proof.internal_goal print_results mode true kind before_qed after_qed' fixes assumes
        (map (fn t=> (Binding.empty_atts,[(HOLogic.mk_Trueprop t,[])])) oblgs)
   end
   

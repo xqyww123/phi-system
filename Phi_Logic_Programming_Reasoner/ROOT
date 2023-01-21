@@ -1,5 +1,5 @@
 session Phi_Logic_Programming_Reasoner = Main +
-  options [document = pdf, document_output = "output", document_build = build]
+  options [document_build = build]
   sessions
     "HOL-Eisbach"
     "Phi_Document"

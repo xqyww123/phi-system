@@ -1,5 +1,5 @@
 session Phi_Semantics_Framework = Main +
-  options [document = pdf, document_build = build]
+  options [document_build = build]
   sessions
     Phi_Statespace
     Virtual_Datatype
