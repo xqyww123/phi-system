@@ -82,15 +82,6 @@ lemma \<phi>Type_eqI:
 
 ML_file \<open>library/tools/simp_congruence.ML\<close>
 
-lemma declare_phi_Type:
-  \<open>T = T' \<Longrightarrow> (x \<Ztypecolon> T) = T' x\<close>
-  \<open>T \<equiv> T' \<Longrightarrow> (x \<Ztypecolon> T) \<equiv> T' x\<close>
-  unfolding \<phi>Type_def by simp_all
-
-ML_file \<open>library/syntax/declare_phi_Type.ML\<close>
-
-hide_fact declare_phi_Type
-
 text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
 
 subsection \<open>Implication\<close>

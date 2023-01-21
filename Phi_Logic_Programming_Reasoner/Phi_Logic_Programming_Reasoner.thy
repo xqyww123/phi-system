@@ -912,6 +912,52 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 
 
+subsection \<open>Optimal Solution\<close>
+
+text \<open>\<phi>-LPR is priority-driven DFS giving the first reached solution but may not be the optimal
+  in some specific given sense. The section gives a way to find out exhaustively the solution
+  of the minimum cost among all candidates in the any user-defined sense.\<close>
+
+definition Cost :: \<open>nat \<Rightarrow> bool\<close> where \<open>Cost _ = True\<close>
+definition At_Least_Cost :: \<open>nat \<Rightarrow> bool\<close> where \<open>At_Least_Cost _ = True\<close>
+
+text \<open>The final cost of a reasoning process is the sum of all invoked \<open>Cost\<close> or
+  the maximum invoked \<open>At_Least_Cost\<close>, the one which is greater.\<close>
+
+definition \<open>Optimum_Solution Divergence Measure \<equiv> (PROP Divergence &&& PROP Measure)\<close>
+
+text \<open>Each invocation of \<open>Optimum_Solution Collect_Candidates Measure\<close>
+invokes an instance of the optimal solution reasoning.
+The reasoning has two stages, Collect_Candidates and Measure.
+In the first stage, ANY feasible search branches
+solving the \<open>Collect_Candidates\<close> are recorded to be candidates from which the reasoning
+finds the optimal in the second stage.
+If some path reaches the end of \<open>Collect_Candidates\<close>, the search will not stop, but continue
+to find other solutions of \<open>Collect_Candidates\<close> by backtracking.
+But branches pruned by cuts are not revisited.
+\<open>\<r>Success\<close> is forbidden in the first stage.
+Global cut is dangerous because it kills other potential candidates.
+
+In the second stage, the reasoning of each candidate goes straight and terminates once it
+reaches the end of \<open>Measure\<close>.
+The cost during this reasoning process is compared with each other,
+and the reasoning result of the minimum one is returned as the result of
+\<open>Optimum_Solution Collect_Candidates Measure\<close>.\<close>
+
+subsubsection \<open>Internal Implementation\<close>
+
+definition \<open>Begin_Measure \<equiv> Trueprop True\<close>
+definition \<open>End_Measure \<equiv> Trueprop True\<close>
+
+lemma Optimum_Solution_rule:
+  \<open> PROP Collect_Candidates
+\<Longrightarrow> PROP Begin_Measure
+\<Longrightarrow> PROP Measure
+\<Longrightarrow> PROP End_Measure
+\<Longrightarrow> PROP Optimum_Solution Collect_Candidates Measure\<close>
+  unfolding Optimum_Solution_def
+  by (rule conjunctionI)
+
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>
   \<comment> \<open>Maybe Useless, considering to discard!\<close>
