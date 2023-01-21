@@ -360,10 +360,11 @@ lemma ToSA_by_structural_extraction__reverse_morphism:
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
   ;; A[THEN \<phi>frame_view_right]
      SE[OF \<open>Q'\<close>]
+  thm \<phi>
   \<medium_right_bracket> apply (simp add: \<phi>)
-  \<medium_left_bracket>
-    have A : \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w R2' \<heavy_comma> W' \<longmapsto> A' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1'\<close> using \<phi>_previous by simp
-    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>a\<^bold>n\<^bold>d P2')\<close> using \<phi>_previous by simp
+    \<medium_left_bracket>
+    have A : \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w R2' \<heavy_comma> W' \<longmapsto> A' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
+    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>a\<^bold>n\<^bold>d P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
     ;; SE A[THEN \<phi>frame_view_right]
   \<medium_right_bracket>. . .
 

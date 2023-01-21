@@ -20,15 +20,14 @@ proc
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
 
-declare [[eta_contract=false]]
-declare [[\<phi>trace_reasoning, \<phi>trace_reasoning_candidates]]
+declare [[\<phi>trace_reasoning]]
+
 
 proc
   input  \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l x - 1 \<Ztypecolon> \<nat>[32]\<close>
   \<medium_left_bracket>
     if \<medium_left_bracket> \<open>0 < $x\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0 \<Ztypecolon> \<nat>[32]\<close> \<medium_right_bracket>.
-  ;;
     (* the cartouche like \<open>0 < $x\<close> invokes a synthesis process
        to make a value satisfying that specification *)
   \<medium_right_bracket> using \<phi> by simp .

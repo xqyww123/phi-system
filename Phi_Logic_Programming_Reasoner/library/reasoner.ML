@@ -132,8 +132,8 @@ fun debug_pretty_generic ctxt G =
   then tracing (Pretty.string_of (G ()))  
   else ()
 
-fun error msg = Exn.error (msg ^ "\nReasoning Fail! You may turn on \<phi>reasoning_tracing and \
-      \\<phi>reasoning_tracing_condidates to debug.")
+fun error msg = Exn.error (msg ^ "\nReasoning Fail! You may turn on \<phi>trace_reasoning or\
+      \ \<phi>trace_reasoning_candidates  to debug.")
 
 
 exception Success  of context_state

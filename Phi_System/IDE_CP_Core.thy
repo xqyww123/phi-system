@@ -1532,6 +1532,7 @@ ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
+ML_file \<open>library/system/premise_attribute.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 
 hide_fact "__value_access_0__"
@@ -1549,6 +1550,13 @@ attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_p
   \<open>Evaluate the IDE-CP process on the target theorem.
   Particular processor can be specified to be invoked alone.\<close>
 
+attribute_setup elim_premise_tag = \<open>
+Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
+      if can PLPR_Syntax.dest_premise_tag (Thm.concl_of th) then th RS @{thm Premise_D} else th))
+\<close>
+
+declare [[\<phi>premise_attribute  [elim_premise_tag] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>]]
+declare [[\<phi>premise_attribute? [useful] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>]]
 
 subsection \<open>IDE Processors\<close>
 

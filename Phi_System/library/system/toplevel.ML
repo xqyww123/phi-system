@@ -106,21 +106,22 @@ fun gen_constr_envir prep_term prep_prop prep_var prep_ctxt mk_Goal
     val parse_term = prep_term ctxt_parse
     val parse_prop = prep_prop ctxt_parse
 
-    fun prep_attrterm prep =
-         (apfst (apsnd (map (Attrib.check_src lthy))) #>
-          apsnd (fn (prop, binds) => (prep prop, map parse_term binds)))
+    fun prep_attrterm prep ((b,attrs),(prop, pats)) =
+      let val prop' = prep prop
+          val attrs' = map (Attrib.check_src lthy) attrs
+          val attrs_pre = Premises_Attribute.attribute_of (null attrs') prop' (Context.Proof lthy)
+      in ((b, attrs_pre @ attrs'), (prop', map parse_term pats))
+      end
     val defines = map (prep_attrterm parse_prop) raw_defines
 
     fun prep_precond (Premise, c) =
           prep_attrterm (parse_prop #>
                   (fn (Const (@{const_name Trueprop}, _) $ tm)
-                        => \<^const>\<open>Trueprop\<close> $ (Const (@{const_abbrev Normal_Premise}, dummyT) $ tm)
+                        => \<^const>\<open>Trueprop\<close> $ (@{term Normal_Premise} $ tm)
                     | _ => error "Premise must be atomic HOL assertion (meaning you cannot use \
                                  \meta connectivities like \<open>\<Longrightarrow>\<close> or \<open>\<And>\<close>). You may want to \
                                  \use keyword \<open>assume\<close> for introducing advanced arbitrary \
                                  \antecedents.")) c
-            |> apfst (apsnd (fn attrs =>
-                  @{attributes [useful]} @ [Attrib.internal (K elim_premise)] @ attrs))
       | prep_precond (Assumption, c) = prep_attrterm parse_prop c
     val preconds = map prep_precond raw_preconds
 
@@ -608,7 +609,7 @@ fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
                       Pretty.block [Pretty.str "to ",
                                     Syntax.pretty_term ctxt'' (Thm.prop_of th2)],
                       Pretty.str "which usually means some schematic variable is instantiated to\
-                        \some universally quantified variables that it has no access."
+                        \ some universally quantified variables that it has no access."
                     ]))
                 val sequent' = Thm.instantiate insts sequent
              in Thm.implies_elim (Phi_Help.beta_eta_contract_leading_antecedent sequent')
@@ -627,8 +628,13 @@ fun gen_begin_block prep_attr (var_bindings,prem_bindings) int stat =
                                  map (prep_attr ctxt) attrs)) prem_bindings
     val delta = length prems - length prem_bindings
     val _ = if delta < 0 then error "too much premise bindings" else  ()
-    val bindings = (bindings_given @ (List.tabulate (delta, K (Binding.empty, attr_useful))))
-          |> map (apsnd (fn x => elim_premise :: x))
+    val bindings = (bindings_given @ (List.tabulate (delta, K (Binding.empty, []))))
+          |> map2 (fn P => fn (b,attrs) =>
+              let val attrs' = Premises_Attribute.attribute_of
+                                    (null attrs andalso Binding.is_empty b) P (Context.Proof ctxt)
+                            |> map (Attrib.attribute ctxt)
+              in (b, attrs' @ attrs)
+              end) prems
   in
     stat
       |> internal_goal (print_results int) Proof_Context.mode_schematic true 
