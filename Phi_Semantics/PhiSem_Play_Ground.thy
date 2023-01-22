@@ -35,7 +35,6 @@ proc
 (*
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
            (SOME Generic_Variable_Access.to_value_no_clean))\<close> *)
-
  
 proc
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>

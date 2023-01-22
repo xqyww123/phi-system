@@ -16,8 +16,8 @@ end
 
 structure Premises_Attribute : PREMISES_ATTRIBUTE = struct
 
-fun attr_eq ((a1,b1,c1), (a2,b2,c2)) = (a1 = a2) andalso b1 aconv b2
-fun attr_merge (a1,b1,c1) (a2,b2,c2) = (a1,b1, c1 @ c2)
+fun attr_eq ((a1,b1,_), (a2,b2,_)) = (a1 = a2) andalso b1 aconv b2
+fun attr_merge (a1,b1,c1) (_,_,c2) = (a1, b1, c1 @ c2)
 
 structure Data = Generic_Data (
   type T = (bool * term (*pattern*) * Token.src list) Item_Net.T
@@ -52,7 +52,7 @@ val _ = Theory.setup (
     Scan.lift (Scan.optional (\<^keyword>\<open>?\<close> >> K false) true) --
     Attrib.attribs --| Scan.lift \<^keyword>\<open>for\<close> -- prop_pattern
     >> (fn ((mandatory, attr), pat) => Thm.declaration_attribute (fn _ =>
-          register_attribute (mandatory, @{print} pat, attr)))
+          register_attribute (mandatory, pat, attr)))
     ) "register attributes applying on premises matching the given pattern, for those premises\
       \ in \<phi>-programming block."
 )

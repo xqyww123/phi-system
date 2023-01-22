@@ -7,7 +7,10 @@ session "Phi_Semantics" = "Phi_System" +
   theories
     PhiSem_Aggregate
     PhiSem_CF_Basic
+    PhiSem_CF_Break
+    PhiSem_CF_Breakable
     PhiSem_Generic_Boolean
+    PhiSem_Common_Int
     PhiSem_Machine_Integer
     PhiSem_Variable
   document_files (in "~~/src/Doc/")

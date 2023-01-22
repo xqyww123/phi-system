@@ -2053,8 +2053,8 @@ lemma Structural_Extract_aggrement_to
             Structural_Extract'_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
-  ;; dup
-  ;;  Agreement_cast[OF A]
+    dup
+    Agreement_cast[OF A]
   \<medium_right_bracket>.
   using Agreement_cast .
 

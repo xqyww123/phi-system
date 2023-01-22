@@ -8,7 +8,7 @@ theory IDE_CP_Core
     Calculus_of_Programming
     IDE_CP_Reasoning1
   keywords
-    "proc" "rec_proc" (*"\<phi>cast"*) :: thy_goal_stmt
+    "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
     "var" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws"
     "input" "affirm" :: quasi_command
@@ -198,7 +198,7 @@ text \<open>Sequent in pattern \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold
 \<close>
 
 
-subsubsection \<open>Label of Text\<close>
+subsubsection \<open>Text Label\<close>
 
 text \<open>This part presents a mechanism to encode text symbol inside sequent.
   It may be used anywhere needing some text annotation for any purpose.\<close>
@@ -234,20 +234,18 @@ lemma LabelTag: "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x" unfolding Labe
 lemma [elim!,\<phi>inhabitance_rule]: "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x \<Longrightarrow> C \<Longrightarrow> C" by auto
 
 
-paragraph \<open>Label Binding Objects\<close> (*depreciated*)
+paragraph \<open>Label Binding of Objects\<close>
 
-definition Labelled :: "label \<Rightarrow> 'a \<Rightarrow> 'a" where "Labelled name x = x" \<comment>\<open>name tag\<close>
+definition Labelled :: "label \<Rightarrow> 'a::{} \<Rightarrow> 'a" where [iff]: "Labelled name x \<equiv> x"
 
-(* consts "named_sugar" :: " 'i_am \<Rightarrow> 'merely \<Rightarrow> 'a_sugar " ("\<ltbrak>_\<rtbrak>. _" [10,15] 14)
-translations
-  "\<ltbrak>name\<rtbrak>. x \<Ztypecolon> T" == "x \<Ztypecolon> (\<ltbrak>name\<rtbrak>. T)"
-  "\<ltbrak>name\<rtbrak>. x" == "CONST Labelled (LABEL name) x" *)
+lemma Labelled_def_sym: \<open>x::'a::{} \<equiv> Labelled name x\<close> unfolding Labelled_def .
 
-lemma [simp]: "x \<in> Labelled name S \<longleftrightarrow> x \<in> S" unfolding Labelled_def ..
-lemma [simp]: "x \<in> Labelled name S \<longleftrightarrow> x \<in> S" unfolding Labelled_def ..
+syntax "_LABELED_" :: "idt \<Rightarrow> 'a::{} \<Rightarrow> 'a" ("_\<^bold>: _" [1000,4] 3)
+translations "name\<^bold>: X" == "CONST Labelled (LABEL name) X"
 
 ML_file \<open>library/syntax/label.ML\<close>
 
+thm Labelled_def
 
 
 subsection \<open>Reasoning Job done by \<phi>-LPR\<close>
@@ -1532,6 +1530,7 @@ ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
+ML_file \<open>library/system/named_premises.ML\<close>
 ML_file \<open>library/system/premise_attribute.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 
@@ -1555,8 +1554,9 @@ Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
       if can PLPR_Syntax.dest_premise_tag (Thm.concl_of th) then th RS @{thm Premise_D} else th))
 \<close>
 
-declare [[\<phi>premise_attribute  [elim_premise_tag] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>]]
-declare [[\<phi>premise_attribute? [useful] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>]]
+declare [[\<phi>premise_attribute  [elim_premise_tag] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>,
+          \<phi>premise_attribute? [useful] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>,
+          \<phi>premise_attribute? [\<phi>reason] for \<open>\<phi>SemType _ _\<close>]]
 
 subsection \<open>IDE Processors\<close>
 

@@ -146,8 +146,8 @@ proc \<phi>__synthesis_eq[
 ]:
   assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1  @action synthesis G\<close>
     and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
-    and   [\<phi>reason]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and   [\<phi>reason]: \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
+    and   \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+    and   \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
     and   [\<phi>reason]: \<open>\<phi>Equal T can_eq (=)\<close>
   input \<open>R\<close>
   premises \<open>can_eq x y\<close>
