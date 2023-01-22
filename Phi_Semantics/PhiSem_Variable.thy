@@ -401,6 +401,15 @@ proc op_var_scope:
 
 subsection \<open>Implementing IDE-CP Generic Variable Access\<close>
 
+lemma "__set_var_rule__":
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+\<Longrightarrow> pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type
+\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+  \<medium_left_bracket> premises G and P and [\<phi>reason]
+    op_set_var P G
+  \<medium_right_bracket> .. .
+
 lemma "__new_var_rule__":
   \<open> (\<And>var. varname.type var \<equiv> TY
               \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g var \<lbrace> R\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var]\<heavy_comma> X \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
@@ -437,18 +446,8 @@ lemma "__set_new_var_noty_rule__":
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
-lemma "__set_var_rule__":
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
-\<Longrightarrow> pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type
-\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-  \<medium_left_bracket> premises G and P and [\<phi>reason]
-    op_set_var P G
-  \<medium_right_bracket> .. .
 
-(*
 ML_file "library/variable.ML"
-*)
 
 end
 

@@ -142,10 +142,15 @@ fun env_to_table ctxt (TY,TM)
      tenv_to_vars_table ctxt TY TM)
 
 fun beta_eta_contract th =
-  Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
+  if Term.could_beta_eta_contract (Thm.prop_of th)
+  then Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
+  else th
 
 fun beta_eta_contract_leading_antecedent th =
-  Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion Conv.all_conv (Thm.cprop_of th)) th
+  if Term.could_beta_eta_contract (leading_antecedent' th)
+  then Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion
+                                         Conv.all_conv (Thm.cprop_of th)) th
+  else th
 
 fun has_head c (Const (c', _)) = (c = c')
   | has_head c (h $ _) = has_head c h

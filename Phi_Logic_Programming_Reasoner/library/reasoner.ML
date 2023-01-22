@@ -100,6 +100,12 @@ type reasoner = {name: term,
                  blacklist: term list,
                  tactic: (context_state -> context_state Seq.seq)}
 
+
+
+fun normalize_reasoner ({name,pos,pattern,blacklist,tactic}:reasoner) =
+  ({name=name, pos=pos, pattern = map Envir.beta_eta_contract pattern,
+    blacklist = map Envir.beta_eta_contract blacklist, tactic = tactic}:reasoner)
+
 fun transform_reasoner phi ({name,pos,pattern,blacklist,tactic}:reasoner) =
   ({name=name, pos=pos, pattern = map (Morphism.term phi) pattern,
     blacklist = map (Morphism.term phi) blacklist, tactic = tactic}:reasoner)
@@ -148,8 +154,10 @@ structure Reasoners = Generic_Data (
 
 fun reasoners ctxt = Cost_Net.content (Reasoners.get (Context.Proof ctxt)) |> map (apfst ~)
 fun reasoner_net ctxt = Reasoners.get (Context.Proof ctxt)
-fun add (priority,reasoner) = Reasoners.map (Cost_Net.update (~priority,reasoner));
-fun adds reasoners = Reasoners.map (fold (Cost_Net.update o apfst (op ~)) reasoners)
+fun add (priority,reasoner) =
+      Reasoners.map (Cost_Net.update (~priority, normalize_reasoner reasoner));
+fun adds reasoners =
+      Reasoners.map (fold (Cost_Net.update o apfst (op ~) o apsnd normalize_reasoner) reasoners)
 fun add_lthy cost_reasoner =
   Local_Theory.declaration {syntax=false, pervasive=false} (fn phi =>
     add (apsnd (transform_reasoner phi) cost_reasoner)
@@ -191,12 +199,24 @@ fun concl_of_goal st i =
   in subst_bounds (rfrees, B)
   end
 
-fun call_tactics N ctxt tactics th =
+
+fun beta_eta_contract_leading_antecedent th =
+  if (case Thm.prop_of th
+        of \<^const>\<open>Pure.imp\<close> $ X $ _ => Term.could_beta_eta_contract X
+         | _ => false)
+  then Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion
+                                         Conv.all_conv (Thm.cprop_of th)) th
+  else th
+
+fun call_tactics N ctxt tactics th0 =
+  let val th = beta_eta_contract_leading_antecedent th0 in
   if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
   else let
     val prop = Thm.prop_of th
-    val tacs = concl_of_goal prop 1
+    val tacs = concl_of_goal prop 1 (*TODO: if we can implement a HO match which tolerates loose
+                                      bounds, we don't need substituting loose bounds any more here
+                                      and the performance can be improved effectively.*)
                 |> (fn term =>
                     Cost_Net.retrieve tactics term
                       |> filter (fn (_,reasoner) =>
@@ -224,6 +244,7 @@ fun call_tactics N ctxt tactics th =
           else SOME (cost, #pos r, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
         )
     handle Local_Cut ret => [ret]
+  end
   end
 
 fun gen_reason _ _ _ _ _ [] = NONE

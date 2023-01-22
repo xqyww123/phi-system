@@ -369,8 +369,8 @@ text \<open>
   For example, some operation may be designed for any generic action \<open>?act :: (?'ty::cls) action\<close>
   that fall into class \<open>cls\<close>.
 
-\<^emph>\<open>Comment: I am thinking this category type variable is a bad design because the ItemNet the
-  indexing data structure we are using doesn't support type sort, causing this feature is actually
+\<^emph>\<open>Comment: I am thinking this category type variable is a bad design because the indexing
+  data structure (Net) we are using doesn't support type sort, causing this feature is actually
   not indexed at all, causing the reasoning here becomes searching one by one in linear time!
   Maybe classification should be done by some term-level structure. Let's think when have time!\<close>\<close>
 
