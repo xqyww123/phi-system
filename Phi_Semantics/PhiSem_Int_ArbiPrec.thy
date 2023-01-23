@@ -55,35 +55,6 @@ lemma Valid_Types[simp]:
 
 section \<open>\<phi>-Types\<close>
 
-subsection \<open>Natural Nmber\<close>
-
-definition \<phi>ANat :: "(VAL, nat) \<phi>" ("\<nat>")
-  where "\<nat> = (\<lambda>n. {V_aint.mk (of_nat n)})"
-
-lemma \<phi>ANat_expn[\<phi>expns]:
-  "p \<in> (n \<Ztypecolon> \<nat>) \<longleftrightarrow> (p = V_aint.mk (of_nat n))"
-  unfolding \<phi>Type_def Big_def by (simp add: \<phi>ANat_def)
-
-lemma \<phi>ANat_elim[elim!,\<phi>inhabitance_rule]:
-  "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma \<phi>ANat_semty[\<phi>reason 1000]:
-  \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<close>
-  unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns Big_def)
-
-lemma [\<phi>reason 1000]:
-  "\<phi>Equal \<nat> (\<lambda>x y. True) (=)"
-  unfolding \<phi>Equal_def by (auto simp add: \<phi>expns)
-
-lemma [\<phi>reason 1000]:
-  "\<phi>Zero aint \<nat> 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason]:
-  \<open> is_singleton (n \<Ztypecolon> \<nat>)\<close>
-  by (rule is_singletonI''; simp add: \<phi>expns)
-
-
 subsection \<open>Integer in the normal sense\<close>
 
 definition \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
@@ -111,16 +82,41 @@ lemma \<phi>Int_semty[\<phi>reason 1000]:
   by (simp add: \<phi>expns)
 
 
+subsection \<open>Natural Nmber\<close>
+
+definition \<phi>ANat :: "(VAL, nat) \<phi>" ("\<nat>")
+  where [simp]: "\<nat> n = (Int.int n \<Ztypecolon> \<int>)"
+
+(* lemma \<phi>ANat_elim[elim!,\<phi>inhabitance_rule]:
+  "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C" .
+
+lemma \<phi>ANat_semty[\<phi>reason 1000]:
+  \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<close>
+  unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns Big_def)
+
+lemma [\<phi>reason 1000]:
+  "\<phi>Equal \<nat> (\<lambda>x y. True) (=)"
+  unfolding \<phi>Equal_def by (auto simp add: \<phi>expns)
+
+lemma [\<phi>reason 1000]:
+  "\<phi>Zero aint \<nat> 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason]:
+  \<open> is_singleton (n \<Ztypecolon> \<nat>)\<close>
+  by (rule is_singletonI''; simp add: \<phi>expns)
+
+*)
+
+
 subsubsection \<open>Subtyping\<close>
 
 lemma subty_Z_N[\<phi>overload nat]: 
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < x \<Longrightarrow> x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s nat x \<Ztypecolon> \<nat>"
-  unfolding Imply_def Premise_def
-  by (simp add: \<phi>expns Big_def del: One_nat_def)
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 \<le> x \<Longrightarrow> x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s nat x \<Ztypecolon> \<nat>"
+  \<medium_left_bracket> construct\<phi>_1 \<open>nat x \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>. .
 
 lemma subty_N_Z[\<phi>overload int]:
   "x \<Ztypecolon> \<nat> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Int.int x \<Ztypecolon> \<int>"
-  unfolding Imply_def Premise_def by (simp add: \<phi>expns Big_def del: One_nat_def)
+  \<medium_left_bracket> destruct\<phi> \<medium_right_bracket>. .
 
 
 section \<open>Instructions\<close>

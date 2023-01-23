@@ -893,23 +893,34 @@ text \<open>\<open>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i
   \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
 
 definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[_] _ :/ _" [10,1000,10] 9)
-  where "Simplify setting result origin \<longleftrightarrow> result = origin"
+  where [iff]: "Simplify setting result origin \<longleftrightarrow> result = origin"
 
-lemma [cong]: "A = A' \<Longrightarrow> Simplify s x A = Simplify s x A' "
-  unfolding Simplify_def by simp
+definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
+  where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close>
 
-lemma Simplify_I[intro!]: "Simplify s A A" unfolding Simplify_def ..
-lemma Simplify_E[elim!]: "Simplify s A B \<Longrightarrow> (A = B \<Longrightarrow> C) \<Longrightarrow> C" unfolding Simplify_def by blast
+lemma [cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
 
+lemma Do_Simplification:
+  \<open>PROP Do_Simplificatin A B \<Longrightarrow> Simplify s A B\<close>
+  unfolding Do_Simplificatin_def Simplify_def atomize_eq .
+
+lemma End_Simplification : \<open>PROP Do_Simplificatin A A\<close> unfolding Do_Simplificatin_def .
+lemma End_Simplification': \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B \<Longrightarrow> PROP Do_Simplificatin A B\<close>
+  unfolding Do_Simplificatin_def Premise_def atomize_eq .
+
+ML_file \<open>library/simplifier.ML\<close>
+
+hide_fact End_Simplification' End_Simplification Do_Simplification
 
 subsubsection \<open>Default Simplifier\<close>
 
 abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y _ : _" [1000,10] 9)
   where "Default_Simplify \<equiv> Simplify default"
 
-\<phi>reasoner Default_Simplify 1000 (\<open>Default_Simplify ?x ?y\<close>)
-  = (simp?, rule Simplify_I)
+declare [[ML_debugger]]
 
+\<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
+  = \<open>PLPR_Simplifier.simplifier I\<close>
 
 
 subsection \<open>Optimal Solution\<close>

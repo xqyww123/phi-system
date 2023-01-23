@@ -266,8 +266,9 @@ declare proc_bind_SKIP[procedure_simps]
 \<phi>reasoner procedure_equivalent 1200 (\<open>Premise procedure_simplification ?P\<close>)
   = (rule Premise_I; simp only: procedure_simps; fail)
 
-\<phi>reasoner procedure_simplification 1000 (\<open>Simplify procedure_simplification ?x ?y\<close>)
-  = ((simp only: procedure_simps)?, rule Simplify_I)
+\<phi>reasoner_ML procedure_simplification 1000 (\<open>Simplify procedure_simplification ?x ?y\<close>)
+  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
+          Named_Theorems.get ctxt \<^named_theorems>\<open>procedure_simps\<close>)\<close>
 
 lemma "\<phi>__final_proc_rewrite__":
   \<open> Simplify procedure_simplification f' f

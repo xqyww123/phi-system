@@ -45,35 +45,19 @@ named_theorems assertion_simps \<open>Simplification rules normalizing an assert
 
 \<phi>reasoner_ML assertion_simp_source 1300
   (\<open>Simplify (assertion_simps SOURCE) ?X' ?X\<close>)
-  = \<open>fn (ctxt,sequent) =>
-  let val ctxt' = Raw_Simplifier.clear_simpset ctxt
-                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
-                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps_source\<close>
-  in Tactical.HEADGOAL (Simplifier.simp_tac ctxt') sequent
-  |> Seq.map (fn th => (ctxt, @{thm Simplify_I} RS th))
-  end
-\<close>
+  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
+        Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
+      @ Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps_source\<close>)\<close>
 
 \<phi>reasoner_ML assertion_simp_target 1300
   (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
-  = \<open>fn (ctxt,sequent) =>
-  let val ctxt' = Raw_Simplifier.clear_simpset ctxt
-                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
-                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps_target\<close>
-  in Tactical.HEADGOAL (Simplifier.simp_tac ctxt') sequent
-  |> Seq.map (fn th => (ctxt, @{thm Simplify_I} RS th))
-  end
-\<close>
+  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
+        Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
+      @ Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps_target\<close>)\<close>
 
 \<phi>reasoner_ML assertion_simp 1300
   (\<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close>)
-  = \<open>fn (ctxt,sequent) =>
-  let val ctxt' = Raw_Simplifier.clear_simpset ctxt
-                      addsimps Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
-  in Tactical.HEADGOAL (Simplifier.simp_tac ctxt') sequent
-  |> Seq.map (fn th => (ctxt, @{thm Simplify_I} RS th))
-  end
-\<close>
+  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt => Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>)\<close>
 
 lemmas [assertion_simps] =
   mult_zero_right[where 'a=assn] mult_zero_left[where 'a=assn] mult_1_right[where 'a=assn]

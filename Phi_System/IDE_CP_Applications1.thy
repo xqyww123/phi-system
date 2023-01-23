@@ -43,10 +43,24 @@ lemma cases'_\<phi>app:
 
 subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type\<close>
 
-lemma destruct_\<phi>app:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y D : T x
+lemma destruct\<phi>_\<phi>app:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y D: T x
 \<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s D\<close>
   unfolding Simplify_def \<phi>Type_def by (simp add: implies_refl)
+
+lemma construct\<phi>_1_\<phi>app:
+  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (x \<Ztypecolon> T)
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y X: T x
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action ToSA
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T\<close>
+  unfolding Action_Tag_def Simplify_def \<phi>Type_def by simp
+
+lemma construct\<phi>_\<phi>app:
+  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (x \<Ztypecolon> T)
+\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y X: T x
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' * X @action ToSA
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' * (x \<Ztypecolon> T)\<close>
+  unfolding Action_Tag_def Simplify_def \<phi>Type_def by simp
 
 section \<open>Value \& Its Settings\<close>
 

@@ -264,8 +264,9 @@ declare mult.assoc[symmetric, frame_var_rewrs]
 
 consts frame_var_rewrs :: mode
 
-\<phi>reasoner Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
-  = ((simp only: frame_var_rewrs)?, rule Simplify_I)
+\<phi>reasoner_ML Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
+  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
+          Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>)\<close>
 
 definition \<phi>IntroFrameVar :: "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool"
   where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> S' = (R * S) \<and> T' = R * T "
@@ -373,25 +374,6 @@ attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules
 
 \<phi>overloads D \<open>Destructive subtyping rules\<close>
 \<phi>overloads cast \<open>Transform the content of a container\<close>
-
-
-
-
-(*
-subsubsection \<open>Constrain at Most One Solution when Reasoning A Proposition\<close>
-
-definition Unique_Solution :: \<open>bool \<Rightarrow> bool\<close>
-  where [iff]: \<open>Unique_Solution P \<longleftrightarrow> P\<close>
-
-definition Meet_A_Solution :: bool
-  where [iff]: \<open>Meet_A_Solution \<longleftrightarrow> True\<close>
-
-lemma start_unique_solution_reasoning:
-  \<open> P
-\<Longrightarrow> Meet_A_Solution
-\<Longrightarrow> Unique_Solution P\<close>
-  unfolding Unique_Solution_def . *)
-
 
 
 subsection \<open>Synthesis\<close>
@@ -1064,7 +1046,7 @@ lemma [\<phi>reason 1200 for \<open>
   by blast
 
 
-subsubsection \<open>Applying on Transformation Mode\<close>
+subsubsection \<open>Applying on Implication Mode\<close>
 
 lemma apply_cast_on_imply_exact[\<phi>reason 2000 for \<open>
   PROP \<phi>Application_Method (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
@@ -1073,7 +1055,7 @@ lemma apply_cast_on_imply_exact[\<phi>reason 2000 for \<open>
   \<open> PROP \<phi>Application_Success
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
                              (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S))
-                             (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> P))\<close>
+                             (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def Imply_def ToA_Construction_def
   by blast
 
@@ -1085,7 +1067,7 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
 \<Longrightarrow> PROP \<phi>Application_Method
             (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
             (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s R * S))
-            (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s R * T) \<and> P))\<close>
+            (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s R * T) \<and> P))\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_def ToA_Construction_def
   using implies_left_prod
   by (metis Imply_def)
