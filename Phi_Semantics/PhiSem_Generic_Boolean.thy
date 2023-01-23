@@ -21,6 +21,9 @@ debt_axiomatization
 
 section \<open>Instructions\<close>
 
+definition op_const_bool :: "bool \<Rightarrow> VAL proc"
+  where "op_const_bool b = Return (\<phi>arg (V_bool.mk b))"
+
 definition op_not :: "(VAL, VAL) proc'"
   where "op_not v =
     \<phi>M_getV bool V_bool.dest v (\<lambda>v.
@@ -89,7 +92,19 @@ section \<open>Abstractions of Boolean Arithmetic\<close>
 
 \<phi>overloads "=" and "\<not>" and "\<and>" and "\<or>"
 
-paragraph \<open>Not\<close>
+subsection \<open>Constant\<close>
+
+lemma op_const_bool:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_const_bool_def
+  by (rule, simp add: \<phi>Bool_expn)
+
+lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS True  \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis ?G\<close>
+                   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS False \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis ?G\<close>]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace> @action synthesis G\<close>
+  \<medium_left_bracket> op_const_bool[where b=b] \<medium_right_bracket>. .
+
+subsection \<open>Not\<close>
 
 lemma op_not[\<phi>overload \<not>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_not raw \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -102,7 +117,7 @@ schematic_goal
   shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?G \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l \<not>b \<Ztypecolon> \<bool> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action synthesis G\<close>
   \<medium_left_bracket> F1 \<not> \<medium_right_bracket> .. .
 
-paragraph \<open>And\<close>
+subsection \<open>And\<close>
 
 lemma op_and[\<phi>overload \<and>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -117,7 +132,7 @@ schematic_goal
   shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?G \<lbrace> R \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<and> y) \<Ztypecolon> \<bool> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 + E2   @action synthesis G\<close>
    \<medium_left_bracket> F1 F2 \<and> \<medium_right_bracket>. .
 
-paragraph \<open>Or\<close>
+subsection \<open>Or\<close>
 
 lemma op_or[\<phi>overload \<or>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -126,7 +141,7 @@ lemma op_or[\<phi>overload \<or>]:
       simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
 
 
-paragraph \<open>Equal\<close>
+subsection \<open>Equal\<close>
 
 lemma op_equal_\<phi>app[\<phi>overload =]:
   \<open> \<phi>SemType (a \<Ztypecolon> T) TY

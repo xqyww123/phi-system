@@ -76,8 +76,9 @@ section \<open>Abstraction of Procedures\<close>
 
 subsubsection \<open>Syntax for Annotations\<close>
 
-consts Invariant :: \<open>bool \<Rightarrow> bool\<close> ("Inv: _" [37] 36)
-consts Guard :: \<open>bool \<Rightarrow> bool\<close> ("Guard: _" [37] 36)
+consts Invariant :: \<open>bool \<Rightarrow> bool\<close> ("Inv: _" [100] 36)
+consts Guard :: \<open>bool \<Rightarrow> bool\<close> ("Guard: _" [100] 36)
+consts End   :: \<open>bool \<Rightarrow> bool\<close> ("End: _" [100] 36)
 
 subsection \<open>Branch-like\<close>
 

@@ -304,12 +304,13 @@ lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_
 subsection \<open>Syntax hiding technical separation items\<close>
 
 optional_translations (\<phi>hide_brk_frame)
+  "L" <= "CONST Brk_Frame l\<heavy_comma> L"
   "R" <= "R \<heavy_comma> CONST Brk_Frame l"
+  "R\<heavy_comma> L" <= "R \<heavy_comma> CONST Brk_Frame l\<heavy_comma> L"
   "XCONST Void" <= "CONST Brk_Frame l"
   \<open>Hides technical SL assertions for control flowing breaking\<close>
 
 declare [[\<phi>hide_brk_frame]]
-declare [[\<phi>hide_brk_frame=false]]
 
 (*
 ML \<open>
