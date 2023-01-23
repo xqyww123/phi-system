@@ -249,8 +249,8 @@ syntax "_LABELED_PROP_" :: "idt \<Rightarrow> prop \<Rightarrow> prop" ("_\<^bol
 translations "_LABELED_PROP_ name X" => "CONST Labelled (LABEL name) X"
 
 ML_file \<open>library/syntax/label.ML\<close>
-
-
+ML_file \<open>library/system/named_premises.ML\<close>
+ML_file \<open>library/system/premise_attribute.ML\<close>
 
 subsection \<open>Reasoning Job done by \<phi>-LPR\<close>
 
@@ -342,7 +342,25 @@ lemma \<phi>IntroFrameVar'_Yes:
     else Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_Yes} RS sequent)
   end\<close>
 
+subsection \<open>General Syntax\<close>
 
+definition HIDDEN_PREM :: \<open>'a::{} \<Rightarrow> 'a\<close> where \<open>HIDDEN_PREM x \<equiv> x\<close>
+
+lemma HIDDEN_PREM_I : \<open>P \<Longrightarrow> HIDDEN_PREM P\<close> unfolding HIDDEN_PREM_def .
+lemma HIDDEN_PREM_I': \<open>PROP P \<Longrightarrow> PROP HIDDEN_PREM P\<close> unfolding HIDDEN_PREM_def .
+lemma HIDDEN_PREM_D : \<open>HIDDEN_PREM P \<Longrightarrow> P\<close> unfolding HIDDEN_PREM_def .
+lemma HIDDEN_PREM_D': \<open>PROP HIDDEN_PREM P \<Longrightarrow> PROP P\<close> unfolding HIDDEN_PREM_def .
+   
+optional_translations (\<phi>hide_techinicals)
+  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (CONST HIDDEN_PREM X)) Y"
+  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (name\<^bold>: CONST HIDDEN_PREM X)) Y"
+  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST HIDDEN_PREM X) Y"
+  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (name\<^bold>: CONST HIDDEN_PREM X) Y"
+  \<open>show hidden internal techinical constructs\<close>
+
+declare [[\<phi>hide_techinicals,
+          \<phi>premise_attribute [THEN HIDDEN_PREM_D ] for \<open>HIDDEN_PREM ?P\<close>,
+          \<phi>premise_attribute [THEN HIDDEN_PREM_D'] for \<open>PROP HIDDEN_PREM ?P\<close>]]
 
 section \<open>Mechanisms\<close>
 
@@ -1534,8 +1552,6 @@ ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
-ML_file \<open>library/system/named_premises.ML\<close>
-ML_file \<open>library/system/premise_attribute.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 
 hide_fact "__value_access_0__"
