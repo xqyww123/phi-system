@@ -18,8 +18,6 @@ end
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Phi_Syntax
 
-
-val unit_const_name = @{const_name "Product_Type.Unity"}
 val label_ty = Type (@{type_name "label"}, [])
 val label_cty = @{ctyp "label"}
 val label_const_name = @{const_name "LABEL_TAG"}
@@ -39,10 +37,11 @@ fun mk_label_c name = Thm.renamed_term (mk_label name) label_c
 fun mk_label_thm name = 
   Thm.instantiate (TVars.empty, Vars.make [((("x",0),\<^typ>\<open>label\<close>), mk_label_c name)]) @{thm LabelTag}
 fun mk_labelled name tm = Const(@{const_name Labelled}, dummyT) $ mk_label name $ tm
-val dest_labelled = Phi_Help.dest_binop \<^const_name>\<open>Labelled\<close> #> apfst dest_label
 
 val labelled_name = @{const_name "Labelled"}
-val dest_labelled = Phi_Help.dest_binop labelled_name #> apfst dest_label
+fun dest_labelled X = X
+  |> perhaps (try HOLogic.dest_Trueprop)
+  |> Phi_Help.dest_binop \<^const_name>\<open>Labelled\<close> |> apfst dest_label
 fun dest_labelled_opt tm =
   case try (Phi_Help.dest_binop labelled_name) tm of
      SOME (v,tm) => (SOME (dest_label v), tm)

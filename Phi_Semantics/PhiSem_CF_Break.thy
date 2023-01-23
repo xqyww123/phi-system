@@ -107,6 +107,10 @@ definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) pro
   \<ggreater> throw (ABN_break.mk ())
 )\<close>
 
+lemma op_break_reduce_tail[procedure_simps,simp]:
+  \<open>(op_break L v \<ggreater> f) = op_break L v\<close>
+  unfolding op_break_def by simp
+
 definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> Brk_Frame l)\<close>
 definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _/ \<^bold>o\<^bold>r _" [1000,10,3] 3)
   where \<open>sift_brking_frame = sift_brking_frame'\<close>
@@ -142,12 +146,10 @@ lemma brk_scope:
   apply (rule \<phi>CONSEQ'E0, rule FIC_brk_frame.\<phi>R_dispose_res_frm[where P=\<open>\<lambda>_. True\<close>]; simp)
   by (rule, rule implies_refl)
 
-lemma op_break_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break l vs \<lbrace> collect_return_values S vs\<heavy_comma> Brk_Frame l \<longmapsto> 0 \<rbrace>
+lemma "_op_break_rule_":
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break l vs \<lbrace> S vs\<heavy_comma> Brk_Frame l \<longmapsto> 0 \<rbrace>
    \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame l S)\<close>
   unfolding op_break_def Brking_Frame_eq_identity Brk_Frame_eq_identity
-            collect_return_values'_def
-  unfolding TAIL_def
   by (rule, rule, simp, simp, simp, rule, \<phi>reason)
 
 end
@@ -157,11 +159,12 @@ section \<open>Reasoning Processes\<close>
 
 subsection \<open>sift brking frame\<close>
 
-\<phi>setup_reason_rule_default_pattern
+declare [[\<phi>reason_default_pattern
      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
   \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>
  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
-  \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>
+  \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>]]
+     
 
 lemma [\<phi>reason 1010 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?var_Y' ?var_E'\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
@@ -223,6 +226,18 @@ lemma Brking_Frame_absorb_item[assertion_simps]:
   unfolding Brking_Frame'_def TAIL_def
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> ;; \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. .
+
+lemma Brking_Frame_absorb_subj[assertion_simps]:
+  \<open>((Brking_Frame l Y) \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = Brking_Frame l (\<lambda>v. Y v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  unfolding Brking_Frame'_def TAIL_def
+  apply (intro assertion_eq_intro)
+  \<medium_left_bracket> \<medium_right_bracket>. \<medium_left_bracket> ;; \<medium_right_bracket>. .
+
+lemma Brking_Frame_absorb_ex[assertion_simps]:
+  \<open>(\<exists>*x. (Brking_Frame l (Y x))) = Brking_Frame l (\<lambda>v. \<exists>*x. Y x v)\<close>
+  unfolding Brking_Frame'_def TAIL_def
+  apply (intro assertion_eq_intro)
+  \<medium_left_bracket> \<medium_right_bracket>. \<medium_left_bracket> ;; \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1180]:
   \<open> NO_MATCH TYPE('a) TYPE('b)
@@ -293,7 +308,8 @@ optional_translations (\<phi>hide_brk_frame)
   "XCONST Void" <= "CONST Brk_Frame l"
   \<open>Hides technical SL assertions for control flowing breaking\<close>
 
-(*declare [[\<phi>hide_brk_frame]] *)
+declare [[\<phi>hide_brk_frame]]
+declare [[\<phi>hide_brk_frame=false]]
 
 (*
 ML \<open>
@@ -316,13 +332,11 @@ proc
   output \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
-        $y op_break[of l1]
+        $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] U\<close>]
       \<medium_right_bracket>.
       assert \<bottom> (*this place is unreachable!*)
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
-
-thm brk_scope
 
 
 end

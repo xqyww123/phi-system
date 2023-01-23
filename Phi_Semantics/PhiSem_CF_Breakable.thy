@@ -2,25 +2,9 @@ theory PhiSem_CF_Breakable
   imports PhiSem_CF_Break PhiSem_CF_Basic
 begin
 
-thm while_\<phi>app
 
-definition continue_label :: \<open>brk_label \<Rightarrow> brk_label\<close>
-  where \<open>continue_label x = x\<close>
 
-lemma continue_\<phi>app:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_break (continue_label l) vs
-    \<lbrace> collect_return_values S vs\<heavy_comma> Brk_Frame (continue_label l) \<longmapsto> (0 :: unit \<phi>arg \<Rightarrow> _) \<rbrace>
-   \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame (continue_label l) S)\<close>
-  unfolding continue_label_def
-  using op_break_\<phi>app .
 
-thm op_break_\<phi>app[]
-thm brk_scope
-
-declare distrib_right[assertion_simps]
-thm assertion_simps
-
- 
 proc while:
   assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x)\<close>
   and S: \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w U \<longmapsto> (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x) @action ToSA\<close>
@@ -28,12 +12,20 @@ proc while:
                   \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<lbrace> X x \<longmapsto> X x'\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l cond x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1"
   and B: "\<And>x lb lc. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<Longrightarrow>
                     \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<Longrightarrow>
-                    \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x\<heavy_comma> Brk_Frame (continue_label lc)\<heavy_comma> Brk_Frame lb
-                            \<longmapsto> X x'\<heavy_comma> Brk_Frame (continue_label lc)\<heavy_comma> Brk_Frame lb
-                                \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x'
-                              \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lb \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. X x'\<heavy_comma> Brk_Frame (continue_label lc) \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')
-                                         \<^bold>o\<^bold>r \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k (continue_label lc) \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x')
-                                         \<^bold>o\<^bold>r E2 e)"
+                    break_\<phi>app\<^bold>:
+                        \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_break lb \<phi>V_none :: unit proc)
+                           \<lbrace> (X x'\<heavy_comma> Brk_Frame lc \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')\<heavy_comma> Brk_Frame lb \<longmapsto> 0 \<rbrace>
+                        \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame lb (\<lambda>_::unit \<phi>arg. X x'\<heavy_comma> Brk_Frame lc \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')) \<Longrightarrow>
+                    continue_\<phi>app\<^bold>:
+                        \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_break lc \<phi>V_none :: unit proc)
+                           \<lbrace> (X x'\<heavy_comma> Brk_Frame lb \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x')\<heavy_comma> Brk_Frame lc \<longmapsto> 0 \<rbrace>
+                        \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>_. Brking_Frame lc (\<lambda>_::unit \<phi>arg. X x'\<heavy_comma> Brk_Frame lb \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x')) \<Longrightarrow>
+                    \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body lb lc
+                        \<lbrace> X x\<heavy_comma> Brk_Frame lc\<heavy_comma> Brk_Frame lb
+                      \<longmapsto> X x'\<heavy_comma> Brk_Frame lc\<heavy_comma> Brk_Frame lb \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x'
+                         \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lb \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. X x'\<heavy_comma> Brk_Frame lc \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')
+                                    \<^bold>o\<^bold>r \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lc \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x')
+                                    \<^bold>o\<^bold>r E2 e)"
   input \<open>U\<close>
   output \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> \<not> cond x\<close>
   throws \<open>E1 + E2\<close>
@@ -42,7 +34,9 @@ proc while:
       PhiSem_CF_Basic.while \<open>Brk_Frame lb\<heavy_comma> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x\<close>
       \<medium_left_bracket> C \<medium_right_bracket>.
       \<medium_left_bracket> brk_scope \<medium_left_bracket> for lc
-          B[unfolded continue_label_def, where lb=lb]
+          B[where lb1=lb]
+          "_op_break_rule_"[THEN Labelled_I]
+          "_op_break_rule_"[THEN Labelled_I]
         \<medium_right_bracket> for \<open>(X x'\<heavy_comma> Brk_Frame lb \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x')\<heavy_comma> Brk_Frame lc\<close> .. ;;
       \<medium_right_bracket>. ;;
     \<medium_right_bracket> for \<open>(X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x')\<heavy_comma> Brk_Frame lb\<close> .. ;;

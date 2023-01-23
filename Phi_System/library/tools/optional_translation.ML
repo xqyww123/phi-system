@@ -1,4 +1,14 @@
-local
+(* FILE: Phi_System/library/tools/optional_translation.ML
+   AUTHOR: Qiyuan Xu
+
+   Syntax translation command like that in Isar but improved by option flags controlling whether
+   the translations are enabled.
+*)
+
+signature OPTIONAL_TRANSLATION = sig
+end
+
+structure Optional_Translation : OPTIONAL_TRANSLATION = struct
 
 fun read_trrules thy raw_rules =
   let
@@ -12,10 +22,9 @@ fun read_trrules thy raw_rules =
 
 val equals = Parse.$$$ "=";
 
-
 val scan_value =
-      equals -- Args.$$$ "false" >> K Sign.add_trrules ||
-      equals -- Args.$$$ "true" >> K Sign.del_trrules ||
+      equals -- Args.$$$ "false" >> K Sign.del_trrules ||
+      equals -- Args.$$$ "true" >> K Sign.add_trrules ||
       Scan.succeed Sign.add_trrules
 
 fun translations ((b, args), text) thy =
@@ -48,5 +57,4 @@ val _ =
      -- Scan.repeat1 trans_line
      -- Parse.embedded >> (Toplevel.theory o translations));
 
-in
 end

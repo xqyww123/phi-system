@@ -76,9 +76,11 @@ named_theorems assertion_simps \<open>Simplification rules normalizing an assert
 \<close>
 
 lemmas [assertion_simps] =
-  mult_zero_right mult_zero_left mult_1_right mult_1_left add_0_right add_0_left zero_fun
-  zero_fun_def[symmetric] plus_fun Subjection_Zero ExSet_simps FOCUS_TAG_def ExSet_0
-
+  mult_zero_right[where 'a=assn] mult_zero_left[where 'a=assn] mult_1_right[where 'a=assn]
+  mult_1_left[where 'a=assn] add_0_right[where 'a=assn] add_0_left[where 'a=assn]
+  zero_fun[where 'a=assn] zero_fun_def[symmetric, where 'b=assn] plus_fun[where 'a=assn]
+  Subjection_Zero ExSet_simps FOCUS_TAG_def[where 'a=assn] ExSet_0
+  distrib_right[where 'a=assn]
 
 section \<open>Small Reasoning Process\<close>
 

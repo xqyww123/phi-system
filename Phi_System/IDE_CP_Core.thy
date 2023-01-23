@@ -239,13 +239,17 @@ paragraph \<open>Label Binding of Objects\<close>
 definition Labelled :: "label \<Rightarrow> 'a::{} \<Rightarrow> 'a" where [iff]: "Labelled name x \<equiv> x"
 
 lemma Labelled_def_sym: \<open>x::'a::{} \<equiv> Labelled name x\<close> unfolding Labelled_def .
+lemma Labelled_I': \<open>PROP P \<Longrightarrow> PROP (Labelled name (PROP P))\<close> unfolding Labelled_def .
+lemma Labelled_I : \<open>P \<Longrightarrow> PROP Trueprop (Labelled name P)\<close> unfolding Labelled_def .
 
-syntax "_LABELED_" :: "idt \<Rightarrow> 'a::{} \<Rightarrow> 'a" ("_\<^bold>: _" [1000,4] 3)
+syntax "_LABELED_" :: "idt \<Rightarrow> logic \<Rightarrow> logic" ("_\<^bold>:/ (_)" [1000,11] 10)
 translations "name\<^bold>: X" == "CONST Labelled (LABEL name) X"
+
+syntax "_LABELED_PROP_" :: "idt \<Rightarrow> prop \<Rightarrow> prop" ("_\<^bold>:/ (_)" [1000,11] 10)
+translations "_LABELED_PROP_ name X" => "CONST Labelled (LABEL name) X"
 
 ML_file \<open>library/syntax/label.ML\<close>
 
-thm Labelled_def
 
 
 subsection \<open>Reasoning Job done by \<phi>-LPR\<close>
@@ -474,9 +478,9 @@ text \<open>
 TODO: replace <@GOAL> G to \<open>@action synthesis G\<close>
 \<close>
 
-\<phi>setup_reason_rule_default_pattern
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-  \<Rightarrow> \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _  @action synthesis _\<close>
+declare [[\<phi>reason_default_pattern \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
+                               \<Rightarrow> \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _  @action synthesis _\<close>]]
+    
 
 subsubsection \<open>Synthesis Operations\<close>
 

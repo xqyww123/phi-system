@@ -30,7 +30,7 @@ fun add_bindings bindings =
 
 fun update_binding name f = Data.map (apfst (Symtab.map_entry name f))
 
-fun remove_bindings names = Data.map (apfst (fold Symtab.delete names))
+fun remove_bindings names = Data.map (apfst (fold Symtab.delete_safe names))
 
 fun default_name bindings ctxt =
   let val anonymous = snd (Data.get ctxt)
@@ -57,7 +57,7 @@ fun bind_sequent_assms bindings goal (ctxt,sequent) =
 fun bindings_of' tab (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ X $ Y)
       = (try Phi_Syntax.dest_labelled X |> Option.map (fn (k,_) =>
                 case Symtab.lookup tab k of SOME x => x
-                   | NONE => error ("Binding data of premise "^k^" is lost!")))
+                   | NONE => ((Binding.name k,[]),[])))
           :: bindings_of' tab Y
   | bindings_of' tab (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,X))
       = bindings_of' tab X
@@ -65,12 +65,16 @@ fun bindings_of' tab (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ X $ Y)
 
 val bindings_of = bindings_of' o fst o Data.get
 
-fun remove_assm_bindings' X =
-  Conv.try_conv (Conv.implies_conv (Conv.try_conv Phi_Syntax.elim_labelled) remove_assm_bindings') X
+fun remove_assm_bindings' ctxt X =
+  (Conv.forall_conv (remove_assm_bindings' o snd) ctxt
+   else_conv (Conv.try_conv (Conv.implies_conv
+          (Conv.try_conv (HOLogic.Trueprop_conv Phi_Syntax.elim_labelled
+                                else_conv Phi_Syntax.elim_labelled))
+          (remove_assm_bindings' ctxt)))) X
 
 fun remove_assm_bindings ctxt goal sequent =
   (bindings_of ctxt (Logic.nth_prem (goal, Thm.prop_of sequent)),
-   Conv.gconv_rule remove_assm_bindings' goal sequent)
+   Conv.gconv_rule (remove_assm_bindings' ctxt) goal sequent)
 
 
 end

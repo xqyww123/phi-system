@@ -432,22 +432,18 @@ fun the_default_pattern_of ctxt term =
                                 \\<open>\<phi>reason for \<open>pattern\<close>\<close>"]
                  ))))
 
-fun set_reason_rule_default_pattern_cmd raw_pat_pats lthy =
-  let
-    fun wrap2L f (x,y) = case f [x,y] of [x',y'] => (x',y')
-    val ctxt_p = Proof_Context.set_mode Proof_Context.mode_pattern lthy
-    val pat_pats = map ( apply2 (Syntax.parse_prop ctxt_p)
-                      #> wrap2L (Syntax.check_props ctxt_p)) raw_pat_pats
-  in Local_Theory.declaration {syntax=false,pervasive=false} (fn phi =>
-        add_default_pattern (map (apply2 (Morphism.term phi)) pat_pats)) lthy
-  end
 
-val _ =
-  Outer_Syntax.local_theory @{command_keyword \<phi>setup_reason_rule_default_pattern}
+fun wrap2L f (x,y) = case f [x,y] of [x',y'] => (x',y')
+val pat2 = (Args.context -- Scan.lift (Parse.prop --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.prop))
+  >> (fn (ctxt,pat2) =>
+    let val ctxt_p = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
+     in pat2 |> apply2 (Syntax.parse_prop ctxt_p) |> wrap2L (Syntax.check_props ctxt_p) end)
+
+val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason_default_pattern\<close>
+    (Parse.enum1' "and" pat2 >> (fn pats =>
+              Thm.declaration_attribute (K (add_default_pattern pats))))
     "set the default pattern of a reasoning rule once its conclusion matches some pattern"
-    (Parse.and_list1 (Parse.prop --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.prop)
-      >> set_reason_rule_default_pattern_cmd)
-
+)
 
 (*** Reasoner for Introduction Reasoning Rule ***)
 

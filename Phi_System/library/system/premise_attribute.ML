@@ -37,7 +37,7 @@ fun register_attribute_lthy (mandatory, pat,attr) =
     (fn m => register_attribute (mandatory, Morphism.term m pat, attr))
 
 fun attribute_of default term ctxt =
-  Item_Net.retrieve_matching (@{print} ((Data.get) ctxt)) (Envir.beta_eta_contract term)
+  Item_Net.retrieve_matching (Data.get ctxt) (Envir.beta_eta_contract term)
     |> map_filter (fn (mandatory,pat, attr) =>
           if (default orelse mandatory)
           andalso Pattern.matches (Context.theory_of ctxt) (pat,term)

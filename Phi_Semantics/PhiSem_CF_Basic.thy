@@ -110,7 +110,7 @@ proc "if":
               \<open>(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w If C (Y\<^sub>T v) (Y\<^sub>F v) \<longmapsto> Y v @action branch_convergence)\<close>
   input  \<open>X\<close>
   output \<open>Y (ret::'a::VALs \<phi>arg)\<close>
-  throws \<open>\<lambda>e. E e + (E\<^sub>T e \<^bold>s\<^bold>u\<^bold>b\<^bold>j C) + (E\<^sub>F e \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> C)\<close>
+  throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
   \<medium_left_bracket> C branch brT brF \<medium_right_bracket>. .
 
 subsection \<open>Loops\<close>

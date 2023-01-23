@@ -1235,6 +1235,10 @@ subsection \<open>Exception\<close>
 definition throw :: \<open>ABNM \<Rightarrow> 'ret::VALs proc\<close>
   where \<open>throw raw = det_lift (Exception raw)\<close>
 
+lemma throw_reduce_tail[procedure_simps,simp]:
+  \<open>(throw any \<ggreater> f) = throw any\<close>
+  unfolding throw_def bind_def det_lift_def by simp
+
 lemma "__throw_rule__"[intro!]:
   \<open> (\<And>a. X a \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' a)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (throw excep :: 'ret::VALs proc) \<lbrace> X excep \<longmapsto> Any \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X'\<close>

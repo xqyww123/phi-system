@@ -168,7 +168,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
 
     val is_top = not (Phi_Envir.under_programming_environ ctxt) orelse is_backward_mode stat
     val normalize_tac =
-          REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt @{thms Action_Tag_I Argument_I allI impI}))
+          REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt
+              @{thms Action_Tag_I Argument_I allI impI Labelled_I Labelled_I'}))
     val stat =
           if is_top
           then stat
@@ -213,13 +214,13 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     val vars = map Free (var_names ~~ map snd vars)
     val goal = subst_bounds (rev vars, goal)
     val prems_goal = Phi_Help.strip_binop_r @{const_name Pure.imp} goal
-    val (prems, goal) = (Phi_Help.front prems_goal, Phi_Help.last prems_goal)
+    val (prems, goal') = (Phi_Help.front prems_goal, Phi_Help.last prems_goal)
 
-    val mode = Phi_Working_Mode.working_mode_on1 ctxt goal
+    val mode = Phi_Working_Mode.working_mode_on1 ctxt goal'
 
-    val arg = #argument_spec mode goal
-    val blk_name = #block_name_of mode goal
-    val (level, stat) = Proof.map_context_result inc_blk_level stat
+    val arg = #argument_spec mode goal'
+    val blk_name = #block_name_of mode goal'
+    val (level, stat'') = Proof.map_context_result inc_blk_level stat
     val blk_name = "\<L>" ^ (Int.toString level) ^ "_" ^ blk_name
 
     fun after_qed (ctxt',[[th]]) stat0 =
@@ -266,11 +267,11 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
               in ((b, map (Attrib.attribute ctxt) (attrs' @ attrs)), pats)
               end) prems
   in
-    stat
+    stat''
       |> Proof.internal_goal (print_results int) Proof_Context.mode_schematic true 
           "" NONE after_qed []
           (map2 (fn (b,pats) => fn P => (b,[(P,pats)])) bindings prems)
-          [(Binding.empty_atts, [(goal,[])])] |> #2
+          [(Binding.empty_atts, [(goal',[])])] |> #2
       |> Proof.map_context (Proof_Context.set_mode Proof_Context.mode_default)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC all_tac), Position.no_range))
@@ -280,7 +281,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
       |> Proof.map_context_result (fn ctxt => ctxt
             |> Phi_Working_Mode.set mode
             |> Proof_Context.put_thms false ("\<phi>thesis",
-                          SOME [Drule.mk_term (Thm.cterm_of ctxt (reduce_var goal))])
+                          SOME [Drule.mk_term (Thm.cterm_of ctxt (reduce_var goal'))])
             |> #initial_sequent mode blk_name (Thm.cterm_of ctxt arg)
             |> swap)
       |-> Phi_Envir.enter_programming_environ
