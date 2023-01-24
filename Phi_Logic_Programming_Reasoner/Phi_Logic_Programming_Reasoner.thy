@@ -9,10 +9,11 @@ theory Phi_Logic_Programming_Reasoner
 begin
 
 ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
+ML_file \<open>library/pattern.ML\<close>
 
 definition \<r>Feasible :: \<open>bool\<close> where \<open>\<r>Feasible = True\<close>
 
-ML_file_debug \<open>library/reasoner.ML\<close>
+ML_file \<open>library/reasoner.ML\<close>
 
 section \<open>Introduction\<close>
 

@@ -16,11 +16,16 @@ signature NU_PROCESSOR = sig
 
   val trace : bool Config.T
 
-  val define : binding -> int (*precedence*) -> term (*pattern*) list -> proc -> local_theory -> local_theory
+  datatype 'a pattern = Whole_Prop of 'a | Concl of 'a | Premise of 'a
+
+  val define : binding -> int (*precedence*) -> term pattern list -> proc
+            -> Context.generic -> Context.generic
+  val define_lthy : binding -> int (*precedence*) -> term pattern list -> proc
+            -> local_theory -> local_theory
   (* val get : Proof.context -> string -> T option *)
   val defined : Context.generic -> string -> bool
   val get_attr : Context.generic -> xstring * Position.T -> attribute parser
-  val list : Context.generic -> (binding * term (*pattern*) list) list
+  val list : Context.generic -> (binding * term pattern list) list
   val internal_process : context_state -> context_state parser
   val simple_process   : context_state -> context_state parser
   val powerful_process : Token.T list -> Proof.state -> Proof.state
@@ -38,14 +43,14 @@ signature NU_PROCESSOR = sig
   val apply_attr : attribute -> context_state -> context_state
   val parse_auto_level : proc -> proc
 
-  val setup : binding -> int (*precedence*) -> term (*pattern*) list -> proc ->
+  val setup : binding -> int (*precedence*) -> term pattern list -> proc ->
         string (*comment*) -> local_theory -> local_theory
-  val setup_global : binding -> int (*precedence*) -> term (*pattern*) list -> proc ->
+  val setup_global : binding -> int (*precedence*) -> term pattern list -> proc ->
         string (*comment*) -> theory -> theory
   val setup' : binding -> int (*precedence*) ->
-        (string (*pattern*) list * (binding * string option * mixfix) list) -> proc ->
+        (string pattern list * (binding * string option * mixfix) list) -> proc ->
         string (*comment*) -> local_theory -> local_theory
-  val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string (*pattern*) list)
+  val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string pattern list)
         * (binding * string option * mixfix) list)
         * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
 
@@ -68,10 +73,26 @@ val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_processing\<c
 
 type proc = context_state -> (unit -> context_state) parser
 
+datatype 'a pattern = Whole_Prop of 'a | Concl of 'a | Premise of 'a
+
+fun map_pattern f (Whole_Prop x) = Whole_Prop (f x)
+  | map_pattern f (Concl x) = Concl (f x)
+  | map_pattern f (Premise x) = Premise (f x)
+
+fun pattern_burrow f pats =
+  map (fn Whole_Prop x => x | Concl x => x | Premise x => x) pats
+    |> f
+    |> map2 (fn Whole_Prop _ => Whole_Prop | Concl _ => Concl | Premise _ => Premise) pats
+
+fun pattern_print_ML (Whole_Prop x) = "Phi_Processor.Whole_Prop (" ^ ML_Syntax.print_term x ^ ")"
+  | pattern_print_ML (Concl x) = "Phi_Processor.Concl (" ^ ML_Syntax.print_term x ^ ")"
+  | pattern_print_ML (Premise x) = "Phi_Processor.Premise (" ^ ML_Syntax.print_term x ^ ")"
+
+
 datatype processor = Processor of {
               binding : binding,
               precedence : int,
-              pattern : term list,
+              pattern : term pattern list,
               proc : proc
             }
 
@@ -92,11 +113,18 @@ structure Data = Generic_Data
 
 val ops_processor = {get_data = Data.get, put_data = Data.put}
 
-fun define binding precedence pat proc =
-      Entity.define ops_processor binding (mk_processor (binding, precedence, pat, proc)) #> #2
+fun define binding precedence pat proc ctxt =
+  let
+    val x = mk_processor (binding, precedence, pat, proc)
+    val (name, data') = Name_Space.define ctxt true (binding, x) (Data.get ctxt);
+  in Data.put data' ctxt end;
 
-fun define_global binding precedence pat proc =
-      Entity.define_global ops_processor binding (mk_processor (binding, precedence, pat, proc)) #> #2
+fun define_lthy binding precedence pat proc =
+  Local_Theory.declaration {syntax=false, pervasive=false} (fn m =>
+      define binding precedence (map (map_pattern (Morphism.term m)) pat) proc)
+  
+fun define_global binding precedence pat proc thy =
+  Context.theory_map (define binding precedence pat proc) thy
 
 val list = Data.get #> Name_Space.dest_table
       #> map (fn (name, Processor {pattern, ...}) => (Binding.name name,pattern))
@@ -119,6 +147,11 @@ fun get_attr ctxt name =
   wrap_attr
     (proc_of (Name_Space.check ctxt (Data.get ctxt) name |> snd))
 
+fun matches thy (Whole_Prop pat) X = Pattern.matches thy (pat,X)
+  | matches thy (Premise pat) (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ X $ _)
+      = PLPR_Pattern.matches thy (pat, Logic.strip_assums_concl X)
+  | matches thy (Premise pat) X = PLPR_Pattern.matches thy (pat,X)
+  | matches thy (Concl pat) X = PLPR_Pattern.matches thy (pat, Logic.strip_assums_concl X)
 
 exception Processed of (context_state * Token.T list)
 
@@ -129,7 +162,7 @@ fun process_impl procs (stat,toks) limit =
       let
         val stat' = fold (fn (_, Processor {binding, pattern, proc,...}) => fn (ctxt,sequent) =>
           if exists (fn pat =>
-                Pattern.matches (Proof_Context.theory_of ctxt) (pat, Thm.prop_of sequent)
+                matches (Proof_Context.theory_of ctxt) pat (Thm.prop_of sequent)
              ) pattern
           then let
             val _ = if limit > 1000 then error "too deep process" else ();
@@ -206,7 +239,7 @@ val process_no_input = process_by_input []
 val read_prop_pattern = Syntax.read_props o Proof_Context.set_mode Proof_Context.mode_pattern
 
 fun setup binding precedence term proc (comment:string) =
-  define binding precedence term proc
+  define_lthy binding precedence term proc
 
 fun setup_global binding precedence term proc (comment:string) =
   define_global binding precedence term proc
@@ -214,22 +247,22 @@ fun setup_global binding precedence term proc (comment:string) =
 fun setup' binding precedence (raw_term,fixes) proc (comment:string) lthy =
   let
     val (_, lthy') = Proof_Context.add_fixes_cmd fixes lthy
-    val prop = read_prop_pattern lthy' raw_term
+    val prop = pattern_burrow (read_prop_pattern lthy') raw_term
   in
-    define binding precedence prop proc lthy
+    define_lthy binding precedence prop proc lthy
   end
 
 fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) lthy =
   let
-    val (_, ctxt') = Proof_Context.add_fixes_cmd fixes lthy
-    val prop = read_prop_pattern ctxt' raw_term
+    val (_, lthy') = Proof_Context.add_fixes_cmd fixes lthy
+    val prop = pattern_burrow (read_prop_pattern lthy') raw_term
   in
     lthy |> Context.proof_map (
       ML_Context.expression (Input.pos_of proc)
         (ML_Lex.read
           ("Theory.local_setup (Phi_Processor.setup (" ^
           ML_Syntax.make_binding binding ^ ") (" ^ ML_Syntax.print_int precedence ^ ") ("
-          ^ ML_Syntax.print_list ML_Syntax.print_term prop ^ ") (let open Phi_Processor in ") @
+          ^ ML_Syntax.print_list pattern_print_ML prop ^ ") (let open Phi_Processor in ") @
           ML_Lex.read_source proc @
           ML_Lex.read (" end) " ^ ML_Syntax.print_string comment ^ ")"))
     )
@@ -258,5 +291,18 @@ val simplifier = almost_safe (fn (ctxt, sequent) =>
     val sequent' = Simplifier.full_simplify ctxt' (Drule.eta_contraction_rule sequent)
     in  raise Bypass (SOME (ctxt, sequent'))
     end))
-  
+
+
+val pattern_keyword = (\<^keyword>\<open>premises\<close> >> K Premise)
+                   || (\<^keyword>\<open>conclusion\<close> >> K Concl)
+                   || (Scan.succeed Whole_Prop)
+val pattern = (pattern_keyword -- Parse.term) >> (fn (f,x) => f x)
+
+val _ =
+  Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
+      (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
+          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" pattern --| \<^keyword>\<open>)\<close> )
+          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.embedded ""
+        >> setup_cmd)
+
 end

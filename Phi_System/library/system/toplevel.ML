@@ -392,6 +392,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Pretty.block (Pretty.here \<^here>)
                   ]))
                 val (_,result) = NuApply.apply [sequent'] (ctxt',goal')
+                              |> Phi_Reasoners.safer_obligation_solver1
               in result end
             ))
        in
@@ -795,13 +796,6 @@ val _ =
           ,NONE)))
    -- Phi_Processor.powerful_process_p_inert)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
-
-val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
-      (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
-          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
-          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.embedded ""
-        >> Phi_Processor.setup_cmd)
 
 (* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"

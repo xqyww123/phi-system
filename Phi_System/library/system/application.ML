@@ -41,19 +41,34 @@ val expand_appliant =
 fun apply_proc_naive proc (ctxt,sequent) =
   (ctxt, expand_appliant proc RS (sequent RS @{thm \<phi>apply_proc}))
 
+fun mk_app_reasoning_normal app (ctxt,sequent) () =
+  let val rule = Thm.instantiate (TVars.empty,
+                                  Vars.make [((("Apps",0),propT),  Thm.cprop_of app),
+                                             ((("State",0),propT), Thm.cprop_of sequent)])
+                 @{thm \<phi>application}
+       val sequent' = Thm.implies_elim (Thm.implies_elim rule app) sequent
+  in SOME ((ctxt,sequent'), Seq.empty)
+  end
+
+fun mk_app_reasoning_RS app (ctxt,sequent) () =
+  let val sequent' = (app RS @{thm \<phi>Application_Conv})
+                  |> Thm.permute_prems 0 (Thm.nprems_of app)
+                  |> (fn th => th RS sequent)
+  in SOME ((ctxt, sequent'), Seq.empty) end
+
+fun mk_app_reasonings apps (ctxt,sequent) =
+  case Thm.prop_of sequent
+    of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+            map (fn app => (0, Seq.make (mk_app_reasoning_RS app (ctxt,sequent)))) apps
+     | _ => map (fn app => (0, Seq.make (mk_app_reasoning_normal app (ctxt,sequent)))) apps
+
 fun try_apply [] (ctxt,sequent) = NONE
   | try_apply applications (ctxt,sequent) =
       let
-        val apps = applications
-                    |> foldl1 (fn (a,b) =>
-                          Drule.comp_no_flatten (b,0) 1 (
-                           Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
-        val sequent' = Drule.comp_no_flatten (sequent,0) 1
-                          (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
         val _ = Phi_Reasoner.debug_info ctxt (fn _ =>
                     "Reasoning generic applications..." ^ Position.here \<^here>)
       in
-        Phi_Reasoner.reason NONE (ctxt,sequent')
+        Phi_Reasoner.reason_s ctxt (mk_app_reasonings applications (ctxt,sequent))
       end
 
 fun apply applications stat =

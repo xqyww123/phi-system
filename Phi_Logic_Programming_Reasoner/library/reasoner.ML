@@ -49,7 +49,7 @@ signature NU_REASONER = sig
   val reason1 : (unit -> string) (*error message*)
              -> int option (*N*) -> context_state -> context_state
   val reason_s : Proof.context (*the context for accessing reasoner db*)
-              -> (priority * context_state Seq.seq) list -> context_state Seq.seq
+              -> (priority * context_state Seq.seq) list -> context_state option
   (*Note it returns at most one state in the returned sequence.*)
   val reason_tac : int option (*N*)
                 -> Proof.context (*the context for accessing reasoner db*)
@@ -311,14 +311,12 @@ fun reason1 G N stat =
       case reason N stat of SOME x => x
         | NONE => error (G ())
 
-fun reason_s ctxt seqs = Seq.make (fn () =>
+fun reason_s ctxt seqs =
       gen_reason' 0
                   (Config.get ctxt trace)
                   (Config.get ctxt step_limit)
                   (Reasoners.get (Context.Proof ctxt))
                   [seqs]
-        |> Option.map (rpair Seq.empty)
-    )
 
 fun reason_tac N ctxt stat = Seq.make (fn () =>
       gen_reason' (num_of_protected_prems (snd stat) N)

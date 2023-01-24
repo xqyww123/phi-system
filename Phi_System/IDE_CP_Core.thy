@@ -638,14 +638,14 @@ ML_file \<open>library/system/application.ML\<close>
 
 subsubsection \<open>Common Rules of Application Methods\<close>
 
-lemma [\<phi>reason for \<open>
+lemma [\<phi>reason 80 for \<open>
   PROP \<phi>Application_Method (PROP ?App &&& PROP ?Apps) ?State ?Result
 \<close>]:
   \<open> PROP \<phi>Application_Method (PROP App) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application_Method (PROP App &&& PROP Apps) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_Method_def conjunction_imp .
 
-lemma [\<phi>reason for \<open>
+lemma [\<phi>reason 70 for \<open>
   PROP \<phi>Application_Method (PROP ?App &&& PROP ?Apps) ?State ?Result
 \<close>]:
   \<open> PROP \<phi>Application_Method (PROP Apps) State (PROP Result)
@@ -663,11 +663,10 @@ lemma [\<phi>reason 1100 for \<open>
 lemma [\<phi>reason 1100 for \<open>
   PROP \<phi>Application_Method (Trueprop (?Prem \<longrightarrow> ?App)) ?State ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop App) State (PROP Result)
+  \<open> PROP \<phi>Application_Method (Trueprop App) State Result
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop (Prem \<longrightarrow> App)) State (Prem \<Longrightarrow> PROP Result)\<close>
   unfolding prop_def \<phi>Application_Method_def imp_implication
   subgoal premises prems using prems(1)[OF prems(2) prems(3)[OF prems(4)]] . .
-
 
 lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application_Method (Pure.all ?App) ?State ?Result
@@ -678,7 +677,6 @@ lemma [\<phi>reason 1200 for \<open>
   subgoal premises prems
     apply (tactic \<open>Tactic.resolve_tac \<^context>
       [((Thm.forall_elim \<^cterm>\<open>x\<close> @{thm prems(3)}) RS @{thm prems(1)[OF prems(2)]})] 1\<close>) . .
-
 
 lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application_Method (Trueprop (All ?App)) ?State ?Result
@@ -697,9 +695,6 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Application as a Resolution\<close>
 
-definition \<phi>Application_Conv :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close>
-  where \<open>\<phi>Application_Conv P Q \<equiv> (PROP P \<Longrightarrow> PROP Q)\<close>
-
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Application_Conv X' X
 \<Longrightarrow> PROP \<phi>Application_Method X' (PROP X \<Longrightarrow> PROP Y) Y\<close>
@@ -716,37 +711,22 @@ lemma [\<phi>reason 3000 for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP 
   unfolding \<phi>Application_Conv_def .
 
 lemma [\<phi>reason 1200]:
-  \<open> (\<And>x. PROP \<phi>Application_Conv A (X x))
-\<Longrightarrow> PROP \<phi>Application_Conv A (\<And>x. PROP X x)\<close>
+  \<open> (\<And>x. PROP \<phi>Application_Conv (A x) (X x))
+\<Longrightarrow> PROP \<phi>Application_Conv (Pure.all A) (Pure.all X)\<close>
   unfolding \<phi>Application_Conv_def
 proof -
-  assume A: \<open>(\<And>x. PROP A \<Longrightarrow> PROP X x)\<close>
-    and  B: \<open>PROP A\<close>
+  assume A: \<open>(\<And>x. PROP A x \<Longrightarrow> PROP X x)\<close>
+    and  B: \<open>\<And>x. PROP A x\<close>
   show \<open>\<And>x. PROP X x\<close> proof -
     fix x show \<open>PROP X x\<close> using A[OF B] .
   qed
 qed
 
 lemma [\<phi>reason 1200]:
-  \<open> (\<And>x. PROP \<phi>Application_Conv A (Trueprop (X x)))
-\<Longrightarrow> PROP \<phi>Application_Conv A (Trueprop (All X))\<close>
+  \<open> PROP \<phi>Application_Conv A Y
+\<Longrightarrow> PROP \<phi>Application_Conv (PROP X \<Longrightarrow> PROP A) (PROP X \<Longrightarrow> PROP Y)\<close>
   unfolding \<phi>Application_Conv_def
-proof
-  fix x
-  assume A: \<open>(\<And>x. PROP A \<Longrightarrow> X x)\<close>
-    and  B: \<open>PROP A\<close>
-  from A[OF B] show \<open>X x\<close> .
-qed
-
-lemma [\<phi>reason 1200]:
-  \<open> (PROP X \<Longrightarrow> PROP \<phi>Application_Conv A (PROP Y))
-\<Longrightarrow> PROP \<phi>Application_Conv A (PROP X \<Longrightarrow> PROP Y)\<close>
-  unfolding \<phi>Application_Conv_def .
-
-lemma [\<phi>reason 1200]:
-  \<open> (X \<Longrightarrow> PROP \<phi>Application_Conv A (Trueprop Y))
-\<Longrightarrow> PROP \<phi>Application_Conv A (Trueprop (X \<longrightarrow> Y))\<close>
-  unfolding \<phi>Application_Conv_def by rule
+  subgoal premises P using P(3)[THEN P(2), THEN P(1)] . .
 
 lemma [\<phi>reason 1200]:
   \<open> PROP \<phi>Application_Conv X (PROP Y)
@@ -1568,10 +1548,10 @@ hide_fact \<phi>cast_exception_UI
 \<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
   (NuApply.apply (Phi_App_Rules.app_rules ctxt xnames) (ctxt, sequent)))\<close>
 
-\<phi>processor set_param 5000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
+\<phi>processor set_param 5000 (premises \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
   Phi_Sys.set_param_cmd term stat)\<close>
 
-\<phi>processor set_label 5000 (\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP ?Q\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>
+\<phi>processor set_label 5000 (premises \<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>
   Phi_Sys.set_label name stat)\<close>
 
 \<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
@@ -1579,9 +1559,11 @@ hide_fact \<phi>cast_exception_UI
     let open Phi_Envir
     val apps = Phi_App_Rules.app_rules ctxt thms
     val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
-    in case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
+    in NuApply.apply apps (ctxt,sequent) end)\<close>
+
+(* case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
          of SOME (th, _) => (ctxt,th)
-          | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) end)\<close>
+          | _ => raise THM ("RSN: no unifiers", 1, sequent::apps) *)
 
 ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)\<close>
 
@@ -1698,11 +1680,11 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
   else raise Bypass NONE
 ))\<close>
 
-\<phi>processor enter_proof 790 (\<open>Premise ?mode ?P \<Longrightarrow> PROP ?Any\<close>)
+\<phi>processor enter_proof 790 (premises \<open>Premise ?mode ?P\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
       raise Terminate_Process (stat, snd o Phi_Toplevel.prove_prem false))\<close>
 
-\<phi>processor auto_obligation_solver 800 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P \<Longrightarrow> PROP ?Q\<close> | \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P \<Longrightarrow> PROP ?Q\<close>)
+\<phi>processor auto_obligation_solver 800 (premises \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P\<close> | premises \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
     if Config.get ctxt Phi_Reasoner.auto_level >= 2
     then case Seq.pull (Phi_Reasoners.auto_obligation_solver ctxt sequent)

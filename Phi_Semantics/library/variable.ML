@@ -80,7 +80,8 @@ val _ = Theory.setup (
    Generic_Variable_Access.register_assigner
      ("var", \<^type_name>\<open>varname\<close>, "to declare a new variable", variable_assigner)
 #> Phi_Processor.setup_global
-    \<^binding>\<open>declare_variable\<close> 5000 [\<^prop_pattern>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>]
+    \<^binding>\<open>declare_variable\<close> 5000 [Phi_Processor.Whole_Prop
+                                                \<^prop_pattern>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S\<close>]
     (fn (ctxt,sequent) => \<^keyword>\<open>var\<close> |--
                 Parse.list1 (Parse.list1 Parse.binding -- Scan.option (\<^keyword>\<open>::\<close> |-- Parse.term))
      >> (fn raw_vars => fn () =>
