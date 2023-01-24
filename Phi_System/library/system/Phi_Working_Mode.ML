@@ -14,13 +14,14 @@ type working_mode = {
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
   block_name_of: term -> string,
-  transform_rule : thm,
+  implication_rule : thm,
   view_shift_rule: thm option,
   cast: cterm (*desired*) -> Proof.context * thm (*sequent*) -> Proof.context * thm,
   cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
-  before_finish: cterm -> Proof.context * thm -> Proof.context * thm,
+  before_assembling: cterm (*goal*) -> Proof.context * thm -> Proof.context * thm,
+(*  after_assembling:  cterm (*goal*) -> Proof.context * thm -> Proof.context * thm, *)
   introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
-  introduce_existence_during_finalization:
+  introduce_existence_in_assembling:
       (string * typ) list -> Proof.context * thm -> Proof.context * thm
 }
 (*
@@ -60,13 +61,14 @@ type working_mode = {
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
   block_name_of: term -> string,
-  transform_rule : thm,
+  implication_rule : thm,
   view_shift_rule: thm option,
   cast: cterm -> Proof.context * thm -> Proof.context * thm,
   cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
-  before_finish: cterm -> Proof.context * thm -> Proof.context * thm,
+  before_assembling: cterm (*goal*) -> Proof.context * thm -> Proof.context * thm,
+(*  after_assembling:  cterm (*goal*) -> Proof.context * thm -> Proof.context * thm, *)
   introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
-  introduce_existence_during_finalization:
+  introduce_existence_in_assembling:
       (string * typ) list -> Proof.context * thm -> Proof.context * thm
 }
 
@@ -252,8 +254,38 @@ fun start_proc blk_name arg ctxt =
     (ctxt,init)
   end
 
+fun cast desired (ctxt, sequent) =
+  let
+    val idx = 1 + Thm.maxidx_of_cterm desired
+    val rule =
+     (if can (Phi_Syntax.dest_CurrentConstruction) (Thm.concl_of sequent)
+      then @{thm "_\<phi>cast_internal_rule_"}
+      else @{thm "_\<phi>cast_internal_rule_'"})
+        |> Thm.incr_indexes idx
+        |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
+  in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
+  end
 
-fun before_finish goal (ctxt,sequent) =
+fun cast_exception desired (ctxt, sequent) =
+  let
+    val idx = 1 + Thm.maxidx_of_cterm desired
+    val rule =
+     (if can (Phi_Syntax.dest_PendingConstruction) (Thm.concl_of sequent)
+      then @{thm "_\<phi>cast_exception_rule_"}
+      else cannot_cast_exception sequent)
+        |> Thm.incr_indexes idx
+        |> Drule.infer_instantiate ctxt [(("E'",idx),desired)]
+  in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
+  end
+
+
+(*fun after_assembling goal (ctxt,sequent) =
+  let
+    val (_,_,_,_) = Phi_Syntax.dest_procedure_c goal
+  in ()
+  end *)
+
+fun before_assembling goal (ctxt,sequent) =
   let
     val sequent' =
       if can Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)
@@ -316,35 +348,13 @@ val procedure : working_mode =
         case #1 (Phi_Syntax.dest_procedure term)
           of (Var ((x,_),_)) => x
            | _ => "block"),
-    transform_rule  = @{thm \<phi>apply_implication},
+    implication_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
-    cast = (fn desired => fn (ctxt, sequent) =>
-      let
-        val idx = 1 + Thm.maxidx_of_cterm desired
-        val rule =
-         (if can (Phi_Syntax.dest_CurrentConstruction) (Thm.concl_of sequent)
-          then @{thm "_\<phi>cast_internal_rule_"}
-          else @{thm "_\<phi>cast_internal_rule_'"})
-            |> Thm.incr_indexes idx
-            |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
-       in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
-       end
-    ),
-    cast_exception = (fn desired => fn (ctxt, sequent) =>
-      let
-        val idx = 1 + Thm.maxidx_of_cterm desired
-        val rule =
-         (if can (Phi_Syntax.dest_PendingConstruction) (Thm.concl_of sequent)
-          then @{thm "_\<phi>cast_exception_rule_"}
-          else cannot_cast_exception sequent)
-            |> Thm.incr_indexes idx
-            |> Drule.infer_instantiate ctxt [(("E'",idx),desired)]
-       in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
-       end
-    ),
-    before_finish = before_finish,
+    cast = cast,
+    cast_exception = cast_exception,
+    before_assembling = before_assembling,
     introduce_existence = introduce_existence_cc I @{thm introduce_Ex},
-    introduce_existence_during_finalization = introduce_existence_cc I @{thm introduce_Ex}
+    introduce_existence_in_assembling = introduce_existence_cc I @{thm introduce_Ex}
 }
 end
 
@@ -414,7 +424,7 @@ in
         case #1 (Phi_Syntax.dest_view_shift term)
           of (Var ((x,_),_)) => x
            | _ => "\<V>\<S>"),
-    transform_rule  = @{thm \<phi>apply_implication},
+    implication_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = (fn desired => fn (ctxt, sequent) =>
       let
@@ -427,9 +437,9 @@ in
       end
     ),
     cast_exception = K (cannot_cast_exception o snd),
-    before_finish = (K I),
+    before_assembling = (K I),
     introduce_existence = introduce_existence_cc I @{thm introduce_Ex},
-    introduce_existence_during_finalization =
+    introduce_existence_in_assembling =
       introduce_existence_cc (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
                                | _ => error ("bad form of the finalizing sequent"))
                              @{thm introduce_Ex_subj}
@@ -492,7 +502,7 @@ in
     inhabited_rule = K @{thm ToA_Construction_Inhabited_rule},
     initial_sequent = start_implication,
     block_name_of = (K "\<chi>"),
-    transform_rule  = @{thm \<phi>apply_implication_impl},
+    implication_rule  = @{thm \<phi>apply_implication_impl},
     view_shift_rule = NONE,
     cast = (fn desired => fn (ctxt,sequent) =>
       let
@@ -505,9 +515,9 @@ in
       end
     ),
     cast_exception = K (cannot_cast_exception o snd),
-    before_finish = (K I),
+    before_assembling = (K I),
     introduce_existence = introduce_ex_ToA I @{thm introduce_Ex_ToA},
-    introduce_existence_during_finalization =
+    introduce_existence_in_assembling =
         introduce_ex_ToA (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
                            | _ => error ("bad form of the finalizing sequent"))
                          @{thm introduce_Ex_ToA_subj}

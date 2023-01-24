@@ -948,19 +948,15 @@ subsubsection \<open>Applying on a Block / End a Block\<close>
 definition \<open>Simple_HO_Unification f f' \<longleftrightarrow> (f = f')\<close>
 
 text \<open>\<^schematic_prop>\<open>Simple_HO_Unification A (?f x\<^sub>1 \<dots> x\<^sub>n)\<close> encodes a higher order unification
-  having two restrictions that terms \<open>x\<^sub>1, \<dots>, x\<^sub>n\<close> cannot occur free in \<open>?f\<close>
-  and \<open>?A\<close> does not contain \<open>?f\<close>.
-  It has the most general unifier when \<open>x\<^sub>1, \<dots>, x\<^sub>n\<close> are all variables.
-To prove this, we show there is a unique \<open>f\<close> such that \<open>f x \<equiv> A\<close> if \<open>x\<close> is a variable not free in \<open>f\<close>.
+  which find an instantiation of \<open>f\<close> where terms \<open>x\<^sub>1, \<dots>, x\<^sub>n\<close> are not free in \<open>f\<close>.
+
+  Such \<open>f\<close> is the most general if \<open>x\<^sub>1, \<dots>, x\<^sub>n\<close> are all variables.
+  To prove this, we show there is a unique \<open>f\<close> such that \<open>f x \<equiv> A\<close> if \<open>x\<close> is a variable
+    not free in \<open>f\<close>.
   Assume \<open>f\<^sub>1 x \<equiv> A\<close> and \<open>f\<^sub>2 x \<equiv> A\<close> then we have \<open>f\<^sub>1 x \<equiv> f\<^sub>2 x\<close>
   and then \<open>(\<lambda>x. f\<^sub>1 x) \<equiv> (\<lambda>x. f\<^sub>2 x)\<close>.
   Because x is not free in \<open>f\<^sub>1, f\<^sub>2\<close>, by eta-contraction, we have \<open>f\<^sub>1 \<equiv> f\<^sub>2\<close>.
-The \<open>\<equiv>\<close> here means alpha-beta-eta equivalence.
-
-Although the reasoner using the same strategy
-  does support the case when \<open>x\<^sub>1, \<dots>, x\<^sub>n\<close> are not all variables,
-  the outcome is not guaranteed to be the most general.
-The reasoner works only when \<open>?A\<close> does not contain \<open>?f\<close>.
+  The \<open>\<equiv>\<close> here means alpha-beta-eta equivalence.
 \<close>
 
 lemma Simple_HO_Unification_I:
@@ -1010,10 +1006,12 @@ in
       val btys = rev (map snd Vs)
       val f' = Envir.beta_eta_contract f'
     in (case Term.strip_comb f' of (Var v, args) =>
-         Thm.instantiate (TVars.empty, Vars.make [
-              (v, Thm.cterm_of ctxt (fold_rev (my_abstract_over btys)
-                                              (dec_bound_level (~ (length args)) args) f))])
-           sequent
+        if forall is_Bound args
+        then sequent
+        else Thm.instantiate (TVars.empty, Vars.make [
+                (v, Thm.cterm_of ctxt (fold_rev (my_abstract_over btys)
+                                                (dec_bound_level (~ (length args)) args) f))])
+             sequent
         | _ => sequent)
        |> (fn seq => Seq.single (ctxt, @{thm Simple_HO_Unification_I} RS seq))
     end

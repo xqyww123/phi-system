@@ -20,7 +20,7 @@ fun eliminate_term ctxt xs thm =
     fun collect vs tm = Term.fold_aterms (fn t as Free v =>
                         if member (op =) vs v then insert (op =) v else I | _ => I) tm []
     val bads = collect vs tm
-  in #introduce_existence_during_finalization mode bads (ctxt, thm) |> snd
+  in #introduce_existence_in_assembling mode bads (ctxt, thm) |> snd
   end
 
 fun eliminate ctxt rule xs As thm'' =

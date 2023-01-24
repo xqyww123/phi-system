@@ -213,6 +213,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
           ) stat
     val vars = map Free (var_names ~~ map snd vars)
     val goal = subst_bounds (rev vars, goal)
+            |> reduce_var
     val prems_goal = Phi_Help.strip_binop_r @{const_name Pure.imp} goal
     val (prems, goal') = (Phi_Help.front prems_goal, Phi_Help.last prems_goal)
 
@@ -280,8 +281,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
 
       |> Proof.map_context_result (fn ctxt => ctxt
             |> Phi_Working_Mode.set mode
-            |> Proof_Context.put_thms false ("\<phi>thesis",
-                          SOME [Drule.mk_term (Thm.cterm_of ctxt (reduce_var goal'))])
+            |> Phi_Envir.put_thesis (Thm.cterm_of ctxt goal')
             |> #initial_sequent mode blk_name (Thm.cterm_of ctxt arg)
             |> swap)
       |-> Phi_Envir.enter_programming_environ
@@ -355,7 +355,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                                ]
                            ])))
                         end)
-              |> #before_finish mode goal
+              |> #before_assembling mode goal
         val desired_nu = #return_spec_c mode ctxt' goal
         val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                   Pretty.str "casting to the destined post-condition ",
