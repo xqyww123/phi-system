@@ -5,17 +5,19 @@
    An application rule can be a specification theorem for a procedure, a rule of view shift
    or transformation of abstraction, or any arbitrary things whose application methods are
    registered to the \<phi>-LPR reasoner.
+
+   I changed the semantics of application recently: the application now returns
+   once the first successful application is found, instead of traversing all possible
+   applications and checking there is only one feasible application.
 *)
 
 signature NU_APPLICATION = sig
 
   val apply_proc_naive : thm (*proc*) -> context_state -> context_state
 
-  val start_reasoning: context_state -> context_state Seq.seq
-  val success_application : context_state -> context_state Seq.seq
-
-(*The resulted sequent always has an additional obligation antecedent at the last
-of the antecedent list, no matter whether any real obligations are generated during ToSA.*)
+(*Depending on application rules, most of the resulted sequent (except resolution) has
+an additional obligation antecedent at the last of the antecedent list,
+storing proof obligations generated during ToSA, no matter whether the obligations are trivial.*)
   val try_apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state option
   val apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state
 
@@ -38,67 +40,6 @@ val expand_appliant =
 fun apply_proc_naive proc (ctxt,sequent) =
   (ctxt, expand_appliant proc RS (sequent RS @{thm \<phi>apply_proc}))
 
-val empty_var = Synchronized.var "\<phi>application_ctxt" [] : thm list Synchronized.var
-
-structure AppContext = Proof_Data (
-  type T = thm list (*successful application*) Synchronized.var
-  val init = K empty_var
-)
-
-val bad_rule_msg =
-  "The reasoning of application finishes without invoking \<phi>Application_Success.\n"^
-  "Some application rule must be wrong."^
-  "A correct application rule should have proposition \<phi>Application_Success in its premises, "^
-  "marking the sequent behind this premise is the result of the application."
-
-fun app_equivalent ctxt (thm1, thm2) =
-  let
-    val goal = Goal.init (Thm.mk_binop \<^cterm>\<open>(\<equiv>)::prop \<Rightarrow> prop \<Rightarrow> prop\<close>
-                  (Thm.cprop_of thm1) (Thm.cprop_of thm2))
-  in
-    is_some (Seq.pull (SOLVED' (Simplifier.simp_tac ctxt) 1 goal))
-  end
-
-fun start_reasoning (ctxt,sequent) =
-  let
-    val (app,state,result) = dest_triop_c \<^const_name>\<open>\<phi>Application\<close> (Thm.cprem_of sequent 1)
-    val sequent' = @{thm \<phi>application_start_reasoning}
-          |> Drule.infer_instantiate ctxt
-                [(("Apps",0), app),
-                 (("State",0), state),
-                 (("Result",0), result)]
-    val successful_app = Synchronized.var "\<phi>application_ctxt" []
-    val ctxt' = AppContext.put successful_app ctxt
-    val _ = case Phi_Reasoner.reason NONE (ctxt', sequent')
-              of SOME _ => error bad_rule_msg
-               | NONE => ()
-  in
-    case Synchronized.value successful_app
-          |> distinct (app_equivalent ctxt)
-      of thms as (_ :: _ :: _) =>
-        (warning ("Failed application in \n"^Thm.string_of_thm ctxt sequent^
-          "\nThere are more than one available applications that are not trivially equivalent:\n"^
-          String.concatWith "\n" (map (fn t=> "\<bullet> "^Thm.string_of_thm ctxt t) thms)^
-          "\nThe system cannot determine which one to be applied. You may modify the code to be more specific.");
-         Seq.empty)
-       | [result] =>
-            let val result' = Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>Application_normalize} result
-            in Seq.single (ctxt, result' RS sequent) end
-       | [] =>
-        (warning ("Failed application in \n"^Thm.string_of_thm ctxt sequent^
-          "\nNo available applications are found.");
-         Seq.empty)
-  end
-
-fun success_application (ctxt,sequent) =
-  let
-    val sequent' = @{thm \<phi>application_success} RS sequent
-    val _ = Synchronized.change (AppContext.get ctxt)
-                (fn thms => sequent' :: thms)
-  in
-    Seq.empty
-  end
-
 fun try_apply [] (ctxt,sequent) = NONE
   | try_apply applications (ctxt,sequent) =
       let
@@ -111,7 +52,6 @@ fun try_apply [] (ctxt,sequent) = NONE
                     "Reasoning generic applications..." ^ Position.here \<^here>)
       in
         Phi_Reasoner.reason NONE (ctxt,sequent')
-          |> Option.map (apsnd (Goal.conclude))
       end
 
 fun apply applications stat =

@@ -474,7 +474,8 @@ proc [
   output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x > y) \<Ztypecolon> \<bool>\<close>
   throws \<open>E1 + E2\<close>
   @action \<open>synthesis G\<close>
-  \<medium_left_bracket> F1 \<rightarrow> val v1
+  \<medium_left_bracket>
+    F1 \<rightarrow> val v1
     F2 \<rightarrow> val v2
     $v2 $v1 <
   \<medium_right_bracket>. .

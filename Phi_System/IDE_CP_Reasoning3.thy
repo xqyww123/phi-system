@@ -2054,7 +2054,9 @@ lemma Structural_Extract_aggrement_to
   apply (cases C; simp)
   \<medium_left_bracket> premises A
     dup
-    Agreement_cast[OF A]
+  ML_val \<open>@{thm this} |> Thm.prop_of\<close>
+  ;;
+  ;; Agreement_cast[OF A]
   \<medium_right_bracket>.
   using Agreement_cast .
 
