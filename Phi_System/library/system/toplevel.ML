@@ -379,19 +379,19 @@ fun gen_finish_proc prep_term qed spec int stat =
         val stat' = stat
           |> Proof.set_facts []
           |> Proof.end_block
-        val end_tac = basic_method (fn ctxt' => fn goal => (
+        val end_tac = basic_method (fn ctxt' => fn goal' => (
             let
               val sequent' = singleton (Proof_Context.export ctxt ctxt') sequent
               val _ = Phi_Reasoner.debug_info ctxt' (fn _ =>
                   Pretty.string_of (Pretty.chunks [
                     Pretty.str "Solving the goal by the resulted sequent from the programming.",
                     Pretty.item [Pretty.str "goal:"],
-                    Syntax.pretty_term ctxt' (fst (Logic.dest_implies (Thm.prop_of goal))),
+                    Syntax.pretty_term ctxt' (fst (Logic.dest_implies (Thm.prop_of goal'))),
                     Pretty.item [Pretty.str "resulted sequent:"],
                     Thm.pretty_thm ctxt' sequent',
                     Pretty.block (Pretty.here \<^here>)
                   ]))
-                val result = NuApply.MP ctxt' sequent' goal
+                val (_,result) = NuApply.apply [sequent'] (ctxt',goal')
               in result end
             ))
        in

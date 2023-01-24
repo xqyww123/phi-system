@@ -21,11 +21,12 @@ storing proof obligations generated during ToSA, no matter whether the obligatio
   val try_apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state option
   val apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state
 
+(*
   (*Advanced Modus Pones using logic programming about antecedent \<^term>\<open>\<phi>Application_Conv\<close>
     where the inferences relate to various conversions of applied rules.
    *)
   val MPs : Proof.context -> thm list -> thm -> thm
-  val MP  : Proof.context -> thm -> thm -> thm
+  val MP  : Proof.context -> thm -> thm -> thm *)
 
 end
 
@@ -47,7 +48,8 @@ fun try_apply [] (ctxt,sequent) = NONE
                     |> foldl1 (fn (a,b) =>
                           Drule.comp_no_flatten (b,0) 1 (
                            Drule.comp_no_flatten (a,0) 1 @{thm conjunctionI}))
-        val sequent' = sequent RS (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
+        val sequent' = Drule.comp_no_flatten (sequent,0) 1
+                          (Drule.comp_no_flatten (apps,0) 1 @{thm \<phi>application})
         val _ = Phi_Reasoner.debug_info ctxt (fn _ =>
                     "Reasoning generic applications..." ^ Position.here \<^here>)
       in
@@ -60,6 +62,7 @@ fun apply applications stat =
      | NONE => raise THM ("Application Fail", 0, (snd stat)::applications)
 
 
+(*
 fun comp_no_flatten_matched (th, n) i rule =
   (case distinct Thm.eq_thm (Seq.list_of
       (Thm.bicompose NONE {flatten = false, match = true, incremented = true}
@@ -90,6 +93,6 @@ fun MPs ctxt th1s' th2 =
 
 fun MP ctxt th1' th2 =
   MPs ctxt [th1'] th2
-  
+  *)
 end
 

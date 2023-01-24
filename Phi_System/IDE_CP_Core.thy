@@ -694,7 +694,13 @@ lemma [\<phi>reason 1200]:
   unfolding prop_def \<phi>Application_Method_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2) prems(3)] . .
 
-lemma [\<phi>reason 1200]:
+
+subsubsection \<open>Application as a Resolution\<close>
+
+definition \<phi>Application_Conv :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close>
+  where \<open>\<phi>Application_Conv P Q \<equiv> (PROP P \<Longrightarrow> PROP Q)\<close>
+
+lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Application_Conv X' X
 \<Longrightarrow> PROP \<phi>Application_Method X' (PROP X \<Longrightarrow> PROP Y) Y\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_Conv_def
@@ -705,49 +711,48 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> PROP \<phi>Application_Method (Trueprop X') (Trueprop (X \<longrightarrow> Y)) (Trueprop Y)\<close>
   unfolding \<phi>Application_Method_def \<phi>Application_Conv_def by blast
 
-lemma [\<phi>reason 2000 for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
+lemma [\<phi>reason 3000 for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
   \<open>PROP \<phi>Application_Conv (PROP X) (PROP X)\<close>
   unfolding \<phi>Application_Conv_def .
 
 lemma [\<phi>reason 1200]:
-  \<open> (\<And>x. PROP \<phi>Application_Conv (Trueprop (X' x)) (Trueprop (X x)))
-\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (All X')) (Trueprop (All X))\<close>
-  unfolding \<phi>Application_Conv_def by blast
-
-lemma [\<phi>reason 1200]:
-  \<open> PROP \<phi>Application_Conv (Trueprop X)  (Trueprop X')
-\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop Y') (Trueprop Y)
-\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (X' \<longrightarrow> Y')) (Trueprop (X \<longrightarrow> Y))\<close>
-  unfolding \<phi>Application_Conv_def by blast
-
-lemma [\<phi>reason 1200]:
-  \<open> (\<And>x. PROP \<phi>Application_Conv (X' x) (X x))
-\<Longrightarrow> PROP \<phi>Application_Conv (\<And>x. PROP X' x) (\<And>x. PROP X x)\<close>
+  \<open> (\<And>x. PROP \<phi>Application_Conv A (X x))
+\<Longrightarrow> PROP \<phi>Application_Conv A (\<And>x. PROP X x)\<close>
   unfolding \<phi>Application_Conv_def
 proof -
-  assume A: \<open>(\<And>x. PROP X' x \<Longrightarrow> PROP X x)\<close>
-    and  B: \<open>\<And>x. PROP X' x\<close>
+  assume A: \<open>(\<And>x. PROP A \<Longrightarrow> PROP X x)\<close>
+    and  B: \<open>PROP A\<close>
   show \<open>\<And>x. PROP X x\<close> proof -
-    fix x show \<open>PROP X x\<close> using B[where x=x, THEN A] .
+    fix x show \<open>PROP X x\<close> using A[OF B] .
   qed
 qed
 
 lemma [\<phi>reason 1200]:
-  \<open> PROP \<phi>Application_Conv (PROP X)  (PROP X')
-\<Longrightarrow> PROP \<phi>Application_Conv (PROP Y') (PROP Y)
-\<Longrightarrow> PROP \<phi>Application_Conv (PROP X' \<Longrightarrow> PROP Y') (PROP X \<Longrightarrow> PROP Y)\<close>
+  \<open> (\<And>x. PROP \<phi>Application_Conv A (Trueprop (X x)))
+\<Longrightarrow> PROP \<phi>Application_Conv A (Trueprop (All X))\<close>
   unfolding \<phi>Application_Conv_def
-  subgoal premises prems using prems(4)[THEN prems(1), THEN prems(3), THEN prems(2)] . .
+proof
+  fix x
+  assume A: \<open>(\<And>x. PROP A \<Longrightarrow> X x)\<close>
+    and  B: \<open>PROP A\<close>
+  from A[OF B] show \<open>X x\<close> .
+qed
 
 lemma [\<phi>reason 1200]:
-  \<open> PROP \<phi>Application_Conv (PROP X) (PROP Y)
-\<Longrightarrow> PROP \<phi>Application_Conv (PROP X) (PROP Y @action A)\<close>
-  unfolding Action_Tag_def .
+  \<open> (PROP X \<Longrightarrow> PROP \<phi>Application_Conv A (PROP Y))
+\<Longrightarrow> PROP \<phi>Application_Conv A (PROP X \<Longrightarrow> PROP Y)\<close>
+  unfolding \<phi>Application_Conv_def .
 
 lemma [\<phi>reason 1200]:
-  \<open> PROP \<phi>Application_Conv (PROP X) (PROP Y)
-\<Longrightarrow> PROP \<phi>Application_Conv (PROP X @action A) (PROP Y)\<close>
+  \<open> (X \<Longrightarrow> PROP \<phi>Application_Conv A (Trueprop Y))
+\<Longrightarrow> PROP \<phi>Application_Conv A (Trueprop (X \<longrightarrow> Y))\<close>
+  unfolding \<phi>Application_Conv_def by rule
+
+lemma [\<phi>reason 1200]:
+  \<open> PROP \<phi>Application_Conv X (PROP Y)
+\<Longrightarrow> PROP \<phi>Application_Conv X (PROP Y @action A)\<close>
   unfolding Action_Tag_def .
+
 
 subsubsection \<open>Applying on Procedure Mode\<close>
 
