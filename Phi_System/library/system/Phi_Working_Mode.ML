@@ -5,16 +5,16 @@ type working_mode = {
   domain: Proof.context -> term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term,
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
-  argument_spec: term (*proposition of a goal or a state sequent*) -> term,
-  return_spec:   term (*proposition of a goal*) -> term,
-  return_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm,
-  exception_spec  : term (*proposition of a goal*) -> term option,
-  exception_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option,
-  inhabited_rule: Proof.context -> thm,
+  source_spec: term (*proposition of a goal or a state sequent*) -> term,
+  target_spec:   term (*proposition of a goal*) -> term,
+  target_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm,
+ (* exception_spec  : term (*proposition of a goal*) -> term option,
+  exception_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option, *)
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
   block_name_of: term -> string,
-  implication_rule : thm,
+  inhabited_rule: thm,
+  transformation_rule : thm,
   view_shift_rule: thm option,
   cast: cterm (*desired*) -> Proof.context * thm (*sequent*) -> Proof.context * thm,
   cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
@@ -52,21 +52,20 @@ type working_mode = {
   domain: Proof.context -> term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term,
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
-  argument_spec: term (*proposition of a goal or a state sequent*) -> term,
-  return_spec: term (*term of the state sequent*) -> term,
-  return_spec_c: Proof.context -> cterm (*term of the state sequent*) -> cterm,
-  exception_spec  : term (*proposition of a goal*) -> term option,
-  exception_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option,
-  inhabited_rule: Proof.context -> thm,
+  source_spec: term (*proposition of a goal or a state sequent*) -> term,
+  target_spec: term (*term of the state sequent*) -> term,
+  target_spec_c: Proof.context -> cterm (*term of the state sequent*) -> cterm,
+(*  exception_spec  : term (*proposition of a goal*) -> term option,
+  exception_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option, *)
+  inhabited_rule: thm,
   initial_sequent: string (*block name*) -> cterm (*spec of initial state*)
                       -> Proof.context -> Proof.context * thm,
   block_name_of: term -> string,
-  implication_rule : thm,
+  transformation_rule : thm,
   view_shift_rule: thm option,
   cast: cterm -> Proof.context * thm -> Proof.context * thm,
   cast_exception: cterm (*desired*) -> Proof.context * thm -> Proof.context * thm,
   before_assembling: cterm (*goal*) -> Proof.context * thm -> Proof.context * thm,
-(*  after_assembling:  cterm (*goal*) -> Proof.context * thm -> Proof.context * thm, *)
   introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
   introduce_existence_in_assembling:
       (string * typ) list -> Proof.context * thm -> Proof.context * thm
@@ -203,21 +202,21 @@ fun introduce_existence_cc extract rule xs (ctxt,sequent) =
 
 local
 
-val return_spec =
+val target_spec =
       orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
      (orelse_opt (try (#3 o Phi_Syntax.dest_procedure))
          (#4 o Phi_Syntax.dest_PendingConstruction))
-val return_spec_c = K (
+val target_spec_c = K (
       orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction_c))
      (orelse_opt (try (#3 o Phi_Syntax.dest_procedure_c))
          (#4 o Phi_Syntax.dest_PendingConstruction_c)))
-val exception_spec = 
+(* val exception_spec = 
       orelse_opt (try (#4 o Phi_Syntax.dest_procedure))
          (#5 o Phi_Syntax.dest_PendingConstruction) #> SOME
 val exception_spec_c = K (
       orelse_opt (try (#4 o Phi_Syntax.dest_procedure_c))
-         (#5 o Phi_Syntax.dest_PendingConstruction_c) #> SOME)
-val argument_spec = orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
+         (#5 o Phi_Syntax.dest_PendingConstruction_c) #> SOME) *)
+val source_spec = orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
      (orelse_opt (try (#2 o Phi_Syntax.dest_procedure))
          (#4 o Phi_Syntax.dest_PendingConstruction))
 
@@ -278,20 +277,13 @@ fun cast_exception desired (ctxt, sequent) =
   in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
   end
 
-
-(*fun after_assembling goal (ctxt,sequent) =
-  let
-    val (_,_,_,_) = Phi_Syntax.dest_procedure_c goal
-  in ()
-  end *)
-
 fun before_assembling goal (ctxt,sequent) =
   let
     val sequent' =
       if can Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)
       then let
         val (ins,current_nu) =
-              return_spec_c ctxt (Thm.cprop_of sequent)
+              target_spec_c ctxt (Thm.cprop_of sequent)
                  |> Thm.term_of
                  |> Procedure_Syntax.abstract_return_vals "\<r>\<e>\<t>"
                               (TVar (("ret", Thm.maxidx_of sequent), \<^sort>\<open>VALs\<close>)) true
@@ -306,10 +298,10 @@ fun before_assembling goal (ctxt,sequent) =
                   (SOLVED' (Simplifier.simp_tac ctxt) 1)
         end
       else sequent
-    val desired_nu = return_spec_c ctxt goal
+    val desired_nu = target_spec_c ctxt goal
     val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
                           |> Phi_Syntax.dest_sem_value_T
-    val current_phi = return_spec_c ctxt (Thm.cprop_of sequent')
+    val current_phi = target_spec_c ctxt (Thm.cprop_of sequent')
     val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
                           |> Phi_Syntax.dest_sem_value_T
     val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
@@ -337,18 +329,18 @@ val procedure : working_mode =
     ),
     spec_of   = #4 o Phi_Syntax.dest_CurrentConstruction,
     spec_of_c = #4 o Phi_Syntax.dest_CurrentConstruction_c,
-    return_spec = return_spec,
-    return_spec_c = return_spec_c,
-    argument_spec = argument_spec,
-    exception_spec = exception_spec,
-    exception_spec_c = exception_spec_c,
-    inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
+    target_spec = target_spec,
+    target_spec_c = target_spec_c,
+    source_spec = source_spec,
+(*    exception_spec = exception_spec,
+    exception_spec_c = exception_spec_c, *)
+    inhabited_rule = @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_proc,
     block_name_of = (fn term => 
         case #1 (Phi_Syntax.dest_procedure term)
           of (Var ((x,_),_)) => x
            | _ => "block"),
-    implication_rule  = @{thm \<phi>apply_implication},
+    transformation_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = cast,
     cast_exception = cast_exception,
@@ -364,14 +356,14 @@ end
 
 val view_shift : working_mode = 
 let
-  fun return_spec term =
+  fun target_spec term =
     let
       val (_,T,P) = Phi_Syntax.dest_view_shift term
     in
       Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
     end
   (*TODO: optimize this*)
-  fun return_spec_c ctxt = Thm.term_of #> return_spec #> Thm.cterm_of ctxt
+  fun target_spec_c ctxt = Thm.term_of #> target_spec #> Thm.cterm_of ctxt
 
   fun finish_view_shift hyp (ctxt,sequent) =
     let open Phi_Syntax
@@ -412,19 +404,19 @@ in
                        orelse Phi_Syntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> x),
     spec_of   = #4 o Phi_Syntax.dest_CurrentConstruction,
     spec_of_c = #4 o Phi_Syntax.dest_CurrentConstruction_c,
-    return_spec = return_spec,
-    return_spec_c = return_spec_c,
-    argument_spec = orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
+    target_spec = target_spec,
+    target_spec_c = target_spec_c,
+    source_spec = orelse_opt (try (#4 o Phi_Syntax.dest_CurrentConstruction))
                                     (#1 o Phi_Syntax.dest_view_shift),
-    exception_spec = K NONE,
-    exception_spec_c = K (K NONE),
-    inhabited_rule = K @{thm CurrentConstruction_Inhabited_rule},
+(*    exception_spec = K NONE,
+    exception_spec_c = K (K NONE), *)
+    inhabited_rule = @{thm CurrentConstruction_Inhabited_rule},
     initial_sequent = start_view_shift,
     block_name_of = (fn term => 
         case #1 (Phi_Syntax.dest_view_shift term)
           of (Var ((x,_),_)) => x
            | _ => "\<V>\<S>"),
-    implication_rule  = @{thm \<phi>apply_implication},
+    transformation_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = (fn desired => fn (ctxt, sequent) =>
       let
@@ -451,16 +443,16 @@ end
 
 val implication : working_mode =
 let
-  fun return_spec term =
+  fun target_spec term =
     let
       val (_,T,P) = Phi_Syntax.dest_implication term
     in
       Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
     end
   (*TODO: optimize this*)
-  fun return_spec_c ctxt = Thm.term_of #> return_spec #> Thm.cterm_of ctxt
+  fun target_spec_c ctxt = Thm.term_of #> target_spec #> Thm.cterm_of ctxt
 
-  val argument_spec = orelse_opt (try (#2 o Phi_Syntax.dest_set_member))
+  val source_spec = orelse_opt (try (#2 o Phi_Syntax.dest_set_member))
                                       (#1 o Phi_Syntax.dest_implication)
 
   fun finish_implication hyp (ctxt,sequent) =
@@ -494,15 +486,15 @@ in
                        orelse can Phi_Syntax.dest_ToA_Construction  x),
     spec_of   = #2 o Phi_Syntax.dest_ToA_Construction,
     spec_of_c = #2 o Phi_Syntax.dest_ToA_Construction_c,
-    return_spec = return_spec,
-    return_spec_c = return_spec_c,
-    argument_spec = argument_spec,
-    exception_spec = K NONE,
-    exception_spec_c = K (K NONE),
-    inhabited_rule = K @{thm ToA_Construction_Inhabited_rule},
+    target_spec = target_spec,
+    target_spec_c = target_spec_c,
+    source_spec = source_spec,
+(*    exception_spec = K NONE,
+    exception_spec_c = K (K NONE), *)
+    inhabited_rule = @{thm ToA_Construction_Inhabited_rule},
     initial_sequent = start_implication,
     block_name_of = (K "\<chi>"),
-    implication_rule  = @{thm \<phi>apply_implication_impl},
+    transformation_rule  = @{thm \<phi>apply_implication_impl},
     view_shift_rule = NONE,
     cast = (fn desired => fn (ctxt,sequent) =>
       let

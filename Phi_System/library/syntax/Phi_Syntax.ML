@@ -8,7 +8,7 @@ include PHI_SYNTAX
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm * cterm
   val dest_set_member   :  term ->  term * term
   val dest_set_member_c : cterm -> cterm * cterm
-  val dest_current_nu   : thm -> term (*depreciated, use #argument_spec in Working Mode instead.*)
+  val dest_current_nu   : thm -> term (*depreciated, use #source_spec in Working Mode instead.*)
   val dest_current_nu_c : thm -> cterm
 
   val block_var_of_Constuction : term  -> term

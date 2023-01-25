@@ -183,7 +183,7 @@ fun collect_and_clean_value whether_clean ctxt sequent =
     val rule = if whether_clean
                then @{thm apply_collect_clean_value[where WHETHER_CLEAN = True]}
                else @{thm apply_collect_clean_value[where WHETHER_CLEAN = False]}
-  in (ctxt, rule RS (sequent COMP #implication_rule mode))
+  in (ctxt, rule RS (sequent COMP #transformation_rule mode))
   |> Phi_Reasoner.reason NONE
   |> (fn SOME (_, sequent') => sequent'
                             |> HOLogic.conj_elim ctxt

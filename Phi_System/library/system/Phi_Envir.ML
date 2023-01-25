@@ -71,7 +71,7 @@ fun the_implication i ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_impli
 (* Reason pure facts that the given sequent implies. *)
 fun gen_reason_programming_implication erules (mode:Phi_Working_Mode.working_mode) ctxt sequent =
   let
-    val inhabited_rule = #inhabited_rule mode ctxt
+    val inhabited_rule = #inhabited_rule mode
     val thm = sequent RS inhabited_rule
     val _ = Phi_Reasoner.debug_info ctxt (fn _ =>
                 "extracting implied pure facts..." ^ Position.here \<^here>)

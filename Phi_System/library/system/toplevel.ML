@@ -219,7 +219,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
 
     val mode = Phi_Working_Mode.working_mode_on1 ctxt goal'
 
-    val arg = #argument_spec mode goal'
+    val arg = #source_spec mode goal'
     val blk_name = #block_name_of mode goal'
     val (level, stat'') = Proof.map_context_result inc_blk_level stat
     val blk_name = "\<L>" ^ (Int.toString level) ^ "_" ^ blk_name
@@ -356,7 +356,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                            ])))
                         end)
               |> #before_assembling mode goal
-        val desired_nu = #return_spec_c mode ctxt' goal
+        val desired_nu = #target_spec_c mode ctxt' goal
         val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                   Pretty.str "casting to the destined post-condition ",
                   Syntax.pretty_term ctxt'' (Thm.term_of desired_nu),
