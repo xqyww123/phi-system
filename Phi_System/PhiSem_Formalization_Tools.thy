@@ -1327,8 +1327,8 @@ proc (nodef) try'':
   output YY
   throws EE2
   \<medium_left_bracket> "__op_try__"
-  ;;  F  
-  ;;  G
+    F  
+    G
   \<medium_right_bracket>. .
 
 proc (nodef) try':

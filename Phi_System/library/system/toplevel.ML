@@ -73,24 +73,6 @@ datatype cond_kind = Premise | Assumption
 
 
 
-structure Blk_Level = Proof_Data (
-  type T = int
-  val init = K 0
-)
-
-fun inc_blk_level ctxt =
-  let
-    val i = Blk_Level.get ctxt
-  in (i, Blk_Level.put (i+1) ctxt)
-  end
-
-fun dec_blk_level ctxt =
-  let
-    val i = Blk_Level.get ctxt
-  in (i, Blk_Level.put (i-1) ctxt)
-  end
-
-
 (* structure Statement_Begin_Hook *)
 (*
 structure Procedure_Begin_Hook = Generic_Data (
@@ -218,11 +200,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     val (prems, goal') = (Phi_Help.front prems_goal, Phi_Help.last prems_goal)
 
     val mode = Phi_Working_Mode.working_mode_on1 ctxt goal'
-
-    val arg = #source_spec mode goal'
-    val blk_name = #block_name_of mode goal'
-    val (level, stat'') = Proof.map_context_result inc_blk_level stat
-    val blk_name = "\<L>" ^ (Int.toString level) ^ "_" ^ blk_name
+    val goal'c = Thm.cterm_of ctxt goal'
+    val arg = #source_spec_c mode goal'c
 
     fun after_qed (ctxt',[[th]]) stat0 =
       let val stat = Proof.end_block stat0
@@ -268,7 +247,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
               in ((b, map (Attrib.attribute ctxt) (attrs' @ attrs)), pats)
               end) prems
   in
-    stat''
+    stat
       |> Proof.internal_goal (print_results int) Proof_Context.mode_schematic true 
           "" NONE after_qed []
           (map2 (fn (b,pats) => fn P => (b,[(P,pats)])) bindings prems)
@@ -281,8 +260,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
 
       |> Proof.map_context_result (fn ctxt => ctxt
             |> Phi_Working_Mode.set mode
-            |> Phi_Envir.put_thesis (Thm.cterm_of ctxt goal')
-            |> #initial_sequent mode blk_name (Thm.cterm_of ctxt arg)
+            |> Phi_Envir.put_thesis goal'c
+            |> #initial_sequent mode arg
             |> swap)
       |-> Phi_Envir.enter_programming_environ
       |> Proof.begin_block
@@ -307,7 +286,6 @@ fun gen_finish_proc prep_term qed spec int stat =
     val goal = Phi_Envir.get_thesis ctxt_
     val mode = Phi_Working_Mode.mode ctxt_
   in stat
-  |> Proof.map_context (dec_blk_level #> snd)
   |> Proof.map_context_result (fn ctxt_pre1 =>
       let
         val sequent_pre1 = Phi_Envir.the_programming_sequent' ctxt_pre1
@@ -355,19 +333,8 @@ fun gen_finish_proc prep_term qed spec int stat =
                                ]
                            ])))
                         end)
-              |> #before_assembling mode goal
-        val desired_nu = #target_spec_c mode ctxt' goal
-        val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
-                  Pretty.str "casting to the destined post-condition ",
-                  Syntax.pretty_term ctxt'' (Thm.term_of desired_nu),
-                  Pretty.block (Pretty.here \<^here>)
-                ])
-      in
-        (ctxt'',sequent'')
-          (* |> invoke_Block_End_Hook *)
-          |> Phi_Sys.cast desired_nu
-          |> swap
-          ||> Phi_Envir.exit_programming_environ
+              |> #vcg_before_assembling mode goal
+      in (sequent'', Phi_Envir.exit_programming_environ ctxt'')
         (*The transformation shall generate a poof obligation*)
       end
     )

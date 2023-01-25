@@ -1,6 +1,9 @@
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
+  val dest_tags   :  term ->  term
+  val dest_tags_c : cterm -> cterm
+
   val is_construction_mode: term -> term -> bool
   val dest_CurrentConstruction   :  term -> term * term * term * term
   val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm * cterm
@@ -8,8 +11,6 @@ include PHI_SYNTAX
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm * cterm
   val dest_set_member   :  term ->  term * term
   val dest_set_member_c : cterm -> cterm * cterm
-  val dest_current_nu   : thm -> term (*depreciated, use #source_spec in Working Mode instead.*)
-  val dest_current_nu_c : thm -> cterm
 
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
@@ -82,12 +83,6 @@ fun block_var_of_Constuction_c c = (dest_CurrentConstruction_c c |> #2)
   handle TERM _ => raise TERM ("neithr CurrentConstruction nor PendingConstruction", [term_of c]))
 
 fun orelse_opt f1 f2 x = case f1 x of SOME y => y | NONE => f2 x
-val dest_current_nu =
-      Thm.prop_of #> perhaps (try dest_Trueprop)
-        #> orelse_opt (try (dest_PendingConstruction #> #4)) (dest_CurrentConstruction #> #4)
-val dest_current_nu_c =
-      Thm.cprop_of #> perhaps (try dest_Trueprop_c)
-        #> orelse_opt (try (dest_PendingConstruction_c #> #4)) (dest_CurrentConstruction_c #> #4)
 
 val current_block_var_c =
   Thm.cprop_of
