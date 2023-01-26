@@ -39,7 +39,7 @@ fun simproc raw_cong ctx cterm =
   let
     val cong = Thm.incr_indexes (Thm.maxidx_of_cterm cterm + 1) raw_cong
     val (lhs,_) = Thm.cconcl_of cong |> dest_binop_c @{const_name "Pure.eq"}
-    val cong = Thm.instantiate (Thm.first_order_match (lhs,cterm)) cong (* |> @{print} *)
+    val cong = Thm.instantiate (Thm.first_order_match (lhs,cterm)) cong (*index is considered*)
   in
     SINGLE (ALLGOALS (SOLVED' (Simplifier.asm_simp_tac ctx))) cong |> chk_simplified
   end handle Pattern.MATCH => NONE

@@ -117,7 +117,7 @@ fun schematic_var_expansion ctxt th =
                                 |> Thm.cterm_of ctxt)
                     ))
   in
-    Thm.instantiate (TVars.empty, Vars.make insts) th
+    Thm.instantiate (TVars.empty, Vars.make insts) th (*index is considered*)
   end
 
 fun simproc_of expn ctxt cterm =

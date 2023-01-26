@@ -227,7 +227,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                       Pretty.str "which usually means some schematic variable is instantiated to\
                         \ some universally quantified variables that it has no access."
                     ]))
-                val sequent' = Thm.instantiate insts sequent
+                val sequent' = Thm.instantiate insts sequent (*index is considered*)
              in Thm.implies_elim (Phi_Help.beta_eta_contract_leading_antecedent sequent')
                                  (Phi_Help.beta_eta_contract th2)end
       in if is_top
@@ -752,17 +752,26 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
     (option (\<^keyword>\<open>for\<close> |-- term) >> (Toplevel.proof' o end_block_cmd))
 
-val _ =
+val _ = let
+  fun repeat_future_proof s =
+    if Proof.goal_finished s then s
+    else s
+      |> Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>")
+      |> Proof.local_future_terminal_proof
+          ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range), NONE)
+  fun repeat_future_proof0 s =
+    if Proof.goal_finished s
+    then Proof.local_done_proof s
+    else repeat_future_proof s
+in
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
     (((option (\<^keyword>\<open>for\<close> |-- term) >> (fn cast => fn int => fn stat =>
        stat
     |> end_block_cmd cast int
-    |> (fn s => Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>") s)
-    |> Proof.local_future_terminal_proof
-          ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range)
-          ,NONE)))
+    |> repeat_future_proof0))
    -- Phi_Processor.powerful_process_p_inert)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
+end
 
 (* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"

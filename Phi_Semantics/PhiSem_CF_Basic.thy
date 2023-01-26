@@ -171,7 +171,7 @@ proc while:
       \<medium_left_bracket> B C \<medium_right_bracket>.
       \<medium_right_bracket>.
     \<medium_left_bracket> \<medium_right_bracket> for \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> \<not> cond vars\<close> ..
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .. .
 
 (*
 We fail to infer the abstraction of the loop guard automatically but

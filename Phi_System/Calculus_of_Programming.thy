@@ -164,11 +164,10 @@ lemma \<phi>make_view_shift:
 
 subsection \<open>Construct Implication\<close>
 
-lemma (in -) "\<phi>make_implication":
+lemma "\<phi>make_implication":
   \<open>(\<And>x. \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def ToA_Construction_def
-  by (simp add: \<phi>expns)
-
+  by (simp add: Subjection_expn)
 
 subsection \<open>Cast\<close>
 

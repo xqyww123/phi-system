@@ -42,10 +42,14 @@ fun apply_proc_naive proc (ctxt,sequent) =
   (ctxt, expand_appliant proc RS (sequent RS @{thm \<phi>apply_proc}))
 
 fun mk_app_reasoning_normal app (ctxt,sequent) () =
-  let val rule = Thm.instantiate (TVars.empty,
-                                  Vars.make [((("Apps",0),propT),  Thm.cprop_of app),
-                                             ((("State",0),propT), Thm.cprop_of sequent)])
-                 @{thm \<phi>application}
+  let val idx = Thm.maxidx_of sequent + 1
+      val app = Thm.incr_indexes idx app
+      val idx = Thm.maxidx_of app + 1
+      val rule = @{thm \<phi>application}
+              |> Thm.incr_indexes idx
+              |> Thm.instantiate (TVars.empty,
+                                  Vars.make [((("Apps",idx),propT),  Thm.cprop_of app),
+                                             ((("State",idx),propT), Thm.cprop_of sequent)])
        val sequent' = Thm.implies_elim (Thm.implies_elim rule app) sequent
   in SOME ((ctxt,sequent'), Seq.empty)
   end

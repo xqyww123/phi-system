@@ -68,12 +68,9 @@ abbreviation Brk_Frame' :: \<open>brk_label \<Rightarrow> (VAL list option,'a) \
 definition Brk_Frame :: \<open>brk_label \<Rightarrow> assn\<close>
   where \<open>Brk_Frame label \<equiv> () \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable \<circle>))\<close>
 
-definition Brking_Frame' :: \<open>brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close>
-  where \<open>Brking_Frame' label S =
+definition Brking_Frame :: \<open>brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close> ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _" [1000,10] 3)
+  where \<open>Brking_Frame label S =
      (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable (\<black_circle> Identity))))\<close>
-
-abbreviation Brking_Frame ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _" [1000,10] 3)
-  where \<open>Brking_Frame l S \<equiv> TAIL (Brking_Frame' l S)\<close>
 
 lemma Brk_Frame_eq_identity:
   \<open>Brk_Frame l = (nonsepable None \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
@@ -82,7 +79,7 @@ lemma Brk_Frame_eq_identity:
 
 lemma Brking_Frame_eq_identity:
   \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nonsepable (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
-  unfolding set_eq_iff Brking_Frame'_def TAIL_def
+  unfolding set_eq_iff Brking_Frame_def TAIL_def
   by (simp add: \<phi>expns)
 
 
@@ -179,7 +176,7 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> E \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' @action ToSA
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
-            TAIL_def Brking_Frame'_def
+            TAIL_def Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
     X cases' \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> Brk_Frame l)\<close> ..
              \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..
@@ -199,7 +196,7 @@ lemma [\<phi>reason 3000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bo
 
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
-  unfolding set_eq_iff Brking_Frame'_def plus_fun_def distrib_right ExSet_plus TAIL_def by clarify
+  unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_plus TAIL_def by clarify
 
 lemma [\<phi>reason 1200]:
   \<open> X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y1 E1
@@ -223,19 +220,19 @@ lemma [\<phi>reason 1200]:
 
 lemma Brking_Frame_absorb_item[assertion_simps]:
   \<open>((Brking_Frame l Y)\<heavy_comma> X) = Brking_Frame l (\<lambda>v. Y v \<heavy_comma> X)\<close>
-  unfolding Brking_Frame'_def TAIL_def
+  unfolding Brking_Frame_def TAIL_def
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> ;; \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. .
 
 lemma Brking_Frame_absorb_subj[assertion_simps]:
   \<open>((Brking_Frame l Y) \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = Brking_Frame l (\<lambda>v. Y v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  unfolding Brking_Frame'_def TAIL_def
+  unfolding Brking_Frame_def TAIL_def
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> \<medium_right_bracket>. \<medium_left_bracket> ;; \<medium_right_bracket>. .
 
 lemma Brking_Frame_absorb_ex[assertion_simps]:
   \<open>(\<exists>*x. (Brking_Frame l (Y x))) = Brking_Frame l (\<lambda>v. \<exists>*x. Y x v)\<close>
-  unfolding Brking_Frame'_def TAIL_def
+  unfolding Brking_Frame_def TAIL_def
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> \<medium_right_bracket>. \<medium_left_bracket> ;; \<medium_right_bracket>. .
 
@@ -274,6 +271,7 @@ hide_fact Brking_Frame_plus
 
 subsection \<open>ToSA through Brking_Frame\<close>
 
+(*
 lemma [\<phi>reason 2000]:
   \<open> Brking_Frame l (\<lambda>v. S v\<heavy_comma> A v\<heavy_comma> B v) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
 \<Longrightarrow> Brking_Frame l (\<lambda>v. S v\<heavy_comma> (A v\<heavy_comma> B v)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
@@ -282,20 +280,21 @@ lemma [\<phi>reason 2000]:
 lemma [\<phi>reason 2000]:
   \<open> Brking_Frame l (\<lambda>v. S v\<heavy_comma> A v\<heavy_comma> B v) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
 \<Longrightarrow> Brking_Frame l (\<lambda>v. S v\<heavy_comma> (A v\<heavy_comma> B v)) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding mult.assoc .
+  unfolding mult.assoc . *)
 
-lemma [\<phi>reason 1200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 2200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+  (*The priority must override Void Padding*)
   \<open> (\<And>v. S v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R v \<heavy_comma> Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' mode)
 \<Longrightarrow> Brking_Frame l S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Brking_Frame'_def TAIL_def Action_Tag_def FOCUS_TAG_def
+  unfolding Brking_Frame_def TAIL_def Action_Tag_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
     X[THEN implies_right_prod]
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 1200 for \<open>Brking_Frame ?l ?S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 2200 for \<open>Brking_Frame ?l ?S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
   \<open>(\<And>v. S v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G)
 \<Longrightarrow> Brking_Frame l S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Brking_Frame'_def TAIL_def Action_Tag_def FOCUS_TAG_def
+  unfolding Brking_Frame_def TAIL_def Action_Tag_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
     X
   \<medium_right_bracket>. .
@@ -334,7 +333,7 @@ proc
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
         $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] U\<close>]
-      \<medium_right_bracket>.
+      \<medium_right_bracket> .. ;;
       assert \<bottom> (*this place is unreachable!*)
     \<medium_right_bracket>.
   \<medium_right_bracket>. .

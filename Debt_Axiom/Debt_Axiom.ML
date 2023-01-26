@@ -60,8 +60,8 @@ fun add_debt_axiom ctxt (b, prop) thy =
     
     val thm =
       Thm.instantiate (TVars.make recover, Vars.empty) axm'
-      |> Thm.unvarify_global thy'
-      |> fold Thm.elim_implies of_sorts;
+        |> Thm.unvarify_global thy'
+        |> fold Thm.elim_implies of_sorts
   in ((axm_name, thm), thy') end;
 
 fun add_debt_axiom_global arg thy = add_debt_axiom (Syntax.init_pretty_global thy) arg thy;
