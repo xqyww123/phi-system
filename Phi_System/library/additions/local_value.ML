@@ -27,7 +27,7 @@ fun delete_val' pred xname ctxt =
   case Symtab.lookup (Values.get ctxt) xname
     of SOME rule => if pred rule
                     then ctxt
-                    else Context.proof_map (Phi_Reasoner.del_intro_rule rule) ctxt
+                    else Context.proof_map (Phi_Reasoner.del_intro_rule [rule]) ctxt
      | NONE => ctxt
 
 val delete_val = delete_val' (K false)
@@ -68,7 +68,7 @@ fun update_val b rule ctxt = ctxt
      |> Context.proof_map (Phi_Reasoner.add_intro_rule
                               (Binding.pos_of b) 1000
                               ([pattern_of ctxt (Binding.name_of b) rule],[])
-                              rule)
+                              [rule])
      |> Generic_Variable_Access.bind_local_vals [(Binding.name_of b, valterm_of ctxt rule)]
 
 
@@ -98,7 +98,8 @@ fun value_optimization bs stat =
         val rule = Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>))
               |> fold (fn V => fn rule =>
                     Thm.instantiate (TVars.empty, Vars.make [((("name",0),\<^typ>\<open>valname\<close>),V)])
-                                    @{thm "__fast_assign_val__"} RS rule) vterms
+                                    @{thm "__fast_assign_val__"}
+                    RS rule) vterms
               |> (fn rule => @{thm "__fast_assign_val_0__"} RS rule)
         val (ctxt,sequent) = NuApply.apply [rule] (ctxt,sequent)
               |> Phi_Reasoners.safer_obligation_solver1

@@ -35,7 +35,7 @@ fun declare_rule pos rule =
                       Const (\<^const_name>\<open>Pure.eq\<close>, T1)
                         $ V1 $ Var (("out", maxidx_of_term V1 + 1), T)
                    | _ => raise THM ("Bad rule.", 0, [rule])
-   in Context.proof_map (Phi_Reasoner.add_intro_rule pos 1000 ([pattern], []) rule)
+   in Context.proof_map (Phi_Reasoner.add_intro_rule pos 1000 ([pattern], []) [rule])
   end
 
 fun variable_assigner' b (ctxt,sequent) =
@@ -67,8 +67,10 @@ fun variable_declarer' TY b (ctxt,sequent) =
     val ([vname],ctxt) = Proof_Context.add_fixes [(b, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
     val ctxt = Generic_Variable_Access.bind_local_vals
                         [(Binding.name_of b, Free (Binding.name_of b, @{typ varname}))] ctxt
+    val idx = Thm.maxidx_of_cterm TY + 1
     val rule = @{thm "__new_var_rule__"}
-          |> Thm.instantiate (TVars.empty, Vars.make [((("TY",0),\<^typ>\<open>TY option\<close>),TY)])
+          |> Thm.incr_indexes idx
+          |> Thm.instantiate (TVars.empty, Vars.make [((("TY",idx),\<^typ>\<open>TY option\<close>),TY)])
   in (rule, ctxt,
       [Thm.cterm_of ctxt (Free (vname, @{typ varname}))],
       [declare_rule (Binding.pos_of b)])

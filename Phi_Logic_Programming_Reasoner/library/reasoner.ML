@@ -55,14 +55,14 @@ signature NU_REASONER = sig
                 -> Proof.context (*the context for accessing reasoner db*)
                 -> context_tactic
   
-  val add_intro_rule : Position.T -> priority -> term list * term list -> thm
+  val add_intro_rule : Position.T -> priority -> term list * term list -> thm list
                     -> Context.generic -> Context.generic
-  val add_intro_rules: (thm * Position.T * priority * term list * term list) list
+  val add_intro_rules: (thm list * Position.T * priority * term list * term list) list
                     -> Context.generic -> Context.generic
-  val has_intro_rule : thm -> Context.generic -> bool
-  val del_intro_rule : thm -> Context.generic -> Context.generic
-  val attr_add_intro : (Position.T * (int * (term list * term list))) -> attribute
-  val attr_del_intro : attribute
+  val has_intro_rule : thm list -> Context.generic -> bool
+  val del_intro_rule : thm list -> Context.generic -> Context.generic
+  val attr_add_intro : (Position.T * ((int * thm list) * (term list * term list))) -> attribute
+  val attr_del_intro : thm list -> attribute
 
   val setup_cmd : (((string (*name term*) * Position.T) * priority)
                    * (bool (*true for matching, false for not matching*)
@@ -465,39 +465,51 @@ fun single_RS rule (ctxt,thm) =
   Seq.make (fn _ => Option.map (rpair Seq.empty) (single_RS' rule (ctxt,thm)))
 
 
-fun name_of_intro_reasoner rule = Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Thm.prop_of rule
-fun intro_reasoner ctxt pos priority patterns blacklist rule =
+fun name_of_intro_reasoner rules =
+  Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Logic.mk_conjunction_list (map Thm.prop_of rules)
+fun intro_reasoner ctxt pos priority patterns blacklist rules =
   let
-    val rule = Thm.trim_context rule
+    val rules = rules
+             |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
+             |> map Thm.trim_context
+    val _ = if null rules then error ("No rule is given!") else ()
     val pats = if null patterns
-               then let val pat = the_default_pattern_of ctxt (Thm.concl_of rule)
-                        val _ = debug_pretty_generic ctxt (fn () => Pretty.chunks [
-                                Pretty.str "No pattern is given, use the default pattern:",
-                                Syntax.pretty_term (Context.proof_of ctxt) pat
-                            ])
-                    in [pat] end
+               then case rules
+                      of [rule] =>
+                        let val pat = the_default_pattern_of ctxt (Thm.concl_of rule)
+                            val _ = debug_pretty_generic ctxt (fn () => Pretty.chunks [
+                                    Pretty.str "No pattern is given, use the default pattern:",
+                                    Syntax.pretty_term (Context.proof_of ctxt) pat
+                                ])
+                        in [pat] end
+                       | _ => error "Pattern of the reasoner is required"
                else patterns
-    val f_num = length (filter (fn \<^prop>\<open>\<r>Feasible\<close> => true | _ => false) (Thm.prems_of rule))
-    val has_feasible =
-          if f_num > 0 andalso priority < 1000
-          then error ("Conditional \<r>Feasible only makes sense for assertive rule.")
-          else if f_num > 1
-          then error ("A reasoning rule can contain one \<r>Feasible antecedent at most.")
-          else f_num > 0
-  in {name = name_of_intro_reasoner rule,
+    
+    val rules_with_feasible_flag = map (fn rule =>
+      let val f_num = length (filter (fn \<^prop>\<open>\<r>Feasible\<close> => true | _ => false) (Thm.prems_of rule))
+       in  (if f_num > 0 andalso priority < 1000
+            then error ("Conditional \<r>Feasible only makes sense for assertive rule.")
+            else if f_num > 1
+            then error ("A reasoning rule can contain one \<r>Feasible antecedent at most.")
+            else f_num > 0)
+           |> pair rule
+      end) rules
+    fun tactic [] s = Seq.empty
+      | tactic ((rule,has_feasible)::R) s = Seq.make (fn _ =>
+          single_RS' rule s
+            |> has_feasible ? Option.mapPartial (reason NONE)
+            |> Option.map (rpair (tactic R s))
+        )
+  in {name = name_of_intro_reasoner rules,
       pos = pos,
       pattern = pats,
       blacklist = blacklist,
-      tactic = (fn s => Seq.make (fn _ =>
-                  single_RS' rule s
-                    |> has_feasible ? Option.mapPartial (reason NONE)
-                    |> Option.map (rpair Seq.empty)
-                ))
+      tactic = tactic rules_with_feasible_flag
       }
   end
 
-fun add_intro_rule pos priority (pattern,blacklist) rule ctxt =
-      add (priority, intro_reasoner ctxt pos priority pattern blacklist rule) ctxt
+fun add_intro_rule pos priority (pattern,blacklist) rules ctxt =
+      add (priority, intro_reasoner ctxt pos priority pattern blacklist rules) ctxt
 fun add_intro_rules rules ctxt =
   if null rules then ctxt
   else adds (map (fn (rule,pos,priority,pattern,blacklist) =>
@@ -505,9 +517,11 @@ fun add_intro_rules rules ctxt =
 fun del_intro_rule rule = del (name_of_intro_reasoner rule)
 fun has_intro_rule rule = has (name_of_intro_reasoner rule)
 
-fun attr_add_intro (pos, (priority, (pattern, blacklist))) =
-  Thm.declaration_attribute (add_intro_rule pos priority (pattern,blacklist))
-val attr_del_intro = Thm.declaration_attribute del_intro_rule
+fun attr_add_intro (pos, ((priority, additional_rules), (pattern, blacklist))) =
+  Thm.declaration_attribute (fn rule =>
+      add_intro_rule pos priority (pattern,blacklist) (rule::additional_rules))
+fun attr_del_intro additional_rules =
+  Thm.declaration_attribute (fn rule => del_intro_rule (rule::additional_rules))
 
 
 val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
@@ -519,10 +533,11 @@ val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
 in
   (lift pos_parser --
   (lift (option add |-- ((\<^keyword>\<open>!\<close> >> K 2000000) || optional Parse.int 100))
+      -- Attrib.thms
       -- (optional (lift (\<^keyword>\<open>for\<close>) |-- prop_pattern) []
        -- optional (lift (\<^keyword>\<open>except\<close>) |-- prop_pattern) []))
         >> attr_add_intro)
-  || (lift del >> K attr_del_intro)
+  || ((lift del |-- Attrib.thms) >> attr_del_intro)
 end)
 "Decalre or remove introduction rules in \<phi>-LPR."
 
@@ -531,8 +546,8 @@ end)
   Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
-                                    Method.modifier (attr_add_intro (pos,(100,([],[])))) \<^here>),
-    Args.del >> K (Method.modifier attr_del_intro \<^here>)
+                                    Method.modifier (attr_add_intro (pos,((100,[]),([],[])))) \<^here>),
+    Args.del >> K (Method.modifier (attr_del_intro []) \<^here>)
 ] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."
