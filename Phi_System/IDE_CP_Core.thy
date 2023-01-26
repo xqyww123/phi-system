@@ -21,6 +21,7 @@ theory IDE_CP_Core
 abbrevs
   "!!" = "!!"
   and "<argument>" = "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t"
+  and "<do>" = "\<^bold>d\<^bold>o"
   and "<param>" = "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m"
   and "<label>" = "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l"
       and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
@@ -53,7 +54,7 @@ lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 
-subsubsection \<open>Syntax\<close>
+subsubsection \<open>Syntax \& Prelude ML\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
 ML_file \<open>library/syntax/procedure2.ML\<close>
@@ -62,110 +63,7 @@ ML_file \<open>library/system/Phi_Envir.ML\<close>
 
 section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
 
-
-subsection \<open>Annotations in Sequents \& Specifications\<close>
-
-(*subsubsection \<open>Technical Tags\<close> (*depreciated*)
-
-datatype uniq_id = UNIQ_ID
-  \<comment> \<open>A technical tag that is during the exporting translated to a unique ID.
-    It is useful to generate unique name of anonymous functions.\<close> *)
-
-(* subsubsection \<open>Fix\<close>
-
-definition Fix :: \<open>'a set \<Rightarrow> 'a set\<close> ("FIX _" [16] 15) where [iff]: \<open>Fix S = S\<close>
-
-text \<open>During the reasoning of ToSA, annotation \<^term>\<open>FIX S\<close> prevents the reasoner to permute the
-  item \<^term>\<open>S\<close>. The order of \<open>S\<close> is fixed.
-For example, a cast may apply only on the first object,
-  after user rotates the target to the first.\<close>
-
-lemma [\<phi>reason 2000]:
-  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s FIX Y \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding Fix_def .
-
-lemma (in \<phi>spec) [\<phi>reason 2000]:
-  \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s FIX Y \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding Fix_def .
-
-(* lemma (in \<phi>empty) cast_obj_\<phi>app:
-  "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t Y \<longmapsto> Y' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e (FIX OBJ Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s OBJ Y' \<^bold>a\<^bold>n\<^bold>d P"
-  unfolding Imply_def Argument_def Fix_def
-  by (simp_all add: \<phi>expns, blast) *)
-*)
-
-subsubsection \<open>Useless Tag\<close>
-
-definition USELESS :: \<open>bool \<Rightarrow> bool\<close> where \<open>USELESS x = x\<close>
-
-lemma [simp]: \<open>USELESS True\<close> unfolding USELESS_def ..
-
-text \<open>Simplification plays an important role in the programming in IDE_CP.
-  We use it to simplify the specification and evaluate the abstract state.
-
-  It is powerful as a transformation preserving all information,
-  but sometimes we expect the transformation is weaker and unequal by disposing
-  some useless information that we do not need.
-  For example, we want to rewrite \<^term>\<open>x \<Ztypecolon> T\<close> to \<^term>\<open>y \<Ztypecolon> U\<close> but the rewrite may be held
-  only with an additional proposition \<^term>\<open>Useless\<close> which is useless for us,
-  \[ \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Useless\<close> \]
-  In cases like this, we can wrap the useless proposition by tag \<open>\<open>USELESS\<close>\<close>,
-  as \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS Useless\<close>. The equality is still held because
-  \<^prop>\<open>USELESS P \<equiv> P\<close>, but IDE-CP is configured to drop the \<^prop>\<open>Useless\<close>
-  so the work space will not be polluted by helpless propositions.
-\<close>
-
-
-subsubsection \<open>Structural Morphism\<close>
-
-(*TODO: explain*)
-
-definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [15] 14)
-  where [iff]: \<open>SMorphism X = X\<close>
-
-definition Morphism :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
-  where \<open>Morphism _ R Q = (R \<longrightarrow> Q)\<close>
-
-consts morphism_mode :: mode
-
-abbreviation Automatic_Morphism :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Morphism \<equiv> Morphism MODE_AUTO\<close>
-
-
-text \<open>
-Note, the argument here means any \<phi>-Type in the pre-condition, not necessary argument value.
-
-  If in a procedure or an implication rule or a view shift rule,
-  there is an argument where the procedure or the rule retains its structure,
-  this argument can be marked by \<^term>\<open>SMORPH arg\<close>.
-
-  Recall when applying the procedure or the rule, the reasoner extracts \<^term>\<open>arg\<close> from the
-    current \<phi>-BI specification \<^term>\<open>X\<close> of the current sequent.
-  This extraction may break \<^term>\<open>X\<close> especially when the \<^term>\<open>arg\<close> to be extracted is
-    scattered and embedded in multiple \<phi>-Types in \<^term>\<open>X\<close>.
-  For example, extract \<^term>\<open>(x1, y2) \<Ztypecolon> (A1 * B2)\<close> from
-    \<^term>\<open>((x1, x2) \<Ztypecolon> (A1 * A2)) * ((y1, (y2, y3)) \<Ztypecolon> (B1 * (B2 * B3)))\<close>.
-  After the application, the following sequent will have broken structures because
-    the original structure of \<^term>\<open>X\<close> is destroyed in order to extract \<^term>\<open>arg\<close>.
-  However, the structure of the new \<^term>\<open>arg'\<close> may not changes.
-  If so, by reversing the extraction, it is possible to recovery the original structure of \<^term>\<open>X\<close>,
-    only with changed value of the corresponding part of \<^term>\<open>arg\<close> in \<^term>\<open>X\<close>.
-
-  The system supports multiple arguments to be marked by \<^term>\<open>SMORPH arg\<close>.
-  And the system applies the reverse morphism in the correct order.
-  A requirement is,
-  those structural-retained argument should locate at the end of the procedure's or the rule's
-    argument list. Or else, because the reasoner does not record the extraction morphism of
-    arguments not marked by \<^term>\<open>SMORPH arg\<close>, those arguments which occur after the
-    structural-retained arguments change the \<phi>-BI specification by their extraction
-    causing the recorded morphism of previous \<^term>\<open>SMORPH arg\<close> mismatch the current
-    \<phi>-BI specification and so possibly not able to be applied any more.
-\<close>
-
-
-
-subsection \<open>Programming Job asking User Input\<close>
-
-subsubsection \<open>Parameter\<close>
+subsection \<open>Parameter From User\<close>
 
 definition ParamTag :: " 'a \<Rightarrow> bool" ("\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m _" [1000] 26) where "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<equiv> True"
 
@@ -178,33 +76,66 @@ lemma [cong]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<longleftrightar
 
 ML_file \<open>library/syntax/param.ML\<close>
 
-\<phi>reasoner_ML ParamTag 1000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (Phi_Reasoners.defer_antecedent (K I))
+subsection \<open>Proof Obligation\<close>
+
+text \<open>See \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> given in \<open>\<phi>\<close>-Logic Programming Reasoner.\<close>
+
+subsection \<open>Judgement Obligation\<close>
+
+definition Argument :: "'a \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where [iff]: "Argument x = x"
+
+lemma Argument_I[intro!]: "P \<Longrightarrow> Argument P" unfolding Argument_def .
+
+text \<open>Antecedent \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P\<close> represents the wrapped antecedent \<^prop>\<open>P\<close>
+  is a problem intended to be solved by users. Different with \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q\<close> where
+  boolean \<^prop>\<open>Q\<close> is a pure assertion being a verification condition,
+  the wrapped \<^prop>\<open>P\<close> is a judgement in the programming, such as a transformation of abstraction
+  or a view shift or any others representing specific properties.
+
+  In addition, \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P\<close> suppresses any attempts from the automatic reasoner. \<^prop>\<open>P\<close>
+  will be protected as intact.
 \<close>
 
-subsubsection \<open>Rule as an Argument\<close>
+subsection \<open>Reasoning Obligation\<close>
 
-definition Argument :: "'a \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where "Argument x = x"
+definition Do :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _" [3] 2) where [iff]: \<open>Do X \<equiv> X\<close>
 
-lemma Argument_I: "P \<Longrightarrow> Argument P" unfolding Argument_def .
+text \<open>In a rule, \<^prop>\<open>\<^bold>d\<^bold>o A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
+obtained from the reasoning, instead of a prerequisite condition of applying the rule.
+During the reasoning process,
 
-text \<open>Sequent in pattern \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P \<Longrightarrow> PROP Q\<close> asks users to input a theorem \<^prop>\<open>P\<close>
-  or any rule of conclusion \<^prop>\<open>P\<close> and arbitrary antecedents.
-  Argument emphasizes the meaning of \<^emph>\<open>input by user\<close> and tags and protects the proposition \<open>P\<close>
-  to prevent any unexpected auto-reasoning,
-  e.g., in the case of \<^schematic_prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P \<Longrightarrow> C\<close>
-  if there is no the tag\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t\<close> the system may interpret
-  \<^schematic_term>\<open>x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P\<close> as a transformation problem and reason it unexpectedly
-  using an immediate solution \<^prop>\<open>x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T\<close>.
+\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<^bold>d\<^bold>o\<close>, \<^prop>\<open>A\<close> is evaluated immediately
+  and once it fails the search branch backtracks;
 
-  This antecedent is handled by the `rule` processor.
+\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<^bold>d\<^bold>o A\<close> wrapped by \<open>\<^bold>d\<^bold>o\<close>, it means an obtained
+  reasoning obligation as an outcome of the reasoning,
+  just like \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> meaning an extracted verification condition.
+  So conforming to \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close>, no real reasoning work is imposed on \<^prop>\<open>\<^bold>d\<^bold>o A\<close> and it 
+  is returned in the final outcome of the reasoning,
+  as given before the \<^schematic_prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n \<dots>\<close> in order.
+
+  For example, if during a reasoning process, two \<^prop>\<open>\<^bold>d\<^bold>o A1\<close> and \<^prop>\<open>\<^bold>d\<^bold>o A2\<close> are encountered in
+  order, and if the reasoning succeeds, the final outcome would be
+  \[ \<^schematic_prop>\<open>\<^bold>d\<^bold>o A1 \<Longrightarrow> \<^bold>d\<^bold>o A2 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n \<dots> \<Longrightarrow> Conclusion\<close> \]
+\<close>
+
+lemma Do_I: \<open>PROP P \<Longrightarrow> \<^bold>d\<^bold>o PROP P\<close> unfolding Do_def .
+
+ML_file \<open>library/system/reasoners.ML\<close>
+
+\<phi>reasoner_ML ParamTag 1000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent)
 \<close>
 
 \<phi>reasoner_ML Argument 1000 (\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (Phi_Reasoners.defer_antecedent (K I))
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
 \<close>
 
-subsubsection \<open>Text Label\<close>
+\<phi>reasoner_ML Do 1000 (\<open>\<^bold>d\<^bold>o ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
+\<close>
+
+subsection \<open>Text Label\<close>
 
 text \<open>This part presents a mechanism to encode text symbol inside sequent.
   It may be used anywhere needing some text annotation for any purpose.\<close>
@@ -255,99 +186,9 @@ syntax "_LABELED_PROP_" :: "idt \<Rightarrow> prop \<Rightarrow> prop" ("_\<^bol
 translations "_LABELED_PROP_ name X" => "CONST Labelled (LABEL name) X"
 
 ML_file \<open>library/syntax/label.ML\<close>
-ML_file \<open>library/system/named_premises.ML\<close>
+ML_file \<open>library/tools/named_premises.ML\<close>
 ML_file \<open>library/system/premise_attribute.ML\<close>
 
-subsection \<open>Reasoning Job done by \<phi>-LPR\<close>
-
-subsubsection \<open>Introduce Frame Variable\<close>
-
-named_theorems frame_var_rewrs \<open>Rewriting rules to normalize after inserting the frame variable\<close>
-
-declare mult.assoc[symmetric, frame_var_rewrs]
-  Subjection_times[frame_var_rewrs]
-  ExSet_times_right[frame_var_rewrs]
-
-consts frame_var_rewrs :: mode
-
-\<phi>reasoner_ML Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
-  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
-          Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>)\<close>
-
-definition \<phi>IntroFrameVar :: "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool"
-  where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> S' = (R * S) \<and> T' = R * T "
-
-definition \<phi>IntroFrameVar' ::
-  "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> bool"
-  where "\<phi>IntroFrameVar' R S' S T' T E' E \<longleftrightarrow> S' = (R * S) \<and> T' = (\<lambda>ret. R * T ret) \<and> E' = (\<lambda>ex. R * E ex) "
-
-definition TAIL :: \<open>assn \<Rightarrow> assn\<close> where \<open>TAIL S = S\<close>
-
-text \<open>Antecedent \<^schematic_prop>\<open>\<phi>IntroFrameVar ?R ?S' S ?T' T\<close> appends a frame variable
-  \<^schematic_term>\<open>?R\<close> to the source MTF \<^term>\<open>S\<close> if the items in \<^term>\<open>S\<close> do not have an ending
-  frame variable already nor the ending item is not tagged by \<open>TAIL\<close>.
-  If so, the reasoner returns \<open>?S' := ?R * S\<close> for a schematic \<open>?R\<close>,
-  or else, the \<open>S\<close> is returned unchanged \<open>?S' := ?S\<close>.
-  \<open>\<phi>IntroFrameVar'\<close> is similar.
-
-  Tag \<open>TAIL\<close> is meaningful only when it tags the last item of a \<open>\<^emph>\<close>-sequence.
-  It has a meaning of `the remaining everything' like, the target (RHS) item tagged by this
-  means the item matches the whole remaining part of the source (LHS) part.
-  \<open>TAIL\<close> also means, the tagged item is at the end and has a sense of ending, so no further
-  padding is required (e.g. padding-of-void during ToSA reasoning).
-\<close>
-
-lemma \<phi>IntroFrameVar_No:
-  "\<phi>IntroFrameVar Void S S T T"
-  unfolding \<phi>IntroFrameVar_def by simp
-
-lemma \<phi>IntroFrameVar'_No:
-  "\<phi>IntroFrameVar' Void S S T T E E"
-  unfolding \<phi>IntroFrameVar'_def by simp
-
-lemma \<phi>IntroFrameVar_Yes:
-  " Simplify frame_var_rewrs S' (R * S)
-\<Longrightarrow> Simplify frame_var_rewrs T' (R * T)
-\<Longrightarrow> \<phi>IntroFrameVar R S' S T' T"
-  unfolding \<phi>IntroFrameVar_def by blast
-
-lemma \<phi>IntroFrameVar'_Yes:
-  " Simplify frame_var_rewrs S' (R * S)
-\<Longrightarrow> Simplify frame_var_rewrs T' (\<lambda>ret. R * T ret)
-\<Longrightarrow> Simplify frame_var_rewrs E' (\<lambda>ex. R * E ex)
-\<Longrightarrow> \<phi>IntroFrameVar' R S' S T' T E' E"
-  unfolding \<phi>IntroFrameVar'_def by blast
-
-
-\<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
-\<open>fn (ctxt, sequent) =>
-  let
-    val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
-        Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = hd (Phi_Syntax.strip_separations S)
-    fun suppressed (Var _) = true
-      | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
-      | suppressed _ = false
-  in
-    if suppressed tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
-    then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
-    else Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
-  end\<close>
-
-\<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
-\<open>fn (ctxt, sequent) =>
-  let
-    val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
-        Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = hd (Phi_Syntax.strip_separations S)
-    fun suppressed (Var _) = true
-      | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
-      | suppressed _ = false
-  in
-    if suppressed tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
-    then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
-    else Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_Yes} RS sequent)
-  end\<close>
 
 subsection \<open>General Syntax\<close>
 
@@ -1458,20 +1299,23 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 
 
 \<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
-\<open>fn (ctxt,sequent) => Scan.succeed (fn _ => (
-  Phi_Reasoner.debug_info ctxt (fn _ =>
-      "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
-  if Config.get ctxt Phi_Reasoner.auto_level >= 1
-    andalso (case Thm.major_prem_of sequent
-               of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _) => false
-                | \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Argument\<close>, _) $ _) => false
-                | \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) => false
-                | _ => true)
-  then case Phi_Reasoner.reason (SOME 1) (ctxt, sequent)
-         of SOME (ctxt',sequent') => (ctxt', sequent')
-          | NONE => raise Bypass (SOME (ctxt,sequent))
-  else raise Bypass NONE
-))\<close>
+\<open>fn (ctxt,sequent0) => Scan.succeed (fn _ =>
+let val sequent = case Thm.major_prem_of sequent0
+                    of Const(\<^const_name>\<open>Do\<close>, _) $ _ => @{thm Do_I} RS sequent0
+                     | _ => sequent0
+    val _ = Phi_Reasoner.debug_info ctxt (fn _ =>
+              "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
+in if Config.get ctxt Phi_Reasoner.auto_level >= 1
+      andalso (case Thm.major_prem_of sequent
+                 of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _) => false
+                  | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Argument\<close>, _) $ _) => false
+                  | _ (*Trueprop*) $ (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) => false
+                  | _ => true)
+   then case Phi_Reasoner.reason (SOME 1) (ctxt, sequent)
+          of SOME (ctxt',sequent') => (ctxt', sequent')
+           | NONE => raise Bypass (SOME (ctxt,sequent))
+   else raise Bypass NONE
+end)\<close>
 
 \<phi>processor enter_proof 790 (premises \<open>Premise ?mode ?P\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>

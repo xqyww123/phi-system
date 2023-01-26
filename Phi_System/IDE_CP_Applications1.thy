@@ -236,7 +236,7 @@ lemma transform_by_\<phi>app:
   unfolding Argument_def .
 
 lemma is_\<phi>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> x \<Ztypecolon> N \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x' \<Ztypecolon> N" using view_shift_id by force
-lemma as_\<phi>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X' \<Longrightarrow> x \<Ztypecolon> N \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X' \<Longrightarrow> x \<Ztypecolon> N \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X'"  by blast 
+lemma as_\<phi>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m X' \<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> N \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X' \<Longrightarrow> x \<Ztypecolon> N \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X'" unfolding Do_def by blast
 
 lemma view_shift_whole_\<phi>app:
   "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X' \<^bold>a\<^bold>n\<^bold>d P"

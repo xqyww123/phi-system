@@ -97,6 +97,8 @@ subsection \<open>Helper Isar Commands\<close>
 
 ML_file \<open>library/tools/optional_translation.ML\<close>
 
+
+
 (*TODO: Move this*)
 subsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
 

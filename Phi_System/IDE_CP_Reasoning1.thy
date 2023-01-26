@@ -32,6 +32,71 @@ lemma [\<phi>reason 2000]:
   \<open>Matches X A \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (Y <matches> A) \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Assertion_Matches_def .
 
+subsubsection \<open>Useless Tag\<close>
+
+definition USELESS :: \<open>bool \<Rightarrow> bool\<close> where \<open>USELESS x = x\<close>
+
+lemma [simp]: \<open>USELESS True\<close> unfolding USELESS_def ..
+
+text \<open>Simplification plays an important role in the programming in IDE_CP.
+  We use it to simplify the specification and evaluate the abstract state.
+
+  It is powerful as a transformation preserving all information,
+  but sometimes we expect the transformation is weaker and unequal by disposing
+  some useless information that we do not need.
+  For example, we want to rewrite \<^term>\<open>x \<Ztypecolon> T\<close> to \<^term>\<open>y \<Ztypecolon> U\<close> but the rewrite may be held
+  only with an additional proposition \<^term>\<open>Useless\<close> which is useless for us,
+  \[ \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Useless\<close> \]
+  In cases like this, we can wrap the useless proposition by tag \<open>\<open>USELESS\<close>\<close>,
+  as \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS Useless\<close>. The equality is still held because
+  \<^prop>\<open>USELESS P \<equiv> P\<close>, but IDE-CP is configured to drop the \<^prop>\<open>Useless\<close>
+  so the work space will not be polluted by helpless propositions.
+\<close>
+
+subsubsection \<open>Structural Morphism\<close>
+
+(*TODO: explain*)
+
+definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [15] 14)
+  where [iff]: \<open>SMorphism X = X\<close>
+
+definition Morphism :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Morphism _ R Q = (R \<longrightarrow> Q)\<close>
+
+consts morphism_mode :: mode
+
+abbreviation Automatic_Morphism :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Morphism \<equiv> Morphism MODE_AUTO\<close>
+
+text \<open>
+Note, the argument here means any \<phi>-Type in the pre-condition, not necessary argument value.
+
+  If in a procedure or an implication rule or a view shift rule,
+  there is an argument where the procedure or the rule retains its structure,
+  this argument can be marked by \<^term>\<open>SMORPH arg\<close>.
+
+  Recall when applying the procedure or the rule, the reasoner extracts \<^term>\<open>arg\<close> from the
+    current \<phi>-BI specification \<^term>\<open>X\<close> of the current sequent.
+  This extraction may break \<^term>\<open>X\<close> especially when the \<^term>\<open>arg\<close> to be extracted is
+    scattered and embedded in multiple \<phi>-Types in \<^term>\<open>X\<close>.
+  For example, extract \<^term>\<open>(x1, y2) \<Ztypecolon> (A1 * B2)\<close> from
+    \<^term>\<open>((x1, x2) \<Ztypecolon> (A1 * A2)) * ((y1, (y2, y3)) \<Ztypecolon> (B1 * (B2 * B3)))\<close>.
+  After the application, the following sequent will have broken structures because
+    the original structure of \<^term>\<open>X\<close> is destroyed in order to extract \<^term>\<open>arg\<close>.
+  However, the structure of the new \<^term>\<open>arg'\<close> may not changes.
+  If so, by reversing the extraction, it is possible to recovery the original structure of \<^term>\<open>X\<close>,
+    only with changed value of the corresponding part of \<^term>\<open>arg\<close> in \<^term>\<open>X\<close>.
+
+  The system supports multiple arguments to be marked by \<^term>\<open>SMORPH arg\<close>.
+  And the system applies the reverse morphism in the correct order.
+  A requirement is,
+  those structural-retained argument should locate at the end of the procedure's or the rule's
+    argument list. Or else, because the reasoner does not record the extraction morphism of
+    arguments not marked by \<^term>\<open>SMORPH arg\<close>, those arguments which occur after the
+    structural-retained arguments change the \<phi>-BI specification by their extraction
+    causing the recorded morphism of previous \<^term>\<open>SMORPH arg\<close> mismatch the current
+    \<phi>-BI specification and so possibly not able to be applied any more.
+\<close>
+
 
 
 section \<open>Normalization of Assertions\<close>
@@ -214,6 +279,95 @@ lemma [\<phi>reason 1200 for \<open>lambda_abstraction (tag ?x) ?fx ?f\<close>]:
 \<Longrightarrow> lambda_abstraction (tag x :: 'any <named> 'name) fx (case_named f')\<close>
   unfolding lambda_abstraction_def rename_abstraction_def by simp
 
+
+subsubsection \<open>Introduce Frame Variable\<close>
+
+named_theorems frame_var_rewrs \<open>Rewriting rules to normalize after inserting the frame variable\<close>
+
+declare mult.assoc[symmetric, frame_var_rewrs]
+  Subjection_times[frame_var_rewrs]
+  ExSet_times_right[frame_var_rewrs]
+
+consts frame_var_rewrs :: mode
+
+\<phi>reasoner_ML Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
+  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
+          Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>)\<close>
+
+definition \<phi>IntroFrameVar :: "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool"
+  where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> S' = (R * S) \<and> T' = R * T "
+
+definition \<phi>IntroFrameVar' ::
+  "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> bool"
+  where "\<phi>IntroFrameVar' R S' S T' T E' E \<longleftrightarrow> S' = (R * S) \<and> T' = (\<lambda>ret. R * T ret) \<and> E' = (\<lambda>ex. R * E ex) "
+
+definition TAIL :: \<open>assn \<Rightarrow> assn\<close> where \<open>TAIL S = S\<close>
+
+text \<open>Antecedent \<^schematic_prop>\<open>\<phi>IntroFrameVar ?R ?S' S ?T' T\<close> appends a frame variable
+  \<^schematic_term>\<open>?R\<close> to the source MTF \<^term>\<open>S\<close> if the items in \<^term>\<open>S\<close> do not have an ending
+  frame variable already nor the ending item is not tagged by \<open>TAIL\<close>.
+  If so, the reasoner returns \<open>?S' := ?R * S\<close> for a schematic \<open>?R\<close>,
+  or else, the \<open>S\<close> is returned unchanged \<open>?S' := ?S\<close>.
+  \<open>\<phi>IntroFrameVar'\<close> is similar.
+
+  Tag \<open>TAIL\<close> is meaningful only when it tags the last item of a \<open>\<^emph>\<close>-sequence.
+  It has a meaning of `the remaining everything' like, the target (RHS) item tagged by this
+  means the item matches the whole remaining part of the source (LHS) part.
+  \<open>TAIL\<close> also means, the tagged item is at the end and has a sense of ending, so no further
+  padding is required (e.g. padding-of-void during ToSA reasoning).
+\<close>
+
+lemma \<phi>IntroFrameVar_No:
+  "\<phi>IntroFrameVar Void S S T T"
+  unfolding \<phi>IntroFrameVar_def by simp
+
+lemma \<phi>IntroFrameVar'_No:
+  "\<phi>IntroFrameVar' Void S S T T E E"
+  unfolding \<phi>IntroFrameVar'_def by simp
+
+lemma \<phi>IntroFrameVar_Yes:
+  " Simplify frame_var_rewrs S' (R * S)
+\<Longrightarrow> Simplify frame_var_rewrs T' (R * T)
+\<Longrightarrow> \<phi>IntroFrameVar R S' S T' T"
+  unfolding \<phi>IntroFrameVar_def by blast
+
+lemma \<phi>IntroFrameVar'_Yes:
+  " Simplify frame_var_rewrs S' (R * S)
+\<Longrightarrow> Simplify frame_var_rewrs T' (\<lambda>ret. R * T ret)
+\<Longrightarrow> Simplify frame_var_rewrs E' (\<lambda>ex. R * E ex)
+\<Longrightarrow> \<phi>IntroFrameVar' R S' S T' T E' E"
+  unfolding \<phi>IntroFrameVar'_def by blast
+
+
+\<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
+\<open>fn (ctxt, sequent) =>
+  let
+    val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
+        Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
+    val tail = hd (Phi_Syntax.strip_separations S)
+    fun suppressed (Var _) = true
+      | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
+      | suppressed _ = false
+  in
+    if suppressed tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
+    then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
+    else Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
+  end\<close>
+
+\<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
+\<open>fn (ctxt, sequent) =>
+  let
+    val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
+        Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
+    val tail = hd (Phi_Syntax.strip_separations S)
+    fun suppressed (Var _) = true
+      | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
+      | suppressed _ = false
+  in
+    if suppressed tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
+    then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
+    else Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_Yes} RS sequent)
+  end\<close>
 
 
 section \<open>Declaration of Large Processes\<close>

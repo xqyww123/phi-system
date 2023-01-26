@@ -360,7 +360,7 @@ The purpose is denoted by \<open>action\<close> type, which is an unspecified ty
 
 typedecl 'category action
 
-definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_  @action _" [2,3] 2)
+definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_ @action _" [3,4] 3)
   where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
 
 text \<open>

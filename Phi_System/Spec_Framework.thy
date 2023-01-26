@@ -412,5 +412,6 @@ lemma norm_precond_ex:
   unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
 
 
+ML_file \<open>library/syntax/syntax0.ML\<close>
 
 end
