@@ -289,11 +289,12 @@ lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @ac
   unfolding Action_Tag_def \<phi>_\<phi>None by simp
 
 
+(*
 lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'act::simplification action)\<close>]:
   \<open>(x \<Ztypecolon> \<phi> \<circle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (() \<Ztypecolon> \<circle>) @action Act\<close>
   for Act :: \<open>'act::simplification action\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None
-  by (simp add: implies_refl)
+  by (simp add: implies_refl) *)
 
 paragraph \<open>Reasoning Rules\<close>
 
@@ -379,12 +380,9 @@ lemma ToSA_skip [\<phi>reason 1200
   by (smt (verit) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
 
 
-
-
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'aa::{structural, implication} action)\<close>]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi> U \<^bold>a\<^bold>n\<^bold>d P @action Act \<close>
-  for Act :: \<open>'aa::{structural, implication} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act \<close>
   unfolding Action_Tag_def using \<phi>_cast .
 
 lemma [\<phi>reason 1200]:

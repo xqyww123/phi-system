@@ -326,7 +326,8 @@ val view_shift : working_mode =
 let
   fun target_spec term =
     let
-      val (_,T,P) = Phi_Syntax.dest_view_shift term
+      val (_,T,P') = Phi_Syntax.dest_view_shift term
+      val P = if is_Var P' then \<^const>\<open>True\<close> else P'
     in
       Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
     end
@@ -410,7 +411,8 @@ val implication : working_mode =
 let
   fun target_spec term =
     let
-      val (_,T,P) = Phi_Syntax.dest_implication term
+      val (_,T,P') = Phi_Syntax.dest_implication term
+      val P = if is_Var P' then \<^const>\<open>True\<close> else P'
     in
       Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
     end

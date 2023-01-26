@@ -178,8 +178,8 @@ lemma [\<phi>reason 1000]:
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
             TAIL_def Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
-    X cases' \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> Brk_Frame l)\<close> ..
-             \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..
+    X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> Brk_Frame l)\<close> ..
+            \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..
   \<medium_right_bracket>. .
   
 
@@ -204,8 +204,8 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> (X1 + X2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
   unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right
   \<medium_left_bracket> premises X1 and X2
-    cases' \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
-           \<medium_left_bracket> X1 \<medium_right_bracket>.
+    cases \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
+          \<medium_left_bracket> X1 \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
 (* lemma [\<phi>reason 1200]:

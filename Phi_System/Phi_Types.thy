@@ -222,6 +222,7 @@ lemma \<phi>None_itself_is_one[simp]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 
+(*
 lemma [\<phi>reason 1500
     for \<open>(() \<Ztypecolon> \<phi>None) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::simplification action)\<close>
     except \<open>(() \<Ztypecolon> \<phi>None) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?x \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::simplification action)\<close>
@@ -229,7 +230,7 @@ lemma [\<phi>reason 1500
   \<open>(() \<Ztypecolon> \<phi>None) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 @action Act\<close>
   for Act :: \<open>'a::simplification action\<close>
   unfolding Action_Tag_def by (simp add: implies_refl)
-
+*)
 
 subsection \<open>Prod\<close>
 
@@ -328,11 +329,10 @@ lemma [\<phi>reason 50 for \<open>?A * ?B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<
   
 paragraph \<open>Action\<close>
 
-lemma [\<phi>reason 1200 for \<open>?A * ?B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::{structural, implication} action)\<close>]:
-  \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Q @action Act
-\<Longrightarrow> A * B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * Y \<^bold>a\<^bold>n\<^bold>d P \<and> Q @action Act\<close>
-  for Act :: \<open>'a::{structural, implication} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action structural act
+\<Longrightarrow> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Q @action structural act
+\<Longrightarrow> A * B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * Y \<^bold>a\<^bold>n\<^bold>d P \<and> Q @action structural act\<close>
   unfolding Action_Tag_def
   by (meson implies_left_prod implies_right_prod implies_trans)
 
@@ -472,11 +472,12 @@ lemma \<phi>MapAt_\<phi>None:
   \<open>k \<^bold>\<rightarrow> \<circle> = \<circle>\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
+(*
 lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> ?k \<^bold>\<rightarrow> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y @action (?Act::?'a::simplification action)\<close>]:
   \<open>x \<Ztypecolon> k \<^bold>\<rightarrow> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s () \<Ztypecolon> \<circle> @action Act\<close>
   for Act :: \<open>'a::simplification action\<close>
   unfolding Action_Tag_def
-  by (simp add: implies_refl \<phi>MapAt_\<phi>None)
+  by (simp add: implies_refl \<phi>MapAt_\<phi>None) *)
 
 lemma \<phi>MapAt_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
@@ -495,10 +496,9 @@ lemma \<phi>MapAt_cast[\<phi>reason]:
   unfolding Imply_def
   by (clarsimp simp add: \<phi>expns; blast)
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::{structural, implication} action)\<close>]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow> U \<^bold>a\<^bold>n\<^bold>d P @action Act \<close>
-  for Act :: \<open>'a::{structural, implication} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act \<close>
   unfolding Action_Tag_def
   using \<phi>MapAt_cast .
 
@@ -554,10 +554,11 @@ lemma \<phi>MapAt_L_\<phi>None:
   \<open>k \<^bold>\<rightarrow>\<^sub>@ \<circle> = \<circle>\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
+(*
 lemma [\<phi>reason for \<open>?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub># \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::simplification action)\<close>]:
   \<open>x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub># \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s () \<Ztypecolon> \<circle> @action Act\<close>
   for Act :: \<open>'a::simplification action\<close>
-  unfolding Action_Tag_def by (simp add: implies_refl \<phi>MapAt_L_\<phi>None)
+  unfolding Action_Tag_def by (simp add: implies_refl \<phi>MapAt_L_\<phi>None) *)
 
 lemma \<phi>MapAt_L_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
@@ -581,12 +582,10 @@ lemma \<phi>MapAt_L_cast[\<phi>reason]:
   unfolding Imply_def
   by (clarsimp simp add: \<phi>expns; blast)
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::{structural, implication} action)\<close>]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U \<^bold>a\<^bold>n\<^bold>d P @action Act \<close>
-  for Act :: \<open>'a::{structural, implication} action\<close>
-  unfolding Action_Tag_def
-  using \<phi>MapAt_L_cast .
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U \<^bold>a\<^bold>n\<^bold>d P @action structural Act \<close>
+  unfolding Action_Tag_def using \<phi>MapAt_L_cast .
 
 lemma [simp]:
   \<open>(k \<^bold>\<rightarrow>\<^sub>@ ExTyp T) = (\<exists>\<phi> c. k \<^bold>\<rightarrow>\<^sub>@ T c)\<close>
@@ -794,10 +793,9 @@ lemma \<phi>perm_transformer_cast[\<phi>reason]:
 
 paragraph \<open>Action\<close>
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::{implication, structural} action)\<close>]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_transformer \<psi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>perm_transformer \<psi> U \<^bold>a\<^bold>n\<^bold>d P @action Act\<close>
-  for Act :: \<open>'a::{implication, structural} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> x \<Ztypecolon> \<phi>perm_transformer \<psi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>perm_transformer \<psi> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act\<close>
   unfolding Action_Tag_def using \<phi>perm_transformer_cast .
 
 paragraph \<open>Simplification\<close>
@@ -826,12 +824,12 @@ lemma \<phi>perm_transformer_\<phi>None:
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
   by (metis inj_at_1_def perm_transformer'.axioms(5))
 
-lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::simplification action)\<close>]:
+(* lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>perm_transformer ?\<psi> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::simplification action)\<close>]:
   \<open>x \<Ztypecolon> \<phi>perm_transformer \<psi> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<circle> @action Act\<close>
   for Act :: \<open>'a::simplification action\<close>
   unfolding Imply_def Action_Tag_def
   apply (clarsimp simp add: \<phi>expns)
-  using inj_at_1_def perm_transformer'.axioms(5) by blast
+  using inj_at_1_def perm_transformer'.axioms(5) by blast *)
 
 lemma \<phi>perm_transformer_MapAt:
   \<open>\<phi>perm_transformer ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_transformer f T)\<close>
@@ -908,10 +906,9 @@ lemma \<phi>Share_cast[\<phi>reason]:
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns; blast)
 
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> ?T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::{structural,implication} action)\<close>]:
-  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action Act\<close>
-  for Act :: \<open>'a::{structural,implication} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action structural Act\<close>
   unfolding Action_Tag_def using \<phi>Share_cast .
 
 paragraph \<open>Simplifications\<close>
@@ -983,11 +980,12 @@ lemma \<phi>Share_\<phi>None:
   \<open>0 < n \<Longrightarrow> n \<Znrres> \<circle> = (\<circle> :: ('a::share_one,unit) \<phi>)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
+(*
 lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> ?n \<Znrres> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'b::simplification action)\<close>]:
   \<open>x \<Ztypecolon> n \<Znrres> \<circle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>) @action Act\<close>
   for Act :: \<open>'b::simplification action\<close>
   unfolding Imply_def Action_Tag_def
-  by (simp add: \<phi>expns)
+  by (simp add: \<phi>expns) *)
 
 subparagraph \<open>Permission\<close>
 
@@ -1032,10 +1030,9 @@ lemma \<phi>Some_cast[\<phi>reason]:
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<black_circle> U \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<black_circle> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::{implication,structural} action)\<close>]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<black_circle> U \<^bold>a\<^bold>n\<^bold>d P @action Act\<close>
-  for Act :: \<open>'a::{implication,structural} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<black_circle> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act\<close>
   unfolding Action_Tag_def using \<phi>Some_cast .
 
 lemma [simp]:
@@ -1237,10 +1234,9 @@ lemma Agreement_shrink[
   by (clarsimp simp add: \<phi>expns)
   
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Agreement ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::{structural, implication} action)\<close>]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> x \<Ztypecolon> Agreement T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> Agreement U \<^bold>a\<^bold>n\<^bold>d P @action Act\<close>
-  for Act :: \<open>'a::{structural, implication} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> x \<Ztypecolon> Agreement T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> Agreement U \<^bold>a\<^bold>n\<^bold>d P @action structural Act\<close>
   unfolding Action_Tag_def using Agreement_cast .
 
 subsection \<open>Nonsepable\<close>
@@ -1275,10 +1271,9 @@ lemma Nonsepable_cast[\<phi>reason]:
   unfolding Imply_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Nonsepable ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'a::{structural, implication} action)\<close>]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> x \<Ztypecolon> Nonsepable T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> Nonsepable U \<^bold>a\<^bold>n\<^bold>d P @action Act\<close>
-  for Act :: \<open>'a::{structural, implication} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> x \<Ztypecolon> Nonsepable T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> Nonsepable U \<^bold>a\<^bold>n\<^bold>d P @action structural Act\<close>
   unfolding Action_Tag_def using Nonsepable_cast .
 
 
@@ -1329,10 +1324,9 @@ lemma \<phi>MayInit_cast[\<phi>reason for \<open>?x \<Ztypecolon> \<phi>MayInit 
 \<Longrightarrow> x \<Ztypecolon> \<phi>MayInit TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>MayInit TY U \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> \<phi>MayInit ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?U \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'aa::{implication,structural} action)\<close>]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action Act
-\<Longrightarrow> x \<Ztypecolon> \<phi>MayInit TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>MayInit TY U \<^bold>a\<^bold>n\<^bold>d P @action Act\<close>
-  for Act :: \<open>'a::{implication,structural} action\<close>
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action structural Act
+\<Longrightarrow> x \<Ztypecolon> \<phi>MayInit TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>MayInit TY U \<^bold>a\<^bold>n\<^bold>d P @action structural Act\<close>
   unfolding Action_Tag_def using \<phi>MayInit_cast .
 
 definition \<phi>Uninit :: \<open>('v uninit, unit) \<phi>\<close>

@@ -12,6 +12,9 @@ signature PHI_REASONERS = sig
                               -> Proof.context * thm -> Proof.context * thm
   val safer_obligation_solver1: Proof.context * thm -> Proof.context * thm
 
+  (*defer the leading antecedent to the nearest obligation and call the contract*)
+  val defer_antecedent : (Proof.context -> thm -> thm) (*contract*)
+                                 -> Proof.context -> thm -> thm Seq.seq
   val defer_obligation_tac : Proof.context -> thm -> thm Seq.seq
 
 end
@@ -137,7 +140,7 @@ fun contract_obligations ctxt thm = let open Conv in
   |> fconv_rule (rewr_conv @{thm contract_obligations})
 end
 
-fun defer_obligation_tac ctxt thm =
+fun defer_antecedent contract ctxt thm =
   let
     val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
           case tm of (_ $ (@{term Proof_Obligation} $ _)) => true
@@ -147,11 +150,11 @@ fun defer_obligation_tac ctxt thm =
     if idx = ~1
     then error ("Fail to defer a proof obligation: an \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n antecedent is not found.")
     else Thm.permute_prems 1 idx thm
-      |> contract_obligations ctxt
+      |> contract ctxt
       |> Thm.permute_prems 0 (~idx)
-      |> (fn thm' => if Thm.nprems_of thm' = n - 1 then thm'
-                     else raise Fail "BUG!!!")
       |> Seq.single
   end
+
+val defer_obligation_tac = defer_antecedent contract_obligations
 
 end

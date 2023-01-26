@@ -213,7 +213,7 @@ definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\
   where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
 notation ExSet (binder "\<exists>\<^sup>s" 10)
 
-lemma [\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
+lemma ExSet_expn[\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
 
 lemma ExSet_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (ExSet S) \<Longrightarrow> (\<And>x. Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>

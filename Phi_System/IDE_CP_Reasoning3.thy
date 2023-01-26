@@ -4,7 +4,7 @@ text \<open>Here we give the implementation of all large reasoning processes tha
 the previous part I.\<close>
 
 theory IDE_CP_Reasoning3
-  imports IDE_CP_Applications1
+  imports IDE_CP_App2
 begin
 
 
@@ -1470,9 +1470,7 @@ text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the 
 
 text \<open>This merging procedure retains the order of the left side.\<close>
 
-typedecl branch_convergence
-instance branch_convergence :: whole_target ..
-consts branch_convergence :: \<open>branch_convergence action\<close>
+consts branch_convergence :: \<open>unit action\<close>
 
 (* text \<open>Though definitionally If is identical to If, there is semantic difference between them.
   If has a systematical meaning. If P A B means the procedure merging two assertions

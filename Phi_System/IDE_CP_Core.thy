@@ -178,6 +178,9 @@ lemma [cong]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<longleftrightar
 
 ML_file \<open>library/syntax/param.ML\<close>
 
+\<phi>reasoner_ML ParamTag 1000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (Phi_Reasoners.defer_antecedent (K I))
+\<close>
 
 subsubsection \<open>Rule as an Argument\<close>
 
@@ -197,6 +200,9 @@ text \<open>Sequent in pattern \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold
   This antecedent is handled by the `rule` processor.
 \<close>
 
+\<phi>reasoner_ML Argument 1000 (\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (Phi_Reasoners.defer_antecedent (K I))
+\<close>
 
 subsubsection \<open>Text Label\<close>
 
@@ -1074,7 +1080,9 @@ definition Do_Action :: \<open>'cat action \<Rightarrow> prop \<Rightarrow> prop
 text \<open>\<^prop>\<open>PROP Do_Action action sequent result\<close> is the antecedent to be reasoned
   to return the construction result of the sequent by the action.\<close>
 
-subsubsection \<open>Methods of Applying Action\<close>
+declare [[\<phi>reason_default_pattern \<open>PROP Do_Action ?A ?S _\<close> \<Rightarrow> \<open>PROP Do_Action ?A ?S _\<close>]]
+
+subsubsection \<open>Two Methods of Applying Action\<close>
 
 text \<open>There are two way to activate the construction of an action.
   One is by application mechanism where user inputs a theorem of shape \<^prop>\<open>PROP Call_Action action\<close>;
@@ -1084,11 +1092,10 @@ paragraph \<open>First way, by Application\<close>
 
 definition Call_Action :: \<open>'cat action \<Rightarrow> prop\<close> where \<open>Call_Action \<equiv> Pure.term\<close>
 
-lemma Call_Action_I: \<open>PROP Call_Action XX\<close> unfolding Call_Action_def term_def .
+lemma Call_Action_I[intro!]: \<open>PROP Call_Action XX\<close> unfolding Call_Action_def term_def .
 
 lemma [\<phi>reason 2000]:
   \<open> PROP Do_Action action sequent result
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application_Method (Call_Action action) sequent result\<close>
   unfolding \<phi>Application_Method_def Do_Action_def .
 
@@ -1098,10 +1105,9 @@ lemma [\<phi>reason 1400]:
   \<open> \<r>CALL Synthesis_Parse action action'
 \<Longrightarrow> PROP Do_Action action' sequent result
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis (action::'cat action) sequent result\<close>
   unfolding DoSynthesis_def Do_Action_def .
-
+(*
 subsubsection \<open>Classes of Actions\<close>
 
 class view_shift  (* The action can be a view shift. FIX ME: the semantics of them is very unclear *)
@@ -1128,274 +1134,60 @@ instance implication_single_target_structural :: single_target ..
 instance implication_single_target_structural :: structural ..
 
 typedecl simplification
-instance simplification :: simplification ..
-
-consts can_be_implication :: \<open>'a \<Rightarrow> 'a\<close> (* The action can be an implication *)
+instance simplification :: simplification .. *)
 
 subsubsection \<open>Rules of Executing Action\<close>
 
-paragraph \<open>Generalization\<close>
+consts User_Action :: \<open>'a action \<Rightarrow> 'a action\<close>
 
-lemma [\<phi>reason 2000
-    for \<open>PROP Do_Action (?action::?'a::multi_args_fixed_first action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Re\<close>
-    except \<open>PROP Do_Action ?action (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Re\<close>
-]:
-  \<open> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H (Void \<heavy_comma> X))) Re
+paragraph \<open>Fallback\<close>
+
+lemma User_Action_succeed:
+  \<open> P @action action
+\<Longrightarrow> P @action User_Action action\<close>
+  unfolding Action_Tag_def .
+
+lemma User_Action_fail:
+  \<open> ERROR TEXT(\<open>Don't know how to do\<close> A)
+\<Longrightarrow> P @action User_Action A\<close>
+  unfolding Action_Tag_def by blast
+
+lemma User_Action_fail'IMP:
+  \<open> ERROR TEXT(\<open>Don't know how to do\<close> A \<open>on state\<close> X)
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action User_Action A\<close>
+  unfolding Action_Tag_def by blast
+
+lemma User_Action_fail'VS:
+  \<open> ERROR TEXT(\<open>Don't know how to do\<close> A \<open>on state\<close> X)
+\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action User_Action A\<close>
+  unfolding Action_Tag_def by blast
+
+declare [[\<phi>reason 1000 User_Action_succeed User_Action_fail User_Action_fail'IMP User_Action_fail'VS
+      for \<open>?P @action User_Action ?action\<close>]]
+
+paragraph \<open>Action on view shift or programming mode\<close>
+
+text \<open>by default, only supports view shifts, but specific actions can override this.\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action User_Action action
 \<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H X)) Re\<close>
-  for action :: \<open>'a::multi_args_fixed_first action\<close>
-  by simp
-
-lemma [\<phi>reason 30]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action (can_be_implication action)\<close>
-  unfolding Action_Tag_def
-  by (simp add: view_shift_by_implication) 
-
-
-paragraph \<open>Action by View Shift\<close>
-
-
-lemma [\<phi>reason 1100 for \<open>PROP Do_Action (?action::?'a::view_shift action) (Trueprop (CurrentConstruction ?mode ?s ?R ?X)) ?Result\<close>]:
-  \<open> X1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any2 @action action
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R1\<heavy_comma> X1 \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action (action)
-      (Trueprop (CurrentConstruction mode s R X))
-      (Trueprop (CurrentConstruction mode s R (R1\<heavy_comma> Y) \<and> (Any \<and> Any2)))\<close>
-  for action :: \<open>('a::view_shift) action\<close>
+      (Trueprop (CurrentConstruction mode s H X))
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> CurrentConstruction mode s H Y \<and> P )\<close>
   unfolding Do_Action_def Action_Tag_def Action_Tag_def
   using \<phi>apply_view_shift \<phi>frame_view by blast
 
-lemma [\<phi>reason 1200
-    for \<open>PROP Do_Action (?action::?'a::{view_shift, whole_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
-]:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H X))
-      (Trueprop (CurrentConstruction mode s H Y \<and> Any))\<close>
-  for action :: \<open>('a::{view_shift, whole_target}) action\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift \<phi>frame_view by blast
+paragraph \<open>Action on \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s P\<close>\<close>
 
-lemma [\<phi>reason 1200
-    for \<open>PROP Do_Action (?action::?'a::{view_shift, single_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
-    except \<open>PROP Do_Action ?action (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Result\<close>
-]:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H X))
-      (Trueprop (CurrentConstruction mode s H Y \<and> Any))\<close>
-  for action :: \<open>('a::{view_shift, single_target}) action\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift \<phi>frame_view by blast
+text \<open>only has implications.\<close>
 
-lemma [\<phi>reason 1200
-    for \<open>PROP Do_Action (?action::?'a::{view_shift, single_target} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Result\<close>
-]:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H (R \<heavy_comma> X)))
-      (Trueprop (CurrentConstruction mode s H (R \<heavy_comma> Y) \<and> Any))\<close>
-  for action :: \<open>('a::{view_shift, single_target}) action\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift \<phi>frame_view by blast
-
-
-lemma [\<phi>reason 1200 for \<open>PROP Do_Action (?action::?'a::{multi_args_fixed_first,view_shift} action) (Trueprop (CurrentConstruction ?mode ?s ?R ?X)) ?Result\<close>]:
-  \<open> Xr\<heavy_comma> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any2 @action action
-\<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R1\<heavy_comma> Xr \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action (action)
-      (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> X)))
-      (Trueprop (CurrentConstruction mode s H (R1\<heavy_comma> Y) \<and> Any \<and> Any2))\<close>
-  for action :: \<open>('a::{multi_args_fixed_first,view_shift}) action\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>apply_view_shift \<phi>view_shift_intro_frame \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1))
-
-
-paragraph \<open>Action by Implication\<close>
-
-subparagraph \<open>On CurrentConstruction\<close>
-
-lemma [\<phi>reason 1090 for \<open>PROP Do_Action (?action::?'a::implication action) (Trueprop (CurrentConstruction ?mode ?s ?H ?XX)) ?Result\<close>]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> XX \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R\<heavy_comma> X \<^bold>a\<^bold>n\<^bold>d P2 @action ToSA
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H XX))
-      (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> (P2 \<and> P)))\<close>
-  for action :: \<open>'a::implication action\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
-
-lemma [\<phi>reason 1190
-    for \<open>PROP Do_Action (?action::?'a::{whole_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
-]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H X))
-      (Trueprop (CurrentConstruction mode s H Y \<and> P))\<close>
-  for action :: \<open>'a::{whole_target,implication} action\<close>
-  unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
-
-lemma [\<phi>reason 1190
-    for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H ?X)) ?Result\<close>
-    except  \<open>PROP Do_Action ?action (Trueprop (CurrentConstruction ?mode ?s ?H (?R\<heavy_comma> ?X))) ?Result\<close>
-]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H X))
-      (Trueprop (CurrentConstruction mode s H Y \<and> P))\<close>
-  for action :: \<open>'a::{single_target,implication} action\<close>
-  unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
-
-lemma [\<phi>reason 1190
-    for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?R \<heavy_comma> ?X))) ?Result\<close>
-]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> X)))
-      (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> P))\<close>
-  for action :: \<open>'a::{single_target,implication} action\<close>
-  unfolding Do_Action_def Action_Tag_def
-  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
-
-lemma [\<phi>reason 1190 for \<open>PROP Do_Action (?action::?'a::{implication,multi_args_fixed_first} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?RR \<heavy_comma> ?X))) ?Result\<close>]:
-  \<open> Xr \<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> RR \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R\<heavy_comma> Xr \<^bold>a\<^bold>n\<^bold>d P2 @action ToSA
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H (RR \<heavy_comma> X)))
-      (Trueprop (CurrentConstruction mode s H (R\<heavy_comma> Y) \<and> P2 \<and> P))\<close>
-  for action :: \<open>'a::{implication,multi_args_fixed_first} action\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>apply_implication \<phi>apply_view_shift \<phi>view_shift_intro_frame_R
-                                ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
-
-(* No need to provide general search rule because the rule of
-\<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action\<close>
-(see paragraph Generalization) converts all general search of view_shift for implication. *)
-
-subparagraph \<open>On \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s P\<close>\<close>
-
-lemma [\<phi>reason 1100
-    for \<open>PROP Do_Action (?action::?'a::{implication, single_target} action)
-                        (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s ?X)) ?Result\<close>
-    except \<open>PROP Do_Action ?action (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s (?R * ?X))) ?Result\<close>
-]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> \<r>Feasible
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action User_Action action
 \<Longrightarrow> PROP Do_Action action
       (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s X))
-      (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s Y) \<and> P))\<close>
-  for action :: \<open>'a::{implication,single_target} action\<close>
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s Y) \<and> P )\<close>
   unfolding Do_Action_def Action_Tag_def Imply_def ToA_Construction_def by blast
 
-lemma [\<phi>reason 1200
-    for \<open>PROP Do_Action (?action::?'a::{single_target,implication} action)
-                        (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s (?R * ?X))) ?Result\<close>
-]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s R * X))
-      (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s R * Y) \<and> P))\<close>
-  for action :: \<open>'a::{implication,single_target} action\<close>
-  unfolding Do_Action_def Action_Tag_def ToA_Construction_def
-  by (meson Imply_def implies_left_prod)
-
-lemma [\<phi>reason 1200
-    for \<open>PROP Do_Action (?action::?'a::{implication, whole_target} action)
-                        (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s ?X)) ?Result\<close>
-    except \<open>PROP Do_Action ?action (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?s) \<^bold>i\<^bold>s (?R * ?X))) ?Result\<close>
-]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s X))
-      (Trueprop ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s Y) \<and> P))\<close>
-  for action :: \<open>'a::{implication,whole_target} action\<close>
-  unfolding Do_Action_def Action_Tag_def Imply_def ToA_Construction_def by blast
-
-(* TODO!
-lemma [\<phi>reason 1190 on \<open>PROP Do_Action (?action::?'a::{implication,multi_args_fixed_first} action) (Trueprop (CurrentConstruction ?mode ?s ?H (?RR \<heavy_comma> ?X))) ?Result\<close>]:
-  \<open> Xr * X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> \<r>Feasible
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (s \<in> (RR * X)))
-      (Trueprop (s \<in> (R * Y) \<and> P))\<close>
-  for action :: \<open>'a::{implication,multi_args_fixed_first} action\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  by (metis (no_types, lifting) \<phi>apply_implication \<phi>spec.\<phi>apply_view_shift \<phi>spec_axioms \<phi>view_shift_intro_frame_R ab_semigroup_mult_class.mult_ac(1) implies_left_prod)
-*)
-
-
-(*
-lemma [\<phi>reason 1100]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
-\<Longrightarrow> PROP Assertion_Level_Reasoning (XX \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * X \<^bold>a\<^bold>n\<^bold>d P2)
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (s \<in> XX))
-      (Trueprop (s \<in> (R * Y) \<and> P2 \<and> P))\<close>
-  for action :: \<open>'a::implication action\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift view_shift_by_implication implies_left_prod by blast
-*)
-
-
-
-subsection \<open>Actions\<close>
-(*TODO: move this*)
-
-subsubsection \<open>Identity\<close>
-
-consts to_Identity   :: \<open>implication_single_target_structural action\<close>
-consts from_Identity :: \<open>implication_single_target_structural action\<close>
-
-lemma to_Identity_\<phi>app:   \<open>PROP Call_Action to_Identity\<close>   using Call_Action_I .
-lemma from_Identity_\<phi>app: \<open>PROP Call_Action from_Identity\<close> using Call_Action_I .
-
-subsubsection \<open>Duplicate \& Shrink\<close>
-
-typedecl action_dup_typ
-instance action_dup_typ :: view_shift ..
-instance action_dup_typ :: implication ..
-instance action_dup_typ :: procedure ..
-instance action_dup_typ :: single_target ..
-instance action_dup_typ :: structural_1_2 ..
-
-typedecl action_drop_typ
-instance action_drop_typ :: view_shift ..
-instance action_drop_typ :: implication ..
-instance action_drop_typ :: procedure ..
-instance action_drop_typ :: multi_args_fixed_first ..
-  \<comment> \<open>Because it may need an auxiliary Black Hole\<close>
-
-typedecl action_shrink_typ
-instance action_shrink_typ :: view_shift ..
-instance action_shrink_typ :: implication ..
-instance action_shrink_typ :: procedure ..
-instance action_shrink_typ :: multi_args_fixed_first ..
-instance action_shrink_typ :: structural_2_1 ..
-
-consts action_dup :: \<open>action_dup_typ action\<close>
-consts action_drop :: \<open>action_drop_typ action\<close>
-consts action_shrink :: \<open>action_shrink_typ action\<close>
-
-lemma dup_\<phi>app:    \<open>PROP Call_Action action_dup\<close>    using Call_Action_I .
-lemma drop_\<phi>app:   \<open>PROP Call_Action action_drop\<close>   using Call_Action_I .
-lemma shrink_\<phi>app: \<open>PROP Call_Action action_shrink\<close> using Call_Action_I .
 
 
 subsection \<open>Generic Assignment \& Access\<close>
@@ -1671,8 +1463,9 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
       "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
   if Config.get ctxt Phi_Reasoner.auto_level >= 1
     andalso (case Thm.major_prem_of sequent
-               of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _)
-                    => false
+               of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _) => false
+                | \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Argument\<close>, _) $ _) => false
+                | \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) => false
                 | _ => true)
   then case Phi_Reasoner.reason (SOME 1) (ctxt, sequent)
          of SOME (ctxt',sequent') => (ctxt', sequent')
