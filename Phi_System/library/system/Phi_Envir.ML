@@ -95,7 +95,7 @@ fun gen_update_programming_sequent' put sequent ctxt =
                                        reason_programming_implication' mode ctxt sequent))
       else case Programming_Sequent.get ctxt
              of (_, construction, implication)::_ => put ctxt (sequent, construction, implication)
-              | [] => raise Fail "bug #gq3unip9q"
+              | [] => put ctxt (sequent, Drule.dummy_thm, Lazy.value [])
   end
 
 val update_programming_sequent' = gen_update_programming_sequent'

@@ -84,22 +84,53 @@ lemma \<phi>Int_semty[\<phi>reason 1000]:
 
 subsection \<open>Natural Nmber\<close>
 
-definition \<phi>ANat :: "(VAL, nat) \<phi>" ("\<nat>")
-  where [simp]: "\<nat> n = (Int.int n \<Ztypecolon> \<int>)"
+definition \<phi>ANat ("\<nat>") where [simp]: "\<nat> n = (of_nat n \<Ztypecolon> \<int>)"
 
-(* lemma \<phi>ANat_elim[elim!,\<phi>inhabitance_rule]:
+declare [[\<phi>trace_reasoning]]
+
+lemma [\<phi>reason 1000 for \<open>?x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<nat> \<^bold>a\<^bold>n\<^bold>d ?Any\<close>]: 
+  " \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 \<le> x \<and> y = nat x
+\<Longrightarrow> x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>"
+  \<medium_left_bracket> construct\<phi> \<open>nat x \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 \<le> x
+\<Longrightarrow> x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s nat x \<Ztypecolon> \<nat> @action to \<nat>\<close> \<medium_left_bracket> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000 for \<open>?x \<Ztypecolon> \<nat> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<int> \<^bold>a\<^bold>n\<^bold>d ?Any\<close>]:
+  " \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Int.int x = y
+\<Longrightarrow> x \<Ztypecolon> \<nat> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<int>" \<medium_left_bracket> destruct\<phi> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]:
+  " x \<Ztypecolon> \<nat> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Int.int x \<Ztypecolon> \<int> @action to \<int> " \<medium_left_bracket> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]: \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]: "\<phi>Zero aint \<nat> 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> \<int>\<close> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]: \<open>\<phi>Equal \<nat> (\<lambda>_ _. True) (=)\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>. .
+
+
+
+
+lemma
+  \<open>A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B
+\<Longrightarrow> Inhabited A
+\<Longrightarrow> Inhabited B\<close>
+  unfolding Imply_def Inhabited_def
+  by (simp, blast)
+
+ lemma \<phi>ANat_elim[elim!,\<phi>inhabitance_rule]:
   "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C" .
 
-lemma \<phi>ANat_semty[\<phi>reason 1000]:
-  \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<close>
-  unfolding \<phi>SemType_def subset_iff by (simp add: \<phi>expns Big_def)
 
 lemma [\<phi>reason 1000]:
   "\<phi>Equal \<nat> (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (auto simp add: \<phi>expns)
 
 lemma [\<phi>reason 1000]:
-  "\<phi>Zero aint \<nat> 0" unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+  "\<phi>Zero aint \<nat> 0"
+  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason]:
   \<open> is_singleton (n \<Ztypecolon> \<nat>)\<close>
@@ -110,13 +141,7 @@ lemma [\<phi>reason]:
 
 subsubsection \<open>Subtyping\<close>
 
-lemma subty_Z_N[\<phi>overload nat]: 
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 \<le> x \<Longrightarrow> x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s nat x \<Ztypecolon> \<nat>"
-  \<medium_left_bracket> construct\<phi>_1 \<open>nat x \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>. .
 
-lemma subty_N_Z[\<phi>overload int]:
-  "x \<Ztypecolon> \<nat> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Int.int x \<Ztypecolon> \<int>"
-  \<medium_left_bracket> destruct\<phi> \<medium_right_bracket>. .
 
 
 section \<open>Instructions\<close>

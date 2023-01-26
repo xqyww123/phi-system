@@ -96,7 +96,7 @@ text \<open>Antecedent \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bol
 
 subsection \<open>Reasoning Obligation\<close>
 
-definition Do :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _" [3] 2) where [iff]: \<open>Do X \<equiv> X\<close>
+definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
 
 text \<open>In a rule, \<^prop>\<open>\<^bold>d\<^bold>o A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
 obtained from the reasoning, instead of a prerequisite condition of applying the rule.
@@ -250,50 +250,51 @@ lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method
             (Trueprop (X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P))
             working_mode_implication
-            (\<And>\<CC>. \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s X \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)
+            (\<And>\<CC>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s X) \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)
             (Trueprop True)
             (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+            Labelled_def
   using \<phi>make_implication .
 
 lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?var_P)) _ _ _ _\<close>]:
   \<open> PROP \<phi>Programming_Method
             (Trueprop (X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y))
             working_mode_implication
-            (\<And>\<CC>. \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s X \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j True)
+            (\<And>\<CC>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s X) \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j True)
             (Trueprop True)
             (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
   using \<phi>make_implication .
 
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method
             (Trueprop (X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P))
             working_mode_view_shift
-            (\<And>\<CC> \<RR>. \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s X \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)
+            (\<And>\<CC> \<RR>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s X) \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)
             (Trueprop True)
             (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
   using \<phi>make_view_shift .
 
 lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?var_P)) _ _ _ _\<close>]:
   \<open> PROP \<phi>Programming_Method
             (Trueprop (X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y))
             working_mode_view_shift
-            (\<And>\<CC> \<RR>. \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s X \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j True)
+            (\<And>\<CC> \<RR>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s X) \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j True)
             (Trueprop True)
             (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
   using \<phi>make_view_shift .
 
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method
             (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c G \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))
             working_mode_procedure
-            (\<And>\<SS> \<RR>. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t \<SS> [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n X \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g G \<^bold>o\<^bold>n \<SS> [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
+            (\<And>\<SS> \<RR>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t \<SS> [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n X) \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g G \<^bold>o\<^bold>n \<SS> [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
             (Trueprop True)
             (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
   using \<phi>reassemble_proc_final .
 
 hide_fact \<phi>make_implication \<phi>make_view_shift \<phi>reassemble_proc_final
@@ -328,7 +329,7 @@ proof -
   show \<open>PROP Q\<close> using A[OF D[OF P] R[OF P] F[OF P]] .
 qed
 
-lemma [\<phi>reason 1000]: \<comment> \<open>TODO: use ML to preserve the name of the lambda variable\<close>
+lemma \<phi>Programming_Method_All:
   \<open> (\<And>x. PROP \<phi>Programming_Method (Trueprop (P x)) M (D x) (R x) (F x))
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (All P)) M (\<And>x. PROP D x) (\<And>x. PROP R x) (\<And>x. PROP F x)\<close>
   unfolding \<phi>Programming_Method_def
@@ -341,7 +342,7 @@ proof (intro allI)
   show \<open>P x\<close> using A[OF D R F] .
 qed
 
-lemma [\<phi>reason 1000]: \<comment> \<open>TODO: use ML to preserve the name of the lambda variable\<close>
+lemma \<phi>Programming_Method_ALL:
   \<open> (\<And>x. PROP \<phi>Programming_Method (P x) M (D x) (R x) (F x))
 \<Longrightarrow> PROP \<phi>Programming_Method (\<And>x. PROP P x) M (\<And>x. PROP D x) (\<And>x. PROP R x) (\<And>x. PROP F x)\<close>
   unfolding \<phi>Programming_Method_def
@@ -353,6 +354,36 @@ proof -
     and  F: \<open>\<And>x. PROP F x\<close>
   show \<open>PROP P x\<close> using A[OF D R F] .
 qed
+
+\<phi>reasoner_ML \<open>\<phi>Programming_Method (Trueprop (All P))\<close> 1000
+  (\<open>PROP \<phi>Programming_Method (Trueprop (All ?P)) _ _ _ _\<close>)
+  = \<open>fn (ctxt,sequent) =>
+  let val _ $ (_ $ (_ $ P)) $ _ $ _ $ _ $ _ = Thm.major_prem_of sequent
+      fun rename N' (Abs ("x",T,X)) = Abs (N',T,X)
+        | rename N' (X $ Y) = rename N' X $ rename N' Y
+        | rename _ X = X
+      val rule = @{thm \<phi>Programming_Method_All}
+      val rule' = case P of Abs (N,_,_) => Thm.renamed_prop (rename N (Thm.prop_of rule)) rule
+                          | _ => rule
+  in Phi_Reasoner.single_RS rule' (ctxt,sequent)
+  end
+\<close>
+
+\<phi>reasoner_ML \<open>\<phi>Programming_Method (Pure.all P)\<close> 1000
+  (\<open>PROP \<phi>Programming_Method (Pure.all ?P) _ _ _ _\<close>)
+  = \<open>fn (ctxt,sequent) =>
+  let val _ $ (_ $ P) $ _ $ _ $ _ $ _ = Thm.major_prem_of sequent
+      fun rename N' (Abs ("x",T,X)) = Abs (N',T,X)
+        | rename N' (X $ Y) = rename N' X $ rename N' Y
+        | rename _ X = X
+      val rule = @{thm \<phi>Programming_Method_ALL}
+      val rule' = case P of Abs (N,_,_) => Thm.renamed_prop (rename N (Thm.prop_of rule)) rule
+                          | _ => rule
+  in Phi_Reasoner.single_RS rule' (ctxt,sequent)
+  end
+\<close>
+
+hide_fact \<phi>Programming_Method_All \<phi>Programming_Method_ALL
 
 
 

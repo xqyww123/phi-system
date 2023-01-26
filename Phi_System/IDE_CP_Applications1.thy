@@ -364,19 +364,13 @@ lemma destruct\<phi>_\<phi>app:
 \<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s D\<close>
   unfolding Simplify_def \<phi>Type_def by (simp add: implies_refl)
 
-lemma construct\<phi>_1_\<phi>app:
-  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y X: T x
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action ToSA
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T\<close>
-  unfolding Action_Tag_def Simplify_def \<phi>Type_def by simp
-
 lemma construct\<phi>_\<phi>app:
   \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y X: T x
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' * X @action ToSA
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' * (x \<Ztypecolon> T)\<close>
-  unfolding Action_Tag_def Simplify_def \<phi>Type_def by simp
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (if single then X else S' * X) @action ToSA
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (if single then x \<Ztypecolon> T else S' * (x \<Ztypecolon> T))\<close>
+  for i :: nat
+  unfolding Action_Tag_def Simplify_def \<phi>Type_def by (cases single; simp)
 
 
 subsection \<open>Duplicate \& Shrink\<close>

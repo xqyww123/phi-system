@@ -255,8 +255,6 @@ lemma [\<phi>reason 1200 for \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
 \<Longrightarrow> lambda_abstraction (x,y) fx (case_prod f2)\<close>
   unfolding lambda_abstraction_def by simp
 
-ML \<open>Name.variant "" Name.context\<close>
-
 \<phi>reasoner_ML lambda_abstraction 1100 ("lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
   let
     val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _))
@@ -368,6 +366,54 @@ lemma \<phi>IntroFrameVar'_Yes:
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
     else Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_Yes} RS sequent)
   end\<close>
+
+
+subsection \<open>Embedded Reasoning\<close>
+
+definition Embedded_Reasoning :: \<open>bool \<Rightarrow> bool\<close> where \<open>Embedded_Reasoning X \<longleftrightarrow> X\<close>
+
+text \<open>Annotate a boolean assertion in a proof obligation is actually an embedded reasoning
+antecedent.\<close>
+
+subsubsection \<open>Implementation\<close>
+
+definition Pass_Embedded_Reasoning :: \<open>bool \<Rightarrow> bool\<close>
+  where \<open>Pass_Embedded_Reasoning X \<longleftrightarrow> X\<close>
+
+definition Pass_Embedded_Reasoning' :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Pass_Embedded_Reasoning' IN OUT \<longleftrightarrow> (OUT \<longleftrightarrow> IN)\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>Pass_Embedded_Reasoning' ?X _\<close> \<Rightarrow> \<open>Pass_Embedded_Reasoning' ?X _\<close>
+]]
+
+lemma [\<phi>reason 1000]:
+  \<open> Pass_Embedded_Reasoning' X Y
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Y
+\<Longrightarrow> Pass_Embedded_Reasoning X\<close>
+  unfolding Pass_Embedded_Reasoning_def Pass_Embedded_Reasoning'_def Premise_def
+  by blast
+
+lemma [\<phi>reason 1110]:
+  \<open> R
+\<Longrightarrow> Pass_Embedded_Reasoning' X Y
+\<Longrightarrow> Pass_Embedded_Reasoning' (Embedded_Reasoning R \<and> X) Y\<close>
+  unfolding Pass_Embedded_Reasoning'_def Embedded_Reasoning_def by blast
+
+lemma [\<phi>reason 1100]:
+  \<open> Pass_Embedded_Reasoning' X Y
+\<Longrightarrow> Pass_Embedded_Reasoning' (P \<and> X) (P \<and> Y)\<close>
+  unfolding Pass_Embedded_Reasoning'_def by blast
+
+lemma [\<phi>reason 1010]:
+  \<open> R
+\<Longrightarrow> Pass_Embedded_Reasoning' (Embedded_Reasoning R) True \<close>
+  unfolding Pass_Embedded_Reasoning'_def Embedded_Reasoning_def by blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Pass_Embedded_Reasoning' P P \<close>
+  unfolding Pass_Embedded_Reasoning'_def by blast
+
 
 
 section \<open>Declaration of Large Processes\<close>

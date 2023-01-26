@@ -492,15 +492,15 @@ subsection \<open>Subjection\<close>
 
 lemma [\<phi>reason 3200]:
   " T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
+   (P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
     T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding Imply_def by (simp add: \<phi>expns)
+  unfolding Imply_def Pass_Embedded_Reasoning_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 3200]:
   " T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R * U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
+   (P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
     T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R * (U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding Imply_def by (simp add: \<phi>expns)
+  unfolding Imply_def Pass_Embedded_Reasoning_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 3200]:
   "(Q @action subj_premise G \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G) \<Longrightarrow>
@@ -829,6 +829,38 @@ lemma [\<phi>reason 2000 for \<open> ?R * (SYNTHESIS ?Y) \<^bold>i\<^bold>m\<^bo
 \<Longrightarrow> R * (SYNTHESIS Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
   unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All
   by (simp add: \<phi>expns)
+
+
+subsection \<open>Value\<close>
+
+text \<open>The rules require the same values are alpha-conversible. \<close>
+text \<open>Priority shouldn't exceed 2000.\<close>
+
+lemma [\<phi>reason 1215 for \<open>?R\<heavy_comma> ?y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R'' \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v'] ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]:
+  " y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> R \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA True G"
+  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All View_Shift_def
+  by (simp add: \<phi>expns times_list_def) metis
+
+lemma [\<phi>reason 1210 for \<open>?R\<heavy_comma> ?y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R'' \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v'] ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+  "R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> @action reason_ToSA mode G"
+  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All View_Shift_def Action_Tag_def
+  by blast
+
+
+lemma [\<phi>reason 1200 for \<open>?R\<heavy_comma> ?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R'''\<heavy_comma> \<blangle> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+  " R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+\<Longrightarrow> R \<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
+  unfolding Action_Tag_def FOCUS_TAG_def split_paired_All Action_Tag_def
+  by (metis implies_left_prod mult.assoc mult.commute)
+
+lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?V \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
+  except \<open>?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R''' \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?V \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
+]:
+  " R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+\<Longrightarrow> R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] V \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] V \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
+  unfolding FOCUS_TAG_def Action_Tag_def
+  by (metis (no_types, opaque_lifting) implies_right_prod mult.assoc mult.commute)
 
 
 subsection \<open>General Search\<close>
@@ -1371,14 +1403,6 @@ lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> \<^bold>v
   unfolding FOCUS_TAG_def Action_Tag_def
   by (smt (verit, best) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
 
-lemma ToSA_skip
-  [\<phi>reason 70 for \<open>?R \<heavy_comma> ?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
-  " CHK_SUBGOAL G
-  \<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-  \<Longrightarrow> R \<heavy_comma> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> H \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G "
-  unfolding FOCUS_TAG_def
-  by (simp add: \<phi>view_shift_intro_frame mult.commute mult.left_commute)
-
 
 subsection \<open>General Search\<close>
 
@@ -1387,6 +1411,15 @@ lemma [\<phi>reason 800 for \<open>?R \<heavy_comma> ?V \<^bold>s\<^bold>h\<^bol
       \<comment> \<open>successful termination of the step-by-step search\<close>
   unfolding Action_Tag_def FOCUS_TAG_def split_paired_All
   by (simp add: view_shift_id)
+
+lemma ToSA_skip
+  [\<phi>reason 70 for \<open>?R \<heavy_comma> ?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
+  " CHK_SUBGOAL G
+  \<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+  \<Longrightarrow> R \<heavy_comma> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> H \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G "
+  unfolding FOCUS_TAG_def
+  by (simp add: \<phi>view_shift_intro_frame mult.commute mult.left_commute)
+
 
 (* 
 We don't need other general searches any more, because every resource locale configures its reasoning rules.

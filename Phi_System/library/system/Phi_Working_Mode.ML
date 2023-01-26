@@ -5,7 +5,7 @@ type working_mode = {
   is_on_going_construction: term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term (*the BI assertion*),
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
-  initial_sequent: cterm (*initial BI assertion*) -> Proof.context -> Proof.context * thm,
+  initial_sequent: Proof.state -> thm * Proof.state,
   inhabited_rule: thm,
   transformation_rule : thm,
   view_shift_rule: thm option,
@@ -49,7 +49,7 @@ type working_mode = {
   spec_of  :  term (*on-going construction assertion*) ->  term,
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
   inhabited_rule: thm,
-  initial_sequent: cterm (*goal*) -> Proof.context -> Proof.context * thm,
+  initial_sequent: Proof.state -> thm * Proof.state,
   transformation_rule : thm,
   view_shift_rule: thm option,
   cast: cterm -> Proof.context * thm -> Proof.context * thm,
@@ -89,7 +89,17 @@ fun mode1 ctxt = case Mode.get ctxt
                     | NONE => error ("No working mode has been set in this context.")
 
 
-(* Auxiliaries *)
+(** Auxiliaries **)
+
+fun generic_initial_sequent gen s =
+  case Facts.lookup (Context.Proof (Proof.context_of s))
+                    (Proof_Context.facts_of (Proof.context_of s)) "local.\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>"
+    of SOME {thms=[X], dynamic=false} => (Thm.transfer' (Proof.context_of s) X, s)
+     | _ => gen s 
+
+val default_initial_sequent = generic_initial_sequent (fn _ => error "BUG #q23c5nu9[")
+
+(* Cast *)
 
 fun generic_cast rule place desired_nu (ctxt,sequent) =
   let
@@ -289,7 +299,7 @@ val procedure : working_mode =
     exception_spec = exception_spec,
     exception_spec_c = exception_spec_c, *)
     inhabited_rule = @{thm CurrentConstruction_Inhabited_rule},
-    initial_sequent = initial_sequent_procedure,
+    initial_sequent = default_initial_sequent,
     transformation_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = cast,
@@ -306,6 +316,7 @@ end
 
 val view_shift : working_mode = 
 let
+(* MAY NOT REMOVE
   fun finish_view_shift hyp (_,sequent) =
     let open Phi_Syntax
       val (_,s',H',_) = dest_CurrentConstruction_c hyp
@@ -337,7 +348,7 @@ let
             (fn _ => fn [hyp] => (finish_view_shift hyp o pair ctxt, I)) [init] ctxt
     in
       (ctxt,init)
-    end
+    end *)
 in
 {
     name = \<^const_name>\<open>working_mode_view_shift\<close>,
@@ -349,7 +360,7 @@ in
     exception_spec = K NONE,
     exception_spec_c = K (K NONE), *)
     inhabited_rule = @{thm CurrentConstruction_Inhabited_rule},
-    initial_sequent = start_view_shift,
+    initial_sequent = default_initial_sequent,
     transformation_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = (fn desired => fn (ctxt, sequent) =>
@@ -377,6 +388,7 @@ end
 
 
 local
+(* MAY NOT REMOVE
   fun finish_implication hyp (_,sequent) =
     let val (s,_) = Phi_Syntax.dest_ToA_Construction_c hyp
     in sequent
@@ -398,7 +410,7 @@ local
             (fn _ => fn [hyp] => (finish_implication hyp o pair ctxt, I)) [init] ctxt
     in
       (ctxt,init)
-    end
+    end *)
 in
 val implication : working_mode = {
     name = \<^const_name>\<open>working_mode_implication\<close>,
@@ -406,7 +418,7 @@ val implication : working_mode = {
     spec_of   = #2 o Phi_Syntax.dest_ToA_Construction,
     spec_of_c = #2 o Phi_Syntax.dest_ToA_Construction_c,
     inhabited_rule = @{thm ToA_Construction_Inhabited_rule},
-    initial_sequent = start_implication,
+    initial_sequent = default_initial_sequent,
     transformation_rule  = @{thm \<phi>apply_implication_impl},
     view_shift_rule = NONE,
     cast = (fn desired => fn (ctxt,sequent) =>

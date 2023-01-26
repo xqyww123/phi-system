@@ -201,6 +201,85 @@ abbreviation Vals :: \<open>(VAL, 'a) \<phi> \<Rightarrow> (VAL list, 'a) \<phi>
 
 translations "(CONST Vals T) \<^emph> (CONST Vals U)" == "XCONST Vals (T \<^emph> U)"
 
+
+subsection \<open>Prove Properties of Value Abstractions by Programming\<close>
+
+subsubsection \<open>Semantic Type\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Well_Type TY)) M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>SemType S TY)) M D R F\<close>
+  unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def Imply_def
+  by (simp add: subset_iff)
+
+lemma [\<phi>reason 1000 for \<open>?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Well_Type ?TY \<^bold>a\<^bold>n\<^bold>d _\<close>]:
+  \<open> \<phi>SemType S TY
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Well_Type TY\<close>
+  unfolding Imply_def \<phi>SemType_def subset_iff by blast
+
+subsubsection \<open>Zero Value\<close>
+
+consts working_mode_\<phi>Zero :: working_mode
+
+lemma \<phi>deduce_zero_value:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (y \<Ztypecolon> U)
+\<Longrightarrow> \<phi>Zero TY U y
+\<Longrightarrow> y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> \<phi>Zero TY T x\<close>
+  unfolding ToA_Construction_def \<phi>Zero_def image_iff Inhabited_def Imply_def
+  by (simp, blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method (Trueprop (\<phi>Zero TY T x)) working_mode_\<phi>Zero
+                             (Trueprop (\<phi>Zero TY T x))
+                             (Trueprop True)
+                             (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def .
+
+
+subsubsection \<open>Equality\<close>
+
+lemma \<phi>deduce_Equal:
+  \<open> (\<And>x y vx vy. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ceq x y
+              \<Longrightarrow> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] U \<heavy_comma> y' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] U
+                  \<^bold>s\<^bold>u\<^bold>b\<^bold>j ceq' x' y' \<and> eq x y = eq' x' y'
+                  \<^bold>s\<^bold>u\<^bold>b\<^bold>j x' y' U. \<phi>Equal U ceq' eq')
+\<Longrightarrow> \<phi>Equal T ceq  eq \<close>
+  unfolding \<phi>Equal_def Premise_def Imply_def
+  by (clarsimp simp add: \<phi>expns \<phi>arg_All, blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method
+          (\<And>x y vx vy. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ceq x y
+              \<Longrightarrow> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] U \<heavy_comma> y' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] U
+                  \<^bold>s\<^bold>u\<^bold>b\<^bold>j U x' y'. Embedded_Reasoning (\<phi>Equal U ceq' eq') \<and> ceq' x' y' \<and> eq x y = eq' x' y')
+          M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>Equal T ceq eq)) M D R F\<close>
+  (is \<open>PROP \<phi>Programming_Method (PROP ?IMP) _ _ _ _ \<Longrightarrow> PROP _\<close>
+   is \<open>PROP ?PPP \<Longrightarrow> PROP _\<close>)
+  unfolding \<phi>Programming_Method_def conjunction_imp
+proof -
+  have rule: \<open>PROP ?IMP \<Longrightarrow> \<phi>Equal T ceq eq\<close>
+  unfolding \<phi>Equal_def Premise_def Imply_def Embedded_Reasoning_def
+  by (clarsimp simp add: \<phi>expns \<phi>arg_All, blast)
+
+  assume D: \<open>PROP D\<close>
+    and  R: \<open>PROP R\<close>
+    and  F: \<open>PROP F\<close>
+    and PP: \<open>PROP D \<Longrightarrow> PROP R \<Longrightarrow> PROP F \<Longrightarrow> PROP ?IMP\<close>
+  show \<open>\<phi>Equal T ceq eq\<close>
+    using PP[OF D R F, THEN rule] .
+qed
+
+
+
+
+ML_file \<open>library/additions/value_properties.ML\<close>
+
+hide_fact \<phi>deduce_zero_value
+
 (*
 TODO: fix this feature
 subsubsection \<open>Auto unfolding for value list\<close>
@@ -215,7 +294,7 @@ lemma [\<phi>programming_simps]:
  = (\<exists>*x. x \<Ztypecolon> Val (\<phi>V_hd rawv) T \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS (\<exists>v. rawv = \<phi>V_cons v \<phi>V_nil))\<close>
   unfolding set_eq_iff \<phi>V_cons_def USELESS_def
   apply (cases rawv; clarsimp simp add: \<phi>expns \<phi>V_tl_def \<phi>V_hd_def times_list_def; rule;
-          clarsimp simp add: sem_value_All sem_value_exists)
+          clarsimp simp add: \<phi>arg_All \<phi>arg_exists)
   by blast+
 
 lemma [simp]:
