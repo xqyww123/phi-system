@@ -16,8 +16,6 @@ theory Phi_Semantics_Framework
   imports Main Resource_Space Debt_Axiom.Debt_Axiom
   abbrevs "<throws>" = "\<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s"
     and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
-    and "<view>" = "\<^bold>v\<^bold>i\<^bold>e\<^bold>w"
-    and "<with>" = "\<^bold>w\<^bold>i\<^bold>t\<^bold>h"
 begin
 
 

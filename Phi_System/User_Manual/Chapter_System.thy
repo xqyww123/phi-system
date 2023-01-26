@@ -10,7 +10,7 @@ section \<open>Specifications on Fictional \<phi>-SL\<close>
 text \<open>\begin{remark}[Source \& Target]
 As both ToA and view shift constitutes a morphism,
 \[ \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
-\[ \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close> \]
+\[ \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
 we name the above \<open>X\<close> and \<open>Y\<close> as \<^emph>\<open>source\<close> and \<^emph>\<open>target\<close> respectively.
 We also name the \<open>P\<close> \<^emph>\<open>side fact\<close> as it is a side effect generated during the transformation.
 \end{remark}\<close>
@@ -168,7 +168,7 @@ are indeed specialized proof goal statement like command @{command lemma} and @{
 which initiates a standard Isabelle proof context having for examples the following proof states
 corresponding to the three construction mode,
 \[ \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close> \]
-\[ \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
+\[ \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
 \[ \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
 where the only subgoal is exact the desired conclusion,
 and the subgoal is meantime also an antecedent job

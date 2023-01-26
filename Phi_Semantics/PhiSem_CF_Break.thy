@@ -186,9 +186,9 @@ lemma [\<phi>reason 1000]:
   \<medium_right_bracket>. .
   
 
-lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?Any @action reason_ToSA ?G ?mode\<close>]:
+lemma [\<phi>reason 3000 for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?G ?mode\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
+\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
   unfolding FOCUS_TAG_def Action_Tag_def
   using view_shift_by_implication .
 
@@ -260,8 +260,8 @@ lemma [\<phi>reason 1000]:
 (*It doesn't matter if the structure of sift_brking_frame is broken in the source part.*)
 (*
 lemma [\<phi>reason 3000]:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l Y + (E\<heavy_comma> Brk_Frame l) \<longmapsto> Z \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w sift_brking_frame l Y E \<longmapsto> Z \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
+  \<open> Brking_Frame l Y + (E\<heavy_comma> Brk_Frame l) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+\<Longrightarrow> sift_brking_frame l Y E \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
   unfolding sift_brking_frame_def sift_brking_frame'_def .
 
 lemma [\<phi>reason 3000]:
@@ -280,8 +280,8 @@ lemma [\<phi>reason 2000]:
   unfolding mult.assoc .
 
 lemma [\<phi>reason 2000]:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l (\<lambda>v. S v\<heavy_comma> A v\<heavy_comma> B v) \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l (\<lambda>v. S v\<heavy_comma> (A v\<heavy_comma> B v)) \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
+  \<open> Brking_Frame l (\<lambda>v. S v\<heavy_comma> A v\<heavy_comma> B v) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+\<Longrightarrow> Brking_Frame l (\<lambda>v. S v\<heavy_comma> (A v\<heavy_comma> B v)) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
   unfolding mult.assoc .
 
 lemma [\<phi>reason 1200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
@@ -292,9 +292,9 @@ lemma [\<phi>reason 1200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold
     X[THEN implies_right_prod]
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 1200 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame ?l ?S \<longmapsto> ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open>(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w S v \<longmapsto> R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G)
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w Brking_Frame l S \<longmapsto> Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>w\<^bold>i\<^bold>t\<^bold>h P @action reason_ToSA mode G\<close>
+lemma [\<phi>reason 1200 for \<open>Brking_Frame ?l ?S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+  \<open>(\<And>v. S v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G)
+\<Longrightarrow> Brking_Frame l S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
   unfolding Brking_Frame'_def TAIL_def Action_Tag_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
     X

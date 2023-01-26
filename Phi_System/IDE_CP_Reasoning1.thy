@@ -29,7 +29,7 @@ lemma [\<phi>reason 2000]:
   unfolding Assertion_Matches_def .
 
 lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> (Y <matches> A) \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  \<open>Matches X A \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (Y <matches> A) \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Assertion_Matches_def .
 
 
@@ -221,7 +221,7 @@ section \<open>Declaration of Large Processes\<close>
 subsection \<open>Transformation of State Abstraction (ToSA)\<close>
 
 text \<open>
-  Supporting either view shift \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y @action ToSA\<close> or
+  Supporting either view shift \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y @action ToSA\<close> or
   implication \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action ToSA\<close>,
   ToSA is a reasoning process of Transformation of Abstraction (ToA) for
   assertions of (fictional) computation state.
@@ -249,8 +249,8 @@ the reasoning is weaker.
 
 abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
 
-lemma [\<phi>reason 3000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?X \<longmapsto> ?X' \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P @action ToSA' ?mode\<close>]:
-  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X @action ToSA' mode\<close>
+lemma [\<phi>reason 3000 for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X' \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>]:
+  \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action ToSA' mode\<close>
   unfolding Action_Tag_def using \<phi>view_refl .
 
 subsection \<open>Removing Values\<close>

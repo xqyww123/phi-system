@@ -2,6 +2,7 @@ chapter \<open>Specification Framework\<close>
 
 theory Spec_Framework
   imports Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
+  abbrevs "<shifts>" = "\<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s"
 begin
 
 section \<open>Specification of Value\<close>
@@ -243,63 +244,63 @@ ML_file \<open>library/syntax/procedure.ML\<close>
 section \<open>View Shift\<close>
 
 definition View_Shift
-    :: "assn \<Rightarrow> assn \<Rightarrow> bool \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _)" [13,13,13] 12)
+    :: "assn \<Rightarrow> assn \<Rightarrow> bool \<Rightarrow> bool" ("(2_/ \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _/ \<^bold>a\<^bold>n\<^bold>d _)" [13,13,13] 12)
   where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<in> INTERP_SPEC (R * T) \<longrightarrow> x \<in> INTERP_SPEC (R * U) \<and> P)"
 
 abbreviation Simple_View_Shift
-    :: "assn \<Rightarrow> assn \<Rightarrow> bool" ("(2\<^bold>v\<^bold>i\<^bold>e\<^bold>w _/ \<longmapsto> _)"  [13,13] 12)
+    :: "assn \<Rightarrow> assn \<Rightarrow> bool" ("(2_/ \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _)"  [13,13] 12)
   where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
 
 lemma View_Shift_imply_P:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
+  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P1
 \<Longrightarrow> (P1 \<longrightarrow> P2)
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2\<close>
+\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P2\<close>
   unfolding View_Shift_def
   by blast
 
 lemma view_shift_by_implication[intro?, \<phi>reason 10]:
   \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+\<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def View_Shift_def INTERP_SPEC_def
   by (clarsimp, metis set_mult_expn)
 
-lemma view_shift_0[\<phi>reason 2000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> ?X \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
-  \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w 0 \<longmapsto> X\<close>
+lemma view_shift_0[\<phi>reason 2000 for \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+  \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X\<close>
   by (blast intro: view_shift_by_implication zero_implies_any)
 
-lemma view_shift_id[\<phi>reason 2000 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?A \<longmapsto> ?B \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
-  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> A"
+lemma view_shift_id[\<phi>reason 2000 for \<open>?A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+  "A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s A"
   by (blast intro: view_shift_by_implication implies_refl)
 
-lemma view_shift_id_ty[\<phi>reason 30 for \<open>\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?x \<Ztypecolon> ?T \<longmapsto> ?y \<Ztypecolon> ?T \<^bold>w\<^bold>i\<^bold>t\<^bold>h ?P\<close>]:
-  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = y \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w x \<Ztypecolon> T \<longmapsto> y \<Ztypecolon> T"
+lemma view_shift_id_ty[\<phi>reason 30 for \<open>?x \<Ztypecolon> ?T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?y \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+  "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = y \<Longrightarrow> x \<Ztypecolon> T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s y \<Ztypecolon> T"
   by (blast intro: view_shift_by_implication implies_refl_ty)
 
 lemma view_shift_union[\<phi>reason 800]:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X + Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> X + Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X + Y \<^bold>a\<^bold>n\<^bold>d P\<close>
+  \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X + Y \<^bold>a\<^bold>n\<^bold>d P\<close>
   by (simp add: View_Shift_def distrib_left)+
 
 lemma \<phi>view_shift_trans:
-  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-    \<Longrightarrow> (P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h Q)
-    \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<and> Q"
+  "A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P
+    \<Longrightarrow> (P \<Longrightarrow> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s C \<^bold>a\<^bold>n\<^bold>d Q)
+    \<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s C \<^bold>a\<^bold>n\<^bold>d P \<and> Q"
   unfolding View_Shift_def by blast
 
 lemma \<phi>frame_view:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R * A \<longmapsto> R * B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> R * A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R * B \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc)
 
 lemma \<phi>view_shift_intro_frame:
-  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w R * U' \<longmapsto> R * U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P "
+  "U' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> R * U' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R * U \<^bold>a\<^bold>n\<^bold>d P "
   by (simp add: \<phi>frame_view)
 
 lemma \<phi>view_shift_intro_frame_R:
-  "\<^bold>v\<^bold>i\<^bold>e\<^bold>w U' \<longmapsto> U \<^bold>w\<^bold>i\<^bold>t\<^bold>h P \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w U' * R \<longmapsto> U * R \<^bold>w\<^bold>i\<^bold>t\<^bold>h P "
+  "U' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> U' * R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s U * R \<^bold>a\<^bold>n\<^bold>d P "
   by (simp add: \<phi>frame_view mult.commute)
 
 
@@ -335,26 +336,26 @@ lemma \<phi>Inhabited:
 subsubsection \<open>View Shift\<close>
 
 lemma \<phi>frame_view_right:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A * R \<longmapsto> B * R \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+  \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> A * R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B * R \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc mult.commute)
 
 lemma \<phi>view_refl:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> X \<close>
+  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<close>
   unfolding View_Shift_def by blast
 
 lemma \<phi>view_trans:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> B \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> C \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<and> P2\<close>
+  \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P1
+\<Longrightarrow> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s C \<^bold>a\<^bold>n\<^bold>d P2
+\<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s C \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2\<close>
   unfolding View_Shift_def by blast
 
 lemma \<phi>CONSEQ:
    "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A' \<longmapsto> A \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any1
-\<Longrightarrow> (\<And>ret. \<^bold>v\<^bold>i\<^bold>e\<^bold>w B ret \<longmapsto> B' ret \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any2)
-\<Longrightarrow> (\<And>ex.  \<^bold>v\<^bold>i\<^bold>e\<^bold>w E ex  \<longmapsto> E' ex  \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any3)
+\<Longrightarrow> A' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s A \<^bold>a\<^bold>n\<^bold>d Any1
+\<Longrightarrow> (\<And>ret. B ret \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B' ret \<^bold>a\<^bold>n\<^bold>d Any2)
+\<Longrightarrow> (\<And>ex.  E ex \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' ex \<^bold>a\<^bold>n\<^bold>d Any3)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' "
   unfolding \<phi>Procedure_def View_Shift_def subset_iff
   apply clarsimp
@@ -367,7 +368,7 @@ lemma \<phi>frame0:
   using \<phi>frame[where E=0, simplified, folded zero_fun_def] .
 
 lemma \<phi>CONSEQ'E:
-   "(\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w E v \<longmapsto> E' v \<^bold>w\<^bold>i\<^bold>t\<^bold>h P3)
+   "(\<And>v. E v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' v \<^bold>a\<^bold>n\<^bold>d P3)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' "
   using \<phi>CONSEQ view_shift_id by blast
@@ -384,9 +385,9 @@ lemma \<phi>CASE:
   by (simp add: distrib_left)
 
 lemma \<phi>CASE_VS:
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w B \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P2
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w A + B \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h P1 \<or> P2\<close>
+  \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P1
+\<Longrightarrow> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P2
+\<Longrightarrow> A + B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P1 \<or> P2\<close>
   unfolding View_Shift_def
   by (simp add: distrib_left)
 

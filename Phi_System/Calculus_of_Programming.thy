@@ -148,7 +148,7 @@ lemma \<phi>reassemble_proc_final:
   by blast
 
 lemma "\<phi>__Return_rule__":
-  \<open> \<^bold>v\<^bold>i\<^bold>e\<^bold>w X \<longmapsto> Y \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any
+  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_::unit \<phi>arg. Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def
   by clarsimp
@@ -157,7 +157,7 @@ subsection \<open>Construct View Shift\<close>
 
 lemma \<phi>make_view_shift:
   \<open> (\<And>s R. \<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S \<Longrightarrow> (\<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P))
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P\<close>
+\<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding CurrentConstruction_def View_Shift_def
   by (simp add: INTERP_SPEC_subj Subjection_expn)
 
@@ -174,7 +174,7 @@ subsection \<open>Cast\<close>
 
 lemma \<phi>apply_view_shift:
   " CurrentConstruction mode blk R S
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w S \<longmapsto> S' \<^bold>w\<^bold>i\<^bold>t\<^bold>h P
+\<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
   unfolding CurrentConstruction_def View_Shift_def
   by (simp_all add: split_paired_all \<phi>expns)
@@ -183,14 +183,14 @@ lemmas \<phi>apply_implication = \<phi>apply_view_shift[OF _ view_shift_by_impli
 
 lemma \<phi>apply_view_shift_pending:
   " PendingConstruction f blk H T E
-\<Longrightarrow> (\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w T x \<longmapsto> T' x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+\<Longrightarrow> (\<And>x. T x \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' x \<^bold>a\<^bold>n\<^bold>d P)
 \<Longrightarrow> PendingConstruction f blk H T' E"
   unfolding PendingConstruction_def View_Shift_def
   by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All)
 
 lemma \<phi>apply_view_shift_pending_E:
   " PendingConstruction f blk H T E
-\<Longrightarrow> (\<And>x. \<^bold>v\<^bold>i\<^bold>e\<^bold>w E x \<longmapsto> E' x \<^bold>w\<^bold>i\<^bold>t\<^bold>h P)
+\<Longrightarrow> (\<And>x. E x \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' x \<^bold>a\<^bold>n\<^bold>d P)
 \<Longrightarrow> PendingConstruction f blk H T E'"
   unfolding PendingConstruction_def View_Shift_def
   by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All)
@@ -209,7 +209,7 @@ lemma \<phi>apply_implication_impl:
 
 lemma "_\<phi>cast_internal_rule_":
   " CurrentConstruction mode blk H T
-\<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w T \<longmapsto> T' \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any @action ToSA
+\<Longrightarrow> T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> CurrentConstruction mode blk H T'"
@@ -219,7 +219,7 @@ lemma "_\<phi>cast_internal_rule_":
 
 lemma "_\<phi>cast_internal_rule_'":
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> (\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w T v \<longmapsto> T' v \<^bold>w\<^bold>i\<^bold>t\<^bold>h Any @action ToSA)
+\<Longrightarrow> (\<And>v. T v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' v \<^bold>a\<^bold>n\<^bold>d Any @action ToSA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
@@ -228,14 +228,14 @@ lemma "_\<phi>cast_internal_rule_'":
 
 lemma "_\<phi>cast_exception_":
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> (\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w E v \<longmapsto> E' v @action ToSA)
+\<Longrightarrow> (\<And>v. E v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' v @action ToSA)
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'"
   unfolding Action_Tag_def
   using \<phi>apply_view_shift_pending_E by blast
 
 lemma "_\<phi>cast_exception_rule_":
   " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> (\<And>v. \<^bold>v\<^bold>i\<^bold>e\<^bold>w E v \<longmapsto> E' v @action ToSA)
+\<Longrightarrow> (\<And>v. E v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' v @action ToSA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'"
