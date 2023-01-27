@@ -142,13 +142,11 @@ exception Local_Cut of (priority * Position.T * context_state Seq.seq)
 
 
 (*** Reasoner Registry ***)
-fun reasoner_eq ({name,pattern,...}, {name=name',pattern=pattern',...}) =
-  (name = name')
+fun reasoner_eq ({name,...}, {name=name',...}) = (name = name')
 
 structure Reasoners = Generic_Data (
-  type T = reasoner Cost_Net.T;
-  val empty : T = Cost_Net.init reasoner_eq #pattern;
-  val extend = I;
+  type T = reasoner Cost_Net.T
+  val empty : T = Cost_Net.init reasoner_eq #pattern
   val merge : T * T -> T = Cost_Net.merge
 )
 
@@ -401,8 +399,6 @@ structure Default_Pattern = Generic_Data (
   type T = (term (*pattern P*) * term (*the default pattern X*)) Net.net
   (*It gives the default pattern P of an introduction rule whose conclusion matches some pattern P*)
   val empty = Net.empty
-(* Item_Net.init 
-                            (single o fst) *)
   val merge = Net.merge pat_pat_eq
 )
 

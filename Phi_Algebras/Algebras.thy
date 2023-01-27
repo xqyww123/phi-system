@@ -1067,6 +1067,7 @@ lemma share_fun_updt[simp]:
   unfolding share_fun_def fun_eq_iff by simp
 
 
+(*
 paragraph \<open>Complete Permission\<close>
 
 ML \<open>
@@ -1084,7 +1085,7 @@ attribute_setup ML_attr = \<open>Scan.peek (fn ctxt => Parse.ML_source >> (fn sr
     @ ML_Lex.read ") o Context.proof_of))))") ctxt
   |> ML_Attribute.get |> the
 ))\<close>
-
+ *)
 
 subsection \<open>Unit\<close>
 

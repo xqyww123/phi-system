@@ -18,6 +18,8 @@ structure Phi_Error : PHI_ERROR = struct
 exception CastFail of (*name*) string * (*desired*) cterm * (*sequent*) thm
 exception ReasoningFail of thm
 
+
+(*THIS MERGE IS WRONG! ! ! !*)
 fun merge (f,g) = (fn c => fn e => f (g c) e)
 
 structure D = Theory_Data(struct 

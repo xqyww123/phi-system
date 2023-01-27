@@ -73,13 +73,6 @@ datatype cond_kind = Premise | Assumption
 
 
 
-(* structure Statement_Begin_Hook *)
-(*
-structure Procedure_Begin_Hook = Generic_Data (
-  type T = (context_state -> context_state) list
-  val init = K []
-) *)
-
 (** Programming Block **)
 
 (* Begin Block *)
@@ -244,7 +237,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     val bindings = (prem_bindings @ (List.tabulate (delta, K ((Binding.empty, []),[]))))
           |> map2 (fn P => fn ((b,attrs),pats) =>
               let val attrs' = Premises_Attribute.attribute_of (null attrs) P (Context.Proof ctxt)
-              in ((b, map (Attrib.attribute ctxt) (attrs' @ attrs)), pats)
+              in ((b, attrs' @ map (Attrib.attribute ctxt) attrs), pats)
               end) prems
   in
     stat

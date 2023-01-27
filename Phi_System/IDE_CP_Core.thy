@@ -120,6 +120,7 @@ During the reasoning process,
 \<close>
 
 lemma Do_I: \<open>PROP P \<Longrightarrow> \<^bold>d\<^bold>o PROP P\<close> unfolding Do_def .
+lemma Do_D: \<open>\<^bold>d\<^bold>o PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
 
 ML_file \<open>library/system/reasoners.ML\<close>
 
@@ -1129,9 +1130,17 @@ Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
       if can PLPR_Syntax.dest_premise_tag (Thm.concl_of th) then th RS @{thm Premise_D} else th))
 \<close>
 
+attribute_setup elim_Do_tag = \<open>
+Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
+  case Thm.concl_of th
+    of Const(\<^const_name>\<open>Do\<close>, _) $ _ => th RS @{thm Do_D}
+     | _ => th))
+\<close>
+
 declare [[\<phi>premise_attribute  [elim_premise_tag] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>,
           \<phi>premise_attribute? [useful] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>,
-          \<phi>premise_attribute? [\<phi>reason] for \<open>\<phi>SemType _ _\<close>]]
+          \<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>,
+          \<phi>premise_attribute? [\<phi>reason] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close>]]
 
 subsection \<open>IDE Processors\<close>
 

@@ -49,7 +49,7 @@ proc
       if \<open>$v = 10\<close> \<medium_left_bracket> break \<medium_right_bracket>. \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v;; continue \<medium_right_bracket>.
       assert \<bottom>
     \<medium_right_bracket>. (*loop body*)
-    $v  
+    $v
   \<medium_right_bracket>. .
 
 end
