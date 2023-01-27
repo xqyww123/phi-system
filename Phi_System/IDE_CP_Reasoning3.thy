@@ -2723,7 +2723,7 @@ lemma Structural_Extract_share_eq
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn'[symmetric] Premise_def Structural_Extract'_def
   apply (simp add: \<phi>Share_\<phi>Prod[symmetric])
-  using \<phi>Share_cast .
+  using \<phi>Share_transformation .
 
 lemma [\<phi>reason 1211 for \<open>Structural_Extract' (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> ?m \<Znrres> ?U) ?R2 (Automatic_Morphism ?RP ?RX \<and> ?P)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> CHK_SUBGOAL G
@@ -2756,7 +2756,7 @@ lemma Structural_Extract_share_ge
   \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and [\<phi>reason] and _ and X
     share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
-    X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
+    X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_right_prod]
   have t1: \<open>(r \<Ztypecolon> n \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U) * (x \<Ztypecolon> m - n \<Znrres> T) = (x \<Ztypecolon> m - n \<Znrres> T) * (r \<Ztypecolon> n \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U)\<close>
     using mult.assoc mult.commute by blast
@@ -2775,7 +2775,7 @@ lemma Structural_Extract_share_le
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' Structural_Extract'_def Action_Tag_def
   \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and _ and X
-    X[folded \<phi>Prod_expn', THEN \<phi>Share_cast, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
+    X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_left_prod, folded mult.assoc]
   
   have \<open>(y \<Ztypecolon> n - m \<Znrres> U) * (y \<Ztypecolon> m \<Znrres> U) = (y \<Ztypecolon> n \<Znrres> U)\<close>
