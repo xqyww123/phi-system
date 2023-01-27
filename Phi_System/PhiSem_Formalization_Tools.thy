@@ -444,21 +444,21 @@ subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
    R: resource Res Valid
-+  share: perm_transformer perm_transformer
++  share: perm_functor perm_functor
 +  fictional_project_inject INTERPRET Fic
-      \<open>R.raw_basic_fiction (\<F>_functional perm_transformer)\<close>
+      \<open>R.raw_basic_fiction (\<F>_functional perm_functor)\<close>
 for Valid :: "'T::sep_algebra set"
-and perm_transformer :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
+and perm_functor :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
 and Res :: "'T resource_entry"
 and Fic :: "'U fiction_entry"
 begin
 
-sublocale basic_fiction Valid \<open>\<F>_functional perm_transformer\<close> ..
+sublocale basic_fiction Valid \<open>\<F>_functional perm_functor\<close> ..
 
 lemma sep_disj_fiction:
   \<open> Fic_Space r
 \<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }
-\<Longrightarrow> r ## mk (perm_transformer x)\<close>
+\<Longrightarrow> r ## mk (perm_functor x)\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
@@ -469,7 +469,7 @@ lemma sep_disj_fiction:
 
 lemma expand_subj:
   \<open> Fic_Space r
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk (perm_transformer x))
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk (perm_functor x))
   = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
@@ -498,15 +498,15 @@ lemma expand_subj:
 
 lemma expand:
   \<open>Fic_Space r
-\<Longrightarrow> r ## mk (perm_transformer x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x))) =
+\<Longrightarrow> r ## mk (perm_functor x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x))) =
     \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
 lemma expand_conj:
   \<open> Fic_Space r
-\<Longrightarrow> a \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x))) \<and> r ## mk (perm_transformer x)
+\<Longrightarrow> a \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x))) \<and> r ## mk (perm_functor x)
 \<longleftrightarrow> a \<in> \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, OF prems(1), unfolded set_eq_iff]
@@ -517,8 +517,8 @@ lemma expand_conj:
 lemma partial_implies_raw:
   \<open> Fic_Space r
 \<Longrightarrow> 0 < n 
-\<Longrightarrow> r ## mk (share n (perm_transformer x))
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (share n (perm_transformer x))))
+\<Longrightarrow> r ## mk (share n (perm_functor x))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (share n (perm_functor x))))
 \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
   unfolding \<phi>Res_Spec_def
   apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
@@ -529,9 +529,9 @@ lemma partial_implies_raw:
   subgoal premises prems for u y a proof -
     have t0: \<open>1 / n * n = 1\<close> using prems(12) by force 
     have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close> using prems(12) by force
-    have t2: \<open>share (1/n) (share n (perm_transformer x)) \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
+    have t2: \<open>share (1/n) (share n (perm_functor x)) \<preceq>\<^sub>S\<^sub>L share n (perm_functor x)\<close>
       by (simp add: order_less_imp_le prems(2) share.\<psi>_self_disj share_sub t1)
-    then have t3: \<open>perm_transformer x \<preceq>\<^sub>S\<^sub>L share n (perm_transformer x)\<close>
+    then have t3: \<open>perm_functor x \<preceq>\<^sub>S\<^sub>L share n (perm_functor x)\<close>
       using share_share_not0
       by (metis prems(2) share_left_one t0 t1)
     then show ?thesis
@@ -552,28 +552,28 @@ end
 
 (* lemma VS_merge_ownership:
   \<open> (\<forall>ua ub. ua \<in> (x \<Ztypecolon> T) \<and> ub \<in> (x \<Ztypecolon> T) \<and>
-             can_share (perm_transformer ua) \<and> can_share (perm_transformer ub) \<and>
-             share na (perm_transformer ua) ## share nb (perm_transformer ub) \<longrightarrow> ua = ub)
+             can_share (perm_functor ua) \<and> can_share (perm_functor ub) \<and>
+             share na (perm_functor ua) ## share nb (perm_functor ub) \<longrightarrow> ua = ub)
 \<Longrightarrow> na + nb \<le> 1
 \<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> na T) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb T) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) T)\<close>
   unfolding View_Shift_def Premise_def
   apply (clarsimp simp add: \<phi>expns mult.assoc mk_homo_mult[symmetric] times_fine)
   subgoal for res R res_r res_xa res_xb
-    apply (cases \<open>share na (perm_transformer res_xa) ## share nb (perm_transformer res_xb)\<close>;
+    apply (cases \<open>share na (perm_functor res_xa) ## share nb (perm_functor res_xb)\<close>;
            clarsimp simp add: fun_1upd_homo \<phi>INTERP_RES_\<phi>Res_Spec share_left_distrib)
-    apply (rule exI[where x=\<open>res_r * mk (Fine (share (na + nb) (perm_transformer res_xb)))\<close>], simp)
+    apply (rule exI[where x=\<open>res_r * mk (Fine (share (na + nb) (perm_functor res_xb)))\<close>], simp)
     by (metis share_sep_left_distrib_0) .
 
 lemma VS_split_ownership:
-  \<open> (\<forall>u. u \<in> (x \<Ztypecolon> T) \<and> can_share (perm_transformer u) \<and> 0 < n \<and> na + nb \<le> 1
-     \<longrightarrow> share na (perm_transformer u) ## share nb (perm_transformer u))
+  \<open> (\<forall>u. u \<in> (x \<Ztypecolon> T) \<and> can_share (perm_functor u) \<and> 0 < n \<and> na + nb \<le> 1
+     \<longrightarrow> share na (perm_functor u) ## share nb (perm_functor u))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (0 < n \<longrightarrow> na + nb = n \<and> 0 < na \<and> 0 < nb)
 \<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> n T) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> na T) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb T)\<close>
   unfolding View_Shift_def Premise_def
   apply (clarsimp simp add: \<phi>expns)
   subgoal for res R res_r res_x
-    apply (rule exI[where x=\<open>res_r * (mk (Fine (share na (perm_transformer res_x)))
-                                    * mk (Fine (share nb (perm_transformer res_x))))\<close>],
+    apply (rule exI[where x=\<open>res_r * (mk (Fine (share na (perm_functor res_x)))
+                                    * mk (Fine (share nb (perm_functor res_x))))\<close>],
            rule conjI, blast)
     by (clarsimp simp add: mk_homo_mult[symmetric] times_fine fun_1upd_homo share_sep_left_distrib_0) .
 end*)
@@ -589,11 +589,11 @@ and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_mon
 and Fic :: "('FIC_N,'FIC::{no_inverse,comm_monoid_mult},'U) Virtual_Datatype.Field"
 and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) interp"
 +
-fixes perm_transformer :: \<open>'T \<Rightarrow> 'U\<close>
+fixes perm_functor :: \<open>'T \<Rightarrow> 'U\<close>
   and R_dom :: \<open>'T set\<close>
 assumes \<open>Fic_Space r
 \<Longrightarrow> x \<in> R_dom
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_transformer x)))
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x)))
   = \<phi>Res_Spec (\<I> INTERP r * { R.mk x})\<close>
 
 begin
@@ -837,9 +837,9 @@ lemma "__dispose_rule__":
   using "__updt_rule__"[where u=None, simplified, simplified,
             simplified, simplified one_set_def[symmetric], simplified] .
 
-abbreviation perm_transformer :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
-  where \<open>perm_transformer \<equiv> (o) to_share\<close>
-abbreviation \<open>share_fiction \<equiv> raw_basic_fiction (\<F>_functional perm_transformer)\<close>
+abbreviation perm_functor :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
+  where \<open>perm_functor \<equiv> (o) to_share\<close>
+abbreviation \<open>share_fiction \<equiv> raw_basic_fiction (\<F>_functional perm_functor)\<close>
 
 (* lemma share_fiction_expn_full:
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<Znrres> v))))
@@ -921,12 +921,12 @@ and Res :: "('key \<Rightarrow> 'val option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Valid \<open>R.perm_transformer\<close> by standard blast
+sublocale permission_fiction Valid \<open>R.perm_functor\<close> by standard blast
 
 lemma expand:
   \<open>Fic_Space r
-\<Longrightarrow> r ## mk (R.perm_transformer x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (R.perm_transformer x))) =
+\<Longrightarrow> r ## mk (R.perm_functor x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (R.perm_functor x))) =
     \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
@@ -1065,9 +1065,9 @@ lemma "__dispose_rule__":
       using prems(1) prems(3) prems(5) prems(7) t1 by force
   qed .
 
-abbreviation perm_transformer :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
-  where \<open>perm_transformer \<equiv> (o) ((o) to_share)\<close>
-abbreviation \<open>share_fiction \<equiv> raw_basic_fiction (\<F>_functional perm_transformer)\<close>
+abbreviation perm_functor :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
+  where \<open>perm_functor \<equiv> (o) ((o) to_share)\<close>
+abbreviation \<open>share_fiction \<equiv> raw_basic_fiction (\<F>_functional perm_functor)\<close>
 
 (*depreciated!*)
 (*lemma share_fiction_expn_full':
@@ -1187,10 +1187,10 @@ and Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Valid \<open>R.perm_transformer\<close> by standard  blast
+sublocale permission_fiction Valid \<open>R.perm_functor\<close> by standard  blast
 
 lemma [simp]:
-  \<open>R.perm_transformer (1(k := f)) = 1(k := to_share o f)\<close>
+  \<open>R.perm_functor (1(k := f)) = 1(k := to_share o f)\<close>
   unfolding fun_eq_iff by simp
 
 lemmas partial_implies = partial_implies_raw

@@ -466,7 +466,7 @@ text \<open>A homomorphism from Separation Algebra to Share Algebra, which
    maps each element in a separation algebra to the one of the total
    ownership in the share algebra.\<close>
 
-locale perm_transformer' = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi> + sep_mult_strip_011 \<psi> + homo_join_sub \<psi> + inj_at_1 \<psi>
+locale perm_functor' = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi> + sep_mult_strip_011 \<psi> + homo_join_sub \<psi> + inj_at_1 \<psi>
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
 + assumes join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
     and   inj_\<psi>[simp]: \<open>inj \<psi>\<close>
@@ -475,16 +475,16 @@ locale perm_transformer' = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi> + se
 text \<open>Given an element of a separation algebra x, a permission transformer \<phi> gives the complete
   permission of x.\<close>
 
-locale perm_transformer =
+locale perm_functor =
   fixes \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
-  assumes perm_transformer': \<open>id perm_transformer' \<psi>\<close>
+  assumes perm_functor': \<open>id perm_functor' \<psi>\<close>
 begin
-sublocale perm_transformer' using perm_transformer'[simplified] .
-lemma [simp]: \<open>perm_transformer' \<psi>\<close> using perm_transformer' by simp
+sublocale perm_functor' using perm_functor'[simplified] .
+lemma [simp]: \<open>perm_functor' \<psi>\<close> using perm_functor' by simp
 end
 
-lemma perm_transformer'_id[intro!,simp]:
-  \<open>perm_transformer' F \<Longrightarrow> id perm_transformer' F\<close>
+lemma perm_functor'_id[intro!,simp]:
+  \<open>perm_functor' F \<Longrightarrow> id perm_functor' F\<close>
   by simp
 
 
@@ -1440,13 +1440,13 @@ lemma prod_superset_dom1:
 subsubsection \<open>Total Permission Transformation\<close>
 
 
-lemma perm_transformer_pointwise:
-  \<open>perm_transformer' \<psi> \<Longrightarrow> perm_transformer' ((\<circ>) \<psi>)\<close>
+lemma perm_functor_pointwise:
+  \<open>perm_functor' \<psi> \<Longrightarrow> perm_functor' ((\<circ>) \<psi>)\<close>
   unfolding comp_def
   subgoal premises prem proof
-    note t1[simp] = prem[unfolded comp_def perm_transformer'_axioms_def
-        perm_transformer_def homo_one_def homo_mult_def homo_mult_axioms_def mult_strip_011_def
-        homo_sep_disj_semi_def homo_join_sub_def perm_transformer'_def homo_sep_mult_def
+    note t1[simp] = prem[unfolded comp_def perm_functor'_axioms_def
+        perm_functor_def homo_one_def homo_mult_def homo_mult_axioms_def mult_strip_011_def
+        homo_sep_disj_semi_def homo_join_sub_def perm_functor'_def homo_sep_mult_def
         homo_sep_mult_axioms_def sep_mult_strip_011_def inj_at_1_def]
     have t2[unfolded join_sub_def]:
       \<open>(\<forall>n x y. 0 < n \<and> n \<le> 1 \<longrightarrow> (share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y))\<close>
@@ -1483,15 +1483,15 @@ lemma perm_transformer_pointwise:
       by (simp add: sep_disj_fun_def)
   qed .
 
-lemma perm_transformer_pointwise_eq[iff]:
-  \<open>perm_transformer' ((\<circ>) \<psi>) \<longleftrightarrow> perm_transformer' \<psi>\<close>
+lemma perm_functor_pointwise_eq[iff]:
+  \<open>perm_functor' ((\<circ>) \<psi>) \<longleftrightarrow> perm_functor' \<psi>\<close>
   for \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
-  apply rule prefer 2 using perm_transformer_pointwise apply blast
+  apply rule prefer 2 using perm_functor_pointwise apply blast
   unfolding comp_def
   subgoal premises prem proof
-    note t1 = prem[unfolded comp_def perm_transformer'_axioms_def
-        perm_transformer_def homo_one_def homo_mult_def homo_mult_axioms_def mult_strip_011_def
-        homo_sep_disj_semi_def homo_join_sub_def perm_transformer'_def homo_sep_mult_def
+    note t1 = prem[unfolded comp_def perm_functor'_axioms_def
+        perm_functor_def homo_one_def homo_mult_def homo_mult_axioms_def mult_strip_011_def
+        homo_sep_disj_semi_def homo_join_sub_def perm_functor'_def homo_sep_mult_def
         homo_sep_mult_axioms_def sep_mult_strip_011_def inj_at_1_def]
     ML_prf \<open>Context.>> (Context.map_proof (Proof_Context.put_thms false ("t2", SOME (
         HOLogic.conj_elims @{context} @{thm t1}
@@ -1787,8 +1787,8 @@ subsubsection \<open>Convert a function to sharing or back\<close>
 abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
-lemma perm_transformer_to_share[iff]:
-  \<open>perm_transformer' (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
+lemma perm_functor_to_share[iff]:
+  \<open>perm_functor' (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
   fix a' :: \<open>'a share option\<close>
