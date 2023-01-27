@@ -453,22 +453,22 @@ These general things named \<^emph>\<open>application\<close> includes
 \<^item> actions --- meta operations combining several applications or transformations, cf. section Action.
 \<close>
 
-definition \<phi>Application_Method :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
-  where \<open>\<phi>Application_Method App_Rules State Result
+definition \<phi>Application :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
+  where \<open>\<phi>Application App_Rules State Result
                       \<equiv> (PROP State \<Longrightarrow> PROP App_Rules \<Longrightarrow> PROP Result)\<close>
 
-(* lemma \<phi>Application_Method_cong[cong]:
+(* lemma \<phi>Application_cong[cong]:
   \<open> App1 \<equiv> App2 \<Longrightarrow> Stat1 \<equiv> Stat2 \<Longrightarrow> Res1 \<equiv> Res2
-\<Longrightarrow> \<phi>Application_Method App1 Stat1 Res1 \<equiv> \<phi>Application_Method App2 Stat2 Res2\<close>
-  unfolding \<phi>Application_Method *)
+\<Longrightarrow> \<phi>Application App1 Stat1 Res1 \<equiv> \<phi>Application App2 Stat2 Res2\<close>
+  unfolding \<phi>Application *)
 
 lemma \<phi>application:
   \<open> PROP Apps
 \<Longrightarrow> PROP State
-\<Longrightarrow> PROP \<phi>Application_Method (PROP Apps) (PROP State) (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (PROP Apps) (PROP State) (PROP Result)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> PROP Result\<close>
-  unfolding \<phi>Application_Method_def Pure.prop_def .
+  unfolding \<phi>Application_def Pure.prop_def .
 
 definition \<phi>Application_Conv :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close>
   where \<open>\<phi>Application_Conv P Q \<equiv> (PROP P \<Longrightarrow> PROP Q)\<close>
@@ -487,57 +487,57 @@ ML_file \<open>library/system/application.ML\<close>
 subsubsection \<open>Common Rules of Application Methods\<close>
 
 lemma [\<phi>reason 80 for \<open>
-  PROP \<phi>Application_Method (PROP ?App &&& PROP ?Apps) ?State ?Result
+  PROP \<phi>Application (PROP ?App &&& PROP ?Apps) ?State ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (PROP App) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application_Method (PROP App &&& PROP Apps) State (PROP Result)\<close>
-  unfolding prop_def \<phi>Application_Method_def conjunction_imp .
+  \<open> PROP \<phi>Application (PROP App) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (PROP App &&& PROP Apps) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def conjunction_imp .
 
 lemma [\<phi>reason 70 for \<open>
-  PROP \<phi>Application_Method (PROP ?App &&& PROP ?Apps) ?State ?Result
+  PROP \<phi>Application (PROP ?App &&& PROP ?Apps) ?State ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (PROP Apps) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application_Method (PROP App &&& PROP Apps) State (PROP Result)\<close>
-  unfolding prop_def \<phi>Application_Method_def conjunction_imp .
+  \<open> PROP \<phi>Application (PROP Apps) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (PROP App &&& PROP Apps) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def conjunction_imp .
 
 lemma [\<phi>reason 1100 for \<open>
-  PROP \<phi>Application_Method (PROP ?Prem \<Longrightarrow> PROP ?App) ?State ?Result
+  PROP \<phi>Application (PROP ?Prem \<Longrightarrow> PROP ?App) ?State ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (PROP App) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application_Method (PROP Prem \<Longrightarrow> PROP App) State (PROP Prem \<Longrightarrow> PROP Result)\<close>
-  unfolding prop_def \<phi>Application_Method_def imp_implication
+  \<open> PROP \<phi>Application (PROP App) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (PROP Prem \<Longrightarrow> PROP App) State (PROP Prem \<Longrightarrow> PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def imp_implication
   subgoal premises prems using prems(1)[OF  prems(2) prems(3)[OF prems(4)]] . .
 
 lemma [\<phi>reason 1100 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?Prem \<longrightarrow> ?App)) ?State ?Result
+  PROP \<phi>Application (Trueprop (?Prem \<longrightarrow> ?App)) ?State ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop App) State Result
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (Prem \<longrightarrow> App)) State (Prem \<Longrightarrow> PROP Result)\<close>
-  unfolding prop_def \<phi>Application_Method_def imp_implication
+  \<open> PROP \<phi>Application (Trueprop App) State Result
+\<Longrightarrow> PROP \<phi>Application (Trueprop (Prem \<longrightarrow> App)) State (Prem \<Longrightarrow> PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def imp_implication
   subgoal premises prems using prems(1)[OF prems(2) prems(3)[OF prems(4)]] . .
 
 lemma [\<phi>reason 1200 for \<open>
-  PROP \<phi>Application_Method (Pure.all ?App) ?State ?Result
+  PROP \<phi>Application (Pure.all ?App) ?State ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (PROP (App x)) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application_Method (Pure.all App) State (PROP Result)\<close>
-  unfolding \<phi>Application_Method_def
+  \<open> PROP \<phi>Application (PROP (App x)) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Pure.all App) State (PROP Result)\<close>
+  unfolding \<phi>Application_def
   subgoal premises prems
     apply (tactic \<open>Tactic.resolve_tac \<^context>
       [((Thm.forall_elim \<^cterm>\<open>x\<close> @{thm prems(3)}) RS @{thm prems(1)[OF prems(2)]})] 1\<close>) . .
 
 lemma [\<phi>reason 1200 for \<open>
-  PROP \<phi>Application_Method (Trueprop (All ?App)) ?State ?Result
+  PROP \<phi>Application (Trueprop (All ?App)) ?State ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop (App x)) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (All App)) State (PROP Result)\<close>
-  unfolding prop_def \<phi>Application_Method_def imp_implication
+  \<open> PROP \<phi>Application (Trueprop (App x)) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def imp_implication
   subgoal premises prems using prems(1)[OF prems(2) prems(3)[THEN spec[where x=x]]] . .
 
 lemma [\<phi>reason 1200]:
-  \<open> PROP \<phi>Application_Method (Trueprop App) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application_Method (App @action Act) State (PROP Result)\<close>
-  unfolding prop_def \<phi>Application_Method_def Action_Tag_def
+  \<open> PROP \<phi>Application (Trueprop App) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (App @action Act) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2) prems(3)] . .
 
 
@@ -545,14 +545,14 @@ subsubsection \<open>Application as a Resolution\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Application_Conv X' X
-\<Longrightarrow> PROP \<phi>Application_Method X' (PROP X \<Longrightarrow> PROP Y) Y\<close>
-  unfolding \<phi>Application_Method_def \<phi>Application_Conv_def
+\<Longrightarrow> PROP \<phi>Application X' (PROP X \<Longrightarrow> PROP Y) Y\<close>
+  unfolding \<phi>Application_def \<phi>Application_Conv_def
   subgoal premises prems using prems(3)[THEN prems(1), THEN prems(2)] . .
 
 lemma [\<phi>reason 1200]:
   \<open> PROP \<phi>Application_Conv (Trueprop X') (Trueprop X)
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop X') (Trueprop (X \<longrightarrow> Y)) (Trueprop Y)\<close>
-  unfolding \<phi>Application_Method_def \<phi>Application_Conv_def by blast
+\<Longrightarrow> PROP \<phi>Application (Trueprop X') (Trueprop (X \<longrightarrow> Y)) (Trueprop Y)\<close>
+  unfolding \<phi>Application_def \<phi>Application_Conv_def by blast
 
 lemma [\<phi>reason 3000 for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
   \<open>PROP \<phi>Application_Conv (PROP X) (PROP X)\<close>
@@ -603,96 +603,96 @@ The construction in a ready state should always be specified by a simple MTF.
 paragraph \<open>Transformation Methods\<close>
 
 lemma [\<phi>reason 3000 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?x \<Ztypecolon> ?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?x \<Ztypecolon> ?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?x' \<Ztypecolon> ?X'))) ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop (x \<Ztypecolon> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+  \<open> PROP \<phi>Application (Trueprop (x \<Ztypecolon> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk R (Void\<heavy_comma> x' \<Ztypecolon> X')))
       (Trueprop ((CurrentConstruction mode blk R T') \<and> P'))
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (x \<Ztypecolon> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+\<Longrightarrow> PROP \<phi>Application (Trueprop (x \<Ztypecolon> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk R (x' \<Ztypecolon> X')))
       (Trueprop ((CurrentConstruction mode blk R T') \<and> P'))\<close>
   by simp
 
 lemma \<phi>apply_subtyping_fast[\<phi>reason 1800 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+  \<open> PROP \<phi>Application (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk R S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
-  unfolding \<phi>Application_Method_def
+  unfolding \<phi>Application_def
   using \<phi>apply_implication .
 
 lemma [\<phi>reason 1500 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S))) ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+  \<open> PROP \<phi>Application (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
-  unfolding \<phi>Application_Method_def
+  unfolding \<phi>Application_def
   using \<phi>apply_implication implies_left_prod by blast
 
 lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P))
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def FOCUS_TAG_def Action_Tag_def
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
   by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
   
 
 paragraph \<open>View Shift Methods\<close>
 
 lemma [\<phi>reason 3000 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?x \<Ztypecolon> ?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?x \<Ztypecolon> ?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?x' \<Ztypecolon> ?X'))) ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop (x \<Ztypecolon> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+  \<open> PROP \<phi>Application (Trueprop (x \<Ztypecolon> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk R (Void\<heavy_comma> x' \<Ztypecolon> X')))
       (Trueprop ((CurrentConstruction mode blk R T') \<and> P'))
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (x \<Ztypecolon> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+\<Longrightarrow> PROP \<phi>Application (Trueprop (x \<Ztypecolon> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk R (x' \<Ztypecolon> X')))
       (Trueprop ((CurrentConstruction mode blk R T') \<and> P'))\<close>
   by simp
 
 lemma \<phi>apply_view_shift_fast[\<phi>reason 1800 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop (S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+  \<open> PROP \<phi>Application (Trueprop (S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk R S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
-  unfolding \<phi>Application_Method_def
+  unfolding \<phi>Application_def
   using "\<phi>apply_view_shift" .
 
 lemma [\<phi>reason 1500 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S))) ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop (S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+  \<open> PROP \<phi>Application (Trueprop (S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
-  unfolding \<phi>Application_Method_def
+  unfolding \<phi>Application_def
   using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame by blast
 
 lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P1 @action ToSA
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P2))
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P2))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def FOCUS_TAG_def Action_Tag_def
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
   using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
   by (metis (no_types, lifting))
 
@@ -700,22 +700,22 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
 paragraph \<open>Procedure Methods\<close>
 
 lemma apply_proc_fast[\<phi>reason 2000 for \<open>
-  PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S \<longmapsto> ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))
+  PROP \<phi>Application (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S \<longmapsto> ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))
           (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S)) ?Result
 \<close>  \<open>
-  PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?var_S \<longmapsto> ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))
+  PROP \<phi>Application (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?var_S \<longmapsto> ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))
           (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S)) ?Result
 \<close>
 ]:
-  \<open> PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E ))
+  \<open> PROP \<phi>Application (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E ))
       (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)\<close>
-  unfolding \<phi>Application_Method_def
+  unfolding \<phi>Application_def
   using \<phi>apply_proc .
 
 
 lemma \<phi>apply_proc_fully[\<phi>reason for
-    \<open>PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S' \<longmapsto> ?T' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))
+    \<open>PROP \<phi>Application (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S' \<longmapsto> ?T' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))
             (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S)) ?Result\<close>
 ]:
   \<open> \<phi>IntroFrameVar' R S'' S' T T' E'' E'
@@ -723,10 +723,10 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
 \<Longrightarrow> Simplify (assertion_simps undefined) E''' E''
 \<Longrightarrow> (\<And>v. Remove_Values (E''' v) (E v))
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' ))
+\<Longrightarrow> PROP \<phi>Application (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' ))
     (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S))
     (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) \<and> P)\<close>
-  unfolding \<phi>Application_Method_def \<phi>IntroFrameVar'_def
+  unfolding \<phi>Application_def \<phi>IntroFrameVar'_def
     FOCUS_TAG_def Simplify_def Action_Tag_def Simplify_def Remove_Values_def
   apply rule
   subgoal premises prems
@@ -843,46 +843,46 @@ lemma [\<phi>reason 1200 for \<open>
 subsubsection \<open>Applying on Implication Mode\<close>
 
 lemma apply_cast_on_imply_exact[\<phi>reason 2000 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
                            (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?x) \<^bold>i\<^bold>s ?S')) ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
+  \<open> PROP \<phi>Application (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
                              (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S))
                              (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> P))\<close>
-  unfolding \<phi>Application_Method_def Imply_def ToA_Construction_def
+  unfolding \<phi>Application_def Imply_def ToA_Construction_def
   by blast
 
 lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
-  PROP \<phi>Application_Method (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
+  PROP \<phi>Application (Trueprop (?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
                            (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(?x) \<^bold>i\<^bold>s ?R * ?S')) ?Result
 \<close>]:
-  \<open> PROP \<phi>Application_Method
+  \<open> PROP \<phi>Application
             (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P))
             (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s R * S))
             (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> ((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s R * T) \<and> P))\<close>
-  unfolding \<phi>Application_Method_def ToA_Construction_def
+  unfolding \<phi>Application_def ToA_Construction_def
   using implies_left_prod by (metis Imply_def)
 
 
 subsubsection \<open>Morphism\<close>
 
 lemma [\<phi>reason 2000]:
-  \<open> PROP \<phi>Application_Method (RP \<Longrightarrow> RX @action morphism_mode) (Trueprop S) (PROP RET)
-\<Longrightarrow> PROP \<phi>Application_Method (Trueprop (Morphism any_mode RP RX)) (Trueprop S) (PROP RET)\<close>
-  unfolding \<phi>Application_Method_def Morphism_def Action_Tag_def
+  \<open> PROP \<phi>Application (RP \<Longrightarrow> RX @action morphism_mode) (Trueprop S) (PROP RET)
+\<Longrightarrow> PROP \<phi>Application (Trueprop (Morphism any_mode RP RX)) (Trueprop S) (PROP RET)\<close>
+  unfolding \<phi>Application_def Morphism_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2), OF prems(3)[THEN mp], simplified] . .
 
 lemma [\<phi>reason 1200 for \<open>
-  PROP \<phi>Application_Method (?S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P2 @action morphism_mode)
+  PROP \<phi>Application (?S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?T' \<^bold>a\<^bold>n\<^bold>d ?P2 @action morphism_mode)
         (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   " \<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P1 @action ToSA' False
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> PROP \<phi>Application_Method (S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P2 @action morphism_mode)
+\<Longrightarrow> PROP \<phi>Application (S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P2 @action morphism_mode)
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_Method_def FOCUS_TAG_def Action_Tag_def Simplify_def
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def Simplify_def
   using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
   by (metis (no_types, lifting))
 
@@ -938,8 +938,8 @@ lemma Call_Action_I[intro!]: \<open>PROP Call_Action XX\<close> unfolding Call_A
 
 lemma [\<phi>reason 2000]:
   \<open> PROP Do_Action action sequent result
-\<Longrightarrow> PROP \<phi>Application_Method (Call_Action action) sequent result\<close>
-  unfolding \<phi>Application_Method_def Do_Action_def .
+\<Longrightarrow> PROP \<phi>Application (Call_Action action) sequent result\<close>
+  unfolding \<phi>Application_def Do_Action_def .
 
 paragraph \<open>Second way, by Synthesis\<close>
 
