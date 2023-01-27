@@ -65,12 +65,12 @@ section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
 
 subsection \<open>Parameter From User\<close>
 
-definition ParamTag :: " 'a \<Rightarrow> bool" ("\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m _" [1000] 26) where "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<equiv> True"
+definition ParamTag :: " 'a::{} \<Rightarrow> bool" ("\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m _" [1000] 26) where "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<equiv> True"
 
 text \<open>Antecedent \<^prop>\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x\<close> asks users to input some term that matches pattern \<^term>\<open>x\<close>.
   \<phi>-Processor `set_param` processes this antecedent.\<close>
 
-lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a" unfolding ParamTag_def using TrueI .
+lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a::{}" unfolding ParamTag_def using TrueI .
 lemma [elim!,\<phi>inhabitance_rule]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" .
 lemma [cong]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<longleftrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" \<comment> \<open>Disable simplification on parameters\<close> ..
 
@@ -980,56 +980,12 @@ instance simplification :: simplification .. *)
 
 subsubsection \<open>Rules of Executing Action\<close>
 
-consts User_Action :: \<open>'a action \<Rightarrow> 'a action\<close>
-
 paragraph \<open>Fallback\<close>
 
-lemma User_Action_succeed:
-  \<open> P @action action
-\<Longrightarrow> P @action User_Action action\<close>
-  unfolding Action_Tag_def .
-
-lemma User_Action_fail:
-  \<open> ERROR TEXT(\<open>Don't know how to do\<close> A)
-\<Longrightarrow> P @action User_Action A\<close>
-  unfolding Action_Tag_def by blast
-
-lemma User_Action_fail'IMP:
-  \<open> ERROR TEXT(\<open>Don't know how to do\<close> A \<open>on state\<close> X)
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action User_Action A\<close>
-  unfolding Action_Tag_def by blast
-
-lemma User_Action_fail'VS:
-  \<open> ERROR TEXT(\<open>Don't know how to do\<close> A \<open>on state\<close> X)
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action User_Action A\<close>
-  unfolding Action_Tag_def by blast
-
-declare [[\<phi>reason 1000 User_Action_succeed User_Action_fail User_Action_fail'IMP User_Action_fail'VS
-      for \<open>?P @action User_Action ?action\<close>]]
-
-paragraph \<open>Action on view shift or programming mode\<close>
-
-text \<open>by default, only supports view shifts, but specific actions can override this.\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action User_Action action
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (CurrentConstruction mode s H X))
-      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> CurrentConstruction mode s H Y \<and> P )\<close>
-  unfolding Do_Action_def Action_Tag_def Action_Tag_def
-  using \<phi>apply_view_shift \<phi>frame_view by blast
-
-paragraph \<open>Action on \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s P\<close>\<close>
-
-text \<open>only has implications.\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action User_Action action
-\<Longrightarrow> PROP Do_Action action
-      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s X))
-      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s Y) \<and> P )\<close>
-  unfolding Do_Action_def Action_Tag_def Imply_def ToA_Construction_def by blast
-
+lemma [\<phi>reason 1]:
+  \<open> FAIL TEXT(\<open>Don't know how to do\<close> action \<open>on\<close> Sequent)
+\<Longrightarrow> PROP Do_Action action Sequent Sequent\<close>
+  unfolding Do_Action_def Action_Tag_def Action_Tag_def .
 
 
 subsection \<open>Generic Assignment \& Access\<close>
@@ -1322,7 +1278,7 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
                   | _ => true)
    then case Phi_Reasoner.reason (SOME 1) (ctxt, sequent)
           of SOME (ctxt',sequent') => (ctxt', sequent')
-           | NONE => raise Bypass (SOME (ctxt,sequent))
+           | NONE => raise Bypass (SOME (ctxt,sequent0))
    else raise Bypass NONE
 end)\<close>
 

@@ -80,7 +80,7 @@ lemma Var_inhabited[\<phi>inhabitance_rule,elim!]:
   \<open>Inhabited (x \<Ztypecolon> Var vname T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
-lemma Var_subty:
+lemma Var_ToA:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> x \<Ztypecolon> Var v T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> Var v T' \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns, blast)
@@ -169,6 +169,13 @@ lemma [\<phi>reason 1450 for \<open>?R \<heavy_comma> ?H \<^bold>s\<^bold>h\<^bo
   \<open> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>a\<^bold>n\<^bold>d P  @action reason_ToSA mode G
 \<Longrightarrow> R \<heavy_comma> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> H \<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
   using ToSA_skip[OF CHK_SUBGOAL_I] .
+
+
+lemma [\<phi>reason 2000]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action to Target
+\<Longrightarrow> x \<Ztypecolon> Var v T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> Var v U \<^bold>a\<^bold>n\<^bold>d P @action to Target \<close>
+  unfolding Action_Tag_def
+  using Var_ToA .
 
 
 subsubsection \<open>Application Methods for Subtyping\<close>
@@ -325,7 +332,7 @@ proc (nodef) op_get_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<close>
   output \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
-  \<medium_left_bracket> to_Identity op_get_var'' \<medium_right_bracket>. .
+  \<medium_left_bracket> to Identity  op_get_var'' \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200 for
     \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ?x <val-of> ?var \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
@@ -349,8 +356,8 @@ lemma op_set_var_\<phi>app:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]:
       \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var var TY \<a>\<r>\<g> \<lbrace> x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<a>\<r>\<g>] U \<longmapsto> \<lambda>\<r>\<e>\<t>. y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U \<rbrace> \<close>
-  \<medium_left_bracket> to_Identity 
-    $y to_Identity
+  \<medium_left_bracket> to Identity 
+    $y to Identity
     op_set_var'' 
   \<medium_right_bracket>. .
 
@@ -392,13 +399,10 @@ proc op_var_scope:
   \<medium_left_bracket> op_var_scope'[where TY=TY]
     try''
     \<medium_left_bracket> premises [\<phi>reason]
-      BLK to_Identity op_free_var
-    \<medium_right_bracket>.
-    \<medium_left_bracket>
-    ;;
-    ;; to_Identity
-    ;; op_free_var
-    ;; throw  \<medium_right_bracket>. 
+      BLK to Identity op_free_var \<medium_right_bracket>.
+    \<medium_left_bracket> to Identity
+      op_free_var
+      throw \<medium_right_bracket>. 
   \<medium_right_bracket>. .
 
 subsection \<open>Implementing IDE-CP Generic Variable Access\<close>

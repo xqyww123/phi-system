@@ -14,8 +14,8 @@ subsection \<open>Encoding of Text\<close>
 
 typedecl "text"
 consts literal_text :: \<open>(text \<Rightarrow> text) \<Rightarrow> text\<close>
-       term_text :: \<open>'a \<Rightarrow> text\<close>
-       type_text :: \<open>'a itself \<Rightarrow> text\<close>
+       term_text :: \<open>'a::{} \<Rightarrow> text\<close>
+       type_text :: \<open>'a::{} itself \<Rightarrow> text\<close>
        cat_text :: \<open>text \<Rightarrow> text \<Rightarrow> text\<close>
       "text" :: \<open>text \<Rightarrow> text\<close>
 text \<open>We use the name of a lambda variable to encode an arbitrary string text.\<close>
@@ -23,7 +23,8 @@ text \<open>We use the name of a lambda variable to encode an arbitrary string t
 nonterminal "text_"
 syntax "_text_" :: \<open>text_ \<Rightarrow> text\<close> ("TEXT'(_')" [1] 1000)
 syntax "_text_literal_" :: \<open>cartouche \<Rightarrow> text_\<close> ("_")
-syntax "_text_term_" :: \<open>term \<Rightarrow> text_\<close> ("_" [1000] 999)
+syntax "_text_term_" :: \<open>logic \<Rightarrow> text_\<close> ("_" [1000] 999)
+syntax "_text_prop_" :: \<open>prop \<Rightarrow> text_\<close> ("_" [1000] 999)
 syntax "_text_cat_" :: \<open>text_ \<Rightarrow> text_ \<Rightarrow> text_\<close> ("_ _" [1,2] 1)
 
 declare [[ML_debugger]]
@@ -90,6 +91,8 @@ let open Ast
             Constant \<^const_syntax>\<open>undefined\<close>,
             Constant \<^type_syntax>\<open>text\<close>]]]
   fun parse (Appl [Constant \<^syntax_const>\<open>_text_literal_\<close>, tm]) = encode_literal (dest_literal tm)
+    | parse (Appl [Constant \<^syntax_const>\<open>_text_prop_\<close>, tm]) =
+        parse (Appl [Constant \<^syntax_const>\<open>_text_term_\<close>, tm])
     | parse (Appl [Constant \<^syntax_const>\<open>_text_term_\<close>,
                        (tm as Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, _])]) =
         Appl [Constant \<^const_syntax>\<open>type_text\<close>, tm]
