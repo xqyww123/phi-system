@@ -323,6 +323,11 @@ lemma [\<phi>reason 1]:
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action to T\<close>
   unfolding Action_Tag_def by blast
 
+lemma [\<phi>reason 10]:
+  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action to U\<close>
+  unfolding Action_Tag_def .
+
 lemma [\<phi>reason 5000]:
   \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> T) @action to T\<close>
   unfolding Action_Tag_def using implies_refl .
