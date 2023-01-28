@@ -254,7 +254,7 @@ text \<open>
 
   The rewrite process enables user to input partially instead of always giving the complete
   assertion every time, for example, just the abstract object \<^term>\<open>x\<close> to
-  denote \<^schematic_term>\<open>x \<Ztypecolon> _\<close> and leave the type unspecified to accept anything.
+  denote \<^pattern_term>\<open>x \<Ztypecolon> _\<close> and leave the type unspecified to accept anything.
   For example, user may input just an abstract object \<^term>\<open>x\<close> to mean to
     synthesis \<^term>\<open>x \<Ztypecolon> T\<close> for some unspecified \<^term>\<open>T\<close>;
     user may also input \<^term>\<open>0::nat\<close> to mean to synthesis \<^term>\<open>0 \<Ztypecolon> Natural_Number\<close>.
@@ -306,7 +306,7 @@ lemma [\<phi>reason 20
 
 subsubsection \<open>Tagging the target of a synthesis rule\<close>
 
-definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [15] 14) where [iff]: \<open>Synthesis S = S\<close>
+definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [16] 15) where [iff]: \<open>Synthesis S = S\<close>
 
 consts synthesis :: \<open>subgoal \<Rightarrow> unit action\<close>
 

@@ -272,8 +272,8 @@ text \<open>Priority Convention:
 \<^item> 2600: Disjunction in target part; Default normalization in target part
         Divergence happens here!
         Existentially quantified variables are fixed here!
-\<^item> 2100: Padding void holes after the last item. Rules capturing the last item in
-        the \<open>\<^emph>\<close>-sequence should have priority higher than this.
+\<^item> 2100: Padding void holes after the last item. Rules capturing the whole items including
+        the last item in the \<open>\<^emph>\<close>-sequence should have priority higher than this.
 \<^item> 2000: Step-by-step searching
 \<^item> \<le> 1999: Rules for searching specific object like value, variable, etc.
 \<^item> 800:  Disjunction in target part

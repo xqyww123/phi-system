@@ -253,9 +253,9 @@ datatype ('a::VALs) \<phi>arg = \<phi>arg (dest: 'a)
 hide_const (open) dest
 
 
-lemma sem_value_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
-lemma sem_value_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
-lemma sem_value_All: \<open>(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (\<phi>arg x))\<close>
+lemma \<phi>arg_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
+lemma \<phi>arg_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
+lemma \<phi>arg_All: \<open>(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (\<phi>arg x))\<close>
 proof
   fix x :: 'a assume A: \<open>(\<And>x. PROP P x)\<close> then show \<open>PROP P (\<phi>arg x)\<close> .
 next
@@ -425,8 +425,8 @@ lemma proc_bind_return_none[simp]:
   apply rule
     apply clarsimp
     subgoal for z
-      apply (cases z; simp add: sem_value_All) .
-  apply (rule bexI[where x=y]; clarsimp simp add: sem_value_All) . .
+      apply (cases z; simp add: \<phi>arg_All) .
+  apply (rule bexI[where x=y]; clarsimp simp add: \<phi>arg_All) . .
 
 lemmas proc_bind_SKIP[simp] =
   proc_bind_SKIP'[unfolded Return_def, simplified]

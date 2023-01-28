@@ -35,9 +35,7 @@ translations
 
 ML_file \<open>library/syntax/value.ML\<close>
 
-subsection \<open>Properties\<close>
-
-subsubsection \<open>Semantic Type\<close>
+subsection \<open>Semantic Type\<close>
 
 definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
   where \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
@@ -67,21 +65,40 @@ lemma [\<phi>reason]:
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
   ..
 
+subsubsection \<open>Reasoning Rules\<close>
+
+declare [[\<phi>reason_default_pattern \<open>\<phi>SemType ?S ?TY\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close>]]
+
 lemma [\<phi>reason 1]:
   \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
 \<Longrightarrow> \<phi>SemType X Any\<close>
   by blast
 
-declare [[\<phi>reason_default_pattern \<open>\<phi>SemType ?S ?TY\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close>]]
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>SemType X TY
+\<Longrightarrow> \<phi>SemType Y TY
+\<Longrightarrow> \<phi>SemType (X + Y) TY\<close>
+  unfolding \<phi>SemType_def subset_iff by simp
 
-subsubsection \<open>Zero Value\<close>
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>SemType X TY
+\<Longrightarrow> \<phi>SemType (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) TY\<close>
+  unfolding \<phi>SemType_def subset_iff by (simp add: Subjection_expn)
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. \<phi>SemType (X x) TY)
+\<Longrightarrow> \<phi>SemType (ExSet X) TY\<close>
+  unfolding \<phi>SemType_def subset_iff by (clarsimp simp add: ExSet_expn)
+
+
+subsection \<open>Zero Value\<close>
 
 definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
   where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>Zero ?TY ?T ?x\<close> \<Rightarrow> \<open>\<phi>Zero ?TY ?T _\<close>]]
 
-subsubsection \<open>Equality\<close>
+subsection \<open>Equality\<close>
 
 definition \<phi>Equal :: "(VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool"
   where "\<phi>Equal T can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 res.
@@ -90,10 +107,10 @@ definition \<phi>Equal :: "(VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close> \<Rightarrow> \<open>\<phi>Equal ?TY _ _\<close>]]
 
-subsubsection \<open>Functional\<close>
+subsection \<open>Functional\<close>
 
 lemma is_singletonI'':
-  \<open> \<exists>p. p \<in> A
+  \<open> \<exists>p. p \<in> A \<comment> \<open>TODO: remove this\<close>
 \<Longrightarrow> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
 \<Longrightarrow> is_singleton A\<close>
   by (metis equals0D is_singletonI')
@@ -208,7 +225,7 @@ lemma  INTERP_SPEC_ex[\<phi>expns]:
   \<open> INTERP_SPEC (ExSet S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
   unfolding INTERP_SPEC_def by (simp add: \<phi>expns set_eq_iff, blast)
 
-abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [13,14] 13)
+abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [14,15] 14)
   where \<open>COMMA \<equiv> (*)\<close>
 
 

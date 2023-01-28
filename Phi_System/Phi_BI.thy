@@ -148,7 +148,7 @@ lemma assertion_eq_intro:
 
 subsection \<open>Specialized Additive Conjunction\<close>
 
-definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 13)
+definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 14)
   where " (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = {p. p \<in> T \<and> P}"
 
 lemma Subjection_expn[\<phi>expns]:
@@ -209,9 +209,9 @@ lemma Subjection_plus:
 
 subsection \<open>Existential Quantification\<close>
 
-definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 10)
+definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 13)
   where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
-notation ExSet (binder "\<exists>\<^sup>s" 10)
+notation ExSet (binder "\<exists>\<^sup>s" 13)
 
 lemma ExSet_expn[\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
 
@@ -224,7 +224,7 @@ lemma ExSet_inhabited_expn[\<phi>inhabited]:
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 syntax
-  "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _" [4,0,5] 4)
+  "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<^bold>s\<^bold>u\<^bold>b\<^bold>j/ _./ _" [14,0,15] 14)
 
 translations
   " X \<^bold>s\<^bold>u\<^bold>b\<^bold>j idts. P " \<rightleftharpoons> "\<exists>* idts. X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P"
