@@ -147,7 +147,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
       val (_,arg_spec,ret_spec,E_spec) = Phi_Syntax.dest_procedure_c proc_cterm
       val goal = Phi_Envir.get_thesis ctxt
       val (trueprop, goal_term) = Thm.dest_comb goal
-      val ((goal_F_arg,goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
+      val ((goal_Pending, goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
       fun instantiate_R inst spec =
         let
           fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
@@ -165,7 +165,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
         end
       val goal_ret' = instantiate_R goal_ret ret_spec
       (*  val goal_E'   = instantiate_R goal_E   E_spec *)
-      val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_F_arg goal_ret') goal_E)
+      val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_Pending goal_ret') goal_E)
       val ctxt = Phi_Envir.put_thesis goal' ctxt
       
       (*declare every hypothesis*)
@@ -173,7 +173,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
       val ctxt = fold2 (fn H => fn D => D H) Hs decl ctxt
       
       (*make the new initial sequent*)
-      val (ctxt, sequent') = #initial_sequent Phi_Working_Mode.procedure arg_spec ctxt
+      val (ctxt, sequent') = Phi_Working_Mode.initial_sequent_procedure arg_spec ctxt
       
       val (_, ctxt) = Assumption.add_assms (fn _ => fn _ =>
                 ((fn sequentx => #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx)

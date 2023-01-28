@@ -58,8 +58,6 @@ subsubsection \<open>Syntax \& Prelude ML\<close>
 
 ML_file \<open>library/syntax/Phi_Syntax.ML\<close>
 ML_file \<open>library/syntax/procedure2.ML\<close>
-ML_file \<open>library/system/Phi_Working_Mode.ML\<close>
-ML_file \<open>library/system/Phi_Envir.ML\<close>
 
 section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
 
@@ -212,6 +210,151 @@ declare [[\<phi>hide_techinicals,
           \<phi>premise_attribute [THEN HIDDEN_PREM_D'] for \<open>PROP HIDDEN_PREM ?P\<close>]]
 
 section \<open>Mechanisms\<close>
+
+subsection \<open>Programming Modes\<close>
+
+typedecl working_mode
+
+consts working_mode_procedure   :: working_mode
+       working_mode_implication :: working_mode
+       working_mode_view_shift  :: working_mode
+
+definition \<phi>Programming_Method :: \<open>prop \<Rightarrow> working_mode \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
+  where \<open>\<phi>Programming_Method Target mode Programming_Deduction Post_Reasoning Future_Works
+          \<equiv> (   PROP Programming_Deduction
+            \<Longrightarrow> PROP Post_Reasoning
+            \<Longrightarrow> PROP Future_Works
+            \<Longrightarrow> PROP Target)\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>PROP \<phi>Programming_Method ?T _ _ _ _\<close> \<Rightarrow> \<open>PROP \<phi>Programming_Method ?T _ _ _ _\<close>
+]]
+
+lemma reason_programming:
+  \<open> PROP \<phi>Programming_Method Target working_mode Programming_Deduction Post_Reasoning Future_Works
+\<Longrightarrow> TERM working_mode
+\<Longrightarrow> PROP Programming_Deduction
+\<Longrightarrow> PROP Post_Reasoning
+\<Longrightarrow> PROP Future_Works
+\<Longrightarrow> PROP Target\<close>
+  unfolding \<phi>Programming_Method_def
+  subgoal premises prems using prems(1)[OF prems(3) prems(4) prems(5)] . .
+
+
+ML_file \<open>library/system/Phi_Working_Mode.ML\<close>
+ML_file \<open>library/system/Phi_Envir.ML\<close>
+
+subsubsection \<open>Built-in Programming Methods\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P))
+            working_mode_implication
+            (\<And>\<CC>. \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s X \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  using \<phi>make_implication .
+
+lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?var_P)) _ _ _ _\<close>]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y))
+            working_mode_implication
+            (\<And>\<CC>. \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s X \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(\<CC>) \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j True)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  using \<phi>make_implication .
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P))
+            working_mode_view_shift
+            (\<And>\<CC> \<RR>. \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s X \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  using \<phi>make_view_shift .
+
+lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?var_P)) _ _ _ _\<close>]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y))
+            working_mode_view_shift
+            (\<And>\<CC> \<RR>. \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s X \<Longrightarrow> \<^bold>v\<^bold>i\<^bold>e\<^bold>w \<CC> [\<RR>] \<^bold>i\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j True)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  using \<phi>make_view_shift .
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c G \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))
+            working_mode_procedure
+            (\<And>\<SS> \<RR>. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t \<SS> [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n X \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g G \<^bold>o\<^bold>n \<SS> [\<RR>] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+  using \<phi>reassemble_proc_final .
+
+hide_fact \<phi>make_implication \<phi>make_view_shift \<phi>reassemble_proc_final
+
+
+subsubsection \<open>General Rules Normalizing Programming Methods\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method (Trueprop Q) M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (P \<longrightarrow> Q)) M (P \<Longrightarrow> PROP D) (P \<Longrightarrow> PROP R) (P \<Longrightarrow> PROP F)\<close>
+  unfolding \<phi>Programming_Method_def
+proof (intro impI)
+  assume A: \<open>PROP D \<Longrightarrow> PROP R \<Longrightarrow> PROP F \<Longrightarrow> Q\<close>
+    and  D: \<open>P \<Longrightarrow> PROP D\<close>
+    and  R: \<open>P \<Longrightarrow> PROP R\<close>
+    and  F: \<open>P \<Longrightarrow> PROP F\<close>
+    and  P: \<open>P\<close>
+  show \<open>Q\<close> using A[OF D[OF P] R[OF P] F[OF P]] .
+qed
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method Q M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (PROP P \<Longrightarrow> PROP Q) M (PROP P \<Longrightarrow> PROP D) (PROP P \<Longrightarrow> PROP R)
+                             (PROP P \<Longrightarrow> PROP F)\<close>
+  unfolding \<phi>Programming_Method_def
+proof -
+  assume A: \<open>PROP D \<Longrightarrow> PROP R \<Longrightarrow> PROP F \<Longrightarrow> PROP Q\<close>
+    and  D: \<open>PROP P \<Longrightarrow> PROP D\<close>
+    and  R: \<open>PROP P \<Longrightarrow> PROP R\<close>
+    and  F: \<open>PROP P \<Longrightarrow> PROP F\<close>
+    and  P: \<open>PROP P\<close>
+  show \<open>PROP Q\<close> using A[OF D[OF P] R[OF P] F[OF P]] .
+qed
+
+lemma [\<phi>reason 1000]: \<comment> \<open>TODO: use ML to preserve the name of the lambda variable\<close>
+  \<open> (\<And>x. PROP \<phi>Programming_Method (Trueprop (P x)) M (D x) (R x) (F x))
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (All P)) M (\<And>x. PROP D x) (\<And>x. PROP R x) (\<And>x. PROP F x)\<close>
+  unfolding \<phi>Programming_Method_def
+proof (intro allI)
+  fix x :: 'a
+  assume A: \<open>\<And>x. PROP D x \<Longrightarrow> PROP R x \<Longrightarrow> PROP F x \<Longrightarrow> P x\<close>
+    and  D: \<open>\<And>x. PROP D x\<close>
+    and  R: \<open>\<And>x. PROP R x\<close>
+    and  F: \<open>\<And>x. PROP F x\<close>
+  show \<open>P x\<close> using A[OF D R F] .
+qed
+
+lemma [\<phi>reason 1000]: \<comment> \<open>TODO: use ML to preserve the name of the lambda variable\<close>
+  \<open> (\<And>x. PROP \<phi>Programming_Method (P x) M (D x) (R x) (F x))
+\<Longrightarrow> PROP \<phi>Programming_Method (\<And>x. PROP P x) M (\<And>x. PROP D x) (\<And>x. PROP R x) (\<And>x. PROP F x)\<close>
+  unfolding \<phi>Programming_Method_def
+proof -
+  fix x :: 'a
+  assume A: \<open>\<And>x. PROP D x \<Longrightarrow> PROP R x \<Longrightarrow> PROP F x \<Longrightarrow> PROP P x\<close>
+    and  D: \<open>\<And>x. PROP D x\<close>
+    and  R: \<open>\<And>x. PROP R x\<close>
+    and  F: \<open>\<And>x. PROP F x\<close>
+  show \<open>PROP P x\<close> using A[OF D R F] .
+qed
+
+
 
 subsection \<open>Ad-hoc Overload\<close>
 
@@ -821,9 +964,22 @@ lemma [\<phi>reason 1200 for \<open>
 \<Longrightarrow> X' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d Any1 @action ToSA
 \<Longrightarrow> (\<And>ret. Y ret \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y' ret \<^bold>a\<^bold>n\<^bold>d Any2 @action ToSA)
 \<Longrightarrow> (\<And>ex.  E ex \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' ex \<^bold>a\<^bold>n\<^bold>d Any3 @action ToSA)
-\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E )) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> Y' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' ))\<close>
+\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E ))
+                           (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> Y' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' ))\<close>
   unfolding \<phi>Application_Conv_def Simple_HO_Unification_def FOCUS_TAG_def Action_Tag_def
   using \<phi>CONSEQ by blast
+
+lemma [\<phi>reason 1200 for \<open>
+  PROP \<phi>Application_Conv (Trueprop (PendingConstruction _ _ _ _ _))
+                         (Trueprop (PendingConstruction _ _ _ _ _))
+\<close>]:
+  \<open> Simple_HO_Unification f f'
+\<Longrightarrow> (\<And>ret. S ret \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S' ret \<^bold>a\<^bold>n\<^bold>d Any2 @action ToSA)
+\<Longrightarrow> (\<And>ex.  E ex \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' ex \<^bold>a\<^bold>n\<^bold>d Any3 @action ToSA)
+\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (PendingConstruction f  s R S  E ))
+                           (Trueprop (PendingConstruction f' s R S' E'))\<close>
+  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def FOCUS_TAG_def Action_Tag_def
+  using \<phi>apply_view_shift_pending \<phi>apply_view_shift_pending_E by blast
 
 
 subsubsection \<open>Applying on View Shift Mode\<close>
@@ -1040,6 +1196,7 @@ lemma [\<phi>reason 1000]:
   unfolding Value_of_def .
 
 
+
 section \<open>Implementing the Interactive Environment\<close>
 
 text \<open>The implementation consists of three steps:
@@ -1224,7 +1381,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
       val _ = if Config.get ctxt NuObtain.enable_auto
               andalso Config.get ctxt Phi_Reasoner.auto_level >= 2
               then () else raise Bypass NONE
-      val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent)
+      val mode = Phi_Working_Mode.mode1 ctxt
     in
       case #spec_of mode (Thm.concl_of sequent)
         of Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs _ =>

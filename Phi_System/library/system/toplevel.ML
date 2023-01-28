@@ -139,12 +139,12 @@ in
 
 fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
   let
-    val ctxt = Proof.context_of stat
-
-    val is_top = not (Phi_Envir.under_programming_environ ctxt) orelse is_backward_mode stat
+    val is_top = not (Phi_Envir.under_programming_environ (Proof.context_of stat))
+                 orelse is_backward_mode stat
     val normalize_tac =
-          REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac ctxt
+          REPEAT_DETERM (HEADGOAL (Tactic.resolve_tac (Proof.context_of stat)
               @{thms Action_Tag_I Argument_I allI impI Labelled_I Labelled_I'}))
+          (*TODO: retain the name of the quantified variables*)
     val stat =
           if is_top
           then stat
@@ -156,9 +156,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
           if is_top
           then #goal (Proof.raw_goal stat)
           else Phi_Envir.the_state_sequent stat
-                  |> Tactic.rule_by_tactic ctxt normalize_tac
-    val stat = (if is_top then Proof.enter_forward (Proof.assert_backward stat) else stat)
-                  |> Proof.begin_block
+                  |> Tactic.rule_by_tactic (Proof.context_of stat) normalize_tac
 
     val ((prem_bindings, sequent), stat) = Proof.map_context_result (fn ctxt =>
       let val prem_bindings =
@@ -174,8 +172,29 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
       end
     ) stat
 
-    val stat = if is_top then Proof.refine_primitive (K (K sequent)) stat else stat
+    val (sequent,stat) = Proof.map_context_result (fn ctxt =>
+          Phi_Reasoner.reason (SOME 1) (ctxt, @{thm reason_programming} RS sequent)
+              |> (fn SOME (X,TH) => (TH, X)
+                   | NONE => error (Pretty.string_of (Pretty.chunks [
+                        Pretty.str "Don't know how to make by programming:",
+                        Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
+                       ])))) stat
+    val mode = case Thm.major_prem_of sequent
+                 of Const(\<^const_name>\<open>Pure.term\<close>, _) $ Const (N, _)
+                      => Phi_Working_Mode.get_by_name1 (Context.Proof (Proof.context_of stat)) N
+                  | X => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
+                          Pretty.str "Bad mode constant:",
+                          Syntax.pretty_term (Proof.context_of stat) X
+                      ]))
+    val sequent = (Drule.termI RS sequent)
+               |> Raw_Simplifier.norm_hhf_protect (Proof.context_of stat)
 
+    val stat = if is_top
+               then Proof.refine_primitive (K (K sequent)) stat
+               else Phi_Envir.set_state_sequent sequent stat
+
+    val stat = (if is_top then Proof.enter_forward (Proof.assert_backward stat) else stat)
+                  |> Proof.begin_block
 
     (*Assuming the proof state is in the normal hhf, or else the operation fails.*)
     val (vars, goal) =
@@ -189,12 +208,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     val vars = map Free (var_names ~~ map snd vars)
     val goal = subst_bounds (rev vars, goal)
             |> reduce_var
-    val prems_goal = Phi_Help.strip_binop_r @{const_name Pure.imp} goal
-    val (prems, goal') = (Phi_Help.front prems_goal, Phi_Help.last prems_goal)
-
-    val mode = Phi_Working_Mode.working_mode_on1 ctxt goal'
-    val goal'c = Thm.cterm_of ctxt goal'
-    val arg = #source_spec_c mode goal'c
+    val prems = Logic.strip_imp_prems goal
+    val goal'  = Logic.strip_imp_concl goal
 
     fun after_qed (ctxt',[[th]]) stat0 =
       let val stat = Proof.end_block stat0
@@ -204,7 +219,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                                    |> Proof_Context.export ctxt' ctxt''
           val th2 = Drule.forall_intr_list (map Drule.dest_term vars') th1
 
-          fun gen_sequent sequent0 =
+          fun gen_sequent (ctxt,sequent0) =
             let val sequent = Phi_Help.beta_eta_contract_leading_antecedent sequent0
                 val insts =
                       Pattern.match (Proof_Context.theory_of ctxt'')
@@ -221,23 +236,38 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                         \ some universally quantified variables that it has no access."
                     ]))
                 val sequent' = Thm.instantiate insts sequent (*index is considered*)
-             in Thm.implies_elim (Phi_Help.beta_eta_contract_leading_antecedent sequent')
-                                 (Phi_Help.beta_eta_contract th2)end
+                val sequent'' = Thm.implies_elim
+                                      (Phi_Help.beta_eta_contract_leading_antecedent sequent')
+                                      (Phi_Help.beta_eta_contract th2)
+                val (ctxt'3, sequent'3) = Phi_Reasoner.reason (SOME 1) (ctxt, sequent'')
+                       |> (fn SOME X => X
+                            | NONE => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
+                                  Pretty.str "Fail to reason the finalization reasoning tasks:",
+                                  Syntax.pretty_term ctxt (Thm.major_prem_of sequent'')
+                                ])))
+                val sequent'4 = case Thm.major_prem_of sequent'3
+                                  of Const (\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>True\<close>, _)
+                                      => @{thm TrueI} RS sequent'3
+                                   | _ => sequent'3
+             in (ctxt'3, sequent'4)
+             end
       in if is_top
          then stat
                 |> Proof.enter_backward
                 |> Proof.apply (Method.Basic (fn _ =>
-                        Method.SIMPLE_METHOD (Seq.single o gen_sequent)), Position.no_range)
+                        Method.CONTEXT_METHOD (K (Seq.single o Seq.Result o gen_sequent))), Position.no_range)
                 |> Seq.the_result "never fail"
-         else Phi_Envir.set_state_sequent (gen_sequent sequent) stat
+         else Phi_Envir.map_state_sequent gen_sequent stat
       end
 
-    val delta = length prems - length prem_bindings
+    val delta = length prems - length prem_bindings - 1
     val _ = if delta < 0 then error "too much premise bindings" else  ()
-    val bindings = (prem_bindings @ (List.tabulate (delta, K ((Binding.empty, []),[]))))
+    val bindings = (prem_bindings @ (List.tabulate (delta, K ((Binding.empty, []),[])))
+                                  @ [((Binding.name "\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>", []), [])])
           |> map2 (fn P => fn ((b,attrs),pats) =>
-              let val attrs' = Premises_Attribute.attribute_of (null attrs) P (Context.Proof ctxt)
-              in ((b, attrs' @ map (Attrib.attribute ctxt) attrs), pats)
+              let val attrs' = Premises_Attribute.attribute_of (null attrs) P
+                                                        (Context.Proof (Proof.context_of stat))
+              in ((b, attrs' @ map (Attrib.attribute (Proof.context_of stat)) attrs), pats)
               end) prems
   in
     stat
@@ -251,13 +281,13 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
       |> Seq.the_result "never fail"
       |> Proof.using_facts [] |> Proof.enter_forward (*|> Proof.begin_block*)
 
-      |> Proof.map_context_result (fn ctxt => ctxt
+      |> Proof.map_context (fn ctxt => ctxt
             |> Phi_Working_Mode.set mode
-            |> Phi_Envir.put_thesis goal'c
-            |> #initial_sequent mode arg
-            |> swap)
-      |-> Phi_Envir.enter_programming_environ
+            |> Phi_Envir.put_thesis (Thm.cterm_of ctxt goal'))
       |> Proof.begin_block
+      |> (fn stat => stat
+          |> Phi_Envir.enter_programming_environ
+                                    (Proof_Context.get_thm (Proof.context_of stat) "\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>"))
 (*      |> Generic_Variable_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end
@@ -277,7 +307,7 @@ fun gen_finish_proc prep_term qed spec int stat =
   let
     val ctxt_ = Proof.context_of stat
     val goal = Phi_Envir.get_thesis ctxt_
-    val mode = Phi_Working_Mode.mode ctxt_
+    val mode = Phi_Working_Mode.mode1 ctxt_
   in stat
   |> Proof.map_context_result (fn ctxt_pre1 =>
       let
@@ -327,7 +357,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                            ])))
                         end)
               |> #vcg_before_assembling mode goal
-      in (sequent'', Phi_Envir.exit_programming_environ ctxt'')
+      in (sequent'', ctxt'')
         (*The transformation shall generate a poof obligation*)
       end
     )
@@ -338,6 +368,7 @@ fun gen_finish_proc prep_term qed spec int stat =
         val ctxt = Proof.context_of stat
         val stat' = stat
           |> Proof.set_facts []
+          |> Proof.map_context Phi_Envir.exit_programming_environ
           |> Proof.end_block
         val end_tac = basic_method (fn ctxt' => fn goal' => (
             let
@@ -467,11 +498,6 @@ fun gen_begin_proc prep_term prep_prop prep_var post_process def_const
     lthy |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
               includes elems concls int
          |> Proof.map_context (Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>))
-         |> (fn stat => stat
-              |> Proof.map_context (Phi_Envir.put_thesis (
-                    Thm.cprem_of (#goal (Proof.goal stat)) 1
-                      |> Drule.strip_imp_concl
-                  )))
          |> Proof.refine (Method.Basic (K (K (
               Named_Premises.bind_sequent_assms (map (apsnd snd) preconds) 1
                 #> Seq.Result #> Seq.single))))

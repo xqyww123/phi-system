@@ -51,10 +51,10 @@ fun the_construction ctxt =
                                      | [] => (err_bad_env (); Drule.dummy_thm)
 
 val under_programming_environ = not o null o Programming_Sequent.get
-val exit_programming_environ = Programming_Sequent.map tl
+val exit_programming_environ = Programming_Sequent.map (fn L => tl L)
 
 fun the_programming_sequent' ctxt =
-  case Programming_Sequent.get ctxt of (thm, _, _)::_ => thm
+  case Programming_Sequent.get ctxt of (thm, _, _)::L => thm
                                      | [] => (err_bad_env (); Drule.dummy_thm)
 
 val the_state_sequent = the_programming_sequent' o Proof.context_of
@@ -80,9 +80,7 @@ fun gen_reason_programming_implication erules (mode:Phi_Working_Mode.working_mod
   end
 
 fun reason_programming_implication ctxt erules sequent =
-  gen_reason_programming_implication erules
-    (Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent))
-    ctxt sequent
+  gen_reason_programming_implication erules (Phi_Working_Mode.mode1 ctxt) ctxt sequent
 
 fun reason_programming_implication' mode ctxt sequent =
   [gen_reason_programming_implication
@@ -91,12 +89,14 @@ fun reason_programming_implication' mode ctxt sequent =
 
 
 fun gen_update_programming_sequent' put sequent ctxt =
-  case Phi_Working_Mode.working_mode_on ctxt (Thm.concl_of sequent)
-    of SOME mode => put ctxt (sequent, sequent, Lazy.lazy (fn () =>
-                                        reason_programming_implication' mode ctxt sequent))
-     | _ => case Programming_Sequent.get ctxt
-              of (_, construction, implication)::_ => put ctxt (sequent, construction, implication)
-               | [] => put ctxt (sequent, sequent, Lazy.value [])
+  let val mode = Phi_Working_Mode.mode1 ctxt
+   in if #is_on_going_construction mode (Thm.prop_of sequent)
+      then put ctxt (sequent, sequent, Lazy.lazy (fn () =>
+                                       reason_programming_implication' mode ctxt sequent))
+      else case Programming_Sequent.get ctxt
+             of (_, construction, implication)::_ => put ctxt (sequent, construction, implication)
+              | [] => raise Fail "bug #gq3unip9q"
+  end
 
 val update_programming_sequent' = gen_update_programming_sequent'
         (fn ctxt => fn data => Programming_Sequent.map (fn L => data::tl L) ctxt)

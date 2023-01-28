@@ -1324,6 +1324,8 @@ fn (ctxt,sequent) =>
   end
 \<close>
 
+declare [[\<phi>trace_reasoning, \<phi>trace_reasoning_candidates]]
+
 proc (nodef) try'':
   assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   assumes G: \<open>(\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE2 )\<close>
@@ -1333,7 +1335,7 @@ proc (nodef) try'':
   \<medium_left_bracket> "__op_try__"
     F  
     G
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .. .
 
 proc (nodef) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>

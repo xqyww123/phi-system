@@ -2223,7 +2223,7 @@ lemma Structural_Extract_aggrement_to
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Feasible_def
             Structural_Extract'_def
-  apply (cases C; simp)
+  apply (cases C; simp) 
   \<medium_left_bracket> premises A
     dup
     Agreement_cast[OF A]

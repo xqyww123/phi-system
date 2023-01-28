@@ -153,10 +153,14 @@ text \<open>Fail ends the current search branch but does not terminate
 definition FAIL :: \<open>text \<Rightarrow> bool\<close>
   where [iff]: \<open>FAIL x \<longleftrightarrow> False\<close>
 
-\<phi>reasoner_ML FAIL 1200 (\<open>FAIL ?x\<close>) = \<open>fn (ctxt,sequent) =>
+definition FAIL' :: \<open>text \<Rightarrow> prop\<close>
+  where [iff]: \<open>FAIL' x \<equiv> (\<And>P. PROP P)\<close>
+
+\<phi>reasoner_ML FAIL 1200 (\<open>FAIL ?x\<close> | \<open>PROP FAIL' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
   let
-    val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ text)
-          = Thm.major_prem_of sequent
+    val text = case Thm.major_prem_of sequent
+                 of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ X) => X
+                  | \<^const>\<open>FAIL'\<close> $ X => X
     val str = Encode_Text.decode_text_str ctxt text
     val _ = warning str
   in Seq.empty
@@ -170,10 +174,14 @@ text \<open>Fail terminates the whole reasoning.\<close>
 definition ERROR :: \<open>text \<Rightarrow> bool\<close>
   where [iff]: \<open>ERROR x \<longleftrightarrow> False\<close>
 
-\<phi>reasoner_ML ERROR 1200 (\<open>ERROR ?x\<close>) = \<open>fn (ctxt,sequent) =>
+definition ERROR' :: \<open>text \<Rightarrow> prop\<close>
+  where [iff]: \<open>ERROR' x \<equiv> (\<And>P. PROP P)\<close>
+
+\<phi>reasoner_ML ERROR 1200 (\<open>ERROR ?x\<close> | \<open>PROP ERROR' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
   let
-    val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>ERROR\<close> $ text)
-          = Thm.major_prem_of sequent
+    val text = case Thm.major_prem_of sequent
+                 of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>ERROR\<close> $ X) => X
+                  | \<^const>\<open>ERROR'\<close> $ X => X
     val str = Encode_Text.decode_text_str ctxt text
     val _ = error str
   in Seq.empty

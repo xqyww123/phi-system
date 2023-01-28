@@ -15,7 +15,7 @@ structure NuObtain : NU_OBTAIN = struct
 fun eliminate_term ctxt xs thm =
   let open Phi_Envir Phi_Syntax Phi_Help
     val tm = Thm.prop_of thm
-    val mode = Phi_Working_Mode.working_mode_on1 ctxt tm
+    val mode = Phi_Working_Mode.mode1 ctxt
     val vs = map (dest_Free o Thm.term_of) xs;
     fun collect vs tm = Term.fold_aterms (fn t as Free v =>
                         if member (op =) vs v then insert (op =) v else I | _ => I) tm []
@@ -102,7 +102,7 @@ fun auto_choose stat =
   let
     val ctxt = Proof.context_of stat
     val sequent = Phi_Envir.the_state_sequent stat
-    val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent)
+    val mode = Phi_Working_Mode.mode1 ctxt
     val var_names = #spec_of mode (Thm.concl_of sequent)
           |> Phi_Help.strip_binder_vars @{const_name ExSet}
           |> map (Name.clean o fst)

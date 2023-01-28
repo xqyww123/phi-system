@@ -179,7 +179,7 @@ end
 
 fun collect_and_clean_value whether_clean ctxt sequent =
   let
-    val mode = Phi_Working_Mode.working_mode_on1 ctxt (Thm.concl_of sequent)
+    val mode = Phi_Working_Mode.mode1 ctxt
     val rule = if whether_clean
                then @{thm apply_collect_clean_value[where WHETHER_CLEAN = True]}
                else @{thm apply_collect_clean_value[where WHETHER_CLEAN = False]}
@@ -268,7 +268,7 @@ structure Process_of_Argument = Generic_Data (
 val _ = Theory.setup (Context.theory_map (
 Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
   if level = 0
-  andalso #domain Phi_Working_Mode.procedure ctxt (Thm.concl_of sequent)
+  andalso #name (Phi_Working_Mode.mode1 ctxt) = #name Phi_Working_Mode.procedure
   then the_default to_value_and_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
   else (ctxt,sequent)
 )))

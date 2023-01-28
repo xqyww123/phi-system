@@ -52,11 +52,8 @@ fun vcg_sem_type goal (ctxt,sequent) =
 
 val sem_type : Phi_Working_Mode.working_mode = {
   name = "\<phi>SemType",
-  domain = (fn _ => can dest_SemType),
   spec_of = #spec_of Phi_Working_Mode.implication,
   spec_of_c = #spec_of_c Phi_Working_Mode.implication,
-  source_spec = #1 o dest_SemType,
-  source_spec_c = #1 o dest_SemType_c,
   inhabited_rule = #inhabited_rule Phi_Working_Mode.implication,
   initial_sequent = start_implication finish_sem_type,
   transformation_rule = #transformation_rule Phi_Working_Mode.implication,
@@ -81,11 +78,8 @@ fun make_zero_value goal ctxt =
 
 val zero_value : Phi_Working_Mode.working_mode = {
   name = "\<phi>Zero",
-  domain = (fn _ => can dest_Zero),
   spec_of = #spec_of Phi_Working_Mode.implication,
   spec_of_c = #spec_of_c Phi_Working_Mode.implication,
-  source_spec = I,
-  source_spec_c = I,
   inhabited_rule = #inhabited_rule Phi_Working_Mode.implication,
   initial_sequent = make_zero_value,
   transformation_rule = #transformation_rule Phi_Working_Mode.implication,

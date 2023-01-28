@@ -176,7 +176,7 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> E \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' @action ToSA
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
-            TAIL_def Brking_Frame_def
+            TAIL_def Brking_Frame_def 
   \<medium_left_bracket> premises X and Y and E
     X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> Brk_Frame l)\<close> ..
             \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..

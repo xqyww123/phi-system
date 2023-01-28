@@ -2,17 +2,10 @@ signature PHI_WORKING_MODE = sig
 
 type working_mode = {
   name: string,
-  domain: Proof.context -> term -> bool,
+  is_on_going_construction: term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term (*the BI assertion*),
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
-  source_spec: term (*goal*) -> term,
-  source_spec_c: cterm (*goal*) -> cterm,
-(*  target_spec:   term (*proposition of a goal*) -> term option,
-  target_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option,
-  exception_spec  : term (*proposition of a goal*) -> term option,
-  exception_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option, *)
   initial_sequent: cterm (*initial BI assertion*) -> Proof.context -> Proof.context * thm,
-(*  block_name_of: term -> string, *)
   inhabited_rule: thm,
   transformation_rule : thm,
   view_shift_rule: thm option,
@@ -30,14 +23,18 @@ which always has a leading obligation P no matter whether it is trivially true.
 cast exception is the version for casting an exception assertion.
 *)
 
-val working_mode_on  : Proof.context -> term -> working_mode option
-val working_mode_on1 : Proof.context -> term -> working_mode
 val procedure : working_mode
 val view_shift : working_mode
 val implication : working_mode
 
+val initial_sequent_procedure : cterm (*argument*) -> Proof.context -> Proof.context * thm
+
+val register :  working_mode list -> Context.generic -> Context.generic
+val get_by_name  : Context.generic -> string -> working_mode option
+val get_by_name1 : Context.generic -> string -> working_mode
 val set  : working_mode -> Proof.context -> Proof.context
-val mode : Proof.context -> working_mode
+val mode  : Proof.context -> working_mode option
+val mode1 : Proof.context -> working_mode
 
 val cast : cterm -> Proof.context * thm -> Proof.context * thm
 val cast_exception : cterm -> Proof.context * thm -> Proof.context * thm
@@ -48,15 +45,9 @@ structure Phi_Working_Mode : PHI_WORKING_MODE = struct
 
 type working_mode = {
   name: string,
-  domain: Proof.context -> term -> bool,
+  is_on_going_construction: term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term,
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
-  source_spec: term (*goal*) -> term,
-  source_spec_c: cterm (*goal*) -> cterm,
-(*  target_spec: term (*term of the state sequent*) -> term option,
-  target_spec_c: Proof.context -> cterm (*term of the state sequent*) -> cterm option,
-  exception_spec  : term (*proposition of a goal*) -> term option,
-  exception_spec_c: Proof.context -> cterm (*proposition of a goal*) -> cterm option, *)
   inhabited_rule: thm,
   initial_sequent: cterm (*goal*) -> Proof.context -> Proof.context * thm,
   transformation_rule : thm,
@@ -75,13 +66,13 @@ structure Data = Generic_Data(
   val merge = Symtab.merge (K true)
 )
 
-fun working_mode_on ctxt goal =
-      Symtab.get_first (fn (_,mode) => if #domain mode ctxt goal then SOME mode else NONE)
-        (Data.get (Context.Proof ctxt))
+val get_by_name = Symtab.lookup o Data.get
+fun get_by_name1 ctxt name =
+  case get_by_name ctxt name
+    of SOME X => X
+     | NONE => error ("No such registered mode: "^name)
 
-fun working_mode_on1 ctxt goal =
-      case working_mode_on ctxt goal of SOME x => x
-         | NONE => error ("Do not know how to handle goal\n" ^ Syntax.string_of_term ctxt goal)
+fun register wms = Data.map (fold (fn wm => Symtab.update_new (#name wm, wm)) wms)
 
 (* Set / Get Mode *)
 
@@ -91,10 +82,12 @@ structure Mode = Proof_Data(
 )
 
 val set = Mode.put o SOME
-fun mode ctxt = case Mode.get ctxt
-                  of SOME x => x
-                   | NONE => error ("No working mode has been set in this context.")
-  
+
+val mode = Mode.get
+fun mode1 ctxt = case Mode.get ctxt
+                   of SOME x => x
+                    | NONE => error ("No working mode has been set in this context.")
+
 
 (* Auxiliaries *)
 
@@ -122,8 +115,10 @@ fun bad_sequent sequent =
 fun collect vs tm = Term.fold_aterms (fn Free v =>
                     if member (op =) vs v then insert (op =) v else I | _ => I) tm []
 
-fun introduce_ex_ToA extract rule xs (ctxt, sequent) =
+fun introduce_ex_ToA extract rule0 xs (ctxt, sequent) =
   let
+    val idx = Thm.maxidx_of sequent + 1
+    val rule = Thm.incr_indexes idx rule0
     fun generalize x sequent =
       case Phi_Syntax.dest_ToA_Construction (Thm.concl_of sequent) of (_, S)
             => sequent RS Drule.infer_instantiate ctxt
@@ -131,9 +126,11 @@ fun introduce_ex_ToA extract rule xs (ctxt, sequent) =
   in fold_rev generalize xs sequent |> pair ctxt
   end
 
-fun introduce_existence_cc extract rule xs (ctxt,sequent) =
+fun introduce_existence_cc extract rule0 xs (ctxt,sequent) =
   if can Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)
   then let
+      val idx = Thm.maxidx_of sequent + 1
+      val rule = Thm.incr_indexes idx rule0
       fun generalize x sequent =
         case Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent) of (_,_,_,_,E)
               => sequent RS Drule.infer_instantiate ctxt
@@ -145,8 +142,9 @@ fun introduce_existence_cc extract rule xs (ctxt,sequent) =
       val (_,_,_,Q,E) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequent)
       val bad_Q = collect xs Q
       val bad_E = collect xs E
-      val rule_Q = @{thm introduce_Ex_pending}
-      val rule_E = @{thm introduce_Ex_pending_E}
+      val idx = Thm.maxidx_of sequent + 1
+      val rule_Q = Thm.incr_indexes idx @{thm introduce_Ex_pending}
+      val rule_E = Thm.incr_indexes idx @{thm introduce_Ex_pending_E}
       fun generalize_Q x sequent =
         case Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequent) of (_,_,_,Q,_)
           => sequent RS
@@ -159,19 +157,9 @@ fun introduce_existence_cc extract rule xs (ctxt,sequent) =
       end
   else bad_sequent sequent
 
-fun cast desired (ctxt,sequent) =
-  let
-    val mode = mode ctxt
-  in
-    #cast mode desired (ctxt,sequent)
-  end
+fun cast desired (ctxt,sequent) = #cast (mode1 ctxt) desired (ctxt,sequent)
 
-fun cast_exception desired (ctxt,sequent) =
-  let
-    val mode = mode ctxt
-  in
-    #cast_exception mode desired (ctxt,sequent)
-  end
+fun cast_exception desired (ctxt,sequent) = #cast_exception (mode1 ctxt) desired (ctxt,sequent)
 
 fun vcg_by_cast destination (ctxt,sequent) = (
       Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
@@ -187,8 +175,6 @@ fun vcg_by_cast destination (ctxt,sequent) = (
 (** Procedure Mode **)    
 
 
-local
-
 fun finish_proc hyp (_,sequent) =
   let open Phi_Syntax
     val (_,s',H',_) = dest_CurrentConstruction_c hyp
@@ -200,7 +186,7 @@ fun finish_proc hyp (_,sequent) =
       |> (fn th => th COMP @{thm \<phi>reassemble_proc_final})
   end
 
-fun start_proc arg ctxt =
+fun initial_sequent_procedure arg ctxt =
   let open Phi_Syntax
     val ([blk_name, RR],ctxt) = Variable.add_fixes ["\<SS>", "\<RR>"] ctxt
     val stat_var = Free (blk_name, \<^typ>\<open>resource\<close>)
@@ -221,6 +207,8 @@ fun start_proc arg ctxt =
   in
     (ctxt,init)
   end
+
+local
 
 fun cast desired (ctxt, sequent) =
   let
@@ -267,7 +255,7 @@ fun vcg_before_assembling goal (ctxt,sequent) =
                   (SOLVED' (Simplifier.simp_tac ctxt) 1)
         end
       else sequent
-    val desired_nu = #3 (Phi_Syntax.dest_procedure_c goal)
+    val desired_nu = #4 (Phi_Syntax.dest_PendingConstruction_c goal)
     val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
                           |> Phi_Syntax.dest_sem_value_T
     val current_phi = #4 (Phi_Syntax.dest_PendingConstruction_c (Thm.cprop_of sequent'))
@@ -292,22 +280,16 @@ in
 
 val procedure : working_mode = 
   {
-    name = "procedure",
-    domain = (fn _ => fn tm =>
-               can Phi_Syntax.dest_procedure tm
-        orelse Phi_Syntax.is_construction_mode \<^const>\<open>programming_mode\<close> tm
-        orelse can Phi_Syntax.dest_PendingConstruction tm
-    ),
+    name = \<^const_name>\<open>working_mode_procedure\<close>,
+    is_on_going_construction = can Phi_Syntax.dest_CurrentConstruction,
     spec_of   = #4 o Phi_Syntax.dest_CurrentConstruction,
     spec_of_c = #4 o Phi_Syntax.dest_CurrentConstruction_c,
-    source_spec   = #2 o Phi_Syntax.dest_procedure,
-    source_spec_c = #2 o Phi_Syntax.dest_procedure_c,
 (*    target_spec = SOME o target_spec,
     target_spec_c = SOME oo target_spec_c,
     exception_spec = exception_spec,
     exception_spec_c = exception_spec_c, *)
     inhabited_rule = @{thm CurrentConstruction_Inhabited_rule},
-    initial_sequent = start_proc,
+    initial_sequent = initial_sequent_procedure,
     transformation_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = cast,
@@ -324,16 +306,6 @@ end
 
 val view_shift : working_mode = 
 let
-  fun target_spec term =
-    let
-      val (_,T,P') = Phi_Syntax.dest_view_shift term
-      val P = if is_Var P' then \<^const>\<open>True\<close> else P'
-    in
-      Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
-    end
-  (*TODO: optimize this*)
-  fun target_spec_c ctxt = Thm.term_of #> target_spec #> Thm.cterm_of ctxt
-
   fun finish_view_shift hyp (_,sequent) =
     let open Phi_Syntax
       val (_,s',H',_) = dest_CurrentConstruction_c hyp
@@ -368,13 +340,10 @@ let
     end
 in
 {
-    name = "view shift",
-    domain = (fn _ => fn x => can Phi_Syntax.dest_view_shift x
-                       orelse Phi_Syntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> x),
+    name = \<^const_name>\<open>working_mode_view_shift\<close>,
+    is_on_going_construction = can Phi_Syntax.dest_CurrentConstruction,
     spec_of   = #4 o Phi_Syntax.dest_CurrentConstruction,
     spec_of_c = #4 o Phi_Syntax.dest_CurrentConstruction_c,
-    source_spec   = #1 o Phi_Syntax.dest_view_shift,
-    source_spec_c = #1 o Phi_Syntax.dest_view_shift_c,
 (*    target_spec = SOME o target_spec,
     target_spec_c = SOME oo target_spec_c,
     exception_spec = K NONE,
@@ -395,7 +364,7 @@ in
     ),
     cast_exception = K (cannot_cast_exception o snd),
     vcg_before_assembling = (fn goal => fn (ctxt,sequent) =>
-        vcg_by_cast (target_spec_c ctxt goal) (ctxt,sequent)),
+        vcg_by_cast (#4 (Phi_Syntax.dest_CurrentConstruction_c goal)) (ctxt,sequent)),
     introduce_existence = introduce_existence_cc I @{thm introduce_Ex},
     introduce_existence_in_assembling =
       introduce_existence_cc (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
@@ -407,18 +376,7 @@ end
 (** Implication **)
 
 
-val implication : working_mode =
-let
-  fun target_spec term =
-    let
-      val (_,T,P') = Phi_Syntax.dest_implication term
-      val P = if is_Var P' then \<^const>\<open>True\<close> else P'
-    in
-      Const (\<^const_name>\<open>Subjection\<close>, fastype_of T --> \<^typ>\<open>bool\<close> --> fastype_of T) $ T $ P
-    end
-  (*TODO: optimize this*)
-  fun target_spec_c ctxt = Thm.term_of #> target_spec #> Thm.cterm_of ctxt
-
+local
   fun finish_implication hyp (_,sequent) =
     let val (s,_) = Phi_Syntax.dest_ToA_Construction_c hyp
     in sequent
@@ -442,14 +400,11 @@ let
       (ctxt,init)
     end
 in
-{
-    name = "implication",
-    domain = (fn _ => fn x => can Phi_Syntax.dest_implication x
-                       orelse can Phi_Syntax.dest_ToA_Construction  x),
+val implication : working_mode = {
+    name = \<^const_name>\<open>working_mode_implication\<close>,
+    is_on_going_construction = can Phi_Syntax.dest_ToA_Construction,
     spec_of   = #2 o Phi_Syntax.dest_ToA_Construction,
     spec_of_c = #2 o Phi_Syntax.dest_ToA_Construction_c,
-    source_spec   = #1 o Phi_Syntax.dest_implication,
-    source_spec_c = #1 o Phi_Syntax.dest_implication_c,
     inhabited_rule = @{thm ToA_Construction_Inhabited_rule},
     initial_sequent = start_implication,
     transformation_rule  = @{thm \<phi>apply_implication_impl},
@@ -466,7 +421,7 @@ in
     ),
     cast_exception = K (cannot_cast_exception o snd),
     vcg_before_assembling = (fn goal => fn (ctxt,sequent) =>
-        vcg_by_cast (target_spec_c ctxt goal) (ctxt,sequent)),
+        vcg_by_cast (#2 (Phi_Syntax.dest_ToA_Construction_c goal)) (ctxt,sequent)),
     introduce_existence = introduce_ex_ToA I @{thm introduce_Ex_ToA},
     introduce_existence_in_assembling =
         introduce_ex_ToA (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
@@ -475,57 +430,7 @@ in
 }
 end
 
-
-(*
-local
-
-val dest_SemType = Phi_Syntax.dest_tags #> Phi_Help.dest_binop \<^const_name>\<open>\<phi>SemType\<close>
-
-in
-
-val SemType = {
-    name = "\<phi>SemType",
-    domain = (fn _ => fn x => can dest_SemType x),
-    spec_of   = #2 o Phi_Syntax.dest_ToA_Construction,
-    spec_of_c = #2 o Phi_Syntax.dest_ToA_Construction_c,
-    target_spec = K NONE,
-    target_spec_c = K (K NONE),
-    source_spec = source_spec,
-(*    exception_spec = K NONE,
-    exception_spec_c = K (K NONE), *)
-    inhabited_rule = @{thm ToA_Construction_Inhabited_rule},
-    initial_sequent = start_implication,
-    block_name_of = (K "\<chi>"),
-    transformation_rule  = @{thm \<phi>apply_implication_impl},
-    view_shift_rule = NONE,
-    cast = (fn desired => fn (ctxt,sequent) =>
-      let
-        val idx = 1 + Thm.maxidx_of_cterm desired
-        val rule = @{thm "_\<phi>cast_implication_"}
-          |> Thm.incr_indexes idx
-          |> Drule.infer_instantiate ctxt [(("T",idx),desired)]
-      in
-        generic_cast rule "sequent" desired (ctxt, sequent)
-      end
-    ),
-    cast_exception = K (cannot_cast_exception o snd),
-    vcg_before_assembling = (K I),
-    introduce_existence = introduce_ex_ToA I @{thm introduce_Ex_ToA},
-    introduce_existence_in_assembling =
-        introduce_ex_ToA (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
-                           | _ => error ("bad form of the finalizing sequent"))
-                         @{thm introduce_Ex_ToA_subj}
-}
-
-end
-*)
-
-
-val _ = Theory.setup (Context.theory_map
-            (Data.map (Symtab.update_new ("procedure",   procedure)
-                    #> Symtab.update_new ("view_shift",  view_shift)
-                    #> Symtab.update_new ("implication", implication)
-)))
+val _ = Theory.setup (Context.theory_map (register [procedure, view_shift, implication]))
 
 
 end
