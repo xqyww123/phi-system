@@ -208,6 +208,9 @@ subsubsection \<open>Semantic Type\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method (Trueprop (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Well_Type TY)) M D R F
+\<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show the value abstraction\<close> S \<open>has semantic type\<close> TY
+      \<open>Now you entered the programming mode and you need to transform the specification to\<close>
+      \<open>some representation of \<phi>-types whose semantic type is know so that we can verify your claim.\<close>)
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>SemType S TY)) M D R F\<close>
   unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def Imply_def
   by (simp add: subset_iff)
@@ -241,21 +244,15 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Equality\<close>
 
-lemma \<phi>deduce_Equal:
-  \<open> (\<And>x y vx vy. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ceq x y
-              \<Longrightarrow> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] U \<heavy_comma> y' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] U
-                  \<^bold>s\<^bold>u\<^bold>b\<^bold>j ceq' x' y' \<and> eq x y = eq' x' y'
-                  \<^bold>s\<^bold>u\<^bold>b\<^bold>j x' y' U. \<phi>Equal U ceq' eq')
-\<Longrightarrow> \<phi>Equal T ceq  eq \<close>
-  unfolding \<phi>Equal_def Premise_def Imply_def
-  by (clarsimp simp add: \<phi>expns \<phi>arg_All, blast)
-
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method
           (\<And>x y vx vy. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ceq x y
               \<Longrightarrow> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] U \<heavy_comma> y' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] U
                   \<^bold>s\<^bold>u\<^bold>b\<^bold>j U x' y'. Embedded_Reasoning (\<phi>Equal U ceq' eq') \<and> ceq' x' y' \<and> eq x y = eq' x' y')
           M D R F
+\<Longrightarrow> Friendly_Help
+    TEXT(\<open>Hi! Transform the specification to some representation of \<phi>-types whose\<close> \<phi>Equal
+         \<open>property is known so that we can generate proof obligations for your claim.\<close>)
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>Equal T ceq eq)) M D R F\<close>
   (is \<open>PROP \<phi>Programming_Method (PROP ?IMP) _ _ _ _ \<Longrightarrow> PROP _\<close>
    is \<open>PROP ?PPP \<Longrightarrow> PROP _\<close>)
@@ -272,8 +269,6 @@ proof -
   show \<open>\<phi>Equal T ceq eq\<close>
     using PP[OF D R F, THEN rule] .
 qed
-
-
 
 
 ML_file \<open>library/additions/value_properties.ML\<close>

@@ -285,7 +285,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                   |> Phi_Envir.put_thesis (Thm.cprem_of (#goal (Proof.goal stat)) 1
                                               |> Drule.strip_imp_concl)))
       |> Proof.begin_block
-      |> #initial_sequent mode
+      |> #initialize_sequent mode
       |-> Phi_Envir.enter_programming_environ
 (*      |> Generic_Variable_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)

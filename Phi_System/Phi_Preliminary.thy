@@ -113,6 +113,25 @@ subsection \<open>Helper Isar Commands\<close>
 
 ML_file \<open>library/tools/optional_translation.ML\<close>
 
+subsection \<open>The Friendly Character\<close>
+
+ML_file \<open>library/tools/the_friendly_character.ML\<close>
+
+definition Friendly_Help :: \<open>text \<Rightarrow> bool\<close> where [iff]: \<open>Friendly_Help _ \<longleftrightarrow> True\<close>
+
+term \<open>ERROR\<close>
+lemma Friendly_Help_I: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_def ..
+
+\<phi>reasoner_ML Friendly_Help 1000 (\<open>Friendly_Help _\<close>) = \<open>fn (ctxt,sequent) =>
+ (if Config.get ctxt Phi_The_Friendly_Character.enable
+  then let
+        val _ $ (_ $ text) = Thm.major_prem_of sequent
+        val pretty = Text_Encoding.decode_text_pretty ctxt text
+       in Phi_The_Friendly_Character.info ctxt (fn _ => pretty) end
+  else ();
+  Seq.single (ctxt, @{thm Friendly_Help_I} RS sequent)
+ )
+\<close>
 
 
 (*TODO: Move this*)

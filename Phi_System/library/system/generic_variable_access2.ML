@@ -173,7 +173,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
       val ctxt = fold2 (fn H => fn D => D H) Hs decl ctxt
       
       (*make the new initial sequent*)
-      val (ctxt, sequent') = Phi_Working_Mode.initial_sequent_procedure arg_spec ctxt
+      val (ctxt, sequent') = Phi_Working_Mode.initialize_sequent_procedure arg_spec ctxt
       
       val (_, ctxt) = Assumption.add_assms (fn _ => fn _ =>
                 ((fn sequentx => #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx)

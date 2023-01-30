@@ -5,7 +5,7 @@ type working_mode = {
   is_on_going_construction: term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term (*the BI assertion*),
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
-  initial_sequent: Proof.state -> thm * Proof.state,
+  initialize_sequent: Proof.state -> thm * Proof.state,
   inhabited_rule: thm,
   transformation_rule : thm,
   view_shift_rule: thm option,
@@ -27,7 +27,7 @@ val procedure : working_mode
 val view_shift : working_mode
 val implication : working_mode
 
-val initial_sequent_procedure : cterm (*argument*) -> Proof.context -> Proof.context * thm
+val initialize_sequent_procedure : cterm (*argument*) -> Proof.context -> Proof.context * thm
 
 val register :  working_mode list -> Context.generic -> Context.generic
 val get_by_name  : Context.generic -> string -> working_mode option
@@ -49,7 +49,7 @@ type working_mode = {
   spec_of  :  term (*on-going construction assertion*) ->  term,
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
   inhabited_rule: thm,
-  initial_sequent: Proof.state -> thm * Proof.state,
+  initialize_sequent: Proof.state -> thm * Proof.state,
   transformation_rule : thm,
   view_shift_rule: thm option,
   cast: cterm -> Proof.context * thm -> Proof.context * thm,
@@ -91,13 +91,13 @@ fun mode1 ctxt = case Mode.get ctxt
 
 (** Auxiliaries **)
 
-fun generic_initial_sequent gen s =
+fun generic_initialize_sequent gen s =
   case Facts.lookup (Context.Proof (Proof.context_of s))
                     (Proof_Context.facts_of (Proof.context_of s)) "local.\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>"
     of SOME {thms=[X], dynamic=false} => (Thm.transfer' (Proof.context_of s) X, s)
      | _ => gen s 
 
-val default_initial_sequent = generic_initial_sequent (fn _ => error "BUG #q23c5nu9[")
+val default_initialize_sequent = generic_initialize_sequent (fn _ => error "BUG #q23c5nu9[")
 
 (* Cast *)
 
@@ -196,7 +196,7 @@ fun finish_proc hyp (_,sequent) =
       |> (fn th => th COMP @{thm \<phi>reassemble_proc_final})
   end
 
-fun initial_sequent_procedure arg ctxt =
+fun initialize_sequent_procedure arg ctxt =
   let open Phi_Syntax
     val ([blk_name, RR],ctxt) = Variable.add_fixes ["\<SS>", "\<RR>"] ctxt
     val stat_var = Free (blk_name, \<^typ>\<open>resource\<close>)
@@ -299,7 +299,7 @@ val procedure : working_mode =
     exception_spec = exception_spec,
     exception_spec_c = exception_spec_c, *)
     inhabited_rule = @{thm CurrentConstruction_Inhabited_rule},
-    initial_sequent = default_initial_sequent,
+    initialize_sequent = default_initialize_sequent,
     transformation_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = cast,
@@ -360,7 +360,7 @@ in
     exception_spec = K NONE,
     exception_spec_c = K (K NONE), *)
     inhabited_rule = @{thm CurrentConstruction_Inhabited_rule},
-    initial_sequent = default_initial_sequent,
+    initialize_sequent = default_initialize_sequent,
     transformation_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
     cast = (fn desired => fn (ctxt, sequent) =>
@@ -418,7 +418,7 @@ val implication : working_mode = {
     spec_of   = #2 o Phi_Syntax.dest_ToA_Construction,
     spec_of_c = #2 o Phi_Syntax.dest_ToA_Construction_c,
     inhabited_rule = @{thm ToA_Construction_Inhabited_rule},
-    initial_sequent = default_initial_sequent,
+    initialize_sequent = default_initialize_sequent,
     transformation_rule  = @{thm \<phi>apply_implication_impl},
     view_shift_rule = NONE,
     cast = (fn desired => fn (ctxt,sequent) =>

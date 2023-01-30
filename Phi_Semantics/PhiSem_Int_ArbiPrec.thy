@@ -86,8 +86,6 @@ subsection \<open>Natural Nmber\<close>
 
 definition \<phi>ANat ("\<nat>") where [simp]: "\<nat> n = (of_nat n \<Ztypecolon> \<int>)"
 
-declare [[\<phi>trace_reasoning]]
-
 lemma [\<phi>reason 1000 for \<open>?x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<nat> \<^bold>a\<^bold>n\<^bold>d ?Any\<close>]: 
   " \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 \<le> x \<and> y = nat x
 \<Longrightarrow> x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>"
@@ -103,6 +101,8 @@ lemma [\<phi>reason 1000 for \<open>?x \<Ztypecolon> \<nat> \<^bold>i\<^bold>m\<
 
 lemma [\<phi>reason 1000]:
   " x \<Ztypecolon> \<nat> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Int.int x \<Ztypecolon> \<int> @action to \<int> " \<medium_left_bracket> \<medium_right_bracket>. .
+
+declare [[\<phi>show_helps = true]]
 
 lemma [\<phi>reason 1000]: \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>. .
 
