@@ -2708,7 +2708,7 @@ lemma Structural_Extract_share_half
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
     X[THEN implies_right_prod]
-   \<medium_right_bracket>. .
+  \<medium_right_bracket>. .
 
 lemma Structural_Extract_share_half_rev:
   \<open> \<phi>Sep_Disj_Identical T

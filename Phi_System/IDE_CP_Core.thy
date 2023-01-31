@@ -227,7 +227,7 @@ definition \<phi>Programming_Method :: \<open>prop \<Rightarrow> working_mode \<
             \<Longrightarrow> PROP Target)\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>PROP \<phi>Programming_Method ?T _ _ _ _\<close> \<Rightarrow> \<open>PROP \<phi>Programming_Method ?T _ _ _ _\<close>
+      \<open>PROP \<phi>Programming_Method ?T _ _ _ _\<close> \<Rightarrow> \<open>PROP \<phi>Programming_Method ?T _ _ _ _\<close> (100)
 ]]
 
 lemma reason_programming:
@@ -500,8 +500,10 @@ text \<open>
 TODO: replace <@GOAL> G to \<open>@action synthesis G\<close>
 \<close>
 
-declare [[\<phi>reason_default_pattern \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-                               \<Rightarrow> \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _  @action synthesis _\<close>]]
+declare [[\<phi>reason_default_pattern
+      \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _  @action synthesis _\<close> \<Rightarrow>
+      \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _  @action synthesis _\<close>    (100)
+]]
     
 
 subsubsection \<open>Synthesis Operations\<close>
@@ -1109,7 +1111,7 @@ definition Do_Action :: \<open>'cat action \<Rightarrow> prop \<Rightarrow> prop
 text \<open>\<^prop>\<open>PROP Do_Action action sequent result\<close> is the antecedent to be reasoned
   to return the construction result of the sequent by the action.\<close>
 
-declare [[\<phi>reason_default_pattern \<open>PROP Do_Action ?A ?S _\<close> \<Rightarrow> \<open>PROP Do_Action ?A ?S _\<close>]]
+declare [[\<phi>reason_default_pattern \<open>PROP Do_Action ?A ?S _\<close> \<Rightarrow> \<open>PROP Do_Action ?A ?S _\<close> (100) ]]
 
 subsubsection \<open>Two Methods of Applying Action\<close>
 

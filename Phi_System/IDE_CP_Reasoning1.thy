@@ -384,7 +384,7 @@ definition Pass_Embedded_Reasoning' :: \<open>bool \<Rightarrow> bool \<Rightarr
   where \<open>Pass_Embedded_Reasoning' IN OUT \<longleftrightarrow> (OUT \<longleftrightarrow> IN)\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>Pass_Embedded_Reasoning' ?X _\<close> \<Rightarrow> \<open>Pass_Embedded_Reasoning' ?X _\<close>
+      \<open>Pass_Embedded_Reasoning' ?X _\<close> \<Rightarrow> \<open>Pass_Embedded_Reasoning' ?X _\<close> (100)
 ]]
 
 lemma [\<phi>reason 1000]:

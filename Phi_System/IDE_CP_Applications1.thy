@@ -16,8 +16,10 @@ subsubsection \<open>Actions only for implication only\<close>
 consts \<A>_transformation :: \<open>'a action \<Rightarrow> 'a action\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close>
-  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close> \<Rightarrow> \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close>    (100)
+  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close> \<Rightarrow>
+      \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close>    (100)
 ]]
 
 lemma [\<phi>reason 1010]:
@@ -97,8 +99,10 @@ subsubsection \<open>Actions for \<open>\<exists>\<and>\<close>-free MTF\<close>
 consts \<A>_simple_MTF :: \<open>'a action \<Rightarrow> 'a action\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close>
-  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close> \<Rightarrow> \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close>    (100)
+  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close> \<Rightarrow>
+      \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close>    (100)
 ]]
 
 paragraph \<open>Implication\<close>
@@ -143,8 +147,10 @@ consts \<A>_leading_item' :: \<open>'a action \<Rightarrow> 'a action\<close>
 abbreviation \<open>\<A>_leading_item A \<equiv> \<A>_simple_MTF (\<A>_leading_item' A)\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_leading_item' _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_leading_item' _\<close>
-  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_leading_item' _\<close> \<Rightarrow> \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_leading_item' _\<close>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_leading_item' _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_leading_item' _\<close>    (100)
+  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_leading_item' _\<close> \<Rightarrow>
+      \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_leading_item' _\<close>    (100)
 ]]
 
 paragraph \<open>Implication\<close>
@@ -183,8 +189,10 @@ consts \<A>_multi_arity' :: \<open>'a action \<Rightarrow> 'a action\<close>
 abbreviation \<open>multi_arity A \<equiv> \<A>_simple_MTF (\<A>_multi_arity' A)\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_multi_arity' _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_multi_arity' _\<close>
-  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_multi_arity' _\<close> \<Rightarrow> \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_multi_arity' _\<close>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_multi_arity' _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_multi_arity' _\<close>    (100)
+  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_multi_arity' _\<close> \<Rightarrow>
+      \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_multi_arity' _\<close>    (100)
 ]]
 
 lemma [\<phi>reason 1010 except \<open>?X1\<heavy_comma> ?X2 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action \<A>_multi_arity' ?A\<close>]:
@@ -237,12 +245,18 @@ text \<open>
 \<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural _\<close>
-  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural _\<close> \<Rightarrow> \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural _\<close>
-  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_2_1 _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_2_1 _\<close>
-  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_2_1 _\<close> \<Rightarrow> \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_2_1 _\<close>
-  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_1_2 _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_1_2 _\<close>
-  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_1_2 _\<close> \<Rightarrow> \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_1_2 _\<close>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural _\<close>    (100)
+  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural _\<close> \<Rightarrow>
+      \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural _\<close>     (100)
+  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_2_1 _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_2_1 _\<close>    (100)
+  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_2_1 _\<close> \<Rightarrow>
+      \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_2_1 _\<close>     (100)
+  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_1_2 _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_1_2 _\<close>    (100)
+  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_1_2 _\<close> \<Rightarrow>
+      \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_structural_1_2 _\<close>     (100)
 ]]
 
 paragraph \<open>Fallbacks\<close>
@@ -278,7 +292,8 @@ subsubsection \<open>As\<close>
 consts "as" :: \<open>'a set \<Rightarrow> unit action\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action as ?T\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action as ?T\<close>]]
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action as ?T\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action as ?T\<close> (100)
+]]
 
 abbreviation \<open>\<A>_transform_to_be S \<equiv> \<A>_leading_item (\<A>nap (as S)) \<close>
 
@@ -310,7 +325,8 @@ consts to :: \<open>('a,'b) \<phi> \<Rightarrow> unit action\<close>
 abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to ?T\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to ?T\<close>]]
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to ?T\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to ?T\<close> (100)
+]]
 
 lemma to_\<phi>app:
   \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T
@@ -340,8 +356,10 @@ consts \<A>_action_case :: \<open>unit action\<close>
 lemma cases_\<phi>app: \<open>PROP Call_Action (\<A>_view_shift_or_imp \<A>_action_case)\<close> ..
 
 declare [[ \<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_action_case\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_action_case\<close>
-  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_action_case\<close> \<Rightarrow> \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_action_case\<close>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_action_case\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_action_case\<close>    (100)
+  and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_action_case\<close> \<Rightarrow>
+      \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_action_case\<close>    (100)
 ]]
 
 lemma [\<phi>reason 1000]:

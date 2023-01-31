@@ -60,14 +60,14 @@ lemma SemTyp_Of_I[intro!, simp]:
   unfolding SemTyp_Of_def
   using \<phi>SemType_unique by blast 
 
-lemma [\<phi>reason]:
+lemma [\<phi>reason 100]:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
   ..
 
 subsubsection \<open>Reasoning Rules\<close>
 
-declare [[\<phi>reason_default_pattern \<open>\<phi>SemType ?S ?TY\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close>]]
+declare [[\<phi>reason_default_pattern \<open>\<phi>SemType ?S ?TY\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close> (100) ]]
 
 lemma [\<phi>reason 1]:
   \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
@@ -96,7 +96,7 @@ subsection \<open>Zero Value\<close>
 definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
   where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
 
-declare [[\<phi>reason_default_pattern \<open>\<phi>Zero ?TY ?T ?x\<close> \<Rightarrow> \<open>\<phi>Zero ?TY ?T _\<close>]]
+declare [[\<phi>reason_default_pattern \<open>\<phi>Zero ?TY ?T ?x\<close> \<Rightarrow> \<open>\<phi>Zero ?TY ?T _\<close> (100) ]]
 
 subsection \<open>Equality\<close>
 
@@ -105,7 +105,7 @@ definition \<phi>Equal :: "(VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<
     can_eq x1 x2 \<and> p1 \<in> (x1 \<Ztypecolon> T) \<and> p2 \<in> (x2 \<Ztypecolon> T)
       \<longrightarrow> Can_EqCompare res p1 p2 \<and> (EqCompare p1 p2 = eq x1 x2))"
 
-declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close> \<Rightarrow> \<open>\<phi>Equal ?TY _ _\<close>]]
+declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close> \<Rightarrow> \<open>\<phi>Equal ?TY _ _\<close> (100) ]]
 
 subsection \<open>Functional\<close>
 

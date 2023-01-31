@@ -1250,7 +1250,7 @@ lemma "__throw_rule__"[intro!]:
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
 
-lemma throw_\<phi>app[intro!]:
+lemma throw_\<phi>app:
   \<open> (\<And>v. Remove_Values (X v) (X' v))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Imply_def

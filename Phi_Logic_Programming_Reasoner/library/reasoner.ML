@@ -71,10 +71,11 @@ signature NU_REASONER = sig
         -> local_theory -> local_theory
 
   (* Default Pattern of Introduction Rule *)
-  val add_default_pattern : (term (*pattern P*) * term (*the default pattern X*)) list
-                         -> Context.generic -> Context.generic
+  val add_default_pattern :
+                  (int (*priority*) * term (*pattern P*) * term (*the default pattern X*)) list
+               -> Context.generic -> Context.generic
       (*The default pattern of an introduction rule whose conclusion matches P is X.*)
-  val remove_default_pattern : term * term -> Context.generic -> Context.generic
+  val remove_default_pattern : int * term * term -> Context.generic -> Context.generic
   val the_default_pattern_of : Context.generic -> term -> term
 
   (* Helpful Tools *)
@@ -393,45 +394,56 @@ val _ =
 
 (*** Default Pattern for Introduction Reasoning Rule ***)
 
-fun pat_pat_eq ((a1,b1),(a2,b2)) = a1 aconv a2 andalso b1 aconv b2
+fun pat_pat_eq ((p1,a1,b1),(p2,a2,b2)) = p1 = p2 andalso a1 aconv a2 andalso b1 aconv b2
 
 structure Default_Pattern = Generic_Data (
-  type T = (term (*pattern P*) * term (*the default pattern X*)) Net.net
-  (*It gives the default pattern P of an introduction rule whose conclusion matches some pattern P*)
+  type T = (int (*priority*) * term (*pattern P*) * term (*the default pattern X*)) Net.net
+  (*It gives the default pattern P of an introduction rule whose conclusion matches some pattern P.
+    Larger priority is more prior.*)
   val empty = Net.empty
   val merge = Net.merge pat_pat_eq
 )
 
 fun add_default_pattern pat_pats ctxt =
-      Default_Pattern.map (fold (fn (p1,p2) =>
-              Net.insert_term pat_pat_eq (p1,(p1,p2))) pat_pats) ctxt
+      Default_Pattern.map (fold (fn (n,p1,p2) =>
+              Net.insert_term pat_pat_eq (p1,(n,p1,p2))) pat_pats) ctxt
       handle Net.INSERT => Exn.error ("Some pattern clashes with existing entries.")
-fun remove_default_pattern (p1,p2) =
-      Default_Pattern.map (Net.delete_term_safe pat_pat_eq (p1,(p1,p2)))
+fun remove_default_pattern (n,p1,p2) =
+      Default_Pattern.map (Net.delete_term_safe pat_pat_eq (p1,(n,p1,p2)))
 
-fun calc_pattern thy term (pat, pat_ret) =
- (SOME (Envir.subst_term (Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)) pat_ret))
+fun calc_pattern thy term (n, pat, pat_ret) =
+ (SOME (n, Envir.subst_term (Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)) pat_ret))
   handle Pattern.MATCH => NONE
 
 fun the_default_pattern_of ctxt term =
   Net.match_term (Default_Pattern.get ctxt) term
-    |> map_filter (calc_pattern (Context.theory_of ctxt) term)
-    |> (fn [] => term
-         | [ret] => ret
-         | ls => error (Pretty.string_of (Pretty.chunks (
+    |> sort (fn ((n1,_,_),(n2,_,_)) => int_ord (n2,n1))
+    |> Seq.of_list
+    |> Seq.map_filter (calc_pattern (Context.theory_of ctxt) term)
+    |> Seq.chop 2
+    |> (fn ([], _) => term
+         | ([(_,ret)], _) => ret
+         | ([(n1,ret),(n2,ret2)], _) =>
+            if n1 = n2
+            then error (Pretty.string_of (Pretty.chunks (
                     [Pretty.str "Multiple default patterns are available:"] @
-                    (map (Syntax.pretty_term (Context.proof_of ctxt)) ls) @
+                    (map (Syntax.pretty_term (Context.proof_of ctxt)) [ret,ret2]) @
                     [Pretty.str "Fail to determine which pattern is preferable. \
                                 \Please indicate the pattern manually using syntax \
                                 \\<open>\<phi>reason for \<open>pattern\<close>\<close>"]
-                 ))))
+                 )))
+            else ret)
 
 
 fun wrap2L f (x,y) = case f [x,y] of [x',y'] => (x',y')
-val pat2 = (Args.context -- Scan.lift (Parse.prop --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.prop))
-  >> (fn (ctxt,pat2) =>
+val pat2 = (Args.context -- Scan.lift (Parse.prop --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.prop
+                                      --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))
+  >> (fn (ctxt,((p1,p2),n)) =>
     let val ctxt_p = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
-     in pat2 |> apply2 (Syntax.parse_prop ctxt_p) |> wrap2L (Syntax.check_props ctxt_p) end)
+        val [p1',p2'] = Syntax.check_props ctxt_p [Syntax.parse_prop ctxt_p p1,
+                                                   Syntax.parse_prop ctxt_p p2]
+     in (n,p1',p2')
+     end)
 
 val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason_default_pattern\<close>
     (Parse.enum1' "and" pat2 >> (fn pats =>

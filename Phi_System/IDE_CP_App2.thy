@@ -215,7 +215,7 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def Imply_def
   by (simp add: subset_iff)
 
-lemma [\<phi>reason 1000 for \<open>?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Well_Type ?TY \<^bold>a\<^bold>n\<^bold>d _\<close>]:
+lemma [\<phi>reason 1000]:
   \<open> \<phi>SemType S TY
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Well_Type TY\<close>
   unfolding Imply_def \<phi>SemType_def subset_iff by blast

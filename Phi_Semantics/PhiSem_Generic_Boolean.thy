@@ -68,20 +68,20 @@ lemma \<phi>Bool_expn[\<phi>expns]:
 lemma \<phi>Bool_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<bool>) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
-lemma \<phi>Bool_eqcmp[\<phi>reason 1000]:
+lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
   "\<phi>Equal \<bool> (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (simp add: \<phi>expns can_eq_bool eq_bool)
 
-lemma \<phi>Bool_zero[\<phi>reason 1000]:
+lemma \<phi>Bool_zero[\<phi>reason 2000]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e TY = bool \<Longrightarrow> \<phi>Zero TY \<bool> False"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_bool)
 
-lemma \<phi>Bool_semty[\<phi>reason 1000]:
+lemma \<phi>Bool_semty[\<phi>reason 2000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) bool\<close>
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns WT_bool)
 
-lemma [\<phi>reason]:
+lemma [\<phi>reason 2000]:
   \<open>is_singleton (x \<Ztypecolon> \<bool>)\<close>
   by (rule is_singletonI''; simp add: \<phi>expns)
 
