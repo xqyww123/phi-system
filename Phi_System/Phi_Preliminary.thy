@@ -14,10 +14,7 @@ declare [ [ML_debugger, ML_exception_debugger]]
 subsection \<open>Named Theorems\<close>
 
 named_theorems \<phi>expns \<open>Semantics Expansions, used to expand assertions semantically.\<close>
-and \<phi>inhabited \<open>Inhabitance lemmas, of form \<open>Inhabited P \<longleftrightarrow> Expansion\<close>\<close>
 and \<phi>programming_simps \<open>Simplification rules used in the deductive programming\<close>
-and \<phi>inhabitance_rule \<open>General Elimination rules for extracting pure facts from
-  an inhabited BI assertion \<open>Inhabited assertion\<close>\<close>
 
 declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 
@@ -134,8 +131,9 @@ lemma Friendly_Help_I: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_
 \<close>
 
 
-(*TODO: Move this*)
-subsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
+subsection \<open>Some very Early Reasoning\<close>
+
+subsubsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
 
 definition \<open>CONV_GE \<longleftrightarrow> False\<close>
 definition \<open>CONV_GE_Ex \<equiv> Ex\<close>
@@ -159,21 +157,46 @@ lemma CONV_GE_phase_3:
   \<open>CONV_GE_conj A B \<equiv> A \<and> B\<close>
   unfolding CONV_GE_conj_def atomize_conj .
 
-ML \<open>
-(*If no  disjunction: split the conjunction into a list
-  If has disjunction: convert to Disjunctive Normal Form*)
-fun conv_GE_to_plain_conjunction ctxt thm =
-  let
-    val V = case Thm.concl_of thm
-      of (\<^const>\<open>Trueprop\<close> $ Var V) => V
-       | _ => raise THM ("Not a Generalized Elimination rule", 0, [thm])
-    val thm' = Thm.instantiate (TVars.empty, Vars.make [(V, \<^cterm>\<open>CONV_GE\<close>)]) thm
-  in
-    thm'
-      |> Raw_Simplifier.rewrite_rule ctxt @{thms atomize_all atomize_imp atomize_eq atomize_conj CONV_GE_phase_1}
-      |> Raw_Simplifier.rewrite_rule ctxt @{thms CONV_GE_Ex_def CONV_GE_phase_2}
-      |> Raw_Simplifier.rewrite_rule ctxt @{thms CONV_GE_Ex_def CONV_GE_phase_3}
-      |> Conjunction.elim_conjunctions
-  end
+subsubsection \<open>Extract Elimination Rule - Part I\<close>
+
+definition Extract_Elimination_Rule :: \<open>prop \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> prop\<close>
+  where \<open>Extract_Elimination_Rule IN OUT_L OUT_R \<equiv> (PROP IN \<Longrightarrow> OUT_L \<Longrightarrow> OUT_R)\<close>
+
+declare [[\<phi>reason_default_pattern \<open>PROP Extract_Elimination_Rule ?I _ _\<close>
+                                \<Rightarrow> \<open>PROP Extract_Elimination_Rule ?I _ _\<close> (100) ]]
+
+lemma Do_Extract_Elimination_Rule:
+  \<open> PROP IN
+\<Longrightarrow> PROP Extract_Elimination_Rule IN OUT_L OUT_R
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> OUT_L \<Longrightarrow> (OUT_R \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Extract_Elimination_Rule_def
+proof -
+  assume IN: \<open>PROP IN\<close>
+    and  RL: \<open>PROP IN \<Longrightarrow> OUT_L \<Longrightarrow> OUT_R\<close>
+    and  OL: \<open>OUT_L\<close>
+    and  OR: \<open>OUT_R \<Longrightarrow> C\<close>
+  from OR[OF RL[OF IN OL]] show \<open>C\<close> .
+qed
+
+ML_file \<open>library/tools/elimination_rule.ML\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP Extract_Elimination_Rule (PROP P) OL OR
+\<Longrightarrow> PROP Extract_Elimination_Rule (PROP P @action A) OL OR\<close>
+  unfolding Extract_Elimination_Rule_def Action_Tag_def .
+
+subsubsection \<open>Inhabitance Reasoning - Part I\<close>
+
+text \<open>is by a set of General Elimination rules~\cite{elim_resolution} that extracts pure facts from
+  an inhabited BI assertion, i.e., of a form like
+  \[ \<open>Inhabited X \<Longrightarrow> (Pure1 \<Longrightarrow> Pure2 \<Longrightarrow> \<dots> \<Longrightarrow> C) \<Longrightarrow> \<dots> \<Longrightarrow> C\<close> \]
 \<close>
+
+ML_file \<open>library/tools/inhabited_rule.ML\<close>
+
+declare disjE[\<phi>inhabitance_rule]
+        conjE[\<phi>inhabitance_rule]
+
+(*TODO: Move this*)
 end

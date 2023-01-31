@@ -1,5 +1,5 @@
 theory PhiSem_Int_ArbiPrec
-  imports PhiSem_Common_Int PhiSem_Generic_Boolean
+  imports PhiSem_Generic_Boolean PhiSem_Common_Int
 begin
 
 chapter \<open>Integer of Arbitrary Precision\<close>
@@ -102,7 +102,8 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   " x \<Ztypecolon> \<nat> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Int.int x \<Ztypecolon> \<int> @action to \<int> " \<medium_left_bracket> \<medium_right_bracket>. .
 
-declare [[\<phi>show_helps = true]]
+lemma \<phi>ANat_elim[elim!,\<phi>inhabitance_rule]:
+  "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C" .
 
 lemma [\<phi>reason 1000]: \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>. .
 
@@ -110,33 +111,6 @@ lemma [\<phi>reason 1000]: "\<phi>Zero aint \<nat> 0" \<medium_left_bracket> \<o
 
 lemma [\<phi>reason 1000]: \<open>\<phi>Equal \<nat> (\<lambda>_ _. True) (=)\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>. .
 
-
-
-
-lemma
-  \<open>A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B
-\<Longrightarrow> Inhabited A
-\<Longrightarrow> Inhabited B\<close>
-  unfolding Imply_def Inhabited_def
-  by (simp, blast)
-
- lemma \<phi>ANat_elim[elim!,\<phi>inhabitance_rule]:
-  "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C" .
-
-
-lemma [\<phi>reason 1000]:
-  "\<phi>Equal \<nat> (\<lambda>x y. True) (=)"
-  unfolding \<phi>Equal_def by (auto simp add: \<phi>expns)
-
-lemma [\<phi>reason 1000]:
-  "\<phi>Zero aint \<nat> 0"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason]:
-  \<open> is_singleton (n \<Ztypecolon> \<nat>)\<close>
-  by (rule is_singletonI''; simp add: \<phi>expns)
-
-*)
 
 
 subsubsection \<open>Subtyping\<close>
@@ -232,6 +206,12 @@ lemma op_const_aint_\<phi>app:
   unfolding op_const_aint_def Premise_def Synthesis_def
   by (rule, simp add: \<phi>expns)
 
+lemma
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y x' : of_nat x \<comment>\<open>TODO: improve this!\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_aint x' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat> \<rbrace>\<close> 
+  \<medium_left_bracket> op_const_aint[where x=x'] \<medium_right_bracket>. .
+
+
 lemma [\<phi>reason 1210
     for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
@@ -259,8 +239,7 @@ lemma [\<phi>reason 1200
 ]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y x' : of_nat x \<comment>\<open>TODO: improve this!\<close>
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_aint x' \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat> \<rbrace> @action synthesis G\<close>
-  unfolding Synthesis_def Action_Tag_def Simplify_def apply simp
-  using op_const_aint_\<phi>app[THEN \<phi>frame, simplified] by simp
+  \<medium_left_bracket> op_const_aint[where x=x'] \<medium_right_bracket>. .
 
 
 lemma [\<phi>reason 1200

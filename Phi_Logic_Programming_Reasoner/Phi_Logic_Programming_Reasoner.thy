@@ -901,6 +901,9 @@ definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<cl
 
 lemma [cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
 
+lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .
+lemma Simplify_I: \<open>A = B \<Longrightarrow> Simplify m A B\<close> unfolding Simplify_def .
+
 lemma Do_Simplification:
   \<open>PROP Do_Simplificatin A B \<Longrightarrow> Simplify s A B\<close>
   unfolding Do_Simplificatin_def Simplify_def atomize_eq .

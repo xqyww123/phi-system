@@ -1283,10 +1283,20 @@ Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
      | _ => th))
 \<close>
 
-declare [[\<phi>premise_attribute  [elim_premise_tag] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>,
+attribute_setup elim_Simplify_tag = \<open>
+Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
+  case Thm.concl_of th
+    of _ $ (Const(\<^const_name>\<open>Simplify\<close>, _) $ _ $ _ $ _) => th RS @{thm Simplify_D}
+     | _ => th))
+\<close>
+
+declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>,
+          \<phi>premise_attribute  [elim_premise_tag] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>,
           \<phi>premise_attribute? [useful] for \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?x\<close>,
-          \<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>,
-          \<phi>premise_attribute? [\<phi>reason] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close>]]
+          \<phi>premise_attribute? [\<phi>reason] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close>,
+          \<phi>premise_attribute  [elim_Simplify_tag] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>,
+          \<phi>premise_attribute? [useful] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>
+]]
 
 subsection \<open>IDE Processors\<close>
 

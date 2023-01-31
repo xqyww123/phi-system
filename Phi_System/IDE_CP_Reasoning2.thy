@@ -7,7 +7,7 @@ theory IDE_CP_Reasoning2
   imports IDE_CP_Applications1
 begin
 
-section \<open>Extracts Values\<close>
+section \<open>Small Reasoning Processes\<close>
 
 text \<open>The section includes several processes handling values used in different scenarios.\<close>
 
@@ -99,6 +99,37 @@ fn (ctxt, sequent) =>
     Seq.single (ctxt, rule RS sequent)
   end
 \<close>
+
+
+
+subsection \<open>Extract Elimination Rule\<close>
+
+definition Extract_Elimination_Rule :: \<open>prop \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> prop\<close>
+  where \<open>Extract_Elimination_Rule IN OUT_L OUT_R \<equiv> (PROP IN \<Longrightarrow> OUT_L \<Longrightarrow> OUT_R)\<close>
+
+declare [[\<phi>reason_default_pattern \<open>PROP Extract_Elimination_Rule ?I ?L ?R\<close>
+                                \<Rightarrow> \<open>PROP Extract_Elimination_Rule ?I ?L ?R\<close> (100) ]]
+
+lemma Do_Extract_Elimination_Rule:
+  \<open> PROP IN
+\<Longrightarrow> PROP Extract_Elimination_Rule IN OUT_L OUT_R
+\<Longrightarrow> OUT_L \<Longrightarrow> (OUT_R \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Extract_Elimination_Rule_def
+proof -
+  assume IN: \<open>PROP IN\<close>
+    and  RL: \<open>PROP IN \<Longrightarrow> OUT_L \<Longrightarrow> OUT_R\<close>
+    and  OL: \<open>OUT_L\<close>
+    and  OR: \<open>OUT_R \<Longrightarrow> C\<close>
+  from OR[OF RL[OF IN OL]] show \<open>C\<close> .
+qed
+
+lemma [\<phi>reason 1100]:
+  \<open>PROP Extract_Elimination_Rule (Trueprop (X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y)) (Inhabited X) (Inhabited Y) \<close>
+  unfolding Extract_Elimination_Rule_def Imply_def Inhabited_def by blast
+
+lemma [\<phi>reason 1000]:
+  \<open>PROP Extract_Elimination_Rule (Trueprop (X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P)) (Inhabited X) (Inhabited Y \<and> P) \<close>
+  unfolding Extract_Elimination_Rule_def Imply_def Inhabited_def by blast
 
 
 

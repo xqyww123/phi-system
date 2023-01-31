@@ -120,10 +120,6 @@ lemma SubjectionTY_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding SubjectionTY_expn using Subjection_inhabited .
 
-lemma SubjectionTY_inhabited_expn[\<phi>inhabited]:
-  \<open>Inhabited (x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> Inhabited (x \<Ztypecolon> T) \<and> P\<close>
-  unfolding SubjectionTY_expn by (simp add: \<phi>inhabited)
-
 
 subsection \<open>Existential Quantification as a Type\<close>
 
@@ -172,10 +168,6 @@ lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
 lemma ExTyp_inhabited[elim!, \<phi>inhabitance_rule]:
   \<open>Inhabited (x \<Ztypecolon> ExTyp T) \<Longrightarrow> (Inhabited (\<exists>*a. x a \<Ztypecolon> T a) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding ExTyp_expn .
-
-lemma ExTyp_inhabited_expn[\<phi>inhabited]:
-  \<open>Inhabited (x \<Ztypecolon> ExTyp T) \<longleftrightarrow> (\<exists>c. Inhabited (x c \<Ztypecolon> T c))\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 (* lemma [\<phi>reason 1000]:
   \<open> P @action \<A>nap (\<A>_structural (to Identity))

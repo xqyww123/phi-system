@@ -38,7 +38,7 @@ fun attribute_of default term ctxt =
           andalso Pattern.matches (Context.theory_of ctxt) (pat,term)
           then SOME (i,attr) else NONE)
     |> sort (int_ord o apply2 #1)
-    |> (fn L => fold (fn (_,X) => fn L => X @ L) L [])
+    |> maps snd
 
 val prop_pattern = Scan.peek (Args.named_term o
         Syntax.read_prop o Proof_Context.set_mode Proof_Context.mode_pattern o Context.proof_of)

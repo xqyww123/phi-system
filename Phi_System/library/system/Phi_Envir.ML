@@ -66,7 +66,8 @@ fun the_implication_GE i ctxt =
       else (err_bad_env (); [])
    end
 
-fun the_implication i ctxt = maps (conv_GE_to_plain_conjunction ctxt) (the_implication_GE i ctxt)
+fun the_implication i ctxt = maps (Phi_Reasoners.conv_GE_to_plain_conjunction ctxt)
+                                  (the_implication_GE i ctxt)
 
 (* Reason pure facts that the given sequent implies. *)
 fun gen_reason_programming_implication erules (mode:Phi_Working_Mode.working_mode) ctxt sequent =
@@ -83,8 +84,7 @@ fun reason_programming_implication ctxt erules sequent =
   gen_reason_programming_implication erules (Phi_Working_Mode.mode1 ctxt) ctxt sequent
 
 fun reason_programming_implication' mode ctxt sequent =
-  [gen_reason_programming_implication
-    (Named_Theorems.get ctxt @{named_theorems \<phi>inhabitance_rule}) mode ctxt sequent]
+  [gen_reason_programming_implication (Phi_Inhabitance_Rules.get ctxt) mode ctxt sequent]
   handle THM _ => []
 
 

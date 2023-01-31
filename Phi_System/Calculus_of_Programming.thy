@@ -306,15 +306,17 @@ lemma \<phi>rename_proc_with_goal:
 
 paragraph \<open>Fact Store\<close>
 
-lemma [simp]:
+lemma [\<phi>programming_simps]:
   "CurrentConstruction mode s H (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> P"
   unfolding CurrentConstruction_def by (simp_all add: \<phi>expns split_paired_all)
 
-lemma [simp]:
+lemma [\<phi>programming_simps]:
   "(CurrentConstruction mode s H T \<and> B) \<and> C \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> (B \<and> C)"
   by simp
 
-declare Subjection_expn[\<phi>programming_simps]
+lemma [\<phi>programming_simps]:
+  \<open>(\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> P\<close>
+  unfolding ToA_Construction_def by (simp add: Subjection_expn)
 
 lemma [\<phi>programming_simps]:
   \<open>((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> (B \<and> C)\<close>

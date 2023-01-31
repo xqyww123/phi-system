@@ -41,7 +41,7 @@ proc
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   premises \<open>x < 10\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l 10 \<Ztypecolon> \<nat>[32]\<close>
-  \<medium_left_bracket>  $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
+  \<medium_left_bracket> $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
     while \<open>x \<Ztypecolon> ?T \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
     \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket>. (*guard*)
     \<medium_left_bracket>

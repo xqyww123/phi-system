@@ -151,6 +151,17 @@ lemma assertion_eq_intro:
 \<Longrightarrow> P = Q\<close>
   unfolding Imply_def by blast
 
+subsubsection \<open>Inhabitance Reasoning - Part II\<close>
+
+lemma [\<phi>reason 1100]:
+  \<open>PROP Extract_Elimination_Rule (Trueprop (X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y)) (Inhabited X) (Inhabited Y) \<close>
+  unfolding Extract_Elimination_Rule_def Imply_def Inhabited_def by blast
+
+lemma [\<phi>reason 1000]:
+  \<open>PROP Extract_Elimination_Rule (Trueprop (X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P)) (Inhabited X) (Inhabited Y \<and> P) \<close>
+  unfolding Extract_Elimination_Rule_def Imply_def Inhabited_def by blast
+
+
 subsection \<open>Specialized Additive Conjunction\<close>
 
 definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 14)
@@ -159,13 +170,9 @@ definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (inf
 lemma Subjection_expn[\<phi>expns]:
   "p \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> p \<in> T \<and> P"
   unfolding Subjection_def by simp
-
+ 
 lemma Subjection_inhabited[elim!,\<phi>inhabitance_rule]:
   \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: Subjection_expn)
-
-lemma Subjection_inhabited_expn[\<phi>inhabited]:
-  \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> Inhabited S \<and> P\<close>
   unfolding Inhabited_def by (simp add: Subjection_expn)
 
 lemma Subjection_cong[cong]:
@@ -222,10 +229,6 @@ lemma ExSet_expn[\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>
 
 lemma ExSet_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (ExSet S) \<Longrightarrow> (\<And>x. Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns; blast)
-
-lemma ExSet_inhabited_expn[\<phi>inhabited]:
-  \<open>Inhabited (ExSet S) \<longleftrightarrow> (\<exists>x. Inhabited (S x))\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 syntax
