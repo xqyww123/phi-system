@@ -195,8 +195,13 @@ text \<open>is by a set of General Elimination rules~\cite{elim_resolution} that
 
 ML_file \<open>library/tools/inhabited_rule.ML\<close>
 
-declare disjE[\<phi>inhabitance_rule]
+declare (* disjE[\<phi>inhabitance_rule] *) (*I don't like divergence!*)
         conjE[\<phi>inhabitance_rule]
+        set_mult_inhabited[\<phi>inhabitance_rule]
+        set_plus_inhabited[\<phi>inhabitance_rule]
+
+lemma [\<phi>inhabitance_rule, elim!]:
+  \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 (*TODO: Move this*)
 end

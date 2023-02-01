@@ -377,18 +377,52 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type\<close>
 
+named_theorems \<phi>defs \<open>Definitions of \<phi>-Type\<close>
+
+consts \<A>_construct\<phi> :: \<open>'a set \<Rightarrow> unit action\<close>
+       \<A>_destruct\<phi>  :: \<open>('a,'b) \<phi> \<Rightarrow> unit action\<close>
+
+declare [[ \<phi>reason_default_pattern
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_construct\<phi> ?S\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_construct\<phi> ?S\<close>    (100)
+  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_destruct\<phi> ?T\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_destruct\<phi> ?T\<close>    (100)
+]]
+
 lemma destruct\<phi>_\<phi>app:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y D: T x
-\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s D\<close>
-  unfolding Simplify_def \<phi>Type_def by (simp add: implies_refl)
+  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T'
+\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s D \<^bold>a\<^bold>n\<^bold>d P @action \<A>_destruct\<phi> T'
+\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s D \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Action_Tag_def .
 
 lemma construct\<phi>_\<phi>app:
   \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y X: T x
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (if single then X else S' * X) @action ToSA
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (if single then x \<Ztypecolon> T else S' * (x \<Ztypecolon> T))\<close>
-  for i :: nat
-  unfolding Action_Tag_def Simplify_def \<phi>Type_def by (cases single; simp)
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (if single then X else S' * X) \<^bold>a\<^bold>n\<^bold>d P @action ToSA
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (if single then x \<Ztypecolon> T else S' * (x \<Ztypecolon> T)) \<^bold>a\<^bold>n\<^bold>d P \<close>
+  unfolding Action_Tag_def Simplify_def \<phi>Type_def
+  apply (cases single; simp)
+  using implies_trans apply fastforce
+  using implies_left_prod implies_trans by fastforce
+
+consts mode_\<phi>defs :: \<open>unit action\<close>
+
+abbreviation Unfold_\<phi>Defs :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<phi>\<d>\<e>\<f>\<s>] _ : _" [1000,10] 9)
+  where "Unfold_\<phi>Defs \<equiv> Simplify mode_\<phi>defs"
+
+lemma [\<phi>reason 10 for \<open>?x \<Ztypecolon> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_destruct\<phi> _\<close>]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<phi>\<d>\<e>\<f>\<s>] D: T x
+\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s D @action \<A>_destruct\<phi> T\<close>
+  unfolding Action_Tag_def Simplify_def \<phi>Type_def by (simp add: implies_refl)
+
+lemma [\<phi>reason 10]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<phi>\<d>\<e>\<f>\<s>] X: T x
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T @action \<A>_construct\<phi> (x \<Ztypecolon> T)\<close>
+  unfolding Action_Tag_def Simplify_def \<phi>Type_def by (simp add: implies_refl)
+
+\<phi>reasoner_ML Unfold_\<phi>Defs 1000 (\<open>Unfold_\<phi>Defs ?X' ?X\<close>)
+  = \<open>PLPR_Simplifier.simplifier (fn ctxt =>
+        clear_simpset ctxt addsimps (Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>defs\<close>))\<close>
 
 
 subsection \<open>Duplicate \& Shrink\<close>

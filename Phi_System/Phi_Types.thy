@@ -120,6 +120,10 @@ lemma SubjectionTY_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding SubjectionTY_expn using Subjection_inhabited .
 
+lemma [\<phi>reason 1000]:
+  \<open> Rewrite_into_\<phi>Type S (x \<Ztypecolon> T)
+\<Longrightarrow> Rewrite_into_\<phi>Type (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) (x \<Ztypecolon> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  unfolding Rewrite_into_\<phi>Type_def by (simp add: SubjectionTY_expn)
 
 subsection \<open>Existential Quantification as a Type\<close>
 
@@ -177,6 +181,11 @@ lemma ExTyp_inhabited[elim!, \<phi>inhabitance_rule]:
 lemma Action_to_Identity[\<phi>reason 30]:
   \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (v \<Ztypecolon> Identity \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j v. v \<in> X) @action to Identity\<close>
   unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>a. Rewrite_into_\<phi>Type (S a) (x a \<Ztypecolon> T a))
+\<Longrightarrow> Rewrite_into_\<phi>Type (ExSet S) (x \<Ztypecolon> ExTyp T)\<close>
+  unfolding Rewrite_into_\<phi>Type_def by (simp add: ExTyp_expn, metis)
 
 
 subsection \<open>Inter\<close>

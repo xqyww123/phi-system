@@ -364,7 +364,7 @@ lemma \<phi>view_refl:
 
 lemma \<phi>view_trans:
   \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P1
-\<Longrightarrow> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s C \<^bold>a\<^bold>n\<^bold>d P2
+\<Longrightarrow> (P1 \<Longrightarrow> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s C \<^bold>a\<^bold>n\<^bold>d P2)
 \<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s C \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2\<close>
   unfolding View_Shift_def by blast
 

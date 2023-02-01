@@ -19,4 +19,11 @@ abbreviation LshL (infixl "LSHL" 70) where \<open>x LSHL y \<equiv> x  *  2 ^ Bi
 \<phi>overloads "+" and "-" and "*" and "/" and "<" and "\<le>" and ">" and "\<ge>" and "=" and "\<not>"
   and "\<and>" and "\<or>"
 
+
+(*TODO:
+
+disable the auto evaluation when the exponent is too large!
+
+declare power_numeral[simp del]
+*)
 end

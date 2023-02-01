@@ -102,7 +102,7 @@ lemma zero_implies_any[\<phi>reason 2000]:
 
 lemma implies_refl[
     \<phi>reason 2000 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?A \<^bold>a\<^bold>n\<^bold>d ?P\<close>,
-    \<phi>reason 800 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close> \<comment> \<open>Unification can be aggressive.\<close>
+    \<phi>reason 900 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close> \<comment> \<open>Unification can be aggressive.\<close>
 ]:
   "A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A" unfolding Imply_def by fast
 

@@ -1244,6 +1244,10 @@ lemma plus_set_in_iff[iff]:
 
 lemma plus_set_S_S [simp]: \<open>S + S = S\<close> for S :: \<open>'a set\<close> unfolding plus_set_def by simp
 
+lemma set_plus_inhabited[elim!]:
+  \<open>Inhabited (S + T) \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def times_set_def by (simp, blast)
+
 instantiation set :: (sep_semigroup) ordered_semiring_0 begin
 instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
 end

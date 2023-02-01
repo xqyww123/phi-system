@@ -496,6 +496,11 @@ lemma [\<phi>reason 3200]:
     T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
   unfolding Imply_def Pass_Embedded_Reasoning_def by (simp add: \<phi>expns)
 
+lemma [\<phi>reason 3210]:
+  " T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
+    T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j True \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
+  unfolding Imply_def Pass_Embedded_Reasoning_def by (simp add: \<phi>expns)
+
 lemma [\<phi>reason 3200]:
   " T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R * U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
    (P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
@@ -793,7 +798,7 @@ lemma [\<phi>reason 2000
 (* except \<open>?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?R2 * (FIX ?X) \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close> *)
 ]:
   " R  \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R1 * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 @action reason_ToSA mode G
-\<Longrightarrow> R1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2 \<brangle>     \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA mode G
+\<Longrightarrow> (P1 \<Longrightarrow> R1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2 \<brangle>  \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA mode G)
 \<Longrightarrow> R  \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2 * X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2 @action reason_ToSA mode G"
   unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def
   by (metis set_mult_expn)
@@ -1040,6 +1045,11 @@ lemma [\<phi>reason 3200]:
   "T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
    (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
    T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
+  unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 3210]:
+  "T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
+   T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j True \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
   unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 3200]:
@@ -1329,7 +1339,7 @@ lemma [\<phi>reason 2000
 (*  except \<open>?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?R2 \<heavy_comma> FIX ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close> *)
 ]:
   " R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R1 \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 @action reason_ToSA mode G
-\<Longrightarrow> R1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA mode G
+\<Longrightarrow> (P1 \<Longrightarrow> R1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA mode G)
 \<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<heavy_comma> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P2 \<and> P1 @action reason_ToSA mode G"
   unfolding Action_Tag_def FOCUS_TAG_def split_paired_All
   by (metis View_Shift_imply_P \<phi>frame_view_right \<phi>view_trans)

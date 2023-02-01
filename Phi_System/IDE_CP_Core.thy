@@ -48,11 +48,6 @@ lemma [\<phi>programming_simps]:
   \<open>(A\<heavy_comma> (B\<heavy_comma> C)) = (A\<heavy_comma> B\<heavy_comma> C)\<close>
   unfolding mult.assoc ..
 
-declare set_mult_inhabited[\<phi>inhabitance_rule]
-
-lemma [\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
-
 
 subsubsection \<open>Syntax \& Prelude ML\<close>
 

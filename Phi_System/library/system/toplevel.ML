@@ -405,15 +405,28 @@ end
 
 
 fun prove_prem int stat =
-  let open Proof
-    val specthm = Phi_Envir.the_state_sequent stat
-    val goal = Thm.prop_of specthm
+  let
+    val sequent = Phi_Envir.the_state_sequent stat
+    fun after_qed sequent stat =
+      let
+        val original_auto_level = Config.get (Proof.context_of stat) Phi_Reasoner.auto_level
+      in
+        stat |> Proof.map_context
+                  (Config.put Phi_Reasoner.auto_level 0
+                #> Config.put Phi_Reasoner.auto_level original_auto_level)
+             |> Phi_Envir.set_state_sequent sequent
+      end
+  in Phi_Sys.obligation_proof (print_results int) Proof_Context.mode_schematic ""
+        NONE after_qed [] [] sequent stat
+  end
+ (*let open Proof
+    val sequent = Phi_Envir.the_state_sequent stat
+    val goal = Thm.prop_of sequent
                 |> Logic.dest_implies |> #1 (* |> dest_premise_tag |> mk_Trueprop *)
     fun after_qed (ctxt',[[th]]) stat =
       let
         val [th] = Proof_Context.export ctxt' (context_of stat) [th]
         val original_auto_level = Config.get (Proof.context_of stat) Phi_Reasoner.auto_level
-        (* val th = th RS @{thm NuPrime.Premise_I} *)
       in
         stat |> Proof.map_context_result
                   (Config.put Phi_Reasoner.auto_level 0
@@ -431,7 +444,7 @@ fun prove_prem int stat =
                 HEADGOAL (resolve_tac ctxt @{thms Premise_I})
               ))) #> Seq.the_result "should never fail"
             )
-  end
+  end*)
 
 
 (** Header of Procedure **)

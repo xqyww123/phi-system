@@ -19,13 +19,6 @@ signature PHI_SYS = sig
 
   val synthesis : cterm -> context_state -> context_state
 
-  val setup_proof : (Proof.context -> (string * string) * (string * thm list) list -> unit)
-        -> Proof_Context.mode -> string -> Method.text option
-        -> (Proof.context * thm list list -> Proof.state -> Proof.state)
-        -> (binding * typ option * mixfix) list (*fixes*)
-        -> (Thm.binding * (term * term list) list) list (*premis*)
-        -> (term * term list) list list (*no binding is allowed*)
-        -> Proof.state -> thm list * Proof.state
   val obligation_proof :  (Proof.context -> (string * string) * (string * thm list) list -> unit)
         -> Proof_Context.mode -> string -> Method.text option
         -> (thm -> Proof.state -> Proof.state)
@@ -259,19 +252,6 @@ fun synthesis term (ctxt, sequent) =
   end
 
 
-fun setup_proof print_results mode kind before_qed after_qed' fixes assumes gl stat =
-  let open Proof
-    fun after_qed ctxthms stat =
-      stat |> end_block 
-           |> after_qed' ctxthms
-  in
-    stat |> begin_block
-      |> internal_goal print_results mode true kind before_qed after_qed fixes assumes
-            (map (pair Binding.empty_atts) gl)
-      (* |> apsnd (fn stat => using_facts (Named_Theorems.get (context_of stat)
-      * "Phi_Sys.useful") stat) *)
-  end
-
 fun obligations_of (\<^const>\<open>Pure.imp\<close>
                     $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ G))
                     $ P) = G :: obligations_of P
@@ -287,8 +267,19 @@ fun obligation_proof print_results mode kind before_qed after_qed fixes assumes 
         val sequent' = fold (fn x => fn s => x RS (@{thm Premise_I} RS s)) thms sequent
        in after_qed sequent' stat
       end
+    fun setup_environ ctxt =
+      let val facts = Proof_Context.facts_of ctxt
+          fun get name = #thms (the (Facts.lookup (Context.Proof ctxt) facts name))
+                      |> map (Thm.transfer' ctxt)
+       in ctxt
+       (*We fix the dynamic lemmas to be local lemmas so that the sledgehammer can access them*)
+       |> Proof_Context.put_thms true ("\<phi>", SOME (get "IDE_CP_Core.\<phi>"))
+       |> Proof_Context.put_thms true ("\<phi>lemmata",
+                                       SOME (Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>))
+      end
   in
-    Proof.internal_goal print_results mode true kind before_qed after_qed' fixes assumes
+    Proof.map_context setup_environ
+  #>Proof.internal_goal print_results mode true kind before_qed after_qed' fixes assumes
        (map (fn t=> (Binding.empty_atts,[(HOLogic.mk_Trueprop t,[])])) oblgs)
   end
   

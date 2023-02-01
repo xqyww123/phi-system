@@ -49,7 +49,17 @@ fun extract_elim_rule ctxt thm =
     ]);
     (ctxt, Drule.compose (thm, 1, @{thm Do_Extract_Elimination_Rule}))
       |> Phi_Reasoner.reason NONE
-      |> (fn SOME (_, ret) => ret
+      |> (fn SOME (ctxt', ret) =>
+            let val ret' = Thm.biresolution (SOME ctxt') false
+                              [(*(true, @{thm disjE}), *) (true, @{thm conjE})] 2 ret
+                        |> Seq.pull
+                        |> (fn SOME (x, _) => x
+                             | NONE => error "Internal bug!#q3f4j89[")
+                val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+                      Pretty.str "Obtained the following elimination rule:",
+                      Syntax.pretty_term ctxt (Thm.prop_of ret')
+                  ])
+             in ret' end
            | NONE => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
                 Pretty.str "Fail to extract elimination rule from:",
                 Syntax.pretty_term ctxt (Thm.prop_of thm)

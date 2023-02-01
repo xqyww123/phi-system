@@ -132,6 +132,17 @@ lemma [\<phi>reason 1000]:
   unfolding Extract_Elimination_Rule_def Imply_def Inhabited_def by blast
 
 
+subsection \<open>Rewrite into \<phi>-Type\<close>
+
+definition Rewrite_into_\<phi>Type :: \<open>'a set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+  where \<open>Rewrite_into_\<phi>Type IN OUT \<longleftrightarrow> IN = OUT\<close>
+
+declare [[\<phi>reason_default_pattern \<open>Rewrite_into_\<phi>Type ?X _\<close> \<Rightarrow> \<open>Rewrite_into_\<phi>Type ?X _\<close> (100)]]
+
+lemma [\<phi>reason 3000]:
+  \<open>Rewrite_into_\<phi>Type (x \<Ztypecolon> T) (x \<Ztypecolon> T)\<close>
+  unfolding Rewrite_into_\<phi>Type_def ..
+
 
 (*
 subsection \<open>Extract a Value\<close>

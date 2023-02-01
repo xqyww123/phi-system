@@ -641,7 +641,8 @@ lemma [\<phi>reason 5000]:
   unfolding Premise_def .
 
 lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
-                                    \<open>Premise ?mode (?x = ?var_x)\<close>]:
+                                    \<open>Premise ?mode (?x = ?var_x)\<close>
+                                    \<open>Premise ?mode (?var_x = ?x)\<close>]:
   "Premise mode (x = x)"
   unfolding Premise_def ..
 
@@ -920,8 +921,6 @@ subsubsection \<open>Default Simplifier\<close>
 
 abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y _ : _" [1000,10] 9)
   where "Default_Simplify \<equiv> Simplify default"
-
-declare [[ML_debugger]]
 
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
   = \<open>PLPR_Simplifier.simplifier I\<close>

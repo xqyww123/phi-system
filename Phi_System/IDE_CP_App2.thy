@@ -15,21 +15,27 @@ lemma Val_transformation [\<phi>reason]:
 
 paragraph \<open>Action\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason 1200]:
   \<open> y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P @action A
 \<Longrightarrow> y \<Ztypecolon> Val v U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Val v T \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural A\<close>
   unfolding Action_Tag_def using Val_transformation .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason 1200]:
   \<open> y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P @action to A
 \<Longrightarrow> y \<Ztypecolon> Val v U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Val v T \<^bold>a\<^bold>n\<^bold>d P @action to A\<close>
   unfolding Action_Tag_def using Val_transformation .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason 1200]:
   \<open> y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P @action as A
 \<Longrightarrow> y \<Ztypecolon> Val v U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Val v T \<^bold>a\<^bold>n\<^bold>d P @action as A\<close>
   unfolding Action_Tag_def using Val_transformation .
 
+lemma [\<phi>reason 1200]:
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s D \<^bold>a\<^bold>n\<^bold>d P @action \<A>_destruct\<phi> T'
+\<Longrightarrow> Rewrite_into_\<phi>Type D (y \<Ztypecolon> U)
+\<Longrightarrow> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] U \<^bold>a\<^bold>n\<^bold>d P @action \<A>_destruct\<phi> T'\<close>
+  unfolding Action_Tag_def Rewrite_into_\<phi>Type_def
+  by (rule Val_transformation, simp)
 
 paragraph \<open>Simplification\<close>
 
@@ -274,6 +280,7 @@ qed
 ML_file \<open>library/additions/value_properties.ML\<close>
 
 hide_fact \<phi>deduce_zero_value
+
 
 (*
 TODO: fix this feature
