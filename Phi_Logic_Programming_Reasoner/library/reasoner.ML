@@ -494,18 +494,25 @@ fun intro_reasoner ctxt pos priority patterns blacklist rules =
                else patterns
     
     val rules_with_feasible_flag = map (fn rule =>
-      let val f_num = length (filter (fn \<^prop>\<open>\<r>Feasible\<close> => true | _ => false) (Thm.prems_of rule))
-       in  (if f_num > 0 andalso priority < 1000
-            then error ("Conditional \<r>Feasible only makes sense for assertive rule.")
-            else if f_num > 1
-            then error ("A reasoning rule can contain one \<r>Feasible antecedent at most.")
-            else f_num > 0)
-           |> pair rule
+      let fun is_Require (Const (\<^const_name>\<open>\<r>Require\<close>, _) $ _) = true
+            | is_Require (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_Require X
+            | is_Require (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,X)) = is_Require X
+            | is_Require _ = false
+       in case Thm.prems_of rule
+            of []    => (rule, false)
+             | (r::L)=> if exists is_Require L
+                        then error("A reasoning rule can contain one \<r>Require antecedent at \
+                                   \the leading position.")
+                        else if is_Require r
+                         then if priority < 1000
+                          then error("Conditional \<r>Require only makes sense for confident rule.")
+                          else (rule, true)
+                         else (rule, false)
       end) rules
-    fun tactic [] s = Seq.empty
+    fun tactic [] _ = Seq.empty
       | tactic ((rule,has_feasible)::R) s = Seq.make (fn _ =>
           single_RS' rule s
-            |> has_feasible ? Option.mapPartial (reason NONE)
+            |> has_feasible ? Option.mapPartial (reason (SOME 1))
             |> Option.map (rpair (tactic R s))
         )
   in {name = name_of_intro_reasoner rules,

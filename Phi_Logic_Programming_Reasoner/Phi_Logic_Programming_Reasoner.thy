@@ -11,9 +11,11 @@ begin
 ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
 ML_file \<open>library/pattern.ML\<close>
 
-definition \<r>Feasible :: \<open>bool\<close> where \<open>\<r>Feasible = True\<close>
+definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
 
 ML_file \<open>library/reasoner.ML\<close>
+
+lemma \<r>Require_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Require P\<close> unfolding \<r>Require_def .
 
 section \<open>Introduction\<close>
 
@@ -149,14 +151,14 @@ different pruning optimization strategy.
   no other candidates will be attempted, but the backtrack is still propagated to the upper layer
   (of the search tree).
   Any presence of a candidate with priority $\geq$ 1000, causes the reasoning (at this point)
-  assertive (in the sense that no alternative search branch will be attempted).
+  is confident (in the sense that no alternative search branch will be attempted).
 
 \<^enum> When the highest priority of the candidates $\geq$ 100,000,
   this candidate becomes a \<^emph>\<open>global cut\<close>, which forgets all the previous search history.
   No backtrack will be propagated to the past before the global cut so it improves the performance.
   Once the reasoning of the branch of the cut fails, the whole reasoning fails.
 
-Reasoners of priority $\geq$ 1000 are named \<^emph>\<open>assertive reasoners\<close> and others are
+Reasoners of priority $\geq$ 1000 are named \<^emph>\<open>confident reasoners\<close> and others are
 \<^emph>\<open>submissive reasoners\<close>.
 
 \<^emph>\<open>Remark\<close>: a local cut reasoner can throw \<^verbatim>\<open>Global_Cut s\<close> to trigger a global cut with the
@@ -252,7 +254,7 @@ text \<open>Attributes @{attribute_def \<phi>reason} is provided for introducing
   If the priority is not given explicitly, by default it is 100.
 \<close>
 
-text \<open>\<^emph>\<open>Remark\<close>: Rules of priority $\geq$ 1000 are named \<^emph>\<open>assertive rules\<close> and others are
+text \<open>\<^emph>\<open>Remark\<close>: Rules of priority $\geq$ 1000 are named \<^emph>\<open>confident rules\<close> and others are
 \<^emph>\<open>submissive rules\<close>.\<close>
 
 text \<open>\<^emph>\<open>Remark\<close>: Attribute @{attribute \<phi>reason} can be used without any argument.
@@ -269,20 +271,12 @@ declare conjI[\<phi>reason add] TrueI[\<phi>reason 1000]
 paragraph \<open>\<open>\<r>\<close>Feasible \label{sec:rFeasible}\<close>
 
 text \<open>Cut rules including local cut and global cut are those of priority $\geq$ 1000.
-A cut rule can have at most one special \<open>\<r>Feasible\<close> antecedent, which determines whether the cut
-rule is feasible to be applied.
-\[ \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<r>Feasible \<Longrightarrow> A3 \<Longrightarrow> C\<close> \]
-Any antecedents before the \<^const>\<open>\<r>Feasible\<close> (e.g. \<open>A1\<close> and \<open>A2\<close> above) are conditions of this cut rule.
-When applying the rule, those conditions will be attempted first by the reasoning engine in order,
-and if their reasoning is failed, the cut rule is discarded and not considered as an admissible rule,
-just like the rule is never given.
-So the engine attempts the next highest-priority rule.
-If the next rule is not a cut rule (its priority < 1000), the engine works in the normal
-mode with backtracking.
-
-\<^const>\<open>\<r>Feasible\<close> provides a mechanism to constrain the condition of applying a cut rule arbitrarily,
-whereas previously the condition is only determined on the patterns and the blacklist, which is
-not expressive enough.
+A cut rule can have at most one special \<open>\<r>Require\<close> antecedent at the leading position,
+which determines the condition of the rule to be applied, e.g. the following rule can be applied
+only if \<open>A1\<close> and \<open>A2\<close> are solvable.
+\[ \<open>\<r>Require (A1 &&& A2) \<Longrightarrow> A3 \<Longrightarrow> C\<close> \]
+It provides a mechanism to constrain semantic conditions of applying the rule,
+whereas the pattern matches mentioned earlier are only able to check the syntactical conditions.
 \<close>
 
 subsection \<open>Reasoners by Isar Methods and ML code\<close>
@@ -540,15 +534,6 @@ lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def .
 
 \<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
   raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
-
-text \<open>\<open>\<r>Feasible\<close> has been introduced in \cref{sec:rFeasible}. The following rules relate
-to the internal implementation. We refer interesting readers to \<^file>\<open>library/reasoner.ML\<close>.\<close>
-
-lemma \<r>Feasible_I: \<open>\<r>Feasible\<close> unfolding \<r>Feasible_def ..
-
-\<phi>reasoner_ML \<r>Feasible 10000 (\<open>\<r>Feasible\<close>) = \<open>fn (ctxt,sequent) =>
-  raise Phi_Reasoner.Success (ctxt, @{thm \<r>Feasible_I} RS sequent)\<close>
-
 
 
 subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}\<close>
