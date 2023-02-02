@@ -392,6 +392,22 @@ attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules
 \<phi>overloads D \<open>Destructive subtyping rules\<close>
 \<phi>overloads cast \<open>Transform the content of a container\<close>
 
+text \<open>
+Convention of Overloading Distance:
+
+\<^item> 0. Transparent, the matching is perfect.
+\<^item> 1. Almost Transparent, but still incomparable to the really transparent, meaning tiny cost still
+      exists, maybe in time or reasoning only
+\<^item> 3. Expected Conversion: some conversion and therefore information lost is inevitable but it is
+      expected so can be accepted.
+\<^item> 5. Less Expected Conversion: in some rare case the information lost can be severe
+        but generally still can be accepted for most of usages.
+\<^item> 9. Slightly Aggressive.
+\<^item> 12. Aggressive in most of the situations.
+\<^item> 15. Bad.
+
+Threshold Cost Always!
+\<close>
 
 subsection \<open>Synthesis\<close>
 
@@ -636,7 +652,7 @@ definition \<phi>Application :: \<open>prop \<Rightarrow> prop \<Rightarrow> pro
 lemma \<phi>application:
   \<open> PROP Apps
 \<Longrightarrow> PROP State
-\<Longrightarrow> PROP Optimum_Solution (\<phi>Application (Optimum_Among Apps) State Result)
+\<Longrightarrow> PROP \<phi>Application Apps State Result
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> PROP Result\<close>
   unfolding \<phi>Application_def Pure.prop_def Optimum_Solution_def Optimum_Among_def .
@@ -657,6 +673,7 @@ ML_file \<open>library/system/application.ML\<close>
 
 subsubsection \<open>Common Rules of Application Methods\<close>
 
+(*
 lemma \<phi>Application_opt_L:
   \<open> Stop_Divergence
 \<Longrightarrow> PROP \<phi>Application (PROP App) State (PROP Result)
@@ -677,6 +694,7 @@ lemma [\<phi>reason 1000 \<phi>Application_opt_L \<phi>Application_opt_R for
 \<Longrightarrow> PROP \<phi>Application App State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (Optimum_Among App) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def Optimum_Among_def .
+*)
 
 lemma [\<phi>reason 80 for \<open>
   PROP \<phi>Application (PROP ?App &&& PROP ?Apps) ?State ?Result

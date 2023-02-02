@@ -3,6 +3,8 @@ signature PLPR_HANDLERS_ARG = sig
 type domT
 type retT
 val default : domT -> retT
+val current_level : Proof.context -> int
+val ctxt_of : domT -> Proof.context
 
 end
 
@@ -11,6 +13,7 @@ signature PLPR_HANDLERS = sig
 structure Arg : PLPR_HANDLERS_ARG
 
 val push : (Arg.domT -> Arg.retT option) -> Proof.context -> serial * Proof.context
+val push_local : (Arg.domT -> Arg.retT option) -> Proof.context -> serial * Proof.context
 val remove : serial -> Proof.context -> Proof.context
 val invoke : Proof.context -> Arg.domT -> Arg.retT
 
@@ -26,6 +29,15 @@ structure Data = Proof_Data (
 fun push h ctxt =
   let val (serial, L) = Data.get ctxt
    in (serial, Data.put (serial + 1, (serial, h) :: L) ctxt) end
+
+fun push_local h ctxt =
+  let val lev = Arg.current_level ctxt
+      val _ = if lev = 0 then error "Not in PLPR reasoning environment" else ()
+   in push (fn a =>
+        if lev = Arg.current_level (Arg.ctxt_of a)
+        then h a
+        else NONE) ctxt
+  end
 
 fun remove serial = Data.map (apsnd (filter_out (fn (s, _) => s = serial)))
 

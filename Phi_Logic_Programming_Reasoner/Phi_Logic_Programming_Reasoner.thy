@@ -916,7 +916,10 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 subsection \<open>Exhaustive Divergence\<close>
 
+definition Exhaustive_Divergence :: \<open>prop \<Rightarrow> prop\<close> where [iff]: \<open>Exhaustive_Divergence X \<equiv> X\<close>
 definition [iff]: \<open>Stop_Divergence \<longleftrightarrow> True\<close>
+
+subsubsection \<open>Implementation\<close>
 
 lemma Stop_Divergence_I: \<open>Stop_Divergence\<close> unfolding Stop_Divergence_def ..
 
@@ -924,6 +927,20 @@ ML_file \<open>library/exhaustive_divergen.ML\<close>
 
 \<phi>reasoner_ML Stop_Divergence 1000 (\<open>Stop_Divergence\<close>) = \<open>
   apsnd (fn th => @{thm Stop_Divergence_I} RS th) #> PLPR_Exhaustive_Divergence.stop\<close>
+
+definition \<open>Begin_Exhaustive_Divergence \<longleftrightarrow> True\<close>
+definition \<open>  End_Exhaustive_Divergence \<longleftrightarrow> True\<close>
+
+lemma Begin_Exhaustive_Divergence_I: \<open>Begin_Exhaustive_Divergence\<close>
+  unfolding Begin_Exhaustive_Divergence_def ..
+lemma End_Exhaustive_Divergence_I: \<open>End_Exhaustive_Divergence\<close>
+  unfolding End_Exhaustive_Divergence_def ..
+
+\<phi>reasoner_ML Begin_Exhaustive_Divergence 1000 (\<open>Begin_Exhaustive_Divergence\<close>)
+  = \<open>PLPR_Exhaustive_Divergence.begin Seq.of_list\<close>
+
+\<phi>reasoner_ML End_Exhaustive_Divergence 1000 (\<open>End_Exhaustive_Divergence\<close>)
+  = \<open>PLPR_Exhaustive_Divergence.exit\<close>
 
 
 subsection \<open>Optimal Solution\<close>
@@ -957,33 +974,46 @@ Global cut is disabled until the exhaustive divergence end (maybe
 
 subsubsection \<open>Implementation\<close>
 
+definition [iff]: \<open>End_Optimum_Solution \<longleftrightarrow> True\<close>
+
 lemma Incremental_Cost_I: \<open>Incremental_Cost X\<close> unfolding Incremental_Cost_def ..
 
 lemma Threshold_Cost_I: \<open>Threshold_Cost X\<close> unfolding Threshold_Cost_def ..
 
-lemma Optimum_Solution_I: \<open>PROP X \<Longrightarrow> PROP Optimum_Solution X\<close> unfolding Optimum_Solution_def .
+lemma End_Optimum_Solution_I: \<open>End_Optimum_Solution\<close> unfolding End_Optimum_Solution_def ..
+
+lemma Do_Optimum_Solution:
+  \<open> PROP X
+\<Longrightarrow> End_Optimum_Solution
+\<Longrightarrow> PROP Optimum_Solution X\<close>
+  unfolding Optimum_Solution_def .
 
 ML_file \<open>library/optimum_solution.ML\<close>
 
 \<phi>reasoner_ML Incremental_Cost 1000 (\<open>Incremental_Cost _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let val _ $ (_ $ N) = Thm.major_prem_of sequent
       val (_, n) = HOLogic.dest_number N
-      val ctxt' = PLPR_Optimum_Solution.report_cost (n,0) ctxt
       val sequent' = @{thm Incremental_Cost_I} RS sequent
-   in SOME ((ctxt',sequent'), Seq.empty) end
+   in Seq.pull (PLPR_Optimum_Solution.report_cost (n,0) (ctxt,sequent'))
+   end
 )\<close>
 
 \<phi>reasoner_ML Threshold_Cost 1000 (\<open>Threshold_Cost _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let val _ $ (_ $ N) = Thm.major_prem_of sequent
       val (_, n) = HOLogic.dest_number N
-      val ctxt' = PLPR_Optimum_Solution.report_cost (0,n) ctxt
       val sequent' = @{thm Threshold_Cost_I} RS sequent
-   in SOME ((ctxt',sequent'), Seq.empty) end
+   in Seq.pull (PLPR_Optimum_Solution.report_cost (0,n) (ctxt,sequent'))
+  end
 )\<close>
 
 \<phi>reasoner_ML Optimum_Solution 1000 (\<open>PROP Optimum_Solution _\<close>) = \<open>
-   apsnd (fn th => @{thm Optimum_Solution_I} RS th)
-#> PLPR_Optimum_Solution.reason
+   apsnd (fn th => @{thm Do_Optimum_Solution} RS th)
+#> PLPR_Optimum_Solution.start
+\<close>
+
+\<phi>reasoner_ML End_Optimum_Solution 1000 (\<open>End_Optimum_Solution\<close>) = \<open>
+   apsnd (fn th => @{thm End_Optimum_Solution_I} RS th)
+#> PLPR_Optimum_Solution.finish
 \<close>
 
 subsubsection \<open>Derivations\<close>

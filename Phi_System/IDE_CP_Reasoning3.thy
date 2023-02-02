@@ -2257,6 +2257,7 @@ lemma [\<phi>reason 1211 for
 
 The bellowing reasoning is too weak! *)
 
+
 lemma Structural_Extract_aggrement_to
   [\<phi>reason 1200 for \<open>Structural_Extract (?x \<Ztypecolon> Agreement ?T) ?R (?y \<Ztypecolon> Agreement ?U) ?W ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
   \<open> \<r>REQUIRE x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
@@ -2264,7 +2265,7 @@ lemma Structural_Extract_aggrement_to
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Require_def
             Structural_Extract'_def
   apply (cases C; simp)
-  \<medium_left_bracket> premises A
+  \<medium_left_bracket> premises A 
     dup
     Agreement_cast[OF A]
   \<medium_right_bracket>.

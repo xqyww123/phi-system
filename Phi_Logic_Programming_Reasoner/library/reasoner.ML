@@ -55,7 +55,8 @@ signature NU_REASONER = sig
   val reason1 : (unit -> string) (*error message*)
              -> int option (*N*) -> context_state -> context_state
   val reason_s : Proof.context (*the context for accessing reasoner db*)
-              -> (priority * context_state Seq.seq) list -> context_state option
+              -> (Proof.context -> 'a * (priority * context_state Seq.seq) list)
+              -> 'a * context_state option
   (*Note it returns at most one state in the returned sequence.*)
   val reason_tac : int option (*N*)
                 -> Proof.context (*the context for accessing reasoner db*)
@@ -162,33 +163,28 @@ val nested_level = Environ.get
 
 (* Cut, Abrupt Termination, and Handlers *)
 
-structure Global_Cut_Handlers = PLPR_Handlers(
-  type domT = context_state
-  type retT = context_state Seq.seq
-  val default = Seq.single
-)
-
-structure Success_Handlers = PLPR_Handlers(
-  type domT = context_state
-  type retT = context_state
-  val default = I
-)
-
 exception Success    of context_state
 exception Global_Cut of context_state
 exception Local_Cut  of (priority * Position.T * context_state Seq.seq)
 
-fun gen_disable push msg ctxt =
-  let val lev = nested_level ctxt
-   in push (fn (ctxt,_) =>
-          if lev = nested_level ctxt
-          then bad_config msg
-          else NONE
-      ) ctxt
-  end
+structure Global_Cut_Handlers = PLPR_Handlers(
+  type domT = context_state
+  type retT = (priority * Position.T * context_state Seq.seq) list
+  fun default s = raise Global_Cut s
+  val current_level = nested_level
+  val ctxt_of = fst
+)
 
-val disable_global_cut = gen_disable Global_Cut_Handlers.push
-val disable_success    = gen_disable Success_Handlers.push
+structure Success_Handlers = PLPR_Handlers(
+  type domT = context_state
+  type retT = (priority * Position.T * context_state Seq.seq) list
+  fun default s = raise Success s
+  val current_level = nested_level
+  val ctxt_of = fst
+)
+
+fun disable_global_cut msg = Global_Cut_Handlers.push_local (fn _ => bad_config msg)
+fun disable_success    msg = Success_Handlers.push_local (fn _ => bad_config msg)
 
 (*** Reasoner Registry ***)
 fun reasoner_eq ({name,...}, {name=name',...}) = (name = name')
@@ -255,7 +251,7 @@ fun beta_eta_contract_leading_antecedent th =
                                          Conv.all_conv (Thm.cprop_of th)) th
   else th
 
-fun call_tactics N ctxt tactics th0 =
+fun call_tactics cost_delt N ctxt tactics th0 =
   let val th = beta_eta_contract_leading_antecedent th0 in
   if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
@@ -276,7 +272,7 @@ fun call_tactics N ctxt tactics th0 =
                       |> (if Config.get ctxt trace_candidates
                           then (fn rs => (List.app (debug ctxt) rs; rs))
                           else I))
-                |> sort (int_ord o apply2 fst)
+                |> sort (int_ord o apply2 fst) (*TODO: comment this!*)
   in
     tacs 
       |> map_filter (fn (cost, r : reasoner) =>
@@ -286,13 +282,15 @@ fun call_tactics N ctxt tactics th0 =
                | _ => NONE
           else if cost <= ~1000 then
             case Seq.pull (#tactic r (ctxt,th))
-              of SOME (x,s) => raise Local_Cut (cost, #pos r, Seq.cons x s)
+              of SOME (x,s) => raise Local_Cut (cost + cost_delt, #pos r, Seq.cons x s)
                | _ => NONE
-          else SOME (cost, #pos r, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
+          else SOME (cost + cost_delt, #pos r, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
         )
-    handle Local_Cut ret => [ret]
   end
   end
+  handle Local_Cut ret => [ret]
+       | Success s => Success_Handlers.invoke (fst s) s
+       | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
 
 fun gen_reason _ _ _ _ _ [] = NONE
   | gen_reason N trace limit iter tactics ([]::L) =
@@ -314,12 +312,11 @@ fun gen_reason _ _ _ _ _ [] = NONE
                     then tracing ("\<phi>reasoning (score " ^ string_of_int (~cost)
                       ^ "):"^ Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                     else ()
-            val Z = (call_tactics N ctxt tactics th)
-                  |> map (fn (a,b,c) => (a+cost,b,c))
+            val Z = (call_tactics cost N ctxt tactics th)
                   |> (fn Z => Z::(
                         let val t = if pointer_eq (seq',Seq.empty) then L' else (cost,pos,seq')::L'
                         in if null t then L else t::L end))
-                handle Success ret => raise Success (Success_Handlers.invoke (fst ret) ret)
+                handle Success ret => raise Success ret
                      | Global_Cut stat =>
                         let
                           val _ = if trace
@@ -327,7 +324,7 @@ fun gen_reason _ _ _ _ _ [] = NONE
                                           ^ Thm.string_of_thm ctxt (snd stat))
                                   else ()
                         in
-                          [[(0,pos, Global_Cut_Handlers.invoke (fst stat) stat)]]
+                          [[(0,pos, Seq.single stat)]]
                         end
           in
             gen_reason N trace limit (iter+1) tactics Z
@@ -337,8 +334,7 @@ fun gen_reason _ _ _ _ _ [] = NONE
 
 (*Entry point*)
 fun gen_reason' N trace limit reasoners states =
-     (gen_reason N trace limit 0 reasoners (map (map (fn (a,b) =>
-          (~a,Position.none, b |> Seq.map (apfst enter_reasoning_envir)))) states)
+     (gen_reason N trace limit 0 reasoners (map (map (fn (a,b) => (~a,Position.none, b))) states)
       handle Success ret => SOME ret)
      |> Option.map (apfst exit_reasoning_envir)
 
@@ -355,25 +351,27 @@ fun reason (SOME 0) S = SOME S
                   (Config.get ctxt trace)
                   (Config.get ctxt step_limit)
                   (Reasoners.get (Context.Proof ctxt))
-                  [[(0, Seq.single (ctxt, sequent))]]
+                  [[(0, Seq.single (enter_reasoning_envir ctxt, sequent))]]
 
 fun reason1 G N stat =
       case reason N stat of SOME x => x
         | NONE => error (G ())
 
 fun reason_s ctxt seqs =
-      gen_reason' 0
-                  (Config.get ctxt trace)
-                  (Config.get ctxt step_limit)
-                  (Reasoners.get (Context.Proof ctxt))
-                  [seqs]
+  let val (ret,seqs') = seqs (enter_reasoning_envir ctxt)
+   in (ret, gen_reason' 0
+              (Config.get ctxt trace)
+              (Config.get ctxt step_limit)
+              (Reasoners.get (Context.Proof ctxt))
+              [seqs'])
+  end
 
 fun reason_tac N ctxt stat = Seq.make (fn () =>
       gen_reason' (num_of_protected_prems (snd stat) N)
                   (Config.get ctxt trace)
                   (Config.get ctxt step_limit)
                   (Reasoners.get (Context.Proof ctxt))
-                  [[(0, Seq.single stat)]]
+                  [[(0, Seq.single (apfst enter_reasoning_envir stat))]]
        |> Option.map (rpair Seq.empty o Seq.Result)
     )
 

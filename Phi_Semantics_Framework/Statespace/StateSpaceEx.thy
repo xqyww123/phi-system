@@ -159,42 +159,6 @@ text \<open>You can define a derived state space by inheriting existing state sp
 of components if you like, and by declaring new components.
 \<close>
 
-statespace ('a,'b) loo :: type = "'a::monoid_mult" foo + X2: "'a" foo[f=f',a=a',b=b',c=c'] + bar [b=B,c=C] +
-  X::'b
-
-
-
-print_locale loo
-print_locale loo_valuetypes
-print_locale loo_namespace
-
-context loo_valuetypes begin
-typ 'self
-typ 'a
-term a'
-end
-
-thm foo_valuetypes_def
-
-
-lemma (in loo) loo1: 
-  shows "s\<langle>a:=i\<rangle>\<cdot>B = s\<cdot>B"
-proof -
-  thm foo1
-  txt \<open>The Lemma @{thm [source] foo1} from the parent state space 
-         is also available here: \begin{center}@{thm foo1}\end{center}\<close>
-  have "s<a:=i>\<cdot>a = i"
-    by (rule foo1)
-  thm bar1
-  txt \<open>Note the renaming of the parameters in Lemma @{thm [source] bar1}: 
-         \begin{center}@{thm bar1}\end{center}\<close>
-  have "s<B:=True>\<cdot>C = s\<cdot>C"
-    by (rule bar1)
-  show ?thesis
-    by simp
-qed
-
-
 statespace 'a dup = FA: 'a foo [f=F, a=A] + 'a foo +
   x::int
 

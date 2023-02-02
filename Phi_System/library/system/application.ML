@@ -41,7 +41,7 @@ val expand_appliant =
 fun apply_proc_naive proc (ctxt,sequent) =
   (ctxt, expand_appliant proc RS (sequent RS @{thm \<phi>apply_proc}))
 
-fun mk_app_reasoning_normal app (ctxt,sequent) () =
+fun mk_app_reasoning_normal app sequent =
   let val idx = Thm.maxidx_of sequent + 1
       val app = Thm.incr_indexes idx app
       val idx = Thm.maxidx_of app + 1
@@ -50,30 +50,25 @@ fun mk_app_reasoning_normal app (ctxt,sequent) () =
               |> Thm.instantiate (TVars.empty,
                                   Vars.make [((("Apps",idx),propT),  Thm.cprop_of app),
                                              ((("State",idx),propT), Thm.cprop_of sequent)])
-       val sequent' = Thm.implies_elim (Thm.implies_elim rule app) sequent
-  in SOME ((ctxt,sequent'), Seq.empty)
+  in Thm.implies_elim (Thm.implies_elim rule app) sequent
   end
 
-fun mk_app_reasoning_RS app (ctxt,sequent) () =
-  let val sequent' = (app RS @{thm \<phi>Application_Conv})
-                  |> Thm.permute_prems 0 (Thm.nprems_of app)
-                  |> (fn th => th RS sequent)
-  in SOME ((ctxt, sequent'), Seq.empty) end
+fun mk_app_reasoning_RS app sequent =
+  (app RS @{thm \<phi>Application_Conv})
+    |> Thm.permute_prems 0 (Thm.nprems_of app)
+    |> (fn th => th RS sequent)
 
-fun mk_app_reasonings apps (ctxt,sequent) =
+fun mk_app_reasoning sequent app =
   case Thm.prop_of sequent
     of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-            map (fn app => (0, Seq.make (mk_app_reasoning_RS app (ctxt,sequent)))) apps
-     | _ => map (fn app => (0, Seq.make (mk_app_reasoning_normal app (ctxt,sequent)))) apps
+            mk_app_reasoning_RS app sequent
+     | _ => mk_app_reasoning_normal app sequent
 
-fun try_apply [] (ctxt,sequent) = NONE
-  | try_apply applications (ctxt,sequent) =
-      let
-        val _ = Phi_Reasoner.debug_info ctxt (fn _ =>
-                    "Reasoning generic applications..." ^ Position.here \<^here>)
-      in
-        Phi_Reasoner.reason_s ctxt (mk_app_reasonings applications (ctxt,sequent))
-      end
+fun try_apply [] _ = NONE
+  | try_apply apps (ctxt,sequent) = (
+      Phi_Reasoner.debug_info ctxt (fn _ =>
+            "Reasoning generic applications..." ^ Position.here \<^here>);
+      PLPR_Optimum_Solution.best_among (ctxt, map (mk_app_reasoning sequent) apps))
 
 fun apply applications stat =
   case try_apply applications stat

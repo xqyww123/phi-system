@@ -21,7 +21,7 @@ fun begin cb (ctxt,sequent) = Seq.make (fn () =>
       val (suc, ctxt) = ctxt
                |> Data.map (fn L => SOME var :: L)
                |> Phi_Reasoner.disable_success
-                            "\<r>Sucess is prohibited during PLPR_Exhaustive_Divergence"
+                            "Exceptional termination during PLPR_Exhaustive_Divergence"
       val (gcut, ctxt) = ctxt
                |> Phi_Reasoner.disable_global_cut
                             "Global Cut is prohibited during PLPR_Exhaustive_Divergence"
