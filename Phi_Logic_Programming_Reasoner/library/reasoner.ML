@@ -26,6 +26,7 @@ signature NU_REASONER = sig
             (*Prints any debug info only when the flag \<phi>trace_reasoning is turned on.*)
   val debug_pretty_generic : Context.generic -> (unit -> Pretty.T) -> unit
   val error : string -> 'a
+  val bad_config : string -> 'a
 
   (*auto level: 2 - fully auto, 1 - partially auto, 0 - fully manual*)
   val auto_level : int Config.T
@@ -33,6 +34,11 @@ signature NU_REASONER = sig
 
   exception Success of context_state
   exception Global_Cut of context_state
+
+  structure Global_Cut_Handlers : PLPR_HANDLERS
+  structure Success_Handlers : PLPR_HANDLERS
+  val disable_global_cut : string -> Proof.context -> serial * Proof.context
+  val disable_success    : string -> Proof.context -> serial * Proof.context
 
   val add : priority * reasoner -> Context.generic -> Context.generic
   val add_lthy : priority * reasoner -> local_theory -> local_theory
@@ -54,7 +60,11 @@ signature NU_REASONER = sig
   val reason_tac : int option (*N*)
                 -> Proof.context (*the context for accessing reasoner db*)
                 -> context_tactic
-  
+
+  (*The nested level of the current reasoning*)
+  val nested_level : Proof.context -> int (*Starting from 1*)
+
+
   val add_intro_rule : Position.T -> priority -> term list * term list -> thm list
                     -> Context.generic -> Context.generic
   val add_intro_rules: (thm list * Position.T * priority * term list * term list) list
@@ -108,8 +118,10 @@ fun normalize_reasoner ({name,pos,pattern,blacklist,tactic}:reasoner) =
     blacklist = map Envir.beta_eta_contract blacklist, tactic = tactic}:reasoner)
 
 fun transform_reasoner phi ({name,pos,pattern,blacklist,tactic}:reasoner) =
-  ({name=name, pos=pos, pattern = map (Morphism.term phi) pattern,
-    blacklist = map (Morphism.term phi) blacklist, tactic = tactic}:reasoner)
+  ({name=name, pos=pos,
+    pattern = map (Morphism.term phi) pattern,
+    blacklist = map (Morphism.term phi) blacklist,
+    tactic = tactic}:reasoner)
   
 
 (* Attributes *)
@@ -134,13 +146,49 @@ fun debug_pretty_generic ctxt G =
   else ()
 
 fun error msg = Exn.error (msg ^ "\nReasoning Fail! You may turn on \<phi>trace_reasoning or\
-      \ \<phi>trace_reasoning_candidates  to debug.")
+      \ \<phi>trace_reasoning_candidates to debug.")
+fun bad_config msg = Exn.error (msg ^ "\nSome rule is configured incorrectly!")
 
+(* Reasoning Environ *)
 
-exception Success  of context_state
+structure Environ = Proof_Data (
+  type T = int (*nested level*)
+  val init = K 0
+)
+
+val enter_reasoning_envir = Environ.map (fn x => x + 1)
+val exit_reasoning_envir  = Environ.map (fn x => x - 1)
+val nested_level = Environ.get
+
+(* Cut, Abrupt Termination, and Handlers *)
+
+structure Global_Cut_Handlers = PLPR_Handlers(
+  type domT = context_state
+  type retT = context_state Seq.seq
+  val default = Seq.single
+)
+
+structure Success_Handlers = PLPR_Handlers(
+  type domT = context_state
+  type retT = context_state
+  val default = I
+)
+
+exception Success    of context_state
 exception Global_Cut of context_state
-exception Local_Cut of (priority * Position.T * context_state Seq.seq)
+exception Local_Cut  of (priority * Position.T * context_state Seq.seq)
 
+fun gen_disable push msg ctxt =
+  let val lev = nested_level ctxt
+   in push (fn (ctxt,_) =>
+          if lev = nested_level ctxt
+          then bad_config msg
+          else NONE
+      ) ctxt
+  end
+
+val disable_global_cut = gen_disable Global_Cut_Handlers.push
+val disable_success    = gen_disable Success_Handlers.push
 
 (*** Reasoner Registry ***)
 fun reasoner_eq ({name,...}, {name=name',...}) = (name = name')
@@ -271,7 +319,7 @@ fun gen_reason _ _ _ _ _ [] = NONE
                   |> (fn Z => Z::(
                         let val t = if pointer_eq (seq',Seq.empty) then L' else (cost,pos,seq')::L'
                         in if null t then L else t::L end))
-                handle Success ret => raise Success ret
+                handle Success ret => raise Success (Success_Handlers.invoke (fst ret) ret)
                      | Global_Cut stat =>
                         let
                           val _ = if trace
@@ -279,7 +327,7 @@ fun gen_reason _ _ _ _ _ [] = NONE
                                           ^ Thm.string_of_thm ctxt (snd stat))
                                   else ()
                         in
-                          [[(0,pos, Seq.single stat)]]
+                          [[(0,pos, Global_Cut_Handlers.invoke (fst stat) stat)]]
                         end
           in
             gen_reason N trace limit (iter+1) tactics Z
@@ -287,12 +335,15 @@ fun gen_reason _ _ _ _ _ [] = NONE
        | NONE => gen_reason N trace limit iter tactics (L'::L)
   end
 
+(*Entry point*)
+fun gen_reason' N trace limit reasoners states =
+     (gen_reason N trace limit 0 reasoners (map (map (fn (a,b) =>
+          (~a,Position.none, b |> Seq.map (apfst enter_reasoning_envir)))) states)
+      handle Success ret => SOME ret)
+     |> Option.map (apfst exit_reasoning_envir)
+
 
 (* Various Interfaces for Invoking Reasoning *)
-
-fun gen_reason' N trace limit tactics states =
-      gen_reason N trace limit 0 tactics (map (map (fn (a,b) => (~a,Position.none,b))) states)
-      handle Success ret => SOME ret
 
 fun num_of_protected_prems thm NONE = 0
   | num_of_protected_prems thm (SOME N) =
@@ -513,7 +564,8 @@ fun intro_reasoner ctxt pos priority patterns blacklist rules =
       | tactic ((rule,has_feasible)::R) s = Seq.make (fn _ =>
           single_RS' rule s
             |> has_feasible ? Option.mapPartial (reason (SOME 1))
-            |> Option.map (rpair (tactic R s))
+            |> (fn NONE => Seq.pull (tactic R s)
+                 | SOME ret => SOME (ret, tactic R s))
         )
   in {name = name_of_intro_reasoner rules,
       pos = pos,

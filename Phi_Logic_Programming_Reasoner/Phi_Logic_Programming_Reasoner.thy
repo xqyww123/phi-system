@@ -8,8 +8,11 @@ theory Phi_Logic_Programming_Reasoner
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
 begin
 
+declare [[ML_debugger]]
+
 ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
 ML_file \<open>library/pattern.ML\<close>
+ML_file \<open>library/handlers.ML\<close>
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
 
@@ -913,62 +916,80 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 subsection \<open>Exhaustive Divergence\<close>
 
-definition \<open>Begin_Exhaustive_Divergence \<longleftrightarrow> True\<close>
-definition \<open>End_Exhaustive_Divergence   \<longleftrightarrow> True\<close>
+definition [iff]: \<open>Stop_Divergence \<longleftrightarrow> True\<close>
+
+lemma Stop_Divergence_I: \<open>Stop_Divergence\<close> unfolding Stop_Divergence_def ..
 
 ML_file \<open>library/exhaustive_divergen.ML\<close>
 
-ML \<open>ML_Name_Space.forget_structure\<close>
+\<phi>reasoner_ML Stop_Divergence 1000 (\<open>Stop_Divergence\<close>) = \<open>
+  apsnd (fn th => @{thm Stop_Divergence_I} RS th) #> PLPR_Exhaustive_Divergence.stop\<close>
 
 
 subsection \<open>Optimal Solution\<close>
 
-text \<open>\<phi>-LPR is priority-driven DFS giving the first reached solution but may not be the optimal
-  for certain given measure. The section gives a way to find out the solution
-  of the minimum cost among all candidates exhaustively.
+text \<open>\<phi>-LPR is priority-driven DFS searching the first reached solution which may not be the optimal
+  one for certain measure. The section gives a way to find out the solution of the minimum cost
+  among all search branches.
 
-The cost is reported by the following antecedents inserted in the user rules.\<close>
+The cost is measured by reports from the following antecedents inserted in the user rules.\<close>
 
-definition Incremental_Cost :: \<open>int \<Rightarrow> bool\<close> where \<open>Incremental_Cost _ = True\<close>
-definition Threshold_Cost   :: \<open>int \<Rightarrow> bool\<close> where \<open>Threshold_Cost   _ = True\<close>
+definition Incremental_Cost :: \<open>int \<Rightarrow> bool\<close> where [iff]: \<open>Incremental_Cost _ = True\<close>
+definition Threshold_Cost   :: \<open>int \<Rightarrow> bool\<close> where [iff]: \<open>Threshold_Cost   _ = True\<close>
 
 text \<open>The final cost of a reasoning process is the sum of all the reported \<open>Incremental_Cost\<close> or
   the maximum \<open>Threshold_Cost\<close>, the one which is larger.\<close>
 
+definition Optimum_Solution :: \<open>prop \<Rightarrow> prop\<close> where [iff]: \<open>Optimum_Solution P \<equiv> P\<close>
 
-definition \<open>Optimum_Solution Divergence Measure \<equiv> (PROP Divergence &&& PROP Measure)\<close>
+text \<open>Each individual invocation of \<open>Optimum_Solution P\<close>
+invokes an individual instance of the optimal solution reasoning.
+The reasoning of \<open>P\<close> is proceeded exhaustively meaning exploring all backtracks except local cuts.
+A search branch can turn off the exhaustive divergence early by invoking \<^prop>\<open>Stop_Divergence\<close>.
+If so the following reasoning will be in the normal DFS mode terminating once the first solution
+reached, but the cost is still counted, and still only the optimal solution will be returned
+when exiting \<open>Optimum_Solution\<close>.
 
-text \<open>Each invocation of \<open>Optimum_Solution Collect_Candidates Measure\<close>
-invokes an instance of the optimal solution reasoning.
-The reasoning has two stages, Collect_Candidates and Measure.
-In the first stage, ANY feasible search branches
-solving the \<open>Collect_Candidates\<close> are recorded to be candidates from which the reasoning
-finds the optimal in the second stage.
-If some path reaches the end of \<open>Collect_Candidates\<close>, the search will not stop, but continue
-to find other solutions of \<open>Collect_Candidates\<close> by backtracking.
-But branches pruned by cuts are not revisited.
-\<open>\<r>Success\<close> is forbidden in the first stage.
-Global cut is dangerous because it kills other potential candidates.
+Global cut is disabled until the exhaustive divergence end (maybe
+  by \<^prop>\<open>Stop_Divergence\<close> early), because it kill other search branches.
+\<open>\<r>Success\<close> is disabled during the whole \<open>Optimum_Solution\<close> reasoning.
+\<close>
 
-In the second stage, the reasoning of each candidate goes straight and terminates once it
-reaches the end of \<open>Measure\<close>.
-The cost during this reasoning process is compared with each other,
-and the reasoning result of the minimum one is returned as the result of
-\<open>Optimum_Solution Collect_Candidates Measure\<close>.\<close>
+subsubsection \<open>Implementation\<close>
 
-subsubsection \<open>Internal Implementation\<close>
+lemma Incremental_Cost_I: \<open>Incremental_Cost X\<close> unfolding Incremental_Cost_def ..
 
-definition \<open>End_Divergence \<longleftrightarrow> True\<close>
-definition \<open>End_Measure \<longleftrightarrow> True\<close>
+lemma Threshold_Cost_I: \<open>Threshold_Cost X\<close> unfolding Threshold_Cost_def ..
 
-lemma Optimum_Solution_rule:
-  \<open> PROP Collect_Candidates
-\<Longrightarrow> End_Divergence
-\<Longrightarrow> PROP Measure
-\<Longrightarrow> End_Measure
-\<Longrightarrow> PROP Optimum_Solution Collect_Candidates Measure\<close>
-  unfolding Optimum_Solution_def
-  by (rule conjunctionI)
+lemma Optimum_Solution_I: \<open>PROP X \<Longrightarrow> PROP Optimum_Solution X\<close> unfolding Optimum_Solution_def .
+
+ML_file \<open>library/optimum_solution.ML\<close>
+
+\<phi>reasoner_ML Incremental_Cost 1000 (\<open>Incremental_Cost _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N) = Thm.major_prem_of sequent
+      val (_, n) = HOLogic.dest_number N
+      val ctxt' = PLPR_Optimum_Solution.report_cost (n,0) ctxt
+      val sequent' = @{thm Incremental_Cost_I} RS sequent
+   in SOME ((ctxt',sequent'), Seq.empty) end
+)\<close>
+
+\<phi>reasoner_ML Threshold_Cost 1000 (\<open>Threshold_Cost _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N) = Thm.major_prem_of sequent
+      val (_, n) = HOLogic.dest_number N
+      val ctxt' = PLPR_Optimum_Solution.report_cost (0,n) ctxt
+      val sequent' = @{thm Threshold_Cost_I} RS sequent
+   in SOME ((ctxt',sequent'), Seq.empty) end
+)\<close>
+
+\<phi>reasoner_ML Optimum_Solution 1000 (\<open>PROP Optimum_Solution _\<close>) = \<open>
+   apsnd (fn th => @{thm Optimum_Solution_I} RS th)
+#> PLPR_Optimum_Solution.reason
+\<close>
+
+subsubsection \<open>Derivations\<close>
+
+definition Optimum_Among :: \<open>prop \<Rightarrow> prop\<close> where \<open>Optimum_Among Candidates \<equiv> Candidates\<close>
+  \<comment> \<open>We leave it as a syntax merely\<close>
 
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>

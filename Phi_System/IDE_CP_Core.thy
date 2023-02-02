@@ -636,10 +636,10 @@ definition \<phi>Application :: \<open>prop \<Rightarrow> prop \<Rightarrow> pro
 lemma \<phi>application:
   \<open> PROP Apps
 \<Longrightarrow> PROP State
-\<Longrightarrow> PROP \<phi>Application (PROP Apps) (PROP State) (PROP Result)
+\<Longrightarrow> PROP Optimum_Solution (\<phi>Application (Optimum_Among Apps) State Result)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> PROP Result\<close>
-  unfolding \<phi>Application_def Pure.prop_def .
+  unfolding \<phi>Application_def Pure.prop_def Optimum_Solution_def Optimum_Among_def .
 
 definition \<phi>Application_Conv :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close>
   where \<open>\<phi>Application_Conv P Q \<equiv> (PROP P \<Longrightarrow> PROP Q)\<close>
@@ -656,6 +656,27 @@ ML_file \<open>library/system/application.ML\<close>
 
 
 subsubsection \<open>Common Rules of Application Methods\<close>
+
+lemma \<phi>Application_opt_L:
+  \<open> Stop_Divergence
+\<Longrightarrow> PROP \<phi>Application (PROP App) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Optimum_Among (PROP App &&& PROP Apps)) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def conjunction_imp Optimum_Among_def .
+
+lemma \<phi>Application_opt_R:
+  \<open> PROP \<phi>Application (Optimum_Among Apps) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Optimum_Among (PROP App &&& PROP Apps)) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def conjunction_imp Optimum_Among_def .
+
+declare [[\<phi>reason 1010 \<phi>Application_opt_L \<phi>Application_opt_R for
+            \<open>PROP \<phi>Application (Optimum_Among (PROP ?App &&& PROP ?Apps)) ?State ?Result\<close>]]
+
+lemma [\<phi>reason 1000 \<phi>Application_opt_L \<phi>Application_opt_R for
+            \<open>PROP \<phi>Application (Optimum_Among ?App) ?State ?Result\<close>]:
+  \<open> Stop_Divergence
+\<Longrightarrow> PROP \<phi>Application App State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Optimum_Among App) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def Optimum_Among_def .
 
 lemma [\<phi>reason 80 for \<open>
   PROP \<phi>Application (PROP ?App &&& PROP ?Apps) ?State ?Result
