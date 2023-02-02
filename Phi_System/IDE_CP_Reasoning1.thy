@@ -463,7 +463,7 @@ text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> remove
 
 subsection \<open>Collects all Values in an Assertion / from the State Sequent\<close>
 
-consts collect_clean_value :: \<open>bool \<Rightarrow> unit action\<close>
+consts collect_clean_value :: \<open>bool \<Rightarrow> action\<close>
 
 lemma apply_collect_clean_value:
   \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V @action collect_clean_value WHETHER_CLEAN

@@ -13,7 +13,7 @@ section \<open>Build Elements of Actions\<close>
 
 subsubsection \<open>Actions only for implication only\<close>
 
-consts \<A>_transformation :: \<open>'a action \<Rightarrow> 'a action\<close>
+consts \<A>_transformation :: \<open>action \<Rightarrow> action\<close>
 
 declare [[\<phi>reason_default_pattern
       \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_transformation _\<close> \<Rightarrow>
@@ -52,7 +52,7 @@ lemma [\<phi>reason 1100]:
 
 subsubsection \<open>View Shift\<close>
 
-consts \<A>_view_shift_or_imp :: \<open>'a action \<Rightarrow> 'a action\<close>
+consts \<A>_view_shift_or_imp :: \<open>action \<Rightarrow> action\<close>
 
 lemma [\<phi>reason 1100]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action action
@@ -87,7 +87,7 @@ hide_fact do_\<A>_view_shift_or_imp_VS do_\<A>_view_shift_or_imp_VS_degrade
 
 subsubsection \<open>Nap, a space for injection\<close>
 
-consts \<A>nap :: \<open>'a action \<Rightarrow> 'a action\<close>
+consts \<A>nap :: \<open>action \<Rightarrow> action\<close>
 
 lemma [\<phi>reason 10]:
   \<open> P @action A
@@ -96,7 +96,7 @@ lemma [\<phi>reason 10]:
 
 subsubsection \<open>Actions for \<open>\<exists>\<and>\<close>-free MTF\<close>
 
-consts \<A>_simple_MTF :: \<open>'a action \<Rightarrow> 'a action\<close>
+consts \<A>_simple_MTF :: \<open>action \<Rightarrow> action\<close>
 
 declare [[\<phi>reason_default_pattern
       \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_simple_MTF _\<close> \<Rightarrow>
@@ -142,7 +142,7 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Actions for the leading item only\<close>
 
-consts \<A>_leading_item' :: \<open>'a action \<Rightarrow> 'a action\<close>
+consts \<A>_leading_item' :: \<open>action \<Rightarrow> action\<close>
 
 abbreviation \<open>\<A>_leading_item A \<equiv> \<A>_simple_MTF (\<A>_leading_item' A)\<close>
 
@@ -184,7 +184,7 @@ subsubsection \<open>Actions of multi-arity\<close>
 text \<open>for transformations containing remainder, of form \<open>?R\<heavy_comma> X \<longmapsto> ?R\<heavy_comma> Y\<close>
   so padding Void is required when there is only one item.\<close>
 
-consts \<A>_multi_arity' :: \<open>'a action \<Rightarrow> 'a action\<close>
+consts \<A>_multi_arity' :: \<open>action \<Rightarrow> action\<close>
 
 abbreviation \<open>multi_arity A \<equiv> \<A>_simple_MTF (\<A>_multi_arity' A)\<close>
 
@@ -228,9 +228,9 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Structural\<close>
 
-consts \<A>_structural :: \<open>'a action \<Rightarrow> 'a action\<close>
-consts \<A>_structural_1_2 :: \<open>'a action \<Rightarrow> 'a action\<close>
-consts \<A>_structural_2_1 :: \<open>'a action \<Rightarrow> 'a action\<close>
+consts \<A>_structural :: \<open>action \<Rightarrow> action\<close>
+consts \<A>_structural_1_2 :: \<open>action \<Rightarrow> action\<close>
+consts \<A>_structural_2_1 :: \<open>action \<Rightarrow> action\<close>
 
 text \<open>
 \<^descr> \<^const>\<open>\<A>_structural\<close> \<A>_structural homomorphism in shape:
@@ -289,7 +289,7 @@ lemma assert_\<phi>app:
 
 subsubsection \<open>As\<close>
 
-consts "as" :: \<open>'a set \<Rightarrow> unit action\<close>
+consts "as" :: \<open>'a set \<Rightarrow> action\<close>
 
 declare [[\<phi>reason_default_pattern
       \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action as ?T\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action as ?T\<close> (100)
@@ -320,7 +320,7 @@ lemma [\<phi>reason 5000]:
 
 subsubsection \<open>To\<close>
 
-consts to :: \<open>('a,'b) \<phi> \<Rightarrow> unit action\<close>
+consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
 
 abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close>
 
@@ -351,7 +351,7 @@ lemma [\<phi>reason 5000]:
 
 subsection \<open>Case Analysis\<close>
 
-consts \<A>_action_case :: \<open>unit action\<close>
+consts \<A>_action_case :: \<open>action\<close>
 
 lemma cases_\<phi>app: \<open>PROP Call_Action (\<A>_view_shift_or_imp \<A>_action_case)\<close> ..
 
@@ -379,8 +379,8 @@ subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type\<close>
 
 named_theorems \<phi>defs \<open>Definitions of \<phi>-Type\<close>
 
-consts \<A>_construct\<phi> :: \<open>'a set \<Rightarrow> unit action\<close>
-       \<A>_destruct\<phi>  :: \<open>('a,'b) \<phi> \<Rightarrow> unit action\<close>
+consts \<A>_construct\<phi> :: \<open>'a set \<Rightarrow> action\<close>
+       \<A>_destruct\<phi>  :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
 
 declare [[ \<phi>reason_default_pattern
       \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action \<A>_construct\<phi> ?S\<close> \<Rightarrow>
@@ -405,7 +405,7 @@ lemma construct\<phi>_\<phi>app:
   using implies_trans apply fastforce
   using implies_left_prod implies_trans by fastforce
 
-consts mode_\<phi>defs :: \<open>unit action\<close>
+consts mode_\<phi>defs :: \<open>action\<close>
 
 abbreviation Unfold_\<phi>Defs :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<phi>\<d>\<e>\<f>\<s>] _ : _" [1000,10] 9)
   where "Unfold_\<phi>Defs \<equiv> Simplify mode_\<phi>defs"
@@ -427,9 +427,9 @@ lemma [\<phi>reason 10]:
 
 subsection \<open>Duplicate \& Shrink\<close>
 
-consts action_dup    :: \<open>unit action\<close>
-       action_shrink :: \<open>unit action\<close>
-       action_drop   :: \<open>unit action\<close>
+consts action_dup    :: \<open>action\<close>
+       action_shrink :: \<open>action\<close>
+       action_drop   :: \<open>action\<close>
 
 lemma dup_\<phi>app:
   \<open>PROP Call_Action (\<A>_transformation (\<A>_leading_item (\<A>_structural_1_2 action_dup)))\<close> ..
@@ -442,7 +442,7 @@ lemma drop_\<phi>app:
 
 (*subsection \<open>Simplification as an Action\<close>
 
-consts action_simplify :: \<open>unit action\<close>
+consts action_simplify :: \<open>action\<close>
 
 lemma simplify_\<phi>app:
   \<open>PROP Call_Action (\<A>_transformation (\<A>_simple_MTF ))\<close> *)

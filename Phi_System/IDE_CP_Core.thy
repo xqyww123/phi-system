@@ -477,7 +477,7 @@ subsubsection \<open>Tagging the target of a synthesis rule\<close>
 
 definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [16] 15) where [iff]: \<open>Synthesis S = S\<close>
 
-consts synthesis :: \<open>subgoal \<Rightarrow> unit action\<close>
+consts synthesis :: \<open>subgoal \<Rightarrow> action\<close>
 
 text \<open>
   Occurring in the post-condition of a rule (either a procedure specification or a view shift
@@ -1091,16 +1091,16 @@ text \<open>Action provides a kind of meta calling mechanism.
 
 (*TODO: polish below*)
 
-text \<open>The action symbol is encoded to be a fixed free variable or a constant of \<^typ>\<open>'cat action\<close>.
+text \<open>The action symbol is encoded to be a fixed free variable or a constant of \<^typ>\<open>action\<close>.
   Therefore the pattern matching can be native and fast.
-  Note an action can be parameterized like, \<^typ>\<open>nat \<Rightarrow> bool \<Rightarrow> 'cat action\<close> parameterized
+  Note an action can be parameterized like, \<^typ>\<open>nat \<Rightarrow> bool \<Rightarrow> action\<close> parameterized
     by a nat and a boolean. Other parameters can come from the sequent.
 \<close>
 
 text \<open>\<^prop>\<open>A @action Act\<close> tells antecedent \<^prop>\<open>A\<close> is bound to the action Act, typically
   a procedure rule or an implication or a view shift rule.\<close>
 
-definition Do_Action :: \<open>'cat action \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
+definition Do_Action :: \<open>action \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
   where \<open>Do_Action action sequent result \<equiv> (PROP sequent \<Longrightarrow> PROP result)\<close>
 
 text \<open>\<^prop>\<open>PROP Do_Action action sequent result\<close> is the antecedent to be reasoned
@@ -1116,7 +1116,7 @@ text \<open>There are two way to activate the construction of an action.
 
 paragraph \<open>First way, by Application\<close>
 
-definition Call_Action :: \<open>'cat action \<Rightarrow> prop\<close> where \<open>Call_Action \<equiv> Pure.term\<close>
+definition Call_Action :: \<open>action \<Rightarrow> prop\<close> where \<open>Call_Action \<equiv> Pure.term\<close>
 
 lemma Call_Action_I[intro!]: \<open>PROP Call_Action XX\<close> unfolding Call_Action_def term_def .
 
@@ -1131,7 +1131,8 @@ lemma [\<phi>reason 1400]:
   \<open> \<r>CALL Synthesis_Parse action action'
 \<Longrightarrow> PROP Do_Action action' sequent result
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> PROP DoSynthesis (action::'cat action) sequent result\<close>
+\<Longrightarrow> PROP DoSynthesis action sequent result\<close>
+  for action :: action
   unfolding DoSynthesis_def Do_Action_def .
 (*
 subsubsection \<open>Classes of Actions\<close>

@@ -485,7 +485,7 @@ fun gen_begin_proc prep_term prep_prop prep_var post_process def_const
     val goal0 = \<^const>\<open>Trueprop\<close> $
                   (Const (@{const_name \<phi>Procedure}, dummyT) $ v_proc $ arg $ ret $ throws)
     val goal = (case action of NONE => goal0
-                   | SOME A => \<^Const>\<open>Action_Tag dummyT\<close> $ goal0 $ parse_term A)
+                   | SOME A => \<^Const>\<open>Action_Tag\<close> $ goal0 $ parse_term A)
             |> fold_rev (fn (_,(P,_)) => fn X => \<^const>\<open>Pure.imp\<close> $ P $ X) preconds
 
     fun post_process' binding int lthy th =

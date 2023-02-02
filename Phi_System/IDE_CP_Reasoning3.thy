@@ -283,7 +283,7 @@ text \<open>Priority Convention:
 \<close>
 
 
-consts reason_ToSA  :: \<open>bool \<Rightarrow> subgoal \<Rightarrow> unit action\<close>
+consts reason_ToSA  :: \<open>bool \<Rightarrow> subgoal \<Rightarrow> action\<close>
        subj_premise :: \<open>subgoal \<Rightarrow> mode\<close>
 
 
@@ -1513,7 +1513,7 @@ text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the 
 
 text \<open>This merging procedure retains the order of the left side.\<close>
 
-consts branch_convergence :: \<open>unit action\<close>
+consts branch_convergence :: \<open>action\<close>
 
 (* text \<open>Though definitionally If is identical to If, there is semantic difference between them.
   If has a systematical meaning. If P A B means the procedure merging two assertions

@@ -316,7 +316,7 @@ subsection \<open>Reasoning Process\<close>
 
 subsubsection \<open>Infer Semantic Type of Variable\<close>
 
-consts infer_var_type :: \<open>unit action\<close>
+consts infer_var_type :: \<open>action\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> varname.type var \<equiv> TY'

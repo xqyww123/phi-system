@@ -352,9 +352,9 @@ text \<open>In the reasoning, antecedents of the same form may have different pu
 The purpose is denoted by \<open>action\<close> type, which is an unspecified type because it serves only for
   syntactic purpose.\<close>
 
-typedecl 'category action
+typedecl action
 
-definition Action_Tag :: \<open>prop \<Rightarrow> 'cat action \<Rightarrow> prop\<close> ("_ @action _" [3,4] 3)
+definition Action_Tag :: \<open>prop \<Rightarrow> action \<Rightarrow> prop\<close> ("_ @action _" [3,4] 3)
   where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
 
 text \<open>
@@ -388,7 +388,7 @@ text \<open>Modes are general annotations used in various antecedents, which may
   The exact meaning of them depend on the specific antecedent using them.
   An example can be found in \cref{sec:proof-obligation}.\<close>
 
-type_synonym mode = \<open>unit action\<close>
+type_synonym mode = action
 
 text \<open>We provide a serial of predefined modes, which may be commonly useful.\<close>
 
@@ -747,7 +747,7 @@ A subgoal is represented by an unspecified type which only has a syntactic effec
 
 typedecl "subgoal"
 
-consts subgoal_context :: \<open>subgoal \<Rightarrow> unit action\<close>
+consts subgoal_context :: \<open>subgoal \<Rightarrow> action\<close>
 
 abbreviation GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
   where "(PROP P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> (PROP P @action subgoal_context G)"
@@ -911,17 +911,30 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   = \<open>PLPR_Simplifier.simplifier I\<close>
 
 
+subsection \<open>Exhaustive Divergence\<close>
+
+definition \<open>Begin_Exhaustive_Divergence \<longleftrightarrow> True\<close>
+definition \<open>End_Exhaustive_Divergence   \<longleftrightarrow> True\<close>
+
+ML_file \<open>library/exhaustive_divergen.ML\<close>
+
+ML \<open>ML_Name_Space.forget_structure\<close>
+
+
 subsection \<open>Optimal Solution\<close>
 
 text \<open>\<phi>-LPR is priority-driven DFS giving the first reached solution but may not be the optimal
-  in some specific given sense. The section gives a way to find out exhaustively the solution
-  of the minimum cost among all candidates in the any user-defined sense.\<close>
+  for certain given measure. The section gives a way to find out the solution
+  of the minimum cost among all candidates exhaustively.
 
-definition Cost :: \<open>nat \<Rightarrow> bool\<close> where \<open>Cost _ = True\<close>
-definition At_Least_Cost :: \<open>nat \<Rightarrow> bool\<close> where \<open>At_Least_Cost _ = True\<close>
+The cost is reported by the following antecedents inserted in the user rules.\<close>
 
-text \<open>The final cost of a reasoning process is the sum of all invoked \<open>Cost\<close> or
-  the maximum invoked \<open>At_Least_Cost\<close>, the one which is greater.\<close>
+definition Incremental_Cost :: \<open>int \<Rightarrow> bool\<close> where \<open>Incremental_Cost _ = True\<close>
+definition Threshold_Cost   :: \<open>int \<Rightarrow> bool\<close> where \<open>Threshold_Cost   _ = True\<close>
+
+text \<open>The final cost of a reasoning process is the sum of all the reported \<open>Incremental_Cost\<close> or
+  the maximum \<open>Threshold_Cost\<close>, the one which is larger.\<close>
+
 
 definition \<open>Optimum_Solution Divergence Measure \<equiv> (PROP Divergence &&& PROP Measure)\<close>
 
@@ -945,14 +958,14 @@ and the reasoning result of the minimum one is returned as the result of
 
 subsubsection \<open>Internal Implementation\<close>
 
-definition \<open>Begin_Measure \<equiv> Trueprop True\<close>
-definition \<open>End_Measure \<equiv> Trueprop True\<close>
+definition \<open>End_Divergence \<longleftrightarrow> True\<close>
+definition \<open>End_Measure \<longleftrightarrow> True\<close>
 
 lemma Optimum_Solution_rule:
   \<open> PROP Collect_Candidates
-\<Longrightarrow> PROP Begin_Measure
+\<Longrightarrow> End_Divergence
 \<Longrightarrow> PROP Measure
-\<Longrightarrow> PROP End_Measure
+\<Longrightarrow> End_Measure
 \<Longrightarrow> PROP Optimum_Solution Collect_Candidates Measure\<close>
   unfolding Optimum_Solution_def
   by (rule conjunctionI)
