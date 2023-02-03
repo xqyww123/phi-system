@@ -9,7 +9,7 @@ theory Phi_Preliminary
   keywords "optional_translations" :: thy_decl
 begin
 
-declare [ [ML_debugger, ML_exception_debugger]]
+(* declare [ [ML_debugger, ML_exception_debugger]] *)
 
 subsection \<open>Named Theorems\<close>
 
@@ -19,8 +19,6 @@ and \<phi>programming_simps \<open>Simplification rules used in the deductive pr
 declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 
 subsection \<open>Error Mechanism\<close>
-
-declare [ [ML_debugger, ML_exception_debugger] ]
 
 ML_file \<open>library/tools/error.ML\<close>
 

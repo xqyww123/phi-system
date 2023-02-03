@@ -8,7 +8,8 @@ theory Phi_Logic_Programming_Reasoner
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
 begin
 
-declare [[ML_debugger]]
+
+ML \<open>Timing.cond_timeit false "asd" (fn () => OS.Process.sleep (seconds 1.0))\<close>
 
 ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
 ML_file \<open>library/pattern.ML\<close>

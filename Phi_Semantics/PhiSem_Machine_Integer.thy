@@ -237,8 +237,9 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   "\<phi>Zero int('b) \<int>('b) 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> Word('b)\<close> \<medium_right_bracket>. .
 
+
 lemma [\<phi>reason 1000]:
-  "\<phi>Equal \<int>('b) (\<lambda>x y. True) (=)"
+  "\<phi>Equal \<int>('b) (\<lambda>x y. True) (=)" 
   \<medium_left_bracket> to \<open>Word(_)\<close> \<medium_right_bracket>
   by (metis One_nat_def atLeastLessThan_iff local.\<phi>lemmata signed_take_bit_int_eq_self_iff sint_sbintrunc') .
 
@@ -426,6 +427,773 @@ lemma [\<phi>overload +]:
 
 declare op_add_word_\<phi>app[\<phi>overload +]
 
+
+
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vxx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vxx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx1) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx1] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx2) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx2] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx3) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx3] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx4) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx4] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx5) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx5] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx6) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx6] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx7) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx7] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx8) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx8] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx9) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx9] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx10) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx10] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx11) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx11] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx12) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx12] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx13) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx13] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx14) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx14] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx15) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx15] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx16) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx16] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx17) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx17] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx18) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx18] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx19) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx19] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx20) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx20] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx21) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx21] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx22) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx22] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx23) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx23] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx24) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx24] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx25) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx25] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx26) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx26] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx27) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx27] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx28) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx28] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx29) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx29] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx30) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx30] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx31) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx31] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx32) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx32] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx33) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx33] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx34) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx34] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx35) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx35] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx36) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx36] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx37) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx37] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx38) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx38] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx39) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx39] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx40) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx40] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx41) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx41] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vxx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vxx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx1) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx1] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx2) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx2] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx3) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx3] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx4) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx4] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx5) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx5] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx6) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx6] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx7) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx7] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx8) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx8] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx9) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx9] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx10) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx10] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx11) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx11] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx12) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx12] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx13) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx13] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx14) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx14] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx15) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx15] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx16) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx16] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx17) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx17] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx18) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx18] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx19) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx19] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx20) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx20] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx21) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx21] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx22) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx22] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx23) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx23] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx24) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx24] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx25) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx25] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx26) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx26] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx27) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx27] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx28) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx28] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx29) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx29] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx30) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx30] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx31) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx31] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx32) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx32] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx33) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx33] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx34) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx34] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx35) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx35] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx36) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx36] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx37) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx37] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx38) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx38] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx39) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx39] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx40) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx40] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair zzy vx41) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx41] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[zzy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vxx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vxx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx1) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx1] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx2) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx2] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx3) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx3] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx4) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx4] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx5) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx5] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx6) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx6] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx7) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx7] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx8) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx8] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx9) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx9] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx10) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx10] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx11) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx11] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx12) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx12] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx13) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx13] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx14) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx14] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx15) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx15] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx16) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx16] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx17) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx17] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx18) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx18] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx19) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx19] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx20) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx20] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx21) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx21] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx22) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx22] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx23) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx23] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx24) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx24] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx25) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx25] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx26) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx26] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx27) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx27] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx28) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx28] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx29) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx29] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx30) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx30] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx31) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx31] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx32) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx32] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx33) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx33] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx34) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx34] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx35) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx35] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx36) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx36] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx37) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx37] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx38) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx38] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx39) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx39] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx40) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx40] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vvy vx41) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx41] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vvy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+
+
 lemma [\<phi>overload +]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vxx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vxx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
@@ -510,13 +1278,185 @@ lemma [\<phi>overload +]:
   \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
     by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
 
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx14) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx14] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
 
-thm "+_\<phi>app"
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx15) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx15] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx16) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx16] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx17) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx17] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx18) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx18] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx19) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx19] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx20) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx20] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx21) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx21] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx22) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx22] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx23) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx23] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx24) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx24] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx25) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx25] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx26) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx26] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx27) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx27] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx28) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx28] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx29) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx29] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx30) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx30] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx31) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx31] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx32) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx32] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx33) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx33] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx34) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx34] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx35) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx35] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx36) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx36] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx37) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx37] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx38) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx38] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx39) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx39] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx40) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx40] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+lemma [\<phi>overload +]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx41) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx41] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
+  \<medium_left_bracket> $x $y op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis atLeastLessThan_iff local.\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
+
+
+declare [[\<phi>count_performance]]
+declare [[\<phi>reasoning_step_limit=2969]]
+
+(*performance: 8K PLPR-OPS*)
 
 proc
   input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>('b)\<close>
-  output \<open>\<dots>\<close>  
-  \<medium_left_bracket> $x $y +
+  output \<open>\<dots>\<close> 
+  \<medium_left_bracket> ;;               $x $y  +
 
 lemma op_add[\<phi>overload +]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2 ^ Big b

@@ -20,6 +20,7 @@ signature NU_REASONER = sig
 
   val trace : bool Config.T (*Prints the state of every reasoning step.*)
   val trace_candidates : bool Config.T (*Prints the candidates at each step.*)
+  val count_performance : bool Config.T
   val step_limit : int Config.T (*limit of the number of reasoning steps*)
   val debug_info: Proof.context -> (unit -> string) -> unit
   val debug_pretty: Proof.context -> (unit -> Pretty.T) -> unit
@@ -112,11 +113,12 @@ type reasoner = {name: term,
                  blacklist: term list,
                  tactic: (context_state -> context_state Seq.seq)}
 
-
+val trick = map_aterms (fn Var ((s,i),T) => Var ((s, if String.isPrefix "var_" s then ~i - 1 else i),T)
+                         | X => X)
 
 fun normalize_reasoner ({name,pos,pattern,blacklist,tactic}:reasoner) =
-  ({name=name, pos=pos, pattern = map Envir.beta_eta_contract pattern,
-    blacklist = map Envir.beta_eta_contract blacklist, tactic = tactic}:reasoner)
+  ({name=name, pos=pos, pattern = map (trick o Envir.beta_eta_contract) pattern,
+    blacklist = map (trick o Envir.beta_eta_contract) blacklist, tactic = tactic}:reasoner)
 
 fun transform_reasoner phi ({name,pos,pattern,blacklist,tactic}:reasoner) =
   ({name=name, pos=pos,
@@ -131,8 +133,10 @@ fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning\<close> (K false);
 val trace_candidates = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning_candidates\<close> (K false);
+val count_performance = Attrib.setup_config_bool \<^binding>\<open>\<phi>count_performance\<close> (K false);
 
 val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_limit\<close> (K 1000);
+
 
 (* Debug Info *)
 fun debug_pretty ctxt G =
@@ -226,9 +230,9 @@ fun is_var (A $ _) = is_var A
 
 fun match_term thy pat_obj =
   let
-    val (_,tms) = Pattern.match thy pat_obj (Vartab.empty, Vartab.empty)
-  in Vartab.fold (fn ((name,_),(_,tm)) => fn flag =>
-        if String.isPrefix "var_" name
+    val (_,tms) = PLPR_Pattern.match thy pat_obj (Vartab.empty, Vartab.empty)
+  in Vartab.fold (fn ((name,i),(_,tm)) => fn flag =>
+        if i < 0 (* String.isPrefix "var_" name *)
         then flag andalso is_var (Envir.beta_eta_contract tm)
         else flag
      ) tms true
@@ -256,8 +260,7 @@ fun call_tactics cost_delt N ctxt tactics th0 =
   if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
   else let
-    val prop = Thm.prop_of th
-    val tacs = concl_of_goal prop 1 (*TODO: if we can implement a HO match which tolerates loose
+    val tacs = Thm.major_prem_of th (*TODO: if we can implement a HO match which tolerates loose
                                       bounds, we don't need substituting loose bounds any more here
                                       and the performance can be improved effectively.*)
                 |> (fn term =>
@@ -272,7 +275,6 @@ fun call_tactics cost_delt N ctxt tactics th0 =
                       |> (if Config.get ctxt trace_candidates
                           then (fn rs => (List.app (debug ctxt) rs; rs))
                           else I))
-                |> sort (int_ord o apply2 fst) (*TODO: comment this!*)
   in
     tacs 
       |> map_filter (fn (cost, r : reasoner) =>
@@ -333,44 +335,37 @@ fun gen_reason _ _ _ _ _ [] = NONE
   end
 
 (*Entry point*)
-fun gen_reason' N trace limit reasoners states =
-     (gen_reason N trace limit 0 reasoners (map (map (fn (a,b) => (~a,Position.none, b))) states)
+fun gen_reason' ctxt N states =
+  Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (fn () =>
+     (gen_reason N (Config.get ctxt trace) (Config.get ctxt step_limit)
+                 0 (Reasoners.get (Context.Proof ctxt))
+                 (map (map (fn (a,b) => (~a,Position.none, b))) states)
       handle Success ret => SOME ret)
      |> Option.map (apfst exit_reasoning_envir)
+  )
+    
 
 
 (* Various Interfaces for Invoking Reasoning *)
 
-fun num_of_protected_prems thm NONE = 0
+fun num_of_protected_prems  _  NONE = 0
   | num_of_protected_prems thm (SOME N) =
       if N >= 0 then Thm.nprems_of thm - N else ~N
 
 fun reason (SOME 0) S = SOME S
   | reason N (ctxt,sequent) =
-      gen_reason' (num_of_protected_prems sequent N)
-                  (Config.get ctxt trace)
-                  (Config.get ctxt step_limit)
-                  (Reasoners.get (Context.Proof ctxt))
+      gen_reason' ctxt (num_of_protected_prems sequent N)
                   [[(0, Seq.single (enter_reasoning_envir ctxt, sequent))]]
 
-fun reason1 G N stat =
-      case reason N stat of SOME x => x
-        | NONE => error (G ())
+fun reason1 G N stat = case reason N stat of SOME x => x | NONE => error (G ())
 
 fun reason_s ctxt seqs =
   let val (ret,seqs') = seqs (enter_reasoning_envir ctxt)
-   in (ret, gen_reason' 0
-              (Config.get ctxt trace)
-              (Config.get ctxt step_limit)
-              (Reasoners.get (Context.Proof ctxt))
-              [seqs'])
+   in (ret, gen_reason' ctxt 0 [seqs'])
   end
 
 fun reason_tac N ctxt stat = Seq.make (fn () =>
-      gen_reason' (num_of_protected_prems (snd stat) N)
-                  (Config.get ctxt trace)
-                  (Config.get ctxt step_limit)
-                  (Reasoners.get (Context.Proof ctxt))
+      gen_reason' ctxt (num_of_protected_prems (snd stat) N)
                   [[(0, Seq.single (apfst enter_reasoning_envir stat))]]
        |> Option.map (rpair Seq.empty o Seq.Result)
     )
@@ -514,7 +509,7 @@ fun chop_seq_head seq =
   Seq.make (fn _ => Option.map (rpair Seq.empty) (chop_seq_head' seq))
 
 fun single_RS' rule (ctxt,thm) =
-  HEADGOAL (Tactic.resolve_tac ctxt [rule]) thm
+  Thm.biresolution (SOME ctxt) false [(false,rule)] 1 thm
     |> chop_seq_head'
     |> Option.map (pair ctxt)
 

@@ -90,12 +90,13 @@ fun match thy (po as (pat,obj)) envir =
 let
   val bs = Inttab.make_set (loose_bnos obj)
   fun match_bind(itms,binders,ixn,T,is,t) =
-    let val js = loose_bnos t
-              |> filter (not o Inttab.defined bs)
+    let val len = length binders
+        val js = loose_bnos t
+              |> filter (fn i => not (Inttab.defined bs (i - len)))
     in if null is
        then if null js then Vartab.update_new (ixn, (T, t)) itms else raise MATCH
        else if subset (op =) (js, is)
-            then let val t' = if downto0(is,length binders - 1) then t
+            then let val t' = if downto0(is, len - 1) then t
                               else mapbnd (idx is) t
                  in Vartab.update_new (ixn, (T, mkabs (binders, is, t'))) itms end
             else raise MATCH
