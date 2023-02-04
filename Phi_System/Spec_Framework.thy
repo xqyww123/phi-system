@@ -285,11 +285,11 @@ lemma view_shift_0[\<phi>reason 2000 for \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^
   \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X\<close>
   by (blast intro: view_shift_by_implication zero_implies_any)
 
-lemma view_shift_id[\<phi>reason 2000 for \<open>?A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+lemma view_shift_refl[\<phi>reason 2000 for \<open>?A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   "A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s A"
   by (blast intro: view_shift_by_implication implies_refl)
 
-lemma view_shift_id_ty[\<phi>reason 30 for \<open>?x \<Ztypecolon> ?T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?y \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
+lemma view_shift_refl_ty[\<phi>reason 30 for \<open>?x \<Ztypecolon> ?T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?y \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = y \<Longrightarrow> x \<Ztypecolon> T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s y \<Ztypecolon> T"
   by (blast intro: view_shift_by_implication implies_refl_ty)
 
@@ -358,10 +358,6 @@ lemma \<phi>frame_view_right:
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc mult.commute)
 
-lemma \<phi>view_refl:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<close>
-  unfolding View_Shift_def by blast
-
 lemma \<phi>view_trans:
   \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B \<^bold>a\<^bold>n\<^bold>d P1
 \<Longrightarrow> (P1 \<Longrightarrow> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s C \<^bold>a\<^bold>n\<^bold>d P2)
@@ -388,7 +384,7 @@ lemma \<phi>CONSEQ'E:
    "(\<And>v. E v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' v \<^bold>a\<^bold>n\<^bold>d P3)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' "
-  using \<phi>CONSEQ view_shift_id by blast
+  using \<phi>CONSEQ view_shift_refl by blast
 
 lemmas \<phi>CONSEQ'E0 = \<phi>CONSEQ'E[OF view_shift_0, unfolded zero_fun_eta]
 

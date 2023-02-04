@@ -292,7 +292,7 @@ consts frame_var_rewrs :: mode
   = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
           Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>)\<close>
 
-definition \<phi>IntroFrameVar :: "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool"
+definition \<phi>IntroFrameVar :: "'a::sep_magma_1 set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool"
   where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> S' = (R * S) \<and> T' = R * T "
 
 definition \<phi>IntroFrameVar' ::
@@ -316,11 +316,11 @@ text \<open>Antecedent \<^schematic_prop>\<open>\<phi>IntroFrameVar ?R ?S' S ?T'
 \<close>
 
 lemma \<phi>IntroFrameVar_No:
-  "\<phi>IntroFrameVar Void S S T T"
+  "\<phi>IntroFrameVar 1 S S T T"
   unfolding \<phi>IntroFrameVar_def by simp
 
 lemma \<phi>IntroFrameVar'_No:
-  "\<phi>IntroFrameVar' Void S S T T E E"
+  "\<phi>IntroFrameVar' 1 S S T T E E"
   unfolding \<phi>IntroFrameVar'_def by simp
 
 lemma \<phi>IntroFrameVar_Yes:
@@ -421,8 +421,7 @@ section \<open>Declaration of Large Processes\<close>
 subsection \<open>Transformation of State Abstraction (ToSA)\<close>
 
 text \<open>
-  Supporting either view shift \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y @action ToSA\<close> or
-  implication \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action ToSA\<close>,
+  Supporting implication \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action ToSA\<close> only,
   ToSA is a reasoning process of Transformation of Abstraction (ToA) for
   assertions of (fictional) computation state.
 \<close>
@@ -449,9 +448,11 @@ the reasoning is weaker.
 
 abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
 
-lemma [\<phi>reason 3000 for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X' \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>]:
-  \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action ToSA' mode\<close>
-  unfolding Action_Tag_def using \<phi>view_refl .
+lemma [\<phi>reason 3000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X' \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>]:
+  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action ToSA' mode\<close>
+  unfolding Action_Tag_def using implies_refl .
+
+
 
 subsection \<open>Removing Values\<close>
 

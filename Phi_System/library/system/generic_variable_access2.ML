@@ -132,7 +132,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
         |> apsnd (fn th => th RS @{thm conjunct1})
   
   in if null vterms
-     then (ctxt, @{thm "\<phi>__Return_rule__"[OF view_shift_id]} RS proc)
+     then (ctxt, @{thm "\<phi>__Return_rule__"[OF view_shift_refl]} RS proc)
               |> Phi_Sys.accept_proc
      else let
       (*insert a callback frame for concatenating sequents*)

@@ -9,7 +9,7 @@ theory Phi_Preliminary
   keywords "optional_translations" :: thy_decl
 begin
 
-(* declare [ [ML_debugger, ML_exception_debugger]] *)
+declare [ [ML_debugger, ML_exception_debugger]]
 
 subsection \<open>Named Theorems\<close>
 

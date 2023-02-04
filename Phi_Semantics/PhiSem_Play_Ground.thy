@@ -35,7 +35,7 @@ setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
 
 (* declare [[\<phi>hide_techinicals=false]] *)
 
-declare [[\<phi>hide_brk_frame]]
+(* declare [[\<phi>hide_brk_frame=false, \<phi>trace_reasoning]] *)
 
 proc
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>

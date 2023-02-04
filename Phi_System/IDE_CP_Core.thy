@@ -519,6 +519,24 @@ declare [[\<phi>reason_default_pattern
 
 subsubsection \<open>Synthesis Operations\<close>
 
+paragraph \<open>Fallbacks\<close>
+
+text \<open>On programming mode, the synthesis operation always tries to find a procedure.
+  View shifts have to be wrapped in a procedure. The following is an automatic wrapper. \<close>
+
+lemma Synthesis_Proc_fallback_VS [\<phi>reason 30
+    for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>v. ?S2\<heavy_comma> SYNTHESIS ?X' v \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
+]:
+  \<open> S1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S2\<heavy_comma> SYNTHESIS X' @action synthesis G
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> SYNTHESIS X' \<rbrace> @action synthesis G\<close>
+  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def by simp
+
+lemma [\<phi>reason 30]:
+  \<open> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2 @action synthesis G
+\<Longrightarrow> S1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S2 @action synthesis G\<close>
+  unfolding Action_Tag_def
+  using view_shift_by_implication by blast 
+
 paragraph \<open>Construction on Programming\<close>
 
 lemma [\<phi>reason 1200
@@ -534,16 +552,6 @@ lemma [\<phi>reason 1200
       (Trueprop (\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. S2\<heavy_comma> X' v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))"
   unfolding Synthesis_def Action_Tag_def DoSynthesis_def
   using \<phi>apply_proc .
-
-text \<open>On programming mode, the synthesis operation always tries to find a procedure.
-  View shifts have to be wrapped in a procedure. The following is an automatic wrapper. \<close>
-
-lemma Synthesis_Proc_fallback_VS [\<phi>reason 30
-    for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>v. ?S2\<heavy_comma> SYNTHESIS ?X' v \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  \<open> S1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S2\<heavy_comma> SYNTHESIS X' @action synthesis G
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> SYNTHESIS X' \<rbrace> @action synthesis G\<close>
-  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def by simp
 
 paragraph \<open>Construction on View Shifting\<close>
 
@@ -562,6 +570,25 @@ lemma [\<phi>reason 1200
       (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w blk [H] \<^bold>i\<^bold>s S2\<heavy_comma> X'))"
   unfolding Synthesis_def Action_Tag_def DoSynthesis_def
   using \<phi>apply_view_shift by blast
+
+paragraph \<open>Construction on ToA\<close>
+
+text \<open>On view shifting mode, the synthesis operation tries to find a view shifting.\<close>
+
+lemma [\<phi>reason 1200
+    for \<open>PROP DoSynthesis ?X (Trueprop (\<^bold>v\<^bold>i\<^bold>e\<^bold>w ?blk [?H] \<^bold>i\<^bold>s ?S1)) ?RET\<close>
+]:
+  " \<r>CALL Synthesis_Parse X X'
+\<Longrightarrow> SUBGOAL TOP_GOAL G
+\<Longrightarrow> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2\<heavy_comma> SYNTHESIS X' @action synthesis G
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> PROP DoSynthesis X
+      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S1))
+      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S2\<heavy_comma> X'))"
+  unfolding Synthesis_def Action_Tag_def DoSynthesis_def
+  by (meson \<phi>apply_implication_impl)
+
 
 paragraph \<open>Solving an antecedent by Synthesis\<close>
 
@@ -824,7 +851,7 @@ lemma [\<phi>reason 3000 for \<open>
       (Trueprop ((CurrentConstruction mode blk R T') \<and> P'))\<close>
   by simp
 
-lemma \<phi>apply_subtyping_fast[\<phi>reason 1800 for \<open>
+lemma [\<phi>reason 3100 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?T \<^bold>a\<^bold>n\<^bold>d ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -849,7 +876,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P))
       (Trueprop (CurrentConstruction mode blk RR S))
@@ -897,14 +924,14 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P1 @action ToSA
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P1 @action ToSA
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P2))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
-  using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
-  by (metis (no_types, lifting))
+  using \<phi>apply_implication \<phi>apply_view_shift \<phi>view_shift_intro_frame by blast
+  
 
 
 paragraph \<open>Procedure Methods\<close>
@@ -929,7 +956,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
             (Trueprop (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t ?blk [?RR] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n ?S)) ?Result\<close>
 ]:
   \<open> \<phi>IntroFrameVar' R S'' S' T T' E'' E'
-\<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P @action ToSA
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P @action ToSA
 \<Longrightarrow> Simplify (assertion_simps undefined) E''' E''
 \<Longrightarrow> (\<And>v. Remove_Values (E''' v) (E v))
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
@@ -943,10 +970,11 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
     apply (simp only: prems(1))
     using \<phi>apply_proc[OF \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _\<close>,
           OF \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S' \<longmapsto> T' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' \<close>[THEN \<phi>frame[where R=R],
-              THEN \<phi>CONSEQ[rotated 1, OF \<open>S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P\<close>,
-                OF view_shift_id, OF view_shift_by_implication[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
+              THEN \<phi>CONSEQ[rotated 1, OF view_shift_by_implication[OF \<open>S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P\<close>],
+                OF view_shift_refl, OF view_shift_by_implication[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
                 simplified prems(1), unfolded \<open>E''' = E''\<close>, simplified prems(1)]]] .
-  by (meson \<phi>apply_view_shift)
+  using \<phi>apply_implication by blast
+  
 
 
 subsubsection \<open>Applying on a Block / End a Block\<close>
@@ -1028,25 +1056,25 @@ lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E )) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f' \<lbrace> ?X' \<longmapsto> ?Y' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' ))
 \<close>]:
   \<open> Simple_HO_Unification f f'
-\<Longrightarrow> X' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d Any1 @action ToSA
+\<Longrightarrow> X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d Any1 @action ToSA
 \<Longrightarrow> (\<And>ret. Y ret \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y' ret \<^bold>a\<^bold>n\<^bold>d Any2 @action ToSA)
 \<Longrightarrow> (\<And>ex.  E ex \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' ex \<^bold>a\<^bold>n\<^bold>d Any3 @action ToSA)
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E ))
                            (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> Y' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' ))\<close>
   unfolding \<phi>Application_Conv_def Simple_HO_Unification_def FOCUS_TAG_def Action_Tag_def
-  using \<phi>CONSEQ by blast
+  using \<phi>CONSEQ view_shift_by_implication by blast
 
 lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application_Conv (Trueprop (PendingConstruction _ _ _ _ _))
                          (Trueprop (PendingConstruction _ _ _ _ _))
 \<close>]:
   \<open> Simple_HO_Unification f f'
-\<Longrightarrow> (\<And>ret. S ret \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S' ret \<^bold>a\<^bold>n\<^bold>d Any2 @action ToSA)
-\<Longrightarrow> (\<And>ex.  E ex \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' ex \<^bold>a\<^bold>n\<^bold>d Any3 @action ToSA)
+\<Longrightarrow> (\<And>ret. S ret \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' ret \<^bold>a\<^bold>n\<^bold>d Any2 @action ToSA)
+\<Longrightarrow> (\<And>ex.  E ex \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' ex \<^bold>a\<^bold>n\<^bold>d Any3 @action ToSA)
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (PendingConstruction f  s R S  E ))
                            (Trueprop (PendingConstruction f' s R S' E'))\<close>
-  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def FOCUS_TAG_def Action_Tag_def
-  using \<phi>apply_view_shift_pending \<phi>apply_view_shift_pending_E by blast
+  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def Action_Tag_def
+  using \<phi>apply_implication_pending \<phi>apply_implication_pending_E by blast
 
 
 subsubsection \<open>Applying on View Shift Mode\<close>
@@ -1054,13 +1082,12 @@ subsubsection \<open>Applying on View Shift Mode\<close>
 lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application_Conv (Trueprop (?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P)) (Trueprop (?X' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y' \<^bold>a\<^bold>n\<^bold>d ?P'))
 \<close>]:
-  \<open> X' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d Any1 @action ToSA
-\<Longrightarrow> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y' \<^bold>a\<^bold>n\<^bold>d Any2 @action ToSA
+  \<open> X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d Any1 @action ToSA
+\<Longrightarrow> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y' \<^bold>a\<^bold>n\<^bold>d Any2 @action ToSA
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (Any1 \<and> Any2 \<and> P \<longrightarrow> P')
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P)) (Trueprop (X' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y' \<^bold>a\<^bold>n\<^bold>d P'))\<close>
-  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def FOCUS_TAG_def
-    Action_Tag_def View_Shift_def
-  by blast
+  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def Action_Tag_def Premise_def
+  by (metis View_Shift_def view_shift_by_implication)
 
 
 subsubsection \<open>Applying on Implication Mode\<close>
@@ -1086,6 +1113,22 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
   unfolding \<phi>Application_def ToA_Construction_def
   using implies_left_prod by (metis Imply_def)
 
+lemma [\<phi>reason for \<open>
+  PROP \<phi>Application (Trueprop (_ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _)) (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(_) \<^bold>i\<^bold>s _)) ?Result
+\<close>]:
+  "\<phi>IntroFrameVar R S'' S' T T'
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
+\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P))
+      (Trueprop (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S))
+      (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> P)"
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
+  by (meson \<phi>apply_implication_impl implies_left_prod)
+  
+
+
+
+
 
 subsubsection \<open>Morphism\<close>
 
@@ -1100,14 +1143,13 @@ lemma [\<phi>reason 1200 for \<open>
         (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
   " \<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P1 @action ToSA' False
+\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S'' \<^bold>a\<^bold>n\<^bold>d P1 @action ToSA' False
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP \<phi>Application (S' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P2 @action morphism_mode)
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def Simplify_def
-  using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame
-  by (metis (no_types, lifting))
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def Simplify_def
+  using \<phi>apply_implication \<phi>apply_view_shift \<phi>frame_view by blast
 
 
 

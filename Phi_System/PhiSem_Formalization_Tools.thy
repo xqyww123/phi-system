@@ -330,17 +330,14 @@ lemma ToSA_by_structural_extraction:
 \<Longrightarrow> SUBGOAL G G2
 \<Longrightarrow> (Q' \<Longrightarrow> Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2)  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2)
 \<Longrightarrow> SOLVE_SUBGOAL G2
-\<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 @action reason_ToSA True G
-\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2 @action reason_ToSA True G"
+\<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 @action reason_ToSA True G
+\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2 @action reason_ToSA True G"
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def Action_Tag_def Try_def
   \<medium_left_bracket> premises SI and Q and _ and SE and _ and A
-    have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-    ;; A[THEN \<phi>frame_view_right]
-       SE[OF \<open>Q'\<close>]
-  \<medium_right_bracket>
-  using \<phi>
-  by simp
-  .
+  have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
+  ;;  A[THEN implies_right_prod]
+     SE[OF \<open>Q'\<close>]
+  \<medium_right_bracket> using \<phi> by simp .
 
 lemma ToSA_by_structural_extraction__reverse_morphism:
   " Structure_Info U Q
@@ -350,34 +347,33 @@ lemma ToSA_by_structural_extraction__reverse_morphism:
               (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> \<phi> T') W' (y' \<Ztypecolon> \<phi> U') R1' P2') \<and> P2))
             \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G2)
 \<Longrightarrow> SOLVE_SUBGOAL G2
-\<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s A' \<^bold>a\<^bold>n\<^bold>d P1') \<and> P1)
+\<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A' \<^bold>a\<^bold>n\<^bold>d P1') \<and> P1)
     @action reason_ToSA True G
-\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d
-      (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> \<phi> T' \<brangle> \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s A'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>a\<^bold>n\<^bold>d P1' \<and> P2') \<and> P1 \<and> P2)
+\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d
+      (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> \<phi> T' \<brangle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>a\<^bold>n\<^bold>d P1' \<and> P2') \<and> P1 \<and> P2)
     @action reason_ToSA True G"
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def
             Action_Tag_def Morphism_def Compact_Antecedent_def Try_def
   \<medium_left_bracket> premises SI and Q and _ and SE and _ and A
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-  ;; A[THEN \<phi>frame_view_right]
+  ;; A[THEN implies_right_prod]
      SE[OF \<open>Q'\<close>]
-  thm \<phi>
   \<medium_right_bracket> apply (simp add: \<phi>)
     \<medium_left_bracket>
-    have A : \<open>R2' \<heavy_comma> W' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s A' \<^bold>a\<^bold>n\<^bold>d P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
+    have A : \<open>R2' \<heavy_comma> W' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A' \<^bold>a\<^bold>n\<^bold>d P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
     have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>a\<^bold>n\<^bold>d P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
-    ;; SE A[THEN \<phi>frame_view_right]
+    ;; SE A[THEN implies_right_prod]
   \<medium_right_bracket>. . .
 
 
 lemma ToSA_skip [\<phi>reason 1200
-    for \<open>?R \<heavy_comma> ?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R'\<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-    except \<open>?R \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R'\<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
+    for \<open>?R \<heavy_comma> ?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R'\<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
+    except \<open>?R \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R'\<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
 ]:
-  " R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R \<heavy_comma> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
+  " R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
+\<Longrightarrow> R \<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
   unfolding Action_Tag_def FOCUS_TAG_def split_paired_All Action_Tag_def
-  by (smt (verit) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
+  by (metis ab_semigroup_mult_class.mult_ac(1) implies_left_prod mult.commute)
 
 
 lemma [\<phi>reason 1200]:
@@ -431,11 +427,11 @@ lemma [\<phi>reason 1200 for
 
 lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>ret. ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> \<phi> ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>]:
   \<open> SUBGOAL G G'
-\<Longrightarrow> S1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> @action reason_ToSA True G'
+\<Longrightarrow> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> @action reason_ToSA True G'
 \<Longrightarrow> SOLVE_SUBGOAL G'
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>_. S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<phi> T \<rbrace> @action synthesis G\<close>
   unfolding FOCUS_TAG_def Synthesis_def Action_Tag_def
-  by (metis \<phi>__Return_rule__)
+  using \<phi>__Return_rule__ view_shift_by_implication by blast
 
 end
 
@@ -541,65 +537,13 @@ lemma partial_implies_raw:
 paragraph \<open>Reasoning Rules\<close>
 
 declare ToSA_by_structural_extraction
-    [\<phi>reason 1210 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]
+    [\<phi>reason 1210 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]
 declare ToSA_by_structural_extraction__reverse_morphism
-    [\<phi>reason 1213 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism ?RP ?RX \<and> ?P)
+    [\<phi>reason 1213 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism ?RP ?RX \<and> ?P)
                        @action reason_ToSA True ?G\<close>]
 
 end
 
-
-
-(* lemma VS_merge_ownership:
-  \<open> (\<forall>ua ub. ua \<in> (x \<Ztypecolon> T) \<and> ub \<in> (x \<Ztypecolon> T) \<and>
-             can_share (perm_functor ua) \<and> can_share (perm_functor ub) \<and>
-             share na (perm_functor ua) ## share nb (perm_functor ub) \<longrightarrow> ua = ub)
-\<Longrightarrow> na + nb \<le> 1
-\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> na T) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb T) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) T)\<close>
-  unfolding View_Shift_def Premise_def
-  apply (clarsimp simp add: \<phi>expns mult.assoc mk_homo_mult[symmetric] times_fine)
-  subgoal for res R res_r res_xa res_xb
-    apply (cases \<open>share na (perm_functor res_xa) ## share nb (perm_functor res_xb)\<close>;
-           clarsimp simp add: fun_1upd_homo \<phi>INTERP_RES_\<phi>Res_Spec share_left_distrib)
-    apply (rule exI[where x=\<open>res_r * mk (Fine (share (na + nb) (perm_functor res_xb)))\<close>], simp)
-    by (metis share_sep_left_distrib_0) .
-
-lemma VS_split_ownership:
-  \<open> (\<forall>u. u \<in> (x \<Ztypecolon> T) \<and> can_share (perm_functor u) \<and> 0 < n \<and> na + nb \<le> 1
-     \<longrightarrow> share na (perm_functor u) ## share nb (perm_functor u))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (0 < n \<longrightarrow> na + nb = n \<and> 0 < na \<and> 0 < nb)
-\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> n T) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> na T) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb T)\<close>
-  unfolding View_Shift_def Premise_def
-  apply (clarsimp simp add: \<phi>expns)
-  subgoal for res R res_r res_x
-    apply (rule exI[where x=\<open>res_r * (mk (Fine (share na (perm_functor res_x)))
-                                    * mk (Fine (share nb (perm_functor res_x))))\<close>],
-           rule conjI, blast)
-    by (clarsimp simp add: mk_homo_mult[symmetric] times_fine fun_1upd_homo share_sep_left_distrib_0) .
-end*)
-
-(* locale permission_fiction =
-  \<phi>spec Resource_Validator INTERPRET
-+  R: resource Res Resource_Validator Valid
-+  fictional_project_inject INTERPRET Fic \<open>R.raw_basic_fiction I\<close>
-for Valid :: "'T::comm_monoid_mult set"
-and I :: "('U::{share,comm_monoid_mult}, 'T) interp"
-and Res :: "('RES_N, 'RES::{comm_monoid_mult,no_inverse}, 'T) Virtual_Datatype.Field"
-and Resource_Validator :: \<open>'RES_N \<Rightarrow> 'RES::{no_inverse,comm_monoid_mult} set\<close>
-and Fic :: "('FIC_N,'FIC::{no_inverse,comm_monoid_mult},'U) Virtual_Datatype.Field"
-and INTERPRET :: "'FIC_N \<Rightarrow> ('FIC::{no_inverse,comm_monoid_mult},'RES_N \<Rightarrow> 'RES) interp"
-+
-fixes perm_functor :: \<open>'T \<Rightarrow> 'U\<close>
-  and R_dom :: \<open>'T set\<close>
-assumes \<open>Fic_Space r
-\<Longrightarrow> x \<in> R_dom
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x)))
-  = \<phi>Res_Spec (\<I> INTERP r * { R.mk x})\<close>
-
-begin
-
-
-end *)
 
 
 
@@ -647,9 +591,9 @@ lemma expand:
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
 declare ToSA_by_structural_extraction
-   [\<phi>reason 1210 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]
+   [\<phi>reason 1210 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]
 declare ToSA_by_structural_extraction__reverse_morphism
-   [\<phi>reason 1213 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism ?RP ?RX \<and> ?P)
+   [\<phi>reason 1213 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism ?RP ?RX \<and> ?P)
         @action reason_ToSA True ?G\<close>]
 
 end
@@ -703,60 +647,50 @@ lemma partial_implies:
       show ?thesis .
     qed . .
 
-lemma VS_double:
-  \<open>{mk x |x. P x} \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s {mk x |x. P x} * {mk x |x. P x}\<close>
-  unfolding View_Shift_def
+lemma double:
+  \<open>{mk x |x. P x} \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s {mk x |x. P x} * {mk x |x. P x}\<close>
+  unfolding Imply_def
   apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric])
-  subgoal for x R u x'
-    apply (cases x'; simp)
-    apply (metis fun_1upd1 inj_homo_one mult_1_class.mult_1_left one_option_def sep_magma_1_right)
-    subgoal for a by (rule exI[where x=\<open>u * mk (Some a)\<close>]; simp
-                ; rule exI[where x=u]; rule exI[where x=\<open>mk (Some a)\<close>]; simp
-                ; rule exI[where x=\<open>mk (Some a)\<close>]; rule exI[where x=\<open>mk (Some a)\<close>]
-                ; simp add: mk_homo_mult[symmetric]) . .
+  subgoal for x'
+    apply (rule exI[where x=\<open>mk x'\<close>], rule exI[where x=\<open>mk x'\<close>])
+    by (cases x'; simp add: mk_homo_mult[symmetric]) .
 
-lemma VS_contract:
-  \<open>{mk x |x. P x} * {mk x |x. P x} \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s {mk x |x. P x} \<close>
-  unfolding View_Shift_def
+lemma contract:
+  \<open>{mk x |x. P x} * {mk x |x. P x} \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s {mk x |x. P x} \<close>
+  unfolding Imply_def
   apply (clarsimp simp add: \<phi>expns)
-  subgoal for x R u xa xb
-    apply (cases xa; cases xb; simp)
-    apply (metis fun_split_1 fun_upd_triv inj_homo_one mk_homo_one one_option_def)
-    apply (metis mk_homo_one mult_1_class.mult_1_left one_option_def)
-     apply (metis fun_1upd1 inj_homo_one mult_1_class.mult_1_right one_option_def)
-    subgoal for a b
-      by (cases \<open>a ## b\<close>; simp; cases a; cases b; simp add: mk_homo_mult[symmetric]; blast) . .
+  subgoal for x y by (cases x; cases y; simp add: mk_homo_mult[symmetric]) .
 
 paragraph \<open>\<phi>-Type\<close>
 
 abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nonsepable T))\<close>
 
 declare ToSA_by_structural_extraction
-    [\<phi>reason 1210 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]
+    [\<phi>reason 1210 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]
 declare ToSA_by_structural_extraction__reverse_morphism
-    [\<phi>reason 1213 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism ?RP ?RX \<and> ?P)
+    [\<phi>reason 1213 for \<open>?A \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism ?RP ?RX \<and> ?P)
         @action reason_ToSA True ?G\<close>]
 
 lemma \<phi>_double_\<phi>app:
-  \<open>x \<Ztypecolon> \<phi>_ag T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>
+  \<open>x \<Ztypecolon> \<phi>_ag T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
     apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nonsepable v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
-  show ?thesis by (simp add: VS_double)
+  show ?thesis by (simp add: double)
 qed
 
 lemma \<phi>_contract_\<phi>app:
-  \<open>x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi>_ag T\<close>
+  \<open>x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi>_ag T\<close>
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
     apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nonsepable v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
-  show ?thesis by (simp add: VS_contract)
+  show ?thesis by (simp add: contract)
 qed
 
 end
@@ -954,19 +888,19 @@ qed
 
 (* lemma VS_merge_ownership_identity:
   \<open> na + nb \<le> 1
-\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) Identity)\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) Identity)\<close>
   by (rule VS_merge_ownership; simp add: \<phi>expns)
 
 lemma VS_split_ownership_identity:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (0 < n \<longrightarrow> na + nb = n \<and> 0 < na \<and> 0 < nb)
-\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity)\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity)\<close>
   by (rule VS_split_ownership; simp add: \<phi>expns sep_disj_fun_def share_fun_def; clarify)
   (* subgoal premises prems for a
     by (insert \<open>\<forall>_. _\<close>[THEN spec[where x=a]], cases \<open>x a\<close>; simp add: share_All prems) . *)
 
 
 lemma VS_divide_ownership:
-  \<open>FIX x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity)\<close>
+  \<open>FIX x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity)\<close>
   unfolding Fix_def
   by (rule VS_split_ownership_identity; simp add: Premise_def)
 *)
@@ -1223,14 +1157,14 @@ section \<open>Common Instructions\<close>
 
 subsection \<open>Drop & Duplicate Value\<close>
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action action_dup\<close>]:
-  \<open>x \<Ztypecolon> Val raw T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @action action_dup\<close>
-  unfolding View_Shift_def Action_Tag_def
+lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action action_dup\<close>]:
+  \<open>x \<Ztypecolon> Val raw T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @action action_dup\<close>
+  unfolding Imply_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action action_drop\<close>]:
-  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Void @action action_drop\<close>
-  unfolding View_Shift_def Action_Tag_def
+lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action action_drop\<close>]:
+  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Void @action action_drop\<close>
+  unfolding Imply_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 
 

@@ -41,11 +41,6 @@ lemma [simp]:
   unfolding \<phi>Type_def Identity_def
   by (simp add: \<phi>SemType_def)
 
-lemma Identity_E_vs[\<phi>reason for \<open>?v \<Ztypecolon> Identity \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?x \<Ztypecolon> ?T \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Identity \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> T\<close>
-  by (simp add: Identity_E view_shift_by_implication)
-
-
 subsection \<open>Any\<close>
 
 definition \<phi>Any :: \<open>('x, unit) \<phi>\<close>
@@ -63,9 +58,6 @@ lemma \<phi>Any_cast [\<phi>reason 1200]:
   \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi>Any\<close>
   unfolding Imply_def by (simp add: \<phi>expns)
 
-lemma \<phi>Any_vs [\<phi>reason 1200 for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?x \<Ztypecolon> \<phi>Any \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x \<Ztypecolon> \<phi>Any\<close>
-  by (simp add: view_shift_by_implication \<phi>Any_cast)
 
 
 subsection \<open>Black Hole\<close>
@@ -81,10 +73,6 @@ abbreviation Black_Hole :: \<open>(FIC_N \<Rightarrow> FIC) set\<close>
 lemma UNIV_subty [\<phi>reason 1000]:
   \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s UNIV\<close>
   unfolding Imply_def by simp
-
-lemma UNIV_view_shift [\<phi>reason for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s UNIV \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s UNIV\<close>
-  using UNIV_subty view_shift_by_implication by blast
 
 
 subsection \<open>Stepwise Abstraction\<close>

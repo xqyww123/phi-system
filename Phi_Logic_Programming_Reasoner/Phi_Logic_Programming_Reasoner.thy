@@ -717,7 +717,7 @@ ML_file \<open>library/nested.ML\<close>
 
 \<phi>reasoner_ML \<r>BEGIN 1000 (\<open>\<r>BEGIN\<close>) = \<open>PLPR_Nested_Reasoning.enter_scope\<close>
 \<phi>reasoner_ML \<r>END 1000 (\<open>\<r>END\<close>) = \<open>PLPR_Nested_Reasoning.exit_scope\<close>
-\<phi>reasoner_ML \<r>Call 1000 (\<open>\<r>Call\<close>) = \<open>PLPR_Nested_Reasoning.call\<close>
+\<phi>reasoner_ML \<r>Call 1000 (\<open>PROP \<r>Call _\<close>) = \<open>PLPR_Nested_Reasoning.call\<close>
 
 
 subsection \<open>Pruning\<close>

@@ -230,14 +230,14 @@ lemma [\<phi>reason 2000]:
   unfolding Imply_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 2000]:
-  \<open> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s fx \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
+  \<open> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s fx \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> lambda_abstraction x fx f
-\<Longrightarrow> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s f \<Ztypecolon> T <func-over> x \<^bold>a\<^bold>n\<^bold>d P\<close>
+\<Longrightarrow> Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s f \<Ztypecolon> T <func-over> x \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding lambda_abstraction_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 2000]:
-  \<open> f x \<Ztypecolon> T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> f \<Ztypecolon> T <func-over> x \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
+  \<open> f x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> f \<Ztypecolon> T <func-over> x \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding lambda_abstraction_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200 for
@@ -803,26 +803,6 @@ lemma [\<phi>reason 2000
   unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def
   by (metis set_mult_expn)
 
-(*
-lemma [\<phi>reason 2010 for \<open> ?R * ?Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?R2 * (FIX ?X) \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]:
-  " Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1
-\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA True G
-\<Longrightarrow> R * Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2 * (FIX X) \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2 @action reason_ToSA True G"
-  unfolding cast_def split_paired_All Fix_def Action_Tag_def
-  by (metis set_mult_expn)
-
-lemma [\<phi>reason 2000 for \<open> ?R * ?Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?R2 * (FIX ?X) \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  " R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R * X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> R2 * (FIX X) \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding cast_def split_paired_All Fix_def Action_Tag_def
-  by (metis set_mult_expn)
-
-lemma [\<phi>reason 2000 for \<open>?R * (FIX ?Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  " R * Y \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R * (FIX Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding cast_def split_paired_All Fix_def
-  by (simp add: \<phi>expns)
-*)
 
 lemma [\<phi>reason 2000 for \<open> ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R2 * \<blangle> SYNTHESIS ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
   " R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2 * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
@@ -834,6 +814,11 @@ lemma [\<phi>reason 2000 for \<open> ?R * (SYNTHESIS ?Y) \<^bold>i\<^bold>m\<^bo
 \<Longrightarrow> R * (SYNTHESIS Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
   unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All
   by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 2000 for \<open>?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R2\<heavy_comma> \<blangle> SMORPH ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+  \<open> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2 \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism RP RX \<and> P @action reason_ToSA mode G
+\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2 \<heavy_comma> \<blangle> SMORPH X \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism RP RX \<and> P @action reason_ToSA mode G\<close>
+  unfolding SMorphism_def .
 
 
 subsection \<open>Value\<close>
@@ -883,13 +868,15 @@ lemma [\<phi>reason 80 for \<open> ?R * ?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\
   unfolding Action_Tag_def FOCUS_TAG_def Imply_def Action_Tag_def
   by (metis (no_types, lifting) mult.assoc set_mult_expn)
 
-lemma [\<phi>reason 70 for \<open> ?R * ?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R''' * \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
+lemma ToSA_skip
+  [\<phi>reason 70 for \<open> ?R * ?H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R''' * \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
   " CHK_SUBGOAL G
   \<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
   \<Longrightarrow> R * H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * H * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G "
   for H :: \<open>'a::sep_ab_semigroup set\<close> 
   unfolding Action_Tag_def FOCUS_TAG_def Imply_def Action_Tag_def
   by (smt (verit, del_insts) mult.assoc mult.commute set_mult_expn)
+
 
 (* lemma [\<phi>reason 1200
     on \<open>?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R' \<heavy_comma> \<blangle> OBJ ?a \<Zinj> ?x \<Ztypecolon> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R'\<^sub>m \<heavy_comma> VAL ?V \<heavy_comma> \<blangle> OBJ ?a\<^sub>m \<Zinj> ?x\<^sub>m \<Ztypecolon> ?X\<^sub>m \<brangle> \<longmapsto> ?R\<^sub>m \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
@@ -925,573 +912,6 @@ lemma [\<phi>reason 2000]:
 
 definition StructuralTag ("<Structural> _" [10] 9) where "StructuralTag \<equiv> Trueprop"
 lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def . *)
-
-
-
-section \<open>ToSA for View Shift\<close>
-
-text \<open>This is a counterpart of the ToSA for view shifts.\<close>
-
-(* lemma [\<phi>intro0]: "x \<Ztypecolon> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H' * y \<Ztypecolon> Y \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m * y\<^sub>m \<Ztypecolon> Y \<longmapsto> x\<^sub>m \<Ztypecolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q
-  \<Longrightarrow> x \<Ztypecolon> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H' * \<blangle> y \<Ztypecolon> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H'\<^sub>m * \<blangle> y\<^sub>m \<Ztypecolon> Y \<brangle> \<longmapsto> x\<^sub>m \<Ztypecolon> X \<^bold>w\<^bold>h\<^bold>e\<^bold>n Q"
-  unfolding Heap_Subty_Goal_def . *)
-(* lemma [\<phi>intro0]: "A \<longmapsto> A \<^bold>d\<^bold>u\<^bold>a\<^bold>l B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s B" unfolding SubtyDual_def  by (simp add: implies_refl) *)
-
-(* lemma [\<phi>intro 1000]:
-  "L * H \<longmapsto> L * H \<^bold>d\<^bold>u\<^bold>a\<^bold>l L * h\<^sub>m \<Ztypecolon> \<blangle> H\<^sub>m \<brangle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s L * h\<^sub>m \<Ztypecolon> H\<^sub>m \<brangle>"
-  unfolding Heap_Subty_Goal_def using cast_dual_id . *)
-
-subsection \<open>Initialization\<close>
-
-lemma [\<phi>reason 2010
-    for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y @action ToSA' ?mode\<close>
-]:
-  \<open> Simplify (assertion_simps SOURCE) X' X
-\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
-\<Longrightarrow> SUBGOAL TOP_GOAL G
-\<Longrightarrow> X' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> Y' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any @action reason_ToSA mode G
-\<Longrightarrow> SOLVE_SUBGOAL G
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y @action ToSA' mode\<close>
-  unfolding Action_Tag_def Simplify_def FOCUS_TAG_def
-  by (simp add: View_Shift_imply_P)
-
-lemma [\<phi>reason 2000
-    for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>
-]:
-  \<open> Simplify (assertion_simps SOURCE) X' X
-\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
-\<Longrightarrow> SUBGOAL TOP_GOAL G
-\<Longrightarrow> X' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> Y' \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> SOLVE_SUBGOAL G
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' mode\<close>
-  unfolding Action_Tag_def Simplify_def FOCUS_TAG_def
-  by simp
-
-lemma [\<phi>reason 2100 for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?var_Y \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>
-                        \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>]:
-  \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action ToSA' mode\<close>
-  unfolding Action_Tag_def using view_shift_id .
-
-
-subsection \<open>Termination\<close>
-
-lemma ToSA_VS_finish : "H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> H \<brangle> @action reason_ToSA mode G"
-  and ToSA_VS_finish': "H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s 1 * \<blangle> H \<brangle> @action reason_ToSA mode G"
-  unfolding mult_1_left FOCUS_TAG_def Action_Tag_def
-  using view_shift_id by this+
-
-lemma ToSA_VS_finish'':
-  \<open> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s H'
-\<Longrightarrow> H' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y @action reason_ToSA mode G
-\<Longrightarrow> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def
-  using View_Shift_def view_shift_by_implication by force
-
-lemma ToSA_VS_finish''':
-  \<open> R1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R1\<heavy_comma> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2\<heavy_comma> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P  @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def
-  using \<phi>view_shift_intro_frame_R .
-
-\<phi>reasoner_ML ToSA_VS_finish 4000 (\<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close> |
-                                  \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R * \<blangle> ?H2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>)
-  = \<open>ToSA_existential_unification @{thm ToSA_VS_finish} @{thm ToSA_VS_finish'}
-                                  @{thm ToSA_VS_finish''} @{thm ToSA_VS_finish'''}\<close>
-
-hide_fact ToSA_VS_finish ToSA_VS_finish' ToSA_VS_finish'' ToSA_VS_finish'''
-
-
-lemma [\<phi>reason 4000 for \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> Void \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> \<r>Clean H
-\<Longrightarrow> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> Void \<brangle> @action reason_ToSA mode G\<close>
-  unfolding \<r>Clean_def FOCUS_TAG_def Action_Tag_def
-  using view_shift_by_implication .
-
-lemma [\<phi>reason 4010 for \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Void \<heavy_comma> \<blangle> Void \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> \<r>Clean H
-\<Longrightarrow> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Void \<heavy_comma> \<blangle> Void \<brangle> @action reason_ToSA mode G\<close>
-  unfolding \<r>Clean_def FOCUS_TAG_def Action_Tag_def
-  by (simp add: view_shift_by_implication)
-
-lemma [\<phi>reason 4000 for \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s H \<heavy_comma> \<blangle> Void \<brangle> @action reason_ToSA mode G\<close>
-  unfolding FOCUS_TAG_def Action_Tag_def
-  by (simp add: \<phi>view_refl)
-
-lemma [\<phi>reason 4011 for \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> Void \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism ?RP ?RX \<and> ?P)
-        @action reason_ToSA ?mode ?G\<close>]:
-  \<open>H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s H \<heavy_comma> \<blangle> Void \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism True (H'\<heavy_comma> \<blangle> Void \<brangle> \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s H' ) \<and> True
-     @action reason_ToSA mode G\<close>
-  unfolding FOCUS_TAG_def Morphism_def Action_Tag_def
-  by (simp add: \<phi>view_refl)
-
-
-
-subsection \<open>Void Holes\<close> \<comment> \<open>eliminate 1 holes generated during the reasoning \<close>
-
-lemma [\<phi>reason 3200 ]:
-  "H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> X \<heavy_comma> 1 \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding mult_1_right .
-
-lemma [\<phi>reason 3200]:
-  "R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   R \<heavy_comma> Void \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding mult_1_right .
-
-subsection \<open>Subjection\<close>
-
-lemma [\<phi>reason 3200]:
-  "T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
-   T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 3210]:
-  "T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j True \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 3200]:
-  "T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R \<heavy_comma> U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q) \<Longrightarrow>
-   T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R \<heavy_comma> (U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 2800]:
-  "(Q @action subj_premise G \<Longrightarrow> T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G)
-\<Longrightarrow> T \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns) blast
-
-
-subsection \<open>Existential\<close>
-
-lemma [\<phi>reason 2600]:
-  "T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> U c \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ExSet U \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding View_Shift_def Action_Tag_def by (simp add: \<phi>expns, metis)
-
-lemma [\<phi>reason 2800]:
-  "(\<And>x. T x \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G) \<Longrightarrow>
-   ExSet T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s U \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding View_Shift_def Action_Tag_def
-  by (simp add: \<phi>expns) fastforce
-
-(* subsubsection \<open>Tailling\<close> \<comment> \<open>\<close>
-
-lemma [\<phi>intro 1100]: \<comment> \<open>tail the step\<close>
-  "H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 \<heavy_comma> \<blangle> x \<Ztypecolon> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l 1 \<heavy_comma> \<blangle> x\<^sub>m \<Ztypecolon> X\<^sub>m \<brangle> \<longmapsto> H\<^sub>m \<brangle> \<Longrightarrow>
-  H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> VAL x \<Ztypecolon> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l H\<^sub>m \<longmapsto> H\<^sub>m \<brangle> "
-  unfolding Separation_emptyL Separation_emptyR .
-
-lemma [\<phi>intro 1100]: \<comment> \<open>tail the step\<close>
-  "H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 \<heavy_comma> \<blangle> x \<Ztypecolon> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l 1 \<heavy_comma> \<blangle> x\<^sub>m \<Ztypecolon> X\<^sub>m \<brangle> \<longmapsto> H\<^sub>m \<brangle> \<Longrightarrow>
-  H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> x \<Ztypecolon> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l \<blangle> x\<^sub>m \<Ztypecolon> X\<^sub>m \<brangle> \<longmapsto> H\<^sub>m \<brangle> "
-  unfolding Separation_emptyL Separation_emptyR .
-*)
-
-subsection \<open>Zero\<close>
-
-lemma [\<phi>reason 3150 for \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?R\<heavy_comma> ?var_X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R \<brangle> @action reason_ToSA mode G
-\<Longrightarrow> 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R\<heavy_comma> 0 \<brangle> @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def zero_set_def Action_Tag_def by simp
-
-lemma [\<phi>reason 3140 for \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?R\<heavy_comma> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R \<brangle> @action reason_ToSA mode G
-\<Longrightarrow> 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R\<heavy_comma> X \<brangle> @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def zero_set_def Action_Tag_def by simp
-
-lemma [\<phi>reason 3130 for \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?var_X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> 0 \<brangle> @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def zero_set_def Action_Tag_def by simp
-
-lemma [\<phi>reason 3100 for \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def zero_set_def Action_Tag_def by simp
-
-lemma [\<phi>reason 3100 for \<open>?R\<heavy_comma> 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open>R\<heavy_comma> 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def zero_set_def Action_Tag_def by simp
-
-lemma [\<phi>reason 3100 for \<open>0\<heavy_comma> ?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open>0\<heavy_comma> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def zero_set_def Action_Tag_def by simp
-
-lemma [\<phi>reason 3100]:
-  \<open> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> Y + 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def Action_Tag_def by simp
-
-lemma [\<phi>reason 3100]:
-  \<open> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> 0 + Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding View_Shift_def by simp
-
-subsection \<open>Divergence\<close>
-
-(* paragraph \<open>Divide Schematic Variable\<close>
-
-definition \<open>ALSTR_Divide_Assertion_U X A B \<equiv> Trueprop (A + B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X)\<close>
-
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (?var_Z::assn) ?A ?B\<close>]:
-  \<open>PROP ALSTR_Divide_Assertion_U (A + B) A B\<close>
-  for A :: \<open>assn\<close>
-  unfolding ALSTR_Divide_Assertion_U_def
-  by (simp add: view_shift_id) 
-
-lemma [\<phi>reason for \<open>PROP ALSTR_Divide_Assertion_U (?Z::assn) ?A ?B\<close>]:
-  \<open>PROP ALSTR_Divide_Assertion_U A A A\<close>
-  for A :: \<open>assn\<close>
-  unfolding ALSTR_Divide_Assertion_U_def
-  by (simp add: view_shift_id)
-
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (?ZR \<heavy_comma> ?Z1) ?A ?B\<close>]:
-  \<open> PROP ALSTR_Divide_Assertion_U Z1 A1 B1
-\<Longrightarrow> PROP ALSTR_Divide_Assertion_U ZR AR BR
-\<Longrightarrow> PROP ALSTR_Divide_Assertion_U (ZR \<heavy_comma> Z1) (AR \<heavy_comma> A1) (BR \<heavy_comma> B1)\<close>
-  unfolding ALSTR_Divide_Assertion_U_def
-  by (smt (z3) INTERP_SPEC_plus View_Shift_def distrib_left mult.commute mult.left_commute plus_set_in_iff)
-
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (0::assn) ?A ?B\<close>]:
-  \<open>PROP ALSTR_Divide_Assertion_U 0 0 (0::assn)\<close>
-  unfolding ALSTR_Divide_Assertion_U_def
-  by (simp add: view_shift_0)
-
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U (ExSet ?Z::assn) ?A ?B\<close>]:
-  \<open>(\<And>c. PROP ALSTR_Divide_Assertion_U (Z c) (A c) (B c))
-\<Longrightarrow> PROP ALSTR_Divide_Assertion_U (ExSet Z) (ExSet A) (ExSet B)\<close>
-  for A :: \<open>'c \<Rightarrow> assn\<close>
-  unfolding ALSTR_Divide_Assertion_U_def Imply_def plus_set_def View_Shift_def
-  apply (clarsimp simp add: \<phi>expns)
-  by (smt (z3) Fic_Space_Un) 
-
-lemma [\<phi>reason 1200
-    for \<open>PROP ALSTR_Divide_Assertion_U (?Z \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?P :: assn) ?A ?B\<close>
-]:
-  \<open> PROP ALSTR_Divide_Assertion_U Z A B
-\<Longrightarrow> PROP ALSTR_Divide_Assertion_U (Z \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) (B \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  for A :: \<open>assn\<close>
-  unfolding ALSTR_Divide_Assertion_U_def plus_set_def View_Shift_def
-  by (simp add: \<phi>expns) blast
-
-lemma [\<phi>reason 1200 for \<open>PROP ALSTR_Divide_Assertion_U \<blangle> ?Z \<brangle> ?A (?B::assn)\<close>]:
-  \<open> PROP ALSTR_Divide_Assertion_U Z A B
-\<Longrightarrow> PROP ALSTR_Divide_Assertion_U \<blangle> Z \<brangle>  \<blangle> A \<brangle>  \<blangle> B \<brangle>\<close>
-  for A :: \<open>assn\<close>
-  unfolding ALSTR_Divide_Assertion_U_def plus_set_def by (simp add: \<phi>expns)
-
-paragraph \<open>Main Rules\<close> *)
-
-subsubsection \<open>Disjunction in Source\<close>
-
-lemma [\<phi>reason 2800 for \<open>?A + ?B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> SUBGOAL G G1
-\<Longrightarrow> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA mode G1
-\<Longrightarrow> SOLVE_SUBGOAL G1
-\<Longrightarrow> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1 @action reason_ToSA mode G
-\<Longrightarrow> A + B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1 \<or> P2 @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def
-  using \<phi>CASE_VS .
-
-lemma [\<phi>reason 2800 for \<open>?R\<heavy_comma> (?A + ?B) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> SUBGOAL G G1
-\<Longrightarrow> R\<heavy_comma> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA mode G1
-\<Longrightarrow> SOLVE_SUBGOAL G1
-\<Longrightarrow> R\<heavy_comma> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1 @action reason_ToSA mode G
-\<Longrightarrow> R\<heavy_comma> A + B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1 \<or> P2 @action reason_ToSA mode G\<close>
-  unfolding distrib_left Action_Tag_def
-  using \<phi>CASE_VS .
-
-subsubsection \<open>Disjunction in Target\<close>
-
-lemma ToSA_VS_disj_target_A:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> A \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> A + B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding plus_set_def Action_Tag_def apply simp
-  by (metis plus_set_def view_shift_union(1))
-
-lemma ToSA_VS_disj_target_B:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> A + B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding plus_set_def Action_Tag_def apply simp
-  by (metis plus_set_def sup_commute view_shift_union(1))
-
-declare [[\<phi>reason 2600 ToSA_VS_disj_target_A ToSA_VS_disj_target_B
-            for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?A + ?B \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]]
-
-hide_fact ToSA_VS_disj_target_A ToSA_VS_disj_target_B
-
-lemma ToSA_VS_disj_target_A':
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R\<heavy_comma> \<blangle> A \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G1
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R\<heavy_comma> \<blangle> A + B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def
-  by (simp add: distrib_left view_shift_union(1))
-
-lemma ToSA_VS_disj_target_B':
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R\<heavy_comma> \<blangle> B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G1
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R\<heavy_comma> \<blangle> A + B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def
-  by (simp add: distrib_left view_shift_union(2)) 
-
-declare [[\<phi>reason 2600 ToSA_VS_disj_target_A' ToSA_VS_disj_target_B'
-            for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R\<heavy_comma> \<blangle> ?A + ?B \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]]
-
-hide_fact ToSA_VS_disj_target_A' ToSA_VS_disj_target_B'
-
-subsubsection \<open>Conditional Branch in Source\<close>
-
-text \<open>The condition should be regarded as an output, and the reasoning process assigns which 
-the branch that it chooses to the output condition variable.\<close>
-
-lemma ToSA_VS_cond_source_A:
-  \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> (if True then A else B) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def
-  by (simp add: Imply_def distrib_left)
-
-lemma ToSA_VS_cond_source_B:
-  \<open> B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> (if False then A else B) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def
-  by (simp add: Imply_def distrib_left)
-
-declare [[\<phi>reason 2600 ToSA_VS_cond_source_A ToSA_VS_cond_source_B
-            for \<open>(if ?condition then ?A else ?B) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]]
-
-hide_fact ToSA_VS_cond_source_A ToSA_VS_cond_source_B
-
-lemma ToSA_VS_cond_source_A':
-  \<open> R * A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R * (if True then A else B) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def
-  by (simp add: Imply_def distrib_left)
-
-lemma ToSA_VS_cond_source_B':
-  \<open> R * B \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R * (if False then A else B) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Action_Tag_def
-  by (simp add: Imply_def distrib_left)
-
-declare [[\<phi>reason 2600 ToSA_VS_cond_source_A' ToSA_VS_cond_source_B'
-            for \<open>?R * (if ?condition then ?A else ?B) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]]
-
-hide_fact ToSA_VS_cond_source_A' ToSA_VS_cond_source_B'
-
-
-subsubsection \<open>Conditional Branch in Target\<close>
-
-lemma ToSA_VS_cond_target_A:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> A \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> if True then A else B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  by simp
-
-lemma ToSA_VS_cond_target_B:
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> if False then A else B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  by simp
-
-declare [[\<phi>reason 2600 ToSA_VS_cond_target_A ToSA_VS_cond_target_B
-            for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> if ?condition then ?A else ?B \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]]
-
-hide_fact ToSA_VS_cond_target_A ToSA_VS_cond_target_B
-
-lemma ToSA_VS_cond_target_A':
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R * \<blangle> A \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R * \<blangle> if True then A else B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  by simp
-
-lemma ToSA_VS_cond_target_B':
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R * \<blangle> B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R * \<blangle> if False then A else B \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  by simp
-
-declare [[\<phi>reason 2600 ToSA_VS_cond_target_A' ToSA_VS_cond_target_B'
-            for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R\<heavy_comma> \<blangle> if ?condition then ?A else ?B \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]]
-
-hide_fact ToSA_VS_cond_target_A' ToSA_VS_cond_target_B'
-
-
-subsection \<open>Step-by-Step Searching Procedure\<close>
-
-lemma [\<phi>reason 2100
- except \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> (?X1 \<heavy_comma> ?X2) \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-        \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?X1 + ?X2 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-        \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> 1 \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-        \<open>?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> TAIL ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  "H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> 1 \<heavy_comma> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding mult_1_left .
-
-lemma [\<phi>reason 2100
-   except \<open>?Y1 \<heavy_comma> ?Y2 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-          \<open>?Y1 + ?Y2 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-          \<open>1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-          \<open>TAIL ?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-]:
-  "1 \<heavy_comma> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G \<Longrightarrow>
-   Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding mult_1_left .
-
-
-lemma [\<phi>reason 2000
-    for \<open>?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?R2 \<heavy_comma> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-(*  except \<open>?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?R2 \<heavy_comma> FIX ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close> *)
-]:
-  " R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R1 \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 @action reason_ToSA mode G
-\<Longrightarrow> (P1 \<Longrightarrow> R1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA mode G)
-\<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<heavy_comma> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P2 \<and> P1 @action reason_ToSA mode G"
-  unfolding Action_Tag_def FOCUS_TAG_def split_paired_All
-  by (metis View_Shift_imply_P \<phi>frame_view_right \<phi>view_trans)
-
-(*
-lemma [\<phi>reason 2010 for \<open>?R\<heavy_comma> ?Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?R2 \<heavy_comma> (FIX ?X) \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]:
-  " Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1
-\<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P2 @action reason_ToSA True G
-\<Longrightarrow> R\<heavy_comma> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<heavy_comma> FIX X \<brangle> \<^bold>a\<^bold>n\<^bold>d P2 \<and> P1 @action reason_ToSA True G"
-  unfolding cast_def split_paired_All Fix_def Action_Tag_def
-  by (metis \<phi>view_shift_intro_frame_R \<phi>view_shift_trans mult.commute)
-
-lemma [\<phi>reason 2000 for \<open>?R\<heavy_comma> ?Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> ?R2 \<heavy_comma> (FIX ?X) \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  " R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R\<heavy_comma> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R2 \<heavy_comma> FIX X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding cast_def split_paired_All Fix_def Action_Tag_def
-  by (metis \<phi>frame_view mult.commute)
-
-lemma [\<phi>reason 2000 for \<open>?R\<heavy_comma> FIX ?Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  " R\<heavy_comma> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R\<heavy_comma> FIX Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding cast_def split_paired_All Fix_def
-  by (simp add: \<phi>expns)
-*)
-
-lemma [\<phi>reason 2000 for \<open>?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R2 \<heavy_comma> \<blangle> SYNTHESIS ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  " R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R2 \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R2 \<heavy_comma> \<blangle> SYNTHESIS X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding Synthesis_def .
-
-lemma [\<phi>reason 2000 for \<open>?R\<heavy_comma> SYNTHESIS ?Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  " R\<heavy_comma> Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R\<heavy_comma> SYNTHESIS Y \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding Action_Tag_def FOCUS_TAG_def split_paired_All
-  by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 2000 for \<open>?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R2\<heavy_comma> \<blangle> SMORPH ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R2 \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism RP RX \<and> P @action reason_ToSA mode G
-\<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R2 \<heavy_comma> \<blangle> SMORPH X \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism RP RX \<and> P @action reason_ToSA mode G\<close>
-  unfolding SMorphism_def .
-
-
-subsection \<open>Value\<close>
-
-text \<open>The rules require the same values are alpha-conversible. \<close>
-text \<open>Priority shouldn't exceed 2000.\<close>
-
-lemma [\<phi>reason 1215 for \<open>?R\<heavy_comma> ?y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R'' \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v'] ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]:
-  " y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> R \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R \<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA True G"
-  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All View_Shift_def
-  by (simp add: \<phi>expns times_list_def) metis
-
-lemma [\<phi>reason 1210 for \<open>?R\<heavy_comma> ?y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?U \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R'' \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v'] ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  "R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R \<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> @action reason_ToSA mode G"
-  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All View_Shift_def Action_Tag_def
-  by blast
-  
-
-lemma [\<phi>reason 1200 for \<open>?R\<heavy_comma> ?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R'''\<heavy_comma> \<blangle> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  " R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R \<heavy_comma> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def
-  by (smt (verit) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
-
-lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?V \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-  except \<open>?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R''' \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?V \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>
-]:
-  " R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] V \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] V \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding FOCUS_TAG_def Action_Tag_def
-  by (smt (verit, best) \<phi>view_shift_intro_frame_R mult.assoc mult.commute)
-
-
-subsection \<open>General Search\<close>
-
-lemma [\<phi>reason 800 for \<open>?R \<heavy_comma> ?V \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  "R \<heavy_comma> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R \<heavy_comma> \<blangle> X \<brangle> @action reason_ToSA mode G"
-      \<comment> \<open>successful termination of the step-by-step search\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def split_paired_All
-  by (simp add: view_shift_id)
-
-lemma ToSA_skip
-  [\<phi>reason 70 for \<open>?R \<heavy_comma> ?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R''' \<heavy_comma> \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]: \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
-  " CHK_SUBGOAL G
-  \<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-  \<Longrightarrow> R \<heavy_comma> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' \<heavy_comma> H \<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G "
-  unfolding FOCUS_TAG_def
-  by (simp add: \<phi>view_shift_intro_frame mult.commute mult.left_commute)
-
-
-(* 
-We don't need other general searches any more, because every resource locale configures its reasoning rules.
-
-
-lemma [\<phi>reason 100 on \<open>?R \<heavy_comma> ?H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R''' * \<blangle> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]: \<comment> \<open>attempts the immediate cell\<close>
-  " CHK_SUBGOAL G
-  \<Longrightarrow> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s H'\<heavy_comma> X \<^bold>a\<^bold>n\<^bold>d P
-  \<Longrightarrow> R\<heavy_comma> H \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R\<heavy_comma> H'\<heavy_comma> \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding cast_def
-  by (simp add: \<phi>view_shift_intro_frame mult.assoc)
-
-lemma [\<phi>reason 10 on \<open>?a \<Zinj> ?x \<Ztypecolon> ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R''' \<heavy_comma> ?a' \<Zinj> ?x' \<Ztypecolon> ?T' \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a = a' \<Longrightarrow>
-   a \<Zinj> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s a' \<Zinj> x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow>
-   a \<Zinj> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 \<heavy_comma> a' \<Zinj> x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P"
-  unfolding cast_def split_paired_All by (simp add: \<phi>expns)
-
-*)
-
-(* lemma [\<phi>reason 1200
-    on \<open>?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R' \<heavy_comma> \<blangle> OBJ ?a \<Zinj> ?x \<Ztypecolon> ?X \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P \<^bold>d\<^bold>u\<^bold>a\<^bold>l ?R'\<^sub>m \<heavy_comma> VAL ?V \<heavy_comma> \<blangle> OBJ ?a\<^sub>m \<Zinj> ?x\<^sub>m \<Ztypecolon> ?X\<^sub>m \<brangle> \<longmapsto> ?R\<^sub>m \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-  ]: \<comment> \<open>OR search the later cells, if hasn't succeeded.\<close>
-  "CHK_SUBGOAL G
-    \<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' \<heavy_comma> \<blangle> OBJ a \<Zinj> x \<Ztypecolon> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_comma> \<blangle> OBJ a\<^sub>m \<Zinj> x\<^sub>m \<Ztypecolon> X\<^sub>m \<brangle> \<longmapsto> R\<^sub>m \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-    \<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' \<heavy_comma> \<blangle> OBJ a \<Zinj> x \<Ztypecolon> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P \<^bold>d\<^bold>u\<^bold>a\<^bold>l R'\<^sub>m \<heavy_comma> VAL V \<heavy_comma> \<blangle> OBJ a\<^sub>m \<Zinj> x\<^sub>m \<Ztypecolon> X\<^sub>m \<brangle> \<longmapsto> R\<^sub>m \<heavy_comma> VAL V \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding FOCUS_TAG_def Subty_Target2_def Separation_assoc[symmetric]
-    Separation_comm(2)[of "VAL V" "\<tort_lbrace>a\<^sub>m \<Zinj> x\<^sub>m \<Ztypecolon> X\<^sub>m\<tort_rbrace>"]
-  unfolding Separation_assoc
-  by (rule cast_dual_intro_frame_R[where M = 1, unfolded Separation_empty])
-
-text \<open>step cases when the reasoner faces an object argument \<^term>\<open>OBJ a \<Zinj> x \<Ztypecolon> T\<close>\<close>
-*)
-
-
-subsection \<open>Plainize\<close>
-
-lemma [\<phi>reason 2000]:
-  " R \<heavy_comma> T1 \<heavy_comma> T2 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> R \<heavy_comma> (T1 \<heavy_comma> T2) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P  @action reason_ToSA mode G"
-  unfolding mult.assoc[symmetric] .
-
-lemma [\<phi>reason 2000]:
-  " T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R \<heavy_comma> X1 \<heavy_comma> X2 \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> T \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> R \<heavy_comma> (X1 \<heavy_comma> X2) \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G"
-  unfolding mult.assoc[symmetric] .
-
-
-
-(*
-subsubsection \<open>Other Reasoning Settings\<close>
-
-lemma [\<phi>intro 14000]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<Zinj> x = a \<Zinj> x' " unfolding Premise_def by simp
-(* lemma [\<phi>intro 13500]: "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<Zinj> x = a' \<Zinj> x' " unfolding Premise_def by simp *)
-
-(*TODO: this rule is too aggressive. Maybe a assumption based flag switch?*)
-lemma [\<phi>intro 13000]: "False \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e a \<Zinj> x = a' \<Zinj> x' " unfolding Premise_def by simp
-  \<comment> \<open>For any other situation (when a is not alpha equivalent to a'), reasoning is pruned early.
-  The proof for \<^term>\<open>a = a'\<close> is always assigned to users, because maintaining the consistency of object identities
-    is so essential that users should always keep.\<close>
-*)
-
 
 
 
@@ -1531,25 +951,11 @@ lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' = ?X @action branch_convergenc
   "If P A A = A @action branch_convergence"
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  "If P A A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s A @action branch_convergence"
-  unfolding Action_Tag_def by (simp add: view_shift_id)
-
 lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
   "If P A A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A @action branch_convergence"
   unfolding Action_Tag_def Imply_def by simp
 
 subsubsection \<open>Zero\<close>
-
-lemma [\<phi>reason 3000 for \<open>If ?P ?A 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  "If P A 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) @action branch_convergence"
-  unfolding Action_Tag_def View_Shift_def
-  by simp
-
-lemma [\<phi>reason 3000 for \<open>If ?P 0 ?A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  "If P 0 A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P) @action branch_convergence"
-  unfolding Action_Tag_def View_Shift_def
-  by simp
 
 lemma [\<phi>reason 3000 for \<open>If ?P ?A 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
   "If P A 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) @action branch_convergence"
@@ -1571,41 +977,6 @@ lemma [\<phi>reason 10 for \<open>If ?P ?A ?B = ?X @action branch_convergence\<c
 text \<open>There is no fallback for \<^const>\<open>If\<close>. The If is not allowed to be fallback.
   If the convergence for If fails, the reasoning fails.\<close>
 
-(*
-subsubsection \<open>Ad-hoc rules\<close>
-
-lemma [\<phi>reason for \<open>If ?P (?a \<Zinj> ?x) (?b \<Zinj> ?y) = ?X @action branch_convergence\<close>]:
-  " If P a b = aa @action branch_convergence
-\<Longrightarrow> If P x y = z  @action branch_convergence
-\<Longrightarrow> If P (a \<Zinj> x) (b \<Zinj> y) = (aa \<Zinj> z) @action branch_convergence"
-  unfolding Action_Tag_def by force
-
- lemma branch_convergence_skip:
-  " If P (R1 * X) (N * Y * \<blangle> R2 \<brangle>) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R @action branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> If P (R1 * X) (N * \<blangle> R2 * Y \<brangle>) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R @action branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  unfolding FOCUS_TAG_def Action_Tag_def Action_Tag_def
-  by (metis mult.assoc mult.commute)
-
-lemma branch_convergence_skip_imp:
-  " If P (R1 * X) (N * Y * \<blangle> R2 \<brangle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R @action branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> If P (R1 * X) (N * \<blangle> R2 * Y \<brangle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R @action branch_convergence \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G"
-  for R :: \<open>'a::sep_algebra set\<close>
-  unfolding FOCUS_TAG_def Action_Tag_def Action_Tag_def
-  by (metis mult.assoc mult.commute)
-*)
-
-(*
-lemma [\<phi>reason 3000]:
-  "If P A B = X
-  \<Longrightarrow> If (MergeNeg (MergeNeg P)) A B = X"
-  unfolding MergeNeg_def by simp
-
-lemma [\<phi>reason 2800]:
-  "If P B A = X
-  \<Longrightarrow> If (MergeNeg P) A B = X"
-  unfolding MergeNeg_def by force
-*)
-
 subsubsection \<open>Subjection\<close>
 
 lemma [\<phi>reason 1400]:
@@ -1617,23 +988,6 @@ lemma [\<phi>reason 1400]:
   \<open> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence
 \<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence\<close>
   unfolding Subjection_Subjection .
-
-lemma [\<phi>reason 1400]:
-  \<open> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Z @action branch_convergence
-\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Z @action branch_convergence\<close>
-  unfolding Subjection_Subjection .
-
-lemma [\<phi>reason 1400]:
-  \<open> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Z @action branch_convergence
-\<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Z @action branch_convergence\<close>
-  unfolding Subjection_Subjection .
-
-lemma
-  [\<phi>reason 1300 for \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  " If P QL QR = Q @action branch_convergence
-\<Longrightarrow> If P L R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL) (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) @action branch_convergence"
-  unfolding Action_Tag_def View_Shift_def by force
 
 lemma [\<phi>reason 1300 for \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
   " If P QL QR = Q @action branch_convergence
@@ -1649,36 +1003,14 @@ lemma [\<phi>reason 1200
 \<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q) @action branch_convergence"
   unfolding Imply_def Action_Tag_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200
-    for \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) ?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>
-]:
-  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  " If P L R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q) @action branch_convergence"
-  unfolding Action_Tag_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns; blast)
-
 lemma [\<phi>reason 1200 for \<open>If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
   " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
 \<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q) @action branch_convergence"
   unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  " If P L R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q) @action branch_convergence"
-  unfolding Action_Tag_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns; blast)
-
 
 subsubsection \<open>Existential\<close>
-
-lemma Conv_Merge_Ex_both:
-  "(\<And>x. If P (L x) (R x) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X x @action branch_convergence)
-\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (\<exists>* x. X x) @action branch_convergence"
-  unfolding Action_Tag_def View_Shift_def
-  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; fastforce)
 
 lemma Conv_Merge_Ex_both_imp:
   "(\<And>x. If P (L x) (R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
@@ -1686,25 +1018,12 @@ lemma Conv_Merge_Ex_both_imp:
   unfolding Action_Tag_def Imply_def
   by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; blast)
 
-lemma Conv_Merge_Ex_R
-  [\<phi>reason 1100 for \<open>If ?P ?L (\<exists>* x. ?R x) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  "(\<And>x. If P L (R x) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X x @action branch_convergence)
-\<Longrightarrow> If P L (\<exists>* x. R x) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (\<exists>* x. X x) @action branch_convergence"
-  unfolding Action_Tag_def View_Shift_def
-  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; fastforce)
-
 lemma Conv_Merge_Ex_R_imp
   [\<phi>reason 1100 for \<open>If ?P ?L (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
   "(\<And>x. If P L (R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
 \<Longrightarrow> If P L (\<exists>* x. R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) @action branch_convergence"
   unfolding Action_Tag_def Imply_def
   by (cases P; simp add: set_eq_iff \<phi>expns; blast)
-
-lemma [\<phi>reason 1100 for \<open>If ?P (\<exists>* x. ?L x) ?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  "(\<And>x. If P (L x) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X x @action branch_convergence)
-\<Longrightarrow> If P (\<exists>* x. L x) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (\<exists>* x. X x) @action branch_convergence"
-  unfolding Action_Tag_def View_Shift_def
-  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; fastforce)
 
 lemma [\<phi>reason 1100 for \<open>If ?P (\<exists>* x. ?L x) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
   "(\<And>x. If P (L x) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
@@ -1714,19 +1033,6 @@ lemma [\<phi>reason 1100 for \<open>If ?P (\<exists>* x. ?L x) ?R \<^bold>i\<^bo
 text \<open>The merging recognize two existential quantifier are identical if their type and variable name
   are the same. If so it uses Conv_Merge_Ex_both to merge the quantification,
   or else the right side is expanded first.\<close>
-
-\<phi>reasoner_ML Merge_Existential 2000
-  (\<open>If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>) =
-\<open>fn (ctxt,sequent) =>
-  let
-    val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
-                                        $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))), _, _)
-        = Phi_Syntax.dest_view_shift (Thm.major_prem_of sequent)
-    val sequent' = if exa = exb andalso tya = tyb
-                   then @{thm Conv_Merge_Ex_both} RS sequent
-                   else @{thm Conv_Merge_Ex_R} RS sequent
-  in Seq.single (ctxt, sequent')
-  end\<close>
 
 \<phi>reasoner_ML Merge_Existential_imp 2000 (\<open>If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X\<close>) =
 \<open>fn (ctxt,sequent) =>
@@ -1750,14 +1056,6 @@ lemma [\<phi>reason 2000 for \<open>If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolo
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (z \<Ztypecolon> Z) @action branch_convergence"
   unfolding Action_Tag_def Imply_def by (cases P; simp)
 
-lemma
-  [\<phi>reason 2000 for \<open>If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  " If P x y = z @action branch_convergence
-\<Longrightarrow> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (z \<Ztypecolon> Z) @action branch_convergence"
-  unfolding Action_Tag_def
-  by (cases P; clarsimp simp add: \<phi>expns view_shift_id)
-
 definition \<open>Branch_Convergence_Type_Pattern type the_type_to_match \<equiv> Trueprop True\<close>
 
 lemma [\<phi>reason 10 for \<open>PROP Branch_Convergence_Type_Pattern ?X ?X'\<close>]:
@@ -1778,18 +1076,6 @@ lemma [\<phi>reason 1200 for \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bol
 \<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * (z \<Ztypecolon> Z) @action branch_convergence\<close>
   unfolding Action_Tag_def Action_Tag_def FOCUS_TAG_def
   by (smt (z3) Imply_def implies_right_prod)
-
-lemma [\<phi>reason 1200 for \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X @action branch_convergence\<close>]:
-  \<open> PROP Branch_Convergence_Type_Pattern T T'
-\<Longrightarrow> SUBGOAL TOP_GOAL G
-\<Longrightarrow> R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any @action reason_ToSA True G
-\<Longrightarrow> If P x y = z @action branch_convergence
-\<Longrightarrow> If P T T' = Z @action branch_convergence
-\<Longrightarrow> If P L R' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X * (z \<Ztypecolon> Z) @action branch_convergence\<close>
-  unfolding Action_Tag_def Action_Tag_def FOCUS_TAG_def
-  by (smt (z3) View_Shift_def mult.commute mult.left_commute)
-
 
 
 subsubsection \<open>Convergence of Structural Nodes\<close>
@@ -1843,11 +1129,6 @@ lemma [\<phi>reason]:
 subsubsection \<open>Unfold\<close>
 
 lemma [\<phi>reason 2000]:
-  " If P L (N \<heavy_comma> R1 \<heavy_comma> R2) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (N \<heavy_comma> (R1 \<heavy_comma> R2)) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence"
-  unfolding Action_Tag_def by (metis mult.assoc)
-
-lemma [\<phi>reason 2000]:
   " If P L (N * R1 * R2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
 \<Longrightarrow> If P L (N * (R1 * R2)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
   for N :: \<open>'a::sep_semigroup set\<close>
@@ -1859,10 +1140,6 @@ lemma [\<phi>reason 2000]:
   for R :: \<open>'a::sep_semigroup set\<close>
   unfolding Action_Tag_def by (metis mult.assoc)
 
-lemma [\<phi>reason 2000]:
-  " If P (L1 \<heavy_comma> L2 \<heavy_comma> L3) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L1 \<heavy_comma> (L2 \<heavy_comma> L3)) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence"
-  unfolding Action_Tag_def by (metis mult.assoc)
 
 subsubsection \<open>Eliminate Void Hole\<close>
 
@@ -1889,27 +1166,6 @@ lemma [\<phi>reason 2000]:
 \<Longrightarrow> If P (L * 1) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
   for R :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 2000]:
-  " If P L R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (R \<heavy_comma> 1) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence"
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 2000]:
-  " If P L R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (1 \<heavy_comma> R) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence"
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 2000]:
-  " If P L (R' \<heavy_comma> R) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (R' \<heavy_comma> 1 \<heavy_comma> R) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence"
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 2000]:
-  " If P L R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L \<heavy_comma> 1) R \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X @action branch_convergence"
-  unfolding Action_Tag_def by (cases P; simp)
-
 
 (* subsection \<open>Program Interface\<close> \<comment> \<open>Interfaces exported to target LLVM module\<close>
 
@@ -3076,18 +2332,18 @@ lemma Collect_Return_Values_I: \<open>Collect_Return_Values (S V) S V\<close>
   end
 \<close>
 
-lemma [\<phi>reason 2550 for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> collect_return_values ?S ?vs \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 2550 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> collect_return_values ?S ?vs \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?mode ?G\<close>]:
   \<open> Collect_Return_Values X S vs
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> collect_return_values S vs \<brangle> @action reason_ToSA mode G\<close>
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> collect_return_values S vs \<brangle> @action reason_ToSA mode G\<close>
   unfolding Collect_Return_Values_def collect_return_values'_def FOCUS_TAG_def Action_Tag_def
             TAIL_def
-  by (simp add: view_shift_id)
+  by (simp add: implies_refl)
 
-lemma [\<phi>reason 3200 for \<open>0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> collect_return_values ?S ?vs \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?mode ?G\<close>]:
-  \<open> 0 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> collect_return_values 0 \<phi>V_none \<brangle> @action reason_ToSA mode G\<close>
+lemma [\<phi>reason 3200 for \<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> collect_return_values ?S ?vs \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?mode ?G\<close>]:
+  \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> collect_return_values 0 \<phi>V_none \<brangle> @action reason_ToSA mode G\<close>
   unfolding Collect_Return_Values_def collect_return_values'_def FOCUS_TAG_def Action_Tag_def
             TAIL_def
-  by (simp add: view_shift_id)
+  by (simp add: implies_refl)
 
 
 end

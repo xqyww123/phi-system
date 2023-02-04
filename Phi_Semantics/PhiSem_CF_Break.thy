@@ -183,11 +183,10 @@ lemma [\<phi>reason 1000]:
   \<medium_right_bracket>. .
   
 
-lemma [\<phi>reason 3000 for \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?G ?mode\<close>]:
+lemma [\<phi>reason 3000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?G ?mode\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
-\<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
-  unfolding FOCUS_TAG_def Action_Tag_def
-  using view_shift_by_implication .
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
+  unfolding FOCUS_TAG_def Action_Tag_def .
 
 lemma [\<phi>reason 3000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?G ?mode\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
@@ -254,33 +253,10 @@ lemma [\<phi>reason 1000]:
     X
   \<medium_right_bracket>. .
 
-(*It doesn't matter if the structure of sift_brking_frame is broken in the source part.*)
-(*
-lemma [\<phi>reason 3000]:
-  \<open> Brking_Frame l Y + (E\<heavy_comma> Brk_Frame l) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> sift_brking_frame l Y E \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding sift_brking_frame_def sift_brking_frame'_def .
-
-lemma [\<phi>reason 3000]:
-  \<open> Brking_Frame l Y + (E\<heavy_comma> Brk_Frame l) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> sift_brking_frame l Y E \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding sift_brking_frame_def sift_brking_frame'_def .
-*)
-
 hide_fact Brking_Frame_plus
 
 subsection \<open>ToSA through Brking_Frame\<close>
 
-(*
-lemma [\<phi>reason 2000]:
-  \<open> Brking_Frame l (\<lambda>v. S v\<heavy_comma> A v\<heavy_comma> B v) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> Brking_Frame l (\<lambda>v. S v\<heavy_comma> (A v\<heavy_comma> B v)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding mult.assoc .
-
-lemma [\<phi>reason 2000]:
-  \<open> Brking_Frame l (\<lambda>v. S v\<heavy_comma> A v\<heavy_comma> B v) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G
-\<Longrightarrow> Brking_Frame l (\<lambda>v. S v\<heavy_comma> (A v\<heavy_comma> B v)) \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding mult.assoc . *)
 
 lemma [\<phi>reason 2200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
   (*The priority must override Void Padding*)
@@ -289,14 +265,6 @@ lemma [\<phi>reason 2200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold
   unfolding Brking_Frame_def TAIL_def Action_Tag_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
     X[THEN implies_right_prod]
-  \<medium_right_bracket>. .
-
-lemma [\<phi>reason 2200 for \<open>Brking_Frame ?l ?S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
-  \<open>(\<And>v. S v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G)
-\<Longrightarrow> Brking_Frame l S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Brking_Frame_def TAIL_def Action_Tag_def FOCUS_TAG_def
-  \<medium_left_bracket> premises X
-    X
   \<medium_right_bracket>. .
 
 
@@ -332,7 +300,7 @@ proc
   output \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
-        $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] U\<close>]
+  ;; $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] U\<close>]
       \<medium_right_bracket> .. ;;
       assert \<bottom> (*this place is unreachable!*)
     \<medium_right_bracket>.
