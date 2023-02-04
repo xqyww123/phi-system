@@ -110,7 +110,8 @@ lemma implies_refl_ty[\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<^bold>i\
   "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = y \<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> T" unfolding Imply_def by fast
 
 
-lemma implies_union[\<phi>reason 800]:
+
+lemma implies_union:
   \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X + Y \<^bold>a\<^bold>n\<^bold>d P\<close>
   \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
@@ -179,11 +180,11 @@ lemma Subjection_cong[cong]:
   \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> S \<equiv> S') \<Longrightarrow> (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<equiv> (S' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P')\<close>
   unfolding atomize_eq set_eq_iff by (simp add: Subjection_expn, blast)
 
-lemma [\<phi>reason 1000]:
+(* lemma [\<phi>reason 1000]:
   " T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> (P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q)
 \<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q \<^bold>a\<^bold>n\<^bold>d P"
-  unfolding Imply_def Premise_def by (simp add: Subjection_expn)
+  unfolding Imply_def Premise_def by (simp add: Subjection_expn) *)
 
 lemma Subjection_imp_I:
   \<open> P
@@ -271,10 +272,10 @@ lemma ExSet_0[simp]:
 \<Longrightarrow> (ExSet T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d (\<exists>c. P c)"
   unfolding Imply_def by (simp add: \<phi>expns) blast *)
 
-lemma [\<phi>reason 300]:
+(* lemma [\<phi>reason 300]:
   \<open>(\<And>c. S c \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P)
 \<Longrightarrow> (ExSet S) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding Imply_def by (simp add: \<phi>expns, blast)
+  unfolding Imply_def by (simp add: \<phi>expns, blast) *)
 
 lemma ExSet_imp_I[\<phi>reason 100]:
   \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' x \<^bold>a\<^bold>n\<^bold>d P
