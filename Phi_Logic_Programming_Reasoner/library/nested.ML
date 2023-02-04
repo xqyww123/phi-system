@@ -2,6 +2,7 @@ signature PLPR_NESTED_REASONING = sig
 
 val enter_scope : context_state -> context_state Seq.seq
 val exit_scope  : context_state -> context_state Seq.seq
+val call : context_state -> context_state Seq.seq
 
 end
 
@@ -36,6 +37,11 @@ fun exit_scope (ctxt,sequent) = (
     "exiting the nested \<phi>-LPR reasoning "^ string_of_int (Scope.get ctxt - 1) ^ Position.here \<^here>);
   raise Phi_Reasoner.Success (Scope.map (fn x => x - 1) ctxt,
                              @{thm \<r>END_I} RS sequent)
+)
+
+fun call (ctxt,sequent) = Seq.make (fn () =>
+  Phi_Reasoner.reason (SOME 1) (ctxt, @{thm \<r>Call_I} RS sequent)
+    |> Option.map (rpair Seq.empty)
 )
 
 end

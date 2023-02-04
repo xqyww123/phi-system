@@ -705,24 +705,19 @@ belongs. \<^prop>\<open>\<r>Success\<close> is prohibited in the nested scope be
 the remain antecedents after the \<^prop>\<open>\<r>Success\<close> and how to return them into the outer scope.
 \<close>
 
-definition \<r>Call_Frame :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CALL _" [3] 2)
-  where \<open>\<r>Call_Frame P \<equiv> PROP P\<close>
+definition \<r>Call :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CALL _" [3] 2)
+  where \<open>\<r>Call P \<equiv> PROP P\<close>
   \<comment> \<open>Call the antecedent \<^prop>\<open>P\<close> in a frame\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> \<r>BEGIN
-\<Longrightarrow> PROP P
-\<Longrightarrow> \<r>END
-\<Longrightarrow> \<r>CALL PROP P\<close>
-  unfolding \<r>Call_Frame_def .
 
 lemma \<r>BEGIN_I: \<open>\<r>BEGIN\<close> unfolding \<r>BEGIN_def ..
 lemma \<r>END_I: \<open>\<r>END\<close> unfolding \<r>END_def ..
+lemma \<r>Call_I: \<open>PROP P \<Longrightarrow> \<r>CALL PROP P\<close> unfolding \<r>Call_def .
 
 ML_file \<open>library/nested.ML\<close>
 
 \<phi>reasoner_ML \<r>BEGIN 1000 (\<open>\<r>BEGIN\<close>) = \<open>PLPR_Nested_Reasoning.enter_scope\<close>
 \<phi>reasoner_ML \<r>END 1000 (\<open>\<r>END\<close>) = \<open>PLPR_Nested_Reasoning.exit_scope\<close>
+\<phi>reasoner_ML \<r>Call 1000 (\<open>\<r>Call\<close>) = \<open>PLPR_Nested_Reasoning.call\<close>
 
 
 subsection \<open>Pruning\<close>
