@@ -1022,6 +1022,77 @@ subsubsection \<open>Derivations\<close>
 definition Optimum_Among :: \<open>prop \<Rightarrow> prop\<close> where \<open>Optimum_Among Candidates \<equiv> Candidates\<close>
   \<comment> \<open>We leave it as a syntax merely\<close>
 
+
+subsection \<open>Environment Variables\<close>
+
+definition Push_Envir_Var :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
+  where \<open>Push_Envir_Var Name Val \<longleftrightarrow> True\<close>
+definition Pop_Envir_Var  :: \<open>'name \<Rightarrow> bool\<close> where \<open>Pop_Envir_Var Name \<longleftrightarrow> True\<close>
+definition Get_Envir_Var  :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
+  where \<open>Get_Envir_Var Name Return \<longleftrightarrow> True\<close>
+definition Get_Envir_Var' :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>Get_Envir_Var' Name Default Return \<longleftrightarrow> True\<close>
+
+subsubsection \<open>Implementation\<close>
+
+ML_file \<open>library/envir_var.ML\<close>
+
+lemma Push_Envir_Var_I: \<open>Push_Envir_Var N V\<close> unfolding Push_Envir_Var_def ..
+lemma Pop_Envir_Var_I:  \<open>Pop_Envir_Var N\<close>    unfolding Pop_Envir_Var_def  ..
+lemma Get_Envir_Var_I : \<open>Get_Envir_Var  N V\<close>   for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var_def  ..
+lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var'_def ..
+
+\<phi>reasoner_ML Push_Envir_Var 1000 (\<open>Push_Envir_Var _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ V) = Thm.major_prem_of sequent
+      val _ = if maxidx_of_term V <> ~1
+              then warning "PLPR Envir Var: The value to be assigned has schematic variables \
+                           \which will not be retained!"
+              else ()
+   in SOME ((PLPR_Envir_Var.push (PLPR_Envir_Var.name_of N) (Thm.cterm_of ctxt V) ctxt,
+            @{thm Push_Envir_Var_I} RS sequent),
+      Seq.empty) end
+)\<close>
+
+\<phi>reasoner_ML Pop_Envir_Var 1000 (\<open>Pop_Envir_Var _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N) = Thm.major_prem_of sequent
+   in SOME ((PLPR_Envir_Var.pop (PLPR_Envir_Var.name_of N) ctxt, @{thm Pop_Envir_Var_I} RS sequent),
+      Seq.empty) end
+)\<close>
+
+\<phi>reasoner_ML Get_Envir_Var 1000 (\<open>Get_Envir_Var _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ _) = Thm.major_prem_of sequent
+      val idx = Thm.maxidx_of sequent + 1
+   in case PLPR_Envir_Var.get (PLPR_Envir_Var.name_of N) ctxt
+        of NONE => Phi_Reasoner.error
+                      ("No enviromental variable " ^ PLPR_Envir_Var.name_of N ^ " is set")
+         | SOME V' =>
+            let val V = Thm.incr_indexes_cterm idx V'
+             in SOME ((ctxt, ( @{thm Get_Envir_Var_I}
+                        |> Thm.incr_indexes idx
+                        |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
+                                             Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
+                         ) RS sequent),
+                    Seq.empty)
+            end
+  end
+)\<close>
+
+\<phi>reasoner_ML Get_Envir_Var' 1000 (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ D $ _) = Thm.major_prem_of sequent
+      val idx = Thm.maxidx_of sequent + 1
+      val V = (case PLPR_Envir_Var.get (PLPR_Envir_Var.name_of N) ctxt
+                 of SOME V => V | NONE => Thm.cterm_of ctxt D)
+                |> Thm.incr_indexes_cterm idx
+   in SOME ((ctxt, ( @{thm Get_Envir_Var'_I}
+                  |> Thm.incr_indexes idx
+                  |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
+                                       Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
+                   ) RS sequent),
+      Seq.empty)
+  end
+)\<close>
+
+
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>
   \<comment> \<open>Maybe Useless, considering to discard!\<close>
