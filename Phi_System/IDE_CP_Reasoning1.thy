@@ -128,8 +128,8 @@ lemmas [assertion_simps] =
   mult_zero_right[where 'a=assn] mult_zero_left[where 'a=assn] mult_1_right[where 'a=assn]
   mult_1_left[where 'a=assn] add_0_right[where 'a=assn] add_0_left[where 'a=assn]
   zero_fun[where 'a=assn] zero_fun_def[symmetric, where 'b=assn] plus_fun[where 'a=assn]
-  Subjection_Zero ExSet_simps FOCUS_TAG_def[where 'a=assn] ExSet_0
-  distrib_right[where 'a=assn]
+  Subjection_Zero ExSet_simps distrib_right[where 'a=assn]
+  mult.assoc[symmetric, where 'a=assn]
 
 section \<open>Small Reasoning Process\<close>
 
@@ -324,17 +324,12 @@ lemma \<phi>IntroFrameVar'_No:
   unfolding \<phi>IntroFrameVar'_def by simp
 
 lemma \<phi>IntroFrameVar_Yes:
-  " Simplify frame_var_rewrs S' (R * S)
-\<Longrightarrow> Simplify frame_var_rewrs T' (R * T)
-\<Longrightarrow> \<phi>IntroFrameVar R S' S T' T"
-  unfolding \<phi>IntroFrameVar_def by blast
+  "\<phi>IntroFrameVar R (R * \<blangle> S \<brangle>) S (R * T) T"
+  unfolding \<phi>IntroFrameVar_def FOCUS_TAG_def by blast
 
 lemma \<phi>IntroFrameVar'_Yes:
-  " Simplify frame_var_rewrs S' (R * S)
-\<Longrightarrow> Simplify frame_var_rewrs T' (\<lambda>ret. R * T ret)
-\<Longrightarrow> Simplify frame_var_rewrs E' (\<lambda>ex. R * E ex)
-\<Longrightarrow> \<phi>IntroFrameVar' R S' S T' T E' E"
-  unfolding \<phi>IntroFrameVar'_def by blast
+  " \<phi>IntroFrameVar' R (R * \<blangle> S \<brangle>) S (\<lambda>ret. R * T ret) T (\<lambda>ex. R * E ex) E"
+  unfolding \<phi>IntroFrameVar'_def FOCUS_TAG_def by blast
 
 
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =

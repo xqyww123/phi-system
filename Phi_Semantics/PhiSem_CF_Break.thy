@@ -258,9 +258,9 @@ hide_fact Brking_Frame_plus
 subsection \<open>ToSA through Brking_Frame\<close>
 
 
-lemma [\<phi>reason 2200 for \<open>Brking_Frame ?l ?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?R \<heavy_comma> \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA ?mode ?G\<close>]:
+lemma [\<phi>reason 2200]:
   (*The priority must override Void Padding*)
-  \<open> (\<And>v. S v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R v \<heavy_comma> Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' mode)
+  \<open> (\<And>v. S v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action ToSA' mode)
 \<Longrightarrow> Brking_Frame l S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
   unfolding Brking_Frame_def TAIL_def Action_Tag_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
@@ -277,7 +277,7 @@ optional_translations (\<phi>hide_brk_frame)
   "XCONST Void" <= "CONST Brk_Frame l"
   \<open>Hides technical SL assertions for control flowing breaking\<close>
 
-declare [[\<phi>hide_brk_frame]]
+declare [[\<phi>hide_brk_frame = false]]
 
 (*
 ML \<open>

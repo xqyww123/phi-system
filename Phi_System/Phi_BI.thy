@@ -96,11 +96,11 @@ declare [[\<phi>reason_default_pattern \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^b
 
 subsubsection \<open>Proof \& Reasoning Rules\<close>
 
-lemma zero_implies_any[\<phi>reason 2000]:
+lemma zero_implies_any[\<phi>reason 2000, simp]:
   \<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X\<close>
   unfolding Imply_def zero_set_def by simp
 
-lemma implies_refl[
+lemma implies_refl[simp,
     \<phi>reason 2000 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?A \<^bold>a\<^bold>n\<^bold>d ?P\<close>,
     \<phi>reason 900 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close> \<comment> \<open>Unification can be aggressive.\<close>
 ]:
@@ -262,10 +262,6 @@ lemma ExSet_simps[simp]:
   \<open>(X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j P b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. P b \<and> Q b)\<close>
   \<open>(X2 a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P2 a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j b. Q b) = (X2 a b \<^bold>s\<^bold>u\<^bold>b\<^bold>j a b. P2 a b \<and> Q b)\<close>
   unfolding set_eq_iff by (simp_all add: \<phi>expns) blast
-
-lemma ExSet_0[simp]:
-  \<open>ExSet 0 = 0\<close> \<open>ExSet (\<lambda>_. 0) = 0\<close>
-  by (simp_all add: ExSet_def)
 
 (*lemma [\<phi>reason 200]: (*depreciated*)
    "(\<And>c. T c \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d P c)

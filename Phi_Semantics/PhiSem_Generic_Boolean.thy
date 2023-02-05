@@ -102,7 +102,7 @@ lemma op_const_bool:
 lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS True  \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis ?G\<close>
                    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS False \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis ?G\<close>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace> @action synthesis G\<close>
-  \<medium_left_bracket> op_const_bool[where b=b] \<medium_right_bracket>. .
+  \<medium_left_bracket> op_const_bool[where b=b] \<medium_right_bracket> .. .
 
 subsection \<open>Not\<close>
 

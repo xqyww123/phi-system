@@ -151,8 +151,8 @@ input  \<open>X\<close>
 output \<open>X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x'\<close>
 throws E
   \<medium_left_bracket>
-  V[unfolded Action_Tag_def]
-  "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j invariant x'\<close>, simplified]
+    V[unfolded Action_Tag_def]
+    "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j invariant x'\<close>, simplified]
   \<medium_left_bracket> B \<medium_right_bracket>.
   \<medium_right_bracket> by simp .
 
