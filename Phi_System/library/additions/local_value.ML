@@ -67,7 +67,7 @@ fun update_val b rule ctxt = ctxt
      |> Values.map (Symtab.update ((Binding.name_of b), rule))
      |> Context.proof_map (Phi_Reasoner.add_intro_rule
                               (Binding.pos_of b) 1000
-                              ([pattern_of ctxt (Binding.name_of b) rule],[])
+                              ([pattern_of ctxt (Binding.name_of b) rule],[]) NONE
                               [rule])
      |> Generic_Variable_Access.bind_local_vals [(Binding.name_of b, valterm_of ctxt rule)]
 
