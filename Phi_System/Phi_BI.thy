@@ -65,7 +65,7 @@ begin
 
 subsection \<open>Bottom\<close>
 
-abbreviation Bottom ("\<bottom>") where \<open>Bottom \<equiv> (0::'a set)\<close>
+abbreviation Bottom ("\<bottom>") where \<open>Bottom \<equiv> (0::'a::sep_magma set)\<close>
 
 subsection \<open>\<phi>-Type\<close>
 
@@ -101,7 +101,7 @@ lemma zero_implies_any[\<phi>reason 2000, simp]:
   unfolding Imply_def zero_set_def by simp
 
 lemma implies_refl[simp,
-    \<phi>reason 2000 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?A \<^bold>a\<^bold>n\<^bold>d ?P\<close>,
+    \<phi>reason 4000 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?A \<^bold>a\<^bold>n\<^bold>d ?P\<close>,
     \<phi>reason 900 for \<open>?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?B \<^bold>a\<^bold>n\<^bold>d ?P\<close> \<comment> \<open>Unification can be aggressive.\<close>
 ]:
   "A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A" unfolding Imply_def by fast
@@ -273,15 +273,15 @@ lemma ExSet_simps[simp]:
 \<Longrightarrow> (ExSet S) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns, blast) *)
 
-lemma ExSet_imp_I[\<phi>reason 100]:
+lemma ExSet_imp_I:
   \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' x \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (ExSet S') \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast)
 
-lemma [\<phi>reason 100 for \<open>?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d (Ex ?P)\<close>]:
+(*lemma [\<phi>reason 100 for \<open>?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d (Ex ?P)\<close>]:
   \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P x
 \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d (Ex P)\<close>
-  unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast)
+  unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast) *)
 
 lemma ExSet_plus:
   \<open>(\<exists>*x. A x + B x) = ExSet A + ExSet B\<close>

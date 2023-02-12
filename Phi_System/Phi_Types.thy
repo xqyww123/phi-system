@@ -236,7 +236,7 @@ lemma \<phi>Prod_expn[\<phi>expns]:
   "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>cb ca. concrete = cb * ca \<and> cb \<in> (b \<Ztypecolon> B) \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb ## ca)"
   unfolding \<phi>Prod_def \<phi>Type_def times_set_def by simp
 
-lemma \<phi>Prod_expn':
+lemma \<phi>Prod_expn'[assertion_simps]:
   \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
@@ -272,6 +272,8 @@ lemma [\<phi>reason for \<open>(?x,?y) \<Ztypecolon> ?N \<^emph> ?M \<^bold>s\<^
   by (smt (verit, best) mult.commute mult.left_commute) 
 
 paragraph \<open>Implication\<close>
+
+thm assertion_simps
 
 lemma \<phi>Prod_transformation [\<phi>reason 1000]:
   " x \<Ztypecolon> N \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> N' \<^bold>a\<^bold>n\<^bold>d P1
@@ -315,12 +317,12 @@ lemma [\<phi>reason 1200]:
   for A :: \<open>'a::sep_semigroup set\<close>
   by (simp add: mult.assoc)
 
-lemma [\<phi>reason 50]:
+(* lemma [\<phi>reason 50]:
   \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Q
 \<Longrightarrow> A * B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * Y \<^bold>a\<^bold>n\<^bold>d P \<and> Q\<close>
   for A :: \<open>'a::sep_semigroup set\<close>
-  by (meson implies_left_prod implies_right_prod implies_trans)
+  by (meson implies_left_prod implies_right_prod implies_trans) *)
   
 paragraph \<open>Action\<close>
 

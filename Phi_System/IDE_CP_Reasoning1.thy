@@ -125,11 +125,14 @@ named_theorems assertion_simps \<open>Simplification rules normalizing an assert
   = \<open>PLPR_Simplifier.simplifier_only (fn ctxt => Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>)\<close>
 
 lemmas [assertion_simps] =
-  mult_zero_right[where 'a=assn] mult_zero_left[where 'a=assn] mult_1_right[where 'a=assn]
-  mult_1_left[where 'a=assn] add_0_right[where 'a=assn] add_0_left[where 'a=assn]
-  zero_fun[where 'a=assn] zero_fun_def[symmetric, where 'b=assn] plus_fun[where 'a=assn]
-  Subjection_Zero ExSet_simps distrib_right[where 'a=assn]
-  mult.assoc[symmetric, where 'a=assn]
+  mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
+  mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>]
+  mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
+  add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
+  zero_fun[where 'a=\<open>'a::sep_magma set\<close>] zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma set\<close>]
+  plus_fun[where 'a=\<open>'a::sep_magma set\<close>]
+  Subjection_Zero ExSet_simps distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
+  mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]
 
 section \<open>Small Reasoning Process\<close>
 
