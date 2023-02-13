@@ -1090,10 +1090,10 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
 
 subsection \<open>Recursion Guard\<close>
 
-definition \<r>Recursion_Guard :: \<open>'a::{} \<Rightarrow> prop \<Rightarrow> prop\<close> ("\<r>RECURSION'_GUARD _ _" [100,2] 2)
-  where \<open>(\<r>RECURSION_GUARD X (PROP P)) \<equiv> PROP P\<close>
+definition \<r>Recursion_Guard :: \<open>'a::{} \<Rightarrow> prop \<Rightarrow> prop\<close> ("\<r>RECURSION'_GUARD'(_')/ _" [2,2] 2)
+  where [iff]: \<open>(\<r>RECURSION_GUARD(X) (PROP P)) \<equiv> PROP P\<close>
 
-text \<open>\<^prop>\<open>\<r>RECURSION_GUARD X (PROP P)\<close> annotates the reasoning of \<^prop>\<open>P\<close> is about goal \<^term>\<open>X\<close>.
+text \<open>\<^prop>\<open>\<r>RECURSION_GUARD(X) (PROP P)\<close> annotates the reasoning of \<^prop>\<open>P\<close> is about goal \<^term>\<open>X\<close>.
 It remembers \<^term>\<open>X\<close> and once in the following reasoning the same goal \<^term>\<open>X\<close> occurs again,
 it aborts the search branch because an infinite recursion happens.\<close>
 
@@ -1105,7 +1105,7 @@ definition \<r>Recursion_Residue :: \<open>'a::{} \<Rightarrow> prop\<close>
 lemma Do_\<r>Recursion_Guard:
   \<open> PROP P
 \<Longrightarrow> PROP \<r>Recursion_Residue X
-\<Longrightarrow> \<r>RECURSION_GUARD X (PROP P) \<close>
+\<Longrightarrow> \<r>RECURSION_GUARD(X) (PROP P) \<close>
   unfolding \<r>Recursion_Guard_def .
 
 lemma [\<phi>reason 1000]:
@@ -1114,7 +1114,7 @@ lemma [\<phi>reason 1000]:
 
 ML_file \<open>library/recursion_guard.ML\<close>
 
-\<phi>reasoner_ML \<r>Recursion_Guard 1000 (\<open>\<r>RECURSION_GUARD ?X (PROP ?P)\<close>) = \<open>PLPR_Recursion_Guard.reason\<close>
+\<phi>reasoner_ML \<r>Recursion_Guard 1000 (\<open>\<r>RECURSION_GUARD(?X) (PROP ?P)\<close>) = \<open>PLPR_Recursion_Guard.reason\<close>
 
 hide_fact Do_\<r>Recursion_Guard
 

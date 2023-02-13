@@ -422,7 +422,7 @@ lemma [\<phi>reason 1200 for
 
 lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>ret. ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> \<phi> ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>]:
   \<open> SUBGOAL G G'
-\<Longrightarrow> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> @action ToSA
+\<Longrightarrow> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle>
 \<Longrightarrow> SOLVE_SUBGOAL G'
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>_. S2\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<phi> T \<rbrace> @action synthesis G\<close>
   unfolding FOCUS_TAG_def Synthesis_def Action_Tag_def

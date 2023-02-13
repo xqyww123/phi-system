@@ -131,16 +131,42 @@ definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<op
 subsubsection \<open>Termination\<close>
 
 lemma [\<phi>reason 3000]:
+  \<open>\<r>Clean 0\<close>
+  unfolding \<r>Clean_def by simp
+
+lemma [\<phi>reason 3000]:
   \<open>\<r>Clean 1\<close>
-  unfolding \<r>Clean_def Imply_def by simp
+  unfolding \<r>Clean_def by simp
 
 lemma [\<phi>reason 3000]:
   \<open>\<r>Clean (() \<Ztypecolon> \<phi>None)\<close>
-  unfolding \<r>Clean_def Imply_def by simp
+  unfolding \<r>Clean_def by simp
 
 lemma [\<phi>reason 3000 for \<open>\<r>Clean (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C)\<close>]:
   \<open> \<r>Clean (x \<Ztypecolon> T ?\<^sub>\<phi> False) \<close>
-  unfolding \<r>Clean_def Imply_def by simp
+  unfolding \<r>Clean_def by simp
+
+subsection \<open>Logic Connectives\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean A
+\<Longrightarrow> \<r>Clean B
+\<Longrightarrow> \<r>Clean (A + B)\<close>
+  unfolding \<r>Clean_def
+  using \<phi>CASE_IMP by force
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>x. \<r>Clean (A x))
+\<Longrightarrow> \<r>Clean (ExSet A)\<close>
+  unfolding \<r>Clean_def
+  by (metis ExSet_expn Imply_def)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean A
+\<Longrightarrow> \<r>Clean (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  unfolding \<r>Clean_def Imply_def
+  by (simp add: Subjection_expn)
+  
 
 subsubsection \<open>Structural Node\<close>
 
@@ -297,37 +323,12 @@ declare [[\<phi>trace_reasoning]]
 subsection \<open>Initialization\<close>
 
 lemma [\<phi>reason 2020 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y @action ToSA' _\<close>]:
-  \<open> Simplify (assertion_simps SOURCE) X' X
-\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
-\<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
-\<Longrightarrow> \<r>CALL X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y' \<^bold>a\<^bold>n\<^bold>d Any
-\<Longrightarrow> Pop_Envir_Var ToA_flag_deep
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any @action ToSA' deep
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action ToSA' deep\<close>
-  unfolding Action_Tag_def Simplify_def \<r>Call_def
+  unfolding Action_Tag_def
   by (simp add: implies_weaken)
 
-lemma [\<phi>reason 2022 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ * \<blangle> _ \<brangle> @action ToSA' _\<close>]:
-  \<open> Simplify (assertion_simps SOURCE) X' X
-\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
-\<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
-\<Longrightarrow> \<r>CALL X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * \<blangle> Y' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any
-\<Longrightarrow> Pop_Envir_Var ToA_flag_deep
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * \<blangle> Y \<brangle> @action ToSA' deep\<close>
-  unfolding Action_Tag_def Simplify_def \<r>Call_def
-  by (simp add: implies_weaken)
-
-
-lemma [\<phi>reason 2000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' _\<close>]:
-  \<open> Simplify (assertion_simps SOURCE) X' X
-\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
-\<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
-\<Longrightarrow> \<r>CALL X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y' \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> Pop_Envir_Var ToA_flag_deep
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' deep\<close>
-  unfolding Action_Tag_def Simplify_def \<r>Call_def
-  by simp
-
-lemma [\<phi>reason 2000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ * \<blangle> _ \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' _\<close>]:
+lemma [\<phi>reason 2010 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ * \<blangle> _ \<brangle> \<^bold>a\<^bold>n\<^bold>d ?var_P @action ToSA' _\<close>]:
   \<open> Simplify (assertion_simps SOURCE) X' X
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
@@ -337,9 +338,37 @@ lemma [\<phi>reason 2000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bo
   unfolding Action_Tag_def Simplify_def \<r>Call_def
   by simp
 
+lemma [\<phi>reason 2005 for \<open>(?X::?'a::sep_magma_1 set) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?var_P @action ToSA' _\<close>]:
+  \<open> Simplify (assertion_simps SOURCE) X' X
+\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
+\<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
+\<Longrightarrow> \<r>CALL X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * \<blangle> Y' \<brangle> \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> \<r>Clean R 
+\<Longrightarrow> Pop_Envir_Var ToA_flag_deep
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' deep\<close>
+  for X :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def Simplify_def \<r>Call_def \<r>Clean_def
+  apply simp
+  by (metis Imply_def implies_right_prod mult_1_class.mult_1_left)
+
+lemma [\<phi>reason 2000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?var_P @action ToSA' _\<close>]:
+  \<open> Simplify (assertion_simps SOURCE) X' X
+\<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
+\<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
+\<Longrightarrow> \<r>CALL X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> Pop_Envir_Var ToA_flag_deep
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' deep\<close>
+  unfolding Action_Tag_def Simplify_def \<r>Call_def \<r>Clean_def
+  by simp
+
 lemma [\<phi>reason 2100 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>]:
   \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action ToSA' mode\<close>
   unfolding Action_Tag_def using implies_refl .
+
+lemma [\<phi>reason 2100 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j True \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action ToSA' mode
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>s\<^bold>u\<^bold>b\<^bold>j True @action ToSA' mode\<close>
+  unfolding Action_Tag_def by simp
 
 
 subsection \<open>Termination\<close>
@@ -360,7 +389,8 @@ lemma [\<phi>reason 4000]:
 subsection \<open>Void Holes\<close> \<comment> \<open>eliminate 1 holes generated during the reasoning \<close>
 
 lemma [\<phi>reason 3200]:
-  " H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * 1 \<^bold>a\<^bold>n\<^bold>d P "
+  " H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * 1 \<^bold>a\<^bold>n\<^bold>d P "
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding mult_1_right .
 
@@ -506,35 +536,27 @@ subsection \<open>Divergence\<close>
 subsubsection \<open>Disjunction in Source\<close>
 
 lemma [\<phi>reason 2800]:
-  \<open> SUBGOAL G G1
-\<Longrightarrow> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1
-\<Longrightarrow> SOLVE_SUBGOAL G1
+  \<open> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1
 \<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P2
 \<Longrightarrow> A + B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1 \<or> P2\<close>
   by (simp add: Imply_def)
 
 lemma [\<phi>reason 2800]:
-  \<open> SUBGOAL G G1
-\<Longrightarrow> R * B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1
-\<Longrightarrow> SOLVE_SUBGOAL G1
+  \<open> R * B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1
 \<Longrightarrow> R * A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P2
 \<Longrightarrow> R * (A + B) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P1 \<or> P2\<close>
   apply (simp add: Imply_def distrib_left)
   by (metis plus_set_in_iff set_mult_expn)
 
 lemma [\<phi>reason 2810]:
-  \<open> SUBGOAL G G1
-\<Longrightarrow> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s RB * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1
-\<Longrightarrow> SOLVE_SUBGOAL G1
+  \<open> B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s RB * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1
 \<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s RA * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P2
 \<Longrightarrow> A + B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (RA + RB) * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 \<or> P2\<close>
   apply (simp add: Imply_def)
   by (metis plus_set_in_iff subset_iff times_set_subset(2))
 
 lemma [\<phi>reason 2810]:
-  \<open> SUBGOAL G G1
-\<Longrightarrow> R * B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s RB * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1
-\<Longrightarrow> SOLVE_SUBGOAL G1
+  \<open> R * B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s RB * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1
 \<Longrightarrow> R * A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s RA * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P2
 \<Longrightarrow> R * (A + B) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (RA + RB) * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 \<or> P2\<close>
   apply (simp add: Imply_def)
@@ -646,7 +668,7 @@ lemma ToSA_cond_target_B':
   by simp
 
 declare [[\<phi>reason 2600 ToSA_cond_target_A' ToSA_cond_target_B'
-            for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> if ?condition then ?A else ?B \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P\<close> ]]
+            for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ * \<blangle> if ?condition then ?A else ?B \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P\<close> ]]
 
 hide_fact ToSA_cond_target_A' ToSA_cond_target_B'
 
@@ -698,29 +720,15 @@ lemma [\<phi>reason 2010]:
   unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def
   by (metis (no_types, lifting) mult.assoc set_mult_expn)
 
-lemma ToA_lift_to_extraction:
-  " R  \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R1 * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P
+consts ToA_Annotation :: \<open>'a \<Rightarrow> 'a\<close>
+
+(* lemma [\<phi>reason 25 except \<open>_ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ * \<blangle> _ \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close>]:
+  " \<r>RECURSION_GUARD(ToA_Annotation X) (R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R1 * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P)
 \<Longrightarrow> \<r>Clean R1
 \<Longrightarrow> R  \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P"
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def \<r>Clean_def
-  by (metis mult_1_class.mult_1_left set_mult_expn)
-
-ML \<open>
-structure Do_Not_Lift_These_ToA_To_Extraction = Proof_Data (
-  type T = Termtab.set
-  val init = K Termtab.empty
-)
-\<close>
-
-\<phi>reasoner_ML ToA_lift_to_extraction 5 (\<open>(?X::?'a::sep_magma_1 set) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P\<close>) = \<open>
-fn (ctxt,sequent) => Seq.make (fn _ =>
-  let val (_,Y,_) = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
-   in if Termtab.defined (Do_Not_Lift_These_ToA_To_Extraction.get ctxt)
-      then NONE
-      else SOME ((Phi_Sys_Data_Converted_ToA.map (Termtab.insert_set Y) ctxt), Seq.empty)
-  end)
-\<close>
+  unfolding FOCUS_TAG_def Imply_def split_paired_All \<r>Clean_def \<r>Recursion_Guard_def
+  by (metis mult_1_class.mult_1_left set_mult_expn) *)
 
 (* lemma [\<phi>reason 1050 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>
    except \<open>(?X'::?'a::sep_magma_1 set) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> ?Y' \<brangle> \<^bold>a\<^bold>n\<^bold>d ?P @action reason_ToSA True ?G\<close>]:
@@ -756,15 +764,15 @@ subsection \<open>Value\<close>
 text \<open>The rules require the same values are alpha-beta-eta-conversible. \<close>
 text \<open>Priority shouldn't exceed 2000.\<close>
 
-lemma [\<phi>reason 1215 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]:
-  " y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> R \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P"
-  unfolding Imply_def by (simp add: \<phi>expns times_list_def) metis
-
-lemma [\<phi>reason 1210]:
+lemma [\<phi>reason 1215 for \<open>_ \<heavy_comma> _ \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[_] _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<heavy_comma> \<blangle> _ \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[_] _ \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close>]:
   "R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle>"
   unfolding FOCUS_TAG_def Imply_def by blast
 
+lemma [\<phi>reason 1210 for \<open>_ \<heavy_comma> _ \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[_] _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<heavy_comma> \<blangle> _ \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[_] _ \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close>
+                    if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]:
+  " y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> T \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> R \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R \<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P"
+  unfolding Imply_def by (simp add: \<phi>expns times_list_def) metis
 
 lemma [\<phi>reason 1200]:
   " R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<brangle> \<^bold>a\<^bold>n\<^bold>d P
@@ -999,7 +1007,6 @@ lemma [\<phi>reason 1200 for \<open>PROP Branch_Convergence_Type_Pattern (Val ?v
 
 lemma [\<phi>reason 1200 for \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
   \<open> PROP Branch_Convergence_Type_Pattern T T'
-\<Longrightarrow> SUBGOAL TOP_GOAL G
 \<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any
 \<Longrightarrow> If P x y = z @action branch_convergence
 \<Longrightarrow> If P T T' = Z @action branch_convergence

@@ -132,7 +132,7 @@ schematic_goal
   assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<bool> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1   @action synthesis G\<close>
     and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<bool> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
   shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?G \<lbrace> R \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<and> y) \<Ztypecolon> \<bool> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 + E2   @action synthesis G\<close>
-   \<medium_left_bracket> F1 F2 \<and> \<medium_right_bracket>. .
+  \<medium_left_bracket> F1 F2 \<and> \<medium_right_bracket> by blast .
 
 subsection \<open>Or\<close>
 

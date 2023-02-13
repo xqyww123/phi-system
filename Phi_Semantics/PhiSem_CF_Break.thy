@@ -170,8 +170,6 @@ lemma [\<phi>reason 1010 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bo
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def by simp
 
-declare [[\<phi>reasoning_step_limit = 50]]
-
 lemma [\<phi>reason 1000]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
 \<Longrightarrow> (\<And>v. Y v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y' v @action ToSA)
@@ -185,15 +183,12 @@ lemma [\<phi>reason 1000]:
   \<medium_right_bracket>. .
   
 
-lemma [\<phi>reason 3000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?G ?mode\<close>]:
+lemma [\<phi>reason 3000 for \<open>_ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ * \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
-  unfolding FOCUS_TAG_def Action_Tag_def .
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1 * \<blangle> sift_brking_frame l Y E \<brangle> \<^bold>a\<^bold>n\<^bold>d True\<close>
+  unfolding FOCUS_TAG_def Action_Tag_def
+  by simp
 
-lemma [\<phi>reason 3000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d ?Any @action reason_ToSA ?G ?mode\<close>]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s \<blangle> sift_brking_frame l Y E \<brangle> @action reason_ToSA G mode\<close>
-  unfolding FOCUS_TAG_def Action_Tag_def .
 
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
@@ -223,7 +218,8 @@ lemma Brking_Frame_absorb_item[assertion_simps]:
   \<open>((Brking_Frame l Y)\<heavy_comma> X) = Brking_Frame l (\<lambda>v. Y v \<heavy_comma> X)\<close>
   unfolding Brking_Frame_def TAIL_def
   apply (intro assertion_eq_intro)
-  \<medium_left_bracket> ;; \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. .
+  \<medium_left_bracket> ;; \<medium_right_bracket>
+ . \<medium_left_bracket> \<medium_right_bracket>. .
 
 lemma Brking_Frame_absorb_subj[assertion_simps]:
   \<open>((Brking_Frame l Y) \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = Brking_Frame l (\<lambda>v. Y v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>

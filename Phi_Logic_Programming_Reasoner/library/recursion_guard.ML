@@ -15,10 +15,10 @@ fun reason (ctxt,sequent) = Seq.make (fn () =>
         | chk (Abs (_,_,B)) = chk B
         | chk _ = true
    in if chk Remains
-      then (Phi_Reasoner.debug_info ctxt (fn () =>
+      then SOME ((ctxt, @{thm Do_\<r>Recursion_Guard} RS sequent), Seq.empty)
+      else (Phi_Reasoner.debug_info ctxt (fn () =>
               "\<r>Recursion_Guard: Cut because of infinite recursion!");
             NONE)
-      else SOME ((ctxt, @{thm Do_\<r>Recursion_Guard} RS sequent), Seq.empty)
   end)
 
 end
