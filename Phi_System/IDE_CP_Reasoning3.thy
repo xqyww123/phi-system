@@ -124,7 +124,7 @@ lemma [\<phi>reason 1000]: "SameNuTy A A" \<comment> \<open>The fallback\<close>
   unfolding SameNuTy_def ..
 
 
-subsection \<open>Cleaning\<close>
+subsection \<open>Cleaning to 1\<close>
 
 definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>\<r>Clean S \<longleftrightarrow> (S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 1)\<close>
 
@@ -146,7 +146,7 @@ lemma [\<phi>reason 3000 for \<open>\<r>Clean (?x \<Ztypecolon> ?T ?\<^sub>\<phi
   \<open> \<r>Clean (x \<Ztypecolon> T ?\<^sub>\<phi> False) \<close>
   unfolding \<r>Clean_def by simp
 
-subsection \<open>Logic Connectives\<close>
+subsubsection \<open>Logic Connectives\<close>
 
 lemma [\<phi>reason 1200]:
   \<open> \<r>Clean A
@@ -208,6 +208,76 @@ lemma [\<phi>reason 1200]:
   for T :: \<open>('a::share_semimodule_mult, 'b) \<phi>\<close>
   unfolding \<r>Clean_def Imply_def apply (simp add: \<phi>expns)
   using share_right_one by blast
+
+
+subsection \<open>Equation-based Cleaning\<close>
+
+consts clean_automation_waste :: mode
+
+declare [[\<phi>reason_default_pattern
+    \<open>?X = _ @action clean_automation_waste\<close> \<Rightarrow> \<open>?X = _ @action clean_automation_waste\<close> (100)
+]]
+
+lemma [\<phi>reason 1000]:
+  \<open>X = X @action clean_automation_waste\<close>
+  unfolding Action_Tag_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>(() \<Ztypecolon> \<phi>None) = 1 @action clean_automation_waste\<close>
+  unfolding Action_Tag_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>(x \<Ztypecolon> k \<^bold>\<rightarrow> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>MapAt_\<phi>None by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>(x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
+
+(*TODO: the two rules are bad?*)
+lemma [\<phi>reason 1200 for \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?Z) @action clean_automation_waste\<close>]:
+  \<open>(x \<Ztypecolon> \<circle>) = (() \<Ztypecolon> k \<^bold>\<rightarrow> \<circle>) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>MapAt_\<phi>None by simp
+
+lemma [\<phi>reason 1200 for \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?Z) @action clean_automation_waste\<close>]:
+  \<open>(x \<Ztypecolon> \<circle>) = (() \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
+
+lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi>perm_functor ?\<psi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
+  \<open> perm_functor' \<psi>
+\<Longrightarrow> (x \<Ztypecolon> \<phi>perm_functor \<psi> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>perm_functor_\<phi>None
+  by simp
+
+declare perm_functor_pointwise[\<phi>reason 1200]
+        perm_functor_to_share[\<phi>reason 1200]
+
+lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> \<circle>) = ?Z @action clean_automation_waste\<close>]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> \<circle>) = (() \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>)) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def Premise_def \<phi>Share_\<phi>None by simp
+
+lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> ?T \<^emph> \<circle>) = ?Z @action clean_automation_waste\<close>]:
+  \<open>((x,y) \<Ztypecolon> T \<^emph> \<circle>) = ((x \<Ztypecolon> T) :: 'a::sep_magma_1 set) @action clean_automation_waste\<close>
+  unfolding \<phi>Prod_\<phi>None Action_Tag_def ..
+
+lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> \<circle> \<^emph> ?U) = ?Z @action clean_automation_waste\<close>]:
+  \<open>((x,y) \<Ztypecolon> \<circle> \<^emph> U) = ((y \<Ztypecolon> U) :: 'b::sep_magma_1 set) @action clean_automation_waste\<close>
+  unfolding \<phi>Prod_\<phi>None Action_Tag_def ..
+
+lemma [\<phi>reason 1200 for \<open>((?x,?r) \<Ztypecolon> (?T \<^emph> ?n \<Znrres> \<circle>)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n
+\<Longrightarrow> ((x,r) \<Ztypecolon> (T \<^emph> n \<Znrres> \<circle>)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
+  unfolding set_eq_iff Premise_def Action_Tag_def
+  by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200 for \<open>((?r,?x) \<Ztypecolon> (?n \<Znrres> \<circle> \<^emph> ?T)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n
+\<Longrightarrow> ((r,x) \<Ztypecolon> (n \<Znrres> \<circle> \<^emph> T)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
+  unfolding set_eq_iff Premise_def Action_Tag_def
+  by (simp add: \<phi>expns)
+
+
 
 
 subsection \<open>Unification of \<lambda>-Abstraction\<close>
@@ -318,7 +388,6 @@ declare [[\<phi>reason_default_pattern
       \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close>    (120)
 ]]
 
-declare [[\<phi>trace_reasoning]]
 
 subsection \<open>Initialization\<close>
 
@@ -858,272 +927,7 @@ definition StructuralTag ("<Structural> _" [10] 9) where "StructuralTag \<equiv>
 lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def . *)
 
 
-
-section \<open>Convergence of Branches\<close>
-
-text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the canonical \<phi>-BI form \<^term>\<open>C\<close>.
-
-  The strongest post-condition of a branch statement results in \<^term>\<open>If P A B\<close> typically.
-  It is strongest but not good because it violates the canonical \<phi>-BI form.
-  Thus an automation procedure here is presented to transform it.
-  Typically it unifies refinement relations in two branches but leaves abstract objects
-  in an if expression.
-
-  The transformation is as strong as possible to minimize the loose of information.
-  It is clear if two branches are in the same refinement, no information will be lost.
-  If not, and any necessary information is lost in this process, user can always manually transform
-  the assertion before the end of each branch, to unify the refinement of two branches.
-\<close>
-
-text \<open>This merging procedure retains the order of the left side.\<close>
-
-consts branch_convergence :: \<open>action\<close>
-
-(* text \<open>Though definitionally If is identical to If, there is semantic difference between them.
-  If has a systematical meaning. If P A B means the procedure merging two assertions
-  A and B, whereas If P A B means to merge two abstract objects or two refinement relations.
-  A key difference in the procedure is, there is fallback for If P A B. If there is no further
-  rule telling how to do with If P A B, then the result of the procedure on this is just
-  If P A B itself --- it is usual that a branch statement returning 1 or 2 is specified by
-  \<^term>\<open>(if P then 1 else 2) \<Ztypecolon> \<phi>Nat\<close>. In contrast, there is no fallback for If P A B, because
-  a failure of If P A B means the failure of merging those two assertions A and B, which is
-  the failure of the whole merging procedure.\<close> *)
-
-subsubsection \<open>Identity\<close>
-
-lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' = ?X @action branch_convergence\<close>]:
-  "If P A A = A @action branch_convergence"
-  unfolding Action_Tag_def by simp
-
-lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  "If P A A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A @action branch_convergence"
-  unfolding Action_Tag_def Imply_def by simp
-
-subsubsection \<open>Zero\<close>
-
-lemma [\<phi>reason 3000 for \<open>If ?P ?A 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  "If P A 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def
-  by (simp add: \<phi>expns zero_set_def)
-
-lemma [\<phi>reason 3000 for \<open>If ?P 0 ?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  "If P 0 A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def
-  by (simp add: \<phi>expns zero_set_def)
-
-
-subsubsection \<open>Fallback\<close>
-
-lemma [\<phi>reason 10 for \<open>If ?P ?A ?B = ?X @action branch_convergence\<close>]:
-  "If P A B = If P A B @action branch_convergence"
-  unfolding Action_Tag_def ..
-
-text \<open>There is no fallback for \<^const>\<open>If\<close>. The If is not allowed to be fallback.
-  If the convergence for If fails, the reasoning fails.\<close>
-
-subsubsection \<open>Subjection\<close>
-
-lemma [\<phi>reason 1400]:
-  \<open> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence
-\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence\<close>
-  unfolding Subjection_Subjection .
-
-lemma [\<phi>reason 1400]:
-  \<open> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence
-\<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence\<close>
-  unfolding Subjection_Subjection .
-
-lemma [\<phi>reason 1300 for \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  " If P QL QR = Q @action branch_convergence
-\<Longrightarrow> If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL) (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def by force
-
-lemma [\<phi>reason 1200
-    for \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>
-]:
-  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q) @action branch_convergence"
-  unfolding Imply_def Action_Tag_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200 for \<open>If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
-
-
-subsubsection \<open>Existential\<close>
-
-lemma Conv_Merge_Ex_both_imp:
-  "(\<And>x. If P (L x) (R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
-\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def
-  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; blast)
-
-lemma Conv_Merge_Ex_R_imp
-  [\<phi>reason 1100 for \<open>If ?P ?L (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  "(\<And>x. If P L (R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
-\<Longrightarrow> If P L (\<exists>* x. R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def
-  by (cases P; simp add: set_eq_iff \<phi>expns; blast)
-
-lemma [\<phi>reason 1100 for \<open>If ?P (\<exists>* x. ?L x) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  "(\<And>x. If P (L x) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
-\<Longrightarrow> If P (\<exists>* x. L x) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def by (cases P; simp add: set_eq_iff \<phi>expns; blast)
-
-text \<open>The merging recognize two existential quantifier are identical if their type and variable name
-  are the same. If so it uses Conv_Merge_Ex_both to merge the quantification,
-  or else the right side is expanded first.\<close>
-
-\<phi>reasoner_ML Merge_Existential_imp 2000 (\<open>If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X\<close>) =
-\<open>fn (ctxt,sequent) =>
-  let
-    val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
-                                         $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))), _, _)
-        = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
-    val sequent' = if exa = exb andalso tya = tyb
-                   then @{thm Conv_Merge_Ex_both_imp} RS sequent
-                   else @{thm Conv_Merge_Ex_R_imp} RS sequent
-  in Seq.single (ctxt, sequent')
-  end\<close>
-
-
-
-subsubsection \<open>Main Procedure\<close>
-
-lemma [\<phi>reason 2000 for \<open>If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  " If P x y = z @action branch_convergence
-\<Longrightarrow> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (z \<Ztypecolon> Z) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def by (cases P; simp)
-
-definition \<open>Branch_Convergence_Type_Pattern type the_type_to_match \<equiv> Trueprop True\<close>
-
-lemma [\<phi>reason 10 for \<open>PROP Branch_Convergence_Type_Pattern ?X ?X'\<close>]:
-  \<open>PROP Branch_Convergence_Type_Pattern X X\<close>
-  unfolding Branch_Convergence_Type_Pattern_def ..
-
-lemma [\<phi>reason 1200 for \<open>PROP Branch_Convergence_Type_Pattern (Val ?v ?T) (Val ?v ?T')\<close>]:
-  \<open>PROP Branch_Convergence_Type_Pattern (Val v T) (Val v T')\<close>
-  unfolding Branch_Convergence_Type_Pattern_def ..
-
-lemma [\<phi>reason 1200 for \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
-  \<open> PROP Branch_Convergence_Type_Pattern T T'
-\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any
-\<Longrightarrow> If P x y = z @action branch_convergence
-\<Longrightarrow> If P T T' = Z @action branch_convergence
-\<Longrightarrow> If P L R' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * (z \<Ztypecolon> Z) @action branch_convergence\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def
-  by (smt (z3) Imply_def implies_right_prod)
-
-
-subsubsection \<open>Convergence of Structural Nodes\<close>
-
-lemma [\<phi>reason 1200 for \<open>If ?P (?n \<Znrres> ?T) (?n' \<Znrres> ?U) = ?Z @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (n \<Znrres> T) (n \<Znrres> U) = n \<Znrres> Z @action branch_convergence\<close>
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 1200 for \<open>If ?P (?T \<^emph> ?U) (?T' \<^emph> ?U') = ?Z @action branch_convergence\<close>]:
-  \<open> If P T T' = T'' @action branch_convergence
-\<Longrightarrow> If P U U' = U'' @action branch_convergence
-\<Longrightarrow> If P (T \<^emph> U) (T' \<^emph> U') = (T'' \<^emph> U'') @action branch_convergence\<close>
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 1200 for \<open>If ?P (?k \<^bold>\<rightarrow>\<^sub>@ ?T) (?k' \<^bold>\<rightarrow>\<^sub>@ ?U) = ?Z @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (k \<^bold>\<rightarrow>\<^sub>@ T) (k \<^bold>\<rightarrow>\<^sub>@ U) = k \<^bold>\<rightarrow>\<^sub>@ Z @action branch_convergence\<close>
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 1200 for \<open>If ?P (?k \<^bold>\<rightarrow> ?T) (?k' \<^bold>\<rightarrow> ?U) = ?Z @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (k \<^bold>\<rightarrow> T) (k \<^bold>\<rightarrow> U) = k \<^bold>\<rightarrow> Z @action branch_convergence\<close>
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 1200 for \<open>If ?P (Val ?v ?T) (Val ?v' ?U) = ?Z @action branch_convergence\<close>]:
-  \<open>If P (Val v T) (Val v U) = Val v (If P T U) @action branch_convergence\<close>
-  unfolding Action_Tag_def by simp
-
-lemma [\<phi>reason 1200 for \<open>If ?P (\<black_circle> ?T) (\<black_circle> ?U) = (\<black_circle> ?Z) @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (\<black_circle> T) (\<black_circle> U) = (\<black_circle> Z) @action branch_convergence\<close>
-  unfolding Action_Tag_def by fastforce
-
-lemma [\<phi>reason 1200 for \<open>If ?P (Val ?v ?T) (Val ?v' ?U) = ?Z @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (Val v T) (Val v U) = (Val v Z) @action branch_convergence\<close>
-  unfolding Action_Tag_def by fastforce
-
-
-(* subsubsection \<open>Object\<close>
-
-definition EqualAddress :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool "
-  where "EqualAddress _ _ = True"
-
-lemma [\<phi>reason]:
-  "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a1 = a2
-   \<Longrightarrow> EqualAddress (a1 \<Zinj> x1 \<Ztypecolon> T1) (a2 \<Zinj> x2 \<Ztypecolon> T2) "
-  unfolding EqualAddress_def .. *)
-
-subsubsection \<open>Unfold\<close>
-
-lemma [\<phi>reason 2000]:
-  " If P L (N * R1 * R2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (N * (R1 * R2)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
-  for N :: \<open>'a::sep_semigroup set\<close>
-  unfolding Action_Tag_def by (metis mult.assoc)
-
-lemma [\<phi>reason 2000]:
-  " If P (L1 * L2 * L3) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L1 * (L2 * L3)) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
-  for R :: \<open>'a::sep_semigroup set\<close>
-  unfolding Action_Tag_def by (metis mult.assoc)
-
-
-subsubsection \<open>Eliminate Void Hole\<close>
-
-lemma [\<phi>reason 2000]:
-  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (R * 1) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
-  for R :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 2000]:
-  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (1 * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
-  for R :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 2000]:
-  " If P L (R' * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P L (R' * 1 * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
-  for R :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def by (cases P; simp)
-
-lemma [\<phi>reason 2000]:
-  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
-\<Longrightarrow> If P (L * 1) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
-  for R :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def by (cases P; simp)
-
-(* subsection \<open>Program Interface\<close> \<comment> \<open>Interfaces exported to target LLVM module\<close>
-
-definition Prog_Interface :: " label \<Rightarrow> 'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a::lrep  \<longmapsto> 'b::lrep) \<Rightarrow> bool"
-  where "Prog_Interface _ args rets proc \<longleftrightarrow> True"
-
-lemma Prog_Interface_proc: "TERM proc \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) proc" 
-  unfolding Prog_Interface_def ..
-
-lemma Prog_Interface_func:
-  "TERM f \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) f" 
-  unfolding Prog_Interface_def ..
-*)
-
-section \<open>Automation for Sharing Permission\<close>
+section \<open>Transformation of Structural Abstraction\<close>
 
 subsection \<open>Structure Info\<close>
 
@@ -1172,74 +976,6 @@ lemma [\<phi>reason 1200 for \<open>Structure_Info (\<phi>perm_functor ?\<psi> ?
 lemma [\<phi>reason 30 for \<open>Structure_Info ?T ?P\<close>]:
   \<open> Structure_Info T True \<close>
   unfolding Structure_Info_def by blast
-
-subsection \<open>Cleaning\<close>
-
-consts clean_automation_waste :: mode
-
-declare [[\<phi>reason_default_pattern
-    \<open>?X = _ @action clean_automation_waste\<close> \<Rightarrow> \<open>?X = _ @action clean_automation_waste\<close> (100)
-]]
-
-lemma [\<phi>reason 1000]:
-  \<open>X = X @action clean_automation_waste\<close>
-  unfolding Action_Tag_def by simp
-
-lemma [\<phi>reason 1200]:
-  \<open>(() \<Ztypecolon> \<phi>None) = 1 @action clean_automation_waste\<close>
-  unfolding Action_Tag_def by simp
-
-lemma [\<phi>reason 1200]:
-  \<open>(x \<Ztypecolon> k \<^bold>\<rightarrow> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>MapAt_\<phi>None by simp
-
-lemma [\<phi>reason 1200]:
-  \<open>(x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
-
-(*TODO: the two rules are bad?*)
-lemma [\<phi>reason 1200 for \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?Z) @action clean_automation_waste\<close>]:
-  \<open>(x \<Ztypecolon> \<circle>) = (() \<Ztypecolon> k \<^bold>\<rightarrow> \<circle>) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>MapAt_\<phi>None by simp
-
-lemma [\<phi>reason 1200 for \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?Z) @action clean_automation_waste\<close>]:
-  \<open>(x \<Ztypecolon> \<circle>) = (() \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
-
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi>perm_functor ?\<psi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open> perm_functor' \<psi>
-\<Longrightarrow> (x \<Ztypecolon> \<phi>perm_functor \<psi> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>perm_functor_\<phi>None
-  by simp
-
-declare perm_functor_pointwise[\<phi>reason 1200]
-        perm_functor_to_share[\<phi>reason 1200]
-
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> \<circle>) = (() \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>)) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def Premise_def \<phi>Share_\<phi>None by simp
-
-lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> ?T \<^emph> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open>((x,y) \<Ztypecolon> T \<^emph> \<circle>) = ((x \<Ztypecolon> T) :: 'a::sep_magma_1 set) @action clean_automation_waste\<close>
-  unfolding \<phi>Prod_\<phi>None Action_Tag_def ..
-
-lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> \<circle> \<^emph> ?U) = ?Z @action clean_automation_waste\<close>]:
-  \<open>((x,y) \<Ztypecolon> \<circle> \<^emph> U) = ((y \<Ztypecolon> U) :: 'b::sep_magma_1 set) @action clean_automation_waste\<close>
-  unfolding \<phi>Prod_\<phi>None Action_Tag_def ..
-
-lemma [\<phi>reason 1200 for \<open>((?x,?r) \<Ztypecolon> (?T \<^emph> ?n \<Znrres> \<circle>)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n
-\<Longrightarrow> ((x,r) \<Ztypecolon> (T \<^emph> n \<Znrres> \<circle>)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
-  unfolding set_eq_iff Premise_def Action_Tag_def
-  by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200 for \<open>((?r,?x) \<Ztypecolon> (?n \<Znrres> \<circle> \<^emph> ?T)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n
-\<Longrightarrow> ((r,x) \<Ztypecolon> (n \<Znrres> \<circle> \<^emph> T)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
-  unfolding set_eq_iff Premise_def Action_Tag_def
-  by (simp add: \<phi>expns)
-
 
 
 subsection \<open>Extract\<close>
@@ -2005,7 +1741,7 @@ lemma [\<phi>reason 2000]:
 lemma [\<phi>reason 2000]:
   \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) R Y W P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) R Y W P\<close>
-  for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
+  for T :: \<open>('a::{share_one,sep_magma},'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
 lemma [\<phi>reason 2011]:
@@ -2030,13 +1766,13 @@ lemma [\<phi>reason 2011]:
 lemma [\<phi>reason 2000]:
   \<open> Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) W P
 \<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) W P\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt_L .
 
 lemma [\<phi>reason 2000]:
   \<open> Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) W P
 \<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) W P\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt_L .
 
 lemma [\<phi>reason 2011]:
@@ -2044,7 +1780,7 @@ lemma [\<phi>reason 2011]:
       (Automatic_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T') R' P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W
       (Automatic_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
   unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
@@ -2053,7 +1789,7 @@ lemma [\<phi>reason 2011]:
       (Automatic_Morphism RP (Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) R Y W P) \<and> P')
 \<Longrightarrow> Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R'
       (Automatic_Morphism RP (Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W P) \<and> P')\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::share_module_sep, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
   unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
@@ -2121,6 +1857,270 @@ lemma [\<phi>reason 2011 for \<open>Structural_Extract (?y \<Ztypecolon> ?n \<Zn
 \<Longrightarrow> Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> T') R'
       (Automatic_Morphism RP (Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P) \<and> P')\<close>
   by simp
+
+section \<open>Convergence of Branches\<close>
+
+text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the canonical \<phi>-BI form \<^term>\<open>C\<close>.
+
+  The strongest post-condition of a branch statement results in \<^term>\<open>If P A B\<close> typically.
+  It is strongest but not good because it violates the canonical \<phi>-BI form.
+  Thus an automation procedure here is presented to transform it.
+  Typically it unifies refinement relations in two branches but leaves abstract objects
+  in an if expression.
+
+  The transformation is as strong as possible to minimize the loose of information.
+  It is clear if two branches are in the same refinement, no information will be lost.
+  If not, and any necessary information is lost in this process, user can always manually transform
+  the assertion before the end of each branch, to unify the refinement of two branches.
+\<close>
+
+text \<open>This merging procedure retains the order of the left side.\<close>
+
+consts branch_convergence :: \<open>action\<close>
+
+(* text \<open>Though definitionally If is identical to If, there is semantic difference between them.
+  If has a systematical meaning. If P A B means the procedure merging two assertions
+  A and B, whereas If P A B means to merge two abstract objects or two refinement relations.
+  A key difference in the procedure is, there is fallback for If P A B. If there is no further
+  rule telling how to do with If P A B, then the result of the procedure on this is just
+  If P A B itself --- it is usual that a branch statement returning 1 or 2 is specified by
+  \<^term>\<open>(if P then 1 else 2) \<Ztypecolon> \<phi>Nat\<close>. In contrast, there is no fallback for If P A B, because
+  a failure of If P A B means the failure of merging those two assertions A and B, which is
+  the failure of the whole merging procedure.\<close> *)
+
+subsubsection \<open>Identity\<close>
+
+lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' = ?X @action branch_convergence\<close>]:
+  "If P A A = A @action branch_convergence"
+  unfolding Action_Tag_def by simp
+
+lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  "If P A A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A @action branch_convergence"
+  unfolding Action_Tag_def Imply_def by simp
+
+subsubsection \<open>Zero\<close>
+
+lemma [\<phi>reason 3000 for \<open>If ?P ?A 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  "If P A 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) @action branch_convergence"
+  unfolding Action_Tag_def Imply_def
+  by (simp add: \<phi>expns zero_set_def)
+
+lemma [\<phi>reason 3000 for \<open>If ?P 0 ?A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  "If P 0 A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> P) @action branch_convergence"
+  unfolding Action_Tag_def Imply_def
+  by (simp add: \<phi>expns zero_set_def)
+
+
+subsubsection \<open>Fallback\<close>
+
+lemma [\<phi>reason 10 for \<open>If ?P ?A ?B = ?X @action branch_convergence\<close>]:
+  "If P A B = If P A B @action branch_convergence"
+  unfolding Action_Tag_def ..
+
+text \<open>There is no fallback for \<^const>\<open>If\<close>. The If is not allowed to be fallback.
+  If the convergence for If fails, the reasoning fails.\<close>
+
+subsubsection \<open>Subjection\<close>
+
+lemma [\<phi>reason 1400]:
+  \<open> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence
+\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence\<close>
+  unfolding Subjection_Subjection .
+
+lemma [\<phi>reason 1400]:
+  \<open> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<and> Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence
+\<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q1 \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z @action branch_convergence\<close>
+  unfolding Subjection_Subjection .
+
+lemma [\<phi>reason 1300 for \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QL) (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?QR) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  " If P QL QR = Q @action branch_convergence
+\<Longrightarrow> If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j QL) (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j QR) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) @action branch_convergence"
+  unfolding Action_Tag_def Imply_def by force
+
+lemma [\<phi>reason 1200
+    for \<open>If ?P (?L \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>
+]:
+  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P (L \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j P \<longrightarrow> Q) @action branch_convergence"
+  unfolding Imply_def Action_Tag_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200 for \<open>If ?P ?L (?R \<^bold>s\<^bold>u\<^bold>b\<^bold>j ?Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P L (R \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not>P \<longrightarrow> Q) @action branch_convergence"
+  unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
+
+
+subsubsection \<open>Existential\<close>
+
+lemma Conv_Merge_Ex_both_imp:
+  "(\<And>x. If P (L x) (R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
+\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) @action branch_convergence"
+  unfolding Action_Tag_def Imply_def
+  by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; blast)
+
+lemma Conv_Merge_Ex_R_imp
+  [\<phi>reason 1100 for \<open>If ?P ?L (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  "(\<And>x. If P L (R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
+\<Longrightarrow> If P L (\<exists>* x. R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) @action branch_convergence"
+  unfolding Action_Tag_def Imply_def
+  by (cases P; simp add: set_eq_iff \<phi>expns; blast)
+
+lemma [\<phi>reason 1100 for \<open>If ?P (\<exists>* x. ?L x) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  "(\<And>x. If P (L x) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X x @action branch_convergence)
+\<Longrightarrow> If P (\<exists>* x. L x) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (\<exists>* x. X x) @action branch_convergence"
+  unfolding Action_Tag_def Imply_def by (cases P; simp add: set_eq_iff \<phi>expns; blast)
+
+text \<open>The merging recognize two existential quantifier are identical if their type and variable name
+  are the same. If so it uses Conv_Merge_Ex_both to merge the quantification,
+  or else the right side is expanded first.\<close>
+
+\<phi>reasoner_ML Merge_Existential_imp 2000 (\<open>If ?P (\<exists>* x. ?L x) (\<exists>* x. ?R x) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X\<close>) =
+\<open>fn (ctxt,sequent) =>
+  let
+    val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
+                                         $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))), _, _)
+        = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
+    val sequent' = if exa = exb andalso tya = tyb
+                   then @{thm Conv_Merge_Ex_both_imp} RS sequent
+                   else @{thm Conv_Merge_Ex_R_imp} RS sequent
+  in Seq.single (ctxt, sequent')
+  end\<close>
+
+
+
+subsubsection \<open>Main Procedure\<close>
+
+lemma [\<phi>reason 2000 for \<open>If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  " If P x y = z @action branch_convergence
+\<Longrightarrow> If P T U = Z @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (z \<Ztypecolon> Z) @action branch_convergence"
+  unfolding Action_Tag_def Imply_def by (cases P; simp)
+
+definition \<open>Branch_Convergence_Type_Pattern type the_type_to_match \<equiv> Trueprop True\<close>
+
+lemma [\<phi>reason 10 for \<open>PROP Branch_Convergence_Type_Pattern ?X ?X'\<close>]:
+  \<open>PROP Branch_Convergence_Type_Pattern X X\<close>
+  unfolding Branch_Convergence_Type_Pattern_def ..
+
+lemma [\<phi>reason 1200 for \<open>PROP Branch_Convergence_Type_Pattern (Val ?v ?T) (Val ?v ?T')\<close>]:
+  \<open>PROP Branch_Convergence_Type_Pattern (Val v T) (Val v T')\<close>
+  unfolding Branch_Convergence_Type_Pattern_def ..
+
+lemma [\<phi>reason 1200 for \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X @action branch_convergence\<close>]:
+  \<open> PROP Branch_Convergence_Type_Pattern T T'
+\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<^bold>a\<^bold>n\<^bold>d Any
+\<Longrightarrow> If P x y = z @action branch_convergence
+\<Longrightarrow> If P T T' = Z @action branch_convergence
+\<Longrightarrow> If P L R' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * (z \<Ztypecolon> Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def FOCUS_TAG_def
+  by (smt (z3) Imply_def implies_right_prod)
+
+
+subsubsection \<open>Convergence of Structural Nodes\<close>
+
+lemma [\<phi>reason 1200 for \<open>If ?P (?n \<Znrres> ?T) (?n' \<Znrres> ?U) = ?Z @action branch_convergence\<close>]:
+  \<open> If P T U = Z @action branch_convergence
+\<Longrightarrow> If P (n \<Znrres> T) (n \<Znrres> U) = n \<Znrres> Z @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 1200 for \<open>If ?P (?T \<^emph> ?U) (?T' \<^emph> ?U') = ?Z @action branch_convergence\<close>]:
+  \<open> If P T T' = T'' @action branch_convergence
+\<Longrightarrow> If P U U' = U'' @action branch_convergence
+\<Longrightarrow> If P (T \<^emph> U) (T' \<^emph> U') = (T'' \<^emph> U'') @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 1200 for \<open>If ?P (?k \<^bold>\<rightarrow>\<^sub>@ ?T) (?k' \<^bold>\<rightarrow>\<^sub>@ ?U) = ?Z @action branch_convergence\<close>]:
+  \<open> If P T U = Z @action branch_convergence
+\<Longrightarrow> If P (k \<^bold>\<rightarrow>\<^sub>@ T) (k \<^bold>\<rightarrow>\<^sub>@ U) = k \<^bold>\<rightarrow>\<^sub>@ Z @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 1200 for \<open>If ?P (?k \<^bold>\<rightarrow> ?T) (?k' \<^bold>\<rightarrow> ?U) = ?Z @action branch_convergence\<close>]:
+  \<open> If P T U = Z @action branch_convergence
+\<Longrightarrow> If P (k \<^bold>\<rightarrow> T) (k \<^bold>\<rightarrow> U) = k \<^bold>\<rightarrow> Z @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 1200 for \<open>If ?P (Val ?v ?T) (Val ?v' ?U) = ?Z @action branch_convergence\<close>]:
+  \<open>If P (Val v T) (Val v U) = Val v (If P T U) @action branch_convergence\<close>
+  unfolding Action_Tag_def by simp
+
+lemma [\<phi>reason 1200 for \<open>If ?P (\<black_circle> ?T) (\<black_circle> ?U) = (\<black_circle> ?Z) @action branch_convergence\<close>]:
+  \<open> If P T U = Z @action branch_convergence
+\<Longrightarrow> If P (\<black_circle> T) (\<black_circle> U) = (\<black_circle> Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by fastforce
+
+lemma [\<phi>reason 1200 for \<open>If ?P (Val ?v ?T) (Val ?v' ?U) = ?Z @action branch_convergence\<close>]:
+  \<open> If P T U = Z @action branch_convergence
+\<Longrightarrow> If P (Val v T) (Val v U) = (Val v Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by fastforce
+
+
+(* subsubsection \<open>Object\<close>
+
+definition EqualAddress :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool "
+  where "EqualAddress _ _ = True"
+
+lemma [\<phi>reason]:
+  "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m a1 = a2
+   \<Longrightarrow> EqualAddress (a1 \<Zinj> x1 \<Ztypecolon> T1) (a2 \<Zinj> x2 \<Ztypecolon> T2) "
+  unfolding EqualAddress_def .. *)
+
+subsubsection \<open>Unfold\<close>
+
+lemma [\<phi>reason 2000]:
+  " If P L (N * R1 * R2) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P L (N * (R1 * R2)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
+  for N :: \<open>'a::sep_semigroup set\<close>
+  unfolding Action_Tag_def by (metis mult.assoc)
+
+lemma [\<phi>reason 2000]:
+  " If P (L1 * L2 * L3) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P (L1 * (L2 * L3)) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
+  for R :: \<open>'a::sep_semigroup set\<close>
+  unfolding Action_Tag_def by (metis mult.assoc)
+
+
+subsubsection \<open>Eliminate Void Hole\<close>
+
+lemma [\<phi>reason 2000]:
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P L (R * 1) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
+  for R :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 2000]:
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P L (1 * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
+  for R :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 2000]:
+  " If P L (R' * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P L (R' * 1 * R) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
+  for R :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 2000]:
+  " If P L R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence
+\<Longrightarrow> If P (L * 1) R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action branch_convergence"
+  for R :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def by (cases P; simp)
+
+(* subsection \<open>Program Interface\<close> \<comment> \<open>Interfaces exported to target LLVM module\<close>
+
+definition Prog_Interface :: " label \<Rightarrow> 'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a::lrep  \<longmapsto> 'b::lrep) \<Rightarrow> bool"
+  where "Prog_Interface _ args rets proc \<longleftrightarrow> True"
+
+lemma Prog_Interface_proc: "TERM proc \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) proc" 
+  unfolding Prog_Interface_def ..
+
+lemma Prog_Interface_func:
+  "TERM f \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) f" 
+  unfolding Prog_Interface_def ..
+*)
 
 
 section \<open>Small Process - II\<close>

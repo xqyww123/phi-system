@@ -1084,73 +1084,6 @@ text \<open>Many read-only applicable rules require only non-zero permissions.
     \<^schematic_prop>\<open> (x \<Ztypecolon> half ?n \<Znrres> T) * (x \<Ztypecolon> half ?m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Z\<close>.
 \<close>
 
-
-paragraph \<open>Implication \& Action Rules\<close>
-
-lemma \<phi>Share_transformation:
-  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P\<close>
-  unfolding Imply_def by (clarsimp simp add: \<phi>expns; blast)
-
-lemma [\<phi>reason 1000]:
-  \<open> \<r>REQUIRE \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m n = n'
-\<Longrightarrow> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n' \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P\<close>
-  using \<phi>Share_transformation by (simp add: Premise_def)
-
-
-
-
-paragraph \<open>Action Rules\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-lemma [\<phi>reason 1000]:
-  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action to Z
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action to Z\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-lemma [\<phi>reason 1100]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n' = n
-\<Longrightarrow> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action to Z
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action to (n' \<Znrres> Z)\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-lemma [\<phi>reason 1000]:
-  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action as Z
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action as Z\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-lemma [\<phi>reason 1100]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n' = n
-\<Longrightarrow> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action as (z \<Ztypecolon> n' \<Znrres> Z)\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-
-paragraph \<open>Simplifications\<close>
-
-lemma [simp]:
-  \<open>(n \<Znrres> ExTyp T) = (\<exists>\<phi> c. n \<Znrres> T c)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-lemma [simp]:
-  \<open>(n \<Znrres> (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (n \<Znrres> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-
-lemma \<phi>Share_simp_cong[folded atomize_eq]:
-  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) = (x' \<Ztypecolon> n \<Znrres> T')\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-simproc_setup \<phi>Share_simp_cong ("x \<Ztypecolon> n \<Znrres> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Share_simp_cong} ctxt)
-\<close>
-
 subparagraph \<open>Structural Conversions\<close>
 
 lemma \<phi>Share_1[simp]:
@@ -1206,6 +1139,122 @@ lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> ?n \<Znrres> \<circle> \<^b
   for Act :: \<open>'b::simplification action\<close>
   unfolding Imply_def Action_Tag_def
   by (simp add: \<phi>expns) *)
+
+
+paragraph \<open>Implication \& Action Rules\<close>
+
+lemma \<phi>Share_transformation:
+  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def by (clarsimp simp add: \<phi>expns; blast)
+
+lemma [\<phi>reason 1010]:
+  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n = n'
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n' \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  using \<phi>Share_transformation by (simp add: Premise_def)
+
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> n * m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Premise_def by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> n * m \<Znrres> T) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 < n \<and> 0 < m
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  unfolding Premise_def by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
+  for T :: \<open>('a::share_one,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt .
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  for T :: \<open>('a::share_one,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt .
+
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::share_one, 'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt_L .
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::share_one, 'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt_L .
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x \<Ztypecolon> n \<Znrres> (T \<^emph> U)) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>Prod .
+
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> (T \<^emph> U)) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
+  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>Prod .
+
+
+
+paragraph \<open>Action Rules\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action to Z
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action to Z\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+lemma [\<phi>reason 1100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n' = n
+\<Longrightarrow> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action to Z
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action to (n' \<Znrres> Z)\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action as Z
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action as Z\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+lemma [\<phi>reason 1100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n' = n
+\<Longrightarrow> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action as (z \<Ztypecolon> Z)
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P @action as (z \<Ztypecolon> n' \<Znrres> Z)\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+
+paragraph \<open>Simplifications\<close>
+
+lemma [simp]:
+  \<open>(n \<Znrres> ExTyp T) = (\<exists>\<phi> c. n \<Znrres> T c)\<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
+
+lemma [simp]:
+  \<open>(n \<Znrres> (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (n \<Znrres> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
+
+
+lemma \<phi>Share_simp_cong[folded atomize_eq]:
+  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) = (x' \<Ztypecolon> n \<Znrres> T')\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
+simproc_setup \<phi>Share_simp_cong ("x \<Ztypecolon> n \<Znrres> T") = \<open>
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Share_simp_cong} ctxt)
+\<close>
+
 
 subparagraph \<open>Permission\<close>
 
