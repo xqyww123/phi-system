@@ -218,8 +218,7 @@ lemma Brking_Frame_absorb_item[assertion_simps]:
   \<open>((Brking_Frame l Y)\<heavy_comma> X) = Brking_Frame l (\<lambda>v. Y v \<heavy_comma> X)\<close>
   unfolding Brking_Frame_def TAIL_def
   apply (intro assertion_eq_intro)
-  \<medium_left_bracket> ;; \<medium_right_bracket>
- . \<medium_left_bracket> \<medium_right_bracket>. .
+  \<medium_left_bracket> ;; \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. .
 
 lemma Brking_Frame_absorb_subj[assertion_simps]:
   \<open>((Brking_Frame l Y) \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = Brking_Frame l (\<lambda>v. Y v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
