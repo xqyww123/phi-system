@@ -43,5 +43,4 @@ fun call (ctxt,sequent) = Seq.make (fn () =>
   Phi_Reasoner.reason (SOME 1) (ctxt, @{thm \<r>Call_I} RS sequent)
     |> Option.map (rpair Seq.empty)
 )
-
 end

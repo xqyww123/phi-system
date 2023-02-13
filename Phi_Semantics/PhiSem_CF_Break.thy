@@ -241,12 +241,10 @@ lemma [\<phi>reason 1180]:
   by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<heavy_comma> \<blangle> Brk_Frame l \<brangle> \<^bold>a\<^bold>n\<^bold>d Any @action reason_ToSA False G
-\<Longrightarrow> SOLVE_SUBGOAL G
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E\<heavy_comma> \<blangle> Brk_Frame l \<brangle> \<^bold>a\<^bold>n\<^bold>d Any
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l 0 E\<close>
   unfolding sift_brking_frame'_def FOCUS_TAG_def
-  \<medium_left_bracket> premises _ and X and _
+  \<medium_left_bracket> premises X
     X
   \<medium_right_bracket>. .
 
@@ -257,9 +255,9 @@ subsection \<open>ToSA through Brking_Frame\<close>
 
 lemma [\<phi>reason 2200]:
   (*The priority must override Void Padding*)
-  \<open> (\<And>v. S v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action ToSA' mode)
-\<Longrightarrow> Brking_Frame l S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P @action reason_ToSA mode G\<close>
-  unfolding Brking_Frame_def TAIL_def Action_Tag_def FOCUS_TAG_def
+  \<open> (\<And>v. S v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R v \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P)
+\<Longrightarrow> Brking_Frame l S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Brking_Frame_def TAIL_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
     X[THEN implies_right_prod]
   \<medium_right_bracket>. .
@@ -297,11 +295,11 @@ proc
   output \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
-  ;; $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] U\<close>]
+       $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] U\<close>]
       \<medium_right_bracket> .. ;;
       assert \<bottom> (*this place is unreachable!*)
-    \<medium_right_bracket>.
-  \<medium_right_bracket>. .
+    \<medium_right_bracket> ..
+  \<medium_right_bracket> .. .
 
 
 end

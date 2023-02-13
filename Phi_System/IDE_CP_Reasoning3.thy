@@ -479,24 +479,30 @@ lemma [\<phi>intro 1100]: \<comment> \<open>tail the step\<close>
 
 subsection \<open>Zero\<close>
 
+\<phi>reasoner_ML \<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X\<close> 3100 (\<open>0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let fun collect L (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (_,_,X)) = collect L X
+        | collect L (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = collect L X
+        | collect L (Const (\<^const_name>\<open>times\<close>, _) $ A $ B) = collect (collect L A) B
+        | collect L (Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ X) = collect L X
+        | collect L (Var (V, T)) = AList.update (op =) (V, Const (\<^const_name>\<open>zero_class.zero\<close>, T)) L
+        | collect L (X $ _) = collect L X
+        | collect L _ = L
+      val (_,X,_) = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
+      val sequent' = Drule.infer_instantiate ctxt
+                        (collect [] X |> map (apsnd (Thm.cterm_of ctxt))) sequent
+      val sequent'2 = (@{thm zero_implies_any} RS sequent')
+                   |> Raw_Simplifier.rewrite_rule ctxt @{thms zero_fun[folded atomize_eq]}
+   in SOME ((ctxt, sequent'2), Seq.empty) end)
+\<close>
+
 lemma [\<phi>reason 3100]:
-  \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X\<close>
-  by simp
-
-lemma [\<phi>reason 3110]:
-  \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 0 * \<blangle> X \<brangle>\<close>
+  \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X
+\<Longrightarrow> R * 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X\<close>
   by simp
 
 lemma [\<phi>reason 3100]:
-  \<open> R * 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X\<close>
-  by simp
-
-lemma [\<phi>reason 3110]:
-  \<open> R * 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 0 * \<blangle> X \<brangle>\<close>
-  by simp
-
-lemma [\<phi>reason 3100]:
-  \<open> 0 * R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s 0 * \<blangle> X \<brangle>\<close>
+  \<open> 0 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X
+\<Longrightarrow> 0 * R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X\<close>
   by simp
 
 lemma [\<phi>reason 3100]:
@@ -531,7 +537,6 @@ lemma [\<phi>reason 3100]:
 
 
 subsection \<open>Divergence\<close>
-
 
 subsubsection \<open>Disjunction in Source\<close>
 
