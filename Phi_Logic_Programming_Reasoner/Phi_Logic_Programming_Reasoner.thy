@@ -799,23 +799,9 @@ definition Branch :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (
 
 subsubsection \<open>Implementation\<close>
 
-consts BRANCH :: \<open>subgoal \<Rightarrow> subgoal\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> PROP A ||| PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
-\<Longrightarrow> PROP A ||| PROP B\<close>
-  unfolding Action_Tag_def .
-
-lemma [\<phi>reason for \<open>PROP ?A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close> except \<open>PROP ?X ||| PROP ?Y \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH ?G)\<close>]:
+lemma Branch_L:
   \<open> PROP A
-\<Longrightarrow> SOLVE_SUBGOAL G
-\<Longrightarrow> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
-  unfolding Action_Tag_def .
-
-lemma [\<phi>reason add]:
-  \<open> PROP A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
-\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
+\<Longrightarrow> PROP A ||| PROP B\<close>
   unfolding Action_Tag_def Branch_def
 proof -
   assume A: \<open>PROP A\<close>
@@ -826,9 +812,9 @@ proof -
   qed
 qed
 
-lemma [\<phi>reason 10]:
-  \<open> PROP B \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)
-\<Longrightarrow> PROP A ||| PROP B  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L (BRANCH G)\<close>
+lemma Branch_R:
+  \<open> PROP B
+\<Longrightarrow> PROP A ||| PROP B\<close>
   unfolding Action_Tag_def Branch_def
 proof -
   assume B: \<open>PROP B\<close>
@@ -838,6 +824,8 @@ proof -
     show \<open>PROP C\<close> using B'[OF B] .
   qed
 qed
+
+declare [[\<phi>reason 1000 Branch_L Branch_R for \<open>PROP ?A ||| PROP ?B\<close>]]
 
 lemma Branch_imp:
   \<open> (PROP A ||| PROP B \<Longrightarrow> PROP C)

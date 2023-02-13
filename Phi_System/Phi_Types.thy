@@ -262,26 +262,26 @@ lemma \<phi>Prod_\<phi>None:
 
 subsubsection \<open>Reasoning Rules\<close>
 
-paragraph \<open>View Shift\<close>
+(* paragraph \<open>View Shift\<close>
 
 lemma [\<phi>reason for \<open>(?x,?y) \<Ztypecolon> ?N \<^emph> ?M \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (?x',?y') \<Ztypecolon> ?N' \<^emph> ?M' \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   " x \<Ztypecolon> N \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s x' \<Ztypecolon> N' \<^bold>a\<^bold>n\<^bold>d P1
 \<Longrightarrow> y \<Ztypecolon> M \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s y' \<Ztypecolon> M' \<^bold>a\<^bold>n\<^bold>d P2
 \<Longrightarrow> (x,y) \<Ztypecolon> N \<^emph> M \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (x',y') \<Ztypecolon> N' \<^emph> M' \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2"
   unfolding View_Shift_def \<phi>Prod_expn'
-  by (smt (verit, best) mult.commute mult.left_commute) 
+  by (smt (verit, best) mult.commute mult.left_commute)  *)
 
 paragraph \<open>Implication\<close>
 
 thm assertion_simps
 
-lemma \<phi>Prod_transformation [\<phi>reason 1000]:
+lemma \<phi>Prod_transformation (*[\<phi>reason 1000]*) :
   " x \<Ztypecolon> N \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> N' \<^bold>a\<^bold>n\<^bold>d P1
 \<Longrightarrow> y \<Ztypecolon> M \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y' \<Ztypecolon> M' \<^bold>a\<^bold>n\<^bold>d P2
 \<Longrightarrow> (x,y) \<Ztypecolon> N \<^emph> M \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (x',y') \<Ztypecolon> N' \<^emph> M' \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2"
   unfolding Imply_def by (simp add: \<phi>expns) blast
 
-lemma [\<phi>reason 1200]:
+(* lemma [\<phi>reason 1200]:
   \<open> (y \<Ztypecolon> Y) * (x \<Ztypecolon> X) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> (x,y) \<Ztypecolon> (X \<^emph> Y) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Z \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding \<phi>Prod_split .
@@ -315,7 +315,7 @@ lemma [\<phi>reason 1200]:
   \<open> Z \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A * B * C \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> Z \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A * (B * C) \<^bold>a\<^bold>n\<^bold>d P\<close>
   for A :: \<open>'a::sep_semigroup set\<close>
-  by (simp add: mult.assoc)
+  by (simp add: mult.assoc)*)
 
 (* lemma [\<phi>reason 50]:
   \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P
@@ -598,11 +598,17 @@ simproc_setup \<phi>MapAt_simp_cong ("(x \<Ztypecolon> k \<^bold>\<rightarrow> T
 
 paragraph \<open>Implication \& Action rules\<close>
 
-lemma \<phi>MapAt_cast[\<phi>reason 1000]:
+lemma \<phi>MapAt_cast:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow> U \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def
   by (clarsimp simp add: \<phi>expns; blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> \<r>REQUIRE \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k = k'
+\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<^bold>a\<^bold>n\<^bold>d P\<close>
+  using \<phi>MapAt_cast by (simp add: Premise_def)
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act
@@ -611,8 +617,7 @@ lemma [\<phi>reason 1200]:
   using \<phi>MapAt_cast .
 
 lemma [\<phi>reason 1200]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k = k'
-\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action to Z
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action to Z
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow> U \<^bold>a\<^bold>n\<^bold>d P @action to (k' \<^bold>\<rightarrow> Z) \<close>
   unfolding Action_Tag_def
   using \<phi>MapAt_cast .
@@ -624,8 +629,7 @@ lemma [\<phi>reason 100]:
   using \<phi>MapAt_cast .
 
 lemma [\<phi>reason 1200]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k = k'
-\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action as (z \<Ztypecolon> Z)
+  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action as (z \<Ztypecolon> Z)
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow> U \<^bold>a\<^bold>n\<^bold>d P @action as (z \<Ztypecolon> k' \<^bold>\<rightarrow> Z) \<close>
   unfolding Action_Tag_def
   using \<phi>MapAt_cast .
@@ -710,11 +714,37 @@ lemma \<phi>MapAt_L_At:
 
 paragraph \<open>Implication \& Action Rules\<close>
 
-lemma \<phi>MapAt_L_cast[\<phi>reason 1000]:
+lemma \<phi>MapAt_L_cast:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def
   by (clarsimp simp add: \<phi>expns; blast)
+
+lemma [\<phi>reason 1020]:
+  \<open> \<r>REQUIRE \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
+\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^bold>a\<^bold>n\<^bold>d P\<close>
+  using \<phi>MapAt_L_cast by (simp add: Premise_def)
+
+lemma [\<phi>reason 1017]:
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k'
+&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
+\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def \<r>Require_def conjunction_imp
+  apply (clarsimp simp add: \<phi>expns)
+  using push_map_push_map by blast
+
+lemma [\<phi>reason 1013]:
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
+&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
+\<Longrightarrow> x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^bold>a\<^bold>n\<^bold>d P\<close>
+  unfolding Imply_def \<r>Require_def conjunction_imp
+  by (clarsimp simp add: \<phi>expns)
+
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act
@@ -1057,10 +1087,21 @@ text \<open>Many read-only applicable rules require only non-zero permissions.
 
 paragraph \<open>Implication \& Action Rules\<close>
 
-lemma \<phi>Share_transformation[\<phi>reason 1000]:
+lemma \<phi>Share_transformation:
   \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns; blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> \<r>REQUIRE \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m n = n'
+\<Longrightarrow> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> n' \<Znrres> U) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  using \<phi>Share_transformation by (simp add: Premise_def)
+
+
+
+
+paragraph \<open>Action Rules\<close>
 
 lemma [\<phi>reason 1200]:
   \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (y \<Ztypecolon> U) \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act
@@ -1560,6 +1601,7 @@ lemma [simp]:
 
 paragraph \<open>Rules\<close>
 
+(*TODO: improve this*)
 lemma \<phi>MayInit_cast[\<phi>reason for \<open>?x \<Ztypecolon> \<phi>MayInit ?TY ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<phi>MayInit ?TY' ?U \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> x \<Ztypecolon> \<phi>MayInit TY T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi>MayInit TY U \<^bold>a\<^bold>n\<^bold>d P\<close>

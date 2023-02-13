@@ -355,7 +355,7 @@ lemma [\<phi>reason 2000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bo
   \<open> Simplify (assertion_simps SOURCE) X' X
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
-\<Longrightarrow> \<r>CALL X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> \<r>CALL X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y' \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' deep\<close>
   unfolding Action_Tag_def Simplify_def \<r>Call_def \<r>Clean_def
@@ -1632,40 +1632,42 @@ for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' 
 
 
 lemma Structural_Extract_\<phi>MapAt_L_pad_left:
-  \<open> \<r>REQUIRE CHK_SUBGOAL G &&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k' &&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k'
+&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
   unfolding Structural_Extract_def Premise_def \<r>Require_def conjunction_imp
   subgoal premises prems
-    apply (insert prems(4),
+    apply (insert prems(3),
        simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
-          \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k kd, unfolded prems(3)])
+          \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k kd, unfolded prems(2)])
     by (rule \<phi>MapAt_L_cast) .
 
 declare Structural_Extract_\<phi>MapAt_L_pad_left [THEN SE_clean_waste, \<phi>reason 1180]
 
 
 lemma Structural_Extract_\<phi>MapAt_L_pad_right:
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
 &&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' @ kd = k
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
   unfolding Structural_Extract_def Premise_def \<r>Require_def conjunction_imp
   subgoal premises prems
-    apply (insert prems(4),
+    apply (insert prems(3),
        simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
-          \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k' kd, unfolded prems(3)])
+          \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k' kd, unfolded prems(2)])
     by (rule \<phi>MapAt_L_cast) .
 
 declare Structural_Extract_\<phi>MapAt_L_pad_right [THEN SE_clean_waste, \<phi>reason 1150]
 
 
 lemma [THEN SE_clean_waste', \<phi>reason 1183]:
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k'
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k'
 &&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
@@ -1679,8 +1681,8 @@ lemma [THEN SE_clean_waste', \<phi>reason 1183]:
                    Structural_Extract_imply_P)
 
 lemma [THEN SE_clean_waste', \<phi>reason 1153]:
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
 &&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' @ kd = k
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
@@ -1856,8 +1858,7 @@ lemma
 
 lemma Structural_Extract_share_eq:
   \<comment> \<open>If requires exactly what we have now, typically this happens after the previous rule or n = 1.\<close>
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m = n
+  \<open> \<r>REQUIRE \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m = n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W) P \<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
@@ -1868,8 +1869,7 @@ lemma Structural_Extract_share_eq:
 declare Structural_Extract_share_eq [THEN SE_clean_waste, \<phi>reason 1200]
 
 lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m = n
+  \<open> \<r>REQUIRE \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m m = n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W)
@@ -1884,14 +1884,14 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
 
 lemma Structural_Extract_share_ge:
   \<comment> \<open>If requires less than what we have, give it.\<close>
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
 &&& \<phi>Sep_Disj_Identical T
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' Action_Tag_def conjunction_imp \<r>Require_def
-  \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and [\<phi>reason] and X
+  \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and [\<phi>reason] and X
     share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
     X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
@@ -1905,14 +1905,14 @@ declare Structural_Extract_share_ge [THEN SE_clean_waste, \<phi>reason 1180]
 
 lemma Structural_Extract_share_le:
   \<comment> \<open>If requires more than what we have, give all what we can give.\<close>
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < m \<and> m < n
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < m \<and> m < n
 &&& \<phi>Sep_Disj_Identical U
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' conjunction_imp \<r>Require_def
-  \<medium_left_bracket> premises _ and LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and X
+  \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and X
     X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_left_prod, folded mult.assoc]
   
@@ -1930,8 +1930,8 @@ declare Structural_Extract_share_le[THEN SE_clean_waste, \<phi>reason 1170]
 
 lemma [THEN SE_clean_waste', \<phi>reason 1183]:
   \<comment> \<open>If requires less than what we have, give it.\<close>
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < n \<and> n < m
 &&& \<phi>Sep_Disj_Identical T
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
@@ -1946,8 +1946,8 @@ lemma [THEN SE_clean_waste', \<phi>reason 1183]:
                    Structural_Extract_imply_P)
 
 lemma [THEN SE_clean_waste', \<phi>reason 1173]:
-  \<open> \<r>REQUIRE CHK_SUBGOAL G
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < m \<and> m < n
+  \<open> \<r>REQUIRE
+    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m 0 < m \<and> m < n
 &&& \<phi>Sep_Disj_Identical U
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
