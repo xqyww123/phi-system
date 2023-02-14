@@ -33,8 +33,20 @@ lemma [\<phi>reason 1200]:
   by (simp add: \<phi>expns) blast
 
 lemma [\<phi>reason 1200]:
+  \<open>(\<And>c. Remove_Values (R * T c) (R' * T' c))
+\<Longrightarrow> Remove_Values (R * ExSet T) (R' * ExSet T')\<close>
+  unfolding Remove_Values_def Imply_def
+  by (simp add: \<phi>expns) blast
+
+lemma [\<phi>reason 1200]:
   \<open> Remove_Values T T'
 \<Longrightarrow> Remove_Values (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) (T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  unfolding Remove_Values_def Imply_def
+  by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values (R * T) (R' * T')
+\<Longrightarrow> Remove_Values (R * (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) (R' * (T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P))\<close>
   unfolding Remove_Values_def Imply_def
   by (simp add: \<phi>expns)
 
@@ -49,6 +61,13 @@ lemma [\<phi>reason 1200]:
   by simp
 
 lemma [\<phi>reason 1200]:
+  \<open> Remove_Values A A'
+\<Longrightarrow> Remove_Values B B'
+\<Longrightarrow> Remove_Values (A + B) (A' + B')\<close>
+  unfolding Remove_Values_def Imply_def
+  by blast 
+
+lemma [\<phi>reason 1200]:
   \<open> Remove_Values R R'
 \<Longrightarrow> Remove_Values (R * (x \<Ztypecolon> Val raw T)) R'\<close>
   unfolding Remove_Values_def Imply_def by (simp add: Val_expn Subjection_expn)
@@ -57,9 +76,24 @@ lemma [\<phi>reason 1200]:
   \<open>Remove_Values (x \<Ztypecolon> Val raw T) 1\<close>
   unfolding Remove_Values_def Imply_def by (simp add: Val_expn Subjection_expn)
 
-lemma [\<phi>reason 1100]:
+lemma [\<phi>reason 1200]:
   \<open> Remove_Values A A'
-\<Longrightarrow> Remove_Values (A * B) (A' * B)\<close>
+\<Longrightarrow> Remove_Values (1 * A) A'\<close>
+  unfolding Remove_Values_def Imply_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values A A'
+\<Longrightarrow> Remove_Values (A * 1) A'\<close>
+  unfolding Remove_Values_def Imply_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>Remove_Values (A * 0) 0\<close>
+  unfolding Remove_Values_def Imply_def by simp
+
+lemma [\<phi>reason 1100]:
+  \<open> Remove_Values B B'
+\<Longrightarrow> Remove_Values A A'
+\<Longrightarrow> Remove_Values (A * B) (A' * B')\<close>
   unfolding Remove_Values_def Imply_def by (simp add: \<phi>expns) blast
 
 lemma [\<phi>reason 1000]:

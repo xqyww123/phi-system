@@ -267,7 +267,7 @@ definition \<phi>Procedure :: "'ret::VALs proc
                         \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
                         \<Rightarrow> (ABNM \<Rightarrow> assn)
                         \<Rightarrow> bool"
-    ("\<^bold>p\<^bold>r\<^bold>o\<^bold>c (2_)/ (0\<lbrace> _/ \<longmapsto> _ \<rbrace>)/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (100_)/ " [101,2,2,2] 100)
+    ("\<^bold>p\<^bold>r\<^bold>o\<^bold>c (2_)/ (0\<lbrace> _/ \<longmapsto> _ \<rbrace>)/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (100_)/ " [101,2,2,100] 100)
   where "\<phi>Procedure f T U E \<longleftrightarrow>
     (\<forall>comp R. comp \<in> INTERP_SPEC (R * T) \<longrightarrow> f comp \<subseteq> \<S> (\<lambda>v. INTERP_SPEC (R * U v)) (\<lambda>v. INTERP_SPEC (R * E v)))"
 
@@ -369,7 +369,7 @@ lemma \<phi>SEQ:
 
 lemma \<phi>frame:
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s \<lambda>ex. R * E ex "
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R * A \<longmapsto> \<lambda>ret. R * B ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>ex. R * E ex) "
   unfolding \<phi>Procedure_def subset_iff
   apply clarify subgoal premises prems for comp R' s
     using prems(1)[THEN spec[where x=comp], THEN spec[where x=\<open>R' * R\<close>],

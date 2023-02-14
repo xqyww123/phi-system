@@ -107,46 +107,46 @@ lemma [\<phi>reason 1200 for
   \<open>Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Val ?raw ?T @action synthesis ?G\<close>]:
+(*
+lemma [\<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Val ?raw ?T\<close>]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T  @action synthesis G\<close>
+\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T\<close>
+  unfolding Action_Tag_def
+  by (cases raw; simp add: Val_expn implies_refl) *)
+
+lemma [\<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close>]:
+  \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> \<blangle> x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<brangle>\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn implies_refl)
 
-lemma [\<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T  @action synthesis ?G\<close>]:
-  \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T  @action synthesis G\<close>
-  unfolding Action_Tag_def
-  by (cases raw; simp add: Val_expn implies_refl)
-
-lemma [\<phi>reason 1300 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T \<rbrace>  @action synthesis ?G\<close>
+lemma [\<phi>reason 1210 for
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<rbrace>  @action synthesis G\<close>
-  apply (rule Synthesis_Proc_fallback_VS)
-  unfolding Action_Tag_def
-  by (cases raw; simp add: Val_expn view_shift_refl)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<brangle> \<rbrace> @action synthesis\<close>
+  apply (rule Synthesis_Proc_fallback_VS, rule view_shift_by_implication[where P=True])
+  by (cases raw; simp add: Val_expn)
 
 lemma [\<phi>reason 1200 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL \<phi>arg. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E   @action synthesis ?G\<close>
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL \<phi>arg. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<rbrace>  @action synthesis G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<brangle> \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
 
 lemma [\<phi>reason 1200 for
-    \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> SYNTHESIS ?x <set-to> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T  @action synthesis ?G\<close>
+    \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> \<blangle> ?x <set-to> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d _ \<close>
 ]:
   \<open> ERROR TEXT(\<open>Local value is immutable. Cannot assign to\<close> raw)
-\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> SYNTHESIS x <set-to> (raw::VAL \<phi>arg) \<Ztypecolon> T  @action synthesis G\<close>
+\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> \<blangle> x <set-to> (raw::VAL \<phi>arg) \<Ztypecolon> T \<brangle>\<close>
   by simp
 
-lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E )) @action synthesis ?G\<close>]:
+lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))\<close>]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>)) @action synthesis G\<close>
+\<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>))\<close>
   unfolding Synthesis_by_def Action_Tag_def \<phi>Procedure_def Return_def det_lift_def
   by (cases raw; simp add: Val_expn)
 
@@ -161,26 +161,25 @@ lemma "__set_value_rule__":
   unfolding \<phi>Procedure_def Value_of_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> SYNTHESIS ?x <val-of> (?name::valname) \<Ztypecolon> ?T  @action synthesis ?G\<close>]:
+lemma [\<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d _ \<close>]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> SYNTHESIS x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T  @action synthesis G\<close>
+\<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<brangle>\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn implies_refl)
 
 lemma [\<phi>reason 1300 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<rbrace>  @action synthesis ?G\<close>
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<rbrace>  @action synthesis G\<close>
-  apply (rule Synthesis_Proc_fallback_VS)
-  unfolding Action_Tag_def
-  by (cases raw; simp add: Val_expn view_shift_refl)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<brangle> \<rbrace> @action synthesis\<close>
+  apply (rule Synthesis_Proc_fallback_VS, rule view_shift_by_implication[where P=True])
+  by (cases raw; simp add: Val_expn)
 
 lemma [\<phi>reason 1200 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL \<phi>arg. ?R' \<heavy_comma> SYNTHESIS ?x <val-of> (?name::valname) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E   @action synthesis ?G\<close>
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL \<phi>arg. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> SYNTHESIS x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<rbrace>  @action synthesis G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<brangle> \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
