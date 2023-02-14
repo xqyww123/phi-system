@@ -57,7 +57,7 @@ subsubsection \<open>Structural Morphism\<close>
 
 (*TODO: explain*)
 
-definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [15] 14)
+definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [17] 16)
   where [iff]: \<open>SMorphism X = X\<close>
 
 definition Morphism :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
@@ -97,6 +97,12 @@ Note, the argument here means any \<phi>-Type in the pre-condition, not necessar
     \<phi>-BI specification and so possibly not able to be applied any more.
 \<close>
 
+declare [[\<phi>reason_default_pattern
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close>    (110)
+  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
+      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close>    (120)
+]]
 
 
 section \<open>Normalization of Assertions\<close>

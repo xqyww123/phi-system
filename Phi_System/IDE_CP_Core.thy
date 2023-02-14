@@ -491,7 +491,7 @@ lemma [\<phi>reason 20
 
 subsubsection \<open>Tagging the target of a synthesis rule\<close>
 
-definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [16] 15) where [iff]: \<open>Synthesis S = S\<close>
+definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [17] 16) where [iff]: \<open>Synthesis S = S\<close>
 
 consts synthesis :: \<open>subgoal \<Rightarrow> action\<close>
 
@@ -531,7 +531,7 @@ lemma Synthesis_Proc_fallback_VS [\<phi>reason 30
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> SYNTHESIS X' \<rbrace> @action synthesis G\<close>
   unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def by simp
 
-lemma [\<phi>reason 30]:
+lemma Synthesis_VS_fallback_IMP [\<phi>reason 30]:
   \<open> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2 @action synthesis G
 \<Longrightarrow> S1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S2 @action synthesis G\<close>
   unfolding Action_Tag_def

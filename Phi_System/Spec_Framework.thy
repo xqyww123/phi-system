@@ -225,7 +225,7 @@ lemma  INTERP_SPEC_ex[\<phi>expns]:
   \<open> INTERP_SPEC (ExSet S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
   unfolding INTERP_SPEC_def by (simp add: \<phi>expns set_eq_iff, blast)
 
-abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [14,15] 14)
+abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [15,16] 15)
   where \<open>COMMA \<equiv> (*)\<close>
 
 

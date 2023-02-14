@@ -94,6 +94,23 @@ abbreviation SimpleImply :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " (
 
 declare [[\<phi>reason_default_pattern \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d _\<close> (10)]]
 
+text \<open>Semantics of antecedent \<^pattern_prop>\<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d ?P\<close>:
+  Given the source \<^term>\<open>X\<close> and the target \<^term>\<open>Y\<close>, find a reasoning way to do the transformation,
+  which may bring in additional pure facts \<^pattern_term>\<open>?P\<close> and generate proof obligations.\<close>
+
+definition FOCUS_TAG :: " 'a \<Rightarrow> 'a "  ("\<blangle> _ \<brangle>") where [iff]: "\<blangle> x \<brangle> = x"
+
+abbreviation Remains :: \<open> 'a::{sep_disj,times} set \<Rightarrow> 'a set \<Rightarrow> 'a set \<close> (infix "\<r>\<e>\<m>\<a>\<i>\<n>\<s>" 13)
+  where \<open>(X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<equiv> R * \<blangle> X \<brangle>\<close>
+
+declare [[\<phi>reason_default_pattern
+    \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<^bold>a\<^bold>n\<^bold>d _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<^bold>a\<^bold>n\<^bold>d _\<close> (20)
+]]
+
+text \<open>For antecedent \<^pattern_prop>\<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<^bold>a\<^bold>n\<^bold>d _\<close>, the semantics is slightly different
+  where it specifies extracting given \<^term>\<open>Y\<close> from given \<^term>\<open>X\<close> and leaving some \<^schematic_term>\<open>?R\<close>.\<close>
+
+
 subsubsection \<open>Proof \& Reasoning Rules\<close>
 
 lemma zero_implies_any[\<phi>reason 2000, simp]:
@@ -165,7 +182,7 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Specialized Additive Conjunction\<close>
 
-definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 14)
+definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<^bold>s\<^bold>u\<^bold>b\<^bold>j" 15)
   where " (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = {p. p \<in> T \<and> P}"
 
 lemma Subjection_expn[\<phi>expns]:
@@ -222,9 +239,9 @@ lemma Subjection_plus:
 
 subsection \<open>Existential Quantification\<close>
 
-definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 13)
+definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 14)
   where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
-notation ExSet (binder "\<exists>\<^sup>s" 13)
+notation ExSet (binder "\<exists>\<^sup>s" 14)
 
 lemma ExSet_expn[\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
 

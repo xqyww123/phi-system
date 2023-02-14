@@ -401,13 +401,6 @@ consts MODE_SIMP :: mode \<comment> \<open>relating to simplification\<close>
 consts MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
 consts MODE_AUTO :: mode \<comment> \<open>something that will be triggered automatically\<close>
 
-subsubsection \<open>Focus\<close> \<comment> \<open>Depreciated\<close>
-
-text \<open>A general technical tag used in the reasoning, usually represents the reasoning
-  currently focuses on certain part, certain target.\<close>
-
-definition FOCUS_TAG :: " 'a \<Rightarrow> 'a "  ("\<blangle> _ \<brangle>") where [iff]: "\<blangle> x \<brangle> = x"
-
 
 
 subsection \<open>General Rules\<close>

@@ -379,14 +379,7 @@ text \<open>Priority Convention:
 \<close>
 
 
-consts subj_premise  :: \<open>subgoal \<Rightarrow> mode\<close>
-       ToA_flag_deep :: bool
-
-declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close> \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close> (110)
-  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close>    (120)
-]]
+consts ToA_flag_deep :: bool
 
 
 subsection \<open>Initialization\<close>

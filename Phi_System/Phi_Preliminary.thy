@@ -201,5 +201,22 @@ declare (* disjE[\<phi>inhabitance_rule] *) (*I don't like divergence!*)
 lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+
+subsection \<open>Convention of Syntax Priority\<close>
+
+
+text \<open>
+\<^item> 10: Labelled, Programming_CurrentConstruction, View_Shift_CurrentConstruction
+      PendingConstruction, ToA_Construction, Argument tag
+\<^item> 12: View_Shift, Imply
+\<^item> 13: Remains
+\<^item> 14: ExSet
+\<^item> 15: Comma, Subjection
+\<^item> 16: SMorphism, SYNTHESIS
+\<^item> 18: Assertion_Matches
+\<^item> 20: \<phi>-type colon
+\<close>
+
+
 (*TODO: Move this*)
 end
