@@ -466,9 +466,13 @@ fun add_default_pattern pat_pats ctxt =
 fun remove_default_pattern (n,p1,p2) =
       Default_Pattern.map (Net.delete_term_safe pat_pat_eq (p1,(n,p1,p2)))
 
-fun calc_pattern thy term (n, pat, pat_ret) =
- (SOME (n, Envir.subst_term (Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)) pat_ret))
-  handle Pattern.MATCH => NONE
+fun calc_pattern thy term (n, pat0, pat_ret0) =
+  let val ind = Term.maxidx_of_term term + 1
+      val pat = Logic.incr_indexes ([],[],ind) pat0
+      val pat_ret = Logic.incr_indexes ([],[],ind) pat_ret0
+      val s = Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)
+   in (SOME (n, Envir.subst_term s pat_ret))
+  end handle Pattern.MATCH => NONE
 
 fun the_default_pattern_of ctxt term =
   Net.match_term (Default_Pattern.get ctxt) term
