@@ -30,7 +30,8 @@ inductive SemDoWhile :: "VAL proc \<Rightarrow> resource \<Rightarrow> unit stat
   "Success (\<phi>arg (V_bool.mk False)) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (\<phi>arg ()) res)"
 | "Success (\<phi>arg (V_bool.mk True)) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
 | "Exception v e \<in> f s \<Longrightarrow> SemDoWhile f s (Exception v e)"
-| "PartialCorrect \<in> f s \<Longrightarrow> SemDoWhile f s PartialCorrect"
+| "NonTerm \<in> f s \<Longrightarrow> SemDoWhile f s NonTerm"
+| "AssumptionBroken \<in> f s \<Longrightarrow> SemDoWhile f s AssumptionBroken"
 | "Invalid \<in> f s \<Longrightarrow> SemDoWhile f s Invalid"
 
 lemma "\<nexists> y. SemDoWhile ((\<lambda>res. Return (\<phi>arg (V_bool.mk True)) res) :: VAL proc) res y"
@@ -120,7 +121,7 @@ lemma "__DoWhile__rule_\<phi>app":
   " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l P x' \<Ztypecolon> \<bool>) \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E "
   unfolding op_do_while_def \<phi>Procedure_def
-  apply (simp add: subset_iff LooseStateTy_expn')
+  apply (simp add: subset_iff LooseStateSpec_expn')
   apply (rule allI impI conjI)+
   subgoal for comp R s
   apply (rotate_tac 2)
@@ -186,5 +187,8 @@ simplifications like beta reduction,
 causing it is very difficult to recover the actual abstract guard
 \<open>cond\<close> from the reduced composition \<open>cond x'\<close>.
 *)
+
+
+subsection \<open>Recursion\<close>
 
 end

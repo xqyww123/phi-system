@@ -185,14 +185,14 @@ lemma \<phi>apply_view_shift_pending:
 \<Longrightarrow> (\<And>x. T x \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' x \<^bold>a\<^bold>n\<^bold>d P)
 \<Longrightarrow> PendingConstruction f blk H T' E"
   unfolding PendingConstruction_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All)
+  by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_state_All)
 
 lemma \<phi>apply_view_shift_pending_E:
   " PendingConstruction f blk H T E
 \<Longrightarrow> (\<And>x. E x \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' x \<^bold>a\<^bold>n\<^bold>d P)
 \<Longrightarrow> PendingConstruction f blk H T E'"
   unfolding PendingConstruction_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns LooseStateTy_expn' subset_iff split_state_All)
+  by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_state_All)
 
 lemmas \<phi>apply_implication_pending =
   \<phi>apply_view_shift_pending[OF _ view_shift_by_implication]

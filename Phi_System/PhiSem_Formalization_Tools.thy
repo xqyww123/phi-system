@@ -13,7 +13,7 @@ definition \<phi>M_assert :: \<open>bool \<Rightarrow> unit proc\<close>
   where \<open>\<phi>M_assert P = (\<lambda>s. if P then Return \<phi>V_none s else {Invalid})\<close>
 
 definition \<phi>M_assume :: \<open>bool \<Rightarrow> unit proc\<close>
-  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Return \<phi>V_none s else {PartialCorrect})\<close>
+  where \<open>\<phi>M_assume P = (\<lambda>s. if P then Return \<phi>V_none s else {AssumptionBroken})\<close>
 
 definition \<phi>M_getV_raw :: \<open>(VAL \<Rightarrow> 'v) \<Rightarrow> VAL \<phi>arg \<Rightarrow> ('v \<Rightarrow> 'y proc) \<Rightarrow> 'y proc\<close>
   where \<open>\<phi>M_getV_raw VDT_dest v F = F (VDT_dest (\<phi>arg.dest v))\<close>
@@ -1177,7 +1177,8 @@ lemma throw_\<phi>app:
 definition op_try :: "'ret proc \<Rightarrow> (ABNM \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'}
                                        | Exception v s' \<Rightarrow> g v s'
-                                       | PartialCorrect \<Rightarrow> {PartialCorrect}
+                                       | AssumptionBroken \<Rightarrow> {AssumptionBroken}
+                                       | NonTerm \<Rightarrow> {NonTerm}
                                        | Invalid \<Rightarrow> {Invalid}) ` f s)\<close>
 
 lemma "__op_try__"[intro!]:
@@ -1189,7 +1190,7 @@ lemma "__op_try__"[intro!]:
     apply (cases s; simp; cases x; clarsimp simp add: \<phi>expns ring_distribs)
     subgoal premises prems for a b u v
       using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
-      by (metis (no_types, lifting) INTERP_SPEC LooseStateTy_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) set_mult_expn)
+      by (metis (no_types, lifting) INTERP_SPEC LooseStateSpec_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) set_mult_expn)
     subgoal premises prems for a b c d u v2 proof -
       have \<open>Exception a b \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
         using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
@@ -1214,7 +1215,7 @@ lemma "__op_try__"[intro!]:
       then show ?thesis
         by (simp add: INTERP_SPEC set_mult_expn)
     qed
-    apply (smt (z3) INTERP_SPEC LooseStateTy_expn(2) LooseStateTy_expn(3) set_mult_expn)
+    apply (smt (z3) INTERP_SPEC LooseStateSpec_expn(2) LooseStateSpec_expn(3) set_mult_expn)
     by blast .
 
 definition "Union_the_Same_Or_Arbitrary_when_Var Z X Y \<longleftrightarrow> (\<forall>v. (Z::'v \<Rightarrow> 'a set) v = X v + Y v)"

@@ -119,96 +119,107 @@ lemma is_singletonI'':
 
 section \<open>Specification of Monadic States\<close>
 
-definition StrictStateTy :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
+definition StrictStateSpec :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Exception val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
-                              | PartialCorrect \<Rightarrow> False}"
+                              | NonTerm \<Rightarrow> False
+                              | AssumptionBroken \<Rightarrow> False
+                  }"
 
-definition LooseStateTy  :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
+definition LooseStateSpec  :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
                           \<Rightarrow> 'ret state set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Exception val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
-                              | PartialCorrect \<Rightarrow> True}"
+                              | NonTerm \<Rightarrow> True
+                              | AssumptionBroken \<Rightarrow> True
+                  }"
 
-lemma StrictStateTy_expn[iff]:
+lemma StrictStateSpec_expn[iff]:
         "Success vs x \<in> !\<S> T E \<equiv> x \<in> T vs"
         "Exception v x \<in> !\<S> T E \<equiv> x \<in> E v"
         "\<not> (Invalid \<in> !\<S> T E)"
-        "\<not> (PartialCorrect \<in> !\<S> T E)"
-  and LooseStateTy_expn[iff]:
+        "\<not> (NonTerm \<in> !\<S> T E)"
+        "\<not> (AssumptionBroken \<in> !\<S> T E)"
+  and LooseStateSpec_expn[iff]:
         "Success vs x \<in> \<S> T E \<equiv> x \<in> T vs"
         "Exception v x \<in> \<S> T E \<equiv> x \<in> E v"
         "\<not> (Invalid \<in> \<S> T E)"
-        "(PartialCorrect \<in> \<S> T E)"
-  by (simp_all add: StrictStateTy_def LooseStateTy_def)
+        "(NonTerm \<in> \<S> T E)"
+        "(AssumptionBroken \<in> \<S> T E)"
+  by (simp_all add: StrictStateSpec_def LooseStateSpec_def)
 
-lemma LooseStateTy_expn' :
-    "x \<in> \<S> T E \<longleftrightarrow> x = PartialCorrect
+lemma LooseStateSpec_expn' :
+    "x \<in> \<S> T E \<longleftrightarrow> x = NonTerm
+                 \<or> x = AssumptionBroken
                  \<or> (\<exists>x' v. x = Success v x' \<and> x' \<in> T v)
                  \<or> (\<exists>x' v. x = Exception v x' \<and> x' \<in> E v)"
   by (cases x) simp_all
 
-lemma StrictStateTy_elim[elim]:
+lemma StrictStateSpec_elim[elim]:
     "s \<in> !\<S> T E
 \<Longrightarrow> (\<And>x v. s = Success v x \<Longrightarrow> x \<in> T v \<Longrightarrow> C)
 \<Longrightarrow> (\<And>x v. s = Exception v x \<Longrightarrow> x \<in> E v \<Longrightarrow> C)
 \<Longrightarrow> C" by (cases s) auto
 
-lemma StrictStateTy_intro[intro]:
+lemma StrictStateSpec_intro[intro]:
     " x \<in> T v \<Longrightarrow> Success v x \<in> !\<S> T E"
     " x \<in> E a \<Longrightarrow> Exception a x \<in> !\<S> T E"
   by simp_all
 
-lemma LooseStateTy_E[elim]:
+lemma LooseStateSpec_E[elim]:
     "s \<in> \<S> T E
 \<Longrightarrow> (\<And>x v. s = Success v x \<Longrightarrow> x \<in> T v \<Longrightarrow> C)
 \<Longrightarrow> (\<And>x v. s = Exception v x \<Longrightarrow> x \<in> E v \<Longrightarrow> C)
-\<Longrightarrow> (s = PartialCorrect \<Longrightarrow> C)
+\<Longrightarrow> (s = NonTerm \<Longrightarrow> C)
+\<Longrightarrow> (s = AssumptionBroken \<Longrightarrow> C)
 \<Longrightarrow> C"
   by (cases s) auto
 
-lemma LooseStateTy_I[intro]:
+lemma LooseStateSpec_I[intro]:
   "x \<in> T v \<Longrightarrow> Success v x \<in> \<S> T E"
   "x \<in> E a \<Longrightarrow> Exception a x \<in> \<S> T E"
-  "PartialCorrect \<in> \<S> T E"
+  "NonTerm \<in> \<S> T E"
+  "AssumptionBroken \<in> \<S> T E"
   by simp_all
 
-lemma LooseStateTy_upgrade:
-  "s \<in> \<S> T E \<Longrightarrow> s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T E"
+lemma LooseStateSpec_upgrade:
+  "s \<in> \<S> T E \<Longrightarrow> s \<noteq> AssumptionBroken \<Longrightarrow> s \<noteq> NonTerm \<Longrightarrow> s \<in> !\<S> T E"
   by (cases s) auto
 
-lemma StrictStateTy_degrade: "s \<in> !\<S> T E \<Longrightarrow> s \<in> \<S> T E" by (cases s) auto
+lemma StrictStateSpec_degrade: "s \<in> !\<S> T E \<Longrightarrow> s \<in> \<S> T E" by (cases s) auto
 
-lemma LooseStateTy_introByStrict: "(s \<noteq> PartialCorrect \<Longrightarrow> s \<in> !\<S> T E) \<Longrightarrow> s \<in> \<S> T E" by (cases s) auto
+lemma LooseStateSpec_introByStrict:
+  "(s \<noteq> AssumptionBroken \<Longrightarrow> s \<noteq> NonTerm \<Longrightarrow> s \<in> !\<S> T E) \<Longrightarrow> s \<in> \<S> T E"
+  by (cases s) auto
 
-lemma StrictStateTy_subset:
+lemma StrictStateSpec_subset:
   \<open>(\<And>v. A v \<subseteq> A' v) \<Longrightarrow> (\<And>v. E v \<subseteq> E' v) \<Longrightarrow> !\<S> A E \<subseteq> !\<S> A' E'\<close>
-  unfolding subset_iff StrictStateTy_def by simp
-lemma StrictStateTy_subset'[intro]:
+  unfolding subset_iff StrictStateSpec_def by simp
+lemma StrictStateSpec_subset'[intro]:
   \<open>(\<And>v. \<forall>s. s \<in> A v \<longrightarrow> s \<in> A' v) \<Longrightarrow> (\<And>v. \<forall>s. s \<in> E v \<longrightarrow> s \<in> E' v) \<Longrightarrow> s \<in> !\<S> A E \<Longrightarrow> s \<in> !\<S> A' E'\<close>
-  unfolding StrictStateTy_def by (cases s; simp)
+  unfolding StrictStateSpec_def by (cases s; simp)
 
-lemma LooseStateTy_subset:
+lemma LooseStateSpec_subset:
   \<open>(\<And>v. A v \<subseteq> A' v) \<Longrightarrow> (\<And>v. E v \<subseteq> E' v) \<Longrightarrow> \<S> A E \<subseteq> \<S> A' E'\<close>
-  unfolding subset_iff LooseStateTy_def by simp
-lemma LooseStateTy_subset'[intro]:
+  unfolding subset_iff LooseStateSpec_def by simp
+lemma LooseStateSpec_subset'[intro]:
   \<open>(\<And>v. \<forall>s. s \<in> A v \<longrightarrow> s \<in> A' v) \<Longrightarrow> (\<And>v. \<forall>s. s \<in> E v \<longrightarrow> s \<in> E' v) \<Longrightarrow> s \<in> \<S> A E \<Longrightarrow> s \<in> \<S> A' E'\<close>
-  unfolding LooseStateTy_def by (cases s; simp)
+  unfolding LooseStateSpec_def by (cases s; simp)
 
 
-lemma LooseStateTy_plus[iff]:
+lemma LooseStateSpec_plus[iff]:
 (*  \<open>\<S> (A + B) E   = \<S> A E + \<S> B E\<close> *)
   \<open>\<S> X (\<lambda>v. EA v + EB v) = \<S> X EA + \<S> X EB\<close>
-  unfolding set_eq_iff LooseStateTy_def by simp_all
-lemma StrictStateTy_plus[iff]:
+  unfolding set_eq_iff LooseStateSpec_def by simp_all
+lemma StrictStateSpec_plus[iff]:
 (*  \<open>!\<S> (A + B) E   = !\<S> A E  + !\<S> B E\<close> *)
   \<open>!\<S> X (\<lambda>v. EA v + EB v) = !\<S> X EA + !\<S> X EB\<close>
-  unfolding set_eq_iff StrictStateTy_def by simp_all
+  unfolding set_eq_iff StrictStateSpec_def by simp_all
 
 abbreviation \<open>Void \<equiv> (1::assn)\<close>
 
@@ -372,7 +383,7 @@ lemma \<phi>CONSEQ:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A' \<longmapsto> B' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' "
   unfolding \<phi>Procedure_def View_Shift_def subset_iff
   apply clarsimp
-  by (smt (verit, del_insts) LooseStateTy_expn')
+  by (smt (verit, del_insts) LooseStateSpec_expn')
 
 subsection \<open>Helper Rules\<close>
 

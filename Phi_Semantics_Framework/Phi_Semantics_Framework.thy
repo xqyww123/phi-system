@@ -337,17 +337,21 @@ declare [ [typedef_overloaded] ]
 datatype 'ret state =
       Success \<open>'ret::VALs \<phi>arg\<close> (resource: resource)
     | Exception \<open>ABNM\<close> (resource: resource)
-    | Invalid | PartialCorrect
+    | Invalid
+    | AssumptionBroken
+    | NonTerm
 
 declare [ [typedef_overloaded = false] ]
 
 
 lemma split_state_All:
-  \<open>All P \<longleftrightarrow> (\<forall>v r. P (Success v r)) \<and> (\<forall>v r. P (Exception v r)) \<and> P Invalid \<and> P PartialCorrect\<close>
+  \<open>All P \<longleftrightarrow> (\<forall>v r. P (Success v r)) \<and> (\<forall>v r. P (Exception v r)) \<and> P Invalid
+                \<and> P AssumptionBroken \<and> P NonTerm\<close>
   by (metis state.exhaust)
 
 lemma split_state_Ex:
-  \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Exception v r)) \<or> P Invalid \<or> P PartialCorrect\<close>
+  \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Exception v r)) \<or> P Invalid
+                \<or> P AssumptionBroken \<or> P NonTerm\<close>
   by (metis state.exhaust)  
 
 hide_const(open) resource
@@ -396,7 +400,9 @@ definition bind :: "'a::VALs proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b::
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
                                            | Exception v x \<Rightarrow> {Exception v x}
                                            | Invalid \<Rightarrow> {Invalid}
-                                           | PartialCorrect \<Rightarrow> {PartialCorrect}) ` f res))"
+                                           | NonTerm \<Rightarrow> {NonTerm}
+                                           | AssumptionBroken \<Rightarrow> {AssumptionBroken}
+                              ) ` f res))"
 
 abbreviation bind' ("_ \<ggreater>/ _" [75,76] 75)
   where \<open>bind' f g \<equiv> (f \<bind> (\<lambda>_. g))\<close>
