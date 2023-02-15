@@ -252,7 +252,6 @@ text \<open>Arguments and Returns are wrapped by \<phi>arg type.
 datatype ('a::VALs) \<phi>arg = \<phi>arg (dest: 'a)
 hide_const (open) dest
 
-
 lemma \<phi>arg_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
 lemma \<phi>arg_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
 lemma \<phi>arg_All: \<open>(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (\<phi>arg x))\<close>
@@ -286,6 +285,23 @@ lemma \<phi>V_simps[simp]:
      apply simp apply simp apply simp .
 
 definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
+
+paragraph \<open>More auxiliary properties\<close>
+
+lemma split_paired_All_\<phi>arg:
+  "(\<forall>x. P x) \<longleftrightarrow> (\<forall>a b. P (\<phi>V_pair a b))"
+  by (metis \<phi>V_simps(1))
+
+lemma split_paired_Ex_\<phi>arg:
+  "(\<exists>x. P x) \<longleftrightarrow> (\<exists>a b. P (\<phi>V_pair a b))"
+  by (metis \<phi>V_simps(1))
+  
+lemma split_paired_all_\<phi>arg:
+  "(\<And>x. PROP P x) \<equiv> (\<And>a b. PROP P (\<phi>V_pair a b))"
+  unfolding \<phi>arg_All \<phi>V_pair_def split_paired_all by simp
+
+
+
 
 (* datatype unreachable = unreachable
 

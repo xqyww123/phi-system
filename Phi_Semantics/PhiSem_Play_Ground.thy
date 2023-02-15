@@ -36,7 +36,7 @@ setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
 (* declare [[\<phi>hide_techinicals=false]] *)
 
 (* declare [[\<phi>hide_brk_frame=false, \<phi>trace_reasoning]] *)
-
+ 
 proc
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   premises \<open>x < 10\<close>
@@ -52,5 +52,22 @@ proc
   \<medium_right_bracket>. .
 
 
+notepad
+begin
 
+  assume A: \<open>(\<And>x::((nat \<times> int \<times> bool) <named> ('name_a \<times> 'name_b \<times> 'name_c)).
+    P (case_named (fst) x) \<and> Q (case_named (fst o snd) x) \<and> Z (case_named (snd o snd) x))\<close>
+
+assume B: \<open>(\<And>x::(((nat \<times> int \<times> bool) <named> ('name_a \<times> 'name_b \<times> 'name_c)) \<Rightarrow> bool). x aaa)\<close>
+
+  term case_named
+  
+  thm B
+  ML_val \<open>QuantExpansion.named_predicate_expansion @{context} @{thm B}\<close>
+
+  assume C: \<open>PROP Pure.prop (AAA \<Longrightarrow> (\<And>x. P x))\<close>
+  ML_val \<open>@{thm C[unfolded Pure.prop_def]} COMP @{thm meta_spec}\<close>
+
+end
+thm meta_spec
 end

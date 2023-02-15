@@ -2136,8 +2136,8 @@ lemma Collect_Return_Values_I: \<open>Collect_Return_Values (S V) S V\<close>
   let
     val \<^const>\<open>Trueprop\<close> $ (\<^Const_>\<open>Collect_Return_Values _\<close> $ S $ Var S' $ Var V')
           = Thm.major_prem_of sequent
-    val (V'',S'') = Procedure_Syntax.abstract_return_vals
-                            "\<v>\<s>" (TVar (("ret", Thm.maxidx_of sequent),\<^sort>\<open>VALs\<close>)) true S
+    val (V'',S'') = Procedure_Syntax.package_values
+                            "\<v>\<s>" (TVar (("ret", Thm.maxidx_of sequent),\<^sort>\<open>VALs\<close>)) true NONE S
           |> apply2 (Thm.cterm_of ctxt)
    in Drule.infer_instantiate_types ctxt [(S',S''),(V',V'')] sequent
           |> (fn th => @{thm Collect_Return_Values_I} RS th)

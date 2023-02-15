@@ -6,7 +6,7 @@ begin
 
 section \<open>Instructions\<close>
 
-paragraph \<open>Non-Branching Selection\<close>
+subsection \<open>Non-Branching Selection\<close>
 
 definition op_sel :: "TY \<Rightarrow> (VAL \<times> VAL \<times> VAL, VAL) proc'"
   where "op_sel TY =
@@ -16,7 +16,7 @@ definition op_sel :: "TY \<Rightarrow> (VAL \<times> VAL \<times> VAL, VAL) proc
     \<phi>M_getV TY id vb (\<lambda>b.
     Return (\<phi>arg (if c then b else a)))))))"
 
-paragraph \<open>Branch\<close>
+subsection \<open>Branch\<close>
 
 definition op_if :: "'ret proc
                   \<Rightarrow> 'ret proc
@@ -24,7 +24,7 @@ definition op_if :: "'ret proc
   where "op_if brT brF v =
     \<phi>M_getV bool V_bool.dest v (\<lambda>c. (if c then brT else brF))"
 
-paragraph \<open>While Loop\<close>
+subsection \<open>While Loop\<close>
 
 inductive SemDoWhile :: "VAL proc \<Rightarrow> resource \<Rightarrow> unit state \<Rightarrow> bool" where
   "Success (\<phi>arg (V_bool.mk False)) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (\<phi>arg ()) res)"
@@ -60,7 +60,7 @@ lemma SemDoWhile_deterministic2:
   using SemDoWhile_deterministic by blast *)
 
 
-paragraph \<open>Recursion\<close>
+subsection \<open>Recursion\<close>
 
 inductive SemRec :: "(('a,'a) proc' \<Rightarrow> ('a,'a) proc')
             \<Rightarrow> 'a \<phi>arg \<Rightarrow> resource \<Rightarrow> 'a state set \<Rightarrow> bool"
@@ -68,10 +68,33 @@ where
   SemRec_I0: "(\<And>g. F g x res = y) \<Longrightarrow> SemRec F x res y"
 | SemRec_IS: "SemRec (F o F) x res y \<Longrightarrow> SemRec F x res y"
 
-definition op_recursion :: "TY list \<Rightarrow> TY list
-                         \<Rightarrow> (('a,'a) proc' \<Rightarrow> ('a,'a) proc')
+definition op_recursion :: "(('a,'a) proc' \<Rightarrow> ('a,'a) proc')
                          \<Rightarrow> ('a,'a) proc'"
-  where "op_recursion _ _ F x s = (if (\<exists>t. SemRec F x s t) then The (SemRec F x s) else {})"
+  where "op_recursion F x s = (if (\<exists>t. SemRec F x s t) then The (SemRec F x s) else {})"
+
+
+
+subsubsection \<open>Simple Properties\<close>
+
+lemma SemRec_IR: "SemRec F x r y \<Longrightarrow> SemRec (F o F) x r y"
+  by (induct rule: SemRec.induct, rule SemRec_I0, simp)
+
+lemma SemRec_deterministic:
+  assumes "SemRec c s r s1" and "SemRec c s r s2" shows "s1 = s2"
+proof -
+  have "SemRec c s r s1 \<Longrightarrow> (\<forall>s2. SemRec c s r s2 \<longrightarrow> s1 = s2)"
+    apply (induct rule: SemRec.induct)
+     apply clarify
+    subgoal for F a b y s2 apply (rotate_tac 1)
+      apply (induct rule: SemRec.induct) by auto 
+    apply clarify apply (blast intro: SemRec_IR) done
+  thus ?thesis using assms by simp
+qed
+
+lemma SemRec_deterministic2: " SemRec body s r x \<Longrightarrow> The (SemRec body s r) = x"
+  using SemRec_deterministic by (metis theI_unique)
+
+
 
 section \<open>Abstraction of Procedures\<close>
 
@@ -190,5 +213,22 @@ causing it is very difficult to recover the actual abstract guard
 
 
 subsection \<open>Recursion\<close>
+
+lemma "__op_recursion__":
+  "(\<forall>g x' v'. (\<forall>x'' v''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v'' \<lbrace> X v'' x'' \<longmapsto> Y x'' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g v' \<lbrace> X v' x' \<longmapsto> Y x' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
+\<Longrightarrow> \<forall>x v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion F v \<lbrace> X v x \<longmapsto> Y x \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
+  unfolding op_recursion_def \<phi>Procedure_def atomize_all
+  apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
+  
+  subgoal for x v comp a R
+    apply (rotate_tac 1) apply (induct rule: SemRec.induct) 
+    
+    subgoal premises prems for F v res y
+      using prems(3)[THEN spec[where x= \<open>\<lambda>_ _. {AssumptionBroken}\<close>], simplified,
+                     THEN spec[where x=x], THEN spec[where x=v], THEN spec[where x=res],
+                     THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] .
+    by simp .
+
+ML_file \<open>library/basic_recursion.ML\<close>
 
 end

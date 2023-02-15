@@ -20,10 +20,13 @@ end
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Phi_Syntax
 
-val tylabel_name = prefix "'\<phi>name_"
+val tylabel_NAME = "'name_"
+val tylabel_name = prefix tylabel_NAME
+val tylabel_name_size = String.size tylabel_NAME
+
 fun mk_name_tylabels names =
       HOLogic.mk_tupleT (map (fn x => TFree (tylabel_name x, [\<^class>\<open>type\<close>])) names)
-fun trim_tylabel_name name = String.substring(name, 12, size name - 12)
+fun trim_tylabel_name name = String.substring(name, tylabel_name_size, size name - tylabel_name_size)
 
 local open Ast in
 

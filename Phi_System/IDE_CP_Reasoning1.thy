@@ -220,6 +220,8 @@ simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow
 simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
   \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
 
+ML_file "./library/syntax/procedure3.ML"
+
 
 subsubsection \<open>Rename \<lambda>-Abstraction\<close>
 

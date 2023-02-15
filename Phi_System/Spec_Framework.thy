@@ -145,12 +145,18 @@ lemma StrictStateSpec_expn[iff]:
         "\<not> (Invalid \<in> !\<S> T E)"
         "\<not> (NonTerm \<in> !\<S> T E)"
         "\<not> (AssumptionBroken \<in> !\<S> T E)"
+        "\<not> {Invalid} \<subseteq> !\<S> T E"
+        "\<not> {NonTerm} \<subseteq> !\<S> T E"
+        "\<not> {AssumptionBroken} \<subseteq> !\<S> T E"
   and LooseStateSpec_expn[iff]:
         "Success vs x \<in> \<S> T E \<equiv> x \<in> T vs"
         "Exception v x \<in> \<S> T E \<equiv> x \<in> E v"
         "\<not> (Invalid \<in> \<S> T E)"
         "(NonTerm \<in> \<S> T E)"
         "(AssumptionBroken \<in> \<S> T E)"
+        "\<not> {Invalid} \<subseteq> \<S> T E"
+        "{NonTerm} \<subseteq> \<S> T E"
+        "{AssumptionBroken} \<subseteq> \<S> T E"
   by (simp_all add: StrictStateSpec_def LooseStateSpec_def)
 
 lemma LooseStateSpec_expn' :

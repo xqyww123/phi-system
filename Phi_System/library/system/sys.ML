@@ -197,7 +197,7 @@ fun set_param term' (ctxt,sequent) =
     if has_only_one_ex_quantification X
     then (* We aggregate the user input `term` into a single ex quantification with name preserved*)
           let
-            val (N,term') = QuantExpansion.aggregate_variables_quantification term
+            val (N,term') = QuantExpansion.aggregate_vars_quantification term
           in (ctxt, set_param' ctxt_parse term' sequent
                       |> Raw_Simplifier.rewrite_rule ctxt
                             (QuantExpansion.ExNu_expansion     N ctxt
