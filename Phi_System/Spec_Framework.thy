@@ -3,6 +3,7 @@ chapter \<open>Specification Framework\<close>
 theory Spec_Framework
   imports Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
   abbrevs "<shifts>" = "\<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s"
+    and   "<val>" = "\<^bold>v\<^bold>a\<^bold>l"
 begin
 
 section \<open>Specification of Value\<close>

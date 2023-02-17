@@ -25,6 +25,7 @@ signature PHI_HELP = sig
   val leading_antecedent : term -> (string * typ) list (*quantified variables*)
                                  * term list (*premises of the antecedent*)
                                  * term (*conclusion containing loose bound*)
+  val rewrite_leading_antecedent : Proof.context -> thm -> thm
 
   val string_of_term_generic : Context.generic -> term -> string
 
@@ -35,6 +36,8 @@ signature PHI_HELP = sig
 
   val beta_eta_contract : thm -> thm
   val beta_eta_contract_leading_antecedent : thm -> thm
+
+  val safe_fastype_of : term -> typ (*improved Term.fastype_of which considers dummyT*)
 
   val dest_monop_ty: string (* const name *) -> typ -> typ
   val dest_monop   : string (* const name *) -> term -> term
@@ -65,21 +68,10 @@ signature PHI_HELP = sig
   val list_mk_binop_r_ty  (* right associative *) : string (* type name *) -> typ list -> typ
   val list_mk_binop_r0 (* right associative *) : string (* const name *)
         -> term (* initial term *) -> term list -> term
-  (*val dest_binder    : string (*binder name*) -> term -> term * term
-  val dest_binder_c  : string (*binder name*) -> cterm -> cterm * cterm
-  (* one wrapped by `BinderNameTag` *)
-  val mk_abstract  : term (*var*) -> term (*body*) -> term
-  val mk_binder    : string (*binder name*) -> term -> term -> term
-  val strip_binder_n   : int (*number of binders to be destructed*) ->
-        string -> term -> term list * term
-  val strip_binder_nc : int -> string -> cterm -> cterm list * cterm
-  val strip_binder   : string -> term -> term list * term
-  val strip_binder_c : string -> cterm -> cterm list * cterm *)
+
   val strip_binder_vars : string -> term -> (string * typ) list
   val strip_binder_raw_body : string -> term -> term (* term containing raw bounds! *)
   val strip_binder_raw : string -> term -> (string * typ) list * term
-  val list_mk_binder   : string -> term list -> term -> term
-  val list_mk_abstract : term list -> term -> term
   val strip_implies_c : cterm -> cterm
 
   (* abstract `free variables` into a lambda abstraction of a tuple of variables named `names`,
@@ -121,6 +113,9 @@ fun strip_meta_hhf term =
 fun leading_antecedent (Const("Pure.imp", _) $ H $ _) = strip_meta_hhf H
   | leading_antecedent X = raise TERM ("has no antecedent", [X])
 
+fun rewrite_leading_antecedent ctxt =
+  Conv.fconv_rule (Conv.implies_conv (Simplifier.rewrite ctxt) Conv.all_conv)
+
 fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global thy
   | string_of_term_generic (Context.Proof ctxt) = Syntax.string_of_term ctxt
 
@@ -151,6 +146,32 @@ fun beta_eta_contract_leading_antecedent th =
   then Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion
                                          Conv.all_conv (Thm.cprop_of th)) th
   else th
+
+
+
+local
+
+fun fastype_of_term Ts (Abs (_, T, t)) = T --> fastype_of_term (T :: Ts) t
+  | fastype_of_term Ts (t $ _) = range_type_of Ts t
+  | fastype_of_term Ts a = fastype_of_atom Ts a
+and fastype_of_atom _ (Const (_, T)) = T
+  | fastype_of_atom _ (Free (_, T)) = T
+  | fastype_of_atom _ (Var (_, T)) = T
+  | fastype_of_atom Ts (Bound i) = fastype_of_bound Ts i
+and fastype_of_bound (T :: Ts) i = if i = 0 then T else fastype_of_bound Ts (i - 1)
+  | fastype_of_bound [] i = raise TERM ("fastype_of: Bound", [Bound i])
+and range_type_of Ts (Abs (_, T, u)) = fastype_of_term (T :: Ts) u
+  | range_type_of Ts (t $ u) = range_type_ofT (t $ u) (range_type_of Ts t)
+  | range_type_of Ts a = range_type_ofT a (fastype_of_atom Ts a)
+and range_type_ofT _ (Type ("fun", [_, T])) = T
+  | range_type_ofT _ (Type ("dummy", _)) = dummyT
+  | range_type_ofT t _ = raise TERM ("fastype_of: expected function type", [t]);
+
+in
+val safe_fastype_of = fastype_of_term [];
+end
+
+
 
 fun has_head c (Const (c', _)) = (c = c')
   | has_head c (h $ _) = has_head c h
@@ -255,9 +276,6 @@ fun list_mk_binop_l0 _  x0 [] = x0
 fun dest_binder_c binder = dest_monop_c binder #> dest_abs NONE
 val dest_binder_name_tag   = dest_binop   "NuPrime.BinderNameTag"
 val dest_binder_name_tag_c = dest_binop_c "NuPrime.BinderNameTag" *)
-fun mk_abstract (Free namty) body = absfree namty body
-  | mk_abstract tm _ = raise TERM ("mk_abstract: should be a free variable", [tm])
-fun mk_binder binder var body = mk_monop binder (mk_abstract var body)
 
 (*fun gen_strip_binder num dest tm =
   if num = 0 then ([],tm)
@@ -271,8 +289,7 @@ fun strip_binder_n  n = gen_strip_binder n o dest_binder
 fun strip_binder_nc n = gen_strip_binder n o dest_binder_c
 val strip_binder   = strip_binder_n ~1
 val strip_binder_c = strip_binder_nc ~1 *)
-fun list_mk_binder binder = fold (mk_binder binder)
-val list_mk_abstract = fold mk_abstract
+
 
 fun strip_binder_vars binder (Const (binder', _) $ Abs (name, ty, body))
       = if binder' = binder then (name,ty) :: strip_binder_vars binder body else []

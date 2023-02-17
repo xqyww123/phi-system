@@ -66,6 +66,24 @@ lemma [iff]:
   \<open> n < 16 \<Longrightarrow> Big n = n \<close>
   unfolding Big_def by simp+
 
+subsection \<open>Helper Conversion\<close>
+
+definition \<open>PURE_TOP \<equiv> (\<And>P::prop. PROP P \<Longrightarrow> PROP P)\<close>
+
+lemma PURE_TOP_I[\<phi>reason 1000]: \<open>PROP PURE_TOP\<close> unfolding PURE_TOP_def .
+
+lemma PURE_TOP_imp:
+  \<open>(PROP PURE_TOP \<Longrightarrow> PROP P) \<equiv> PROP P\<close> (is \<open>PROP ?LHS \<equiv> PROP ?RHS\<close>)
+proof
+  assume \<open>PROP ?LHS\<close>
+  from this[OF PURE_TOP_I] show \<open>PROP ?RHS\<close> .
+next
+  assume \<open>PROP ?RHS\<close>
+  then show \<open>PROP ?LHS\<close> .
+qed
+
+ML_file \<open>library/syntax/helper_conv.ML\<close>
+
 
 
 subsection \<open>Helper Antiquotations\<close>

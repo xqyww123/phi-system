@@ -264,6 +264,7 @@ qed
 
 abbreviation \<open>\<phi>V_none \<equiv> \<phi>arg ()\<close>
 definition \<open>\<phi>V_pair x y = \<phi>arg (\<phi>arg.dest x, \<phi>arg.dest y)\<close>
+definition \<open>\<phi>V_case_prod f x \<equiv> case x of \<phi>arg (a,b) \<Rightarrow> f (\<phi>arg a) (\<phi>arg b)\<close>
 definition \<open>\<phi>V_fst x = map_\<phi>arg fst x\<close>
 definition \<open>\<phi>V_snd x = map_\<phi>arg snd x\<close>
 abbreviation \<open>\<phi>V_nil \<equiv> \<phi>arg []\<close>
@@ -278,11 +279,15 @@ lemma \<phi>V_simps[simp]:
   \<open>\<phi>V_cons (\<phi>arg h) (\<phi>arg l) = \<phi>arg (h#l)\<close>
   \<open>\<phi>V_hd (\<phi>V_cons hv lv) = hv\<close>
   \<open>\<phi>V_tl (\<phi>V_cons hv lv) = lv\<close>
-  unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def
+  \<open>\<phi>V_case_prod f (\<phi>V_pair a b) = f a b\<close>
+  unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def \<phi>V_case_prod_def
      apply (cases v, simp)
      apply (cases v, simp)
      apply (cases v, simp)
-     apply simp apply simp apply simp .
+     apply simp apply simp apply simp
+  apply simp .
+
+term \<open>\<phi>V_case_prod (\<lambda>x. \<phi>V_case_prod (\<lambda>y. \<phi>V_case_prod (\<lambda>z. f x y z)))\<close>
 
 definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
 

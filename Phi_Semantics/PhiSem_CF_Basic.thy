@@ -68,9 +68,9 @@ where
   SemRec_I0: "(\<And>g. F g x res = y) \<Longrightarrow> SemRec F x res y"
 | SemRec_IS: "SemRec (F o F) x res y \<Longrightarrow> SemRec F x res y"
 
-definition op_recursion :: "(('a,'a) proc' \<Rightarrow> ('a,'a) proc')
+definition op_fix_point :: "(('a,'a) proc' \<Rightarrow> ('a,'a) proc')
                          \<Rightarrow> ('a,'a) proc'"
-  where "op_recursion F x s = (if (\<exists>t. SemRec F x s t) then The (SemRec F x s) else {})"
+  where "op_fix_point F x s = (if (\<exists>t. SemRec F x s t) then The (SemRec F x s) else {})"
 
 
 
@@ -214,21 +214,61 @@ causing it is very difficult to recover the actual abstract guard
 
 subsection \<open>Recursion\<close>
 
-lemma "__op_recursion__":
-  "(\<forall>g x' v'. (\<forall>x'' v''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v'' \<lbrace> X v'' x'' \<longmapsto> Y x'' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E) \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g v' \<lbrace> X v' x' \<longmapsto> Y x' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
-\<Longrightarrow> \<forall>x v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_recursion F v \<lbrace> X v x \<longmapsto> Y x \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
-  unfolding op_recursion_def \<phi>Procedure_def atomize_all
+lemma "__op_recursion_simp__":
+  "(\<And>g x' v'. (\<And>x'' v''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v''  \<lbrace> X x'' v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x'')
+                      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g v' \<lbrace> X x' v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' )
+\<Longrightarrow> \<forall>x v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x"
+  unfolding op_fix_point_def \<phi>Procedure_def atomize_all
   apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
   
   subgoal for x v comp a R
     apply (rotate_tac 1) apply (induct rule: SemRec.induct) 
     
     subgoal premises prems for F v res y
-      using prems(3)[THEN spec[where x= \<open>\<lambda>_ _. {AssumptionBroken}\<close>], simplified,
-                     THEN spec[where x=x], THEN spec[where x=v], THEN spec[where x=res],
+      using prems(3)[of \<open>\<lambda>_ _. {AssumptionBroken}\<close> x v, simplified, THEN spec[where x=res],
                      THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] .
     by simp .
 
+text \<open>Instead, we use a variant of the above rule which in addition annotates the names
+  of the values.\<close>
+
+lemma "__op_recursion__":
+  "(\<And>g x' (v':: 'a::VALs \<phi>arg <named> 'names).
+          P x'
+      \<Longrightarrow> PROP Labelled label (HIDDEN_PREM
+          (\<And>x'' (v''::'a \<phi>arg <named> 'names).
+              P x'' \<Longrightarrow>
+              \<^bold>p\<^bold>r\<^bold>o\<^bold>c g (case_named id v'') \<lbrace> case_named (X x'') v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x''))
+      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g (case_named id v') \<lbrace> case_named (X x') v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' )
+\<Longrightarrow> PROP Pure.prop (
+      P x \<Longrightarrow>
+      \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x
+)"
+  (*unfolding Pure.prop_def \<phi>arg_forall named_All
+  apply simp *)
+
+  unfolding op_fix_point_def \<phi>Procedure_def atomize_all \<phi>arg_forall \<phi>arg_All HIDDEN_PREM_def
+            Pure.prop_def
+  apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
+  
+  subgoal for comp a R
+    apply (rotate_tac 2) apply (induct rule: SemRec.induct) 
+
+    subgoal premises prems for F v res y
+      thm prems(3)[OF prems(4)]
+      using prems(3)[OF prems(4),
+                     of \<open>\<lambda>_ _. {AssumptionBroken}\<close> \<open>tag v\<close>, simplified, THEN spec[where x=res],
+                     THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] .
+    by simp .
+
+
 ML_file \<open>library/basic_recursion.ML\<close>
+
+attribute_setup recursive = \<open>Scan.repeat Args.term >> (fn vars =>
+    Phi_Modifier.wrap_to_attribute (fn (ctxt,sequent) =>
+      case Phi_Toplevel.name_of_the_building_procedure ctxt
+        of SOME b => PhiSem_Control_Flow.basic_recursive_mod b vars (ctxt,sequent)
+         | NONE => error "Name binding of the procedure is required."
+  ))\<close>
 
 end

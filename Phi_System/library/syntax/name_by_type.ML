@@ -12,8 +12,10 @@ include PHI_SYNTAX
   val mk_name_tag_ast : (Ast.ast * string list) -> Ast.ast
 
   val mk_namedT : typ -> string list -> typ
-  val dest_named : typ -> (string * typ) list
-  val dest_named_only_names : typ -> string list
+  val dest_namedT : typ -> (string * typ) list
+  val dest_namedT_only_names : typ -> string list
+
+  val mk_named_tag : term -> typ -> term
 
 end
 
@@ -55,12 +57,14 @@ fun dest_name_tylabel (TFree (name,_)) = trim_tylabel_name name
   | dest_name_tylabel (TVar ((name,_),_)) = trim_tylabel_name name
 val dest_name_tylabels = HOLogic.strip_tupleT #> map dest_name_tylabel
 
-fun dest_named (Type (@{type_name named}, [tys, names]))
+fun dest_namedT (Type (@{type_name named}, [tys, names]))
       = dest_name_tylabels names ~~ HOLogic.strip_tupleT tys
-  | dest_named ty = raise TYPE ("dest_named", [ty], [])
-fun dest_named_only_names (Type (@{type_name named}, [_, names]))
+  | dest_namedT ty = raise TYPE ("dest_namedT", [ty], [])
+fun dest_namedT_only_names (Type (@{type_name named}, [_, names]))
       = dest_name_tylabels names
-  | dest_named_only_names ty = raise TYPE ("dest_named", [ty], [])
+  | dest_namedT_only_names ty = raise TYPE ("dest_namedT", [ty], [])
+
+fun mk_named_tag X T = \<^Const>\<open>tag \<open>Phi_Help.safe_fastype_of X\<close> T\<close> $ X
 
 val _ = Theory.setup (Sign.parse_ast_translation (
   [(\<^syntax_const>\<open>__named__\<close>, (fn _ => fn [term,name] =>

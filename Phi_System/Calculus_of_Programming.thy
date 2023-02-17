@@ -257,10 +257,9 @@ text \<open>Rules showing the obtained procedure is identical to the desired goa
 consts procedure_simplification :: mode
 named_theorems procedure_simps
 
-declare proc_bind_SKIP[procedure_simps]
-  proc_bind_SKIP'[procedure_simps]
-  proc_bind_assoc[procedure_simps]
-  proc_bind_return_none[procedure_simps]
+lemmas [procedure_simps] =
+            proc_bind_SKIP proc_bind_SKIP'
+            proc_bind_assoc proc_bind_return_none \<phi>V_simps
 
 \<phi>reasoner procedure_equivalent 1200 (\<open>Premise procedure_simplification ?P\<close>)
   = (rule Premise_I; simp only: procedure_simps; fail)

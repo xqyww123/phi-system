@@ -1,6 +1,10 @@
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
+  val assn_fictionT : typ
+  val mk_procT  : typ -> typ
+  val mk_proc'T : typ -> typ -> typ
+
   val is_construction_mode: term -> term -> bool
   val dest_CurrentConstruction   :  term -> term * term * term * term
   val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm * cterm
@@ -24,6 +28,10 @@ end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Thm Term HOLogic Phi_Help Phi_Syntax
+
+fun mk_procT T = \<^typ>\<open>resource\<close> --> \<^Type>\<open>set \<open>\<^Type>\<open>state T\<close>\<close>\<close>
+fun mk_proc'T T U = \<^Type>\<open>\<phi>arg T\<close> --> mk_procT U
+val assn_fictionT = \<^typ>\<open>assn\<close>
 
 val dest_CurrentConstruction   =
       perhaps (try dest_Trueprop)   #> dest_quadop   @{const_name CurrentConstruction}

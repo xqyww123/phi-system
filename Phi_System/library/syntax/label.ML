@@ -12,6 +12,7 @@ include PHI_SYNTAX
   val mk_label_thm : string -> thm
   val intro_labelled : string -> conv
   val elim_labelled : conv
+  val labelled_conv : conv -> conv
 
 end
 
@@ -55,5 +56,6 @@ fun intro_labelled name cterm =
 
 val elim_labelled = Conv.rewr_conv @{thm Labelled_def}
 
+val labelled_conv = Conv.arg_conv
 
 end

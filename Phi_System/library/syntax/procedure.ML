@@ -20,7 +20,7 @@ Translate a term X containing values V (including anonymous values) into (\<lamb
 
 Values of identical name are considered identical. Any anonymous value is considered unique.
 *)
-  val package_values :
+val package_values :
        string (*name of the lambda variable*)
         -> typ (*type of the return when the spec is 0*)
         -> bool (*the order for scanning and collecting the values.
@@ -38,12 +38,15 @@ val translate_ret : term -> term
    roughly identical to (package_values "\<r>\<e>\<t>" true).
 *)
 
+val is_argT : typ -> bool
 val dest_argT : typ -> typ
 val mk_argT : typ -> typ
 val dest_arg_prodT : typ -> typ * typ
 val mk_arg_prodT   : typ * typ -> typ
 val mk_arg_tupleT  : typ list -> typ
 val mk_arg_tuple   : typ list -> term list -> term
+val dest_arg_tuple : term -> term list
+val map_argT  : (typ -> typ) -> typ -> typ
 
 end
 
@@ -88,6 +91,8 @@ fun need_translate_arg (Const (\<^const_name>\<open>anonymous\<close>, _)) = tru
   | need_translate_arg _ = false
 
 
+fun is_argT (Type (\<^type_name>\<open>\<phi>arg\<close>, [_])) = true
+  | is_argT _ = false
 fun dest_argT (Type (\<^type_name>\<open>\<phi>arg\<close>, [T])) = T
   | dest_argT T = raise TYPE("Not a \<phi>arg type", [T], [])
 fun mk_argT T = \<^Type>\<open>\<phi>arg \<open>T\<close>\<close>
@@ -101,6 +106,11 @@ fun mk_arg_prodT (Type (\<^type_name>\<open>\<phi>arg\<close>, [T1]), Type (\<^t
       = Type (\<^type_name>\<open>\<phi>arg\<close>, [HOLogic.mk_prodT (T1,T2)])
   | mk_arg_prodT (T1,T2) = raise TYPE("Not a \<phi>arg type", [T1,T2], [])
 
+fun mk_arg_tupleT Ts = mk_argT (HOLogic.mk_tupleT (map dest_argT Ts))
+
+fun map_argT f (Type (\<^type_name>\<open>\<phi>arg\<close>, [T])) = Type (\<^type_name>\<open>\<phi>arg\<close>, [f T])
+  | map_argT _ T = raise TYPE("Not a \<phi>arg type", [T], [])
+
 fun mk_arg_tuple _ [] = \<^term>\<open>\<phi>V_none\<close>
   | mk_arg_tuple _ [tm] = tm
   | mk_arg_tuple (Type (\<^type_name>\<open>\<phi>arg\<close>, [T])::tys) (tm::tms)
@@ -110,7 +120,8 @@ fun mk_arg_tuple _ [] = \<^term>\<open>\<phi>V_none\<close>
           $ tm $ mk_arg_tuple tys tms
   | mk_arg_tuple tys tms = raise TYPE ("Not a \<phi>arg type", tys, tms)
 
-fun mk_arg_tupleT Ts = mk_argT (HOLogic.mk_tupleT (map dest_argT Ts))
+fun dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_pair\<close>, _) $ A $ B) = A :: dest_arg_tuple B
+  | dest_arg_tuple X = [X]
 
 (* fun mk_arg_prodT []  = \<^typ>\<open>unit \<phi>arg\<close>
   | mk_arg_prodT (Type ("dummy", []) :: _) = dummyT
@@ -160,10 +171,10 @@ fun jth_index_of_annoy j ans (Const (\<^const_name>\<open>anonymous\<close>, _) 
       = jth_index_of_annoy j (ans+1) L
   | jth_index_of_annoy _ _ [] = raise Fail "Procedure_Syntax: Insufficient values"
 
-fun index_of VS v =
+fun mk_projection Tys VS i v =
   let val ret = find_index (fn x => x = v) VS
-   in if ret = ~1 then raise TERM ("Procedure_Syntax: Not given in the value list", [v])
-      else ret
+   in if ret = ~1 then v
+      else nth_project Tys ret (Bound i)
   end
 
 fun map_ret Tys i VS (j, Const (\<^const_name>\<open>anonymous\<close>, _))
@@ -172,21 +183,21 @@ fun map_ret Tys i VS (j, Const (\<^const_name>\<open>anonymous\<close>, _))
       = (j + 1, nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
   | map_ret Tys i VS (j, v as Const ("_type_constraint_",
                                       Type("fun", [Type(\<^type_name>\<open>\<phi>arg\<close>, _),_])) $ _)
-      = (j, nth_project Tys (index_of VS v) (Bound i))
+      = (j, mk_projection Tys VS i v)
   | map_ret Tys i VS (j, v as Const ("_constrain", _) $ _ $ (Const (\<^type_syntax>\<open>\<phi>arg\<close>, _) $ _))
-      = (j, nth_project Tys (index_of VS v) (Bound i))
+      = (j, mk_projection Tys VS i v)
   | map_ret Tys i VS (j, v as Free (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))
-      = (j, nth_project Tys (index_of VS v) (Bound i))
+      = (j, mk_projection Tys VS i v)
   | map_ret Tys i VS (j, v as Var (_, Type(\<^type_name>\<open>\<phi>arg\<close>, _)))
-      = (j, nth_project Tys (index_of VS v) (Bound i))
+      = (j, mk_projection Tys VS i v)
   | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ Const (\<^const_name>\<open>anonymous\<close>, _))
       = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
   | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ Const (\<^const_syntax>\<open>anonymous\<close>, _))
       = (j + 1, h $ nth_project Tys (jth_index_of_annoy j 0 VS) (Bound i))
   | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>Val\<close>, _)) $ v)
-      = (j, h $ nth_project Tys (index_of VS v) (Bound i))
+      = (j, h $ mk_projection Tys VS i v)
   | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ v)
-      = (j, h $ nth_project Tys (index_of VS v) (Bound i))
+      = (j, h $ mk_projection Tys VS i v)
   | map_ret Tys i VS (j, Abs (name,ty,X))
       = (case map_ret Tys (i+1) VS (j, X) of (j',X') => (j', Abs (name, ty,X')))
   | map_ret Tys i VS (j, X $ Y)

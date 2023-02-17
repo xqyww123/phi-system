@@ -191,7 +191,7 @@ proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
 next fix x :: "'a <named> 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
 qed
 
-lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists \<phi>expns)
+lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists \<phi>expns) 
 
 
 subsubsection \<open>Expansion of Quantification\<close>
@@ -209,20 +209,27 @@ lemma eoq__snd[unfolded atomize_eq[symmetric], named_expansion]:
 lemmas [unfolded atomize_eq[symmetric], named_expansion] =
   Product_Type.prod.case named.case id_apply
 
-ML_file "./library/tools/quant_expansion.ML"
+ML_file  "./library/tools/quant_expansion.ML"
+
+hide_fact  eoq__fst eoq__snd
+hide_const eoq__fst eoq__snd
 
 simproc_setup named_forall_expansion ("All (P :: 'a <named> 'names \<Rightarrow> bool)") =
-  \<open>K (QuantExpansion.simproc_of QuantExpansion.forall_expansion)\<close>
+  \<open>K (QuantExpansion.simproc_of
+          (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => QuantExpansion.forall_expansion_arg_encoding
+            | _ => QuantExpansion.forall_expansion))\<close>
 
 simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow> 'b set)") =
-  \<open>K (fn ctx => fn cterms => QuantExpansion.simproc_of QuantExpansion.ExNu_expansion ctx cterms)\<close>
+  \<open>K (QuantExpansion.simproc_of (K QuantExpansion.ExNu_expansion))\<close>
 
-simproc_setup named_pureAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
-  \<open>K (QuantExpansion.simproc_of QuantExpansion.pure_All_expansion)\<close>
+simproc_setup named_metaAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
+  \<open>K (QuantExpansion.simproc_of
+          (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => QuantExpansion.meta_All_expansion_arg_encoding
+            | _ => QuantExpansion.meta_All_expansion))\<close>
 
+(*TODO: merge to procedure 1*)
 ML_file "./library/syntax/procedure3.ML"
-
-
+ 
 subsubsection \<open>Rename \<lambda>-Abstraction\<close>
 
 definition rename_abstraction :: \<open>'\<phi>name_name itself \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool\<close>

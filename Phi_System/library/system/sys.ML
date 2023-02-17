@@ -197,12 +197,12 @@ fun set_param term' (ctxt,sequent) =
     if has_only_one_ex_quantification X
     then (* We aggregate the user input `term` into a single ex quantification with name preserved*)
           let
-            val (N,term') = QuantExpansion.aggregate_vars_quantification term
+            val (N,term') = QuantExpansion.aggregate_vars_quantification ~1 term
           in (ctxt, set_param' ctxt_parse term' sequent
                       |> Raw_Simplifier.rewrite_rule ctxt
                             (QuantExpansion.ExNu_expansion     N ctxt
                           :: QuantExpansion.forall_expansion   N ctxt
-                          :: QuantExpansion.pure_All_expansion N ctxt
+                          :: QuantExpansion.meta_All_expansion N ctxt
                           :: QuantExpansion.exists_expansion   N ctxt
                           :: QuantExpansion.aux_expansions       ctxt))
           end
@@ -210,7 +210,7 @@ fun set_param term' (ctxt,sequent) =
   end
 
 fun set_param_cmd xterm (ctxt,sequent) =
-  case try (dest_funT #> apfst Phi_Syntax.dest_named) (param_type sequent)
+  case try (dest_funT #> apfst Phi_Syntax.dest_namedT) (param_type sequent)
     of SOME (name_and_tys, rng) =>
         let
           val fixes = map (fn (name,ty) =>

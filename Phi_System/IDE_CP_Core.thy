@@ -190,6 +190,12 @@ ML_file \<open>library/tools/named_premises.ML\<close>
 ML_file \<open>library/system/premise_attribute.ML\<close>
 
 
+definition Labelled_embed :: "label \<Rightarrow> bool \<Rightarrow> bool" where "Labelled_embed name x \<equiv> x"
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Labelled L (Trueprop P) \<equiv> Trueprop (Labelled_embed L P)\<close>
+  unfolding Labelled_embed_def Labelled_def .
+
 subsection \<open>General Syntax\<close>
 
 definition HIDDEN_PREM :: \<open>'a::{} \<Rightarrow> 'a\<close> where \<open>HIDDEN_PREM x \<equiv> x\<close>
@@ -1350,6 +1356,7 @@ ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
+ML_file \<open>library/system/modifier.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 
 hide_fact "__value_access_0__"
