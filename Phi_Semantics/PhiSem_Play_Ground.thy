@@ -35,6 +35,10 @@ setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
 
 (* declare [[\<phi>hide_techinicals=false]] *)
 
+declare [[\<phi>hide_techinicals=false]]
+
+ML \<open>Phi_Helper_Conv.aggregate_imps_obj (K Conv.all_conv) \<^context> \<^cprop>\<open>A \<Longrightarrow> B \<Longrightarrow> asd\<^bold>: (\<And>x. P x) \<Longrightarrow> D\<close>\<close>
+
 (* declare [[\<phi>hide_brk_frame=false, \<phi>trace_reasoning]] *)
    
 proc
@@ -50,46 +54,31 @@ proc
     \<medium_right_bracket>. (*loop body*)
     $v
   \<medium_right_bracket>. .
- 
-proc XXX:
+
+
+proc XXX: 
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   premises A: \<open>x < 10\<close>  
   output \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   is [recursive x]
-  \<medium_left_bracket> $x XXX \<medium_right_bracket>. .
+  is [recursive x]
+  is [recursive xa]
+  \<medium_left_bracket> premises A and XXX and YYY and ZZZ
+  thm ZZZ
+  ;; $xaa ZZZ XXX YYY
+ \<medium_right_bracket> .. .
 
-thm XXX_def
-
-proc XXX:
+   
+proc YYY:
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[32]\<close>
   premises A: \<open>x < y\<close>    
   output \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<heavy_comma> 20 \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>[32]\<close>
   is [recursive x y]
-  \<medium_left_bracket> $x $y XXX \<medium_right_bracket>. .
+  is [recursive x y]
+  is [recursive xa ya]
+  \<medium_left_bracket> premises A and AAA and BBB and CCC
+    $xaa $yaa CCC AAA BBB \<medium_right_bracket>. .
 
-thm XXX_def
+thm YYY_def
 
-ML \<open>@{term \<open>A\<^bold>: X\<close>}\<close>
-
-notepad
-begin
-
-  fix x :: nat
-  ML_val
-
-  assume A: \<open>(\<And>x::((nat \<times> int \<times> bool) <named> ('name_a \<times> 'name_b \<times> 'name_c)).
-    P (case_named (fst) x) \<and> Q (case_named (fst o snd) x) \<and> Z (case_named (snd o snd) x))\<close>
-
-assume B: \<open>(\<And>x::(((nat \<times> int \<times> bool) <named> ('name_a \<times> 'name_b \<times> 'name_c)) \<Rightarrow> bool). x aaa)\<close>
-
-  term case_named
-  
-  thm B
-  ML_val \<open>QuantExpansion.named_predicate_expansion @{context} @{thm B}\<close>
-
-  assume C: \<open>PROP Pure.prop (AAA \<Longrightarrow> (\<And>x. P x))\<close>
-  ML_val \<open>@{thm C[unfolded Pure.prop_def]} COMP @{thm meta_spec}\<close>
-
-end
-thm meta_spec
 end

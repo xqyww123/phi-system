@@ -197,24 +197,24 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                then Proof.refine_primitive (K (K sequent)) stat
                else Phi_Envir.set_state_sequent sequent stat
 
-    val stat = (if is_top then Proof.enter_forward (Proof.assert_backward stat) else stat)
-                  |> Proof.begin_block
-
     (*Assuming the proof state is in the normal hhf, or else the operation fails.*)
     val (vars0, goal) =
           Phi_Help.strip_binder_raw @{const_name Pure.all} (Phi_Help.leading_antecedent' sequent)
-    val vars = burrow_fst (Name.variant_list []) vars0
+    val vars1 = burrow_fst (Name.variant_list []) vars0
     val vb_N = length var_bindings
     val (var_names, stat) =
           Proof.map_context_result (Proof_Context.add_fixes
-            (map2 (fn (_,ty) => fn b => (b, SOME ty, NoSyn)) (List.take (vars, vb_N)) var_bindings
-           @ map  (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) (List.drop (vars, vb_N)))
+            (map2 (fn (_,ty) => fn b => (b, SOME ty, NoSyn)) (List.take (vars1, vb_N)) var_bindings
+           @ map  (fn (nam,ty) => (Binding.name nam, SOME ty, NoSyn)) (List.drop (vars1, vb_N)))
           ) stat
-    val vars = map Free (var_names ~~ map snd vars)
+    val vars = map2 (fn N => fn (_,T) => Free (N,T)) var_names vars1
     val goal = subst_bounds (rev vars, goal)
             |> reduce_var
     val prems = Logic.strip_imp_prems goal
     val goal'  = Logic.strip_imp_concl goal
+
+    val stat = (if is_top then Proof.enter_forward (Proof.assert_backward stat) else stat)
+                  |> Proof.begin_block
 
     fun after_qed (ctxt',[[th]]) stat0 =
       let val stat = Proof.end_block stat0
@@ -227,7 +227,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
           fun gen_sequent (ctxt,sequent0) =
             let val sequent = Phi_Help.beta_eta_contract_leading_antecedent sequent0
                 val insts =
-                      Pattern.match (Proof_Context.theory_of ctxt'')
+                      PLPR_Pattern.match (Proof_Context.theory_of ctxt'')
                                     (Phi_Help.leading_antecedent' sequent, Thm.prop_of th2)
                                     (Vartab.empty, Vartab.empty)
                       |> Phi_Help.env_to_table ctxt''

@@ -138,6 +138,7 @@ proc "if":
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
   \<medium_left_bracket> C branch brT brF \<medium_right_bracket>. .
 
+
 subsection \<open>Loops\<close>
 
 lemma "__DoWhile__rule_\<phi>app":
@@ -244,13 +245,10 @@ lemma "__op_recursion__":
       P x \<Longrightarrow>
       \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x
 )"
-  (*unfolding Pure.prop_def \<phi>arg_forall named_All
-  apply simp *)
-
   unfolding op_fix_point_def \<phi>Procedure_def atomize_all \<phi>arg_forall \<phi>arg_All HIDDEN_PREM_def
             Pure.prop_def
   apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
-  
+
   subgoal for comp a R
     apply (rotate_tac 2) apply (induct rule: SemRec.induct) 
 
@@ -264,11 +262,17 @@ lemma "__op_recursion__":
 
 ML_file \<open>library/basic_recursion.ML\<close>
 
-attribute_setup recursive = \<open>Scan.repeat Args.term >> (fn vars =>
+attribute_setup recursive = \<open>Scan.repeat (Scan.lift Parse.term) >> (fn vars =>
     Phi_Modifier.wrap_to_attribute (fn (ctxt,sequent) =>
       case Phi_Toplevel.name_of_the_building_procedure ctxt
-        of SOME b => PhiSem_Control_Flow.basic_recursive_mod b vars (ctxt,sequent)
-         | NONE => error "Name binding of the procedure is required."
+        of NONE => error "Name binding of the recursive procedure is mandatory."
+         | SOME b => (
+            if Binding.is_empty b
+            then error "Name binding of the recursive procedure is mandatory."
+            else if null vars then tracing "You may want to use syntax \<open>recursive vars\<close> to indicate \
+                 \which variables are varied between the recursive callings." else ();
+            PhiSem_Control_Flow.basic_recursive_mod Syntax.read_terms b vars (ctxt,sequent)
+           )
   ))\<close>
 
 end

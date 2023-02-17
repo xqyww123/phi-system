@@ -216,6 +216,12 @@ declare [[\<phi>hide_techinicals,
           \<phi>premise_attribute [THEN HIDDEN_PREM_D ] for \<open>HIDDEN_PREM ?P\<close>,
           \<phi>premise_attribute [THEN HIDDEN_PREM_D'] for \<open>PROP HIDDEN_PREM ?P\<close>]]
 
+definition HIDDEN_PREM_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>HIDDEN_PREM_embed X \<equiv> X\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>HIDDEN_PREM (Trueprop P) \<equiv> Trueprop (HIDDEN_PREM_embed P)\<close>
+  unfolding HIDDEN_PREM_def HIDDEN_PREM_embed_def .
+
 section \<open>Mechanisms\<close>
 
 subsection \<open>Programming Modes\<close>
@@ -820,26 +826,30 @@ lemma [\<phi>reason 3000 for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP 
   unfolding \<phi>Application_Conv_def .
 
 lemma [\<phi>reason 1200]:
-  \<open> (\<And>x. PROP \<phi>Application_Conv (A x) (X x))
-\<Longrightarrow> PROP \<phi>Application_Conv (Pure.all A) (Pure.all X)\<close>
+  \<open> PROP \<phi>Application_Conv (A x) X
+\<Longrightarrow> PROP \<phi>Application_Conv (Pure.all A) X\<close>
   unfolding \<phi>Application_Conv_def
 proof -
-  assume A: \<open>(\<And>x. PROP A x \<Longrightarrow> PROP X x)\<close>
+  assume A: \<open>PROP A x \<Longrightarrow> PROP X\<close>
     and  B: \<open>\<And>x. PROP A x\<close>
-  show \<open>\<And>x. PROP X x\<close> proof -
-    fix x show \<open>PROP X x\<close> using A[OF B] .
-  qed
+  from A[OF B[of x]] show \<open>PROP X\<close> .
 qed
 
 lemma [\<phi>reason 1200]:
-  \<open> PROP \<phi>Application_Conv A Y
-\<Longrightarrow> PROP \<phi>Application_Conv (PROP X \<Longrightarrow> PROP A) (PROP X \<Longrightarrow> PROP Y)\<close>
-  unfolding \<phi>Application_Conv_def
-  subgoal premises P using P(3)[THEN P(2), THEN P(1)] . .
+  \<open> PROP May_By_Assumption X
+\<Longrightarrow> PROP \<phi>Application_Conv A Y
+\<Longrightarrow> PROP \<phi>Application_Conv (PROP X \<Longrightarrow> PROP A) Y\<close>
+  unfolding \<phi>Application_Conv_def May_By_Assumption_def
+  subgoal premises p using p(1)[THEN p(3), THEN p(2)] . .
 
 lemma [\<phi>reason 1200]:
   \<open> PROP \<phi>Application_Conv X (PROP Y)
 \<Longrightarrow> PROP \<phi>Application_Conv X (PROP Y @action A)\<close>
+  unfolding Action_Tag_def .
+
+lemma [\<phi>reason 1200]:
+  \<open> PROP \<phi>Application_Conv (PROP Y) X
+\<Longrightarrow> PROP \<phi>Application_Conv (PROP Y @action A) X\<close>
   unfolding Action_Tag_def .
 
 

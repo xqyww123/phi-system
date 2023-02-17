@@ -30,9 +30,10 @@ fun expand_aggregated_imps C c =
    implies_conv C (rewr_conv @{thm PURE_TOP_imp} else_conv expand_aggregated_imps C)) c
 
 fun aggregate_imps_obj C ctxt c =
-  (implies_conv (C ctxt then_conv atomize_conv ctxt)
-                (aggregate_imps_obj C ctxt else_conv rewr_conv @{thm True_implies_equals[symmetric]})
-   then_conv rewr_conv @{thm conj_imp_eq_imp_imp[symmetric]}) c
+ ((implies_conv (C ctxt then_conv atomize_conv ctxt)
+                (aggregate_imps_obj C ctxt)
+   then_conv rewr_conv @{thm conj_imp_eq_imp_imp[symmetric]})
+  else_conv rewr_conv @{thm True_implies_equals[symmetric]}) c
 
 fun expand_aggregated_imps_obj C ctxt c =
   (rewr_conv @{thm conj_imp_eq_imp_imp} then_conv

@@ -13,7 +13,7 @@ subsubsection \<open>Prelude Settings\<close>
 ML \<open>Timing.cond_timeit false "asd" (fn () => OS.Process.sleep (seconds 1.0))\<close>
 
 ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
-ML_file \<open>library/pattern.ML\<close>
+ML_file_debug \<open>library/pattern.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
@@ -368,6 +368,7 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>(P &&& Q) \<equiv> Trueprop (pure_conj_embed P Q)\<close>
   unfolding atomize_conj pure_conj_embed_def .
 
+(*TODO: find a way to preserve the name*)
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>(\<And>x. P x) \<equiv> Trueprop (pure_all_embed P)\<close>
   unfolding atomize_all pure_all_embed_def .
@@ -547,6 +548,27 @@ lemma NO_MATCH_I: "NO_MATCH A B" unfolding NO_MATCH_def ..
     if Pattern.matches (Proof_Context.theory_of ctxt) (a,b)
     then Seq.empty
     else Seq.single (ctxt, @{thm NO_MATCH_I} RS th)
+  end
+\<close>
+
+
+subsubsection \<open>Proof By Assumption\<close>
+
+definition By_Assumption :: \<open>prop \<Rightarrow> prop\<close> where \<open>By_Assumption P \<equiv> P\<close>
+definition May_By_Assumption :: \<open>prop \<Rightarrow> prop\<close> where \<open>May_By_Assumption P \<equiv> P\<close>
+
+lemma By_Assumption_I: \<open>PROP P \<Longrightarrow> PROP By_Assumption P\<close> unfolding By_Assumption_def .
+lemma May_By_Assumption_I: \<open>PROP P \<Longrightarrow> PROP May_By_Assumption P\<close> unfolding May_By_Assumption_def .
+
+\<phi>reasoner_ML By_Assumption 1000 (\<open>PROP By_Assumption _\<close>) = \<open>fn (ctxt,sequent) =>
+    HEADGOAL (Tactic.assume_tac ctxt) (@{thm By_Assumption_I} RS sequent)
+      |> Seq.map (pair ctxt)
+\<close>
+
+\<phi>reasoner_ML May_By_Assumption 1000 (\<open>PROP May_By_Assumption _\<close>) = \<open>fn (ctxt,sequent) =>
+  let val sequent' = @{thm May_By_Assumption_I} RS sequent
+   in (HEADGOAL (Tactic.assume_tac ctxt) ORELSE Seq.single) sequent'
+        |> Seq.map (pair ctxt)
   end
 \<close>
 
