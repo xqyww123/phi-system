@@ -8,6 +8,7 @@ theory Phi_Logic_Programming_Reasoner
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
 begin
 
+subsubsection \<open>Prelude Settings\<close>
 
 ML \<open>Timing.cond_timeit false "asd" (fn () => OS.Process.sleep (seconds 1.0))\<close>
 
@@ -20,6 +21,7 @@ definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _
 ML_file \<open>library/reasoner.ML\<close>
 
 lemma \<r>Require_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Require P\<close> unfolding \<r>Require_def .
+
 
 section \<open>Introduction\<close>
 
@@ -345,6 +347,36 @@ section \<open>Predefined Antecedents, Reasoners, and Rules\<close>
 
 subsection \<open>Auxiliary Structures\<close>
 
+subsubsection \<open>Isomorphic Atomize\<close>
+
+text \<open>The system \<open>Object_Logic.atomize\<close> and \<open>Object_Logic.rulify\<close> is not isomorphic in the sense
+  that for any given rule \<open>R\<close>, \<open>Object_Logic.rulify (Object_Logic.atomize R)\<close> does not exactly
+  equal \<open>R\<close>. The section gives a way addressing this issue.\<close>
+
+ML_file \<open>library/iso_atomize.ML\<close>
+
+definition \<open>pure_imp_embed \<equiv> (\<longrightarrow>)\<close>
+definition \<open>pure_all_embed \<equiv> (All)\<close>
+definition \<open>pure_conj_embed \<equiv> (\<and>)\<close>
+definition \<open>pure_prop_embed x \<equiv> x\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(P \<Longrightarrow> Q) \<equiv> Trueprop (pure_imp_embed P Q)\<close>
+  unfolding atomize_imp pure_imp_embed_def .
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(P &&& Q) \<equiv> Trueprop (pure_conj_embed P Q)\<close>
+  unfolding atomize_conj pure_conj_embed_def .
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(\<And>x. P x) \<equiv> Trueprop (pure_all_embed P)\<close>
+  unfolding atomize_all pure_all_embed_def .
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>PROP Pure.prop (Trueprop P) \<equiv> Trueprop (pure_prop_embed P)\<close>
+  unfolding Pure.prop_def pure_prop_embed_def .
+
+
 subsubsection \<open>Action\<close>
 
 text \<open>In the reasoning, antecedents of the same form may have different purposes, e.g.,
@@ -372,6 +404,13 @@ text \<open>
   data structure (Net) we are using doesn't support type sort, causing this feature is actually
   not indexed at all, causing the reasoning here becomes searching one by one in linear time!
   Maybe classification should be done by some term-level structure. Let's think when have time!\<close>\<close>
+
+definition Action_Tag_embed :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close>
+  where \<open>Action_Tag_embed P A \<equiv> P\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>PROP Action_Tag (Trueprop P) A \<equiv> Trueprop (Action_Tag_embed P A)\<close>
+  unfolding Action_Tag_def Action_Tag_embed_def .
 
 lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
@@ -712,6 +751,11 @@ ML_file \<open>library/nested.ML\<close>
 \<phi>reasoner_ML \<r>END 1000 (\<open>\<r>END\<close>) = \<open>PLPR_Nested_Reasoning.exit_scope\<close>
 \<phi>reasoner_ML \<r>Call 1000 (\<open>PROP \<r>Call _\<close>) = \<open>PLPR_Nested_Reasoning.call\<close>
 
+definition \<r>Call_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>\<r>Call_embed P \<equiv> P\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>\<r>Call (Trueprop P) \<equiv> Trueprop (\<r>Call_embed P)\<close>
+  unfolding \<r>Call_def \<r>Call_embed_def .
 
 subsection \<open>Pruning\<close>
 
@@ -788,7 +832,19 @@ short-cut is featured by using subgoal. It tries each antecedent from left to ri
       the first success of solving an antecedent, and none of the remains are attempted.\<close>
 
 definition Branch :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixr "|||" 3)
-  where \<open>Branch A B \<equiv> (\<And>C::prop. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close>
+  where \<open>Branch A B \<equiv> (\<And>C. (PROP A \<Longrightarrow> C) \<Longrightarrow> (PROP B \<Longrightarrow> C) \<Longrightarrow> C)\<close>
+
+definition Branch_embed :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Branch_embed A B \<equiv> A \<or> B\<close>
+
+lemma atomize_Branch:
+  \<open>Branch (Trueprop A) (Trueprop B) \<equiv> Trueprop (A \<or> B)\<close>
+  unfolding Branch_def or_def atomize_eq atomize_imp atomize_all .
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Branch (Trueprop A) (Trueprop B) \<equiv> Trueprop (Branch_embed A B)\<close>
+  unfolding Branch_embed_def atomize_Branch .
+
 
 subsubsection \<open>Implementation\<close>
 
@@ -798,10 +854,10 @@ lemma Branch_L:
   unfolding Action_Tag_def Branch_def
 proof -
   assume A: \<open>PROP A\<close>
-  show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
-    fix C :: "prop"
-    assume A': \<open>PROP A \<Longrightarrow> PROP C\<close>
-    show \<open>PROP C\<close> using A'[OF A] .
+  show \<open>(\<And>C. (PROP A \<Longrightarrow> C) \<Longrightarrow> (PROP B \<Longrightarrow> C) \<Longrightarrow> C)\<close> proof -
+    fix C :: "bool"
+    assume A': \<open>PROP A \<Longrightarrow> C\<close>
+    show \<open>C\<close> using A'[OF A] .
   qed
 qed
 
@@ -811,45 +867,14 @@ lemma Branch_R:
   unfolding Action_Tag_def Branch_def
 proof -
   assume B: \<open>PROP B\<close>
-  show \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C)\<close> proof -
-    fix C :: "prop"
-    assume B': \<open>PROP B \<Longrightarrow> PROP C\<close>
-    show \<open>PROP C\<close> using B'[OF B] .
+  show \<open>(\<And>C. (PROP A \<Longrightarrow> C) \<Longrightarrow> (PROP B \<Longrightarrow> C) \<Longrightarrow> C)\<close> proof -
+    fix C :: "bool"
+    assume B': \<open>PROP B \<Longrightarrow> C\<close>
+    show \<open>C\<close> using B'[OF B] .
   qed
 qed
 
 declare [[\<phi>reason 1000 Branch_L Branch_R for \<open>PROP ?A ||| PROP ?B\<close>]]
-
-lemma Branch_imp:
-  \<open> (PROP A ||| PROP B \<Longrightarrow> PROP C)
- \<equiv> ((PROP A \<Longrightarrow> PROP C) &&& (PROP B \<Longrightarrow> PROP C))\<close>
-  unfolding Branch_def proof
-  assume X: \<open>(\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C) \<Longrightarrow> PROP C\<close>
-  show \<open>(PROP A \<Longrightarrow> PROP C) &&& (PROP B \<Longrightarrow> PROP C) \<close> proof -
-    assume A: \<open>PROP A\<close>
-    show \<open>PROP C\<close> proof (rule X)
-      fix C :: "prop"
-      assume \<open>PROP A \<Longrightarrow> PROP C\<close>
-      from this[OF A] show \<open>PROP C\<close> .
-    qed
-  next assume B: \<open>PROP B\<close>
-    show \<open>PROP C\<close> proof (rule X)
-      fix C :: "prop"
-      assume \<open>PROP B \<Longrightarrow> PROP C\<close>
-      from this[OF B] show \<open>PROP C\<close> .
-    qed
-  qed
-next
-  assume X: \<open>(PROP A \<Longrightarrow> PROP C) &&& (PROP B \<Longrightarrow> PROP C)\<close>
-    and  Y: \<open>\<And>C. (PROP A \<Longrightarrow> PROP C) \<Longrightarrow> (PROP B \<Longrightarrow> PROP C) \<Longrightarrow> PROP C\<close>
-  show \<open>PROP C\<close> proof (rule Y)
-    assume \<open>PROP A\<close>
-    from X[THEN conjunctionD1, OF this] show \<open>PROP C\<close> .
-  next
-    assume \<open>PROP B\<close>
-    from X[THEN conjunctionD2, OF this] show \<open>PROP C\<close> .
-  qed
-qed
 
 subsection \<open>Simplification \& Rewrite\<close>
 
@@ -895,6 +920,12 @@ subsection \<open>Exhaustive Divergence\<close>
 
 definition Exhaustive_Divergence :: \<open>prop \<Rightarrow> prop\<close> where [iff]: \<open>Exhaustive_Divergence X \<equiv> X\<close>
 definition [iff]: \<open>Stop_Divergence \<longleftrightarrow> True\<close>
+
+definition Exhaustive_Divergence_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Exhaustive_Divergence_embed X \<equiv> X\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Exhaustive_Divergence (Trueprop P) \<equiv> Trueprop (Exhaustive_Divergence_embed P)\<close>
+  unfolding Exhaustive_Divergence_embed_def Exhaustive_Divergence_def .
 
 subsubsection \<open>Implementation\<close>
 
@@ -949,6 +980,12 @@ Global cut is disabled until the exhaustive divergence end (maybe
 \<open>\<r>Success\<close> is disabled during the whole \<open>Optimum_Solution\<close> reasoning.
 \<close>
 
+definition Optimum_Solution_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Optimum_Solution_embed P \<equiv> P\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Optimum_Solution (Trueprop P) \<equiv> Trueprop (Optimum_Solution_embed P)\<close>
+  unfolding Optimum_Solution_embed_def Optimum_Solution_def .
+
 subsubsection \<open>Implementation\<close>
 
 definition [iff]: \<open>End_Optimum_Solution \<longleftrightarrow> True\<close>
@@ -998,6 +1035,11 @@ subsubsection \<open>Derivations\<close>
 definition Optimum_Among :: \<open>prop \<Rightarrow> prop\<close> where \<open>Optimum_Among Candidates \<equiv> Candidates\<close>
   \<comment> \<open>We leave it as a syntax merely\<close>
 
+definition Optimum_Among_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Optimum_Among_embed X \<equiv> X\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Optimum_Among (Trueprop P) \<equiv> Trueprop (Optimum_Among_embed P)\<close>
+  unfolding Optimum_Among_embed_def Optimum_Among_def .
 
 subsection \<open>Environment Variables\<close>
 
@@ -1078,20 +1120,27 @@ text \<open>\<^prop>\<open>\<r>RECURSION_GUARD(X) (PROP P)\<close> annotates the
 It remembers \<^term>\<open>X\<close> and once in the following reasoning the same goal \<^term>\<open>X\<close> occurs again,
 it aborts the search branch because an infinite recursion happens.\<close>
 
+definition \<r>Recursion_Guard_embed :: \<open>'a::{} \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>\<r>Recursion_Guard_embed _ P \<equiv> P\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>\<r>Recursion_Guard X (Trueprop P) \<equiv> Trueprop (\<r>Recursion_Guard_embed X P)\<close>
+  unfolding \<r>Recursion_Guard_embed_def \<r>Recursion_Guard_def .
+
 subsubsection \<open>Implementation\<close>
 
-definition \<r>Recursion_Residue :: \<open>'a::{} \<Rightarrow> prop\<close> 
-  where \<open>\<r>Recursion_Residue \<equiv> Pure.term\<close>
+definition \<r>Recursion_Residue :: \<open>'a::{} \<Rightarrow> bool\<close> 
+  where \<open>\<r>Recursion_Residue _ \<equiv> True\<close>
 
 lemma Do_\<r>Recursion_Guard:
   \<open> PROP P
-\<Longrightarrow> PROP \<r>Recursion_Residue X
+\<Longrightarrow> \<r>Recursion_Residue X
 \<Longrightarrow> \<r>RECURSION_GUARD(X) (PROP P) \<close>
   unfolding \<r>Recursion_Guard_def .
 
 lemma [\<phi>reason 1000]:
-  \<open>PROP \<r>Recursion_Residue X\<close>
-  unfolding \<r>Recursion_Residue_def .
+  \<open>\<r>Recursion_Residue X\<close>
+  unfolding \<r>Recursion_Residue_def ..
 
 ML_file \<open>library/recursion_guard.ML\<close>
 

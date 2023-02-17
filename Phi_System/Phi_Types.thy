@@ -1372,7 +1372,7 @@ lemma [\<phi>reason 1200]:
 ||| \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow> T) (k2 \<^bold>\<rightarrow> U)\<close>
   for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def Branch_imp
+  unfolding \<phi>Sep_Disj_def atomize_Branch
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def)+
 
 lemma [\<phi>reason 1200]:
@@ -1380,7 +1380,7 @@ lemma [\<phi>reason 1200]:
 ||| \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow>\<^sub># T) (k2 \<^bold>\<rightarrow>\<^sub># U)\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def Branch_imp
+  unfolding \<phi>Sep_Disj_def atomize_Branch
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def push_map_def)+
 
 

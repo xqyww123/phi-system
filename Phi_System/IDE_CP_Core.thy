@@ -117,6 +117,12 @@ lemma Do_D: \<open>\<^bold>d\<^bold>o PROP P \<Longrightarrow> PROP P\<close> un
 
 ML_file \<open>library/system/reasoners.ML\<close>
 
+definition Do_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Do_embed X \<equiv> X\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
+  unfolding Do_def Do_embed_def .
+
 \<phi>reasoner_ML ParamTag 1000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P\<close>) = \<open>
   Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent)
 \<close>
@@ -446,6 +452,12 @@ text \<open>
 
   One can disable \<phi>_synthesis_parsing to disable this feature.\<close>
 
+definition DoSynthesis_embed :: \<open>'a \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>DoSynthesis_embed term sequent result \<equiv> (sequent \<longrightarrow> result)\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>DoSynthesis term (Trueprop sequent) (Trueprop result) \<equiv> Trueprop (DoSynthesis_embed term sequent result)\<close>
+  unfolding DoSynthesis_def DoSynthesis_embed_def atomize_imp .
 
 subsubsection \<open>Parse the Term to be Synthesised\<close>
 
@@ -605,6 +617,12 @@ text \<open>If the synthesis procedure is invoked on an inference rule like \<^p
     affects the preciseness of Synthesis_Parse rule. The procedure of Synthesis_Parse
     should be triggered at the entry point of each specific operation, where the expected type
     is clear.\<close>
+
+definition Synthesis_by_embed :: \<open>'a \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Synthesis_by_embed X Q \<equiv> Q\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Synthesis_by X (Trueprop P) \<equiv> Trueprop (Synthesis_by_embed X P)\<close>
+  unfolding Synthesis_by_embed_def Synthesis_by_def .
 
 lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (PROP ?P \<Longrightarrow> PROP ?Q) ?RET\<close>
@@ -1188,6 +1206,7 @@ text \<open>\<^prop>\<open>PROP Do_Action action sequent result\<close> is the a
   to return the construction result of the sequent by the action.\<close>
 
 declare [[\<phi>reason_default_pattern \<open>PROP Do_Action ?A ?S _\<close> \<Rightarrow> \<open>PROP Do_Action ?A ?S _\<close> (100) ]]
+
 
 subsubsection \<open>Two Methods of Applying Action\<close>
 

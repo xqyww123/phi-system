@@ -13,6 +13,7 @@ fun reason (ctxt,sequent) = Seq.make (fn () =>
             chk A andalso chk B
         | chk (Const (\<^const_name>\<open>Pure.all\<close>, _) $ B) = chk B
         | chk (Abs (_,_,B)) = chk B
+        | chk (Const (\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
         | chk _ = true
    in if chk Remains
       then SOME ((ctxt, @{thm Do_\<r>Recursion_Guard} RS sequent), Seq.empty)
