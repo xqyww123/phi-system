@@ -1151,10 +1151,10 @@ lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw 
   by (clarsimp simp add: \<phi>expns)
 
 
-subsection \<open>Exception\<close>
+subsection \<open>Abnormality\<close>
 
 definition throw :: \<open>ABNM \<Rightarrow> 'ret::VALs proc\<close>
-  where \<open>throw raw = det_lift (Exception raw)\<close>
+  where \<open>throw raw = det_lift (Abnormality raw)\<close>
 
 lemma throw_reduce_tail[procedure_simps,simp]:
   \<open>(throw any \<ggreater> f) = throw any\<close>
@@ -1176,7 +1176,7 @@ lemma throw_\<phi>app:
 
 definition op_try :: "'ret proc \<Rightarrow> (ABNM \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'}
-                                       | Exception v s' \<Rightarrow> g v s'
+                                       | Abnormality v s' \<Rightarrow> g v s'
                                        | AssumptionBroken \<Rightarrow> {AssumptionBroken}
                                        | NonTerm \<Rightarrow> {NonTerm}
                                        | Invalid \<Rightarrow> {Invalid}) ` f s)\<close>
@@ -1192,7 +1192,7 @@ lemma "__op_try__"[intro!]:
       using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
       by (metis (no_types, lifting) INTERP_SPEC LooseStateSpec_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) set_mult_expn)
     subgoal premises prems for a b c d u v2 proof -
-      have \<open>Exception a b \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
+      have \<open>Abnormality a b \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
         using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
         using prems(10) prems(3) prems(7) prems(8) prems(9) by blast
       note this[simplified]
@@ -1204,11 +1204,11 @@ lemma "__op_try__"[intro!]:
         by (metis INTERP_SPEC prems(11) set_mult_expn)
     qed
     subgoal premises prems for a b c d u v proof -
-      have \<open>Exception a b \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
+      have \<open>Abnormality a b \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
         using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
         using prems(10) prems(3) prems(7) prems(8) prems(9) by blast
       note this[simplified]
-      then have \<open>Exception c d \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
+      then have \<open>Abnormality c d \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
         using prems(2)[THEN spec[where x=b], THEN spec[where x=R]]
         by (meson INTERP_SPEC prems(4) set_mult_expn)
       note this[simplified]

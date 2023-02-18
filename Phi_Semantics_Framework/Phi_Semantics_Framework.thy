@@ -141,7 +141,7 @@ lemma Valid_Resource_mult_homo:
   by (simp add: times_fun sep_disj_fun_def Resource_Validator_mult_homo; blast)
 
 
-subsection \<open>Exception\<close>
+subsection \<open>Abnormality\<close>
 
 virtual_datatype \<phi>empty_abnormal
 
@@ -329,7 +329,7 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
 \<^item> \<open>Success v r\<close> represents a successful returning state with return value \<open>v\<close> and resulted resource
   state \<open>r\<close>.
 
-\<^item> \<open>Exception v r\<close> represents the computation throws an exception of value \<open>v\<close>, at the
+\<^item> \<open>Abnormality v r\<close> represents the computation throws an exception of value \<open>v\<close>, at the
   moment when the state of the resources is \<open>r\<close>.
 
 \<^item> \<open>NonTerm\<close> represents the execution does not terminate.
@@ -357,7 +357,7 @@ declare [ [typedef_overloaded] ]
 
 datatype 'ret state =
       Success \<open>'ret::VALs \<phi>arg\<close> (resource: resource)
-    | Exception \<open>ABNM\<close> (resource: resource)
+    | Abnormality \<open>ABNM\<close> (resource: resource)
     | Invalid
     | AssumptionBroken
     | NonTerm
@@ -366,12 +366,12 @@ declare [ [typedef_overloaded = false] ]
 
 
 lemma split_state_All:
-  \<open>All P \<longleftrightarrow> (\<forall>v r. P (Success v r)) \<and> (\<forall>v r. P (Exception v r)) \<and> P Invalid
+  \<open>All P \<longleftrightarrow> (\<forall>v r. P (Success v r)) \<and> (\<forall>v r. P (Abnormality v r)) \<and> P Invalid
                 \<and> P AssumptionBroken \<and> P NonTerm\<close>
   by (metis state.exhaust)
 
 lemma split_state_Ex:
-  \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Exception v r)) \<or> P Invalid
+  \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Abnormality v r)) \<or> P Invalid
                 \<or> P AssumptionBroken \<or> P NonTerm\<close>
   by (metis state.exhaust)  
 
@@ -419,7 +419,7 @@ type_synonym ('arg,'ret) proc' = "'arg \<phi>arg \<Rightarrow> 'ret proc"
 
 definition bind :: "'a::VALs proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b::VALs proc"  ("_ \<bind>/ _" [75,76] 75)
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
-                                           | Exception v x \<Rightarrow> {Exception v x}
+                                           | Abnormality v x \<Rightarrow> {Abnormality v x}
                                            | Invalid \<Rightarrow> {Invalid}
                                            | NonTerm \<Rightarrow> {NonTerm}
                                            | AssumptionBroken \<Rightarrow> {AssumptionBroken}
