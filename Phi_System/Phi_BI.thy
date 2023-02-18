@@ -263,7 +263,7 @@ lemma " Union { S x |x. P x } = (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x
   by (simp add: set_eq_iff \<phi>expns) blast
 
 
-lemma ExSet_pair: "ExSet T = (\<exists>*c1 c2. T (c1,c2) )"
+lemma ExSet_pair: "ExSet T = (\<exists>*a b. T (a,b) )"
   unfolding set_eq_iff by (clarsimp simp add: \<phi>expns)
 
 (* lemma (in \<phi>empty_sem) [simp]: "p \<in> \<S>  (ExSet T) \<longleftrightarrow> (\<exists>z. p \<in> \<S>  (T z) )" by (cases p, simp_all add: \<phi>expns set_eq_iff)

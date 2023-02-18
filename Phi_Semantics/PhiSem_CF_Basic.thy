@@ -253,9 +253,8 @@ lemma "__op_recursion__":
     apply (rotate_tac 2) apply (induct rule: SemRec.induct) 
 
     subgoal premises prems for F v res y
-      thm prems(3)[OF prems(4)]
       using prems(3)[OF prems(4),
-                     of \<open>\<lambda>_ _. {AssumptionBroken}\<close> \<open>tag v\<close>, simplified, THEN spec[where x=res],
+                     of \<open>\<lambda>_ _. {AssumptionBroken}\<close> v, simplified, THEN spec[where x=res],
                      THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] .
     by simp .
 

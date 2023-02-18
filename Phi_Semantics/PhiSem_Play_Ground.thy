@@ -68,7 +68,7 @@ proc XXX:
   ;; $xaa ZZZ XXX YYY
  \<medium_right_bracket> .. .
 
-   
+    
 proc YYY:
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[32]\<close>
   premises A: \<open>x < y\<close>    

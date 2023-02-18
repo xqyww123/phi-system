@@ -12,6 +12,7 @@ val expand_aggregated_imps_obj : (Proof.context -> conv) -> Proof.context -> con
 val protect_conv : conv
 val unprotect_conv : conv
 
+val quant_conv : string -> (cterm * Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 
@@ -45,10 +46,27 @@ fun expand_aggregated_imps_obj C ctxt c =
 val protect_conv = rewr_conv @{thm Pure.prop_def[symmetric]}
 val unprotect_conv = rewr_conv @{thm Pure.prop_def}
 
-fun hol_all_conv cv ctxt ct =
+
+fun is_strict_reflexive th = (op =) (Logic.dest_equals (Thm.prop_of th))
+  handle TERM _ => false;
+
+fun abs_conv cv ctxt ct =
   (case Thm.term_of ct of
-    Const (\<^const_name>\<open>All\<close>, _) $ Abs _ => Conv.arg_conv (Conv.abs_conv cv ctxt) ct
-  | _ => raise CTERM ("hol_all_conv", [ct]));
+    Abs (a, _, _) =>
+      let
+        val ((v, ct'), ctxt') = Variable.dest_abs_cterm ct ctxt;
+        val eq = cv (v, ctxt') ct';
+      in if is_strict_reflexive eq then all_conv ct else Thm.abstract_rule a v eq end
+  | _ => raise CTERM ("abs_conv", [ct]));
+
+
+fun quant_conv head cv ctxt ct =
+  (case Thm.term_of ct of Const (N, _) $ Abs _ =>
+      if N = head then Conv.arg_conv (abs_conv cv ctxt) ct
+                  else raise CTERM ("quant_conv", [ct])
+  | _ => raise CTERM ("quant_conv", [ct]))
+
+val hol_all_conv = quant_conv \<^const_name>\<open>All\<close>
 
 fun meta_all_body_conv C ctxt =
   forall_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt

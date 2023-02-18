@@ -198,13 +198,14 @@ fun set_param term' (ctxt,sequent) =
     then (* We aggregate the user input `term` into a single ex quantification with name preserved*)
           let
             val (N,term') = QuantExpansion.aggregate_vars_quantification ~1 term
+            val sctxt = clear_simpset ctxt
+                        addsimps QuantExpansion.aux_expansions ctxt
+                        addsimprocs [QuantExpansion.named_forall,
+                                     QuantExpansion.named_ex,
+                                     QuantExpansion.named_ExSet,
+                                     QuantExpansion.named_metaAll]
           in (ctxt, set_param' ctxt_parse term' sequent
-                      |> Raw_Simplifier.rewrite_rule ctxt
-                            (QuantExpansion.ExNu_expansion     N ctxt
-                          :: QuantExpansion.forall_expansion   N ctxt
-                          :: QuantExpansion.meta_All_expansion N ctxt
-                          :: QuantExpansion.exists_expansion   N ctxt
-                          :: QuantExpansion.aux_expansions       ctxt))
+                      |> Simplifier.full_simplify sctxt)
           end
     else (ctxt, set_param' ctxt_parse term sequent)
   end
