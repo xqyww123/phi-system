@@ -37,6 +37,17 @@ translations
 ML_file \<open>library/syntax/value.ML\<close>
 
 
+subsubsection \<open>Abnormality\<close>
+
+definition AbnormalObj :: \<open>VAL \<phi>arg \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close>
+  where \<open>AbnormalObj \<equiv> Val\<close>
+
+(*TODO: more about exception
+
+Any exception object will be specified by this type. and by this we clarify the difference
+between a value and an exception object.
+Then in exception specs, any Val is senseless and will be removed.*)
+
 
 subsection \<open>Semantic Type\<close>
 
