@@ -9,7 +9,11 @@ val quantify_args_of_proc_term : bool (*whether to record the names in the quant
 val quantify_args_of_proc_term_meta : bool (*whether to record the names in the quantification*)
                          -> term -> term
 
-val rule_of_package_arguement : Proof.context -> term -> thm
+(* \<^bold>p\<^bold>r\<^bold>o\<^bold>c f (\<phi>V_pair ?a ?b) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?b] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE
+--------------------------------------------------------------------------------------
+   \<forall>pack. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f pack \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_snd pack] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_fst pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE
+*)
+val package_argument : Proof.context -> thm -> thm
 
 end
 
@@ -29,12 +33,12 @@ fun quantify_args_of_proc_term' record_name proc =
                                         else SOME []
                             | _      => SOME []
       val (pack, X') = package_values "" \<^typ>\<open>unit\<close> true Vs X
-      fun parameterize_var (Var (v,T)) = Var (v, fastype_of pack --> T) $ Bound 0
+      fun parameterize_var (Var (v,T))   = Var (v, fastype_of pack --> T) $ Bound 0
         | parameterize_var (X $ Bound i) = parameterize_var X $ Bound 0
       val f' = if is_var f then parameterize_var f
-               else case f of F $ Vs  => if is_argT' (fastype_of Vs)
-                                         then F $ Bound 0
-                                         else f
+               else case f of F $ Vs => if is_argT' (fastype_of Vs)
+                                        then F $ Bound 0
+                                        else f
                             | _      => f
       val T = fastype_of pack
       val abs1 = Abs ("", T,
@@ -79,14 +83,29 @@ fun quantify_args_of_proc_term record_name (Const (\<^const_name>\<open>Trueprop
 
 
 (*
-    (\<And>a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f a \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_snd a] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_fst a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE ) \<equiv>
-    (\<And>a b. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f (\<phi>V_pair a b) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[b] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE )
+    (\<And>a b. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f (\<phi>V_pair a b) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[b] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE ) \<Longrightarrow>
+    (\<forall>a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f a \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_snd a] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_fst a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE )
 *)
 fun rule_of_package_arguement ctxt proc =
-  let val packed = quantify_args_of_proc_term_meta false proc
+  let val packed = quantify_args_of_proc_term false proc
                 |> Thm.cterm_of ctxt
-      val ctxt' = Simplifier.init_simpset @{thms split_paired_all_\<phi>arg[folded atomize_eq]
-                                                 \<phi>V_simps[folded atomize_eq]} ctxt
-   in Raw_Simplifier.rewrite_cterm (false,false,false) (K (K NONE)) ctxt' packed end
+      fun expand_quant ctxt c = let open Conv Phi_Helper_Conv in
+            try_conv (rewr_conv @{thm split_paired_all_\<phi>arg[folded atomize_eq]}
+                      then_conv forall_conv (expand_quant o snd) ctxt)
+          end c
+      val ctxt' = Simplifier.init_simpset @{thms \<phi>V_simps[folded atomize_eq]} ctxt
+   in packed
+   |>(Conv.rewr_conv @{thm atomize_all[symmetric]}
+      then_conv expand_quant ctxt'
+      then_conv Raw_Simplifier.rewrite_cterm (false,false,false) (K (K NONE)) ctxt')
+   |>(fn th => th RS @{thm equal_elim_rule2})
+  end
+
+fun package_argument ctxt proc_thm =
+  let val proc = Thm.concl_of proc_thm
+      val rule = rule_of_package_arguement ctxt proc
+   in (proc_thm RS rule)
+   |> Raw_Simplifier.rewrite_rule ctxt @{thms triv_forall_equality}
+  end
 
 end

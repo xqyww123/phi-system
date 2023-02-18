@@ -391,8 +391,6 @@ shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?FF \<lbrace> X \<longmapsto> 
 
 subsubsection \<open>Declare New Variables\<close>
 
-declare [[eta_contract=false]]
-
 proc op_var_scope:
   assumes BLK: \<open>\<And>var. varname.type var \<equiv> TY
                   \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F var \<lbrace> X\<heavy_comma> \<^bold>u\<^bold>n\<^bold>i\<^bold>n\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[var] \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any

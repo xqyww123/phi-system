@@ -229,7 +229,8 @@ simproc_setup named_metaAll_expansion ("Pure.all (P :: 'a <named> 'names \<Right
 
 (*TODO: merge to procedure 1*)
 ML_file "./library/syntax/procedure3.ML"
- 
+
+
 subsubsection \<open>Rename \<lambda>-Abstraction\<close>
 
 definition rename_abstraction :: \<open>'\<phi>name_name itself \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool\<close>

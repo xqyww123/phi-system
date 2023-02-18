@@ -219,13 +219,13 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     fun after_qed (ctxt',[[th]]) stat0 =
       let val stat = Proof.end_block stat0
           val ctxt'' = Proof.context_of stat
-          val th0 = Drule.eta_contraction_rule th
+          val th0 = (* Drule.eta_contraction_rule *) th
           val (th1::vars') = (th0::map (Drule.mk_term o Thm.cterm_of ctxt') vars)
                                    |> Proof_Context.export ctxt' ctxt''
           val th2 = Drule.forall_intr_list (map Drule.dest_term vars') th1
 
-          fun gen_sequent (ctxt,sequent0) =
-            let val sequent = Phi_Help.beta_eta_contract_leading_antecedent sequent0
+          fun gen_sequent (ctxt,sequent) =
+            let (*val sequent = Phi_Help.beta_eta_contract_leading_antecedent sequent0*)
                 val insts =
                       PLPR_Pattern.match (Proof_Context.theory_of ctxt'')
                                     (Phi_Help.leading_antecedent' sequent, Thm.prop_of th2)
@@ -244,6 +244,9 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                 val sequent'' = Thm.implies_elim
                                       (Phi_Help.beta_eta_contract_leading_antecedent sequent')
                                       (Phi_Help.beta_eta_contract th2)
+                    (*This beta eta contraction may be not good, cuz it may remove names of quantified
+                      variables but I cannot find a better and simpler way to do this implication
+                      elimination.*)
                 val (ctxt'3, sequent'3) = Phi_Reasoner.reason (SOME 1) (ctxt, sequent'')
                        |> (fn SOME X => X
                             | NONE => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [

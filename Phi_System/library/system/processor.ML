@@ -288,7 +288,7 @@ val simplifier = almost_safe (fn (ctxt, sequent) =>
     val simps = Named_Theorems.get ctxt \<^named_theorems>\<open>useful\<close>
     val simps'= Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>programming_simps\<close>
     val ctxt' = Raw_Simplifier.addsimps (ctxt, simps @ simps')
-    val sequent' = Simplifier.full_simplify ctxt' (Drule.eta_contraction_rule sequent)
+    val sequent' = Simplifier.full_simplify ctxt' sequent
     in  raise Bypass (SOME (ctxt, sequent'))
     end))
 

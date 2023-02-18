@@ -356,7 +356,10 @@ text \<open>The system \<open>Object_Logic.atomize\<close> and \<open>Object_Log
 ML_file \<open>library/iso_atomize.ML\<close>
 
 definition \<open>pure_imp_embed \<equiv> (\<longrightarrow>)\<close>
-definition \<open>pure_all_embed \<equiv> (All)\<close>
+definition pure_all_embed :: \<open>('a \<Rightarrow> bool) \<Rightarrow> bool\<close> (binder \<open>\<forall>\<^sub>e\<^sub>m\<^sub>b\<^sub>e\<^sub>d \<close> 10)
+    \<comment> \<open>We give it a binder syntax to prevent eta-contraction which
+        deprives names of quantifier variables\<close>
+  where \<open>pure_all_embed \<equiv> (All)\<close>
 definition \<open>pure_conj_embed \<equiv> (\<and>)\<close>
 definition \<open>pure_prop_embed x \<equiv> x\<close>
 
@@ -370,7 +373,7 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 
 (*TODO: find a way to preserve the name*)
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>(\<And>x. P x) \<equiv> Trueprop (pure_all_embed P)\<close>
+  \<open>(\<And>x. P x) \<equiv> Trueprop (pure_all_embed (\<lambda>x. P x))\<close>
   unfolding atomize_all pure_all_embed_def .
 
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:

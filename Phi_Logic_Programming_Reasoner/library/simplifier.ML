@@ -8,7 +8,7 @@ end
 structure PLPR_Simplifier : PLPR_SIMPLIFIER = struct
 
 fun simplifier F (ctxt,sequent) =
-  (@{thm Do_Simplification} RS (Drule.eta_contraction_rule sequent))
+  (@{thm Do_Simplification} RS sequent)
     |> Tactical.HEADGOAL (Simplifier.simp_tac (F ctxt))
     |> Seq.map_filter (fn th =>
           case Phi_Reasoner.single_RS' @{thm End_Simplification} (ctxt,th)

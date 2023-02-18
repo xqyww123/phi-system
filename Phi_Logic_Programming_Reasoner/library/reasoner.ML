@@ -257,23 +257,22 @@ fun concl_of_goal st i =
   in subst_bounds (rfrees, B)
   end
 
-
-fun beta_eta_contract_leading_antecedent th =
+(* fun beta_eta_contract_leading_antecedent th =
   if (case Thm.prop_of th
         of \<^const>\<open>Pure.imp\<close> $ X $ _ => Term.could_beta_eta_contract X
          | _ => false)
   then Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion
                                          Conv.all_conv (Thm.cprop_of th)) th
-  else th
+  else th *)
 
-fun call_tactics cost_delt N ctxt tactics th0 =
-  let val th = beta_eta_contract_leading_antecedent th0 in
+fun call_tactics cost_delt N ctxt tactics th =
   if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
   else let
     val tacs = Thm.major_prem_of th (*TODO: if we can implement a HO match which tolerates loose
                                       bounds, we don't need substituting loose bounds any more here
                                       and the performance can be improved effectively.*)
+                |> Envir.beta_eta_contract
                 |> (fn term =>
                     Cost_Net.retrieve tactics term
                       |> filter (fn (_,reasoner) =>
@@ -299,7 +298,6 @@ fun call_tactics cost_delt N ctxt tactics th0 =
                | _ => NONE
           else SOME (cost + cost_delt, #pos r, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
         )
-  end
   end
   handle Local_Cut ret => [ret]
        | Success s => Success_Handlers.invoke (fst s) s

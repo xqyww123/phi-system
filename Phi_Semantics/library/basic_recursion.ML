@@ -12,7 +12,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt0,sequent0) =
   let
     val sequent = sequent0
               |> Conv.fconv_rule (let open Phi_Helper_Conv Conv in
-                    leading_antecedent_conv (foralls_body_conv (fn ctxt =>
+                    leading_antecedent_conv (meta_all_body_conv (fn ctxt =>
                                   aggregate_imps_obj (K all_conv) ctxt
                         then_conv protect_conv
                       ) ctxt0)
@@ -96,9 +96,9 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt0,sequent0) =
     val norm_sequent = Phi_Help.rewrite_leading_antecedent simp_ctxt sequent
     val sequent1 = (rule RS norm_sequent)
                 |> Conv.gconv_rule (let open Phi_Helper_Conv Conv in
-                    foralls_body_conv (fn ctxt =>
+                    meta_all_body_conv (fn ctxt =>
                         implies_conv all_conv (implies_conv (
-                            Phi_Syntax.labelled_conv (arg_conv (foralls_body_conv (
+                            Phi_Syntax.labelled_conv (arg_conv (meta_all_body_conv (
                                 expand_aggregated_imps_obj (K (try_conv Phi_Syntax.elim_labelled
                                                               then_conv try_conv (rewr_conv @{thm HIDDEN_PREM_def})))
                             ) ctxt))
