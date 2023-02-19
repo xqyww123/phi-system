@@ -61,6 +61,7 @@ theory Phi_BI
       and "<implies>" = "\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s"
       and "<and>"  = "\<^bold>a\<^bold>n\<^bold>d"
       and "<subj>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>j"
+      and "<remains>" = "\<r>\<e>\<m>\<a>\<i>\<n>\<s>"
 begin
 
 subsection \<open>Bottom\<close>

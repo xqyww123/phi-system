@@ -545,8 +545,6 @@ declare [[\<phi>reason_default_pattern
   and \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ * \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close> \<Rightarrow>
       \<open>?X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s  _ * \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close>    (100)
 ]]
-    
-declare [[\<phi>trace_reasoning]]
 
 subsubsection \<open>Synthesis Operations\<close>
 
@@ -689,6 +687,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> case_named f (tag x) \<brangle> \<Ztypecolon> T ret \<rbrace> @action synthesis\<close>
   by simp
 
+
 subsection \<open>Application\<close> 
 \<comment> \<open>of procedures, ToA, and any other things\<close>
 
@@ -808,6 +807,26 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> PROP \<phi>Application (App @action Act) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2) prems(3)] . .
+
+
+lemma [\<phi>reason 1200]:
+  \<open> PROP \<phi>Application (Trueprop (\<forall>a b. App (a,b))) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
+  unfolding split_paired_All .
+
+lemma [\<phi>reason 1100]:
+  \<open> PROP \<phi>Application (Trueprop (App x)) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
+  unfolding \<phi>Application_def
+  subgoal premises p by (rule p(1), rule p(2), rule p(3)[THEN spec[where x=x]]) .
+
+lemma [\<phi>reason 1200]:
+  \<open> PROP \<phi>Application (Trueprop (\<forall>a. App (\<phi>V_pair x a))) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
+  unfolding \<phi>Application_def
+  subgoal premises p by (rule p(1), rule p(2), rule, rule p(3)[THEN spec]) .
+
+
 
 
 subsubsection \<open>Application as a Resolution\<close>

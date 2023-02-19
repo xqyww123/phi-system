@@ -519,6 +519,7 @@ val _ =
             val reasoners = if strict
                             then get_reasoners' (Proof_Context.theory_of ctxt) all_reasoners pattern
                             else Net.match_term all_reasoners pattern
+                                  |> sort (fn ((c1,_,_),(c2,_,_)) => int_ord (c1,c2))
          in if null reasoners
             then writeln "No reasoner found."
             else writeln (Pretty.string_of (Pretty.chunks

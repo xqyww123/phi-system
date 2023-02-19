@@ -3,6 +3,7 @@ signature PATTERN_TRANSLATION = sig
 val add : (int * term * term) list -> Context.generic -> Context.generic
 val remove : int * term * term -> Context.generic -> Context.generic
 val translate : Context.generic -> term -> term option
+val translate_by_unify : Context.generic -> term -> term option
 val setup_attribute : binding -> string -> theory -> theory
 
 end
@@ -28,19 +29,35 @@ fun add pat_pats ctxt =
 fun remove (n,p1,p2) =
       Data.map (Net.delete_term_safe pat_pat_eq (p1,(n,p1,p2)))
 
-fun calculate thy term (n, pat0, pat_ret0) =
+fun calculate ctxt term (n, pat0, pat_ret0) =
   let val ind = Term.maxidx_of_term term + 1
       val pat = Logic.incr_indexes ([],[],ind) pat0
       val pat_ret = Logic.incr_indexes ([],[],ind) pat_ret0
-      val s = Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)
+      val s = Pattern.match (Context.theory_of ctxt) (pat, term) (Vartab.empty, Vartab.empty)
    in (SOME (n, Envir.subst_term s pat_ret))
   end handle Pattern.MATCH => NONE
 
-fun translate ctxt term =
+fun calculate_by_unify ctxt term (n, pat0, pat_ret0) =
+  let val ind = Term.maxidx_of_term term + 1
+      val pat = Logic.incr_indexes ([],[],ind) pat0
+      val pat_ret = Logic.incr_indexes ([],[],ind) pat_ret0
+   in Unify.unifiers (ctxt, Envir.empty (Term.maxidx_of_term pat), [(pat, term)])
+           |> Seq.chop 2
+           |> (fn ([],_) => NONE
+                | ([(s,_)],_) => SOME (n, Envir.subst_term (Envir.type_env s, Envir.term_env s) pat_ret)
+                | _ => error (Pretty.string_of (Pretty.chunks [
+                        Pretty.str "Multiple unifiers between:",
+                        Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pat,
+                        Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term
+                    ])))
+  end handle Pattern.MATCH => NONE
+
+
+fun gen_translate calc ctxt term =
   Net.match_term (Data.get ctxt) term
     |> sort (fn ((n1,_,_),(n2,_,_)) => int_ord (n2,n1))
     |> Seq.of_list
-    |> Seq.map_filter (calculate (Context.theory_of ctxt) term)
+    |> Seq.map_filter (calc ctxt term)
     |> Seq.chop 2
     |> (fn ([], _) => NONE
          | ([(_,ret)], _) => SOME ret
@@ -53,6 +70,8 @@ fun translate ctxt term =
                  )))
             else SOME ret)
 
+val translate = gen_translate calculate
+val translate_by_unify = gen_translate calculate_by_unify
 
 val pat2 = (Args.context -- Scan.lift (Parse.prop --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.prop
                                       --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))

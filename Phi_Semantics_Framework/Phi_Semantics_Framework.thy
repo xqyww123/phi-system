@@ -263,7 +263,8 @@ next
 qed
 
 abbreviation \<open>\<phi>V_none \<equiv> \<phi>arg ()\<close>
-definition \<open>\<phi>V_pair x y = \<phi>arg (\<phi>arg.dest x, \<phi>arg.dest y)\<close>
+definition \<phi>V_pair ("_\<^bold>, _" [11,10] 10)
+  where \<open>\<phi>V_pair x y = \<phi>arg (\<phi>arg.dest x, \<phi>arg.dest y)\<close>
 definition \<open>\<phi>V_case_prod f x \<equiv> case x of \<phi>arg (a,b) \<Rightarrow> f (\<phi>arg a) (\<phi>arg b)\<close>
 definition \<open>\<phi>V_fst x = map_\<phi>arg fst x\<close>
 definition \<open>\<phi>V_snd x = map_\<phi>arg snd x\<close>
@@ -416,7 +417,7 @@ type_synonym 'ret proc = "resource \<Rightarrow> 'ret state set"
 type_synonym ('arg,'ret) proc' = "'arg \<phi>arg \<Rightarrow> 'ret proc"
 
 
-definition bind :: "'a::VALs proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b::VALs proc"  ("_ \<bind>/ _" [75,76] 75)
+definition bind :: "'a::VALs proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b::VALs proc"  ("_ \<bind>/ _" [76,75] 75)
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
                                            | Abnormality v x \<Rightarrow> {Abnormality v x}
                                            | Invalid \<Rightarrow> {Invalid}
@@ -424,7 +425,7 @@ definition bind :: "'a::VALs proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b::
                                            | AssumptionBroken \<Rightarrow> {AssumptionBroken}
                               ) ` f res))"
 
-abbreviation bind' ("_ \<ggreater>/ _" [75,76] 75)
+abbreviation bind' ("_ \<ggreater>/ _" [76,75] 75)
   where \<open>bind' f g \<equiv> (f \<bind> (\<lambda>_. g))\<close>
 
 definition \<open>det_lift f x = {f x}\<close>

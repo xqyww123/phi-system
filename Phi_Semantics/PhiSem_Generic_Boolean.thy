@@ -94,15 +94,11 @@ section \<open>Abstractions of Boolean Arithmetic\<close>
 
 subsection \<open>Constant\<close>
  
-lemma op_const_bool:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace>\<close>
+lemma op_const_bool[\<phi>synthesis for \<open>\<lambda>v. True \<Ztypecolon> ?T v\<close> \<open>\<lambda>v. False \<Ztypecolon> ?T v\<close>]:
+  \<open> Check_Literal b
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_const_bool_def
   by (rule, simp add: \<phi>Bool_expn)
-
-lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> \<blangle> True  \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<close>
-                   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> \<blangle> False \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<close>]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> R \<longmapsto> R\<heavy_comma> \<blangle> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<brangle> \<rbrace>\<close>
-  \<medium_left_bracket> op_const_bool[where b=b] \<medium_right_bracket> .. .
 
 subsection \<open>Not\<close>
 
@@ -112,17 +108,12 @@ lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
   by (cases raw, simp, rule, simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns)
 
 
-schematic_goal
-  [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R1\<heavy_comma> \<blangle> \<not>?b \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ \<close>]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> R \<longmapsto> R1\<heavy_comma> \<blangle> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-  shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?G \<lbrace> R \<longmapsto> R1\<heavy_comma> \<blangle> \<^bold>v\<^bold>a\<^bold>l \<not>b \<Ztypecolon> \<bool> \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-  \<medium_left_bracket> F1 \<not> \<medium_right_bracket> .. .
-
 subsection \<open>And\<close>
 
-
-lemma op_and[\<phi>overload \<and>, \<phi>synthesis 100]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+declare [[\<phi>trace_reasoning = 1]]
+ 
+lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (vb\<^bold>, va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
   by (cases va; cases vb; simp, rule, rule, simp add: \<phi>expns WT_bool, rule,
       simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
@@ -130,14 +121,14 @@ lemma op_and[\<phi>overload \<and>, \<phi>synthesis 100]:
 subsection \<open>Or\<close>
 
 lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or (vb\<^bold>, va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def
   by(cases va; cases vb, simp, rule, rule, simp add: \<phi>expns WT_bool, rule,
       simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
 
 
 subsection \<open>Equal\<close>
-
+ 
 lemma op_equal_\<phi>app[\<phi>overload =]:
   \<open> \<phi>SemType (a \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (b \<Ztypecolon> T) TY
@@ -150,7 +141,20 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
     apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
    apply (unfold \<phi>Equal_def Premise_def, simp)
   by (rule \<phi>M_Success', rule, simp add: \<phi>expns)
+  
+declare op_equal_\<phi>app[ \<phi>synthesis 100]
 
+
+
+declare [[\<phi>trace_reasoning = 2]]
+
+proc play:
+  input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<bool>\<close>
+  output \<open>\<not> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<bool>\<close>
+  \<medium_left_bracket> \<open>False \<or> \<not> $x\<close> \<medium_right_bracket>. .
+
+
+(*
 proc (nodef) \<phi>__synthesis_eq[
     \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x = ?y) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
 ]:
@@ -165,6 +169,6 @@ proc (nodef) \<phi>__synthesis_eq[
   throws \<open>E1 + E2\<close>
   @action \<open>synthesis G\<close>
   \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
-
+*)
 
 end

@@ -20,6 +20,8 @@ include PHI_SYNTAX
   val dest_sem_value_T: typ -> typ
   val mk_sem_value_T: typ -> typ
 
+  val mk_phi_type : term * term -> term
+
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
@@ -76,5 +78,9 @@ fun mk_separations [] = \<^term>\<open>Void\<close>
 val dest_sem_value_T = dest_monop_ty \<^type_name>\<open>\<phi>arg\<close>
 fun mk_sem_value_T T = Type(\<^type_name>\<open>\<phi>arg\<close>, [T])
 
+fun mk_phi_type (x,T) =
+  let val \<^Type>\<open>fun \<open>a\<close> \<open>\<^Type>\<open>set \<open>b\<close>\<close>\<close>\<close> = Phi_Help.safe_fastype_of  T
+   in \<^Const>\<open>\<phi>Type a b\<close> $ x $ T end
+  
 
 end

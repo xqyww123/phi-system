@@ -544,8 +544,8 @@ fun clean_values (ctxt,sequent) =
 val statement_cmd =
   Phi_Processor.powerful_process_p >> (fn f => fn stat =>
     stat |> Phi_Envir.map_state_sequent clean_values
-         |> Proof.map_context Phi_Envir.freeze_dynamic_lemmas
          |> f
+         |> Proof.map_context Phi_Envir.freeze_dynamic_lemmas
   )
 
 

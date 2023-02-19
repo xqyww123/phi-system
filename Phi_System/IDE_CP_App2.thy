@@ -136,6 +136,15 @@ lemma [\<phi>reason 1200 for
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma \<phi>arg_val_varify_type:
+  \<open> \<phi>arg.dest raw \<in> (x  \<Ztypecolon> T)
+\<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d Any
+||| FAIL TEXT(\<open>Expect the value\<close> raw \<open>has spec\<close> (x' \<Ztypecolon> T') \<open>but is specified by\<close>
+      (x \<Ztypecolon> T) \<open>actually, and the conversion fails.\<close>)
+\<Longrightarrow> \<phi>arg.dest raw \<in> (x' \<Ztypecolon> T')\<close>
+  unfolding Imply_def atomize_Branch by blast
 
 lemma [\<phi>reason 1200 for
     \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> \<blangle> ?x <set-to> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d _ \<close>
@@ -144,7 +153,8 @@ lemma [\<phi>reason 1200 for
 \<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> \<blangle> x <set-to> (raw::VAL \<phi>arg) \<Ztypecolon> T \<brangle>\<close>
   by simp
 
-lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))\<close>]:
+lemma [OF \<phi>arg_val_varify_type,
+       \<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E ))\<close>]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>))\<close>
   unfolding Synthesis_by_def Action_Tag_def \<phi>Procedure_def Return_def det_lift_def
@@ -161,13 +171,15 @@ lemma "__set_value_rule__":
   unfolding \<phi>Procedure_def Value_of_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d _ \<close>]:
+lemma [OF \<phi>arg_val_varify_type,
+       \<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S2\<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d _ \<close>]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<brangle>\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn implies_refl)
 
-lemma [\<phi>reason 1300 for
+lemma [OF \<phi>arg_val_varify_type,
+       \<phi>reason 1300 for
     \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
@@ -175,7 +187,8 @@ lemma [\<phi>reason 1300 for
   apply (rule Synthesis_Proc_fallback_VS, rule view_shift_by_implication[where P=True])
   by (cases raw; simp add: Val_expn)
 
-lemma [\<phi>reason 1200 for
+lemma [OF \<phi>arg_val_varify_type,
+       \<phi>reason 1200 for
     \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL \<phi>arg. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)

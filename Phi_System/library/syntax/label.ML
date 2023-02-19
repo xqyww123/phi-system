@@ -56,6 +56,9 @@ fun intro_labelled name cterm =
 
 val elim_labelled = Conv.rewr_conv @{thm Labelled_def}
 
-val labelled_conv = Conv.arg_conv
+fun labelled_conv C ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>Labelled\<close>, _) $ _ => Conv.arg_conv C ctm
+     | _ => raise CTERM ("labelled_conv", [ctm])
 
 end

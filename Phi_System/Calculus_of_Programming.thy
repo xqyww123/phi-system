@@ -280,6 +280,23 @@ lemmas [procedure_simps] =
 \<phi>reasoner_ML procedure_simplification 1000 (\<open>Simplify procedure_simplification ?x ?y\<close>)
   = \<open>PLPR_Simplifier.simplifier_by_ss' Proc_Monad_SS.get'\<close>
 
+(*
+lemma "\<phi>__final_proc_rewrite__":
+  \<open> Simplify procedure_simplification f' f
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  unfolding Action_Tag_def Simplify_def by simp
+
+lemma "\<phi>__final_proc_rewrite__'":
+  \<open> Simplify procedure_simplification f' f
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action A
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action A\<close>
+  unfolding Action_Tag_def Simplify_def by simp
+*)
+>>>>>>> f5b514e (Almost done: Synthesis)
+
 subsection \<open>Misc\<close>
 
 paragraph \<open>Inhabitance\<close>

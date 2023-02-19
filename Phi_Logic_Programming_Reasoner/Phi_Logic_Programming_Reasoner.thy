@@ -13,12 +13,13 @@ subsubsection \<open>Prelude Settings\<close>
 
 ML \<open>Timing.cond_timeit false "asd" (fn () => OS.Process.sleep (seconds 1.0))\<close>
 
-ML_file_debug \<open>library/pattern.ML\<close>
+ML_file \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
-ML_file \<open>library/pattern_translation.ML\<close>
+ML_file_debug \<open>library/pattern_translation.ML\<close>
 
-print_abbrevs
+ML \<open>Unify.unifiers (Context.Proof \<^context>, Envir.init, [(Var(("a",0),\<^typ>\<open>prop\<close>), \<^prop>\<open>True\<close>)])
+|> Seq.pull\<close>
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
 

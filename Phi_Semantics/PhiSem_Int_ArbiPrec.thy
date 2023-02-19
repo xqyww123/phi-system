@@ -195,9 +195,12 @@ bundle unfold_Big = Big_def[iff]
 
 subsubsection \<open>Constant Integer\<close>
 
-lemma op_const_aint_\<phi>app:
+lemma op_const_aint_\<phi>app[
+    \<phi>synthesis 300 for \<open>\<lambda>ret. (numeral ?n::nat) \<Ztypecolon> _\<close>
+                       \<open>\<lambda>ret. (0::nat) \<Ztypecolon> _\<close>
+                       \<open>\<lambda>ret. (1::nat) \<Ztypecolon> _\<close>]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_aint x \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<int> \<rbrace>\<close>
-  unfolding op_const_aint_def Premise_def Synthesis_def
+  unfolding op_const_aint_def Premise_def
   by (rule, simp add: \<phi>expns)
 
 lemma

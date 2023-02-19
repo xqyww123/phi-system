@@ -153,6 +153,9 @@ lemmas [assertion_simps] =
   plus_fun[where 'a=\<open>'a::sep_magma set\<close>]
   Subjection_Zero ExSet_simps distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]
+  \<phi>V_simps
+
+lemmas [assertion_simps_source] = ExSet_times_left ExSet_times_right
 
 section \<open>Small Reasoning Process\<close>
 
