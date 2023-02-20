@@ -321,7 +321,7 @@ fun gen_finish_proc prep_term qed spec int stat =
           if Thm.no_prems sequent_pre1
           then (ctxt_pre1,sequent_pre1)
           else let
-            val _ = Phi_Reasoner.debug_info ctxt_pre1 (fn _ =>
+            val _ = Phi_Reasoner.debug_print ctxt_pre1 (fn _ =>
                       "solving pending antecedents before closing the programming block..."
                       ^ Position.here \<^here>)
             fun attack_obligations (ctxt,sequent) =
@@ -378,7 +378,7 @@ fun gen_finish_proc prep_term qed spec int stat =
         val end_tac = basic_method (fn ctxt' => fn goal' => (
             let
               val sequent' = singleton (Proof_Context.export ctxt ctxt') sequent
-              val _ = Phi_Reasoner.debug_info ctxt' (fn _ =>
+              val _ = Phi_Reasoner.debug_print ctxt' (fn _ =>
                   Pretty.string_of (Pretty.chunks [
                     Pretty.str "Solving the goal by the resulted sequent from the programming.",
                     Pretty.item [Pretty.str "goal:"],
@@ -390,6 +390,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                 val (_,result) = NuApply.apply [sequent'] (ctxt',goal')
                               |> Phi_Reasoners.safer_obligation_solver1
               in result end
+              handle E => raise (@{print} E)
             ))
        in
         stat'

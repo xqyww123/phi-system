@@ -103,7 +103,7 @@ val default_initialize_sequent = generic_initialize_sequent (fn _ => error "BUG 
 
 fun generic_cast rule place desired_nu (ctxt,sequent) =
   let
-    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "reasoning cast..." ^ Position.here \<^here>)
+    val _ = Phi_Reasoner.debug_print ctxt (fn _ => "reasoning cast..." ^ Position.here \<^here>)
     val (ctxt', sequent') =
           case Phi_Reasoner.reason NONE (ctxt, sequent RS rule)
             of SOME ret => ret

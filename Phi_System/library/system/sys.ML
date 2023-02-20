@@ -104,10 +104,25 @@ fun move_lemmata (ctxt, sequent) =
      | _ => (ctxt, sequent)
 
 
-fun export_codeblock _ param_cterms rule assm sequent =
+fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =
+  let val (_,_,_,_,E) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequent0)
+      val Free param_ret' = Thm.term_of param_ret
+      fun has_bound_ret (Free X) = (X = param_ret')
+        | has_bound_ret (A $ B) = has_bound_ret A orelse has_bound_ret B
+        | has_bound_ret (Abs (_,_,X)) = has_bound_ret X
+        | has_bound_ret _ = false
+      val sequent = if has_bound_ret E
+                    then let val E' = Term.absfree param_ret' E
+                                   |> Thm.cterm_of ctxt
+                             val ex_rule = @{thm \<phi>ex_quantify_E}
+                                        |> Drule.infer_instantiate ctxt [(("E",0),E')]
+                          in sequent0 RS ex_rule end
+                    else sequent0
+   in
      sequent |> Thm.implies_intr assm
-             |> Drule.forall_intr_list param_cterms
+             |> Drule.forall_intr_list [param_s, param_ret]
              |> (fn th => th COMP_INCR rule)
+  end
 
 
 fun accept_proc' (ctxt,sequent) =
@@ -133,6 +148,7 @@ fun accept_proc' (ctxt,sequent) =
                       in Thm.instantiate (TVars.make [(V,\<^ctyp>\<open>unit\<close>)], Vars.empty) rule'
                       end)
           else rule'
+
     val \<^Const_>\<open>Pure.all _\<close> $ Abs (_, _, \<^Const_>\<open>Pure.all _\<close> $ Abs (_, ret_ty,
             \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
         = Phi_Help.leading_antecedent' rule
@@ -142,8 +158,8 @@ fun accept_proc' (ctxt,sequent) =
     val codeblk_cterm =
           Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name, \<^typ>\<open>resource\<close>)], codeblk_term)
               |> Thm.cterm_of ctxt
-    val param_cterms = [Free (s_name, \<^typ>\<open>resource\<close>), Free (ret_name, ret_ty)]
-              |> map (Thm.cterm_of ctxt)
+    val param_cterms = (Free (s_name, \<^typ>\<open>resource\<close>), Free (ret_name, ret_ty))
+              |> apply2 (Thm.cterm_of ctxt)
 
     val (_,_,f,_) = Phi_Syntax.dest_CodeBlock_c codeblk_cterm
     val _ = if Thm.maxidx_of_cterm f <> ~1
@@ -245,7 +261,7 @@ fun synthesis term (ctxt, sequent) =
           |> Drule.infer_instantiate ctxt [(("X",i_s + i_t), Thm.incr_indexes_cterm i_s term),
                                            (("sequent",i_s + i_t), Thm.cprop_of sequent)]
           |> (fn rule => Thm.implies_elim rule sequent)
-    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "reasoning synthesis..." ^ Position.here \<^here>)
+    val _ = Phi_Reasoner.debug_print ctxt (fn _ => "reasoning synthesis..." ^ Position.here \<^here>)
   in
     case Phi_Reasoner.reason NONE (ctxt, sequent')
       of SOME ret => ret

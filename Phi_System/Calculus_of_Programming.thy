@@ -96,6 +96,9 @@ lemma \<phi>assemble_proc:
   apply clarsimp subgoal for s s'
   by (cases s; simp; cases s'; simp add: split_state_All ring_distribs plus_fun) .
 
+  
+
+
 lemma \<phi>accept_proc:
   \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> CodeBlock s s' f ret
@@ -199,6 +202,11 @@ lemmas \<phi>apply_implication_pending =
 
 lemmas \<phi>apply_implication_pending_E =
   \<phi>apply_view_shift_pending_E[OF _ view_shift_by_implication]
+
+lemma \<phi>ex_quantify_E:
+  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (E ret)
+\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. ExSet (\<lambda>x. E x e))\<close>
+  using \<phi>apply_implication_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
 
 lemma \<phi>apply_implication_impl:
   \<open> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s S

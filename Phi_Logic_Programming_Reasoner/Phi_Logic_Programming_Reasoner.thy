@@ -14,11 +14,12 @@ ML \<open>Timing.cond_timeit false "asd" (fn () => OS.Process.sleep (seconds 1.0
 
 ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
 ML_file_debug \<open>library/pattern.ML\<close>
+ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
 
-ML_file \<open>library/reasoner.ML\<close>
+ML_file_debug \<open>library/reasoner.ML\<close>
 
 lemma \<r>Require_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Require P\<close> unfolding \<r>Require_def .
 

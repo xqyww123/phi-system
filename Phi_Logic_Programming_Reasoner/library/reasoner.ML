@@ -18,11 +18,13 @@ signature NU_REASONER = sig
                  tactic: (context_state -> context_state Seq.seq)}
 
 
-  val trace : bool Config.T (*Prints the state of every reasoning step.*)
-  val trace_candidates : bool Config.T (*Prints the candidates at each step.*)
+  val trace : int Config.T (*Prints the state of every reasoning step.*)
+                     (*trace level: 0 - none; 1 - less info; 2 - more info; 3 - much more info*)
   val count_performance : bool Config.T
   val step_limit : int Config.T (*limit of the number of reasoning steps*)
-  val debug_info: Proof.context -> (unit -> string) -> unit
+  val info_print : Proof.context -> (unit -> string) -> unit
+  val info_pretty: Proof.context -> (unit -> Pretty.T) -> unit
+  val debug_print: Proof.context -> (unit -> string) -> unit
   val debug_pretty: Proof.context -> (unit -> Pretty.T) -> unit
             (*Prints any debug info only when the flag \<phi>trace_reasoning is turned on.*)
   val debug_pretty_generic : Context.generic -> (unit -> Pretty.T) -> unit
@@ -44,9 +46,13 @@ signature NU_REASONER = sig
   val add : priority * reasoner -> Context.generic -> Context.generic
   val add_lthy : priority * reasoner -> local_theory -> local_theory
   val del : name -> Context.generic -> Context.generic
+  val del_reasoners: term (*pattern*)
+                  -> (reasoner -> bool) (*filter, returning true to delete one*)
+                  -> Context.generic -> Context.generic
   val has : term -> Context.generic -> bool
   val reasoners : Proof.context -> (priority * reasoner) list
   val reasoner_net : Proof.context -> reasoner Cost_Net.T
+  val get_reasoners : theory -> reasoner Cost_Net.T -> term (*pattern*) -> (priority * reasoner) list
 
   (* Interfaces for Reasoning *)
   (*N: number of premises to be attacked at most, if it is positive;
@@ -93,7 +99,7 @@ signature NU_REASONER = sig
                -> Context.generic -> Context.generic
       (*The default pattern of an introduction rule whose conclusion matches P is X.*)
   val remove_default_pattern : int * term * term -> Context.generic -> Context.generic
-  val the_default_pattern_of : Context.generic -> term -> term
+  val the_default_pattern_of : Context.generic -> term -> term option
 
   (* Helpful Tools *)
   val chop_seq_head' : 'a Seq.seq -> 'a option
@@ -142,8 +148,7 @@ fun transform_reasoner phi ({name,pos,pattern,blacklist,tactic}:reasoner) =
 val auto_level = Attrib.setup_config_int \<^binding>\<open>\<phi>auto_level\<close> (K 2)
 fun reduce_auto_level i = Config.map auto_level (fn j => Int.min (i,j))
 
-val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning\<close> (K false);
-val trace_candidates = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_reasoning_candidates\<close> (K false);
+val trace = Attrib.setup_config_int \<^binding>\<open>\<phi>trace_reasoning\<close> (K 0);
 val count_performance = Attrib.setup_config_bool \<^binding>\<open>\<phi>count_performance\<close> (K false);
 
 val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_limit\<close> (K 1000);
@@ -151,15 +156,27 @@ val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_
 
 (* Debug Info *)
 fun debug_pretty ctxt G =
-  if Config.get ctxt trace
+  if 2 <= Config.get ctxt trace
   then tracing (Pretty.string_of (G ()))  
   else ()
-fun debug_info ctxt G = debug_pretty ctxt (G #> Pretty.str)
+fun debug_print ctxt G = debug_pretty ctxt (G #> Pretty.str)
 
 fun debug_pretty_generic ctxt G =
-  if Config.get_generic ctxt trace
+  if 2 <= Config.get_generic ctxt trace
   then tracing (Pretty.string_of (G ()))  
   else ()
+
+fun info_pretty ctxt G =
+  if 1 <= Config.get ctxt trace
+  then tracing (Pretty.string_of (G ()))  
+  else ()
+fun info_print ctxt G = info_pretty ctxt (G #> Pretty.str)
+
+fun info_pretty_generic ctxt G =
+  if 1 <= Config.get_generic ctxt trace
+  then tracing (Pretty.string_of (G ()))  
+  else ()
+
 
 fun error msg = Exn.error (msg ^ "\nReasoning Fail! You may turn on \<phi>trace_reasoning or\
       \ \<phi>trace_reasoning_candidates to debug.")
@@ -265,28 +282,39 @@ fun concl_of_goal st i =
                                          Conv.all_conv (Thm.cprop_of th)) th
   else th *)
 
-fun call_tactics cost_delt N ctxt tactics th =
+fun get_reasoners thy tactics term =
+  Cost_Net.retrieve tactics term
+    |> filter (fn (_,reasoner) =>
+        exists (fn pat =>
+          match_term thy (pat,term))
+        (#pattern reasoner)
+        andalso forall (fn pat =>
+          not (match_term thy (pat,term)))
+        (#blacklist reasoner))
+
+
+fun del_reasoners pattern filter ctxt =
+  Reasoners.map (fn reasoners =>
+    let val names = get_reasoners (Context.theory_of ctxt) reasoners pattern
+                  |> map_filter (fn (_, R) => if filter R then SOME (#name R) else NONE)
+     in fold (fn N => Cost_Net.remove
+                   ({name=N, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty}))
+        names reasoners
+    end) ctxt
+
+
+fun call_tactics trace cost_delt N ctxt tactics th =
   if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
-  else let
-    val tacs = Thm.major_prem_of th (*TODO: if we can implement a HO match which tolerates loose
+  else
+    Thm.major_prem_of th (*TODO: if we can implement a HO match which tolerates loose
                                       bounds, we don't need substituting loose bounds any more here
                                       and the performance can be improved effectively.*)
-                |> Envir.beta_eta_contract
-                |> (fn term =>
-                    Cost_Net.retrieve tactics term
-                      |> filter (fn (_,reasoner) =>
-                          exists (fn pat =>
-                            match_term (Proof_Context.theory_of ctxt) (pat,term))
-                          (#pattern reasoner)
-                          andalso forall (fn pat =>
-                            not (match_term (Proof_Context.theory_of ctxt) (pat,term)))
-                          (#blacklist reasoner))
-                      |> (if Config.get ctxt trace_candidates
-                          then (fn rs => (List.app (debug ctxt) rs; rs))
-                          else I))
-  in
-    tacs 
+      |> Envir.beta_eta_contract
+      |> get_reasoners (Proof_Context.theory_of ctxt) tactics
+      |> (if 3 <= trace
+          then (fn rs => (List.app (debug ctxt) rs; rs))
+          else I)
       |> map_filter (fn (cost, r : reasoner) =>
           if cost <= ~1000000 then
             case Seq.pull (#tactic r (ctxt,th))
@@ -298,14 +326,13 @@ fun call_tactics cost_delt N ctxt tactics th =
                | _ => NONE
           else SOME (cost + cost_delt, #pos r, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
         )
-  end
   handle Local_Cut ret => [ret]
        | Success s => Success_Handlers.invoke (fst s) s
        | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
 
 fun gen_reason _ _ _ _ _ [] = NONE
   | gen_reason N trace limit iter tactics ([]::L) =
-      (if trace then tracing ("Backtracking...") else ();
+      (if 2 <= trace then tracing ("Backtracking...") else ();
        gen_reason N trace limit iter tactics L)
   | gen_reason N trace limit iter tactics (((cost,pos,seq)::L')::L) =
   let
@@ -319,18 +346,18 @@ fun gen_reason _ _ _ _ _ [] = NONE
     case Seq.pull seq
       of SOME ((ctxt,th), seq') =>
           (let
-            val _ = if trace
+            val _ = if 2 <= trace
                     then tracing ("\<phi>reasoning (score " ^ string_of_int (~cost)
                       ^ "):"^ Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                     else ()
-            val Z = (call_tactics cost N ctxt tactics th)
+            val Z = (call_tactics trace cost N ctxt tactics th)
                   |> (fn Z => Z::(
                         let val t = if pointer_eq (seq',Seq.empty) then L' else (cost,pos,seq')::L'
                         in if null t then L else t::L end))
                 handle Success ret => raise Success ret
                      | Global_Cut stat =>
                         let
-                          val _ = if trace
+                          val _ = if 2 <= trace
                                   then tracing ("\<phi>reasoning cut:\n"
                                           ^ Thm.string_of_thm ctxt (snd stat))
                                   else ()
@@ -478,8 +505,8 @@ fun the_default_pattern_of ctxt term =
     |> Seq.of_list
     |> Seq.map_filter (calc_pattern (Context.theory_of ctxt) term)
     |> Seq.chop 2
-    |> (fn ([], _) => term
-         | ([(_,ret)], _) => ret
+    |> (fn ([], _) => NONE
+         | ([(_,ret)], _) => SOME ret
          | ([(n1,ret),(n2,ret2)], _) =>
             if n1 = n2
             then error (Pretty.string_of (Pretty.chunks (
@@ -489,7 +516,7 @@ fun the_default_pattern_of ctxt term =
                                 \Please indicate the pattern manually using syntax \
                                 \\<open>\<phi>reason for \<open>pattern\<close>\<close>"]
                  )))
-            else ret)
+            else SOME ret)
 
 
 fun wrap2L f (x,y) = case f [x,y] of [x',y'] => (x',y')
@@ -542,8 +569,9 @@ fun intro_reasoner ctxt pos priority patterns blacklist guard rules =
     val pats = if null patterns
                then case rules
                       of [rule] =>
-                        let val pat = the_default_pattern_of ctxt (Thm.concl_of rule)
-                            val _ = debug_pretty_generic ctxt (fn () => Pretty.chunks [
+                        let val concl = Thm.concl_of rule
+                            val pat = the_default concl (the_default_pattern_of ctxt concl)
+                            val _ = info_pretty_generic ctxt (fn () => Pretty.chunks [
                                     Pretty.str "No pattern is given, use the default pattern:",
                                     Syntax.pretty_term (Context.proof_of ctxt) pat
                                 ])
@@ -609,7 +637,7 @@ val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
   fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
   val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
-  fun pos_parser x = (Token.pos_of (hd x), x)
+  val pos_parser = Phi_Reasoner_Helpers.pos_parser "\<phi>reasoner"
   val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
        let val ctxt = Context.Proof (Context.proof_of ctxt0)
             |> ML_Context.expression (Input.pos_of src)

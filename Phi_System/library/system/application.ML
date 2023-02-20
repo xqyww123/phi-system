@@ -66,7 +66,7 @@ fun mk_app_reasoning sequent app =
 
 fun try_apply [] _ = NONE
   | try_apply apps (ctxt,sequent) = (
-      Phi_Reasoner.debug_info ctxt (fn _ =>
+      Phi_Reasoner.debug_print ctxt (fn _ =>
             "Reasoning generic applications..." ^ Position.here \<^here>);
       PLPR_Optimum_Solution.best_among (ctxt, map (mk_app_reasoning sequent) apps))
 
@@ -97,7 +97,7 @@ fun MPs ctxt th1s' th2 =
      |> pair ctxt |> Seq.single
      |> pair 0
      ) th1s
-    val _ = Phi_Reasoner.debug_info ctxt (fn _ => "Reasoning modus pones..." ^ Position.here \<^here>)
+    val _ = Phi_Reasoner.debug_print ctxt (fn _ => "Reasoning modus pones..." ^ Position.here \<^here>)
     fun obligation_fail S = raise Phi_Reasoners.Attemption_Fail S
   in 
     case Seq.pull (Phi_Reasoner.reason_s ctxt stats)

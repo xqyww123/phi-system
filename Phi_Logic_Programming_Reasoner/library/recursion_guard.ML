@@ -17,7 +17,7 @@ fun reason (ctxt,sequent) = Seq.make (fn () =>
         | chk _ = true
    in if chk Remains
       then SOME ((ctxt, @{thm Do_\<r>Recursion_Guard} RS sequent), Seq.empty)
-      else (Phi_Reasoner.debug_info ctxt (fn () =>
+      else (Phi_Reasoner.debug_print ctxt (fn () =>
               "\<r>Recursion_Guard: Cut because of infinite recursion!");
             NONE)
   end)
