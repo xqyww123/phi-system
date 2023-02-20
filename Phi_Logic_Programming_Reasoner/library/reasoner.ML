@@ -53,6 +53,7 @@ signature NU_REASONER = sig
   val reasoners : Proof.context -> (priority * reasoner) list
   val reasoner_net : Proof.context -> reasoner Cost_Net.T
   val get_reasoners : theory -> reasoner Cost_Net.T -> term (*pattern*) -> (priority * reasoner) list
+  val pretty : Proof.context -> int (*cost*) * reasoner -> Pretty.T
 
   (* Interfaces for Reasoning *)
   (*N: number of premises to be attacked at most, if it is positive;
@@ -243,6 +244,11 @@ fun del name = Reasoners.map (Cost_Net.remove(
 
 fun has name ctxt = Cost_Net.member (Reasoners.get ctxt) (
       {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty})
+
+fun pretty ctxt (cost, (r:reasoner)) =
+  Pretty.block (Pretty.here (#pos r) @
+    [Pretty.str "(", Pretty.str (string_of_int cost), Pretty.str ") ",
+     Syntax.pretty_term ctxt (#name r)])
 
 (*** Implementing Functions ***)
 
@@ -471,6 +477,22 @@ val _ =
         --| @{keyword =} -- Parse.args1 (K true)
       >> setup_method_cmd)
 
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>print_\<phi>reasoners\<close>
+    "print \<phi>reasoner matching the given pattern"
+    (Parse.term -- (Scan.optional (Args.query >> K false) true) >> (fn (raw_pattern, strict) =>
+      Toplevel.keep (fn top =>
+        let val ctxt = Toplevel.context_of top
+            val pattern = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt) raw_pattern
+            val all_reasoners = Reasoners.get (Context.Proof ctxt)
+            val reasoners = if strict
+                            then get_reasoners (Proof_Context.theory_of ctxt) all_reasoners pattern
+                            else Cost_Net.retrieve all_reasoners pattern
+         in if null reasoners
+            then writeln "No reasoner found."
+            else writeln (Pretty.string_of (Pretty.chunks (map (pretty ctxt o apfst (op ~)) reasoners)))
+        end)));
+
 
 (*** Default Pattern for Introduction Reasoning Rule ***)
 
@@ -558,7 +580,7 @@ fun single_RS rule (ctxt,thm) =
 
 
 fun name_of_intro_reasoner rules =
-  Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Logic.mk_conjunction_list (map Thm.prop_of rules)
+  (*Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ *) Logic.mk_conjunction_list (map Thm.prop_of rules)
 
 fun intro_reasoner ctxt pos priority patterns blacklist guard rules =
   let

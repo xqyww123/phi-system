@@ -2,6 +2,7 @@ theory Phi_Logic_Programming_Reasoner
   imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
   keywords "except" :: quasi_command
     and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
+    and "print_\<phi>reasoners" :: diag
   abbrevs
       "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
@@ -17,12 +18,13 @@ ML_file_debug \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 
+print_abbrevs
+
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
 
 ML_file_debug \<open>library/reasoner.ML\<close>
 
 lemma \<r>Require_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Require P\<close> unfolding \<r>Require_def .
-
 
 section \<open>Introduction\<close>
 

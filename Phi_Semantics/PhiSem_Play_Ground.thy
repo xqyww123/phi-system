@@ -56,6 +56,7 @@ proc
   \<medium_right_bracket>. .
 
 
+
 proc XXX: 
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[32]\<close>
   premises A: \<open>x < 10\<close>  
