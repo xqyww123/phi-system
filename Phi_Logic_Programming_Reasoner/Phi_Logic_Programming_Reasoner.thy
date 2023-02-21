@@ -431,6 +431,8 @@ lemma Conv_Action_Tag_I:
   \<open>X = X @action A\<close>
   unfolding Action_Tag_def ..
 
+ML_file \<open>library/action_tag.ML\<close>
+
 subsubsection \<open>Mode\<close>
 
 text \<open>Modes are general annotations used in various antecedents, which may configure

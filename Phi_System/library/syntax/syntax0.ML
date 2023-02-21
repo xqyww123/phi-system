@@ -6,6 +6,7 @@ include PHI_SYNTAX
 
   val dest_procedure   : term -> term * term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm * cterm
+  val procedure_conv_F : conv -> conv
 
   val dest_view_shift   : term  -> term * term * term
   val dest_view_shift_c : cterm -> cterm * cterm * cterm
@@ -41,6 +42,14 @@ val dest_procedure   =
 val dest_procedure_c =
      dest_tags_c
   #> dest_quadop_c @{const_name \<phi>Procedure}
+
+fun procedure_conv_F C =
+  Phi_Helper_Conv.may_action_tag_conv (Phi_Helper_Conv.may_Trueprop_conv (fn ctm =>
+    case Thm.term_of ctm
+      of (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _)
+           => Conv.fun_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg_conv C))) ctm
+       | _ => raise CTERM ("procedure_conv_F", [ctm])
+     ))
 
 val dest_view_shift    =
          dest_tags

@@ -10,6 +10,7 @@ signature PHI_PROCEDURE = sig
   val app_suffix : string
   val compilation_suffix : string
 
+  val final_simp : Proof.context -> thm -> thm
   val define : bool (*whether to define a new constant*)
         -> Attrib.binding -> thm -> local_theory -> thm * local_theory
 
@@ -144,9 +145,9 @@ fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = 
   | concl_of x = x
 
 
-fun closure _ f =
+fun closure ctxt substT f =
   let
-    val tvars = Term.add_tvars f []
+  (*val tvars = Term.add_tvars f []
     val (subst,_) = Term.fold_types Term.declare_typ_names f Name.context
                     |> pair []
                     |> fold_rev (fn ((name,idx),sort) => fn (L,ctxt) =>
@@ -154,12 +155,12 @@ fun closure _ f =
                             |> apfst (fn name' =>
                                   (((name,idx),sort), TFree (name',sort))::L)
                      ) tvars
-    val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f
+    val f' = Term_Subst.instantiate (TVars.make subst, Vars.empty) f *)
 
     fun trim ((i as \<^term>\<open>\<phi>V_none\<close>), (x as Abs (_, \<^typ>\<open>unit \<phi>arg\<close>, X)))
           = if Term.is_open X then ([i], x) else ([], X)
       | trim (i,x) = ([i],x)
-    val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" dummyT false NONE f' |> trim
+    val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" dummyT false NONE f |> trim
     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
                              | _ => I) f'' []
     fun abst i (Var v) =
@@ -172,20 +173,39 @@ fun closure _ f =
 
   in abst 0 f''
       |> fold (fn ((name,_), T) => fn X => Abs (name, T, X)) vars
-      |> fold (fn (_,tfree) => fn x => Abs ("_", Type ("itself", [tfree]), x)) subst
-      |> pair (length tvars, length vars, instance)
+      |> TVars.fold (fn (_,tfree) => fn x => Abs ("_", Type ("itself", [Thm.typ_of tfree]), x)) substT
+      |> pair (TVars.size substT, length vars, instance)
   end
 
-fun gen_define def_const (binding,attrs) sequent lthy =
+fun rule_proc_F C ctxt = Conv.fconv_rule (
+          Phi_Helper_Conv.hhf_concl_conv (K (Phi_Syntax.procedure_conv_F C)) ctxt)
+
+fun final_simp ctxt sequent =
+  let val rules = Named_Theorems.get ctxt \<^named_theorems>\<open>procedure_simps\<close>
+      val sctxt = clear_simpset ctxt addsimps rules
+      val sequent' = rule_proc_F (Simplifier.rewrite sctxt) ctxt sequent
+   in sequent'
+  end
+
+fun importT_proc th ctxt =
   let
-    val sequent' = sequent
-          |> Drule.zero_var_indexes
-    val (f,_,_,_) = Thm.concl_of sequent' |> concl_of |> Phi_Syntax.dest_procedure 
+    val (f,_,_,_) = Thm.concl_of th |> concl_of |> Phi_Syntax.dest_procedure 
+    val (instT, ctxt') = Variable.importT_inst [f] ctxt;
+    val instT' = TVars.map (K (Thm.ctyp_of ctxt')) instT;
+    val th' = Thm.instantiate (instT', Vars.empty) th;
+  in ((instT', th'), ctxt') end;
 
 
-    (*all variables in the procedure body*)
+fun gen_define def_const (binding,attrs) sequent01 lthy0 =
+  let
+    val sequent0 = final_simp lthy0 sequent01
+    val ((substT, sequent), lthy) = importT_proc sequent0 lthy0
+
+    val (f,_,_,_) = Thm.concl_of sequent |> concl_of |> Phi_Syntax.dest_procedure 
+
+    (*all variables are in the procedure body*)
     (*then f' is the standard form of a definition*)
-    val (arity_ins,f') = closure lthy f
+    val (arity_ins,f') = closure lthy substT f
 
     val (def_binding,proc_binding) = if Binding.is_empty binding
                                      then (binding,binding)
@@ -193,20 +213,19 @@ fun gen_define def_const (binding,attrs) sequent lthy =
                                           ,Binding.suffix_name app_suffix binding)
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
-    fun rename def proc_th =
-          (proc_th RS (def RS @{thm \<phi>rename_proc}))
-          handle THM _ => (proc_th RS (def RS @{thm \<phi>rename_proc_with_goal}))
+    fun rename ctxt def = 
+          rule_proc_F (Conv.rewr_conv (Thm.symmetric def)) ctxt
 
     val (lthy, sequent'') =
       if Binding.is_empty binding orelse not def_const
-      then (lthy, sequent')
+      then (lthy, sequent)
       else lthy
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
             |-> (fn (tm,(_,def)) => fn lthy_x => 
                 lthy_x
                   (* |> Local_Theory.background_theory
                         (Context.theory_map (add_procedure (Binding.name_of binding))) *)
-                  |> rpair (rename (norm_def lthy_x arity_ins def) sequent')
+                  |> rpair (rename lthy_x (norm_def lthy_x arity_ins def) sequent)
                 )
 
     (*val sequent = sequent

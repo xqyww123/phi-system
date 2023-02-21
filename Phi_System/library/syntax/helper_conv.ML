@@ -17,6 +17,9 @@ val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 
 val leading_antecedent_conv : conv -> conv
+val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
+
+val may_Trueprop_conv : conv -> conv
 
 end
 
@@ -73,5 +76,16 @@ fun meta_all_body_conv C ctxt =
   else_conv C ctxt
 
 fun leading_antecedent_conv C = implies_conv C all_conv
+fun hhf_concl_conv C ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => Conv.forall_conv (hhf_concl_conv C o snd) ctxt ctm
+     | Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => raise CTERM ("hhf_concl_conv", [ctm])
+     | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.arg_conv (hhf_concl_conv C ctxt) ctm
+     | _ => C ctxt ctm
+
+fun may_Trueprop_conv cv ct =
+  (case Thm.term_of ct of
+    Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv cv ct
+  | _ => cv ct)
 
 end
