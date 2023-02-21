@@ -496,66 +496,18 @@ val _ =
 
 (*** Default Pattern for Introduction Reasoning Rule ***)
 
-fun pat_pat_eq ((p1,a1,b1),(p2,a2,b2)) = p1 = p2 andalso a1 aconv a2 andalso b1 aconv b2
-
-structure Default_Pattern = Generic_Data (
-  type T = (int (*priority*) * term (*pattern P*) * term (*the default pattern X*)) Net.net
-  (*It gives the default pattern P of an introduction rule whose conclusion matches some pattern P.
-    Larger priority is more prior.*)
-  val empty = Net.empty
-  val merge = Net.merge pat_pat_eq
-)
-
-fun add_default_pattern pat_pats ctxt =
-      Default_Pattern.map (fold (fn (n,p1,p2) =>
-              Net.insert_term pat_pat_eq (p1,(n,p1,p2))) pat_pats) ctxt
-      handle Net.INSERT => Exn.error ("Some pattern clashes with existing entries.")
-fun remove_default_pattern (n,p1,p2) =
-      Default_Pattern.map (Net.delete_term_safe pat_pat_eq (p1,(n,p1,p2)))
-
-fun calc_pattern thy term (n, pat0, pat_ret0) =
-  let val ind = Term.maxidx_of_term term + 1
-      val pat = Logic.incr_indexes ([],[],ind) pat0
-      val pat_ret = Logic.incr_indexes ([],[],ind) pat_ret0
-      val s = Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)
-   in (SOME (n, Envir.subst_term s pat_ret))
-  end handle Pattern.MATCH => NONE
-
-fun the_default_pattern_of ctxt term =
-  Net.match_term (Default_Pattern.get ctxt) term
-    |> sort (fn ((n1,_,_),(n2,_,_)) => int_ord (n2,n1))
-    |> Seq.of_list
-    |> Seq.map_filter (calc_pattern (Context.theory_of ctxt) term)
-    |> Seq.chop 2
-    |> (fn ([], _) => NONE
-         | ([(_,ret)], _) => SOME ret
-         | ([(n1,ret),(n2,ret2)], _) =>
-            if n1 = n2
-            then error (Pretty.string_of (Pretty.chunks (
-                    [Pretty.str "Multiple default patterns are available:"] @
-                    (map (Syntax.pretty_term (Context.proof_of ctxt)) [ret,ret2]) @
-                    [Pretty.str "Fail to determine which pattern is preferable. \
+structure Default_Pattern = Pattern_Translation (
+  val multi_translation_err_msg = "Fail to determine which pattern is preferable. \
                                 \Please indicate the pattern manually using syntax \
-                                \\<open>\<phi>reason for \<open>pattern\<close>\<close>"]
-                 )))
-            else SOME ret)
-
-
-fun wrap2L f (x,y) = case f [x,y] of [x',y'] => (x',y')
-val pat2 = (Args.context -- Scan.lift (Parse.prop --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.prop
-                                      --| \<^keyword>\<open>(\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>))
-  >> (fn (ctxt,((p1,p2),n)) =>
-    let val ctxt_p = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
-        val [p1',p2'] = Syntax.check_props ctxt_p [Syntax.parse_prop ctxt_p p1,
-                                                   Syntax.parse_prop ctxt_p p2]
-     in (n,p1',p2')
-     end)
-
-val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason_default_pattern\<close>
-    (Parse.enum1' "and" pat2 >> (fn pats =>
-              Thm.declaration_attribute (K (add_default_pattern pats))))
-    "set the default pattern of a reasoning rule once its conclusion matches some pattern"
+                                \\<open>\<phi>reason for \<open>pattern\<close>\<close>"
 )
+
+val add_default_pattern = Default_Pattern.add
+val remove_default_pattern = Default_Pattern.remove
+val the_default_pattern_of = Default_Pattern.translate
+
+val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>reason_default_pattern\<close>
+          "set the default pattern of a reasoning rule once its conclusion matches some pattern")
 
 (*** Reasoner for Introduction Reasoning Rule ***)
 

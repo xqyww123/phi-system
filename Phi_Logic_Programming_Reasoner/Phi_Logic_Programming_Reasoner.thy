@@ -17,6 +17,7 @@ ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data s
 ML_file_debug \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
+ML_file \<open>library/pattern_translation.ML\<close>
 
 print_abbrevs
 
