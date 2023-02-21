@@ -586,6 +586,7 @@ fun intro_reasoner ctxt pos priority patterns blacklist guard rules =
   let
     val rules = rules
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
+             |> Drule.zero_var_indexes_list
              |> map Thm.trim_context
     val _ = if null rules then error ("No rule is given!") else ()
     val pats = if null patterns
