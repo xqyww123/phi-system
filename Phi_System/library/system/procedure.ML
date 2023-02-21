@@ -10,7 +10,7 @@ signature PHI_PROCEDURE = sig
   val app_suffix : string
   val compilation_suffix : string
 
-  val final_simp : Proof.context -> thm -> thm
+  val simp_monads : Proof.context -> thm -> thm
   val define : bool (*whether to define a new constant*)
         -> Attrib.binding -> thm -> local_theory -> thm * local_theory
 
@@ -178,9 +178,11 @@ fun closure ctxt substT f =
   end
 
 fun rule_proc_F C ctxt = Conv.fconv_rule (
-          Phi_Helper_Conv.hhf_concl_conv (K (Phi_Syntax.procedure_conv_F C)) ctxt)
+          Phi_Helper_Conv.hhf_concl_conv (K
+              (  Phi_Syntax.proc_monad_conv C
+       else_conv Phi_Syntax.pending_construction_monad_conv C)) ctxt)
 
-fun final_simp ctxt sequent =
+fun simp_monads ctxt sequent =
   let val rules = Named_Theorems.get ctxt \<^named_theorems>\<open>procedure_simps\<close>
       val sctxt = clear_simpset ctxt addsimps rules
       val sequent' = rule_proc_F (Simplifier.rewrite sctxt) ctxt sequent
@@ -198,7 +200,7 @@ fun importT_proc th ctxt =
 
 fun gen_define def_const (binding,attrs) sequent01 lthy0 =
   let
-    val sequent0 = final_simp lthy0 sequent01
+    val sequent0 = simp_monads lthy0 sequent01
     val ((substT, sequent), lthy) = importT_proc sequent0 lthy0
 
     val (f,_,_,_) = Thm.concl_of sequent |> concl_of |> Phi_Syntax.dest_procedure 

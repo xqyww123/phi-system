@@ -177,8 +177,9 @@ fun accept_proc' (ctxt,sequent) =
     (ctxt'2, @{thm \<phi>accept_proc} OF [sequent, codeblk])
   end
 
-fun accept_proc (ctxt,sequent) =
+fun accept_proc (ctxt,sequent0) =
   let
+    val sequent = Phi_Procedure.simp_monads ctxt sequent0
     val (f,_,_,_,_) = Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
   in if f = \<^term>\<open>Return \<phi>V_none\<close>
      then (ctxt, sequent RS @{thm \<phi>accept_proc_optimize_\<phi>V_none})

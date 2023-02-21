@@ -10,6 +10,7 @@ include PHI_SYNTAX
   val dest_CurrentConstruction_c : cterm -> cterm * cterm * cterm * cterm
   val dest_PendingConstruction : term -> term * term * term * term * term
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm * cterm
+  val pending_construction_monad_conv : conv -> conv
   val dest_set_member   :  term ->  term * term
   val dest_set_member_c : cterm -> cterm * cterm
 
@@ -43,6 +44,14 @@ val dest_PendingConstruction_c =
       perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name PendingConstruction}
 val dest_set_member   = dest_tags   #> dest_binop   @{const_name Set.member}
 val dest_set_member_c = dest_tags_c #> dest_binop_c @{const_name Set.member}
+
+fun pending_construction_monad_conv C =
+  Phi_Helper_Conv.may_action_tag_conv (Phi_Helper_Conv.may_Trueprop_conv (fn ctm =>
+    case Thm.term_of ctm
+      of (Const (\<^const_name>\<open>PendingConstruction\<close>, _) $ _ $ _ $ _ $ _ $ _)
+           => Conv.fun_conv (Conv.fun_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg_conv C)))) ctm
+       | _ => raise CTERM ("pending_construction_monad_conv", [ctm])
+     ))
 
 val dest_CodeBlock   = perhaps (try dest_Trueprop)   #> dest_quadop   \<^const_name>\<open>CodeBlock\<close>
 val dest_CodeBlock_c = perhaps (try dest_Trueprop_c) #> dest_quadop_c \<^const_name>\<open>CodeBlock\<close>
