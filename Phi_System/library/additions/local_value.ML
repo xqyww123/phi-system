@@ -23,15 +23,6 @@ structure Values = Proof_Data (
 
 fun has_val xname ctxt = Symtab.defined (Values.get ctxt) xname
 
-fun delete_val' pred xname ctxt =
-  case Symtab.lookup (Values.get ctxt) xname
-    of SOME rule => if pred rule
-                    then ctxt
-                    else Context.proof_map (Phi_Reasoner.del_intro_rule [rule]) ctxt
-     | NONE => ctxt
-
-val delete_val = delete_val' (K false)
-
 fun pattern_of ctxt xname rule =
   let
     val iname = Variable.intern_fixed ctxt xname
@@ -52,6 +43,20 @@ fun pattern_of ctxt xname rule =
                 else raise THM ("Bad Rule", 0, [rule])
          | _ => raise THM ("Bad Rule", 0, [rule])
   end
+
+fun delete_val' pred xname ctxt =
+  case Symtab.lookup (Values.get ctxt) xname
+    of SOME rule => if pred rule
+                    then ctxt
+                    else Context.proof_map (
+                            Phi_Reasoner.del_reasoners
+                                (pattern_of ctxt xname rule)
+                                (fn (_,r) => #name r aconv Thm.prop_of rule)
+                            ) ctxt
+     | NONE => ctxt
+
+val delete_val = delete_val' (K false)
+
 
 fun valterm_of ctxt rule =
   case Thm.prop_of rule

@@ -13,7 +13,6 @@ subsubsection \<open>Prelude Settings\<close>
 
 ML \<open>Timing.cond_timeit false "asd" (fn () => OS.Process.sleep (seconds 1.0))\<close>
 
-ML_file \<open>library/cost_net.ML\<close> \<comment> \<open>An efficient data structure storing reasoners with indexes.\<close>
 ML_file_debug \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>

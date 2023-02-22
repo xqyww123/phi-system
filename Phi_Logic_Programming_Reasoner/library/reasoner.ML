@@ -8,8 +8,10 @@ signature NU_REASONER = sig
 
  
   type priority = int
+  type cost = int (*cost is the negative of the priority*)
   type pattern = term
   type name = term
+  type reasoners
 
   type reasoner = {name: name,
                  pos: Position.T,
@@ -45,15 +47,15 @@ signature NU_REASONER = sig
 
   val add : priority * reasoner -> Context.generic -> Context.generic
   val add_lthy : priority * reasoner -> local_theory -> local_theory
-  val del : name -> Context.generic -> Context.generic
   val del_reasoners: term (*pattern*)
-                  -> (reasoner -> bool) (*filter, returning true to delete one*)
+                  -> (priority * reasoner -> bool) (*filter, returning true to delete one*)
                   -> Context.generic -> Context.generic
-  val has : term -> Context.generic -> bool
-  val reasoners : Proof.context -> (priority * reasoner) list
-  val reasoner_net : Proof.context -> reasoner Cost_Net.T
-  val get_reasoners : theory -> reasoner Cost_Net.T -> term (*pattern*) -> (priority * reasoner) list
-  val pretty : Proof.context -> int (*cost*) * reasoner -> Pretty.T
+  val has_reasoner : term -> (int * reasoner -> bool) -> Context.generic -> bool
+  val reasoners : Proof.context -> reasoners
+  val content : reasoners -> (priority * reasoner) list
+  val get_reasoners : theory -> reasoners
+                   -> term (*pattern*) -> (cost * reasoner) list
+  val pretty : Proof.context -> priority * reasoner -> Pretty.T
 
   (* Interfaces for Reasoning *)
   (*N: number of premises to be attacked at most, if it is positive;
@@ -81,12 +83,9 @@ signature NU_REASONER = sig
   val add_intro_rules: (thm list * Position.T * priority * term list * term list
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
-  val has_intro_rule : thm list -> Context.generic -> bool
-  val del_intro_rule : thm list -> Context.generic -> Context.generic
   val attr_add_intro :
         (((Position.T * int) * thm list) * (term list * term list)) * (context_state -> bool) option
        -> attribute
-  val attr_del_intro : thm list -> attribute
 
   val setup_cmd : (((string (*name term*) * Position.T) * priority)
                    * (bool (*true for matching, false for not matching*)
@@ -220,41 +219,68 @@ fun disable_global_cut msg = Global_Cut_Handlers.push_local (fn _ => bad_config 
 fun disable_success    msg = Success_Handlers.push_local (fn _ => bad_config msg)
 
 (*** Reasoner Registry ***)
-fun reasoner_eq ({name,...}, {name=name',...}) = (name = name')
+
+type cost = int
+fun cost_eq ((c1,pat1,r1),(c2,pat2,r2)) = (c1 = c2 andalso pat1 = pat2 andalso #name r1 = #name r2)
+type reasoners = (cost * pattern * reasoner) Net.net
 
 structure Reasoners = Generic_Data (
-  type T = reasoner Cost_Net.T
-  val empty : T = Cost_Net.init reasoner_eq #pattern
-  val merge : T * T -> T = Cost_Net.merge
+  type T = reasoners
+  val empty : T = Net.empty
+  val merge : T * T -> T = Net.merge cost_eq
 )
 
-fun reasoners ctxt = Cost_Net.content (Reasoners.get (Context.Proof ctxt)) |> map (apfst ~)
-fun reasoner_net ctxt = Reasoners.get (Context.Proof ctxt)
-fun add (priority,reasoner) =
-      Reasoners.map (Cost_Net.update (~priority, normalize_reasoner reasoner));
-fun adds reasoners =
-      Reasoners.map (fold (Cost_Net.update o apfst (op ~) o apsnd normalize_reasoner) reasoners)
+fun reasoners ctxt = Reasoners.get (Context.Proof ctxt)
+fun content net = Net.content net |> map (fn (a,b,c) => (~a,c))
+
+fun pretty ctxt (priority, (r:reasoner)) =
+  Pretty.block (Pretty.here (#pos r) @
+    [Pretty.str "(", Pretty.str (string_of_int priority), Pretty.str ") ",
+     Syntax.pretty_term ctxt (#name r)])
+
+fun pretty' ctxt (cost, pat, (r:reasoner)) =
+   Pretty.block (
+     Pretty.here (#pos r) @
+    [Pretty.str "(", Pretty.str (string_of_int (~cost)), Pretty.str ") on pattern ",
+     Syntax.pretty_term ctxt pat, Pretty.str " : ",
+     Pretty.fbrk,
+     Syntax.pretty_term ctxt (#name r)])
+
+
+fun insert_net ctxt priority (reasoner:reasoner) pat net =
+  let val x = (~priority, pat, reasoner)
+   in Net.insert_term cost_eq (pat, x) net
+      handle Net.INSERT =>
+        let val dups = Net.lookup net (Net.key_of_term pat)
+                   |> filter (fn y => cost_eq (x,y))
+            val ctxt' = Context.proof_of ctxt
+         in Exn.error (Pretty.string_of (Pretty.chunks (
+              Pretty.str "Clash with existing reasoner!" ::
+              map (fn d => pretty' ctxt' d) dups
+           )))
+        end
+  end
+
+fun add (priority, reasoner0) ctxt = 
+  let val reasoner = normalize_reasoner reasoner0
+   in Reasoners.map (fold (insert_net ctxt priority reasoner) (#pattern reasoner)) ctxt
+  end
+fun adds reasoners ctxt = Reasoners.map (
+      fold (fn (priority,reasoner0) =>
+        let val reasoner = normalize_reasoner reasoner0
+         in fold (insert_net ctxt priority reasoner) (#pattern reasoner)
+        end) reasoners) ctxt
+
 fun add_lthy cost_reasoner =
   Local_Theory.declaration {syntax=false, pervasive=false} (fn phi =>
     add (apsnd (transform_reasoner phi) cost_reasoner)
   )
 
-fun del name = Reasoners.map (Cost_Net.remove(
-      {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty}))
-
-fun has name ctxt = Cost_Net.member (Reasoners.get ctxt) (
-      {name=name, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty})
-
-fun pretty ctxt (cost, (r:reasoner)) =
-  Pretty.block (Pretty.here (#pos r) @
-    [Pretty.str "(", Pretty.str (string_of_int cost), Pretty.str ") ",
-     Syntax.pretty_term ctxt (#name r)])
-
 (*** Implementing Functions ***)
 
 (* Main Reasoning Function *)
 
-fun debug ctxt (c,(r : reasoner as {name,...})) =
+fun debug ctxt (c,_,(r : reasoner as {name,...})) =
   tracing ("reasoning candicates (" ^ string_of_int c ^ "):\n"
               ^ Syntax.string_of_term (Proof_Context.set_mode Proof_Context.mode_abbrev ctxt) name)
 
@@ -288,40 +314,45 @@ fun concl_of_goal st i =
                                          Conv.all_conv (Thm.cprop_of th)) th
   else th *)
 
-fun get_reasoners thy tactics term =
-  Cost_Net.retrieve tactics term
-    |> filter (fn (_,reasoner) =>
+fun get_reasoners' thy tactics term =
+  Net.match_term tactics term
+    |> filter (fn (_,_,reasoner) =>
         exists (fn pat =>
           match_term thy (pat,term))
         (#pattern reasoner)
         andalso forall (fn pat =>
           not (match_term thy (pat,term)))
         (#blacklist reasoner))
+    |> sort (fn ((c1,_,_),(c2,_,_)) => int_ord (c1,c2))
+
+fun get_reasoners thy tactics term =
+      get_reasoners' thy tactics term |> map (fn (c,_,r) => (~c,r))
 
 
 fun del_reasoners pattern filter ctxt =
-  Reasoners.map (fn reasoners =>
-    let val names = get_reasoners (Context.theory_of ctxt) reasoners pattern
-                  |> map_filter (fn (_, R) => if filter R then SOME (#name R) else NONE)
-     in fold (fn N => Cost_Net.remove
-                   ({name=N, pos=Position.none, pattern=[], blacklist=[], tactic = K Seq.empty}))
-        names reasoners
+  Reasoners.map (fn all_reasoners =>
+    let val to_remove = Net.match_term all_reasoners pattern
+                     |> List.filter (fn (c,_,r) => filter (~c, r))
+     in fold (fn (c,p,R) => Net.delete_term cost_eq (p, (c,p,R)))
+             to_remove all_reasoners
     end) ctxt
+
+fun has_reasoner pattern filter ctxt =
+  Net.match_term (Reasoners.get ctxt) pattern
+    |> exists (fn (c,_,r) => filter (~c,r))
 
 
 fun call_tactics trace cost_delt N ctxt tactics th =
   if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
   else
-    Thm.major_prem_of th (*TODO: if we can implement a HO match which tolerates loose
-                                      bounds, we don't need substituting loose bounds any more here
-                                      and the performance can be improved effectively.*)
+    Thm.major_prem_of th
       |> Envir.beta_eta_contract
-      |> get_reasoners (Proof_Context.theory_of ctxt) tactics
+      |> get_reasoners' (Proof_Context.theory_of ctxt) tactics
       |> (if 3 <= trace
           then (fn rs => (List.app (debug ctxt) rs; rs))
           else I)
-      |> map_filter (fn (cost, r : reasoner) =>
+      |> map_filter (fn (cost, _, r : reasoner) =>
           if cost <= ~1000000 then
             case Seq.pull (#tactic r (ctxt,th))
               of SOME (x,_) => raise Global_Cut x
@@ -486,11 +517,12 @@ val _ =
             val pattern = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt) raw_pattern
             val all_reasoners = Reasoners.get (Context.Proof ctxt)
             val reasoners = if strict
-                            then get_reasoners (Proof_Context.theory_of ctxt) all_reasoners pattern
-                            else Cost_Net.retrieve all_reasoners pattern
+                            then get_reasoners' (Proof_Context.theory_of ctxt) all_reasoners pattern
+                            else Net.match_term all_reasoners pattern
          in if null reasoners
             then writeln "No reasoner found."
-            else writeln (Pretty.string_of (Pretty.chunks (map (pretty ctxt o apfst (op ~)) reasoners)))
+            else writeln (Pretty.string_of (Pretty.chunks
+                              (map (fn (c,_,r) => pretty ctxt (~c,r)) reasoners)))
         end)));
 
 
@@ -596,14 +628,10 @@ fun add_intro_rules rules ctxt =
   if null rules then ctxt
   else adds (map (fn (rule,pos,priority,pattern,blacklist,guard) =>
               (priority, intro_reasoner ctxt pos priority pattern blacklist guard rule)) rules) ctxt
-fun del_intro_rule rule = del (name_of_intro_reasoner rule)
-fun has_intro_rule rule = has (name_of_intro_reasoner rule)
 
 fun attr_add_intro ((((pos, priority), additional_rules), (pattern, blacklist)), guard) =
   Thm.declaration_attribute (fn rule =>
       add_intro_rule pos priority (pattern,blacklist) guard (rule::additional_rules))
-fun attr_del_intro additional_rules =
-  Thm.declaration_attribute (fn rule => del_intro_rule (rule::additional_rules))
 
 
 
@@ -629,7 +657,6 @@ in
     -- optional (lift (\<^keyword>\<open>except\<close>) |-- prop_pattern) [])
   -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
   >> attr_add_intro)
-|| ((lift del |-- Attrib.thms) >> attr_del_intro)
 end)
 "Decalre or remove introduction rules in \<phi>-LPR."
 
@@ -638,8 +665,7 @@ end)
   Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
-               Method.modifier (attr_add_intro ((((pos,100),[]),([],[])),NONE)) \<^here>),
-    Args.del >> K (Method.modifier (attr_del_intro []) \<^here>)
+               Method.modifier (attr_add_intro ((((pos,100),[]),([],[])),NONE)) \<^here>)
 ] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."
