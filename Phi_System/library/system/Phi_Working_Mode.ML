@@ -39,6 +39,8 @@ val mode1 : Proof.context -> working_mode
 val cast : cterm -> Proof.context * thm -> Proof.context * thm
 val cast_exception : cterm -> Proof.context * thm -> Proof.context * thm
 
+val infer_working_mode_of_sequent : context_state -> working_mode * context_state
+
 end
 
 structure Phi_Working_Mode : PHI_WORKING_MODE = struct
@@ -443,6 +445,31 @@ val implication : working_mode = {
 end
 
 val _ = Theory.setup (Context.theory_map (register [procedure, view_shift, implication]))
+
+
+
+fun infer_working_mode_of_sequent (ctxt,sequent) =
+  let val _ = Phi_Reasoner.debug_pretty ctxt (fn () => Pretty.chunks [
+                Pretty.str "Inferring the working mode for the sequent:",
+                Thm.pretty_thm ctxt sequent
+            ])
+      val (sequent',ctxt') =
+          Phi_Reasoner.reason (SOME 1) (ctxt, @{thm reason_programming} RS sequent)
+              |> (fn SOME (X,TH) => (TH, X)
+                   | NONE => error (Pretty.string_of (Pretty.chunks [
+                        Pretty.str "Don't know how to make by programming:",
+                        Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
+                       ])))
+      val mode = case Thm.major_prem_of sequent'
+                 of Const(\<^const_name>\<open>Pure.term\<close>, _) $ Const (N, _)
+                      => get_by_name1 (Context.Proof ctxt') N
+                  | X => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
+                          Pretty.str "Bad mode constant:",
+                          Syntax.pretty_term ctxt' X
+                      ]))
+      val sequent'' = (Drule.termI RS sequent')
+                   |> Raw_Simplifier.norm_hhf_protect ctxt'
+   in (mode, (ctxt', sequent'')) end
 
 
 end

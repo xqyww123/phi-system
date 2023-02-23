@@ -161,23 +161,9 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
           else Phi_Envir.the_state_sequent stat
                   |> Tactic.rule_by_tactic (Proof.context_of stat) normalize_tac
 
-    val (sequent,stat) = Proof.map_context_result (fn ctxt =>
-          Phi_Reasoner.reason (SOME 1) (ctxt, @{thm reason_programming} RS sequent)
-              |> (fn SOME (X,TH) => (TH, X)
-                   | NONE => error (Pretty.string_of (Pretty.chunks [
-                        Pretty.str "Don't know how to make by programming:",
-                        Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
-                       ])))) stat
-
-    val mode = case Thm.major_prem_of sequent
-                 of Const(\<^const_name>\<open>Pure.term\<close>, _) $ Const (N, _)
-                      => Phi_Working_Mode.get_by_name1 (Context.Proof (Proof.context_of stat)) N
-                  | X => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
-                          Pretty.str "Bad mode constant:",
-                          Syntax.pretty_term (Proof.context_of stat) X
-                      ]))
-    val sequent = (Drule.termI RS sequent)
-               |> Raw_Simplifier.norm_hhf_protect (Proof.context_of stat)
+    val ((mode,sequent),stat) = Proof.map_context_result (fn ctxt =>
+            Phi_Working_Mode.infer_working_mode_of_sequent (ctxt,sequent)
+                |> (fn (m,(c,s)) => ((m,s),c))) stat
 
     val ((prem_bindings, sequent), stat) = Proof.map_context_result (fn ctxt =>
       let val prem_bindings =
