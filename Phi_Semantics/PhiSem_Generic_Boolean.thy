@@ -93,7 +93,8 @@ section \<open>Abstractions of Boolean Arithmetic\<close>
 \<phi>overloads "=" and "\<not>" and "\<and>" and "\<or>"
 
 subsection \<open>Constant\<close>
- 
+
+
 lemma op_const_bool[\<phi>synthesis for \<open>\<lambda>v. True \<Ztypecolon> ?T v\<close> \<open>\<lambda>v. False \<Ztypecolon> ?T v\<close>]:
   \<open> Check_Literal b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -113,7 +114,7 @@ subsection \<open>And\<close>
 declare [[\<phi>trace_reasoning = 1]]
  
 lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (vb\<^bold>, va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
   by (cases va; cases vb; simp, rule, rule, simp add: \<phi>expns WT_bool, rule,
       simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
@@ -121,18 +122,21 @@ lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
 subsection \<open>Or\<close>
 
 lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or (vb\<^bold>, va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def
   by(cases va; cases vb, simp, rule, rule, simp add: \<phi>expns WT_bool, rule,
       simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
 
 
 subsection \<open>Equal\<close>
- 
+
+declare [[ overloaded_operator_in_synthesis \<open>(=)\<close>
+      :: \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<bool>\<close>]]
+
 lemma op_equal_\<phi>app[\<phi>overload =]:
-  \<open> \<phi>SemType (a \<Ztypecolon> T) TY
+  \<open> \<phi>Equal T can_eq eq
+\<Longrightarrow> \<phi>SemType (a \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (b \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>Equal T can_eq eq
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e can_eq a b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_equal TY (\<phi>V_pair rawb rawa) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawa] T\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawb] T \<longmapsto> eq a b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<bool> \<rbrace>\<close>
   unfolding op_equal_def
@@ -141,34 +145,9 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
     apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
    apply (unfold \<phi>Equal_def Premise_def, simp)
   by (rule \<phi>M_Success', rule, simp add: \<phi>expns)
-  
-declare op_equal_\<phi>app[ \<phi>synthesis 100]
 
 
+declare op_equal_\<phi>app[where eq=\<open>(=)\<close>, \<phi>synthesis 100]
 
-declare [[\<phi>trace_reasoning = 2]]
-
-proc play:
-  input \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<bool>\<close>
-  output \<open>\<not> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<bool>\<close>
-  \<medium_left_bracket> \<open>False \<or> \<not> $x\<close> \<medium_right_bracket>. .
-
-
-(*
-proc (nodef) \<phi>__synthesis_eq[
-    \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x = ?y) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> T  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1  @action synthesis G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
-    and   \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-    and   \<open>\<phi>SemType (y \<Ztypecolon> T) TY\<close>
-    and   [\<phi>reason]: \<open>\<phi>Equal T can_eq (=)\<close>
-  input \<open>R\<close>
-  premises \<open>can_eq x y\<close>
-  output \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x = y) \<Ztypecolon> \<bool>\<close>
-  throws \<open>E1 + E2\<close>
-  @action \<open>synthesis G\<close>
-  \<medium_left_bracket> F1 F2 = \<medium_right_bracket>. .
-*)
 
 end

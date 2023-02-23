@@ -120,23 +120,13 @@ lemma [\<phi>reason 1200 for \<open>?S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^b
   unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn implies_refl)
 
-lemma [\<phi>reason 1210 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>
-]:
-  \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<brangle> \<rbrace> @action synthesis\<close>
-  apply (rule Synthesis_Proc_fallback_VS, rule view_shift_by_implication[where P=True])
-  by (cases raw; simp add: Val_expn)
-
 lemma [\<phi>reason 1200 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL \<phi>arg. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis\<close>
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<brangle> \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma \<phi>arg_val_varify_type:
   \<open> \<phi>arg.dest raw \<in> (x  \<Ztypecolon> T)
@@ -179,17 +169,8 @@ lemma [OF \<phi>arg_val_varify_type,
   by (cases raw; simp add: Val_expn implies_refl)
 
 lemma [OF \<phi>arg_val_varify_type,
-       \<phi>reason 1300 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>
-]:
-  \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] T \<brangle> \<rbrace> @action synthesis\<close>
-  apply (rule Synthesis_Proc_fallback_VS, rule view_shift_by_implication[where P=True])
-  by (cases raw; simp add: Val_expn)
-
-lemma [OF \<phi>arg_val_varify_type,
        \<phi>reason 1200 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret::VAL \<phi>arg. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis\<close>
+    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] T \<brangle> \<rbrace> @action synthesis\<close>

@@ -534,18 +534,15 @@ lemma op_lshl_word_\<phi>app[\<phi>synthesis 100]:
   \<medium_left_bracket> $v1 $v2 op_lshl_word_pre_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
     by (simp add: of_nat_inverse the_\<phi>(2)) .
 
-lemma
-  \<open>push_bit y x = x * 2 ^ y\<close> for x :: nat
-  by (simp add: push_bit_nat_def)
-
 lemma op_lshl_nat_mod_\<phi>app[\<phi>synthesis 100]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * 2 ^ y < LENGTH('ba)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lshl LENGTH('ba) LENGTH('bb) (\<phi>V_pair v2 v1)
-        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v1] \<nat>('ba) \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v2] \<nat>('bb) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x ^  \<Ztypecolon> \<nat>('ba) \<rbrace>\<close>
+        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v1] \<nat>('ba) \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v2] \<nat>('bb) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l push_bit y x  \<Ztypecolon> \<nat>('ba) \<rbrace>\<close>
   \<medium_left_bracket> $v1 $v2 op_lshl_word_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
+  unfolding push_bit_nat_def
+  by (metis dual_order.strict_trans less_exp of_nat_inverse of_nat_push_bit push_bit_eq_mult the_\<phi>(2))
 
-
-
+thm push_bit_int_def
 
 lemma op_lshl_nat_\<phi>app:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * 2 ^ Big y < 2 ^ Big b1

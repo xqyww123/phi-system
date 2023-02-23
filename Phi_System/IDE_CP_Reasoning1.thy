@@ -13,6 +13,7 @@ subsection \<open>General Tags\<close>
 
 consts SOURCE :: mode
        TARGET :: mode
+       ABNORMAL :: mode
 
 subsection \<open>Small Annotations\<close>
 
@@ -128,6 +129,12 @@ structure Assertion_SS_Target = Simpset (
   val binding = \<^binding>\<open>assertion_simps_target\<close>
   val comment_attrib = "Simp rules normalizing particularly target part of an assertion."
 )
+
+structure Assertion_SS_Abnormal = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = \<^binding>\<open>assertion_simps_abnormal\<close>
+  val comment_attrib = "Simp rules normalizing particularly the abnormal spec of a triple."
+)
 \<close>
 
 \<phi>reasoner_ML assertion_simp_source 1300
@@ -139,6 +146,11 @@ structure Assertion_SS_Target = Simpset (
   (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
   = \<open>PLPR_Simplifier.simplifier_by_ss' (fn ctxt =>
       Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt))\<close>
+
+\<phi>reasoner_ML assertion_simp_abnormal 1300
+  (\<open>Simplify (assertion_simps ABNORMAL) ?X' ?X\<close>)
+  = \<open>PLPR_Simplifier.simplifier_by_ss' (fn ctxt =>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Abnormal.get' ctxt))\<close>
 
 \<phi>reasoner_ML assertion_simp 1300
   (\<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close>)

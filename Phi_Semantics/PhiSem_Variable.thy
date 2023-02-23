@@ -331,23 +331,19 @@ lemma
 subsection \<open>Rules of Variable Operations\<close>
 
 subsubsection \<open>Get\<close>
-
+ 
 proc (nodef) op_get_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<close>
   output \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
   \<medium_left_bracket> to Identity  op_get_var'' \<medium_right_bracket>. .
 
-lemma [\<phi>reason 1200 for
-    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS ?x <val-of> ?var \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  \<open> SUBGOAL G G2
-\<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T \<brangle>
-\<Longrightarrow> SOLVE_SUBGOAL G2
+lemma [\<phi>reason 1200]:
+  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<heavy_comma> \<blangle> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T \<brangle> \<^bold>a\<^bold>n\<^bold>d Any
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> X \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T \<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x <val-of> var \<Ztypecolon> T \<rbrace> @action synthesis G\<close>
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_var var TY \<lbrace> X \<longmapsto> Y\<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T \<heavy_comma> \<blangle> \<^bold>v\<^bold>a\<^bold>l x <val-of> var \<Ztypecolon> T \<brangle> \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def
-  \<medium_left_bracket> premises _ and GetVar and _ and [\<phi>reason]
+  \<medium_left_bracket> premises GetVar and _
     GetVar op_get_var \<medium_right_bracket>. .
 
 
@@ -365,27 +361,17 @@ lemma op_set_var_\<phi>app:
     op_set_var'' 
   \<medium_right_bracket>. .
 
-(* proc (nodef) op_set_var:
-  assumes [unfolded Action_Tag_def, useful]:
-      \<open>pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type\<close>
-  assumes [unfolded \<phi>SemType_def subset_iff, useful]:
-      \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
-  input  \<open>x \<Ztypecolon> Var var T\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U\<close>
-  output \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<close>
-  \<medium_left_bracket> to_Identity 
-    $y to_Identity
-    op_set_var'' 
-  \<medium_right_bracket>. .
-*)
-schematic_goal op_set_var__synthesis [\<phi>reason 1200 for 
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS (?y <set-to> ?var) \<Ztypecolon> ?U ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
+lemma op_set_var__synthesis [\<phi>reason 1200 for 
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> \<blangle> (?y <set-to> ?var) \<Ztypecolon> ?U ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis\<close>
 ]:
-assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> X1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis G \<close>
+assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> X1\<heavy_comma> \<blangle> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis \<close>
   and P: \<open>pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type\<close>
   and S[unfolded Action_Tag_def]:
          \<open>X1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<heavy_comma> x \<Ztypecolon> Var var T \<^bold>a\<^bold>n\<^bold>d Any @action ToSA\<close>
   and [\<phi>reason]: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
-shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?FF \<lbrace> X \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U \<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (y <set-to> var) \<Ztypecolon> U \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action synthesis G\<close>
+shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c (g \<bind> (\<lambda>\<v>0. op_set_var var TY \<v>0 \<ggreater> (op_get_var var TY)))
+            \<lbrace> X \<longmapsto> Y\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U \<heavy_comma> \<blangle> \<^bold>v\<^bold>a\<^bold>l (y <set-to> var) \<Ztypecolon> U \<brangle> \<rbrace>
+       \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action synthesis\<close>
   \<medium_left_bracket> G S op_set_var P op_get_var \<medium_right_bracket>. .
 
 

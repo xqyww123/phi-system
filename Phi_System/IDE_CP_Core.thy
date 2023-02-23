@@ -75,7 +75,7 @@ text \<open>See \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^b
 
 subsection \<open>Judgement Obligation\<close>
 
-definition Argument :: "'a \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where [iff]: "Argument x = x"
+definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where [iff]: "Argument x \<equiv> x"
 
 lemma Argument_I[intro!]: "P \<Longrightarrow> Argument P" unfolding Argument_def .
 
@@ -418,7 +418,7 @@ Convention of Overloading Distance:
       exists, maybe in time or reasoning only
 \<^item> 3. Expected Conversion: some conversion and therefore information lost is inevitable but it is
       expected so can be accepted.
-\<^item> 5. Less Expected Conversion: in some rare case the information lost can be severe
+\<^item> 5. Less Expected Conversion: in some (rare) case the information lost can be severe
         but generally still can be accepted for most of usages.
 \<^item> 9. Slightly Aggressive.
 \<^item> 12. Aggressive in most of the situations.
@@ -640,8 +640,7 @@ declare [[\<phi>reason_default_pattern \<open>PROP Synthesis_by ?X ?Q\<close> \<
 lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (PROP ?P \<Longrightarrow> PROP ?Q) ?RET\<close>
 ]:
-  " SUBGOAL TOP_GOAL G
-\<Longrightarrow> PROP Synthesis_by X (PROP P)
+  " PROP Synthesis_by X (PROP P)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X (PROP P \<Longrightarrow> PROP Q) (PROP Q)"
@@ -687,6 +686,45 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> case_named f (tag x) \<brangle> \<Ztypecolon> T ret \<rbrace> @action synthesis\<close>
   by simp
 
+lemma [\<phi>reason 1200]:
+  \<open> PROP Synthesis_by X (Trueprop P)
+\<Longrightarrow> PROP Synthesis_by X (Trueprop (\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P))\<close>
+  unfolding Argument_def .
+
+lemma [\<phi>reason 1200]:
+  \<open> PROP Synthesis_by X (PROP P)
+\<Longrightarrow> PROP Synthesis_by X (PROP (Argument P))\<close>
+  unfolding Argument_def .
+
+lemma [\<phi>reason 1200 for \<open>PROP Synthesis_by ?X (Trueprop (_ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X' \<^bold>a\<^bold>n\<^bold>d _))\<close>]:
+  \<open> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> PROP Synthesis_by X (Trueprop (A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P))\<close>
+  unfolding Synthesis_by_def .
+
+lemma [\<phi>reason 1200 for \<open>PROP Synthesis_by ?X (Trueprop (_ \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?X' \<^bold>a\<^bold>n\<^bold>d _))\<close>]:
+  \<open> A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> PROP Synthesis_by X (Trueprop (A \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X \<^bold>a\<^bold>n\<^bold>d P))\<close>
+  unfolding Synthesis_by_def .
+
+lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by ?X (\<And>a. _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d ?P)\<close>]:
+  \<open> (\<And>a. A a \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)
+\<Longrightarrow> PROP Synthesis_by X (\<And>a. A a \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)\<close>
+  unfolding Synthesis_by_def .
+
+lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by ?X (\<And>a. ?A a \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?B a \<^bold>a\<^bold>n\<^bold>d ?P)\<close>]:
+  \<open> (\<And>a. A a \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)
+\<Longrightarrow> PROP Synthesis_by X (\<And>a. A a \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)\<close>
+  unfolding Synthesis_by_def .
+
+lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by ?X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d ?P)\<close>]:
+  \<open> (\<And>a. A a \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)
+\<Longrightarrow> PROP Synthesis_by X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A a \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)\<close>
+  unfolding Synthesis_by_def Argument_def .
+
+lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by ?X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?A a \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s ?B a \<^bold>a\<^bold>n\<^bold>d ?P)\<close>]:
+  \<open> (\<And>a. A a \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)
+\<Longrightarrow> PROP Synthesis_by X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A a \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)\<close>
+  unfolding Synthesis_by_def Argument_def .
 
 subsection \<open>Application\<close> 
 \<comment> \<open>of procedures, ToA, and any other things\<close>

@@ -40,17 +40,24 @@ fun attribute_of default term ctxt =
     |> sort (int_ord o apply2 #1)
     |> maps snd
 
-val prop_pattern = Scan.peek (Args.named_term o
-        Syntax.read_prop o Proof_Context.set_mode Proof_Context.mode_pattern o Context.proof_of)
+val prop_patterns = Scan.peek (fn generic =>
+  let val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of generic)
+   in Scan.repeat (Args.named_term (fn str =>
+        let val term = Syntax.read_prop ctxt str
+            val ctxt' = Proof_Context.augment term ctxt
+         in singleton (Variable.export_terms ctxt' ctxt) term
+        end))
+  end)
 
 fun chk_attribute ctxt = map (Context.cases Attrib.attribute_global Attrib.attribute ctxt)
 
 val _ = Theory.setup (
   Attrib.setup \<^binding>\<open>\<phi>premise_attribute\<close> (
     Scan.lift (Scan.optional (\<^keyword>\<open>?\<close> >> K false) true) --
-    Attrib.attribs --| Scan.lift \<^keyword>\<open>for\<close> -- Scan.repeat prop_pattern
+    Attrib.attribs --| Scan.lift \<^keyword>\<open>for\<close> -- prop_patterns
     >> (fn ((mandatory, attr), pats) => Thm.declaration_attribute (fn _ => fn ctxt =>
-          fold (fn pat => register_attribute (serial(), mandatory, pat, chk_attribute ctxt attr)) pats ctxt))
+            fold (fn pat => register_attribute (serial(), mandatory, pat, chk_attribute ctxt attr))
+                            pats ctxt))
     ) "register attributes applying on premises matching the given pattern, for those premises\
       \ in \<phi>-programming block."
 )

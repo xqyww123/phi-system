@@ -33,7 +33,20 @@ declare [[
     overloaded_operator_in_synthesis \<open>push_bit\<close>
 ]]
 
-declare [[overloaded_operator_in_synthesis 1300 \<open>\<lambda>x n. x * 2 ^ n\<close>]]
+declare [[overloaded_operator_in_synthesis 70 \<open>\<lambda>x n. x * 2 ^ n\<close>]]
+
+
+lemma [\<phi>reason 200]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> push_bit n x \<Ztypecolon> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x * 2 ^ n \<Ztypecolon> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis\<close>
+  for x :: nat
+  unfolding push_bit_nat_def .
+
+lemma [\<phi>reason 200]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> push_bit n x \<Ztypecolon> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x * 2 ^ n \<Ztypecolon> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis\<close>
+  for x :: int
+  unfolding push_bit_int_def .
 
 
 (*TODO:

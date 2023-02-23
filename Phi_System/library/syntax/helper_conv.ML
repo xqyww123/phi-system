@@ -31,8 +31,9 @@ fun aggregate_imps C c =
    then_conv rewr_conv @{thm conjunction_imp[symmetric]}) c
 
 fun expand_aggregated_imps C c =
+  (rewr_conv @{thm PURE_TOP_imp} else_conv
   (rewr_conv @{thm conjunction_imp} then_conv
-   implies_conv C (rewr_conv @{thm PURE_TOP_imp} else_conv expand_aggregated_imps C)) c
+   implies_conv C (expand_aggregated_imps C))) c
 
 fun aggregate_imps_obj C ctxt c =
  ((implies_conv (C ctxt then_conv atomize_conv ctxt)
@@ -41,9 +42,10 @@ fun aggregate_imps_obj C ctxt c =
   else_conv rewr_conv @{thm True_implies_equals[symmetric]}) c
 
 fun expand_aggregated_imps_obj C ctxt c =
+  (rewr_conv @{thm True_implies_equals} else_conv
   (rewr_conv @{thm conj_imp_eq_imp_imp} then_conv
    implies_conv (rulify_conv ctxt then_conv C ctxt)
-                (rewr_conv @{thm True_implies_equals} else_conv expand_aggregated_imps_obj C ctxt)) c
+                (expand_aggregated_imps_obj C ctxt))) c
 
 
 val protect_conv = rewr_conv @{thm Pure.prop_def[symmetric]}
