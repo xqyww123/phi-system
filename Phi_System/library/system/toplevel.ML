@@ -278,7 +278,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     stat
       |> Proof.internal_goal (print_results int) Proof_Context.mode_schematic true 
           "" NONE after_qed []
-          (map2 (fn (b,pats) => fn P => (b,[(P,pats)])) bindings prems)
+          (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems)
           [(Binding.empty_atts, [(goal',[])])] |> #2
       |> Proof.map_context (Proof_Context.set_mode Proof_Context.mode_default)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
@@ -513,14 +513,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr post_process def_const
 
     fun post_process' binding int lthy th =
       lthy
-        |> Phi_Procedure.define def_const binding (
-            (lthy, (th RSN (3, @{thm "\<phi>__final_proc_rewrite__"})
-                      handle THM _  => (th RSN (3, @{thm "\<phi>__final_proc_rewrite__'"}))))
-              |> Phi_Reasoner.reason NONE
-              |> (fn SOME (lthy', th) => post_process lthy' th
-                   | NONE => error("Fail to simplify finally the procedure.\n"^
-                                   "It is a rare error and you may check the simplification "^
-                                   "rules of procedure_simps")))
+        |> Phi_Procedure.define def_const binding th
         |-> (fn th => fn lthy =>
               (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
                 (("\<phi>procedure", ""), [("", [th])]); lthy))
@@ -565,6 +558,7 @@ fun clean_values (ctxt,sequent) =
 val statement_cmd =
   Phi_Processor.powerful_process_p >> (fn f => fn stat =>
     stat |> Phi_Envir.map_state_sequent clean_values
+         |> Proof.map_context Phi_Envir.freeze_dynamic_lemmas
          |> f
   )
 

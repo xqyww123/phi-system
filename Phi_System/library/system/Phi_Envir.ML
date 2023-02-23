@@ -28,6 +28,8 @@ signature PHI_ENVIR = sig
   val put_thesis : cterm -> Proof.context -> Proof.context
   val get_thesis : Proof.context -> cterm
 
+  val freeze_dynamic_lemmas : Proof.context -> Proof.context
+
   structure Enter_Programming_Environ : HOOKS
 
 end
@@ -162,6 +164,17 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>\<
                    @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>useful\<close>)
           )))
 
+fun freeze_dynamic_lemmas ctxt =
+  let val facts = Proof_Context.facts_of ctxt
+      fun get name = #thms (the (Facts.lookup (Context.Proof ctxt) facts name))
+                  |> map (Thm.transfer' ctxt)
+   in ctxt
+   (*We fix the dynamic lemmas to be local lemmas so that the sledgehammer can access them*)
+   |> Proof_Context.put_thms true ("the_\<phi>", SOME (get "IDE_CP_Core.\<phi>"))
+   |> Proof_Context.put_thms true ("the_\<phi>lemmata",
+                                   SOME (Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>))
+  end
+
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_GE_previous\<close>,
           fn genric =>
               case genric
@@ -195,7 +208,6 @@ structure Thesis = Proof_Data (
 )
 
 fun put_thesis thesis = Thesis.put (SOME thesis)
-
 fun get_thesis ctxt =
       case Thesis.get ctxt
         of SOME x => x

@@ -285,16 +285,7 @@ fun obligation_proof print_results mode kind before_qed after_qed fixes assumes 
         val sequent' = fold (fn x => fn s => x RS (@{thm Premise_I} RS s)) thms sequent
        in after_qed sequent' stat
       end
-    fun setup_environ ctxt =
-      let val facts = Proof_Context.facts_of ctxt
-          fun get name = #thms (the (Facts.lookup (Context.Proof ctxt) facts name))
-                      |> map (Thm.transfer' ctxt)
-       in ctxt
-       (*We fix the dynamic lemmas to be local lemmas so that the sledgehammer can access them*)
-       |> Proof_Context.put_thms true ("\<phi>", SOME (get "IDE_CP_Core.\<phi>"))
-       |> Proof_Context.put_thms true ("\<phi>lemmata",
-                                       SOME (Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>))
-      end
+    val setup_environ = Phi_Envir.freeze_dynamic_lemmas
   in
     Proof.map_context setup_environ
   #>Proof.internal_goal print_results mode true kind before_qed after_qed' fixes assumes
