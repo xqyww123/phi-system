@@ -44,18 +44,18 @@ structure Programming_Sequent = Proof_Data (
   val init = (K [])
 )
 
-fun err_bad_env () = (* warning("Not in the \<phi> programming environment") *) ()
+fun err_bad_env () = error ("Not in the \<phi> programming environment")
 
 fun the_construction ctxt =
   case Programming_Sequent.get ctxt of (_,thm, _)::_ => thm
-                                     | [] => (err_bad_env (); Drule.dummy_thm)
+                                     | [] => Drule.dummy_thm
 
 val under_programming_environ = not o null o Programming_Sequent.get
 val exit_programming_environ = Programming_Sequent.map (fn L => tl L)
 
 fun the_programming_sequent' ctxt =
   case Programming_Sequent.get ctxt of (thm, _, _)::L => thm
-                                     | [] => (err_bad_env (); Drule.dummy_thm)
+                                     | [] => Drule.dummy_thm
 
 val the_state_sequent = the_programming_sequent' o Proof.context_of
 
@@ -63,7 +63,7 @@ fun the_implication_GE i ctxt =
   let val L = Programming_Sequent.get ctxt
    in if i < length L
       then Lazy.force (#3 (List.nth (L,i)))
-      else (err_bad_env (); [])
+      else []
    end
 
 fun the_implication i ctxt = maps (Phi_Reasoners.conv_GE_to_plain_conjunction ctxt)
@@ -91,15 +91,14 @@ fun reason_programming_implication' mode ctxt sequent =
 fun gen_update_programming_sequent' put sequent ctxt =
   let val mode = Phi_Working_Mode.mode1 ctxt
    in if #is_on_going_construction mode (Thm.prop_of sequent)
-      then put ctxt (sequent, sequent, Lazy.lazy (fn () =>
-                                       reason_programming_implication' mode ctxt sequent))
-      else case Programming_Sequent.get ctxt
-             of (_, construction, implication)::_ => put ctxt (sequent, construction, implication)
-              | [] => put ctxt (sequent, Drule.dummy_thm, Lazy.value [])
+      then put ctxt (K (sequent, sequent, Lazy.lazy (fn () =>
+                                       reason_programming_implication' mode ctxt sequent)))
+      else put ctxt (fn (_, construction, implication)::_ => (sequent, construction, implication)
+                      | [] => (sequent, Drule.dummy_thm, Lazy.value []))
   end
 
 val update_programming_sequent' = gen_update_programming_sequent'
-        (fn ctxt => fn data => Programming_Sequent.map (fn L => data::tl L) ctxt)
+        (fn ctxt => fn data => Programming_Sequent.map (fn L => data L :: tl L) ctxt)
 
 
 structure Enter_Programming_Environ =
@@ -110,7 +109,7 @@ fun enter_programming_environ' stat =
     val level = length (Programming_Sequent.get (fst stat))
     val (ctxt',sequent') = Enter_Programming_Environ.invoke level stat
   in gen_update_programming_sequent'
-          (fn ctxt => fn data => Programming_Sequent.map (fn L => data::L) ctxt)
+          (fn ctxt => fn data => Programming_Sequent.map (fn L => data L :: L) ctxt)
           sequent' ctxt'
   |> rpair sequent'
   end
@@ -133,13 +132,13 @@ fun map_state_sequent f s =
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>this\<close>,
           fn genric =>
               case genric
-              of Context.Theory _ => (err_bad_env (); [])
+              of Context.Theory _ => []
                | Context.Proof ctxt => [the_programming_sequent' ctxt]))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>construction\<close>,
           fn genric =>
               case genric
-              of Context.Theory _ => (err_bad_env (); [])
+              of Context.Theory _ => []
                | Context.Proof ctxt => [the_construction ctxt]))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_GE\<close>,
@@ -159,7 +158,7 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>\<
               case genric
               of Context.Theory _ => []
                | Context.Proof ctxt =>
-                   ( Proof_Context.get_thms ctxt "\<phi>implication"
+                   ( Proof_Context.get_thms ctxt "IDE_CP_Core.\<phi>implication"
                    @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>useful\<close>)
           )))
 
@@ -190,11 +189,16 @@ fun catch msg f tm = (f tm) handle TERM _ => raise TERM (msg, [tm])
 fun catch_th i msg f th = (f th) handle THM _ => raise THM (msg, i, [th])
                                       | TERM _ => raise TERM (msg, [prop_of th])
 
+structure Thesis = Proof_Data (
+  type T = cterm option
+  val init = K NONE
+)
 
+fun put_thesis thesis = Thesis.put (SOME thesis)
 
-fun put_thesis thesis = 
-      Proof_Context.put_thms false ("\<phi>thesis", SOME [Drule.mk_term thesis])
 fun get_thesis ctxt =
-      Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term
+      case Thesis.get ctxt
+        of SOME x => x
+         | NONE => err_bad_env ()
 
 end
