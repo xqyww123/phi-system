@@ -287,7 +287,6 @@ lemma \<phi>V_simps[simp]:
      apply simp apply simp apply simp
   apply simp .
 
-term \<open>\<phi>V_case_prod (\<lambda>x. \<phi>V_case_prod (\<lambda>y. \<phi>V_case_prod (\<lambda>z. f x y z)))\<close>
 
 definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
 
