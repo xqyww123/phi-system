@@ -109,26 +109,40 @@ section \<open>Normalization of Assertions\<close>
 
 consts assertion_simps :: \<open>mode \<Rightarrow> mode\<close>
 
-named_theorems assertion_simps \<open>Simplification rules normalizing an assertion.
-                                It is applied before ToSA process.\<close>
-  and assertion_simps_source \<open>Simp rules normalizing particularly source part of an assertion.\<close>
-  and assertion_simps_target \<open>Simp rules normalizing particularly target part of an assertion.\<close>
+ML \<open>
+structure Assertion_SS = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = \<^binding>\<open>assertion_simps\<close>
+  val comment_attrib = "Simplification rules normalizing an assertion. \
+                       \It is applied before ToSA process."
+)
+
+structure Assertion_SS_Source = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = \<^binding>\<open>assertion_simps_source\<close>
+  val comment_attrib = "Simp rules normalizing particularly source part of an assertion."
+)
+
+structure Assertion_SS_Target = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = \<^binding>\<open>assertion_simps_target\<close>
+  val comment_attrib = "Simp rules normalizing particularly target part of an assertion."
+)
+\<close>
 
 \<phi>reasoner_ML assertion_simp_source 1300
   (\<open>Simplify (assertion_simps SOURCE) ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
-        Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
-      @ Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps_source\<close>)\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' (fn ctxt =>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Source.get' ctxt))\<close>
 
 \<phi>reasoner_ML assertion_simp_target 1300
   (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
-        Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>
-      @ Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps_target\<close>)\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' (fn ctxt =>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt))\<close>
 
 \<phi>reasoner_ML assertion_simp 1300
   (\<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt => Named_Theorems.get ctxt \<^named_theorems>\<open>assertion_simps\<close>)\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' Assertion_SS.get'\<close>
 
 lemmas [assertion_simps] =
   mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]

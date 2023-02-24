@@ -26,6 +26,7 @@ subsection \<open>Helper ML\<close>
 
 ML_file \<open>library/tools/Phi_Help.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
+ML_file \<open>library/tools/simpset.ML\<close>
 
 ML \<open>signature PHI_SYNTAX = sig end
 structure Phi_Syntax : PHI_SYNTAX = struct end\<close>

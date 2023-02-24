@@ -262,34 +262,23 @@ subsection \<open>Finalization Rewrites\<close>
 text \<open>Rules showing the obtained procedure is identical to the desired goal
   in the end of the construction.\<close>
 
+ML \<open>structure Proc_Monad_SS = Simpset(
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = \<^binding>\<open>procedure_simps\<close>
+  val comment_attrib = "declare the rules for simplifying procedure monad."
+)\<close>
+
 consts procedure_simplification :: mode
-named_theorems procedure_simps
 
 lemmas [procedure_simps] =
             proc_bind_SKIP proc_bind_SKIP'
             proc_bind_assoc proc_bind_return_none \<phi>V_simps
 
-\<phi>reasoner procedure_equivalent 1200 (\<open>Premise procedure_simplification ?P\<close>)
-  = (rule Premise_I; simp only: procedure_simps; fail)
+\<phi>reasoner_ML procedure_equivalence 1200 (\<open>Premise procedure_simplification ?P\<close>)
+  = \<open>PLPR_Simplifier.simplifier_by_ss' Proc_Monad_SS.get'\<close>
 
 \<phi>reasoner_ML procedure_simplification 1000 (\<open>Simplify procedure_simplification ?x ?y\<close>)
-  = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
-          Named_Theorems.get ctxt \<^named_theorems>\<open>procedure_simps\<close>)\<close>
-
-lemma "\<phi>__final_proc_rewrite__":
-  \<open> Simplify procedure_simplification f' f
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
-  unfolding Action_Tag_def Simplify_def by simp
-
-lemma "\<phi>__final_proc_rewrite__'":
-  \<open> Simplify procedure_simplification f' f
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action A
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action A\<close>
-  unfolding Action_Tag_def Simplify_def by simp
-
+  = \<open>PLPR_Simplifier.simplifier_by_ss' Proc_Monad_SS.get'\<close>
 
 subsection \<open>Misc\<close>
 
@@ -303,13 +292,6 @@ lemma CurrentConstruction_Inhabited_rule:
   "CurrentConstruction mode s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
   using CurrentConstruction_D by blast
 
-paragraph \<open>Rename\<close>
-
-lemma \<phi>rename_proc: "f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E " by fast
-
-lemma \<phi>rename_proc_with_goal:
-  \<open>f \<equiv> f' \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> U \<longmapsto> \<R> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action A \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> U \<longmapsto> \<R> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action A\<close>
-  unfolding Action_Tag_def using \<phi>rename_proc .
 
 paragraph \<open>Fact Store\<close>
 

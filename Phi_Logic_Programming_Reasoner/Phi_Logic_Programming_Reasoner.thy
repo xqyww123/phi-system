@@ -933,7 +933,7 @@ lemma End_Simplification : \<open>PROP Do_Simplificatin A A\<close> unfolding Do
 lemma End_Simplification': \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B \<Longrightarrow> PROP Do_Simplificatin A B\<close>
   unfolding Do_Simplificatin_def Premise_def atomize_eq .
 
-ML_file \<open>library/simplifier.ML\<close>
+ML_file_debug \<open>library/simplifier.ML\<close>
 
 hide_fact End_Simplification' End_Simplification Do_Simplification
 

@@ -183,8 +183,7 @@ fun rule_proc_F C ctxt = Conv.fconv_rule (
        else_conv Phi_Syntax.pending_construction_monad_conv C)) ctxt)
 
 fun simp_monads ctxt sequent =
-  let val rules = Named_Theorems.get ctxt \<^named_theorems>\<open>procedure_simps\<close>
-      val sctxt = clear_simpset ctxt addsimps rules
+  let val sctxt = Proc_Monad_SS.equip ctxt
       val sequent' = rule_proc_F (Simplifier.rewrite sctxt) ctxt sequent
    in sequent'
   end

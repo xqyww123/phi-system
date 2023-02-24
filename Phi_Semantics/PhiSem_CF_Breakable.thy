@@ -7,6 +7,8 @@ text \<open>Since we have \<^verbatim>\<open>break\<close> and \<^verbatim>\<ope
   necessarily the negative of the loop guard. Therefore here we need 3 assertions, invariance,
   guard, and termination condition.\<close>
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc while:
   assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x \<and> End: termination x)\<close>
   and S: \<open>U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x) @action ToSA\<close>

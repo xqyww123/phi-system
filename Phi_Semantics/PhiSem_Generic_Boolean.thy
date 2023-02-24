@@ -98,7 +98,7 @@ lemma op_const_bool:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_const_bool_def
   by (rule, simp add: \<phi>Bool_expn)
-
+ 
 lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS True  \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis ?G\<close>
                    \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> SYNTHESIS False \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E @action synthesis ?G\<close>]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> R \<longmapsto> R\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace> @action synthesis G\<close>
