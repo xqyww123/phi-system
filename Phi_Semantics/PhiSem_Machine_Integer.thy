@@ -407,6 +407,24 @@ definition op_sdiv :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc
       Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_b sdiv val_a))))
   )))"
 
+definition op_umod :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_umod _ =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
+      \<phi>M_assert (val_a \<noteq> 0) \<ggreater>
+      Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_b mod val_a))))
+  )))"
+
+definition op_smod :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_smod _ =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
+      \<phi>M_assert (val_a \<noteq> 0) \<ggreater>
+      Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_b smod val_a))))
+  )))"
+
 definition op_lshr :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
   where "op_lshr b_b b_a =
       \<phi>M_caseV (\<lambda>va vb.
@@ -663,6 +681,47 @@ lemma op_div_int_fail[\<phi>synthesis 100]:
               \<open>and they are different in negative numbers\<close>)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c fail \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   by blast
+
+subsubsection \<open>Modulo\<close>
+
+lemma op_umod_word_\<phi>app[\<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<noteq> 0
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_umod TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x mod y \<Ztypecolon> Word('b) \<rbrace>\<close>
+  unfolding op_umod_def Premise_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
+      rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
+
+lemma op_mod_nat_\<phi>app[\<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<noteq> 0
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_umod TYPE('b) (\<phi>V_pair vy vx)
+      \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x mod y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
+  \<medium_left_bracket> $vx $vy op_umod_word
+    affirm using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast \<medium_right_bracket>
+  by (simp add: of_nat_inverse the_\<phi>lemmata(1) the_\<phi>lemmata(2) unat_mod_distrib) .
+
+lemma op_smod_word_\<phi>app[\<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<noteq> 0
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_smod TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x smod y \<Ztypecolon> Word('b) \<rbrace>\<close>
+  unfolding op_smod_def Premise_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
+      rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
+
+lemma op_mod_int_\<phi>app[\<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<noteq> 0
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_smod TYPE('b) (\<phi>V_pair vy vx)
+      \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x smod y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
+  \<medium_left_bracket> $vx $vy op_smod_word
+    affirm by (metis atLeastLessThan_iff signed_0 sint_of_int_eq the_\<phi>(2) the_\<phi>(3)) \<medium_right_bracket>
+  by (metis One_nat_def atLeastLessThan_iff signed_take_bit_int_eq_self_iff sint_sbintrunc' smod_word_def smod_word_max smod_word_min the_\<phi>lemmata(1) the_\<phi>lemmata(2)) .
+
+lemma op_mod_int_fail[\<phi>synthesis 100]:
+  \<open> FAIL TEXT(\<open>About integers, there is no rule available for unsigned modulo\<close> (mod)
+              \<open>Please use the signed\<close> (smod)
+              \<open>Note the C semantics is\<close> (smod) \<open>instead of\<close> (mod)
+              \<open>and they are different in negative numbers\<close>)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c fail \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x mod y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
+  by blast
+
 
 subsubsection \<open>Shift\<close>
 
