@@ -220,6 +220,8 @@ lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 
+
+
 subsection \<open>Convention of Syntax Priority\<close>
 
 

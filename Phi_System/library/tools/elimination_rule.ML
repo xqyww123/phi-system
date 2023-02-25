@@ -2,7 +2,7 @@ signature PHI_REASONERS = sig
 include PHI_REASONERS
 
 val conv_GE_to_plain_conjunction : Proof.context -> thm -> thm list
-val extract_elim_rule : Proof.context -> thm -> thm
+val extract_elim_rule : Proof.context -> thm list -> thm -> thm
 
 end
 
@@ -39,7 +39,7 @@ fun is_elim_rule (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ (Const (\<^
       = is_elim_rule' NONE X
   | is_elim_rule _ = false
 
-fun extract_elim_rule ctxt thm =
+fun extract_elim_rule ctxt erules thm =
   if is_elim_rule (Thm.prop_of thm)
   then thm
   else (
@@ -50,12 +50,12 @@ fun extract_elim_rule ctxt thm =
     (ctxt, Drule.compose (thm, 1, @{thm Do_Extract_Elimination_Rule}))
       |> Phi_Reasoner.reason NONE
       |> (fn SOME (ctxt', ret) =>
-            let val ret' = Thm.biresolution (SOME ctxt') false
-                              [(*(true, @{thm disjE}), *) (true, @{thm conjE})] 2 ret
+            let val ret' = Tactical.REPEAT_DETERM (Thm.biresolution (SOME ctxt') false
+                              (map (pair true) erules) 2) ret
                         |> Seq.pull
                         |> (fn SOME (x, _) => x
                              | NONE => error "Internal bug!#q3f4j89[")
-                val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+                val _ = Phi_Reasoner.info_pretty ctxt (fn _ => Pretty.chunks [
                       Pretty.str "Obtained the following elimination rule:",
                       Syntax.pretty_term ctxt (Thm.prop_of ret')
                   ])

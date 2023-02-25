@@ -1,5 +1,7 @@
 theory PhiSem_Machine_Integer
-  imports PhiSem_Common_Int PhiSem_Generic_Boolean "HOL-Library.Word"
+  imports PhiSem_Common_Int PhiSem_Generic_Boolean
+          "Word_Lib.More_Word" (*We use the word lib from seL4*)
+          "Word_Lib.Signed_Division_Word"
 begin
 
 chapter \<open>Semantics for Machine Integers\<close>
@@ -69,9 +71,23 @@ lemma Valid_Types[simp]:
 
 section \<open>\<phi>-Types\<close>
 
-subsection \<open>Integer\<close>
+text \<open>Thresholds between \<phi>-Types
+\<^item> 9 \<open>Word \<longrightarrow> \<nat>\<^sup>r\<close>
+\<^item> 9 \<open>Word \<longrightarrow> \<nat>\<close>
+\<^item> 9 \<open>Word \<longrightarrow> \<int>\<close>
+\<^item> 7 \<open>\<nat>\<^sup>r \<longrightarrow> Word\<close>
+\<^item> 7 \<open>\<nat> \<longrightarrow> Word\<close>
+\<^item> 7 \<open>\<int> \<longrightarrow> Word\<close>
+\<^item> 6 \<open>\<int> \<longrightarrow> \<nat>\<close>
+\<^item> 5 \<open>\<nat> \<longrightarrow> \<int>\<close>
+\<^item> 4 \<open>\<nat>\<^sup>r \<longrightarrow> \<nat>\<close>
+\<^item> 4 \<open>\<nat> \<longrightarrow> \<nat>\<^sup>r\<close>
 
-subsubsection \<open>Words\<close>
+There is no direct transformation between \<open>\<nat>\<^sup>r\<close> and \<open>\<int>\<close> because of complexity in the expression.
+
+\<close>
+
+subsection \<open>Words\<close>
 
 definition Word :: \<open>'b itself \<Rightarrow> (VAL, 'b::len word) \<phi>\<close>
   where \<open>Word _ x = { V_int.mk (LENGTH('b), unat x) }\<close>
@@ -108,12 +124,75 @@ lemma [\<phi>reason 1000]:
 
 
 
-subsubsection \<open>Natural Numbers\<close>
+subsection \<open>Natural Numbers\<close>
 
-paragraph \<open>Natural Number\<close>
+subsubsection \<open>Rounded Natural Number\<close>
+
+definition \<phi>RoundedNat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
+  where [\<phi>defs]: "\<phi>RoundedNat _ x = ((of_nat x :: 'b word) \<Ztypecolon> Word('b))"
+
+syntax \<phi>RoundedNat_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<nat>\<^sup>r'(_')")
+
+translations "\<nat>\<^sup>r('x)" <= "CONST \<phi>RoundedNat TYPE('x)"
+
+parse_ast_translation \<open>
+  let open Ast
+   in [(\<^syntax_const>\<open>\<phi>RoundedNat_syntax\<close>, (fn _ => fn [V] =>
+          Appl [Constant \<^const_syntax>\<open>\<phi>RoundedNat\<close>,
+                Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
+
+lemma [
+  \<phi>reason 1000 for \<open>?x \<Ztypecolon> \<nat>\<^sup>r(?'b1) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> _ \<^bold>a\<^bold>n\<^bold>d _\<close>
+]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x mod 2^LENGTH('b) = y mod 2^LENGTH('b)
+\<Longrightarrow> x \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
+  \<medium_left_bracket> destruct\<phi> _
+    construct\<phi> \<open>y \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
+    affirm by (simp add: the_\<phi>(2) unat_of_nat word_unat_eq_iff) \<medium_right_bracket>. .
+
+lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>\<^sup>r(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<Ztypecolon> Word(_) \<^bold>a\<^bold>n\<^bold>d _\<close>]:
+  \<open> Threshold_Cost 7
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y = of_nat x
+\<Longrightarrow> x \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> Word('b)\<close>
+  for y :: \<open>'b::len word\<close>
+  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>. .
+
+lemma [
+  \<phi>reason 800 for \<open>_ \<Ztypecolon> \<phi>RoundedNat _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (Word _)\<close>,
+  \<phi>inhabitance_rule
+]:
+  \<open>x \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (of_nat x :: 'b::len word) \<Ztypecolon> Word('b) @action to Word('b)\<close>
+  \<medium_left_bracket> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200 for \<open>_ \<Ztypecolon> Word(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<Ztypecolon> \<nat>\<^sup>r(_) \<^bold>a\<^bold>n\<^bold>d _\<close>]:
+  \<open> Threshold_Cost 9
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y mod 2^LENGTH('b) = unat x
+\<Longrightarrow> x \<Ztypecolon> Word('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
+  for x :: \<open>'b::len word\<close>
+  \<medium_left_bracket> construct\<phi> \<open>unat x \<Ztypecolon> \<nat>\<^sup>r('b)\<close> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200 for \<open>_ \<Ztypecolon> Word _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (\<phi>RoundedNat _)\<close>]:
+  \<open> x \<Ztypecolon> Word('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s unat x \<Ztypecolon> \<nat>\<^sup>r('b) @action to \<nat>\<^sup>r('b)\<close>
+  for x :: \<open>'b::len word\<close> \<medium_left_bracket> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]:
+  \<open>\<phi>SemType (x \<Ztypecolon> \<nat>\<^sup>r('b)) int('b)\<close>
+  \<medium_left_bracket> to \<open>Word _\<close> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]:
+  \<open>\<phi>Zero int('b) \<nat>\<^sup>r('b) 0\<close>
+  \<medium_left_bracket> \<open>0 \<Ztypecolon> Word('b)\<close> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1000]:
+  "\<phi>Equal (\<nat>\<^sup>r('b::len)) (\<lambda>x y. True) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))"
+  \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket>
+    by (simp add: unat_of_nat word_unat_eq_iff) .
+
+
+subsubsection \<open>Natural Number\<close>
 
 definition \<phi>Nat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
-  where [\<phi>defs]: "\<phi>Nat _ x = ((of_nat x :: 'b word) \<Ztypecolon> Word('b) \<^bold>s\<^bold>u\<^bold>b\<^bold>j x \<in> {0..< 2 ^ LENGTH('b)})"
+  where [\<phi>defs]: "\<phi>Nat _ x = (x \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>s\<^bold>u\<^bold>b\<^bold>j x \<in> {0..< 2 ^ LENGTH('b)})"
 
 syntax \<phi>Nat_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<nat>'(_')")
 
@@ -124,16 +203,40 @@ parse_ast_translation \<open>
    in [(\<^syntax_const>\<open>\<phi>Nat_syntax\<close>, (fn _ => fn [V] =>
           Appl [Constant \<^const_syntax>\<open>\<phi>Nat\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
+lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<Ztypecolon> \<nat>\<^sup>r(_) \<^bold>a\<^bold>n\<^bold>d _\<close>]:
+  \<open> Threshold_Cost 4
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y = x
+\<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>a\<^bold>n\<^bold>d x < 2 ^ LENGTH('b)\<close>
+  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>. .
+
+lemma [
+  \<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (\<phi>RoundedNat _)\<close>,
+  \<phi>inhabitance_rule
+]:
+  \<open>x \<Ztypecolon> \<nat>('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>a\<^bold>n\<^bold>d x < 2 ^ LENGTH('b) @action to \<nat>\<^sup>r('b)\<close>
+  \<medium_left_bracket> \<medium_right_bracket>. .
+
+
+lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>\<^sup>r(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (\<phi>Nat _)\<close>]:
+  \<open> x \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x mod 2 ^ LENGTH('b) \<Ztypecolon> \<nat>('b) @action to \<nat>('b)\<close>
+  \<medium_left_bracket> construct\<phi> \<open>x mod 2 ^ LENGTH('b) \<Ztypecolon> \<nat>('b)\<close> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>\<^sup>r(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<Ztypecolon> \<nat>(_) \<^bold>a\<^bold>n\<^bold>d _ \<close>]:
+  \<open> Threshold_Cost 4
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x mod 2 ^ LENGTH('b) = y
+\<Longrightarrow> x \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>('b) \<close>
+  \<medium_left_bracket> to \<open>\<nat>(_)\<close> \<medium_right_bracket>. .
+
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<Ztypecolon> Word(_) \<^bold>a\<^bold>n\<^bold>d _\<close>]:
   \<open> Threshold_Cost 7
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y = of_nat x
 \<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> Word('b) \<^bold>a\<^bold>n\<^bold>d x < 2 ^ LENGTH('b)\<close>
   for y :: \<open>'b::len word\<close>
-  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>. .
+  \<medium_left_bracket> to \<open>\<nat>\<^sup>r(_)\<close> \<medium_right_bracket>. .
 
 lemma [
-  \<phi>reason 800 for \<open>_ \<Ztypecolon> \<phi>Nat _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (Word _)\<close>,
+  \<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (Word _)\<close>,
   \<phi>inhabitance_rule
 ]:
   \<open>x \<Ztypecolon> \<nat>('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (of_nat x :: 'b::len word) \<Ztypecolon> Word('b) \<^bold>a\<^bold>n\<^bold>d x < 2 ^ LENGTH('b)
@@ -146,11 +249,13 @@ lemma [\<phi>reason 1200 for \<open>_ \<Ztypecolon> Word(_) \<^bold>i\<^bold>m\<
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y = unat x
 \<Longrightarrow> x \<Ztypecolon> Word('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>('b)\<close>
   for x :: \<open>'b::len word\<close>
-  \<medium_left_bracket> construct\<phi> \<open>unat x \<Ztypecolon> \<nat>('b)\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> to \<open>\<nat>\<^sup>r('b)\<close> \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200 for \<open>_ \<Ztypecolon> Word _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (\<phi>Nat _)\<close>]:
   \<open> x \<Ztypecolon> Word('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s unat x \<Ztypecolon> \<nat>('b) @action to \<nat>('b)\<close>
   for x :: \<open>'b::len word\<close> \<medium_left_bracket> \<medium_right_bracket>. .
+
+
 
 lemma [\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<nat>('b)) int('b)\<close>
@@ -203,11 +308,11 @@ lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> Word(_) \<^bold>i\<^bold>m\<
     affirm apply (simp add: \<open>y = sint x\<close>) using sint_greater_eq sint_less by blast
   \<medium_right_bracket>. .
 
-lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> Word(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to Word(_)\<close>]:
+lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> Word(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (Word _)\<close>]:
   \<open> x \<Ztypecolon> Word('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sint x \<Ztypecolon> \<int>('b) @action to Word('b) \<close>
   \<medium_left_bracket> \<medium_right_bracket>. .
 
-lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<int>(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to \<nat>(_)\<close>]:
+lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<int>(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<^bold>a\<^bold>n\<^bold>d _ @action to (\<phi>Nat _)\<close>]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 \<le> x \<and> x < 2 ^ (LENGTH('b)-1)
 \<Longrightarrow> x \<Ztypecolon> \<int>('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s nat x \<Ztypecolon> \<nat>('b) @action to \<nat>('b)\<close>
   \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket>
@@ -226,7 +331,7 @@ lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<^bold>i\<^bold>m\
   by (metis One_nat_def id_apply the_\<phi>(2) negative_zle of_int_eq_id of_nat_less_numeral_power_cancel_iff real_of_nat_eq_numeral_power_cancel_iff signed_of_nat signed_take_bit_int_eq_self_iff) .
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<Ztypecolon> \<int>(_) \<^bold>a\<^bold>n\<^bold>d _ \<close>]:
-  \<open> Threshold_Cost 4
+  \<open> Threshold_Cost 5
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x < 2 ^ (LENGTH('b)-1) \<and> y = of_nat x
 \<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<int>('b) \<close>
   \<medium_left_bracket> to \<open>\<int>(_)\<close> \<medium_right_bracket>. .
@@ -289,7 +394,17 @@ definition op_udiv :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
+      \<phi>M_assert (val_a \<noteq> 0) \<ggreater>
       Return (\<phi>arg (V_int.mk (bits, (val_b div val_a))))
+  )))"
+
+definition op_sdiv :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_sdiv _ =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b::'b word.
+      \<phi>M_assert (val_a \<noteq> 0) \<ggreater>
+      Return (\<phi>arg (V_int.mk (LENGTH('b), unat (val_b sdiv val_a))))
   )))"
 
 definition op_lshr :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
@@ -308,20 +423,36 @@ definition op_lshl :: "nat \<Rightarrow> nat \<Rightarrow> (VAL \<times> VAL, VA
       Return (\<phi>arg (V_int.mk (b_b, (val_b * 2 ^ val_a mod 2^b_b))))
   )))"
 
-definition op_lt :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
-  where "op_lt bits =
+definition op_ult :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_ult bits =
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
       Return (\<phi>arg (V_bool.mk (val_b < val_a)))
   )))"
 
-definition op_le :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
-  where "op_le bits =
+definition op_ule :: "nat \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_ule bits =
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) va (\<lambda>val_a.
       \<phi>M_getV (T_int.mk bits) (snd o V_int.dest) vb (\<lambda>val_b.
       Return (\<phi>arg (V_bool.mk (val_b \<le> val_a)))
+  )))"
+
+definition op_slt :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_slt _ =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b.
+      Return (\<phi>arg (V_bool.mk (val_b <s val_a)))
+  )))"
+
+definition op_sle :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_sle _ =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) va (\<lambda>val_a::'b word.
+      \<phi>M_getV (T_int.mk LENGTH('b)) (of_nat o snd o V_int.dest) vb (\<lambda>val_b.
+      Return (\<phi>arg (V_bool.mk (val_b \<le>s val_a)))
   )))"
 
 
@@ -377,9 +508,7 @@ lemma [\<phi>reason 50
   using op_const_size_t[THEN \<phi>frame, simplified] . *)
 
 
-subsubsection \<open>Integer Arithmetic\<close>
-
-paragraph \<open>Addition\<close>
+subsubsection \<open>Addition\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
@@ -389,13 +518,17 @@ lemma op_add_word_\<phi>app[\<phi>synthesis 100]:
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns unat_word_ariths)
 
-lemma [\<phi>overload +, \<phi>synthesis 100]:
+lemma op_add_nat_\<phi>app[\<phi>overload +, \<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y < 2 ^ LENGTH('b)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
   \<medium_left_bracket> $vx $vy op_add_word[where 'b='b] \<medium_right_bracket> using \<phi> by (metis of_nat_add of_nat_inverse) .
 
+lemma op_add_natR_\<phi>app[\<phi>overload +, \<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>\<^sup>r('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
+  \<medium_left_bracket> $vx $vy op_add_word[where 'b='b] \<medium_right_bracket>
+    by (metis of_nat_add unat_of_nat) .
 
-lemma [\<phi>overload +, \<phi>synthesis 100]:
+lemma op_add_int_\<phi>app[\<phi>overload +, \<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
   \<medium_left_bracket> $vx $vy op_add_word[where 'b='b] \<medium_right_bracket>
@@ -404,7 +537,7 @@ lemma [\<phi>overload +, \<phi>synthesis 100]:
 declare op_add_word_\<phi>app[\<phi>overload +]
 
 
-paragraph \<open>Subtraction\<close>
+subsubsection \<open>Subtraction\<close>
 
 lemma op_sub_word_\<phi>app[\<phi>synthesis 100]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> Word('b) \<rbrace>\<close>
@@ -419,6 +552,12 @@ lemma op_sub_nat_\<phi>app[\<phi>overload -, \<phi>synthesis 100]:
   \<medium_left_bracket> $vx $vy op_sub_word[where 'b='b] \<medium_right_bracket>
     by (metis diff_le_self le_unat_uoi the_\<phi>(2) the_\<phi>lemmata(2) of_nat_diff of_nat_inverse) .
 
+lemma op_sub_natR_\<phi>app[\<phi>overload -, \<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>\<^sup>r('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace>\<close>
+  \<medium_left_bracket> $vx $vy op_sub_word[where 'b='b] \<medium_right_bracket>
+    by (metis of_nat_diff the_\<phi>(2) unat_of_nat) .
+
 lemma op_sub_int_\<phi>app[\<phi>overload -, \<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x - y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
@@ -428,8 +567,7 @@ lemma op_sub_int_\<phi>app[\<phi>overload -, \<phi>synthesis 100]:
 declare op_sub_word_\<phi>app[\<phi>overload -]
 
 
-paragraph \<open>Times\<close>
- 
+subsubsection \<open>Multiplication\<close>
  
 declare [[\<phi>trace_reasoning = 1]]
 
@@ -447,6 +585,12 @@ lemma op_mul_nat_\<phi>app[\<phi>overload *, \<phi>synthesis 100]:
   \<medium_left_bracket> $vx $vy op_mul_word[where 'b='b] \<medium_right_bracket>
     using the_\<phi>(2) of_nat_inverse by fastforce .
 
+lemma op_mul_natR_\<phi>app[\<phi>overload *, \<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
+         \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>\<^sup>r('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x * y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace>\<close>
+  \<medium_left_bracket> $vx $vy op_mul_word[where 'b='b] \<medium_right_bracket>
+    by (metis of_nat_mult unat_of_nat) .
+
 lemma op_mul_int_\<phi>app[\<phi>overload *, \<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
@@ -457,25 +601,72 @@ lemma op_mul_int_\<phi>app[\<phi>overload *, \<phi>synthesis 100]:
 declare op_mul_word_\<phi>app[\<phi>overload *]
 
 
-
-paragraph \<open>Division\<close>
+subsubsection \<open>Division\<close>
 
 lemma op_udiv_word_\<phi>app[\<phi>synthesis 100]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> Word('b) \<rbrace>\<close>
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<noteq> 0
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> Word('b) \<rbrace>\<close>
   unfolding op_udiv_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns unat_div)
-
-lemma op_udiv_nat_\<phi>app[\<phi>overload /, \<phi>synthesis 100]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
-  \<medium_left_bracket> $vx $vy op_udiv_word_\<phi>app[where 'b='b] \<medium_right_bracket>
-    by (simp add: the_\<phi>lemmata(1) the_\<phi>lemmata(2) of_nat_inverse unat_div) .
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
+      rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
+ 
+lemma op_div_nat_\<phi>app[\<phi>overload /, \<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<noteq> 0
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
+  \<medium_left_bracket> $vx $vy op_udiv_word_\<phi>app[where 'b='b]
+    affirm using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast 
+  \<medium_right_bracket> by (simp add: the_\<phi>lemmata(1) the_\<phi>lemmata(2) of_nat_inverse unat_div) .
 
 declare op_udiv_word_\<phi>app[\<phi>overload /]
 
 
-paragraph \<open>Right Shift\<close>
+lemma op_sdiv_word_\<phi>app[\<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<noteq> 0
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sdiv TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x sdiv y \<Ztypecolon> Word('b) \<rbrace>\<close>
+  unfolding op_sdiv_def Premise_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
+        rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns)
 
+lemma op_div_int_\<phi>app[\<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<noteq> - (2 ^ (LENGTH('b) - 1)) \<and> y \<noteq> 0
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sdiv TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x sdiv y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
+  \<medium_left_bracket> $vx $vy op_sdiv_word
+    affirm by (metis atLeastLessThan_iff signed_0 sint_of_int_eq the_\<phi>(2) the_\<phi>(3)) \<medium_right_bracket>
+    unfolding sdiv_word_def
+  proof simp
+    have [simp]: \<open>sint (word_of_int x::'b word) = x\<close>
+      by (meson atLeastLessThan_iff sint_of_int_eq the_\<phi>lemmata(2))
+    have [simp]: \<open>sint (word_of_int y::'b word) = y\<close>
+      by (meson atLeastLessThan_iff sint_of_int_eq the_\<phi>lemmata(1))
+
+    have t1: \<open>x < 2 ^ (LENGTH('b)-1)\<close>
+      using atLeastLessThan_iff the_\<phi>lemmata(2) by blast
+    have t2: \<open>- (2 ^ (LENGTH('b)-1)) < x\<close>
+      by (meson Orderings.order_eq_iff atLeastLessThan_iff leI the_\<phi>(3) the_\<phi>lemmata(2))
+    have t3: \<open>\<bar>x\<bar> < 2 ^ (LENGTH('b)-1)\<close>
+      using t1 t2 by linarith
+    have t4: \<open>\<bar>x sdiv y\<bar> < 2 ^ (LENGTH('b)-1)\<close>
+      unfolding signed_divide_int_def
+      apply (cases \<open>x = 0\<close>) apply simp
+      apply (cases \<open>y = 0\<close>) apply simp
+      apply (simp add: abs_mult)
+      by (smt (verit, best) One_nat_def int_div_less_self int_div_same_is_1 pos_imp_zdiv_neg_iff t3)
+    show \<open>x sdiv y = sint (word_of_int (sint (word_of_int x::'b word) sdiv sint (word_of_int y::'b word))::'b word)\<close>
+      apply simp
+      by (smt (verit, del_insts) t4 sint_of_int_eq)
+  qed .
+
+lemma op_div_int_fail[\<phi>synthesis 100]:
+  \<open> FAIL TEXT(\<open>About integers, there is no rule available for unsigned division\<close> (div)
+              \<open>Please use the signed\<close> (sdiv)
+              \<open>Note the C semantics is\<close> (sdiv) \<open>instead of\<close> (div)
+              \<open>and they are different in negative numbers\<close>)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c fail \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
+  by blast
+
+subsubsection \<open>Shift\<close>
+
+paragraph \<open>Right Shift\<close>
 
 lemma op_lshr_word_pre_\<phi>app:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lshr LENGTH('ba) LENGTH('bb) (\<phi>V_pair v2 v1)
@@ -534,119 +725,85 @@ lemma op_lshl_word_\<phi>app[\<phi>synthesis 100]:
   \<medium_left_bracket> $v1 $v2 op_lshl_word_pre_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
     by (simp add: of_nat_inverse the_\<phi>(2)) .
 
-lemma op_lshl_nat_mod_\<phi>app[\<phi>synthesis 100]:
+lemma op_lshl_nat_\<phi>app[\<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * 2 ^ y < LENGTH('ba)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lshl LENGTH('ba) LENGTH('bb) (\<phi>V_pair v2 v1)
-        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v1] \<nat>('ba) \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v2] \<nat>('bb) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l push_bit y x  \<Ztypecolon> \<nat>('ba) \<rbrace>\<close>
+        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v1] \<nat>('ba) \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v2] \<nat>('bb) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l push_bit y x \<Ztypecolon> \<nat>('ba) \<rbrace>\<close>
   \<medium_left_bracket> $v1 $v2 op_lshl_word_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
   unfolding push_bit_nat_def
-  by (metis dual_order.strict_trans less_exp of_nat_inverse of_nat_push_bit push_bit_eq_mult the_\<phi>(2))
+  by (metis dual_order.strict_trans less_exp of_nat_inverse of_nat_push_bit push_bit_eq_mult the_\<phi>(2)) .
 
-thm push_bit_int_def
-
-lemma op_lshl_nat_\<phi>app:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * 2 ^ Big y < 2 ^ Big b1
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lshl b1 b2 (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> Val raw1 \<nat>[b1] \<heavy_comma> y \<Ztypecolon> Val raw2 \<nat>[b2] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x * 2 ^ Big y \<Ztypecolon> \<nat>[b1] \<rbrace>\<close>
-  unfolding op_lshl_def
-  by (cases raw1; cases raw2; simp; rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns Big_def)
-
-proc [
-    \<phi>reason 1300 for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x LSHR ?y) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[b1] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1   @action synthesis G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[b2] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
-  input \<open>R\<close>
-  output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x LSHR y) \<Ztypecolon> \<nat>[b1]\<close>
-  throws \<open>E1 + E2\<close>
-  @action \<open>synthesis G\<close>
-  \<medium_left_bracket> F1 F2 op_lshr_nat \<medium_right_bracket>. .
-
-proc [
-    \<phi>reason 1300 for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x LSHL ?y) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  premises \<open>x * 2 ^ Big y < 2 ^ Big b1\<close>
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[b1] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1   @action synthesis G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[b2] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
-  input \<open>R\<close>
-  output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x LSHL y) \<Ztypecolon> \<nat>[b1]\<close>
-  throws \<open>E1 + E2\<close>
-  @action \<open>synthesis G\<close>
-  \<medium_left_bracket> F1 F2 op_lshl_nat \<medium_right_bracket>. .
+lemma op_lshl_natR_\<phi>app[\<phi>synthesis 100]:
+  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x * 2 ^ y < LENGTH('ba)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lshl LENGTH('ba) LENGTH('bb) (\<phi>V_pair v2 v1)
+        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v1] \<nat>\<^sup>r('ba) \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v2] \<nat>('bb) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l push_bit y x \<Ztypecolon> \<nat>\<^sup>r('ba) \<rbrace>\<close>
+  \<medium_left_bracket> $v1 $v2 op_lshl_word_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
+  unfolding push_bit_nat_def
+  by (metis push_bit_nat_def push_bit_of_nat unat_of_nat) .
 
 
-paragraph \<open>Less Than\<close>
+subsubsection \<open>Comparison\<close>
 
-lemma op_lt[\<phi>overload <]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_lt b (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> Val rawx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val rawy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
-  unfolding op_lt_def
-  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns, rule,
+paragraph \<open>Unsigned Less Than\<close>
+
+lemma op_lt_word_\<phi>app[\<phi>overload <, \<phi>synthesis 100]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_ult LENGTH('b) (\<phi>V_pair vy vx)
+       \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_ult_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
+      simp add: \<phi>expns, rule, simp add: \<phi>expns word_less_nat_alt)
+
+lemma op_lt_nat_\<phi>app[\<phi>overload <, \<phi>synthesis 100]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_ult LENGTH('b) (\<phi>V_pair vy vx)
+       \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<medium_left_bracket> $vx $vy op_lt_word[where 'b='b] \<medium_right_bracket>
+    by (simp add: of_nat_inverse the_\<phi>lemmata(1) the_\<phi>lemmata(2) word_less_nat_alt) .
+  
+paragraph \<open>Signed Less Than\<close>
+
+lemma op_slt_word_\<phi>app[\<phi>overload <, \<phi>synthesis 100]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_slt TYPE('b) (\<phi>V_pair vy vx)
+       \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x <s y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_slt_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
-
-proc [
-    \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x < ?y) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R  \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1   @action synthesis G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
-  input \<open>R\<close>
-  output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x < y) \<Ztypecolon> \<bool>\<close>
-  throws \<open>E1 + E2\<close>
-  @action \<open>synthesis G\<close>
-  \<medium_left_bracket> F1 F2 < \<medium_right_bracket>. .
+lemma op_slt_int_\<phi>app[\<phi>overload <, \<phi>synthesis 100]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_slt TYPE('b) (\<phi>V_pair vy vx)
+       \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<medium_left_bracket> $vx $vy op_slt_word[where 'b='b] \<medium_right_bracket>
+    by (metis antisym_conv1 atLeastLessThan_iff linorder_not_le signed_take_bit_int_greater_eq_self_iff signed_take_bit_int_less_eq_self_iff sint_sbintrunc' the_\<phi>lemmata(1) the_\<phi>lemmata(2) word_sless_alt) .
 
 
-proc [
-    \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x > ?y) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1   @action synthesis G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
-  input \<open>R\<close>
-  output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x > y) \<Ztypecolon> \<bool>\<close>
-  throws \<open>E1 + E2\<close>
-  @action \<open>synthesis G\<close>
-  \<medium_left_bracket>
-    F1 \<rightarrow> val v1
-    F2 \<rightarrow> val v2
-    $v2 $v1 <
-  \<medium_right_bracket>. .
+paragraph \<open>Unsigned Less Equal\<close>
 
-(* Service Obligation !!!!! Last Day!!!! *)
-
-paragraph \<open>Less Equal\<close>
-
-lemma op_le[\<phi>overload \<le>]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_le b (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> Val rawx \<nat>[b]\<heavy_comma> y \<Ztypecolon> Val rawy \<nat>[b] \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
-  unfolding op_le_def
+lemma op_le_word_\<phi>app[\<phi>overload \<le>, \<phi>synthesis 100]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_ule LENGTH('b) (\<phi>V_pair rawy rawx)
+        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_ule_def
   by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns word_le_nat_alt)
 
-proc [
-    \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x \<le> ?y) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[b]  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1   @action synthesis G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
-  input \<open>R\<close>
-  output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<le> y) \<Ztypecolon> \<bool>\<close>
-  throws \<open>E1 + E2\<close>
-  @action \<open>synthesis G\<close>
-  \<medium_left_bracket> F1 F2 \<le> \<medium_right_bracket>. .
+lemma op_le_nat_\<phi>app[\<phi>overload \<le>, \<phi>synthesis 100]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_ule LENGTH('b) (\<phi>V_pair rawy rawx)
+        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawy] \<nat>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<medium_left_bracket> $x $y op_le_word \<medium_right_bracket>
+    by (simp add: the_\<phi>lemmata(1) the_\<phi>lemmata(2) unat_of_nat word_le_nat_alt) .
 
+paragraph \<open>Signed Less Equal\<close>
 
-proc [
-    \<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> SYNTHESIS (?x \<ge> ?y) \<Ztypecolon> ?T ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis ?G\<close>
-]:
-  assumes F1: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f1 \<lbrace> R \<longmapsto> R1\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1   @action synthesis G\<close>
-    and   F2: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f2 \<lbrace> R1 \<longmapsto> R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>[b] \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2   @action synthesis G\<close>
-  input \<open>R\<close>
-  output   \<open>R2\<heavy_comma> SYNTHESIS \<^bold>v\<^bold>a\<^bold>l (x \<ge> y) \<Ztypecolon> \<bool>\<close>
-  throws \<open>E1 + E2\<close>
-  @action \<open>synthesis G\<close>
-  \<medium_left_bracket> 
-    F1 \<rightarrow> val v1
-    F2 \<rightarrow> val v2
-    $v2 $v1 \<le>
-  \<medium_right_bracket>. .
+lemma op_sle_word_\<phi>app[\<phi>overload \<le>, \<phi>synthesis 100]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sle TYPE('b) (\<phi>V_pair rawy rawx)
+        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le>s y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  unfolding op_sle_def
+  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns word_le_nat_alt)
+
+lemma op_le_int_\<phi>app[\<phi>overload \<le>, \<phi>synthesis 100]:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sle TYPE('b) (\<phi>V_pair rawy rawx)
+        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawy] \<int>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
+  \<medium_left_bracket> $x $y op_sle_word \<medium_right_bracket>
+    by (metis atLeastLessThan_iff signed_take_bit_int_eq_self_iff sint_sbintrunc' the_\<phi>lemmata(1) the_\<phi>lemmata(2) word_sle_eq) .
 
 
 

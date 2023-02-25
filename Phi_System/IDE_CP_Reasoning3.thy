@@ -2219,8 +2219,6 @@ declare [[\<phi>reason_default_pattern
 ]]
 
 
-declare [[\<phi>trace_reasoning = 1]]
-
 
 lemma [\<phi>reason 1200 for \<open>PROP Gen_Synthesis_Rule
       (Trueprop (\<forall>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<heavy_comma> ?X v \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<longmapsto> ?Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E )) _ _\<close>]:
@@ -2446,8 +2444,6 @@ lemma overloaded_synthesis_ternary:
     H1 H2 H3 H
   \<medium_right_bracket> .. .
 
-declare [[\<phi>trace_reasoning = 3]]
-
 lemma make_overloaded_synthesis_rule:
   \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R\<heavy_comma> E e)
 \<Longrightarrow> PROP Gen_Synthesis_Rule
@@ -2482,20 +2478,21 @@ ML_file \<open>library/additions/overloaded_synthesis.ML\<close>
 attribute_setup overloaded_operator_in_synthesis = \<open>
   Scan.peek (fn ctxt =>
     Scan.optional Parse.int 60 --
-    Parse.position (Parse.term >> Context.cases Syntax.read_term_global Syntax.read_term ctxt) --
-    Scan.option (\<^keyword>\<open>::\<close> |-- 
-        (Scan.repeat Parse.term --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.term)
-      >> (fn (A,Y) =>
-          let val ctxt' = Proof_Context.set_mode Proof_Context.mode_schematic (Context.proof_of ctxt)
-              val terms = map (Type.constraint \<^typ>\<open>_ \<phi>arg \<Rightarrow> assn\<close> o Syntax.parse_term ctxt') (Y::A)
-                       |> Syntax.check_terms ctxt'
-              val ctxt'' = fold Proof_Context.augment terms ctxt'
-              val (Y'::A') = Variable.export_terms ctxt'' ctxt' terms
-           in (A',Y')
-          end)))
->> (fn ((priority, (term, pos)), signat) =>
+    Parse.position (
+        (Scan.repeat Parse.term --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.term
+          >> (fn (A,Y) =>
+              let val ctxt' = Proof_Context.set_mode Proof_Context.mode_schematic (Context.proof_of ctxt)
+                  val terms = map (Type.constraint \<^typ>\<open>_ \<phi>arg \<Rightarrow> assn\<close> o Syntax.parse_term ctxt') (Y::A)
+                           |> Syntax.check_terms ctxt'
+                  val ctxt'' = fold Proof_Context.augment terms ctxt'
+                  val (Y'::A') = Variable.export_terms ctxt'' ctxt' terms
+               in Phi_Synthesis.Signat (A',Y')
+              end))
+      || (Parse.term >>
+            (Phi_Synthesis.Operator o Context.cases Syntax.read_term_global Syntax.read_term ctxt)))
+>> (fn (priority, (signat, pos)) =>
       Thm.declaration_attribute (K (
-        Phi_Synthesis.declare_overloaded_operator term signat pos priority)))
+        Phi_Synthesis.declare_overloaded_operator signat pos priority))))
 \<close>
 
 

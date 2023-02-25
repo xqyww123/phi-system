@@ -270,26 +270,24 @@ fun synthesis term (ctxt, sequent) =
   end
 
 
-fun obligations_of (\<^const>\<open>Pure.imp\<close>
-                    $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ G))
-                    $ P) = G :: obligations_of P
-  | obligations_of _ = []
-
-fun obligation_proof print_results mode kind before_qed after_qed fixes assumes sequent =
+fun obligation_proof print_results mode kind before_qed after_qed fixes assumes sequent0 =
   let
-    val oblgs = obligations_of (Thm.prop_of sequent)
+    val (oblg,sequent) =
+        let val th = @{thm Premise_I} RS sequent0
+         in ([Phi_Help.leading_antecedent' th], th) end
+        handle THM _ => ([], sequent0)
     fun after_qed' (ctxt, thmss) stat =
       let
         val ctxt' = Proof.context_of stat
         val thms = Proof_Context.export ctxt ctxt' (flat thmss)
-        val sequent' = fold (fn x => fn s => x RS (@{thm Premise_I} RS s)) thms sequent
+        val sequent' = fold (fn x => fn s => x RS s) thms sequent
        in after_qed sequent' stat
       end
     val setup_environ = Phi_Envir.freeze_dynamic_lemmas
   in
     Proof.map_context setup_environ
   #>Proof.internal_goal print_results mode true kind before_qed after_qed' fixes assumes
-       (map (fn t=> (Binding.empty_atts,[(HOLogic.mk_Trueprop t,[])])) oblgs)
+       (map (fn t => (Binding.empty_atts,[(t,[])])) oblg)
   end
   
 

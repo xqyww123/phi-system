@@ -23,7 +23,6 @@ proc
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
 
-declare [[\<phi>trace_reasoning = 1]]
 
 proc
   input  \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>\<close>
@@ -44,7 +43,7 @@ declare [[\<phi>hide_techinicals=false]]
 
 ML \<open>Phi_Helper_Conv.aggregate_imps_obj (K Conv.all_conv) \<^context> \<^cprop>\<open>A \<Longrightarrow> B \<Longrightarrow> asd\<^bold>: (\<And>x. P x) \<Longrightarrow> D\<close>\<close>
 
-(* declare [[\<phi>hide_brk_frame=false, \<phi>trace_reasoning]] *)
+(* declare [[\<phi>hide_brk_frame=false, \<phi>easoning]] *)
 
 fun fib :: \<open>nat \<Rightarrow> nat\<close> where
   \<open>fib 0 = 1\<close> | \<open>fib (Suc 0) = 1\<close> | \<open>fib n = fib (n-1) + fib (n-2)\<close>
@@ -54,9 +53,9 @@ proc FIB:
   output \<open>\<^bold>v\<^bold>a\<^bold>l fib n \<Ztypecolon> \<nat>\<close>
   is [recursive n]
   \<medium_left_bracket> if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket>. \<medium_left_bracket>
-      \<open>$n - 1\<close> FIB
-      \<open>$n - 2\<close> FIB
-      +
+      \<open>$n - 1\<close> FIB \<rightarrow> val a;;
+      \<open>$n - 2\<close> FIB \<rightarrow> val b;;
+      \<open>$a + $b\<close>
   \<medium_right_bracket>.
   \<medium_right_bracket> by (metis One_nat_def Value_of_def fib.elims fib.simps(2) le_Suc_eq le_zero_eq) .
 

@@ -1,8 +1,9 @@
 signature PHI_SYNTHESIS = sig
 include PHI_SYNTHESIS
 
-val declare_overloaded_operator : term -> (term list * term) option
-                               -> Position.T -> int -> Context.generic -> Context.generic
+datatype ovld_signat = Signat of term list * term | Operator of term
+val declare_overloaded_operator : ovld_signat -> Position.T -> Phi_Reasoner.priority
+                               -> Context.generic -> Context.generic
 
 end
 
@@ -18,20 +19,17 @@ fun overload_rule_of arity =
      | 3 => @{thm overloaded_synthesis_ternary}
      | _ => error "Arity greater than 3 is not supported yet."
 
-fun declare_overloaded_operator operator0 signat0 pos priority ctxt0 =
+datatype ovld_signat = Signat of term list * term | Operator of term
+
+fun declare_overloaded_operator signat0 pos priority ctxt0 =
   let val ctxt = Context.proof_of ctxt0
-      val ctxt' = Proof_Context.augment operator0 ctxt
-      val operator = singleton (Variable.export_terms ctxt' ctxt) operator0
 
-      val arg_tys0 = binder_types (Term.fastype_of operator)
-      val arity = case signat0 of SOME (a,_) => length a
-                                | NONE => length arg_tys0
-      val arg_tys = take arity arg_tys0
-
-      val rule0 = overload_rule_of arity
-
-      fun default_signature () =
-        let val arg_names = Name.invent (Variable.names_of ctxt') "x" arity
+      fun default_signature operator0 =
+        let val ctxt' = Proof_Context.augment operator0 ctxt
+            val operator = singleton (Variable.export_terms ctxt' ctxt) operator0
+            val arg_tys = binder_types (Term.fastype_of operator)
+            val arity = length arg_tys
+            val arg_names = Name.invent (Variable.names_of ctxt') "x" arity
             val phi_names = Name.invent (Variable.names_of ctxt') "T" arity
             val args = map2 (fn T => fn N => Var ((N,0),T)) arg_tys arg_names
             val phis = map2 (fn T => fn N => Var ((N,0), \<^typ>\<open>VAL \<phi>arg\<close> --> T --> \<^typ>\<open>assn\<close>))
@@ -45,12 +43,13 @@ fun declare_overloaded_operator operator0 signat0 pos priority ctxt0 =
          in (arg_specs, y_spec)
         end
 
-      val (args0, ret0) = case signat0 of SOME s => s
-                                      | NONE => default_signature ()
+      val (args0, ret0) = case signat0 of Signat s => s
+                                        | Operator f => default_signature f
       val (args, ret) = (map (Logic.incr_indexes ([],[],1)) args0,
                          Logic.incr_indexes ([],[],1) ret0)
+      val arity = length args
 
-      val rule = rule0
+      val rule = overload_rule_of arity
             |> Drule.infer_instantiate ctxt (
                   (("YY",0), Thm.cterm_of ctxt ret) ::
                   map_index (fn (i,tm) => (("S"^string_of_int (1+i), 0), Thm.cterm_of ctxt tm)) args)

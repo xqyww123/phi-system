@@ -1,5 +1,5 @@
 theory PhiSem_Common_Int
-  imports PhiSem_Generic_Boolean
+  imports PhiSem_Generic_Boolean "HOL-Library.Signed_Division"
 begin
 
 section \<open>Preliminary\<close>
@@ -24,16 +24,13 @@ declare [[
     overloaded_operator_in_synthesis \<open>(-)\<close>,
     overloaded_operator_in_synthesis \<open>(*)\<close>,
     overloaded_operator_in_synthesis \<open>(div)\<close>,
+    overloaded_operator_in_synthesis \<open>(sdiv)\<close>,
     overloaded_operator_in_synthesis \<open>(/)\<close>,
-    overloaded_operator_in_synthesis \<open>(<)\<close>
-      :: \<open>\<lambda>v. x1 \<Ztypecolon> T1 v\<close> \<open>\<lambda>v. x2 \<Ztypecolon> T2 v\<close> \<Rightarrow> \<open>\<lambda>v. x1 < x2 \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<bool>\<close>,
-    overloaded_operator_in_synthesis \<open>(\<le>)\<close>
-      :: \<open>\<lambda>v. x1 \<Ztypecolon> T1 v\<close> \<open>\<lambda>v. x2 \<Ztypecolon> T2 v\<close> \<Rightarrow> \<open>\<lambda>v. x1 \<le> x2 \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<bool>\<close>,
+    overloaded_operator_in_synthesis \<open>\<lambda>v. x1 \<Ztypecolon> T1 v\<close> \<open>\<lambda>v. x2 \<Ztypecolon> T2 v\<close> \<Rightarrow> \<open>\<lambda>v. x1 < x2 \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<bool>\<close>,
+    overloaded_operator_in_synthesis \<open>\<lambda>v. x1 \<Ztypecolon> T1 v\<close> \<open>\<lambda>v. x2 \<Ztypecolon> T2 v\<close> \<Rightarrow> \<open>\<lambda>v. x1 \<le> x2 \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<bool>\<close>,
     overloaded_operator_in_synthesis \<open>drop_bit\<close>,
     overloaded_operator_in_synthesis \<open>push_bit\<close>
 ]]
-
-declare [[overloaded_operator_in_synthesis 70 \<open>\<lambda>x n. x * 2 ^ n\<close>]]
 
 
 lemma [\<phi>reason 200]:

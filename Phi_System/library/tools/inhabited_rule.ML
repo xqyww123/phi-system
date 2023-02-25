@@ -1,5 +1,6 @@
 signature PHI_INHABITANCE_RULES = sig
 
+  val extract_elim_rule : Proof.context -> thm -> thm
   val member: Proof.context -> thm -> bool
   val get: Proof.context -> thm list
   val add_thm: thm -> Context.generic -> Context.generic
@@ -21,11 +22,17 @@ val member = Item_Net.member o Data.get o Context.Proof;
 val content = Item_Net.content o Data.get;
 val get = content o Context.Proof;
 
+fun extract_elim_rule ctxt thm =
+  if Phi_Syntax.is_elim_rule (Thm.prop_of thm)
+  then thm
+  else Phi_Reasoners.extract_elim_rule ctxt (get ctxt) thm
+
 fun add_thm thm ctxt =
-  Data.map (Item_Net.update (Phi_Reasoners.extract_elim_rule (Context.proof_of ctxt) thm)) ctxt
+  Data.map (Item_Net.update (extract_elim_rule (Context.proof_of ctxt) thm)) ctxt
 
 fun del_thm thm ctxt =
-  Data.map (Item_Net.remove (Phi_Reasoners.extract_elim_rule (Context.proof_of ctxt) thm)) ctxt
+  Data.map (Item_Net.remove (extract_elim_rule (Context.proof_of ctxt) thm)) ctxt
+
 
 val add = Thm.declaration_attribute add_thm;
 val del = Thm.declaration_attribute del_thm;

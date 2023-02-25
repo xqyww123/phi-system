@@ -110,8 +110,6 @@ lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
 
 
 subsection \<open>And\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
  
 lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -130,8 +128,11 @@ lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
 
 subsection \<open>Equal\<close>
 
-declare [[ overloaded_operator_in_synthesis \<open>(=)\<close>
-      :: \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<bool>\<close>]]
+declare [[
+    overloaded_operator_in_synthesis \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<bool>\<close>,
+    overloaded_operator_in_synthesis
+        \<open>\<lambda>v. x mod N \<Ztypecolon> T v\<close> \<open>\<lambda>v. y mod N \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x mod N = y mod N \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<bool>\<close>
+]]
 
 lemma op_equal_\<phi>app[\<phi>overload =]:
   \<open> \<phi>Equal T can_eq eq
@@ -148,6 +149,7 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
 
 
 declare op_equal_\<phi>app[where eq=\<open>(=)\<close>, \<phi>synthesis 100]
+declare op_equal_\<phi>app[where eq=\<open>(\<lambda>x y. x mod N = y mod N)\<close> for N, \<phi>synthesis 100]
 
 
 end
