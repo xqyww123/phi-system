@@ -2,6 +2,7 @@ theory PhiSem_Machine_Integer
   imports PhiSem_Common_Int PhiSem_Generic_Boolean
           "Word_Lib.More_Word" (*We use the word lib from seL4*)
           "Word_Lib.Signed_Division_Word"
+          "Word_Lib.Word_Lemmas"
 begin
 
 chapter \<open>Semantics for Machine Integers\<close>
@@ -352,10 +353,6 @@ lemma [\<phi>reason 1000]:
 
 section \<open>Instructions\<close>
 
-subsection \<open>Arithmetic Operations\<close>
-
-subsubsection \<open>Integer arithmetic\<close>
-
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> VAL proc"
   where "op_const_int bits const = Return (\<phi>arg (V_int.mk (bits,const)))"
 
@@ -473,6 +470,16 @@ definition op_sle :: "'b::len itself \<Rightarrow> (VAL \<times> VAL, VAL) proc'
       Return (\<phi>arg (V_bool.mk (val_b \<le>s val_a)))
   )))"
 
+
+definition op_cast_uint :: \<open>'b1::len itself \<Rightarrow> 'b2::len itself \<Rightarrow> (VAL, VAL) proc'\<close>
+  where \<open>op_cast_uint _ _ va =
+    \<phi>M_getV (T_int.mk LENGTH('b1)) (of_nat o snd o V_int.dest) va (\<lambda>val::'b1 word.
+    Return (\<phi>arg (V_int.mk (LENGTH('b2), unat (Word.cast val :: 'b2 word)))))\<close>
+
+definition op_cast_int :: \<open>'b1::len itself \<Rightarrow> 'b2::len itself \<Rightarrow> (VAL, VAL) proc'\<close>
+  where \<open>op_cast_int _ _ va =
+    \<phi>M_getV (T_int.mk LENGTH('b1)) (of_nat o snd o V_int.dest) va (\<lambda>val::'b1 word.
+    Return (\<phi>arg (V_int.mk (LENGTH('b2), unat (Word.scast val :: 'b2 word)))))\<close>
 
 
 section \<open>Abstraction of Instructions\<close>
@@ -864,6 +871,51 @@ lemma op_le_int_\<phi>app[\<phi>overload \<le>, \<phi>synthesis 100]:
   \<medium_left_bracket> $x $y op_sle_word \<medium_right_bracket>
     by (metis atLeastLessThan_iff signed_take_bit_int_eq_self_iff sint_sbintrunc' the_\<phi>lemmata(1) the_\<phi>lemmata(2) word_sle_eq) .
 
+subsubsection \<open>Cast\<close>
+
+lemma op_cast_uint_word_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_cast_uint TYPE('ba) TYPE('bb) v
+     \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] Word('ba) \<longmapsto> Word.cast x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l Word('bb) \<rbrace>\<close>
+  unfolding op_cast_uint_def
+  by (cases v, simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+
+lemma op_cast_nat_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_cast_uint TYPE('ba) TYPE('bb) v
+     \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<nat>('ba) \<longmapsto> take_bit LENGTH('bb) x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>('bb) \<rbrace>\<close>
+  \<medium_left_bracket> $v op_cast_uint_word[where 'bb='bb] \<medium_right_bracket>
+    by (simp add: of_nat_inverse the_\<phi>lemmata unsigned_ucast_eq) .
+
+lemma op_cast_int_word_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_cast_int TYPE('ba) TYPE('bb) v
+     \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] Word('ba) \<longmapsto> Word.scast x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l Word('bb) \<rbrace>\<close>
+  unfolding op_cast_int_def
+  by (cases v, simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+
+lemma op_cast_int_\<phi>app:
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_cast_int TYPE('ba) TYPE('bb) v
+     \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<int>('ba) \<longmapsto> signed_take_bit (LENGTH('bb)-1) x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>('bb) \<rbrace>\<close>
+  \<medium_left_bracket> $v op_cast_int_word[where 'bb='bb] \<medium_right_bracket>
+    by (metis One_nat_def atLeastLessThan_iff signed_scast_eq signed_take_bit_int_eq_self sint_sbintrunc' the_\<phi>lemmata) .
+
+lemma op_upcast_nat_\<phi>app:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m LENGTH('ba) \<le> LENGTH('bb)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_cast_uint TYPE('ba) TYPE('bb) v
+     \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<nat>('ba) \<longmapsto> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>('bb) \<rbrace>\<close>
+  \<medium_left_bracket> $v have [useful]: \<open>x < 2 ^ LENGTH('ba)\<close> using \<phi> by blast
+  ;; $v op_cast_nat[where 'bb='bb] \<medium_right_bracket>
+    by (metis le_antisym take_bit_nat_eq_self take_bit_nat_less_eq_self take_bit_tightened_less_eq_nat the_\<phi>(2) the_\<phi>(3)) .
+
+lemma op_upcast_int_\<phi>app:
+  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m LENGTH('ba) \<le> LENGTH('bb)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_cast_int TYPE('ba) TYPE('bb) v
+     \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] \<int>('ba) \<longmapsto> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>('bb) \<rbrace>\<close>
+  \<medium_left_bracket> $v op_cast_int_word[where 'bb='bb] \<medium_right_bracket>
+  proof simp
+    have t1: \<open>is_up (Word.scast :: 'ba word \<Rightarrow> 'bb word)\<close>
+      using is_up that(1) by blast
+    show \<open>x = sint (Word.scast (word_of_int x :: 'ba word) :: 'bb word)\<close>
+      by (metis atLeastLessThan_iff sint_of_int_eq sint_up_scast t1 the_\<phi>lemmata)
+  qed .
 
 
 end
