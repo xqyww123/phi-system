@@ -913,7 +913,7 @@ text \<open>\<open>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i
   \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
 
 definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[_] _ :/ _" [10,1000,10] 9)
-  where [iff]: "Simplify setting result origin \<longleftrightarrow> result = origin"
+  where "Simplify setting result origin \<longleftrightarrow> result = origin"
 
 definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
   where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close>
@@ -941,7 +941,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier I\<close>
+  = \<open>PLPR_Simplifier.simplifier NONE I\<close>
 
 
 subsection \<open>Exhaustive Divergence\<close>

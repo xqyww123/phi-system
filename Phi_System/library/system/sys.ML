@@ -274,6 +274,7 @@ fun obligation_proof print_results mode kind before_qed after_qed fixes assumes 
   let
     val (oblg,sequent) =
         let val th = @{thm Premise_I} RS sequent0
+            handle THM _ => @{thm Simplify_I} RS sequent0
          in ([Phi_Help.leading_antecedent' th], th) end
         handle THM _ => ([], sequent0)
     fun after_qed' (ctxt, thmss) stat =

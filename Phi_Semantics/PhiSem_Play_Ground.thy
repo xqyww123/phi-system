@@ -2,6 +2,7 @@ theory PhiSem_Play_Ground
   imports
     PhiSem_CF_Breakable
     PhiSem_Int_ArbiPrec
+    PhiSem_Machine_Integer
     PhiSem_Variable
 begin
 
@@ -61,6 +62,19 @@ proc FIB:
 
 thm FIB_def
 
+proc FIB2:
+  input \<open>\<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>(8)\<close>
+  output \<open>\<^bold>v\<^bold>a\<^bold>l fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
+  is [recursive n]
+  \<medium_left_bracket> if \<open>$n \<le> 1\<close> \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>. \<medium_left_bracket>
+        \<open>$n - 1\<close> FIB2 \<rightarrow> val a;;
+        \<open>$n - 2\<close> FIB2 \<rightarrow> val b;;
+        \<open>$a + $b\<close>
+    \<medium_right_bracket>.
+  \<medium_right_bracket> by (smt (verit, ccfv_threshold) One_nat_def Value_of_def fib.elims fib.simps(1) fib.simps(2) le_Suc_eq le_zero_eq) .
+
+thm FIB2_def
+
 proc
   input \<open>\<^bold>v\<^bold>a\<^bold>l a \<Ztypecolon> \<int>\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<int>\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l c \<Ztypecolon> \<int>\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l a + b + c \<Ztypecolon> \<int>\<close>
@@ -70,6 +84,11 @@ proc
   input \<open>\<^bold>v\<^bold>a\<^bold>l a \<Ztypecolon> \<int>\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<int>\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l c \<Ztypecolon> \<int>\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l a + b + c \<Ztypecolon> \<int>\<close>
   \<medium_left_bracket> $a $b + $c + \<medium_right_bracket>. .
+
+proc
+  input \<open>\<^bold>v\<^bold>a\<^bold>l a \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
+  output \<open>\<^bold>v\<^bold>a\<^bold>l a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
+  \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
 
 
 proc

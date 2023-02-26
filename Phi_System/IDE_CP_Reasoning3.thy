@@ -4,7 +4,7 @@ text \<open>Here we give the implementation of all large reasoning processes tha
 the previous part I.\<close>
 
 theory IDE_CP_Reasoning3
-  imports IDE_CP_App2
+  imports IDE_CP_App2 "HOL-Library.Word"
 begin
 
 
@@ -2537,7 +2537,9 @@ lemma [\<phi>reason 3200]:
   by (simp add: implies_refl)
 
 
-subsection \<open>Literal Checker\<close>
+subsection \<open>Literal Evaluation\<close>
+
+subsubsection \<open>Check\<close>
 
 definition Check_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Check_Literal _ \<longleftrightarrow> True\<close>
 
@@ -2555,12 +2557,32 @@ lemma [\<phi>reason 1000]:
   \<open>Check_Literal 0\<close> unfolding Check_Literal_def ..
 
 lemma [\<phi>reason 1000]:
+  \<open> Check_Literal x
+\<Longrightarrow> Check_Literal (Suc x)\<close> unfolding Check_Literal_def ..
+
+lemma [\<phi>reason 1000]:
   \<open>Check_Literal 1\<close> unfolding Check_Literal_def ..
 
 lemma [\<phi>reason 1000]:
   \<open>Check_Literal (numeral x)\<close> unfolding Check_Literal_def ..
 
 declare [[\<phi>premise_attribute? [\<phi>reason add] for \<open>Check_Literal _\<close>]]
+
+
+subsubsection \<open>Evaluation\<close>
+
+consts literal :: mode
+
+lemma Do_Literal_Simplification:
+  \<open> PROP Do_Simplificatin A B
+\<Longrightarrow> Check_Literal A
+\<Longrightarrow> Simplify s A B\<close>
+  unfolding Do_Simplificatin_def Simplify_def atomize_eq .
+
+\<phi>reasoner_ML \<open>Simplify literal\<close> 1000 (\<open>Simplify literal _ _\<close>) =
+  \<open>PLPR_Simplifier.simplifier (SOME @{thm Do_Literal_Simplification}) I\<close>
+
+hide_fact Do_Literal_Simplification
 
 
 end

@@ -36,7 +36,7 @@ end
 functor Simpset(Config : sig
   val initial_ss : Simpset_Configure.initial_ss_configure
   val binding : binding
-  val comment_attrib : string
+  val comment : string
 end) : SIMPSET = struct
 
 structure Data = Generic_Data (
@@ -54,7 +54,7 @@ fun map f generic = Data.map (Raw_Simplifier.simpset_map (Context.proof_of gener
 val add = Thm.declaration_attribute (fn th => map (fn ctxt => ctxt addsimps [th]))
 val del = Thm.declaration_attribute (fn th => map (fn ctxt => ctxt delsimps [th]))
 
-val _ = Theory.setup (Attrib.setup Config.binding (Attrib.add_del add del) Config.comment_attrib)
+val _ = Theory.setup (Attrib.setup Config.binding (Attrib.add_del add del) Config.comment)
 
 fun print ctxt verbose =
   writeln (Pretty.string_of (Simplifier.pretty_simpset verbose (equip ctxt)))

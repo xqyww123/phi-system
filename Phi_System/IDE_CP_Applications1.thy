@@ -421,7 +421,7 @@ lemma [\<phi>reason 10]:
   unfolding Action_Tag_def Simplify_def \<phi>Type_def by (simp add: implies_refl)
 
 \<phi>reasoner_ML Unfold_\<phi>Defs 1000 (\<open>Unfold_\<phi>Defs ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier (fn ctxt =>
+  = \<open>PLPR_Simplifier.simplifier NONE (fn ctxt =>
         clear_simpset ctxt addsimps (Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>defs\<close>))\<close>
 
 

@@ -265,7 +265,7 @@ text \<open>Rules showing the obtained procedure is identical to the desired goa
 ML \<open>structure Proc_Monad_SS = Simpset(
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = \<^binding>\<open>procedure_simps\<close>
-  val comment_attrib = "declare the rules for simplifying procedure monad."
+  val comment = "declare the rules for simplifying procedure monad."
 )\<close>
 
 consts procedure_simplification :: mode
@@ -275,10 +275,10 @@ lemmas [procedure_simps] =
             proc_bind_assoc proc_bind_return_none \<phi>V_simps
 
 \<phi>reasoner_ML procedure_equivalence 1200 (\<open>Premise procedure_simplification ?P\<close>)
-  = \<open>PLPR_Simplifier.simplifier_by_ss' Proc_Monad_SS.get'\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' NONE Proc_Monad_SS.get'\<close>
 
 \<phi>reasoner_ML procedure_simplification 1000 (\<open>Simplify procedure_simplification ?x ?y\<close>)
-  = \<open>PLPR_Simplifier.simplifier_by_ss' Proc_Monad_SS.get'\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' NONE Proc_Monad_SS.get'\<close>
 
 subsection \<open>Misc\<close>
 

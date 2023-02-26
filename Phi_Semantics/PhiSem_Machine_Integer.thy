@@ -82,7 +82,7 @@ text \<open>Thresholds between \<phi>-Types
 \<^item> 6 \<open>\<int> \<longrightarrow> \<nat>\<close>
 \<^item> 5 \<open>\<nat> \<longrightarrow> \<int>\<close>
 \<^item> 4 \<open>\<nat>\<^sup>r \<longrightarrow> \<nat>\<close>
-\<^item> 4 \<open>\<nat> \<longrightarrow> \<nat>\<^sup>r\<close>
+\<^item> 2 \<open>\<nat> \<longrightarrow> \<nat>\<^sup>r\<close>
 
 There is no direct transformation between \<open>\<nat>\<^sup>r\<close> and \<open>\<int>\<close> because of complexity in the expression.
 
@@ -205,7 +205,7 @@ parse_ast_translation \<open>
           Appl [Constant \<^const_syntax>\<open>\<phi>Nat\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<Ztypecolon> \<nat>\<^sup>r(_) \<^bold>a\<^bold>n\<^bold>d _\<close>]:
-  \<open> Threshold_Cost 4
+  \<open> Threshold_Cost 2
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y = x
 \<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>\<^sup>r('b) \<^bold>a\<^bold>n\<^bold>d x < 2 ^ LENGTH('b)\<close>
   \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>. .
@@ -491,20 +491,34 @@ subsubsection \<open>Constant Integer\<close>
 declare [[\<phi>trace_reasoning = 1]]
  
 lemma op_const_word_\<phi>app[\<phi>synthesis 300]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b) (unat n) \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> Word('b) \<rbrace> \<close>
-  unfolding op_const_int_def Premise_def
+  \<open> Simplify literal n (unat n')
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b) n \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n' \<Ztypecolon> Word('b) \<rbrace> \<close>
+  unfolding op_const_int_def Premise_def Simplify_def
   by (rule, simp add: \<phi>expns)
-          
+
 lemma op_const_nat_\<phi>app[
     \<phi>synthesis 200 for \<open>\<lambda>ret. (numeral ?n::nat) \<Ztypecolon> _\<close>
                        \<open>\<lambda>ret. (0::nat) \<Ztypecolon> _\<close>
                        \<open>\<lambda>ret. (1::nat) \<Ztypecolon> _\<close>
 ]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2 ^ LENGTH('b)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b::len) n \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
+\<Longrightarrow> Simplify literal n' n
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
   \<medium_left_bracket> have [simp]: \<open>unat (word_of_nat n :: 'b word) = n\<close> using \<phi> of_nat_inverse by blast 
-    ;; op_const_word[where 'b='b and n=\<open>of_nat n\<close>, simplified]
-  \<medium_right_bracket>. .
+  ;; op_const_word_\<phi>app[where 'b='b and n'=\<open>of_nat n\<close> and n=n']
+    affirm by (simp add: \<open>n' = n\<close>)
+  \<medium_right_bracket> by simp .
+
+lemma op_const_natR_\<phi>app[
+    \<phi>synthesis 200 for \<open>\<lambda>ret. (numeral ?n::nat) \<Ztypecolon> _\<close>
+                       \<open>\<lambda>ret. (0::nat) \<Ztypecolon> _\<close>
+                       \<open>\<lambda>ret. (1::nat) \<Ztypecolon> _\<close>
+]:
+  \<open> Simplify literal n' (n mod 2 ^ LENGTH('b))
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
+  \<medium_left_bracket> op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified]
+    affirm by (simp add: the_\<phi>(2) unat_of_nat) 
+  \<medium_right_bracket> by (simp add: unat_of_nat) .
 
 lemma [\<phi>reason 50
     for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>

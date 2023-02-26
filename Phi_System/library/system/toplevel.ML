@@ -279,6 +279,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
       |> Proof.begin_block
       |> #initialize_sequent mode
       |-> Phi_Envir.enter_programming_environ
+      |> Proof.map_context Phi_Envir.freeze_dynamic_lemmas
 (*      |> Generic_Variable_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end

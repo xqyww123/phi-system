@@ -1656,7 +1656,7 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
    else raise Bypass NONE
 end)\<close>
 
-\<phi>processor enter_proof 790 (premises \<open>Premise ?mode ?P\<close>)
+\<phi>processor enter_proof 790 (premises \<open>Premise ?mode ?P\<close> | premises \<open>Simplify ?mode _ _\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
       raise Terminate_Process (stat, snd o Phi_Toplevel.prove_prem false))\<close>
 
