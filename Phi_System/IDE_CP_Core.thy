@@ -103,9 +103,9 @@ During the reasoning process,
 \<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<^bold>d\<^bold>o A\<close> wrapped by \<open>\<^bold>d\<^bold>o\<close>, it means an obtained
   reasoning obligation as an outcome of the reasoning,
   just like \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> meaning an extracted verification condition.
-  So conforming to \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close>, no real reasoning work is imposed on \<^prop>\<open>\<^bold>d\<^bold>o A\<close> and it 
-  is returned in the final outcome of the reasoning,
-  as given before the \<^schematic_prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n \<dots>\<close> in order.
+  So conforming to \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close>, no immediate reasoning work is invoked and the antecedent
+  is returned and is given before the \<^schematic_prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n \<dots>\<close> in order,
+  as an outcome of the reasoning,.
 
   For example, if during a reasoning process, two \<^prop>\<open>\<^bold>d\<^bold>o A1\<close> and \<^prop>\<open>\<^bold>d\<^bold>o A2\<close> are encountered in
   order, and if the reasoning succeeds, the final outcome would be
@@ -429,12 +429,21 @@ Threshold Cost Always!
 
 subsection \<open>Synthesis\<close>
 
-text \<open>The section presents a generic synthesis framework.
-  It is called generic because it supports different semantics of synthesis on different kinds of
-    sequent. For example, on Programming_CurrentConstruction, the behavior is to reason
-    a procedure to generate an output satisfying the desired specification;
-    on View_Shift_CurrentConstruction, it is to reason a view shift;
-    on a form of \<open>P \<Longrightarrow> Q\<close>, it is to reason a proposition P according to the given term.\<close>
+text \<open>The synthesis involves not only making a program but also finding a view shift or a ToA.
+
+On a ready state of a construction like \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S\<close> or \<open>(\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S)\<close>,
+the synthesis mechanism makes some program or find some ToA to bring or to make the given
+specification come true. Example: given the specification \<open>X\<close>, the synthesis mechanism is expected
+to deduce \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S'\<heavy_comma> X\<close> or \<open>(\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S'\<heavy_comma> X)\<close>. The state \<open>S\<close> may be
+changed to \<open>S'\<close>, but the change is minimal and only necessary for synthesising the \<open>X\<close>. 
+
+On a state sequent having some antecedent like \<open>P \<Longrightarrow> Q\<close>, the synthesis mechanism is expected
+to solve the antecedent \<open>P\<close> according to the given specification from user.
+For example, the \<open>P\<close> can be the specification of a procedure to be programmed, like the guard
+\<open>P \<equiv> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> X \<longmapsto> ?cond \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<bool> \<rbrace>\<close> of the branch statement. In this case
+the mechanism is to synthesis that guard according to the user-given specification, like \<open>$x > 2\<close>
+to synthesis \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> X \<longmapsto> $x > 2 \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<bool> \<rbrace>\<close>.
+\<close>
 
 definition DoSynthesis :: \<open>'a \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
   where \<open>DoSynthesis term sequent result \<equiv> (PROP sequent \<Longrightarrow> PROP result)\<close>
@@ -450,10 +459,9 @@ lemma \<phi>synthesis:
 
 text \<open>
   Overall, the synthesis procedure consists of 2 phases.
-  The first phase is a pre-process, performed by antecedent
+  The first phase is a pre-process parsing the user input. Performed by antecedent
     \<^schematic_prop>\<open>Synthesis_Parse input ?parsed\<close>,
-  which rewrites the user \<^term>\<open>input\<close> to \<^schematic_term>\<open>?parsed\<close>.
-  The second phase invokes the reasoning process for synthesising the \<^schematic_term>\<open>?parsed\<close>.
+  it rewrites the user \<^term>\<open>input\<close> to \<^schematic_term>\<open>?parsed\<close>.
 
   The rewrite process enables user to input partially instead of always giving the complete
   assertion every time, for example, just the abstract object \<^term>\<open>x\<close> to
@@ -462,7 +470,41 @@ text \<open>
     synthesis \<^term>\<open>x \<Ztypecolon> T\<close> for some unspecified \<^term>\<open>T\<close>;
     user may also input \<^term>\<open>0::nat\<close> to mean to synthesis \<^term>\<open>0 \<Ztypecolon> Natural_Number\<close>.
 
-  One can disable \<phi>_synthesis_parsing to disable this feature.\<close>
+  One can disable \<phi>_synthesis_parsing to disable this feature.
+
+  The second phase does the real work, synthesising the \<open>?parsed\<close>.
+
+  As the given specifications are on abstraction, ways to synthesis an abstract specification
+  are many and not uniquely determined syntactically of course.
+  Therefore we apply an A* algorithm according to explicitly annotated cost. The algorithm finds the
+  solution having the minimum cost.
+
+  Besides, in order to reduce the search space, we assume a large amount of operators having
+  specific programs to refine them (such as plus and subtract),
+  so that synthesising a composite expression can be split structurally (and syntactically) to
+  several small problems for synthesising its operands and for finding a proper program refining the operator.
+
+  To find such a proper instantiation requires to know the abstraction relations of the operands,
+  but it is not an easy problem because transformation of abstraction can happen at every application.
+  The choice of the abstraction relation of a sub-expression affects the synthesis of the inner
+  operations of the sub-expression and also the outer operation using it.
+  Choices of the intermediate abstraction relations have to be counted globally.
+
+  Therefore the synthesis reasoning also contains two phases. The first phase split the synthesis
+  problem for the original big composite expression down to several small problems of
+  choosing the intermediate abstraction relations and instantiating proper refinement for each
+  operators. And the second phase is an A* search finding the optimum choices and the instantiations.
+  The first phase is more deterministic, and the first-reached solution (according to the PLPR
+  priority of the configured rules) is adopted and the remains are dropped.
+  The second phase is exhaustive for every possible search branches (with pruning).
+  
+  Candidates of the second phase are measured by the distance of the transformation used inside.
+  An ideal solution is to involve no transformation at all.
+  A transformation is an edge and each one is labelled with a distance manually.
+  The distance of a path \<open>e\<^sub>1;e\<^sub>2;\<dots>;e\<^sub>n\<close> is the maximum distance of its edges (transformations),
+  \<open>max{e\<^sub>i}\<close>.
+
+\<close>
 
 definition DoSynthesis_embed :: \<open>'a \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>DoSynthesis_embed term sequent result \<equiv> (sequent \<longrightarrow> result)\<close>

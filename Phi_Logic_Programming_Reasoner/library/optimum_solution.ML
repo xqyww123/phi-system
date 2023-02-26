@@ -26,11 +26,11 @@ fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
             val cost = eval next
          in case Synchronized.value optimum
               of SOME (opt, _) =>
-                  if opt < cost
+                  if opt <= cost
                   then (Phi_Reasoner.debug_pretty ctxt (fn () => Pretty.block [
                         Pretty.str "PLPR_OPTIMUM_SOLUTION: Current score (",
                         Pretty.str (string_of_int cost),
-                        Pretty.str ") exceeds the optimum score already reached (",
+                        Pretty.str ") reaches the optimum score already reached (",
                         Pretty.str (string_of_int opt),
                         Pretty.str ") thus trimming the branch."
                       ])
