@@ -25,7 +25,7 @@ signature PHI_TOPLEVEL = sig
 
 (*
   val begin_rec_proc_cmd : bool (*whether to define a new constant*)
-        -> Attrib.binding 
+        -> Attrib.binding
         -> xstring (*input*)
         -> xstring (*output*)
         -> xstring option (*throws*)
@@ -262,7 +262,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
               end) prems
   in
     stat
-      |> Proof.internal_goal (print_results int) Proof_Context.mode_schematic true 
+      |> Proof.internal_goal (print_results int) Proof_Context.mode_schematic true
           "" NONE after_qed []
           (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems)
           [(Binding.empty_atts, [(goal',[])])] |> #2
@@ -390,7 +390,7 @@ val end_block_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
 
 (* fun gen_finish_proc' prep_specthm qed int stat =
   let val sequent = Proof.the_fact stat
-  in if current_block_depth sequent > 1 then 
+  in if current_block_depth sequent > 1 then
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
     else gen_finish_proc prep_specthm qed int stat end *)
 val finish_proc_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
@@ -563,14 +563,14 @@ val statement_cmd =
     val codegen = eval ("NuCG.codegen NuCG_" ^ Context.theory_name thy ^ ".gen"
                     ^ "(" ^ ML_Syntax.print_path path ^ ")" )
     val _ = tracing("generating LLVM IR: " ^ Path.print path)
-  in 
+  in
     thy |> Context.theory_map (eval (NuCompilation.compile thy(* |> (fn s => (tracing s; s))*)))
         |> Context.theory_map codegen
   end *)
 
 
 
-local open Scan Phi_Sys Parse 
+local open Scan Phi_Sys Parse
 
 val is_props = Scan.repeat1 ($$$ "is" |-- prop);
 val ppats = Scan.optional ($$$ "(" |-- !!! (is_props --| $$$ ")")) [];

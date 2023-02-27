@@ -32,7 +32,7 @@ text \<open>
   based on logic programming like Prolog.
   It allows arbitrary user reasoners to be integrated freely, and applies them selectively
   by matching the pattern of the goals.
-  
+
   The reasoning is a depth-first heuristic search guided by \<^emph>\<open>priority\<close> of each branch.
   A reasoning state is represented by a \<^emph>\<open>pair\<close> of \<^verbatim>\<open>Proof.context\<close> and a sequent, of type
   \<^verbatim>\<open>Proof.context * thm\<close>.
@@ -622,7 +622,7 @@ text \<open>
   Therefore, \<^prop>\<open>P\<close> has to be as simple as possible. The tactic used to solve \<^prop>\<open>P\<close> is
   @{method clarsimp}.
   A more powerful tactic like @{method auto} is not adoptable because the tactic must be safe and
-  non-blocking commonly. 
+  non-blocking commonly.
   A blocking search branch blocks the whole reasoning, which is not acceptable.
 
   \<^prop>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is not for proof obligations that are intended to be solved by users.
@@ -909,7 +909,7 @@ subsection \<open>Simplification \& Rewrite\<close>
 
 text \<open>\<open>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
   \<open>mode\<close>. The \<open>?result\<close> should be an output variable for the result of the simplification.
-  
+
   We implement a \<open>default\<close> mode where the system simple-set is used to simplify
   \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
 
@@ -1003,7 +1003,7 @@ not changed and is as greedy as the usual behavior --- returning the first-reach
 and discarding the others.
 
 As an example, in
-\<open>Begin_Optimum_Solution \<Longrightarrow> \<r>Choice A \<Longrightarrow> B \<Longrightarrow> \<r>Choice C \<Longrightarrow> End_Optimum_Solution \<Longrightarrow> \<dots>\<close>, 
+\<open>Begin_Optimum_Solution \<Longrightarrow> \<r>Choice A \<Longrightarrow> B \<Longrightarrow> \<r>Choice C \<Longrightarrow> End_Optimum_Solution \<Longrightarrow> \<dots>\<close>,
 assuming both \<open>A,B,C\<close> have 2 solvers \<open>A\<^sub>1,A\<^sub>2,B\<^sub>1,B\<^sub>2,C\<^sub>1,C\<^sub>2\<close> and assuming \<open>B\<^sub>1\<close> have higher priority
 than \<open>B\<^sub>2\<close> and can success, the mechanism traverses 4 combination of the solvers \<open>A\<^sub>1,C\<^sub>1\<close>,
 \<open>A\<^sub>1,C\<^sub>2\<close>, \<open>A\<^sub>2,C\<^sub>1\<close>, \<open>A\<^sub>2,C\<^sub>2\<close>, i.e., only exhaustively on \<open>\<r>Choice\<close>-marked antecedents but still
@@ -1186,7 +1186,7 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 
 subsubsection \<open>Implementation\<close>
 
-definition \<r>Recursion_Residue :: \<open>'a::{} \<Rightarrow> bool\<close> 
+definition \<r>Recursion_Residue :: \<open>'a::{} \<Rightarrow> bool\<close>
   where \<open>\<r>Recursion_Residue _ \<equiv> True\<close>
 
 lemma Do_\<r>Recursion_Guard:

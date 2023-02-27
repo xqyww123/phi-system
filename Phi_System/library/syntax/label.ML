@@ -35,7 +35,7 @@ fun dest_label tm =
 val label_c = @{cterm "LABEL name"}
 fun mk_label name = label_const $ Abs (name, unit_ty, unit_const)
 fun mk_label_c name = Thm.renamed_term (mk_label name) label_c
-fun mk_label_thm name = 
+fun mk_label_thm name =
   Thm.instantiate (TVars.empty, Vars.make [((("x",0),\<^typ>\<open>label\<close>), mk_label_c name)]) @{thm LabelTag}
 fun mk_labelled name tm = Const(@{const_name Labelled}, dummyT) $ mk_label name $ tm
 

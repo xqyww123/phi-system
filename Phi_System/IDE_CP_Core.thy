@@ -204,7 +204,7 @@ lemma HIDDEN_PREM_I : \<open>P \<Longrightarrow> HIDDEN_PREM P\<close> unfolding
 lemma HIDDEN_PREM_I': \<open>PROP P \<Longrightarrow> PROP HIDDEN_PREM P\<close> unfolding HIDDEN_PREM_def .
 lemma HIDDEN_PREM_D : \<open>HIDDEN_PREM P \<Longrightarrow> P\<close> unfolding HIDDEN_PREM_def .
 lemma HIDDEN_PREM_D': \<open>PROP HIDDEN_PREM P \<Longrightarrow> PROP P\<close> unfolding HIDDEN_PREM_def .
-   
+
 optional_translations (\<phi>hide_techinicals)
   ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (CONST HIDDEN_PREM X)) Y"
   ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (name\<^bold>: CONST HIDDEN_PREM X)) Y"
@@ -404,7 +404,7 @@ subsection \<open>Ad-hoc Overload\<close>
 
 ML_file \<open>library/system/app_rules.ML\<close>
 
-attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_position) >> (fn bindings => 
+attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_position) >> (fn bindings =>
   Thm.declaration_attribute (fn th => fold (Phi_App_Rules.overload th) bindings))\<close>
 
 \<phi>overloads D \<open>Destructive subtyping rules\<close>
@@ -435,7 +435,7 @@ On a ready state of a construction like \<open>\<^bold>c\<^bold>u\<^bold>r\<^bol
 the synthesis mechanism makes some program or find some ToA to bring or to make the given
 specification come true. Example: given the specification \<open>X\<close>, the synthesis mechanism is expected
 to deduce \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S'\<heavy_comma> X\<close> or \<open>(\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S'\<heavy_comma> X)\<close>. The state \<open>S\<close> may be
-changed to \<open>S'\<close>, but the change is minimal and only necessary for synthesising the \<open>X\<close>. 
+changed to \<open>S'\<close>, but the change is minimal and only necessary for synthesising the \<open>X\<close>.
 
 On a state sequent having some antecedent like \<open>P \<Longrightarrow> Q\<close>, the synthesis mechanism is expected
 to solve the antecedent \<open>P\<close> according to the given specification from user.
@@ -499,7 +499,7 @@ text \<open>
   The first-reached solution (according to the PLPR priority of the configured rules) is adopted
   and the remains are dropped.
   The second phase is exhaustive for every possible search branches (with pruning).
-  
+
   Candidates of the second phase are measured by the distance of the transformation used inside.
   An ideal solution is to involve no transformation at all.
   A transformation is an edge and each one is labelled with a distance manually.
@@ -557,7 +557,7 @@ lemma [\<phi>reason 9999 for
   \<comment> \<open>We do not need to rewrite the input once it is already an assertion\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 10 
+lemma [\<phi>reason 10
     for \<open>Synthesis_Parse ?x (?Y::?'ret \<Rightarrow> assn)\<close>
     except \<open>Synthesis_Parse (?x \<Ztypecolon> ?T) ?Y\<close>
            \<open>Synthesis_Parse (?x::assn) ?Y\<close>
@@ -807,7 +807,7 @@ lemma [\<phi>reason 1500 for \<open>PROP Synthesis_by ?X (\<And>a. \<^bold>a\<^b
 \<Longrightarrow> PROP Synthesis_by X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A a \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s X a \<^bold>a\<^bold>n\<^bold>d P)\<close>
   unfolding Synthesis_by_def Argument_def .
 
-subsection \<open>Application\<close> 
+subsection \<open>Application\<close>
 \<comment> \<open>of procedures, ToA, and any other things\<close>
 
 text \<open>It is a generic framework allowing to apply general things on the state sequent.
@@ -1057,7 +1057,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
   by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
-  
+
 
 paragraph \<open>View Shift Methods\<close>
 
@@ -1105,7 +1105,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
   using \<phi>apply_implication \<phi>apply_view_shift \<phi>view_shift_intro_frame by blast
-  
+
 
 
 paragraph \<open>Procedure Methods\<close>
@@ -1148,7 +1148,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason for
                 OF view_shift_refl, OF view_shift_by_implication[OF \<open>E''' _ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E _\<close>],
                 simplified prems(1), unfolded \<open>E''' = E''\<close>, simplified prems(1)]]] .
   using \<phi>apply_implication by blast
-  
+
 
 
 subsubsection \<open>Applying on a Block / End a Block\<close>
@@ -1298,7 +1298,7 @@ lemma [\<phi>reason for \<open>
       (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (meson \<phi>apply_implication_impl implies_left_prod)
-  
+
 
 
 
@@ -1469,7 +1469,7 @@ consts \<phi>identifier :: "unit \<Rightarrow> unit" \<comment> \<open>used only
 subsubsection \<open>Rule \& Implementation\<close>
 
 lemma "__value_access_0__":
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   by fastforce
 

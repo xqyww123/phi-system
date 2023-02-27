@@ -10,7 +10,7 @@ consts bool :: TY
 
 debt_axiomatization V_bool :: \<open>bool value_entry\<close>
   where V_bool_ax: \<open>VDT_field V_bool\<close>
-  
+
 interpretation V_bool: VDT_field V_bool using V_bool_ax .
 
 debt_axiomatization
@@ -110,7 +110,7 @@ lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
 
 
 subsection \<open>And\<close>
- 
+
 lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vb] \<bool> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
@@ -147,7 +147,7 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
    apply (unfold \<phi>Equal_def Premise_def, simp)
   by (rule \<phi>M_Success', rule, simp add: \<phi>expns)
 
- 
+
 declare op_equal_\<phi>app[where eq=\<open>(=)\<close>, \<phi>synthesis 100]
 declare op_equal_\<phi>app[where eq=\<open>(\<lambda>x y. x mod N = y mod N)\<close> for N, \<phi>synthesis 100]
 

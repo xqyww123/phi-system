@@ -39,7 +39,7 @@ fun is_subgoal (Topgoal, _) = true
   | is_subgoal ((s1 as Subgoal (i1,_,_)), Subgoal (i2,p,_))
       = (i1 = i2 orelse is_subgoal (s1,p))
 fun is_sub ctxt = is_subgoal o apply2 (fetch_goal ctxt)
-  
+
 
 fun subgoal (ctxt,sequent) =
   let
@@ -67,7 +67,7 @@ fun subgoal (ctxt,sequent) =
 fun chk_subgoal (ctxt,sequent) =
   let
     val (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>CHK_SUBGOAL\<close> $ goal'))
-          = Thm.major_prem_of sequent  
+          = Thm.major_prem_of sequent
     val goal = fetch_goal ctxt goal'
   in
     if chk_goal goal

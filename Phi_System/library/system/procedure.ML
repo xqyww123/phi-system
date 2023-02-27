@@ -51,7 +51,7 @@ fun interfaces_of thy =
   the_default Symtab.empty (Symtab.lookup (Interfaces.get thy) (Context.theory_long_name thy))
 
 fun add_interface intrf thy =
-  Interfaces.map (Symtab.map_default 
+  Interfaces.map (Symtab.map_default
     (Context.theory_long_name thy, Symtab.empty)
     (Symtab.insert (K false) (Binding.name_of (#name intrf), intrf))) thy
 
@@ -190,7 +190,7 @@ fun simp_monads ctxt sequent =
 
 fun importT_proc th ctxt =
   let
-    val (f,_,_,_) = Thm.concl_of th |> concl_of |> Phi_Syntax.dest_procedure 
+    val (f,_,_,_) = Thm.concl_of th |> concl_of |> Phi_Syntax.dest_procedure
     val (instT, ctxt') = Variable.importT_inst [f] ctxt;
     val instT' = TVars.map (K (Thm.ctyp_of ctxt')) instT;
     val th' = Thm.instantiate (instT', Vars.empty) th;
@@ -202,7 +202,7 @@ fun gen_define def_const (binding,attrs) sequent01 lthy0 =
     val sequent0 = simp_monads lthy0 sequent01
     val ((substT, sequent), lthy) = importT_proc sequent0 lthy0
 
-    val (f,_,_,_) = Thm.concl_of sequent |> concl_of |> Phi_Syntax.dest_procedure 
+    val (f,_,_,_) = Thm.concl_of sequent |> concl_of |> Phi_Syntax.dest_procedure
 
     (*all variables are in the procedure body*)
     (*then f' is the standard form of a definition*)
@@ -214,7 +214,7 @@ fun gen_define def_const (binding,attrs) sequent01 lthy0 =
                                           ,Binding.suffix_name app_suffix binding)
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
-    fun rename ctxt def = 
+    fun rename ctxt def =
           rule_proc_F (Conv.rewr_conv (Thm.symmetric def)) ctxt
 
     val (lthy, sequent'') =
@@ -222,7 +222,7 @@ fun gen_define def_const (binding,attrs) sequent01 lthy0 =
       then (lthy, sequent)
       else lthy
             |> Local_Theory.define ((binding, NoSyn), ((def_binding,[]), f'))
-            |-> (fn (tm,(_,def)) => fn lthy_x => 
+            |-> (fn (tm,(_,def)) => fn lthy_x =>
                 lthy_x
                   (* |> Local_Theory.background_theory
                         (Context.theory_map (add_procedure (Binding.name_of binding))) *)

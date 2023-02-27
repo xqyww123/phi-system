@@ -97,7 +97,7 @@ fun generic_initialize_sequent gen s =
   case Facts.lookup (Context.Proof (Proof.context_of s))
                     (Proof_Context.facts_of (Proof.context_of s)) "local.\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>"
     of SOME {thms=[X], dynamic=false} => (Thm.transfer' (Proof.context_of s) X, s)
-     | _ => gen s 
+     | _ => gen s
 
 val default_initialize_sequent = generic_initialize_sequent (fn _ => error "BUG #q23c5nu9[")
 
@@ -184,7 +184,7 @@ fun vcg_by_cast destination (ctxt,sequent) = (
 
 (* Working Modes *)
 
-(** Procedure Mode **)    
+(** Procedure Mode **)
 
 
 fun finish_proc hyp (_,sequent) =
@@ -290,7 +290,7 @@ fun vcg_before_assembling goal (ctxt,sequent) =
 
 in
 
-val procedure : working_mode = 
+val procedure : working_mode =
   {
     name = \<^const_name>\<open>working_mode_procedure\<close>,
     is_on_going_construction = can Phi_Syntax.dest_CurrentConstruction,
@@ -316,7 +316,7 @@ end
 (** View Shift **)
 
 
-val view_shift : working_mode = 
+val view_shift : working_mode =
 let
 (* MAY NOT REMOVE
   fun finish_view_shift hyp (_,sequent) =
@@ -398,7 +398,7 @@ local
         |> Thm.forall_intr s
         |> (fn th => th COMP @{thm \<phi>make_implication})
     end
-  
+
   fun start_implication arg ctxt =
     let open Phi_Syntax
       val ([blk_name],ctxt) = Variable.add_fixes ["\<CC>"] ctxt

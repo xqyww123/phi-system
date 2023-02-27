@@ -66,7 +66,7 @@ lemma \<phi>AInt_expn[\<phi>expns]:
 
 lemma \<phi>AInt_inhabited[elim!,\<phi>inhabitance_rule]:
   "Inhabited (x \<Ztypecolon> \<int>) \<Longrightarrow> C \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns) 
+  unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
@@ -86,7 +86,7 @@ subsection \<open>Natural Nmber\<close>
 
 definition \<phi>ANat ("\<nat>") where [\<phi>defs]: "\<nat> n = (of_nat n \<Ztypecolon> \<int>)"
 
-lemma [\<phi>reason 1000]: 
+lemma [\<phi>reason 1000]:
   " Threshold_Cost 4
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e 0 \<le> x \<and> y = nat x
 \<Longrightarrow> x \<Ztypecolon> \<int> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<nat>"
@@ -112,7 +112,7 @@ lemma [\<phi>reason 1000]: \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<c
 lemma [\<phi>reason 1000]: "\<phi>Zero aint \<nat> 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> \<int>\<close> \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1000]: \<open>\<phi>Equal \<nat> (\<lambda>_ _. True) (=)\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>. .
- 
+
 
 section \<open>Instructions\<close>
 
@@ -194,7 +194,7 @@ section \<open>Abstraction of Instructions\<close>
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
- 
+
 lemma op_const_aint_\<phi>app[\<phi>synthesis 300]:
   \<open> Check_Literal x
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_aint x \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<int> \<rbrace>\<close>
@@ -204,7 +204,7 @@ lemma op_const_aint_\<phi>app[\<phi>synthesis 300]:
 lemma op_const_anat_\<phi>app[\<phi>synthesis 300]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y x' : of_nat x \<comment>\<open>TODO: improve this!\<close>
 \<Longrightarrow> Check_Literal x'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_aint x' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat> \<rbrace>\<close> 
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_aint x' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_const_aint[where x=x'] \<medium_right_bracket>. .
 
 

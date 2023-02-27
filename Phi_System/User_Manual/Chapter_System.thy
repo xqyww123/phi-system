@@ -41,7 +41,7 @@ The environment is an extensible framework targeting on the core monadic languag
 Programming features like mutable variable or any specific control flow like branches
 are added later to the environment as the framework and the core monadic language is extensible.
 The chapter focuses on the core designs of the framework, and leaves
-pluggable components to the later chapters. 
+pluggable components to the later chapters.
 
 
 The programming in \<phi>-System primarily involves 3 (sorts of) Isar commands:
@@ -71,7 +71,7 @@ instead of the actual fact that @{command ";;"} leads a statement.
 \end{remarks}
 
 IDE-CP is based on the theory of Calculus of Programming (CoP).
-We introduce CoP briefly here and highly recommend readers to its paper~\cite{CoP}. 
+We introduce CoP briefly here and highly recommend readers to its paper~\cite{CoP}.
 In CoP, programming is identical to deducing a state sequent.
 One may view the state sequent a specialized variant of Hoare triple which specifies and
 certifies the returning state of evaluating the current program segment of the on-going

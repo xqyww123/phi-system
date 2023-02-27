@@ -53,7 +53,7 @@ fun declare_rule pos priority (patterns0,blacklist0) proc_thm0 ctxt0 =
       val blacklist = map pat_of blacklist0
       val _ = Phi_Reasoner.debug_pretty ctxt (fn () => Pretty.chunks ([
                 Pretty.str "The rule is bound on pattern(s):",
-                Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) patterns)] @ 
+                Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) patterns)] @
                 (if null blacklist then [] else [
                 Pretty.str "excluding pattern(s):",
                 Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) blacklist)

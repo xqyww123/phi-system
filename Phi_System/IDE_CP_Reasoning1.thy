@@ -220,7 +220,7 @@ proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
 next fix x :: "'a <named> 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
 qed
 
-lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists \<phi>expns) 
+lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists \<phi>expns)
 
 
 subsubsection \<open>Expansion of Quantification\<close>

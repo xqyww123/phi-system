@@ -4,7 +4,7 @@
 
 section \<open>Setup for State Space Locales \label{sec:StateSpaceLocale}\<close>
 
-theory StateSpaceLocale imports StateFun 
+theory StateSpaceLocale imports StateFun
   keywords "statespace" :: thy_defn
 begin
 

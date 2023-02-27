@@ -29,7 +29,7 @@ lemma infinite_varname:
   using inj_on_finite[where A = \<open>UNIV::nat set\<close> and B = \<open>{k. varname.type k = TY}\<close>
         and f = \<open>\<lambda>n. varname n TY\<close>]
   using inj_def by fastforce
-  
+
 
 resource_space \<phi>min_res = \<phi>empty_res +
   R_var :: R_var
@@ -85,7 +85,7 @@ lemma Var_transformation:
 \<Longrightarrow> x \<Ztypecolon> Var v T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> Var v T' \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Imply_def by (simp add: \<phi>expns, blast)
 
-lemma Var_cast_\<phi>app[\<phi>overload cast]: 
+lemma Var_cast_\<phi>app[\<phi>overload cast]:
   \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> T' \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[v] T' \<^bold>a\<^bold>n\<^bold>d P\<close>
   unfolding Argument_def
@@ -331,7 +331,7 @@ lemma
 subsection \<open>Rules of Variable Operations\<close>
 
 subsubsection \<open>Get\<close>
- 
+
 proc (nodef) op_get_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] T\<close>
@@ -356,12 +356,12 @@ lemma op_set_var_\<phi>app:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]:
       \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   shows \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_var var TY \<a>\<r>\<g> \<lbrace> x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<a>\<r>\<g>] U \<longmapsto> \<lambda>\<r>\<e>\<t>. y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U \<rbrace> \<close>
-  \<medium_left_bracket> to Identity 
+  \<medium_left_bracket> to Identity
     $y to Identity
-    op_set_var'' 
+    op_set_var''
   \<medium_right_bracket>. .
 
-lemma op_set_var__synthesis [\<phi>reason 1200 for 
+lemma op_set_var__synthesis [\<phi>reason 1200 for
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> \<blangle> (?y <set-to> ?var) \<Ztypecolon> ?U ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action synthesis\<close>
 ]:
 assumes G: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> X \<longmapsto> X1\<heavy_comma> \<blangle> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> U \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis \<close>
@@ -390,13 +390,13 @@ proc op_var_scope:
       BLK to Identity op_free_var \<medium_right_bracket>.
     \<medium_left_bracket> to Identity
       op_free_var
-      throw \<medium_right_bracket>. 
+      throw \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
 subsection \<open>Implementing IDE-CP Generic Variable Access\<close>
 
 lemma "__set_var_rule__":
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U\<heavy_comma> X \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (op_set_var var TY raw \<ggreater> g) \<lbrace> R\<heavy_comma> (x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw] U\<heavy_comma> X) \<longmapsto> Z \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>

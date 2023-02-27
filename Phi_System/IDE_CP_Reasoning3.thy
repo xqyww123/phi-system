@@ -12,7 +12,7 @@ begin
 
 definition "addr_allocated heap addr \<longleftrightarrow> MemAddress addr \<in> dom heap"
 adhoc_overloading allocated addr_allocated
-                                                         
+
 (* lemma addr_allocated_mono[dest]: "h \<subseteq>\<^sub>m h' \<Longrightarrow> addr_allocated h addr \<Longrightarrow> addr_allocated h' addr"
   unfolding addr_allocated_def by auto
 lemma [iff]: "addr_allocated (h(k \<mapsto> v)) addr \<longleftrightarrow> k = MemAddress addr \<or> addr_allocated h addr"
@@ -166,7 +166,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<r>Clean (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
   unfolding \<r>Clean_def Imply_def
   by (simp add: Subjection_expn)
-  
+
 
 subsubsection \<open>Structural Node\<close>
 
@@ -394,7 +394,7 @@ lemma [\<phi>reason 2005 for \<open>(?X::?'a::sep_magma_1 set) \<^bold>i\<^bold>
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
 \<Longrightarrow> \<r>CALL X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R * \<blangle> Y' \<brangle> \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> \<r>Clean R 
+\<Longrightarrow> \<r>Clean R
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P @action ToSA' deep\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
@@ -658,7 +658,7 @@ hide_fact ToSA_disj_target_A' ToSA_disj_target_B'
 
 subsubsection \<open>Conditional Branch in Source\<close>
 
-text \<open>The condition should be regarded as an output, and the reasoning process assigns which 
+text \<open>The condition should be regarded as an output, and the reasoning process assigns which
 the branch that it chooses to the output condition variable.\<close>
 
 lemma ToSA_cond_source_A:
@@ -862,7 +862,7 @@ lemma ToSA_skip [\<phi>reason 70 for \<open> _ * _ * _ \<^bold>i\<^bold>m\<^bold
 \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
   " R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> R * H \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R' * H * \<blangle> X \<brangle> \<^bold>a\<^bold>n\<^bold>d P"
-  for H :: \<open>'a::sep_ab_semigroup set\<close> 
+  for H :: \<open>'a::sep_ab_semigroup set\<close>
   unfolding FOCUS_TAG_def Imply_def
   by (smt (verit, del_insts) mult.assoc mult.commute set_mult_expn)
 
@@ -1138,7 +1138,7 @@ lemma [\<phi>reason 1211]:
                    Structural_Extract_reverse_morphism_I)
 
 (*TODO: According to @{thm Agreement_times}, there must be a reasoning mechanism for \<inter>\<^sub>\<phi>
-  It scatters information using \<inter>\<^sub>\<phi> 
+  It scatters information using \<inter>\<^sub>\<phi>
 
 The bellowing reasoning is too weak! *)
 
@@ -1148,7 +1148,7 @@ lemma Structural_Extract_aggrement_to [\<phi>reason 1200]:
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) P\<close>
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Require_def
   apply (cases C; simp)
-  \<medium_left_bracket> premises A 
+  \<medium_left_bracket> premises A
     dup
     Agreement_cast[OF A]
   \<medium_right_bracket>.
@@ -1197,7 +1197,7 @@ lemma Structural_Extract_to_mult:
 declare Structural_Extract_to_mult [THEN SE_clean_waste, \<phi>reason 1200]
 
 lemma Structural_Extract_\<phi>Prod_right:
-  \<open> Try S1 (Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1) 
+  \<open> Try S1 (Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1)
 \<Longrightarrow> Try S2 (Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2)
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m S1 \<or> S2
 \<Longrightarrow> Structural_Extract A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX) (P1 \<and> P2)\<close>
@@ -1633,7 +1633,7 @@ lemma Structural_Extract_share_le:
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and X
     X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_left_prod, folded mult.assoc]
-  
+
   have \<open>(y \<Ztypecolon> n - m \<Znrres> U) * (y \<Ztypecolon> m \<Znrres> U) = (y \<Ztypecolon> n \<Znrres> U)\<close>
     using \<phi>Share_share[where n=\<open>n-m\<close> and m=m, simplified] \<phi>
     by (smt (verit) SDI)
@@ -2090,11 +2090,11 @@ lemma [\<phi>reason 2000]:
 definition Prog_Interface :: " label \<Rightarrow> 'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a::lrep  \<longmapsto> 'b::lrep) \<Rightarrow> bool"
   where "Prog_Interface _ args rets proc \<longleftrightarrow> True"
 
-lemma Prog_Interface_proc: "TERM proc \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) proc" 
+lemma Prog_Interface_proc: "TERM proc \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) proc"
   unfolding Prog_Interface_def ..
 
 lemma Prog_Interface_func:
-  "TERM f \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) f" 
+  "TERM f \<Longrightarrow> Prog_Interface name TYPE('a::lrep) TYPE('b::lrep) f"
   unfolding Prog_Interface_def ..
 *)
 

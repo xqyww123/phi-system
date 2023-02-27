@@ -111,11 +111,11 @@ structure Data = Generic_Data
 fun trace_data context =
   let
     val (lookup_ss, ex_ss, active) = Data.get context
-    val pretty_ex_ss = Simplifier.pretty_simpset true (put_simpset ex_ss (Context.proof_of context)) 
-    val pretty_lookup_ss = Simplifier.pretty_simpset true (put_simpset lookup_ss (Context.proof_of context)) 
+    val pretty_ex_ss = Simplifier.pretty_simpset true (put_simpset ex_ss (Context.proof_of context))
+    val pretty_lookup_ss = Simplifier.pretty_simpset true (put_simpset lookup_ss (Context.proof_of context))
   in
-    tracing ("state_fun ex_ss: " ^ Pretty.string_of pretty_ex_ss ^ 
-     "\n ================= \n lookup_ss: " ^ Pretty.string_of pretty_lookup_ss ^ "\n " ^ 
+    tracing ("state_fun ex_ss: " ^ Pretty.string_of pretty_ex_ss ^
+     "\n ================= \n lookup_ss: " ^ Pretty.string_of pretty_lookup_ss ^ "\n " ^
      "active: " ^ @{make_string} active)
   end
 

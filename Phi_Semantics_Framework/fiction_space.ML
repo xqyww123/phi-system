@@ -160,24 +160,24 @@ fun comps_of_distinct_thm thm = Thm.prop_of thm
 
 fun insert_tagged_distinct_thms tagged_thm tagged_thms =
  let
-   fun ins t1 [] = [t1] 
+   fun ins t1 [] = [t1]
      | ins (t1 as (names1, _)) ((t2 as (names2, _))::thms) =
          if Ord_List.subset string_ord (names1, names2) then t2::thms
          else if Ord_List.subset string_ord (names2, names1) then ins t1 thms
          else t2 :: ins t1 thms
- in 
+ in
    ins tagged_thm tagged_thms
  end
 
-fun join_tagged_distinct_thms tagged_thms1 tagged_thms2 = 
+fun join_tagged_distinct_thms tagged_thms1 tagged_thms2 =
   tagged_thms1 |> fold insert_tagged_distinct_thms tagged_thms2
 
 fun tag_distinct_thm thm = (comps_of_distinct_thm thm, thm)
 val tag_distinct_thms = map tag_distinct_thm
 
-fun join_distinct_thms thms1 thms2 = 
-  if pointer_eq (thms1, thms2) then thms1 
-  else join_tagged_distinct_thms (tag_distinct_thms thms1) (tag_distinct_thms thms2) 
+fun join_distinct_thms thms1 thms2 =
+  if pointer_eq (thms1, thms2) then thms1
+  else join_tagged_distinct_thms (tag_distinct_thms thms1) (tag_distinct_thms thms2)
        |> map snd
 
 fun insert_distinct_thm thm thms = join_distinct_thms thms [thm]
@@ -191,13 +191,13 @@ fun join_declinfo_entry name (T1:term, names1:string list) (T2, names2) =
     fun typ_info T names = @{make_string} T ^ " "  ^ Pretty.string_of (Pretty.str_list "(" ")" names);
   in
     if T1 = T2 then (T1, distinct (op =) (names1 @ names2))
-    else error ("entry '" ^ name ^ "' disagrees on interpretation:\n " ^ 
-        typ_info T1 names1 ^ " vs. "  ^ typ_info T2 names2) 
+    else error ("entry '" ^ name ^ "' disagrees on interpretation:\n " ^
+        typ_info T1 names1 ^ " vs. "  ^ typ_info T2 names2)
   end
 fun guess_name (Free (x,_)) = x
   | guess_name _ = "unknown"
 
-val join_declinfo = Termtab.join (fn trm => uncurry (join_declinfo_entry (guess_name trm))) 
+val join_declinfo = Termtab.join (fn trm => uncurry (join_declinfo_entry (guess_name trm)))
 
 (* EntryData *)
 
@@ -221,7 +221,7 @@ structure EntryData = Generic_Data
      silent = silent1 andalso silent2 (* FIXME odd merge *)}
 );
 
-fun trace_entry_data context =  
+fun trace_entry_data context =
   tracing ("EntryData: " ^ @{make_string} (EntryData.get context))
 
 fun make_entry_data declinfo distinctthm silent =
@@ -229,7 +229,7 @@ fun make_entry_data declinfo distinctthm silent =
 
 
 fun update_declinfo (n,v) ctxt =
-  let       
+  let
     val {declinfo,distinctthm,silent} = EntryData.get ctxt;
     val v = apsnd single v
   in EntryData.put (make_entry_data
@@ -266,7 +266,7 @@ structure Fiction_Space_Data = Generic_Data
 fun is_Fiction_Space context name =
   Symtab.defined (Fiction_Space_Data.get context) (Locale.intern (Context.theory_of context) name)
 
-fun trace_Fiction_Space_data context =  
+fun trace_Fiction_Space_data context =
   tracing ("StateSpaceData: " ^ @{make_string} (Fiction_Space_Data.get context))
 
 fun add_Fiction_Space name Sv args parents components ctxt =
@@ -286,7 +286,7 @@ fun get_Fiction_Space ctxt name =
 fun mk_free ctxt name =
   if Variable.is_fixed ctxt name orelse Variable.is_declared ctxt name
   then
-    let 
+    let
       val n' = Variable.intern_fixed ctxt name |> perhaps Long_Name.dest_hidden;
       val free = Free (n', Proof_Context.infer_type ctxt (n', dummyT))
     in SOME (free) end
@@ -295,9 +295,9 @@ fun mk_free ctxt name =
 
 fun get_dist_thm ctxt name = Symtab.lookup (#distinctthm (EntryData.get ctxt)) name
 
-fun get_dist_thm2 ctxt x y = 
+fun get_dist_thm2 ctxt x y =
  (let
-    val dist_thms = [x, y] |> map cons_name_of 
+    val dist_thms = [x, y] |> map cons_name_of
       |> map (these o get_dist_thm (Context.Proof ctxt)) |> flat;
 
     fun get_paths dist_thm =
@@ -308,28 +308,28 @@ fun get_dist_thm2 ctxt x y =
         val y_path = the (DistinctTreeProver.find_tree y tree);
       in SOME (dist_thm, x_path, y_path) end
       handle Option.Option => NONE
-    
+
     val result = get_first get_paths dist_thms
-  in 
+  in
     result
   end)
-    
-       
+
+
 fun get_comp' ctxt name =
-  mk_free (Context.proof_of ctxt) name 
-  |> Option.mapPartial (fn t => 
+  mk_free (Context.proof_of ctxt) name
+  |> Option.mapPartial (fn t =>
        let
          val declinfo = #declinfo (EntryData.get ctxt)
-       in 
+       in
          case Termtab.lookup declinfo t of
-           NONE => (* during syntax phase, types of fixes might not yet be constrained completely *) 
+           NONE => (* during syntax phase, types of fixes might not yet be constrained completely *)
              AList.lookup (fn (x, Free (n,_)) => n = x | _ => false) (Termtab.dest declinfo) name
          | some => some
        end)
 
 (* legacy wrapper *)
 fun get_comp ctxt name =
- get_comp' ctxt name |> Option.map (apsnd (fn ns => if null ns then "" else hd ns)) 
+ get_comp' ctxt name |> Option.map (apsnd (fn ns => if null ns then "" else hd ns))
 
 fun get_comps ctxt = #declinfo (EntryData.get ctxt)
 
@@ -575,7 +575,7 @@ fun Fiction_Space_definition rep_sort project_injectL
               in Context.proof_map
                   (update_declinfo (Morphism.term phi (Free (n,nT)),v))
               end;
-            val ctxt' = ctxt |> fold upd updates 
+            val ctxt' = ctxt |> fold upd updates
           in ctxt' end;
 
       in Context.mapping I upd_prf ctxt end;
@@ -706,12 +706,12 @@ fun gen_define_Fiction_Space prep_typ prep_term (sort,project_injectL)
                   #> the_default (Sign.defaultS thy))) args
     val (resT',env) = prep_typ ctxt resT args'
     val (parents',env) = fold_map add_parent parents env;
-    
+
     fun prep_sort S' S = if S = "" then S' else Syntax.read_sort ctxt S
     val sort' = fold (parent_sort thy o #2 o #2) parents'
                     (prep_sort \<^sort>\<open>sep_algebra\<close> sort)
     val env = (repN, sort')::env
-    
+
     val interpT = Type(\<^type_name>\<open>interp\<close>, [dummyT, resT'])
 
 
@@ -737,11 +737,11 @@ fun gen_define_Fiction_Space prep_typ prep_term (sort,project_injectL)
           if member (op =) (map fst args) repN
           then ["'self is a reserved keyword and cannot be a type parameter"]
           else []
-      
-      
+
+
     (*TODO!!!*)
     val err_extra_frees = []
-      
+
     val project_injectL = Locale.check thy project_injectL
 
 

@@ -6,7 +6,7 @@ signature NU_REASONER = sig
   (* This file is the major hot point of the whole system.
      TODO: optimize it as much as possible! *)
 
- 
+
   type priority = int
   type cost = int (*cost is the negative of the priority*)
   type pattern = term
@@ -143,7 +143,7 @@ fun transform_reasoner phi ({name,pos,pattern,blacklist,tactic}:reasoner) =
     pattern = map (Morphism.term phi) pattern,
     blacklist = map (Morphism.term phi) blacklist,
     tactic = tactic}:reasoner)
-  
+
 
 (* Attributes *)
 val auto_level = Attrib.setup_config_int \<^binding>\<open>\<phi>auto_level\<close> (K 2)
@@ -158,24 +158,24 @@ val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_
 (* Debug Info *)
 fun debug_pretty ctxt G =
   if 2 <= Config.get ctxt trace
-  then tracing (Pretty.string_of (G ()))  
+  then tracing (Pretty.string_of (G ()))
   else ()
 fun debug_print ctxt G = debug_pretty ctxt (G #> Pretty.str)
 
 fun debug_pretty_generic ctxt G =
   if 2 <= Config.get_generic ctxt trace
-  then tracing (Pretty.string_of (G ()))  
+  then tracing (Pretty.string_of (G ()))
   else ()
 
 fun info_pretty ctxt G =
   if 1 <= Config.get ctxt trace
-  then tracing (Pretty.string_of (G ()))  
+  then tracing (Pretty.string_of (G ()))
   else ()
 fun info_print ctxt G = info_pretty ctxt (G #> Pretty.str)
 
 fun info_pretty_generic ctxt G =
   if 1 <= Config.get_generic ctxt trace
-  then tracing (Pretty.string_of (G ()))  
+  then tracing (Pretty.string_of (G ()))
   else ()
 
 
@@ -264,7 +264,7 @@ fun insert_net ctxt priority (reasoner:reasoner) pat net =
         end
   end
 
-fun add (priority, reasoner0) ctxt = 
+fun add (priority, reasoner0) ctxt =
   let val reasoner = normalize_reasoner reasoner0
    in Reasoners.map (fold (insert_net ctxt priority reasoner) (#pattern reasoner)) ctxt
   end
@@ -423,7 +423,7 @@ fun gen_reason' ctxt N states =
       handle Success ret => SOME ret)
      |> Option.map (apfst exit_reasoning_envir)
   )
-    
+
 
 
 (* Various Interfaces for Invoking Reasoning *)
@@ -593,7 +593,7 @@ fun intro_reasoner ctxt pos priority patterns blacklist guard rules =
                         in [pat] end
                        | _ => error "Pattern of the reasoner is required"
                else patterns
-    
+
     val rules_with_flag = map (fn rule =>
       let fun is_Require (Const (\<^const_name>\<open>\<r>Require\<close>, _) $ _) = true
             | is_Require (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_Require X
@@ -644,7 +644,7 @@ fun attr_add_intro ((((pos, priority), additional_rules), (pattern, blacklist)),
 
 
 val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
-(let open Args Scan Parse 
+(let open Args Scan Parse
   fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
   val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))

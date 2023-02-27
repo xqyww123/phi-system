@@ -210,7 +210,7 @@ lemma \<phi>Field_zeros [\<phi>reason 1000]:
   unfolding \<phi>Zero_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult_cons image_iff)
   using V_tup_sep_disj by blast
-  
+
 
 lemma \<phi>Field_semty[\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<clubsuit> T) (tup [TY])\<close>
@@ -277,7 +277,7 @@ lemma Array_semty[\<phi>reason 1000]:
   apply (clarsimp simp add: \<phi>expns list_all_length list_all2_conv_all_nth \<phi>SemType_def subset_iff
           Inhabited_def)
   using Well_Type_unique by blast
-  
+
 lemma Array_zero[\<phi>reason 1000]:
   \<open>\<phi>Zero TY T zero \<Longrightarrow> \<phi>\<phi>SemType T TY \<Longrightarrow> \<phi>Zero (array N TY) (Array N T) (replicate N zero)\<close>
   unfolding \<phi>Zero_def

@@ -76,7 +76,7 @@ fun variable_declarer' TY b (ctxt,sequent) =
       [declare_rule (Binding.pos_of b)])
   end
 
-fun variable_declarer TY : Generic_Variable_Access.assigner = ("new_var", variable_declarer' TY) 
+fun variable_declarer TY : Generic_Variable_Access.assigner = ("new_var", variable_declarer' TY)
 
 val _ = Theory.setup (
    Generic_Variable_Access.register_assigner

@@ -32,7 +32,7 @@ fun dest_eq_lhs' tm =
       else Logic.dest_equals tm |> #1
 fun name_of_definition def = Thm.concl_of def |> dest_eq_lhs' |> strip_comb |> #1 |> dest_Const |> #1
 fun add def = Instrs.map (Symtab.update_new (name_of_definition def, def))
-val is_instruction = Instrs.get #> Symtab.defined 
+val is_instruction = Instrs.get #> Symtab.defined
 fun is_instruction_term ctx (Const (name, _)) = is_instruction ctx name
   | is_instruction_term _ _ = false
 fun is_compilable ctx tm = fold_aterms (fn tm => fn P => P andalso is_instruction_term ctx tm) tm true

@@ -65,7 +65,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Remove_Values B B'
 \<Longrightarrow> Remove_Values (A + B) (A' + B')\<close>
   unfolding Remove_Values_def Imply_def
-  by blast 
+  by blast
 
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values R R'
@@ -99,7 +99,7 @@ lemma [\<phi>reason 1100]:
 lemma [\<phi>reason 1000]:
   \<open> Remove_Values A A\<close>
   unfolding Remove_Values_def
-  by simp 
+  by simp
 
 
 subsection \<open>Rewrite into \<phi>-Type\<close>

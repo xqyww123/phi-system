@@ -77,7 +77,7 @@ subsubsection \<open>Separation Magma\<close>
 
 class sep_magma = sep_disj + times
 begin
-definition join_sub (infix "\<preceq>\<^sub>S\<^sub>L" 50) 
+definition join_sub (infix "\<preceq>\<^sub>S\<^sub>L" 50)
   where \<open>join_sub y z \<longleftrightarrow> (\<exists>x. z = x * y \<and> x ## y)\<close>
 end
 
@@ -132,7 +132,7 @@ begin
 subclass positive_sep_magma_1 ..
 end
 
-definition (in times) subsume (infix "\<preceq>\<^sub>\<times>" 50) 
+definition (in times) subsume (infix "\<preceq>\<^sub>\<times>" 50)
   where \<open>subsume y z \<longleftrightarrow> (\<exists>x. z = x * y)\<close>
 
 class positive_mult = times +
@@ -224,7 +224,7 @@ begin
 subclass sep_magma .
 subclass sep_ab_semigroup proof
   fix x y z :: 'a
-  show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by simp 
+  show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by simp
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close> unfolding join_sub_def by force
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by simp
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by simp
@@ -254,7 +254,7 @@ subclass sep_algebra proof
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close>
     by (metis local.mult_1_right local.nonsepable_disj_1)
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close>
-    by (metis local.mult_1_left local.nonsepable_disj_1) 
+    by (metis local.mult_1_left local.nonsepable_disj_1)
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
     unfolding join_sub_def apply clarsimp
     by (metis local.mult_1_left)
@@ -274,7 +274,7 @@ end
 
 subsubsection \<open>Strict Subsumption\<close>
 
-definition join_sub_strict :: \<open>'a::sep_ab_semigroup \<Rightarrow> 'a::sep_ab_semigroup \<Rightarrow> bool\<close> (infix "\<prec>\<^sub>S\<^sub>L" 50) 
+definition join_sub_strict :: \<open>'a::sep_ab_semigroup \<Rightarrow> 'a::sep_ab_semigroup \<Rightarrow> bool\<close> (infix "\<prec>\<^sub>S\<^sub>L" 50)
   where \<open>join_sub_strict y z \<longleftrightarrow> join_sub y z \<and> y \<noteq> z\<close>
 
 
@@ -293,7 +293,7 @@ proof
     unfolding join_sub_strict_def join_sub_def
     using join_positivity join_sub_def by blast
 qed
- 
+
 interpretation join_sub: order_bot 1 \<open>join_sub::'a::sep_algebra \<Rightarrow> 'a \<Rightarrow> bool\<close> join_sub_strict
 proof
   fix a :: 'a
@@ -372,7 +372,7 @@ begin
 (* lemma share_sep_disj_refl_1 [simp]:
   \<open>m \<noteq> 0 \<Longrightarrow> x ## share m x\<close>  \<open>m \<noteq> 0 \<Longrightarrow> share m x ## x\<close>
   by (metis share_left_one share_sep_disj_refl)+ *)
-  
+
 lemma share_sep_disj_right[simp]:
         \<open>0 < n \<Longrightarrow> y ## share n x \<longleftrightarrow> y ## x\<close>
   using local.share_sep_disj_left sep_disj_commute by force
@@ -668,7 +668,7 @@ instance proof
       show ?thesis apply (insert t1)
         unfolding join_sub_def apply (elim disjE; clarsimp)
         apply (metis sep_disj_option(1) times_option(1))
-        by (metis mult_1_class.mult_1_left sep_magma_1_right) 
+        by (metis mult_1_class.mult_1_left sep_magma_1_right)
     qed .
 qed
 end
@@ -731,11 +731,11 @@ end
 
 instantiation prod :: (ab_semigroup_mult, ab_semigroup_mult) ab_semigroup_mult begin
 instance apply standard
-  by (metis mult.commute prod.collapse times_prod) 
+  by (metis mult.commute prod.collapse times_prod)
 end
 
 instantiation prod :: (comm_monoid_mult, comm_monoid_mult) comm_monoid_mult begin
-instance apply standard by simp 
+instance apply standard by simp
 end
 
 instantiation prod :: (sep_disj,sep_disj) sep_disj begin
@@ -835,7 +835,7 @@ lemma zero_fun[simp]: "0 x = 0" unfolding zero_fun_def by simp
 lemmas zero_fun_eta[simp] = zero_fun_def[symmetric]
 
 instantiation "fun" :: (type, no_inverse) no_inverse begin
-instance by (standard, simp add: one_fun_def times_fun fun_eq_iff, blast) 
+instance by (standard, simp add: one_fun_def times_fun fun_eq_iff, blast)
 end
 
 instantiation "fun" :: (type, no_negative) no_negative begin
@@ -865,7 +865,7 @@ lemma sep_disj_fun_nonsepable:
   \<open>f x = Some v \<Longrightarrow> g ## f \<Longrightarrow> g x = None\<close>
   for v :: \<open>'a :: nonsepable_semigroup\<close>
   by (metis sep_disj_fun sep_disj_option_nonsepable)+
-  
+
 
 instantiation "fun" :: (type,mult_1) mult_1 begin
 instance by (standard; simp add: one_fun_def times_fun_def)
@@ -944,7 +944,7 @@ end
 instantiation "fun" :: (type,comm_monoid_add) comm_monoid_add begin
 instance proof
   fix a b :: \<open>'a \<Rightarrow> 'b\<close>
-  show \<open>a + b = b + a\<close> unfolding plus_fun_def fun_eq_iff using add.commute by blast 
+  show \<open>a + b = b + a\<close> unfolding plus_fun_def fun_eq_iff using add.commute by blast
   show \<open>0 + a = a\<close> unfolding plus_fun_def fun_eq_iff by simp
 qed
 end
@@ -1291,7 +1291,7 @@ lemma sep_disj_partial_map_disjoint:
   for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
   unfolding sep_disj_fun_def sep_disj_option_def disjoint_iff
   by (smt (verit, ccfv_SIG) domD domIff nonsepable_disj option.simps(4) option.simps(5))
-  
+
 
 lemma sep_disj_partial_map_some_none:
   \<open>f ## g \<Longrightarrow> g k = Some v \<Longrightarrow> f k = None\<close>
@@ -1303,7 +1303,7 @@ lemma sep_disj_partial_map_not_1_1:
   for f :: "'a \<Rightarrow> ('b :: nonsepable_monoid)"
   unfolding sep_disj_fun_def apply simp
   by blast
-  
+
 
 lemma sep_disj_partial_map_upd:
   \<open>f ## g \<Longrightarrow> k \<in> dom g \<Longrightarrow> (f * g)(k := v) = (f * g(k:=v))\<close>
@@ -1510,7 +1510,7 @@ lemma perm_functor_pointwise_eq[iff]:
     have x1[simp]: \<open>\<And>k v x. \<psi> ((1(k := v)) x) = (1(k := \<psi> v)) x\<close> by simp
     have x2[simp]: \<open>\<And>k a b. (1(k := a) \<preceq>\<^sub>S\<^sub>L 1(k := b)) \<longleftrightarrow> a \<preceq>\<^sub>S\<^sub>L (b::'x::sep_algebra)\<close>
       unfolding join_sub_def
-      by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) fun_upd_same fun_upd_triv) 
+      by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) fun_upd_same fun_upd_triv)
     have x3[simp]: \<open>\<And>k a b. 1(k := a) = 1(k := b) \<longleftrightarrow> a = b\<close>
       by (metis fun_upd_same)
 
@@ -1572,7 +1572,7 @@ datatype 'a fine ("_ ?" [100] 101) = Fine (the_fine: 'a) | Undef
 notation the_fine ("!!_" [1000] 1000)
 
 lemma split_fine_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (Fine x)) \<and> P Undef\<close> by (metis fine.exhaust_sel)
-lemma split_fine_ex : \<open>Ex  P \<longleftrightarrow> (\<exists>x. P (Fine x)) \<or> P Undef\<close> by (metis fine.exhaust_sel) 
+lemma split_fine_ex : \<open>Ex  P \<longleftrightarrow> (\<exists>x. P (Fine x)) \<or> P Undef\<close> by (metis fine.exhaust_sel)
 
 lemma Fine_inject[simp]: \<open>inj Fine\<close>
   by (meson fine.inject injI)
@@ -1732,7 +1732,7 @@ end
 instantiation share :: (type) sep_ab_semigroup begin
 instance proof
   fix x y z :: "'a share"
-  show "x ## y \<Longrightarrow> x * y = y * x" by (cases x; cases y) (simp add: add.commute) 
+  show "x ## y \<Longrightarrow> x * y = y * x" by (cases x; cases y) (simp add: add.commute)
   show "x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)"
     by (cases x; cases y; cases z) (simp add: add.assoc)
   show "x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y"
@@ -1928,8 +1928,8 @@ subsection \<open>Agreement\<close>
 
 datatype 'a agree = agree 'a
 
-lemma agree_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (agree x))\<close> by (metis agree.exhaust) 
-lemma agree_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (agree x))\<close> by (metis agree.exhaust) 
+lemma agree_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (agree x))\<close> by (metis agree.exhaust)
+lemma agree_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (agree x))\<close> by (metis agree.exhaust)
 
 instantiation agree :: (type) sep_magma begin
 definition times_agree :: \<open>'a agree \<Rightarrow> 'a agree \<Rightarrow> 'a agree\<close>
@@ -2096,7 +2096,7 @@ lemma partialwise_\<I>[simp]: "\<I> (partialwise I) (Fine x) = { Fine y |y. y \<
 subsubsection \<open>Exact Itself\<close>
 
 definition [simp]: "\<F>_it' x = {x}"
-  
+
 definition "\<F>_it = Interp \<F>_it'"
 
 lemma \<F>_it_\<I>[simp]: "\<I> \<F>_it = \<F>_it'"

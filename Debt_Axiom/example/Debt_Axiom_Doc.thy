@@ -39,10 +39,10 @@ text \<open>Debt Axiom provides an approach to safely declare an axiom early, bu
     and partial definition about the semantic feature concerned by the module,
     so that we can provide some mechanisms for the feature.
 
-  The Debt Axiom package addresses 
+  The Debt Axiom package addresses
   The tour starts from declaring semantic types used in our library to model the type
     and the value of the language respectively.
-  
+
   Therefore, we just \<^emph>\<open>declare\<close> the types in an \<^emph>\<open>unspecified\<close> way.
 \<close>
 
@@ -53,7 +53,7 @@ The definition can be given later after the final target language is given and d
 the complete target semantic features.
 
 We continue declare some basic infrastructure in the formalization.
-\<open>typ_of\<close> give the type of a 
+\<open>typ_of\<close> give the type of a
 \<close>
 
 
@@ -101,7 +101,7 @@ datatype val = V_int (dest_V_int: int) | V_array (dest_V_array: \<open>val list\
 
 specify_type VAL[simp]: VAL = val
 
-print_debt_axiom  
+print_debt_axiom
 
 specification (mk_int dest_int mk_array dest_array)
   mk_int_def': \<open>mk_int = VAL.inj o V_int\<close>
@@ -113,7 +113,7 @@ specification (mk_int dest_int mk_array dest_array)
 lemma mk_int_inj': \<open>dest_int (mk_int i) = i\<close>
   unfolding mk_int_def' dest_int_def' by simp
 
-lemma [simp]: \<open>VAL.inj \<circ> VAL.prj = id\<close> by fastforce 
+lemma [simp]: \<open>VAL.inj \<circ> VAL.prj = id\<close> by fastforce
 
 lemma mk_array_inj': \<open>dest_array (mk_array x) = x\<close>
   unfolding mk_array_def' dest_array_def' by simp

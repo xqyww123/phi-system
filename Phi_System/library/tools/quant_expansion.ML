@@ -253,7 +253,7 @@ fun nth_project [_] 0 term = term
   | nth_project (ty::_::_) 0 term
       = Const (FST, ty --> (fst (dest_prodT ty))) $ term
   | nth_project (ty::tys::tyss) i term =
-      nth_project (tys::tyss) (i-1) (Const (SND, ty --> tys) $ term) 
+      nth_project (tys::tyss) (i-1) (Const (SND, ty --> tys) $ term)
   | nth_project _ _ _ = error "BUG:gp8743bpfs"
 
 fun aggregate_vars_raw names tys body =

@@ -130,7 +130,7 @@ fun accept_proc' (ctxt,sequent) =
     val rule' = sequent RS @{thm \<phi>assemble_proc}
     val \<^Const_>\<open>Pure.all _\<close> $ Abs (_, _, \<^Const_>\<open>Pure.all _\<close> $ Abs (_, ret_ty,
             \<^Const_>\<open> Pure.imp for _ _ \<close>))
-        = Phi_Help.leading_antecedent' rule' 
+        = Phi_Help.leading_antecedent' rule'
 
     val rule =
           if Term.maxidx_of_typ ret_ty <> ~1
@@ -168,7 +168,7 @@ fun accept_proc' (ctxt,sequent) =
                     Syntax.pretty_term ctxt (Thm.term_of f)
                  ]))
             else ()
-                  
+
 
     val ([codeblk],ctxt'2) = Assumption.add_assms
             (fn _ => fn [assm] => (export_codeblock ctxt' param_cterms rule assm, I))
@@ -181,7 +181,7 @@ fun accept_proc (ctxt,sequent0) =
   let
     val sequent = Phi_Procedure.simp_monads ctxt sequent0
     val (f,_,_,_,_) = Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
-  in case f of Const (\<^const_name>\<open>Return\<close>, _) $ _ 
+  in case f of Const (\<^const_name>\<open>Return\<close>, _) $ _
          => (ctxt, sequent RS @{thm \<phi>accept_proc_optimize_return_v})
      | _ => accept_proc' (ctxt,sequent)
   end
@@ -243,7 +243,7 @@ fun set_param_cmd xterm (ctxt,sequent) =
         end
      | NONE =>
         let
-          val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern ctxt 
+          val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
         in
           set_param (Syntax.parse_term ctxt_parse xterm) (ctxt,sequent)
         end
@@ -290,6 +290,6 @@ fun obligation_proof print_results mode kind before_qed after_qed fixes assumes 
   #>Proof.internal_goal print_results mode true kind before_qed after_qed' fixes assumes
        (map (fn t => (Binding.empty_atts,[(t,[])])) oblg)
   end
-  
+
 
 end

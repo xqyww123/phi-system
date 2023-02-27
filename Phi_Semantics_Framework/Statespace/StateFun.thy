@@ -4,7 +4,7 @@
 
 section \<open>State Space Representation as Function \label{sec:StateFun}\<close>
 
-theory StateFun imports DistinctTreeProver 
+theory StateFun imports DistinctTreeProver
 begin
 
 
@@ -20,7 +20,7 @@ all types that we attempt to store in the state space.
 
 The update is actually generalized to a map function. The map supplies
 better compositionality, especially if you think of nested state
-spaces.\<close> 
+spaces.\<close>
 
 definition K_statefun :: "'a \<Rightarrow> 'b \<Rightarrow> 'a" where "K_statefun c x \<equiv> c"
 
@@ -41,23 +41,23 @@ definition update ::
   where "update destr constr n f s = s(n := constr (f (destr (s n))))"
 
 lemma lookup_update_same:
-  "(\<And>v. destr (constr v) = v) \<Longrightarrow> lookup destr n (update destr constr n f s) = 
-         f (destr (s n))"  
+  "(\<And>v. destr (constr v) = v) \<Longrightarrow> lookup destr n (update destr constr n f s) =
+         f (destr (s n))"
   by (simp add: lookup_def update_def)
 
 lemma lookup_update_id_same:
-  "lookup destr n (update destr' id n (K_statefun (lookup id n s')) s) =                  
-     lookup destr n s'"  
+  "lookup destr n (update destr' id n (K_statefun (lookup id n s')) s) =
+     lookup destr n s'"
   by (simp add: lookup_def update_def)
 
 lemma lookup_update_other:
-  "n\<noteq>m \<Longrightarrow> lookup destr n (update destr' constr m f s) = lookup destr n s"  
+  "n\<noteq>m \<Longrightarrow> lookup destr n (update destr' constr m f s) = lookup destr n s"
   by (simp add: lookup_def update_def)
 
 
-lemma id_id_cancel: "id (id x) = x" 
+lemma id_id_cancel: "id (id x) = x"
   by (simp add: id_def)
-  
+
 lemma destr_contstr_comp_id: "(\<And>v. destr (constr v) = v) \<Longrightarrow> destr \<circ> constr = id"
   by (rule ext) simp
 
@@ -79,14 +79,14 @@ lemma conj_cong: "P \<equiv> P' \<Longrightarrow> Q \<equiv> Q' \<Longrightarrow
   by simp
 
 
-lemma update_apply: "(update destr constr n f s x) = 
+lemma update_apply: "(update destr constr n f s x) =
      (if x=n then constr (f (destr (s n))) else s x)"
   by (simp add: update_def)
 
 lemma ex_id: "\<exists>x. id x = y"
   by (simp add: id_def)
 
-lemma swap_ex_eq: 
+lemma swap_ex_eq:
   "\<exists>s. f s = x \<equiv> True \<Longrightarrow>
    \<exists>s. x = f s \<equiv> True"
   apply (rule eq_reflection)
@@ -96,7 +96,7 @@ lemma swap_ex_eq:
 lemmas meta_ext = eq_reflection [OF ext]
 
 (* This lemma only works if the store is welltyped:
-    "\<exists>x.  s ''n'' = (c x)" 
+    "\<exists>x.  s ''n'' = (c x)"
    or in general when c (d x) = x,
      (for example: c=id and d=id)
  *)

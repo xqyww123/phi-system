@@ -345,7 +345,7 @@ lemma [\<phi>reason 1000]:
 
 
 lemma [\<phi>reason 1000]:
-  "\<phi>Equal \<int>('b) (\<lambda>x y. True) (=)" 
+  "\<phi>Equal \<int>('b) (\<lambda>x y. True) (=)"
   \<medium_left_bracket> to \<open>Word(_)\<close> \<medium_right_bracket>
   by (metis One_nat_def atLeastLessThan_iff the_\<phi>lemmata signed_take_bit_int_eq_self_iff sint_sbintrunc') .
 
@@ -487,7 +487,7 @@ section \<open>Abstraction of Instructions\<close>
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
- 
+
 lemma op_const_word_\<phi>app[\<phi>synthesis 300]:
   \<open> Simplify literal n (unat n')
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b) n \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n' \<Ztypecolon> Word('b) \<rbrace> \<close>
@@ -498,7 +498,7 @@ lemma op_const_nat_\<phi>app[\<phi>synthesis 200]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2 ^ LENGTH('b)
 \<Longrightarrow> Simplify literal n' n
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
-  \<medium_left_bracket> have [simp]: \<open>unat (word_of_nat n :: 'b word) = n\<close> using \<phi> of_nat_inverse by blast 
+  \<medium_left_bracket> have [simp]: \<open>unat (word_of_nat n :: 'b word) = n\<close> using \<phi> of_nat_inverse by blast
   ;; op_const_word_\<phi>app[where 'b='b and n'=\<open>of_nat n\<close> and n=n']
     affirm by (simp add: \<open>n' = n\<close>)
   \<medium_right_bracket> by simp .
@@ -507,7 +507,7 @@ lemma op_const_natR_\<phi>app[\<phi>synthesis 200]:
   \<open> Simplify literal n' (n mod 2 ^ LENGTH('b))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
   \<medium_left_bracket> op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified]
-    affirm by (simp add: the_\<phi>(2) unat_of_nat) 
+    affirm by (simp add: the_\<phi>(2) unat_of_nat)
   \<medium_right_bracket> by (simp add: unat_of_nat) .
 
 lemma [\<phi>reason 50
@@ -635,12 +635,12 @@ lemma op_udiv_word_\<phi>app[\<phi>synthesis 100]:
   unfolding op_udiv_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
       rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
- 
+
 lemma op_div_nat_\<phi>app[\<phi>overload /, \<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<noteq> 0
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_udiv LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> $vx $vy op_udiv_word_\<phi>app[where 'b='b]
-    affirm using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast 
+    affirm using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast
   \<medium_right_bracket> by (simp add: the_\<phi>lemmata(1) the_\<phi>lemmata(2) of_nat_inverse unat_div) .
 
 declare op_udiv_word_\<phi>app[\<phi>overload /]
@@ -767,7 +767,7 @@ lemma op_lshr_int_\<phi>app[\<phi>synthesis 100]:
   \<medium_left_bracket>
   ;; $v1
   have t1: \<open>x < 2 ^ (LENGTH('ba) - 1)\<close>
-    using atLeastLessThan_iff the_\<phi>(1) by blast 
+    using atLeastLessThan_iff the_\<phi>(1) by blast
   have t2: \<open>nat x < 2 ^ (LENGTH('ba) - 1)\<close>
     using t1 by fastforce
 
@@ -825,7 +825,7 @@ lemma op_lt_nat_\<phi>app[\<phi>overload <, \<phi>synthesis 100]:
        \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat>('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> $vx $vy op_lt_word[where 'b='b] \<medium_right_bracket>
     by (simp add: of_nat_inverse the_\<phi>lemmata(1) the_\<phi>lemmata(2) word_less_nat_alt) .
-  
+
 paragraph \<open>Signed Less Than\<close>
 
 lemma op_slt_word_\<phi>app[\<phi>overload <, \<phi>synthesis 100]:

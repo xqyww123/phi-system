@@ -72,7 +72,7 @@ definition SemTyp_Of :: \<open>VAL set \<Rightarrow> TY\<close>
 lemma SemTyp_Of_I[intro!, simp]:
   \<open>S \<noteq> {} \<Longrightarrow> \<phi>SemType S TY \<Longrightarrow> SemTyp_Of S = TY\<close>
   unfolding SemTyp_Of_def
-  using \<phi>SemType_unique by blast 
+  using \<phi>SemType_unique by blast
 
 lemma [\<phi>reason 100]:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
@@ -396,7 +396,7 @@ lemma \<phi>view_trans:
   unfolding View_Shift_def by blast
 
 lemma \<phi>CONSEQ:
-   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  
+   "\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> A' \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s A \<^bold>a\<^bold>n\<^bold>d Any1
 \<Longrightarrow> (\<And>ret. B ret \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s B' ret \<^bold>a\<^bold>n\<^bold>d Any2)
 \<Longrightarrow> (\<And>ex.  E ex \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' ex \<^bold>a\<^bold>n\<^bold>d Any3)
@@ -413,7 +413,7 @@ lemma \<phi>frame0:
 
 lemma \<phi>CONSEQ'E:
    "(\<And>v. E v \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' v \<^bold>a\<^bold>n\<^bold>d P3)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A  \<longmapsto> B  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> A \<longmapsto> B \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' "
   using \<phi>CONSEQ view_shift_refl by blast
 

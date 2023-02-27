@@ -1,5 +1,5 @@
 (* Map from logic types to printer types
-* 
+*
 * numeral itself    :  int
 * lrep itself       :  llty
 * func              :  ctxt -> string * ctxt,  generating the function and

@@ -67,7 +67,7 @@ fun raw_auto ctxt =
 
   The semantics of schematic variables in auto_obligation_solver and safer_obligation_solver is,
   any possible instantiation is acceptable.
-  
+
   If the schematic variables are not able to be chosen arbitrarily, additional mechanisms have
   to be applied previously.*)
 fun context_tactic_to_state_transition tac fail (ctxt, sequent) =

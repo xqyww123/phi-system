@@ -4,7 +4,7 @@
 
 section \<open>Distinctness of Names in a Binary Tree \label{sec:DistinctTreeProver}\<close>
 
-theory DistinctTreeProver 
+theory DistinctTreeProver
 imports Main
 begin
 
@@ -40,15 +40,15 @@ primrec all_distinct :: "'a tree \<Rightarrow> bool"
 where
   "all_distinct Tip = True"
 | "all_distinct (Node l x d r) =
-    ((d \<or> (x \<notin> set_of l \<and> x \<notin> set_of r)) \<and> 
+    ((d \<or> (x \<notin> set_of l \<and> x \<notin> set_of r)) \<and>
       set_of l \<inter> set_of r = {} \<and>
       all_distinct l \<and> all_distinct r)"
 
-text \<open>Given a binary tree \<^term>\<open>t\<close> for which 
+text \<open>Given a binary tree \<^term>\<open>t\<close> for which
 \<^const>\<open>all_distinct\<close> holds, given two different nodes contained in the tree,
 we want to write a ML function that generates a logarithmic
 certificate that the content of the nodes is distinct. We use the
-following lemmas to achieve this.\<close> 
+following lemmas to achieve this.\<close>
 
 lemma all_distinct_left: "all_distinct (Node l x b r) \<Longrightarrow> all_distinct l"
   by simp
@@ -103,11 +103,11 @@ where
   "delete x Tip = None"
 | "delete x (Node l y d r) = (case delete x l of
                                 Some l' \<Rightarrow>
-                                 (case delete x r of 
+                                 (case delete x r of
                                     Some r' \<Rightarrow> Some (Node l' y (d \<or> (x=y)) r')
                                   | None \<Rightarrow> Some (Node l' y (d \<or> (x=y)) r))
                                | None \<Rightarrow>
-                                  (case delete x r of 
+                                  (case delete x r of
                                      Some r' \<Rightarrow> Some (Node l y (d \<or> (x=y)) r')
                                    | None \<Rightarrow> if x=y \<and> \<not>d then Some (Node l y True r)
                                              else None))"
@@ -193,7 +193,7 @@ next
         by simp
       from delete_Some_set_of [OF Some]
       have "set_of r' \<subseteq> set_of r".
-      
+
       with dist_l' dist_r' l'_l Some x_l_Some del d dist_l_r
       show ?thesis
         by fastforce
@@ -255,7 +255,7 @@ next
       from Node.hyps (2) [OF Some]
       obtain x_r: "x \<in> set_of r" "x \<notin> set_of r'"
         by simp
-      from x_r x_l Some x_l_Some del 
+      from x_r x_l Some x_l_Some del
       show ?thesis
         by (clarsimp split: if_split_asm)
     next
@@ -277,7 +277,7 @@ next
       from Node.hyps (2) [OF Some]
       obtain x_r: "x \<in> set_of r" "x \<notin> set_of r'"
         by simp
-      from x_r x_notin_l Some x_l_None del 
+      from x_r x_notin_l Some x_l_None del
       show ?thesis
         by (clarsimp split: if_split_asm)
     next
@@ -297,12 +297,12 @@ where
   "subtract Tip t = Some t"
 | "subtract (Node l x b r) t =
      (case delete x t of
-        Some t' \<Rightarrow> (case subtract l t' of 
+        Some t' \<Rightarrow> (case subtract l t' of
                      Some t'' \<Rightarrow> subtract r t''
                     | None \<Rightarrow> None)
        | None \<Rightarrow> None)"
 
-lemma subtract_Some_set_of_res: 
+lemma subtract_Some_set_of_res:
   "subtract t\<^sub>1 t\<^sub>2 = Some t \<Longrightarrow> set_of t \<subseteq> set_of t\<^sub>2"
 proof (induct t\<^sub>1 arbitrary: t\<^sub>2 t)
   case Tip thus ?case by simp
@@ -313,18 +313,18 @@ next
   proof (cases "delete x t\<^sub>2")
     case (Some t\<^sub>2')
     note del_x_Some = this
-    from delete_Some_set_of [OF Some] 
+    from delete_Some_set_of [OF Some]
     have t2'_t2: "set_of t\<^sub>2' \<subseteq> set_of t\<^sub>2" .
     show ?thesis
     proof (cases "subtract l t\<^sub>2'")
       case (Some t\<^sub>2'')
       note sub_l_Some = this
-      from Node.hyps (1) [OF Some] 
+      from Node.hyps (1) [OF Some]
       have t2''_t2': "set_of t\<^sub>2'' \<subseteq> set_of t\<^sub>2'" .
       show ?thesis
       proof (cases "subtract r t\<^sub>2''")
         case (Some t\<^sub>2''')
-        from Node.hyps (2) [OF Some ] 
+        from Node.hyps (2) [OF Some ]
         have "set_of t\<^sub>2''' \<subseteq> set_of t\<^sub>2''" .
         with Some sub_l_Some del_x_Some sub t2''_t2' t2'_t2
         show ?thesis
@@ -337,7 +337,7 @@ next
       qed
     next
       case None
-      with del_x_Some sub 
+      with del_x_Some sub
       show ?thesis
         by simp
     qed
@@ -347,7 +347,7 @@ next
   qed
 qed
 
-lemma subtract_Some_set_of: 
+lemma subtract_Some_set_of:
   "subtract t\<^sub>1 t\<^sub>2 = Some t \<Longrightarrow> set_of t\<^sub>1 \<subseteq> set_of t\<^sub>2"
 proof (induct t\<^sub>1 arbitrary: t\<^sub>2 t)
   case Tip thus ?case by simp
@@ -358,7 +358,7 @@ next
   proof (cases "delete x t\<^sub>2")
     case (Some t\<^sub>2')
     note del_x_Some = this
-    from delete_Some_set_of [OF Some] 
+    from delete_Some_set_of [OF Some]
     have t2'_t2: "set_of t\<^sub>2' \<subseteq> set_of t\<^sub>2" .
     from delete_None_set_of_conv [of x t\<^sub>2] Some
     have x_t2: "x \<in> set_of t\<^sub>2"
@@ -367,14 +367,14 @@ next
     proof (cases "subtract l t\<^sub>2'")
       case (Some t\<^sub>2'')
       note sub_l_Some = this
-      from Node.hyps (1) [OF Some] 
+      from Node.hyps (1) [OF Some]
       have l_t2': "set_of l \<subseteq> set_of t\<^sub>2'" .
       from subtract_Some_set_of_res [OF Some]
       have t2''_t2': "set_of t\<^sub>2'' \<subseteq> set_of t\<^sub>2'" .
       show ?thesis
       proof (cases "subtract r t\<^sub>2''")
         case (Some t\<^sub>2''')
-        from Node.hyps (2) [OF Some ] 
+        from Node.hyps (2) [OF Some ]
         have r_t\<^sub>2'': "set_of r \<subseteq> set_of t\<^sub>2''" .
         from Some sub_l_Some del_x_Some sub r_t\<^sub>2'' l_t2' t2'_t2 t2''_t2' x_t2
         show ?thesis
@@ -387,7 +387,7 @@ next
       qed
     next
       case None
-      with del_x_Some sub 
+      with del_x_Some sub
       show ?thesis
         by simp
     qed
@@ -397,7 +397,7 @@ next
   qed
 qed
 
-lemma subtract_Some_all_distinct_res: 
+lemma subtract_Some_all_distinct_res:
   "subtract t\<^sub>1 t\<^sub>2 = Some t \<Longrightarrow> all_distinct t\<^sub>2 \<Longrightarrow> all_distinct t"
 proof (induct t\<^sub>1 arbitrary: t\<^sub>2 t)
   case Tip thus ?case by simp
@@ -409,20 +409,20 @@ next
   proof (cases "delete x t\<^sub>2")
     case (Some t\<^sub>2')
     note del_x_Some = this
-    from delete_Some_all_distinct [OF Some dist_t2] 
+    from delete_Some_all_distinct [OF Some dist_t2]
     have dist_t2': "all_distinct t\<^sub>2'" .
     show ?thesis
     proof (cases "subtract l t\<^sub>2'")
       case (Some t\<^sub>2'')
       note sub_l_Some = this
-      from Node.hyps (1) [OF Some dist_t2'] 
+      from Node.hyps (1) [OF Some dist_t2']
       have dist_t2'': "all_distinct t\<^sub>2''" .
       show ?thesis
       proof (cases "subtract r t\<^sub>2''")
         case (Some t\<^sub>2''')
-        from Node.hyps (2) [OF Some dist_t2''] 
+        from Node.hyps (2) [OF Some dist_t2'']
         have dist_t2''': "all_distinct t\<^sub>2'''" .
-        from Some sub_l_Some del_x_Some sub 
+        from Some sub_l_Some del_x_Some sub
              dist_t2'''
         show ?thesis
           by simp
@@ -434,7 +434,7 @@ next
       qed
     next
       case None
-      with del_x_Some sub 
+      with del_x_Some sub
       show ?thesis
         by simp
     qed
@@ -445,7 +445,7 @@ next
 qed
 
 
-lemma subtract_Some_dist_res: 
+lemma subtract_Some_dist_res:
   "subtract t\<^sub>1 t\<^sub>2 = Some t \<Longrightarrow> set_of t\<^sub>1 \<inter> set_of t = {}"
 proof (induct t\<^sub>1 arbitrary: t\<^sub>2 t)
   case Tip thus ?case by simp
@@ -465,18 +465,18 @@ next
     proof (cases "subtract l t\<^sub>2'")
       case (Some t\<^sub>2'')
       note sub_l_Some = this
-      from Node.hyps (1) [OF Some ] 
+      from Node.hyps (1) [OF Some ]
       have dist_l_t2'': "set_of l \<inter> set_of t\<^sub>2'' = {}".
       from subtract_Some_set_of_res [OF Some]
       have t2''_t2': "set_of t\<^sub>2'' \<subseteq> set_of t\<^sub>2'" .
       show ?thesis
       proof (cases "subtract r t\<^sub>2''")
         case (Some t\<^sub>2''')
-        from Node.hyps (2) [OF Some] 
+        from Node.hyps (2) [OF Some]
         have dist_r_t2''': "set_of r \<inter> set_of t\<^sub>2''' = {}" .
         from subtract_Some_set_of_res [OF Some]
         have t2'''_t2'': "set_of t\<^sub>2''' \<subseteq> set_of t\<^sub>2''".
-        
+
         from Some sub_l_Some del_x_Some sub t2'''_t2'' dist_l_t2'' dist_r_t2'''
              t2''_t2' t2'_t2 x_not_t2'
         show ?thesis
@@ -489,7 +489,7 @@ next
       qed
     next
       case None
-      with del_x_Some sub 
+      with del_x_Some sub
       show ?thesis
         by simp
     qed
@@ -498,7 +498,7 @@ next
     with sub show ?thesis by simp
   qed
 qed
-        
+
 lemma subtract_Some_all_distinct:
   "subtract t\<^sub>1 t\<^sub>2 = Some t \<Longrightarrow> all_distinct t\<^sub>2 \<Longrightarrow> all_distinct t\<^sub>1"
 proof (induct t\<^sub>1 arbitrary: t\<^sub>2 t)
@@ -511,7 +511,7 @@ next
   proof (cases "delete x t\<^sub>2")
     case (Some t\<^sub>2')
     note del_x_Some = this
-    from delete_Some_all_distinct [OF Some dist_t2 ] 
+    from delete_Some_all_distinct [OF Some dist_t2 ]
     have dist_t2': "all_distinct t\<^sub>2'" .
     from delete_Some_set_of [OF Some]
     have t2'_t2: "set_of t\<^sub>2' \<subseteq> set_of t\<^sub>2" .
@@ -523,9 +523,9 @@ next
     proof (cases "subtract l t\<^sub>2'")
       case (Some t\<^sub>2'')
       note sub_l_Some = this
-      from Node.hyps (1) [OF Some dist_t2' ] 
+      from Node.hyps (1) [OF Some dist_t2' ]
       have dist_l: "all_distinct l" .
-      from subtract_Some_all_distinct_res [OF Some dist_t2'] 
+      from subtract_Some_all_distinct_res [OF Some dist_t2']
       have dist_t2'': "all_distinct t\<^sub>2''" .
       from subtract_Some_set_of [OF Some]
       have l_t2': "set_of l \<subseteq> set_of t\<^sub>2'" .
@@ -536,14 +536,14 @@ next
       show ?thesis
       proof (cases "subtract r t\<^sub>2''")
         case (Some t\<^sub>2''')
-        from Node.hyps (2) [OF Some dist_t2''] 
+        from Node.hyps (2) [OF Some dist_t2'']
         have dist_r: "all_distinct r" .
         from subtract_Some_set_of [OF Some]
         have r_t2'': "set_of r \<subseteq> set_of t\<^sub>2''" .
         from subtract_Some_dist_res [OF Some]
         have dist_r_t2''': "set_of r \<inter> set_of t\<^sub>2''' = {}".
 
-        from dist_l dist_r Some sub_l_Some del_x_Some r_t2'' l_t2' x_t2 x_not_t2' 
+        from dist_l dist_r Some sub_l_Some del_x_Some r_t2'' l_t2' x_t2 x_not_t2'
              t2''_t2' dist_l_t2'' dist_r_t2'''
         show ?thesis
           by auto
@@ -555,7 +555,7 @@ next
       qed
     next
       case None
-      with del_x_Some sub 
+      with del_x_Some sub
       show ?thesis
         by simp
     qed
@@ -567,43 +567,43 @@ qed
 
 
 lemma delete_left:
-  assumes dist: "all_distinct (Node l y d r)" 
+  assumes dist: "all_distinct (Node l y d r)"
   assumes del_l: "delete x l = Some l'"
   shows "delete x (Node l y d r) = Some (Node l' y d r)"
 proof -
   from delete_Some_x_set_of [OF del_l]
   obtain x: "x \<in> set_of l"
     by simp
-  with dist 
+  with dist
   have "delete x r = None"
     by (cases "delete x r") (auto dest:delete_Some_x_set_of)
 
-  with x 
+  with x
   show ?thesis
     using del_l dist
     by (auto split: option.splits)
 qed
 
 lemma delete_right:
-  assumes dist: "all_distinct (Node l y d r)" 
+  assumes dist: "all_distinct (Node l y d r)"
   assumes del_r: "delete x r = Some r'"
   shows "delete x (Node l y d r) = Some (Node l y d r')"
 proof -
   from delete_Some_x_set_of [OF del_r]
   obtain x: "x \<in> set_of r"
     by simp
-  with dist 
+  with dist
   have "delete x l = None"
     by (cases "delete x l") (auto dest:delete_Some_x_set_of)
 
-  with x 
+  with x
   show ?thesis
     using del_r dist
     by (auto split: option.splits)
 qed
 
-lemma delete_root: 
-  assumes dist: "all_distinct (Node l x False r)" 
+lemma delete_root:
+  assumes dist: "all_distinct (Node l x False r)"
   shows "delete x (Node l x False r) = Some (Node l x True r)"
 proof -
   from dist have "delete x r = None"
@@ -614,10 +614,10 @@ proof -
   ultimately show ?thesis
     using dist
        by (auto split: option.splits)
-qed               
+qed
 
 lemma subtract_Node:
- assumes del: "delete x t = Some t'"                                
+ assumes del: "delete x t = Some t'"
  assumes sub_l: "subtract l t' = Some t''"
  assumes sub_r: "subtract r t'' = Some t'''"
  shows "subtract (Node l x False r) t = Some t'''"
@@ -626,7 +626,7 @@ by simp
 
 lemma subtract_Tip: "subtract Tip t = Some t"
   by simp
- 
+
 text \<open>Now we have all the theorems in place that are needed for the
 certificate generating ML functions.\<close>
 

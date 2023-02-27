@@ -64,14 +64,14 @@ proc balance_of:
     op_get_var[where vname=v_account]
     op_get_mapping_ledgeRef
   ;;
-  
+
   ;;op_load_ledge
   thm \<phi>lemmata
   thm \<phi>morphism
   \<medium_right_bracket>. .
 
 (* { P } C {} *)
-(* { x : T * x2 : T2 * x3 : T3 ... \<and> P x x2 x3 } C { ... } 
+(* { x : T * x2 : T2 * x3 : T3 ... \<and> P x x2 x3 } C { ... }
 contract \<rightarrow> field-path \<rightarrow> value
 
 name \<rightarrow> heap
@@ -166,7 +166,7 @@ proc transfer_from:
       (if amount \<le> balance_alice \<and> amount \<le> allowance then allowance - amount else allowance)
         \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''allowance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (alice \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (bob \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> \<nat>[256] \<heavy_comma>
       \<^bold>v\<^bold>a\<^bold>l amount \<le> balance_alice \<and> amount \<le> allowance \<Ztypecolon> \<bool>\<close>
-  \<medium_left_bracket> 
+  \<medium_left_bracket>
 (* if amount \<le> balance_alice \<and> amount \<le> allowance
  *)
     \<rightarrow> v_alice, v_bob, v_amount
@@ -194,7 +194,7 @@ proc transfer_from:
     op_le
     op_and \<rightarrow> ret
   ;;if \<open>$ret\<close>
-  \<medium_left_bracket> 
+  \<medium_left_bracket>
   (* balance[alice] -= amount;
      balance[bob]   += amount;
      allowance[alice,bob] -= amount;
@@ -279,7 +279,7 @@ proc approve:
     op_get_var[where vname=v_amount]
     op_add
     op_store_ledge
-  \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. 
+  \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>.
   ;; \<open>$ret\<close>
   \<medium_right_bracket>. .
 

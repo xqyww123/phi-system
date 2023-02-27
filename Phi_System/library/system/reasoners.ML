@@ -54,7 +54,7 @@ fun chk_param X L idx =
 
 fun gen_defer_antecedent find_idx thm =
   case Thm.prems_of thm
-    of (H::L) => 
+    of (H::L) =>
       let val idx = find_idx H L
       in
         if idx = ~1

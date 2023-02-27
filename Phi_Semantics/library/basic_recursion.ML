@@ -62,7 +62,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt0,sequent0) =
                   Pretty.item [Pretty.str "Return  : ", Syntax.pretty_typ ctxt ret_ty]
                 ]))
             else ()
-    
+
     val N = length sem_args
     val f_T = Phi_Syntax.mk_proc'T arg_ty ret_ty
           --> fold_rev (curry (op -->)) arg_tys (Phi_Syntax.mk_procT ret_ty)

@@ -321,7 +321,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> A * B \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X * Y \<^bold>a\<^bold>n\<^bold>d P \<and> Q\<close>
   for A :: \<open>'a::sep_semigroup set\<close>
   by (meson implies_left_prod implies_right_prod implies_trans) *)
-  
+
 paragraph \<open>Action\<close>
 
 lemma [\<phi>reason 1200]:
@@ -1520,7 +1520,7 @@ lemma Agreement_shrink[
   \<open> (x \<Ztypecolon> Agreement T) * (x \<Ztypecolon> Agreement T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Agreement T @action action_shrink \<close>
   unfolding Imply_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
-  
+
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act
@@ -1631,7 +1631,7 @@ definition \<phi>MayInit :: \<open>TY \<Rightarrow> (VAL, 'x) \<phi> \<Rightarro
 lemma \<phi>MayInit_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>MayInit TY T) \<longleftrightarrow> (p = uninitialized \<and> (\<exists>z. Zero TY = Some z \<and> z \<in> (x \<Ztypecolon> T)) \<or> (\<exists>v. p = initialized v \<and> v \<in> (x \<Ztypecolon> T <of-type> TY)))\<close>
   unfolding \<phi>Type_def \<phi>MayInit_def by (simp add: \<phi>expns, blast)
-  
+
 lemma \<phi>MayInit_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>MayInit TY T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns, blast)

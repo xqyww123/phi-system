@@ -299,7 +299,7 @@ lemma split_paired_All_\<phi>arg:
 lemma split_paired_Ex_\<phi>arg:
   "(\<exists>x. P x) \<longleftrightarrow> (\<exists>a b. P (\<phi>V_pair a b))"
   by (metis \<phi>V_simps(1))
-  
+
 lemma split_paired_all_\<phi>arg:
   "(\<And>x. PROP P x) \<equiv> (\<And>a b. PROP P (\<phi>V_pair a b))"
   unfolding \<phi>arg_All \<phi>V_pair_def split_paired_all by simp
@@ -315,8 +315,8 @@ lemma split_paired_Ex_\<phi>arg_unit:
 lemma split_paired_all_\<phi>arg_unit:
   "(\<And>x. PROP P x) \<equiv> PROP P \<phi>V_none"
   unfolding \<phi>arg_All \<phi>V_pair_def split_paired_all by simp
-  
-  
+
+
 
 
 (* datatype unreachable = unreachable
@@ -348,7 +348,7 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
 \<^item> \<open>Invalid\<close> represents the computation is invalid.
   It defines the domain of valid programs, which are the ones that never never generates
   an execution path that results in \<open>Invalid\<close>.
- 
+
 \<^item> \<open>Assumption_Violated\<close> represents the computation that results in an execution path that is not
   considered or modelled by the trust base.
   For example, the formalization of the allocation instruction may assume the size of the object
@@ -384,7 +384,7 @@ lemma split_state_All:
 lemma split_state_Ex:
   \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Abnormality v r)) \<or> P Invalid
                 \<or> P AssumptionBroken \<or> P NonTerm\<close>
-  by (metis state.exhaust)  
+  by (metis state.exhaust)
 
 hide_const(open) resource
 

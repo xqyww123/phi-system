@@ -32,7 +32,7 @@ print_locale vars_namespace
 print_locale vars_valuetypes
 print_locale vars
 
-text \<open>\noindent This resembles a \<^theory_text>\<open>record\<close> definition, 
+text \<open>\noindent This resembles a \<^theory_text>\<open>record\<close> definition,
 but introduces sophisticated locale
 infrastructure instead of HOL type schemes. The resulting context
 postulates two distinct names \<^term>\<open>n\<close> and \<^term>\<open>b\<close> and
@@ -41,14 +41,14 @@ projection~/ injection functions that convert from abstract values to
 
 locale vars' =
   fixes n::'name and b::'name
-  assumes "distinct [n, b]" 
+  assumes "distinct [n, b]"
 
   fixes project_nat::"'value \<Rightarrow> nat" and inject_nat::"nat \<Rightarrow> 'value"
-  assumes "\<And>n. project_nat (inject_nat n) = n" 
+  assumes "\<And>n. project_nat (inject_nat n) = n"
 
   fixes project_bool::"'value \<Rightarrow> bool" and inject_bool::"bool \<Rightarrow> 'value"
   assumes "\<And>b. project_bool (inject_bool b) = b"
- 
+
 text \<open>\noindent The HOL predicate \<^const>\<open>distinct\<close> describes
 distinctness of all names in the context.  Locale \<open>vars'\<close>
 defines the raw logical content that is defined in the state space
@@ -69,8 +69,8 @@ corresponding distinctness theorem. As state spaces are merged or
 extended there are multiple distinctness theorems in the context. Our
 declarations take care that the link always points to the strongest
 distinctness assumption.  With these declarations in place, a lookup
-can be written as \<open>s\<cdot>n\<close>, which is translated to \<open>project_nat (s n)\<close>, and an 
-update as \<open>s\<langle>n := 2\<rangle>\<close>, which is translated to \<open>s(n := inject_nat 2)\<close>. 
+can be written as \<open>s\<cdot>n\<close>, which is translated to \<open>project_nat (s n)\<close>, and an
+update as \<open>s\<langle>n := 2\<rangle>\<close>, which is translated to \<open>s(n := inject_nat 2)\<close>.
 We can now establish the
 following lemma:\<close>
 
@@ -121,7 +121,7 @@ nodes in the larger and smaller tree, respectively.\<close>
 
 text \<open>We continue with more examples.\<close>
 
-statespace 'a foo :: group_add = 
+statespace 'a foo :: group_add =
   f::"nat\<Rightarrow>nat"
   a::int
   b::'self
@@ -131,19 +131,19 @@ print_locale foo
 thm foo_valuetypes_def
 
 
-lemma (in foo) foo1: 
+lemma (in foo) foo1:
   shows "s\<langle>a := i\<rangle>\<cdot>a = i"
   by simp
 
-lemma (in foo) foo2: 
+lemma (in foo) foo2:
   shows "(s\<langle>a:=i\<rangle>)\<cdot>a = i"
   by simp
 
-lemma (in foo) foo3: 
+lemma (in foo) foo3:
   shows "(s\<langle>a:=i\<rangle>)\<cdot>b = s\<cdot>b"
   by simp
 
-lemma (in foo) foo4: 
+lemma (in foo) foo4:
   shows "(s\<langle>a:=i,b:=j,c:=k,a:=x\<rangle>) = (s\<langle>b:=j,c:=k,a:=x\<rangle>)"
   by simp
 
@@ -151,7 +151,7 @@ statespace bar :: monoid_mult =
   b::bool
   c::string
 
-lemma (in bar) bar1: 
+lemma (in bar) bar1:
   shows "(s\<langle>b:=True\<rangle>)\<cdot>c = s\<cdot>c"
   by simp
 
@@ -183,12 +183,12 @@ locale fooX = foo +
 
 
 text \<open>
-We can also put statespaces side-by-side by using ordinary @{command locale} expressions 
+We can also put statespaces side-by-side by using ordinary @{command locale} expressions
 (instead of the @{command statespace}).
-\<close> 
+\<close>
 
 
-locale side_by_side = foo + bar where b="B::'a" and c=C for B C 
+locale side_by_side = foo + bar where b="B::'a" and c=C for B C
 
 context side_by_side
 begin
@@ -199,7 +199,7 @@ lemma "s<B := i>\<cdot>C = s\<cdot>C"
 lemma "s<a := i>\<cdot>b = s\<cdot>b"
   by simp
 
-text \<open>In contrast to the statespace @{locale loo} there is no 'inter' statespace distinctness 
+text \<open>In contrast to the statespace @{locale loo} there is no 'inter' statespace distinctness
 between the names of @{locale foo} and @{locale bar}.\<close>
 end
 
@@ -233,7 +233,7 @@ statespace merge_vars1_vars2 = vars1 + vars2
 
 context merge_vars1_vars2
 begin
-text \<open>When defining a statespace instead of a side-by-side locale we get the distinctness of 
+text \<open>When defining a statespace instead of a side-by-side locale we get the distinctness of
 all variables.\<close>
 lemma "s<k := i>\<cdot>m = s\<cdot>m"
   by simp

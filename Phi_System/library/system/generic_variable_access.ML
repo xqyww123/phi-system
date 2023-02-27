@@ -172,7 +172,7 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
 ]))
 
 end
-  
+
 (*** Initial Process for Arguments ***)
 
 (** Predefined Processes **)
@@ -196,7 +196,7 @@ fun register_value_spec_thms pos rules =
   Phi_Reasoner.add_intro_rules (map (fn rule =>
     let
       val i = maxidx_of_term (Thm.prop_of rule) + 1
-      val pattern = 
+      val pattern =
             (case Thm.prop_of rule
                of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)

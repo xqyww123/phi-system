@@ -33,7 +33,7 @@ end
 structure NuApply : NU_APPLICATION = struct
 open Phi_Help
 
-val expand_appliant = 
+val expand_appliant =
   repeat (fn th => th RS @{thm spec}) #>
   repeat (fn th => th RS @{thm mp}) #>
   repeat (fn th => th RS @{thm spec})
@@ -99,7 +99,7 @@ fun MPs ctxt th1s' th2 =
      ) th1s
     val _ = Phi_Reasoner.debug_print ctxt (fn _ => "Reasoning modus pones..." ^ Position.here \<^here>)
     fun obligation_fail S = raise Phi_Reasoners.Attemption_Fail S
-  in 
+  in
     case Seq.pull (Phi_Reasoner.reason_s ctxt stats)
       of SOME (stat, _) => snd (Phi_Reasoners.safer_obligation_solver' obligation_fail stat)
        | NONE => Phi_Reasoner.error "Meta Modus Pones"

@@ -57,7 +57,7 @@ fun add_debt_axiom ctxt (b, prop) thy =
     val axm_term = Logic.list_implies (maps Logic.mk_of_sort constraints, prop')
           |> Thm.global_cterm_of thy
     val (axm', thy') = Debt_Axiom_Kernel.axiomize (axm_name, axm_term) thy
-    
+
     val thm =
       Thm.instantiate (TVars.make recover, Vars.empty) axm'
         |> Thm.unvarify_global thy'
@@ -177,7 +177,7 @@ fun instantiate_type_cmd (binding, ((T,T'),RB_AB)) thy =
 
 val debts = Debt_Axiom_Kernel.debts
 fun list_debts thy =
-  let open Pretty 
+  let open Pretty
     val debts = Symtab.dest (Debt_Axiom_Kernel.debts thy)
   in
     writeln (chunks (

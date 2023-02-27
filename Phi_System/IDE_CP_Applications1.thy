@@ -301,7 +301,7 @@ lemma as_\<phi>app:
   " \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m S
 \<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> N \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' \<^bold>a\<^bold>n\<^bold>d P @action \<A>_transform_to_be S
 \<Longrightarrow> x \<Ztypecolon> N \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' \<^bold>a\<^bold>n\<^bold>d P"
-  unfolding Do_def Action_Tag_def . 
+  unfolding Do_def Action_Tag_def .
 
 lemma [\<phi>reason 10]:
   \<open> (x \<Ztypecolon> T) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S

@@ -71,7 +71,7 @@ lemma \<phi>M_getV[intro!]:
 declare \<phi>M_getV[where X=1, simplified, intro!]
 
 lemma \<phi>M_caseV[intro!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F va vb \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F va vb \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_caseV F (\<phi>V_pair va vb) \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>M_caseV_def \<phi>V_pair_def by simp
 
@@ -166,7 +166,7 @@ lemma \<phi>Res_Spec_expn_impEx:
 lemma \<phi>Res_Spec_expn_impSubj:
   \<open>(x \<in> \<phi>Res_Spec (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j B) \<longrightarrow> P) \<longleftrightarrow> (B \<longrightarrow> x \<in> \<phi>Res_Spec A \<longrightarrow> P)\<close>
   by (metis Subjection_expn \<phi>Res_Spec_subj)
-  
+
 
 paragraph \<open>Weakest Precondition Transformer for \<phi>Res_Spec\<close>
 
@@ -475,7 +475,7 @@ lemma expand_subj:
       apply (rule exI[where x=\<open>a\<close>], rule exI[where x=\<open>R.mk (y * x)\<close>])
       apply (metis R.inj.homo_mult fun_1upd_homo prems(5) prems(6) prems(7) sep_disj_multI2 share.homo_mult t1)
       by (metis prems(8) sep_disj_get_name_eq share.sep_disj_homo_semi t1)
-      
+
   qed .
 
 lemma expand:
@@ -498,7 +498,7 @@ lemma expand_conj:
 
 lemma partial_implies_raw:
   \<open> Fic_Space r
-\<Longrightarrow> 0 < n 
+\<Longrightarrow> 0 < n
 \<Longrightarrow> r ## mk (share n (perm_functor x))
 \<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (share n (perm_functor x))))
 \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
@@ -509,7 +509,7 @@ lemma partial_implies_raw:
   apply (cases \<open>n \<le> 1\<close>)
   apply (metis join_sub_def join_sub_ext_left sep_disj_get_name_eq share.join_sub_share_join_sub_whole)
   subgoal premises prems for u y a proof -
-    have t0: \<open>1 / n * n = 1\<close> using prems(12) by force 
+    have t0: \<open>1 / n * n = 1\<close> using prems(12) by force
     have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close> using prems(12) by force
     have t2: \<open>share (1/n) (share n (perm_functor x)) \<preceq>\<^sub>S\<^sub>L share n (perm_functor x)\<close>
       by (simp add: order_less_imp_le prems(2) share.\<psi>_self_disj share_sub t1)
@@ -611,7 +611,7 @@ begin
 sublocale basic_fiction \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
   \<open>\<F>_optionwise \<F>_agree\<close>
   by (standard; simp add: R.fiction_agree_def)
-                       
+
 lemma partial_implies:
   \<open> Fic_Space r
 \<Longrightarrow> r ## mk (Some (agree (nonsepable x)))
@@ -1182,7 +1182,7 @@ definition op_try :: "'ret proc \<Rightarrow> (ABNM \<Rightarrow> 'ret proc) \<R
                                        | Invalid \<Rightarrow> {Invalid}) ` f s)\<close>
 
 lemma "__op_try__"[intro!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E v) 
+  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E v)
 \<Longrightarrow> (\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> Y2 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 )
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> \<lambda>v. Y1 v + Y2 v \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2  \<close>
   unfolding op_try_def \<phi>Procedure_def subset_iff
@@ -1249,7 +1249,7 @@ proc (nodef) try'':
   output YY
   throws EE2
   \<medium_left_bracket> "__op_try__"
-    F  
+    F
     G
   \<medium_right_bracket> .. .
 
@@ -1260,7 +1260,7 @@ proc (nodef) try':
   input  X
   output Z
   throws E2
-  \<medium_left_bracket> "__op_try__" F G 
+  \<medium_left_bracket> "__op_try__" F G
       unfold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def, THEN spec, symmetric]
   \<medium_right_bracket>. .
 
@@ -1323,7 +1323,7 @@ context identity_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_get_res_entry_frm[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
       \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
@@ -1341,7 +1341,7 @@ context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_get_res_entry_frm[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
       \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
@@ -1370,7 +1370,7 @@ lemma (in partial_map_resource2) \<phi>R_get_res_entry[intro!]:
 
 lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
       \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
@@ -1381,7 +1381,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[int
 
 lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry1[intro!]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E 
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
       \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
   using \<phi>R_get_res_entry[where n=1, simplified] .
@@ -1618,7 +1618,7 @@ lemma (in identity_fiction_for_partial_mapping_resource) "\<phi>R_allocate_res_e
     using Fic_Space_Un \<phi>Res_Spec_mult_homo prems(6) prems(7) prems(8) prems(9) sep_disj_fiction sep_disj_multI2 by blast
   . .
 
-  
+
 
 (*
 

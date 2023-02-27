@@ -310,7 +310,7 @@ fun caseprod (tm as (Abs (_,_, Abs (_,_, _)))) = prodconst $ tm
   | caseprod (tm as (Abs (_,_, Const (@{const_name case_prod}, _) $ _))) = prodconst $ tm
   | caseprod tm = tm
 val tuple_abs = fold_rev (caseprod oo absfree'')
-   
+
 
 fun comp_rule ctxt incremented th1 th2 =
   Thm.bicompose (SOME ctxt) {flatten = true, match = false, incremented = incremented}

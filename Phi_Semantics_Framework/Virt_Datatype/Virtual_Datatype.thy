@@ -71,12 +71,12 @@ begin
 lemma not_constructor_not_instance[simp]:
   \<open>CONS_OF v \<noteq> name \<Longrightarrow> v \<notin> domain \<equiv> True\<close>
   unfolding atomize_eq using name_of by blast
-  
+
 lemma in_domain_cons[simp]: "v \<in> domain \<Longrightarrow> CONS_OF v = name"
   using name_of domain_def by force
 
 lemma in_domain_mk_dest[simp]: "v \<in> domain \<Longrightarrow> mk (dest v) = v"
-  using domain_def dest_mk by fastforce 
+  using domain_def dest_mk by fastforce
 
 end
 

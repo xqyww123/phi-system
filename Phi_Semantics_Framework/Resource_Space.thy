@@ -32,7 +32,7 @@ translations
 subsection \<open>Resource Space\<close>
 
 text \<open>The section gives a locale-based approach for modelling modularly compound resource states
-  that combine different kinds of resources modelled by different types. 
+  that combine different kinds of resources modelled by different types.
 It is in essence a modified Statespace ~\cite{Statespace} with the sort constraint of \<open>sep_algebra\<close>.
 
 Different kinds of resources can use different types for modelling, and the compound is represented

@@ -161,7 +161,7 @@ declare [[\<phi>reason_default_pattern
   \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close> (100)
  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?Y ?E \<^bold>a\<^bold>n\<^bold>d ?Any\<close>
   \<Rightarrow> \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l _ _ \<^bold>a\<^bold>n\<^bold>d _\<close>  (100)]]
-     
+
 
 lemma [\<phi>reason 1010 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame ?l ?var_Y' ?var_E'\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame' l Y E
@@ -176,12 +176,12 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> E \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' @action ToSA
 \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
-            TAIL_def Brking_Frame_def 
+            TAIL_def Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
     X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> Brk_Frame l)\<close> ..
             \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..
   \<medium_right_bracket>. .
-  
+
 
 lemma [\<phi>reason 3000 for \<open>_ \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ * \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close>]:
   \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s sift_brking_frame l Y E

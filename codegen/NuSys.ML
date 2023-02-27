@@ -10,7 +10,7 @@ val op_local_value_gen = push
 fun op_sel_gen ty = pop (fn C => binop' expr ("select i1 " ^ to_s C ^ ", ") ty ty)
 
 fun op_if_gen ty brT brF = assign_label (fn Lt => assign_label (fn Lf => assign_label (fn Lx =>
-  br' Lt Lf #> put_bb Lt #> get_ssa (fn s0 => brT #> get_bb (fn Lt' => br Lx #> get_ssa (fn sT => 
+  br' Lt Lf #> put_bb Lt #> get_ssa (fn s0 => brT #> get_bb (fn Lt' => br Lx #> get_ssa (fn sT =>
                put_bb Lf #> map_ssa (K s0) #> brF #> get_bb (fn Lf' => br Lx #> get_ssa (fn sF =>
                put_bb Lx #> map_ssa (K (sT <*> sF <*> Nil)) #> phi ty Lt' Lf' #> trunc_tail))))))))
 

@@ -6,5 +6,5 @@ val _ = Theory.setup (Sign.print_ast_translation (let open Ast in
       if Config.get ctxt phi_display_value_internal_name
       then raise Match
       else Appl [Constant \<^syntax_const>\<open>val_syntax\<close>, b]))
-  ] 
+  ]
 end))

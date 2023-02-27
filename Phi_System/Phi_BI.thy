@@ -13,7 +13,7 @@ All specifications in \<phi>-System are in Multi-Term Form. It is so pervasive t
 notation to denote them,
 \[ \<open>(x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<^emph> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<^emph> \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n \<^bold>s\<^bold>u\<^bold>b\<^bold>j a. P)\<close> \]
 Readers may read it as a set,
-\[ \<open>{ x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<^emph> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<^emph> \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n |a. P }\<close> \] 
+\[ \<open>{ x\<^sub>1 \<Ztypecolon> T\<^sub>1 \<^emph> x\<^sub>2 \<Ztypecolon> T\<^sub>2 \<^emph> \<cdots> x\<^sub>n \<Ztypecolon> T\<^sub>n |a. P }\<close> \]
 
 \<^descr> \<^emph>\<open>Simple Multi-Term Form\<close> is a MTF where there is no existential quantification and the attached
   \<open>P\<close> is trivial \<open>True\<close>, viz., it is characterized by
@@ -43,7 +43,7 @@ Specifically, in this minimal specialized BI:
     instead of a family of assertions indexed by free variables.
 
   \<^item> The use of a implication represents a transformation of abstraction.
-    Therefore, implications are never curried or nested, always in form \<open>X \<longrightarrow> Y \<and> P\<close> 
+    Therefore, implications are never curried or nested, always in form \<open>X \<longrightarrow> Y \<and> P\<close>
     where \<open>X, Y\<close> are MTF and \<open>P\<close> is a pure proposition.
     We denote them by notation \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>.
 
@@ -189,7 +189,7 @@ definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (inf
 lemma Subjection_expn[\<phi>expns]:
   "p \<in> (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> p \<in> T \<and> P"
   unfolding Subjection_def by simp
- 
+
 lemma Subjection_inhabited[elim!,\<phi>inhabitance_rule]:
   \<open>Inhabited (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: Subjection_expn)

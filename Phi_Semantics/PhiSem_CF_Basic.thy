@@ -86,7 +86,7 @@ proof -
     apply (induct rule: SemRec.induct)
      apply clarify
     subgoal for F a b y s2 apply (rotate_tac 1)
-      apply (induct rule: SemRec.induct) by auto 
+      apply (induct rule: SemRec.induct) by auto
     apply clarify apply (blast intro: SemRec_IR) done
   thus ?thesis using assms by simp
 qed
@@ -214,10 +214,10 @@ lemma "__op_recursion_simp__":
 \<Longrightarrow> \<forall>x v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x"
   unfolding op_fix_point_def \<phi>Procedure_def atomize_all
   apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
-  
+
   subgoal for x v comp a R
-    apply (rotate_tac 1) apply (induct rule: SemRec.induct) 
-    
+    apply (rotate_tac 1) apply (induct rule: SemRec.induct)
+
     subgoal premises prems for F v res y
       using prems(3)[of \<open>\<lambda>_ _. {AssumptionBroken}\<close> x v, simplified, THEN spec[where x=res],
                      THEN spec[where x=R], THEN mp, OF prems(2), unfolded prems(1)] .
@@ -243,7 +243,7 @@ lemma "__op_recursion__":
   apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
 
   subgoal for comp a R
-    apply (rotate_tac 2) apply (induct rule: SemRec.induct) 
+    apply (rotate_tac 2) apply (induct rule: SemRec.induct)
 
     subgoal premises prems for F v res y
       using prems(3)[OF prems(4),

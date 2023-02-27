@@ -86,7 +86,7 @@ fun parse_assigner ctxt =
                      ])) end
   in map parse
   end
-  
+
 
 
 fun strip_imp_prems_rev ret ct =
@@ -126,11 +126,11 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
               val delt = 1 + find_index is_body (Thm.prems_of th)
               val _ = if delt = 0 then error "Internal Bug: Some assignment rule is wrong!" else ()
             in Thm.permute_prems 0 delt th end)
-        |> Phi_Reasoner.reason1 (fn _ => 
+        |> Phi_Reasoner.reason1 (fn _ =>
             "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
            ) (SOME ~1)
         |> apsnd (fn th => th RS @{thm conjunct1})
-  
+
   in if null vterms
      then (ctxt, @{thm "\<phi>__Return_rule__"[OF view_shift_refl]} RS proc)
               |> Phi_Sys.accept_proc
@@ -138,11 +138,11 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
       (*insert a callback frame for concatenating sequents*)
       val (_, ctxt) = Assumption.add_assms
                             (fn _ => fn _ => (concact_sequent ctxt proc vterms, I)) [] ctxt
-      
+
       val (rev_hyps, proc_cterm) = Thm.cprem_of proc 1
                |> fold (fn v => fn prem => Drule.beta_conv (Thm.dest_arg prem) v) vterms
                |> strip_imp_prems_rev []
-      
+
       (*Now we change the goal of the programming context to add the *)
       val (_,arg_spec,ret_spec,E_spec) = Phi_Syntax.dest_procedure_c proc_cterm
       val goal = Phi_Envir.get_thesis ctxt
@@ -167,14 +167,14 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
       (*  val goal_E'   = instantiate_R goal_E   E_spec *)
       val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_Pending goal_ret') goal_E)
       val ctxt = Phi_Envir.put_thesis goal' ctxt
-      
+
       (*declare every hypothesis*)
       val (Hs,ctxt) = Assumption.add_assms Assumption.presume_export (rev rev_hyps) ctxt
       val ctxt = fold2 (fn H => fn D => D H) Hs decl ctxt
-      
+
       (*make the new initial sequent*)
       val (ctxt, sequent') = Phi_Working_Mode.initialize_sequent_procedure arg_spec ctxt
-      
+
       val (_, ctxt) = Assumption.add_assms (fn _ => fn _ =>
                 ((fn sequentx => #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx)
                                     |> Phi_Reasoners.safer_obligation_solver1

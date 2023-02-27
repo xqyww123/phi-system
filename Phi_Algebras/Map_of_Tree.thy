@@ -128,7 +128,7 @@ lemma push_pull_map:
   by simp (metis append_take_drop_id)
 
 lemma pull_map_1[simp]:
-  \<open>pull_map idx 1 = 1\<close> 
+  \<open>pull_map idx 1 = 1\<close>
   unfolding pull_map_def fun_eq_iff by simp
 
 lemma pull_map_0[simp]:

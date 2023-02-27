@@ -207,7 +207,7 @@ lemma \<open>C1.is_instance (C1.mk x)\<close>
       \<open>\<not> C2.is_instance (C1.mk x)\<close>
       \<open>C1.is_instance v \<longleftrightarrow> (\<exists>x. v = C1.mk x)\<close>
   \<comment> \<open>\<open>C.is_instance\<close> asserts whether a representation is an instance of the constructor.\<close>
-  unfolding C1.is_instance_def by simp+ 
+  unfolding C1.is_instance_def by simp+
 end
 
 
@@ -311,7 +311,7 @@ interpretation interp1: TR
   \<open>Virtual_Datatype.Field MY_R_NIL (\<lambda>_. ()) (\<lambda>_. [])\<close>
   \<open>Virtual_Datatype.Field MY_R_CONS (\<lambda>l. case l of (a#l') \<Rightarrow> (a,l')) (\<lambda>(a,l'). a#l')\<close>
   by unfold_locales (auto split: list.split unit.split)
-  
+
 thm interp1.sth_def[simplified] \<comment> \<open>@{thm interp1.sth_def[simplified]}\<close>
 
 

@@ -13,7 +13,7 @@ include PHI_SYNTAX
 
   val dest_implication   : term  -> term * term * term
   val dest_implication_c : cterm -> cterm * cterm * cterm
-  
+
   val strip_separations : term -> term list
   val mk_separations : term list -> term
 
@@ -81,6 +81,6 @@ fun mk_sem_value_T T = Type(\<^type_name>\<open>\<phi>arg\<close>, [T])
 fun mk_phi_type (x,T) =
   let val \<^Type>\<open>fun \<open>a\<close> \<open>\<^Type>\<open>set \<open>b\<close>\<close>\<close>\<close> = Phi_Help.safe_fastype_of  T
    in \<^Const>\<open>\<phi>Type a b\<close> $ x $ T end
-  
+
 
 end

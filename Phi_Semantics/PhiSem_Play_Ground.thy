@@ -47,7 +47,7 @@ ML \<open>Phi_Helper_Conv.aggregate_imps_obj (K Conv.all_conv) \<^context> \<^cp
 
 fun fib :: \<open>nat \<Rightarrow> nat\<close> where
   \<open>fib 0 = 1\<close> | \<open>fib (Suc 0) = 1\<close> | \<open>fib n = fib (n-1) + fib (n-2)\<close>
-    
+
 proc FIB:
   input \<open>\<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l fib n \<Ztypecolon> \<nat>\<close>
@@ -68,7 +68,7 @@ proc FIB2:
   is [recursive n]
   \<medium_left_bracket> if \<open>$n \<le> 1\<close> \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>. \<medium_left_bracket>
         \<open>$n - 1\<close> FIB2 \<rightarrow> val a;;
-        \<open>$n - 2\<close> FIB2 \<rightarrow> val b;;  
+        \<open>$n - 2\<close> FIB2 \<rightarrow> val b;;
         \<open>$a + $b\<close>
   \<medium_right_bracket>.
   \<medium_right_bracket> by (smt (verit, ccfv_threshold) One_nat_def Value_of_def fib.elims fib.simps(1) fib.simps(2) le_Suc_eq le_zero_eq) .
@@ -107,9 +107,9 @@ proc
 
 
 
-proc XXX: 
+proc XXX:
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>\<close>
-  premises A: \<open>x < 10\<close>  
+  premises A: \<open>x < 10\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>\<close>
   is [recursive x]
   is [recursive x]
@@ -118,10 +118,10 @@ proc XXX:
   thm ZZZ
   ;; $xaa ZZZ XXX YYY
  \<medium_right_bracket> .. .
-    
+
 proc YYY:
   input \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l y \<Ztypecolon> \<nat>\<close>
-  premises A: \<open>x < y\<close>    
+  premises A: \<open>x < y\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>\<heavy_comma> 20 \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close>
   is [recursive x y]
   is [recursive x y]

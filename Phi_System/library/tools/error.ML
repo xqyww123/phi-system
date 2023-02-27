@@ -22,7 +22,7 @@ exception ReasoningFail of thm
 (*THIS MERGE IS WRONG! ! ! !*)
 fun merge (f,g) = (fn c => fn e => f (g c) e)
 
-structure D = Theory_Data(struct 
+structure D = Theory_Data(struct
   type T = (exn -> unit) -> exn -> unit
   val empty = I
   val merge = merge

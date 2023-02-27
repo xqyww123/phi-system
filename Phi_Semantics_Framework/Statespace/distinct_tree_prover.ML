@@ -225,7 +225,7 @@ fun find_in_set ctxt t ct =
   case find_tree t (Thm.term_of ct) of
     SOME ps => in_set ctxt ps ct
   | NONE => raise TERM ("find_in_set", [t, Thm.term_of ct])
- 
+
 (*
 1. First get paths x_path y_path of x and y in the tree.
 2. For the common prefix descend into the tree according to the path

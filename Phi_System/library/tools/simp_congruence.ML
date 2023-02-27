@@ -65,5 +65,5 @@ fun simproc_qualifier cong ctx cterm =
           => Option.map (norm_name name) (simproc cong ctx cterm) (* |> @{print} *)
       | _ => NONE
   end
-  
+
 end
