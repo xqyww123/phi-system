@@ -365,7 +365,9 @@ fun call_tactics trace N ctxt tactics th =
         )
   handle Local_Cut ret => [ret]
        | Success s => Success_Handlers.invoke (fst s) s
+                   |> map (fn (p,s) => (0,p,s))
        | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
+                      |> map (fn (p,s) => (0,p,s))
 
 fun gen_reason _ _ _ _ _ [] = NONE
   | gen_reason N trace limit iter tactics ([]::L) =

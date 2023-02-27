@@ -946,34 +946,27 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 subsection \<open>Exhaustive Divergence\<close>
 
-definition Exhaustive_Divergence :: \<open>prop \<Rightarrow> prop\<close> where [iff]: \<open>Exhaustive_Divergence X \<equiv> X\<close>
-definition [iff]: \<open>Stop_Divergence \<longleftrightarrow> True\<close>
-
-definition Exhaustive_Divergence_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Exhaustive_Divergence_embed X \<equiv> X\<close>
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>Exhaustive_Divergence (Trueprop P) \<equiv> Trueprop (Exhaustive_Divergence_embed P)\<close>
-  unfolding Exhaustive_Divergence_embed_def Exhaustive_Divergence_def .
-
-subsubsection \<open>Implementation\<close>
-
-lemma Stop_Divergence_I: \<open>Stop_Divergence\<close> unfolding Stop_Divergence_def ..
+declare [[ML_debugger]]
 
 ML_file \<open>library/exhaustive_divergen.ML\<close>
 
-\<phi>reasoner_ML Stop_Divergence 1000 (\<open>Stop_Divergence\<close>) = \<open>
-  apsnd (fn th => @{thm Stop_Divergence_I} RS th) #> PLPR_Exhaustive_Divergence.stop\<close>
-
 definition \<open>Begin_Exhaustive_Divergence \<longleftrightarrow> True\<close>
 definition \<open>  End_Exhaustive_Divergence \<longleftrightarrow> True\<close>
+definition [iff]: \<open>Stop_Divergence \<longleftrightarrow> True\<close>
+
+lemma Stop_Divergence_I: \<open>Stop_Divergence\<close> unfolding Stop_Divergence_def ..
 
 lemma Begin_Exhaustive_Divergence_I: \<open>Begin_Exhaustive_Divergence\<close>
   unfolding Begin_Exhaustive_Divergence_def ..
+
 lemma End_Exhaustive_Divergence_I: \<open>End_Exhaustive_Divergence\<close>
   unfolding End_Exhaustive_Divergence_def ..
 
 \<phi>reasoner_ML Begin_Exhaustive_Divergence 1000 (\<open>Begin_Exhaustive_Divergence\<close>)
   = \<open>PLPR_Exhaustive_Divergence.begin Seq.of_list\<close>
+
+\<phi>reasoner_ML Stop_Divergence 1000 (\<open>Stop_Divergence\<close>) =
+  \<open>apsnd (fn th => @{thm Stop_Divergence_I} RS th) #> PLPR_Exhaustive_Divergence.stop\<close>
 
 \<phi>reasoner_ML End_Exhaustive_Divergence 1000 (\<open>End_Exhaustive_Divergence\<close>)
   = \<open>PLPR_Exhaustive_Divergence.exit\<close>
@@ -998,10 +991,6 @@ definition Optimum_Solution :: \<open>prop \<Rightarrow> prop\<close> where [iff
 text \<open>Each individual invocation of \<open>Optimum_Solution P\<close>
 invokes an individual instance of the optimal solution reasoning.
 The reasoning of \<open>P\<close> is proceeded exhaustively meaning exploring all backtracks except local cuts.
-A search branch can turn off the exhaustive divergence early by invoking \<^prop>\<open>Stop_Divergence\<close>.
-If so the following reasoning will be in the normal DFS mode terminating once the first solution
-reached, but the cost is still counted, and still only the optimal solution will be returned
-when exiting \<open>Optimum_Solution\<close>.
 
 Global cut is disabled until the exhaustive divergence end (maybe
   by \<^prop>\<open>Stop_Divergence\<close> early), because it kill other search branches.
@@ -1014,14 +1003,25 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Optimum_Solution (Trueprop P) \<equiv> Trueprop (Optimum_Solution_embed P)\<close>
   unfolding Optimum_Solution_embed_def Optimum_Solution_def .
 
+definition [iff]: \<open>Begin_Optimum_Solution \<longleftrightarrow> True\<close>
+definition [iff]: \<open>End_Optimum_Solution \<longleftrightarrow> True\<close>
+
+definition \<r>Choice :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CHOICE _" [3] 2) where \<open>\<r>Choice P \<equiv> P\<close>
+
+lemma \<r>Choice_I:
+  \<open> PROP P
+\<Longrightarrow> PROP \<r>Choice P\<close>
+  unfolding \<r>Choice_def .
+
+
 subsubsection \<open>Implementation\<close>
 
-definition [iff]: \<open>End_Optimum_Solution \<longleftrightarrow> True\<close>
 
 lemma Incremental_Cost_I: \<open>Incremental_Cost X\<close> unfolding Incremental_Cost_def ..
 
 lemma Threshold_Cost_I: \<open>Threshold_Cost X\<close> unfolding Threshold_Cost_def ..
 
+lemma Begin_Optimum_Solution_I: \<open>Begin_Optimum_Solution\<close> unfolding Begin_Optimum_Solution_def ..
 lemma End_Optimum_Solution_I: \<open>End_Optimum_Solution\<close> unfolding End_Optimum_Solution_def ..
 
 lemma Do_Optimum_Solution:
@@ -1050,6 +1050,11 @@ ML_file \<open>library/optimum_solution.ML\<close>
 
 \<phi>reasoner_ML Optimum_Solution 1000 (\<open>PROP Optimum_Solution _\<close>) = \<open>
    apsnd (fn th => @{thm Do_Optimum_Solution} RS th)
+#> PLPR_Optimum_Solution.start
+\<close>
+
+\<phi>reasoner_ML Optimum_Solution 1000 (\<open>Begin_Optimum_Solution\<close>) = \<open>
+   apsnd (fn th => @{thm Begin_Optimum_Solution_I} RS th)
 #> PLPR_Optimum_Solution.start
 \<close>
 

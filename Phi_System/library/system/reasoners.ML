@@ -21,27 +21,13 @@ fun find_obligation flag i (( _ $ (@{term Proof_Obligation} $ _ ))::L) =
       find_obligation (flag orelse is_deferable X) (i+1) L
   | find_obligation _ _ [] = ~1
 
-fun gen_defer_antecedent chk thm =
-  let
-    val idx = tl (Thm.prems_of thm) |> find_obligation false 0
-    val _ = chk idx (Thm.prems_of thm)
-  in
-    if idx = ~1
-    then error ("Fail to defer a proof obligation: an \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n antecedent is not found.")
-    else Thm.permute_prems 1 idx thm
-      |> Thm.permute_prems 0 (~idx)
-      |> Seq.single
-  end
-
-val defer_antecedent = gen_defer_antecedent (K I)
-
 val err_msg = "Bad configuration of reasoning rules!\n\
             \Some antecedents are bound on undetermined variables to be given by users in future, \
             \which can only be used in \<^bold>d\<^bold>o, \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e.\n\
             \Check any variables assigned by \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m antecedent are only used in \
             \\<^bold>d\<^bold>o, \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e."
 
-fun chk_param idx (X::L) =
+fun chk_param X L idx =
   let
     val vars = Term.add_vars  X [] |> Vartab.make
     val tvars= Term.add_tvars X [] |> Vartab.make
@@ -60,9 +46,25 @@ fun chk_param idx (X::L) =
         else if not (is_deferable X) andalso has_bad X
         then Phi_Reasoner.error err_msg
         else chk (i-1) L
-  in chk idx L
+  in (chk idx L; idx)
   end
 
-val defer_param_antecedent = gen_defer_antecedent chk_param
+fun gen_defer_antecedent find_idx thm =
+  case Thm.prems_of thm
+    of (H::L) => 
+      let val idx = find_idx H L
+      in
+        if idx = ~1
+        then error ("Fail to defer a proof obligation: an \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n antecedent is not found.")
+        else Thm.permute_prems 1 idx thm
+          |> Thm.permute_prems 0 (~idx)
+          |> Seq.single
+      end
+     | [] => Seq.single thm
+
+val defer_antecedent = gen_defer_antecedent (fn X => fn L => find_obligation false 0 L)
+
+val defer_param_antecedent = gen_defer_antecedent (fn X => fn L =>
+      chk_param X L (find_obligation false 0 L))
 
 end

@@ -261,9 +261,11 @@ lemma op_add_aint_\<phi>app[\<phi>overload +, \<phi>synthesis 100]:
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
+declare [[\<phi>trac]]
+
 lemma op_add_anat_\<phi>app[\<phi>overload +, \<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<nat> \<rbrace> \<close>
-  \<medium_left_bracket> $vx $vy op_add_aint \<medium_right_bracket> by fastforce .
+      \<medium_left_bracket> $vx $vy op_add_aint \<medium_right_bracket> by fastforce .
 
 paragraph \<open>Subtraction\<close>
 

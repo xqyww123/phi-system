@@ -493,9 +493,11 @@ text \<open>
   Therefore the synthesis reasoning also contains two phases. The first phase split the synthesis
   problem for the original big composite expression down to several small problems of
   choosing the intermediate abstraction relations and instantiating proper refinement for each
-  operators. And the second phase is an A* search finding the optimum choices and the instantiations.
-  The first phase is more deterministic, and the first-reached solution (according to the PLPR
-  priority of the configured rules) is adopted and the remains are dropped.
+  operators. And the second phase is an heuristic search finding the optimum choices
+  and the instantiations.
+  The first phase is a greedy algorithm as what we assumed.
+  The first-reached solution (according to the PLPR priority of the configured rules) is adopted
+  and the remains are dropped.
   The second phase is exhaustive for every possible search branches (with pruning).
   
   Candidates of the second phase are measured by the distance of the transformation used inside.
@@ -512,6 +514,10 @@ definition DoSynthesis_embed :: \<open>'a \<Rightarrow> bool \<Rightarrow> bool 
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>DoSynthesis term (Trueprop sequent) (Trueprop result) \<equiv> Trueprop (DoSynthesis_embed term sequent result)\<close>
   unfolding DoSynthesis_def DoSynthesis_embed_def atomize_imp .
+
+definition Optimal_Synthesis :: \<open>prop \<Rightarrow> prop\<close> where \<open>Optimal_Synthesis P \<equiv> P\<close>
+
+
 
 subsubsection \<open>Parse the Term to be Synthesised\<close>
 
@@ -562,6 +568,9 @@ subsubsection \<open>Tagging the target of a synthesis rule\<close>
 consts synthesis :: action
 
 text \<open>
+  Only procedure rules need to be tagged by \<^const>\<open>synthesis\<close>. The view shift and the ToA do not.
+
+
   Occurring in the post-condition of a rule (either a procedure specification or a view shift
     or an implication), SYNTHESIS tags the target of the rule, i.e., the construct that this
     procedure or this transformation synthesises.
@@ -611,6 +620,8 @@ lemma [\<phi>reason 1200
 ]:
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' v \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis
+\<Longrightarrow> Begin_Optimum_Solution
+\<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X
@@ -628,6 +639,8 @@ lemma [\<phi>reason 1200
 ]:
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S2\<heavy_comma> \<blangle> X' \<brangle> \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> Begin_Optimum_Solution
+\<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X
@@ -645,6 +658,8 @@ lemma [\<phi>reason 1200
 ]:
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2\<heavy_comma> \<blangle> X' \<brangle> \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> Begin_Optimum_Solution
+\<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X
@@ -683,6 +698,8 @@ lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (PROP ?P \<Longrightarrow> PROP ?Q) ?RET\<close>
 ]:
   " PROP Synthesis_by X (PROP P)
+\<Longrightarrow> Begin_Optimum_Solution
+\<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X (PROP P \<Longrightarrow> PROP Q) (PROP Q)"

@@ -1,8 +1,9 @@
 signature PLPR_OPTIMUM_SOLUTION = sig
 
 val start  : context_state -> context_state Seq.seq
-val report_cost : int (*incremental*) * int (*threshold*) -> context_state -> context_state Seq.seq
 val finish : context_state -> context_state Seq.seq
+val report_cost : int (*incremental-distance*) * int (*maximal-distance*)
+              -> context_state -> context_state Seq.seq
 
 val best_among : (Proof.context * thm list) -> context_state option
 
@@ -10,92 +11,98 @@ end
 
 structure PLPR_Optimum_Solution : PLPR_OPTIMUM_SOLUTION = struct
 
-type cost = int (*incremental*) * int (*threshold*)
+exception YIELD
+
+type cost = int (*incremental-distance*) * int (*maximal-distance*)
 val eval : cost -> int = Int.max
 
-structure Data = Proof_Data (
-  type T = (cost * (int * context_state) option Synchronized.var) list
+structure Candidates = Heap (
+  type elem = (int (*evaluated cost*) * context_state)
+  fun ord ((c1,_),(c2,_)) = int_ord (c1,c2)
+)
+
+structure Cost = Proof_Data (
+  type T = cost
+  val init = K (0,0)
+)
+
+structure Stack = Proof_Data (
+  type T = (Candidates.T Synchronized.var * serial * serial) list
   val init = K []
 )
 
 fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
-  case Data.get ctxt
-    of [] => SOME ((ctxt,sequent), Seq.empty)
-     | (((INC',THR'), optimum) :: L) =>
-        let val next = (INC' + INC, Int.max (THR',THR))
-            val cost = eval next
-         in case Synchronized.value optimum
-              of SOME (opt, _) =>
-                  if opt <= cost
-                  then (Phi_Reasoner.debug_pretty ctxt (fn () => Pretty.block [
-                        Pretty.str "PLPR_OPTIMUM_SOLUTION: Current score (",
-                        Pretty.str (string_of_int cost),
-                        Pretty.str ") reaches the optimum score already reached (",
-                        Pretty.str (string_of_int opt),
-                        Pretty.str ") thus trimming the branch."
-                      ])
-                    ; NONE)
-                  else SOME ((Data.put ((next, optimum) :: L) ctxt, sequent), Seq.empty)
-               | NONE => SOME ((Data.put ((next, optimum) :: L) ctxt, sequent), Seq.empty)
-        end
-)
+  let val (INC',THR') = Cost.get ctxt
+      val next = (INC' + INC, Int.max (THR',THR))
+      val cost = eval next
+      val ctxt = Cost.put next ctxt
+      fun prt () = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+                      Pretty.str "PLPR_Optimum_Solution: current score: ",
+                      Pretty.str (string_of_int cost),
+                      Pretty.str ", swithcing to another search branch..."
+                   ])
+      val ret = case Stack.get ctxt
+                  of [] => SOME ((ctxt,sequent), Seq.empty)
+                   | ((heap_sync,_,_) :: _) =>
+                        Synchronized.change_result heap_sync (fn heap =>
+                          if Candidates.is_empty heap
+                          then (prt (); (NONE, Candidates.insert (cost,(ctxt,sequent)) heap))
+                          else let val (min_cost, _) = Candidates.min heap
+                            in if cost <= min_cost
+                               then (SOME ((ctxt,sequent), Seq.empty), heap)
+                               else (prt (); (NONE, Candidates.insert (cost,(ctxt,sequent)) heap))
+                            end)
+   in if is_some ret
+      then ret
+      else raise YIELD
+  end)
 
 fun finish (ctxt,sequent) = Seq.make (fn _ => (
-  case Data.get ctxt
-    of [] => ()
-     | (((INC',THR'), optimum) :: _) =>
-        let val v = eval (INC',THR')
-            val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+  case Stack.get ctxt
+    of [] => SOME ((ctxt,sequent), Seq.empty)
+     | ((_,sh,gcut) :: _) =>
+        let val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
                       Pretty.str "The search reaches a solution with cost ",
-                      Pretty.str (string_of_int v)])
-         in Synchronized.change optimum
-               (fn x as SOME (opt, _) =>
-                    if v < opt
-                    then SOME (v, (ctxt,sequent))
-                    else x
-                 | NONE => SOME (v, (ctxt,sequent)))
-            ; ()
+                      Pretty.str (string_of_int (eval (Cost.get ctxt)))])
+            val ctxt' = ctxt
+                 |> Phi_Reasoner.Success_Handlers.remove sh
+                 |> Phi_Reasoner.Global_Cut_Handlers.remove gcut
+         in SOME ((ctxt',sequent), Seq.empty)
         end
-; NONE
 ))
 
 fun init ctxt =
-  let val var = Synchronized.var "PLPR_Optimum_Solution" NONE
-      val frame = ((0,0), var)
-   in (var, Data.map (fn L => frame :: L) ctxt)
+  let val var = Synchronized.var "PLPR_Optimum_Solution" Candidates.empty
+      val (sh, ctxt) = ctxt
+        |> Phi_Reasoner.Success_Handlers.push_local (fn s => SOME [(\<^here>, finish s)])
+      val (gcut, ctxt) = ctxt
+        |> Phi_Reasoner.disable_global_cut
+                    "Global Cut is prohibited during Optimum_Solution reasoning"
+   in (var, Stack.map (fn L => (var,sh,gcut) :: L) ctxt)
   end
 
-fun result var =
-      case Synchronized.value var
-        of NONE => NONE
-         | SOME (_, (ctxt, sequent)) => SOME (Data.map tl ctxt, sequent)
-
-fun start (ctxt,sequent) = Seq.make (fn () => Seq.pull
+fun gen_start ctxt candidates = Seq.make (fn () =>
   let val (var, ctxt) = init ctxt
-      val (sh, ctxt) = ctxt
-        |> Phi_Reasoner.disable_success "Exceptional termination during Optimum_Solution reasoning!"
-   in Seq.append
-        (PLPR_Exhaustive_Divergence.begin Seq.of_list (ctxt,sequent))
-        (Seq.make (fn () => result var
-                         |> Option.map (apfst (Phi_Reasoner.Success_Handlers.remove sh)
-                                     #> rpair Seq.empty)))
+      fun next_candidate () =
+        Synchronized.change_result var (fn heap =>
+          if Candidates.is_empty heap
+          then (NONE, heap)
+          else let val ((_,next), heap') = Candidates.min_elem heap
+                in (SOME (next, Seq.make next_candidate), heap')
+               end
+                         (*|> Option.map (fn (c,th) =>
+                                  ((Phi_Reasoner.Success_Handlers.remove sh c, th), Seq.empty)))*)
+          )
+   in Seq.pull (Seq.append (Seq.of_list (map (pair ctxt) candidates)) (Seq.make next_candidate))
    end
 )
+
+fun start (ctxt,sequent) = gen_start ctxt [sequent]
 
 fun best_among (_, []) = NONE
   | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE (ctxt,thm)
   | best_among (ctxt,candidates) =
-      let val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks (
-            Pretty.str "Reasoning the optimal solution from candidates:" ::
-            map (Thm.pretty_thm_item ctxt) candidates
-          ))
-          val (var, ctxt) = init ctxt
-          val (sh, ret) = Phi_Reasoner.reason_s ctxt (fn ctxt => ctxt
-                |> Phi_Reasoner.Success_Handlers.push_local (fn s => SOME [(\<^here>, finish s)])
-                |> apsnd (fn ctxt => [Seq.of_list (map (pair ctxt) candidates)]))
-          val _ = if is_some ret then error "BUG #f1j90[3" else ()
-       in result var
-       |> Option.map (apfst (Phi_Reasoner.Success_Handlers.remove sh))
-      end
+      Phi_Reasoner.reason_s ctxt (fn ctxt => ((), [(0, gen_start ctxt candidates)]))
+        |> snd
 
 end
