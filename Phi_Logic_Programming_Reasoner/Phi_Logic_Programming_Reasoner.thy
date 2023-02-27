@@ -13,6 +13,7 @@ subsubsection \<open>Prelude Settings\<close>
 
 ML \<open>Timing.cond_timeit false "asd" (fn () => OS.Process.sleep (seconds 1.0))\<close>
 
+
 ML_file \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
@@ -20,7 +21,7 @@ ML_file \<open>library/pattern_translation.ML\<close>
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
 
-ML_file_debug \<open>library/reasoner.ML\<close>
+ML_file \<open>library/reasoner.ML\<close>
 
 lemma \<r>Require_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Require P\<close> unfolding \<r>Require_def .
 
@@ -931,7 +932,7 @@ lemma End_Simplification : \<open>PROP Do_Simplificatin A A\<close> unfolding Do
 lemma End_Simplification': \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B \<Longrightarrow> PROP Do_Simplificatin A B\<close>
   unfolding Do_Simplificatin_def Premise_def atomize_eq .
 
-ML_file_debug \<open>library/simplifier.ML\<close>
+ML_file \<open>library/simplifier.ML\<close>
 
 hide_fact End_Simplification' End_Simplification Do_Simplification
 
@@ -944,9 +945,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   = \<open>PLPR_Simplifier.simplifier NONE I\<close>
 
 
-subsection \<open>Exhaustive Divergence\<close>
-
-declare [[ML_debugger]]
+(* subsection \<open>Exhaustive Divergence\<close>
 
 ML_file \<open>library/exhaustive_divergen.ML\<close>
 
@@ -970,52 +969,73 @@ lemma End_Exhaustive_Divergence_I: \<open>End_Exhaustive_Divergence\<close>
 
 \<phi>reasoner_ML End_Exhaustive_Divergence 1000 (\<open>End_Exhaustive_Divergence\<close>)
   = \<open>PLPR_Exhaustive_Divergence.exit\<close>
-
+*)
 
 subsection \<open>Optimal Solution\<close>
 
 text \<open>\<phi>-LPR is priority-driven DFS searching the first reached solution which may not be the optimal
   one for certain measure. The section gives a way to find out the solution of the minimum cost
-  among all search branches.
+  among a given set of candidates.
+\<close>
 
-The cost is measured by reports from the following antecedents inserted in the user rules.\<close>
+definition Optimum_Solution :: \<open>prop \<Rightarrow> prop\<close> where [iff]: \<open>Optimum_Solution P \<equiv> P\<close>
+definition [iff]: \<open>Begin_Optimum_Solution \<longleftrightarrow> True\<close>
+definition [iff]: \<open>End_Optimum_Solution \<longleftrightarrow> True\<close>
+
+
+text \<open>Each individual invocation of \<open>Optimum_Solution P\<close>
+invokes an individual instance of the optimal solution reasoning.
+The reasoning of \<open>P\<close> is proceeded exhaustively meaning exploring all backtracks except local cuts.
+\<close>
+
+
+paragraph \<open>Candidates\<close>
+
+text \<open>The candidates are all search branches diverged from the antecedents marked by \<close>
+
+definition \<r>Choice :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CHOICE _" [3] 2) where \<open>\<r>Choice P \<equiv> P\<close>
+
+lemma \<r>Choice_I: \<open> PROP P \<Longrightarrow> PROP \<r>Choice P\<close> unfolding \<r>Choice_def .
+
+text \<open>For the antecedents marked by \<open>\<r>Choice\<close>, the mechanism traverses exhaustively all
+combinations of their (direct) solvers, but for other not marked antecedents, the strategy is
+not changed and is as greedy as the usual behavior --- returning the first-reached solution
+and discarding the others.
+
+As an example, in
+\<open>Begin_Optimum_Solution \<Longrightarrow> \<r>Choice A \<Longrightarrow> B \<Longrightarrow> \<r>Choice C \<Longrightarrow> End_Optimum_Solution \<Longrightarrow> \<dots>\<close>, 
+assuming both \<open>A,B,C\<close> have 2 solvers \<open>A\<^sub>1,A\<^sub>2,B\<^sub>1,B\<^sub>2,C\<^sub>1,C\<^sub>2\<close> and assuming \<open>B\<^sub>1\<close> have higher priority
+than \<open>B\<^sub>2\<close> and can success, the mechanism traverses 4 combination of the solvers \<open>A\<^sub>1,C\<^sub>1\<close>,
+\<open>A\<^sub>1,C\<^sub>2\<close>, \<open>A\<^sub>2,C\<^sub>1\<close>, \<open>A\<^sub>2,C\<^sub>2\<close>, i.e., only exhaustively on \<open>\<r>Choice\<close>-marked antecedents but still
+greedy on others.
+
+Note, even marked by \<open>\<r>Choice\<close>, local cuts are still valid and cuts search branches.
+Global cut is disabled during the whole reasoning because it kills other search branches.
+\<open>\<r>Success\<close> is available and the mechanism ensures it is always the optimal one invokes the \<open>\<r>Success\<close>.
+\<close>
+
+paragraph \<open>Cost\<close>
+
+text \<open>The cost is measured by reports from the following antecedents inserted in the user rules.\<close>
 
 definition Incremental_Cost :: \<open>int \<Rightarrow> bool\<close> where [iff]: \<open>Incremental_Cost _ = True\<close>
 definition Threshold_Cost   :: \<open>int \<Rightarrow> bool\<close> where [iff]: \<open>Threshold_Cost   _ = True\<close>
 
 text \<open>The final cost of a reasoning process is the sum of all the reported \<open>Incremental_Cost\<close> or
-  the maximum \<open>Threshold_Cost\<close>, the one which is larger.\<close>
+  the maximum \<open>Threshold_Cost\<close>, the one which is larger.
 
-definition Optimum_Solution :: \<open>prop \<Rightarrow> prop\<close> where [iff]: \<open>Optimum_Solution P \<equiv> P\<close>
-
-text \<open>Each individual invocation of \<open>Optimum_Solution P\<close>
-invokes an individual instance of the optimal solution reasoning.
-The reasoning of \<open>P\<close> is proceeded exhaustively meaning exploring all backtracks except local cuts.
-
-Global cut is disabled until the exhaustive divergence end (maybe
-  by \<^prop>\<open>Stop_Divergence\<close> early), because it kill other search branches.
-\<open>\<r>Success\<close> is disabled during the whole \<open>Optimum_Solution\<close> reasoning.
+If the cost of two branches are the same, the first reached one is considered better.
 \<close>
+
+
+
+subsubsection \<open>Implementation\<close>
 
 definition Optimum_Solution_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Optimum_Solution_embed P \<equiv> P\<close>
 
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Optimum_Solution (Trueprop P) \<equiv> Trueprop (Optimum_Solution_embed P)\<close>
   unfolding Optimum_Solution_embed_def Optimum_Solution_def .
-
-definition [iff]: \<open>Begin_Optimum_Solution \<longleftrightarrow> True\<close>
-definition [iff]: \<open>End_Optimum_Solution \<longleftrightarrow> True\<close>
-
-definition \<r>Choice :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CHOICE _" [3] 2) where \<open>\<r>Choice P \<equiv> P\<close>
-
-lemma \<r>Choice_I:
-  \<open> PROP P
-\<Longrightarrow> PROP \<r>Choice P\<close>
-  unfolding \<r>Choice_def .
-
-
-subsubsection \<open>Implementation\<close>
-
 
 lemma Incremental_Cost_I: \<open>Incremental_Cost X\<close> unfolding Incremental_Cost_def ..
 
@@ -1053,7 +1073,7 @@ ML_file \<open>library/optimum_solution.ML\<close>
 #> PLPR_Optimum_Solution.start
 \<close>
 
-\<phi>reasoner_ML Optimum_Solution 1000 (\<open>Begin_Optimum_Solution\<close>) = \<open>
+\<phi>reasoner_ML Begin_Optimum_Solution 1000 (\<open>Begin_Optimum_Solution\<close>) = \<open>
    apsnd (fn th => @{thm Begin_Optimum_Solution_I} RS th)
 #> PLPR_Optimum_Solution.start
 \<close>
@@ -1062,6 +1082,10 @@ ML_file \<open>library/optimum_solution.ML\<close>
    apsnd (fn th => @{thm End_Optimum_Solution_I} RS th)
 #> PLPR_Optimum_Solution.finish
 \<close>
+
+\<phi>reasoner_ML \<r>Choice 1000 (\<open>PROP \<r>Choice _\<close>) = \<open>fn (ctxt,sequent) =>
+  PLPR_Optimum_Solution.choices (ctxt, @{thm \<r>Choice_I} RS sequent)\<close>
+
 
 subsubsection \<open>Derivations\<close>
 

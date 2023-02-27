@@ -23,8 +23,7 @@ proc
 (*
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
-
-
+       
 proc
   input  \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l x - 1 \<Ztypecolon> \<nat>\<close>
@@ -62,15 +61,16 @@ proc FIB:
 
 thm FIB_def
 
+
 proc FIB2:
   input \<open>\<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>(8)\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
   is [recursive n]
   \<medium_left_bracket> if \<open>$n \<le> 1\<close> \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>. \<medium_left_bracket>
         \<open>$n - 1\<close> FIB2 \<rightarrow> val a;;
-        \<open>$n - 2\<close> FIB2 \<rightarrow> val b;;
+        \<open>$n - 2\<close> FIB2 \<rightarrow> val b;;  
         \<open>$a + $b\<close>
-    \<medium_right_bracket>.
+  \<medium_right_bracket>.
   \<medium_right_bracket> by (smt (verit, ccfv_threshold) One_nat_def Value_of_def fib.elims fib.simps(1) fib.simps(2) le_Suc_eq le_zero_eq) .
 
 thm FIB2_def

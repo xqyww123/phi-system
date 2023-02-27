@@ -2406,11 +2406,11 @@ declare [[\<phi>reason_default_pattern
 lemma overloaded_synthesis_unary:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 @action synthesis
 \<Longrightarrow> PROP Optimum_Solution
-    (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. R3 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+    (\<r>CHOICE \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. R3 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
           \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (h1 \<bind> H) \<lbrace> R1 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
     \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (E1 + E) @action synthesis\<close>
-  unfolding Optimum_Solution_def
+  unfolding Optimum_Solution_def \<r>Choice_def
   \<medium_left_bracket> premises H1 and H
     H1 H \<medium_right_bracket> .. .
 
@@ -2418,12 +2418,12 @@ lemma overloaded_synthesis_binary:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 @action synthesis
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h2 \<lbrace> R2 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> S2 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 @action synthesis
 \<Longrightarrow> PROP Optimum_Solution
-    (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R3 \<heavy_comma> S1 (\<phi>V_snd vs) \<heavy_comma> S2 (\<phi>V_fst vs) \<longmapsto> \<lambda>ret. R4 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+    (\<r>CHOICE \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R3 \<heavy_comma> S1 (\<phi>V_snd vs) \<heavy_comma> S2 (\<phi>V_fst vs) \<longmapsto> \<lambda>ret. R4 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
           \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (h1 \<bind> (\<lambda>v1. h2 \<bind> (\<lambda>v2. H (\<phi>V_pair v2 v1))))
       \<lbrace> R1 \<longmapsto> \<lambda>ret. R4\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
     \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + E e) @action synthesis\<close>
-  unfolding Optimum_Solution_def
+  unfolding Optimum_Solution_def \<r>Choice_def
   \<medium_left_bracket> premises H1 and H2 and H
     H1 H2 H \<medium_right_bracket> .. .
 
@@ -2432,14 +2432,14 @@ lemma overloaded_synthesis_ternary:
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h2 \<lbrace> R2 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R3\<heavy_comma> \<blangle> S2 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 @action synthesis
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h3 \<lbrace> R3 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R4\<heavy_comma> \<blangle> S3 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E3 @action synthesis
 \<Longrightarrow> PROP Optimum_Solution
-    (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R4 \<heavy_comma> S1 (\<phi>V_snd (\<phi>V_snd vs)) \<heavy_comma> S2 (\<phi>V_fst (\<phi>V_snd vs)) \<heavy_comma> S3 (\<phi>V_fst vs)
+    (\<r>CHOICE \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R4 \<heavy_comma> S1 (\<phi>V_snd (\<phi>V_snd vs)) \<heavy_comma> S2 (\<phi>V_fst (\<phi>V_snd vs)) \<heavy_comma> S3 (\<phi>V_fst vs)
                   \<longmapsto> \<lambda>ret. R5 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
           \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (h1 \<bind> (\<lambda>v1. h2 \<bind> (\<lambda>v2. h3 \<bind> (\<lambda>v3. H (\<phi>V_pair v3 (\<phi>V_pair v2 v1))))))
       \<lbrace> R1 \<longmapsto> \<lambda>ret. R5\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
     \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + ((\<exists>*v. S1 v)\<heavy_comma> (\<exists>*v. S2 v)\<heavy_comma> E3 e) + E e)
     @action synthesis\<close>
-  unfolding Optimum_Solution_def
+  unfolding Optimum_Solution_def \<r>Choice_def
   \<medium_left_bracket> premises H1 and H2 and H3 and H
     H1 H2 H3 H
   \<medium_right_bracket> .. .

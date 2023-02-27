@@ -42,8 +42,8 @@ signature NU_REASONER = sig
 
   structure Global_Cut_Handlers : PLPR_HANDLERS
   structure Success_Handlers : PLPR_HANDLERS
-  val disable_global_cut : string -> Proof.context -> serial * Proof.context
-  val disable_success    : string -> Proof.context -> serial * Proof.context
+  val disable_global_cut : int -> string -> Proof.context -> serial * Proof.context
+  val disable_success    : int -> string -> Proof.context -> serial * Proof.context
 
   val add : priority * reasoner -> Context.generic -> Context.generic
   val add_lthy : priority * reasoner -> local_theory -> local_theory
@@ -216,8 +216,10 @@ structure Success_Handlers = PLPR_Handlers(
   val ctxt_of = fst
 )
 
-fun disable_global_cut msg = Global_Cut_Handlers.push_local (fn _ => bad_config msg)
-fun disable_success    msg = Success_Handlers.push_local (fn _ => bad_config msg)
+(*delt: 0 for the current reasoning context
+        1 for the sub-calling environment*)
+fun disable_global_cut delt msg = Global_Cut_Handlers.push_localctxt delt (fn _ => bad_config msg)
+fun disable_success    delt msg = Success_Handlers.push_localctxt delt (fn _ => bad_config msg)
 
 (*** Reasoner Registry ***)
 

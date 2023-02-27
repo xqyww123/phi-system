@@ -13,7 +13,7 @@ signature PLPR_HANDLERS = sig
 structure Arg : PLPR_HANDLERS_ARG
 
 val push : (Arg.domT -> Arg.retT option) -> Proof.context -> serial * Proof.context
-val push_local : (Arg.domT -> Arg.retT option) -> Proof.context -> serial * Proof.context
+val push_localctxt : int -> (Arg.domT -> Arg.retT option) -> Proof.context -> serial * Proof.context
 val remove : serial -> Proof.context -> Proof.context
 val invoke : Proof.context -> Arg.domT -> Arg.retT
 
@@ -30,8 +30,10 @@ fun push h ctxt =
   let val (serial, L) = Data.get ctxt
    in (serial, Data.put (serial + 1, (serial, h) :: L) ctxt) end
 
-fun push_local h ctxt =
-  let val lev = Arg.current_level ctxt
+(*delt: 0 for the current reasoning context
+        1 for the sub-calling environment*)
+fun push_localctxt delt h ctxt =
+  let val lev = Arg.current_level ctxt + delt
       val _ = if lev = 0 then error "Not in PLPR reasoning environment" else ()
    in push (fn a =>
         if lev = Arg.current_level (Arg.ctxt_of a)
