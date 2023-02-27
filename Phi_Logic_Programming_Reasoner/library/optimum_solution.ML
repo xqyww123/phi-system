@@ -91,8 +91,8 @@ fun best_among (_, []) = NONE
           ))
           val (var, ctxt) = init ctxt
           val (sh, ret) = Phi_Reasoner.reason_s ctxt (fn ctxt => ctxt
-                |> Phi_Reasoner.Success_Handlers.push_local (fn s => SOME [(0, \<^here>, finish s)])
-                |> apsnd (fn ctxt => [(0, Seq.of_list (map (pair ctxt) candidates))]))
+                |> Phi_Reasoner.Success_Handlers.push_local (fn s => SOME [(\<^here>, finish s)])
+                |> apsnd (fn ctxt => [Seq.of_list (map (pair ctxt) candidates)]))
           val _ = if is_some ret then error "BUG #f1j90[3" else ()
        in result var
        |> Option.map (apfst (Phi_Reasoner.Success_Handlers.remove sh))
