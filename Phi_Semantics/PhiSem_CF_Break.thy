@@ -290,8 +290,6 @@ val _ = Theory.setup (
 
 section \<open>Example\<close>
 
-(* declare [[\<phi>trace_reasoning_candidates]] *)
-
 proc
   input  \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>
   output \<open>y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l U\<close>

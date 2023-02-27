@@ -49,12 +49,11 @@ fun declare_rule pos priority (patterns0,blacklist0) proc_thm0 ctxt0 =
                | NONE => error "Cannot infer the pattern of the antecedent to be bound.\n\
                   \Some translation rule for giving the pattern may be required, and can be decalred\
                   \ by \<open>declare [[generate_pattern_of_synthesis_rule \<dots> \<Rightarrow> \<dots>]].\<close>"
-      val patterns = map pat_of patterns0
+      val patterns = map pat_of (if null patterns0 then [\<^term>\<open>()\<close>] else patterns0)
       val blacklist = map pat_of blacklist0
       val _ = Phi_Reasoner.debug_pretty ctxt (fn () => Pretty.chunks ([
                 Pretty.str "The rule is bound on pattern(s):",
-                Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X])
-                      (if null patterns then [concl] else patterns))] @ 
+                Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) patterns)] @ 
                 (if null blacklist then [] else [
                 Pretty.str "excluding pattern(s):",
                 Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) blacklist)

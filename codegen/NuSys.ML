@@ -68,7 +68,7 @@ fun pop_arg T_nil = I             | pop_arg (T <%> T_nil) = pop_put' T
 fun catS Nil s' = s' | catS (s <*> r) s' = s <*> (catS r s')
 
 fun op_call_gen arg ret func =
-  (if ret = T_nil then I else expr) 
+  (if ret = T_nil then I else expr)
     (put "call " #> putT ret #> put " @" #> func #-> put #> put "(" #> pop_arg arg #> put ")\n")
   #> (case ret of (_ <%> _ <%> _) => op_dest_tup_gen ret #> pop (map_ssa o catS) | _ => I)
 

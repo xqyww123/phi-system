@@ -1,5 +1,8 @@
 signature PHI_SYS_REASONERS = sig
 
+val gen_defer_antecedent :
+        (term (*leading antecedent*) -> term list (*premises*) -> int (*index in the premises*))
+      -> tactic
 val defer_antecedent: thm -> thm Seq.seq
 val defer_param_antecedent: thm -> thm Seq.seq
 
@@ -62,7 +65,7 @@ fun gen_defer_antecedent find_idx thm =
       end
      | [] => Seq.single thm
 
-val defer_antecedent = gen_defer_antecedent (fn X => fn L => find_obligation false 0 L)
+val defer_antecedent = gen_defer_antecedent (fn _ => fn L => find_obligation false 0 L)
 
 val defer_param_antecedent = gen_defer_antecedent (fn X => fn L =>
       chk_param X L (find_obligation false 0 L))

@@ -13,7 +13,7 @@ open Phi_Synthesis
 (*The maximal index must be 0!*)
 fun overload_rule_of arity =
   case arity
-    of 0 => error "It makes no sense to overload a constant operator!"
+    of 0 => @{thm overloaded_synthesis_nullary}
      | 1 => @{thm overloaded_synthesis_unary}
      | 2 => @{thm overloaded_synthesis_binary}
      | 3 => @{thm overloaded_synthesis_ternary}

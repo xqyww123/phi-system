@@ -194,20 +194,14 @@ section \<open>Abstraction of Instructions\<close>
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
-
-lemma op_const_aint_\<phi>app[
-    \<phi>synthesis 300 for \<open>\<lambda>ret. (numeral ?n::int) \<Ztypecolon> _\<close>
-                       \<open>\<lambda>ret. (0::int) \<Ztypecolon> _\<close>
-                       \<open>\<lambda>ret. (1::int) \<Ztypecolon> _\<close>]:
+ 
+lemma op_const_aint_\<phi>app[\<phi>synthesis 300]:
   \<open> Check_Literal x
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_aint x \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_const_aint_def Premise_def
   by (rule, simp add: \<phi>expns)
 
-lemma op_const_anat_\<phi>app[
-    \<phi>synthesis 300 for \<open>\<lambda>ret. numeral ?n \<Ztypecolon> _\<close>
-                       \<open>\<lambda>ret. 0 \<Ztypecolon> _\<close>
-                       \<open>\<lambda>ret. 1 \<Ztypecolon> _\<close>]:
+lemma op_const_anat_\<phi>app[\<phi>synthesis 300]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y x' : of_nat x \<comment>\<open>TODO: improve this!\<close>
 \<Longrightarrow> Check_Literal x'
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_aint x' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat> \<rbrace>\<close> 

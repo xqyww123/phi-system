@@ -487,8 +487,6 @@ section \<open>Abstraction of Instructions\<close>
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
  
 lemma op_const_word_\<phi>app[\<phi>synthesis 300]:
   \<open> Simplify literal n (unat n')
@@ -496,11 +494,7 @@ lemma op_const_word_\<phi>app[\<phi>synthesis 300]:
   unfolding op_const_int_def Premise_def Simplify_def
   by (rule, simp add: \<phi>expns)
 
-lemma op_const_nat_\<phi>app[
-    \<phi>synthesis 200 for \<open>\<lambda>ret. (numeral ?n::nat) \<Ztypecolon> _\<close>
-                       \<open>\<lambda>ret. (0::nat) \<Ztypecolon> _\<close>
-                       \<open>\<lambda>ret. (1::nat) \<Ztypecolon> _\<close>
-]:
+lemma op_const_nat_\<phi>app[\<phi>synthesis 200]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e n < 2 ^ LENGTH('b)
 \<Longrightarrow> Simplify literal n' n
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
@@ -509,11 +503,7 @@ lemma op_const_nat_\<phi>app[
     affirm by (simp add: \<open>n' = n\<close>)
   \<medium_right_bracket> by simp .
 
-lemma op_const_natR_\<phi>app[
-    \<phi>synthesis 200 for \<open>\<lambda>ret. (numeral ?n::nat) \<Ztypecolon> _\<close>
-                       \<open>\<lambda>ret. (0::nat) \<Ztypecolon> _\<close>
-                       \<open>\<lambda>ret. (1::nat) \<Ztypecolon> _\<close>
-]:
+lemma op_const_natR_\<phi>app[\<phi>synthesis 200]:
   \<open> Simplify literal n' (n mod 2 ^ LENGTH('b))
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
   \<medium_left_bracket> op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified]
@@ -548,8 +538,6 @@ lemma [\<phi>reason 50
 
 
 subsubsection \<open>Addition\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_add_word_\<phi>app[\<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] Word('b) \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> Word('b) \<rbrace>\<close>
@@ -607,8 +595,7 @@ declare op_sub_word_\<phi>app[\<phi>overload -]
 
 
 subsubsection \<open>Multiplication\<close>
- 
-declare [[\<phi>trace_reasoning = 1]]
+
 
 lemma op_mul_word_\<phi>app[\<phi>synthesis 100]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_umul LENGTH('b::len) (\<phi>V_pair vy vx)

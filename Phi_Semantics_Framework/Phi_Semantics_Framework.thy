@@ -304,7 +304,19 @@ lemma split_paired_all_\<phi>arg:
   "(\<And>x. PROP P x) \<equiv> (\<And>a b. PROP P (\<phi>V_pair a b))"
   unfolding \<phi>arg_All \<phi>V_pair_def split_paired_all by simp
 
+lemma split_paired_All_\<phi>arg_unit:
+  "(\<forall>x. P x) \<longleftrightarrow> P \<phi>V_none"
+  by (simp add: \<phi>arg_forall)
 
+lemma split_paired_Ex_\<phi>arg_unit:
+  "(\<exists>x. P x) \<longleftrightarrow> P \<phi>V_none"
+  by (simp add: \<phi>arg_exists)
+
+lemma split_paired_all_\<phi>arg_unit:
+  "(\<And>x. PROP P x) \<equiv> PROP P \<phi>V_none"
+  unfolding \<phi>arg_All \<phi>V_pair_def split_paired_all by simp
+  
+  
 
 
 (* datatype unreachable = unreachable

@@ -23,7 +23,7 @@ proc
 (*
 int XX(int x) { if 0 < x then x - 1 else 0 }
 *)
-       
+
 proc
   input  \<open>\<^bold>v\<^bold>a\<^bold>l x \<Ztypecolon> \<nat>\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l x - 1 \<Ztypecolon> \<nat>\<close>

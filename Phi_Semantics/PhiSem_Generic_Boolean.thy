@@ -147,7 +147,7 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
    apply (unfold \<phi>Equal_def Premise_def, simp)
   by (rule \<phi>M_Success', rule, simp add: \<phi>expns)
 
-
+ 
 declare op_equal_\<phi>app[where eq=\<open>(=)\<close>, \<phi>synthesis 100]
 declare op_equal_\<phi>app[where eq=\<open>(\<lambda>x y. x mod N = y mod N)\<close> for N, \<phi>synthesis 100]
 

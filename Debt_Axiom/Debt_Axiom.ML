@@ -124,7 +124,7 @@ fun discharge_cmd ax_certs thy =
     val certs = map2 (fn (_,C) => fn goal =>
                   goal (K (Tactic.ares_tac ctxt (Attrib.eval_thms ctxt [C]) 1))
                 ) ax_certs goal
-  in Debt_Axiom_Kernel.discharge (ax_names ~~ certs) thy 
+  in Debt_Axiom_Kernel.discharge (ax_names ~~ certs) thy
   handle Fail "dep" =>
          error "Some of the given certification theorems are based on axiomized debts!"
        | Fail "cert" =>

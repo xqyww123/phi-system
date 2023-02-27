@@ -18,7 +18,8 @@ exception SUPER_REACH of context_state
 
 type cost = int (*incremental-distance*) * int (*maximal-distance*)
 val eval : cost -> int = Int.max
-val timestamper = Counter.make ()
+val timestamp_counter = Counter.make ()
+fun timestamper () = ~ (timestamp_counter ())
 
 structure Candidates = Heap (
   type elem = ((int (*evaluated cost*) * int (*timestamp*)) * context_state Seq.seq)
@@ -110,13 +111,13 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
       fun get_heap heap =
         if Candidates.is_empty heap
         then (NONE, heap)
-        else let val ((cost,next), heap') = Candidates.min_elem heap
+        else let val (((cost,_),next), heap') = Candidates.min_elem heap
               in case Seq.pull next
                    of NONE => get_heap heap'
                     | SOME (s, remain) =>
                         if pointer_eq (remain, Seq.empty)
                         then (SOME s, heap')
-                        else (SOME s, Candidates.insert (cost,remain) heap')
+                        else (SOME s, Candidates.insert ((cost,timestamper()),remain) heap')
              end
       fun next_candidate () =
         case Synchronized.change_result var get_heap

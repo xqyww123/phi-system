@@ -115,7 +115,7 @@ fun get_output f (c as (_,out,_)) = f out c   ;   fun map_output f (ssa,out,c) =
 
 fun put s (ssa,out,c) = (ssa,s::out,c);   val putv = put o to_s;    val puti = put o string_of_int
 val putt = put o tystr
-(* 
+(*
 fun putv' (t <%> T_nil) (v <*> Nil) = putv' t v
   | putv' (t1 <%> t2) (v1 <*> v2) = putv' t2 v2 #> put ", " #> putv' t1 v1
   | putv' t v = putt t #> put " " #> putv v *)

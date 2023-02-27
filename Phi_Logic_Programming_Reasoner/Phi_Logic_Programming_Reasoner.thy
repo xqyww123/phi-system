@@ -1050,7 +1050,7 @@ lemma Do_Optimum_Solution:
 \<Longrightarrow> PROP Optimum_Solution X\<close>
   unfolding Optimum_Solution_def .
 
-ML_file \<open>library/optimum_solution.ML\<close>
+ML_file_debug \<open>library/optimum_solution.ML\<close>
 
 \<phi>reasoner_ML Incremental_Cost 1000 (\<open>Incremental_Cost _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let val _ $ (_ $ N) = Thm.major_prem_of sequent

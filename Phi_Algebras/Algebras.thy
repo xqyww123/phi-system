@@ -839,7 +839,7 @@ instance by (standard, simp add: one_fun_def times_fun fun_eq_iff, blast)
 end
 
 instantiation "fun" :: (type, no_negative) no_negative begin
-instance by (standard, simp del: zero_fun_eta add: zero_fun_def plus_fun fun_eq_iff, blast) 
+instance by (standard, simp del: zero_fun_eta add: zero_fun_def plus_fun fun_eq_iff, blast)
 end
 
 instantiation "fun" :: (type, semigroup_mult) semigroup_mult begin

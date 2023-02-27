@@ -515,8 +515,30 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>DoSynthesis term (Trueprop sequent) (Trueprop result) \<equiv> Trueprop (DoSynthesis_embed term sequent result)\<close>
   unfolding DoSynthesis_def DoSynthesis_embed_def atomize_imp .
 
-definition Optimal_Synthesis :: \<open>prop \<Rightarrow> prop\<close> where \<open>Optimal_Synthesis P \<equiv> P\<close>
+definition Optimal_Synthesis :: \<open>prop \<Rightarrow> prop\<close> ("OPTIMAL'_SYNTHESIS _" [3] 2)
+  where \<open>Optimal_Synthesis P \<equiv> P\<close>
+definition End_Optimal_Synthesis where \<open>End_Optimal_Synthesis \<longleftrightarrow> True\<close>
 
+lemma Do_Optimal_Synthesis:
+  \<open> PROP \<r>Choice P
+\<Longrightarrow> PROP Optimal_Synthesis P\<close>
+  unfolding \<r>Choice_def Optimal_Synthesis_def .
+
+lemma End_Optimal_Synthesis_I:
+  \<open>End_Optimal_Synthesis\<close> unfolding End_Optimal_Synthesis_def ..
+
+\<phi>reasoner_ML End_Optimal_Synthesis 1000 (\<open>End_Optimal_Synthesis\<close>) = \<open>
+   apsnd (fn th => @{thm End_Optimal_Synthesis_I} RS th)
+#> PLPR_Optimum_Solution.finish
+\<close>
+
+\<phi>reasoner_ML Optimal_Synthesis 1000 (\<open>PROP Optimal_Synthesis _\<close>) = \<open>fn (ctxt,sequent) =>
+  Phi_Sys_Reasoner.gen_defer_antecedent (fn _ =>
+    find_index (fn \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>End_Optimal_Synthesis\<close>, _)) => true
+                 | _ => false)
+  ) (@{thm Do_Optimal_Synthesis} RS sequent)
+  |> Seq.map (pair ctxt)
+\<close>
 
 
 subsubsection \<open>Parse the Term to be Synthesised\<close>
@@ -621,7 +643,7 @@ lemma [\<phi>reason 1200
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' v \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> End_Optimum_Solution
+\<Longrightarrow> End_Optimal_Synthesis
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X
@@ -640,7 +662,7 @@ lemma [\<phi>reason 1200
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S2\<heavy_comma> \<blangle> X' \<brangle> \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> End_Optimum_Solution
+\<Longrightarrow> End_Optimal_Synthesis
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X
@@ -659,7 +681,7 @@ lemma [\<phi>reason 1200
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2\<heavy_comma> \<blangle> X' \<brangle> \<^bold>a\<^bold>n\<^bold>d P
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> End_Optimum_Solution
+\<Longrightarrow> End_Optimal_Synthesis
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X
@@ -699,7 +721,7 @@ lemma [\<phi>reason 1200
 ]:
   " PROP Synthesis_by X (PROP P)
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> End_Optimum_Solution
+\<Longrightarrow> End_Optimal_Synthesis
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
 \<Longrightarrow> PROP DoSynthesis X (PROP P \<Longrightarrow> PROP Q) (PROP Q)"

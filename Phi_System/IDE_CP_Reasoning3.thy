@@ -2159,7 +2159,9 @@ lemma Gen_Synthesis_Rule:
 ML_file \<open>library/additions/gen_synthesis_rule.ML\<close>
 
 declare [[generate_pattern_of_synthesis_rule
-      \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> _ \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis &&& TERM ?Z\<close> \<Rightarrow>
+      \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis &&& TERM ()\<close> \<Rightarrow>
+      \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>    (120)
+  and \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> _ \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis &&& TERM ?Z\<close> \<Rightarrow>
       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>    (110)
 ]]
 
@@ -2217,7 +2219,6 @@ declare [[\<phi>reason_default_pattern
             (Trueprop (\<forall>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f' v \<lbrace> ?R' \<heavy_comma> \<blangle> ?X' v \<brangle> \<longmapsto> \<lambda>r. ?RN'' \<heavy_comma> \<blangle> ?Y r \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _))
             (PROP ?P) (PROP _)\<close>  (125)
 ]]
-
 
 
 lemma [\<phi>reason 1200 for \<open>PROP Gen_Synthesis_Rule
@@ -2396,34 +2397,51 @@ declare [[\<phi>reason_default_pattern
       \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?x \<Ztypecolon> ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action overloaded_synthesis\<close>
    \<Rightarrow> \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?x \<Ztypecolon> ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' @action overloaded_synthesis\<close> (100),
    generate_pattern_of_synthesis_rule
-      \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action overloaded_synthesis &&& TERM ?Y\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' @action overloaded_synthesis\<close> (110)
+      \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action overloaded_synthesis\<close>  (110)
+  and \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action overloaded_synthesis\<close>  (110)
+  and \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action overloaded_synthesis\<close>  (120)
+  and \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action overloaded_synthesis\<close>  (120)
+  and \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action overloaded_synthesis &&& TERM ?Y'\<close>
+   \<Rightarrow> \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' @action overloaded_synthesis\<close> (110)
+  and \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action overloaded_synthesis &&& TERM ?Y'\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' @action overloaded_synthesis\<close> (110)
 ]]
 
 (* \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH(?'b) vs \<lbrace> ?X' vs \<longmapsto> \<lambda>ret. ?x + ?y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] \<nat>(?'b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. ?R\<heavy_comma> 0 e)
     @action overloaded_synthesis *)
 
+lemma overloaded_synthesis_nullary:
+  \<open>OPTIMAL_SYNTHESIS
+   (\<^bold>p\<^bold>r\<^bold>o\<^bold>c H \<lbrace> R1 \<longmapsto> \<lambda>ret. R2 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
+\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c H \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action synthesis\<close>
+  unfolding Optimal_Synthesis_def Action_Tag_def .
+
+
 lemma overloaded_synthesis_unary:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 @action synthesis
-\<Longrightarrow> PROP Optimum_Solution
-    (\<r>CHOICE \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. R3 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+\<Longrightarrow> OPTIMAL_SYNTHESIS
+    (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. R3 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
           \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (h1 \<bind> H) \<lbrace> R1 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
     \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (E1 + E) @action synthesis\<close>
-  unfolding Optimum_Solution_def \<r>Choice_def
+  unfolding Optimal_Synthesis_def
   \<medium_left_bracket> premises H1 and H
     H1 H \<medium_right_bracket> .. .
 
 lemma overloaded_synthesis_binary:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 @action synthesis
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h2 \<lbrace> R2 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> S2 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 @action synthesis
-\<Longrightarrow> PROP Optimum_Solution
-    (\<r>CHOICE \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R3 \<heavy_comma> S1 (\<phi>V_snd vs) \<heavy_comma> S2 (\<phi>V_fst vs) \<longmapsto> \<lambda>ret. R4 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+\<Longrightarrow> OPTIMAL_SYNTHESIS
+    (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R3 \<heavy_comma> S1 (\<phi>V_snd vs) \<heavy_comma> S2 (\<phi>V_fst vs) \<longmapsto> \<lambda>ret. R4 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
           \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (h1 \<bind> (\<lambda>v1. h2 \<bind> (\<lambda>v2. H (\<phi>V_pair v2 v1))))
       \<lbrace> R1 \<longmapsto> \<lambda>ret. R4\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
     \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + E e) @action synthesis\<close>
-  unfolding Optimum_Solution_def \<r>Choice_def
+  unfolding Optimal_Synthesis_def
   \<medium_left_bracket> premises H1 and H2 and H
     H1 H2 H \<medium_right_bracket> .. .
 
@@ -2431,15 +2449,15 @@ lemma overloaded_synthesis_ternary:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h1 \<lbrace> R1 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 @action synthesis
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h2 \<lbrace> R2 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R3\<heavy_comma> \<blangle> S2 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 @action synthesis
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c h3 \<lbrace> R3 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R4\<heavy_comma> \<blangle> S3 ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E3 @action synthesis
-\<Longrightarrow> PROP Optimum_Solution
-    (\<r>CHOICE \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R4 \<heavy_comma> S1 (\<phi>V_snd (\<phi>V_snd vs)) \<heavy_comma> S2 (\<phi>V_fst (\<phi>V_snd vs)) \<heavy_comma> S3 (\<phi>V_fst vs)
+\<Longrightarrow> OPTIMAL_SYNTHESIS
+    (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c H vs \<lbrace> R4 \<heavy_comma> S1 (\<phi>V_snd (\<phi>V_snd vs)) \<heavy_comma> S2 (\<phi>V_fst (\<phi>V_snd vs)) \<heavy_comma> S3 (\<phi>V_fst vs)
                   \<longmapsto> \<lambda>ret. R5 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
           \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (h1 \<bind> (\<lambda>v1. h2 \<bind> (\<lambda>v2. h3 \<bind> (\<lambda>v3. H (\<phi>V_pair v3 (\<phi>V_pair v2 v1))))))
       \<lbrace> R1 \<longmapsto> \<lambda>ret. R5\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
     \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + ((\<exists>*v. S1 v)\<heavy_comma> (\<exists>*v. S2 v)\<heavy_comma> E3 e) + E e)
     @action synthesis\<close>
-  unfolding Optimum_Solution_def \<r>Choice_def
+  unfolding Optimal_Synthesis_def
   \<medium_left_bracket> premises H1 and H2 and H3 and H
     H1 H2 H3 H
   \<medium_right_bracket> .. .
@@ -2456,20 +2474,19 @@ lemma make_overloaded_synthesis_rule:
   unfolding Gen_Synthesis_Rule_def
   \<medium_left_bracket> premises E[assertion_simps] and F and X and A
     X F[OF A]
-  (* \<medium_left_bracket> fold E[THEN fun_cong[where x=a]] \<medium_right_bracket> .. *)
   \<medium_right_bracket> .. .
 
 lemma make_overloaded_synthesis_rule':
-  \<open> PROP Gen_Synthesis_Rule
+  \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R'\<heavy_comma> E e)
+\<Longrightarrow> PROP Gen_Synthesis_Rule
           (Trueprop (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))
           Ant
           ((\<And>vs. X' vs \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<^bold>a\<^bold>n\<^bold>d Any1 vs)
        \<Longrightarrow> PROP Ant
-       \<Longrightarrow> \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. R'\<heavy_comma> R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. R'\<heavy_comma> E e)
+       \<Longrightarrow> \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. R'\<heavy_comma> R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'
            @action overloaded_synthesis)\<close>
-  unfolding Gen_Synthesis_Rule_def
-  \<medium_left_bracket> premises F and X and A
-    X F[OF A] \<medium_right_bracket> .. .
+  unfolding FOCUS_TAG_def
+  using make_overloaded_synthesis_rule[unfolded FOCUS_TAG_def, where Y = \<open>\<lambda>v. R\<heavy_comma> Y v\<close>, folded mult.assoc] .
 
 ML_file \<open>library/additions/overloaded_synthesis.ML\<close>
 
@@ -2477,7 +2494,8 @@ attribute_setup overloaded_operator_in_synthesis = \<open>
   Scan.peek (fn ctxt =>
     Scan.optional Parse.int 60 --
     Parse.position (
-        (Scan.repeat Parse.term --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.term
+        (( (\<^keyword>\<open>(\<close> -- \<^keyword>\<open>)\<close>) >> (K []) || Scan.repeat Parse.term)
+       --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.term
           >> (fn (A,Y) =>
               let val ctxt' = Proof_Context.set_mode Proof_Context.mode_schematic (Context.proof_of ctxt)
                   val terms = map (Type.constraint \<^typ>\<open>_ \<phi>arg \<Rightarrow> assn\<close> o Syntax.parse_term ctxt') (Y::A)
