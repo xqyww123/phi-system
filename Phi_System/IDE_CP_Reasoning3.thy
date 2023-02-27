@@ -2449,13 +2449,12 @@ lemma make_overloaded_synthesis_rule:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
           (Trueprop (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))
           Ant
-          (Stop_Divergence
-       \<Longrightarrow> (\<And>vs. X' vs \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<^bold>a\<^bold>n\<^bold>d Any1 vs)
+          ((\<And>vs. X' vs \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<^bold>a\<^bold>n\<^bold>d Any1 vs)
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'
            @action overloaded_synthesis)\<close>
   unfolding Gen_Synthesis_Rule_def
-  \<medium_left_bracket> premises E[assertion_simps] and F and _ and X and A
+  \<medium_left_bracket> premises E[assertion_simps] and F and X and A
     X F[OF A]
   (* \<medium_left_bracket> fold E[THEN fun_cong[where x=a]] \<medium_right_bracket> .. *)
   \<medium_right_bracket> .. .
@@ -2464,13 +2463,12 @@ lemma make_overloaded_synthesis_rule':
   \<open> PROP Gen_Synthesis_Rule
           (Trueprop (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E))
           Ant
-          (Stop_Divergence
-       \<Longrightarrow> (\<And>vs. X' vs \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<^bold>a\<^bold>n\<^bold>d Any1 vs)
+          ((\<And>vs. X' vs \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<^bold>a\<^bold>n\<^bold>d Any1 vs)
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. R'\<heavy_comma> R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. R'\<heavy_comma> E e)
            @action overloaded_synthesis)\<close>
   unfolding Gen_Synthesis_Rule_def
-  \<medium_left_bracket> premises F and _ and X and A
+  \<medium_left_bracket> premises F and X and A
     X F[OF A] \<medium_right_bracket> .. .
 
 ML_file \<open>library/additions/overloaded_synthesis.ML\<close>
