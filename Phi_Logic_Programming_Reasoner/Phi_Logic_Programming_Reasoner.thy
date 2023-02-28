@@ -21,7 +21,7 @@ ML_file \<open>library/pattern_translation.ML\<close>
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
 
-ML_file \<open>library/reasoner.ML\<close>
+ML_file_debug \<open>library/reasoner.ML\<close>
 
 lemma \<r>Require_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Require P\<close> unfolding \<r>Require_def .
 

@@ -55,7 +55,7 @@ signature NU_REASONER = sig
   val get_reasoners : theory -> reasoners
                    -> term (*pattern*) -> reasoner list
   val pretty : Proof.context -> reasoner -> Pretty.T
-  val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list
+  (*val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list*)
 
   (* Interfaces for Reasoning *)
   (*N: number of premises to be attacked at most, if it is positive;
@@ -200,7 +200,7 @@ val nested_level = Environ.get
 
 exception Success    of context_state
 exception Global_Cut of context_state
-exception Local_Cut  of (Position.T * context_state Seq.seq)
+exception Local_Cut  of (priority * Position.T * context_state Seq.seq)
 
 structure Global_Cut_Handlers = PLPR_Handlers(
   type domT = context_state
@@ -256,7 +256,7 @@ fun content net = Net.content net |> map (fn (_,_,_,r) => r)
 
 fun pretty ctxt (r:reasoner) =
   Pretty.chunks (
-    Pretty.block (Pretty.here (#pos r) @ [Syntax.pretty_term ctxt (#name r)]) ::
+    Pretty.block (Pretty.here (#pos r) @ [Pretty.str " ", Syntax.pretty_term ctxt (#name r)]) ::
     map (fn (pat,n) => Pretty.item [
           Pretty.str "(", Pretty.str (string_of_int n), Pretty.str "): ",
           Syntax.pretty_term ctxt pat
@@ -343,17 +343,15 @@ fun distinct_rev eq lst =
   let
     fun dist (rev_seen, []) = rev_seen
       | dist (rev_seen, x :: xs) =
-          if member eq rev_seen x then dist (rev_seen, xs)
+          if member eq xs x then dist (rev_seen, xs)
           else dist (x :: rev_seen, xs);
   in dist ([], lst) end;
 
 
 fun get_reasoners' thy tactics term =
   Net.match_term tactics term
-    |> filter (fn (_,_,_,reasoner) =>
-        exists (fn (pat,_) =>
-          match_term thy (pat,term))
-        (#pattern reasoner)
+    |> filter (fn (_,pat,_,reasoner) =>
+        match_term thy (pat,term)
         andalso forall (fn pat =>
           not (match_term thy (pat,term)))
         (#blacklist reasoner))
@@ -376,7 +374,7 @@ fun has_reasoner pattern filter ctxt =
   Net.match_term (Reasoners.get ctxt) pattern
     |> exists (fn (_,_,_,r) => filter r)
 
-fun gen_call_reasoners trace tactics ctxt th =
+fun gen_call_reasoners trace score tactics ctxt th =
   Thm.major_prem_of th
     |> Envir.beta_eta_contract
     |> get_reasoners' (Proof_Context.theory_of ctxt) tactics
@@ -390,28 +388,30 @@ fun gen_call_reasoners trace tactics ctxt th =
              | _ => NONE
         else if priority >= 1000 then
           case Seq.pull (#tactic r (ctxt,th))
-            of SOME (x,s) => raise Local_Cut (#pos r, Seq.cons x s)
+            of SOME (x,s) => raise Local_Cut (score + priority, #pos r, Seq.cons x s)
              | _ => NONE
-        else SOME (#pos r, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
+        else SOME (priority + score, #pos r, Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))))
       )
-  handle Local_Cut ret => [ret]
+  handle Local_Cut (s,pos,seq) => [(s,pos,seq)]
        | Success s => Success_Handlers.invoke (fst s) s
+                   |> map (fn (x,y) => (score,x,y))
        | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
+                      |> map (fn (x,y) => (score,x,y))
 
-fun call_reasoners' trace N ctxt tactics th =
+fun call_reasoners' trace score N ctxt tactics th =
   if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
-  else gen_call_reasoners trace tactics ctxt th
+  else gen_call_reasoners trace score tactics ctxt th
 
-fun call_reasoners (ctxt,th) =
-  gen_call_reasoners (Config.get ctxt trace) (Reasoners.get (Context.Proof ctxt)) ctxt th
+(*fun call_reasoners (ctxt,th) =
+  gen_call_reasoners (Config.get ctxt trace) (Reasoners.get (Context.Proof ctxt)) ctxt th *)
 
 
 fun gen_reason _ _ _ _ _ [] = NONE
   | gen_reason N trace limit iter tactics ([]::L) =
       (if 2 <= trace then tracing ("Backtracking...") else ();
        gen_reason N trace limit iter tactics L)
-  | gen_reason N trace limit iter tactics (((pos,seq)::L')::L) =
+  | gen_reason N trace limit iter tactics (((score,pos,seq)::L')::L) =
   let 
     val _ = if iter > limit
             then error "The reasoning reaches the limit of the number of reasoning steps.\n\
@@ -424,11 +424,12 @@ fun gen_reason _ _ _ _ _ [] = NONE
       of SOME ((ctxt,th), seq') =>
           (let
             val _ = if 2 <= trace
-                    then tracing ("\<phi>reasoning:"^ Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
+                    then tracing ("\<phi>reasoning("^string_of_int score^"):"^
+                                  Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                     else ()
-            val Z = (call_reasoners' trace N ctxt tactics th)
+            val Z = (call_reasoners' trace score N ctxt tactics th)
                   |> (fn Z => Z::(
-                        let val t = if pointer_eq (seq',Seq.empty) then L' else (pos,seq')::L'
+                        let val t = if pointer_eq (seq',Seq.empty) then L' else (score,pos,seq')::L'
                         in if null t then L else t::L end))
                 handle Success ret => raise Success ret
                      | Global_Cut stat =>
@@ -438,7 +439,7 @@ fun gen_reason _ _ _ _ _ [] = NONE
                                           ^ Thm.string_of_thm ctxt (snd stat))
                                   else ()
                         in
-                          [[(pos, Seq.single stat)]]
+                          [[(0,pos, Seq.single stat)]]
                         end
           in
             gen_reason N trace limit (iter+1) tactics Z
@@ -451,7 +452,7 @@ fun gen_reason' ctxt N states =
   Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (fn () =>
      (gen_reason N (Config.get ctxt trace) (Config.get ctxt step_limit)
                  0 (Reasoners.get (Context.Proof ctxt))
-                 (map (map (pair Position.none)) states)
+                 (map (map (fn seq => (0, Position.none, seq))) states)
       handle Success ret => SOME ret)
      |> Option.map (apfst exit_reasoning_envir)
   )

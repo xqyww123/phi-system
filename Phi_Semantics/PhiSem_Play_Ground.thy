@@ -6,7 +6,6 @@ theory PhiSem_Play_Ground
     PhiSem_Variable
 begin
 
-
 no_notation inter (infixl "Int" 70)
         and union (infixl "Un" 65)
         and Nats  ("\<nat>")

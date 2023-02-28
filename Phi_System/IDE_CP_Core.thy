@@ -913,20 +913,11 @@ lemma [\<phi>reason 1200 for \<open>
     apply (tactic \<open>Tactic.resolve_tac \<^context>
       [((Thm.forall_elim \<^cterm>\<open>x\<close> @{thm prems(3)}) RS @{thm prems(1)[OF prems(2)]})] 1\<close>) . .
 
-lemma [\<phi>reason 1200 for \<open>
-  PROP \<phi>Application (Trueprop (All ?App)) ?State ?Result
-\<close>]:
-  \<open> PROP \<phi>Application (Trueprop (App x)) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
-  unfolding prop_def \<phi>Application_def imp_implication
-  subgoal premises prems using prems(1)[OF prems(2) prems(3)[THEN spec[where x=x]]] . .
-
 lemma [\<phi>reason 1200]:
   \<open> PROP \<phi>Application (Trueprop App) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (App @action Act) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2) prems(3)] . .
-
 
 lemma [\<phi>reason 1200]:
   \<open> PROP \<phi>Application (Trueprop (\<forall>a b. App (a,b))) State (PROP Result)
