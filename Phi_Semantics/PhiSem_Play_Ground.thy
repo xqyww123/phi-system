@@ -60,7 +60,6 @@ proc FIB:
   \<medium_right_bracket> by (metis One_nat_def Value_of_def fib.elims fib.simps(2) le_Suc_eq le_zero_eq) .
 
 thm FIB_def
-
  
 proc FIB2:
   input \<open>\<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>(8)\<close>

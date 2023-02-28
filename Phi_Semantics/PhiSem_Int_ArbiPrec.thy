@@ -253,7 +253,7 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_add_aint_\<phi>app
   [\<phi>overload +, \<phi>synthesis for _ (100)
-                           and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int>\<close> (1200)]:
+                           and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x + y \<Ztypecolon> \<int> \<rbrace> \<close>
   unfolding op_aadd_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
@@ -269,7 +269,7 @@ paragraph \<open>Subtraction\<close>
 
 lemma op_sub_aint_\<phi>app[\<phi>overload -,
                        \<phi>synthesis for _ (100)
-                                  and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<int>\<close> (1200)]:
+                                  and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_asub_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
@@ -277,7 +277,7 @@ lemma op_sub_aint_\<phi>app[\<phi>overload -,
 
 lemma op_sub_anat_\<phi>app[\<phi>overload -,
                        \<phi>synthesis for _ (100)
-                                  and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<nat>\<close> (1200)]:
+                                  and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e y \<le> x
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x - y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> $vx $vy op_sub_aint \<medium_right_bracket>
@@ -287,7 +287,7 @@ paragraph \<open>Times\<close>
 
 lemma op_mul_aint[\<phi>overload *,
                   \<phi>synthesis for _ (100)
-                             and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x * y \<Ztypecolon> \<int>\<close> (1200)]:
+                             and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_amul (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x * y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_amul_def
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
@@ -295,7 +295,7 @@ lemma op_mul_aint[\<phi>overload *,
 
 lemma op_mul_anat[\<phi>overload *,
                   \<phi>synthesis for _ (100)
-                             and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x * y \<Ztypecolon> \<nat>\<close> (1200)]:
+                             and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_amul (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x * y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> $vx $vy op_mul_aint \<medium_right_bracket>
     by (simp add: nat_mult_distrib) .
@@ -305,7 +305,7 @@ paragraph \<open>Division\<close>
 
 lemma op_udiv_aint_\<phi>app[\<phi>overload /,
                         \<phi>synthesis for _ (100)
-                                   and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<int>\<close> (1200)]:
+                                   and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_audiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<int> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_audiv_def
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
@@ -313,7 +313,7 @@ lemma op_udiv_aint_\<phi>app[\<phi>overload /,
 
 lemma op_udiv_anat_\<phi>app[\<phi>overload /,
                         \<phi>synthesis for _ (100)
-                                   and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<nat>\<close> (1200)]:
+                                   and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_audiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[vy] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x div y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> $vx $vy op_udiv_aint \<medium_right_bracket>
     by (simp add: div_int_pos_iff nat_div_distrib) .
@@ -329,11 +329,13 @@ lemma op_lshr_aint_pre_\<phi>app:
       rule \<phi>M_assert, simp add: \<phi>expns, rule, simp add: \<phi>expns)
   using drop_bit_int_def by presburger
 
-lemma op_lshr_aint_\<phi>app[\<phi>synthesis 100]:
+lemma op_lshr_aint_\<phi>app[\<phi>synthesis for _ (100)
+                                   and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int> \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. drop_bit y x \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw2] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l drop_bit y x \<Ztypecolon> \<int> \<rbrace>\<close>
   \<medium_left_bracket> $x $y op_lshr_aint_pre \<medium_right_bracket>. .
 
-lemma op_lshr_anat_\<phi>app[\<phi>synthesis 100]:
+lemma op_lshr_anat_\<phi>app[\<phi>synthesis for _ (100)
+                                   and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat> \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>ret. drop_bit y x \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw2] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l drop_bit y x \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> $x $y op_lshr_aint \<medium_right_bracket>
     by (simp add: drop_bit_of_nat)  .
@@ -347,11 +349,13 @@ lemma op_lshl_aint_pre_\<phi>app:
   by (cases raw1; cases raw2; simp; rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
       rule \<phi>M_assert, simp add: \<phi>expns, rule, simp add: \<phi>expns push_bit_int_def)
 
-lemma op_lshl_aint_\<phi>app[\<phi>synthesis 100]:
+lemma op_lshl_aint_\<phi>app[\<phi>synthesis for _ (100)
+                                   and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int> \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw2] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l push_bit y x \<Ztypecolon> \<int> \<rbrace>\<close>
   \<medium_left_bracket> $x $y op_lshl_aint_pre \<medium_right_bracket>. .
 
-lemma op_lshl_anat_\<phi>app[\<phi>synthesis 100]:
+lemma op_lshl_anat_\<phi>app[\<phi>synthesis for _ (100)
+                                   and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat> \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[raw2] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l push_bit y x \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> $x $y op_lshl_aint \<medium_right_bracket>
     by (simp add: push_bit_of_nat) .
@@ -361,7 +365,7 @@ paragraph \<open>Less Than\<close>
 
 lemma op_lt_aint[\<phi>overload <,
                  \<phi>synthesis for _ (100)
-                            and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool>\<close> (1200)]:
+                            and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_a_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawx] \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawy] \<int> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_a_lt_def
   by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns, rule,
@@ -369,7 +373,7 @@ lemma op_lt_aint[\<phi>overload <,
 
 lemma op_lt_anat[\<phi>overload <,
                  \<phi>synthesis for _ (100)
-                            and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool>\<close> (1200)]:
+                            and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_a_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawy] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> $x $y op_lt_aint \<medium_right_bracket>. .
 
@@ -378,7 +382,7 @@ paragraph \<open>Less Equal\<close>
 
 lemma op_le_aint_\<phi>app[\<phi>overload \<le>,
                       \<phi>synthesis for _ (100)
-                                 and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool>\<close> (1200)]:
+                                 and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawx] \<int>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawy] \<int> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_a_le_def
   by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
@@ -386,7 +390,7 @@ lemma op_le_aint_\<phi>app[\<phi>overload \<le>,
 
 lemma op_le_anat_\<phi>app[\<phi>overload \<le>,
                       \<phi>synthesis for _ (100)
-                                 and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool>\<close> (1200)]:
+                                 and \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawy] \<nat> \<longmapsto> \<^bold>v\<^bold>a\<^bold>l x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> $x $y op_le_aint \<medium_right_bracket>. .
 
