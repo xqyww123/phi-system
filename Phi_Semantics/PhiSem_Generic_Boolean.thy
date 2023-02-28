@@ -95,7 +95,9 @@ section \<open>Abstractions of Boolean Arithmetic\<close>
 subsection \<open>Constant\<close>
 
 
-lemma op_const_bool[\<phi>synthesis for \<open>\<lambda>v. True \<Ztypecolon> ?T v\<close> \<open>\<lambda>v. False \<Ztypecolon> ?T v\<close>]:
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma op_const_bool[\<phi>synthesis for \<open>\<lambda>v. True \<Ztypecolon> ?T v\<close> and \<open>\<lambda>v. False \<Ztypecolon> ?T v\<close>]:
   \<open> Check_Literal b
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_const_bool b \<lbrace> Void \<longmapsto> \<^bold>v\<^bold>a\<^bold>l b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_const_bool_def

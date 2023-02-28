@@ -2136,6 +2136,51 @@ lemma [\<phi>reason 1250]:
   \<medium_left_bracket> premises F1 and F2
     F1 F2 \<medium_right_bracket> .. .
 
+(*
+subsection \<open>Infer the binding pattern\<close>
+
+definition Infer_Binding_Pattern :: \<open>'c::{} \<Rightarrow> 'a::{} \<Rightarrow> 'b::{} \<Rightarrow> prop\<close>
+  where \<open>Infer_Binding_Pattern X GIVEN_PATTERN RESULTED_PATTERN \<equiv> TERM RESULTED_PATTERN\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>PROP Infer_Binding_Pattern ?X ?G _\<close> \<Rightarrow> \<open>PROP Infer_Binding_Pattern ?X ?G _\<close> (100)
+]]
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma infer_binding_pattern:
+  \<open> PROP Infer_Binding_Pattern RULE GIVEN_PATTERN RESULTED_PATTERN
+\<Longrightarrow> TERM RESULTED_PATTERN\<close> .
+
+consts morphism_syntax :: \<open>'a::{} \<Rightarrow> 'b::{} \<Rightarrow> 'c::{}\<close>
+consts comma_syntax :: \<open>'a::{} \<Rightarrow> 'b::{} \<Rightarrow> 'c::{}\<close>
+
+lemma [\<phi>reason 2000]:
+  \<open> PROP Infer_Binding_Pattern B G Y
+\<Longrightarrow> PROP Infer_Binding_Pattern (PROP A \<Longrightarrow> PROP B) G Y\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+lemma [\<phi>reason 2000]:
+  \<open> (\<And>x. PROP Infer_Binding_Pattern (X x) G Y)
+\<Longrightarrow> PROP Infer_Binding_Pattern (\<And>x. PROP X x) G Y\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+definition \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration :: \<open>'a::{} \<Rightarrow> 'b::{} \<Rightarrow> 'c::{} \<Rightarrow> prop\<close>
+  where \<open> \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration A B C \<equiv> TERM C\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>PROP \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration ?A ?B _\<close> \<Rightarrow> \<open>PROP \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration ?A ?B _\<close> (100)
+]]
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration A B (A * B)\<close>
+  unfolding \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration_def .
+
+lemma [\<phi>reason 1100]:
+  \<open> PROP \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration A B C
+\<Longrightarrow> PROP \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration A (B * D) (C * D)\<close>
+  unfolding \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration_def .
+*)
 
 
 section \<open>Generation of Synthesis Rule\<close>
@@ -2163,21 +2208,51 @@ declare [[generate_pattern_of_synthesis_rule
       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>    (120)
   and \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> _ \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis &&& TERM ?Z\<close> \<Rightarrow>
       \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>    (110)
+  and \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _  \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> _ \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis &&& (TERM ?X &&& TERM ?Z)\<close> \<Rightarrow>
+      \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _ @action synthesis\<close>    (110)
 ]]
+
+(*
+lemma [\<phi>reason 2000]:
+  \<open> PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> X \<longmapsto> \<lambda>ret. R  \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action synthesis)
+      ()
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X \<longmapsto> \<lambda>ret. R' \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+lemma [\<phi>reason 1050]:
+  \<open> PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> X \<longmapsto> \<lambda>ret. R  \<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action synthesis)
+      Z'
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X \<longmapsto> \<lambda>ret. R' \<heavy_comma> \<blangle> Z' ret \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+*)
 
 attribute_setup \<phi>synthesis = \<open>
   Scan.peek (fn ctxt =>
     let val ctxt' = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of ctxt)
         fun read_term raw =
-          let val term = Type.constraint \<^typ>\<open>(_::VALs) \<phi>arg \<Rightarrow> assn\<close> (Syntax.parse_term ctxt' raw)
-                      |> Syntax.check_term ctxt'
-              val ctxt'' = Proof_Context.augment term ctxt'
-              val term' = singleton (Variable.export_terms ctxt' ctxt') term
-           in term' end
+          let val raw1 = map (Syntax.parse_term ctxt') raw
+              fun chk tagged [] = Syntax.check_terms ctxt' tagged
+                | chk tagged (X::L) =
+                        (chk (Type.constraint \<^typ>\<open>(_::VALs) \<phi>arg \<Rightarrow> assn\<close> X :: tagged) L
+                         handle ERROR err =>
+                         chk (Type.constraint \<^typ>\<open>assn\<close> X :: tagged) L
+                         handle ERROR _ => raise (ERROR err))
+              val terms = chk [] (rev raw1)
+              val ctxt'' = fold Proof_Context.augment terms ctxt'
+              val terms' = Variable.export_terms ctxt'' ctxt' terms
+           in terms' end
+        val pattern = (Args.$$$ "_"  >> (K Phi_Synthesis.No_Pattern))
+                   || ((Parse.term --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.term)
+                          >> (fn (a,b) => case read_term [a,b] of [a',b'] =>
+                                                  Phi_Synthesis.Arg_and_Ret (a',b')))
+                   || (Parse.term >> (singleton read_term #> Phi_Synthesis.Ret_only))
+        val priority = Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>)
      in Phi_Reasoner_Helpers.pos_parser "\<phi>synthesis" --| Scan.option Args.add --
         Scan.optional Parse.int 100 --
-       (Scan.optional (\<^keyword>\<open>for\<close> |-- Scan.repeat (Parse.term >> read_term)) [] --
-        Scan.optional (\<^keyword>\<open>except\<close> |-- Scan.repeat (Parse.term >> read_term)) [] )
+       (Scan.optional (\<^keyword>\<open>for\<close> |-- Parse.and_list1 (pattern -- priority)) [] --
+        Scan.optional (\<^keyword>\<open>except\<close> |-- Parse.and_list1 pattern) [] )
 >> (fn ((pos, priority), pattern) =>
       Thm.declaration_attribute (fn rule =>
         Phi_Synthesis.declare_rule pos priority pattern rule))
@@ -2409,7 +2484,76 @@ declare [[\<phi>reason_default_pattern
    \<Rightarrow> \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' @action overloaded_synthesis\<close> (110)
   and \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action overloaded_synthesis &&& TERM ?Y'\<close>
    \<Rightarrow> \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' @action overloaded_synthesis\<close> (110)
+  and \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action overloaded_synthesis &&& (TERM ?X' &&& TERM ?Y')\<close>
+   \<Rightarrow> \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X' \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' @action overloaded_synthesis\<close> (110)
+  and \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E  @action overloaded_synthesis &&& (TERM ?X' &&& TERM ?Y')\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c _ \<lbrace> ?X' vs \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E' @action overloaded_synthesis\<close> (110)
 ]]
+
+(*
+consts synthesis_pattern1 :: \<open>'ret::{} \<Rightarrow> 'any::{}\<close>
+consts synthesis_pattern2 :: \<open>'arg::{} \<Rightarrow> 'ret::{} \<Rightarrow> 'any::{}\<close>
+
+lemma [\<phi>reason 2000]:
+  \<open> (\<And>vs. PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
+      GIVEN
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis))
+\<Longrightarrow> PROP Infer_Binding_Pattern
+      (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  vs \<lbrace> X  vs \<longmapsto> Y  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action overloaded_synthesis)
+      GIVEN
+      (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+lemma [\<phi>reason 2100]:
+  \<open> (\<And>vs. PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E @action overloaded_synthesis)
+      (synthesis_pattern2 (XX vs) YY)
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis))
+\<Longrightarrow> PROP Infer_Binding_Pattern
+      (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f  vs \<lbrace> X  vs \<longmapsto> Y  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action overloaded_synthesis)
+      (synthesis_pattern2 XX YY)
+      (\<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f' vs \<lbrace> X' vs \<longmapsto> Y' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+lemma [\<phi>reason 1050]:
+  \<open> PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> X  \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action overloaded_synthesis)
+      ()
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+lemma [\<phi>reason 1100]:
+  \<open> PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> X  \<longmapsto> \<lambda>ret. Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action overloaded_synthesis)
+      (synthesis_pattern1 Y')
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> \<lambda>ret. Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+lemma [\<phi>reason 1100]:
+  \<open> PROP \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration RX X' X''
+\<Longrightarrow> PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> X   \<longmapsto> \<lambda>ret. Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action overloaded_synthesis)
+      (synthesis_pattern2 X' Y')
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X'' \<longmapsto> \<lambda>ret. Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+lemma [\<phi>reason 1100]:
+  \<open> PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> X  \<longmapsto> \<lambda>ret. x \<Ztypecolon> Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action overloaded_synthesis)
+      ()
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> \<lambda>ret. x \<Ztypecolon> Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+
+lemma [\<phi>reason 1050]:
+  \<open> PROP Infer_Binding_Pattern
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f  \<lbrace> X  \<longmapsto> \<lambda>ret. x  \<Ztypecolon> Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R  \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  @action overloaded_synthesis)
+      (synthesis_pattern1 x')
+      (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f' \<lbrace> X' \<longmapsto> \<lambda>ret. x' \<Ztypecolon> Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E' @action overloaded_synthesis)\<close>
+  unfolding Infer_Binding_Pattern_def .
+*)
+
+
 
 (* \<forall>vs. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_add LENGTH(?'b) vs \<lbrace> ?X' vs \<longmapsto> \<lambda>ret. ?x + ?y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[ret] \<nat>(?'b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. ?R\<heavy_comma> 0 e)
     @action overloaded_synthesis *)

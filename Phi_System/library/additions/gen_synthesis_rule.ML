@@ -1,7 +1,11 @@
 signature PHI_SYNTHESIS = sig
 
+datatype pattern = Arg_and_Ret of term * term | Ret_only of term | No_Pattern
+
 val gen_rule : Proof.context -> thm -> thm
-val declare_rule : Position.T -> int -> term list * term list
+val declare_rule : Position.T
+                -> Phi_Reasoner.priority
+                -> (pattern * Phi_Reasoner.priority option) list * pattern list
                 -> thm -> Context.generic -> Context.generic
 
 end
@@ -39,26 +43,55 @@ structure Pattern = Pattern_Translation(
 val _ = Theory.setup (Pattern.setup_attribute \<^binding>\<open>generate_pattern_of_synthesis_rule\<close>
     "generated_rule &&& TERM user_given_pattern\<close> \<Rightarrow> \<open>pattern of the antecedents that the reasoner binds on\<close>")
 
+datatype pattern = Arg_and_Ret of term * term | Ret_only of term | No_Pattern
+
+(*  Procedure_Syntax.package_values ""  *)
+
+fun pack _    f (Abs (N,TY,X)) = Abs (N,TY, f X)
+  | pack flag f term =
+      case Phi_Help.safe_fastype_of term
+        of \<^Type>\<open>fun T _\<close> => Abs ("", T, f (term $ Bound 0))
+         | _ => if flag
+                then snd (Procedure_Syntax.package_values "" \<^typ>\<open>unit\<close> true NONE (f term))
+                else f term
+
+fun encode_pattern _    No_Pattern = \<^term>\<open>TERM ()\<close>
+  | encode_pattern _    (Ret_only term) = Logic.mk_term (pack true I term)
+  | encode_pattern flag (Arg_and_Ret (arg,ret)) =
+      let val idx = Int.max (maxidx_of_term arg, maxidx_of_term ret) + 1
+          val R = Var(("R",idx), \<^typ>\<open>assn\<close>)
+          fun prepend_R ((H as Const (\<^const_name>\<open>times\<close>, _)) $ A $ B) = H $ prepend_R A $ B
+            | prepend_R X = Const(\<^const_name>\<open>times\<close>, \<^typ>\<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close>) $ R $ X
+       in Logic.mk_conjunction (Logic.mk_term (pack flag prepend_R arg),
+                                Logic.mk_term (pack true I ret))
+      end
+
 fun declare_rule pos priority (patterns0,blacklist0) proc_thm0 ctxt0 =
   let val ctxt = Context.proof_of ctxt0
       val proc_thm = Drule.zero_var_indexes (gen_rule ctxt proc_thm0)
       val concl = Thm.concl_of proc_thm
       fun pat_of P =
-            case Pattern.translate ctxt0 (Logic.mk_conjunction (concl, Logic.mk_term P))
+            case Pattern.translate ctxt0 (Logic.mk_conjunction (concl, encode_pattern false P))
+              of SOME pattern => pattern
+               | NONE => (
+            case Pattern.translate ctxt0 (Logic.mk_conjunction (concl, encode_pattern true P))
               of SOME pattern => pattern
                | NONE => error "Cannot infer the pattern of the antecedent to be bound.\n\
                   \Some translation rule for giving the pattern may be required, and can be decalred\
-                  \ by \<open>declare [[generate_pattern_of_synthesis_rule \<dots> \<Rightarrow> \<dots>]].\<close>"
-      val patterns = map pat_of (if null patterns0 then [\<^term>\<open>()\<close>] else patterns0)
+                  \ by \<open>declare [[generate_pattern_of_synthesis_rule \<dots> \<Rightarrow> \<dots>]].\<close>")
+      val patterns = map (apfst pat_of) (if null patterns0 then [(No_Pattern, NONE)] else patterns0)
       val blacklist = map pat_of blacklist0
-      val _ = Phi_Reasoner.debug_pretty ctxt (fn () => Pretty.chunks ([
+      val _ = Phi_Reasoner.info_pretty ctxt (fn () => Pretty.chunks ([
                 Pretty.str "The rule is bound on pattern(s):",
-                Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) patterns)] @
+                Pretty.chunks (map (fn (X,N) => Pretty.item [
+                      Pretty.str "(", Pretty.str (string_of_int (the_default priority N)), Pretty.str "): ",
+                      Syntax.pretty_term ctxt X
+                    ]) patterns)] @
                 (if null blacklist then [] else [
                 Pretty.str "excluding pattern(s):",
                 Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) blacklist)
           ])))
-   in Phi_Reasoner.add_intro_rule pos priority (map (rpair NONE) patterns, blacklist) NONE [proc_thm] ctxt0
+   in Phi_Reasoner.add_intro_rule pos priority (patterns, blacklist) NONE [proc_thm] ctxt0
   end
 
 

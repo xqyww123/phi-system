@@ -8,7 +8,6 @@ signature NU_REASONER = sig
 
 
   type priority = int
-  type cost = int (*cost is the negative of the priority*)
   type pattern = term
   type name = term
   type reasoners
@@ -16,11 +15,6 @@ signature NU_REASONER = sig
   type reasoner = {name: name,
                  pos: Position.T,
                  pattern: (pattern * priority) list,
-                 blacklist: pattern list,
-                 tactic: (context_state -> context_state Seq.seq)}
-  type internal_reasoner = {name: name,
-                 pos: Position.T,
-                 pattern: (pattern * cost) list,
                  blacklist: pattern list,
                  tactic: (context_state -> context_state Seq.seq)}
 
@@ -50,19 +44,16 @@ signature NU_REASONER = sig
   val disable_global_cut : int -> string -> Proof.context -> serial * Proof.context
   val disable_success    : int -> string -> Proof.context -> serial * Proof.context
 
-  val internalize : reasoner -> internal_reasoner
-  val externalize : internal_reasoner -> reasoner
-
   val add : reasoner -> Context.generic -> Context.generic
   val add_lthy : reasoner -> local_theory -> local_theory
   val del_reasoners: term (*pattern*)
-                  -> (internal_reasoner -> bool) (*filter, returning true to delete one*)
+                  -> (reasoner -> bool) (*filter, returning true to delete one*)
                   -> Context.generic -> Context.generic
-  val has_reasoner : term -> (internal_reasoner -> bool) -> Context.generic -> bool
+  val has_reasoner : term -> (reasoner -> bool) -> Context.generic -> bool
   val reasoners : Proof.context -> reasoners
-  val content : reasoners -> internal_reasoner list
+  val content : reasoners -> reasoner list
   val get_reasoners : theory -> reasoners
-                   -> term (*pattern*) -> internal_reasoner list
+                   -> term (*pattern*) -> reasoner list
   val pretty : Proof.context -> reasoner -> Pretty.T
   val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list
 
@@ -141,15 +132,9 @@ type reasoner = {name: term,
                  pattern: (term * int) list,
                  blacklist: term list,
                  tactic: (context_state -> context_state Seq.seq)}
-type internal_reasoner = reasoner
 
 val trick = map_aterms (fn Var ((s,i),T) => Var ((s, if String.isPrefix "var_" s then ~i - 1 else i),T)
                          | X => X)
-
-fun internalize ({name,pos,pattern,blacklist,tactic}:reasoner) =
-  ({name=name, pos=pos, pattern = map (apsnd (op ~)) pattern,
-    blacklist = map (trick o Envir.beta_eta_contract) blacklist, tactic = tactic}:reasoner)
-val externalize = internalize
 
 fun normalize_reasoner f ({name,pos,pattern,blacklist,tactic}:reasoner) =
   ({name=name, pos=pos, pattern = map (fn (x,y) => (trick (Envir.beta_eta_contract x), f y)) pattern,
@@ -256,10 +241,9 @@ fun hash name =
 
 
 (** Main Registry **)
-type cost = int
 fun registry_eq ((c1,pat1,id1,_),(c2,pat2,id2,_))
       = (c1 = c2 andalso pat1 = pat2 andalso id1 = id2)
-type reasoners = (cost * pattern * reasoner_id * reasoner) Net.net
+type reasoners = (priority * pattern * reasoner_id * reasoner) Net.net
 
 structure Reasoners = Generic_Data (
   type T = reasoners
@@ -279,17 +263,17 @@ fun pretty ctxt (r:reasoner) =
         ]) (#pattern r)
   )
 
-fun pretty' ctxt (cost, pat, _, (r:reasoner)) =
+fun pretty' ctxt (priority, pat, _, (r:reasoner)) =
    Pretty.block (
      Pretty.here (#pos r) @
-    [Pretty.str "(", Pretty.str (string_of_int (~cost)), Pretty.str ") on pattern ",
+    [Pretty.str "(", Pretty.str (string_of_int priority), Pretty.str ") on pattern ",
      Syntax.pretty_term ctxt pat, Pretty.str " : ",
      Pretty.fbrk,
      Syntax.pretty_term ctxt (#name r)])
 
 
 fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
-  let val x = (~priority, pat, hash (#name reasoner), reasoner)
+  let val x = (priority, pat, hash (#name reasoner), reasoner)
    in Net.insert_term registry_eq (pat, x) net
       handle Net.INSERT =>
         let val dups = Net.lookup net (Net.key_of_term pat)
@@ -355,6 +339,15 @@ fun concl_of_goal st i =
                                          Conv.all_conv (Thm.cprop_of th)) th
   else th *)
 
+fun distinct_rev eq lst =
+  let
+    fun dist (rev_seen, []) = rev_seen
+      | dist (rev_seen, x :: xs) =
+          if member eq rev_seen x then dist (rev_seen, xs)
+          else dist (x :: rev_seen, xs);
+  in dist ([], lst) end;
+
+
 fun get_reasoners' thy tactics term =
   Net.match_term tactics term
     |> filter (fn (_,_,_,reasoner) =>
@@ -364,8 +357,8 @@ fun get_reasoners' thy tactics term =
         andalso forall (fn pat =>
           not (match_term thy (pat,term)))
         (#blacklist reasoner))
-    |> distinct (fn (a,b) => #3 a = #3 b)
     |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
+    |> distinct_rev (fn (a,b) => #3 a = #3 b)
 
 fun get_reasoners thy tactics term =
       get_reasoners' thy tactics term |> map (fn (_,_,_,r) => r)
@@ -390,12 +383,12 @@ fun gen_call_reasoners trace tactics ctxt th =
     |> (if 3 <= trace
         then (fn rs => (List.app (debug ctxt) rs; rs))
         else I)
-    |> map_filter (fn (cost, _, _, r : reasoner) =>
-        if cost <= ~1000000 then
+    |> map_filter (fn (priority, _, _, r : reasoner) =>
+        if priority >= 1000000 then
           case Seq.pull (#tactic r (ctxt,th))
             of SOME (x,_) => raise Global_Cut x
              | _ => NONE
-        else if cost <= ~1000 then
+        else if priority >= 1000 then
           case Seq.pull (#tactic r (ctxt,th))
             of SOME (x,s) => raise Local_Cut (#pos r, Seq.cons x s)
              | _ => NONE
@@ -570,7 +563,7 @@ val _ =
          in if null reasoners
             then writeln "No reasoner found."
             else writeln (Pretty.string_of (Pretty.chunks
-                              (map (fn (_,_,_,r) => pretty ctxt (externalize r)) reasoners)))
+                              (map (fn (_,_,_,r) => pretty ctxt r) reasoners)))
         end)));
 
 

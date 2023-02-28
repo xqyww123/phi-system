@@ -152,7 +152,7 @@ structure Assertion_SS_Abnormal = Simpset (
   = \<open>PLPR_Simplifier.simplifier_by_ss' NONE (fn ctxt =>
       Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Abnormal.get' ctxt))\<close>
 
-\<phi>reasoner_ML assertion_simp 1300
+\<phi>reasoner_ML assertion_simp 1200
   (\<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close>)
   = \<open>PLPR_Simplifier.simplifier_by_ss' NONE Assertion_SS.get'\<close>
 

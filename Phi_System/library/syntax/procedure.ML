@@ -24,7 +24,8 @@ val package_values :
        string (*name of the lambda variable*)
         -> typ (*type of the return when the spec is 0*)
         -> bool (*the order for scanning and collecting the values.
-                  true for Right-to-Left; false for Left-to-Right*)
+                  true for Right-to-Left (the canonical order);
+                  false for Left-to-Right*)
         -> term list option (*values to be packed. If not given, will be collected from the
               expression. If given, the order of scanning is still useful for assigning projection
               index of anonymous values. If there is no anonymous values, the order then has no
