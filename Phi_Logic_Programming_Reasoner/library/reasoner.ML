@@ -223,25 +223,42 @@ fun disable_success    delt msg = Success_Handlers.push_localctxt delt (fn _ => 
 
 (*** Reasoner Registry ***)
 
+(** Hasher **)
+
+type reasoner_id = serial
+fun hasher_eq ((_,s1),(_,s2)) = (s1 = s2)
+val hasher_net = Synchronized.var "Phi_Reasoner.reasoner_hasher"
+                                  (0, (Net.empty : (name * reasoner_id) Net.net))
+
+fun hash name =
+  Synchronized.change_result hasher_net (fn (N,net) =>
+    case find_first (fn (x,_) => x = name) (Net.lookup net (Net.key_of_term name))
+      of SOME (_,s) => (s, (N,net))
+       | NONE => (N, (N+1, Net.insert_term (K false) (name, (name, N)) net))
+  )
+
+
+(** Main Registry **)
 type cost = int
-fun cost_eq ((c1,pat1,r1),(c2,pat2,r2)) = (c1 = c2 andalso pat1 = pat2 andalso #name r1 = #name r2)
-type reasoners = (cost * pattern * reasoner) Net.net
+fun registry_eq ((c1,pat1,id1,_),(c2,pat2,id2,_))
+      = (c1 = c2 andalso pat1 = pat2 andalso id1 = id2)
+type reasoners = (cost * pattern * reasoner_id * reasoner) Net.net
 
 structure Reasoners = Generic_Data (
   type T = reasoners
   val empty : T = Net.empty
-  val merge : T * T -> T = Net.merge cost_eq
+  val merge : T * T -> T = Net.merge registry_eq
 )
 
 fun reasoners ctxt = Reasoners.get (Context.Proof ctxt)
-fun content net = Net.content net |> map (fn (a,b,c) => (~a,c))
+fun content net = Net.content net |> map (fn (c,_,_,r) => (~c,r))
 
 fun pretty ctxt (priority, (r:reasoner)) =
   Pretty.block (Pretty.here (#pos r) @
     [Pretty.str "(", Pretty.str (string_of_int priority), Pretty.str ") ",
      Syntax.pretty_term ctxt (#name r)])
 
-fun pretty' ctxt (cost, pat, (r:reasoner)) =
+fun pretty' ctxt (cost, pat, _, (r:reasoner)) =
    Pretty.block (
      Pretty.here (#pos r) @
     [Pretty.str "(", Pretty.str (string_of_int (~cost)), Pretty.str ") on pattern ",
@@ -251,11 +268,11 @@ fun pretty' ctxt (cost, pat, (r:reasoner)) =
 
 
 fun insert_net ctxt priority (reasoner:reasoner) pat net =
-  let val x = (~priority, pat, reasoner)
-   in Net.insert_term cost_eq (pat, x) net
+  let val x = (~priority, pat, hash (#name reasoner), reasoner)
+   in Net.insert_term registry_eq (pat, x) net
       handle Net.INSERT =>
         let val dups = Net.lookup net (Net.key_of_term pat)
-                   |> filter (fn y => cost_eq (x,y))
+                   |> filter (fn y => registry_eq (x,y))
             val ctxt' = Context.proof_of ctxt
          in Exn.error (Pretty.string_of (Pretty.chunks (
               Pretty.str "Clash with existing reasoner!" ::
@@ -283,7 +300,7 @@ fun add_lthy cost_reasoner =
 
 (* Main Reasoning Function *)
 
-fun debug ctxt (c,_,(r : reasoner as {name,...})) =
+fun debug ctxt (c,_,_,(r : reasoner as {name,...})) =
   tracing ("reasoning candicates (" ^ string_of_int c ^ "):\n"
               ^ Syntax.string_of_term (Proof_Context.set_mode Proof_Context.mode_abbrev ctxt) name)
 
@@ -319,30 +336,31 @@ fun concl_of_goal st i =
 
 fun get_reasoners' thy tactics term =
   Net.match_term tactics term
-    |> filter (fn (_,_,reasoner) =>
+    |> filter (fn (_,_,_,reasoner) =>
         exists (fn pat =>
           match_term thy (pat,term))
         (#pattern reasoner)
         andalso forall (fn pat =>
           not (match_term thy (pat,term)))
         (#blacklist reasoner))
-    |> sort (fn ((c1,_,_),(c2,_,_)) => int_ord (c1,c2))
+    |> distinct (fn (a,b) => #3 a = #3 b)
+    |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
 
 fun get_reasoners thy tactics term =
-      get_reasoners' thy tactics term |> map (fn (c,_,r) => (~c,r))
+      get_reasoners' thy tactics term |> map (fn (c,_,_,r) => (~c,r))
 
 
 fun del_reasoners pattern filter ctxt =
   Reasoners.map (fn all_reasoners =>
     let val to_remove = Net.match_term all_reasoners pattern
-                     |> List.filter (fn (c,_,r) => filter (~c, r))
-     in fold (fn (c,p,R) => Net.delete_term cost_eq (p, (c,p,R)))
+                     |> List.filter (fn (c,_,_,r) => filter (~c, r))
+     in fold (fn (c,p,id,R) => Net.delete_term registry_eq (p, (c,p,id,R)))
              to_remove all_reasoners
     end) ctxt
 
 fun has_reasoner pattern filter ctxt =
   Net.match_term (Reasoners.get ctxt) pattern
-    |> exists (fn (c,_,r) => filter (~c,r))
+    |> exists (fn (c,_,_,r) => filter (~c,r))
 
 fun gen_call_reasoners trace tactics ctxt th =
   Thm.major_prem_of th
@@ -351,7 +369,7 @@ fun gen_call_reasoners trace tactics ctxt th =
     |> (if 3 <= trace
         then (fn rs => (List.app (debug ctxt) rs; rs))
         else I)
-    |> map_filter (fn (cost, _, r : reasoner) =>
+    |> map_filter (fn (cost, _, _, r : reasoner) =>
         if cost <= ~1000000 then
           case Seq.pull (#tactic r (ctxt,th))
             of SOME (x,_) => raise Global_Cut x
@@ -380,7 +398,7 @@ fun gen_reason _ _ _ _ _ [] = NONE
       (if 2 <= trace then tracing ("Backtracking...") else ();
        gen_reason N trace limit iter tactics L)
   | gen_reason N trace limit iter tactics (((pos,seq)::L')::L) =
-  let
+  let 
     val _ = if iter > limit
             then error "The reasoning reaches the limit of the number of reasoning steps.\n\
                        \Perhaps an infinite loop is encountered.\nOtherwise, \
@@ -526,11 +544,11 @@ val _ =
             val reasoners = if strict
                             then get_reasoners' (Proof_Context.theory_of ctxt) all_reasoners pattern
                             else Net.match_term all_reasoners pattern
-                                  |> sort (fn ((c1,_,_),(c2,_,_)) => int_ord (c1,c2))
+                                  |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
          in if null reasoners
             then writeln "No reasoner found."
             else writeln (Pretty.string_of (Pretty.chunks
-                              (map (fn (c,_,r) => pretty ctxt (~c,r)) reasoners)))
+                              (map (fn (c,_,_,r) => pretty ctxt (~c,r)) reasoners)))
         end)));
 
 
