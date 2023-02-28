@@ -205,7 +205,7 @@ fun register_value_spec_thms pos rules =
                                    $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
                                    $ Var (("spec",i), fastype_of TM) )
             | _ => raise THM ("Not a specification theorem of a value!", 0, [rule]))
-    in ([rule], pos, 1000, [pattern], [], NONE) end
+    in ([rule], pos, 1000, [(pattern, SOME 1000)], [], NONE) end
   ) rules)
 
 

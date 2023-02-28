@@ -69,9 +69,9 @@ fun declare_overloaded_operator signat0 pos priority ctxt0 =
                   |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
    in ctxt0
    |> Phi_Reasoner.add_intro_rule pos priority ([],[]) NONE [rule]
-   |> Phi_Reasoner.add_intro_rule pos 2000 ([pattern1],[]) NONE
+   |> Phi_Reasoner.add_intro_rule pos 2000 ([(pattern1,NONE)],[]) NONE
                    [@{thm make_overloaded_synthesis_rule}]
-   |> Phi_Reasoner.add_intro_rule pos 2010 ([pattern2],[]) NONE
+   |> Phi_Reasoner.add_intro_rule pos 2010 ([(pattern2,NONE)],[]) NONE
                    [@{thm make_overloaded_synthesis_rule'}]
   end
 

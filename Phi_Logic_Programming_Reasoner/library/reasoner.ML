@@ -15,7 +15,12 @@ signature NU_REASONER = sig
 
   type reasoner = {name: name,
                  pos: Position.T,
-                 pattern: pattern list,
+                 pattern: (pattern * priority) list,
+                 blacklist: pattern list,
+                 tactic: (context_state -> context_state Seq.seq)}
+  type internal_reasoner = {name: name,
+                 pos: Position.T,
+                 pattern: (pattern * cost) list,
                  blacklist: pattern list,
                  tactic: (context_state -> context_state Seq.seq)}
 
@@ -45,17 +50,20 @@ signature NU_REASONER = sig
   val disable_global_cut : int -> string -> Proof.context -> serial * Proof.context
   val disable_success    : int -> string -> Proof.context -> serial * Proof.context
 
-  val add : priority * reasoner -> Context.generic -> Context.generic
-  val add_lthy : priority * reasoner -> local_theory -> local_theory
+  val internalize : reasoner -> internal_reasoner
+  val externalize : internal_reasoner -> reasoner
+
+  val add : reasoner -> Context.generic -> Context.generic
+  val add_lthy : reasoner -> local_theory -> local_theory
   val del_reasoners: term (*pattern*)
-                  -> (priority * reasoner -> bool) (*filter, returning true to delete one*)
+                  -> (internal_reasoner -> bool) (*filter, returning true to delete one*)
                   -> Context.generic -> Context.generic
-  val has_reasoner : term -> (int * reasoner -> bool) -> Context.generic -> bool
+  val has_reasoner : term -> (internal_reasoner -> bool) -> Context.generic -> bool
   val reasoners : Proof.context -> reasoners
-  val content : reasoners -> (priority * reasoner) list
+  val content : reasoners -> internal_reasoner list
   val get_reasoners : theory -> reasoners
-                   -> term (*pattern*) -> (cost * reasoner) list
-  val pretty : Proof.context -> priority * reasoner -> Pretty.T
+                   -> term (*pattern*) -> internal_reasoner list
+  val pretty : Proof.context -> reasoner -> Pretty.T
   val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list
 
   (* Interfaces for Reasoning *)
@@ -77,20 +85,23 @@ signature NU_REASONER = sig
   val nested_level : Proof.context -> int (*Starting from 1*)
 
 
-  val add_intro_rule : Position.T -> priority -> term list * term list
+  val add_intro_rule : Position.T -> priority -> (pattern * priority option) list * pattern list
                     -> (context_state -> bool) option
                     -> thm list
                     -> Context.generic -> Context.generic
-  val add_intro_rules: (thm list * Position.T * priority * term list * term list
+  val add_intro_rules: (thm list * Position.T * priority * (pattern * priority option) list * pattern list
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
   val attr_add_intro :
-        (((Position.T * int) * thm list) * (term list * term list)) * (context_state -> bool) option
+        ( ((Position.T * priority) * thm list)
+        * ((pattern * priority option) list * pattern list))
+        * (context_state -> bool) option
        -> attribute
 
-  val setup_cmd : (((string (*name term*) * Position.T) * priority)
-                   * (bool (*true for matching, false for not matching*)
-                      * string (*pattern term*)) list
+  val setup_cmd : (((string (*name term*) * Position.T) * priority (*default priority*))
+                   * ((bool (*true for matching, false for not matching*)
+                      * string (*pattern term*))
+                      * priority option) list
                   ) * Input.source (* tactic source*)
         -> local_theory -> local_theory
 
@@ -127,20 +138,26 @@ type pattern = term
 type name = term
 type reasoner = {name: term,
                  pos: Position.T,
-                 pattern: term list,
+                 pattern: (term * int) list,
                  blacklist: term list,
                  tactic: (context_state -> context_state Seq.seq)}
+type internal_reasoner = reasoner
 
 val trick = map_aterms (fn Var ((s,i),T) => Var ((s, if String.isPrefix "var_" s then ~i - 1 else i),T)
                          | X => X)
 
-fun normalize_reasoner ({name,pos,pattern,blacklist,tactic}:reasoner) =
-  ({name=name, pos=pos, pattern = map (trick o Envir.beta_eta_contract) pattern,
+fun internalize ({name,pos,pattern,blacklist,tactic}:reasoner) =
+  ({name=name, pos=pos, pattern = map (apsnd (op ~)) pattern,
+    blacklist = map (trick o Envir.beta_eta_contract) blacklist, tactic = tactic}:reasoner)
+val externalize = internalize
+
+fun normalize_reasoner f ({name,pos,pattern,blacklist,tactic}:reasoner) =
+  ({name=name, pos=pos, pattern = map (fn (x,y) => (trick (Envir.beta_eta_contract x), f y)) pattern,
     blacklist = map (trick o Envir.beta_eta_contract) blacklist, tactic = tactic}:reasoner)
 
 fun transform_reasoner phi ({name,pos,pattern,blacklist,tactic}:reasoner) =
   ({name=name, pos=pos,
-    pattern = map (Morphism.term phi) pattern,
+    pattern = map (apfst (Morphism.term phi)) pattern,
     blacklist = map (Morphism.term phi) blacklist,
     tactic = tactic}:reasoner)
 
@@ -251,12 +268,16 @@ structure Reasoners = Generic_Data (
 )
 
 fun reasoners ctxt = Reasoners.get (Context.Proof ctxt)
-fun content net = Net.content net |> map (fn (c,_,_,r) => (~c,r))
+fun content net = Net.content net |> map (fn (_,_,_,r) => r)
 
-fun pretty ctxt (priority, (r:reasoner)) =
-  Pretty.block (Pretty.here (#pos r) @
-    [Pretty.str "(", Pretty.str (string_of_int priority), Pretty.str ") ",
-     Syntax.pretty_term ctxt (#name r)])
+fun pretty ctxt (r:reasoner) =
+  Pretty.chunks (
+    Pretty.block (Pretty.here (#pos r) @ [Syntax.pretty_term ctxt (#name r)]) ::
+    map (fn (pat,n) => Pretty.item [
+          Pretty.str "(", Pretty.str (string_of_int n), Pretty.str "): ",
+          Syntax.pretty_term ctxt pat
+        ]) (#pattern r)
+  )
 
 fun pretty' ctxt (cost, pat, _, (r:reasoner)) =
    Pretty.block (
@@ -267,7 +288,7 @@ fun pretty' ctxt (cost, pat, _, (r:reasoner)) =
      Syntax.pretty_term ctxt (#name r)])
 
 
-fun insert_net ctxt priority (reasoner:reasoner) pat net =
+fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
   let val x = (~priority, pat, hash (#name reasoner), reasoner)
    in Net.insert_term registry_eq (pat, x) net
       handle Net.INSERT =>
@@ -281,19 +302,19 @@ fun insert_net ctxt priority (reasoner:reasoner) pat net =
         end
   end
 
-fun add (priority, reasoner0) ctxt =
-  let val reasoner = normalize_reasoner reasoner0
-   in Reasoners.map (fold (insert_net ctxt priority reasoner) (#pattern reasoner)) ctxt
+fun add reasoner0 ctxt =
+  let val reasoner = normalize_reasoner I reasoner0
+   in Reasoners.map (fold (insert_net ctxt reasoner) (#pattern reasoner)) ctxt
   end
 fun adds reasoners ctxt = Reasoners.map (
-      fold (fn (priority,reasoner0) =>
-        let val reasoner = normalize_reasoner reasoner0
-         in fold (insert_net ctxt priority reasoner) (#pattern reasoner)
+      fold (fn reasoner0 =>
+        let val reasoner = normalize_reasoner I reasoner0
+         in fold (insert_net ctxt reasoner) (#pattern reasoner)
         end) reasoners) ctxt
 
-fun add_lthy cost_reasoner =
+fun add_lthy reasoner =
   Local_Theory.declaration {syntax=false, pervasive=false} (fn phi =>
-    add (apsnd (transform_reasoner phi) cost_reasoner)
+    add (transform_reasoner phi reasoner)
   )
 
 (*** Implementing Functions ***)
@@ -337,7 +358,7 @@ fun concl_of_goal st i =
 fun get_reasoners' thy tactics term =
   Net.match_term tactics term
     |> filter (fn (_,_,_,reasoner) =>
-        exists (fn pat =>
+        exists (fn (pat,_) =>
           match_term thy (pat,term))
         (#pattern reasoner)
         andalso forall (fn pat =>
@@ -347,20 +368,20 @@ fun get_reasoners' thy tactics term =
     |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
 
 fun get_reasoners thy tactics term =
-      get_reasoners' thy tactics term |> map (fn (c,_,_,r) => (~c,r))
+      get_reasoners' thy tactics term |> map (fn (_,_,_,r) => r)
 
 
 fun del_reasoners pattern filter ctxt =
   Reasoners.map (fn all_reasoners =>
     let val to_remove = Net.match_term all_reasoners pattern
-                     |> List.filter (fn (c,_,_,r) => filter (~c, r))
+                     |> List.filter (fn (_,_,_,r) => filter r)
      in fold (fn (c,p,id,R) => Net.delete_term registry_eq (p, (c,p,id,R)))
              to_remove all_reasoners
     end) ctxt
 
 fun has_reasoner pattern filter ctxt =
   Net.match_term (Reasoners.get ctxt) pattern
-    |> exists (fn (c,_,_,r) => filter (~c,r))
+    |> exists (fn (_,_,_,r) => filter r)
 
 fun gen_call_reasoners trace tactics ctxt th =
   Thm.major_prem_of th
@@ -472,53 +493,54 @@ fun reason_tac N ctxt stat = Seq.make (fn () =>
 
 (*** Command Interface ***)
 
-fun setup_method_cmd (((name,cost),patterns),method) lthy =
+fun setup_method_cmd (((name,priority), raw_patterns),method) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
-    val patterns = split_list patterns
-                      |> apsnd (Syntax.read_props ctxt)
-                      |> (op ~~)
-    val pos_pats = patterns |> map_filter (fn (direct, pat) => if direct then SOME pat else NONE)
-    val neg_pats = patterns |> map_filter (fn (direct, pat) => if direct then NONE else SOME pat)
+    val terms = map (fn ((_,x),_) => x) raw_patterns
+             |> Syntax.read_props ctxt
+    val patterns = map2 (fn ((flag,_),c) => fn tm => (flag,(tm, the_default priority c)))
+                        raw_patterns terms
+    val pos_pats = patterns |> map_filter (fn (sgn, pat) => if sgn then SOME pat else NONE)
+    val neg_pats = patterns |> map_filter (fn (sgn, (pat,_)) => if sgn then NONE else SOME pat)
     val name' = Free(Binding.name_of name, dummyT)
 
     val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (ctxt,thm) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
-  in add_lthy (cost, {name=name', pos=Binding.pos_of name,
-                      pattern=pos_pats, blacklist=neg_pats, tactic=method'''}) lthy'
+  in add_lthy {name=name', pos=Binding.pos_of name,
+               pattern=pos_pats, blacklist=neg_pats, tactic=method'''} lthy'
   end
 
-fun setup_cmd ((((name,pos),cost),patterns),tactic_src) lthy =
+fun setup_cmd ((((name,pos),priority),raw_patterns),tactic_src) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
     val name = Syntax.read_term lthy name
-    val patterns = split_list patterns
-                      |> apsnd (Syntax.read_props ctxt)
-                      |> (op ~~)
-    val pos_pats = patterns |> map_filter (fn (direct, pat) =>
-              if direct then SOME pat else NONE)
-    val neg_pats = patterns |> map_filter (fn (direct, pat) =>
-              if direct then NONE else SOME pat)
+    val terms = map (fn ((_,x),_) => x) raw_patterns
+             |> Syntax.read_props ctxt
+    val patterns = map2 (fn ((flag,_),c) => fn tm => (flag,(tm, the_default priority c)))
+                        raw_patterns terms
+    val pos_pats = patterns |> map_filter (fn (sign, pat) => if sign then SOME pat else NONE)
+    val neg_pats = patterns |> map_filter (fn (sign, (pat,_)) => if sign then NONE else SOME pat)
+    open ML_Syntax
   in
     lthy |> Context.proof_map (
       ML_Context.expression (Input.pos_of tactic_src)
         (ML_Lex.read
-          ("Theory.local_setup (Phi_Reasoner.add_lthy (" ^
-          ML_Syntax.print_int cost ^ ", {name=(" ^
-          ML_Syntax.print_term name ^ "), pos=("^
-          ML_Syntax.print_position pos ^ "), pattern=(" ^
-          ML_Syntax.print_list ML_Syntax.print_term pos_pats
+          ("Theory.local_setup (Phi_Reasoner.add_lthy {name=(" ^
+          print_term name ^ "), pos=("^
+          print_position pos ^ "), pattern=(" ^
+          print_list (print_pair print_term print_int) pos_pats
           ^ "), blacklist=("^
-          ML_Syntax.print_list ML_Syntax.print_term neg_pats
+          print_list print_term neg_pats
           ^"), tactic=(let in ") @
           ML_Lex.read_source tactic_src @
-          ML_Lex.read (" end):(context_state -> context_state Seq.seq)}))"))
+          ML_Lex.read (" end):(context_state -> context_state Seq.seq)})"))
     )
   end
 
 val patterns = Parse.$$$ "(" |-- Parse.enum "|"
-      (Scan.optional (\<^keyword>\<open>except\<close> >> K false) true -- Parse.term)
+      (Scan.optional (\<^keyword>\<open>except\<close> >> K false) true -- Parse.term
+                -- Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
       --| Parse.$$$ ")"
 
 val _ =
@@ -548,7 +570,7 @@ val _ =
          in if null reasoners
             then writeln "No reasoner found."
             else writeln (Pretty.string_of (Pretty.chunks
-                              (map (fn (c,_,_,r) => pretty ctxt (~c,r)) reasoners)))
+                              (map (fn (_,_,_,r) => pretty ctxt (externalize r)) reasoners)))
         end)));
 
 
@@ -592,7 +614,7 @@ fun single_RS rule (ctxt,thm) =
 fun name_of_intro_reasoner rules =
   (*Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ *) Logic.mk_conjunction_list (map Thm.prop_of rules)
 
-fun intro_reasoner ctxt pos priority patterns blacklist guard rules =
+fun intro_reasoner ctxt pos (priority:priority) patterns blacklist guard rules =
   let
     val rules = rules
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
@@ -608,9 +630,9 @@ fun intro_reasoner ctxt pos priority patterns blacklist guard rules =
                                     Pretty.str "No pattern is given, use the default pattern:",
                                     Syntax.pretty_term (Context.proof_of ctxt) pat
                                 ])
-                        in [pat] end
+                        in [(pat,priority)] end
                        | _ => error "Pattern of the reasoner is required"
-               else patterns
+               else map (apsnd (the_default priority)) patterns
 
     val rules_with_flag = map (fn rule =>
       let fun is_Require (Const (\<^const_name>\<open>\<r>Require\<close>, _) $ _) = true
@@ -622,11 +644,7 @@ fun intro_reasoner ctxt pos priority patterns blacklist guard rules =
              | (r::L)=> if exists is_Require L
                         then error("A reasoning rule can contain one \<r>Require antecedent at \
                                    \the leading position.")
-                        else if is_Require r
-                         then if priority < 1000
-                          then error("Conditional \<r>Require only makes sense for confident rule.")
-                          else (rule, true)
-                         else (rule, false)
+                        else (rule, is_Require r)
       end) rules
 
     fun tactic [] _ = Seq.empty
@@ -649,11 +667,11 @@ fun intro_reasoner ctxt pos priority patterns blacklist guard rules =
   end
 
 fun add_intro_rule pos priority (pattern,blacklist) guard rules ctxt =
-      add (priority, intro_reasoner ctxt pos priority pattern blacklist guard rules) ctxt
+      add (intro_reasoner ctxt pos priority pattern blacklist guard rules) ctxt
 fun add_intro_rules rules ctxt =
   if null rules then ctxt
   else adds (map (fn (rule,pos,priority,pattern,blacklist,guard) =>
-              (priority, intro_reasoner ctxt pos priority pattern blacklist guard rule)) rules) ctxt
+              intro_reasoner ctxt pos priority pattern blacklist guard rule) rules) ctxt
 
 fun attr_add_intro ((((pos, priority), additional_rules), (pattern, blacklist)), guard) =
   Thm.declaration_attribute (fn rule =>
@@ -665,7 +683,7 @@ val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Args Scan Parse
   fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
-  val prop_pattern = Scan.repeat (Scan.peek (named_term o read_prop_pattern o Context.proof_of))
+  val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
   val pos_parser = Phi_Reasoner_Helpers.pos_parser "\<phi>reasoner"
   val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
        let val ctxt = Context.Proof (Context.proof_of ctxt0)
@@ -675,12 +693,13 @@ val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
                ML_Lex.read "))")
        in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
      ))
+  val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
 in
   (lift pos_parser
   -- lift (option add |-- ((\<^keyword>\<open>!\<close> >> K 2000000) || optional Parse.int 100))
   -- Attrib.thms
-  -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- prop_pattern) []
-    -- optional (lift (\<^keyword>\<open>except\<close>) |-- prop_pattern) [])
+  -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
+    -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
   -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
   >> attr_add_intro)
 end)
