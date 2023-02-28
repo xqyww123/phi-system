@@ -148,7 +148,7 @@ fun defer_antecedent contract ctxt thm =
     val n = Thm.nprems_of thm
   in
     if idx = ~1
-    then error ("Fail to defer a proof obligation: an \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n antecedent is not found.")
+    then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
     else Thm.permute_prems 1 idx thm
       |> contract ctxt
       |> Thm.permute_prems 0 (~idx)

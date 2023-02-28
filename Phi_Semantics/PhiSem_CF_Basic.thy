@@ -109,9 +109,9 @@ subsection \<open>Branch-like\<close>
 lemma op_sel_\<phi>app:
   \<open> \<phi>SemType (a \<Ztypecolon> A) TY
 \<Longrightarrow> \<phi>SemType (b \<Ztypecolon> B) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_sel TY (\<phi>V_pair rawc (\<phi>V_pair rawb rawa)) \<lbrace>
-        a \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawa] A\<heavy_comma> b \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawb] B\<heavy_comma> c \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawc] \<bool>
-    \<longmapsto> (if c then a else b) \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l (if c then A else B)
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_sel TY (\<phi>V_pair rawc (\<phi>V_pair rawb rawa)) \<lbrace>
+        a \<Ztypecolon> \<v>\<a>\<l>[rawa] A\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[rawb] B\<heavy_comma> c \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool>
+    \<longmapsto> (if c then a else b) \<Ztypecolon> \<v>\<a>\<l> (if c then A else B)
     \<rbrace>\<close>
   unfolding op_sel_def
   by (cases rawc; cases rawb; cases rawa; cases c; simp add: \<phi>SemType_def subset_iff,
@@ -119,19 +119,19 @@ lemma op_sel_\<phi>app:
       simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns WT_bool)
 
 lemma branch_\<phi>app:
-  \<open> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e   C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T )
-\<Longrightarrow> (\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>F )
-\<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y v @action branch_convergence)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_if br\<^sub>T br\<^sub>F rawc \<lbrace> X\<heavy_comma> C \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[rawc] \<bool> \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. (E\<^sub>T e \<^bold>s\<^bold>u\<^bold>b\<^bold>j C) + (E\<^sub>F e \<^bold>s\<^bold>u\<^bold>b\<^bold>j \<not> C)) \<close>
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T )
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F )
+\<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y v @action branch_convergence)
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_if br\<^sub>T br\<^sub>F rawc \<lbrace> X\<heavy_comma> C \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E\<^sub>T e \<s>\<u>\<b>\<j> C) + (E\<^sub>F e \<s>\<u>\<b>\<j> \<not> C)) \<close>
   unfolding op_if_def Premise_def Action_Tag_def
   apply (cases rawc; cases C; simp; rule; simp add: \<phi>expns WT_bool)
   using \<phi>CONSEQ view_shift_by_implication view_shift_refl by blast+
 
 proc "if":
-  assumes C: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c cond \<lbrace> X \<longmapsto> X1\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l C \<Ztypecolon> \<bool> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-      and brT: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e   C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>T \<close>
-      and brF: \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e \<not> C \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<^sub>F \<close>
-      and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y v @action branch_convergence)\<close>
+  assumes C: \<open>\<p>\<r>\<o>\<c> cond \<lbrace> X \<longmapsto> X1\<heavy_comma> \<v>\<a>\<l> C \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+      and brT: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T \<close>
+      and brF: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F \<close>
+      and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y v @action branch_convergence)\<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
@@ -141,8 +141,8 @@ proc "if":
 subsection \<open>Loops\<close>
 
 lemma "__DoWhile__rule_\<phi>app":
-  " \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<^bold>v\<^bold>a\<^bold>l P x' \<Ztypecolon> \<bool>) \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_do_while body \<lbrace> X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. P x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. \<not> P x' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E "
+  " \<p>\<r>\<o>\<c> body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<v>\<a>\<l> P x' \<Ztypecolon> \<bool>) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_do_while body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> X x' \<s>\<u>\<b>\<j> x'. \<not> P x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E "
   unfolding op_do_while_def \<phi>Procedure_def
   apply (simp add: subset_iff LooseStateSpec_expn')
   apply (rule allI impI conjI)+
@@ -161,34 +161,34 @@ lemma "__DoWhile__rule_\<phi>app":
     by blast .
 
 proc (nodef) do_while:
-assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X' x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x)\<close>
-    and V: \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ( X' x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> cond x) \<^bold>a\<^bold>n\<^bold>d Any @action ToSA\<close>
-assumes B: \<open>\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x
-    \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c body \<lbrace> X' x \<longmapsto> (X' x'\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l cond x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x') \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X' x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
+    and V: \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<a>\<n>\<d> Any @action ToSA\<close>
+assumes B: \<open>\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x
+    \<longrightarrow> \<p>\<r>\<o>\<c> body \<lbrace> X' x \<longmapsto> (X' x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x') \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
 input  \<open>X\<close>
-output \<open>X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<and> \<not> cond x'\<close>
+output \<open>X' x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> \<not> cond x'\<close>
 throws E
   \<medium_left_bracket>
     V[unfolded Action_Tag_def]
-    "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j invariant x'\<close>, simplified]
+    "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<s>\<u>\<b>\<j> invariant x'\<close>, simplified]
   \<medium_left_bracket> B \<medium_right_bracket>.
   \<medium_right_bracket> by simp .
 
 proc while:
-  assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. Inv: invariant x \<and> Guard: cond x)\<close>
+  assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
   assumes V[unfolded Action_Tag_def]:
-           "X' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x) \<^bold>a\<^bold>n\<^bold>d Any @action ToSA"
-    and C: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Cond \<lbrace> X x \<longmapsto> X x'\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l cond x' \<Ztypecolon> \<bool> \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1"
-    and B: "\<forall>x. \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e invariant x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e cond x \<longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Body \<lbrace> X x \<longmapsto> X x' \<^bold>s\<^bold>u\<^bold>b\<^bold>j x'. invariant x' \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2"
+           "X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X x \<s>\<u>\<b>\<j> x. invariant x) \<a>\<n>\<d> Any @action ToSA"
+    and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> X x \<longmapsto> X x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
+    and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> X x \<longmapsto> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
   input  \<open>X'\<close>
-  output \<open>X x \<^bold>s\<^bold>u\<^bold>b\<^bold>j x. invariant x \<and> \<not> cond x\<close>
+  output \<open>X x \<s>\<u>\<b>\<j> x. invariant x \<and> \<not> cond x\<close>
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> V C
     branch \<medium_left_bracket>
-      do_while \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. Inv: invariant vars \<and> Guard: cond vars\<close>
+      do_while \<open>X vars \<s>\<u>\<b>\<j> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
       \<medium_left_bracket> B C \<medium_right_bracket>.
       \<medium_right_bracket>.
-    \<medium_left_bracket> \<medium_right_bracket> for \<open>X vars \<^bold>s\<^bold>u\<^bold>b\<^bold>j vars. invariant vars \<and> \<not> cond vars\<close> ..
+    \<medium_left_bracket> \<medium_right_bracket> for \<open>X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close> ..
   \<medium_right_bracket> .. .
 
 (*
@@ -209,9 +209,9 @@ causing it is very difficult to recover the actual abstract guard
 subsection \<open>Recursion\<close>
 
 lemma "__op_recursion_simp__":
-  "(\<And>g x' v'. (\<And>x'' v''. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v''  \<lbrace> X x'' v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x'')
-                      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g v' \<lbrace> X x' v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' )
-\<Longrightarrow> \<forall>x v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x"
+  "(\<And>g x' v'. (\<And>x'' v''. \<p>\<r>\<o>\<c> g v''  \<lbrace> X x'' v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x'')
+                      \<Longrightarrow> \<p>\<r>\<o>\<c> F g v' \<lbrace> X x' v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x' )
+\<Longrightarrow> \<forall>x v. \<p>\<r>\<o>\<c> op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x"
   unfolding op_fix_point_def \<phi>Procedure_def atomize_all
   apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
 
@@ -232,11 +232,11 @@ lemma "__op_recursion__":
       \<Longrightarrow> PROP Labelled label (HIDDEN_PREM
           (\<And>x'' (v''::'a \<phi>arg <named> 'names).
               P x'' \<Longrightarrow>
-              \<^bold>p\<^bold>r\<^bold>o\<^bold>c g (case_named id v'') \<lbrace> case_named (X x'') v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x''))
-      \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F g (case_named id v') \<lbrace> case_named (X x') v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x' )
+              \<p>\<r>\<o>\<c> g (case_named id v'') \<lbrace> case_named (X x'') v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x''))
+      \<Longrightarrow> \<p>\<r>\<o>\<c> F g (case_named id v') \<lbrace> case_named (X x') v'   \<longmapsto> \<lambda>ret. Y x'  ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x' )
 \<Longrightarrow> PROP Pure.prop (
       P x \<Longrightarrow>
-      \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E x
+      \<p>\<r>\<o>\<c> op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x
 )"
   unfolding op_fix_point_def \<phi>Procedure_def atomize_all \<phi>arg_forall \<phi>arg_All HIDDEN_PREM_def
             Pure.prop_def

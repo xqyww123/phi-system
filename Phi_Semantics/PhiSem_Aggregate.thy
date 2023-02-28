@@ -322,7 +322,7 @@ lemma \<phi>Index_getter_tup_0r:
 
 lemma \<phi>Index_getter_arr:
   \<open> \<phi>Index_getter idx X Y f
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < N
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
 \<Longrightarrow> \<phi>Index_getter (i # idx) (Array N X) Y (\<lambda>l. f (l!i))\<close>
   unfolding \<phi>Index_getter_def Premise_def
   by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_arr list_all2_conv_all_nth)
@@ -352,7 +352,7 @@ lemma \<phi>Index_mapper_tup_0r:
 
 lemma \<phi>Index_mapper_arr:
   \<open> \<phi>Index_mapper idx X Y f
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e i < N
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
 \<Longrightarrow> \<phi>Index_mapper (i # idx) (Array N X) Y (\<lambda>g l. l[i := f g (l!i)])\<close>
   unfolding \<phi>Index_mapper_def Premise_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_arr list_all2_conv_all_nth)

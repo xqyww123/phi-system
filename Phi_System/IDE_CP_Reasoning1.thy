@@ -26,11 +26,11 @@ text \<open>The annotation marking on a target \<^term>\<open>Y <matches> A\<clo
   restricts that the source have to first match pattern \<open>A\<close>.\<close>
 
 lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (Y <matches> A) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  \<open>Matches X A \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> (Y <matches> A) \<a>\<n>\<d> P\<close>
   unfolding Assertion_Matches_def .
 
 lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s (Y <matches> A) \<^bold>a\<^bold>n\<^bold>d P\<close>
+  \<open>Matches X A \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> (Y <matches> A) \<a>\<n>\<d> P\<close>
   unfolding Assertion_Matches_def .
 
 subsubsection \<open>Useless Tag\<close>
@@ -47,9 +47,9 @@ text \<open>Simplification plays an important role in the programming in IDE_CP.
   some useless information that we do not need.
   For example, we want to rewrite \<^term>\<open>x \<Ztypecolon> T\<close> to \<^term>\<open>y \<Ztypecolon> U\<close> but the rewrite may be held
   only with an additional proposition \<^term>\<open>Useless\<close> which is useless for us,
-  \[ \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j Useless\<close> \]
+  \[ \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<s>\<u>\<b>\<j> Useless\<close> \]
   In cases like this, we can wrap the useless proposition by tag \<open>\<open>USELESS\<close>\<close>,
-  as \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<^bold>s\<^bold>u\<^bold>b\<^bold>j USELESS Useless\<close>. The equality is still held because
+  as \<^prop>\<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> U \<s>\<u>\<b>\<j> USELESS Useless\<close>. The equality is still held because
   \<^prop>\<open>USELESS P \<equiv> P\<close>, but IDE-CP is configured to drop the \<^prop>\<open>Useless\<close>
   so the work space will not be polluted by helpless propositions.
 \<close>
@@ -99,10 +99,10 @@ Note, the argument here means any \<phi>-Type in the pre-condition, not necessar
 \<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close>    (110)
-  and \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ *  \<blangle> ?Y \<brangle> \<^bold>a\<^bold>n\<^bold>d Automatic_Morphism _ _ \<and> _\<close>    (120)
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Automatic_Morphism _ _ \<and> _\<close>    (110)
+  and \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Automatic_Morphism _ _ \<and> _\<close>    (120)
 ]]
 
 
@@ -437,7 +437,7 @@ declare [[\<phi>reason_default_pattern
 
 lemma [\<phi>reason 1000]:
   \<open> Pass_Embedded_Reasoning' X Y
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Y
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Y
 \<Longrightarrow> Pass_Embedded_Reasoning X\<close>
   unfolding Pass_Embedded_Reasoning_def Pass_Embedded_Reasoning'_def Premise_def
   by blast
@@ -469,7 +469,7 @@ section \<open>Declaration of Large Processes\<close>
 subsection \<open>Transformation of State Abstraction (ToSA)\<close>
 
 text \<open>
-  Supporting implication \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y @action ToSA\<close> only,
+  Supporting implication \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action ToSA\<close> only,
   ToSA is a reasoning process of Transformation of Abstraction (ToA) for
   assertions of (fictional) computation state.
 \<close>
@@ -480,7 +480,7 @@ consts ToSA' :: \<open>bool \<comment> \<open>whether to reason deeper transform
               \<Rightarrow> mode\<close>
 
 text \<open>The boolean flag indicates whether to reason the transformation of \<phi>-types in depth.
-For \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y\<^sub>1 * \<cdots> * Y\<^sub>m @action ToSA' ?flag\<close>,
+For \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y\<^sub>1 * \<cdots> * Y\<^sub>m @action ToSA' ?flag\<close>,
 
 \<^item> If the flag is turned on, for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close>, the reasoner
   infers in depth whether some source \<phi>-Type \<^term>\<open>X\<^sub>j\<close> can be transformed into \<^term>\<open>Y\<^sub>i\<close>,
@@ -496,17 +496,17 @@ the reasoning is weaker.
 
 abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
 
-lemma [\<phi>reason 3000 for \<open>?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?X' \<^bold>a\<^bold>n\<^bold>d ?P @action ToSA' ?mode\<close>]:
-  \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X @action ToSA' mode\<close>
+lemma [\<phi>reason 3000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X' \<a>\<n>\<d> ?P @action ToSA' ?mode\<close>]:
+  \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action ToSA' mode\<close>
   unfolding Action_Tag_def using implies_refl .
 
 
 
 subsection \<open>Removing Values\<close>
 
-definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Output)\<close>
+definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<i>\<m>\<p>\<l>\<i>\<e>\<s> Output)\<close>
 
-text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> removes value assertions \<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>
+text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> removes value assertions \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
   from the assertion \<open>Input\<close>. Bounded values such the return value of a procedure are not removed.\<close>
 
 
@@ -515,38 +515,38 @@ subsection \<open>Collects all Values in an Assertion / from the State Sequent\<
 consts collect_clean_value :: \<open>bool \<Rightarrow> action\<close>
 
 lemma apply_collect_clean_value:
-  \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V @action collect_clean_value WHETHER_CLEAN
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V\<close>
+  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value WHETHER_CLEAN
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V\<close>
   unfolding Action_Tag_def .
 
-lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value True\<close>]:
-  \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V @action collect_clean_value True
-\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> V @action collect_clean_value True\<close>
+lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value True\<close>]:
+  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value True
+\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> V @action collect_clean_value True\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value False\<close>]:
-  \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V @action collect_clean_value False
-\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>a\<^bold>n\<^bold>d \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> V
+lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value False\<close>]:
+  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value False
+\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> V
     @action collect_clean_value False\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1100 for \<open>?S\<heavy_comma> ?X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value ?CLEAN\<close>]:
-  \<open> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d V @action collect_clean_value CLEAN
-\<Longrightarrow> S\<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S'\<heavy_comma> X \<^bold>a\<^bold>n\<^bold>d V @action collect_clean_value CLEAN\<close>
+lemma [\<phi>reason 1100 for \<open>?S\<heavy_comma> ?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value ?CLEAN\<close>]:
+  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value CLEAN
+\<Longrightarrow> S\<heavy_comma> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> S'\<heavy_comma> X \<a>\<n>\<d> V @action collect_clean_value CLEAN\<close>
   unfolding Action_Tag_def using implies_right_prod .
 
-lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value True\<close>]:
-  \<open> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Void \<^bold>a\<^bold>n\<^bold>d \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True
+lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value True\<close>]:
+  \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Void \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True
     @action collect_clean_value True\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value False\<close>]:
-  \<open> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T \<^bold>a\<^bold>n\<^bold>d \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True
+lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value False\<close>]:
+  \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True
     @action collect_clean_value False\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1000 for \<open>?S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?S' \<^bold>a\<^bold>n\<^bold>d ?V @action collect_clean_value ?clean\<close>]:
-  \<open> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X \<^bold>a\<^bold>n\<^bold>d True @action collect_clean_value clean\<close>
+lemma [\<phi>reason 1000 for \<open>?S \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value ?clean\<close>]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> True @action collect_clean_value clean\<close>
   unfolding Action_Tag_def using implies_refl .
 
 end

@@ -8,13 +8,13 @@ section \<open>Implementing CoP Sequent\<close>
 
 text \<open>CoP sequent \<open>P | S |- Q\<close> for \<open>S = (C\<^sub>1,v\<^sub>1); \<cdots> ; (C\<^sub>n,v\<^sub>n)\<close> is implemented as
 \begin{align*}
-& \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s\<^sub>0 [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n P\<close>, \\
+& \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> s\<^sub>0 [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> P\<close>, \\
 & \<open>CodeBlock s\<^sub>0 s\<^sub>1 C\<^sub>1 v\<^sub>1,\<close>         \\
 &     \qquad \<open>\<cdots>\<close>                 \\
 & \<open>CodeBlock s\<^sub>i\<^sub>-\<^sub>1 s\<^sub>i C\<^sub>i v\<^sub>i,\<close>       \\
 &     \qquad \<open>\<cdots>\<close>                 \\
 & \<open>CodeBlock s\<^sub>n\<^sub>-\<^sub>1 s\<^sub>n C\<^sub>n v\<^sub>n\<close>        \\
-\<open>\<turnstile>\<close> \;&\; \<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s\<^sub>n [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q\<close>
+\<open>\<turnstile>\<close> \;&\; \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> s\<^sub>n [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q\<close>
 \end{align*}
 where \<open>s\<^sub>0\<close> denotes the initial state before execution and \<open>s\<^sub>i, v\<^sub>i\<close> denote
 respectively the intermediate state after executing procedure \<open>C\<^sub>i\<close> and
@@ -22,7 +22,7 @@ the return value of \<open>C\<^sub>i\<close>.
 Sequence \<open>{s\<^sub>i}\<^sub>n\<close> therefore links execution of each procedure.
 \<open>R\<close> is the frame variable.
 
-[C]-modality \<open>[C]{Q}{E}\<close> is implemented by \<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g C \<^bold>o\<^bold>n s\<^sub>n [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>.
+[C]-modality \<open>[C]{Q}{E}\<close> is implemented by \<open>\<p>\<e>\<n>\<d>\<i>\<n>\<g> C \<o>\<n> s\<^sub>n [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> E\<close>.
 
 \<close>
 
@@ -41,11 +41,14 @@ consts programming_mode :: mode
 definition CurrentConstruction :: " mode \<Rightarrow> resource \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool "
   where "CurrentConstruction mode s R S \<longleftrightarrow> s \<in> (INTERP_SPEC (R * S))"
 
-abbreviation Programming_CurrentConstruction ("\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _" [1000,1000,11] 10)
+abbreviation Programming_CurrentConstruction ("\<c>\<u>\<r>\<r>\<e>\<n>\<t> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _" [1000,1000,11] 10)
   where \<open>Programming_CurrentConstruction \<equiv> CurrentConstruction programming_mode\<close>
 
-abbreviation View_Shift_CurrentConstruction ("\<^bold>v\<^bold>i\<^bold>e\<^bold>w _ [_]/ \<^bold>i\<^bold>s _" [1000,1000,11] 10)
+abbreviation View_Shift_CurrentConstruction ("\<v>\<i>\<e>\<w> _ [_]/ \<i>\<s> _" [1000,1000,11] 10)
   where \<open>View_Shift_CurrentConstruction \<equiv> CurrentConstruction view_shift_mode\<close>
+
+consts Programming_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>: _" [11] 10)
+consts View_Shift_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: _" [11] 10)
 
 definition PendingConstruction :: " 'ret::VALs proc
                                   \<Rightarrow> resource
@@ -53,15 +56,23 @@ definition PendingConstruction :: " 'ret::VALs proc
                                   \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
                                   \<Rightarrow> (ABNM \<Rightarrow> assn)
                                   \<Rightarrow> bool "
-    ("\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g _ \<^bold>o\<^bold>n _ [_]/ \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n _/ \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s _" [1000,1000,1000,11,11] 10)
+    ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> _ \<o>\<n> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,1000,1000,11,11] 10)
     where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> \<S> (\<lambda>ret. INTERP_SPEC (R * S ret)) (\<lambda>ex. INTERP_SPEC (R * E ex))"
+
+consts PendingConstruction_syntax :: \<open>'ret::VALs proc \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn) \<Rightarrow> (ABNM \<Rightarrow> assn) \<Rightarrow> bool\<close>
+  ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c> _/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,11,11] 10)
+
+translations
+  "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>: S" <= "CONST Programming_CurrentConstruction s R S"
+  "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: S" <= "CONST View_Shift_CurrentConstruction s R S"
+  "\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c> f \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S \<t>\<h>\<r>\<o>\<w>\<s> E" <= "CONST PendingConstruction f s R S E"
 
 definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
 
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
   unfolding CurrentConstruction_def Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
 
-definition ToA_Construction :: \<open>'a \<Rightarrow> 'a set \<Rightarrow> bool\<close> ("\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n'(_') \<^bold>i\<^bold>s _" [11,11] 10)
+definition ToA_Construction :: \<open>'a \<Rightarrow> 'a set \<Rightarrow> bool\<close> ("\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>'(_') \<i>\<s> _" [11,11] 10)
   where \<open>ToA_Construction = (\<in>)\<close>
 
 
@@ -70,9 +81,9 @@ section \<open>Rules for Constructing Programs\<close>
 subsection \<open>Construct Procedure\<close>
 
 lemma \<phi>apply_proc:
-  "(\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> S \<longmapsto> T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow>(\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)"
+  "(\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S)
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> S \<longmapsto> T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow>(\<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E)"
   unfolding \<phi>Procedure_def CurrentConstruction_def PendingConstruction_def bind_def by (auto 0 5)
 
 lemma
@@ -85,13 +96,13 @@ lemma
 
 
 (*Hint: because
-\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 \<longrightarrow>
+\<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E1 \<longrightarrow>
   Invalid \<notin> f s \<and> (\<forall>v s'. Abnormality v s' \<in> f s \<longrightarrow> s' \<in> INTERP_SPEC (R \<heavy_comma> E v))*)
 
 lemma \<phi>assemble_proc:
-  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1
-\<Longrightarrow> (\<And>s' ret. CodeBlock s s' f ret \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (g ret) \<^bold>o\<^bold>n s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2)
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> g) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 + E2\<close>
+  \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E1
+\<Longrightarrow> (\<And>s' ret. CodeBlock s s' f ret \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (g ret) \<o>\<n> s' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E2)
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<bind> g) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E1 + E2\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def subset_iff CodeBlock_def
   apply clarsimp subgoal for s s'
   by (cases s; simp; cases s'; simp add: split_state_All ring_distribs plus_fun) .
@@ -100,67 +111,67 @@ lemma \<phi>assemble_proc:
 
 
 lemma \<phi>accept_proc:
-  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
+  \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> CodeBlock s s' f ret
-\<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret\<close>
+\<Longrightarrow> \<c>\<u>\<r>\<r>\<e>\<n>\<t> s' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T ret\<close>
   unfolding PendingConstruction_def bind_def subset_iff CurrentConstruction_def CodeBlock_def
   by blast
 
 lemma \<phi>accept_proc_optimize_return_v:
-  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (Return v) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T v\<close>
+  \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (Return v) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T v\<close>
   unfolding PendingConstruction_def bind_def subset_iff CurrentConstruction_def Return_def
             det_lift_def
   by simp
 
 
 (* lemma \<phi>accept_proc: \<comment> \<open>Depreciated!\<close>
-  " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1
-\<Longrightarrow> (\<And>s' ret. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T ret \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (g ret) \<^bold>o\<^bold>n s' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2)
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> g) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n U \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E1 + E2"
+  " \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E1
+\<Longrightarrow> (\<And>s' ret. \<c>\<u>\<r>\<r>\<e>\<n>\<t> s' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T ret \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (g ret) \<o>\<n> s' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E2)
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<bind> g) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E1 + E2"
   unfolding CurrentConstruction_def PendingConstruction_def bind_def subset_iff plus_fun_def
   apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .*)
 
 (*
 lemma \<phi>return_when_unreachable:
-  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<ggreater> Return (\<phi>arg undefined)) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>_. T) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>_. T) \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<ggreater> Return (\<phi>arg undefined)) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>_. T) \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   for f :: \<open>unreachable proc\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff
   apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
 *)
 lemma \<phi>return_additional_unit:
-  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (f \<bind> (\<lambda>v. Return (\<phi>V_pair v \<phi>V_none))) \<^bold>o\<^bold>n s [R]
-        \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>ret. T (\<phi>V_fst ret)) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<bind> (\<lambda>v. Return (\<phi>V_pair v \<phi>V_none))) \<o>\<n> s [R]
+        \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>ret. T (\<phi>V_fst ret)) \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def \<phi>V_pair_def
     \<phi>V_fst_def \<phi>V_snd_def det_lift_def subset_iff
   apply clarsimp subgoal for s' s'' by (cases s'; simp; cases s''; simp add: ring_distribs; blast) .
 
 lemma \<phi>return:
-  " \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T'
+  " \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T'
 \<Longrightarrow> T' = T ret
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g (Return ret) \<^bold>o\<^bold>n s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s 0"
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (Return ret) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> 0"
   unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff
   by simp+
 
 lemma \<phi>reassemble_proc_final:
-  "(\<And>s H. \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g g \<^bold>o\<^bold>n s [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c g \<lbrace> S \<longmapsto> T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
+  "(\<And>s H. \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> g \<o>\<n> s [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E)
+\<Longrightarrow> \<p>\<r>\<o>\<c> g \<lbrace> S \<longmapsto> T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E"
   unfolding CurrentConstruction_def PendingConstruction_def \<phi>Procedure_def bind_def split_paired_all
   by blast
 
 lemma "\<phi>__Return_rule__":
-  \<open> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d Any
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_::unit \<phi>arg. Y \<rbrace>\<close>
+  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> Any
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_::unit \<phi>arg. Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def
   by clarsimp
 
 subsection \<open>Construct View Shift\<close>
 
 lemma \<phi>make_view_shift:
-  \<open> (\<And>s R. \<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S \<Longrightarrow> (\<^bold>v\<^bold>i\<^bold>e\<^bold>w s [R] \<^bold>i\<^bold>s S' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P))
-\<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P\<close>
+  \<open> (\<And>s R. \<v>\<i>\<e>\<w> s [R] \<i>\<s> S \<Longrightarrow> (\<v>\<i>\<e>\<w> s [R] \<i>\<s> S' \<s>\<u>\<b>\<j> P))
+\<Longrightarrow> S \<s>\<h>\<i>\<f>\<t>\<s> S' \<a>\<n>\<d> P\<close>
   unfolding CurrentConstruction_def View_Shift_def
   by (simp add: INTERP_SPEC_subj Subjection_expn)
 
@@ -168,7 +179,7 @@ lemma \<phi>make_view_shift:
 subsection \<open>Construct Implication\<close>
 
 lemma "\<phi>make_implication":
-  \<open>(\<And>x. \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S \<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d P\<close>
+  \<open>(\<And>x. \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T \<s>\<u>\<b>\<j> P) \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> T \<a>\<n>\<d> P\<close>
   unfolding Imply_def ToA_Construction_def
   by (simp add: Subjection_expn)
 
@@ -176,7 +187,7 @@ subsection \<open>Cast\<close>
 
 lemma \<phi>apply_view_shift:
   " CurrentConstruction mode blk R S
-\<Longrightarrow> S \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P
+\<Longrightarrow> S \<s>\<h>\<i>\<f>\<t>\<s> S' \<a>\<n>\<d> P
 \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
   unfolding CurrentConstruction_def View_Shift_def
   by (simp_all add: split_paired_all \<phi>expns)
@@ -185,14 +196,14 @@ lemmas \<phi>apply_implication = \<phi>apply_view_shift[OF _ view_shift_by_impli
 
 lemma \<phi>apply_view_shift_pending:
   " PendingConstruction f blk H T E
-\<Longrightarrow> (\<And>x. T x \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s T' x \<^bold>a\<^bold>n\<^bold>d P)
+\<Longrightarrow> (\<And>x. T x \<s>\<h>\<i>\<f>\<t>\<s> T' x \<a>\<n>\<d> P)
 \<Longrightarrow> PendingConstruction f blk H T' E"
   unfolding PendingConstruction_def View_Shift_def
   by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_state_All)
 
 lemma \<phi>apply_view_shift_pending_E:
   " PendingConstruction f blk H T E
-\<Longrightarrow> (\<And>x. E x \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s E' x \<^bold>a\<^bold>n\<^bold>d P)
+\<Longrightarrow> (\<And>x. E x \<s>\<h>\<i>\<f>\<t>\<s> E' x \<a>\<n>\<d> P)
 \<Longrightarrow> PendingConstruction f blk H T E'"
   unfolding PendingConstruction_def View_Shift_def
   by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_state_All)
@@ -204,56 +215,56 @@ lemmas \<phi>apply_implication_pending_E =
   \<phi>apply_view_shift_pending_E[OF _ view_shift_by_implication]
 
 lemma \<phi>ex_quantify_E:
-  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (E ret)
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>e. ExSet (\<lambda>x. E x e))\<close>
+  \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> (E ret)
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. ExSet (\<lambda>x. E x e))\<close>
   using \<phi>apply_implication_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
 
 lemma \<phi>apply_implication_impl:
-  \<open> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s S
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S' \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow>(\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(s) \<^bold>i\<^bold>s S') \<and> P\<close>
+  \<open> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(s) \<i>\<s> S
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P
+\<Longrightarrow>(\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(s) \<i>\<s> S') \<and> P\<close>
   unfolding ToA_Construction_def Imply_def by blast
 
 lemma "_\<phi>cast_internal_rule_":
   " CurrentConstruction mode blk H T
-\<Longrightarrow> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> T' \<a>\<n>\<d> Any @action ToSA
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> CurrentConstruction mode blk H T'"
   unfolding Action_Tag_def
   using \<phi>apply_implication by blast
 
 
 lemma "_\<phi>cast_internal_rule_'":
-  " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> (\<And>v. T v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T' v \<^bold>a\<^bold>n\<^bold>d Any @action ToSA)
+  " \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> (\<And>v. T v \<i>\<m>\<p>\<l>\<i>\<e>\<s> T' v \<a>\<n>\<d> Any @action ToSA)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T' \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E"
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T' \<t>\<h>\<r>\<o>\<w>\<s> E"
   unfolding Action_Tag_def
   using \<phi>apply_implication_pending by blast
 
 lemma "_\<phi>cast_exception_":
-  " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> (\<And>v. E v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' v @action ToSA)
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'"
+  " \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> (\<And>v. E v \<i>\<m>\<p>\<l>\<i>\<e>\<s> E' v @action ToSA)
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E'"
   unfolding Action_Tag_def
   using \<phi>apply_implication_pending_E by blast
 
 lemma "_\<phi>cast_exception_rule_":
-  " \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> (\<And>v. E v \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s E' v @action ToSA)
+  " \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> (\<And>v. E v \<i>\<m>\<p>\<l>\<i>\<e>\<s> E' v @action ToSA)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n T \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E'"
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E'"
   using "_\<phi>cast_exception_" .
 
 lemma "_\<phi>cast_implication_":
-  \<open> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S
-\<Longrightarrow> S \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s T \<^bold>a\<^bold>n\<^bold>d Any @action ToSA
+  \<open> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> T \<a>\<n>\<d> Any @action ToSA
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True
-\<Longrightarrow> \<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T\<close>
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T\<close>
   unfolding ToA_Construction_def Action_Tag_def Imply_def by blast
 
 
@@ -285,7 +296,7 @@ subsection \<open>Misc\<close>
 paragraph \<open>Inhabitance\<close>
 
 lemma ToA_Construction_Inhabited_rule:
-  \<open>\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding ToA_Construction_def Inhabited_def by blast
 
 lemma CurrentConstruction_Inhabited_rule:
@@ -296,7 +307,7 @@ lemma CurrentConstruction_Inhabited_rule:
 paragraph \<open>Fact Store\<close>
 
 lemma [\<phi>programming_simps]:
-  "CurrentConstruction mode s H (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> P"
+  "CurrentConstruction mode s H (T \<s>\<u>\<b>\<j> P) \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> P"
   unfolding CurrentConstruction_def by (simp_all add: \<phi>expns split_paired_all)
 
 lemma [\<phi>programming_simps]:
@@ -304,11 +315,11 @@ lemma [\<phi>programming_simps]:
   by simp
 
 lemma [\<phi>programming_simps]:
-  \<open>(\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<longleftrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> P\<close>
+  \<open>(\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T \<s>\<u>\<b>\<j> P) \<longleftrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P\<close>
   unfolding ToA_Construction_def by (simp add: Subjection_expn)
 
 lemma [\<phi>programming_simps]:
-  \<open>((\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> B) \<and> C \<longleftrightarrow> (\<^bold>a\<^bold>b\<^bold>s\<^bold>t\<^bold>r\<^bold>a\<^bold>c\<^bold>t\<^bold>i\<^bold>o\<^bold>n(x) \<^bold>i\<^bold>s T) \<and> (B \<and> C)\<close>
+  \<open>((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> B) \<and> C \<longleftrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> (B \<and> C)\<close>
   by simp
 
 paragraph \<open>Fixing Existentially Quantified Variable\<close>
@@ -328,17 +339,17 @@ lemma introduce_Ex:
   using \<phi>apply_implication[OF _ ExSet_imp_I[OF implies_refl], THEN conjunct1] .
 
 lemma introduce_Ex_subj:
-  \<open>CurrentConstruction mode blk H (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)\<close>
+  \<open>CurrentConstruction mode blk H (S x \<s>\<u>\<b>\<j> Q) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S \<s>\<u>\<b>\<j> Q)\<close>
   by (metis Subjection_True Subjection_cong introduce_Ex)
 
 lemma introduce_Ex_pending:
-  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. Q x v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n (\<lambda>v. \<exists>*x. Q x v) \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+  \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. Q x v) \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. \<exists>*x. Q x v) \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   using \<phi>apply_implication_pending[OF _ ExSet_imp_I[OF implies_refl]] .
 
 lemma introduce_Ex_pending_E:
-  \<open> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E x v)
-\<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g f \<^bold>o\<^bold>n blk [H] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. \<exists>*x. E x v)\<close>
+  \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. E x v)
+\<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. \<exists>*x. E x v)\<close>
   using \<phi>apply_implication_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
 
 lemma introduce_Ex_ToA:
@@ -347,8 +358,8 @@ lemma introduce_Ex_ToA:
   using \<phi>ExTyp_strip_imp by fastforce
 
 lemma introduce_Ex_ToA_subj:
-  \<open> ToA_Construction s (S x \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q)
-\<Longrightarrow> ToA_Construction s (ExSet S \<^bold>s\<^bold>u\<^bold>b\<^bold>j Q) \<close>
+  \<open> ToA_Construction s (S x \<s>\<u>\<b>\<j> Q)
+\<Longrightarrow> ToA_Construction s (ExSet S \<s>\<u>\<b>\<j> Q) \<close>
   by (metis Subjection_Flase Subjection_True introduce_Ex_ToA)
 
 
@@ -357,14 +368,14 @@ paragraph \<open>Return\<close>
 
 lemma \<phi>M_Success[intro!]:
   \<open> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s Any \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: \<phi>expns)
 
 declare \<phi>M_Success[where X=1, simplified, intro!]
 
 lemma \<phi>M_Success'[intro!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return vs \<lbrace> X vs \<longmapsto> X \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s Any \<close>
+  \<open> \<p>\<r>\<o>\<c> Return vs \<lbrace> X vs \<longmapsto> X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding Return_def \<phi>Procedure_def det_lift_def by (clarsimp simp add: \<phi>expns)
 
 

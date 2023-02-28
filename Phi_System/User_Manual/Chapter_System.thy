@@ -9,15 +9,15 @@ section \<open>Specifications on Fictional \<phi>-SL\<close>
 
 text \<open>\begin{remark}[Source \& Target]
 As both ToA and view shift constitutes a morphism,
-\[ \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
-\[ \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
+\[ \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close> \]
+\[ \<open>X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P\<close> \]
 we name the above \<open>X\<close> and \<open>Y\<close> as \<^emph>\<open>source\<close> and \<^emph>\<open>target\<close> respectively.
 We also name the \<open>P\<close> \<^emph>\<open>side fact\<close> as it is a side effect generated during the transformation.
 \end{remark}\<close>
 
 text \<open>
 \begin{remark}[Multi-Term Form (MTF)]
-\[ \<open>(x\<^sub>1 \<Ztypecolon> T\<^sub>1) * \<dots> * (x\<^sub>n \<Ztypecolon> T\<^sub>n) \<^bold>s\<^bold>u\<^bold>b\<^bold>j a\<^sub>1 \<dots> a\<^sub>m. P\<close> \]
+\[ \<open>(x\<^sub>1 \<Ztypecolon> T\<^sub>1) * \<dots> * (x\<^sub>n \<Ztypecolon> T\<^sub>n) \<s>\<u>\<b>\<j> a\<^sub>1 \<dots> a\<^sub>m. P\<close> \]
 We call \<open>x\<^sub>i \<Ztypecolon> T\<^sub>i\<close> for \<open>1 \<le> i \<le> n\<close> an \<^emph>\<open>item\<close> in the MTF.
 \end{remark}
 
@@ -136,11 +136,11 @@ and premises of each antecedent give us, figuratively speaking,
 available \<^emph>\<open>resources\<close> to complete the job.
 
 To illustrate, a job can be either of
-\<^item> a transformation of abstraction demanded to be reasoned, denoted by \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close>
-\<^item> a proof obligation intended to be solved by users, denoted by \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P\<close>
+\<^item> a transformation of abstraction demanded to be reasoned, denoted by \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
+\<^item> a proof obligation intended to be solved by users, denoted by \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P\<close>
 \<^item> a parameter expected to be given by users, denoted by \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?x\<close>
 \<^item> a specification of a sub-procedure waiting for users programming it,
-  denoted by \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close>.
+  denoted by \<open>\<p>\<r>\<o>\<c> ?F \<lbrace> X \<longmapsto> Y \<t>\<h>\<r>\<o>\<w>\<s> E \<rbrace>\<close>.
 More detailed elucidation are given later in \cref{sec:antecedent-jobs}.
 
 \begin{remark}
@@ -167,9 +167,9 @@ Declaration commands like @{command proc} and others (except those requiring no 
 are indeed specialized proof goal statement like command @{command lemma} and @{command theorem},
 which initiates a standard Isabelle proof context having for examples the following proof states
 corresponding to the three construction mode,
-\[ \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c ?F \<lbrace> X \<longmapsto> Y \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<rbrace>\<close> \]
-\[ \<open>X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>s\<^bold>h\<^bold>i\<^bold>f\<^bold>t\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
-\[ \<open>X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P \<Longrightarrow> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Y \<^bold>a\<^bold>n\<^bold>d P\<close> \]
+\[ \<open>\<p>\<r>\<o>\<c> ?F \<lbrace> X \<longmapsto> Y \<t>\<h>\<r>\<o>\<w>\<s> E \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> ?F \<lbrace> X \<longmapsto> Y \<t>\<h>\<r>\<o>\<w>\<s> E \<rbrace>\<close> \]
+\[ \<open>X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P\<close> \]
+\[ \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close> \]
 where the only subgoal is exact the desired conclusion,
 and the subgoal is meantime also an antecedent job
 asking users respectively to program some procedure \<open>?F\<close> satisfying the specification,
@@ -181,11 +181,11 @@ context allowing users to program or to deduce the desired construct.
 And the programming is deducing a state sequent.
 
 In the programming, the proposition of a state sequent falls in two sorts of forms:
-\<^item> \<^emph>\<open>ready state\<close> like \<^prop>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t state [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n P\<close> representing the previous construction
+\<^item> \<^emph>\<open>ready state\<close> like \<^prop>\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> state [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> P\<close> representing the previous construction
   is finished, the computation state is now as specified by \<open>P\<close>, and the system is ready for
   the next construction.
-\<^item> \<^emph>\<open>pending state\<close> like \<^prop>\<open>\<A> \<Longrightarrow> \<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g F \<^bold>o\<^bold>n state [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
-  is deduced after applying a procedure \<^prop>\<open>\<A> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close> on the ready state.
+\<^item> \<^emph>\<open>pending state\<close> like \<^prop>\<open>\<A> \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> F \<o>\<n> state [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
+  is deduced after applying a procedure \<^prop>\<open>\<A> \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> P \<longmapsto> Q \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close> on the ready state.
   It represents the application of \<open>F\<close> is pending the finish of antecedent jobs \<open>\<A>\<close>.
 
 \begin{remark}
@@ -198,8 +198,8 @@ Those antecedent jobs have various functions, like a transformation of abstracti
 a demanded annotation or even another sub-procedure waiting for programming
 (cf. control flow combinators).
 Once all the pending jobs \<open>\<A>\<close> are finished, meaning state sequent
-\<^prop>\<open>\<^bold>p\<^bold>e\<^bold>n\<^bold>d\<^bold>i\<^bold>n\<^bold>g F \<^bold>o\<^bold>n state [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close> is deduced, the system accepts the procedure \<open>F\<close>
-and deduces the next state sequent in ready form \<^prop>\<open>\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t state' [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n Q\<close>.
+\<^prop>\<open>\<p>\<e>\<n>\<d>\<i>\<n>\<g> F \<o>\<n> state [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> E\<close> is deduced, the system accepts the procedure \<open>F\<close>
+and deduces the next state sequent in ready form \<^prop>\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> state' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q\<close>.
 The \<open>state'\<close> denotes the resulted state of evaluating procedure \<open>F\<close>.
 
 The programming is then essentially a loop of switching between the ready state and the pending
@@ -230,13 +230,13 @@ like @{command lemma} and @{command theorem}, where the desired transformation o
 is given in the goal statement directly together with any assumptions as antecedents.\<close>
 
 lemma example:
-  assumes A: \<open>x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P\<close>
-    and   B: \<open>y \<Ztypecolon> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s z \<Ztypecolon> Z \<^bold>a\<^bold>n\<^bold>d Q\<close>
-  shows \<open>x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s z \<Ztypecolon> Z \<^bold>a\<^bold>n\<^bold>d P \<and> Q\<close>
+  assumes A: \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P\<close>
+    and   B: \<open>y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Z \<a>\<n>\<d> Q\<close>
+  shows \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Z \<a>\<n>\<d> P \<and> Q\<close>
   \<medium_left_bracket> A B \<medium_right_bracket>. .
 
 text \<open>Recalling the sequent of the Isar proof state
-\<open>x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s z \<Ztypecolon> Z \<^bold>a\<^bold>n\<^bold>d P \<and> Q \<Longrightarrow> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s z \<Ztypecolon> Z \<^bold>a\<^bold>n\<^bold>d P \<and> Q\<close>
+\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Z \<a>\<n>\<d> P \<and> Q \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Z \<a>\<n>\<d> P \<and> Q\<close>
 where the only sub-goal is also an antecedent, the sub-goal as an antecedent is opened by
 @{command \<medium_left_bracket>} by which we enter the programming mode where we can deduce the transformation
 forwardly and stepwisely by applying the transformation \<open>A\<close> first and then \<open>B\<close>.
@@ -298,8 +298,8 @@ subsection \<open>Options enabling Expert Display\<close>
 
 text \<open>
 \<^descr> @{attribute \<phi>display_value_internal_name} enables the display of internal names of values.
-    By turning on this option, values will be displayed as \<^term>\<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[internal] T\<close>
-    by contrast to the default display \<^term>\<open>x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l T\<close>.
+    By turning on this option, values will be displayed as \<^term>\<open>x \<Ztypecolon> \<v>\<a>\<l>[internal] T\<close>
+    by contrast to the default display \<^term>\<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>.
     This \<^term>\<open>internal\<close> is the internal semantic representation of value.
 \<^descr> \<phi>display_brk_frame displays the internal and technical separation items for breaking frame.
 \<close>

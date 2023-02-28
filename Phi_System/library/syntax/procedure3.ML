@@ -9,9 +9,9 @@ val quantify_args_of_proc_term : bool (*whether to record the names in the quant
 val quantify_args_of_proc_term_meta : bool (*whether to record the names in the quantification*)
                          -> term -> term
 
-(* \<^bold>p\<^bold>r\<^bold>o\<^bold>c f (\<phi>V_pair ?a ?b) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?b] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE
+(* \<p>\<r>\<o>\<c> f (\<phi>V_pair ?a ?b) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[?b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[?a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 --------------------------------------------------------------------------------------
-   \<forall>pack. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f pack \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_snd pack] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_fst pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE
+   \<forall>pack. \<p>\<r>\<o>\<c> f pack \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd pack] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 *)
 val package_argument : Proof.context -> thm -> thm
 
@@ -83,8 +83,8 @@ fun quantify_args_of_proc_term record_name (Const (\<^const_name>\<open>Trueprop
 
 
 (*
-    (\<And>a b. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f (\<phi>V_pair a b) \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[b] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE ) \<Longrightarrow>
-    (\<forall>a. \<^bold>p\<^bold>r\<^bold>o\<^bold>c f a \<lbrace> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_snd a] T\<heavy_comma> y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[\<phi>V_fst a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE )
+    (\<And>a b. \<p>\<r>\<o>\<c> f (\<phi>V_pair a b) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE ) \<Longrightarrow>
+    (\<forall>a. \<p>\<r>\<o>\<c> f a \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE )
 *)
 fun rule_of_package_arguement ctxt proc =
   let val packed = quantify_args_of_proc_term false proc

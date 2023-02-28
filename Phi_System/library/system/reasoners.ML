@@ -26,9 +26,9 @@ fun find_obligation flag i (( _ $ (@{term Proof_Obligation} $ _ ))::L) =
 
 val err_msg = "Bad configuration of reasoning rules!\n\
             \Some antecedents are bound on undetermined variables to be given by users in future, \
-            \which can only be used in \<^bold>d\<^bold>o, \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e.\n\
+            \which can only be used in \<^bold>d\<^bold>o, \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<p>\<r>\<e>\<m>\<i>\<s>\<e>.\n\
             \Check any variables assigned by \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m antecedent are only used in \
-            \\<^bold>d\<^bold>o, \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e."
+            \\<^bold>d\<^bold>o, \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<p>\<r>\<e>\<m>\<i>\<s>\<e>."
 
 fun chk_param X L idx =
   let
@@ -58,7 +58,7 @@ fun gen_defer_antecedent find_idx thm =
       let val idx = find_idx H L
       in
         if idx = ~1
-        then error ("Fail to defer a proof obligation: an \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n antecedent is not found.")
+        then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
         else Thm.permute_prems 1 idx thm
           |> Thm.permute_prems 0 (~idx)
           |> Seq.single

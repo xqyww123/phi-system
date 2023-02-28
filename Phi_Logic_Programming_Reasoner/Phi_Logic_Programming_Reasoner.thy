@@ -4,7 +4,7 @@ theory Phi_Logic_Programming_Reasoner
     and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
     and "print_\<phi>reasoners" :: diag
   abbrevs
-      "<premise>" = "\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e"
+      "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
 begin
@@ -605,11 +605,11 @@ subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}
 
 definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where "Premise _ x = x"
 
-abbreviation Normal_Premise ("\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e _" [27] 26)
+abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
 abbreviation Simp_Premise ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m _" [27] 26)
   where "Simp_Premise \<equiv> Premise MODE_SIMP"
-abbreviation Proof_Obligation ("\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n _" [27] 26)
+abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27] 26)
   where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
 
 text \<open>
@@ -628,48 +628,48 @@ text \<open>
   \<^prop>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is not for proof obligations that are intended to be solved by users.
   It is more like 'controller or switch' of the rules, i.e. \<^emph>\<open>guard\<close>.
 
-  \<^descr> \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> represents a proof obligation.
+  \<^descr> \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> represents a proof obligation.
   Proof obligations in reasoning rules should be represented by it.
 
-  \<^descr> \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> by contrast
+  \<^descr> \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> by contrast
   represents proof obligations \<open>Q\<close> that are ready to be solved by user (or by automatic tools).
 \<close>
 text \<open>
-  The difference between \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> and \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> is subtle:
+  The difference between \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> and \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> is subtle:
   In a reasoning process, many reasoning rules may be applied, which may generate many
-  \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close>.
-  The engine tries to solve \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> automatically but if it fails the search branch
+  \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>.
+  The engine tries to solve \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> automatically but if it fails the search branch
   would be stuck. Because the search has not been finished, it is bad to ask users' intervention
   to solve the goal because the search branch may high-likely fail later.
   It is \<^emph>\<open>not ready\<close> for user to solve \<open>P\<close> here, and suggestively \<open>P\<close> should be deferred to
   an ideal moment for user solving obligations.
-  This is `ideal moment' is \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close>. If any \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> exists in the antecedents
-  of the sequent, the engine contracts \<open>P\<close> into the latest \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close>, e.g., from
-  \[ \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P \<Longrightarrow> A1 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q' \<Longrightarrow> \<cdots> \<close> \]
+  This is `ideal moment' is \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>. If any \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> exists in the antecedents
+  of the sequent, the engine contracts \<open>P\<close> into the latest \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>, e.g., from
+  \[ \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> A1 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q' \<Longrightarrow> \<cdots> \<close> \]
   it deduces
-  \[ \<open>A1 \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q \<and> P \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q' \<Longrightarrow> \<cdots> \<close> \]
-  In short, \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> collects obligations generated during a reasoning process,
+  \[ \<open>A1 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<and> P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q' \<Longrightarrow> \<cdots> \<close> \]
+  In short, \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> collects obligations generated during a reasoning process,
   and enables user to solve them at an idea moment.
 
   A typical reasoning request (the initial reasoning state namely the argument of the reasoning
   process) is of the following form,
- \[ \<open>Problem \<Longrightarrow> \<r>Success \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<Longrightarrow> Conclusion\<close> \]
+ \[ \<open>Problem \<Longrightarrow> \<r>Success \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> Conclusion\<close> \]
   The \<open>True\<close> represents empty collection or none obligation.
   If the reasoning succeeds, it returns sequent in form
- \[ \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n True \<and> P1 \<and> P2 \<and> \<cdots> \<Longrightarrow> Conclusion\<close> \]
+ \[ \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<and> P1 \<and> P2 \<and> \<cdots> \<Longrightarrow> Conclusion\<close> \]
   where \<open>P1, P2, \<cdots>\<close> are obligations generated by reasoning \<open>Problem\<close>.
   And then, user may solve the obligations manually or by automatic tools.
 
-  For antecedent \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close>,
-  if there is another \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q'\<close> in the remaining antecedents,
-  the reasoner also defer \<open>Q\<close> to \<open>Q'\<close>, just like \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> is a \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e Q\<close>.
+  For antecedent \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>,
+  if there is another \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q'\<close> in the remaining antecedents,
+  the reasoner also defer \<open>Q\<close> to \<open>Q'\<close>, just like \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> is a \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close>.
 
-  If no \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q'\<close> exists in the remaining antecedents,
-  the reasoner of \<^prop>\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e P\<close> and \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> raises
+  If no \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q'\<close> exists in the remaining antecedents,
+  the reasoner of \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> and \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> raises
   an error aborting the whole reasoning, because the reasoning request is not configured correctly.
 
-  Semantically, \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> represents a proof obligation \<open>Q\<close> intended to be addressed by
-  user. It can be deferred but the reasoner never attempts to solve \<^prop>\<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q\<close> practically.
+  Semantically, \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> represents a proof obligation \<open>Q\<close> intended to be addressed by
+  user. It can be deferred but the reasoner never attempts to solve \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> practically.
 
   Nonetheless, we still provide tool for reasoning obligations automatically, albeit they have
   to be called separately with the reasoning engine. See \<^verbatim>\<open>auto_obligation_solver\<close> and
@@ -701,7 +701,7 @@ lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
   = (rule Premise_I; simp; fail)
 
 lemma contract_obligations:
-  "(Premise mode P \<Longrightarrow> \<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n Q \<Longrightarrow> PROP C) \<equiv> (\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P \<and> Q \<Longrightarrow> PROP C)"
+  "(Premise mode P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> PROP C) \<equiv> (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q \<Longrightarrow> PROP C)"
   unfolding Premise_def by rule simp+
 
 lemma contract_premise_true:
@@ -722,7 +722,7 @@ named_theorems useful \<open>theorems to be inserted in the automatic proving,
 ML_file \<open>library/PLPR_Syntax.ML\<close>
 ML_file "library/reasoners.ML"
 
-\<phi>reasoner_ML Normal_Premise 10 (\<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e ?P\<close> | \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n ?P\<close>)
+\<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.defer_obligation_tac\<close>
 
 
@@ -929,7 +929,7 @@ lemma Do_Simplification:
   unfolding Do_Simplificatin_def Simplify_def atomize_eq .
 
 lemma End_Simplification : \<open>PROP Do_Simplificatin A A\<close> unfolding Do_Simplificatin_def .
-lemma End_Simplification': \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e A = B \<Longrightarrow> PROP Do_Simplificatin A B\<close>
+lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> PROP Do_Simplificatin A B\<close>
   unfolding Do_Simplificatin_def Premise_def atomize_eq .
 
 ML_file \<open>library/simplifier.ML\<close>

@@ -13,10 +13,10 @@ context solidity begin
 
 
 definition Currency :: \<open>('VAL, nat) \<phi>\<close>
-  where \<open>Currency = (\<lambda>x. (x \<Ztypecolon> \<nat>[256]) \<^bold>s\<^bold>u\<^bold>b\<^bold>j x \<le> Total_Supply)\<close>
+  where \<open>Currency = (\<lambda>x. (x \<Ztypecolon> \<nat>[256]) \<s>\<u>\<b>\<j> x \<le> Total_Supply)\<close>
 
 lemma Currency_expn[\<phi>expns]:
-  \<open>(x \<Ztypecolon> Currency) = ((x \<Ztypecolon> \<nat>[256]) \<^bold>s\<^bold>u\<^bold>b\<^bold>j x \<le> Total_Supply)\<close>
+  \<open>(x \<Ztypecolon> Currency) = ((x \<Ztypecolon> \<nat>[256]) \<s>\<u>\<b>\<j> x \<le> Total_Supply)\<close>
   unfolding \<phi>Type_def[where T=Currency]
   unfolding Currency_def
   ..
@@ -26,14 +26,14 @@ lemma [\<phi>inhabitance_rule, elim!]:
   unfolding Inhabited_def
   by (simp add: \<phi>expns)
 
-lemma Currency_D[\<phi>reason on \<open>?x \<Ztypecolon> Currency \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?y \<Ztypecolon> \<nat>[?b] \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x = x'
-\<Longrightarrow> x \<Ztypecolon> Currency \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> \<nat>[256] \<^bold>a\<^bold>n\<^bold>d x \<le> Total_Supply\<close>
+lemma Currency_D[\<phi>reason on \<open>?x \<Ztypecolon> Currency \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> \<nat>[?b] \<a>\<n>\<d> ?P\<close>]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
+\<Longrightarrow> x \<Ztypecolon> Currency \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> \<nat>[256] \<a>\<n>\<d> x \<le> Total_Supply\<close>
   unfolding Currency_expn \<medium_left_bracket> \<medium_right_bracket>. .
 
-lemma Currency_I[\<phi>reason on \<open>?y \<Ztypecolon> \<nat>[?b] \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?x \<Ztypecolon> Currency \<^bold>a\<^bold>n\<^bold>d ?P\<close>]:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e x \<le> Total_Supply \<and> x = x'
-\<Longrightarrow> x \<Ztypecolon> \<nat>[256] \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x' \<Ztypecolon> Currency\<close>
+lemma Currency_I[\<phi>reason on \<open>?y \<Ztypecolon> \<nat>[?b] \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?x \<Ztypecolon> Currency \<a>\<n>\<d> ?P\<close>]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<le> Total_Supply \<and> x = x'
+\<Longrightarrow> x \<Ztypecolon> \<nat>[256] \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> Currency\<close>
   unfolding Currency_expn \<medium_left_bracket> \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1000]:
@@ -53,10 +53,10 @@ end
 proc balance_of:
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address)] \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l account \<Ztypecolon> Address\<close>
+      \<v>\<a>\<l> account \<Ztypecolon> Address\<close>
   return   \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address)] \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l balance \<Ztypecolon> \<nat>[256]\<close>
+      \<v>\<a>\<l> balance \<Ztypecolon> \<nat>[256]\<close>
   \<medium_left_bracket> \<rightarrow> v_account;;
     op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
@@ -96,14 +96,14 @@ proc transfer:
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       balance_sender \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address)] \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       balance_receiver \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (receiver \<Ztypecolon> Address)] \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l receiver \<Ztypecolon> Address\<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l amount   \<Ztypecolon> \<nat>[256]\<close>
+      \<v>\<a>\<l> receiver \<Ztypecolon> Address\<heavy_comma>
+      \<v>\<a>\<l> amount   \<Ztypecolon> \<nat>[256]\<close>
   return \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       (if amount \<le> balance_sender then balance_sender - amount else balance_sender)
         \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address)] \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       (if amount \<le> balance_sender then balance_receiver + amount else balance_receiver)
         \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (receiver \<Ztypecolon> Address)] \<^bold>\<rightarrow> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l amount \<le> balance_sender \<Ztypecolon> \<bool>\<close>
+      \<v>\<a>\<l> amount \<le> balance_sender \<Ztypecolon> \<bool>\<close>
   \<medium_left_bracket> ;;
     \<rightarrow> v_receiver, v_amount
   have [useful]: \<open>balance_receiver \<le> Total_Supply\<close> \<open>balance_sender \<le> Total_Supply\<close> using \<phi> by simp+ ;;
@@ -155,9 +155,9 @@ proc transfer_from:
       balance_alice \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (alice \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       balance_bob   \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (bob   \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       allowance     \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''allowance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (alice \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (bob \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> \<nat>[256] \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l alice  \<Ztypecolon> Address\<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l bob    \<Ztypecolon> Address\<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l amount \<Ztypecolon> Currency\<close>
+      \<v>\<a>\<l> alice  \<Ztypecolon> Address\<heavy_comma>
+      \<v>\<a>\<l> bob    \<Ztypecolon> Address\<heavy_comma>
+      \<v>\<a>\<l> amount \<Ztypecolon> Currency\<close>
   return \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       (if amount \<le> balance_alice \<and> amount \<le> allowance then balance_alice - amount else balance_alice)
         \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (alice \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
@@ -165,7 +165,7 @@ proc transfer_from:
         \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (bob \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       (if amount \<le> balance_alice \<and> amount \<le> allowance then allowance - amount else allowance)
         \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''allowance'' \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (alice \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (bob \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> \<nat>[256] \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l amount \<le> balance_alice \<and> amount \<le> allowance \<Ztypecolon> \<bool>\<close>
+      \<v>\<a>\<l> amount \<le> balance_alice \<and> amount \<le> allowance \<Ztypecolon> \<bool>\<close>
   \<medium_left_bracket>
 (* if amount \<le> balance_alice \<and> amount \<le> allowance
  *)
@@ -242,13 +242,13 @@ proc approve:
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       allowance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''allowance''
                            \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (spender \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> \<nat>[256] \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l spender \<Ztypecolon> Address\<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l amount \<Ztypecolon> \<nat>[256]\<close>
+      \<v>\<a>\<l> spender \<Ztypecolon> Address\<heavy_comma>
+      \<v>\<a>\<l> amount \<Ztypecolon> \<nat>[256]\<close>
   return \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       (if allowance + amount < 2 ^ Big 256 then allowance + amount else allowance)
           \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''allowance''
                      \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (spender \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> \<nat>[256] \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l allowance + amount < 2 ^ Big 256 \<Ztypecolon> \<bool>\<close>
+      \<v>\<a>\<l> allowance + amount < 2 ^ Big 256 \<Ztypecolon> \<bool>\<close>
   \<medium_left_bracket> \<rightarrow> v_spender, v_amount;;
     op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
@@ -289,11 +289,11 @@ proc allowance:
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       allowance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''allowance''
                            \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (spender \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> \<nat>[256] \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l spender \<Ztypecolon> Address\<close>
+      \<v>\<a>\<l> spender \<Ztypecolon> Address\<close>
   return \<open>msg \<Ztypecolon> Msg\<heavy_comma>
       allowance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> \<bbbS>\<f>\<i>\<e>\<l>\<d> ''allowance''
                            \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (msg.sender msg \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub># \<bbbS>\<m>\<a>\<p> (spender \<Ztypecolon> Address) \<^bold>\<rightarrow>\<^sub>[\<^sub>] \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> \<nat>[256] \<heavy_comma>
-      \<^bold>v\<^bold>a\<^bold>l allowance \<Ztypecolon> \<nat>[256]\<close>
+      \<v>\<a>\<l> allowance \<Ztypecolon> \<nat>[256]\<close>
   \<medium_left_bracket> op_get_msg_addr[where G=msg.contract]
     op_root_ledge_ref
     op_get_member_ledgeRef[where field=\<open>''allowance''\<close>]

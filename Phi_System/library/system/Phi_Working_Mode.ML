@@ -18,7 +18,7 @@ type working_mode = {
 }
 (*
 cast operation: transform to the desired assertion.
-If successful, it results in \<open>\<^bold>o\<^bold>b\<^bold>l\<^bold>i\<^bold>g\<^bold>a\<^bold>t\<^bold>i\<^bold>o\<^bold>n P \<Longrightarrow> Result\<close>
+If successful, it results in \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<Longrightarrow> Result\<close>
 which always has a leading obligation P no matter whether it is trivially true.
 cast exception is the version for casting an exception assertion.
 *)

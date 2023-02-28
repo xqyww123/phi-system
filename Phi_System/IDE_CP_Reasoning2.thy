@@ -40,13 +40,13 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values T T'
-\<Longrightarrow> Remove_Values (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) (T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+\<Longrightarrow> Remove_Values (T \<s>\<u>\<b>\<j> P) (T' \<s>\<u>\<b>\<j> P)\<close>
   unfolding Remove_Values_def Imply_def
   by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200]:
   \<open> Remove_Values (R * T) (R' * T')
-\<Longrightarrow> Remove_Values (R * (T \<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) (R' * (T' \<^bold>s\<^bold>u\<^bold>b\<^bold>j P))\<close>
+\<Longrightarrow> Remove_Values (R * (T \<s>\<u>\<b>\<j> P)) (R' * (T' \<s>\<u>\<b>\<j> P))\<close>
   unfolding Remove_Values_def Imply_def
   by (simp add: \<phi>expns)
 
@@ -117,7 +117,7 @@ lemma [\<phi>reason 3000]:
 (*
 subsection \<open>Extract a Value\<close>
 
-definition \<open>Extract_a_Value (S_in::assn) S_out val_out \<longleftrightarrow> (S_in \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S_out \<^bold>a\<^bold>n\<^bold>d val_out)\<close>
+definition \<open>Extract_a_Value (S_in::assn) S_out val_out \<longleftrightarrow> (S_in \<i>\<m>\<p>\<l>\<i>\<e>\<s> S_out \<a>\<n>\<d> val_out)\<close>
 
 text \<open>\<^prop>\<open>Extract_a_Value S_in S_out val_out\<close> removes the first (right-most) value from the
   input assertion \<open>S_in\<close> and gives the specification theorem of the removed value in \<open>val_out\<close>.
@@ -129,8 +129,8 @@ text \<open>\<^prop>\<open>Extract_a_Value S_in S_out val_out\<close> removes th
     to the state sequent when user is accessing the value.
 \<close>
 
-lemma [\<phi>reason 1200 for \<open>Extract_a_Value (?R \<heavy_comma> ?x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[?v] ?T) ?R ?V\<close>]:
-  \<open>Extract_a_Value (R \<heavy_comma> x \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>l[v] T) R (\<phi>arg.dest v \<in> (x \<Ztypecolon> T))\<close>
+lemma [\<phi>reason 1200 for \<open>Extract_a_Value (?R \<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T) ?R ?V\<close>]:
+  \<open>Extract_a_Value (R \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T) R (\<phi>arg.dest v \<in> (x \<Ztypecolon> T))\<close>
   unfolding Extract_a_Value_def Imply_def
   by (simp add: \<phi>expns)
 
@@ -146,9 +146,9 @@ lemma [\<phi>reason 1000]:
   by blast
 
 lemma apply_extract_a_value:
-  \<open> \<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S
+  \<open> \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S
 \<Longrightarrow> Extract_a_Value S S' V
-\<Longrightarrow> (\<^bold>c\<^bold>u\<^bold>r\<^bold>r\<^bold>e\<^bold>n\<^bold>t s [R] \<^bold>r\<^bold>e\<^bold>s\<^bold>u\<^bold>l\<^bold>t\<^bold>s \<^bold>i\<^bold>n S') \<and> V\<close>
+\<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S') \<and> V\<close>
   unfolding Extract_a_Value_def
   using \<phi>apply_implication . *)
 

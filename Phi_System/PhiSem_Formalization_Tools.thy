@@ -30,7 +30,7 @@ subsection \<open>Reasoning for Elementary Constructions\<close>
 declare \<phi>SEQ[intro!]
 
 lemma \<phi>M_assert[intro!]:
-  \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace>\<close>
+  \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace>\<close>
   unfolding \<phi>M_assert_def
   by (rule \<phi>Inhabited; simp; rule)
 
@@ -43,19 +43,19 @@ lemma \<phi>M_assert':
   unfolding \<phi>M_assert_def bind_def Return_def det_lift_def by simp
 
 lemma \<phi>M_assume[intro!]:
-  \<open>(P \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
+  \<open>(P \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace>) \<Longrightarrow> \<p>\<r>\<o>\<c> (\<phi>M_assume P \<ggreater> F) \<lbrace> X \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def \<phi>M_assume_def bind_def Return_def det_lift_def
   by clarsimp
 
-lemma \<phi>M_tail_left:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
-lemma \<phi>M_tail_right: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1 \<heavy_comma> Y v \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
-lemma \<phi>M_tail_right_right: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. Y v\<heavy_comma> 1 \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
-lemma \<phi>M_detail_left[intro!]:  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace>\<close> by simp
-lemma \<phi>M_detail_right[intro!]: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F \<lbrace> X \<longmapsto> \<lambda>v. 1\<heavy_comma> Y v \<rbrace>\<close> by simp
+lemma \<phi>M_tail_left:  \<open>\<p>\<r>\<o>\<c> F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
+lemma \<phi>M_tail_right: \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> \<lambda>v. 1 \<heavy_comma> Y v \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
+lemma \<phi>M_tail_right_right: \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> \<lambda>v. Y v\<heavy_comma> 1 \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace>\<close> by simp
+lemma \<phi>M_detail_left[intro!]:  \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> 1\<heavy_comma> X \<longmapsto> Y \<rbrace>\<close> by simp
+lemma \<phi>M_detail_right[intro!]: \<open>\<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> Y \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<longmapsto> \<lambda>v. 1\<heavy_comma> Y v \<rbrace>\<close> by simp
 
 lemma \<phi>M_getV_raw[intro!]:
-   \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  )
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV_raw VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+   \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<p>\<r>\<o>\<c> F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  )
+\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV_raw VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_getV_raw_def Premise_def
   by (clarsimp simp add: \<phi>expns norm_precond_conj)
 
@@ -63,16 +63,16 @@ declare \<phi>M_getV_raw[where X=1, simplified, intro!]
 
 lemma \<phi>M_getV[intro!]:
    \<open>(v \<in> (x \<Ztypecolon> A) \<Longrightarrow> <\<phi>expn> v \<in> Well_Type TY)
-\<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E  )
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_getV TY VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+\<Longrightarrow> (v \<in> (x \<Ztypecolon> A) \<Longrightarrow> \<p>\<r>\<o>\<c> F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  )
+\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV TY VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_getV_def Premise_def
   by (clarsimp simp add: \<phi>expns norm_precond_conj)
 
 declare \<phi>M_getV[where X=1, simplified, intro!]
 
 lemma \<phi>M_caseV[intro!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F va vb \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_caseV F (\<phi>V_pair va vb) \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+  \<open> \<p>\<r>\<o>\<c> F va vb \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_caseV F (\<phi>V_pair va vb) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_caseV_def \<phi>V_pair_def by simp
 
 
@@ -96,13 +96,13 @@ lemma \<phi>Res_Spec_mult_homo:
   by (clarsimp simp add: set_eq_iff times_set_def; rule; clarsimp simp add: Valid_Resource_mult_homo; blast)
 
 lemma \<phi>Res_Spec_subj[iff]:
-  \<open> \<phi>Res_Spec (S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) = (\<phi>Res_Spec S \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) \<close>
+  \<open> \<phi>Res_Spec (S \<s>\<u>\<b>\<j> P) = (\<phi>Res_Spec S \<s>\<u>\<b>\<j> P) \<close>
   unfolding \<phi>Res_Spec_def by (simp add: \<phi>expns set_eq_iff)
 
 lemma \<phi>Res_Spec_subj_\<S>:
   \<open> P
 \<Longrightarrow> res \<subseteq> \<S> S E
-\<Longrightarrow> res \<subseteq> (\<S> (\<lambda>v. S v \<^bold>s\<^bold>u\<^bold>b\<^bold>j P) E)\<close>
+\<Longrightarrow> res \<subseteq> (\<S> (\<lambda>v. S v \<s>\<u>\<b>\<j> P) E)\<close>
   by (clarsimp simp add: \<phi>expns set_eq_iff)
 
 lemma \<phi>Res_Spec_ex[iff]:
@@ -120,10 +120,10 @@ lemma \<phi>INTERP_RES_\<phi>Res_Spec:
   unfolding In_INTERP_RES \<phi>Res_Spec_def by simp blast
 
 lemma \<phi>Procedure_\<phi>Res_Spec:
-  \<open> (\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> P \<longmapsto> Q \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E )
-\<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> P \<and> Fic_Space r \<and> Fic_Space p \<and> r ## p)
-      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<^bold>s\<^bold>u\<^bold>b\<^bold>j q. q \<in> Q v \<and> Fic_Space r \<and> Fic_Space q \<and> r ## q))
-                    (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * e) \<^bold>s\<^bold>u\<^bold>b\<^bold>j e. e \<in> E v \<and> Fic_Space r \<and> Fic_Space e \<and> r ## e)))\<close>
+  \<open> (\<p>\<r>\<o>\<c> f \<lbrace> P \<longmapsto> Q \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )
+\<longleftrightarrow> (\<forall>r res. res \<in> \<phi>Res_Spec (\<I> INTERP (r * p) \<s>\<u>\<b>\<j> p. p \<in> P \<and> Fic_Space r \<and> Fic_Space p \<and> r ## p)
+      \<longrightarrow> f res \<subseteq> \<S> (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * q) \<s>\<u>\<b>\<j> q. q \<in> Q v \<and> Fic_Space r \<and> Fic_Space q \<and> r ## q))
+                    (\<lambda>v. \<phi>Res_Spec (\<I> INTERP (r * e) \<s>\<u>\<b>\<j> e. e \<in> E v \<and> Fic_Space r \<and> Fic_Space e \<and> r ## e)))\<close>
   apply rule
    apply (unfold \<phi>Procedure_alt INTERP_SPEC \<phi>Res_Spec_def subset_iff)
    apply (clarsimp simp add: times_set_def \<phi>expns In_INTERP_RES)
@@ -151,8 +151,8 @@ lemma \<phi>Procedure_\<phi>Res_Spec:
   qed .
 
 lemma \<phi>Res_Spec_expn_R:
-  \<open>\<phi>Res_Spec (\<I> INTERP (r * p) \<^bold>s\<^bold>u\<^bold>b\<^bold>j p. p \<in> (R \<heavy_comma> X) \<and> Fic_Space r \<and> Fic_Space p \<and> r ## p)
- = \<phi>Res_Spec (\<I> INTERP (r * u * x) \<^bold>s\<^bold>u\<^bold>b\<^bold>j u x. u \<in> R \<and> x \<in> X \<and> Fic_Space (r * u) \<and> Fic_Space x
+  \<open>\<phi>Res_Spec (\<I> INTERP (r * p) \<s>\<u>\<b>\<j> p. p \<in> (R \<heavy_comma> X) \<and> Fic_Space r \<and> Fic_Space p \<and> r ## p)
+ = \<phi>Res_Spec (\<I> INTERP (r * u * x) \<s>\<u>\<b>\<j> u x. u \<in> R \<and> x \<in> X \<and> Fic_Space (r * u) \<and> Fic_Space x
                                            \<and> r ## u \<and> (r * u) ## x)\<close>
   unfolding set_eq_iff
   apply (clarsimp simp add: \<phi>expns; rule; clarify)
@@ -164,7 +164,7 @@ lemma \<phi>Res_Spec_expn_impEx:
   by (simp add: ExSet_def \<phi>Res_Spec_def)
 
 lemma \<phi>Res_Spec_expn_impSubj:
-  \<open>(x \<in> \<phi>Res_Spec (A \<^bold>s\<^bold>u\<^bold>b\<^bold>j B) \<longrightarrow> P) \<longleftrightarrow> (B \<longrightarrow> x \<in> \<phi>Res_Spec A \<longrightarrow> P)\<close>
+  \<open>(x \<in> \<phi>Res_Spec (A \<s>\<u>\<b>\<j> B) \<longrightarrow> P) \<longleftrightarrow> (B \<longrightarrow> x \<in> \<phi>Res_Spec A \<longrightarrow> P)\<close>
   by (metis Subjection_expn \<phi>Res_Spec_subj)
 
 
@@ -290,8 +290,8 @@ lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @ac
 
 
 (*
-lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action (?Act::?'act::simplification action)\<close>]:
-  \<open>(x \<Ztypecolon> \<phi> \<circle>) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s (() \<Ztypecolon> \<circle>) @action Act\<close>
+lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?P @action (?Act::?'act::simplification action)\<close>]:
+  \<open>(x \<Ztypecolon> \<phi> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (() \<Ztypecolon> \<circle>) @action Act\<close>
   for Act :: \<open>'act::simplification action\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None
   by (simp add: implies_refl) *)
@@ -299,8 +299,8 @@ lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<^bold>i
 paragraph \<open>Reasoning Rules\<close>
 
 lemma \<phi>_cast:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi> U \<^bold>a\<^bold>n\<^bold>d P\<close>
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns)
 
 lemma \<phi>_Structural_Extract:
@@ -324,8 +324,8 @@ lemma ToSA_by_structural_extraction:
   " Structure_Info U Q
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y Q' : Q
 \<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2))
-\<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>a\<^bold>n\<^bold>d P1
-\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P1 \<and> P2"
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> P1
+\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d> P1 \<and> P2"
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def Try_def \<r>Call_def
   \<medium_left_bracket> premises SI and Q and SE and A
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
@@ -338,9 +338,9 @@ lemma ToSA_by_structural_extraction__reverse_morphism:
 \<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y Q' : Q
 \<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W
              (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> \<phi> T') W' (y' \<Ztypecolon> \<phi> U') R1' P2') \<and> P2)))
-\<Longrightarrow> A \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2 \<heavy_comma> \<blangle> W \<brangle> \<^bold>a\<^bold>n\<^bold>d (Automatic_Morphism RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A' \<^bold>a\<^bold>n\<^bold>d P1') \<and> P1)
-\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d
-      (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> \<phi> T' \<brangle> \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>a\<^bold>n\<^bold>d P1' \<and> P2')
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> (Automatic_Morphism RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1') \<and> P1)
+\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d>
+      (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> \<phi> T' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<a>\<n>\<d> P1' \<and> P2')
           \<and> P1 \<and> P2)"
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def
             Morphism_def Compact_Antecedent_def Try_def \<r>Call_def
@@ -350,26 +350,26 @@ lemma ToSA_by_structural_extraction__reverse_morphism:
      SE[OF \<open>Q'\<close>]
   \<medium_right_bracket> apply (simp add: \<phi>)
     \<medium_left_bracket>
-    have A : \<open>R2' \<heavy_comma> W' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s A' \<^bold>a\<^bold>n\<^bold>d P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
-    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<^bold>a\<^bold>n\<^bold>d P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
+    have A : \<open>R2' \<heavy_comma> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
+    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
     ;; SE A[THEN implies_right_prod]
   \<medium_right_bracket>. . .
 
 
-lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<^bold>a\<^bold>n\<^bold>d _\<close> ]:
-  " R \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P
-\<Longrightarrow> R \<heavy_comma> X \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<^bold>a\<^bold>n\<^bold>d P"
+lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<a>\<n>\<d> _\<close> ]:
+  " R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d> P
+\<Longrightarrow> R \<heavy_comma> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d> P"
   unfolding Action_Tag_def FOCUS_TAG_def split_paired_All Action_Tag_def
   by (metis ab_semigroup_mult_class.mult_ac(1) implies_left_prod mult.commute)
 
 lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi> U \<^bold>a\<^bold>n\<^bold>d P @action \<A>_structural Act \<close>
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action \<A>_structural Act
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P @action \<A>_structural Act \<close>
   unfolding Action_Tag_def using \<phi>_cast .
 
 lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> U \<^bold>a\<^bold>n\<^bold>d P @action to Target
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s y \<Ztypecolon> \<phi> U \<^bold>a\<^bold>n\<^bold>d P @action to Target \<close>
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Target
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P @action to Target \<close>
   unfolding Action_Tag_def using \<phi>_cast .
 
 
@@ -391,7 +391,7 @@ lemma [simp]:
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 lemma [simp]:
-  \<open>(\<phi> (T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)) = (\<phi> T \<phi>\<^bold>s\<^bold>u\<^bold>b\<^bold>j P)\<close>
+  \<open>(\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<phi> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 lemma \<phi>_simp_cong[folded atomize_eq]:
@@ -411,11 +411,11 @@ lemma [\<phi>reason 1200 for
   \<open>Synthesis_Parse (\<phi> T) (\<lambda>_. x \<Ztypecolon> \<phi> T :: assn)\<close>
   unfolding Synthesis_Parse_def ..
 
-(* lemma [\<phi>reason for \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c ?f \<lbrace> ?S1 \<longmapsto> \<lambda>ret. ?S2\<heavy_comma>  \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s ?E\<close>]:
+(* lemma [\<phi>reason for \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?S1 \<longmapsto> \<lambda>ret. ?S2\<heavy_comma>  \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E\<close>]:
   \<open> SUBGOAL G G'
-\<Longrightarrow> S1 \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle>
+\<Longrightarrow> S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle>
 \<Longrightarrow> SOLVE_SUBGOAL G'
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>_. S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>_. S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<rbrace>\<close>
   unfolding FOCUS_TAG_def Synthesis_def Action_Tag_def
   using \<phi>__Return_rule__ view_shift_by_implication by blast *)
 
@@ -451,7 +451,7 @@ lemma sep_disj_fiction:
 
 lemma expand_subj:
   \<open> Fic_Space r
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk (perm_functor x))
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x)) \<s>\<u>\<b>\<j> r ## mk (perm_functor x))
   = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec { R.mk x }\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
@@ -559,7 +559,7 @@ lemma sep_disj_fiction:
 
 lemma expand_subj:
   \<open> Fic_Space r
-\<Longrightarrow> (\<phi>Res_Spec (\<I> INTERP (r * mk x)) \<^bold>s\<^bold>u\<^bold>b\<^bold>j r ## mk x) = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
+\<Longrightarrow> (\<phi>Res_Spec (\<I> INTERP (r * mk x)) \<s>\<u>\<b>\<j> r ## mk x) = \<phi>Res_Spec (\<I> INTERP r) * \<phi>Res_Spec {R.mk x}\<close>
   unfolding \<phi>Res_Spec_mult_homo[symmetric]
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify; rule; clarsimp simp add: \<phi>expns R.raw_basic_fiction_\<I> interp_split' prj.homo_mult)
@@ -632,7 +632,7 @@ lemma partial_implies:
     qed . .
 
 lemma double:
-  \<open>{mk x |x. P x} \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s {mk x |x. P x} * {mk x |x. P x}\<close>
+  \<open>{mk x |x. P x} \<i>\<m>\<p>\<l>\<i>\<e>\<s> {mk x |x. P x} * {mk x |x. P x}\<close>
   unfolding Imply_def
   apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric])
   subgoal for x'
@@ -640,7 +640,7 @@ lemma double:
     by (cases x'; simp add: mk_homo_mult[symmetric]) .
 
 lemma contract:
-  \<open>{mk x |x. P x} * {mk x |x. P x} \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s {mk x |x. P x} \<close>
+  \<open>{mk x |x. P x} * {mk x |x. P x} \<i>\<m>\<p>\<l>\<i>\<e>\<s> {mk x |x. P x} \<close>
   unfolding Imply_def
   apply (clarsimp simp add: \<phi>expns)
   subgoal for x y by (cases x; cases y; simp add: mk_homo_mult[symmetric]) .
@@ -655,7 +655,7 @@ declare ToSA_by_structural_extraction__reverse_morphism
     [\<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 
 lemma \<phi>_double_\<phi>app:
-  \<open>x \<Ztypecolon> \<phi>_ag T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>
+  \<open>x \<Ztypecolon> \<phi>_ag T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
@@ -666,7 +666,7 @@ proof -
 qed
 
 lemma \<phi>_contract_\<phi>app:
-  \<open>x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi>_ag T\<close>
+  \<open>x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>_ag T\<close>
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
@@ -871,19 +871,19 @@ qed
 
 (* lemma VS_merge_ownership_identity:
   \<open> na + nb \<le> 1
-\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) Identity)\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) Identity)\<close>
   by (rule VS_merge_ownership; simp add: \<phi>expns)
 
 lemma VS_split_ownership_identity:
-  \<open> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e (0 < n \<longrightarrow> na + nb = n \<and> 0 < na \<and> 0 < nb)
-\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity)\<close>
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (0 < n \<longrightarrow> na + nb = n \<and> 0 < na \<and> 0 < nb)
+\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity)\<close>
   by (rule VS_split_ownership; simp add: \<phi>expns sep_disj_fun_def share_fun_def; clarify)
   (* subgoal premises prems for a
     by (insert \<open>\<forall>_. _\<close>[THEN spec[where x=a]], cases \<open>x a\<close>; simp add: share_All prems) . *)
 
 
 lemma VS_divide_ownership:
-  \<open>FIX x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity)\<close>
+  \<open>FIX x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity)\<close>
   unfolding Fix_def
   by (rule VS_split_ownership_identity; simp add: Premise_def)
 *)
@@ -1140,13 +1140,13 @@ section \<open>Common Instructions\<close>
 
 subsection \<open>Drop & Duplicate Value\<close>
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action action_dup\<close>]:
-  \<open>x \<Ztypecolon> Val raw T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @action action_dup\<close>
+lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?P @action action_dup\<close>]:
+  \<open>x \<Ztypecolon> Val raw T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @action action_dup\<close>
   unfolding Imply_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s ?Y \<^bold>a\<^bold>n\<^bold>d ?P @action action_drop\<close>]:
-  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s Void @action action_drop\<close>
+lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?P @action action_drop\<close>]:
+  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Void @action action_drop\<close>
   unfolding Imply_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 
@@ -1161,15 +1161,15 @@ lemma throw_reduce_tail[procedure_simps,simp]:
   unfolding throw_def bind_def det_lift_def by simp
 
 lemma "__throw_rule__"[intro!]:
-  \<open> (\<And>a. X a \<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>e\<^bold>s X' a)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c (throw excep :: 'ret::VALs proc) \<lbrace> X excep \<longmapsto> Any \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X'\<close>
+  \<open> (\<And>a. X a \<i>\<m>\<p>\<l>\<i>\<e>\<s> X' a)
+\<Longrightarrow> \<p>\<r>\<o>\<c> (throw excep :: 'ret::VALs proc) \<lbrace> X excep \<longmapsto> Any \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> X'\<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Imply_def
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
 
 lemma throw_\<phi>app:
   \<open> (\<And>v. Remove_Values (X v) (X' v))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c throw excep \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s X' \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> throw excep \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> X' \<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Imply_def
   apply clarsimp
   by (meson Imply_def View_Shift_def view_shift_by_implication)
@@ -1182,9 +1182,9 @@ definition op_try :: "'ret proc \<Rightarrow> (ABNM \<Rightarrow> 'ret proc) \<R
                                        | Invalid \<Rightarrow> {Invalid}) ` f s)\<close>
 
 lemma "__op_try__"[intro!]:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s (\<lambda>v. E v)
-\<Longrightarrow> (\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> Y2 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 )
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_try f g \<lbrace> X \<longmapsto> \<lambda>v. Y1 v + Y2 v \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2  \<close>
+  \<open> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. E v)
+\<Longrightarrow> (\<And>v. \<p>\<r>\<o>\<c> g v \<lbrace> E v \<longmapsto> Y2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 )
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_try f g \<lbrace> X \<longmapsto> \<lambda>v. Y1 v + Y2 v \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2  \<close>
   unfolding op_try_def \<phi>Procedure_def subset_iff
   apply clarsimp subgoal for comp R x s
     apply (cases s; simp; cases x; clarsimp simp add: \<phi>expns ring_distribs)
@@ -1243,8 +1243,8 @@ fn (ctxt,sequent) =>
 \<close>
 
 proc (nodef) try'':
-  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-  assumes G: \<open>(\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> YY \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s EE2 )\<close>
+  assumes F: \<open>\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+  assumes G: \<open>(\<And>v. \<p>\<r>\<o>\<c> g v \<lbrace> E v \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE2 )\<close>
   input  X
   output YY
   throws EE2
@@ -1255,8 +1255,8 @@ proc (nodef) try'':
 
 proc (nodef) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
-  assumes F: \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c f \<lbrace> X \<longmapsto> Y1 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
-  assumes G: \<open>\<And>v. \<^bold>p\<^bold>r\<^bold>o\<^bold>c g v \<lbrace> E v \<longmapsto> Y2 \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E2 \<close>
+  assumes F: \<open>\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+  assumes G: \<open>\<And>v. \<p>\<r>\<o>\<c> g v \<lbrace> E v \<longmapsto> Y2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 \<close>
   input  X
   output Z
   throws E2
@@ -1322,10 +1322,10 @@ subparagraph \<open>identity_fiction_for_partial_mapping_resource\<close>
 context identity_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_get_res_entry_frm[intro!]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+  \<open>\<p>\<r>\<o>\<c> F v
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry key F
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
     \<phi>Res_Spec_expn_R \<phi>Res_Spec_expn_impEx \<phi>Res_Spec_expn_impSubj imp_conjL
   by (clarsimp simp add: \<phi>expns expand simp del: set_mult_expn del: subsetI;
@@ -1340,10 +1340,10 @@ subparagraph \<open>share_fiction_for_partial_mapping_resource\<close>
 context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_get_res_entry_frm[intro!]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry key F
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+  \<open>\<p>\<r>\<o>\<c> F v
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry key F
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
     \<phi>Res_Spec_expn_R \<phi>Res_Spec_expn_impEx \<phi>Res_Spec_expn_impSubj imp_conjL
   apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
@@ -1369,10 +1369,10 @@ lemma (in partial_map_resource2) \<phi>R_get_res_entry[intro!]:
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
 
 lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[intro!]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+  \<open>\<p>\<r>\<o>\<c> F v
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry k1 k2 F
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def del: subsetI)
   apply (rule R.\<phi>R_get_res_entry[where v=v])
@@ -1380,10 +1380,10 @@ lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[int
   by blast
 
 lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry1[intro!]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_get_res_entry k1 k2 F
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E \<close>
+  \<open>\<p>\<r>\<o>\<c> F v
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry k1 k2 F
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   using \<phi>R_get_res_entry[where n=1, simplified] .
 
 
@@ -1409,7 +1409,7 @@ context identity_fiction_for_partial_mapping_resource begin
 lemma \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def
@@ -1428,7 +1428,7 @@ context share_fiction_for_partial_mapping_resource begin
 lemma \<phi>R_set_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def
@@ -1457,7 +1457,7 @@ lemma (in partial_map_resource2) \<phi>R_set_res[intro!]:
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res"[THEN \<phi>CONSEQ'E0, intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k := 1(k2 \<mapsto> v)))}) \<Longrightarrow> P (R.get res))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def
@@ -1485,7 +1485,7 @@ context identity_fiction_for_partial_mapping_resource begin
 lemma \<phi>R_dispose_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := None))
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
@@ -1502,7 +1502,7 @@ context share_fiction_for_partial_mapping_resource begin
 lemma \<phi>R_dispose_res:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := None) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := None))
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
@@ -1528,7 +1528,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res"[THE
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in> Valid)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k := f))})
       \<Longrightarrow> P (R.get res) \<and> dom f = dom (R.get res k))
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_set_res (\<lambda>f. f(k := 1))
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := 1))
          \<lbrace> to_share o f \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_\<phi>Res_Spec
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k := f)\<close>, simplified]
@@ -1573,7 +1573,7 @@ lemma (in mapping_resource) \<phi>R_set_res_new[intro!]:
 lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
 \<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in> Valid \<longrightarrow> m(k := init) \<in> Valid)
-\<Longrightarrow> (\<And>k res. res \<in> \<phi>Res_Spec (R * {mk (1(k := init))} \<^bold>s\<^bold>u\<^bold>b\<^bold>j P k)
+\<Longrightarrow> (\<And>k res. res \<in> \<phi>Res_Spec (R * {mk (1(k := init))} \<s>\<u>\<b>\<j> P k)
       \<Longrightarrow> F k res \<subseteq> \<S> Y E)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
 \<Longrightarrow> \<phi>R_allocate_res_entry P init F res \<subseteq> \<S> Y E\<close>
@@ -1597,8 +1597,8 @@ lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
 lemma (in identity_fiction_for_partial_mapping_resource) "\<phi>R_allocate_res_entry"[intro!]:
   \<open> (\<forall>m. m \<in> Valid \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
 \<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in> Valid \<longrightarrow> m(k \<mapsto> init) \<in> Valid)
-\<Longrightarrow> (\<And>new. P new \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c F new \<lbrace> X \<heavy_comma> init \<Ztypecolon> \<phi> (new \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c R.\<phi>R_allocate_res_entry P (Some init) F \<lbrace> X \<longmapsto> Y \<rbrace> \<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s E\<close>
+\<Longrightarrow> (\<And>new. P new \<Longrightarrow> \<p>\<r>\<o>\<c> F new \<lbrace> X \<heavy_comma> init \<Ztypecolon> \<phi> (new \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry P (Some init) F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec simp del: set_mult_expn del: subsetI)
   subgoal for r res c
   apply (rule R.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])
@@ -1660,13 +1660,13 @@ lemma cons_tup_cons:
   by (simp add: take_Suc_conv_app_nth)
 
 lemma (in \<phi>empty) op_cons_tup_nil:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c cons_tup [] \<lbrace> Void \<longmapsto> () \<Ztypecolon> EmptyTuple \<rbrace>\<close>
+  \<open> \<p>\<r>\<o>\<c> cons_tup [] \<lbrace> Void \<longmapsto> () \<Ztypecolon> EmptyTuple \<rbrace>\<close>
   unfolding cons_tup_nil by \<phi>reason
 
 lemma (in \<phi>empty) op_cons_tup_cons:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c cons_tup TYs \<lbrace> X \<longmapsto> VAL y \<Ztypecolon> Y \<rbrace>
+  \<open> \<p>\<r>\<o>\<c> cons_tup TYs \<lbrace> X \<longmapsto> VAL y \<Ztypecolon> Y \<rbrace>
 \<Longrightarrow> \<phi>SemType (a \<Ztypecolon> A) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c cons_tup (TY#TYs) \<lbrace> VAL a \<Ztypecolon> A\<heavy_comma> X \<longmapsto> VAL (a,y) \<Ztypecolon> (\<clubsuit> A \<^emph> Y) \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> cons_tup (TY#TYs) \<lbrace> VAL a \<Ztypecolon> A\<heavy_comma> X \<longmapsto> VAL (a,y) \<Ztypecolon> (\<clubsuit> A \<^emph> Y) \<rbrace>\<close>
   unfolding cons_tup_cons
   apply \<phi>reason apply (rule \<phi>frame0, assumption)
   apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
@@ -1700,13 +1700,13 @@ lemma op_dest_tup_cons_expn:
   by (metis list.discI list.exhaust_sel list.rel_sel list.sel(1))
 
 lemma (in \<phi>empty) op_dest_tup_nil:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dest_tup [] \<lbrace> () \<Ztypecolon> EmptyTuple \<longmapsto> Void \<rbrace> \<close>
+  \<open>\<p>\<r>\<o>\<c> op_dest_tup [] \<lbrace> () \<Ztypecolon> EmptyTuple \<longmapsto> Void \<rbrace> \<close>
   unfolding op_dest_tup_nil_expn by \<phi>reason
 
 lemma (in \<phi>empty) op_dest_tup_cons:
-  \<open> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dest_tup TYs \<lbrace> VAL y \<Ztypecolon> Y \<longmapsto> X \<rbrace>
+  \<open> \<p>\<r>\<o>\<c> op_dest_tup TYs \<lbrace> VAL y \<Ztypecolon> Y \<longmapsto> X \<rbrace>
 \<Longrightarrow> \<phi>SemType (a \<Ztypecolon> A) TY
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_dest_tup (TY#TYs) \<lbrace> VAL (a,y) \<Ztypecolon> (\<clubsuit> A \<^emph> \<phi>Is_Tuple Y) \<longmapsto> VAL a \<Ztypecolon> A\<heavy_comma> X \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_dest_tup (TY#TYs) \<lbrace> VAL (a,y) \<Ztypecolon> (\<clubsuit> A \<^emph> \<phi>Is_Tuple Y) \<longmapsto> VAL a \<Ztypecolon> A\<heavy_comma> X \<rbrace>\<close>
   unfolding op_dest_tup_cons_expn
   apply \<phi>reason apply (clarsimp simp add: \<phi>SemType_def subset_iff V_tup_mult \<phi>expns)
   apply \<phi>reason apply (clarsimp simp add: \<phi>SemType_def subset_iff V_tup_mult \<phi>expns, assumption)
@@ -1736,7 +1736,7 @@ lemma (in \<phi>empty) op_get_element:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m valid_index TY idx
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> X) TY
 \<Longrightarrow> \<phi>Index_getter idx X Y f
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_get_element idx TY \<lbrace> VAL x \<Ztypecolon> X \<longmapsto> VAL f x \<Ztypecolon> Y \<rbrace> \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_element idx TY \<lbrace> VAL x \<Ztypecolon> X \<longmapsto> VAL f x \<Ztypecolon> Y \<rbrace> \<close>
   unfolding op_get_element_def \<phi>Index_getter_def Premise_def
   apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
   by \<phi>reason
@@ -1746,7 +1746,7 @@ lemma (in \<phi>empty) op_set_element:
 \<Longrightarrow> \<phi>Index_mapper idx X Y f
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> X) TY
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> Y) (index_type idx TY)
-\<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_set_element idx TY \<lbrace> VAL x \<Ztypecolon> X\<heavy_comma> VAL y \<Ztypecolon> Y \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> X \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_element idx TY \<lbrace> VAL x \<Ztypecolon> X\<heavy_comma> VAL y \<Ztypecolon> Y \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> X \<rbrace>\<close>
   unfolding op_set_element_def \<phi>Index_mapper_def Premise_def
   apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
    apply (simp add: \<phi>SemType_def subset_iff)

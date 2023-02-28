@@ -14,8 +14,8 @@ supporting most of control flows and therefore most of (imperative) languages.
 
 theory Phi_Semantics_Framework
   imports Main Resource_Space Debt_Axiom.Debt_Axiom
-  abbrevs "<throws>" = "\<^bold>t\<^bold>h\<^bold>r\<^bold>o\<^bold>w\<^bold>s"
-    and "<proc>" = "\<^bold>p\<^bold>r\<^bold>o\<^bold>c"
+  abbrevs "<throws>" = "\<t>\<h>\<r>\<o>\<w>\<s>"
+    and "<proc>" = "\<p>\<r>\<o>\<c>"
 begin
 
 
