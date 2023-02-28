@@ -993,9 +993,9 @@ paragraph \<open>Candidates\<close>
 
 text \<open>The candidates are all search branches diverged from the antecedents marked by \<close>
 
-definition \<r>Choice :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CHOICE _" [3] 2) where \<open>\<r>Choice P \<equiv> P\<close>
+(* definition \<r>Choice :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CHOICE _" [3] 2) where \<open>\<r>Choice P \<equiv> P\<close>
 
-lemma \<r>Choice_I: \<open> PROP P \<Longrightarrow> PROP \<r>Choice P\<close> unfolding \<r>Choice_def .
+lemma \<r>Choice_I: \<open> PROP P \<Longrightarrow> PROP \<r>Choice P\<close> unfolding \<r>Choice_def . *)
 
 text \<open>For the antecedents marked by \<open>\<r>Choice\<close>, the mechanism traverses exhaustively all
 combinations of their (direct) solvers, but for other not marked antecedents, the strategy is
@@ -1049,7 +1049,7 @@ lemma Do_Optimum_Solution:
 \<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> PROP Optimum_Solution X\<close>
   unfolding Optimum_Solution_def .
-
+                                    
 ML_file_debug \<open>library/optimum_solution.ML\<close>
 
 \<phi>reasoner_ML Incremental_Cost 1000 (\<open>Incremental_Cost _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
@@ -1083,8 +1083,8 @@ ML_file_debug \<open>library/optimum_solution.ML\<close>
 #> PLPR_Optimum_Solution.finish
 \<close>
 
-\<phi>reasoner_ML \<r>Choice 1000 (\<open>PROP \<r>Choice _\<close>) = \<open>fn (ctxt,sequent) =>
-  PLPR_Optimum_Solution.choices (ctxt, @{thm \<r>Choice_I} RS sequent)\<close>
+(*\<phi>reasoner_ML \<r>Choice 1000 (\<open>PROP \<r>Choice _\<close>) = \<open>fn (ctxt,sequent) =>
+  PLPR_Optimum_Solution.choices (ctxt, @{thm \<r>Choice_I} RS sequent)\<close> *)
 
 
 subsubsection \<open>Derivations\<close>

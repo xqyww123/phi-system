@@ -2,7 +2,7 @@ signature PLPR_OPTIMUM_SOLUTION = sig
 
 val start  : context_state -> context_state Seq.seq
 val finish : context_state -> context_state Seq.seq
-val choices: context_state -> context_state Seq.seq
+(* val choices: context_state -> context_state Seq.seq *)
 val report_cost : int (*incremental-distance*) * int (*maximal-distance*)
               -> context_state -> context_state Seq.seq
 
@@ -12,7 +12,6 @@ end
 
 structure PLPR_Optimum_Solution : PLPR_OPTIMUM_SOLUTION = struct
 
-exception YIELD
 exception REACH of context_state
 exception SUPER_REACH of context_state
 
@@ -32,11 +31,11 @@ structure Cost = Proof_Data (
 )
 
 structure Stack = Proof_Data (
-  type T = (Candidates.T Synchronized.var * serial * serial) list
+  type T = ((int * Candidates.T) Synchronized.var * serial * serial) list
   val init = K []
 )
 
-fun choices (ctxt,sequent) = Seq.make (fn () =>
+(*fun choices (ctxt,sequent) = Seq.make (fn () =>
   case Stack.get ctxt
     of [] => SOME ((ctxt,sequent), Seq.empty)
      | ((heap_sync,_,_) :: _) => (
@@ -51,7 +50,7 @@ fun choices (ctxt,sequent) = Seq.make (fn () =>
                     (Synchronized.change heap_sync
                                   (Candidates.insert ((cost,timestamper()), states'));
                      SOME (s', Seq.empty))
-        end))
+        end)) *)
 
 fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
   let val (INC',THR') = Cost.get ctxt
@@ -63,21 +62,14 @@ fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
                       Pretty.str (string_of_int cost),
                       Pretty.str ", swithcing to another search branch..."
                    ])
-      val ret = case Stack.get ctxt
-                  of [] => SOME ((ctxt,sequent), Seq.empty)
-                   | ((heap_sync,_,_) :: _) =>
-                        Synchronized.change_result heap_sync (fn heap =>
-                          if Candidates.is_empty heap
-                          then (SOME ((ctxt,sequent), Seq.empty), heap)
-                          else let val ((min_cost,_), _) = Candidates.min heap
-                            in if cost <= min_cost
-                               then (SOME ((ctxt,sequent), Seq.empty), heap)
-                               else (NONE, Candidates.insert ((cost,timestamper()),
-                                                              Seq.single (ctxt,sequent)) heap)
-                            end)
-   in if is_some ret
-      then ret
-      else (prt (); raise YIELD)
+   in case Stack.get ctxt
+        of [] => SOME ((ctxt,sequent), Seq.empty)
+         | ((heap_sync,_,_) :: _) =>
+              Synchronized.change_result heap_sync (fn (min_cost, heap) =>
+                 if cost <= min_cost
+                 then (SOME ((ctxt,sequent), Seq.empty), (min_cost, heap))
+                 else (prt (); (NONE, (min_cost, Candidates.insert ((cost,timestamper()),
+                                                Seq.single (ctxt,sequent)) heap))))
   end)
 
 fun gen_finish reach (ctxt,sequent) = Seq.make (fn _ => (
@@ -98,7 +90,7 @@ fun gen_finish reach (ctxt,sequent) = Seq.make (fn _ => (
 val finish = gen_finish REACH
 
 fun gen_start ctxt candidates = Seq.make (fn () =>
-  let val var = Synchronized.var "PLPR_Optimum_Solution" Candidates.empty
+  let val var = Synchronized.var "PLPR_Optimum_Solution" (0, Candidates.empty)
       val (sh, ctxt) = ctxt
         |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn s =>
                     SOME [(\<^here>, gen_finish SUPER_REACH s)])
@@ -106,18 +98,18 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
         |> Phi_Reasoner.disable_global_cut 1
                     "Global Cut is prohibited during Optimum_Solution reasoning"
       val ctxt = Stack.map (fn L => (var,sh,gcut) :: L) ctxt
-      val _ = Synchronized.change var (
-                  Candidates.insert ((0,0), Seq.of_list (map (pair ctxt) candidates)))
-      fun get_heap heap =
+      val _ = Synchronized.change var (apsnd (
+                  Candidates.insert ((0,0), Seq.of_list (map (pair ctxt) candidates))))
+      fun get_heap (mc,heap) =
         if Candidates.is_empty heap
-        then (NONE, heap)
+        then (NONE, (mc,heap))
         else let val (((cost,_),next), heap') = Candidates.min_elem heap
               in case Seq.pull next
-                   of NONE => get_heap heap'
+                   of NONE => get_heap (cost,heap')
                     | SOME (s, remain) =>
                         if pointer_eq (remain, Seq.empty)
-                        then (SOME s, heap')
-                        else (SOME s, Candidates.insert ((cost,timestamper()),remain) heap')
+                        then (SOME s, (cost,heap'))
+                        else (SOME s, (cost,Candidates.insert ((cost,timestamper()),remain) heap'))
              end
       fun next_candidate () =
         case Synchronized.change_result var get_heap
@@ -131,8 +123,7 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
                                 "PLPR_Optimum_Solution: the search branch fails, try another");
                               next_candidate ())
                    | SOME s' => SOME (s', Seq.make next_candidate))
-                handle YIELD => next_candidate ()
-                     | REACH s => SOME (s, Seq.make next_candidate)
+                handle REACH s => SOME (s, Seq.make next_candidate)
                      | SUPER_REACH s => raise Phi_Reasoner.Success s
    in next_candidate ()
    end

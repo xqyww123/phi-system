@@ -62,6 +62,8 @@ proc FIB:
 thm FIB_def
 
 
+declare [[\<phi>trace_reasoning = 2]]
+ 
 proc FIB2:
   input \<open>\<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>(8)\<close>
   output \<open>\<^bold>v\<^bold>a\<^bold>l fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>

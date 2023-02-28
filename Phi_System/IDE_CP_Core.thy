@@ -520,9 +520,9 @@ definition Optimal_Synthesis :: \<open>prop \<Rightarrow> prop\<close> ("OPTIMAL
 definition End_Optimal_Synthesis where \<open>End_Optimal_Synthesis \<longleftrightarrow> True\<close>
 
 lemma Do_Optimal_Synthesis:
-  \<open> PROP \<r>Choice P
+  \<open> PROP P
 \<Longrightarrow> PROP Optimal_Synthesis P\<close>
-  unfolding \<r>Choice_def Optimal_Synthesis_def .
+  unfolding Optimal_Synthesis_def .
 
 lemma End_Optimal_Synthesis_I:
   \<open>End_Optimal_Synthesis\<close> unfolding End_Optimal_Synthesis_def ..
