@@ -6,6 +6,7 @@ theory PhiSem_Play_Ground
     PhiSem_Variable
 begin
 
+
 no_notation inter (infixl "Int" 70)
         and union (infixl "Un" 65)
         and Nats  ("\<nat>")
@@ -61,8 +62,6 @@ proc FIB:
 
 thm FIB_def
 
-
-declare [[\<phi>trace_reasoning = 2]]
  
 proc FIB2:
   input \<open>\<^bold>v\<^bold>a\<^bold>l n \<Ztypecolon> \<nat>(8)\<close>

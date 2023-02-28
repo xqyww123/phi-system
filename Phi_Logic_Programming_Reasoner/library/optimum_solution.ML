@@ -21,8 +21,8 @@ val timestamp_counter = Counter.make ()
 fun timestamper () = ~ (timestamp_counter ())
 
 structure Candidates = Heap (
-  type elem = ((int (*evaluated cost*) * int (*timestamp*)) * context_state Seq.seq)
-  fun ord ((c1,_),(c2,_)) = prod_ord int_ord int_ord (c1,c2)
+  type elem = (int (*evaluated cost*) * int (*timestamp*) * context_state Seq.seq)
+  fun ord ((c1,t1,_),(c2,t2,_)) = prod_ord int_ord int_ord ((c1,t1),(c2,t2))
 )
 
 structure Cost = Proof_Data (
@@ -68,7 +68,7 @@ fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
               Synchronized.change_result heap_sync (fn (min_cost, heap) =>
                  if cost <= min_cost
                  then (SOME ((ctxt,sequent), Seq.empty), (min_cost, heap))
-                 else (prt (); (NONE, (min_cost, Candidates.insert ((cost,timestamper()),
+                 else (prt (); (NONE, (min_cost, Candidates.insert (cost,timestamper(),
                                                 Seq.single (ctxt,sequent)) heap))))
   end)
 
@@ -99,17 +99,17 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
                     "Global Cut is prohibited during Optimum_Solution reasoning"
       val ctxt = Stack.map (fn L => (var,sh,gcut) :: L) ctxt
       val _ = Synchronized.change var (apsnd (
-                  Candidates.insert ((0,0), Seq.of_list (map (pair ctxt) candidates))))
+                  Candidates.insert (0, 0, Seq.of_list (map (pair ctxt) candidates))))
       fun get_heap (mc,heap) =
         if Candidates.is_empty heap
         then (NONE, (mc,heap))
-        else let val (((cost,_),next), heap') = Candidates.min_elem heap
+        else let val ((cost,_,next), heap') = Candidates.min_elem heap
               in case Seq.pull next
                    of NONE => get_heap (cost,heap')
                     | SOME (s, remain) =>
                         if pointer_eq (remain, Seq.empty)
                         then (SOME s, (cost,heap'))
-                        else (SOME s, (cost,Candidates.insert ((cost,timestamper()),remain) heap'))
+                        else (SOME s, (cost,Candidates.insert (cost,timestamper(),remain) heap'))
              end
       fun next_candidate () =
         case Synchronized.change_result var get_heap
