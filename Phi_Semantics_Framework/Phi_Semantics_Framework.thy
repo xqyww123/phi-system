@@ -262,7 +262,7 @@ next
   from \<open>PROP P (\<phi>arg (\<phi>arg.dest x))\<close> show "PROP P x" by simp
 qed
 
-abbreviation \<open>\<phi>V_none \<equiv> \<phi>arg ()\<close>
+definition \<open>\<phi>V_none = \<phi>arg ()\<close>
 definition \<open>\<phi>V_pair x y = \<phi>arg (\<phi>arg.dest x, \<phi>arg.dest y)\<close>
 definition \<open>\<phi>V_case_prod f x \<equiv> case x of \<phi>arg (a,b) \<Rightarrow> f (\<phi>arg a) (\<phi>arg b)\<close>
 definition \<open>\<phi>V_fst x = map_\<phi>arg fst x\<close>
@@ -276,17 +276,24 @@ lemma \<phi>V_simps[simp]:
   \<open>\<phi>V_pair (\<phi>V_fst v) (\<phi>V_snd v) = v\<close>
   \<open>\<phi>V_fst (\<phi>V_pair u y) = u\<close>
   \<open>\<phi>V_snd (\<phi>V_pair x u) = u\<close>
+  \<open>\<phi>V_fst (\<phi>arg (xa,xb)) = \<phi>arg xa\<close>
+  \<open>\<phi>V_snd (\<phi>arg (xa,xb)) = \<phi>arg xb\<close>
   \<open>\<phi>V_cons (\<phi>arg h) (\<phi>arg l) = \<phi>arg (h#l)\<close>
   \<open>\<phi>V_hd (\<phi>V_cons hv lv) = hv\<close>
   \<open>\<phi>V_tl (\<phi>V_cons hv lv) = lv\<close>
   \<open>\<phi>V_case_prod f (\<phi>V_pair a b) = f a b\<close>
+  \<open>\<phi>V_case_prod (\<lambda>a b. f2 (\<phi>V_pair a b)) = f2\<close>
+  \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b c. f3 (\<phi>V_pair a (\<phi>V_pair b c)))) = f3\<close>
+  \<open>\<phi>V_case_prod (\<lambda>a. \<phi>V_case_prod (\<lambda>b. \<phi>V_case_prod (\<lambda>c d. f4 (\<phi>V_pair a (\<phi>V_pair b (\<phi>V_pair c d)))))) = f4\<close>
   unfolding \<phi>V_pair_def \<phi>V_fst_def \<phi>V_snd_def \<phi>V_cons_def \<phi>V_hd_def \<phi>V_tl_def \<phi>V_case_prod_def
-     apply (cases v, simp)
-     apply (cases v, simp)
-     apply (cases v, simp)
-     apply simp apply simp apply simp
-  apply simp .
-
+    apply (cases v, simp)
+    apply (cases v, simp)
+    apply (cases v, simp)
+    apply simp apply simp apply simp
+    apply simp apply simp apply simp
+    apply (simp add: fun_eq_iff \<phi>arg_forall)
+    apply (simp add: fun_eq_iff \<phi>arg_forall)
+    apply (simp add: fun_eq_iff \<phi>arg_forall) .
 
 definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
 
@@ -306,15 +313,15 @@ lemma split_paired_all_\<phi>arg:
 
 lemma split_paired_All_\<phi>arg_unit:
   "(\<forall>x. P x) \<longleftrightarrow> P \<phi>V_none"
-  by (simp add: \<phi>arg_forall)
+  by (simp add: \<phi>arg_forall \<phi>V_none_def)
 
 lemma split_paired_Ex_\<phi>arg_unit:
   "(\<exists>x. P x) \<longleftrightarrow> P \<phi>V_none"
-  by (simp add: \<phi>arg_exists)
+  by (simp add: \<phi>arg_exists \<phi>V_none_def)
 
 lemma split_paired_all_\<phi>arg_unit:
   "(\<And>x. PROP P x) \<equiv> PROP P \<phi>V_none"
-  unfolding \<phi>arg_All \<phi>V_pair_def split_paired_all by simp
+  unfolding \<phi>arg_All \<phi>V_pair_def split_paired_all \<phi>V_none_def by simp
 
 
 
@@ -457,7 +464,7 @@ lemma proc_bind_SKIP'[simp]:
 lemma proc_bind_return_none[simp]:
   "f_nil \<ggreater> Return \<phi>V_none \<equiv> f_nil"
   for f_nil :: \<open>unit proc\<close>
-  unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
+  unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def \<phi>V_none_def
   apply (clarsimp)
   subgoal for x y
   apply rule

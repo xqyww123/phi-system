@@ -25,7 +25,6 @@ signature PHI_HELP = sig
   val leading_antecedent : term -> (string * typ) list (*quantified variables*)
                                  * term list (*premises of the antecedent*)
                                  * term (*conclusion containing loose bound*)
-  val rewrite_leading_antecedent : Proof.context -> thm -> thm
 
   val string_of_term_generic : Context.generic -> term -> string
 
@@ -112,9 +111,6 @@ fun strip_meta_hhf term =
 
 fun leading_antecedent (Const("Pure.imp", _) $ H $ _) = strip_meta_hhf H
   | leading_antecedent X = raise TERM ("has no antecedent", [X])
-
-fun rewrite_leading_antecedent ctxt =
-  Conv.fconv_rule (Conv.implies_conv (Simplifier.rewrite ctxt) Conv.all_conv)
 
 fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global thy
   | string_of_term_generic (Context.Proof ctxt) = Syntax.string_of_term ctxt

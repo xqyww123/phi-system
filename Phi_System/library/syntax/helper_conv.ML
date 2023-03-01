@@ -21,6 +21,9 @@ val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
 
 val may_Trueprop_conv : conv -> conv
 
+val rewrite_leading_antecedent : Proof.context -> thm -> thm
+val rewrite_leading_antecedent_hhf_concl : Proof.context -> thm -> thm
+
 end
 
 structure Phi_Helper_Conv : PHI_HELPER_CONV = struct
@@ -89,5 +92,11 @@ fun may_Trueprop_conv cv ct =
   (case Thm.term_of ct of
     Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv cv ct
   | _ => cv ct)
+
+fun rewrite_leading_antecedent ctxt =
+  Conv.gconv_rule (Simplifier.rewrite ctxt) 1
+
+fun rewrite_leading_antecedent_hhf_concl ctxt =
+  Conv.gconv_rule (hhf_concl_conv Simplifier.rewrite ctxt) 1
 
 end

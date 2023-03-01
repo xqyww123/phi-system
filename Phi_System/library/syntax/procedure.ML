@@ -121,7 +121,8 @@ fun mk_arg_tuple _ [] = \<^term>\<open>\<phi>V_none\<close>
           $ tm $ mk_arg_tuple tys tms
   | mk_arg_tuple tys tms = raise TYPE ("Not a \<phi>arg type", tys, tms)
 
-fun dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_pair\<close>, _) $ A $ B) = A :: dest_arg_tuple B
+fun dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_none\<close>, _)) = []
+  | dest_arg_tuple (Const (\<^const_name>\<open>\<phi>V_pair\<close>, _) $ A $ B) = A :: dest_arg_tuple B
   | dest_arg_tuple X = [X]
 
 (* fun mk_arg_prodT []  = \<^typ>\<open>unit \<phi>arg\<close>
@@ -233,13 +234,20 @@ fun package_values name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.
 fun translate_ret (term as (Abs _)) = term
   | translate_ret (term as (Var _)) = term
   | translate_ret (term as (Free _)) = term
+  | translate_ret (tm as Const (\<^const_abbrev>\<open>Void\<close>, _))
+      = Abs ("", \<^typ>\<open>unit \<phi>arg\<close>, tm)
+  | translate_ret (tm as Const (\<^const_name>\<open>one_class.one\<close>, _))
+      = Abs ("", \<^typ>\<open>unit \<phi>arg\<close>, tm)
   | translate_ret (term as (Const _)) = term
   | translate_ret (Const ("_constrain", ty) $ X $ Y)
-      = Const ("_constrain", ty) $ translate_ret X $ Y
+      =(case translate_ret X of Abs (N,T,B) => Abs (N, T, Const ("_constrain", ty) $ B $ Y)
+                              | B => Const ("_constrain", ty) $ B $ Y)
   | translate_ret (Const ("_type_constraint_", ty) $ X)
-      = Const ("_type_constraint_", ty) $ translate_ret X
+      =(case translate_ret X of Abs (N,T,B) => Abs (N, T, Const ("_type_constraint_", ty) $ B)
+                              | B => Const ("_type_constraint_", ty) $ B)
   | translate_ret (Const ("_constrainAbs", ty) $ X $ Y)
-      = Const ("_constrainAbs", ty) $ translate_ret X $ Y
+      =(case translate_ret X of Abs (N,T,B) => Abs (N, T, Const ("_constrainAbs", ty) $ B $ Y)
+                              | B => Const ("_constrainAbs", ty) $ B $ Y)
   | translate_ret term =
       snd (package_values "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> true NONE term)
 
@@ -252,6 +260,8 @@ fun translate_ret (term as (Abs _)) = term
 fun need_translate_ret (Abs (_,_,_)) = false
   | need_translate_ret (Free _) = false
   | need_translate_ret (Var  _) = false
+  | need_translate_ret (Const (\<^const_abbrev>\<open>Void\<close>, _)) = true
+  | need_translate_ret (Const (\<^const_name>\<open>one_class.one\<close>, _)) = true
   | need_translate_ret (Const  _) = false
   | need_translate_ret (Const ("_constrain", _) $ X $ _)
       = need_translate_ret X
