@@ -2215,7 +2215,7 @@ declare [[generate_pattern_of_synthesis_rule
   and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis &&& TERM ()\<close> \<Rightarrow>
       \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (125)
   and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> _ \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis &&& TERM ?z\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?z \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (115)
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?z \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (106)
 ]]
 
 (*
@@ -2347,7 +2347,7 @@ lemma [\<phi>reason 1200]: \<comment> \<open>Gen_Synthesis_Rule final\<close>
 lemma [\<phi>reason 1210]:
   \<open> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>v. \<p>\<r>\<o>\<c> (f \<ggreater> F v) \<lbrace> R\<heavy_comma> \<blangle> Xr v \<brangle> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (ExSet Xr\<heavy_comma> E1 e) + EF e)))
-            (\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> R1\<heavy_comma> \<blangle> X \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 &&& PROP Ant) Result
+            (\<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> R1\<heavy_comma> \<blangle> X \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis &&& PROP Ant) Result
 \<Longrightarrow> PROP Gen_Synthesis_Rule
             (Trueprop (\<forall>v. \<p>\<r>\<o>\<c> F v \<lbrace> R1\<heavy_comma> \<blangle> Xr v\<heavy_comma> X \<brangle> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EF))
             Ant Result \<close>

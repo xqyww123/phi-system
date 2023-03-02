@@ -49,6 +49,9 @@ signature PHI_TOPLEVEL = sig
         cleans all values at its beginning.*)
   val statement_cmd : (Proof.state -> Proof.state) parser
 
+  structure Begining_of_Statement : HOOKS
+  structure End_of_Statement : HOOKS
+
   val prove_prem : bool -> Proof.state -> thm list * Proof.state
   (*val export_LLVM : theory -> theory *)
 end
@@ -533,6 +536,9 @@ val begin_proc_cmd =
 
 (** Statement **)
 
+structure Begining_of_Statement = Hooks(type arg = unit)
+structure End_of_Statement = Hooks(type arg = unit)
+
 (*Whether to remove all values at the beginning of the command \<^bold>;*)
 val statement_clean_values = Attrib.setup_config_bool \<^binding>\<open>\<phi>statement_clean_values\<close> (K true)
 
@@ -544,10 +550,15 @@ fun clean_values (ctxt,sequent) =
 
 val statement_cmd =
   Phi_Processor.powerful_process_p >> (fn f => fn stat =>
-    stat |> Phi_Envir.map_state_sequent clean_values
+    stat |> Phi_Envir.map_state_sequent (Begining_of_Statement.invoke ())
          |> f
-         |> Proof.map_context Phi_Envir.freeze_dynamic_lemmas
+         |> Phi_Envir.map_state_sequent (End_of_Statement.invoke ())
   )
+
+val _ = Theory.setup (Context.theory_map (
+   Begining_of_Statement.add 50 (K clean_values)
+#> End_of_Statement.add 100 (K (apfst Phi_Envir.freeze_dynamic_lemmas))
+))
 
 
 

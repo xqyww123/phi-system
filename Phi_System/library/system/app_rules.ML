@@ -6,7 +6,8 @@
 *)
 
 signature PHI_APP_RULES = sig
-  val app_rules : Proof.context -> (Facts.ref * Token.src list) -> thm list
+  val parse_fact : Proof.context -> Facts.ref -> Facts.ref
+  val app_rules : Proof.context -> (Facts.ref * Token.src list) list -> thm list
   val declare_overloading : binding -> string (*comment*) -> local_theory -> string * local_theory
   val overload : thm -> (string * Position.T) -> Context.generic -> Context.generic
   val parser : (Facts.ref * Token.src list) parser
@@ -15,12 +16,19 @@ end
 
 structure Phi_App_Rules : PHI_APP_RULES = struct
 
-fun suffix_fact _   (Facts.Fact thm) = Facts.Fact thm
-  | suffix_fact suf (Facts.Named ((name,pos),int)) = Facts.Named ((suffix suf name,pos),int)
+fun parse_fact ctxt fact =
+  let val names = Facts.space_of (Proof_Context.facts_of ctxt)
+      fun declared xN = Name_Space.declared names (Name_Space.intern names xN)
+      fun parse_name xN =
+        if declared (prefix "local." xN) then prefix "local." xN
+        else if declared (suffix "_\<phi>app" xN) then suffix "_\<phi>app" xN
+        else xN
+   in case fact of Facts.Fact term => Facts.Fact term
+                 | Facts.Named ((name,pos),int) => Facts.Named ((parse_name name,pos),int)
+  end
 
-fun app_rules ctxt fact =
-  Attrib.eval_thms ctxt [apfst (suffix_fact "_\<phi>app") fact]
-  handle ERROR _ => Attrib.eval_thms ctxt [fact]
+fun app_rules ctxt facts =
+  Attrib.eval_thms ctxt (map (apfst (parse_fact ctxt)) facts)
 
 val declare_overloading = Named_Theorems.declare o Binding.suffix_name "_\<phi>app"
 fun overload th (name,pos) ctx =

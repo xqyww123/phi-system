@@ -1544,7 +1544,7 @@ declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o P
           \<phi>premise_attribute? [useful] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>
 ]]
 
-subsection \<open>IDE Processors\<close>
+subsection \<open>User Interface Processors\<close>
 
 text \<open>Convention of priorities:
   \<^item> Simplifications and Conversions for canonical forms < 1000
@@ -1590,7 +1590,19 @@ lemma \<phi>cast_exception_UI:
 hide_fact \<phi>cast_exception_UI
 
 \<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
-  (NuApply.apply (Phi_App_Rules.app_rules ctxt xnames) (ctxt, sequent)))\<close>
+  (NuApply.apply (Phi_App_Rules.app_rules ctxt [xnames]) (ctxt, sequent)))\<close>
+
+ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
+
+\<phi>processor delayed_apply 8999 (\<open>?P\<close>) \<open> fn (ctxt,sequent) =>
+  (Phi_App_Rules.parser --| \<^keyword>\<open>(\<close>) >> (fn xnames => fn _ =>
+  (Phi_Delay_Application.delay_app (Phi_App_Rules.app_rules ctxt [xnames]) ctxt, sequent))\<close>
+
+\<phi>processor apply_delayed 8999 (\<open>?P\<close>) \<open> fn s => 
+  \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Delay_Application.invoke_delayed_one s)\<close>
+
+\<phi>processor comma 8999 (\<open>?P\<close>) \<open> fn s => 
+  \<^keyword>\<open>,\<close> >> (fn _ => fn _ => Phi_Delay_Application.comma s)\<close>
 
 \<phi>processor set_param 5000 (premises \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
   Phi_Sys.set_param_cmd term stat)\<close>
@@ -1599,9 +1611,9 @@ hide_fact \<phi>cast_exception_UI
   Phi_Sys.set_label name stat)\<close>
 
 \<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
-  \<open>fn (ctxt, sequent) => Phi_App_Rules.parser >> (fn thms => fn _ =>
+  \<open>fn (ctxt, sequent) => Phi_App_Rules.parser >> (fn thm => fn _ =>
     let open Phi_Envir
-    val apps = Phi_App_Rules.app_rules ctxt thms
+    val apps = Phi_App_Rules.app_rules ctxt [thm]
     val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
     in NuApply.apply apps (ctxt,sequent) end)\<close>
 

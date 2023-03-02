@@ -72,7 +72,7 @@ lemma [\<phi>reason 1000]:
     "\<phi>Zero areal \<real> 0"
   unfolding \<phi>Zero_def by (simp add: \<phi>expns)
 
-lemma \<phi>Int_semty[\<phi>reason 1000]:
+lemma [\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<real>) areal\<close>
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns)

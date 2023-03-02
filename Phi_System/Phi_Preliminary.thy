@@ -202,6 +202,19 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> PROP Extract_Elimination_Rule (PROP P @action A) OL OR\<close>
   unfolding Extract_Elimination_Rule_def Action_Tag_def .
 
+lemma [\<phi>reason 1000]:
+  \<open> PROP Q
+\<Longrightarrow> PROP Extract_Elimination_Rule (PROP P) OL OR
+\<Longrightarrow> PROP Extract_Elimination_Rule (PROP Q \<Longrightarrow> PROP P) OL OR\<close>
+  unfolding Extract_Elimination_Rule_def Action_Tag_def
+  subgoal premises P using P(2)[OF P(3)[OF P(1)] P(4)] . .
+
+lemma [\<phi>reason 2000]:
+  \<open> PROP Extract_Elimination_Rule (PROP P) OL OR
+\<Longrightarrow> PROP Extract_Elimination_Rule (\<r>Success \<Longrightarrow> PROP P) OL OR\<close>
+  unfolding Extract_Elimination_Rule_def Action_Tag_def \<r>Success_def
+  subgoal premises P using P(1)[OF P(2)[OF TrueI] P(3)] . .
+
 subsubsection \<open>Inhabitance Reasoning - Part I\<close>
 
 text \<open>is by a set of General Elimination rules~\cite{elim_resolution} that extracts pure facts from

@@ -3,9 +3,14 @@ type arg
 end
 
 signature HOOKS = sig
+
 type arg
-val add: int -> (arg -> context_state -> context_state) -> Context.generic -> Context.generic
-val remove: int * string (*theory name*) -> Context.generic -> Context.generic
+type priority = int
+
+(*One theory is not allowed to have two hooks having the identical priority.
+  But the restriction is not applied between theories.*)
+val add: priority -> (arg -> context_state -> context_state) -> Context.generic -> Context.generic
+val remove: priority * string (*theory name*) -> Context.generic -> Context.generic
 val invoke : arg -> context_state -> context_state
 
 exception Success of context_state
@@ -16,9 +21,10 @@ end
 functor Hooks (Arg : HOOK_ARG) : HOOKS = struct
 
 type arg = Arg.arg
+type priority = int
 
 structure PriorityTab = Table (
-  type key = int * serial
+  type key = priority * serial
   val ord = prod_ord int_ord int_ord
 )
 
