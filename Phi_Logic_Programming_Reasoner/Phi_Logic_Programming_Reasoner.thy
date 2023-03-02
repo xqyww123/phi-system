@@ -7,6 +7,7 @@ theory Phi_Logic_Programming_Reasoner
       "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
   and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
+  and "<threshold>" = "\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>"
 begin
 
 subsubsection \<open>Prelude Settings\<close>
@@ -1019,7 +1020,7 @@ paragraph \<open>Cost\<close>
 text \<open>The cost is measured by reports from the following antecedents inserted in the user rules.\<close>
 
 definition Incremental_Cost :: \<open>int \<Rightarrow> bool\<close> where [iff]: \<open>Incremental_Cost _ = True\<close>
-definition Threshold_Cost   :: \<open>int \<Rightarrow> bool\<close> where [iff]: \<open>Threshold_Cost   _ = True\<close>
+definition Threshold_Cost   :: \<open>int \<Rightarrow> bool\<close> ("\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>") where [iff]: \<open>Threshold_Cost   _ = True\<close>
 
 text \<open>The final cost of a reasoning process is the sum of all the reported \<open>Incremental_Cost\<close> or
   the maximum \<open>Threshold_Cost\<close>, the one which is larger.

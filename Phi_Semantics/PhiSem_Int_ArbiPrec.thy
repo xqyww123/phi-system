@@ -9,7 +9,7 @@ no_notation inter (infixl "Int" 70)
         and Nats  ("\<nat>")
         and Ints  ("\<int>")
 
-section \<open>Models\<close>
+section \<open>Semantics\<close>
 
 subsection \<open>Type\<close>
 
@@ -23,6 +23,8 @@ interpretation \<phi>spec_int_ty TY_CONS_OF _ _ T_aint using \<phi>spec_int_ty_a
 
 hide_fact \<phi>spec_int_ty_ax
 
+abbreviation aint where \<open>aint \<equiv> T_aint.mk ()\<close>
+
 subsection \<open>Value\<close>
 
 virtual_datatype \<phi>spec_int_val = \<phi>empty_val +
@@ -35,7 +37,6 @@ interpretation \<phi>spec_int_val VAL_CONS_OF _ _ V_aint using \<phi>spec_int_va
 
 hide_fact \<phi>spec_int_val_ax \<phi>spec_int_val_axioms
 
-abbreviation aint where \<open>aint \<equiv> T_aint.mk ()\<close>
 
 subsection \<open>Semantics\<close>
 
@@ -190,7 +191,6 @@ definition op_a_le :: "(VAL \<times> VAL, VAL) proc'"
 
 section \<open>Abstraction of Instructions\<close>
 
-
 subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
@@ -205,8 +205,7 @@ lemma op_const_anat_\<phi>app[\<phi>synthesis 300]:
   \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y x' : of_nat x \<comment>\<open>TODO: improve this!\<close>
 \<Longrightarrow> Check_Literal x'
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_const_aint x' \<lbrace> Void \<longmapsto> \<v>\<a>\<l> x \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket>
-  ;; op_const_aint[where x=x'] \<medium_right_bracket>. .
+  \<medium_left_bracket> op_const_aint[where x=x'] \<medium_right_bracket>. .
 
 
 lemma [\<phi>reason 1210

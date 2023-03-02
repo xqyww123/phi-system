@@ -166,6 +166,13 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_leading_item' A\<close>
   unfolding Action_Tag_def .
 
+lemma [\<phi>reason 1010]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> Q @action A
+\<Longrightarrow> X \<s>\<u>\<b>\<j> P \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<s>\<u>\<b>\<j> P \<a>\<n>\<d> Q @action \<A>_leading_item' A\<close>
+  unfolding Action_Tag_def Imply_def
+  by (clarsimp simp add: Subjection_expn)
+
+
 paragraph \<open>View Shift\<close>
 
 lemma [\<phi>reason 1010]:
@@ -178,6 +185,12 @@ lemma [\<phi>reason 1000]:
   \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P @action A
 \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P @action \<A>_leading_item' A\<close>
   unfolding Action_Tag_def .
+
+lemma [\<phi>reason 1010]:
+  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> Q @action A
+\<Longrightarrow> X \<s>\<u>\<b>\<j> P \<s>\<h>\<i>\<f>\<t>\<s> Y \<s>\<u>\<b>\<j> P \<a>\<n>\<d> Q @action \<A>_leading_item' A\<close>
+  unfolding Action_Tag_def View_Shift_def
+  by (simp add: \<phi>expns, blast)
 
 subsubsection \<open>Actions of multi-arity\<close>
 
@@ -377,8 +390,6 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type\<close>
 
-named_theorems \<phi>defs \<open>Definitions of \<phi>-Type\<close>
-
 consts \<A>_construct\<phi> :: \<open>'a set \<Rightarrow> action\<close>
        \<A>_destruct\<phi>  :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
 
@@ -420,9 +431,19 @@ lemma [\<phi>reason 10]:
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T @action \<A>_construct\<phi> (x \<Ztypecolon> T)\<close>
   unfolding Action_Tag_def Simplify_def \<phi>Type_def by (simp add: implies_refl)
 
+
+ML \<open>
+structure PhiDef_SS = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = \<^binding>\<open>\<phi>defs\<close>
+  val comment = "Rules to expand definitions of \<phi>-Type"
+)\<close>
+
 \<phi>reasoner_ML Unfold_\<phi>Defs 1000 (\<open>Unfold_\<phi>Defs ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier NONE (fn ctxt =>
-        clear_simpset ctxt addsimps (Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>defs\<close>))\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' NONE PhiDef_SS.get'\<close>
+
+declare prod.case[\<phi>defs]
+
 
 
 subsection \<open>Duplicate \& Shrink\<close>

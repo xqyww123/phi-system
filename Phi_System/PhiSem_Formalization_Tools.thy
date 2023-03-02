@@ -583,7 +583,7 @@ declare ToSA_by_structural_extraction__reverse_morphism
 end
 
 
-subsection \<open>Nosep Mono-Resource\<close>
+subsection \<open>Nosep Monolithic Resource\<close>
   \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option\<close>\<close>
 
 locale nonsepable_mono_resource =
@@ -599,6 +599,11 @@ end
 
 
 subsubsection \<open>Interp Agreement\<close>
+
+(*TODO: ('k \<Rightarrow> 'v) nosep option ----> ('k \<Rightarrow> 'v share option)
+  total to that
+  none to none
+ *)
 
 locale agreement_fiction_for_nosepable_mono_resource =
    R: nonsepable_mono_resource Res Valid
