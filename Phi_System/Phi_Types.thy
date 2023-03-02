@@ -1548,62 +1548,62 @@ lemma [\<phi>reason 1100]:
   unfolding Action_Tag_def using Agreement_cast .
 
 
-subsection \<open>Nonsepable\<close>
+subsection \<open>Nosep\<close>
 
-definition Nonsepable :: \<open>('T, 'x) \<phi> \<Rightarrow> ('T nonsepable, 'x) \<phi>\<close>
-  where \<open>Nonsepable T x = nonsepable ` (x \<Ztypecolon> T)\<close>
+definition Nosep :: \<open>('T, 'x) \<phi> \<Rightarrow> ('T nosep, 'x) \<phi>\<close>
+  where \<open>Nosep T x = nosep ` (x \<Ztypecolon> T)\<close>
 
-lemma Nonsepable_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> Nonsepable T) \<longleftrightarrow> (\<exists>v. p = nonsepable v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Type_def Nonsepable_def by blast
+lemma Nosep_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> Nosep T) \<longleftrightarrow> (\<exists>v. p = nosep v \<and> v \<in> (x \<Ztypecolon> T))\<close>
+  unfolding \<phi>Type_def Nosep_def by blast
 
-lemma Nonsepable_inhabited[\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> Nonsepable T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma Nosep_inhabited[\<phi>inhabitance_rule, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> Nosep T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 paragraph \<open>Conversion\<close>
 
 lemma [simp]:
-  \<open>Nonsepable (T \<phi>\<s>\<u>\<b>\<j> P) = (Nonsepable T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  \<open>Nosep (T \<phi>\<s>\<u>\<b>\<j> P) = (Nosep T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 lemma [simp]:
-  \<open>Nonsepable (ExTyp T) = (\<exists>\<phi>c. Nonsepable (T c))\<close>
+  \<open>Nosep (ExTyp T) = (\<exists>\<phi>c. Nosep (T c))\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 
 paragraph \<open>Rule\<close>
 
-lemma Nonsepable_cast[\<phi>reason 2000]:
+lemma Nosep_cast[\<phi>reason 2000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> x \<Ztypecolon> Nonsepable T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nonsepable U \<a>\<n>\<d> P\<close>
+\<Longrightarrow> x \<Ztypecolon> Nosep T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nosep U \<a>\<n>\<d> P\<close>
   unfolding Imply_def
   by (clarsimp simp add: \<phi>expns)
 
 lemma [\<phi>reason 2000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action \<A>_structural Act
-\<Longrightarrow> x \<Ztypecolon> Nonsepable T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nonsepable U \<a>\<n>\<d> P @action \<A>_structural Act\<close>
-  unfolding Action_Tag_def using Nonsepable_cast .
+\<Longrightarrow> x \<Ztypecolon> Nosep T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nosep U \<a>\<n>\<d> P @action \<A>_structural Act\<close>
+  unfolding Action_Tag_def using Nosep_cast .
 
 lemma [\<phi>reason 2000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Nonsepable T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nonsepable U \<a>\<n>\<d> P @action to Z\<close>
-  unfolding Action_Tag_def using Nonsepable_cast .
+\<Longrightarrow> x \<Ztypecolon> Nosep T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nosep U \<a>\<n>\<d> P @action to Z\<close>
+  unfolding Action_Tag_def using Nosep_cast .
 
 lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Nonsepable T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nonsepable U \<a>\<n>\<d> P @action to (Nonsepable Z)\<close>
-  unfolding Action_Tag_def using Nonsepable_cast .
+\<Longrightarrow> x \<Ztypecolon> Nosep T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nosep U \<a>\<n>\<d> P @action to (Nosep Z)\<close>
+  unfolding Action_Tag_def using Nosep_cast .
 
 lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as Z
-\<Longrightarrow> x \<Ztypecolon> Nonsepable T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nonsepable U \<a>\<n>\<d> P @action as Z\<close>
-  unfolding Action_Tag_def using Nonsepable_cast .
+\<Longrightarrow> x \<Ztypecolon> Nosep T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nosep U \<a>\<n>\<d> P @action as Z\<close>
+  unfolding Action_Tag_def using Nosep_cast .
 
 lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> x \<Ztypecolon> Nonsepable T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nonsepable U \<a>\<n>\<d> P @action as (z \<Ztypecolon> Nonsepable Z)\<close>
-  unfolding Action_Tag_def using Nonsepable_cast .
+\<Longrightarrow> x \<Ztypecolon> Nosep T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nosep U \<a>\<n>\<d> P @action as (z \<Ztypecolon> Nosep Z)\<close>
+  unfolding Action_Tag_def using Nosep_cast .
 
 
 section \<open>Specifc Structures\<close>

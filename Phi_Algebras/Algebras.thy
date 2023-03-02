@@ -1957,19 +1957,19 @@ lemma to_share_ringop_id[simp]:
 
 subsection \<open>Non-sepable Semigroup\<close>
 
-datatype 'a nonsepable = nonsepable (dest: 'a)
+datatype 'a nosep = nosep (dest: 'a)
 hide_const (open) dest
 
-instantiation nonsepable :: (type) nonsepable_semigroup begin
-definition \<open>sep_disj_nonsepable (x :: 'a nonsepable) (y :: 'a nonsepable) = False\<close>
-definition share_nonsepable :: \<open>rat \<Rightarrow> 'a nonsepable \<Rightarrow> 'a nonsepable\<close>
-  where [simp]: \<open>share_nonsepable _ x = x\<close>
-definition times_nonsepable :: \<open>'a nonsepable \<Rightarrow> 'a nonsepable \<Rightarrow> 'a nonsepable\<close>
-  where [simp]: \<open>times_nonsepable x y = x\<close>
-instance by (standard; case_tac x; simp; case_tac y; simp add: sep_disj_nonsepable_def)
+instantiation nosep :: (type) nonsepable_semigroup begin
+definition \<open>sep_disj_nosep (x :: 'a nosep) (y :: 'a nosep) = False\<close>
+definition share_nosep :: \<open>rat \<Rightarrow> 'a nosep \<Rightarrow> 'a nosep\<close>
+  where [simp]: \<open>share_nosep _ x = x\<close>
+definition times_nosep :: \<open>'a nosep \<Rightarrow> 'a nosep \<Rightarrow> 'a nosep\<close>
+  where [simp]: \<open>times_nosep x y = x\<close>
+instance by (standard; case_tac x; simp; case_tac y; simp add: sep_disj_nosep_def)
 end
 
-instantiation nonsepable :: (type) sep_disj_intuitive begin
+instantiation nosep :: (type) sep_disj_intuitive begin
 instance by (standard; case_tac a; case_tac b; case_tac c; simp)
 end
 

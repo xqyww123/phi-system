@@ -22,7 +22,7 @@ subsection \<open>Resource of Scope Frames\<close>
 
 type_synonym brk_label = nat
 
-type_synonym R_brk_frame = \<open>brk_label \<rightharpoonup> VAL list option nonsepable\<close>
+type_synonym R_brk_frame = \<open>brk_label \<rightharpoonup> VAL list option nosep\<close>
 
 resource_space \<phi>CF_break_res = \<phi>empty_res +
   R_brk_frame :: R_brk_frame
@@ -62,23 +62,23 @@ section \<open>\<phi>-Types\<close>
 
 (*
 abbreviation Brk_Frame' :: \<open>brk_label \<Rightarrow> (VAL list option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
-  where \<open>Brk_Frame' label T \<equiv> (FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable T)))\<close>
+  where \<open>Brk_Frame' label T \<equiv> (FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep T)))\<close>
 *)
 
 definition Brk_Frame :: \<open>brk_label \<Rightarrow> assn\<close>
-  where \<open>Brk_Frame label \<equiv> () \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable \<circle>))\<close>
+  where \<open>Brk_Frame label \<equiv> () \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep \<circle>))\<close>
 
 definition Brking_Frame :: \<open>brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close> ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _" [1000,10] 3)
   where \<open>Brking_Frame label S =
-     (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nonsepable (\<black_circle> Identity))))\<close>
+     (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC_brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep (\<black_circle> Identity))))\<close>
 
 lemma Brk_Frame_eq_identity:
-  \<open>Brk_Frame l = (nonsepable None \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>Brk_Frame l = (nosep None \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff Brk_Frame_def
   by (simp add: \<phi>expns)
 
 lemma Brking_Frame_eq_identity:
-  \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nonsepable (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nosep (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC_brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff Brking_Frame_def TAIL_def
   by (simp add: \<phi>expns)
 
@@ -88,19 +88,19 @@ section \<open>Instruction\<close>
 
 definition op_brk_scope :: \<open>(brk_label \<Rightarrow> ('a::VALs) proc) \<Rightarrow> 'a proc\<close>
   where \<open>op_brk_scope F =
-    R_brk_frame.\<phi>R_allocate_res_entry (\<lambda>_. True) (Some (nonsepable None)) (\<lambda>l.
+    R_brk_frame.\<phi>R_allocate_res_entry (\<lambda>_. True) (Some (nosep None)) (\<lambda>l.
     op_try
     (F l \<bind> (\<lambda>ret. R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l := None)) \<ggreater> Return ret))
     (\<lambda>a. R_brk_frame.\<phi>R_get_res_entry l (\<lambda>brk.
       R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l := None)) \<ggreater>
-     (case nonsepable.dest brk of Some vs \<Rightarrow> Return (\<phi>arg (from_vals vs))
+     (case nosep.dest brk of Some vs \<Rightarrow> Return (\<phi>arg (from_vals vs))
                                 | None \<Rightarrow> throw a)
 )))
 \<close>
 
 definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) proc'\<close>
   where \<open>op_break l = (\<lambda>vs.
-     R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l \<mapsto> nonsepable (Some (to_vals (\<phi>arg.dest vs)))))
+     R_brk_frame.\<phi>R_set_res (\<lambda>f. f(l \<mapsto> nosep (Some (to_vals (\<phi>arg.dest vs)))))
   \<ggreater> throw (ABN_break.mk ())
 )\<close>
 
@@ -118,7 +118,7 @@ context begin
 
 private lemma alloc_brk_scope[intro!]:
   \<open>(\<And>l. \<p>\<r>\<o>\<c> F l \<lbrace> X\<heavy_comma> Brk_Frame l \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  )
-\<Longrightarrow> \<p>\<r>\<o>\<c> R_brk_frame.\<phi>R_allocate_res_entry (\<lambda>_. True) (Some (nonsepable None)) F
+\<Longrightarrow> \<p>\<r>\<o>\<c> R_brk_frame.\<phi>R_allocate_res_entry (\<lambda>_. True) (Some (nosep None)) F
          \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding Brk_Frame_eq_identity
   by (rule; simp add: finite_map_freshness)

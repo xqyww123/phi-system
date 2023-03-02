@@ -21,7 +21,7 @@ datatype varname = varname nat \<comment> \<open>nonce\<close> (type: \<open>TY 
 hide_const (open) type
 declare [ [typedef_overloaded = false] ]
 
-type_synonym R_var = \<open>varname \<rightharpoonup> VAL option nonsepable\<close>
+type_synonym R_var = \<open>varname \<rightharpoonup> VAL option nosep\<close>
   \<comment> \<open>NONE: declared but not initialized.\<close>
 
 lemma infinite_varname:
@@ -68,7 +68,7 @@ section \<open>\<phi>-Types\<close>
 subsection \<open>Variable\<close>
 
 abbreviation Var :: \<open>varname \<Rightarrow> (VAL option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
-  where \<open>Var vname T \<equiv> (FIC_var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Nonsepable T)))\<close>
+  where \<open>Var vname T \<equiv> (FIC_var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Nosep T)))\<close>
 
 abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close> ("\<^bold>v\<^bold>a\<^bold>r[_] _" [22,22] 21)
   where \<open>Inited_Var vname T \<equiv> Var vname (\<black_circle> T)\<close>
@@ -93,15 +93,15 @@ lemma Var_cast_\<phi>app[\<phi>overload cast]:
   by (clarsimp simp add: \<phi>expns, metis)
 
 lemma Raw_Var_identity_eq:
-  \<open>(raw \<Ztypecolon> Var v Identity) = (nonsepable raw \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>(raw \<Ztypecolon> Var v Identity) = (nosep raw \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 lemma UnInited_Var_identity_eq:
-  \<open>(\<^bold>u\<^bold>n\<i>\<n>\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[v]) = (nonsepable None \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>(\<^bold>u\<^bold>n\<i>\<n>\<^bold>i\<^bold>t\<^bold>e\<^bold>d \<^bold>v\<^bold>a\<^bold>r[v]) = (nosep None \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 lemma Inited_Var_identity_eq:
-  \<open>(raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[v] Identity) = (nonsepable (Some raw) \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>(raw \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[v] Identity) = (nosep (Some raw) \<Ztypecolon> FIC_var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 (* lemma Var_ExTyp[simp]:
@@ -222,7 +222,7 @@ subsection \<open>Variable Operations\<close>
 
 definition \<phi>M_get_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
   where "\<phi>M_get_var vname TY F = R_var.\<phi>R_get_res_entry vname ((\<lambda>val.
-            \<phi>M_assert (val \<in> Some ` Well_Type TY) \<ggreater> F (the val)) o nonsepable.dest)"
+            \<phi>M_assert (val \<in> Some ` Well_Type TY) \<ggreater> F (the val)) o nosep.dest)"
 
 definition op_get_var :: "varname \<Rightarrow> TY \<Rightarrow> VAL proc"
   where "op_get_var vname TY = \<phi>M_get_var vname TY (\<lambda>x. Return (\<phi>arg x))"
@@ -231,14 +231,14 @@ definition op_set_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL,unit) proc
   where "op_set_var vname TY v =
           \<phi>M_assert (pred_option (\<lambda>TY'. TY = TY') (varname.type vname)) \<ggreater>
           \<phi>M_getV TY id v (\<lambda>v.
-          R_var.\<phi>R_set_res (\<lambda>f. f(vname := Some (nonsepable (Some v)))))"
+          R_var.\<phi>R_set_res (\<lambda>f. f(vname := Some (nosep (Some v)))))"
 
 definition op_free_var :: "varname \<Rightarrow> unit proc"
   where "op_free_var vname = R_var.\<phi>R_set_res (\<lambda>f. f(vname := None))"
 
 definition op_var_scope' :: "TY option \<Rightarrow> (varname \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
   where "op_var_scope' TY F =
-    R_var.\<phi>R_allocate_res_entry (\<lambda>v. varname.type v = TY) (Some (nonsepable None)) F"
+    R_var.\<phi>R_allocate_res_entry (\<lambda>v. varname.type v = TY) (Some (nosep None)) F"
 
 lemma \<phi>M_get_var[intro!]:
   \<open> v \<in> Well_Type TY
@@ -248,7 +248,7 @@ lemma \<phi>M_get_var[intro!]:
   by (rule FIC_var.\<phi>R_get_res_entry; simp)
 
 lemma \<phi>M_set_var[intro!]:
-  \<open>\<p>\<r>\<o>\<c> R_var.\<phi>R_set_res (\<lambda>f. f(vname \<mapsto> nonsepable (Some u)))
+  \<open>\<p>\<r>\<o>\<c> R_var.\<phi>R_set_res (\<lambda>f. f(vname \<mapsto> nosep (Some u)))
       \<lbrace> v \<Ztypecolon> Var vname Identity \<longmapsto> \<lambda>_. u \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[vname] Identity \<rbrace>\<close>
   unfolding Inited_Var_identity_eq
   unfolding Raw_Var_identity_eq

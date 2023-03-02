@@ -583,12 +583,12 @@ declare ToSA_by_structural_extraction__reverse_morphism
 end
 
 
-subsection \<open>Nonsepable Mono-Resource\<close>
+subsection \<open>Nosep Mono-Resource\<close>
   \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option\<close>\<close>
 
 locale nonsepable_mono_resource =
-  resource entry \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
-for entry :: "'T nonsepable option resource_entry"
+  resource entry \<open>{None} \<union> Some ` nosep ` Valid\<close>
+for entry :: "'T nosep option resource_entry"
 and Valid :: "'T set"
 begin
 
@@ -604,19 +604,19 @@ locale agreement_fiction_for_nosepable_mono_resource =
    R: nonsepable_mono_resource Res Valid
 +  fictional_project_inject INTERPRET Fic \<open>R.fiction_agree\<close>
 for Valid :: "'T set"
-and Res :: "'T nonsepable option resource_entry"
-and Fic :: "'T nonsepable agree option fiction_entry"
+and Res :: "'T nosep option resource_entry"
+and Fic :: "'T nosep agree option fiction_entry"
 begin
 
-sublocale basic_fiction \<open>{None} \<union> Some ` nonsepable ` Valid\<close>
+sublocale basic_fiction \<open>{None} \<union> Some ` nosep ` Valid\<close>
   \<open>\<F>_optionwise \<F>_agree\<close>
   by (standard; simp add: R.fiction_agree_def)
 
 lemma partial_implies:
   \<open> Fic_Space r
-\<Longrightarrow> r ## mk (Some (agree (nonsepable x)))
-\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Some (agree (nonsepable x)))))
-\<Longrightarrow> R.get res = Some (nonsepable x)\<close>
+\<Longrightarrow> r ## mk (Some (agree (nosep x)))
+\<Longrightarrow> res \<in> \<phi>Res_Spec (\<I> INTERP (r * mk (Some (agree (nosep x)))))
+\<Longrightarrow> R.get res = Some (nosep x)\<close>
   unfolding \<phi>Res_Spec_def apply (clarsimp simp add: interp_split'
      R.fiction_agree_def R.raw_basic_fiction_\<I> \<phi>expns R.\<r>_valid_split'
      R.mult_strip_inject_011 R.prj.homo_mult \<F>_optionwise_\<I> image_iff Bex_def
@@ -625,7 +625,7 @@ lemma partial_implies:
   subgoal for u y a aa
     apply (cases aa; simp)
     subgoal premises prems for xa proof -
-      have \<open>get r ## Some (agree (nonsepable x))\<close>
+      have \<open>get r ## Some (agree (nosep x))\<close>
         by (simp add: prems(2))
       from this [unfolded \<open>get r = _\<close>, simplified]
       show ?thesis .
@@ -647,7 +647,7 @@ lemma contract:
 
 paragraph \<open>\<phi>-Type\<close>
 
-abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nonsepable T))\<close>
+abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nosep T))\<close>
 
 declare ToSA_by_structural_extraction
     [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
@@ -659,7 +659,7 @@ lemma \<phi>_double_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nonsepable v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nosep v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: double)
@@ -670,7 +670,7 @@ lemma \<phi>_contract_\<phi>app:
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
-    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nonsepable v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
+    apply (rule exI[where x=\<open>\<lambda>y. \<exists>v. y = Some (agree (nosep v)) \<and> v \<in> (x \<Ztypecolon> T)\<close>])
     by blast
   then obtain P where [simp]: \<open>(x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close> by blast
   show ?thesis by (simp add: contract)
@@ -892,14 +892,14 @@ end
 locale share_fiction_for_partial_mapping_resource_nonsepable =
   share_fiction_for_partial_mapping_resource
     Valid Res Fic
-for Valid :: "('key \<Rightarrow> 'val nonsepable option) set"
-and Res :: "('key \<Rightarrow> 'val nonsepable option) resource_entry"
-and Fic :: "('key \<Rightarrow> 'val nonsepable share option) fiction_entry"
+for Valid :: "('key \<Rightarrow> 'val nosep option) set"
+and Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
 begin
 
 lemma \<phi>nonsepable_normalize:
-  \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Nonsepable Identity)))))
- = (nonsepable x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Identity))))\<close>
+  \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Nosep Identity)))))
+ = (nosep x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Identity))))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 end
@@ -1295,11 +1295,11 @@ lemma (in resource) \<phi>R_get_res[intro!]:
 paragraph \<open>nonsepable_mono_resource\<close>
 
 definition (in nonsepable_mono_resource) \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc\<close>
-  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nonsepable.dest v')
+  where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nosep.dest v')
                                                       | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
-  \<open> get res = Some (nonsepable v)
+  \<open> get res = Some (nosep v)
 \<Longrightarrow> F v res \<subseteq> \<S> Y E
 \<Longrightarrow> \<phi>R_get_res_entry F res \<subseteq> \<S> Y E\<close>
   unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
