@@ -10,7 +10,7 @@ theory PhiSem_Variable
   abbrevs "<var>" = "\<^bold>v\<^bold>a\<^bold>r"
 begin
 
-section \<open>Semantic\<close>
+section \<open>Semantics\<close>
 
 subsection \<open>Models\<close>
 

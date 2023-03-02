@@ -962,8 +962,10 @@ lemma [\<phi>reason 30 for \<open>Structure_Info ?T ?P\<close>]:
 
 subsection \<open>Extract\<close>
 
+text \<open>It is Separation of Abstraction!\<close>
+
 text \<open>The canonical form is where all permission annotation are on leaves.
-  It minimizes fragments.\<close>
+  It minimizes fragments. (TODO: move this)\<close>
 
 definition Structural_Extract :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Structural_Extract From Remain To Residual Aux \<longleftrightarrow> (Residual * From \<i>\<m>\<p>\<l>\<i>\<e>\<s> Remain * To \<a>\<n>\<d> Aux)\<close>

@@ -1,6 +1,6 @@
 theory Algebras
   imports Main HOL.Rat
-    "Phi_Statespace.StateFun" "Phi_Document.Base"
+    "Phi_Statespace.StateFun" "Phi_Document.Base" "HOL-Library.Product_Plus"
   abbrevs "!!" = "!!"
 begin
 
@@ -696,21 +696,17 @@ lemma times_prod[simp]: "(x1,x2) * (y1,y2) = (x1 * y1, x2 * y2)"
 instance ..
 end
 
-instantiation prod :: (plus, plus) plus begin
-definition "plus_prod = (\<lambda>(x1,x2) (y1,y2). (x1 + y1, x2 + y2))"
-lemma plus_prod[simp]: "(x1,x2) + (y1,y2) = (x1 + y1, x2 + y2)"
-  unfolding plus_prod_def by simp
-instance ..
-end
-
-instantiation prod :: (zero, zero) zero begin
-definition "zero_prod = (0,0)"
-instance ..
-end
-
 instantiation prod :: (one, one) one begin
 definition "one_prod = (1,1)"
 instance ..
+end
+
+instantiation prod :: (numeral, numeral) numeral begin
+instance ..
+end
+
+instantiation prod :: (mult_zero, mult_zero) mult_zero begin
+instance by (standard, simp_all add: zero_prod_def split_paired_all)
 end
 
 instantiation prod :: (semigroup_mult, semigroup_mult) semigroup_mult begin
@@ -726,16 +722,15 @@ instance by (standard, simp add: one_prod_def times_prod_def split: prod.split) 
 end
 
 instantiation prod :: (no_negative, no_negative) no_negative begin
-instance by (standard, simp add: zero_prod_def plus_prod_def split: prod.split) blast
+instance by (standard, simp add: zero_prod_def plus_prod_def split_paired_all split: prod.split, blast)
 end
 
 instantiation prod :: (ab_semigroup_mult, ab_semigroup_mult) ab_semigroup_mult begin
-instance apply standard
-  by (metis mult.commute prod.collapse times_prod)
+instance by (standard, metis mult.commute prod.collapse times_prod)
 end
 
 instantiation prod :: (comm_monoid_mult, comm_monoid_mult) comm_monoid_mult begin
-instance apply standard by simp
+instance by standard simp
 end
 
 instantiation prod :: (sep_disj,sep_disj) sep_disj begin
@@ -753,6 +748,60 @@ end
 instantiation prod :: (sep_disj_intuitive,sep_disj_intuitive) sep_disj_intuitive begin
 instance by (standard; case_tac a; case_tac b; case_tac c; simp; blast)
 end
+
+instantiation prod :: (semiring, semiring) semiring begin
+instance by (standard, simp_all add: split_paired_all distrib_right distrib_left)
+end
+
+instantiation prod :: (semiring_0, semiring_0) semiring_0 begin
+instance ..
+end
+
+instantiation prod :: (comm_semiring, comm_semiring) comm_semiring begin
+instance by (standard, simp add: split_paired_all comm_semiring_class.distrib)
+end
+
+instantiation prod :: (semiring_0_cancel, semiring_0_cancel) semiring_0_cancel begin
+instance ..
+end
+
+instantiation prod :: (ring, ring) ring begin
+instance ..
+end
+
+instantiation prod :: (comm_ring, comm_ring) comm_ring begin
+instance ..
+end
+
+instantiation prod :: (zero_neq_one, zero_neq_one) zero_neq_one begin
+instance by (standard, simp add: zero_prod_def one_prod_def)
+end
+
+instantiation prod :: (semiring_1, semiring_1) semiring_1 begin
+instance ..
+end
+
+instantiation prod :: (ring_1, ring_1) ring_1 begin
+instance ..
+end
+
+instantiation prod :: (comm_ring_1, comm_ring_1) comm_ring_1 begin
+instance ..
+end
+
+instantiation prod :: (divide, divide) divide begin
+definition divide_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<close> where
+  \<open>divide_prod x y = (fst x div fst y, snd x div snd y)\<close>
+instance ..
+end
+
+instantiation prod :: (inverse, inverse) inverse begin
+definition inverse_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<close> where
+  \<open>inverse_prod x = (case x of (a,b) \<Rightarrow> (inverse a, inverse b))\<close>
+instance ..
+end
+
+
 
 
 subsection \<open>List\<close>
