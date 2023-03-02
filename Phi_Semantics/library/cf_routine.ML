@@ -44,6 +44,9 @@ fun routine_mod (ctxt0,sequent) =
    in (ctxt0, sequent1)
    |> Phi_Reasoner.reason NONE
    |> (fn SOME ret => ret
+                   |> apfst (Context.proof_map (
+                        Generic_Variable_Access.Process_of_Argument.put
+                           (SOME Generic_Variable_Access.store_value_and_clean)))
         | NONE => Phi_Reasoner.error "Fail to apply the routine modifier.")
   end
 

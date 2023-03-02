@@ -28,7 +28,7 @@ int XX(int x) { if 0 < x then x - 1 else 0 }
 proc
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
-  \<medium_left_bracket>
+  \<medium_left_bracket> ;;
     if \<medium_left_bracket> \<open>0 < $x\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0\<close> \<medium_right_bracket>.
     (* the cartouche like \<open>0 < $x\<close> invokes a synthesis proce
 ss
@@ -37,7 +37,7 @@ ss
 
 (*
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
-           (SOME Generic_Variable_Access.to_value_no_clean))\<close> *)
+           (SOME Generic_Variable_Access.store_value_no_clean))\<close> *)
 
 (* declare [[\<phi>hide_techinicals=false]] *)
 
@@ -53,6 +53,7 @@ fun fib :: \<open>nat \<Rightarrow> nat\<close> where
 proc FIB:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<close>
+  is [routine]
   is [recursive n]
   \<medium_left_bracket> if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket>. \<medium_left_bracket>
       \<open>$n - 1\<close> FIB \<rightarrow> val a;;
@@ -92,18 +93,19 @@ thm XXXX_def[simplified \<phi>V_simps]
 proc
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
-  \<medium_left_bracket> $a $b + $c + \<medium_right_bracket>. .
+  \<medium_left_bracket> + + \<medium_right_bracket>. .
 
 proc
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
-  \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> ;; \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
 
 
 proc
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   premises \<open>x < 10\<close>
   output \<open>\<v>\<a>\<l> 10 \<Ztypecolon> \<nat>\<close>
+  is [routine]
   \<medium_left_bracket> $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
     while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
     \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket>. (*guard*)

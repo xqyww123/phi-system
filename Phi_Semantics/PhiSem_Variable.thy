@@ -357,7 +357,7 @@ lemma op_set_var_\<phi>app:
       \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   shows \<open>\<p>\<r>\<o>\<c> op_set_var var TY \<a>\<r>\<g> \<lbrace> x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<a>\<r>\<g>] U \<longmapsto> \<lambda>\<r>\<e>\<t>. y \<Ztypecolon> \<^bold>v\<^bold>a\<^bold>r[var] U \<rbrace> \<close>
   \<medium_left_bracket> to Identity
-    $y to Identity
+    \<open>var\<close> to Identity
     op_set_var''
   \<medium_right_bracket>. .
 

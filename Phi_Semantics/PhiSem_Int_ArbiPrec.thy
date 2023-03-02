@@ -264,7 +264,7 @@ lemma op_add_anat_\<phi>app[\<phi>overload +,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<nat> \<rbrace> \<close>
-      \<medium_left_bracket> $vx $vy op_add_aint \<medium_right_bracket> by fastforce .
+  \<medium_left_bracket> op_add_aint \<medium_right_bracket> by fastforce .
 
 paragraph \<open>Subtraction\<close>
 
@@ -281,7 +281,7 @@ lemma op_sub_anat_\<phi>app[\<phi>overload -,
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> $vx $vy op_sub_aint \<medium_right_bracket>
+  \<medium_left_bracket> op_sub_aint \<medium_right_bracket>
     using nat_minus_as_int the_\<phi>(2) by presburger .
 
 paragraph \<open>Times\<close>
@@ -298,7 +298,7 @@ lemma op_mul_anat[\<phi>overload *,
                   \<phi>synthesis for _ (100)
                              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_amul (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> $vx $vy op_mul_aint \<medium_right_bracket>
+  \<medium_left_bracket> op_mul_aint \<medium_right_bracket>
     by (simp add: nat_mult_distrib) .
 
 
@@ -316,7 +316,7 @@ lemma op_udiv_anat_\<phi>app[\<phi>overload /,
                         \<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_audiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> $vx $vy op_udiv_aint \<medium_right_bracket>
+  \<medium_left_bracket> op_udiv_aint \<medium_right_bracket>
     by (simp add: div_int_pos_iff nat_div_distrib) .
 
 
@@ -333,12 +333,12 @@ lemma op_lshr_aint_pre_\<phi>app:
 lemma op_lshr_aint_\<phi>app[\<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. drop_bit y x \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<int> \<rbrace>\<close>
-  \<medium_left_bracket> $x $y op_lshr_aint_pre \<medium_right_bracket>. .
+  \<medium_left_bracket> op_lshr_aint_pre \<medium_right_bracket>. .
 
 lemma op_lshr_anat_\<phi>app[\<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>ret. drop_bit y x \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> $x $y op_lshr_aint \<medium_right_bracket>
+  \<medium_left_bracket> op_lshr_aint \<medium_right_bracket>
     by (simp add: drop_bit_of_nat)  .
 
 paragraph \<open>Left Shift\<close>
@@ -353,13 +353,12 @@ lemma op_lshl_aint_pre_\<phi>app:
 lemma op_lshl_aint_\<phi>app[\<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<int> \<rbrace>\<close>
-  \<medium_left_bracket> $x $y op_lshl_aint_pre \<medium_right_bracket>. .
+  \<medium_left_bracket> op_lshl_aint_pre \<medium_right_bracket>. .
 
 lemma op_lshl_anat_\<phi>app[\<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<nat> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<nat> \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> $x $y op_lshl_aint \<medium_right_bracket>
-    by (simp add: push_bit_of_nat) .
+  \<medium_left_bracket> op_lshl_aint \<medium_right_bracket> by (simp add: push_bit_of_nat) .
 
 
 paragraph \<open>Less Than\<close>
@@ -376,7 +375,7 @@ lemma op_lt_anat[\<phi>overload <,
                  \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_a_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
-  \<medium_left_bracket> $x $y op_lt_aint \<medium_right_bracket>. .
+  \<medium_left_bracket> op_lt_aint \<medium_right_bracket>. .
 
 
 paragraph \<open>Less Equal\<close>
@@ -393,7 +392,7 @@ lemma op_le_anat_\<phi>app[\<phi>overload \<le>,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
-  \<medium_left_bracket> $x $y op_le_aint \<medium_right_bracket>. .
+  \<medium_left_bracket> op_le_aint \<medium_right_bracket>. .
 
 
 end

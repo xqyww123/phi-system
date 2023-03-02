@@ -35,8 +35,8 @@ val register_value_spec_thms : Position.T -> thm list -> Context.generic -> Cont
 
 type process_of_argument = context_state -> context_state
 
-val to_value_and_clean : process_of_argument
-val to_value_no_clean  : process_of_argument
+val store_value_and_clean : process_of_argument
+val store_value_no_clean  : process_of_argument
 
 structure Process_of_Argument : GENERIC_DATA
 
@@ -256,8 +256,8 @@ fun gen_default_process clean pos (ctxt,sequent) =
 
 type process_of_argument = context_state -> context_state
 
-val to_value_and_clean = gen_default_process true  Position.none
-val to_value_no_clean  = gen_default_process false Position.none
+val store_value_and_clean = gen_default_process true  Position.none
+val store_value_no_clean  = gen_default_process false Position.none
 
 structure Process_of_Argument = Generic_Data (
   type T = process_of_argument option
@@ -269,7 +269,7 @@ val _ = Theory.setup (Context.theory_map (
 Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
   if level = 0
   andalso #name (Phi_Working_Mode.mode1 ctxt) = #name Phi_Working_Mode.procedure
-  then the_default to_value_and_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
+  then the_default store_value_no_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
   else (ctxt,sequent)
 )))
 
