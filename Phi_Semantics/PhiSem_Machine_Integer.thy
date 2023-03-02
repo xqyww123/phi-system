@@ -546,21 +546,21 @@ lemma op_add_word_\<phi>app[\<phi>synthesis for _ (100)
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns unat_word_ariths)
 
-lemma op_add_nat_\<phi>app[\<phi>overload +,
+lemma op_add_nat_\<phi>app[\<phi>overload add,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x + y < 2 ^ LENGTH('b)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
   \<medium_left_bracket> op_add_word[where 'b='b] \<medium_right_bracket> using \<phi> by (metis of_nat_add of_nat_inverse) .
 
-lemma op_add_natR_\<phi>app[\<phi>overload +,
+lemma op_add_natR_\<phi>app[\<phi>overload add,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>\<^sup>r('b) \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
   \<medium_left_bracket> op_add_word[where 'b='b] \<medium_right_bracket>
     by (metis of_nat_add unat_of_nat) .
 
-lemma op_add_int_\<phi>app[\<phi>overload +,
+lemma op_add_int_\<phi>app[\<phi>overload add,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
@@ -568,7 +568,7 @@ lemma op_add_int_\<phi>app[\<phi>overload +,
   \<medium_left_bracket> op_add_word[where 'b='b] \<medium_right_bracket>
     by (metis atLeastLessThan_iff the_\<phi>(2) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
 
-declare op_add_word_\<phi>app[\<phi>overload +]
+declare op_add_word_\<phi>app[\<phi>overload add]
 
 
 subsubsection \<open>Subtraction\<close>
@@ -581,7 +581,7 @@ lemma op_sub_word_\<phi>app[\<phi>synthesis for _ (100)
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
   by (metis (no_types, opaque_lifting) Nat.add_diff_assoc2 add.commute add_0 mod_add_self2 unat_of_nat unat_sub_if' unsigned_0 word_arith_nat_add)
 
-lemma op_sub_nat_\<phi>app[\<phi>overload -,
+lemma op_sub_nat_\<phi>app[\<phi>overload sub,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
@@ -589,7 +589,7 @@ lemma op_sub_nat_\<phi>app[\<phi>overload -,
   \<medium_left_bracket> op_sub_word[where 'b='b] \<medium_right_bracket>
     by (metis diff_le_self le_unat_uoi the_\<phi>(2) the_\<phi>lemmata(2) of_nat_diff of_nat_inverse) .
 
-lemma op_sub_natR_\<phi>app[\<phi>overload -,
+lemma op_sub_natR_\<phi>app[\<phi>overload sub,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
@@ -597,7 +597,7 @@ lemma op_sub_natR_\<phi>app[\<phi>overload -,
   \<medium_left_bracket> op_sub_word[where 'b='b] \<medium_right_bracket>
     by (metis of_nat_diff the_\<phi>(2) unat_of_nat) .
 
-lemma op_sub_int_\<phi>app[\<phi>overload -,
+lemma op_sub_int_\<phi>app[\<phi>overload sub,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x - y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
@@ -605,7 +605,7 @@ lemma op_sub_int_\<phi>app[\<phi>overload -,
   \<medium_left_bracket> op_sub_word[where 'b='b] \<medium_right_bracket>
     by (metis atLeastLessThan_iff the_\<phi>(2) signed_take_bit_int_eq_self_iff sint_sbintrunc' wi_hom_sub) .
 
-declare op_sub_word_\<phi>app[\<phi>overload -]
+declare op_sub_word_\<phi>app[\<phi>overload sub]
 
 
 subsubsection \<open>Multiplication\<close>
@@ -619,7 +619,7 @@ lemma op_mul_word_\<phi>app[\<phi>synthesis for _ (100)
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns unat_word_ariths(2))
 
-lemma op_mul_nat_\<phi>app[\<phi>overload *,
+lemma op_mul_nat_\<phi>app[\<phi>overload mul,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x * y < 2^LENGTH('b)
@@ -628,7 +628,7 @@ lemma op_mul_nat_\<phi>app[\<phi>overload *,
   \<medium_left_bracket> op_mul_word[where 'b='b] \<medium_right_bracket>
     using the_\<phi>(2) of_nat_inverse by fastforce .
 
-lemma op_mul_natR_\<phi>app[\<phi>overload *,
+lemma op_mul_natR_\<phi>app[\<phi>overload mul,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
@@ -636,7 +636,7 @@ lemma op_mul_natR_\<phi>app[\<phi>overload *,
   \<medium_left_bracket> op_mul_word[where 'b='b] \<medium_right_bracket>
     by (metis of_nat_mult unat_of_nat) .
 
-lemma op_mul_int_\<phi>app[\<phi>overload *,
+lemma op_mul_int_\<phi>app[\<phi>overload mul,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x * y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
@@ -645,7 +645,7 @@ lemma op_mul_int_\<phi>app[\<phi>overload *,
   \<medium_left_bracket> op_mul_word[where 'b='b] \<medium_right_bracket>
     by (metis atLeastLessThan_iff the_\<phi>(2) nle_le of_int_mult signed_take_bit_int_greater_eq_self_iff signed_take_bit_int_less_eq_self_iff sint_sbintrunc') .
 
-declare op_mul_word_\<phi>app[\<phi>overload *]
+declare op_mul_word_\<phi>app[\<phi>overload mul]
 
 
 subsubsection \<open>Division\<close>
@@ -658,7 +658,7 @@ lemma op_udiv_word_\<phi>app[\<phi>synthesis for _ (100)
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
       rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
 
-lemma op_div_nat_\<phi>app[\<phi>overload /,
+lemma op_div_nat_\<phi>app[\<phi>overload div,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
@@ -667,7 +667,7 @@ lemma op_div_nat_\<phi>app[\<phi>overload /,
     affirm using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast
   \<medium_right_bracket> by (simp add: the_\<phi>lemmata(1) the_\<phi>lemmata(2) of_nat_inverse unat_div) .
 
-declare op_udiv_word_\<phi>app[\<phi>overload /]
+declare op_udiv_word_\<phi>app[\<phi>overload div]
 
 
 lemma op_sdiv_word_\<phi>app[\<phi>synthesis for _ (100)
@@ -861,7 +861,7 @@ subsubsection \<open>Comparison\<close>
 paragraph \<open>Unsigned Less Than\<close>
 
 lemma op_lt_word_\<phi>app
-  [\<phi>overload <, \<phi>synthesis for _ (100)
+  [\<phi>overload less, \<phi>synthesis for _ (100)
                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ult LENGTH('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -870,7 +870,7 @@ lemma op_lt_word_\<phi>app
       simp add: \<phi>expns, rule, simp add: \<phi>expns word_less_nat_alt)
 
 lemma op_lt_nat_\<phi>app
-  [\<phi>overload <, \<phi>synthesis for _ (100)
+  [\<phi>overload less, \<phi>synthesis for _ (100)
                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ult LENGTH('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -880,7 +880,7 @@ lemma op_lt_nat_\<phi>app
 paragraph \<open>Signed Less Than\<close>
 
 lemma op_slt_word_\<phi>app
-  [\<phi>overload <, \<phi>synthesis for _ (100)
+  [\<phi>overload less, \<phi>synthesis for _ (100)
                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x <s y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_slt TYPE('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x <s y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -889,7 +889,7 @@ lemma op_slt_word_\<phi>app
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 lemma op_slt_int_\<phi>app
-  [\<phi>overload <, \<phi>synthesis for _ (100)
+  [\<phi>overload less, \<phi>synthesis for _ (100)
                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_slt TYPE('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -900,7 +900,7 @@ lemma op_slt_int_\<phi>app
 paragraph \<open>Unsigned Less Equal\<close>
 
 lemma op_le_word_\<phi>app
-  [\<phi>overload \<le>, \<phi>synthesis for _ (100)
+  [\<phi>overload less_equal, \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ule LENGTH('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] Word('b) \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -909,7 +909,7 @@ lemma op_le_word_\<phi>app
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns word_le_nat_alt)
 
 lemma op_le_nat_\<phi>app
-  [\<phi>overload \<le>, \<phi>synthesis for _ (100)
+  [\<phi>overload less_equal, \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ule LENGTH('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -919,7 +919,7 @@ lemma op_le_nat_\<phi>app
 paragraph \<open>Signed Less Equal\<close>
 
 lemma op_sle_word_\<phi>app
-  [\<phi>overload \<le>, \<phi>synthesis for _ (100)
+  [\<phi>overload less_equal, \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x \<le>s y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_sle TYPE('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] Word('b) \<longmapsto> \<v>\<a>\<l> x \<le>s y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -928,7 +928,7 @@ lemma op_sle_word_\<phi>app
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns word_le_nat_alt)
 
 lemma op_le_int_\<phi>app
-  [\<phi>overload \<le>, \<phi>synthesis for _ (100)
+  [\<phi>overload less_equal, \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_sle TYPE('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>

@@ -31,9 +31,13 @@ fun app_rules ctxt facts =
   Attrib.eval_thms ctxt (map (apfst (parse_fact ctxt)) facts)
 
 val declare_overloading = Named_Theorems.declare o Binding.suffix_name "_\<phi>app"
-fun overload th (name,pos) ctx =
-  Named_Theorems.add_thm (Named_Theorems.check (Context.proof_of ctx)
-    (suffix "_\<phi>app" name, pos)) th ctx
+fun overload th (name,pos) ctxt = (
+  if Context_Position.reports_enabled_generic ctxt
+  then Context_Position.reports_generic ctxt [(pos, Markup.dynamic_fact name)]
+  else ();
+  Named_Theorems.add_thm (Named_Theorems.check (Context.proof_of ctxt)
+    (suffix "_\<phi>app" name, pos)) th ctxt
+)
 
 local open Parse Scan in
 

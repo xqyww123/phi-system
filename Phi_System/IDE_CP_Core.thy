@@ -404,8 +404,8 @@ subsection \<open>Ad-hoc Overload\<close>
 
 ML_file \<open>library/system/app_rules.ML\<close>
 
-attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_position) >> (fn bindings =>
-  Thm.declaration_attribute (fn th => fold (Phi_App_Rules.overload th) bindings))\<close>
+attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_position) >> (fn names =>
+  Thm.declaration_attribute (fn th => fold (Phi_App_Rules.overload th) names))\<close>
 
 \<phi>overloads D \<open>Destructive subtyping rules\<close>
 \<phi>overloads cast \<open>Transform the content of a container\<close>
