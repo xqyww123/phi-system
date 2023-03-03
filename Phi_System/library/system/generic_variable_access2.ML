@@ -175,6 +175,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
       (*make the new initial sequent*)
       val (ctxt, sequent') = Phi_Working_Mode.initialize_sequent_procedure arg_spec ctxt
 
+      (*insert a normalization of the abnormal spec before any exporting*)
       val (_, ctxt) = Assumption.add_assms (fn _ => fn _ =>
                 ((fn sequentx => #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx)
                                     |> Phi_Reasoners.safer_obligation_solver1

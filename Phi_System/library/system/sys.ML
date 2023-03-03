@@ -121,7 +121,10 @@ fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =
    in
      sequent |> Thm.implies_intr assm
              |> Drule.forall_intr_list [param_s, param_ret]
-             |> (fn th => th COMP_INCR rule)
+             |> (fn th => (th COMP_INCR rule)
+                       |> Conv.fconv_rule (Phi_Syntax.pending_construction_abnm_conv
+                             (Conv.repeat_conv (Conv.rewrs_conv
+                                  @{thms add_0_right[folded atomize_eq] add_0_left[folded atomize_eq]}))))
   end
 
 

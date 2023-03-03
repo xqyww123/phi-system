@@ -16,8 +16,8 @@ abbreviation LshL (infixl "LSHL" 70) where \<open>x LSHL y \<equiv> x  *  2 ^ Bi
 
 \<phi>overloads nat and int
 
-\<phi>overloads "+" and "-" and "*" and "/" and "<" and "\<le>" and ">" and "\<ge>" and "=" and "\<not>"
-  and "\<and>" and "\<or>"
+
+\<phi>overloads add and sub and mul and div and less and less_equal and greater and greater_equal
 
 declare [[
     overloaded_operator_in_synthesis \<open>(+)\<close>,
