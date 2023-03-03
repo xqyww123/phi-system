@@ -6,6 +6,9 @@ signature PHI_INHABITANCE_RULES = sig
   val add_thm: thm -> Context.generic -> Context.generic
   val del_thm: thm -> Context.generic -> Context.generic
 
+  val implications_of_inhabitance': thm list -> Proof.context -> thm -> thm list
+  val implications_of_inhabitance : Proof.context -> thm -> thm list
+
 end
 
 structure Phi_Inhabitance_Rules : PHI_INHABITANCE_RULES = struct
@@ -33,10 +36,8 @@ fun add_thm thm ctxt =
 fun del_thm thm ctxt =
   Data.map (Item_Net.remove (extract_elim_rule (Context.proof_of ctxt) thm)) ctxt
 
-
 val add = Thm.declaration_attribute add_thm;
 val del = Thm.declaration_attribute del_thm;
-
 
 val _ = Theory.setup (
     Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>inhabitance_rule\<close>, content)
@@ -47,5 +48,19 @@ val _ = Theory.setup (
     \ may saying the inhabitance of X implies that of Y) so we can infer the inhabited rule from\
     \ them."
 )
+
+(*sequent should be in shape \<open>(Inhabited X \<Longrightarrow> C) \<Longrightarrow> C\<close>.
+  returns all facts implied in the inhabitance. *)
+fun implications_of_inhabitance' erules ctxt sequent =
+  let
+    val _ = Phi_Reasoner.debug_print ctxt (fn _ =>
+                "extracting implied pure facts..." ^ Position.here \<^here>)
+    open Tactical Tactic
+  in rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt erules))) sequent
+  |> Phi_Reasoners.conv_GE_to_plain_conjunction ctxt
+  end
+
+fun implications_of_inhabitance ctxt = implications_of_inhabitance' (get ctxt) ctxt
+
 
 end

@@ -20,9 +20,7 @@ signature PHI_ENVIR = sig
   val map_state_sequent : (context_state -> context_state) -> Proof.state -> Proof.state
   val update_programming_sequent' : thm -> Proof.context -> Proof.context
 
-  val reason_programming_implication : Proof.context
-                                    -> thm list (*elimination rules*)
-                                    -> thm -> thm
+  val reason_programming_implication : Proof.context -> thm -> thm list
 
   (*The goal in a programming context*)
   val put_thesis : cterm -> Proof.context -> Proof.context
@@ -61,33 +59,21 @@ fun the_programming_sequent' ctxt =
 
 val the_state_sequent = the_programming_sequent' o Proof.context_of
 
-fun the_implication_GE i ctxt =
+fun the_implication i ctxt =
   let val L = Programming_Sequent.get ctxt
    in if i < length L
       then Lazy.force (#3 (List.nth (L,i)))
       else []
    end
 
-fun the_implication i ctxt = maps (Phi_Reasoners.conv_GE_to_plain_conjunction ctxt)
-                                  (the_implication_GE i ctxt)
-
-(* Reason pure facts that the given sequent implies. *)
-fun gen_reason_programming_implication erules (mode:Phi_Working_Mode.working_mode) ctxt sequent =
-  let
-    val inhabited_rule = #inhabited_rule mode
-    val thm = sequent RS inhabited_rule
-    val _ = Phi_Reasoner.debug_print ctxt (fn _ =>
-                "extracting implied pure facts..." ^ Position.here \<^here>)
-    open Tactical Tactic
-  in rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt erules))) thm
-  end
-
-fun reason_programming_implication ctxt erules sequent =
-  gen_reason_programming_implication erules (Phi_Working_Mode.mode1 ctxt) ctxt sequent
-
 fun reason_programming_implication' mode ctxt sequent =
-  [gen_reason_programming_implication (Phi_Inhabitance_Rules.get ctxt) mode ctxt sequent]
-  handle THM _ => []
+  let val inhabited_rule = #inhabited_rule mode
+      val thm = sequent RS inhabited_rule
+   in Phi_Inhabitance_Rules.implications_of_inhabitance ctxt thm
+  end handle THM _ => []
+
+fun reason_programming_implication ctxt =
+      reason_programming_implication' (Phi_Working_Mode.mode1 ctxt) ctxt
 
 
 fun gen_update_programming_sequent' put sequent ctxt =
@@ -143,12 +129,6 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>co
               of Context.Theory _ => []
                | Context.Proof ctxt => [the_construction ctxt]))
 
-val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_GE\<close>,
-          fn genric =>
-              case genric
-              of Context.Theory _ => []
-               | Context.Proof ctxt => the_implication_GE 0 ctxt))
-
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication\<close>,
           fn genric =>
               case genric
@@ -174,12 +154,6 @@ fun freeze_dynamic_lemmas ctxt =
    |> Proof_Context.put_thms true ("the_\<phi>lemmata",
                                    SOME (Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>))
   end
-
-val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_GE_previous\<close>,
-          fn genric =>
-              case genric
-              of Context.Theory _ => []
-               | Context.Proof ctxt => the_implication_GE 1 ctxt))
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>implication_previous\<close>,
           fn genric =>

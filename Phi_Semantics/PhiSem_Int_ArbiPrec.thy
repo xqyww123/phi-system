@@ -282,8 +282,7 @@ lemma op_sub_anat_\<phi>app[\<phi>overload sub,
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> op_sub_aint \<medium_right_bracket>
-    using nat_minus_as_int the_\<phi>(2) by presburger .
+  \<medium_left_bracket> op_sub_aint \<medium_right_bracket> using nat_minus_as_int the_\<phi> by presburger .
 
 paragraph \<open>Times\<close>
 

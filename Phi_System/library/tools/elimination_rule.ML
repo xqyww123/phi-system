@@ -23,6 +23,9 @@ fun conv_GE_to_plain_conjunction ctxt thm =
       |> Raw_Simplifier.rewrite_rule ctxt @{thms CONV_GE_Ex_def CONV_GE_phase_2}
       |> Raw_Simplifier.rewrite_rule ctxt @{thms CONV_GE_Ex_def CONV_GE_phase_3}
       |> Conjunction.elim_conjunctions
+      |> filter (fn th => case Thm.prop_of th
+                            of Const (\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>True\<close>, _) => false
+                             | _ => true)
   end
 
 fun pred_V (SOME V) V' = (V = V') | pred_V NONE _ = true

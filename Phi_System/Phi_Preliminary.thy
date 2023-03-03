@@ -232,7 +232,9 @@ declare (* disjE[\<phi>inhabitance_rule] *) (*I don't like divergence!*)
 lemma [\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
-
+lemma Membership_E_Inhabitance:
+  \<open>x \<in> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by blast
 
 
 subsection \<open>Convention of Syntax Priority\<close>

@@ -78,7 +78,7 @@ proc FIB2:
   \<medium_right_bracket> by (smt (verit, ccfv_threshold) One_nat_def Value_of_def fib.elims fib.simps(1) fib.simps(2) le_Suc_eq le_zero_eq) .
 
 thm FIB2_def
-  
+   
 proc XXXX:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>

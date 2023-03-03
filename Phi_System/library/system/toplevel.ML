@@ -365,9 +365,11 @@ fun gen_finish_proc prep_term qed spec int stat =
           |> Proof.set_facts []
           |> Proof.map_context Phi_Envir.exit_programming_environ
           |> Proof.end_block
+        val ctxt'1 = Proof.context_of stat'
+        val sequent'1 = singleton (Proof_Context.export ctxt ctxt'1) sequent
         val end_tac = basic_method (fn ctxt' => fn goal' => (
             let
-              val sequent' = singleton (Proof_Context.export ctxt ctxt') sequent
+              val sequent' = singleton (Proof_Context.export ctxt'1 ctxt') sequent'1
               val _ = Phi_Reasoner.debug_print ctxt' (fn _ =>
                   Pretty.string_of (Pretty.chunks [
                     Pretty.str "Solving the goal by the resulted sequent from the programming.",
