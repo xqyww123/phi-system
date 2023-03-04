@@ -45,6 +45,10 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs\<heavy_comma> S) TYs\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
 
+lemma [\<phi>reason 2000]:
+  \<open> \<phi>_Have_Types (\<lambda>_::unit \<phi>arg. Void) []\<close>
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
+
 lemma [\<phi>reason 1020 except \<open>\<phi>_Have_Types (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:
   \<open> \<phi>_Have_Types (\<lambda>vs. Void\<heavy_comma> R vs) TYs
 \<Longrightarrow> \<phi>_Have_Types R TYs\<close>

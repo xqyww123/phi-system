@@ -1,3 +1,5 @@
+- Corecion → ● --> →
+- Eliminational φ-LPR, necessary in Inhabitance rule generation?
 - Auto mechanism for generating implication rules using constructφ
 - Hide scaffolding/helper rules, to optimize sledgeharmer.
 

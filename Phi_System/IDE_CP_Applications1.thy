@@ -334,6 +334,7 @@ lemma [\<phi>reason 5000]:
 subsubsection \<open>To\<close>
 
 consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
+consts RAW :: \<open>('a,'b) \<phi>\<close>
 
 abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close>
 
@@ -344,6 +345,11 @@ declare [[\<phi>reason_default_pattern
 lemma to_\<phi>app:
   \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T
 \<Longrightarrow> \<^bold>d\<^bold>o X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_transform_to T
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
+  unfolding Do_def Action_Tag_def .
+
+lemma D_\<phi>app:
+  \<open> \<^bold>d\<^bold>o X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_transform_to RAW
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   unfolding Do_def Action_Tag_def .
 
@@ -360,6 +366,7 @@ lemma [\<phi>reason 10]:
 lemma [\<phi>reason 5000]:
   \<open> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> T) @action to T\<close>
   unfolding Action_Tag_def using implies_refl .
+
 
 
 subsection \<open>Case Analysis\<close>
@@ -388,7 +395,7 @@ lemma [\<phi>reason 1000]:
   unfolding Argument_def Action_Tag_def using \<phi>CASE_IMP .
 
 
-subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type\<close>
+subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type by Definition\<close>
 
 consts \<A>_construct\<phi> :: \<open>'a set \<Rightarrow> action\<close>
        \<A>_destruct\<phi>  :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
@@ -406,15 +413,30 @@ lemma destruct\<phi>_\<phi>app:
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D \<a>\<n>\<d> P\<close>
   unfolding Action_Tag_def .
 
-lemma construct\<phi>_\<phi>app:
-  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (x \<Ztypecolon> T)
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
-\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (if single then X else S' * X) \<a>\<n>\<d> P @action ToSA
-\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (if single then x \<Ztypecolon> T else S' * (x \<Ztypecolon> T)) \<a>\<n>\<d> P \<close>
-  unfolding Action_Tag_def Simplify_def \<phi>Type_def
+consts \<A>_construct\<phi>_ToSA :: \<open>'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> action\<close>
+
+lemma [\<phi>reason 1100 for \<open>?S \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_construct\<phi>_ToSA _ _\<close>]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P @action ToSA
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi>_ToSA x T\<close>
+  unfolding Action_Tag_def Do_def
+  using implies_trans by fastforce
+
+lemma [\<phi>reason 1200 for \<open>(?S::'a::sep_magma set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_construct\<phi>_ToSA _ _\<close>]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (if single then X else X \<r>\<e>\<m>\<a>\<i>\<n>\<s> S') \<a>\<n>\<d> P @action ToSA
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (if single then x \<Ztypecolon> T else x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S') \<a>\<n>\<d> P @action \<A>_construct\<phi>_ToSA x T\<close>
+  for S :: \<open>'a::sep_magma set\<close>
+  unfolding Action_Tag_def Simplify_def \<phi>Type_def Do_def
   apply (cases single; simp)
   using implies_trans apply fastforce
   using implies_left_prod implies_trans by fastforce
+
+lemma construct\<phi>_\<phi>app:
+  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (x \<Ztypecolon> T)
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P @action \<A>_construct\<phi>_ToSA x T
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P \<close>
+  unfolding Action_Tag_def Do_def .
 
 consts mode_\<phi>defs :: \<open>action\<close>
 

@@ -77,18 +77,31 @@ lemma UNIV_subty [\<phi>reason 1000]:
 
 subsection \<open>Stepwise Abstraction\<close>
 
-definition \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 75)
-  where \<open>\<phi>Composition T U = (\<lambda>x. (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> U x))\<close>
+definition \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
+  where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U))\<close>
 
-lemma \<phi>Composition_expn[\<phi>expns]:
+lemma [\<phi>reason 1200]:
+  \<open>x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U) @action to RAW\<close>
+  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200]:
+  \<open> y \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<Zcomp> U \<a>\<n>\<d> P\<close>
+  \<medium_left_bracket> premises Y[unfolded Imply_def Identity_expn, simplified, useful]
+    construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket>. .
+
+lemma \<phi>Composition_expn:
   \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>
   unfolding \<phi>Composition_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma \<phi>Composition_inhabited[elim,\<phi>inhabitance_rule]:
   \<open>Inhabited (x \<Ztypecolon> T \<Zcomp> U) \<Longrightarrow> (\<And>y. Inhabited (x \<Ztypecolon> U) \<Longrightarrow> Inhabited (y \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns) blast
+  unfolding Inhabited_def by (simp add: \<phi>expns \<phi>Composition_expn) blast
 
-
+lemma [\<phi>reason 1200 for \<open>(_ \<Ztypecolon> _ \<Zcomp> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (_ \<Ztypecolon> _ \<Zcomp> _) \<a>\<n>\<d> _\<close>]:
+  \<open> x1 \<Ztypecolon> U1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> x2 \<Ztypecolon> U2 \<a>\<n>\<d> P
+\<Longrightarrow> (x1 \<Ztypecolon> T \<Zcomp> U1) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x2 \<Ztypecolon> T \<Zcomp> U2) \<a>\<n>\<d> P\<close>
+  unfolding \<phi>Composition_expn Imply_def by blast
 
 
 section \<open>Logical Connectives\<close>
@@ -210,12 +223,17 @@ lemma \<phi>None_itself_is_one[simp]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 
-subsubsection \<open>Action Rules\<close>
+subsubsection \<open>Actions\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<circle> @action to Target \<close>
   unfolding Action_Tag_def using implies_refl .
 
+subsubsection \<open>Rules\<close>
+
+lemma [\<phi>reason 3000]:
+  \<open>\<r>Clean (() \<Ztypecolon> \<phi>None)\<close>
+  unfolding \<r>Clean_def by simp
 
 (*
 lemma [\<phi>reason 1500
@@ -271,58 +289,23 @@ lemma [\<phi>reason for \<open>(?x,?y) \<Ztypecolon> ?N \<^emph> ?M \<s>\<h>\<i>
   unfolding View_Shift_def \<phi>Prod_expn'
   by (smt (verit, best) mult.commute mult.left_commute)  *)
 
-paragraph \<open>Implication\<close>
-
-lemma \<phi>Prod_transformation (*[\<phi>reason 1000]*) :
+(*do not add it to \<phi>-LPR because we have stronger reasoning mechanisms*)
+lemma \<phi>Prod_transformation:
   " x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> N' \<a>\<n>\<d> P1
 \<Longrightarrow> y \<Ztypecolon> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> M' \<a>\<n>\<d> P2
 \<Longrightarrow> (x,y) \<Ztypecolon> N \<^emph> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x',y') \<Ztypecolon> N' \<^emph> M' \<a>\<n>\<d> P1 \<and> P2"
   unfolding Imply_def by (simp add: \<phi>expns) blast
 
-(* lemma [\<phi>reason 1200]:
-  \<open> (y \<Ztypecolon> Y) * (x \<Ztypecolon> X) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z \<a>\<n>\<d> P
-\<Longrightarrow> (x,y) \<Ztypecolon> (X \<^emph> Y) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z \<a>\<n>\<d> P\<close>
-  unfolding \<phi>Prod_split .
-
 lemma [\<phi>reason 1200]:
-  \<open> A * (y \<Ztypecolon> Y) * (x \<Ztypecolon> X) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z \<a>\<n>\<d> P
-\<Longrightarrow> A * ((x,y) \<Ztypecolon> X \<^emph> Y) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z \<a>\<n>\<d> P\<close>
-  for A :: \<open>'a::sep_semigroup set\<close>
-  unfolding \<phi>Prod_split
-  by (simp add: mult.assoc)
+  \<open> \<r>Clean (x \<Ztypecolon> T)
+\<Longrightarrow> \<r>Clean (y \<Ztypecolon> U)
+\<Longrightarrow> \<r>Clean ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
+  for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
+  unfolding \<r>Clean_def \<phi>Prod_expn' Imply_def
+  apply (simp add: \<phi>expns)
+  using mult_1_class.mult_1_left by blast
 
-lemma [\<phi>reason 1200]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) * (y \<Ztypecolon> Y) \<a>\<n>\<d> P
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y,z) \<Ztypecolon> (Y \<^emph> Z) \<a>\<n>\<d> P\<close>
-  unfolding \<phi>Prod_split .
-
-lemma [\<phi>reason 1200]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> A * (z \<Ztypecolon> Z) * (y \<Ztypecolon> Y) \<a>\<n>\<d> P
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> A * ((y,z) \<Ztypecolon> Y \<^emph> Z) \<a>\<n>\<d> P\<close>
-  for A :: \<open>'a::sep_semigroup set\<close>
-  unfolding \<phi>Prod_split
-  by (simp add: mult.assoc)
-
-lemma [\<phi>reason 1200]:
-  \<open> A * B * C \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z \<a>\<n>\<d> P
-\<Longrightarrow> A * (B * C) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z \<a>\<n>\<d> P\<close>
-  for A :: \<open>'a::sep_semigroup set\<close>
-  by (simp add: mult.assoc)
-
-lemma [\<phi>reason 1200]:
-  \<open> Z \<i>\<m>\<p>\<l>\<i>\<e>\<s> A * B * C \<a>\<n>\<d> P
-\<Longrightarrow> Z \<i>\<m>\<p>\<l>\<i>\<e>\<s> A * (B * C) \<a>\<n>\<d> P\<close>
-  for A :: \<open>'a::sep_semigroup set\<close>
-  by (simp add: mult.assoc)*)
-
-(* lemma [\<phi>reason 50]:
-  \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P
-\<Longrightarrow> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> Q
-\<Longrightarrow> A * B \<i>\<m>\<p>\<l>\<i>\<e>\<s> X * Y \<a>\<n>\<d> P \<and> Q\<close>
-  for A :: \<open>'a::sep_semigroup set\<close>
-  by (meson implies_left_prod implies_right_prod implies_trans) *)
-
-paragraph \<open>Action\<close>
+subsubsection \<open>Action\<close>
 
 lemma [\<phi>reason 1200]:
   \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P @action \<A>_structural act
@@ -521,7 +504,7 @@ lemma \<phi>Optional_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> T ?\<^sub>\<phi> C) \<Longrightarrow> ((C \<Longrightarrow> Inhabited (x \<Ztypecolon> T)) \<Longrightarrow> Z) \<Longrightarrow> Z\<close>
   unfolding Inhabited_def by (cases C; clarsimp simp add: \<phi>expns)
 
-paragraph \<open>Conversion\<close>
+subsubsection \<open>Conversion\<close>
 
 lemma [simp]:
   \<open>(x \<Ztypecolon> T ?\<^sub>\<phi> True) = (x \<Ztypecolon> T)\<close>
@@ -531,7 +514,11 @@ lemma [simp]:
   \<open>(x \<Ztypecolon> T ?\<^sub>\<phi> False) = 1\<close>
   unfolding set_eq_iff by (simp add: \<phi>Optional_expn)
 
+subsubsection \<open>Rules\<close>
 
+lemma [\<phi>reason 3000 for \<open>\<r>Clean (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C)\<close>]:
+  \<open> \<r>Clean (x \<Ztypecolon> T ?\<^sub>\<phi> False) \<close>
+  unfolding \<r>Clean_def by simp
 
 
 
@@ -646,6 +633,14 @@ lemma [simp]:
   \<open>(k \<^bold>\<rightarrow> (T \<phi>\<s>\<u>\<b>\<j> P)) = (k \<^bold>\<rightarrow> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean (x \<Ztypecolon> T)
+\<Longrightarrow> \<r>Clean (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
+  unfolding \<r>Clean_def Imply_def
+  apply (clarsimp simp add: \<phi>expns)
+  by (metis fun_1upd1)
+
+
 
 subsubsection \<open>By List of Keys\<close>
 
@@ -708,6 +703,14 @@ simproc_setup \<phi>MapAt_L_simp_cong ("x \<Ztypecolon> k \<^bold>\<rightarrow>\
 lemma \<phi>MapAt_L_At:
   \<open>(ks \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) = (ks \<^bold>\<rightarrow> T)\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; metis append_self_conv push_map_unit)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean (x \<Ztypecolon> T)
+\<Longrightarrow> \<r>Clean (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T)\<close>
+  unfolding \<r>Clean_def Imply_def
+  apply (simp add: \<phi>expns)
+  using push_map_1 by blast
+
 
 
 paragraph \<open>Implication \& Action Rules\<close>
@@ -1058,7 +1061,7 @@ lemma \<phi>Share_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> n \<Znrres> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
-paragraph \<open>Auxiliary Tag\<close>
+subparagraph \<open>Auxiliary Tag\<close>
 
 definition half :: \<open>rat \<Rightarrow> rat\<close> where [iff]: \<open>half x = x\<close>
 
@@ -1082,7 +1085,7 @@ text \<open>Many read-only applicable rules require only non-zero permissions.
     \<^schematic_prop>\<open> (x \<Ztypecolon> half ?n \<Znrres> T) * (x \<Ztypecolon> half ?m \<Znrres> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Z\<close>.
 \<close>
 
-subparagraph \<open>Structural Conversions\<close>
+paragraph \<open>Structural Conversions\<close>
 
 lemma \<phi>Share_1[simp]:
   \<open> (1 \<Znrres> T) = T \<close>
@@ -1201,6 +1204,12 @@ lemma [\<phi>reason 1000]:
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean (x \<Ztypecolon> T)
+\<Longrightarrow> \<r>Clean (x \<Ztypecolon> n \<Znrres> T)\<close>
+  for T :: \<open>('a::share_semimodule_mult, 'b) \<phi>\<close>
+  unfolding \<r>Clean_def Imply_def apply (simp add: \<phi>expns)
+  using share_right_one by blast
 
 
 paragraph \<open>Action Rules\<close>
