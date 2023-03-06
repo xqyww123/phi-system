@@ -771,5 +771,28 @@ definition StructuralTag ("<Structural> _" [10] 9) where "StructuralTag \<equiv>
 lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def . *)
 
 
+section \<open>Programming Methods\<close>
+
+subsection \<open>Functional\<close>
+
+term \<open>\<^bold>d\<^bold>o X\<close>
+
+lemma is_functional_imp'':
+  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> is_functional S'
+\<Longrightarrow> is_functional S\<close>
+  unfolding Imply_def is_functional_def
+  by blast
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method (Trueprop (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> Embedded_Reasoning (is_functional S'))) M D R F
+\<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show\<close> S \<open>is functional\<close>
+      \<open>Now you entered the programming mode and you need to transform the specification to\<close>
+      \<open>someone which is functional, so that we can verify your claim.\<close>)
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (is_functional S)) M D R F\<close>
+  unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
+            Embedded_Reasoning_def
+  by (rule is_functional_imp''[where S'=S']; simp)
+
+
 
 end

@@ -6,7 +6,7 @@ text \<open>In this part, we build simple applications based on IDE-CP directly,
 theory IDE_CP_Applications1
   imports IDE_CP_Core
   keywords "val" :: quasi_command
-  abbrevs "<vals>" = "\<v>\<a>\<l>\<^bold>s"
+  abbrevs "<vals>" = "\<v>\<a>\<l>s"
 begin
 
 section \<open>Build Elements of Actions\<close>
@@ -489,6 +489,18 @@ consts action_simplify :: \<open>action\<close>
 
 lemma simplify_\<phi>app:
   \<open>PROP Call_Action (\<A>_transformation (\<A>_simple_MTF ))\<close> *)
+
+subsection \<open>Transformation\<close>
+
+consts find_source_object :: action
+
+declare [[\<phi>reason_default_pattern
+      \<open>_ \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> ?U \<a>\<n>\<d> _ find_source_object\<close> \<Rightarrow> \<open>_ \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> ?U \<a>\<n>\<d> _ find_source_object\<close> (100) ]]
+
+lemma [\<phi>reason 1]:
+  \<open> FAIL TEXT(\<open>cannot find a source object\<close> x \<open>enabling transformation\<close> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<a>\<n>\<d> P))
+\<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action find_source_object\<close>
+  by simp
 
 
 end

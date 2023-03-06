@@ -31,7 +31,7 @@ lemma Identity_functional[\<phi>reason 1000]:
   \<open>is_singleton (x \<Ztypecolon> Identity)\<close>
   by (rule is_singletonI''; simp add: \<phi>expns)
 
-lemma Identity_E[\<phi>reason 100]:
+lemma Identity_E[\<phi>reason 10]:
   \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T\<close>
   unfolding Imply_def Premise_def by (simp add: \<phi>expns)
 
@@ -40,6 +40,16 @@ lemma [simp]:
 \<Longrightarrow> SemTyp_Of (v \<Ztypecolon> Identity) = TY\<close>
   unfolding \<phi>Type_def Identity_def
   by (simp add: \<phi>SemType_def)
+
+lemma [\<phi>reason 1200]:
+  \<open>is_functional (v \<Ztypecolon> Identity)\<close>
+  by (clarsimp simp add: Identity_expn)
+
+lemma satisfication_encoding:
+  \<open> (x \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<a>\<n>\<d> P) \<longleftrightarrow> x \<in> (y \<Ztypecolon> T) \<and> P\<close>
+  unfolding Imply_def Identity_expn by blast
+
+
 
 subsection \<open>Any\<close>
 
@@ -90,6 +100,13 @@ lemma [\<phi>reason 1200]:
   \<medium_left_bracket> premises Y[unfolded Imply_def Identity_expn, simplified, useful]
     construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket>. .
 
+lemma [\<phi>reason 1200]:
+  \<open> is_functional (x \<Ztypecolon> U)
+\<Longrightarrow> y \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<a>\<n>\<d> P\<close>
+  \<medium_left_bracket> premises [unfolded is_functional_def, useful] and [unfolded satisfication_encoding, useful]
+    D \<medium_right_bracket>. .
+
 lemma \<phi>Composition_expn:
   \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>
   unfolding \<phi>Composition_def \<phi>Type_def by (simp add: \<phi>expns)
@@ -125,6 +142,11 @@ lemma [\<phi>reason 1000]:
   \<open> Rewrite_into_\<phi>Type S (x \<Ztypecolon> T)
 \<Longrightarrow> Rewrite_into_\<phi>Type (S \<s>\<u>\<b>\<j> P) (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   unfolding Rewrite_into_\<phi>Type_def by (simp add: SubjectionTY_expn)
+
+lemma [\<phi>reason 1200]:
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> is_functional (x \<Ztypecolon> T))
+\<Longrightarrow> is_functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  \<medium_left_bracket> premises [\<phi>reason add] ;; \<medium_right_bracket>. .
 
 subsection \<open>Existential Quantification as a Type\<close>
 
@@ -217,11 +239,13 @@ lemma \<phi>None_expn[\<phi>expns]:
 lemma \<phi>None_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
-
 lemma \<phi>None_itself_is_one[simp]:
   \<open>(() \<Ztypecolon> \<phi>None) = 1\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
+lemma [\<phi>reason 1200]:
+  \<open>() \<Ztypecolon> \<phi>None \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<Ztypecolon> Identity\<close>
+  unfolding Imply_def \<phi>None_expn Identity_expn by simp
 
 subsubsection \<open>Actions\<close>
 
@@ -229,11 +253,18 @@ lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<circle> @action to Target \<close>
   unfolding Action_Tag_def using implies_refl .
 
+lemma [\<phi>reason 1200]:
+  \<open>() \<Ztypecolon> \<phi>None \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<Ztypecolon> Identity @action to Identity\<close> \<medium_left_bracket> \<medium_right_bracket>. .
+
 subsubsection \<open>Rules\<close>
 
 lemma [\<phi>reason 3000]:
   \<open>\<r>Clean (() \<Ztypecolon> \<phi>None)\<close>
   unfolding \<r>Clean_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>is_functional (() \<Ztypecolon> \<phi>None)\<close>
+  \<medium_left_bracket> to Identity \<medium_right_bracket>. .
 
 (*
 lemma [\<phi>reason 1500
@@ -304,6 +335,14 @@ lemma [\<phi>reason 1200]:
   unfolding \<r>Clean_def \<phi>Prod_expn' Imply_def
   apply (simp add: \<phi>expns)
   using mult_1_class.mult_1_left by blast
+
+lemma [\<phi>reason 1200]:
+  \<open> is_functional (x \<Ztypecolon> T)
+\<Longrightarrow> is_functional (y \<Ztypecolon> U)
+\<Longrightarrow> is_functional ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
+  unfolding is_functional_def set_eq_iff
+  by (simp add: \<phi>expns, blast)
+
 
 subsubsection \<open>Action\<close>
 
@@ -640,6 +679,16 @@ lemma [\<phi>reason 1200]:
   apply (clarsimp simp add: \<phi>expns)
   by (metis fun_1upd1)
 
+lemma [\<phi>reason 1200]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> k = k'
+\<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> T \<a>\<n>\<d> P
+\<Longrightarrow> 1(k := v) \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> k' \<^bold>\<rightarrow> T \<a>\<n>\<d> P\<close>
+  by (clarsimp simp add: \<phi>expns Imply_def, blast)
+
+lemma [\<phi>reason 1200]:
+  \<open> is_functional (x \<Ztypecolon> T)
+\<Longrightarrow> is_functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
+  by (clarsimp simp add: \<phi>expns is_functional_def, blast)
 
 
 subsubsection \<open>By List of Keys\<close>
@@ -1348,6 +1397,16 @@ lemma \<phi>Some_simp_cong[folded atomize_eq]:
 simproc_setup \<phi>Some_simp_cong ("x \<Ztypecolon> \<black_circle> T") = \<open>
   K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Some_simp_cong} ctxt)
 \<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> T \<a>\<n>\<d> P
+\<Longrightarrow> Some v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> \<black_circle> T \<a>\<n>\<d> P\<close>
+  by (clarsimp simp add: \<phi>expns Imply_def)
+
+lemma [\<phi>reason 1200]:
+  \<open> is_functional (x \<Ztypecolon> T)
+\<Longrightarrow> is_functional (x \<Ztypecolon> \<black_circle> T)\<close>
+  by (clarsimp simp add: \<phi>expns is_functional_def)
 
 
 subsubsection \<open>\<phi>Sep_Disj\<close>

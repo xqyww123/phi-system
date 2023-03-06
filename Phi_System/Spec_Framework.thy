@@ -126,13 +126,37 @@ declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close
 
 subsection \<open>Functional\<close>
 
+definition is_functional :: \<open>'a set \<Rightarrow> bool\<close>
+  where \<open>is_functional S \<longleftrightarrow> (\<forall>x y. x \<in> S \<and> y \<in> S \<longrightarrow> x = y)\<close>
+
+declare [[\<phi>reason_default_pattern \<open>is_functional ?S\<close> \<Rightarrow> \<open>is_functional ?S\<close> (100)]]
+
+lemma is_functional_alt:
+  \<open>is_functional S \<longleftrightarrow> (S = {} \<or> (\<exists>x. S = {x}))\<close>
+  unfolding is_functional_def by blast
+
+lemma is_functional_I[intro!]:
+  \<open> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
+\<Longrightarrow> is_functional A \<close>
+  unfolding is_functional_def by blast
+
+lemma is_functional_imp:
+  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S'
+\<Longrightarrow> is_functional S'
+\<Longrightarrow> is_functional S\<close>
+  unfolding Imply_def is_functional_def
+  by blast
+
 lemma is_singletonI'':
-  \<open> \<exists>p. p \<in> A \<comment> \<open>TODO: remove this\<close>
+  \<open> \<exists>p. p \<in> A \<comment> \<open>TODO: model this\<close>
 \<Longrightarrow> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
 \<Longrightarrow> is_singleton A\<close>
   by (metis equals0D is_singletonI')
 
-
+lemma [\<phi>reason 1]:
+  \<open> FAIL TEXT(\<open>Fail to prove\<close> S \<open>is functional\<close>)
+\<Longrightarrow> is_functional S\<close>
+  by blast
 
 section \<open>Specification of Monadic States\<close>
 

@@ -269,6 +269,7 @@ proof -
     using PP[OF D R F, THEN rule] .
 qed
 
+subsubsection \<open>Finale\<close>
 
 ML_file \<open>library/additions/value_properties.ML\<close>
 
