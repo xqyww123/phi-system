@@ -131,7 +131,7 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
 \<close>
 
-\<phi>reasoner_ML Do 1000 (\<open>\<^bold>d\<^bold>o ?P\<close>) = \<open>
+\<phi>reasoner_ML Do 1200 (\<open>\<^bold>d\<^bold>o (PROP ?P)\<close>) = \<open>
   Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
 \<close>
 

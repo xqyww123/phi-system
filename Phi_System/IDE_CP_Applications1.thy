@@ -415,19 +415,26 @@ lemma destruct\<phi>_\<phi>app:
 
 consts \<A>_construct\<phi>_ToSA :: \<open>'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> action\<close>
 
+lemma [\<phi>reason 1 for \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_construct\<phi>_ToSA _ _\<close>]:
+  \<open> ERROR TEXT(\<open>Fail to construct\<close> (x \<Ztypecolon> T) \<open>from definition\<close>)
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P @action \<A>_construct\<phi>_ToSA x T\<close>
+  by simp
+
 lemma [\<phi>reason 1100 for \<open>?S \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_construct\<phi>_ToSA _ _\<close>]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
-\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P @action ToSA
+  \<open> ((X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
+&&&   S \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P @action ToSA))
+||| ERROR TEXT(\<open>Fail to construct\<close> (x \<Ztypecolon> T) \<open>from definition\<close>)
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi>_ToSA x T\<close>
-  unfolding Action_Tag_def Do_def
+  unfolding Action_Tag_def Do_def atomize_conj atomize_Branch
   using implies_trans by fastforce
 
 lemma [\<phi>reason 1200 for \<open>(?S::'a::sep_magma set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_construct\<phi>_ToSA _ _\<close>]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
-\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (if single then X else X \<r>\<e>\<m>\<a>\<i>\<n>\<s> S') \<a>\<n>\<d> P @action ToSA
+  \<open> (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
+&&&  S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (if single then X else X \<r>\<e>\<m>\<a>\<i>\<n>\<s> S') \<a>\<n>\<d> P @action ToSA)
+||| ERROR TEXT(\<open>Fail to construct\<close> (x \<Ztypecolon> T) \<open>from definition\<close>)
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (if single then x \<Ztypecolon> T else x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S') \<a>\<n>\<d> P @action \<A>_construct\<phi>_ToSA x T\<close>
   for S :: \<open>'a::sep_magma set\<close>
-  unfolding Action_Tag_def Simplify_def \<phi>Type_def Do_def
+  unfolding Action_Tag_def Simplify_def \<phi>Type_def Do_def atomize_conj atomize_Branch
   apply (cases single; simp)
   using implies_trans apply fastforce
   using implies_left_prod implies_trans by fastforce

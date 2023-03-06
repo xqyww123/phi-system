@@ -49,6 +49,39 @@ lemma satisfication_encoding:
   \<open> (x \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<a>\<n>\<d> P) \<longleftrightarrow> x \<in> (y \<Ztypecolon> T) \<and> P\<close>
   unfolding Imply_def Identity_expn by blast
 
+lemma [\<phi>reason 1200]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = v'
+\<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> {v'}\<close>
+  unfolding Imply_def Identity_expn Premise_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = v'
+\<Longrightarrow> {v'} \<i>\<m>\<p>\<l>\<i>\<e>\<s> v \<Ztypecolon> Identity\<close>
+  unfolding Imply_def Identity_expn Premise_def by simp
+
+
+subsection \<open>Func\<close>
+
+definition \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
+  where [\<phi>defs]: \<open>\<phi>Fun f x = { f x }\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x
+\<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>Fun f\<close>
+  \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<phi>Fun f\<close> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y
+\<Longrightarrow> x \<Ztypecolon> \<phi>Fun f \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Identity\<close>
+  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y
+\<Longrightarrow> x \<Ztypecolon> \<phi>Fun f \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Identity @action to Identity\<close> \<medium_left_bracket> \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200]:
+  \<open>is_functional (x \<Ztypecolon> \<phi>Fun f)\<close>
+  \<medium_left_bracket> to Identity \<medium_right_bracket>. .
 
 
 subsection \<open>Any\<close>
