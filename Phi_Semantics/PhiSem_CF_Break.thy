@@ -30,7 +30,7 @@ resource_space \<phi>CF_break_res = \<phi>empty_res +
 debt_axiomatization R_brk_frame :: \<open>R_brk_frame resource_entry\<close>
   where \<phi>CF_break_res_ax: \<open>\<phi>CF_break_res R_brk_frame\<close>
 
-interpretation \<phi>CF_break_res R_brk_frame using \<phi>CF_break_res_ax .
+interpretation \<phi>CF_break_res R_brk_frame \<open>TYPE(RES_N)\<close> \<open>TYPE(RES)\<close> using \<phi>CF_break_res_ax .
 
 hide_fact \<phi>CF_break_res_ax
 

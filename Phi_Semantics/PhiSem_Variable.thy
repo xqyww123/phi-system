@@ -37,7 +37,7 @@ resource_space \<phi>min_res = \<phi>empty_res +
 debt_axiomatization R_var :: \<open>R_var resource_entry\<close>
   where \<phi>min_res_ax: \<open>\<phi>min_res R_var\<close>
 
-interpretation \<phi>min_res R_var using \<phi>min_res_ax .
+interpretation \<phi>min_res R_var \<open>TYPE(RES_N)\<close> \<open>TYPE(RES)\<close> using \<phi>min_res_ax .
 
 hide_fact \<phi>min_res_ax \<phi>min_res_axioms \<phi>min_res_fields_axioms
 
