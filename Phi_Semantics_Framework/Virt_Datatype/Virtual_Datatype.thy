@@ -17,7 +17,7 @@ datatype ('CONS_NAME,'REP,'ABS) Field =
 
 hide_const (open) name project inject
 
-definition lift_Field :: \<open>('ABS \<Rightarrow> 'ABS')
+(* definition lift_Field :: \<open>('ABS \<Rightarrow> 'ABS')
                        \<Rightarrow> ('ABS' \<Rightarrow> 'ABS)
                        \<Rightarrow> ('CONS_NAME,'REP,'ABS) Field
                        \<Rightarrow> ('CONS_NAME,'REP,'ABS') Field\<close>
@@ -27,6 +27,7 @@ definition lift_Field :: \<open>('ABS \<Rightarrow> 'ABS')
 lemma lift_Field[simp]:
   \<open>lift_Field f g (Field name projector injector) = Field name (f o projector) (injector o g)\<close>
   unfolding lift_Field_def by simp
+*)
 
 locale VDT_field =
   fixes field :: "('CONS_NAME,'value,'a) Field"
@@ -55,10 +56,10 @@ lemma mk_in_domain[simp,intro]: "mk x \<in> domain" using domain_def by blast
 
 end
 
-lemma VDT_field_lift:
+(*lemma VDT_field_lift:
   \<open>(\<And>x. f (g x) = x) \<Longrightarrow> VDT_field field \<Longrightarrow> VDT_field (lift_Field f g field)\<close>
   unfolding VDT_field_def
-  by (cases field; simp)
+  by (cases field; simp)*)
 
 
 locale field_entry =

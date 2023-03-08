@@ -1,6 +1,7 @@
 theory Algebras
   imports Main HOL.Rat
     "Phi_Statespace.StateFun" "Phi_Document.Base" "HOL-Library.Product_Plus"
+    "HOL-Library.Finite_Map"
   abbrevs "!!" = "!!"
 begin
 
@@ -117,6 +118,10 @@ subsubsection \<open>Unital Separation\<close>
 class sep_magma_1 = sep_magma + mult_1 +
   assumes sep_magma_1_left  [simp]: "x ## 1"
   assumes sep_magma_1_right [simp]: "1 ## x"
+
+class sep_magma_0 = sep_magma_1 + mult_zero + zero_neq_one +
+  assumes sep_magma_0_left  [simp]: "x ## 0 \<longleftrightarrow> x = 1"
+  assumes sep_magma_0_right [simp]: "0 ## x \<longleftrightarrow> x = 1"
 
 class positive_sep_magma_1 = sep_magma_1 + positive_sep_magma
 begin
@@ -445,6 +450,10 @@ locale homo_sep_disj =
 locale homo_sep_disj_semi =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
   assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> (* TODO: improve this to be a \<longleftrightarrow> ! *)
+
+locale homo_sep_disj_semi' =
+  fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
+  assumes sep_disj_homo_semi[simp]: \<open>\<psi> a ## \<psi> b \<longrightarrow> a ## b\<close>
 
 locale homo_join_sub =
   fixes \<psi> :: \<open>'a::sep_ab_semigroup \<Rightarrow> 'b::sep_ab_semigroup\<close>
@@ -802,6 +811,31 @@ instance ..
 end
 
 
+subsection \<open>Coproduct\<close>
+
+instantiation sum :: (times, times) times begin
+definition times_sum :: \<open>'a + 'b \<Rightarrow> 'a + 'b \<Rightarrow> 'a + 'b\<close>
+  where "times_sum = (\<lambda>x y. case x of Inl x1 \<Rightarrow> (case y of Inl y1 \<Rightarrow> Inl (x1 * y1))
+                                    | Inr x2 \<Rightarrow> (case y of Inr y2 \<Rightarrow> Inr (x2 * y2)))"
+lemma times_sum:
+  \<open>Inl x1 * Inl y1 = Inl (x1 * y1)\<close>
+  \<open>Inr x2 * Inr y2 = Inr (x2 * y2)\<close>
+  unfolding times_sum_def by simp_all
+instance ..
+end
+
+instantiation sum :: (plus, plus) plus begin
+definition plus_sum :: \<open>'a + 'b \<Rightarrow> 'a + 'b \<Rightarrow> 'a + 'b\<close>
+  where "plus_sum = (\<lambda>x y. case x of Inl x1 \<Rightarrow> (case y of Inl y1 \<Rightarrow> Inl (x1 + y1))
+                                   | Inr x2 \<Rightarrow> (case y of Inr y2 \<Rightarrow> Inr (x2 + y2)))"
+lemma plus_sum[simp]:
+  \<open>Inl x1 + Inl y1 = Inl (x1 + y1)\<close>
+  \<open>Inr x2 + Inr y2 = Inr (x2 + y2)\<close>
+  unfolding plus_sum_def by simp_all
+instance ..
+end
+
+
 
 
 subsection \<open>List\<close>
@@ -1135,6 +1169,50 @@ attribute_setup ML_attr = \<open>Scan.peek (fn ctxt => Parse.ML_source >> (fn sr
   |> ML_Attribute.get |> the
 ))\<close>
  *)
+
+subsection \<open>Finite Map\<close>
+
+instantiation fmap :: (type,times) times begin
+context includes fmap.lifting begin
+lift_definition times_fmap :: \<open>('a, 'b) fmap \<Rightarrow> ('a, 'b) fmap \<Rightarrow> ('a, 'b) fmap\<close> is "(\<lambda>f g x. (f x::'b option) * g x)"
+  by (simp add: dom_def)
+instance ..
+end
+end
+
+context includes fmap.lifting begin
+lemma times_fmlookup:
+  \<open>fmlookup (f * g) x = fmlookup f x * fmlookup g x\<close> by (transfer; simp)
+end
+
+instantiation "fmap" :: (type,one) one begin
+context includes fmap.lifting begin
+lift_definition one_fmap :: \<open>('a, 'b) fmap\<close> is "(\<lambda>(x::'a). (1::'b option))" by simp
+instance ..
+end
+end
+
+lemma one_fmap[simp]: "fmlookup 1 x = 1" including fmap.lifting by (transfer; simp)
+
+instance "fmap" :: (type,mult_1) mult_1
+  including fmap.lifting
+  by (standard; transfer; simp)
+
+instantiation fmap :: (type,sep_disj) sep_disj begin
+context includes fmap.lifting begin
+lift_definition sep_disj_fmap :: \<open>('a, 'b) fmap \<Rightarrow> ('a, 'b) fmap \<Rightarrow> bool\<close>
+  is "\<lambda>m1 m2. (\<forall>x. m1 x ## m2 x)" .
+instance ..
+end
+end
+
+instance "fmap" :: (type,sep_magma) sep_magma ..
+
+instance "fmap" :: (type,sep_magma_1) sep_magma_1
+  including fmap.lifting
+  by (standard; transfer; simp)
+  
+
 
 subsection \<open>Unit\<close>
 

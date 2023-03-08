@@ -8,6 +8,9 @@ begin
 
 section \<open>Specification of Value\<close>
 
+type_synonym rassn = \<open>resource set\<close>
+type_synonym vassn = \<open>VAL set\<close>
+
 subsection \<open>Primitive \<phi>-Types\<close>
 
 subsubsection \<open>Value\<close>

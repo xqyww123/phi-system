@@ -118,27 +118,31 @@ unspecified_type RES
 unspecified_type RES_N
 type_synonym resource = \<open>RES_N \<Rightarrow> RES\<close>
 
-debt_axiomatization RES_sort: \<open>OFCLASS(RES, sep_algebra_class)\<close>
+setup \<open>Sign.mandatory_path "RES"\<close>
 
-instance RES :: sep_algebra using RES_sort .
+consts DOMAIN :: \<open>RES_N \<Rightarrow> RES sep_closed_set\<close>
 
-interpretation \<phi>empty_res \<open>TYPE(RES_N)\<close> \<open>TYPE(RES)\<close> by standard simp
+debt_axiomatization sort: \<open>OFCLASS(RES, sep_algebra_class)\<close>
 
-debt_axiomatization Resource_Validator :: \<open>RES_N \<Rightarrow> RES set\<close>
-  where Resource_Validator_mult_homo:
-      \<open>\<And>N. A N ## B N \<Longrightarrow> A N * B N \<in> Resource_Validator N \<longleftrightarrow> A N \<in> Resource_Validator N \<and> B N \<in> Resource_Validator N\<close>
-  and   Resource_Validator_1: \<open>\<And>N. 1 \<in> Resource_Validator N\<close>
+setup \<open>Sign.parent_path\<close>
 
-definition "Valid_Resource = {R. (\<forall>N. R N \<in> Resource_Validator N)}"
+instance RES :: sep_algebra using RES.sort .
+
+interpretation RES: \<phi>empty_res RES.DOMAIN \<open>TYPE(RES_N)\<close> \<open>TYPE(RES)\<close> by standard simp
+
+term RES.SPACE
+
+(*
+definition "Valid_Resource = {R. (\<forall>N. R N \<in>\<^sub>S Resource_Validator N)}"
 
 lemma Valid_Resource_1[iff]:
   \<open>1 \<in> Valid_Resource\<close>
-  unfolding Valid_Resource_def by (simp add: Resource_Validator_1)
+  unfolding Valid_Resource_def by simp
 
 lemma Valid_Resource_mult_homo:
   \<open>A ## B \<Longrightarrow> A * B \<in> Valid_Resource \<longleftrightarrow> A \<in> Valid_Resource \<and> B \<in> Valid_Resource\<close>
   unfolding Valid_Resource_def
-  by (simp add: times_fun sep_disj_fun_def Resource_Validator_mult_homo; blast)
+  by (simp add: times_fun sep_disj_fun_def; blast)*)
 
 
 subsection \<open>Abnormality\<close>
@@ -187,19 +191,25 @@ type_synonym  assn = \<open>fiction set\<close>
 type_synonym rassn = \<open>resource set\<close>
 type_synonym vassn = \<open>VAL set\<close>
 
-debt_axiomatization FIC_sort: \<open>OFCLASS(FIC, sep_algebra_class)\<close>
+setup \<open>Sign.mandatory_path "FIC"\<close>
 
-instance FIC :: sep_algebra using FIC_sort .
+consts DOMAIN :: \<open>FIC_N \<Rightarrow> FIC sep_closed_set\<close>
+
+debt_axiomatization sort: \<open>OFCLASS(FIC, sep_algebra_class)\<close>
+
+setup \<open>Sign.parent_path\<close>
+
+instance FIC :: sep_algebra using FIC.sort .
 
 consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) interp\<close>
 
-interpretation fictional_space INTERPRET .
+interpretation FIC: fictional_space FIC.DOMAIN INTERPRET .
 
-definition "INTERP_RES fic \<equiv> Valid_Resource \<inter> {_. Fic_Space fic} \<inter> \<I> INTERP fic"
+definition "INTERP_RES fic \<equiv> RES.SPACE \<inter> {_. fic \<in> FIC.SPACE } \<inter> \<I> FIC.INTERP fic"
   \<comment> \<open>Interpret a fiction\<close>
 
 lemma In_INTERP_RES:
-  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> Valid_Resource \<and> Fic_Space fic \<and> r \<in> \<I> INTERP fic\<close>
+  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> r \<in> \<I> FIC.INTERP fic\<close>
   unfolding INTERP_RES_def by simp
 
 definition INTERP_SPEC :: \<open>assn \<Rightarrow> rassn\<close>
@@ -226,6 +236,7 @@ lemma INTERP_SPEC_0[simp]:
   \<open>INTERP_SPEC {} = {}\<close>
   unfolding INTERP_SPEC_def zero_set_def by simp+
 
+(*
 lemma INTERP_mult:
   \<open> Fic_Space f1
 \<Longrightarrow> Fic_Space f2
@@ -238,7 +249,7 @@ lemma INTERP_mult:
   unfolding INTERP_def Fic_Space_def
   by (simp add: dom1_sep_mult_disjoint times_fun prod.union_disjoint
                 disjoint_dom1_eq_1[of f1 f2],
-      meson dom1_disjoint_sep_disj times_set_I)
+      meson dom1_disjoint_sep_disj times_set_I) *)
 
 
 subsection \<open>Formalization of Computation\<close>
