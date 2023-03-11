@@ -20,48 +20,25 @@ hide_fact \<phi>CF_break_abnormal_ax
 
 subsection \<open>Resource of Scope Frames\<close>
 
-type_synonym brk_label = nat
 
 setup \<open>Sign.mandatory_path "RES"\<close>
 
-type_synonym brk_frame = \<open>brk_label \<rightharpoonup> VAL list option nosep\<close>
+type_synonym brk_label = nat
+type_synonym brk_frame = \<open>RES.brk_label \<rightharpoonup> VAL list option nosep\<close>
 
 setup \<open>Sign.parent_path\<close>
 
-resource_space \<phi>CF_break_res = \<phi>empty_res +
-  brk_frame :: \<open>{frames::RES.brk_frame. finite (dom frames)}\<close>
-
-setup \<open>Sign.mandatory_path "RES"\<close>
-
-debt_axiomatization brk_frame :: \<open>RES.brk_frame resource_entry\<close>
-  where \<phi>CF_break_res_ax: \<open>\<phi>CF_break_res RES.DOMAIN brk_frame\<close>
-
-interpretation \<phi>CF_break_res RES.DOMAIN RES.brk_frame \<open>TYPE(RES_N)\<close> \<open>TYPE(RES)\<close> using RES.\<phi>CF_break_res_ax .
+resource_space \<phi>CF_break =
+  brk_frame :: \<open>{frames::RES.brk_frame. finite (dom frames)}\<close> (partial_map_resource) ..
 
 hide_fact RES.\<phi>CF_break_res_ax
-
-interpretation brk_frame: partial_map_resource RES.brk_frame RES.domain'
-  by (standard; simp add: set_eq_iff image_iff; blast)
-
-setup \<open>Sign.parent_path\<close>
 
 
 subsection \<open>Fiction of Scope Frames\<close>
 
-fiction_space \<phi>CF_break_fic :: \<open>RES_N \<Rightarrow> RES\<close> =
+fiction_space \<phi>CF_break =
   brk_frame :: \<open>RES.brk_frame.raw_basic_fiction \<F>_it\<close>
-
-setup \<open>Sign.mandatory_path "FIC"\<close>
-
-debt_axiomatization brk_frame :: \<open>RES.brk_frame fiction_entry\<close>
-  where \<phi>CF_break_fic_ax: \<open>\<phi>CF_break_fic FIC.DOMAIN INTERPRET FIC_var\<close>
-
-interpretation \<phi>CF_break_fic FIC.DOMAIN INTERPRET FIC.brk_frame using FIC.\<phi>CF_break_fic_ax .
-
-interpretation brk_frame:
-    identity_fiction_for_partial_mapping_resource RES.brk_frame RES.domain' FIC.brk_frame ..
-
-setup \<open>Sign.parent_path\<close>
+               (identity_fiction_for_partial_mapping_resource RES.brk_frame) ..
 
 hide_fact FIC.\<phi>CF_break_fic_ax
 
@@ -72,10 +49,10 @@ abbreviation Brk_Frame' :: \<open>brk_label \<Rightarrow> (VAL list option,'a) \
   where \<open>Brk_Frame' label T \<equiv> (FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep T)))\<close>
 *)
 
-definition Brk_Frame :: \<open>brk_label \<Rightarrow> assn\<close>
+definition Brk_Frame :: \<open>RES.brk_label \<Rightarrow> assn\<close>
   where \<open>Brk_Frame label \<equiv> () \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep \<circle>))\<close>
 
-definition Brking_Frame :: \<open>brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close> ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _" [1000,10] 3)
+definition Brking_Frame :: \<open>RES.brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close> ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _" [1000,10] 3)
   where \<open>Brking_Frame label S =
      (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep (\<black_circle> Identity))))\<close>
 
@@ -93,7 +70,7 @@ lemma Brking_Frame_eq_identity:
 
 section \<open>Instruction\<close>
 
-definition op_brk_scope :: \<open>(brk_label \<Rightarrow> ('a::VALs) proc) \<Rightarrow> 'a proc\<close>
+definition op_brk_scope :: \<open>(RES.brk_label \<Rightarrow> ('a::VALs) proc) \<Rightarrow> 'a proc\<close>
   where \<open>op_brk_scope F =
     RES.brk_frame.\<phi>R_allocate_res_entry (\<lambda>_. True) (Some (nosep None)) (\<lambda>l.
     op_try
@@ -105,7 +82,7 @@ definition op_brk_scope :: \<open>(brk_label \<Rightarrow> ('a::VALs) proc) \<Ri
 )))
 \<close>
 
-definition op_break :: \<open>brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) proc'\<close>
+definition op_break :: \<open>RES.brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) proc'\<close>
   where \<open>op_break l = (\<lambda>vs.
      RES.brk_frame.\<phi>R_set_res (\<lambda>f. f(l \<mapsto> nosep (Some (to_vals (\<phi>arg.dest vs)))))
   \<ggreater> throw (ABN_break.mk ())

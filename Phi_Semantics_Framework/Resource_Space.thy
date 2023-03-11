@@ -7,31 +7,10 @@ section \<open>Framework for Modular Formalization of Resources \& Fictional Res
 text \<open>Algebras used in the formalization are given in~\cite{Algebras}.\<close>
 
 theory Resource_Space
-  imports "Phi_Algebras.Algebras"
-    "Virtual_Datatype.Virtual_Datatype"
-  keywords "resource_space" :: thy_defn
-       and "fiction_space" :: thy_defn
+  imports "Phi_Algebras.Algebras" "Phi_Statespace.StateFun"
 begin
 
-subsubsection \<open>Syntax Patch\<close>
-
-text \<open>
-The section presents the improved Statespace, \<^emph>\<open>resource space\<close>, which is specialized for
-  resource models in separation algebra.
-In addition, the section also presents a similar construct, \<^emph>\<open>fiction space\<close>,
-  for formalize modularly fictions used in fictional separation (i.e., Fictional
-  Separation Logic~\cite{FSL}).\<close>
-
-syntax
-  "_entry_updbind" :: "'a \<Rightarrow> 'a \<Rightarrow> updbind"     ("(2_ #=/ _)")
-  "_fine_Update"  :: "'a \<Rightarrow> updbinds \<Rightarrow> 'a"  ("_/'((_)')\<^sub>?" [1000, 0] 900)
-
-translations
-  "f(x#=y)" => "f(CONST Field.name x := CONST Field.inject x y)"
-
-
 subsection \<open>Separation Closed Set\<close>
-
 
 definition Sep_Closed :: \<open>'a::sep_magma_1 set \<Rightarrow> bool\<close>
   where \<open>Sep_Closed S \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> (x * y) \<in> S \<longleftrightarrow> x \<in> S \<and> y \<in> S) \<and> 1 \<in> S\<close>
@@ -87,6 +66,34 @@ lemma sep_closed_partial_map[simp]:
   unfolding Sep_Closed_def
   by (clarsimp simp add: dom_mult)
 
+
+subsection \<open>Kind\<close>
+
+text \<open>
+The section presents the improved Statespace, \<^emph>\<open>resource space\<close>, which is specialized for
+  resource models in separation algebra.
+In addition, the section also presents a similar construct, \<^emph>\<open>fiction space\<close>,
+  for formalize modularly fictions used in fictional separation (i.e., Fictional
+  Separation Logic~\cite{FSL}).\<close>
+
+declare [[typedef_overloaded]]
+
+datatype ('CONS_NAME,'REP,'ABS) kind =
+  kind (name: 'CONS_NAME) (project: "'REP \<Rightarrow> 'ABS") (inject: "'ABS \<Rightarrow> 'REP") (domain: \<open>'ABS sep_closed_set\<close>)
+
+hide_const (open) name project inject domain
+
+declare [[typedef_overloaded=false]]
+
+syntax
+  "_entry_updbind" :: "'a \<Rightarrow> 'a \<Rightarrow> updbind"     ("(2_ #=/ _)")
+  "_fine_Update"  :: "'a \<Rightarrow> updbinds \<Rightarrow> 'a"  ("_/'((_)')\<^sub>?" [1000, 0] 900)
+
+translations
+  "f(x#=y)" => "f(CONST kind.name x := CONST kind.inject x y)"
+
+
+
 subsection \<open>Resource Space\<close>
 
 text \<open>The section gives a locale-based approach for modelling modularly compound resource states
@@ -99,7 +106,7 @@ by a uniform deep representation, a finite partial map of type
 where \<open>'NAME\<close> is the type of the names of resource kinds that identify each resource kind;
 type \<open>'REP\<close> is the deep representation of states of resources.
 
-We reuse \<^typ>\<open>('NAME, 'REP::sep_algebra, 'T::sep_algebra) Virtual_Datatype.Field\<close>
+We reuse \<^typ>\<open>('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind\<close>
 to represent resource kinds.
 A resource kind is a triple of \<open>name::'NAME\<close> and \<open>project :: 'REP \<Rightarrow> 'T, inject :: 'T \<Rightarrow> 'REP\<close> between
   the deep representation \<open>'REP\<close> of the states and the model \<open>'T\<close> of this kind of resource.
@@ -142,14 +149,44 @@ end
 
 lemma sep_inj_proj_id: \<open>sep_inj_proj id id\<close> by (standard; simp)
 
-locale resource_kind_algebra =
-  sep_inj_proj inject project
-  for name   :: 'NAME
-  and inject :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
-  and project:: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
+locale "resource_space" =
+  fixes DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
+begin
+
+definition SPACE :: \<open>('NAME \<Rightarrow> 'REP) set\<close>
+  where \<open>SPACE = {R. finite (dom1 R) \<and> (\<forall>N. R N \<in>\<^sub>S DOMAIN N) }\<close>
+
+lemma SPACE_1[iff]:
+  \<open>1 \<in> SPACE\<close>
+  unfolding SPACE_def by simp
+
+lemma SPACE_mult_homo:
+  \<open>A ## B \<Longrightarrow> A * B \<in> SPACE \<longleftrightarrow> A \<in> SPACE \<and> B \<in> SPACE\<close>
+  unfolding SPACE_def
+  by (simp add: times_fun sep_disj_fun_def dom1_sep_mult_disjoint; blast)
+
+(* lemma
+  \<open>Sep_Closed {R. \<forall>N. R N \<in>\<^sub>S DOMAIN N }\<close>
+  unfolding Sep_Closed_def by (simp add: times_fun sep_disj_fun_def; blast) *)
+
+end
+
+
+locale resource_kind =
+  "resource_space" DOMAIN
++ sep_inj_proj \<open>kind.inject K\<close> \<open>kind.project K\<close>
+for DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
+and K :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind"
++ assumes raw_domain: "DOMAIN (kind.name K) = kind.inject K `\<^sub>S kind.domain K"
+
 begin
 
 subsubsection \<open>Methods and Sugars of a Resource Kind\<close>
+
+abbreviation "domain \<equiv> kind.domain K"
+abbreviation "name \<equiv> kind.name K"
+abbreviation "inject \<equiv> kind.inject K"
+abbreviation "project \<equiv> kind.project K"
 
 abbreviation "clean r \<equiv> r(name := 1)"
   \<comment> \<open>\<open>clean r\<close> removes all resources of kind \<open>K\<close> from the compound resource \<open>r\<close>.
@@ -217,60 +254,20 @@ lemma sep_disj_clean[simp]:
   \<open>clean r ## mk any\<close>
   by simp
 
-end
-
-locale "resource_space" =
-  fixes DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
-begin
-
-definition SPACE :: \<open>('NAME \<Rightarrow> 'REP) set\<close>
-  where \<open>SPACE = {R. finite (dom1 R) \<and> (\<forall>N. R N \<in>\<^sub>S DOMAIN N) }\<close>
-
-lemma SPACE_1[iff]:
-  \<open>1 \<in> SPACE\<close>
-  unfolding SPACE_def by simp
-
-lemma SPACE_mult_homo:
-  \<open>A ## B \<Longrightarrow> A * B \<in> SPACE \<longleftrightarrow> A \<in> SPACE \<and> B \<in> SPACE\<close>
-  unfolding SPACE_def
-  by (simp add: times_fun sep_disj_fun_def dom1_sep_mult_disjoint; blast)
-
-(* lemma
-  \<open>Sep_Closed {R. \<forall>N. R N \<in>\<^sub>S DOMAIN N }\<close>
-  unfolding Sep_Closed_def by (simp add: times_fun sep_disj_fun_def; blast) *)
-
-
-end
-
-locale resource_kind =
-  "resource_space" DOMAIN
-+ resource_kind_algebra \<open>Field.name K\<close> \<open>Field.inject K\<close> \<open>Field.project K\<close>
-for DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
-and K :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra) Virtual_Datatype.Field"
-and DOM :: \<open>'T sep_closed_set\<close>
-+ assumes raw_domain: "DOMAIN (Field.name K) = Field.inject K `\<^sub>S DOM"
-
-begin
-
-abbreviation domain' where "domain' \<equiv> DOM"
-abbreviation domain  where "domain \<equiv> Field.inject K `\<^sub>S DOM"
-abbreviation "name \<equiv> Field.name K"
-abbreviation "inject \<equiv> Field.inject K"
-abbreviation "project \<equiv> Field.project K"
 
 lemma inj_in_DOMAIN[simp]:
-  \<open>inject x \<in>\<^sub>S DOMAIN name \<longleftrightarrow> x \<in>\<^sub>S DOM\<close>
+  \<open>inject x \<in>\<^sub>S DOMAIN name \<longleftrightarrow> x \<in>\<^sub>S domain\<close>
   by (simp add: inj_Sep_Closed raw_domain)
 
 lemma \<r>_valid_split:
   \<open>res \<in> SPACE \<longleftrightarrow>
-  clean res \<in> SPACE \<and> (\<exists>m. res name = inject m \<and> m \<in>\<^sub>S DOM)\<close>
+  clean res \<in> SPACE \<and> (\<exists>m. res name = inject m \<and> m \<in>\<^sub>S domain)\<close>
   apply (subst split; simp add: times_fun image_iff SPACE_def)
   using inj_Sep_Closed raw_domain by auto
 
 lemma \<r>_valid_split': \<open>
   NO_MATCH (clean res') res
-\<Longrightarrow> res \<in> SPACE \<longleftrightarrow> clean res \<in> SPACE \<and> (\<exists>m. res name = inject m \<and> m \<in>\<^sub>S DOM)\<close>
+\<Longrightarrow> res \<in> SPACE \<longleftrightarrow> clean res \<in> SPACE \<and> (\<exists>m. res name = inject m \<and> m \<in>\<^sub>S domain)\<close>
   using \<r>_valid_split .
 
 lemma inj_prj_in_SPACE[simp]:
@@ -279,7 +276,16 @@ lemma inj_prj_in_SPACE[simp]:
 
 end
 
-ML_file_debug \<open>resource_space.ML\<close>
+locale resource_kind' =
+  resource_kind DOMAIN K
+for DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
+and K :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind"
+and DOM :: \<open>'T::sep_algebra sep_closed_set\<close>
++ assumes domain[simp]: "kind.domain K = DOM"
+
+
+
+ML_file \<open>resource_space.ML\<close>
 
 
 subsection \<open>Fiction Space\<close>
@@ -327,12 +333,13 @@ end
 
 
 locale fiction_kind =
-  fictional_space DOMAIN INTERPRET + resource_kind DOMAIN FK \<open>sep_closed_set UNIV\<close>
+  fictional_space DOMAIN INTERPRET + resource_kind DOMAIN FK
   for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_closed_set\<close>
   and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
-  and FK :: "('FNAME,'FREP,'T::sep_algebra) Virtual_Datatype.Field"
+  and FK :: "('FNAME,'FREP,'T::sep_algebra) kind"
 + fixes I :: "('T,'RES) interp"
-  assumes interpret_reduct[simp]: "\<I> (INTERPRET (Field.name FK)) = \<I> I o Field.project FK"
+assumes interpret_reduct[simp]: "\<I> (INTERPRET (kind.name FK)) = \<I> I o kind.project FK"
+  and   domain[simp]: \<open>kind.domain FK = sep_closed_set UNIV\<close>
 begin
 
 lemma Fic_Space_m[simp]: "mk x \<in> SPACE"
@@ -367,7 +374,10 @@ lemma Fic_Space_mm[simp]: "f ## mk x \<Longrightarrow> f * mk x \<in> SPACE \<lo
 
 end
 
-ML_file \<open>fiction_space.ML\<close>
+ML_file_debug \<open>fiction_space.ML\<close>
+
+hide_type (open) kind
+hide_const (open) kind
 
 
 end

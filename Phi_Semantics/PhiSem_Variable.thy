@@ -22,8 +22,10 @@ hide_const (open) type
 declare [[typedef_overloaded = false]]
 
 setup \<open>Sign.mandatory_path "RES"\<close>
+
 type_synonym Var = \<open>varname \<rightharpoonup> VAL option nosep\<close>
   \<comment> \<open>NONE: declared but not initialized.\<close>
+
 setup \<open>Sign.parent_path\<close>
 
 lemma infinite_varname:
@@ -32,45 +34,18 @@ lemma infinite_varname:
         and f = \<open>\<lambda>n. varname n TY\<close>]
   using inj_def by fastforce
 
+resource_space \<phi>var =
+  Var  :: \<open>{vars::RES.Var. finite (dom vars)}\<close> (partial_map_resource) ..
 
-resource_space \<phi>min_res = \<phi>empty_res +
-  Var :: \<open>{vars::RES.Var. finite (dom vars)}\<close>
-
-setup \<open>Sign.mandatory_path "RES"\<close>
-
-debt_axiomatization Var :: \<open>RES.Var resource_entry\<close>
-  where \<phi>min_res_ax: \<open>\<phi>min_res RES.DOMAIN Var\<close>
-
-interpretation \<phi>min_res RES.DOMAIN RES.Var \<open>TYPE(RES_N)\<close> \<open>TYPE(RES)\<close> using RES.\<phi>min_res_ax .
-
-interpretation Var: partial_map_resource RES.Var \<open>sep_closed_set {vars. finite (dom vars)}\<close>
-  by (standard; simp add: set_eq_iff image_iff; blast)
-
-setup \<open>Sign.parent_path\<close>
-
-hide_fact RES.\<phi>min_res_ax RES.\<phi>min_res_axioms RES.\<phi>min_res_fields_axioms
+hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields_axioms
 
 
 subsubsection \<open>Fiction\<close>
 
-fiction_space \<phi>min_fic :: \<open>RES_N \<Rightarrow> RES\<close> =
-  Var :: \<open>RES.Var.raw_basic_fiction \<F>_it\<close>
+fiction_space \<phi>var =
+  Var :: \<open>RES.Var.raw_basic_fiction \<F>_it\<close> (identity_fiction_for_partial_mapping_resource RES.Var) ..
 
-print_locale \<phi>min_fic
-
-setup \<open>Sign.mandatory_path "FIC"\<close>
-
-debt_axiomatization Var :: \<open>RES.Var fiction_entry\<close>
-  where \<phi>min_fic_ax: \<open>\<phi>min_fic FIC.DOMAIN INTERPRET Var\<close>
-
-interpretation \<phi>min_fic FIC.DOMAIN INTERPRET FIC.Var using FIC.\<phi>min_fic_ax .
-
-interpretation Var: identity_fiction_for_partial_mapping_resource
-                        RES.Var RES.Var.domain' FIC.Var ..
-
-setup \<open>Sign.parent_path\<close>
-
-hide_fact FIC.\<phi>min_fic_ax FIC.\<phi>min_fic_axioms
+hide_fact FIC.\<phi>var_fic_ax FIC.\<phi>var_fic_axioms
 
 
 

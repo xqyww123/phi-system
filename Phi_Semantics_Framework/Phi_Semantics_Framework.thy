@@ -13,7 +13,9 @@ supporting most of control flows and therefore most of (imperative) languages.
 \<close>
 
 theory Phi_Semantics_Framework
-  imports Main Resource_Space Debt_Axiom.Debt_Axiom
+  imports Resource_Space Virtual_Datatype.Virtual_Datatype Debt_Axiom.Debt_Axiom
+  keywords "resource_space" :: thy_goal
+       and "fiction_space"  :: thy_goal
   abbrevs "<throws>" = "\<t>\<h>\<r>\<o>\<w>\<s>"
     and "<proc>" = "\<p>\<r>\<o>\<c>"
 begin
@@ -42,6 +44,7 @@ virtual_datatype \<phi>empty_val :: sep_magma \<comment> \<open>base of value fo
 unspecified_type VAL
 unspecified_type VAL_N
 type_synonym 'T value_entry = \<open>(VAL_N, VAL, 'T) Virtual_Datatype.Field\<close>
+type_synonym vassn = \<open>VAL set\<close>
 
 consts VAL_CONS_OF :: \<open>VAL \<Rightarrow> VAL_N\<close>
 
@@ -112,11 +115,11 @@ end
 
 subsection \<open>Resource\<close>
 
-resource_space \<phi>empty_res \<comment> \<open>base of resource formalization\<close>
-
 unspecified_type RES
 unspecified_type RES_N
 type_synonym resource = \<open>RES_N \<Rightarrow> RES\<close>
+type_synonym rassn = \<open>resource set\<close>
+type_synonym 'T resource_entry = "(RES_N, RES, 'T) Resource_Space.kind"
 
 setup \<open>Sign.mandatory_path "RES"\<close>
 
@@ -124,13 +127,15 @@ consts DOMAIN :: \<open>RES_N \<Rightarrow> RES sep_closed_set\<close>
 
 debt_axiomatization sort: \<open>OFCLASS(RES, sep_algebra_class)\<close>
 
-setup \<open>Sign.parent_path\<close>
-
 instance RES :: sep_algebra using RES.sort .
 
-interpretation RES: \<phi>empty_res RES.DOMAIN \<open>TYPE(RES_N)\<close> \<open>TYPE(RES)\<close> by standard simp
+interpretation "resource_space" RES.DOMAIN .
 
-term RES.SPACE
+setup \<open>Sign.parent_path\<close>
+
+ML_file_debug \<open>resource_space_more.ML\<close>
+ 
+ML \<open>Resource_Space.define_command \<^command_keyword>\<open>resource_space\<close> "extend resource semantics"\<close>
 
 (*
 definition "Valid_Resource = {R. (\<forall>N. R N \<in>\<^sub>S Resource_Validator N)}"
@@ -187,9 +192,8 @@ unspecified_type FIC
 unspecified_type FIC_N
 
 type_synonym fiction = \<open>FIC_N \<Rightarrow> FIC\<close>
-type_synonym  assn = \<open>fiction set\<close>
-type_synonym rassn = \<open>resource set\<close>
-type_synonym vassn = \<open>VAL set\<close>
+type_synonym assn = \<open>fiction set\<close>
+type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T) Resource_Space.kind"
 
 setup \<open>Sign.mandatory_path "FIC"\<close>
 
@@ -204,6 +208,7 @@ instance FIC :: sep_algebra using FIC.sort .
 consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) interp\<close>
 
 interpretation FIC: fictional_space FIC.DOMAIN INTERPRET .
+
 
 definition "INTERP_RES fic \<equiv> RES.SPACE \<inter> {_. fic \<in> FIC.SPACE } \<inter> \<I> FIC.INTERP fic"
   \<comment> \<open>Interpret a fiction\<close>
@@ -235,6 +240,10 @@ lemma INTERP_SPEC_0[simp]:
   \<open>INTERP_SPEC 0  = 0\<close>
   \<open>INTERP_SPEC {} = {}\<close>
   unfolding INTERP_SPEC_def zero_set_def by simp+
+
+ML_file \<open>fiction_space_more.ML\<close>
+
+ML \<open>Fiction_Space.define_command \<^command_keyword>\<open>fiction_space\<close> "extend fictions"\<close>
 
 (*
 lemma INTERP_mult:

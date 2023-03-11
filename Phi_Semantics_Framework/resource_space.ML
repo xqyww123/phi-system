@@ -3,7 +3,7 @@
  * Author: Qiyuan Xu, 2022, 2023
  * Modified from state_space.ML written by Norbert Schirmer. *)
 
-signature RESOURCE_SPACE = sig
+signature RESOURCE_LOCALE = sig
 
 val distinct_compsN : string
 val namesN : string
@@ -14,9 +14,7 @@ val TVAR_N : string
 type additional_data
 type additional_data'
 
-  val define_Resource_Space_command :
-        Outer_Syntax.command_keyword ->
-        string -> string * string -> unit
+  val define_Resource_Locale_command : Outer_Syntax.command_keyword -> string -> unit
 
   val namespace_definition :
      binding ->
@@ -24,7 +22,7 @@ type additional_data'
      (xstring, string) Expression.expr * (binding * string option * mixfix) list ->
      string list -> string list -> theory -> theory
 
-  val define_Resource_Space :
+  val define_Resource_Locale :
      string * (string * Position.T) ->
      additional_data ->
      (xstring * Position.T) option ->
@@ -32,8 +30,8 @@ type additional_data'
      binding ->
      ((string * bool) * (string list * (bstring * Position.T) * (string * string) list)) list ->
      (string * string) list -> theory -> theory
-  val define_Resource_Space_i :
-     string * (xstring * Position.T) ->
+  val define_Resource_Locale_i :
+     sort * (xstring * Position.T) ->
      additional_data' ->
      (xstring * Position.T) option ->
      (string * string option) list ->
@@ -47,21 +45,25 @@ type additional_data'
   val distinct_simproc : Simplifier.simproc
 
 
-  val is_Resource_Space : Context.generic -> xstring -> bool
+  type Resource_Locale_info =
+   {sort: sort, (* sort of representation *)
+    args: (string * sort) list, (* type arguments *)
+    parents: (typ list * string * string option list) list,
+              (* type instantiation, Resource_Locale name, component renamings *)
+    components: (string * term) list
+   }
 
-  val get_comp' : Context.generic -> string -> (term * string list) option
-  val get_comp : Context.generic -> string -> (term * string) option (* legacy wrapper, eventually replace by primed version *)
-  val get_comps : Context.generic -> (term * string list) Termtab.table
+  val locales : Context.generic -> Resource_Locale_info Symtab.table
 
   val get_silent : Context.generic -> bool
   val set_silent : bool -> Context.generic -> Context.generic
 
   val trace_entry_data: Context.generic -> unit
-  val trace_Resource_Space_data: Context.generic -> unit
+  val trace_Resource_Locale_data: Context.generic -> unit
 
 end
 
-signature GENERIC_RESOURCE_SPACE_ARGUMENT = sig
+signature GENERIC_RESOURCE_LOCALE_ARGUMENT = sig
 
 type additional_data
 type additional_data'
@@ -80,15 +82,13 @@ val read_arg : Proof.context -> additional_data' -> string -> (string * sort) li
 val cert_arg : Proof.context -> additional_data' -> term -> (string * sort) list -> term * (string * sort) list
 val dest_typ : typ -> typ
 val field_locale : string
-val command_name : string * Position.T
-val comment : string
 val space_locale : string
 val space_locale_args : additional_data' -> typ -> (string * typ) list
 
 end
 
 
-functor Generic_Resource_Space (Config : GENERIC_RESOURCE_SPACE_ARGUMENT) : RESOURCE_SPACE = struct
+functor Generic_Resource_Locale (Config : GENERIC_RESOURCE_LOCALE_ARGUMENT) : RESOURCE_LOCALE = struct
 
 (* Names *)
 
@@ -106,12 +106,12 @@ type additional_data' = Config.additional_data'
 (* Misc *)
 
 fun repT S = TFree (Config.repN, S)
-fun entryT nameT repT T = Type(\<^type_name>\<open>Virtual_Datatype.Field\<close>, [nameT, repT, T])
+fun entryT nameT repT T = Type(\<^type_name>\<open>kind\<close>, [nameT, repT, T])
 fun dest_typ' TM = Config.dest_typ (Term.type_of TM)
       handle TYPE (msg, TYs, _) => raise TYPE (msg, TYs, [TM])
 
 fun cons_name_of (Free (s,_)) = s
-  | cons_name_of (Const (\<^const_name>\<open>Field.name\<close>, _) $ x) = Term.term_name x
+  | cons_name_of (Const (\<^const_name>\<open>kind.name\<close>, _) $ x) = Term.term_name x
   | cons_name_of t = raise TERM ("const_name_of", [t])
 
 fun comps_of_distinct_thm thm = Thm.prop_of thm
@@ -205,82 +205,68 @@ val join_declinfo = Termtab.join (fn trm => uncurry (join_declinfo_entry (guess_
 (* EntryData *)
 
 type entry_info =
- {declinfo: (term * string list) Termtab.table, (* interpretation, names of component  *)
-  distinctthm: thm list Symtab.table, (* minimal list of maximal distinctness-assumptions
+ {distinctthm: thm list Symtab.table, (* minimal list of maximal distinctness-assumptions
                                          for a component name *)
   silent: bool
- };
+ }
 
 
 structure EntryData = Generic_Data
 (
   type T = entry_info;
-  val empty = {declinfo = Termtab.empty, distinctthm = Symtab.empty, silent = false};
+  val empty = {distinctthm = Symtab.empty, silent = false};
   fun merge
-    ({declinfo=declinfo1, distinctthm=distinctthm1, silent=silent1},
-      {declinfo=declinfo2, distinctthm=distinctthm2, silent=silent2}) : T =
-    {declinfo = join_declinfo (declinfo1, declinfo2),
-     distinctthm = join_distinctthm_tab (distinctthm1, distinctthm2),
+    ({distinctthm=distinctthm1, silent=silent1},
+      {distinctthm=distinctthm2, silent=silent2}) : T =
+    {distinctthm = join_distinctthm_tab (distinctthm1, distinctthm2),
      silent = silent1 andalso silent2 (* FIXME odd merge *)}
-);
+)
 
 fun trace_entry_data context =
   tracing ("EntryData: " ^ @{make_string} (EntryData.get context))
 
-fun make_entry_data declinfo distinctthm silent =
-     {declinfo=declinfo,distinctthm=distinctthm,silent=silent};
-
-
-fun update_declinfo (n,v) ctxt =
-  let
-    val {declinfo,distinctthm,silent} = EntryData.get ctxt;
-    val v = apsnd single v
-  in EntryData.put (make_entry_data
-        (Termtab.map_default (n,v) (join_declinfo_entry (guess_name n) v) declinfo)
-        distinctthm silent) ctxt
-  end;
+fun make_entry_data distinctthm silent =
+     {distinctthm=distinctthm,silent=silent}
 
 fun set_silent silent ctxt =
-  let val {declinfo,distinctthm,...} = EntryData.get ctxt;
-  in EntryData.put
-      (make_entry_data declinfo distinctthm silent) ctxt
-  end;
+  let val {distinctthm,...} = EntryData.get ctxt;
+  in EntryData.put (make_entry_data distinctthm silent) ctxt
+  end
 
-val get_silent = #silent o EntryData.get;
+val get_silent = #silent o EntryData.get
 
 
-(** Resource_Space **)
+(** Resource_Locale **)
 
-type Resource_Space_info =
+type Resource_Locale_info =
  {sort: sort, (* sort of representation *)
   args: (string * sort) list, (* type arguments *)
   parents: (typ list * string * string option list) list,
-            (* type instantiation, Resource_Space name, component renamings *)
+            (* type instantiation, Resource_Locale name, component renamings *)
   components: (string * term) list
- };
+ }
 
-structure Resource_Space_Data = Generic_Data
+structure Resource_Locale_Data = Generic_Data
 (
-  type T = Resource_Space_info Symtab.table;
+  type T = Resource_Locale_info Symtab.table;
   val empty = Symtab.empty;
   fun merge data : T = Symtab.merge (K true) data;
-);
+)
 
-fun is_Resource_Space context name =
-  Symtab.defined (Resource_Space_Data.get context) (Locale.intern (Context.theory_of context) name)
+val locales = Resource_Locale_Data.get
 
-fun trace_Resource_Space_data context =
-  tracing ("StateSpaceData: " ^ @{make_string} (Resource_Space_Data.get context))
+fun trace_Resource_Locale_data context =
+  tracing ("StateSpaceData: " ^ @{make_string} (Resource_Locale_Data.get context))
 
-fun add_Resource_Space name Sv args parents components ctxt =
-      Resource_Space_Data.put
+fun add_Resource_Locale name Sv args parents components ctxt =
+      Resource_Locale_Data.put
         (Symtab.update_new (name, {sort=Sv,args=args,parents=parents,
                                    components=components})
-                           (Resource_Space_Data.get ctxt))
+                           (Resource_Locale_Data.get ctxt))
         ctxt;
 
-fun get_Resource_Space ctxt name =
-      Symtab.lookup (Resource_Space_Data.get ctxt) name;
+fun get_Resource_Locale ctxt name =
+      Symtab.lookup (Resource_Locale_Data.get ctxt) name;
 
 
 
@@ -318,24 +304,6 @@ fun get_dist_thm2 ctxt x y =
   end)
 
 
-fun get_comp' ctxt name =
-  mk_free (Context.proof_of ctxt) name
-  |> Option.mapPartial (fn t =>
-       let
-         val declinfo = #declinfo (EntryData.get ctxt)
-       in
-         case Termtab.lookup declinfo t of
-           NONE => (* during syntax phase, types of fixes might not yet be constrained completely *)
-             AList.lookup (fn (x, Free (n,_)) => n = x | _ => false) (Termtab.dest declinfo) name
-         | some => some
-       end)
-
-(* legacy wrapper *)
-fun get_comp ctxt name =
- get_comp' ctxt name |> Option.map (apsnd (fn ns => if null ns then "" else hd ns))
-
-fun get_comps ctxt = #declinfo (EntryData.get ctxt)
-
 (*** Tactics ***)
 
 fun neq_x_y ctxt x y =
@@ -359,7 +327,7 @@ val distinctNameSolver = mk_solver "distinctNameSolver" distinctTree_tac;
 
 val distinct_simproc =
   Simplifier.make_simproc \<^context> "StateSpace.distinct_simproc"
-   {lhss = [\<^term>\<open>Field.name x = Field.name y\<close>],
+   {lhss = [\<^term>\<open>kind.name x = kind.name y\<close>],
     proc = fn _ => fn ctxt => fn ct =>
       (case Thm.term_of ct of
         Const (\<^const_name>\<open>HOL.eq\<close>,_) $ x $ y =>
@@ -402,7 +370,7 @@ fun namespace_definition name nameT parent_expr parent_comps new_comps thy =
         Context.Theory _ => context
       | Context.Proof ctxt =>
         let
-          val {declinfo,distinctthm=tt,silent} = EntryData.get context;
+          val {distinctthm=tt,silent} = EntryData.get context;
           val all_names = comps_of_distinct_thm thm;
           fun upd name = Symtab.map_default (name, [thm]) (fn thms => insert_distinct_thm thm thms)
 
@@ -412,7 +380,7 @@ fun namespace_definition name nameT parent_expr parent_comps new_comps thy =
               addsimprocs [distinct_simproc]
               |> Context_Position.restore_visible ctxt
               |> Context.Proof
-              |> EntryData.put {declinfo=declinfo,distinctthm=tt',silent=silent};
+              |> EntryData.put {distinctthm=tt',silent=silent};
         in context' end));
 
     val attr = Attrib.internal type_attr;
@@ -431,7 +399,7 @@ fun namespace_definition name nameT parent_expr parent_comps new_comps thy =
   end;
 
 
-(** define Resource_Space **)
+(** define Resource_Locale **)
 
 (* preliminary *)
 
@@ -445,17 +413,10 @@ fun encode_type (TFree (s, _)) = s
         val n' = String.map encode_dot n;
       in if Ts'="" then n' else Ts' ^ "_" ^ n' end;
 
-
-fun add_declaration name decl thy =
-  thy
-  |> Named_Target.init [] name
-  |> (fn lthy => Local_Theory.declaration {syntax = true, pervasive = false} (decl lthy) lthy)
-  |> Local_Theory.exit_global;
-
 fun parent_sort thy pname Sv =
   let
     val ctxt = Context.Theory thy;
-    val {sort, parents, ...} = the (Symtab.lookup (Resource_Space_Data.get ctxt) pname);
+    val {sort, parents, ...} = the (Symtab.lookup (Resource_Locale_Data.get ctxt) pname);
   in
     fold (parent_sort thy o #2) parents (Sign.inter_sort thy (Sv, sort))
   end
@@ -467,7 +428,7 @@ fun parent_components thy Sv (Ts, pname, renaming) =
       | rename (NONE::rs)  (x::xs) = x::rename rs xs
       | rename (SOME r::rs) ((x,T)::xs) = (r,T)::rename rs xs;
     val {args, parents, components, ...} =
-                  the (Symtab.lookup (Resource_Space_Data.get ctxt) pname);
+                  the (Symtab.lookup (Resource_Locale_Data.get ctxt) pname);
     val inst = (Config.repN, repT Sv) :: (map fst args ~~ Ts);
     val subst = Term.map_type_tfree (fn (N,S) =>
                     the_default (TFree (N,S)) (AList.lookup (op =) inst N));
@@ -478,7 +439,7 @@ fun parent_components thy Sv (Ts, pname, renaming) =
 
 (* main stuff *)
 
-fun Resource_Space_definition rep_sort project_injectL additional_data'
+fun Resource_Locale_definition rep_sort project_injectL additional_data'
                    target args name_b parents parent_comps components thy =
   let
     val name = Binding.name_of name_b
@@ -536,13 +497,13 @@ fun Resource_Space_definition rep_sort project_injectL additional_data'
             | NONE => (locinsts',locs')
 
     val name_insts = map (fn (n,T) =>
-          (n, Const (\<^const_name>\<open>Field.name\<close>, entryT (dest_typ' T) --> nameT)
+          (n, Const (\<^const_name>\<open>kind.name\<close>, entryT (dest_typ' T) --> nameT)
                 $ Free (n, entryT (dest_typ' T)))) all_comps
 
     fun interprete_parent_valuetypes (prefix, (Ts, pname, comps)) thyx =
       let
         val {components,...} =
-             the (Symtab.lookup (Resource_Space_Data.get (Context.Theory thyx)) pname);
+             the (Symtab.lookup (Resource_Locale_Data.get (Context.Theory thyx)) pname);
         val components' = map (uncurry the_default) (map fst components ~~ comps)
         val pars = components';
 
@@ -566,27 +527,12 @@ fun Resource_Space_definition rep_sort project_injectL additional_data'
            (fn ctxt => Locale.intro_locales_tac {strict = true, eager = false} ctxt [])
            (full_name, expr) end;
 
-    fun declare_declinfo updates lthy phi ctxt =
-      let
-        fun upd_prf ctxt =
-          let
-            fun upd (n,(v:term * string)) =
-              let
-                val nT = Proof_Context.infer_type (Local_Theory.target_of lthy) (n, dummyT)
-              in Context.proof_map
-                  (update_declinfo (Morphism.term phi (Free (n,nT)),v))
-              end;
-            val ctxt' = ctxt |> fold upd updates
-          in ctxt' end;
-
-      in Context.mapping I upd_prf ctxt end;
-
   in thy
      |> namespace_definition
            (Binding.suffix_name namesN name_b) nameT (parents_expr,[])
            (map fst parent_comps) (map fst components)
      |> Context.theory_map
-          (add_Resource_Space full_name rep_sort args (map snd parents) all_comps)
+          (add_Resource_Locale full_name rep_sort args (map snd parents) all_comps)
      |> add_locale (Binding.suffix_name fields_locale_N name_b) (locinsts,locs) []
      |> Proof_Context.theory_of
      |> fold interprete_parent_valuetypes parents
@@ -603,10 +549,9 @@ fun Resource_Space_definition rep_sort project_injectL additional_data'
             []
      |> Proof_Context.theory_of
      |> fold interprete_parent parents
-     |> add_declaration full_name (declare_declinfo components')
   end;
 
-(** preparation & wrapper for Resource_Space **)
+(** preparation & wrapper for Resource_Locale **)
 
 (* prepare arguments *)
 
@@ -625,7 +570,8 @@ fun cert_typ ctxt raw_T env =
     val env' = Term.add_tfreesT T env;
   in (T, env') end;
 
-fun gen_define_Resource_Space prep_typ prep_term prep_data (sort,project_injectL) additional_data
+fun gen_define_Resource_Locale prep_typ prep_term prep_sort prep_data
+                   (sort,project_injectL) additional_data
                    target args name_b parents comps thy =
   let (* - args distinct
          - only args may occur in comps and parent-instantiations
@@ -635,7 +581,7 @@ fun gen_define_Resource_Space prep_typ prep_term prep_data (sort,project_injectL
          -
          - self_sort: sort of the value type
       *)
-    val _ = writeln ("Defining Resource_Space " ^ Binding.print name_b ^ " ...");
+    val _ = writeln ("Defining Resource_Locale " ^ Binding.print name_b ^ " ...");
 
     val target' = Option.map (Locale.check thy) target
 
@@ -652,17 +598,17 @@ fun gen_define_Resource_Space prep_typ prep_term prep_data (sort,project_injectL
         val full_pname = Locale.check thy pname;
         val quote = quote o fst
         val {args,components,...} =
-              (case get_Resource_Space (Context.Theory thy) full_pname of
+              (case get_Resource_Locale (Context.Theory thy) full_pname of
                 SOME r => r
-               | NONE => error ("Undefined Resource_Space " ^ quote pname));
+               | NONE => error ("Undefined Resource_Locale " ^ quote pname));
 
 
         val (Ts',env') = fold_map (prep_typ ctxt) Ts env
             handle ERROR msg => cat_error msg
-                    ("The error(s) above occurred in parent Resource_Space specification "
+                    ("The error(s) above occurred in parent Resource_Locale specification "
                     ^ quote pname);
         val err_insts = if length args <> length Ts' then
-            ["number of type instantiation(s) does not match arguments of parent Resource_Space "
+            ["number of type instantiation(s) does not match arguments of parent Resource_Locale "
               ^ quote pname]
             else [];
 
@@ -681,15 +627,14 @@ fun gen_define_Resource_Space prep_typ prep_term prep_data (sort,project_injectL
         val errs =err_insts @ err_dup_renamings @ err_rename_unknowns
       in
         if null errs then ((prefix', (Ts', full_pname, rs')), env')
-        else error (cat_lines (errs @ ["in parent Resource_Space " ^ quote pname]))
+        else error (cat_lines (errs @ ["in parent Resource_Locale " ^ quote pname]))
       end;
 
     val args' = map (apsnd (Option.map (Syntax.read_sort ctxt) #> the_default (Sign.defaultS thy))) args
     val (additional_data',env) = prep_data ctxt additional_data args'
     val (parents',env) = fold_map add_parent parents args';
 
-    fun prep_sort S' S = if S = "" then S' else Syntax.read_sort ctxt S
-    val sort' = fold (parent_sort thy o #2 o #2) parents' (prep_sort \<^sort>\<open>sep_algebra\<close> sort)
+    val sort' = fold (parent_sort thy o #2 o #2) parents' (prep_sort ctxt sort)
     val env = (Config.repN, sort')::env
 
 
@@ -744,16 +689,20 @@ fun gen_define_Resource_Space prep_typ prep_term prep_data (sort,project_injectL
     val errs = err_dup_args @ err_dup_components @ err_extra_frees @
                err_dup_types @ err_comp_in_parent @ err_value_keyword;
   in if null errs
-     then thy |> Resource_Space_definition sort' project_injectL additional_data'
+     then thy |> Resource_Locale_definition sort' project_injectL additional_data'
                                 target' args' name_b parents' parent_comps comps'
      else error (cat_lines errs)
   end
-  handle ERROR msg => cat_error msg ("Failed to define fiction space " ^ Binding.print name_b);
+  handle ERROR msg => cat_error msg ("Failed to define resource space " ^ Binding.print name_b);
 
-val define_Resource_Space =
-      gen_define_Resource_Space read_typ Config.read_arg Config.prep_additional_data
-val define_Resource_Space_i =
-      gen_define_Resource_Space cert_typ Config.cert_arg Config.chk_additional_data
+val define_Resource_Locale =
+      gen_define_Resource_Locale read_typ Config.read_arg
+      (fn ctxt => fn S => if S = "" then \<^sort>\<open>sep_algebra\<close> else Syntax.read_sort ctxt S)
+      Config.prep_additional_data
+val define_Resource_Locale_i =
+      gen_define_Resource_Locale cert_typ Config.cert_arg
+      (fn ctxt => fn S => if null S then \<^sort>\<open>sep_algebra\<close> else Syntax.check_sort ctxt S)
+      Config.chk_additional_data
 
 
 (*** outer syntax ***)
@@ -779,7 +728,7 @@ val parent =
 
 in
 
-fun Resource_Space_decl' defaults =
+fun Resource_Locale_decl' defaults =
   Parse.opt_target -- (Parse.type_args_constrained -- Parse.binding)
   -- Config.additional_data_parser defaults --
   (Scan.optional (\<^keyword>\<open>=\<close> |--
@@ -788,31 +737,30 @@ fun Resource_Space_decl' defaults =
         Scan.optional (\<^keyword>\<open>+\<close> |-- Parse.!!! (Scan.repeat1 comp)) []))) ([],[]));
 
 
-fun define_Resource_Space_command kwd comment defaults_setting =
+fun define_Resource_Locale_command' defaults_setting kwd comment =
   Outer_Syntax.command kwd comment
-    (Resource_Space_decl' defaults_setting >> (
+    (Resource_Locale_decl' defaults_setting >> (
   fn (((target, (args, name)), (additional_data, sort_locale)), (parents, comps)) =>
-      Toplevel.theory (define_Resource_Space sort_locale additional_data target args name parents comps)));
+      Toplevel.theory (define_Resource_Locale sort_locale additional_data target args name parents comps)));
 
-val Resource_Space_decl = Resource_Space_decl' ("", Config.field_locale)
-val _ = define_Resource_Space_command Config.command_name Config.comment ("", Config.field_locale)
-
-end
+val define_Resource_Locale_command = define_Resource_Locale_command' ("", Config.field_locale)
 
 end
 
+end
 
 
 
-signature RESOURCE_SPACE_ARGUMENT = sig
 
-include GENERIC_RESOURCE_SPACE_ARGUMENT
+signature RESOURCE_LOCALE_ARGUMENT = sig
+
+include GENERIC_RESOURCE_LOCALE_ARGUMENT
 
 val DOMAIN_N : string
 
 end
 
-structure Resource_Space_Argument : RESOURCE_SPACE_ARGUMENT = struct
+structure Resource_Locale_Argument : RESOURCE_LOCALE_ARGUMENT = struct
 
 type additional_data  = unit
 type additional_data' = unit
@@ -846,7 +794,9 @@ fun read_arg ctxt _ raw_T env =
 fun cert_arg ctxt _ raw_TM env =
   let
     val thy = Proof_Context.theory_of ctxt;
-    val chk = Sign.certify_term thy o Type.constraint \<^Type>\<open>sep_closed_set dummyT\<close>
+    val chk = Sign.certify_term thy
+            o Syntax.check_term ctxt
+            o Type.constraint \<^Type>\<open>sep_closed_set dummyT\<close>
     val (Tm,Ty,_) = chk raw_TM
          handle err => (chk (\<^Const>\<open>sep_closed_set dummyT\<close> $ raw_TM)
          handle _ => raise err)
@@ -859,14 +809,11 @@ fun cert_arg ctxt _ raw_TM env =
 fun dest_typ (\<^Type>\<open>sep_closed_set T\<close>) = T
   | dest_typ T = raise TYPE ("shoud be a sep_closed_set", [T], [])
 
-val field_locale = \<^locale>\<open>resource_kind\<close>
-val command_name = \<^command_keyword>\<open>resource_space\<close>
-val comment = "define resource space by locale"
+val field_locale = \<^locale>\<open>resource_kind'\<close>
 val space_locale = \<^locale>\<open>resource_space\<close>
 
-
 val nameT = TFree (NAME_N, \<^sort>\<open>type\<close>);
-val nameTT  = Term.itselfT nameT
+val nameTT = Term.itselfT nameT
 
 fun space_locale_args _ repT =
   let val domainT = nameT --> \<^Type>\<open>sep_closed_set repT\<close>
@@ -877,5 +824,5 @@ fun space_locale_args _ repT =
 
 end
 
-structure Resource_Space = Generic_Resource_Space(Resource_Space_Argument)
+structure Resource_Locale = Generic_Resource_Locale(Resource_Locale_Argument)
 

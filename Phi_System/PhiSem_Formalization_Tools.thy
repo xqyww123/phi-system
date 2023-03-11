@@ -183,31 +183,27 @@ section \<open>Predefined Resource Snippet\<close>
 
 subsection \<open>Minimal Resource\<close>
 
-type_synonym 'T resource_entry = "(RES_N, RES, 'T) Virtual_Datatype.Field"
-type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T) Virtual_Datatype.Field"
-
 locale resource =
-  resource_kind RES.DOMAIN entry DOM
-  for entry :: "'T::sep_algebra resource_entry"
-  and DOM :: \<open>'T sep_closed_set\<close>
+  resource_kind RES.DOMAIN Res
+  for Res :: "'T::sep_algebra resource_entry"
 begin
 
 lemma get_res_valid_raw:
   \<open> res \<in> RES.SPACE
-\<Longrightarrow> get res \<in>\<^sub>S DOM\<close>
+\<Longrightarrow> get res \<in>\<^sub>S domain\<close>
   unfolding RES.SPACE_def
   apply simp
   by (metis in_image_sep_closed inj_Sep_Closed proj_inj raw_domain)
 
 lemma get_res_Valid:
   \<open> res \<in> \<phi>Res_Spec S
-\<Longrightarrow> (get res) \<in>\<^sub>S DOM\<close>
+\<Longrightarrow> (get res) \<in>\<^sub>S domain\<close>
   unfolding \<phi>Res_Spec_def by (clarsimp simp add: \<r>_valid_split')
 
 
-definition \<open>raw_basic_fiction I = Interp (\<lambda>x. { 1(entry #= y) |y. y \<in> \<I> I x })\<close>
+definition \<open>raw_basic_fiction I = Interp (\<lambda>x. { 1(Res #= y) |y. y \<in> \<I> I x })\<close>
 lemma raw_basic_fiction_\<I>:
-  "\<I> (raw_basic_fiction I) = (\<lambda>x. { 1(entry #= y) |y. y \<in> \<I> I x})"
+  "\<I> (raw_basic_fiction I) = (\<lambda>x. { 1(Res #= y) |y. y \<in> \<I> I x})"
   unfolding raw_basic_fiction_def
   by (rule Interp_inverse) (clarsimp simp add: Interpretation_def one_set_def)
 
@@ -236,10 +232,9 @@ subsection \<open>Fictions\<close>
 subsubsection \<open>Basic Fiction\<close>
 
 locale basic_fiction =
-   R: resource Res DOM
+   R: resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.raw_basic_fiction I\<close>
 for Res :: "'T::sep_algebra resource_entry"
-and DOM :: "'T::sep_algebra sep_closed_set"
 and I :: "('U::sep_algebra, 'T) interp"
 and Fic :: "'U fiction_entry"
 begin
@@ -413,17 +408,16 @@ end
 subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
-   R: resource Res DOM
+   R: resource Res
 +  share: perm_functor perm_functor
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
       \<open>R.raw_basic_fiction (\<F>_functional perm_functor)\<close>
 for Res :: "'T::sep_algebra resource_entry"
-and DOM :: "'T::sep_algebra sep_closed_set"
 and perm_functor :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
 begin
 
-sublocale basic_fiction Res DOM \<open>\<F>_functional perm_functor\<close> ..
+sublocale basic_fiction Res \<open>\<F>_functional perm_functor\<close> ..
 
 lemma sep_disj_fiction:
   \<open> r \<in> FIC.SPACE
@@ -527,10 +521,9 @@ end
 subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction =
-   R: resource Res DOM
+   R: resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.raw_basic_fiction \<F>_it\<close>
 for Res :: "'T::sep_algebra resource_entry"
-and DOM :: "'T sep_closed_set"
 and Fic :: "'T fiction_entry"
 begin
 
@@ -579,9 +572,8 @@ subsection \<open>Nosep Monolithic Resource\<close>
   \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option\<close>\<close>
 
 locale nonsepable_mono_resource =
-  resource entry \<open>sep_closed_set ({None} \<union> Some ` nosep ` DOM)\<close>
-for entry :: "'T nosep option resource_entry"
-and DOM :: "'T set"
+  resource Res
+for Res :: "'T nosep option resource_entry"
 begin
 
 definition fiction_agree
@@ -598,14 +590,13 @@ subsubsection \<open>Interp Agreement\<close>
  *)
 
 locale agreement_fiction_for_nosepable_mono_resource =
-   R: nonsepable_mono_resource Res DOM
+   R: nonsepable_mono_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.fiction_agree\<close>
 for Res :: "'T nosep option resource_entry"
-and DOM :: "'T set"
 and Fic :: "'T nosep agree option fiction_entry"
 begin
 
-sublocale basic_fiction Res \<open>sep_closed_set ({None} \<union> Some ` nosep ` DOM)\<close>
+sublocale basic_fiction Res
   \<open>\<F>_optionwise \<F>_agree\<close>
   by (standard; simp add: R.fiction_agree_def)
 
@@ -680,13 +671,12 @@ end
 subsection \<open>Resources based on Mapping\<close>
 
 locale mapping_resource =
-  resource entry DOM
-for entry :: "('key \<Rightarrow> 'val::sep_algebra) resource_entry"
-and DOM :: \<open>('key \<Rightarrow> 'val::sep_algebra) sep_closed_set\<close>
+  resource Res
+for Res :: "('key \<Rightarrow> 'val::sep_algebra) resource_entry"
 begin
 
 lemma "__allocation_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> m(k := u) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> m(k := u) \<in>\<^sub>S domain)
 \<Longrightarrow> k \<notin> dom1 (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
 \<Longrightarrow> updt (\<lambda>f. f(k := u)) res
@@ -719,13 +709,12 @@ subsection \<open>One Level Parital Mapping\<close>
 subsubsection \<open>Locale for Resource\<close>
 
 locale partial_map_resource =
-  mapping_resource entry DOM
-for entry :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
-and DOM :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) sep_closed_set"
+  mapping_resource Res
+for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 begin
 
 lemma "__updt_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k := u) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k := u) \<in>\<^sub>S domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k \<mapsto> any))}
 \<Longrightarrow> updt (\<lambda>f. f(k := u)) res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := u))}\<close>
@@ -745,7 +734,7 @@ lemma "__updt_rule__":
   qed .
 
 lemma "__dispose_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k \<mapsto> any))}
 \<Longrightarrow> updt (\<lambda>f. f(k := None)) res \<in> \<phi>Res_Spec R\<close>
@@ -814,14 +803,13 @@ end
 subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction_for_partial_mapping_resource =
-   R: partial_map_resource Res DOM
+   R: partial_map_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.raw_basic_fiction \<F>_it\<close>
 for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
-and DOM :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) sep_closed_set"
 and Fic :: "('key \<Rightarrow> 'val option) fiction_entry"
 begin
 
-sublocale identity_fiction Res DOM Fic ..
+sublocale identity_fiction Res Fic ..
 
 end
 
@@ -829,14 +817,13 @@ end
 subsubsection \<open>Permission Fiction\<close>
 
 locale share_fiction_for_partial_mapping_resource =
-   R: partial_map_resource Res DOM
+   R: partial_map_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.share_fiction\<close>
 for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
-and DOM :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) sep_closed_set"
 and Fic :: "('key \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res DOM \<open>R.perm_functor\<close> by standard blast
+sublocale permission_fiction Res \<open>R.perm_functor\<close> by standard blast
 
 lemma expand:
   \<open> r \<in> FIC.SPACE
@@ -888,9 +875,8 @@ lemma VS_divide_ownership:
 end
 
 locale share_fiction_for_partial_mapping_resource_nonsepable =
-  share_fiction_for_partial_mapping_resource Res DOM Fic
+  share_fiction_for_partial_mapping_resource Res Fic
 for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
-and DOM :: "('key \<Rightarrow> 'val nosep option) sep_closed_set"
 and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
 begin
 
@@ -918,13 +904,12 @@ lemma map_fun_at_const[simp]:
 subsubsection \<open>Locale of Resources\<close>
 
 locale partial_map_resource2 =
-  mapping_resource entry DOM
-for entry :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
-and DOM :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) sep_closed_set"
+  mapping_resource Res
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 begin
 
 lemma "__updt_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := 1(k2 \<mapsto> any)))}
 \<Longrightarrow> updt (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
@@ -960,7 +945,7 @@ lemma "__updt_rule__":
 
 
 lemma "__dispose_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in>\<^sub>S domain)
 \<Longrightarrow> dom (get res k) = dom any
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := any))}
@@ -1105,14 +1090,13 @@ end
 subsubsection \<open>Permission Fiction\<close>
 
 locale share_fiction_for_partial_mapping_resource2 =
-   R: partial_map_resource2 Res DOM
+   R: partial_map_resource2 Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.share_fiction\<close>
 for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
-and DOM :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) sep_closed_set"
 and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res DOM \<open>R.perm_functor\<close> by standard  blast
+sublocale permission_fiction Res \<open>R.perm_functor\<close> by standard  blast
 
 lemma [simp]:
   \<open>R.perm_functor (1(k := f)) = 1(k := to_share o f)\<close>
@@ -1405,7 +1389,7 @@ definition (in resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Right
 paragraph \<open>partial_map_resource\<close>
 
 lemma (in partial_map_resource) \<phi>R_set_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k := u) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k := u) \<in>\<^sub>S domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k \<mapsto> any))}
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
@@ -1415,7 +1399,7 @@ lemma (in partial_map_resource) \<phi>R_set_res:
 context identity_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_set_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S R.domain)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<rbrace>\<close>
@@ -1435,7 +1419,7 @@ end
 context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_set_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S R.domain)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
@@ -1450,13 +1434,14 @@ lemma \<phi>R_set_res:
 
 declare \<phi>R_set_res[THEN \<phi>CONSEQ'E0, intro!]
 lemmas \<phi>R_set_res_frm[intro!] = \<phi>R_set_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+
 end
 
 
 paragraph \<open>partial_map_resource2\<close>
 
 lemma (in partial_map_resource2) \<phi>R_set_res[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R * \<phi>Res_Spec {mk (1(k := 1(k2 \<mapsto> any)))}
 \<Longrightarrow> \<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
@@ -1464,7 +1449,7 @@ lemma (in partial_map_resource2) \<phi>R_set_res[intro!]:
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__" del: set_mult_expn)
 
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res"[THEN \<phi>CONSEQ'E0, intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in>\<^sub>S R.domain)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k := 1(k2 \<mapsto> v)))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
@@ -1483,7 +1468,7 @@ subsubsection \<open>Dispose\<close>
 paragraph \<open>partial_map_resource\<close>
 
 lemma (in partial_map_resource) \<phi>R_dispose_res[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k \<mapsto> any))})
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := None)) res
@@ -1491,8 +1476,9 @@ lemma (in partial_map_resource) \<phi>R_dispose_res[intro!]:
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__" \<phi>Res_Spec_mult_homo)
 
 context identity_fiction_for_partial_mapping_resource begin
+
 lemma \<phi>R_dispose_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S R.domain)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
@@ -1504,12 +1490,13 @@ lemma \<phi>R_dispose_res:
 
 declare \<phi>R_dispose_res[THEN \<phi>CONSEQ'E0, intro!]
 lemmas \<phi>R_dispose_res_frm[intro!] = \<phi>R_dispose_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+
 end
 
 context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_dispose_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S R.domain)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
@@ -1521,12 +1508,13 @@ lemma \<phi>R_dispose_res:
 
 declare \<phi>R_dispose_res[THEN \<phi>CONSEQ'E0, intro!]
 lemmas \<phi>R_dispose_res_frm[intro!] = \<phi>R_dispose_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+
 end
 
 paragraph \<open>partial_map_resource2\<close>
 
 lemma (in partial_map_resource2) \<phi>R_dispose_res[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in>\<^sub>S domain)
 \<Longrightarrow> dom (get res k) = dom any
 \<Longrightarrow> P (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec (R * {mk (1(k := any))})
@@ -1534,7 +1522,7 @@ lemma (in partial_map_resource2) \<phi>R_dispose_res[intro!]:
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__" \<phi>Res_Spec_mult_homo)
 
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res"[THEN \<phi>CONSEQ'E0, intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in>\<^sub>S R.domain)
 \<Longrightarrow> (\<And>res r. res \<in> \<phi>Res_Spec (\<I> INTERP r * {R.mk (1(k := f))})
       \<Longrightarrow> P (R.get res) \<and> dom f = dom (R.get res k))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := 1))
@@ -1571,7 +1559,7 @@ definition (in mapping_resource)
 )\<close>
 
 lemma (in mapping_resource) \<phi>R_set_res_new[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> m(k := u) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> m(k := u) \<in>\<^sub>S domain)
 \<Longrightarrow> k \<notin> dom1 (get res)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res
@@ -1580,8 +1568,8 @@ lemma (in mapping_resource) \<phi>R_set_res_new[intro!]:
   by (simp add: \<phi>expns "__allocation_rule__" \<phi>Res_Spec_mult_homo del: set_mult_expn)
 
 lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
-\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S DOM \<longrightarrow> m(k := init) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
+\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S domain \<longrightarrow> m(k := init) \<in>\<^sub>S domain)
 \<Longrightarrow> (\<And>k res. res \<in> \<phi>Res_Spec (R * {mk (1(k := init))} \<s>\<u>\<b>\<j> P k)
       \<Longrightarrow> F k res \<subseteq> \<S> Y E)
 \<Longrightarrow> res \<in> \<phi>Res_Spec R
@@ -1604,15 +1592,15 @@ lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
   qed .
 
 lemma (in identity_fiction_for_partial_mapping_resource) "\<phi>R_allocate_res_entry"[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S DOM \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
-\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S DOM \<longrightarrow> m(k \<mapsto> init) \<in>\<^sub>S DOM)
+  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
+\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S R.domain \<longrightarrow> m(k \<mapsto> init) \<in>\<^sub>S R.domain)
 \<Longrightarrow> (\<And>new. P new \<Longrightarrow> \<p>\<r>\<o>\<c> F new \<lbrace> X \<heavy_comma> init \<Ztypecolon> \<phi> (new \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry P (Some init) F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_\<phi>Res_Spec simp del: set_mult_expn del: subsetI)
   subgoal for r res c
   apply (rule R.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])
   apply (clarsimp)
-      apply (clarsimp)
+  apply (clarsimp)
   apply (clarsimp simp add: Subjection_expn
                   simp del: \<phi>Res_Spec_mult_homo set_mult_expn del: subsetI)
   subgoal premises prems for k res'

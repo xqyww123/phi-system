@@ -1,13 +1,13 @@
-signature FICTION_SPACE_ARGUMENT = sig
+signature FICTION_LOCALE_ARGUMENT = sig
 
-include GENERIC_RESOURCE_SPACE_ARGUMENT
+include GENERIC_RESOURCE_LOCALE_ARGUMENT
 
 val DOMAIN_N : string
 val INTERPRET_N : string
 
 end
 
-structure Fiction_Space_Argument : FICTION_SPACE_ARGUMENT = struct
+structure Fiction_Locale_Argument : FICTION_LOCALE_ARGUMENT = struct
 
 type additional_data  = string
 type additional_data' = typ
@@ -57,7 +57,9 @@ fun read_arg ctxt resT raw_T env =
 fun cert_arg ctxt resT raw_TM env =
   let
     val thy = Proof_Context.theory_of ctxt;
-    val chk = Sign.certify_term thy o Type.constraint \<^Type>\<open>interp dummyT resT\<close>
+    val chk = Sign.certify_term thy
+            o Syntax.check_term ctxt
+            o Type.constraint \<^Type>\<open>interp dummyT resT\<close>
     val (Tm,Ty,_) = chk raw_TM
     val _ = Type.no_tvars Ty
       handle TYPE (msg, _, _) => error msg;
@@ -69,8 +71,6 @@ fun dest_typ (\<^Type>\<open>interp T _\<close>) = T
   | dest_typ T = raise TYPE ("shoud be a sep_closed_set", [T], [])
 
 val field_locale = \<^locale>\<open>fiction_kind\<close>
-val command_name = \<^command_keyword>\<open>fiction_space\<close>
-val comment = "define fiction space by locale"
 val space_locale = \<^locale>\<open>fictional_space\<close>
 
 
@@ -84,4 +84,4 @@ fun space_locale_args resT repT =
 
 end
 
-structure Fiction_Space = Generic_Resource_Space(Fiction_Space_Argument)
+structure Fiction_Locale = Generic_Resource_Locale(Fiction_Locale_Argument)
