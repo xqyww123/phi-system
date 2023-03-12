@@ -10,6 +10,10 @@ val basic_recursive_mod : (Proof.context -> 'a list -> term list)
                        -> binding (*to bind the recursive func*)
                        -> 'a list -> context_state -> context_state
 
+val is_constructing_recursive_procedure : Proof.context -> bool
+
+structure Applying_Recursive_Modifier : HOOKS
+
 end
 
 structure PhiSem_Control_Flow : PHISEM_CONTROL_FLOW = struct
@@ -46,8 +50,27 @@ fun mk_parameterized_schematic_proc mk_T mk_F ctxt arg_ty ret_ty var_name =
           |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
    in f' end
 
-fun basic_recursive_mod prep_vars binding raw_vars (ctxt0,sequent0) =
+
+structure Is_Recursive = Proof_Data (
+  type T = bool
+  val init = K false
+)
+
+val is_constructing_recursive_procedure = Is_Recursive.get
+
+val _ = Phi_Toplevel.Finishing_Construction_Hooks.add 100 (fn () =>
+          apfst (Is_Recursive.put false))
+
+structure Applying_Recursive_Modifier = Hooks(type arg = unit)
+
+fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
   let
+    val _ = if is_constructing_recursive_procedure ctxt01
+            then error "the procedure has already been declared recursive"
+            else ()
+    val (ctxt0,sequent0) = (ctxt01,sequent01)
+          |> Applying_Recursive_Modifier.invoke ()
+          |> apfst (Is_Recursive.put true)
     val sequent = sequent0
                   (*first pack all premises*)
               |> Conv.gconv_rule (let open Phi_Helper_Conv Conv in
@@ -129,7 +152,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt0,sequent0) =
             |> spec
             |> singleton (Proof_Context.export ctxt ctxt0)
 
-    val norm_sequent = Phi_Helper_Conv.rewrite_leading_antecedent simp_ctxt sequent
+    val norm_sequent = Phi_Helper_Conv.simplify_leading_antecedent simp_ctxt sequent
     val sequent1 = (rule RS norm_sequent)
                    (*unpack compressed premises*)
                 |> Conv.gconv_rule (let open Phi_Helper_Conv Conv in

@@ -28,7 +28,8 @@ int XX(int x) { if 0 < x then x - 1 else 0 }
 proc
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
-  \<medium_left_bracket> ;;
+  is [routine]
+  \<medium_left_bracket>
     if \<medium_left_bracket> \<open>0 < $x\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0\<close> \<medium_right_bracket>.
     (* the cartouche like \<open>0 < $x\<close> invokes a synthesis proce
 ss
@@ -43,33 +44,30 @@ setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
 
 declare [[\<phi>hide_techinicals=false]]
 
-ML \<open>Phi_Helper_Conv.aggregate_imps_obj (K Conv.all_conv) \<^context> \<^cprop>\<open>A \<Longrightarrow> B \<Longrightarrow> asd\<^bold>: (\<And>x. P x) \<Longrightarrow> D\<close>\<close>
-
 (* declare [[\<phi>hide_brk_frame=false, \<phi>easoning]] *)
 
 fun fib :: \<open>nat \<Rightarrow> nat\<close> where
   \<open>fib 0 = 1\<close> | \<open>fib (Suc 0) = 1\<close> | \<open>fib n = fib (n-1) + fib (n-2)\<close>
- 
+
 proc FIB:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<close>
-  is [routine]
   is [recursive n]
-  \<medium_left_bracket> if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket>. \<medium_left_bracket>
+  is [routine]
+  \<medium_left_bracket>
+    if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket>. \<medium_left_bracket>
       \<open>$n - 1\<close> FIB \<rightarrow> val a;;
       \<open>$n - 2\<close> FIB \<rightarrow> val b;;
-      \<open>$a + $b\<close>
-  \<medium_right_bracket>.
-  \<medium_right_bracket> by (metis One_nat_def Value_of_def fib.elims fib.simps(2) le_Suc_eq le_zero_eq) .
+      return (\<open>$a + $b\<close>)
+      affirm by (metis fib.elims less_or_eq_imp_le numeral_1_eq_Suc_0 numerals(1) the_\<phi>(2) zero_less_one_class.zero_le_one)
+    \<medium_right_bracket>.
+  \<medium_right_bracket> by (simp add: le_Suc_eq) .
 
-thm FIB_\<phi>app
-thm FIB_def
-  
 proc FIB2:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>(8)\<close>
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
-  is [routine]
   is [recursive n]
+  is [routine]
   \<medium_left_bracket> if \<open>$n \<le> 1\<close> \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>. \<medium_left_bracket>
         \<open>$n - 1\<close> FIB2 \<rightarrow> val a;;
         \<open>$n - 2\<close> FIB2 \<rightarrow> val b;;
@@ -78,13 +76,20 @@ proc FIB2:
   \<medium_right_bracket> by (smt (verit, ccfv_threshold) One_nat_def Value_of_def fib.elims fib.simps(1) fib.simps(2) le_Suc_eq le_zero_eq) .
 
 thm FIB2_def
-   
-proc XXXX:
+
+proc YYY:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
   is [routine]
-  is [routine]
-  is [routine]
+  \<medium_left_bracket>  \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
+
+thm YYY_def
+
+
+proc XXXX:
+  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
+  output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
+  is [routine_basic]
   \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
 
 thm XXXX_def
@@ -106,7 +111,7 @@ proc
   premises \<open>x < 10\<close>
   output \<open>\<v>\<a>\<l> 10 \<Ztypecolon> \<nat>\<close>
   is [routine]
-  \<medium_left_bracket> $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
+  \<medium_left_bracket> $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*);;
     while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
     \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket>. (*guard*)
     \<medium_left_bracket>
@@ -117,7 +122,7 @@ proc
   \<medium_right_bracket>. .
 
 
-
+(*
 proc XXX:
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   premises A: \<open>x < 10\<close>
@@ -131,17 +136,18 @@ proc XXX:
  \<medium_right_bracket> .. .
 
 
-proc YYY:
+proc YYY2:
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> y \<Ztypecolon> \<nat>\<close>
   premises A: \<open>x < y\<close>
   output \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<heavy_comma> 20 \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
-  is [routine]
   is [recursive x y]
   is [recursive x y]
   is [recursive xa ya]
+  is [routine]
   \<medium_left_bracket> premises A and AAA and BBB and CCC
     $xaa $yaa CCC AAA BBB \<medium_right_bracket>. .
 
-thm YYY_def
+thm YYY2_def
+*)
 
 end

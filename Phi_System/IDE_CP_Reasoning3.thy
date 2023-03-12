@@ -1200,6 +1200,15 @@ text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the 
 text \<open>This merging procedure retains the order of the left side.\<close>
 
 consts branch_convergence :: \<open>action\<close>
+       invoke_branch_convergence :: \<open>action\<close>
+
+lemma [\<phi>reason 3000 for \<open>If _ _ _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action invoke_branch_convergence\<close>]:
+  " Simplify (assertion_simps undefined) A' A
+\<Longrightarrow> Simplify (assertion_simps undefined) B' B
+\<Longrightarrow> If P A' B' \<i>\<m>\<p>\<l>\<i>\<e>\<s> C @action branch_convergence
+\<Longrightarrow> If P A  B  \<i>\<m>\<p>\<l>\<i>\<e>\<s> C @action invoke_branch_convergence"
+  unfolding Action_Tag_def Simplify_def
+  by blast 
 
 (* text \<open>Though definitionally If is identical to If, there is semantic difference between them.
   If has a systematical meaning. If P A B means the procedure merging two assertions

@@ -28,7 +28,10 @@ val tylabel_name_size = String.size tylabel_NAME
 
 fun mk_name_tylabels names =
       HOLogic.mk_tupleT (map (fn x => TFree (tylabel_name x, [\<^class>\<open>type\<close>])) names)
-fun trim_tylabel_name name = String.substring(name, tylabel_name_size, size name - tylabel_name_size)
+fun trim_tylabel_name name =
+  if String.isPrefix tylabel_NAME name
+  then String.substring(name, tylabel_name_size, size name - tylabel_name_size)
+  else ""
 
 local open Ast in
 

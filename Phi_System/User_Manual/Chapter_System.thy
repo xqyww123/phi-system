@@ -138,7 +138,7 @@ available \<^emph>\<open>resources\<close> to complete the job.
 To illustrate, a job can be either of
 \<^item> a transformation of abstraction demanded to be reasoned, denoted by \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
 \<^item> a proof obligation intended to be solved by users, denoted by \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P\<close>
-\<^item> a parameter expected to be given by users, denoted by \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?x\<close>
+\<^item> a parameter expected to be given by users, denoted by \<open>\<p>\<a>\<r>\<a>\<m> ?x\<close>
 \<^item> a specification of a sub-procedure waiting for users programming it,
   denoted by \<open>\<p>\<r>\<o>\<c> ?F \<lbrace> X \<longmapsto> Y \<t>\<h>\<r>\<o>\<w>\<s> E \<rbrace>\<close>.
 More detailed elucidation are given later in \cref{sec:antecedent-jobs}.

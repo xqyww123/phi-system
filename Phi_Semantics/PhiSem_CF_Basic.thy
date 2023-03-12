@@ -121,7 +121,7 @@ lemma op_sel_\<phi>app:
 lemma branch_\<phi>app:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T )
 \<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F )
-\<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y v @action branch_convergence)
+\<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y v @action invoke_branch_convergence)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_if br\<^sub>T br\<^sub>F rawc \<lbrace> X\<heavy_comma> C \<Ztypecolon> \<v>\<a>\<l>[rawc] \<bool> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. (E\<^sub>T e \<s>\<u>\<b>\<j> C) + (E\<^sub>F e \<s>\<u>\<b>\<j> \<not> C)) \<close>
   unfolding op_if_def Premise_def Action_Tag_def
   apply (cases rawc; cases C; simp; rule; simp add: \<phi>expns WT_bool)
@@ -131,7 +131,7 @@ proc "if":
   assumes C: \<open>\<p>\<r>\<o>\<c> cond \<lbrace> X \<longmapsto> X1\<heavy_comma> \<v>\<a>\<l> C \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
       and brT: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T \<close>
       and brF: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> C \<longrightarrow> \<p>\<r>\<o>\<c> brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>F \<close>
-      and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y v @action branch_convergence)\<close>
+      and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y v @action invoke_branch_convergence)\<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
@@ -161,7 +161,7 @@ lemma "__DoWhile__rule_\<phi>app":
     by blast .
 
 proc (nodef) do_while:
-assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X' x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
+assumes \<open>\<p>\<a>\<r>\<a>\<m> ( X' x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
     and V: \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<a>\<n>\<d> Any @action ToSA\<close>
 assumes B: \<open>\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x
     \<longrightarrow> \<p>\<r>\<o>\<c> body \<lbrace> X' x \<longmapsto> (X' x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x') \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
@@ -175,20 +175,20 @@ throws E
   \<medium_right_bracket> by simp .
 
 proc while:
-  assumes \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
+  assumes \<open>\<p>\<a>\<r>\<a>\<m> ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
   assumes V[unfolded Action_Tag_def]:
-           "X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X x \<s>\<u>\<b>\<j> x. invariant x) \<a>\<n>\<d> Any @action ToSA"
-    and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> X x \<longmapsto> X x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
-    and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> X x \<longmapsto> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
+           "X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) \<a>\<n>\<d> Any @action ToSA"
+    and C: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<o>\<c> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
+    and B: "\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<o>\<c> Body \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2"
   input  \<open>X'\<close>
-  output \<open>X x \<s>\<u>\<b>\<j> x. invariant x \<and> \<not> cond x\<close>
+  output \<open>R\<heavy_comma> X x \<s>\<u>\<b>\<j> x. invariant x \<and> \<not> cond x\<close>
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> V C
     branch \<medium_left_bracket>
-      do_while \<open>X vars \<s>\<u>\<b>\<j> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
+      do_while \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
       \<medium_left_bracket> B C \<medium_right_bracket>.
       \<medium_right_bracket>.
-    \<medium_left_bracket> \<medium_right_bracket> for \<open>X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close> ..
+    \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close> ..
   \<medium_right_bracket> .. .
 
 (*

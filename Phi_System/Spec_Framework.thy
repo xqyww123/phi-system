@@ -57,6 +57,8 @@ Then in exception specs, any Val is senseless and will be removed.*)
 
 subsection \<open>Semantic Type\<close>
 
+subsubsection \<open>Single Value\<close>
+
 definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
   where \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
   \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
@@ -84,6 +86,17 @@ lemma [\<phi>reason 100]:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
   ..
+
+subsubsection \<open>Multiple Values\<close>
+
+definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg set\<close>
+  where \<open>Well_Typed_Vals TYs = {vs. list_all2 (\<lambda>v T. v \<in> Well_Type T) (to_vals (\<phi>arg.dest vs)) TYs}\<close>
+
+definition \<phi>_Have_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> TY list \<Rightarrow> bool\<close>
+  where \<open>\<phi>_Have_Types spec TYs = (\<forall>v. Inhabited (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
+
+declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<Rightarrow> \<open>\<phi>_Have_Types ?S _\<close> (100)]]
+
 
 subsubsection \<open>Reasoning Rules\<close>
 

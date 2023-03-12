@@ -864,7 +864,7 @@ lemma [\<phi>reason, \<phi>overload D]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t y 
 
 lemma [\<phi>reason]: " x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> y1 \<Ztypecolon> M \<a>\<n>\<d> P \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y1 = g y  \<Longrightarrow> x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> M <down-lift> g"
   unfolding Imply_def by (simp add: \<phi>expns)
-lemma "\<down>lift_\<phi>app": "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g y = x \<Longrightarrow> x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> N <down-lift> g"
+lemma "\<down>lift_\<phi>app": "\<p>\<a>\<r>\<a>\<m> g \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g y = x \<Longrightarrow> x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> N <down-lift> g"
   unfolding Imply_def by (simp add: \<phi>expns)
 
 
@@ -883,7 +883,7 @@ lemma UpLift_inhabited[elim,\<phi>inhabitance_rule]:
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
 lemma "\<up>lift_\<phi>app":
-  "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m g \<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m y \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = g x \<Longrightarrow> x \<Ztypecolon> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> M <up-lift> g"
+  "\<p>\<a>\<r>\<a>\<m> g \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> y \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = g x \<Longrightarrow> x \<Ztypecolon> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> M <up-lift> g"
   unfolding Imply_def by (simp add: \<phi>expns) blast
 (* lemma [\<phi>overload D]: "x \<Ztypecolon> M <up-lift> g \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists> \<Ztypecolon> M) "
   unfolding Imply_def by (simp add: \<phi>expns) blast *)

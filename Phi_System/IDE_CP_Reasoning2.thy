@@ -404,7 +404,7 @@ subsection \<open>Zero\<close>
       val sequent' = Drule.infer_instantiate ctxt
                         (collect [] X |> map (apsnd (Thm.cterm_of ctxt))) sequent
       val sequent'2 = (@{thm zero_implies_any} RS sequent')
-                   |> Raw_Simplifier.rewrite_rule ctxt @{thms zero_fun[folded atomize_eq]}
+                   |> Phi_Helper_Conv.rewrite_leading_antecedent ctxt @{thms zero_fun[folded atomize_eq]}
    in SOME ((ctxt, sequent'2), Seq.empty) end)
 \<close>
 

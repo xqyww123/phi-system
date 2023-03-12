@@ -1,6 +1,11 @@
 signature NAMED_PREMISES = sig
 
-val bind_sequent_assms : (Attrib.binding * term list (*let bindings*)) list -> int
+(*register the attributes (and also let bindings) of the given bindings directly*)
+val add_bindings : (Attrib.binding * term list) list -> Proof.context -> Proof.context
+
+(*bind leading assumptions of the subgoal with the given attributes and let bindings,
+  up to the number of the given attributes*)
+val bind_sequent_assms : (Attrib.binding * term list (*let bindings*)) list -> int (*goal*)
                       -> context_state -> context_state
 val bindings_of : Proof.context -> term -> (Attrib.binding * term list (*let bindings*)) option list
 val remove_assm_bindings : Proof.context -> int -> thm
@@ -11,6 +16,8 @@ val update_binding : string
                   -> Proof.context -> Proof.context
 val remove_bindings : string list -> Proof.context -> Proof.context
 
+val registered : Proof.context -> string -> bool
+
 end
 
 structure Named_Premises : NAMED_PREMISES = struct
@@ -19,6 +26,8 @@ structure Data = Proof_Data (
   type T = (Attrib.binding * term list (*let bindings*)) Symtab.table * string (*anonymous id*)
   val init = K (Symtab.empty, "\<p>\<r>\<e>\<m>_a")
 )
+
+fun registered ctxt = Symtab.defined (fst (Data.get ctxt))
 
 fun add_bindings bindings =
       Data.map (apfst (fold (fn X as ((B,attrs),pats) =>

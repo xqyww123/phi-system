@@ -1,79 +1,47 @@
 theory PhiSem_CF_Routine
-  imports PhiSem_CF_Break PhiSem_CF_Basic
+  imports PhiSem_CF_Break PhiSem_CF_Routine_Basic
 begin
 
-typ \<open>'a::VALs\<close>
+definition op_routine
+        :: \<open>TY list \<Rightarrow> TY list \<Rightarrow>
+            (RES.brk_label \<Rightarrow> ('a::FIX_ARITY_VALs, 'b::FIX_ARITY_VALs) proc') \<Rightarrow>
+            ('a,'b) proc'\<close>
+  where \<open>op_routine argtys rettys F =
+    op_routine_basic argtys rettys (\<lambda>arg. op_brk_scope (\<lambda>brk. F brk arg))\<close>
 
-section \<open>Routine\<close>
-
-text \<open>Procedure in \<open>\<phi>\<close>-system is a program segment, which does not correspond to a function
-  in the target language necessarily. To model them, we formalize a specific semantic statement
-  and we call them \<^emph>\<open>routine\<close> to distinguish with \<^emph>\<open>procedure\<close>.\<close>
-
-definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg set\<close>
-  where \<open>Well_Typed_Vals TYs = {vs. list_all2 (\<lambda>v T. v \<in> Well_Type T) (to_vals (\<phi>arg.dest vs)) TYs}\<close>
-
-definition op_routine :: \<open>TY list \<Rightarrow> TY list \<Rightarrow> ('a::FIX_ARITY_VALs, 'b::FIX_ARITY_VALs) proc' \<Rightarrow> ('a,'b) proc'\<close>
-  where \<open>op_routine argtys rettys F = (\<lambda>args.
-      \<phi>M_assert (args \<in> Well_Typed_Vals argtys)
-   \<ggreater> F args
-  \<bind> (\<lambda>rets. \<phi>M_assert (rets \<in> Well_Typed_Vals rettys)
-           \<ggreater> Return rets))\<close>
-
-definition \<phi>_Have_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> TY list \<Rightarrow> bool\<close>
-  where \<open>\<phi>_Have_Types spec TYs = (\<forall>v. Inhabited (spec v) \<longrightarrow> v \<in> Well_Typed_Vals TYs)\<close>
-
-declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<Rightarrow> \<open>\<phi>_Have_Types ?S _\<close> (100)]]
-
-declare [[\<phi>trace_reasoning = 1]]
-
-lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?R vs\<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T) _\<close>]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs) TYs
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R (\<phi>V_snd vs)\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T) (TY#TYs)\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
-  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inhabited_rewr)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[vs] T) [TY]\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
-  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inhabited_rewr)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>_Have_Types R TYs
-\<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs\<heavy_comma> S) TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
-
-lemma [\<phi>reason 2000]:
-  \<open> \<phi>_Have_Types (\<lambda>_::unit \<phi>arg. Void) []\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
-
-lemma [\<phi>reason 1020 except \<open>\<phi>_Have_Types (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:
-  \<open> \<phi>_Have_Types (\<lambda>vs. Void\<heavy_comma> R vs) TYs
-\<Longrightarrow> \<phi>_Have_Types R TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
-
-lemma [\<phi>reason 1000]:
-  \<open> FAIL TEXT(\<open>Fail to infer the semantic type of\<close> R)
-\<Longrightarrow> \<phi>_Have_Types R TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+abbreviation
+  \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>. op_routine argtys rettys (F \<f>))\<close>
 
 lemma "__routine__":
   \<open> \<phi>_Have_Types X TY_ARGs
 \<Longrightarrow> \<phi>_Have_Types Y TY_RETs
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> (\<And>(vs:: 'a::FIX_ARITY_VALs \<phi>arg <named> 'names).
-          \<p>\<r>\<o>\<c> F (case_named id vs) \<lbrace> X (case_named id vs) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
+\<Longrightarrow> (\<And>(vs:: 'a::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
+      return_\<phi>app\<^bold>: HIDDEN_PREM(
+          \<forall>ret :: 'b :: FIX_ARITY_VALs \<phi>arg.
+            \<p>\<r>\<o>\<c> (op_break label_ret ret :: 'b proc) \<lbrace> Y ret\<heavy_comma> Brk_Frame label_ret \<longmapsto> 0 \<rbrace>
+            \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame label_ret Y))
+      \<Longrightarrow> \<p>\<r>\<o>\<c> F label_ret (case_named (\<lambda>x. x) vs) \<lbrace> X (case_named id vs)\<heavy_comma> Brk_Frame label_ret
+                                          \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> Brk_Frame label_ret
+                                            \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k label_ret \<^bold>w\<^bold>i\<^bold>t\<^bold>h Y \<^bold>o\<^bold>r E e))
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_routine TY_ARGs TY_RETs F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  unfolding op_routine_def \<phi>_Have_Types_def named_All named.case id_apply
-  by (rule \<phi>SEQ, rule \<phi>SEQ, rule \<phi>M_assert, blast, assumption, rule \<phi>SEQ,
-      rule \<phi>M_assert, blast, rule \<phi>M_Success')
-
-ML_file \<open>library/cf_routine.ML\<close>
+  unfolding op_routine_def
+  \<medium_left_bracket> premises [\<phi>reason 5000] and [\<phi>reason 5000] and _ and F
+    "__routine_basic__"[where TY_ARGs=TY_ARGs and TY_RETs=TY_RETs and X=X and Y=Y and vs=vs and 'names='names, simplified]
+    \<medium_left_bracket> for vs
+      brk_scope \<medium_left_bracket> for label_ret
+        F[where vs=\<open>tag vs\<close>, unfolded HIDDEN_PREM_def, simplified]
+        "_op_break_rule_"
+      \<medium_right_bracket>. ;;
+    \<medium_right_bracket>. ;;
+  \<medium_right_bracket>. .
 
 attribute_setup routine =
-  \<open>Scan.succeed (Phi_Modifier.wrap_to_attribute PhiSem_Control_Flow.routine_mod)\<close>
+  \<open>Scan.succeed (Phi_Modifier.wrap_to_attribute
+      (PhiSem_Control_Flow.routine_mod
+          (fn T => \<^typ>\<open>RES.brk_label\<close> --> T)
+          (fn N => fn wrap => fn Tm => Abs("label_ret", \<^typ>\<open>RES.brk_label\<close>, wrap (Tm $ Bound N)))
+          @{thm "__routine__"}))\<close>
 
 
 end

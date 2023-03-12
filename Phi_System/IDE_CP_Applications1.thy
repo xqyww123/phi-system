@@ -293,10 +293,10 @@ section \<open>Basic Applications\<close>
 
 subsection \<open>Conversion\<close>
 
-lemma is_\<phi>app: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x' \<Longrightarrow> x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> N" using implies_refl by force
+lemma is_\<phi>app: "\<p>\<a>\<r>\<a>\<m> x' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x' \<Longrightarrow> x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> N" using implies_refl by force
 
 lemma assert_\<phi>app:
-  \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m Y \<Longrightarrow> \<^bold>d\<^bold>o X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> Any @action ToSA \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y\<close>
+  \<open>\<p>\<a>\<r>\<a>\<m> Y \<Longrightarrow> \<^bold>d\<^bold>o X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> Any @action ToSA \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y\<close>
   unfolding Action_Tag_def Do_def
   using implies_weaken by blast
 
@@ -311,7 +311,7 @@ declare [[\<phi>reason_default_pattern
 abbreviation \<open>\<A>_transform_to_be S \<equiv> \<A>_leading_item (\<A>nap (as S)) \<close>
 
 lemma as_\<phi>app:
-  " \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m S
+  " \<p>\<a>\<r>\<a>\<m> S
 \<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> X' \<a>\<n>\<d> P @action \<A>_transform_to_be S
 \<Longrightarrow> x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> X' \<a>\<n>\<d> P"
   unfolding Do_def Action_Tag_def .
@@ -343,7 +343,7 @@ declare [[\<phi>reason_default_pattern
 ]]
 
 lemma to_\<phi>app:
-  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T
+  \<open> \<p>\<a>\<r>\<a>\<m> T
 \<Longrightarrow> \<^bold>d\<^bold>o X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_transform_to T
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   unfolding Do_def Action_Tag_def .
@@ -408,7 +408,7 @@ declare [[ \<phi>reason_default_pattern
 ]]
 
 lemma destruct\<phi>_\<phi>app:
-  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m T'
+  \<open> \<p>\<a>\<r>\<a>\<m> T'
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D \<a>\<n>\<d> P @action \<A>_destruct\<phi> T'
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D \<a>\<n>\<d> P\<close>
   unfolding Action_Tag_def .
@@ -440,7 +440,7 @@ lemma [\<phi>reason 1200 for \<open>(?S::'a::sep_magma set) \<i>\<m>\<p>\<l>\<i>
   using implies_left_prod implies_trans by fastforce
 
 lemma construct\<phi>_\<phi>app:
-  \<open> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (x \<Ztypecolon> T)
+  \<open> \<p>\<a>\<r>\<a>\<m> (x \<Ztypecolon> T)
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P @action \<A>_construct\<phi>_ToSA x T
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P \<close>
   unfolding Action_Tag_def Do_def .

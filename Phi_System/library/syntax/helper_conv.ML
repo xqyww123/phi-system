@@ -21,8 +21,9 @@ val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
 
 val may_Trueprop_conv : conv -> conv
 
-val rewrite_leading_antecedent : Proof.context -> thm -> thm
-val rewrite_leading_antecedent_hhf_concl : Proof.context -> thm -> thm
+val rewrite_leading_antecedent : Proof.context -> thm list -> thm -> thm
+val simplify_leading_antecedent : Proof.context -> thm -> thm
+val simplify_leading_antecedent_hhf_concl : Proof.context -> thm -> thm
 
 end
 
@@ -93,10 +94,13 @@ fun may_Trueprop_conv cv ct =
     Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv cv ct
   | _ => cv ct)
 
-fun rewrite_leading_antecedent ctxt =
+fun rewrite_leading_antecedent ctxt rules =
+  Conv.gconv_rule (Raw_Simplifier.rewrite ctxt true rules) 1
+
+fun simplify_leading_antecedent ctxt =
   Conv.gconv_rule (Simplifier.rewrite ctxt) 1
 
-fun rewrite_leading_antecedent_hhf_concl ctxt =
+fun simplify_leading_antecedent_hhf_concl ctxt =
   Conv.gconv_rule (hhf_concl_conv Simplifier.rewrite ctxt) 1
 
 end

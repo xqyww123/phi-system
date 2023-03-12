@@ -26,9 +26,9 @@ fun find_obligation flag i (( _ $ (@{term Proof_Obligation} $ _ ))::L) =
 
 val err_msg = "Bad configuration of reasoning rules!\n\
             \Some antecedents are bound on undetermined variables to be given by users in future, \
-            \which can only be used in \<^bold>d\<^bold>o, \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<p>\<r>\<e>\<m>\<i>\<s>\<e>.\n\
-            \Check any variables assigned by \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m antecedent are only used in \
-            \\<^bold>d\<^bold>o, \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<p>\<r>\<e>\<m>\<i>\<s>\<e>."
+            \which can only be used in \<^bold>d\<^bold>o, \<p>\<a>\<r>\<a>\<m>, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<p>\<r>\<e>\<m>\<i>\<s>\<e>.\n\
+            \Check any variables assigned by \<p>\<a>\<r>\<a>\<m> antecedent are only used in \
+            \\<^bold>d\<^bold>o, \<p>\<a>\<r>\<a>\<m>, \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t and \<p>\<r>\<e>\<m>\<i>\<s>\<e>."
 
 fun chk_param X L idx =
   let

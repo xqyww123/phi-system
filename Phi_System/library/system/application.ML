@@ -53,10 +53,13 @@ fun mk_app_reasoning_normal app sequent =
   in Thm.implies_elim (Thm.implies_elim rule app) sequent
   end
 
+fun prep_sequent sequent = prep_sequent (@{thm allI} RS sequent)
+                           handle THM _ => sequent
+
 fun mk_app_reasoning_RS app sequent =
   (app RS @{thm \<phi>Application_Conv})
     |> Thm.permute_prems 0 (Thm.nprems_of app)
-    |> (fn th => th RS sequent)
+    |> (fn th => th RS prep_sequent sequent)
 
 fun mk_app_reasoning sequent app =
   case Thm.prop_of sequent

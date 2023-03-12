@@ -7,11 +7,18 @@ signature HOOKS = sig
 type arg
 type priority = int
 
-(*One theory is not allowed to have two hooks having the identical priority.
+(*In one theory two hooks having the identical priority are not allowed.
   But the restriction is not applied between theories.*)
 val add: priority -> (arg -> context_state -> context_state) -> Context.generic -> Context.generic
-val remove: priority * string (*theory name*) -> Context.generic -> Context.generic
+val add': priority * theory (*the theory that the hook belongs to. A theory cannot contain
+                              two hook having the identical priority*)
+      -> (arg -> context_state -> context_state) -> Context.generic -> Context.generic
+val remove: priority * string (*name of the theory belonging the hook*)
+         -> Context.generic -> Context.generic
+val remove': priority * theory (*the theory belonging the hook*)
+         -> Context.generic -> Context.generic
 val invoke : arg -> context_state -> context_state
+val clean : Context.generic -> Context.generic
 
 exception Success of context_state
 val invoke_until_success : (arg -> context_state -> context_state) (*fallback*)
@@ -24,8 +31,8 @@ type arg = Arg.arg
 type priority = int
 
 structure PriorityTab = Table (
-  type key = priority * serial
-  val ord = prod_ord int_ord int_ord
+  type key = priority * string
+  val ord = prod_ord int_ord fast_string_ord
 )
 
 structure Data = Generic_Data (
@@ -34,12 +41,19 @@ structure Data = Generic_Data (
   val merge = PriorityTab.merge (K true)
 )
 
-fun add priority f ctxt =
-  Data.map (PriorityTab.update_new (
-      (priority, Context.theory_identifier (Context.theory_of ctxt)), f)) ctxt
+fun add'' (priority, thy_id) f ctxt =
+  Data.map (PriorityTab.update_new ((priority, thy_id), f)) ctxt
 
-fun remove (priority,thy) =
-  Data.map (PriorityTab.delete_safe (priority, Context.theory_identifier (Thy_Info.get_theory thy)))
+fun add' (priority, thy) f ctxt = add'' (priority, Context.theory_long_name thy) f ctxt
+
+fun add priority f ctxt = add' (priority, Context.theory_of ctxt) f ctxt
+
+fun remove' (priority,thy) =
+  Data.map (PriorityTab.delete_safe (priority, Context.theory_long_name thy))
+
+fun remove (priority,thy) = remove' (priority, Thy_Info.get_theory thy)
+
+val clean = Data.map (K PriorityTab.empty)
 
 fun invoke arg (ctxt,sequent) =
       PriorityTab.fold (fn (_,f) => fn s => f arg s) (Data.get (Context.Proof ctxt)) (ctxt,sequent)

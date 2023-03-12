@@ -61,4 +61,12 @@ val _ = Theory.setup (
     ) "register attributes applying on premises matching the given pattern, for those premises\
       \ in \<phi>-programming block."
 )
+(*Syntax: \<phi>premise_attribute  [attribute] for \<open>pattern_of_the_antecedent_to_be_bound\<close>
+          \<phi>premise_attribute? [attribute] for \<open>pattern_of_the_antecedent_to_be_bound\<close>
+
+If the question mark is given, the attribute is NOT activated once the user manually give
+  an attribute to the premise, e.g. premise[some], or even empty bracket like premise[].
+Else, the attribute is always applied BEFORE any attributes given by user.
+*)
+
 end

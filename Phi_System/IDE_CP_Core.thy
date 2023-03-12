@@ -22,7 +22,7 @@ abbrevs
   "!!" = "!!"
   and "<argument>" = "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t"
   and "<do>" = "\<^bold>d\<^bold>o"
-  and "<param>" = "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m"
+  and "<param>" = "\<p>\<a>\<r>\<a>\<m>"
   and "<label>" = "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l"
       and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
       and "<by>" = "\<^bold>b\<^bold>y"
@@ -58,14 +58,14 @@ section \<open>Antecedent Jobs \& Annotations in Sequents\<close>
 
 subsection \<open>Parameter From User\<close>
 
-definition ParamTag :: " 'a::{} \<Rightarrow> bool" ("\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m _" [1000] 26) where "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<equiv> True"
+definition ParamTag :: " 'a::{} \<Rightarrow> bool" ("\<p>\<a>\<r>\<a>\<m> _" [1000] 26) where "\<p>\<a>\<r>\<a>\<m> x \<equiv> True"
 
-text \<open>Antecedent \<^prop>\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x\<close> asks users to input some term that matches pattern \<^term>\<open>x\<close>.
+text \<open>Antecedent \<^prop>\<open>\<p>\<a>\<r>\<a>\<m> x\<close> asks users to input some term that matches pattern \<^term>\<open>x\<close>.
   \<phi>-Processor `set_param` processes this antecedent.\<close>
 
-lemma ParamTag: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" for x :: "'a::{}" unfolding ParamTag_def using TrueI .
-lemma [elim!,\<phi>inhabitance_rule]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<Longrightarrow> C \<Longrightarrow> C" .
-lemma [cong]: "\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x \<longleftrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m x" \<comment> \<open>Disable simplification on parameters\<close> ..
+lemma ParamTag: "\<p>\<a>\<r>\<a>\<m> x" for x :: "'a::{}" unfolding ParamTag_def using TrueI .
+lemma [elim!,\<phi>inhabitance_rule]: "\<p>\<a>\<r>\<a>\<m> x \<Longrightarrow> C \<Longrightarrow> C" .
+lemma [cong]: "\<p>\<a>\<r>\<a>\<m> x \<longleftrightarrow> \<p>\<a>\<r>\<a>\<m> x" \<comment> \<open>Disable simplification on parameters\<close> ..
 
 ML_file \<open>library/syntax/param.ML\<close>
 
@@ -123,7 +123,7 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
   unfolding Do_def Do_embed_def .
 
-\<phi>reasoner_ML ParamTag 1000 (\<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P\<close>) = \<open>
+\<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
   Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent)
 \<close>
 
@@ -187,7 +187,6 @@ translations "_LABELED_PROP_ name X" => "CONST Labelled (LABEL name) X"
 
 ML_file \<open>library/syntax/label.ML\<close>
 ML_file \<open>library/tools/named_premises.ML\<close>
-ML_file \<open>library/system/premise_attribute.ML\<close>
 
 
 definition Labelled_embed :: "label \<Rightarrow> bool \<Rightarrow> bool" where "Labelled_embed name x \<equiv> x"
@@ -1634,7 +1633,7 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 \<phi>processor comma 8999 (\<open>?P\<close>) \<open> fn s => 
   \<^keyword>\<open>,\<close> >> (fn _ => fn _ => Phi_Delay_Application.comma s)\<close>
 
-\<phi>processor set_param 5000 (premises \<open>\<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m ?P\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
+\<phi>processor set_param 5000 (premises \<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
   Phi_Sys.set_param_cmd term stat)\<close>
 
 \<phi>processor set_label 5000 (premises \<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>

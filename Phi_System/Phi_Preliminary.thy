@@ -237,6 +237,15 @@ lemma Membership_E_Inhabitance:
   unfolding Inhabited_def by blast
 
 
+subsection \<open>Very Early Mechanism\<close>
+
+subsubsection \<open>Default Attributes in Programming\<close>
+
+text \<open>Registry of default attributes of antecedents in the deductive programming.\<close>
+
+ML_file \<open>library/system/premise_attribute.ML\<close>
+
+
 subsection \<open>Convention of Syntax Priority\<close>
 
 

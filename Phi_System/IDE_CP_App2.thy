@@ -225,7 +225,7 @@ consts working_mode_\<phi>Zero :: working_mode
 
 lemma \<phi>deduce_zero_value:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<^bold>p\<^bold>a\<^bold>r\<^bold>a\<^bold>m (y \<Ztypecolon> U)
+\<Longrightarrow> \<p>\<a>\<r>\<a>\<m> (y \<Ztypecolon> U)
 \<Longrightarrow> \<phi>Zero TY U y
 \<Longrightarrow> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True

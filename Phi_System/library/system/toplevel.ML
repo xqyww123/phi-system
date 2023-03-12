@@ -9,6 +9,9 @@ signature PHI_TOPLEVEL = sig
   datatype cond_kind = Premise | Assumption
   datatype ('a,'b) modifier = Mod_by_Rule of 'a | Mod_by_Attr of 'b
 
+  structure Finishing_Modifier_Hooks : HOOKS
+  structure Finishing_Construction_Hooks : HOOKS
+
   val name_of_the_building_procedure : Proof.context -> binding option
   val begin_proc_cmd : bool (*whether to define a new constant*)
         -> Attrib.binding (*name*)
@@ -450,6 +453,9 @@ fun prove_prem int stat =
 
 datatype ('a,'b) modifier = Mod_by_Rule of 'a | Mod_by_Attr of 'b
 
+structure Finishing_Modifier_Hooks = Hooks (type arg = unit)
+structure Finishing_Construction_Hooks = Hooks (type arg = unit)
+
 structure Procedure_Building_Envir = Proof_Data (
   type T = binding option
   val init = (K NONE)
@@ -470,12 +476,13 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr post_process def_const
     val parse_term = prep_term ctxt_parse
     val parse_prop = prep_prop ctxt_parse
 
-    fun apply_modifier (ctxt,sequent) =
-          fold (fn Mod_by_Rule rule =>
+    fun apply_modifier (ctxt,sequent) = (ctxt,sequent)
+         |> fold (fn Mod_by_Rule rule =>
                           Phi_Modifier.by_rule (singleton (Attrib.eval_thms ctxt) rule)
                  | Mod_by_Attr attr =>
                           fold (Phi_Modifier.apply_wrapped_attribute o prep_attr ctxt) attr
-               ) raw_modifiers (ctxt,sequent)
+               ) raw_modifiers
+         |> Finishing_Modifier_Hooks.invoke ()
 
     fun prep_attrterm prep ((b,attrs),(prop, pats)) =
           ((b, map (Attrib.check_src lthy) attrs), (prep prop, map parse_term pats))
@@ -504,8 +511,10 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr post_process def_const
             |> fold_rev (fn (_,(P,_)) => fn X => \<^const>\<open>Pure.imp\<close> $ P $ X) preconds
 
     fun post_process' binding int lthy th =
-      lthy
-        |> Phi_Procedure.define def_const binding th
+      (lthy,th)
+        |> Finishing_Construction_Hooks.invoke ()
+        |> swap
+        |-> Phi_Procedure.define def_const binding
         |-> (fn th => fn lthy =>
               (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
                 (("\<phi>procedure", ""), [("", [th])]); lthy))
