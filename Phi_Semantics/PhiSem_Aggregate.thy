@@ -1,5 +1,5 @@
 theory PhiSem_Aggregate
-  imports Phi_System.PhiSem_Formalization_Tools
+  imports PhiSem_Aggregate_Base
 begin
 
 section \<open>Semantics\<close>
@@ -56,37 +56,20 @@ hide_fact aggregate_val_ax
 subsection \<open>Semantics\<close>
 
 debt_axiomatization
-        valid_idx_step :: \<open>TY \<Rightarrow> nat \<Rightarrow> bool\<close>
-    and idx_step_type  :: \<open>nat \<Rightarrow> TY \<Rightarrow> TY\<close>
-    and idx_step_value :: \<open>nat \<Rightarrow> VAL \<Rightarrow> VAL\<close>
-    and idx_step_mod_value :: \<open>nat \<Rightarrow> (VAL \<Rightarrow> VAL) \<Rightarrow> VAL \<Rightarrow> VAL\<close>
-    and type_measure :: \<open>TY \<Rightarrow> nat\<close>
-  where WT_tup[simp]: \<open>Well_Type (tup ts)  = { V_tup.mk vs       |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
+        WT_tup[simp]: \<open>Well_Type (tup ts)  = { V_tup.mk vs       |vs. list_all2 (\<lambda> t v. v \<in> Well_Type t) ts vs }\<close>
   and   WT_arr[simp]: \<open>Well_Type (array n t) = { V_array.mk (t,vs) |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs \<and> Valid_Type t }\<close>
   and   zero_tup[simp]: \<open>Zero (tup Ts)     = map_option V_tup.mk (those (map Zero Ts))\<close>
   and   zero_arr[simp]: \<open>Zero (array N T)  = map_option (\<lambda>z. V_array.mk (T, replicate N z)) (Zero T)\<close>
   and   V_tup_sep_disj[simp]: \<open>V_tup.mk l1 ## V_tup.mk l2\<close>
   and   V_tup_mult    : \<open>V_tup.mk l1 * V_tup.mk l2 = V_tup.mk (l2 @ l1)\<close>
-  and   idx_step_type_measure: \<open>valid_idx_step T i
-                            \<Longrightarrow> type_measure (idx_step_type i T) < type_measure T\<close>
+(*  and   idx_step_type_measure: \<open>valid_idx_step T i
+                            \<Longrightarrow> type_measure (idx_step_type i T) < type_measure T\<close>*)
   and   idx_step_type_tup  : \<open>i < length tys \<Longrightarrow> idx_step_type i (tup tys) = tys!i \<close>
   and   idx_step_type_arr  : \<open>i \<le> N \<Longrightarrow> idx_step_type i (array N T) = T\<close>
   and   valid_idx_step_tup : \<open>valid_idx_step (tup tys) i \<longleftrightarrow> i < length tys\<close>
   and   valid_idx_step_arr : \<open>valid_idx_step (array N T) i \<longleftrightarrow> i < N\<close>
-  and   idx_step_value_welltyp: \<open>valid_idx_step T i
-                             \<Longrightarrow> v \<in> Well_Type T
-                             \<Longrightarrow> idx_step_value i v \<in> Well_Type (idx_step_type i T)\<close>
   and   idx_step_value_tup : \<open>idx_step_value i (V_tup.mk vs)   = vs!i\<close>
   and   idx_step_value_arr : \<open>idx_step_value i (V_array.mk (T,vs)) = vs!i\<close>
-  and   idx_step_mod_value : \<open>valid_idx_step T i
-                          \<Longrightarrow> valid_idx_step T j
-                          \<Longrightarrow> v \<in> Well_Type T
-                          \<Longrightarrow> idx_step_value i (idx_step_mod_value j f v) =
-                                (if i = j then f (idx_step_value j v) else idx_step_value i v) \<close>
-  and   idx_step_mod_value_welltyp: \<open>valid_idx_step T i
-                                 \<Longrightarrow> v \<in> Well_Type T
-                                 \<Longrightarrow> f (idx_step_value i v) \<in> Well_Type (idx_step_type i T)
-                                 \<Longrightarrow> idx_step_mod_value i f v \<in> Well_Type T\<close>
   and   idx_step_mod_value_tup : \<open>idx_step_mod_value i f (V_tup.mk vs) = V_tup.mk (vs[i := f (vs!i)])\<close>
   and   idx_step_mod_value_arr : \<open>idx_step_mod_value i f (V_array.mk (T,vs)) = V_array.mk (T,vs[i := f (vs!i)])\<close>
 
@@ -95,41 +78,8 @@ lemma V_tup_mult_cons:
   \<open>NO_MATCH vs ([]::VAL list) \<Longrightarrow> V_tup.mk (v#vs) = V_tup.mk vs * V_tup.mk [v]\<close>
   using V_tup_mult by simp
 
-abbreviation \<open>index_value \<equiv> fold idx_step_value\<close>
-abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>
-abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close>
 
-primrec valid_index :: \<open>TY \<Rightarrow> nat list \<Rightarrow> bool\<close>
-  where \<open>valid_index T [] \<longleftrightarrow> True\<close>
-      | \<open>valid_index T (i#idx) \<longleftrightarrow> valid_idx_step T i \<and> valid_index (idx_step_type i T) idx\<close>
 
-lemma valid_index_tail[simp]:
-  \<open>valid_index T (idx@[i]) \<longleftrightarrow> valid_index T idx \<and> valid_idx_step (index_type idx T) i\<close>
-  by (induct idx arbitrary: T; simp)
-
-lemma index_type_measure:
-  \<open>valid_index T idx \<Longrightarrow> idx \<noteq> [] \<Longrightarrow> type_measure (index_type idx T) < type_measure T\<close>
-  apply (induct idx arbitrary: T; simp)
-  by (metis dual_order.strict_trans fold_simps(1) idx_step_type_measure)
-
-lemma valid_index_cat: \<open>valid_index T (a@b) \<Longrightarrow> valid_index T a \<and> valid_index (index_type a T) b\<close>
-  by (induct a arbitrary: T; simp)
-
-lemma valid_index_cons: \<open>valid_index T [i] \<longleftrightarrow> valid_idx_step T i\<close> by simp
-
-lemma index_value_welltyp:
-  \<open>valid_index T idx \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> index_value idx v \<in> Well_Type (index_type idx T)\<close>
-  apply (induct idx arbitrary: v T; simp)
-  using idx_step_value_welltyp
-  by blast
-
-lemma index_mod_value_welltyp:
-   \<open>valid_index T idx
-\<Longrightarrow> v \<in> Well_Type T
-\<Longrightarrow> f (index_value idx v) \<in> Well_Type (index_type idx T)
-\<Longrightarrow> index_mod_value idx f v \<in> Well_Type T\<close>
-  apply (induct idx arbitrary: T v; simp)
-  using idx_step_mod_value_welltyp idx_step_value_welltyp by blast
 
 
 
@@ -143,11 +93,6 @@ lemma index_offset_tail[simp]:
   \<open>index_offset T (idx@[i]) = index_offset T idx + idx_step_offset (index_type idx T) i\<close>
   by (induct idx arbitrary: T; simp) *)
 
-lemma index_type_idem:
-  \<open>valid_index T idx \<Longrightarrow> index_type idx T = T \<longleftrightarrow> idx = []\<close>
-  apply (cases idx; simp; rule)
-  using index_type_measure
-  by (metis fold_simps(2) list.discI order_less_irrefl valid_index.simps(2))
 
 lemma list_all_replicate:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>
@@ -179,48 +124,54 @@ lemma EmptyTuple_expn[\<phi>expns]:
 
 subsubsection \<open>Field\<close>
 
-definition \<phi>Field :: "(VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>" ("\<clubsuit>")
-  where "\<phi>Field T x = { V_tup.mk [v] |v. v \<in> T x }"
+definition Tuple_Field :: "(VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
+  where "Tuple_Field T x = { V_tup.mk [v] |v. v \<in> T x }"
 
-lemma \<phi>Field_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Field T) \<longleftrightarrow> (\<exists>v. p = V_tup.mk [v] \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Field_def \<phi>Type_def by simp
+syntax "_\<phi>Tuple" :: \<open>tuple_args \<Rightarrow> logic\<close> ("\<lbrace> _ \<rbrace>")
 
-lemma \<phi>Field_inhabited[elim!,\<phi>inhabitance_rule]:
-  \<open>Inhabited (x \<Ztypecolon> \<clubsuit> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+translations
+  "_\<phi>Tuple (_tuple_arg X)" \<rightleftharpoons> "CONST Tuple_Field X"
+  "_\<phi>Tuple (_tuple_args y z)" \<rightleftharpoons> "CONST \<phi>Prod (_\<phi>Tuple (_tuple_arg y)) (_\<phi>Tuple z)"
+
+lemma Tuple_Field_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<lbrace> T \<rbrace>) \<longleftrightarrow> (\<exists>v. p = V_tup.mk [v] \<and> v \<in> (x \<Ztypecolon> T))\<close>
+  unfolding Tuple_Field_def \<phi>Type_def by simp
+
+lemma Tuple_Field_inhabited[elim!,\<phi>inhabitance_rule]:
+  \<open>Inhabited (x \<Ztypecolon> \<lbrace> T \<rbrace>) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma EmptyTuple_reduce[simp]:
-  \<open>(((),a) \<Ztypecolon> EmptyTuple \<^emph> \<clubsuit> T) = (a \<Ztypecolon> \<clubsuit> T)\<close>
-  \<open>((a,()) \<Ztypecolon> \<clubsuit> T \<^emph> EmptyTuple) = (a \<Ztypecolon> \<clubsuit> T)\<close>
+  \<open>(((),a) \<Ztypecolon> EmptyTuple \<^emph> \<lbrace> T \<rbrace>) = (a \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
+  \<open>((a,()) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> EmptyTuple) = (a \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   unfolding set_eq_iff
   apply (clarsimp; rule; clarsimp simp add: \<phi>expns V_tup_mult)
   apply (metis V_tup_mult V_tup_sep_disj append_Nil)
   apply (clarsimp; rule; clarsimp simp add: \<phi>expns V_tup_mult)
   by (metis V_tup_mult V_tup_sep_disj append_Cons append_Nil)
 
-lemma \<phi>Field_zero  [\<phi>reason 1000]:
-  \<open>\<phi>Zero ty T x \<Longrightarrow> \<phi>Zero (tup [ty]) (\<clubsuit> T) x \<close>
+lemma Tuple_Field_zero  [\<phi>reason 1000]:
+  \<open>\<phi>Zero ty T x \<Longrightarrow> \<phi>Zero (tup [ty]) \<lbrace> T \<rbrace> x \<close>
   unfolding \<phi>Zero_def by (clarsimp simp add: \<phi>expns)
 
-lemma \<phi>Field_zeros [\<phi>reason 1000]:
+lemma Tuple_Field_zeros [\<phi>reason 1000]:
   \<open>\<phi>Zero ty T x
     \<Longrightarrow> \<phi>Zero (tup tys) Ts xs
-    \<Longrightarrow> \<phi>Zero (tup (ty#tys)) (\<clubsuit> T \<^emph> Ts) (x,xs) \<close>
+    \<Longrightarrow> \<phi>Zero (tup (ty#tys)) (\<lbrace> T \<rbrace> \<^emph> Ts) (x,xs) \<close>
   unfolding \<phi>Zero_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult_cons image_iff)
   using V_tup_sep_disj by blast
 
 
-lemma \<phi>Field_semty[\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<clubsuit> T) (tup [TY])\<close>
+lemma Tuple_Field_semty[\<phi>reason 1000]:
+  \<open>\<phi>SemType (x \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<lbrace> T \<rbrace>) (tup [TY])\<close>
   unfolding \<phi>SemType_def subset_iff
   by (clarsimp simp add: \<phi>expns)
 
-lemma \<phi>Field_semtsy[\<phi>reason 1000]:
+lemma Tuple_Field_semtys[\<phi>reason 1000]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (tup TYs)
-\<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<clubsuit> T \<^emph> Ts)) (tup (TY#TYs))\<close>
+\<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<lbrace> T \<rbrace> \<^emph> Ts)) (tup (TY#TYs))\<close>
   unfolding \<phi>SemType_def subset_iff
   apply (clarsimp simp add: \<phi>expns)
   by (metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
@@ -292,6 +243,12 @@ definition \<phi>Index_getter :: \<open>nat list \<Rightarrow> (VAL,'a) \<phi> \
 definition \<phi>Index_mapper :: \<open>nat list \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> (('b \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> bool\<close>
   where \<open>\<phi>Index_mapper idx T U f \<longleftrightarrow> (\<forall>g g'. g \<in> (g' \<Ztypecolon> U \<Rrightarrow> U) \<longrightarrow> index_mod_value idx g \<in> (f g' \<Ztypecolon> T \<Rrightarrow> T))\<close>
 
+declare [[
+  \<phi>reason_default_pattern \<open>\<phi>Index_getter ?idx ?T _ _\<close> \<Rightarrow> \<open>\<phi>Index_getter ?idx ?T _ _\<close> (100),
+  \<phi>reason_default_pattern \<open>\<phi>Index_mapper ?idx ?T _ _\<close> \<Rightarrow> \<open>\<phi>Index_mapper ?idx ?T _ _\<close> (100)
+]]
+
+declare [[\<phi>trace_reasoning = 1]]
 
 lemma idx_step_value_V_tup_suc:
   \<open>idx_step_value (Suc i) (V_tup.mk (va # vs)) = idx_step_value i (V_tup.mk vs)\<close>
@@ -302,11 +259,11 @@ lemma idx_step_mod_value_V_tup_suc:
   by (metis NO_MATCH_I V_tup_mult_cons idx_step_mod_value_tup list_update_code(3) nth_Cons_Suc)
 
 
-lemma \<phi>Index_getter_tup_suc:
+lemma [\<phi>reason 1200]:
   \<open> \<phi>Index_getter (i # idx) X Y f
-\<Longrightarrow> \<phi>Index_getter (Suc i # idx) (\<clubsuit> T \<^emph> \<phi>Is_Tuple X) Y (f o snd)\<close>
+\<Longrightarrow> \<phi>Index_getter (Suc i # idx) (\<clubsuit> T \<^emph> X) Y (f o snd)\<close>
   unfolding \<phi>Index_getter_def
-  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_V_tup_suc)
+  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_V_tup_suc)
 
 lemma \<phi>Index_getter_tup_0:
   \<open> \<phi>Index_getter idx X Y f
@@ -336,7 +293,6 @@ lemma \<phi>Index_mapper_tup_suc:
   apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_V_tup_suc)
   by (metis V_tup_sep_disj idx_step_mod_value_tup)
 
-
 lemma \<phi>Index_mapper_tup_0:
   \<open> \<phi>Index_mapper idx X Y f
 \<Longrightarrow> \<phi>Index_mapper (0 # idx) (\<clubsuit> X) Y f\<close>
@@ -357,6 +313,39 @@ lemma \<phi>Index_mapper_arr:
   unfolding \<phi>Index_mapper_def Premise_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_arr list_all2_conv_all_nth)
   by (metis nth_list_update)
+
+
+
+
+
+definition op_get_tuple :: "index list \<Rightarrow> TY \<Rightarrow> (VAL, VAL) proc'"
+  where "op_get_tuple idx T = (\<lambda>v.
+    \<phi>M_getV T id v (\<lambda>v'.
+    \<phi>M_assert (valid_index T idx) \<ggreater>
+    Return (\<phi>arg (index_value idx v'))
+))"
+
+term \<open>3-4-5\<close>
+
+definition op_set_tuple :: "index \<Rightarrow> TY \<Rightarrow> (VAL, VAL) proc'"
+  where "op_set_tuple idx T = (\<lambda>v.
+    \<phi>M_getV T V_tup.dest v (\<lambda>vals.
+    Return (\<phi>arg (vals ! idx))
+))"
+
+
+
+definition op_get_tuple :: "index list \<Rightarrow> TY \<Rightarrow> VAL proc"
+  where "op_get_tuple idx T = (\<lambda>(v#vs,res).
+    if valid_index T idx \<and> v \<in> Well_Type T
+    then Success (index_value idx v # vs, res)
+    else Fail)"
+
+
+term V_tup.mk
+
+
+
 
 
 end

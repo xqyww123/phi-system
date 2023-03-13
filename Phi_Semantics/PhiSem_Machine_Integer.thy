@@ -11,7 +11,7 @@ section \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype \<phi>machine_int_ty = \<phi>empty_ty +
+virtual_datatype \<phi>machine_int_ty =
   T_int     :: nat \<comment> \<open>in unit of bits\<close>
 
 debt_axiomatization T_int :: \<open>nat type_entry\<close>
@@ -45,7 +45,7 @@ parse_ast_translation \<open>
 
 subsubsection \<open>Value\<close>
 
-virtual_datatype \<phi>machine_int_val = \<phi>empty_val +
+virtual_datatype \<phi>machine_int_val =
   V_int     :: \<open>nat \<times> nat\<close> \<comment> \<open>bits \<times> value\<close>
 
 debt_axiomatization V_int :: \<open>(nat \<times> nat) value_entry\<close>

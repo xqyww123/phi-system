@@ -26,7 +26,7 @@ text \<open>The section provides the initial empty semantics of computation stat
 
 subsection \<open>Type\<close>
 
-virtual_datatype \<phi>empty_ty \<comment> \<open>base of type formalization\<close>
+(* virtual_datatype \<phi>empty_ty \<comment> \<open>base of type formalization\<close> *)
 
 unspecified_type TY
 unspecified_type TY_N
@@ -34,12 +34,12 @@ type_synonym 'T type_entry = \<open>(TY_N, TY, 'T) Virtual_Datatype.Field\<close
 
 consts TY_CONS_OF :: \<open>TY \<Rightarrow> TY_N\<close>
 
-interpretation \<phi>empty_ty TY_CONS_OF by standard simp
+(* interpretation \<phi>empty_ty TY_CONS_OF by standard simp *)
 
 
 subsection \<open>Value\<close>
 
-virtual_datatype \<phi>empty_val :: sep_magma \<comment> \<open>base of value formalization\<close>
+(* virtual_datatype \<phi>empty_val :: sep_magma \<comment> \<open>base of value formalization\<close> *)
 
 unspecified_type VAL
 unspecified_type VAL_N
@@ -50,7 +50,12 @@ consts VAL_CONS_OF :: \<open>VAL \<Rightarrow> VAL_N\<close>
 
 instance VAL :: sep_magma ..
 
-interpretation \<phi>empty_val VAL_CONS_OF by standard simp
+text \<open>The semantic value is a separation magma. It is nothing related to the semantic
+  or the specification framework themselves but just to be helpful in some situation for
+  formalization of some semantics such as that in aggregate the separation can represent
+  concatenation of fields.\<close>
+
+(* interpretation \<phi>empty_val VAL_CONS_OF by standard simp *)
 
 
 subsubsection \<open>Deep Representation of Aggregated Values\<close>

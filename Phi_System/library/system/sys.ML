@@ -141,7 +141,7 @@ fun accept_proc' (ctxt,sequent) =
                  of Type (\<^type_name>\<open>\<phi>arg\<close>, [TVar V]) =>
                       let val (f,_,_,_,_) = Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
                           val _ = warning "The return arity of a procedure is not fixed.\
-                                          \ Regard it to none."
+                                          \ Regard it to no return."
                           val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
                               Pretty.block [Pretty.str "In procedure ", Syntax.pretty_term ctxt f],
                               Pretty.block [

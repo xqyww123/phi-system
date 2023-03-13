@@ -13,7 +13,7 @@ section \<open>Semantics\<close>
 
 subsection \<open>Type\<close>
 
-virtual_datatype \<phi>spec_int_ty = \<phi>empty_ty +
+virtual_datatype \<phi>spec_int_ty =
   T_aint    ::  unit
 
 debt_axiomatization T_aint :: \<open>unit type_entry\<close>
@@ -27,7 +27,7 @@ abbreviation aint where \<open>aint \<equiv> T_aint.mk ()\<close>
 
 subsection \<open>Value\<close>
 
-virtual_datatype \<phi>spec_int_val = \<phi>empty_val +
+virtual_datatype \<phi>spec_int_val =
   V_aint     :: \<open>int\<close>
 
 debt_axiomatization V_aint :: \<open>int value_entry\<close>
