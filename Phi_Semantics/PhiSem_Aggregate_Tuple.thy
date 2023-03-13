@@ -14,7 +14,7 @@ virtual_datatype tuple_ty =
 debt_axiomatization T_tup :: \<open>TY list type_entry\<close>
   where tuple_ty_ax: \<open>tuple_ty TY_CONS_OF T_tup\<close>
 
-interpretation tuple_ty TY_CONS_OF _ _ T_tup using tuple_ty_ax .
+interpretation tuple_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_tup using tuple_ty_ax .
 
 (*TODO: intergrate the hidding into the automation command*)
 hide_fact tuple_ty_ax
@@ -27,7 +27,7 @@ virtual_datatype tuple_val =
 debt_axiomatization V_tup :: \<open>VAL list value_entry\<close>
   where tuple_val_ax: \<open>tuple_val VAL_CONS_OF V_tup\<close>
 
-interpretation tuple_val VAL_CONS_OF _ _ V_tup
+interpretation tuple_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_tup
   using tuple_val_ax .
 
 hide_fact tuple_val_ax

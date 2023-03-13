@@ -14,7 +14,7 @@ virtual_datatype array_ty =
 debt_axiomatization T_array :: \<open>(TY \<times> nat) type_entry\<close>
   where array_ty_ax: \<open>array_ty TY_CONS_OF T_array\<close>
 
-interpretation array_ty TY_CONS_OF _ _ T_array using array_ty_ax .
+interpretation array_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_array using array_ty_ax .
 
 hide_fact array_ty_ax
 
@@ -29,7 +29,7 @@ virtual_datatype array_val =
 debt_axiomatization V_array :: \<open>(VAL list) value_entry\<close>
   where array_val_ax: \<open>array_val VAL_CONS_OF V_array\<close>
 
-interpretation array_val VAL_CONS_OF _ _ V_array using array_val_ax .
+interpretation array_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_array using array_val_ax .
 
 hide_fact array_val_ax
 

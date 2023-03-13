@@ -19,7 +19,7 @@ virtual_datatype \<phi>spec_int_ty =
 debt_axiomatization T_aint :: \<open>unit type_entry\<close>
   where \<phi>spec_int_ty_ax: \<open>\<phi>spec_int_ty TY_CONS_OF T_aint\<close>
 
-interpretation \<phi>spec_int_ty TY_CONS_OF _ _ T_aint using \<phi>spec_int_ty_ax .
+interpretation \<phi>spec_int_ty TY_CONS_OF \<open>TYPE(TY_N)\<close> \<open>TYPE(TY)\<close> T_aint using \<phi>spec_int_ty_ax .
 
 hide_fact \<phi>spec_int_ty_ax
 
@@ -33,7 +33,7 @@ virtual_datatype \<phi>spec_int_val =
 debt_axiomatization V_aint :: \<open>int value_entry\<close>
   where \<phi>spec_int_val_ax: \<open>\<phi>spec_int_val VAL_CONS_OF V_aint\<close>
 
-interpretation \<phi>spec_int_val VAL_CONS_OF _ _ V_aint using \<phi>spec_int_val_ax .
+interpretation \<phi>spec_int_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>TYPE(VAL)\<close> V_aint using \<phi>spec_int_val_ax .
 
 hide_fact \<phi>spec_int_val_ax \<phi>spec_int_val_axioms
 

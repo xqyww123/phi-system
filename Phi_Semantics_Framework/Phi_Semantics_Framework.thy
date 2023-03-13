@@ -34,6 +34,8 @@ type_synonym 'T type_entry = \<open>(TY_N, TY, 'T) Virtual_Datatype.Field\<close
 
 consts TY_CONS_OF :: \<open>TY \<Rightarrow> TY_N\<close>
 
+interpretation "virtual_datatype" TY_CONS_OF .
+
 (* interpretation \<phi>empty_ty TY_CONS_OF by standard simp *)
 
 
@@ -49,6 +51,8 @@ type_synonym vassn = \<open>VAL set\<close>
 consts VAL_CONS_OF :: \<open>VAL \<Rightarrow> VAL_N\<close>
 
 instance VAL :: sep_magma ..
+
+interpretation "virtual_datatype" VAL_CONS_OF .
 
 text \<open>The semantic value is a separation magma. It is nothing related to the semantic
   or the specification framework themselves but just to be helpful in some situation for
