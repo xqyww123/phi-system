@@ -11,7 +11,7 @@ section \<open>Semantics\<close>
 
 subsection \<open>Type\<close>
 
-virtual_datatype \<phi>abst_real_ty = \<phi>empty_ty +
+virtual_datatype \<phi>abst_real_ty =
   T_areal    ::  unit
 
 debt_axiomatization T_areal :: \<open>unit type_entry\<close>
@@ -25,7 +25,7 @@ abbreviation areal where \<open>areal \<equiv> T_areal.mk ()\<close>
 
 subsection \<open>Value\<close>
 
-virtual_datatype \<phi>abst_real_val = \<phi>empty_val +
+virtual_datatype \<phi>abst_real_val =
   V_areal     :: \<open>real\<close>
 
 debt_axiomatization V_areal :: \<open>real value_entry\<close>
@@ -44,11 +44,11 @@ and can_eqcmp_areal[simp]: "Can_EqCompare res (V_areal.mk i1) (V_areal.mk i2)"
 and eqcmp_areal[simp]: "EqCompare (V_areal.mk i1) (V_areal.mk i2) \<longleftrightarrow> i1 = i2"
 and  zero_areal[simp]: \<open>Zero areal   = Some (V_areal.mk 0)\<close>
 
-lemma Valid_Types[simp]:
+(* lemma Valid_Types[simp]:
   \<open>Valid_Type areal\<close>
   unfolding Inhabited_def
   apply simp
-  using less_exp by blast
+  using less_exp by blast *)
 
 
 section \<open>\<phi>-Types\<close>

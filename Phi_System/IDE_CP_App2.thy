@@ -193,12 +193,12 @@ thm "__fast_assign_val__"[OF "__fast_assign_val__", OF "__fast_assign_val__", OF
 ML_file \<open>library/additions/local_value.ML\<close>
 
 
-subsection \<open>Deep Representation of Values\<close>
+(*subsection \<open>Deep Representation of Values\<close>
 
 abbreviation Vals :: \<open>(VAL, 'a) \<phi> \<Rightarrow> (VAL list, 'a) \<phi>\<close> ("\<v>\<a>\<l>\<^bold>s _" [51] 50)
   where \<open>Vals \<equiv> List_Item\<close>
 
-translations "(CONST Vals T) \<^emph> (CONST Vals U)" == "XCONST Vals (T \<^emph> U)"
+translations "(CONST Vals T) \<^emph> (CONST Vals U)" == "XCONST Vals (T \<^emph> U)"*)
 
 
 subsection \<open>Prove Properties of Value Abstractions by Programming\<close>

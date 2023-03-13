@@ -46,11 +46,11 @@ and can_eqcmp_aint[simp]: "Can_EqCompare res (V_aint.mk i1) (V_aint.mk i2)"
 and eqcmp_aint[simp]: "EqCompare (V_aint.mk i1) (V_aint.mk i2) \<longleftrightarrow> i1 = i2"
 and  zero_aint[simp]: \<open>Zero aint   = Some (V_aint.mk 0)\<close>
 
-lemma Valid_Types[simp]:
+(*lemma Valid_Types[simp]:
   \<open>Valid_Type aint\<close>
   unfolding Inhabited_def
   apply simp
-  using less_exp by blast
+  using less_exp by blast *)
 
 
 

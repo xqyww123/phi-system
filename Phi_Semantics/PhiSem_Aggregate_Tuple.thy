@@ -55,10 +55,10 @@ lemma list_all_replicate:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>
   by (induct n; simp; blast)
 
-lemma Valid_Type_\<tau>Tuple[simp]:
+(* lemma Valid_Type_\<tau>Tuple[simp]:
   \<open>Valid_Type (tup Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
   unfolding Inhabited_def
-  by (simp; induct Ts; simp add: list_all2_Cons1)
+  by (simp; induct Ts; simp add: list_all2_Cons1) *)
 
 section \<open>\<phi>Type\<close>
 
@@ -124,33 +124,6 @@ lemma Tuple_Field_semtys[\<phi>reason 1000]:
   unfolding \<phi>SemType_def subset_iff
   apply (clarsimp simp add: \<phi>expns)
   by (metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
-
-
-section \<open>Instruction\<close>
-
-(* definition op_cons_tuple :: "'TY list \<Rightarrow> (VAL list) proc'"
-  where "op_cons_tuple tys = (\<lambda>(vs,res).
-    let N = length tys in
-    if N \<le> length vs \<and> list_all2 (\<lambda>v t. v \<in> Well_Type t) (take N vs) tys
-    then Success (V_tup.mk (take N vs) # drop N vs, res)
-    else Fail)" *)
-
-definition op_get_tuple :: "index list \<Rightarrow> TY \<Rightarrow> (VAL, VAL) proc'"
-  where "op_get_tuple idx T = (\<lambda>v.
-    \<phi>M_getV T id v (\<lambda>v'.
-    \<phi>M_assert (valid_index T idx) \<ggreater>
-    Return (\<phi>arg (index_value idx v'))
-))"
-
-definition op_set_tuple :: "bool \<Rightarrow> TY \<Rightarrow> TY \<Rightarrow> index list \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
-  where "op_set_tuple support_assigning_different_typ Tt Tv idx = 
-    \<phi>M_caseV (\<lambda>v tup.
-    \<phi>M_assert (valid_index Tt idx \<and> (support_assigning_different_typ \<or> index_type idx Tt = Tv)) \<ggreater>
-    \<phi>M_getV Tv id v (\<lambda>v'.
-    \<phi>M_getV Tt id tup (\<lambda>tup'.
-    Return (\<phi>arg (index_mod_value idx (\<lambda>_. v') tup'))
-)))"
-
 
 
 
@@ -219,36 +192,6 @@ lemma [\<phi>reason 1200]:
   by (metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
 
 
-section \<open>First-level Abstraction of Instructions\<close>
-
-lemma
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> valid_index TY idx
-\<Longrightarrow> \<phi>Index_getter idx T U f
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_tuple idx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
-  unfolding op_get_tuple_def \<phi>SemType_def subset_iff \<phi>Index_getter_def
-  by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>Mapping_expn)
-
-lemma
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> Simplify eval_semantic_index TY2 (index_type idx TY)
-\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY2
-\<Longrightarrow> valid_index TY idx
-\<Longrightarrow> \<phi>Index_mapper idx T T' U' U f
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_tuple False TY TY2 idx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
-  unfolding op_set_tuple_def \<phi>SemType_def subset_iff \<phi>Index_mapper_def Simplify_def
-  by (cases rv; cases ru; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>Mapping_expn)
-
-lemma
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY2
-\<Longrightarrow> valid_index TY idx
-\<Longrightarrow> \<phi>Index_mapper idx T T' U' U f
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_tuple True TY TY2 idx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
-  unfolding op_set_tuple_def \<phi>SemType_def subset_iff \<phi>Index_mapper_def Simplify_def
-  by (cases rv; cases ru; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>Mapping_expn)
 
 
 end

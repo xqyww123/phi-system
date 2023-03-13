@@ -63,11 +63,11 @@ and can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (b1,x1)) (V_int.mk (b2,x2)
 and eqcmp_int[simp]: "EqCompare (V_int.mk i1) (V_int.mk i2) \<longleftrightarrow> i1 = i2"
 and  zero_int[simp]: \<open>Zero (T_int.mk b)    = Some (V_int.mk (b,0))\<close>
 
-lemma Valid_Types[simp]:
+(*lemma Valid_Types[simp]:
   \<open>Valid_Type (T_int.mk n)\<close>
   unfolding Inhabited_def
   apply simp
-  using less_exp by blast
+  using less_exp by blast *)
 
 
 section \<open>\<phi>-Types\<close>

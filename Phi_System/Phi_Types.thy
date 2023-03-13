@@ -35,11 +35,11 @@ lemma Identity_E[\<phi>reason 10]:
   \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T\<close>
   unfolding Imply_def Premise_def by (simp add: \<phi>expns)
 
-lemma [simp]:
+(*lemma [simp]:
   \<open> v \<in> Well_Type TY
 \<Longrightarrow> SemTyp_Of (v \<Ztypecolon> Identity) = TY\<close>
   unfolding \<phi>Type_def Identity_def
-  by (simp add: \<phi>SemType_def)
+  by (simp add: \<phi>SemType_def)*)
 
 lemma [\<phi>reason 1200]:
   \<open>is_functional (v \<Ztypecolon> Identity)\<close>

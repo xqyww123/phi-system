@@ -95,6 +95,36 @@ lemma index_type_idem:
   using index_type_measure
   by (metis fold_simps(2) list.discI order_less_irrefl valid_index.simps(2))
 
+
+section \<open>Instructions\<close>
+
+(* definition op_cons_tuple :: "'TY list \<Rightarrow> (VAL list) proc'"
+  where "op_cons_tuple tys = (\<lambda>(vs,res).
+    let N = length tys in
+    if N \<le> length vs \<and> list_all2 (\<lambda>v t. v \<in> Well_Type t) (take N vs) tys
+    then Success (V_tup.mk (take N vs) # drop N vs, res)
+    else Fail)" *)
+
+
+definition op_get_aggregate :: "index list \<Rightarrow> TY \<Rightarrow> (VAL, VAL) proc'"
+  where "op_get_aggregate idx T = (\<lambda>v.
+    \<phi>M_getV T id v (\<lambda>v'.
+    \<phi>M_assert (valid_index T idx) \<ggreater>
+    Return (\<phi>arg (index_value idx v'))
+))"
+
+debt_axiomatization allow_assigning_different_typ :: \<open>TY \<Rightarrow> index list \<Rightarrow> bool\<close>
+
+definition op_set_aggregate :: "TY \<Rightarrow> TY \<Rightarrow> index list \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
+  where "op_set_aggregate Tt Tv idx = 
+    \<phi>M_caseV (\<lambda>v tup.
+    \<phi>M_assert (valid_index Tt idx \<and> (index_type idx Tt = Tv \<or> allow_assigning_different_typ Tt idx)) \<ggreater>
+    \<phi>M_getV Tv id v (\<lambda>v'.
+    \<phi>M_getV Tt id tup (\<lambda>tup'.
+    Return (\<phi>arg (index_mod_value idx (\<lambda>_. v') tup'))
+)))"
+
+
 section \<open>Reasoning\<close>
 
 subsection \<open>Evaluate Index\<close>
@@ -108,7 +138,8 @@ structure Eval_Sem_Idx_SS = Simpset (
   val comment = "Rules evaluating indexing of semantic type and value"
 )\<close>
 
-\<phi>reasoner_ML eval_semantic_index 1300 (\<open>Simplify eval_semantic_index ?X' ?X\<close>)
+\<phi>reasoner_ML eval_semantic_index 1300 ( \<open>Simplify eval_semantic_index ?X' ?X\<close>
+                                      | \<open>Premise eval_semantic_index ?P\<close> )
   = \<open>PLPR_Simplifier.simplifier_by_ss' NONE Eval_Sem_Idx_SS.get'\<close>
 
 lemmas [eval_semantic_index] = nth_Cons_0 nth_Cons_Suc fold_simps
@@ -139,5 +170,26 @@ lemma [\<phi>reason 1200]:
   by (simp add: \<phi>Mapping_expn)
 
 
+
+section \<open>First-level Abstraction of Instructions\<close>
+
+lemma op_get_aggregate:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> valid_index TY idx
+\<Longrightarrow> \<phi>Index_getter idx T U f
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate idx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
+  unfolding op_get_aggregate_def \<phi>SemType_def subset_iff \<phi>Index_getter_def
+  by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>Mapping_expn)
+
+lemma op_set_aggregate:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY2
+\<Longrightarrow> Premise eval_semantic_index (index_type idx TY = TY2 \<or> allow_assigning_different_typ TY idx)
+\<Longrightarrow> valid_index TY idx
+\<Longrightarrow> \<phi>Index_mapper idx T T' U' U f
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 idx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
+  unfolding op_set_aggregate_def \<phi>SemType_def subset_iff \<phi>Index_mapper_def Premise_def
+  by (cases rv; cases ru; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>Mapping_expn)
 
 end

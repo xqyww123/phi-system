@@ -697,10 +697,6 @@ lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
   "Premise mode (x = x)"
   unfolding Premise_def ..
 
-
-\<phi>reasoner Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> ?P\<close>)
-  = (rule Premise_I; simp; fail)
-
 lemma contract_obligations:
   "(Premise mode P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> PROP C) \<equiv> (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q \<Longrightarrow> PROP C)"
   unfolding Premise_def by rule simp+
@@ -945,6 +941,8 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
   = \<open>PLPR_Simplifier.simplifier NONE I\<close>
 
+\<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> ?P\<close>)
+  = \<open>PLPR_Simplifier.simplifier NONE I\<close>
 
 (* subsection \<open>Exhaustive Divergence\<close>
 

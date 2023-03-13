@@ -66,21 +66,21 @@ definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
 abbreviation \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> TY \<Rightarrow> bool"
   where \<open>\<phi>\<phi>SemType T TY \<equiv> (\<forall>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
 
-lemma \<phi>SemType_unique:
+(*lemma \<phi>SemType_unique:
   \<open> S \<noteq> {}
 \<Longrightarrow> \<phi>SemType S T1
 \<Longrightarrow> \<phi>SemType S T2
 \<Longrightarrow> T1 = T2\<close>
   unfolding \<phi>SemType_def subset_iff
-  using Well_Type_unique by blast
+  using Well_Type_unique by blast *)
 
-definition SemTyp_Of :: \<open>VAL set \<Rightarrow> TY\<close>
+(* definition SemTyp_Of :: \<open>VAL set \<Rightarrow> TY\<close>
   where \<open>SemTyp_Of S = (@TY. \<phi>SemType S TY)\<close>
 
 lemma SemTyp_Of_I[intro!, simp]:
   \<open>S \<noteq> {} \<Longrightarrow> \<phi>SemType S TY \<Longrightarrow> SemTyp_Of S = TY\<close>
   unfolding SemTyp_Of_def
-  using \<phi>SemType_unique by blast
+  using \<phi>SemType_unique by blast *)
 
 lemma [\<phi>reason 100]:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
