@@ -5,7 +5,7 @@ theory Phi_Logic_Programming_Reasoner
     and "print_\<phi>reasoners" :: diag
   abbrevs
       "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
-  and "<simprem>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m"
+  and "<simprem>" = "\<s>\<i>\<m>\<p>\<r>\<e>\<m>"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
   and "<threshold>" = "\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>"
 begin
@@ -608,7 +608,7 @@ definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where "Premis
 
 abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
-abbreviation Simp_Premise ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m _" [27] 26)
+abbreviation Simp_Premise ("\<s>\<i>\<m>\<p>\<r>\<e>\<m> _" [27] 26)
   where "Simp_Premise \<equiv> Premise MODE_SIMP"
 abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27] 26)
   where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
@@ -617,7 +617,7 @@ text \<open>
   \<^prop>\<open>Premise mode P\<close> represents an ordinary proposition has to be proved during the reasoning.
   There are different modes expressing different roles in the reasoning.
 
-  \<^descr> \<^prop>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is a \<^emph>\<open>guard\<close> of a rule, which constrains that the rule is appliable only
+  \<^descr> \<^prop>\<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> P\<close> is a \<^emph>\<open>guard\<close> of a rule, which constrains that the rule is appliable only
   when \<^prop>\<open>P\<close> can be solved \<^emph>\<open>automatically\<close> during the reasoning.
   If \<^prop>\<open>P\<close> fails to be solved, even if it is actually valid, the rule will not be applied.
   Therefore, \<^prop>\<open>P\<close> has to be as simple as possible. The tactic used to solve \<^prop>\<open>P\<close> is
@@ -626,7 +626,7 @@ text \<open>
   non-blocking commonly.
   A blocking search branch blocks the whole reasoning, which is not acceptable.
 
-  \<^prop>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m P\<close> is not for proof obligations that are intended to be solved by users.
+  \<^prop>\<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> P\<close> is not for proof obligations that are intended to be solved by users.
   It is more like 'controller or switch' of the rules, i.e. \<^emph>\<open>guard\<close>.
 
   \<^descr> \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> represents a proof obligation.
@@ -698,7 +698,7 @@ lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
   unfolding Premise_def ..
 
 
-\<phi>reasoner Simp_Premise 10 (\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m ?P\<close>)
+\<phi>reasoner Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> ?P\<close>)
   = (rule Premise_I; simp; fail)
 
 lemma contract_obligations:

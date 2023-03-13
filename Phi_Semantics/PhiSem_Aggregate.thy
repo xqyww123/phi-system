@@ -8,7 +8,7 @@ subsection \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
 
-virtual_datatype aggregate_ty = \<phi>empty_ty +
+virtual_datatype aggregate_ty =
   tup     :: \<open>'self list\<close>
   array   :: \<open>'self \<times> nat\<close>
 
@@ -39,7 +39,7 @@ hide_fact aggregate_ty_ax
 
 subsubsection \<open>Value\<close>
 
-virtual_datatype aggregate_val = \<phi>empty_val +
+virtual_datatype aggregate_val =
   V_tup     :: \<open>'self list\<close>
   V_array   :: \<open>TY \<times> 'self list\<close>
 
@@ -102,11 +102,6 @@ lemma Valid_Type_\<tau>Array[simp]:
   \<open>Valid_Type (array n T) \<longleftrightarrow> Valid_Type T\<close>
   by (simp add: Inhabited_def;
       meson length_replicate list_all_replicate)
-
-lemma Valid_Type_\<tau>Tuple[simp]:
-  \<open>Valid_Type (tup Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
-  unfolding Inhabited_def
-  by (simp; induct Ts; simp add: list_all2_Cons1)
 
 
 section \<open>\<phi>Type\<close>
@@ -237,45 +232,11 @@ lemma Array_zero[\<phi>reason 1000]:
 
 subsection \<open>Index to Fields of Structures\<close>
 
-definition \<phi>Index_getter :: \<open>nat list \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
-  where \<open>\<phi>Index_getter idx T U g \<longleftrightarrow> index_value idx \<in> (g \<Ztypecolon> T \<Rrightarrow> U)\<close>
-
-definition \<phi>Index_mapper :: \<open>nat list \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> (('b \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> bool\<close>
-  where \<open>\<phi>Index_mapper idx T U f \<longleftrightarrow> (\<forall>g g'. g \<in> (g' \<Ztypecolon> U \<Rrightarrow> U) \<longrightarrow> index_mod_value idx g \<in> (f g' \<Ztypecolon> T \<Rrightarrow> T))\<close>
-
-declare [[
-  \<phi>reason_default_pattern \<open>\<phi>Index_getter ?idx ?T _ _\<close> \<Rightarrow> \<open>\<phi>Index_getter ?idx ?T _ _\<close> (100),
-  \<phi>reason_default_pattern \<open>\<phi>Index_mapper ?idx ?T _ _\<close> \<Rightarrow> \<open>\<phi>Index_mapper ?idx ?T _ _\<close> (100)
-]]
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma idx_step_value_V_tup_suc:
-  \<open>idx_step_value (Suc i) (V_tup.mk (va # vs)) = idx_step_value i (V_tup.mk vs)\<close>
-  by (simp add: idx_step_value_tup)
-
-lemma idx_step_mod_value_V_tup_suc:
-  \<open>idx_step_mod_value (Suc i) g (V_tup.mk (va # vs)) = idx_step_mod_value i g (V_tup.mk vs) * V_tup.mk [va]\<close>
-  by (metis NO_MATCH_I V_tup_mult_cons idx_step_mod_value_tup list_update_code(3) nth_Cons_Suc)
 
 
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_getter (i # idx) X Y f
-\<Longrightarrow> \<phi>Index_getter (Suc i # idx) (\<clubsuit> T \<^emph> X) Y (f o snd)\<close>
-  unfolding \<phi>Index_getter_def
-  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_V_tup_suc)
-
-lemma \<phi>Index_getter_tup_0:
-  \<open> \<phi>Index_getter idx X Y f
-\<Longrightarrow> \<phi>Index_getter (0 # idx) (\<clubsuit> X) Y f\<close>
-  unfolding \<phi>Index_getter_def
-  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
-
-lemma \<phi>Index_getter_tup_0r:
-  \<open> \<phi>Index_getter idx X Y f
-\<Longrightarrow> \<phi>Index_getter (0 # idx) (\<clubsuit> X \<^emph> \<phi>Is_Tuple R) Y (f o fst)\<close>
-  unfolding \<phi>Index_getter_def
-  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
 
 lemma \<phi>Index_getter_arr:
   \<open> \<phi>Index_getter idx X Y f
@@ -286,25 +247,6 @@ lemma \<phi>Index_getter_arr:
 
 
 
-lemma \<phi>Index_mapper_tup_suc:
-  \<open> \<phi>Index_mapper (i # idx) X Y f
-\<Longrightarrow> \<phi>Index_mapper (Suc i # idx) (\<clubsuit> T \<^emph> \<phi>Is_Tuple X) Y (apsnd o f)\<close>
-  unfolding \<phi>Index_mapper_def
-  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_V_tup_suc)
-  by (metis V_tup_sep_disj idx_step_mod_value_tup)
-
-lemma \<phi>Index_mapper_tup_0:
-  \<open> \<phi>Index_mapper idx X Y f
-\<Longrightarrow> \<phi>Index_mapper (0 # idx) (\<clubsuit> X) Y f\<close>
-  unfolding \<phi>Index_mapper_def
-  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
-
-lemma \<phi>Index_mapper_tup_0r:
-  \<open> \<phi>Index_mapper idx X Y f
-\<Longrightarrow> \<phi>Index_mapper (0 # idx) (\<clubsuit> X \<^emph> \<phi>Is_Tuple X) Y (apfst o f)\<close>
-  unfolding \<phi>Index_mapper_def
-  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
-  by (metis Cons_eq_appendI V_tup_mult V_tup_sep_disj append_self_conv2)
 
 lemma \<phi>Index_mapper_arr:
   \<open> \<phi>Index_mapper idx X Y f
@@ -318,12 +260,7 @@ lemma \<phi>Index_mapper_arr:
 
 
 
-definition op_get_tuple :: "index list \<Rightarrow> TY \<Rightarrow> (VAL, VAL) proc'"
-  where "op_get_tuple idx T = (\<lambda>v.
-    \<phi>M_getV T id v (\<lambda>v'.
-    \<phi>M_assert (valid_index T idx) \<ggreater>
-    Return (\<phi>arg (index_value idx v'))
-))"
+
 
 term \<open>3-4-5\<close>
 

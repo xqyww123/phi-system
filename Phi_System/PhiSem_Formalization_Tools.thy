@@ -1730,7 +1730,7 @@ definition op_set_element :: "nat list \<Rightarrow> TY \<Rightarrow> (VAL,'RES_
   ))"
 
 lemma (in \<phi>empty) op_get_element:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m valid_index TY idx
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> valid_index TY idx
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> X) TY
 \<Longrightarrow> \<phi>Index_getter idx X Y f
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_get_element idx TY \<lbrace> VAL x \<Ztypecolon> X \<longmapsto> VAL f x \<Ztypecolon> Y \<rbrace> \<close>
@@ -1739,7 +1739,7 @@ lemma (in \<phi>empty) op_get_element:
   by \<phi>reason
 
 lemma (in \<phi>empty) op_set_element:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m valid_index TY idx
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> valid_index TY idx
 \<Longrightarrow> \<phi>Index_mapper idx X Y f
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> X) TY
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> Y) (index_type idx TY)

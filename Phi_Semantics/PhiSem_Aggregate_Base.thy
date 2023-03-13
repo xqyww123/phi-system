@@ -52,9 +52,18 @@ primrec valid_index :: \<open>TY \<Rightarrow> nat list \<Rightarrow> bool\<clos
   where \<open>valid_index T [] \<longleftrightarrow> True\<close>
       | \<open>valid_index T (i#idx) \<longleftrightarrow> valid_idx_step T i \<and> valid_index (idx_step_type i T) idx\<close>
 
+declare [[\<phi>reason_default_pattern \<open>valid_index ?T ?idx\<close> \<Rightarrow> \<open>valid_index ?T ?idx\<close> (100)]]
+
+lemma [\<phi>reason 1200]: \<open>valid_index T []\<close> by simp
+
 lemma valid_index_tail[simp]:
   \<open>valid_index T (idx@[i]) \<longleftrightarrow> valid_index T idx \<and> valid_idx_step (index_type idx T) i\<close>
   by (induct idx arbitrary: T; simp)
+
+lemma [\<phi>reason 1]:
+  \<open> FAIL TEXT(\<open>Fail to show the validity of index\<close> idx \<open>on type\<close> T)
+\<Longrightarrow> valid_index T idx\<close>
+  by blast
 
 lemma valid_index_cat: \<open>valid_index T (a@b) \<Longrightarrow> valid_index T a \<and> valid_index (index_type a T) b\<close>
   by (induct a arbitrary: T; simp)
@@ -86,6 +95,48 @@ lemma index_type_idem:
   using index_type_measure
   by (metis fold_simps(2) list.discI order_less_irrefl valid_index.simps(2))
 
+section \<open>Reasoning\<close>
+
+subsection \<open>Evaluate Index\<close>
+
+consts eval_semantic_index :: mode
+
+ML \<open>
+structure Eval_Sem_Idx_SS = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = \<^binding>\<open>eval_semantic_index\<close>
+  val comment = "Rules evaluating indexing of semantic type and value"
+)\<close>
+
+\<phi>reasoner_ML eval_semantic_index 1300 (\<open>Simplify eval_semantic_index ?X' ?X\<close>)
+  = \<open>PLPR_Simplifier.simplifier_by_ss' NONE Eval_Sem_Idx_SS.get'\<close>
+
+lemmas [eval_semantic_index] = nth_Cons_0 nth_Cons_Suc fold_simps
+
+
+subsection \<open>Index to Fields of Structures\<close>
+
+definition \<phi>Index_getter :: \<open>nat list \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
+  where \<open>\<phi>Index_getter idx T U g \<longleftrightarrow> index_value idx \<in> (g \<Ztypecolon> T \<Rrightarrow> U)\<close>
+
+definition \<phi>Index_mapper :: \<open>nat list \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'a2) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> (VAL,'b2) \<phi> \<Rightarrow> (('b \<Rightarrow> 'b2) \<Rightarrow> 'a \<Rightarrow> 'a2) \<Rightarrow> bool\<close>
+  where \<open>\<phi>Index_mapper idx T T' U U' f
+    \<longleftrightarrow> (\<forall>g g'. g \<in> (g' \<Ztypecolon> U \<Rrightarrow> U') \<longrightarrow> index_mod_value idx g \<in> (f g' \<Ztypecolon> T \<Rrightarrow> T'))\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>\<phi>Index_getter ?idx ?T _ _\<close> \<Rightarrow> \<open>\<phi>Index_getter ?idx ?T _ _\<close> (100),
+  \<phi>reason_default_pattern \<open>\<phi>Index_mapper ?idx ?T _ _ _ _\<close> \<Rightarrow> \<open>\<phi>Index_mapper ?idx ?T _ _ _ _\<close> (100)
+]]
+
+lemma [\<phi>reason 1200]:
+  \<open>\<phi>Index_getter [] T T id\<close>
+  unfolding \<phi>Index_getter_def
+  by (simp add: \<phi>Mapping_expn)
+
+lemma [\<phi>reason 1200]:
+  \<open>\<phi>Index_mapper [] T T' T T' id\<close>
+  unfolding \<phi>Index_mapper_def
+  by (simp add: \<phi>Mapping_expn)
 
 
 

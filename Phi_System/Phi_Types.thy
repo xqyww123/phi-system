@@ -662,7 +662,7 @@ lemma \<phi>MapAt_cast:
   by (clarsimp simp add: \<phi>expns; blast)
 
 lemma [\<phi>reason 1000]:
-  \<open> \<r>REQUIRE \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k = k'
+  \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<a>\<n>\<d> P\<close>
   using \<phi>MapAt_cast by (simp add: Premise_def)
@@ -804,15 +804,15 @@ lemma \<phi>MapAt_L_cast:
   by (clarsimp simp add: \<phi>expns; blast)
 
 lemma [\<phi>reason 1020]:
-  \<open> \<r>REQUIRE \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k' = k
+  \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k' = k
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P\<close>
   using \<phi>MapAt_L_cast by (simp add: Premise_def)
 
 lemma [\<phi>reason 1017]:
   \<open> \<r>REQUIRE
-    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k < length k'
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
+    \<s>\<i>\<m>\<p>\<r>\<e>\<m> length k < length k'
+&&& \<s>\<i>\<m>\<p>\<r>\<e>\<m> k @ kd = k'
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P\<close>
   unfolding Imply_def \<r>Require_def conjunction_imp
@@ -821,8 +821,8 @@ lemma [\<phi>reason 1017]:
 
 lemma [\<phi>reason 1013]:
   \<open> \<r>REQUIRE
-    \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m length k' < length k
-&&& \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k @ kd = k'
+    \<s>\<i>\<m>\<p>\<r>\<e>\<m> length k' < length k
+&&& \<s>\<i>\<m>\<p>\<r>\<e>\<m> k @ kd = k'
 \<Longrightarrow> x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P\<close>
   unfolding Imply_def \<r>Require_def conjunction_imp
@@ -1467,7 +1467,7 @@ lemma [\<phi>reason 1200]:
   unfolding \<phi>Sep_Disj_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k1 \<noteq> k2
 ||| \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow> T) (k2 \<^bold>\<rightarrow> U)\<close>
   for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
@@ -1475,7 +1475,7 @@ lemma [\<phi>reason 1200]:
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def)+
 
 lemma [\<phi>reason 1200]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m k1 \<noteq> k2
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k1 \<noteq> k2
 ||| \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow>\<^sub># T) (k2 \<^bold>\<rightarrow>\<^sub># U)\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1, 'b) \<phi>\<close>

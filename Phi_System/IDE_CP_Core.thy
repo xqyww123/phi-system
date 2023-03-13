@@ -1563,9 +1563,9 @@ Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
 
 declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o PROP _\<close>,
           \<phi>premise_attribute  [elim_premise_tag] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>,
-          \<phi>premise_attribute  [elim_premise_tag] for \<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m ?x\<close>,
+          \<phi>premise_attribute  [elim_premise_tag] for \<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> ?x\<close>,
           \<phi>premise_attribute? [useful] for \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?x\<close>,
-          \<phi>premise_attribute? [useful] for \<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>r\<^bold>e\<^bold>m ?x\<close>,
+          \<phi>premise_attribute? [useful] for \<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> ?x\<close>,
           \<phi>premise_attribute? [\<phi>reason] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close>,
           \<phi>premise_attribute  [elim_Simplify_tag] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>,
           \<phi>premise_attribute? [useful] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>,
