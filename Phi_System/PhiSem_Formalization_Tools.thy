@@ -305,7 +305,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
 
 lemma ToSA_by_structural_extraction:
   " Structure_Info U Q
-\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y Q' : Q
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
 \<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2))
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> P1
 \<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d> P1 \<and> P2"
@@ -318,7 +318,7 @@ lemma ToSA_by_structural_extraction:
 
 lemma ToSA_by_structural_extraction__reverse_morphism:
   " Structure_Info U Q
-\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y Q' : Q
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
 \<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W
              (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> \<phi> T') W' (y' \<Ztypecolon> \<phi> U') R1' P2') \<and> P2)))
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> (Automatic_Morphism RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1') \<and> P1)

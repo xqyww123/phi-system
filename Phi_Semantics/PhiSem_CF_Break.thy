@@ -149,8 +149,8 @@ declare [[\<phi>reason_default_pattern
 
 lemma [\<phi>reason 1010 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame ?l ?var_Y' ?var_E'\<close>]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y E
-\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simps undefined] Y' : Y
-\<Longrightarrow> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[assertion_simps undefined] E' : E
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps undefined] Y' : Y
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps undefined] E' : E
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def by simp
 

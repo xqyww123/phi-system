@@ -447,16 +447,16 @@ lemma construct\<phi>_\<phi>app:
 
 consts mode_\<phi>defs :: \<open>action\<close>
 
-abbreviation Unfold_\<phi>Defs :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<phi>\<d>\<e>\<f>\<s>] _ : _" [1000,10] 9)
+abbreviation Unfold_\<phi>Defs :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>\<d>\<e>\<f>\<s>] _ : _" [1000,10] 9)
   where "Unfold_\<phi>Defs \<equiv> Simplify mode_\<phi>defs"
 
 lemma [\<phi>reason 10 for \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_destruct\<phi> _\<close>]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<phi>\<d>\<e>\<f>\<s>] D: T x
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>\<d>\<e>\<f>\<s>] D: T x
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D @action \<A>_destruct\<phi> T\<close>
   unfolding Action_Tag_def Simplify_def \<phi>Type_def by (simp add: implies_refl)
 
 lemma [\<phi>reason 10]:
-  \<open> \<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[\<phi>\<d>\<e>\<f>\<s>] X: T x
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>\<d>\<e>\<f>\<s>] X: T x
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T @action \<A>_construct\<phi> (x \<Ztypecolon> T)\<close>
   unfolding Action_Tag_def Simplify_def \<phi>Type_def by (simp add: implies_refl)
 

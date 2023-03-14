@@ -3,7 +3,6 @@ theory PhiSem_Play_Ground
     PhiSem_CF_Breakable
     PhiSem_CF_Routine
     PhiSem_Int_ArbiPrec
-    PhiSem_Machine_Integer
     PhiSem_Variable
 begin
 

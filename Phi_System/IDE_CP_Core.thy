@@ -26,7 +26,7 @@ abbrevs
   and "<label>" = "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l"
       and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
       and "<by>" = "\<^bold>b\<^bold>y"
-      and "<simplify>" = "\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y"
+      and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
       and "<when>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>n"
       and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
   and "<obligation>" = "\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n>"
@@ -1759,7 +1759,8 @@ let val sequent = case Thm.major_prem_of sequent0
               "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
 in if Config.get ctxt Phi_Reasoner.auto_level >= 1
       andalso (case Thm.major_prem_of sequent
-                 of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _) => false
+                 of _ (*Trueprop*) $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>default\<close> $ _) => false
+                  | _ (*Trueprop*) $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_COLLECT\<close> $ _) => false
                   | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Argument\<close>, _) $ _) => false
                   | _ (*Trueprop*) $ (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) => false
                   | _ => true)
@@ -1769,7 +1770,8 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
    else raise Bypass NONE
 end)\<close>
 
-\<phi>processor enter_proof 790 (premises \<open>Premise ?mode ?P\<close> | premises \<open>Simplify ?mode _ _\<close>)
+\<phi>processor enter_proof 790 (premises \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | premises \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>
+                          | premises \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
       raise Terminate_Process (stat, snd o Phi_Toplevel.prove_prem false))\<close>
 

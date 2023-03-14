@@ -904,13 +904,13 @@ declare [[\<phi>reason 1000 Branch_L Branch_R for \<open>PROP ?A ||| PROP ?B\<cl
 
 subsection \<open>Simplification \& Rewrite\<close>
 
-text \<open>\<open>\<open>\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
+text \<open>\<open>\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
   \<open>mode\<close>. The \<open>?result\<close> should be an output variable for the result of the simplification.
 
   We implement a \<open>default\<close> mode where the system simple-set is used to simplify
   \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
 
-definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y[_] _ :/ _" [10,1000,10] 9)
+definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[_] _ :/ _" [10,1000,10] 9)
   where "Simplify setting result origin \<longleftrightarrow> result = origin"
 
 definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
@@ -935,7 +935,7 @@ hide_fact End_Simplification' End_Simplification Do_Simplification
 
 subsubsection \<open>Default Simplifier\<close>
 
-abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<^bold>s\<^bold>i\<^bold>m\<^bold>p\<^bold>l\<^bold>i\<^bold>f\<^bold>y _ : _" [1000,10] 9)
+abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [1000,10] 9)
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)

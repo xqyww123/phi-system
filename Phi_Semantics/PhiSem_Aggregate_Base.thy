@@ -142,7 +142,8 @@ structure Eval_Sem_Idx_SS = Simpset (
                                       | \<open>Premise eval_semantic_index ?P\<close> )
   = \<open>PLPR_Simplifier.simplifier_by_ss' NONE Eval_Sem_Idx_SS.get'\<close>
 
-lemmas [eval_semantic_index] = nth_Cons_0 nth_Cons_Suc fold_simps
+
+lemmas [eval_semantic_index] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms
 
 
 subsection \<open>Index to Fields of Structures\<close>
@@ -170,11 +171,31 @@ lemma [\<phi>reason 1200]:
   by (simp add: \<phi>Mapping_expn)
 
 
+subsection \<open>IDE-Interfaces\<close>
+
+term ParamTag
+
+definition Index_Param_Tag :: \<open>index list \<Rightarrow> bool\<close> ("\<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> _" [1000] 26)
+  where "\<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> x \<equiv> True"
+
+lemma Index_Param_Tag_Swap:
+  \<open> \<p>\<a>\<r>\<a>\<m> P \<Longrightarrow> \<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> P \<close>
+  unfolding Index_Param_Tag_def ..
+
+ML_file \<open>syntax/index_param.ML\<close>
+
+ML \<open>Scan.pass\<close>
+
+\<phi>processor set_index_param 5000 (premises \<open>\<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> _\<close>) \<open>fn (ctxt,sequent) =>
+  Scan.pass (Context.Proof ctxt) Synt_Index_Param.index_term_parser >> (fn term => fn _ =>
+      Phi_Sys.set_param term (ctxt, @{thm Index_Param_Tag_Swap} RS sequent))\<close>
+
 
 section \<open>First-level Abstraction of Instructions\<close>
 
 lemma op_get_aggregate:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+  \<open> \<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> idx
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> valid_index TY idx
 \<Longrightarrow> \<phi>Index_getter idx T U f
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate idx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
@@ -182,7 +203,8 @@ lemma op_get_aggregate:
   by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>Mapping_expn)
 
 lemma op_set_aggregate:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+  \<open> \<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> idx
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY2
 \<Longrightarrow> Premise eval_semantic_index (index_type idx TY = TY2 \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> valid_index TY idx
@@ -191,5 +213,9 @@ lemma op_set_aggregate:
   unfolding op_set_aggregate_def \<phi>SemType_def subset_iff \<phi>Index_mapper_def Premise_def
   by (cases rv; cases ru; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>Mapping_expn)
+
+
+
+
 
 end
