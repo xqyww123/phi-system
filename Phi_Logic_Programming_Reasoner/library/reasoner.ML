@@ -274,11 +274,18 @@ fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
 
 fun add reasoner0 ctxt =
   let val reasoner = normalize_reasoner I reasoner0
+      val _ = info_pretty_generic ctxt 2 (fn () =>
+                Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
+                               pretty (Context.proof_of ctxt) reasoner])
    in Reasoners.map (fold (insert_net ctxt reasoner) (#pattern reasoner)) ctxt
   end
+
 fun adds reasoners ctxt = Reasoners.map (
       fold (fn reasoner0 =>
         let val reasoner = normalize_reasoner I reasoner0
+            val _ = info_pretty_generic ctxt 2 (fn () =>
+                Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
+                               pretty (Context.proof_of ctxt) reasoner])
          in fold (insert_net ctxt reasoner) (#pattern reasoner)
         end) reasoners) ctxt
 
