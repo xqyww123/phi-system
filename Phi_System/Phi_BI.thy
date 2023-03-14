@@ -333,6 +333,31 @@ lemma AllSet_trans:
   unfolding AllSet_def
   by (smt (verit) mem_Collect_eq transD transI)
 
+subsection \<open>Embedding of Logic Connectives in \<open>\<phi>\<close>-Type\<close>
+
+subsubsection \<open>Prod\<close>
+
+definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 55)
+  where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
+
+lemma \<phi>Prod_expn[\<phi>expns]:
+  "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>cb ca. concrete = cb * ca \<and> cb \<in> (b \<Ztypecolon> B) \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb ## ca)"
+  unfolding \<phi>Prod_def \<phi>Type_def times_set_def by simp
+
+lemma \<phi>Prod_expn':
+  \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
+lemma \<phi>Prod_inhabited[elim!,\<phi>inhabitance_rule]:
+  "Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<Longrightarrow> (Inhabited (x1 \<Ztypecolon> T1) \<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (simp add: \<phi>expns, blast)
+
+(* lemma \<phi>Prod_inhabited_expn[\<phi>inhabited]:
+  \<open>Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longleftrightarrow> Inhabited (x1 \<Ztypecolon> T1) \<and> Inhabited (x2 \<Ztypecolon> T2)\<close>
+  unfolding Inhabited_def apply (simp add: \<phi>expns) *)
+
+lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)"
+  by (simp add: \<phi>expns set_eq_iff)
 
 
 

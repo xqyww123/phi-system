@@ -166,7 +166,7 @@ lemmas [assertion_simps] =
   plus_fun[where 'a=\<open>'a::sep_magma set\<close>]
   Subjection_Zero ExSet_simps distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]
-  \<phi>V_simps
+  \<phi>V_simps \<phi>Prod_expn'
 
 lemmas [assertion_simps_source] = ExSet_times_left ExSet_times_right
 
@@ -497,6 +497,75 @@ lemma [\<phi>reason 1000]:
   \<open> FAIL TEXT(\<open>Fail to infer the semantic type of\<close> R)
 \<Longrightarrow> \<phi>_Have_Types R TYs\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+
+
+subsection \<open>Cleaning to 1\<close>
+
+definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>\<r>Clean S \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1)\<close>
+
+declare [[\<phi>reason_default_pattern \<open>\<r>Clean ?S\<close> \<Rightarrow> \<open>\<r>Clean ?S\<close> (100) ]]
+
+context Identity_Homo begin
+
+lemma \<r>Clean[\<phi>reason 1200]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = 1
+\<Longrightarrow> \<r>Clean (x \<Ztypecolon> T)\<close>
+  unfolding \<r>Clean_def
+  using identity_homo by force 
+
+end
+
+context Identity_Functor begin
+
+lemma \<r>Clean_functor[\<phi>reason 1200]:
+  \<open> \<r>Clean (x \<Ztypecolon> T)
+\<Longrightarrow> \<r>Clean (x \<Ztypecolon> F T)\<close>
+  unfolding \<r>Clean_def
+  by (simp add: identity_functor)
+
+end
+
+subsubsection \<open>Termination\<close>
+
+lemma [\<phi>reason 3000]:
+  \<open>\<r>Clean 0\<close>
+  unfolding \<r>Clean_def by simp
+
+lemma [\<phi>reason 3000]:
+  \<open>\<r>Clean 1\<close>
+  unfolding \<r>Clean_def by simp
+
+subsubsection \<open>Logic Connectives\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean A
+\<Longrightarrow> \<r>Clean B
+\<Longrightarrow> \<r>Clean (A + B)\<close>
+  unfolding \<r>Clean_def
+  using \<phi>CASE_IMP by force
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>x. \<r>Clean (A x))
+\<Longrightarrow> \<r>Clean (ExSet A)\<close>
+  unfolding \<r>Clean_def
+  by (metis ExSet_expn Imply_def)
+
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean A
+\<Longrightarrow> \<r>Clean (A \<s>\<u>\<b>\<j> P)\<close>
+  unfolding \<r>Clean_def Imply_def
+  by (simp add: Subjection_expn)
+
+subsubsection \<open>Structural Node\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean A
+\<Longrightarrow> \<r>Clean B
+\<Longrightarrow> \<r>Clean (A * B)\<close>
+  for A :: \<open>'a::sep_magma_1 set\<close>
+  unfolding \<r>Clean_def Imply_def
+  apply (simp add: \<phi>expns)
+  using mult_1_class.mult_1_left by blast
 
 
 

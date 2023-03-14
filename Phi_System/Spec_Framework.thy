@@ -1,7 +1,7 @@
 chapter \<open>Specification Framework\<close>
 
 theory Spec_Framework
-  imports Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
+  imports Phi_Refinement_Algebra "Phi_Semantics_Framework.Phi_Semantics_Framework"
   abbrevs "<shifts>" = "\<s>\<h>\<i>\<f>\<t>\<s>"
     and   "<val>" = "\<v>\<a>\<l>"
 begin

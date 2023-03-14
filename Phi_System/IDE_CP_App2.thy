@@ -6,12 +6,15 @@ section \<open>Value \& Its Settings\<close>
 
 subsection \<open>Reasoning Rules\<close>
 
-paragraph \<open>Implication\<close>
+paragraph \<open>Transformation and Others\<close>
 
 lemma Val_transformation [\<phi>reason]:
   \<open> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P
 \<Longrightarrow> y \<Ztypecolon> Val v U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> Val v T \<a>\<n>\<d> P\<close>
   unfolding Imply_def by (simp add: \<phi>expns)
+
+lemma [\<phi>reason 1200]: \<open>\<r>Clean (x \<Ztypecolon> \<v>\<a>\<l>[v] T)\<close>
+  unfolding \<r>Clean_def Imply_def by (simp add: Val_expn Subjection_expn)
 
 paragraph \<open>Action\<close>
 

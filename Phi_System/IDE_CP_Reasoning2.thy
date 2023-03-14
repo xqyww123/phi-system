@@ -153,54 +153,6 @@ lemma apply_extract_a_value:
   using \<phi>apply_implication . *)
 
 
-subsection \<open>Cleaning to 1\<close>
-
-definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>\<r>Clean S \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1)\<close>
-
-subsubsection \<open>Termination\<close>
-
-lemma [\<phi>reason 3000]:
-  \<open>\<r>Clean 0\<close>
-  unfolding \<r>Clean_def by simp
-
-lemma [\<phi>reason 3000]:
-  \<open>\<r>Clean 1\<close>
-  unfolding \<r>Clean_def by simp
-
-subsubsection \<open>Logic Connectives\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean A
-\<Longrightarrow> \<r>Clean B
-\<Longrightarrow> \<r>Clean (A + B)\<close>
-  unfolding \<r>Clean_def
-  using \<phi>CASE_IMP by force
-
-lemma [\<phi>reason 1200]:
-  \<open>(\<And>x. \<r>Clean (A x))
-\<Longrightarrow> \<r>Clean (ExSet A)\<close>
-  unfolding \<r>Clean_def
-  by (metis ExSet_expn Imply_def)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean A
-\<Longrightarrow> \<r>Clean (A \<s>\<u>\<b>\<j> P)\<close>
-  unfolding \<r>Clean_def Imply_def
-  by (simp add: Subjection_expn)
-
-
-subsubsection \<open>Structural Node\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean A
-\<Longrightarrow> \<r>Clean B
-\<Longrightarrow> \<r>Clean (A * B)\<close>
-  for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding \<r>Clean_def Imply_def
-  apply (simp add: \<phi>expns)
-  using mult_1_class.mult_1_left by blast
-
-
 section \<open>Transformation of State Abstraction (ToSA)\<close>
 
 text \<open>This is a reasoning procedure for transformations of abstraction of the whole computation

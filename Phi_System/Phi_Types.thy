@@ -1,7 +1,7 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
 theory Phi_Types
-  imports IDE_CP_Reasoning2
+  imports IDE_CP_Reasoning2 Phi_Refinement_Algebra
 begin
 
 section \<open>Basics\<close>
@@ -60,6 +60,9 @@ lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = v'
 \<Longrightarrow> {v'} \<i>\<m>\<p>\<l>\<i>\<e>\<s> v \<Ztypecolon> Identity\<close>
   unfolding Imply_def Identity_expn Premise_def by simp
+
+interpretation Identity: Identity_Homo Identity
+  by (standard; simp add: Imply_def Identity_expn)
 
 
 subsection \<open>Func\<close>
@@ -155,6 +158,12 @@ lemma [\<phi>reason 1200 for \<open>(_ \<Ztypecolon> _ \<Zcomp> _) \<i>\<m>\<p>\
 \<Longrightarrow> (x1 \<Ztypecolon> T \<Zcomp> U1) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x2 \<Ztypecolon> T \<Zcomp> U2) \<a>\<n>\<d> P\<close>
   unfolding \<phi>Composition_expn Imply_def by blast
 
+declare [[\<phi>trace_reasoning = 1]]
+
+interpretation \<phi>Composition: Transformation_Functor \<open>\<phi>Composition W\<close> \<open>\<phi>Composition W\<close>
+  by (standard; simp add:  \<phi>Composition_expn Imply_def; blast)
+
+declare \<phi>Composition.transformation_functor[\<phi>reason 1200 for \<open>(_ \<Ztypecolon> _ \<Zcomp> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (_ \<Ztypecolon> _ \<Zcomp> _) \<a>\<n>\<d> _\<close>]
 
 section \<open>Logical Connectives\<close>
 
@@ -293,8 +302,11 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Rules\<close>
 
+interpretation \<phi>None: Identity_Homo \<phi>None
+  by (standard; simp)
+
 lemma [\<phi>reason 3000]:
-  \<open>\<r>Clean (() \<Ztypecolon> \<phi>None)\<close>
+  \<open>\<r>Clean (x \<Ztypecolon> \<phi>None)\<close>
   unfolding \<r>Clean_def by simp
 
 lemma [\<phi>reason 1200]:
@@ -313,27 +325,6 @@ lemma [\<phi>reason 1500
 
 subsection \<open>Prod\<close>
 
-definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 55)
-  where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
-
-lemma \<phi>Prod_expn[\<phi>expns]:
-  "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>cb ca. concrete = cb * ca \<and> cb \<in> (b \<Ztypecolon> B) \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb ## ca)"
-  unfolding \<phi>Prod_def \<phi>Type_def times_set_def by simp
-
-lemma \<phi>Prod_expn'[assertion_simps]:
-  \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-lemma \<phi>Prod_inhabited[elim!,\<phi>inhabitance_rule]:
-  "Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<Longrightarrow> (Inhabited (x1 \<Ztypecolon> T1) \<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns, blast)
-
-(* lemma \<phi>Prod_inhabited_expn[\<phi>inhabited]:
-  \<open>Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longleftrightarrow> Inhabited (x1 \<Ztypecolon> T1) \<and> Inhabited (x2 \<Ztypecolon> T2)\<close>
-  unfolding Inhabited_def apply (simp add: \<phi>expns) *)
-
-lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)"
-  by (simp add: \<phi>expns set_eq_iff)
 
 lemma \<phi>Prod_\<phi>None:
   \<open>((x',y) \<Ztypecolon> \<circle> \<^emph> U) = ((y \<Ztypecolon> U) :: 'a::sep_magma_1 set)\<close>
@@ -707,12 +698,8 @@ lemma [simp]:
   \<open>(k \<^bold>\<rightarrow> (T \<phi>\<s>\<u>\<b>\<j> P)) = (k \<^bold>\<rightarrow> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
-lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean (x \<Ztypecolon> T)
-\<Longrightarrow> \<r>Clean (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
-  unfolding \<r>Clean_def Imply_def
-  apply (clarsimp simp add: \<phi>expns)
-  by (metis fun_1upd1)
+interpretation \<phi>MapAt: Identity_Functor \<open>\<phi>MapAt k\<close>
+  by (standard; simp add: Imply_def \<phi>expns; metis fun_1upd1)
 
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> k = k'
@@ -788,12 +775,8 @@ lemma \<phi>MapAt_L_At:
   \<open>(ks \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) = (ks \<^bold>\<rightarrow> T)\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; metis append_self_conv push_map_unit)
 
-lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean (x \<Ztypecolon> T)
-\<Longrightarrow> \<r>Clean (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T)\<close>
-  unfolding \<r>Clean_def Imply_def
-  apply (simp add: \<phi>expns)
-  using push_map_1 by blast
+interpretation \<phi>MapAt_L: Identity_Functor \<open>\<phi>MapAt_L k\<close>
+  by (standard; simp add: Imply_def \<phi>expns; metis push_map_1)
 
 
 
@@ -1288,12 +1271,8 @@ lemma [\<phi>reason 1000]:
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
-lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean (x \<Ztypecolon> T)
-\<Longrightarrow> \<r>Clean (x \<Ztypecolon> n \<Znrres> T)\<close>
-  for T :: \<open>('a::share_semimodule_mult, 'b) \<phi>\<close>
-  unfolding \<r>Clean_def Imply_def apply (simp add: \<phi>expns)
-  using share_right_one by blast
+interpretation \<phi>Share: Identity_Functor \<open>\<phi>Share n :: ('v::share_one,'x::one) \<phi> \<Rightarrow> ('v, 'x) \<phi>\<close>
+  by (standard; simp add: Imply_def \<phi>expns; metis share_right_one)
 
 
 paragraph \<open>Action Rules\<close>
