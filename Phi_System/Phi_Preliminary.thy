@@ -7,6 +7,7 @@ theory Phi_Preliminary
           Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
   keywords "optional_translations" :: thy_decl
+       and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl
 begin
 
 declare [ [ML_debugger, ML_exception_debugger]]
@@ -125,6 +126,8 @@ end\<close>
 subsection \<open>Helper Isar Commands\<close>
 
 ML_file \<open>library/tools/optional_translation.ML\<close>
+ML_file \<open>library/tools/adhoc_overloading.ML\<close>
+
 
 subsection \<open>The Friendly Character\<close>
 

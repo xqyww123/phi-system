@@ -1,5 +1,5 @@
 theory PhiSem_Aggregate_Base
-  imports Phi_System.PhiSem_Formalization_Tools
+  imports PhiSem_Base
 begin
 
 text \<open>The base for aggregate values which have inner structures and whose members can be

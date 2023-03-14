@@ -72,7 +72,7 @@ fun gen_declare_entries prep_arg prep_expr
       val entries = map (fn (B,TM0,E) =>
             case prep_arg ctxt Config.additional_data' TM0 []
               of (TM, []) => (B, TM, map (prep_expr thy) E)
-               | _ => raise Fail "Bad configuration #g134fjop") entries0
+               | (_, tys) => error "Contains type variables!") entries0
       val space_xname = Config.prepare_space_name_binding name_b
       val space_name = Sign.full_name thy space_xname
       val space_entries = map (fn (B,TM,_) => (Binding.name_of B, TM)) entries

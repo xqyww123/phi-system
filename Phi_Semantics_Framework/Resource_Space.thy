@@ -67,6 +67,18 @@ lemma sep_closed_partial_map[simp]:
   unfolding Sep_Closed_def
   by (clarsimp simp add: dom_mult)
 
+lemma sep_closed_partial_map1[simp]:
+  \<open>Sep_Closed {h::'a \<Rightarrow> 'b :: sep_no_inverse. finite (dom1 h)}\<close> 
+  unfolding Sep_Closed_def
+  by (clarsimp simp add: dom1_mult)
+
+lemma Sep_Closed_pointwise:
+  \<open> (\<forall>k. P k 1)
+\<Longrightarrow> (\<forall>k x y. x ## y \<longrightarrow> P k x \<and> P k y \<longrightarrow> P k (x * y))
+\<Longrightarrow>   Sep_Closed {f. \<forall>k. P k (f k) }\<close>
+  unfolding Sep_Closed_def
+  by (simp add: times_fun; blast)
+
 
 subsection \<open>Separation Homo Set\<close>
 

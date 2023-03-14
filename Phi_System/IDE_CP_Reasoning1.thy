@@ -385,7 +385,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   " \<phi>IntroFrameVar' R (R * \<blangle> S \<brangle>) S (\<lambda>ret. R * T ret) T (\<lambda>ex. R * E ex) E"
   unfolding \<phi>IntroFrameVar'_def FOCUS_TAG_def by blast
 
-
+(*TODO*)
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
 \<open>fn (ctxt, sequent) =>
   let
@@ -396,7 +396,7 @@ lemma \<phi>IntroFrameVar'_Yes:
       | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
       | suppressed _ = false
   in
-    if suppressed tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
+    if suppressed tail (* andalso fastype_of tail = \<^typ>\<open>assn\<close> *)
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
     else Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
   end\<close>

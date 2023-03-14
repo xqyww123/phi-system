@@ -1,7 +1,7 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
 theory Phi_Types
-  imports IDE_CP_Reasoning2 "HOL-Library.Adhoc_Overloading"
+  imports IDE_CP_Reasoning2
 begin
 
 section \<open>Basics\<close>
@@ -16,7 +16,7 @@ This is a planning feature has not been implemented\<close>
 syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_\<phi>")
 
 consts \<phi>coercion :: \<open>('c1,'a) \<phi> \<Rightarrow> ('c2,'a) \<phi>\<close> ("\<coercion> _" [61] 60)
-
+  \<comment> \<open>A syntax sugar to be overloaded!\<close>
 
 subsection \<open>Identity\<close>
 
@@ -1375,7 +1375,7 @@ abbreviation \<phi>Share_Some ("\<fish_eye> _" [91] 90)
 abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
   where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> \<phi>perm_functor to_share (\<phi>Some T)\<close>
 
-adhoc_overloading \<phi>coercion \<phi>Some \<phi>Share_Some \<phi>Share_Some_L
+\<phi>adhoc_overloading \<phi>coercion \<phi>Some \<phi>Share_Some \<phi>Share_Some_L
 
 lemma \<phi>Some_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Some T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<in> (x \<Ztypecolon> T))\<close>
@@ -1658,12 +1658,11 @@ subsection \<open>Nosep\<close>
 definition Nosep :: \<open>('T, 'x) \<phi> \<Rightarrow> ('T nosep, 'x) \<phi>\<close>
   where \<open>Nosep T x = nosep ` (x \<Ztypecolon> T)\<close>
 
-adhoc_overloading \<phi>coercion \<open>\<lambda>T. \<black_circle> Nosep T\<close> \<open>\<lambda>T. \<fish_eye> Nosep T\<close> \<open>\<lambda>T. \<fish_eye>\<^sub>L Nosep T\<close>
+\<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. \<black_circle> Nosep T\<close> \<open>\<lambda>T. \<fish_eye> Nosep T\<close> \<open>\<lambda>T. \<fish_eye>\<^sub>L Nosep T\<close>
 
+(*TODO: give a configure flag to control this sugar*)
 translations
-  "\<coercion> T" <= "CONST \<phi>perm_functor CONST to_share (\<coercion> T)"
-  "\<coercion> T" <= "[] \<^bold>\<rightarrow> \<coercion> T"
-  "\<coercion> T" <= "\<coercion> CONST Nosep T"
+  "\<coercion> T" <= "\<fish_eye> CONST Nosep T"
 
 lemma Nosep_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> Nosep T) \<longleftrightarrow> (\<exists>v. p = nosep v \<and> v \<in> (x \<Ztypecolon> T))\<close>
@@ -1716,6 +1715,12 @@ lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as (z \<Ztypecolon> Z)
 \<Longrightarrow> x \<Ztypecolon> Nosep T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Nosep U \<a>\<n>\<d> P @action as (z \<Ztypecolon> Nosep Z)\<close>
   unfolding Action_Tag_def using Nosep_cast .
+
+lemma [\<phi>reason 1200 for \<open>_ \<Ztypecolon> Nosep _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Identity \<a>\<n>\<d> _\<close>]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Identity \<a>\<n>\<d> P
+\<Longrightarrow> x \<Ztypecolon> Nosep T \<i>\<m>\<p>\<l>\<i>\<e>\<s> nosep y \<Ztypecolon> Identity \<a>\<n>\<d> P \<close>
+  unfolding Imply_def 
+  by (clarsimp simp add: Nosep_expns Identity_expn)
 
 
 section \<open>Specifc Structures\<close>

@@ -3,7 +3,6 @@ chapter \<open>Integrated Deduction Environment for Programming (IDE-P)\<close>
 theory IDE_CP_Core
   imports
     "Phi_Semantics_Framework.Phi_Semantics_Framework"
-    "HOL-Library.Adhoc_Overloading"
     "Phi_Algebras.Map_of_Tree"
     Calculus_of_Programming
     IDE_CP_Reasoning1
@@ -1488,7 +1487,7 @@ subsubsection \<open>Rule \& Implementation\<close>
 
 lemma "__value_access_0__":
   \<open> \<p>\<r>\<o>\<c> F \<lbrace> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> Void \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> Void \<brangle> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   by fastforce
 
 ML_file \<open>library/system/generic_variable_access.ML\<close>

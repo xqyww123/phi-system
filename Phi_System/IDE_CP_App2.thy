@@ -155,18 +155,12 @@ subsection \<open>Assignment\<close>
 
 typedecl valname
 
-lemma "__set_value_rule__":
-  \<open> (\<phi>arg.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> X \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )
-\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> (x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X) \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
-  unfolding \<phi>Procedure_def Value_of_def
-  by (clarsimp simp add: \<phi>expns)
-
 lemma [OF \<phi>arg_val_varify_type,
        \<phi>reason 1200 for \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<brangle> \<a>\<n>\<d> _ \<close>]:
   \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<v>\<a>\<l>[raw] T \<brangle>\<close>
   unfolding Action_Tag_def
-  by (cases raw; simp add: Val_expn implies_refl)
+  by (cases raw; simp add: Val_expn)
 
 lemma [OF \<phi>arg_val_varify_type,
        \<phi>reason 1200 for
@@ -178,17 +172,23 @@ lemma [OF \<phi>arg_val_varify_type,
   by (cases raw; simp add: \<phi>M_Success)
 
 
+
+
+lemma "__set_value_rule__":
+  \<open> (\<phi>arg.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )
+\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<brangle> \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+  unfolding \<phi>Procedure_def Value_of_def
+  by (clarsimp simp add: \<phi>expns)
+
 lemma "__fast_assign_val__":
-  \<open> R\<heavy_comma> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> P
-\<Longrightarrow> R\<heavy_comma> (x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X) \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> \<phi>arg.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<and> P\<close>
+  \<open> R\<heavy_comma> \<blangle> X \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> P
+\<Longrightarrow> R\<heavy_comma> \<blangle> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> \<phi>arg.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<and> P\<close>
   unfolding Imply_def
   by (clarsimp simp add: Val_expn Subjection_expn)
 
 lemma "__fast_assign_val_0__":
-  \<open> R\<heavy_comma> Void \<i>\<m>\<p>\<l>\<i>\<e>\<s> R \<close>
+  \<open> R\<heavy_comma> \<blangle> Void \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> R \<close>
   by (simp add: implies_refl)
-
-thm "__fast_assign_val__"[OF "__fast_assign_val__", OF "__fast_assign_val__", OF "__fast_assign_val_0__"]
 
 ML_file \<open>library/additions/local_value.ML\<close>
 

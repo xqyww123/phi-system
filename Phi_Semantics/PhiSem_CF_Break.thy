@@ -63,7 +63,7 @@ lemma Brk_Frame_eq_identity:
 
 lemma Brking_Frame_eq_identity:
   \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nosep (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
-  unfolding set_eq_iff Brking_Frame_def TAIL_def
+  unfolding set_eq_iff Brking_Frame_def
   by (simp add: \<phi>expns)
 
 
@@ -160,7 +160,7 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> E \<i>\<m>\<p>\<l>\<i>\<e>\<s> E' @action ToSA
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
-            TAIL_def Brking_Frame_def
+            Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
     X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> Brk_Frame l)\<close> ..
             \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..
@@ -176,7 +176,7 @@ lemma [\<phi>reason 3000 for \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle
 
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
-  unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_plus TAIL_def by clarify
+  unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_plus by clarify
 
 lemma [\<phi>reason 1200]:
   \<open> X1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y1 E1
@@ -200,19 +200,19 @@ lemma [\<phi>reason 1200]:
 
 lemma Brking_Frame_absorb_item[assertion_simps]:
   \<open>((Brking_Frame l Y)\<heavy_comma> X) = Brking_Frame l (\<lambda>v. Y v \<heavy_comma> X)\<close>
-  unfolding Brking_Frame_def TAIL_def
+  unfolding Brking_Frame_def
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> ;; \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. .
 
 lemma Brking_Frame_absorb_subj[assertion_simps]:
   \<open>((Brking_Frame l Y) \<s>\<u>\<b>\<j> P) = Brking_Frame l (\<lambda>v. Y v \<s>\<u>\<b>\<j> P)\<close>
-  unfolding Brking_Frame_def TAIL_def
+  unfolding Brking_Frame_def
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> \<medium_right_bracket>. \<medium_left_bracket> ;; \<medium_right_bracket>. .
 
 lemma Brking_Frame_absorb_ex[assertion_simps]:
   \<open>(\<exists>*x. (Brking_Frame l (Y x))) = Brking_Frame l (\<lambda>v. \<exists>*x. Y x v)\<close>
-  unfolding Brking_Frame_def TAIL_def
+  unfolding Brking_Frame_def
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> \<medium_right_bracket>. \<medium_left_bracket> ;; \<medium_right_bracket>. .
 
@@ -241,7 +241,7 @@ lemma [\<phi>reason 2200]:
   (*The priority must override Void Padding*)
   \<open> (\<And>v. S v \<i>\<m>\<p>\<l>\<i>\<e>\<s> R v \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P)
 \<Longrightarrow> Brking_Frame l S \<i>\<m>\<p>\<l>\<i>\<e>\<s> Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
-  unfolding Brking_Frame_def TAIL_def FOCUS_TAG_def
+  unfolding Brking_Frame_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
     X[THEN implies_right_prod]
   \<medium_right_bracket>. .

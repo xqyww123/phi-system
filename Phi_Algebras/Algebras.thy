@@ -123,11 +123,13 @@ class sep_magma_0 = sep_magma_1 + mult_zero + zero_neq_one +
   assumes sep_magma_0_left  [simp]: "x ## 0 \<longleftrightarrow> x = 1"
   assumes sep_magma_0_right [simp]: "0 ## x \<longleftrightarrow> x = 1"
 
+class sep_no_inverse = sep_magma_1 +
+  assumes sep_no_inverse[simp]: \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
+
 class positive_sep_magma_1 = sep_magma_1 + positive_sep_magma
 begin
-lemma sep_no_negative [simp]:
-  \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
-  by (metis local.join_positivity local.mult_1_right local.sep_magma_1_left sep_magma.join_sub_def)
+subclass sep_no_inverse
+  by (standard; metis local.join_positivity local.mult_1_right local.sep_magma_1_left sep_magma.join_sub_def)
 end
 
 subsubsection \<open>Separation Monoid\<close>
@@ -569,20 +571,16 @@ instance apply (standard; case_tac x; case_tac y; simp)
   using sep_disj_commute by blast
 end
 
-instantiation option :: (sep_magma) sep_magma begin
-instance ..
-end
+instance option :: ("{sep_disj,times}") sep_magma ..
 
-instantiation option :: (sep_magma) sep_magma_1 begin
-instance proof
+instance option :: ("{sep_disj,times}") sep_magma_1 proof
   fix x y :: \<open>'a option\<close>
   show \<open>x ## 1\<close> by simp
   show \<open>1 ## x\<close> by simp
 qed
-end
 
-instantiation option :: (positive_sep_magma) positive_sep_magma_1 begin
-instance proof
+
+instance option :: (positive_sep_magma) positive_sep_magma_1 proof
   fix x y :: \<open>'a option\<close>
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
     unfolding join_sub_def
@@ -594,7 +592,6 @@ instance proof
     subgoal for _ u v _ apply (cases u; cases v; simp)
       by (metis join_positivity join_sub_def) .
 qed
-end
 
 
 instantiation option :: (sep_semigroup) sep_semigroup begin
@@ -682,18 +679,26 @@ instance proof
 qed
 end
 
-instantiation option :: (times) no_inverse begin
-instance by (standard, case_tac a; case_tac b; simp)
-end
+instance option :: ("{sep_disj,times}") sep_no_inverse 
+  by (standard; case_tac x; case_tac y; simp)
 
 lemma times_option_none[simp]:
   \<open>x * y = None \<longleftrightarrow> x = None \<and> y = None\<close>
-  using no_inverse one_option_def by metis
+  by (simp add: option.case_eq_if times_option_def)
 
 lemma Some_nonsepable_semigroup_sub_join[simp]:
   \<open>Some x \<preceq>\<^sub>S\<^sub>L X \<longleftrightarrow> X = Some x\<close>
   for x :: \<open>'a::nonsepable_semigroup\<close>
   by (simp add: join_sub_def)
+
+
+instantiation option :: (ab_semigroup_mult) comm_monoid_mult begin
+instance apply (standard)
+    apply (case_tac a; case_tac b; case_tac c; simp add: mult.assoc)
+   apply (case_tac a; case_tac b; simp add: mult.commute)
+  apply (case_tac a; simp) .
+end
+
 
 
 subsection \<open>Product\<close>
@@ -722,17 +727,18 @@ instantiation prod :: (semigroup_mult, semigroup_mult) semigroup_mult begin
 instance by standard (simp_all add: split_paired_all algebra_simps)
 end
 
-instantiation prod :: (monoid_mult, monoid_mult) monoid_mult begin
-instance by standard (simp_all add: one_prod_def split_paired_all algebra_simps)
-end
+instance prod :: (mult_1, mult_1) mult_1
+  by (standard; simp add: one_prod_def split_paired_all)
 
-instantiation prod :: (no_inverse, no_inverse) no_inverse begin
-instance by (standard, simp add: one_prod_def times_prod_def split: prod.split) blast
-end
 
-instantiation prod :: (no_negative, no_negative) no_negative begin
-instance by (standard, simp add: zero_prod_def plus_prod_def split_paired_all split: prod.split, blast)
-end
+instance prod :: (monoid_mult, monoid_mult) monoid_mult
+  by standard (simp_all add: one_prod_def split_paired_all algebra_simps)
+
+instance prod :: (no_inverse, no_inverse) no_inverse
+  by (standard, simp add: one_prod_def times_prod_def split: prod.split) blast
+
+instance prod :: (no_negative, no_negative) no_negative
+  by (standard, simp add: zero_prod_def plus_prod_def split_paired_all split: prod.split, blast)
 
 instantiation prod :: (ab_semigroup_mult, ab_semigroup_mult) ab_semigroup_mult begin
 instance by (standard, metis mult.commute prod.collapse times_prod)
@@ -753,6 +759,12 @@ end
 instantiation prod :: (sep_magma,sep_magma) sep_magma begin
 instance ..
 end
+
+instance prod :: (sep_magma_1, sep_magma_1) sep_magma_1
+  by (standard; simp add: one_prod_def split_paired_all)
+
+instance prod :: (sep_no_inverse, sep_no_inverse) sep_no_inverse
+  by (standard, simp add: one_prod_def times_prod_def split: prod.split) force
 
 instantiation prod :: (sep_disj_intuitive,sep_disj_intuitive) sep_disj_intuitive begin
 instance by (standard; case_tac a; case_tac b; case_tac c; simp; blast)
@@ -877,9 +889,7 @@ instantiation list :: (type) sep_monoid begin
 instance by (standard; clarsimp simp add: times_list_def join_sub_def)
 end
 
-instantiation list :: (type) sep_disj_intuitive begin
-instance by (standard; simp)
-end
+instance list :: (type) sep_disj_intuitive by (standard; simp)
 
 
 
@@ -917,9 +927,8 @@ lemma one_fun[simp]: "1 x = 1" unfolding one_fun_def by simp
 lemma zero_fun[simp]: "0 x = 0" unfolding zero_fun_def by simp
 lemmas zero_fun_eta[simp] = zero_fun_def[symmetric]
 
-instantiation "fun" :: (type, no_inverse) no_inverse begin
-instance by (standard, simp add: one_fun_def times_fun fun_eq_iff, blast)
-end
+instance "fun" :: (type, no_inverse) no_inverse
+  by (standard, simp add: one_fun_def times_fun fun_eq_iff, blast)
 
 instantiation "fun" :: (type, no_negative) no_negative begin
 instance by (standard, simp del: zero_fun_eta add: zero_fun_def plus_fun fun_eq_iff, blast)
@@ -961,6 +970,9 @@ end
 instantiation "fun" :: (type,sep_magma_1) sep_magma_1 begin
 instance by (standard; simp add: sep_disj_fun_def)
 end
+
+instance "fun" :: (type, sep_no_inverse) sep_no_inverse
+  by (standard; simp add: one_fun_def fun_eq_iff times_fun; blast)
 
 instantiation "fun" :: (type,sep_semigroup) sep_semigroup begin
 instance proof
@@ -1240,9 +1252,7 @@ instantiation unit :: monoid_mult begin
 instance by standard simp_all
 end
 
-instantiation unit :: no_inverse begin
-instance by standard simp_all
-end
+instance unit :: no_inverse by standard simp_all
 
 instantiation unit :: no_negative begin
 instance by standard simp_all
@@ -1253,6 +1263,7 @@ definition sep_disj_unit :: \<open>unit \<Rightarrow> unit \<Rightarrow> bool\<c
 instance by (standard; simp)
 end
 
+instance unit :: sep_no_inverse by standard simp_all
 
 subsection \<open>Set\<close>
 
@@ -1309,49 +1320,44 @@ instantiation set :: ("{sep_disj,times}") mult_zero begin
 instance by (standard; simp add: zero_set_def times_set_def)
 end
 
-instantiation set :: ("{sep_magma_1,no_inverse}") no_inverse begin
-instance apply (standard, simp add: one_set_def times_set_def set_eq_iff)
+instance set :: ("{sep_magma_1,no_inverse}") no_inverse
+  apply (standard, simp add: one_set_def times_set_def set_eq_iff)
   by (metis (no_types, opaque_lifting) no_inverse sep_magma_1_left sep_magma_1_right)
-end
 
 instantiation set :: (type) total_sep_disj begin
 definition sep_disj_set :: \<open>'a set \<Rightarrow> 'a set \<Rightarrow> bool\<close> where [simp]: \<open>sep_disj_set _ _ = True\<close>
 instance by (standard; simp)
 end
 
-instantiation set :: (sep_magma) sep_magma begin
-instance ..
-end
+instance set :: (sep_magma) sep_magma ..
 
-instantiation set :: (sep_magma_1) sep_magma_1 begin
-instance proof
+instance set :: (sep_magma_1) sep_magma_1 proof
   fix x :: \<open>'a set\<close>
   show \<open>1 * x = x\<close> unfolding one_set_def times_set_def by simp
   show \<open>x * 1 = x\<close> unfolding one_set_def times_set_def by simp
   show \<open>x ## 1\<close> unfolding one_set_def sep_disj_set_def by simp
   show \<open>1 ## x\<close> unfolding one_set_def sep_disj_set_def by simp
 qed
-end
+
+instance set :: (sep_no_inverse) sep_no_inverse
+  apply (standard, simp add: one_set_def times_set_def set_eq_iff)
+  by (metis (no_types, opaque_lifting) sep_magma_1_left sep_magma_1_right sep_no_inverse)
 
 instantiation set :: (sep_disj_intuitive) sep_disj_intuitive begin
 instance by (standard; simp)
 end
 
-instantiation set :: (sep_semigroup) semigroup_mult begin
-instance
+instance set :: (sep_semigroup) semigroup_mult
   apply (standard; clarsimp simp add: times_set_def algebra_simps set_eq_iff; rule; clarsimp)
   using sep_disj_multD2 sep_disj_multI2 sep_mult_assoc apply blast
   by (metis sep_disj_multD1 sep_disj_multI1 sep_mult_assoc)
-end
 
-instantiation set :: (sep_monoid) monoid_mult begin
-instance by standard (simp_all add: one_set_def times_set_def)
-end
+instance set :: (sep_monoid) monoid_mult
+  by standard (simp_all add: one_set_def times_set_def)
 
-instantiation set :: (sep_ab_semigroup) ab_semigroup_mult begin
-instance apply (standard; simp add: times_set_def set_eq_iff)
+instance set :: (sep_ab_semigroup) ab_semigroup_mult
+  apply (standard; simp add: times_set_def set_eq_iff)
   using sep_disj_commute sep_mult_commute by blast
-end
 
 instantiation set :: (sep_algebra) comm_monoid_mult begin
 instance by (standard; simp_all add: one_set_def times_set_def)
@@ -1516,7 +1522,7 @@ lemma sep_disj_dom1_disj_disjoint:
   by clarsimp
 
 lemma dom1_mult: \<open>f ## g \<Longrightarrow> dom1 (f * g) = dom1 f \<union> dom1 g\<close>
-  for f :: \<open>'a \<Rightarrow> 'b :: {no_inverse,sep_disj}\<close>
+  for f :: \<open>'a \<Rightarrow> 'b :: {sep_no_inverse,sep_disj}\<close>
   unfolding sep_disj_fun_def dom1_def set_eq_iff times_fun by simp
 
 lemma dom_mult: \<open>f ## g \<Longrightarrow> dom (f * g) = dom f \<union> dom g\<close>
@@ -2043,13 +2049,16 @@ definition \<open>sep_disj_nosep (x :: 'a nosep) (y :: 'a nosep) = False\<close>
 definition share_nosep :: \<open>rat \<Rightarrow> 'a nosep \<Rightarrow> 'a nosep\<close>
   where [simp]: \<open>share_nosep _ x = x\<close>
 definition times_nosep :: \<open>'a nosep \<Rightarrow> 'a nosep \<Rightarrow> 'a nosep\<close>
-  where [simp]: \<open>times_nosep x y = x\<close>
+  where [simp]: \<open>times_nosep x y = undefined\<close>
 instance by (standard; case_tac x; simp; case_tac y; simp add: sep_disj_nosep_def)
 end
 
-instantiation nosep :: (type) sep_disj_intuitive begin
-instance by (standard; case_tac a; case_tac b; case_tac c; simp)
-end
+instance nosep :: (type) sep_disj_intuitive by (standard; case_tac a; case_tac b; case_tac c; simp)
+
+instance nosep :: (type) ab_semigroup_mult
+  by (standard; case_tac a; case_tac b; simp; case_tac c; simp)
+
+
 
 subsection \<open>Agreement\<close>
 

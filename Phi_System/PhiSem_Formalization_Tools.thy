@@ -954,7 +954,7 @@ lemma "__dispose_rule__":
       then have "\<forall>ka. 1 = aa k ka \<or> 1 = any ka"
         by (metis one_option_def option.exhaust sep_disj_fun_nonsepable(2))
       then show ?thesis
-        using f1 by (metis domIff no_inverse one_option_def prems(2) times_fun)
+        by (metis domIff f1 mult_1_class.mult_1_right one_option_def prems(2) times_fun)
     qed
     then have t1[simp]: \<open>(aa * 1(k := any))(k := 1) = aa\<close>
       by (smt (verit, del_insts) Diff_iff dom1_upd dom_1 dom_eq_empty_conv fun_split_1_not_dom1 fun_upd_triv fun_upd_upd insertCI)
