@@ -1755,7 +1755,7 @@ subsubsection \<open>Simplifiers \& Reasoners\<close>
 let val sequent = case Thm.major_prem_of sequent0
                     of Const(\<^const_name>\<open>Do\<close>, _) $ _ => @{thm Do_I} RS sequent0
                      | _ => sequent0
-    val _ = Phi_Reasoner.debug_print ctxt (fn _ =>
+    val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
               "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
 in if Config.get ctxt Phi_Reasoner.auto_level >= 1
       andalso (case Thm.major_prem_of sequent

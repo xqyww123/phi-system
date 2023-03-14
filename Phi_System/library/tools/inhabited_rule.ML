@@ -53,7 +53,7 @@ val _ = Theory.setup (
   returns all facts implied in the inhabitance. *)
 fun implications_of_inhabitance' erules ctxt sequent =
   let
-    val _ = Phi_Reasoner.debug_print ctxt (fn _ =>
+    val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
                 "extracting implied pure facts..." ^ Position.here \<^here>)
     open Tactical Tactic
   in rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt erules))) sequent

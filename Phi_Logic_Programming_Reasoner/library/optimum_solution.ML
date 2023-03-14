@@ -57,7 +57,7 @@ fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
       val next = (INC' + INC, Int.max (THR',THR))
       val cost = eval next
       val ctxt = Cost.put next ctxt
-      fun prt () = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+      fun prt () = Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.block [
                       Pretty.str "PLPR_Optimum_Solution: current score: ",
                       Pretty.str (string_of_int cost),
                       Pretty.str ", swithcing to another search branch..."
@@ -76,7 +76,7 @@ fun gen_finish reach (ctxt,sequent) = Seq.make (fn _ => (
   case Stack.get ctxt
     of [] => raise Fail "Not in a PLPR_Optimum_Solution environment"
      | ((_,sh,gcut) :: L ) =>
-        let val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+        let val _ = Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.block [
                       Pretty.str "PLPR_Optimum_Solution reaches a solution with cost ",
                       Pretty.str (string_of_int (eval (Cost.get ctxt)))])
             val ctxt' = ctxt
@@ -114,12 +114,12 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
       fun next_candidate () =
         case Synchronized.change_result var get_heap
           of NONE => (
-              Phi_Reasoner.debug_print ctxt (fn _ =>
+              Phi_Reasoner.info_print ctxt 2 (fn _ =>
                 "PLPR_Optimum_Solution: all choices are traversed, no solution found.");
               NONE)
            | SOME s =>
                (case Phi_Reasoner.reason NONE s
-                  of NONE => (Phi_Reasoner.debug_print ctxt (fn _ =>
+                  of NONE => (Phi_Reasoner.info_print ctxt 2 (fn _ =>
                                 "PLPR_Optimum_Solution: the search branch fails, try another");
                               next_candidate ())
                    | SOME s' => SOME (s', Seq.make next_candidate))
@@ -134,7 +134,7 @@ fun start (ctxt,sequent) = gen_start ctxt [sequent]
 fun best_among (_, []) = NONE
   | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE (ctxt,thm)
   | best_among (ctxt,candidates) =
-    ( Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks (
+    ( Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.chunks (
           Pretty.str "PLPR_Optimum_Solution: reasoning the optimal solution from candidates:" ::
           map (fn th => Pretty.item [Thm.pretty_thm ctxt th]) candidates
         ));

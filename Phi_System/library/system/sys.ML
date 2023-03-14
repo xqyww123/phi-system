@@ -142,7 +142,7 @@ fun accept_proc' (ctxt,sequent) =
                       let val (f,_,_,_,_) = Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent)
                           val _ = warning "The return arity of a procedure is not fixed.\
                                           \ Regard it to no return."
-                          val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+                          val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
                               Pretty.block [Pretty.str "In procedure ", Syntax.pretty_term ctxt f],
                               Pretty.block [
                                 Pretty.str "the arity of the return is not fixed, but a variable ",
@@ -265,7 +265,7 @@ fun synthesis term (ctxt, sequent) =
           |> Drule.infer_instantiate ctxt [(("X",i_s + i_t), Thm.incr_indexes_cterm i_s term),
                                            (("sequent",i_s + i_t), Thm.cprop_of sequent)]
           |> (fn rule => Thm.implies_elim rule sequent)
-    val _ = Phi_Reasoner.debug_print ctxt (fn _ => "reasoning synthesis..." ^ Position.here \<^here>)
+    val _ = Phi_Reasoner.info_print ctxt 2 (fn _ => "reasoning synthesis..." ^ Position.here \<^here>)
   in
     case Phi_Reasoner.reason NONE (ctxt, sequent')
       of SOME ret => ret

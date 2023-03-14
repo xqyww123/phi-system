@@ -23,12 +23,9 @@ signature NU_REASONER = sig
                      (*trace level: 0 - none; 1 - less info; 2 - more info; 3 - much more info*)
   val count_performance : bool Config.T
   val step_limit : int Config.T (*limit of the number of reasoning steps*)
-  val info_print : Proof.context -> (unit -> string) -> unit
-  val info_pretty: Proof.context -> (unit -> Pretty.T) -> unit
-  val debug_print: Proof.context -> (unit -> string) -> unit
-  val debug_pretty: Proof.context -> (unit -> Pretty.T) -> unit
-            (*Prints any debug info only when the flag \<phi>trace_reasoning is turned on.*)
-  val debug_pretty_generic : Context.generic -> (unit -> Pretty.T) -> unit
+  val info_print : Proof.context -> int (*level*) -> (unit -> string) -> unit
+  val info_pretty: Proof.context -> int (*level*) -> (unit -> Pretty.T) -> unit
+  val info_pretty_generic : Context.generic -> int (*level*) -> (unit -> Pretty.T) -> unit
   val error : string -> 'a
   val bad_config : string -> 'a
 
@@ -158,24 +155,13 @@ val step_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>reasoning_step_
 
 
 (* Debug Info *)
-fun debug_pretty ctxt G =
-  if 2 <= Config.get ctxt trace
+fun info_pretty ctxt level G =
+  if level <= Config.get ctxt trace
   then tracing (Pretty.string_of (G ()))
   else ()
-fun debug_print ctxt G = debug_pretty ctxt (G #> Pretty.str)
+fun info_print ctxt level G = info_pretty ctxt level (G #> Pretty.str)
 
-fun debug_pretty_generic ctxt G =
-  if 2 <= Config.get_generic ctxt trace
-  then tracing (Pretty.string_of (G ()))
-  else ()
-
-fun info_pretty ctxt G =
-  if 1 <= Config.get ctxt trace
-  then tracing (Pretty.string_of (G ()))
-  else ()
-fun info_print ctxt G = info_pretty ctxt (G #> Pretty.str)
-
-fun info_pretty_generic ctxt G =
+fun info_pretty_generic ctxt level G =
   if 1 <= Config.get_generic ctxt trace
   then tracing (Pretty.string_of (G ()))
   else ()

@@ -314,7 +314,7 @@ fun gen_finish_proc prep_term qed spec int stat =
           if Thm.no_prems sequent_pre1
           then (ctxt_pre1,sequent_pre1)
           else let
-            val _ = Phi_Reasoner.debug_print ctxt_pre1 (fn _ =>
+            val _ = Phi_Reasoner.info_print ctxt_pre1 2 (fn _ =>
                       "solving pending antecedents before closing the programming block..."
                       ^ Position.here \<^here>)
             fun attack_obligations (ctxt,sequent) =
@@ -335,7 +335,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                      | SOME term =>
                         let val ctxt'' = Proof_Context.set_mode (Proof_Context.mode_pattern) ctxt'
                             val aim = Thm.cterm_of ctxt'' (prep_term ctxt'' term)
-                            val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+                            val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.block [
                                Pretty.str "transforming to the given specification ",
                                Syntax.pretty_term ctxt'' (Thm.term_of aim),
                                Pretty.block (Pretty.here \<^here>)
@@ -373,7 +373,7 @@ fun gen_finish_proc prep_term qed spec int stat =
         val end_tac = basic_method (fn ctxt' => fn goal' => (
             let
               val sequent' = singleton (Proof_Context.export ctxt'1 ctxt') sequent'1
-              val _ = Phi_Reasoner.debug_print ctxt' (fn _ =>
+              val _ = Phi_Reasoner.info_print ctxt' 2 (fn _ =>
                   Pretty.string_of (Pretty.chunks [
                     Pretty.str "Solving the goal by the resulted sequent from the programming.",
                     Pretty.item [Pretty.str "goal:"],

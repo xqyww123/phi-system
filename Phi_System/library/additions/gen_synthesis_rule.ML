@@ -28,7 +28,7 @@ fun gen_rule ctxt proc_thm0 =
    |> Raw_Simplifier.rewrite_rule ctxt @{thms conjunction_imp PURE_TOP_imp}
    |> Thm.solve_constraints
    |> (fn sequent => (
-            Phi_Reasoner.info_pretty ctxt (fn () => Pretty.chunks [
+            Phi_Reasoner.info_pretty ctxt 1 (fn () => Pretty.chunks [
                   Pretty.para "Obtain synthesis rule:",
                   Thm.pretty_thm ctxt sequent
                 ]);
@@ -81,7 +81,7 @@ fun declare_rule pos priority (patterns0,blacklist0) proc_thm0 ctxt0 =
                   \ by \<open>declare [[generate_pattern_of_synthesis_rule \<dots> \<Rightarrow> \<dots>]].\<close>")
       val patterns = map (apfst pat_of) (if null patterns0 then [(No_Pattern, NONE)] else patterns0)
       val blacklist = map pat_of blacklist0
-      val _ = Phi_Reasoner.info_pretty ctxt (fn () => Pretty.chunks ([
+      val _ = Phi_Reasoner.info_pretty ctxt 1 (fn () => Pretty.chunks ([
                 Pretty.str "The rule is bound on pattern(s):",
                 Pretty.chunks (map (fn (X,N) => Pretty.item [
                       Pretty.str "(", Pretty.str (string_of_int (the_default priority N)), Pretty.str "): ",

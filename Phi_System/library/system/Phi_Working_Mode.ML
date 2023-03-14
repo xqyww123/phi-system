@@ -105,7 +105,7 @@ val default_initialize_sequent = generic_initialize_sequent (fn _ => error "BUG 
 
 fun generic_cast rule place desired_nu (ctxt,sequent) =
   let
-    val _ = Phi_Reasoner.debug_print ctxt (fn _ => "reasoning cast..." ^ Position.here \<^here>)
+    val _ = Phi_Reasoner.info_print ctxt 2 (fn _ => "reasoning cast..." ^ Position.here \<^here>)
     val (ctxt', sequent') =
           case Phi_Reasoner.reason NONE (ctxt, sequent RS rule)
             of SOME ret => ret
@@ -174,7 +174,7 @@ fun cast desired (ctxt,sequent) = #cast (mode1 ctxt) desired (ctxt,sequent)
 fun cast_exception desired (ctxt,sequent) = #cast_exception (mode1 ctxt) desired (ctxt,sequent)
 
 fun vcg_by_cast destination (ctxt,sequent) = (
-      Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.block [
+      Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.block [
         Pretty.str "casting to the destined post-condition ",
         Syntax.pretty_term ctxt (Thm.term_of destination),
         Pretty.block (Pretty.here \<^here>)
@@ -449,7 +449,7 @@ val _ = Theory.setup (Context.theory_map (register [procedure, view_shift, impli
 
 
 fun infer_working_mode_of_sequent (ctxt,sequent) =
-  let val _ = Phi_Reasoner.debug_pretty ctxt (fn () => Pretty.chunks [
+  let val _ = Phi_Reasoner.info_pretty ctxt 2 (fn () => Pretty.chunks [
                 Pretty.str "Inferring the working mode for the sequent:",
                 Thm.pretty_thm ctxt sequent
             ])

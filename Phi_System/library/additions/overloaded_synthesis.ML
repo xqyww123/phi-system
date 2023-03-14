@@ -53,7 +53,7 @@ fun declare_overloaded_operator signat0 pos priority ctxt0 =
             |> Drule.infer_instantiate ctxt (
                   (("YY",0), Thm.cterm_of ctxt ret) ::
                   map_index (fn (i,tm) => (("S"^string_of_int (1+i), 0), Thm.cterm_of ctxt tm)) args)
-      val _ = Phi_Reasoner.info_pretty ctxt (fn () => Pretty.chunks [
+      val _ = Phi_Reasoner.info_pretty ctxt 1 (fn () => Pretty.chunks [
                 Pretty.str "Obtain the rule of overloaded synthesis:",
                 Thm.pretty_thm ctxt rule
               ])

@@ -47,7 +47,7 @@ fun extract_elim_rule ctxt0 erules thm0 =
   then thm0
   else
     let val ((_,[thm]),ctxt) = Variable.import true [thm0] ctxt0
-        val _ = Phi_Reasoner.debug_pretty ctxt (fn _ => Pretty.chunks [
+        val _ = Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.chunks [
                   Pretty.str "Going to extract elimination rule from:",
                   Syntax.pretty_term ctxt0 (Thm.prop_of thm0)
               ])
@@ -61,7 +61,7 @@ fun extract_elim_rule ctxt0 erules thm0 =
                              | NONE => error "Internal bug!#q3f4j89[")
                         |> singleton (Variable.export ctxt' ctxt0)
                         |> Drule.zero_var_indexes
-                val _ = Phi_Reasoner.info_pretty ctxt' (fn _ => Pretty.chunks [
+                val _ = Phi_Reasoner.info_pretty ctxt' 1 (fn _ => Pretty.chunks [
                       Pretty.str "Obtained the following elimination rule:",
                       Syntax.pretty_term ctxt' (Thm.prop_of ret')
                   ])
