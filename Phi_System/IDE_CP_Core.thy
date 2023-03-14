@@ -1770,8 +1770,7 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
    else raise Bypass NONE
 end)\<close>
 
-\<phi>processor enter_proof 790 (premises \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | premises \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>
-                          | premises \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _\<close>)
+\<phi>processor enter_proof 790 (premises \<open>Premise _ _\<close> | premises \<open>Simplify _ _ _\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
       raise Terminate_Process (stat, snd o Phi_Toplevel.prove_prem false))\<close>
 

@@ -2,12 +2,8 @@ theory PhiSem_Int_ArbiPrec
   imports PhiSem_Generic_Boolean PhiSem_Common_Int
 begin
 
-chapter \<open>Integer of Arbitrary Precision\<close>
 
-no_notation inter (infixl "Int" 70)
-        and union (infixl "Un" 65)
-        and Nats  ("\<nat>")
-        and Ints  ("\<int>")
+chapter \<open>Integer of Arbitrary Precision\<close>
 
 section \<open>Semantics\<close>
 

@@ -4,10 +4,24 @@ begin
 
 section \<open>Preliminary\<close>
 
-no_notation inter (infixl "Int" 70)
-        and union (infixl "Un" 65)
-        and Nats  ("\<nat>")
-        and Ints  ("\<int>")
+ML \<open>structure PhiSem_Common_Int_Notation_Patch = Theory_Data (
+  type T = string; val empty = ""; val merge = K ""
+)\<close>
+
+setup \<open>
+let val remove_synt = Sign.notation false Syntax.mode_default [
+    (Const (\<^const_abbrev>\<open>inter\<close>, dummyT), Infixl (Input.string "Int", 70, Position.no_range)),
+    (Const (\<^const_abbrev>\<open>union\<close>, dummyT), Infixl (Input.string "Un", 65, Position.no_range)),
+    (Const (\<^const_name>\<open>Nats\<close>, dummyT), Mixfix (Input.string "\<nat>", [], 1000, Position.no_range)),
+    (Const (\<^const_name>\<open>Ints\<close>, dummyT), Mixfix (Input.string "\<int>", [], 1000, Position.no_range))
+  ]
+in remove_synt
+#> Theory.at_begin (fn thy =>
+      if PhiSem_Common_Int_Notation_Patch.get thy = Context.theory_long_name thy
+      then NONE
+      else SOME (thy |> PhiSem_Common_Int_Notation_Patch.put (Context.theory_long_name thy)
+                     |> remove_synt))
+end\<close>
 
 declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[simp del]
 

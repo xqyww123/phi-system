@@ -12,7 +12,6 @@ no_notation inter (infixl "Int" 70)
         and Nats  ("\<nat>")
         and Ints  ("\<int>")
 
-declare [[\<phi>trace_reasoning =3]]
 
 proc
   input \<open>(x,y,(z1,z2)) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<nat> , \<int> , \<lbrace> \<nat>, \<int> \<rbrace> \<rbrace>\<heavy_comma> aa \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>

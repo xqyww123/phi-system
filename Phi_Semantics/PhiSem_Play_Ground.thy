@@ -2,14 +2,10 @@ theory PhiSem_Play_Ground
   imports
     PhiSem_CF_Breakable
     PhiSem_CF_Routine
-    PhiSem_Int_ArbiPrec
     PhiSem_Variable
+    PhiSem_Int_ArbiPrec
+    PhiSem_Machine_Integer
 begin
-
-no_notation inter (infixl "Int" 70)
-        and union (infixl "Un" 65)
-        and Nats  ("\<nat>")
-        and Ints  ("\<int>")
 
 (*
 proc
