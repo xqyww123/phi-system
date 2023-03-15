@@ -69,6 +69,7 @@ type additional_data
 type additional_data'
 type env = (string * sort) list
 
+val entryT : typ -> typ -> typ -> typ
 val prep_additional_data : Proof.context -> additional_data -> env -> additional_data' * env
 val chk_additional_data : Proof.context -> additional_data' -> env -> additional_data' * env
 val additional_data_parser : string * string -> (additional_data * (string * (string * Position.T))) parser
@@ -106,7 +107,6 @@ type additional_data' = Config.additional_data'
 (* Misc *)
 
 fun repT S = TFree (Config.repN, S)
-fun entryT nameT repT T = Type(\<^type_name>\<open>kind\<close>, [nameT, repT, T])
 fun dest_typ' TM = Config.dest_typ (Term.type_of TM)
       handle TYPE (msg, TYs, _) => raise TYPE (msg, TYs, [TM])
 
@@ -453,7 +453,7 @@ fun Resource_Locale_definition rep_sort project_injectL additional_data'
     val repTT = Term.itselfT repT
     val nameT = TFree (Config.NAME_N, \<^sort>\<open>type\<close>);
     val nameTT  = Term.itselfT nameT
-    val entryT = entryT nameT repT
+    val entryT = Config.entryT nameT repT
     val NAME_TY = Free(Config.nameTN, nameTT)
     val VALUE_TY = Free(Config.repTN, repTT)
     val TVARS = map (fn (T,S) => (prefix TVAR_N T, Term.itselfT (TFree(T,S)))) args
@@ -768,6 +768,7 @@ type env = (string * sort) list
 val prep_additional_data = K pair
 val chk_additional_data = K pair
 
+fun entryT nameT repT T = \<^Type>\<open>kind nameT repT T \<^Type>\<open>sep_closed_set T\<close>\<close>
 fun additional_data_parser (default_sort, default_locale) =
       Scan.optional (\<^keyword>\<open>::\<close> |-- (
         Parse.sort -- Scan.optional (\<^keyword>\<open>,\<close> |-- Parse.name_position) (default_locale, Position.none)

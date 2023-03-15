@@ -28,6 +28,7 @@ fun cert_typ ctxt raw_T env =
     val env' = Term.add_tfreesT T env;
   in (T, env') end;
 
+fun entryT nameT repT T = \<^Type>\<open>kind nameT repT T \<^Type>\<open>unit\<close>\<close>
 val prep_additional_data = read_typ
 val chk_additional_data = cert_typ
 
@@ -68,7 +69,7 @@ fun cert_arg ctxt resT raw_TM env =
   in (Tm, env') end;
 
 fun dest_typ (\<^Type>\<open>interp T _\<close>) = T
-  | dest_typ T = raise TYPE ("shoud be a sep_closed_set", [T], [])
+  | dest_typ T = raise TYPE ("shoud be an Algebras.interp", [T], [])
 
 val field_locale = \<^locale>\<open>fiction_kind\<close>
 val space_locale = \<^locale>\<open>fictional_space\<close>
@@ -77,7 +78,7 @@ val space_locale = \<^locale>\<open>fictional_space\<close>
 val nameT = TFree (NAME_N, \<^sort>\<open>type\<close>);
 
 fun space_locale_args resT repT =
-  let val domainT = nameT --> \<^Type>\<open>sep_closed_set repT\<close>
+  let val domainT = nameT --> \<^Type>\<open>sep_homo_set repT\<close>
       val INTERP_T = nameT --> \<^Type>\<open>interp repT resT\<close>
    in [(DOMAIN_N, domainT), (INTERPRET_N, INTERP_T)]
   end

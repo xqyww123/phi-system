@@ -10,10 +10,11 @@ theory Resource_Space
   imports "Phi_Algebras.Algebras" "Phi_Statespace.StateFun"
 begin
 
+
 subsection \<open>Separation Closed Set\<close>
 
 definition Sep_Closed :: \<open>'a::sep_magma_1 set \<Rightarrow> bool\<close>
-  where \<open>Sep_Closed S \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> (x * y) \<in> S \<longleftrightarrow> x \<in> S \<and> y \<in> S) \<and> 1 \<in> S\<close>
+  where \<open>Sep_Closed S \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> x \<in> S \<and> y \<in> S \<longrightarrow> (x * y) \<in> S) \<and> 1 \<in> S\<close>
 
 lemma Sep_Closed_inter:
   \<open>Sep_Closed S1 \<Longrightarrow> Sep_Closed S2 \<Longrightarrow> Sep_Closed (S1 \<inter> S2)\<close>
@@ -42,7 +43,7 @@ lemma one_in_sep_closed_set[simp]:
   by (transfer; simp add: Sep_Closed_def)
 
 lemma mult_in_sep_closed_set[simp]:
-  \<open>x ## y \<Longrightarrow> x * y \<in>\<^sub>S S \<longleftrightarrow> x \<in>\<^sub>S S \<and> y \<in>\<^sub>S S\<close> for S :: \<open>'a::sep_algebra sep_closed_set\<close>
+  \<open>x ## y \<Longrightarrow> x \<in>\<^sub>S S \<and> y \<in>\<^sub>S S \<longrightarrow> x * y \<in>\<^sub>S S\<close> for S :: \<open>'a::sep_algebra sep_closed_set\<close>
   by (transfer; simp add: Sep_Closed_def)
 
 lift_definition sep_closed_inter :: \<open>'a::sep_magma_1 sep_closed_set \<Rightarrow> 'a sep_closed_set \<Rightarrow> 'a sep_closed_set\<close> (infixl "\<inter>\<^sub>S" 65)
@@ -67,6 +68,50 @@ lemma sep_closed_partial_map[simp]:
   by (clarsimp simp add: dom_mult)
 
 
+subsection \<open>Separation Homo Set\<close>
+
+definition Sep_Homo :: \<open>'a::sep_magma_1 set \<Rightarrow> bool\<close>
+  where \<open>Sep_Homo S \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> (x * y) \<in> S \<longleftrightarrow> x \<in> S \<and> y \<in> S) \<and> 1 \<in> S\<close>
+
+lemma Sep_Homo_inter:
+  \<open>Sep_Homo S1 \<Longrightarrow> Sep_Homo S2 \<Longrightarrow> Sep_Homo (S1 \<inter> S2)\<close>
+  unfolding Sep_Homo_def by blast
+
+lemma Sep_Homo_UNIV[simp]:
+  \<open>Sep_Homo UNIV\<close>
+  unfolding Sep_Homo_def by simp
+
+typedef (overloaded) ('a::sep_magma_1) sep_homo_set = \<open>Collect (Sep_Homo::'a set \<Rightarrow> bool)\<close>
+  morphisms dest_sep_homo_set sep_homo_set
+  unfolding Sep_Homo_def by blast
+
+setup_lifting type_definition_sep_homo_set
+
+lift_definition sep_homo_member :: \<open>'a::sep_magma_1 \<Rightarrow> 'a sep_homo_set \<Rightarrow> bool\<close> (infix "\<in>\<^sub>S\<^sub>H" 50)
+  is \<open>\<lambda>x S. x \<in> S\<close> .
+
+lemma in_sep_homo_set[simp]:
+  \<open>Sep_Homo S \<Longrightarrow> x \<in>\<^sub>S\<^sub>H sep_homo_set S \<longleftrightarrow> x \<in> S\<close>
+  unfolding sep_homo_member_def
+  by (simp add: sep_homo_set_inverse)
+
+lemma one_in_sep_homo_set[simp]:
+  \<open>1 \<in>\<^sub>S\<^sub>H S\<close> for S :: \<open>'a::sep_magma_1 sep_homo_set\<close>
+  by (transfer; simp add: Sep_Homo_def)
+
+lemma mult_in_sep_homo_set[simp]:
+  \<open>x ## y \<Longrightarrow> x * y \<in>\<^sub>S\<^sub>H S \<longleftrightarrow> x \<in>\<^sub>S\<^sub>H S \<and> y \<in>\<^sub>S\<^sub>H S\<close> for S :: \<open>'a::sep_algebra sep_homo_set\<close>
+  by (transfer; simp add: Sep_Homo_def)
+
+lift_definition sep_homo_inter :: \<open>'a::sep_magma_1 sep_homo_set \<Rightarrow> 'a sep_homo_set \<Rightarrow> 'a sep_homo_set\<close> (infixl "\<inter>\<^sub>S\<^sub>H" 65)
+  is \<open>\<lambda>S1 S2. S1 \<inter> S2\<close>
+  by (clarsimp simp add: Sep_Homo_def; blast)
+
+definition sep_homo_image :: \<open>('a::sep_algebra \<Rightarrow> 'b::sep_algebra) \<Rightarrow> 'a sep_homo_set \<Rightarrow> 'b sep_homo_set\<close> (infixr "`\<^sub>S\<^sub>H" 90)
+  where \<open>(f `\<^sub>S\<^sub>H S) = sep_homo_set (f ` dest_sep_homo_set S) \<close>
+
+
+
 subsection \<open>Kind\<close>
 
 text \<open>
@@ -78,8 +123,8 @@ In addition, the section also presents a similar construct, \<^emph>\<open>ficti
 
 declare [[typedef_overloaded]]
 
-datatype ('CONS_NAME,'REP,'ABS) kind =
-  kind (name: 'CONS_NAME) (project: "'REP \<Rightarrow> 'ABS") (inject: "'ABS \<Rightarrow> 'REP") (domain: \<open>'ABS sep_closed_set\<close>)
+datatype ('CONS_NAME,'REP,'ABS,'DOMAIN) kind =
+  kind (name: 'CONS_NAME) (project: "'REP \<Rightarrow> 'ABS") (inject: "'ABS \<Rightarrow> 'REP") (domain: \<open>'DOMAIN\<close>)
 
 hide_const (open) name project inject domain
 
@@ -106,7 +151,7 @@ by a uniform deep representation, a finite partial map of type
 where \<open>'NAME\<close> is the type of the names of resource kinds that identify each resource kind;
 type \<open>'REP\<close> is the deep representation of states of resources.
 
-We reuse \<^typ>\<open>('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind\<close>
+We reuse \<^typ>\<open>('NAME, 'REP::sep_algebra, 'T::sep_algebra, 'T sep_closed_set) kind\<close>
 to represent resource kinds.
 A resource kind is a triple of \<open>name::'NAME\<close> and \<open>project :: 'REP \<Rightarrow> 'T, inject :: 'T \<Rightarrow> 'REP\<close> between
   the deep representation \<open>'REP\<close> of the states and the model \<open>'T\<close> of this kind of resource.
@@ -120,73 +165,20 @@ it does not require the physical resource to be separable because any structure 
 
 (*implementation of the representation: (T\<^sub>a + T\<^sub>b) / (1\<^sub>a = 1\<^sub>b), quotient over 1*)
 
-locale sep_inj_proj =
-  inj: homo_sep_mult inject + prj: homo_sep_mult project +
-  inj_disj: homo_sep_disj inject + prj_disj: homo_sep_disj_semi project
-  for inject :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
-  and project:: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
-+ assumes proj_inj[simp]: "project (inject x) = x"
+locale sep_space_entry =
+  inj: homo_sep_mult inject' + prj: homo_sep_mult project' +
+  inj_disj: homo_sep_disj inject' + prj_disj: homo_sep_disj_semi project'
+  for name'   :: 'NAME
+  and inject' :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
+  and project':: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
++ assumes proj_inj[simp]: "project' (inject' x) = x"
     and   mult_in_dom:    \<open>a ## b \<Longrightarrow>
-              a * b = inject c \<longleftrightarrow> (\<exists>a' b'. a = inject a' \<and> b = inject b' \<and> a' * b' = c)\<close>
+              a * b = inject' c \<longleftrightarrow> (\<exists>a' b'. a = inject' a' \<and> b = inject' b' \<and> a' * b' = c)\<close>
 begin
 
-lemma inject_inj[simp]:
-  \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
-  by (metis proj_inj)
-
-lemma inject_assoc_homo[simp]:
-  "R ## inject x \<and> R * inject x ## inject y
-\<Longrightarrow> R * inject x * inject y = R * inject (x * y)"
-  by (metis mult_in_dom sep_disj_multD2 sep_mult_assoc)
-
-lemma inj_Sep_Closed:
-  \<open>Homo_Sep_Closed inject\<close>
-  unfolding Sep_Closed_def Homo_Sep_Closed_def
-  apply clarsimp
-  using image_iff mult_in_dom by fastforce
-
-end
-
-lemma sep_inj_proj_id: \<open>sep_inj_proj id id\<close> by (standard; simp)
-
-locale "resource_space" =
-  fixes DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
-begin
-
-definition SPACE :: \<open>('NAME \<Rightarrow> 'REP) set\<close>
-  where \<open>SPACE = {R. finite (dom1 R) \<and> (\<forall>N. R N \<in>\<^sub>S DOMAIN N) }\<close>
-
-lemma SPACE_1[iff]:
-  \<open>1 \<in> SPACE\<close>
-  unfolding SPACE_def by simp
-
-lemma SPACE_mult_homo:
-  \<open>A ## B \<Longrightarrow> A * B \<in> SPACE \<longleftrightarrow> A \<in> SPACE \<and> B \<in> SPACE\<close>
-  unfolding SPACE_def
-  by (simp add: times_fun sep_disj_fun_def dom1_sep_mult_disjoint; blast)
-
-(* lemma
-  \<open>Sep_Closed {R. \<forall>N. R N \<in>\<^sub>S DOMAIN N }\<close>
-  unfolding Sep_Closed_def by (simp add: times_fun sep_disj_fun_def; blast) *)
-
-end
-
-
-locale resource_kind =
-  "resource_space" DOMAIN
-+ sep_inj_proj \<open>kind.inject K\<close> \<open>kind.project K\<close>
-for DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
-and K :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind"
-+ assumes raw_domain: "DOMAIN (kind.name K) = kind.inject K `\<^sub>S kind.domain K"
-
-begin
-
-subsubsection \<open>Methods and Sugars of a Resource Kind\<close>
-
-abbreviation "domain \<equiv> kind.domain K"
-abbreviation "name \<equiv> kind.name K"
-abbreviation "inject \<equiv> kind.inject K"
-abbreviation "project \<equiv> kind.project K"
+abbreviation "name \<equiv> name'"
+abbreviation "inject \<equiv> inject'"
+abbreviation "project \<equiv> project'"
 
 abbreviation "clean r \<equiv> r(name := 1)"
   \<comment> \<open>\<open>clean r\<close> removes all resources of kind \<open>K\<close> from the compound resource \<open>r\<close>.
@@ -203,6 +195,21 @@ abbreviation "mk x \<equiv> 1(name := inject x)"
   \<comment> \<open>\<open>mk x\<close> makes a compound resource that only has the resource modelled by \<open>x\<close> of kind \<open>K\<close>\<close>
 
 subsubsection \<open>Lemmas for Automation and Analysis\<close>
+
+lemma inject_inj[simp]:
+  \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
+  by (metis proj_inj)
+
+lemma inject_assoc_homo[simp]:
+  "R ## inject x \<and> R * inject x ## inject y
+\<Longrightarrow> R * inject x * inject y = R * inject (x * y)"
+  by (metis mult_in_dom sep_disj_multD2 sep_mult_assoc)
+
+lemma inj_Sep_Closed:
+  \<open>Homo_Sep_Closed inject\<close>
+  unfolding Sep_Closed_def Homo_Sep_Closed_def
+  apply clarsimp
+  using image_iff mult_in_dom by fastforce
 
 lemma sep_disj_mk[simp]:
   \<open>mk x ## mk y \<longleftrightarrow> x ## y\<close>
@@ -254,6 +261,45 @@ lemma sep_disj_clean[simp]:
   \<open>clean r ## mk any\<close>
   by simp
 
+end
+
+lemma sep_inj_proj_id: \<open>sep_space_entry id id\<close> by (standard; simp)
+
+locale "resource_space" =
+  fixes DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
+begin
+
+definition SPACE :: \<open>('NAME \<Rightarrow> 'REP) set\<close>
+  where \<open>SPACE = {R. finite (dom1 R) \<and> (\<forall>N. R N \<in>\<^sub>S DOMAIN N) }\<close>
+
+lemma SPACE_1[iff]:
+  \<open>1 \<in> SPACE\<close>
+  unfolding SPACE_def by simp
+
+lemma SPACE_mult_homo:
+  \<open>A ## B \<Longrightarrow> A \<in> SPACE \<and> B \<in> SPACE \<Longrightarrow> A * B \<in> SPACE\<close>
+  unfolding SPACE_def
+  by (simp add: times_fun sep_disj_fun_def dom1_sep_mult_disjoint; blast)
+
+(* lemma
+  \<open>Sep_Closed {R. \<forall>N. R N \<in>\<^sub>S DOMAIN N }\<close>
+  unfolding Sep_Closed_def by (simp add: times_fun sep_disj_fun_def; blast) *)
+
+end
+
+
+locale resource_kind =
+  "resource_space" DOMAIN
++ sep_space_entry \<open>kind.name K\<close> \<open>kind.inject K\<close> \<open>kind.project K\<close>
+for DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
+and K :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra, 'T sep_closed_set) kind"
++ assumes raw_domain: "DOMAIN (kind.name K) = kind.inject K `\<^sub>S kind.domain K"
+
+begin
+
+subsubsection \<open>Methods and Sugars of a Resource Kind\<close>
+
+abbreviation "domain \<equiv> kind.domain K"
 
 lemma inj_in_DOMAIN[simp]:
   \<open>inject x \<in>\<^sub>S DOMAIN name \<longleftrightarrow> x \<in>\<^sub>S domain\<close>
@@ -274,12 +320,13 @@ lemma inj_prj_in_SPACE[simp]:
   \<open>f \<in> SPACE \<Longrightarrow> inject (project (f name)) = f name\<close>
   by (metis \<r>_valid_split proj_inj)
 
+
 end
 
 locale resource_kind' =
   resource_kind DOMAIN K
 for DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
-and K :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind"
+and K :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra, 'T sep_closed_set) kind"
 and DOM :: \<open>'T::sep_algebra sep_closed_set\<close>
 + assumes domain[simp]: "kind.domain K = DOM"
 
@@ -321,11 +368,23 @@ and \<open>f i\<close> gets the representation of fictional resource \<open>i\<c
 \<close>
 
 locale fictional_space =
-  "resource_space" DOMAIN
-  for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_closed_set\<close>
-  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
+  fixes DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_homo_set\<close>
+    and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
     \<comment> \<open>\<^term>\<open>INTERPRET i\<close> gives the interpretation of fiction kind \<open>i\<close>, i.e., \<open>I\<^sub>i\<close> above.\<close>
 begin
+
+definition SPACE :: \<open>('FNAME \<Rightarrow> 'FREP) set\<close>
+  where \<open>SPACE = {R. finite (dom1 R) \<and> (\<forall>N. R N \<in>\<^sub>S\<^sub>H DOMAIN N) }\<close>
+
+lemma SPACE_1[iff]:
+  \<open>1 \<in> SPACE\<close>
+  unfolding SPACE_def by simp
+
+lemma SPACE_mult_homo:
+  \<open>A ## B \<Longrightarrow> A * B \<in> SPACE \<longleftrightarrow> A \<in> SPACE \<and> B \<in> SPACE\<close>
+  unfolding SPACE_def
+  by (simp add: times_fun sep_disj_fun_def dom1_sep_mult_disjoint; blast)
+
 
 definition "INTERP = \<F>_fun' INTERPRET"
 
@@ -333,14 +392,38 @@ end
 
 
 locale fiction_kind =
-  fictional_space DOMAIN INTERPRET + resource_kind DOMAIN FK
-  for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_closed_set\<close>
+  fictional_space DOMAIN INTERPRET
++ sep_space_entry \<open>kind.name FK\<close> \<open>kind.inject FK\<close> \<open>kind.project FK\<close>
+  for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_homo_set\<close>
   and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
-  and FK :: "('FNAME,'FREP,'T::sep_algebra) kind"
+  and FK :: "('FNAME,'FREP,'T::sep_algebra, unit) kind"
 + fixes I :: "('T,'RES) interp"
 assumes interpret_reduct[simp]: "\<I> (INTERPRET (kind.name FK)) = \<I> I o kind.project FK"
-  and   domain[simp]: \<open>kind.domain FK = sep_closed_set UNIV\<close>
+  and   raw_domain: "DOMAIN (kind.name FK) = sep_homo_set {rep. \<exists>x. rep = kind.inject FK x}"
 begin
+
+lemma in_DOMAIN[simp]:
+  \<open>rep \<in>\<^sub>S\<^sub>H DOMAIN (kind.name FK) \<longleftrightarrow> (\<exists>x. rep = kind.inject FK x)\<close>
+proof -
+  have \<open>Sep_Homo {rep. \<exists>x. rep = kind.inject FK x}\<close>
+    unfolding Sep_Homo_def by (simp add: mult_in_dom; blast)
+  then show ?thesis unfolding raw_domain by simp
+qed
+
+lemma \<r>_valid_split:
+  \<open>res \<in> SPACE \<longleftrightarrow>
+  clean res \<in> SPACE \<and> (\<exists>m. res name = inject m)\<close>
+  by (subst split; simp add: times_fun image_iff SPACE_def; blast)
+
+lemma \<r>_valid_split': \<open>
+  NO_MATCH (clean res') res
+\<Longrightarrow> res \<in> SPACE \<longleftrightarrow> clean res \<in> SPACE \<and> (\<exists>m. res name = inject m)\<close>
+  using \<r>_valid_split .
+
+lemma inj_prj_in_SPACE[simp]:
+  \<open>f \<in> SPACE \<Longrightarrow> inject (project (f name)) = f name\<close>
+  by (metis \<r>_valid_split proj_inj)
+
 
 lemma Fic_Space_m[simp]: "mk x \<in> SPACE"
   unfolding SPACE_def by simp
@@ -370,7 +453,7 @@ lemma interp_split':
 lemma Fic_Space_mm[simp]: "f ## mk x \<Longrightarrow> f * mk x \<in> SPACE \<longleftrightarrow> f \<in> SPACE"
   unfolding SPACE_def finite_dom1_mult1
   apply clarsimp
-  by (metis Fic_Space_m \<r>_valid_split fun_upd_same inj_in_DOMAIN mult_in_sep_closed_set sep_disj_mk_name times_fupdt_1_apply'_sep times_fupdt_1_apply_sep)
+  by (smt (verit, ccfv_threshold) Fic_Space_m SPACE_def SPACE_mult_homo finite_dom1_mult1 mem_Collect_eq)
 
 end
 
