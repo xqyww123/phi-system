@@ -1,7 +1,7 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
 theory Phi_Types
-  imports IDE_CP_Reasoning2
+  imports IDE_CP_Reasoning2 "HOL-Library.Adhoc_Overloading"
 begin
 
 section \<open>Basics\<close>
@@ -14,6 +14,8 @@ text \<open>Sometimes, we do not want to verbosely write a semantic type if it i
 This is a planning feature has not been implemented\<close>
 
 syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_\<phi>")
+
+consts \<phi>coercion :: \<open>('c1,'a) \<phi> \<Rightarrow> ('c2,'a) \<phi>\<close> ("\<coercion> _" [61] 60)
 
 
 subsection \<open>Identity\<close>
@@ -1373,6 +1375,8 @@ abbreviation \<phi>Share_Some ("\<fish_eye> _" [91] 90)
 abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
   where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> \<phi>perm_functor to_share (\<phi>Some T)\<close>
 
+adhoc_overloading \<phi>coercion \<phi>Some \<phi>Share_Some \<phi>Share_Some_L
+
 lemma \<phi>Some_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Some T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def \<phi>Some_def by simp
@@ -1653,6 +1657,13 @@ subsection \<open>Nosep\<close>
 
 definition Nosep :: \<open>('T, 'x) \<phi> \<Rightarrow> ('T nosep, 'x) \<phi>\<close>
   where \<open>Nosep T x = nosep ` (x \<Ztypecolon> T)\<close>
+
+adhoc_overloading \<phi>coercion \<open>\<lambda>T. \<black_circle> Nosep T\<close> \<open>\<lambda>T. \<fish_eye> Nosep T\<close> \<open>\<lambda>T. \<fish_eye>\<^sub>L Nosep T\<close>
+
+translations
+  "\<coercion> T" <= "CONST \<phi>perm_functor CONST to_share (\<coercion> T)"
+  "\<coercion> T" <= "[] \<^bold>\<rightarrow> \<coercion> T"
+  "\<coercion> T" <= "\<coercion> CONST Nosep T"
 
 lemma Nosep_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> Nosep T) \<longleftrightarrow> (\<exists>v. p = nosep v \<and> v \<in> (x \<Ztypecolon> T))\<close>
