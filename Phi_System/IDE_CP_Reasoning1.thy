@@ -505,9 +505,9 @@ definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<op
 
 declare [[\<phi>reason_default_pattern \<open>\<r>Clean ?S\<close> \<Rightarrow> \<open>\<r>Clean ?S\<close> (100) ]]
 
-context Identity_Homo begin
+context Unit_Homo begin
 
-lemma \<r>Clean[\<phi>reason 1200]:
+lemma \<r>Clean[\<phi>reason 90]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = 1
 \<Longrightarrow> \<r>Clean (x \<Ztypecolon> T)\<close>
   unfolding \<r>Clean_def
@@ -515,9 +515,9 @@ lemma \<r>Clean[\<phi>reason 1200]:
 
 end
 
-context Identity_Functor begin
+context Unit_Functor begin
 
-lemma \<r>Clean_functor[\<phi>reason 1200]:
+lemma \<r>Clean_functor[\<phi>reason 90]:
   \<open> \<r>Clean (x \<Ztypecolon> T)
 \<Longrightarrow> \<r>Clean (x \<Ztypecolon> F T)\<close>
   unfolding \<r>Clean_def

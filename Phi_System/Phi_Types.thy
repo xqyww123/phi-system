@@ -61,7 +61,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> {v'} \<i>\<m>\<p>\<l>\<i>\<e>\<s> v \<Ztypecolon> Identity\<close>
   unfolding Imply_def Identity_expn Premise_def by simp
 
-interpretation Identity: Identity_Homo Identity
+interpretation Identity: Unit_Homo Identity
   by (standard; simp add: Imply_def Identity_expn)
 
 
@@ -298,7 +298,7 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Rules\<close>
 
-interpretation \<phi>None: Identity_Homo \<phi>None
+interpretation \<phi>None: Unit_Homo \<phi>None
   by (standard; simp)
 
 lemma [\<phi>reason 3000]:
@@ -692,7 +692,7 @@ lemma [simp]:
   \<open>(k \<^bold>\<rightarrow> (T \<phi>\<s>\<u>\<b>\<j> P)) = (k \<^bold>\<rightarrow> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
-interpretation \<phi>MapAt: Identity_Functor \<open>\<phi>MapAt k\<close>
+interpretation \<phi>MapAt: Unit_Functor \<open>\<phi>MapAt k\<close>
   by (standard; simp add: Imply_def \<phi>expns; metis fun_1upd1)
 
 lemma [\<phi>reason 1200]:
@@ -769,7 +769,7 @@ lemma \<phi>MapAt_L_At:
   \<open>(ks \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) = (ks \<^bold>\<rightarrow> T)\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; metis append_self_conv push_map_unit)
 
-interpretation \<phi>MapAt_L: Identity_Functor \<open>\<phi>MapAt_L k\<close>
+interpretation \<phi>MapAt_L: Unit_Functor \<open>\<phi>MapAt_L k\<close>
   by (standard; simp add: Imply_def \<phi>expns; metis push_map_1)
 
 
@@ -1263,7 +1263,7 @@ lemma [\<phi>reason 1000]:
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
-interpretation \<phi>Share: Identity_Functor \<open>\<phi>Share n :: ('v::share_one,'x::one) \<phi> \<Rightarrow> ('v, 'x) \<phi>\<close>
+interpretation \<phi>Share: Unit_Functor \<open>\<phi>Share n :: ('v::share_one,'x::one) \<phi> \<Rightarrow> ('v, 'x) \<phi>\<close>
   by (standard; simp add: Imply_def \<phi>expns; metis share_right_one)
 
 
