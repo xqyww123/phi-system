@@ -472,7 +472,7 @@ lemma Structural_Extract_\<phi>Some [\<phi>reason 1200]:
   \<open> \<r>REQUIRE x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None) P\<close>
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Require_def
-  using \<phi>Some_cast .
+  using \<phi>Some.transformation .
 
 lemma [\<phi>reason 1211]:
   \<open> \<r>REQUIRE x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
@@ -497,9 +497,9 @@ lemma Structural_Extract_aggrement_to [\<phi>reason 1200]:
   apply (cases C; simp)
   \<medium_left_bracket> premises A
     dup
-    Agreement_cast[OF A]
+    Agreement.transformation[OF A]
   \<medium_right_bracket>.
-  using Agreement_cast .
+  using Agreement.transformation .
 
 
 lemma Structural_Extract_aggrement_from:
@@ -508,10 +508,10 @@ lemma Structural_Extract_aggrement_from:
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Require_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
-    Agreement_cast[OF A]
+    Agreement.transformation[OF A]
     Agreement_shrink
   \<medium_right_bracket>.
-  using Agreement_cast .
+  using Agreement.transformation .
 
 
 lemma [\<phi>reason 1211]:
@@ -653,7 +653,7 @@ lemma Structural_Extract_\<phi>MapAt:
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
   unfolding Structural_Extract_def Premise_def
   apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
-  by (rule \<phi>MapAt_cast)
+  by (rule \<phi>MapAt.transformation)
 
 declare Structural_Extract_\<phi>MapAt[THEN SE_clean_waste, \<phi>reason 1200]
 
