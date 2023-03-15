@@ -26,7 +26,7 @@ definition op_if :: "'ret proc
 
 subsection \<open>While Loop\<close>
 
-inductive SemDoWhile :: "VAL proc \<Rightarrow> resource \<Rightarrow> unit state \<Rightarrow> bool" where
+inductive SemDoWhile :: "VAL proc \<Rightarrow> resource \<Rightarrow> unit comp \<Rightarrow> bool" where
   "Success (\<phi>arg (V_bool.mk False)) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (\<phi>arg ()) res)"
 | "Success (\<phi>arg (V_bool.mk True)) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
 | "Abnormality v e \<in> f s \<Longrightarrow> SemDoWhile f s (Abnormality v e)"
@@ -63,7 +63,7 @@ lemma SemDoWhile_deterministic2:
 subsection \<open>Recursion\<close>
 
 inductive SemRec :: "(('a,'a) proc' \<Rightarrow> ('a,'a) proc')
-            \<Rightarrow> 'a \<phi>arg \<Rightarrow> resource \<Rightarrow> 'a state set \<Rightarrow> bool"
+            \<Rightarrow> 'a \<phi>arg \<Rightarrow> resource \<Rightarrow> 'a comp set \<Rightarrow> bool"
 where
   SemRec_I0: "(\<And>g. F g x res = y) \<Longrightarrow> SemRec F x res y"
 | SemRec_IS: "SemRec (F o F) x res y \<Longrightarrow> SemRec F x res y"

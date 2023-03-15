@@ -2,6 +2,10 @@ chapter \<open>Calculus of Programming\<close>
 
 theory Calculus_of_Programming
   imports Spec_Framework IDE_CP_Reasoning1
+  abbrevs "<state>" = "\<s>\<t>\<a>\<t>\<e>"
+      and "<results>" = "\<r>\<e>\<s>\<u>\<l>\<t>\<s>"
+      and "<in>" = "\<i>\<n>"
+      and "<is>" = "\<i>\<s>"
 begin
 
 section \<open>Implementing CoP Sequent\<close>
@@ -105,7 +109,7 @@ lemma \<phi>assemble_proc:
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (f \<bind> g) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E1 + E2\<close>
   unfolding CurrentConstruction_def PendingConstruction_def bind_def subset_iff CodeBlock_def
   apply clarsimp subgoal for s s'
-  by (cases s; simp; cases s'; simp add: split_state_All ring_distribs plus_fun) .
+  by (cases s; simp; cases s'; simp add: split_comp_All ring_distribs plus_fun) .
 
 
 
@@ -199,14 +203,14 @@ lemma \<phi>apply_view_shift_pending:
 \<Longrightarrow> (\<And>x. T x \<s>\<h>\<i>\<f>\<t>\<s> T' x \<a>\<n>\<d> P)
 \<Longrightarrow> PendingConstruction f blk H T' E"
   unfolding PendingConstruction_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_state_All)
+  by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_comp_All)
 
 lemma \<phi>apply_view_shift_pending_E:
   " PendingConstruction f blk H T E
 \<Longrightarrow> (\<And>x. E x \<s>\<h>\<i>\<f>\<t>\<s> E' x \<a>\<n>\<d> P)
 \<Longrightarrow> PendingConstruction f blk H T E'"
   unfolding PendingConstruction_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_state_All)
+  by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_comp_All)
 
 lemmas \<phi>apply_implication_pending =
   \<phi>apply_view_shift_pending[OF _ view_shift_by_implication]

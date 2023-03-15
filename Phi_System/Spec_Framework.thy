@@ -178,7 +178,7 @@ section \<open>Specification of Monadic States\<close>
 
 definition StrictStateSpec :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
-                          \<Rightarrow> 'ret state set" ("!\<S>")
+                          \<Rightarrow> 'ret comp set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Abnormality val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
@@ -188,7 +188,7 @@ definition StrictStateSpec :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
 
 definition LooseStateSpec  :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
-                          \<Rightarrow> 'ret state set" ("\<S>")
+                          \<Rightarrow> 'ret comp set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
                               | Abnormality val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
@@ -323,7 +323,7 @@ lemma \<phi>Procedure_alt:
   apply rule
   apply ((unfold \<phi>Procedure_def)[1], blast)
   unfolding \<phi>Procedure_def INTERP_SPEC subset_iff
-  apply (clarsimp simp add: times_set_def split_state_All INTERP_SPEC_def)
+  apply (clarsimp simp add: times_set_def split_comp_All INTERP_SPEC_def)
   by metis
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]

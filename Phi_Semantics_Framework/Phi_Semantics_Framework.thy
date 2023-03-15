@@ -403,7 +403,7 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
 
 declare [ [typedef_overloaded] ]
 
-datatype 'ret state =
+datatype 'ret comp =
       Success \<open>'ret::VALs \<phi>arg\<close> (resource: resource)
     | Abnormality \<open>ABNM\<close> (resource: resource)
     | Invalid
@@ -413,19 +413,19 @@ datatype 'ret state =
 declare [ [typedef_overloaded = false] ]
 
 
-lemma split_state_All:
+lemma split_comp_All:
   \<open>All P \<longleftrightarrow> (\<forall>v r. P (Success v r)) \<and> (\<forall>v r. P (Abnormality v r)) \<and> P Invalid
                 \<and> P AssumptionBroken \<and> P NonTerm\<close>
-  by (metis state.exhaust)
+  by (metis comp.exhaust)
 
-lemma split_state_Ex:
+lemma split_comp_Ex:
   \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Abnormality v r)) \<or> P Invalid
                 \<or> P AssumptionBroken \<or> P NonTerm\<close>
-  by (metis state.exhaust)
+  by (metis comp.exhaust)
 
 hide_const(open) resource
 
-declare state.split[split]
+declare comp.split[split]
 
 text \<open>Procedure is the basic building block of a program on the semantics formalization.
 It represents a segment of a program, which is defined inductively,
@@ -461,7 +461,7 @@ is expressed by returning \<open>Invalid\<close>.
 % TODO: value annotation and slightly-shallow representation.
  \<close>
 
-type_synonym 'ret proc = "resource \<Rightarrow> 'ret state set"
+type_synonym 'ret proc = "resource \<Rightarrow> 'ret comp set"
 type_synonym ('arg,'ret) proc' = "'arg \<phi>arg \<Rightarrow> 'ret proc"
 
 
@@ -489,7 +489,7 @@ lemma proc_bind_SKIP'[simp]:
   "(g \<ggreater> Return any) \<ggreater> f \<equiv> g \<ggreater> f"
   "(\<lambda>v. Return v \<bind> h) \<equiv> h"
   unfolding bind_def atomize_eq fun_eq_iff det_lift_def set_eq_iff Return_def
-  by (clarsimp; metis state.exhaust)+
+  by (clarsimp; metis comp.exhaust)+
 
 lemma proc_bind_return_none[simp]:
   "f_nil \<ggreater> Return \<phi>V_none \<equiv> f_nil"

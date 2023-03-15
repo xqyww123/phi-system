@@ -31,7 +31,7 @@ end
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Thm Term HOLogic Phi_Help Phi_Syntax
 
-fun mk_procT T = \<^typ>\<open>resource\<close> --> \<^Type>\<open>set \<open>\<^Type>\<open>state T\<close>\<close>\<close>
+fun mk_procT T = \<^typ>\<open>resource\<close> --> \<^Type>\<open>set \<open>\<^Type>\<open>comp T\<close>\<close>\<close>
 fun mk_proc'T T U = \<^Type>\<open>\<phi>arg T\<close> --> mk_procT U
 val assn_fictionT = \<^typ>\<open>assn\<close>
 
