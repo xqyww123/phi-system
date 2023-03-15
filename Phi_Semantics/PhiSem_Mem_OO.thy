@@ -235,7 +235,7 @@ paragraph \<open>Allocation\<close>
 lemma op_obj_allocate:
   \<open>\<p>\<r>\<o>\<c> op_obj_allocate cls
       \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Identity\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
-  unfolding \<phi>Procedure_\<phi>Res_Spec op_obj_allocate_def
+  unfolding \<phi>Procedure_Hybrid_DL op_obj_allocate_def
   apply (clarsimp simp add: \<phi>expns del: subsetI)
   apply (rule RES.Objs.\<phi>R_allocate_res_entry)
   apply (clarsimp)
@@ -250,7 +250,8 @@ lemma op_obj_allocate:
     have t: \<open>of_class cls k\<close>
       by (metis object_ref.collapse of_class.simps(1) prems(3))
     show ?thesis
-      by (simp add: t FIC.OO_share.expand_conj[where x=\<open>1(k := initial_value_of_class cls)\<close>, simplified] prems)
+      using t FIC.OO_share.expand[where x=\<open>1(k := initial_value_of_class cls)\<close>, simplified] prems
+      using FIC.OO_share.sep_disj_fiction by fastforce
   qed .
 
 paragraph \<open>Load Field\<close>
@@ -315,7 +316,7 @@ lemma op_obj_dispose:
   unfolding op_obj_dispose_def Premise_def
   apply (rule \<phi>M_getV_ref)
   apply (rule \<phi>SEQ[where B=\<open>\<lambda>_. to_share \<circ> fields \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Identity\<close>])
-  apply (clarsimp simp add: \<phi>expns zero_set_def \<phi>Procedure_\<phi>Res_Spec del: subsetI)
+  apply (clarsimp simp add: \<phi>expns zero_set_def \<phi>Procedure_Hybrid_DL del: subsetI)
   apply (rule RES.Objs.\<phi>R_get_res, simp, simp add: dom1_def)
   subgoal premises prems for r res proof -
     have t1: \<open>object_ref.class ref = cls\<close>
@@ -333,7 +334,7 @@ lemma op_obj_dispose:
       apply (cases \<open>fields = Map.empty\<close>)
       using t3 apply blast
       using FIC.OO_share.partial_implies[where x=\<open>1(ref := fields)\<close> and n=1, simplified,
-            OF \<open>r \<in> FIC.SPACE\<close>, OF t4, OF \<open>res \<in> _\<close>]
+            OF \<open>r \<in> FIC.SPACE\<close>, OF t4, OF \<open>\<s>\<t>\<a>\<t>\<e> res \<i>\<s> _\<close>]
             nonsepable_partial_map_subsumption_L2
       by (metis domIff map_le_def)
     show ?thesis by (simp add: t1 t2 prems Return_def det_lift_def)
