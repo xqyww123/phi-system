@@ -455,20 +455,20 @@ subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
    R: resource Res
-+  share: perm_ins_homo perm_ins_homo
++  share: perm_ins_homo_L \<psi>
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
-      \<open>R.basic_fiction (\<F>_functional perm_ins_homo)\<close>
+      \<open>R.basic_fiction (\<F>_functional \<psi>)\<close>
 for Res :: "'T::sep_algebra resource_entry"
-and perm_ins_homo :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
+and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
 begin
 
-sublocale basic_fiction Res \<open>\<F>_functional perm_ins_homo\<close> ..
+sublocale basic_fiction Res \<open>\<F>_functional \<psi>\<close> ..
 
 lemma sep_disj_fiction:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP r * { R.mk x }
-\<Longrightarrow> r ## mk (perm_ins_homo x)\<close>
+\<Longrightarrow> r ## mk (\<psi> x)\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def set_eq_iff
   apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split'
@@ -479,7 +479,7 @@ lemma sep_disj_fiction:
 
 lemma expand_subj:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_ins_homo x)) \<s>\<u>\<b>\<j> r ## mk (perm_ins_homo x))
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (\<psi> x)) \<s>\<u>\<b>\<j> r ## mk (\<psi> x))
   = \<phi>Res_Spec (\<I> INTERP r * { R.mk x })\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify, rule)
@@ -508,8 +508,8 @@ lemma expand_subj:
 
 lemma expand:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> r ## mk (perm_ins_homo x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_ins_homo x))) =
+\<Longrightarrow> r ## mk (\<psi> x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (\<psi> x))) =
     \<phi>Res_Spec (\<I> INTERP r * {R.mk x})\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
@@ -527,8 +527,8 @@ lemma expand:
 lemma partial_implies_raw:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> 0 < n
-\<Longrightarrow> r ## mk (share n (perm_ins_homo x))
-\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (share n (perm_ins_homo x)))
+\<Longrightarrow> r ## mk (share n (\<psi> x))
+\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (share n (\<psi> x)))
 \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def
   apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
@@ -541,9 +541,9 @@ lemma partial_implies_raw:
       by (metis nonzero_eq_divide_eq order_less_irrefl prems(2))
     have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close>
       using prems(12) by force
-    have t2: \<open>share (1/n) (share n (perm_ins_homo x)) \<preceq>\<^sub>S\<^sub>L share n (perm_ins_homo x)\<close>
+    have t2: \<open>share (1/n) (share n (\<psi> x)) \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
       by (simp add: order_less_imp_le prems(2) share.\<psi>_self_disj share_sub t1)
-    then have t3: \<open>perm_ins_homo x \<preceq>\<^sub>S\<^sub>L share n (perm_ins_homo x)\<close>
+    then have t3: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
       using share_share_not0
       by (metis prems(2) share_left_one t0 t1)
     then show ?thesis
@@ -862,7 +862,7 @@ for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entr
 and Fic :: "('key \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> by standard blast
+sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> by standard simp
 
 lemma expand:
   \<open> r \<in> FIC.SPACE
@@ -1131,7 +1131,7 @@ locale share_fiction_for_partial_mapping_resource2 =
     and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> by standard  blast
+sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> by standard simp
 
 lemma [simp]:
   \<open>R.perm_ins_homo (1(k := f)) = 1(k := to_share o f)\<close>

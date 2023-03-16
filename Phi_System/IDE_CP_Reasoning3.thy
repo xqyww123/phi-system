@@ -158,7 +158,7 @@ lemma [\<phi>reason 1200 for \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypeco
   unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
 
 lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open> perm_ins_homo' \<psi>
+  \<open> perm_ins_homo \<psi>
 \<Longrightarrow> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>perm_ins_homo_\<phi>None
   by simp
@@ -804,7 +804,7 @@ lemma Structural_Extract_\<phi>perm_ins_homo:
                        P\<close>
   unfolding Structural_Extract_def Imply_def \<phi>Sep_Disj_def
   apply (clarsimp simp add: \<phi>expns)
-  by (metis (no_types, opaque_lifting) homo_sep_def homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_ins_homo'_def)
+  by (metis (no_types, lifting) homo_sep_def homo_sep_disj_semi_def homo_sep_mult.homo_mult homo_sep_wand_1_def homo_sep_wand_def homo_sep_wand_monoid_def perm_ins_homo.axioms(1))
 
 declare Structural_Extract_\<phi>perm_ins_homo[THEN SE_clean_waste, \<phi>reason 1200]
 

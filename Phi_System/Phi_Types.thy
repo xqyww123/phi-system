@@ -1016,18 +1016,18 @@ definition \<phi>Sep_Disj_Identical :: \<open>('a::share_semimodule_sep, 'b) \<p
 subsubsection \<open>Permission Functor\<close>
 
 definition \<phi>perm_ins_homo :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
-  where \<open>\<phi>perm_ins_homo \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> perm_ins_homo' \<psi>})\<close>
+  where \<open>\<phi>perm_ins_homo \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> perm_ins_homo \<psi>})\<close>
 
 abbreviation (in perm_ins_homo) \<open>\<phi> \<equiv> \<phi>perm_ins_homo \<psi>\<close>
 
 lemma \<phi>perm_ins_homo_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T)
-    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> perm_ins_homo' \<psi>)\<close>
+    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> perm_ins_homo \<psi>)\<close>
   unfolding \<phi>perm_ins_homo_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma (in perm_ins_homo) [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>perm_ins_homo_def \<phi>Type_def by (simp add: \<phi>expns)
+  unfolding \<phi>perm_ins_homo_def \<phi>Type_def by (simp add: \<phi>expns perm_ins_homo_axioms)
 
 lemma \<phi>perm_ins_homo_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -1090,10 +1090,13 @@ simproc_setup \<phi>perm_ins_homo_simp_cong ("x \<Ztypecolon> \<phi>perm_ins_hom
 
 
 lemma \<phi>perm_ins_homo_\<phi>None:
-  \<open> perm_ins_homo' \<psi>
-\<Longrightarrow> \<phi>perm_ins_homo \<psi> \<circle> = \<circle>\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-  using inj_at_1_def perm_ins_homo'_def by auto
+  assumes prem: \<open>perm_ins_homo \<psi>\<close>
+  shows \<open>\<phi>perm_ins_homo \<psi> \<circle> = \<circle>\<close>
+proof -
+  interpret perm_ins_homo \<psi> using prem .
+  show \<open>\<phi> \<circle> = \<circle>\<close>
+    by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns perm_ins_homo_axioms)
+qed
 
 (* lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X \<a>\<n>\<d> ?P @action (?Act::?'a::simplification action)\<close>]:
   \<open>x \<Ztypecolon> \<phi>perm_ins_homo \<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<circle> @action Act\<close>
@@ -1104,32 +1107,42 @@ lemma \<phi>perm_ins_homo_\<phi>None:
 
 lemma \<phi>perm_ins_homo_MapAt:
   \<open>\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_ins_homo f T)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
+proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
             perm_ins_homo_pointwise_eq; rule; clarsimp)
-  using inj_at_1.inj_at_1 perm_ins_homo'.axioms(2) apply fastforce
-  by (metis fun_upd_comp inj_at_1.inj_at_1 perm_ins_homo'.axioms(2) perm_ins_homo_pointwise)
-
+  fix x :: 'a and va :: 'd
+  assume \<open>perm_ins_homo f\<close>
+  then interpret perm_ins_homo f .
+  show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> 1(k := va) = 1(k := v) \<and> (\<exists>va. v = f va \<and> va \<in> (x \<Ztypecolon> T))\<close> by fastforce
+  show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. 1(k := f va) = f \<circ> v \<and> (\<exists>va. v = 1(k := va) \<and> va \<in> (x \<Ztypecolon> T))\<close>
+    by (metis \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> 1(k := va) = 1(k := v) \<and> (\<exists>va. v = f va \<and> va \<in> (x \<Ztypecolon> T))\<close> comp_def fun_upd_same)
+qed
 
 lemma \<phi>perm_ins_homo_MapAt_L:
   \<open>\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow>\<^sub>@ T) = (k \<^bold>\<rightarrow>\<^sub>@ \<phi>perm_ins_homo ((o) f) T)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
+proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
             perm_ins_homo_pointwise_eq; rule; clarsimp)
-  apply (metis homo_one.intro homo_one.push_map_homo inj_at_1.inj_at_1 perm_ins_homo'.axioms(2))
-  by (metis homo_one.intro homo_one.push_map_homo inj_at_1.inj_at_1 perm_ins_homo'.axioms(2))
+  fix x :: 'a and va :: \<open>'b list \<Rightarrow> 'd\<close>
+  assume \<open>perm_ins_homo f\<close>
+  then interpret perm_ins_homo f .
+  show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> k \<^enum>\<^sub>m va = k \<^enum>\<^sub>m v \<and> (\<exists>va. v = f \<circ> va \<and> va \<in> (x \<Ztypecolon> T))\<close>
+    using push_map_homo by blast
+  show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. k \<^enum>\<^sub>m (f \<circ> va) = f \<circ> v \<and> (\<exists>va. v = k \<^enum>\<^sub>m va \<and> va \<in> (x \<Ztypecolon> T))\<close>
+    by (metis push_map_homo)
+qed    
 
 
 lemma \<phi>perm_ins_homo_Prod_imply:
   \<open>x \<Ztypecolon> \<phi>perm_ins_homo f (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (\<phi>perm_ins_homo f T) \<^emph> (\<phi>perm_ins_homo f U)\<close>
   unfolding Imply_def
   apply (cases x; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def)
-  by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def homo_sep_wand_def perm_ins_homo'_def)
+  by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def homo_sep_wand_1_def homo_sep_wand_def homo_sep_wand_monoid_def perm_ins_homo_def)
 
 lemma \<phi>perm_ins_homo_Prod:
   \<open> \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>perm_ins_homo f (T \<^emph> U) = (\<phi>perm_ins_homo f T) \<^emph> (\<phi>perm_ins_homo f U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def homo_sep_wand_def perm_ins_homo'.axioms(1))
-  by (metis homo_sep_wand.homo_sep_wand perm_ins_homo'.axioms(1) sep_disj_commute)
+  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def homo_sep_wand_1_def homo_sep_wand_def homo_sep_wand_monoid_def perm_ins_homo_def)
+  by (metis homo_sep_wand.homo_sep_wand homo_sep_wand_1_def homo_sep_wand_monoid_def perm_ins_homo_def sep_disj_commute)
 
 
 subsubsection \<open>Permission Annotation\<close>

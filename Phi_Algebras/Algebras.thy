@@ -281,11 +281,11 @@ end
 
 subsubsection \<open>Strict Subsumption\<close>
 
-definition join_sub_strict :: \<open>'a::sep_ab_semigroup \<Rightarrow> 'a::sep_ab_semigroup \<Rightarrow> bool\<close> (infix "\<prec>\<^sub>S\<^sub>L" 50)
+definition join_sub_strict :: \<open>'a::sep_magma \<Rightarrow> 'a::sep_magma \<Rightarrow> bool\<close> (infix "\<prec>\<^sub>S\<^sub>L" 50)
   where \<open>join_sub_strict y z \<longleftrightarrow> join_sub y z \<and> y \<noteq> z\<close>
 
 
-interpretation join_sub: order \<open>join_sub::'a::sep_algebra \<Rightarrow> 'a \<Rightarrow> bool\<close> join_sub_strict
+interpretation join_sub: order \<open>join_sub::'a::sep_monoid \<Rightarrow> 'a \<Rightarrow> bool\<close> join_sub_strict
 proof
   fix x y z :: 'a
   show \<open>(x \<prec>\<^sub>S\<^sub>L y) = (x \<preceq>\<^sub>S\<^sub>L y \<and> \<not> y \<preceq>\<^sub>S\<^sub>L x)\<close>
@@ -295,13 +295,13 @@ proof
     by (rule exI[where x=1], simp)
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L z \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L z\<close>
     unfolding join_sub_strict_def join_sub_def
-    by (meson join_sub_def join_sub_ext_left)
+    using sep_disj_multI1 sep_mult_assoc' by blast
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
     unfolding join_sub_strict_def join_sub_def
     using join_positivity join_sub_def by blast
 qed
 
-interpretation join_sub: order_bot 1 \<open>join_sub::'a::sep_algebra \<Rightarrow> 'a \<Rightarrow> bool\<close> join_sub_strict
+interpretation join_sub: order_bot 1 \<open>join_sub::'a::sep_monoid \<Rightarrow> 'a \<Rightarrow> bool\<close> join_sub_strict
 proof
   fix a :: 'a
   show \<open>1 \<preceq>\<^sub>S\<^sub>L a\<close>
@@ -465,10 +465,10 @@ locale homo_join_sub =
 locale homo_sep = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
 
-(*lemma
-  \<open>homo_sep_pre f \<Longrightarrow> homo_sep_pre g \<Longrightarrow> homo_sep_pre (f o g)\<close>
-  unfolding homo_sep_pre_def homo_sep_mult_def homo_sep_disj_semi_def
-  by simp*)
+lemma homo_sep_comp:
+  \<open>homo_sep f \<Longrightarrow> homo_sep g \<Longrightarrow> homo_sep (f o g)\<close>
+  unfolding homo_sep_mult_def homo_sep_disj_semi_def homo_sep_def
+  by simp
 
 locale homo_sep_wand = homo_sep \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
@@ -482,31 +482,89 @@ sublocale homo_join_sub \<psi>
 
 end
 
-locale inj_at_1 =
+locale homo_sep_wand_1 = homo_sep_wand \<psi>
+  for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close>
+begin
+
+sublocale homo_one \<psi>
+  apply standard
+  by (metis homo_sep_wand mult_1_class.mult_1_left mult_1_class.mult_1_right sep_magma_1_right)
+
+end
+
+
+lemma homo_sep_wand_comp:
+  \<open>homo_sep_wand f \<Longrightarrow> homo_sep_wand g \<Longrightarrow> homo_sep_wand (f o g)\<close>
+  unfolding homo_sep_wand_def homo_sep_wand_axioms_def
+  apply (simp add: homo_sep_comp)
+  using homo_sep.axioms(2) homo_sep_disj_semi.sep_disj_homo_semi by blast
+
+lemma homo_sep_wand_1_comp:
+  \<open>homo_sep_wand_1 f \<Longrightarrow> homo_sep_wand_1 g \<Longrightarrow> homo_sep_wand_1 (f o g)\<close>
+  unfolding homo_sep_wand_1_def using homo_sep_wand_comp .
+
+
+locale kernel_is_1 =
   fixes \<psi> :: " 'a::one \<Rightarrow> 'b::one"
   assumes inj_at_1: \<open>\<forall>x. \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
 
+lemma kernel_is_1_comp:
+  \<open>kernel_is_1 f \<Longrightarrow> kernel_is_1 g \<Longrightarrow> kernel_is_1 (f o g)\<close>
+  unfolding kernel_is_1_def by simp
+
+locale homo_sep_wand_monoid = homo_sep_wand_1 \<psi>
+  for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close>
+begin
+
+sublocale kernel_is_1 \<psi>
+  apply standard
+  by (metis homo_join_sub homo_sep_wand join_sub.bot_least join_sub.le_bot mult_1_class.mult_1_left sep_magma_1_right)
+
+end
+
+lemma homo_sep_wand_monoid_comp:
+  \<open>homo_sep_wand_monoid f \<Longrightarrow> homo_sep_wand_monoid g \<Longrightarrow> homo_sep_wand_monoid (f o g)\<close>
+  unfolding homo_sep_wand_monoid_def using homo_sep_wand_1_comp .
+
+
+(*
+locale homo_sep_wand_1 = homo_sep_wand \<psi>
+  for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close>
+begin
+end *)
+
 text \<open>Insertion homomorphism from a separation algebra to a separation permission semimodule.\<close>
 
-locale perm_ins_homo' = homo_sep_wand \<psi> + inj_at_1 \<psi>
+locale perm_ins_homo = homo_sep_wand_monoid \<psi>
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
 + assumes join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
     and   inj_\<psi>[simp]: \<open>inj \<psi>\<close>
     and   \<psi>_self_disj: \<open>\<psi> x ## \<psi> x\<close>
-
-locale perm_ins_homo =
-  fixes \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
-  assumes perm_ins_homo': \<open>id perm_ins_homo' \<psi>\<close>
 begin
-sublocale perm_ins_homo' using perm_ins_homo'[simplified] .
-lemma [simp]: \<open>perm_ins_homo' \<psi>\<close> using perm_ins_homo' by simp
+
+(* lemma \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> x\<close>
+  by (simp add: \<psi>_self_disj share_sub) *)
+
+
 end
 
+locale perm_ins_homo_L =
+  fixes \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
+  assumes perm_ins_homo': \<open>id perm_ins_homo \<psi>\<close>
+begin
+sublocale perm_ins_homo using perm_ins_homo'[simplified] .
+end 
+
+(*
 lemma perm_ins_homo'_id[intro!,simp]:
   \<open>perm_ins_homo' F \<Longrightarrow> id perm_ins_homo' F\<close>
-  by simp
+  by simp*)
 
-
+(*
+lemma
+  \<open>perm_ins_homo' f \<Longrightarrow> homo_sep_wand g \<and> inj_at_1 g \<Longrightarrow> perm_ins_homo' (f o g)\<close>
+  unfolding perm_ins_homo'_def perm_ins_homo'_axioms_def
+  apply (simp add: inj_at_1_comp homo_sep_wand_comp) *)
 
 
 
@@ -1589,86 +1647,87 @@ subsubsection \<open>Total Permission Transformation\<close>
 
 
 lemma perm_ins_homo_pointwise:
-  \<open>perm_ins_homo' \<psi> \<Longrightarrow> perm_ins_homo' ((\<circ>) \<psi>)\<close>
+  assumes prem: \<open>perm_ins_homo \<psi>\<close>
+  shows \<open>perm_ins_homo ((\<circ>) \<psi>)\<close>
   unfolding comp_def
-  subgoal premises prem proof
-    note t1[simp] = prem[unfolded comp_def perm_ins_homo'_def homo_sep_def homo_sep_mult_def
-        homo_sep_disj_semi_def homo_sep_wand_def inj_at_1_def perm_ins_homo'_axioms_def inj_def
-        homo_sep_wand_axioms_def]
-    have t2[unfolded join_sub_def]:
+proof
+  interpret xx: perm_ins_homo \<psi> using prem .
+
+  fix x y z a b c :: \<open>'c \<Rightarrow> 'a\<close>
+  fix a' :: \<open>'c \<Rightarrow> 'b\<close>
+  fix n :: rat
+  show \<open>a ## b \<longrightarrow> (\<lambda>x. \<psi> (a x)) ## (\<lambda>x. \<psi> (b x))\<close>
+    by (simp add: fun_eq_iff times_fun sep_disj_fun_def)
+  show \<open>x ## y \<Longrightarrow> (\<lambda>xa. \<psi> ((x * y) xa)) = (\<lambda>xa. \<psi> (x xa)) * (\<lambda>x. \<psi> (y x))\<close>
+    by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.homo_mult)
+  show \<open>a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
+     (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b)\<close>
+    by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.homo_sep_wand
+            all_conj_distrib[symmetric], subst choice_iff[symmetric]; blast)
+
+  show \<open>inj (\<lambda>g x. \<psi> (g x))\<close>
+    by (rule, simp add: fun_eq_iff inj_eq)
+  (* show \<open>\<forall>x. ((\<lambda>xa. \<psi> (x xa)) = 1) = (x = 1)\<close>
+    by (simp add: one_fun_def fun_eq_iff) *)
+  show \<open>(\<lambda>xa. \<psi> (x xa)) ## (\<lambda>xa. \<psi> (x xa))\<close>
+    by (simp add: sep_disj_fun_def xx.\<psi>_self_disj)
+
+  have t2[unfolded join_sub_def]:
       \<open>(\<forall>n x y. 0 < n \<and> n \<le> 1 \<longrightarrow> (share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y))\<close>
-      using t1 by blast
+    using xx.join_sub_share_join_sub_whole by blast
 
-    fix x y z a b c :: \<open>'c \<Rightarrow> 'a\<close>
-    fix a' :: \<open>'c \<Rightarrow> 'b\<close>
-    fix n :: rat
-    show \<open>a ## b \<longrightarrow> (\<lambda>x. \<psi> (a x)) ## (\<lambda>x. \<psi> (b x))\<close>
-      by (simp add: fun_eq_iff times_fun sep_disj_fun_def)
-    show \<open>x ## y \<Longrightarrow> (\<lambda>xa. \<psi> ((x * y) xa)) = (\<lambda>xa. \<psi> (x xa)) * (\<lambda>x. \<psi> (y x))\<close>
-      by (simp add: fun_eq_iff times_fun sep_disj_fun_def)
-    show \<open>a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
-       (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b)\<close>
-      by (simp add: fun_eq_iff times_fun sep_disj_fun_def
-              all_conj_distrib[symmetric], subst choice_iff[symmetric], rule; clarify)
-
-    show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (share n (\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-      apply (simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def share_fun_def
+  show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (n :\<Znrres> (\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
+    apply (simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def share_fun_def
         all_conj_distrib[symmetric],
         subst choice_iff[symmetric], subst choice_iff[symmetric])
-      using t2 by simp
-
-    show \<open>inj (\<lambda>g x. \<psi> (g x))\<close>
-      by (rule, simp add: fun_eq_iff inj_eq)
-    show \<open>\<forall>x. ((\<lambda>xa. \<psi> (x xa)) = 1) = (x = 1)\<close>
-      by (simp add: one_fun_def fun_eq_iff)
-    show \<open>(\<lambda>xa. \<psi> (x xa)) ## (\<lambda>xa. \<psi> (x xa))\<close>
-      by (simp add: sep_disj_fun_def)
-  qed .
+    using t2 by simp
+qed
 
 lemma perm_ins_homo_pointwise_eq[iff]:
-  \<open>perm_ins_homo' ((\<circ>) \<psi>) \<longleftrightarrow> perm_ins_homo' \<psi>\<close>
+  \<open>perm_ins_homo ((\<circ>) \<psi>) \<longleftrightarrow> perm_ins_homo \<psi>\<close>
   for \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
-  apply rule prefer 2 using perm_ins_homo_pointwise apply blast
-  unfolding comp_def
-  subgoal premises prem proof
-    note t1 = prem[unfolded comp_def perm_ins_homo'_def homo_sep_def homo_sep_mult_def
-        homo_sep_disj_semi_def homo_sep_wand_def inj_at_1_def perm_ins_homo'_axioms_def inj_def
-        homo_sep_wand_axioms_def]
-    ML_prf \<open>Context.>> (Context.map_proof (Proof_Context.put_thms false ("t2", SOME (
-        HOLogic.conj_elims @{context} @{thm t1}
-    ))))\<close>
-    note t3 = t2[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
-    fix x y z a b c :: \<open>'b\<close>
-    fix a' :: 'c
-    fix n :: rat
+proof
+  fix \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
+  assume prem: \<open>perm_ins_homo ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close>
+  show \<open>perm_ins_homo \<psi>\<close>
+  proof
+    interpret xx: perm_ins_homo \<open>((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close> using prem .
+    fix x y a b c :: \<open>'b\<close> and a2 :: 'c and n :: rat
+    show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close>
+      using xx.homo_mult[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
+      by meson
+    show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
+      using xx.sep_disj_homo_semi[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
+      by meson
+    show \<open>a2 ## \<psi> b \<Longrightarrow> (a2 * \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
+      using xx.homo_sep_wand[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff,
+          where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>, simplified]
+      by auto
+    show \<open>inj \<psi>\<close>
+      by (metis (no_types, opaque_lifting) fun_upd_comp inj_def mult_1_class.mult_1_left one_fun times_fupdt_1_apply_sep xx.inj_\<psi>)
+    show \<open>\<psi> x ## \<psi> x\<close>
+      by (metis fun_sep_disj_imply_v fun_upd_comp xx.\<psi>_self_disj)
 
     have x1[simp]: \<open>\<And>k v x. \<psi> ((1(k := v)) x) = (1(k := \<psi> v)) x\<close>
-      using t3(4) by auto 
+      by (metis comp_apply fun_upd_apply one_fun xx.homo_one)
     have x2[simp]: \<open>\<And>k a b. (1(k := a) \<preceq>\<^sub>S\<^sub>L 1(k := b)) \<longleftrightarrow> a \<preceq>\<^sub>S\<^sub>L (b::'x::sep_algebra)\<close>
       unfolding join_sub_def
       by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) fun_upd_same fun_upd_triv)
-    have x3[simp]: \<open>\<And>k a b. 1(k := a) = 1(k := b) \<longleftrightarrow> a = b\<close>
-      by (metis fun_upd_same)
+    have \<open>\<forall>(x::'a \<Rightarrow> 'b) y. 0 < n \<and> n \<le> 1 \<longrightarrow> (n :\<Znrres> (\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
+      using xx.join_sub_share_join_sub_whole[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff comp_def, simplified]
+      by fastforce
+    then have \<open>0 < n \<and> n \<le> 1 \<longrightarrow> (\<forall>(x::'a \<Rightarrow> 'b) y. (n :\<Znrres> (\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y))\<close>
+      by blast
+    from this[THEN mp, THEN spec[where x=\<open>1(undefined := x)\<close>], THEN spec[where x=\<open>1(undefined := y)\<close>],
+          simplified x1 x2 share_1_fupdt]
+    show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (n :\<Znrres> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close> .
+  qed
+next
+  show \<open>perm_ins_homo \<psi> \<Longrightarrow> perm_ins_homo ((\<circ>) \<psi>)\<close>
+    using perm_ins_homo_pointwise .
+qed
 
-    show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> by (meson t3(2))
-    show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close> by (meson t3(1))
-    show \<open>a' ## \<psi> b \<Longrightarrow> (a' * \<psi> b = \<psi> c) = (\<exists>a. a' = \<psi> a \<and> a * b = c \<and> a ## b)\<close>
-      unfolding t2(3)[THEN spec[where x=\<open>1(undefined := a')\<close>],
-                THEN spec[where x=\<open>1(undefined := b)\<close>],
-                THEN spec[where x=\<open>1(undefined := c)\<close>],
-                simplified x1 fun_sep_disj_1_fupdt fun_1upd_homo x3]
-      apply (rule; clarsimp)
-      apply (metis fun_upd_same sep_disj_fun_def times_fun)
-      by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(2) x1)
-    show \<open>\<forall>x. (\<psi> x = 1) = (x = 1)\<close>
-      using t3(4) by auto
-    show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-      using t3(5)[THEN spec, of n, THEN mp, THEN spec[where x=\<open>1(undefined := x)\<close>],
-                  THEN spec[where x=\<open>1(undefined := y)\<close>], simplified x1 x2 share_1_fupdt] .
-    show \<open>inj \<psi>\<close> by (meson injI t3(6))
-    show \<open>\<psi> x ## \<psi> x\<close>
-      using t3(7)[THEN spec[where x=\<open>\<lambda>_. x\<close>], simplified] .
-  qed .
+
 
 subsubsection \<open>Subsumption\<close>
 
@@ -1793,7 +1852,7 @@ abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
 lemma perm_ins_homo_to_share[iff]:
-  \<open>perm_ins_homo' (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
+  \<open>perm_ins_homo (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
   fix a' :: \<open>'a share option\<close>
@@ -1804,15 +1863,14 @@ proof
        (a' * to_share b = to_share c) = (\<exists>a. a' = to_share a \<and> a * b = c \<and> a ## b)\<close>
     apply (cases a'; cases b; cases c; simp add: split_option_ex)
     subgoal for a'' by (cases a''; simp) .
-  show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (share n (to_share x) \<preceq>\<^sub>S\<^sub>L to_share y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
+  show \<open>inj to_share\<close>
+    by (rule, simp, metis option.inj_map_strong share.inject)
+  show \<open>to_share x ## to_share x\<close> by (cases x; simp)
+  show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (n :\<Znrres> to_share x \<preceq>\<^sub>S\<^sub>L to_share y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
     apply (cases a'; cases x; cases y; simp add: join_sub_def split_option_ex share_forall share_exists
           share_All)
     apply (metis add.commute add_le_same_cancel1 diff_add_cancel linorder_not_le nle_le)
     by (metis Orderings.order_eq_iff diff_add_cancel less_add_same_cancel2 linorder_le_less_linear)
-  show \<open>inj to_share\<close>
-    by (rule, simp, metis option.inj_map_strong share.inject)
-  show \<open>\<forall>x. (to_share x = 1) = (x = 1)\<close> by simp
-  show \<open>to_share x ## to_share x\<close> by (cases x; simp)
 qed
 
 
@@ -2109,14 +2167,14 @@ subsubsection \<open>Functional Fiction\<close>
 
 definition \<open>\<F>_functional \<psi> = Interp (\<lambda>x. {y. x = \<psi> y})\<close>
 
-lemma (in inj_at_1) \<F>_functional_\<I>[simp]:
+lemma (in kernel_is_1) \<F>_functional_\<I>[simp]:
   \<open>\<I> (\<F>_functional \<psi>) = (\<lambda>x. {y. x = \<psi> y})\<close>
   unfolding \<F>_functional_def
   by (rule Interp_inverse, simp add: Interpretation_def one_set_def set_eq_iff inj_at_1)
 
 lemma map_option_inj_at_1[simp]:
-  \<open>inj_at_1 (map_option f)\<close>
-  unfolding one_option_def inj_at_1_def
+  \<open>kernel_is_1 (map_option f)\<close>
+  unfolding one_option_def kernel_is_1_def
   by (simp add: split_option_all)
 
 
