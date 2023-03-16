@@ -148,6 +148,18 @@ lemma Valof_Map_append[simp]:
 lemmas Valof_Map[simp] = Valof_Map_append[where f = \<open>Map.empty\<close>, simplified]
 
 
+lemma
+  \<open> perm_ins_homo' f
+\<Longrightarrow> perm_ins_homo' (\<lambda>v. f o Mapof_Val v)\<close>
+
+  term \<open>(\<lambda>v. f o Mapof_Val v)\<close>
+  term Mapof_Val
+  term \<open>((o) to_share) o Mapof_Val\<close>
+
+
+
+
+
 definition \<open>fic_val_to_share_map TY =
       Interp (\<lambda>m. if m = 1 then {None} else {Some v |v. v \<in> Well_Type TY \<and> to_share o Mapof_Val v = m})\<close>
 
@@ -158,16 +170,10 @@ lemma fic_val_to_share_map[simp]:
 
 paragraph \<open>Basic fictions for resource elements\<close>
 
-definition "fiction_mem I = Fiction (\<lambda>x. { 1(R_mem #= y) |y. y \<in> \<I> I x})"
-lemma fiction_mem_\<I>:
-  "\<I> (fiction_mem I) = (\<lambda>x. { 1(R_mem #= y) |y. y \<in> \<I> I x})"
-  unfolding fiction_mem_def
-  by (rule Fiction_inverse) (auto simp add: Fictional_def one_set_def)
-
 
 
 definition "share_mem' = 
-              fiction.pointwise' (\<lambda>seg. fiction.fine (share_val_fiction (segidx.layout seg)))"
+              fiction.pointwise' (\<lambda>seg.  (share_val_fiction (segidx.layout seg)))"
 
 definition "share_mem = fiction_mem (fiction.defined (
               fiction.pointwise' (\<lambda>seg. fiction.fine (share_val_fiction (segidx.layout seg)))))"

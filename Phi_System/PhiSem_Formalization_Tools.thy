@@ -248,18 +248,18 @@ lemma get_res_Valid:
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def by (clarsimp simp add: \<r>_valid_split')
 
 
-definition \<open>raw_basic_fiction I = Interp (\<lambda>x. { 1(Res #= y) |y. y \<in> \<I> I x })\<close>
-lemma raw_basic_fiction_\<I>:
-  "\<I> (raw_basic_fiction I) = (\<lambda>x. { 1(Res #= y) |y. y \<in> \<I> I x})"
-  unfolding raw_basic_fiction_def
+definition \<open>basic_fiction I = Interp (\<lambda>x. { 1(Res #= y) |y. y \<in> \<I> I x })\<close>
+lemma basic_fiction_\<I>:
+  "\<I> (basic_fiction I) = (\<lambda>x. { 1(Res #= y) |y. y \<in> \<I> I x})"
+  unfolding basic_fiction_def
   by (rule Interp_inverse) (clarsimp simp add: Interpretation_def one_set_def)
 
 lemma \<F>_itself_expn[\<phi>expns]:
   \<open>R2 ## x
-\<Longrightarrow> \<phi>Res_Spec (\<I> (raw_basic_fiction \<F>_it) (R2 * x))
-  = \<phi>Res_Spec (\<I> (raw_basic_fiction \<F>_it) R2 * {mk x})\<close>
+\<Longrightarrow> \<phi>Res_Spec (\<I> (basic_fiction \<F>_it) (R2 * x))
+  = \<phi>Res_Spec (\<I> (basic_fiction \<F>_it) R2 * {mk x})\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarsimp simp add: \<phi>expns raw_basic_fiction_\<I> prj.homo_mult)
+  apply (clarsimp simp add: \<phi>expns basic_fiction_\<I> prj.homo_mult)
   apply (rule; clarify)
    apply (simp add: mk_homo_mult sep_mult_assoc')
   using SPACE_mult_homo inj.homo_mult by force
@@ -279,7 +279,7 @@ subsubsection \<open>Basic Fiction\<close>
 
 locale basic_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.raw_basic_fiction I\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction I\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and I :: "('U::sep_algebra, 'T) interp"
 and Fic :: "'U fiction_entry"
@@ -455,22 +455,22 @@ subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
    R: resource Res
-+  share: perm_functor perm_functor
++  share: perm_ins_homo perm_ins_homo
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
-      \<open>R.raw_basic_fiction (\<F>_functional perm_functor)\<close>
+      \<open>R.basic_fiction (\<F>_functional perm_ins_homo)\<close>
 for Res :: "'T::sep_algebra resource_entry"
-and perm_functor :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
+and perm_ins_homo :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
 begin
 
-sublocale basic_fiction Res \<open>\<F>_functional perm_functor\<close> ..
+sublocale basic_fiction Res \<open>\<F>_functional perm_ins_homo\<close> ..
 
 lemma sep_disj_fiction:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP r * { R.mk x }
-\<Longrightarrow> r ## mk (perm_functor x)\<close>
+\<Longrightarrow> r ## mk (perm_ins_homo x)\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def set_eq_iff
-  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
+  apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split'
             R.mult_strip_inject_011 interp_split'
             sep_disj_get_name_eq[symmetric]
@@ -479,11 +479,11 @@ lemma sep_disj_fiction:
 
 lemma expand_subj:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x)) \<s>\<u>\<b>\<j> r ## mk (perm_functor x))
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_ins_homo x)) \<s>\<u>\<b>\<j> r ## mk (perm_ins_homo x))
   = \<phi>Res_Spec (\<I> INTERP r * { R.mk x })\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify, rule)
-  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
+  apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
             share.sep_mult_strip_011 \<phi>Res_Spec_def R.\<r>_valid_split'
             R.mult_strip_inject_011 interp_split' prj.homo_mult)
   thm interp_split'
@@ -492,7 +492,7 @@ lemma expand_subj:
     apply (metis R.inj.homo_mult R.sep_disj_mk fun_1upd_homo_right1 sep_mult_assoc')
     by (metis R.mk_homo_mult R.sep_disj_mk sep_disj_multD1 sep_disj_multI1)
 
-  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns \<phi>Res_Spec_def R.\<r>_valid_split'
+  apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns \<phi>Res_Spec_def R.\<r>_valid_split'
         R.mult_strip_inject_011 interp_split' sep_mult_assoc prj.homo_mult)
   subgoal premises prems for res_r a y proof -
     have t1[simp]: \<open>y ## x\<close>
@@ -508,15 +508,15 @@ lemma expand_subj:
 
 lemma expand:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> r ## mk (perm_functor x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_functor x))) =
+\<Longrightarrow> r ## mk (perm_ins_homo x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (perm_ins_homo x))) =
     \<phi>Res_Spec (\<I> INTERP r * {R.mk x})\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
 (*lemma expand_conj:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP (r * mk (perm_functor x))) \<and> r ## mk (perm_functor x)
+\<Longrightarrow> (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP (r * mk (perm_ins_homo x))) \<and> r ## mk (perm_ins_homo x)
 \<longleftrightarrow> (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP r * { R.mk x })\<close>
   unfolding \<phi>Res_Sat_def
   subgoal premises prems
@@ -527,11 +527,11 @@ lemma expand:
 lemma partial_implies_raw:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> 0 < n
-\<Longrightarrow> r ## mk (share n (perm_functor x))
-\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (share n (perm_functor x)))
+\<Longrightarrow> r ## mk (share n (perm_ins_homo x))
+\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (share n (perm_ins_homo x)))
 \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def
-  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
+  apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
             R.prj.homo_mult interp_split' prj.homo_mult)
   apply (cases \<open>n \<le> 1\<close>)
@@ -541,9 +541,9 @@ lemma partial_implies_raw:
       by (metis nonzero_eq_divide_eq order_less_irrefl prems(2))
     have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close>
       using prems(12) by force
-    have t2: \<open>share (1/n) (share n (perm_functor x)) \<preceq>\<^sub>S\<^sub>L share n (perm_functor x)\<close>
+    have t2: \<open>share (1/n) (share n (perm_ins_homo x)) \<preceq>\<^sub>S\<^sub>L share n (perm_ins_homo x)\<close>
       by (simp add: order_less_imp_le prems(2) share.\<psi>_self_disj share_sub t1)
-    then have t3: \<open>perm_functor x \<preceq>\<^sub>S\<^sub>L share n (perm_functor x)\<close>
+    then have t3: \<open>perm_ins_homo x \<preceq>\<^sub>S\<^sub>L share n (perm_ins_homo x)\<close>
       using share_share_not0
       by (metis prems(2) share_left_one t0 t1)
     then show ?thesis
@@ -567,7 +567,7 @@ subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.raw_basic_fiction \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<F>_it\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and Fic :: "'T fiction_entry"
 begin
@@ -579,7 +579,7 @@ lemma sep_disj_fiction:
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP r * { R.mk x }
 \<Longrightarrow> r ## mk x\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def set_eq_iff
-  apply (clarsimp simp add: R.raw_basic_fiction_\<I> \<phi>expns
+  apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split'
             R.mult_strip_inject_011 interp_split'
             sep_disj_get_name_eq[symmetric]
@@ -590,7 +590,7 @@ lemma expand_subj:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> (\<phi>Res_Spec (\<I> INTERP (r * mk x) \<s>\<u>\<b>\<j> r ## mk x)) = \<phi>Res_Spec (\<I> INTERP r * {R.mk x}) \<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarify; rule; clarsimp simp add: \<phi>expns R.raw_basic_fiction_\<I> interp_split' prj.homo_mult)
+  apply (clarify; rule; clarsimp simp add: \<phi>expns R.basic_fiction_\<I> interp_split' prj.homo_mult)
   apply (simp add: R.mk_homo_mult)
   using R.sep_disj_mk sep_disj_get_name_eq sep_disj_multD1 sep_disj_multI1 sep_mult_assoc' apply blast
   apply (simp add: R.mk_homo_mult[symmetric] sep_mult_assoc)
@@ -620,7 +620,7 @@ for Res :: "'T nosep option resource_entry"
 begin
 
 definition fiction_agree
-  where \<open>fiction_agree = raw_basic_fiction (\<F>_optionwise \<F>_agree)\<close>
+  where \<open>fiction_agree = basic_fiction (\<F>_optionwise \<F>_agree)\<close>
 
 end
 
@@ -649,7 +649,7 @@ lemma partial_implies:
 \<Longrightarrow> R.get res = Some (nosep x)\<close>
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def
   apply (clarsimp simp add: interp_split'
-     R.fiction_agree_def R.raw_basic_fiction_\<I> \<phi>expns R.\<r>_valid_split'
+     R.fiction_agree_def R.basic_fiction_\<I> \<phi>expns R.\<r>_valid_split'
      R.mult_strip_inject_011 R.prj.homo_mult \<F>_optionwise_\<I> image_iff Bex_def
      \<F>_agree_def prj.homo_mult)
   apply (cases \<open>get r\<close>; simp)
@@ -781,9 +781,9 @@ lemma "__dispose_rule__":
   using "__updt_rule__"[where u=None, simplified, simplified,
             simplified, simplified one_set_def[symmetric], simplified] .
 
-abbreviation perm_functor :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
-  where \<open>perm_functor \<equiv> (o) to_share\<close>
-abbreviation \<open>share_fiction \<equiv> raw_basic_fiction (\<F>_functional perm_functor)\<close>
+abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
+  where \<open>perm_ins_homo \<equiv> (o) to_share\<close>
+abbreviation \<open>share_fiction \<equiv> basic_fiction (\<F>_functional perm_ins_homo)\<close>
 
 (* lemma share_fiction_expn_full:
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<Znrres> v))))
@@ -843,7 +843,7 @@ subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.raw_basic_fiction \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<F>_it\<close>
 for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val option) fiction_entry"
 begin
@@ -862,12 +862,12 @@ for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entr
 and Fic :: "('key \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res \<open>R.perm_functor\<close> by standard blast
+sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> by standard blast
 
 lemma expand:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> r ## mk (R.perm_functor x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (R.perm_functor x))) =
+\<Longrightarrow> r ## mk (R.perm_ins_homo x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (R.perm_ins_homo x))) =
     \<phi>Res_Spec (\<I> INTERP r * {R.mk x} )\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
@@ -878,7 +878,6 @@ lemma partial_implies:
 \<Longrightarrow> r ## mk (1(k \<mapsto> Share n v))
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (1(k \<mapsto> Share n v)))
 \<Longrightarrow> R.get res k = Some v\<close>
-  unfolding \<phi>Res_Sat_def
   using partial_implies_raw[where x=\<open>1(k \<mapsto> v)\<close> and n=n, simplified]
     nonsepable_partial_map_subsumption
   by (smt (verit, ccfv_threshold) fun_split_1 fun_upd_same join_sub_def one_option_def sep_disj_fun_def sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep)
@@ -1013,9 +1012,9 @@ lemma "__dispose_rule__":
       using prems(1) prems(3) prems(5) prems(7) t1 by force
   qed .
 
-abbreviation perm_functor :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
-  where \<open>perm_functor \<equiv> (o) ((o) to_share)\<close>
-abbreviation \<open>share_fiction \<equiv> raw_basic_fiction (\<F>_functional perm_functor)\<close>
+abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
+  where \<open>perm_ins_homo \<equiv> (o) ((o) to_share)\<close>
+abbreviation \<open>share_fiction \<equiv> basic_fiction (\<F>_functional perm_ins_homo)\<close>
 
 (*depreciated!*)
 (*lemma share_fiction_expn_full':
@@ -1132,10 +1131,10 @@ locale share_fiction_for_partial_mapping_resource2 =
     and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res \<open>R.perm_functor\<close> by standard  blast
+sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> by standard  blast
 
 lemma [simp]:
-  \<open>R.perm_functor (1(k := f)) = 1(k := to_share o f)\<close>
+  \<open>R.perm_ins_homo (1(k := f)) = 1(k := to_share o f)\<close>
   unfolding fun_eq_iff by simp
 
 lemmas partial_implies = partial_implies_raw
@@ -1146,7 +1145,6 @@ lemma partial_implies':
 \<Longrightarrow> r ## mk (1(k := 1(k2 \<mapsto> Share n v)))
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (1(k := 1(k2 \<mapsto> Share n v))))
 \<Longrightarrow> R.get res k k2 = Some v\<close>
-  unfolding \<phi>Res_Sat_def
   using partial_implies_raw[where x=\<open>1(k := 1(k2 \<mapsto> v))\<close> and n=n, simplified]
     nonsepable_partial_map_subsumption
   by (smt (verit, del_insts) fun_upd_same join_sub_def sep_disj_fun_def sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep times_option(3))

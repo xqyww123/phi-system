@@ -179,7 +179,7 @@ it does not require the physical resource to be separable because any structure 
 
 locale sep_space_entry =
   inj: homo_sep_mult inject' + prj: homo_sep_mult project' +
-  inj_disj: homo_sep_disj inject' + prj_disj: homo_sep_disj_semi project'
+  inj_disj: homo_sep_disj_total inject' + prj_disj: homo_sep_disj_semi project'
   for name'   :: 'NAME
   and inject' :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
   and project':: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>

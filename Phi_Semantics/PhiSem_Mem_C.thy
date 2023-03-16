@@ -125,11 +125,16 @@ type_synonym mem = \<open>segidx \<rightharpoonup> VAL nosep\<close>
 setup \<open>Sign.parent_path\<close>
 
 resource_space c_mem =
-  mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` nosep ` Well_Type (segidx.layout seg))}\<close>
-  .
+  C_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` nosep ` Well_Type (segidx.layout seg))}\<close>
+  (partial_map_resource) ..
+
+term RES.C_mem.basic_fiction
+
+thm RES.C_mem.basic_fiction_def
+
 
 definition In_Mem :: \<open> resource \<Rightarrow> segidx \<Rightarrow> bool\<close>
-  where \<open>In_Mem res seg \<equiv> seg \<in> dom (RES.mem.get res)\<close>
+  where \<open>In_Mem res seg \<equiv> seg \<in> dom (RES.C_mem.get res)\<close>
 
 
 subsection \<open>Semantics\<close>
@@ -495,7 +500,7 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
 
 subsection \<open>Memory Object\<close>
 
-definition (in agmem) Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
+definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
   where \<open>Ref T x' = (case x' of (seg |: idx) \<Zinj> (n \<Znrres> x) \<Rightarrow>
     if 0 < n \<and> valid_index (segidx.layout seg) idx then
     { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))

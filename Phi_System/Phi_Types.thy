@@ -1015,121 +1015,121 @@ definition \<phi>Sep_Disj_Identical :: \<open>('a::share_semimodule_sep, 'b) \<p
 
 subsubsection \<open>Permission Functor\<close>
 
-definition \<phi>perm_functor :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
-  where \<open>\<phi>perm_functor \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> perm_functor' \<psi>})\<close>
+definition \<phi>perm_ins_homo :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
+  where \<open>\<phi>perm_ins_homo \<psi> T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> perm_ins_homo' \<psi>})\<close>
 
-abbreviation (in perm_functor) \<open>\<phi> \<equiv> \<phi>perm_functor \<psi>\<close>
+abbreviation (in perm_ins_homo) \<open>\<phi> \<equiv> \<phi>perm_ins_homo \<psi>\<close>
 
-lemma \<phi>perm_functor_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>perm_functor \<psi> T)
-    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> perm_functor' \<psi>)\<close>
-  unfolding \<phi>perm_functor_def \<phi>Type_def by (simp add: \<phi>expns)
+lemma \<phi>perm_ins_homo_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T)
+    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> perm_ins_homo' \<psi>)\<close>
+  unfolding \<phi>perm_ins_homo_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma (in perm_functor) [\<phi>expns]:
+lemma (in perm_ins_homo) [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>perm_functor_def \<phi>Type_def by (simp add: \<phi>expns)
+  unfolding \<phi>perm_ins_homo_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma \<phi>perm_functor_inhabited[\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>perm_functor \<psi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma \<phi>perm_ins_homo_inhabited[\<phi>inhabitance_rule, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 paragraph \<open>Implication\<close>
 
-lemma \<phi>perm_functor_cast[\<phi>reason 2000]:
+lemma \<phi>perm_ins_homo_cast[\<phi>reason 2000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_functor \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_functor \<psi> U \<a>\<n>\<d> P\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> U \<a>\<n>\<d> P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns; blast)
 
 paragraph \<open>Action\<close>
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action \<A>_structural Act
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_functor \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_functor \<psi> U \<a>\<n>\<d> P @action \<A>_structural Act\<close>
-  unfolding Action_Tag_def using \<phi>perm_functor_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> U \<a>\<n>\<d> P @action \<A>_structural Act\<close>
+  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
 
 lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_functor \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_functor \<psi> U \<a>\<n>\<d> P @action to Z \<close>
-  unfolding Action_Tag_def using \<phi>perm_functor_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> U \<a>\<n>\<d> P @action to Z \<close>
+  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
 
 lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_functor \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_functor \<psi> U \<a>\<n>\<d> P @action to (\<phi>perm_functor \<psi> Z) \<close>
-  unfolding Action_Tag_def using \<phi>perm_functor_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> U \<a>\<n>\<d> P @action to (\<phi>perm_ins_homo \<psi> Z) \<close>
+  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
 
 lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as Z
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_functor \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_functor \<psi> U \<a>\<n>\<d> P @action as Z \<close>
-  unfolding Action_Tag_def using \<phi>perm_functor_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> U \<a>\<n>\<d> P @action as Z \<close>
+  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
 
 lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_functor \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_functor \<psi> U \<a>\<n>\<d> P @action as (z \<Ztypecolon> \<phi>perm_functor \<psi> Z) \<close>
-  unfolding Action_Tag_def using \<phi>perm_functor_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> U \<a>\<n>\<d> P @action as (z \<Ztypecolon> \<phi>perm_ins_homo \<psi> Z) \<close>
+  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
 
 
 
 paragraph \<open>Simplification\<close>
 
 lemma [simp]:
-  \<open>(\<phi>perm_functor \<psi> (ExTyp T)) = (\<exists>\<phi> c. \<phi>perm_functor \<psi> (T c))\<close>
+  \<open>(\<phi>perm_ins_homo \<psi> (ExTyp T)) = (\<exists>\<phi> c. \<phi>perm_ins_homo \<psi> (T c))\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 lemma [simp]:
-  \<open>(\<phi>perm_functor \<psi> (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<phi>perm_functor \<psi> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  \<open>(\<phi>perm_ins_homo \<psi> (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<phi>perm_ins_homo \<psi> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
-lemma \<phi>perm_functor_simp_cong[folded atomize_eq]:
+lemma \<phi>perm_ins_homo_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
-\<Longrightarrow> (x \<Ztypecolon> \<phi>perm_functor \<psi> T) = (x' \<Ztypecolon> \<phi>perm_functor \<psi> T')\<close>
+\<Longrightarrow> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T) = (x' \<Ztypecolon> \<phi>perm_ins_homo \<psi> T')\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
-simproc_setup \<phi>perm_functor_simp_cong ("x \<Ztypecolon> \<phi>perm_functor \<psi> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>perm_functor_simp_cong} ctxt)
+simproc_setup \<phi>perm_ins_homo_simp_cong ("x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T") = \<open>
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>perm_ins_homo_simp_cong} ctxt)
 \<close>
 
 
-lemma \<phi>perm_functor_\<phi>None:
-  \<open> perm_functor' \<psi>
-\<Longrightarrow> \<phi>perm_functor \<psi> \<circle> = \<circle>\<close>
+lemma \<phi>perm_ins_homo_\<phi>None:
+  \<open> perm_ins_homo' \<psi>
+\<Longrightarrow> \<phi>perm_ins_homo \<psi> \<circle> = \<circle>\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-  by (metis inj_at_1_def perm_functor'.axioms(5))
+  by (metis inj_at_1_def perm_ins_homo'.axioms(5))
 
-(* lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>perm_functor ?\<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X \<a>\<n>\<d> ?P @action (?Act::?'a::simplification action)\<close>]:
-  \<open>x \<Ztypecolon> \<phi>perm_functor \<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<circle> @action Act\<close>
+(* lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X \<a>\<n>\<d> ?P @action (?Act::?'a::simplification action)\<close>]:
+  \<open>x \<Ztypecolon> \<phi>perm_ins_homo \<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<circle> @action Act\<close>
   for Act :: \<open>'a::simplification action\<close>
   unfolding Imply_def Action_Tag_def
   apply (clarsimp simp add: \<phi>expns)
-  using inj_at_1_def perm_functor'.axioms(5) by blast *)
+  using inj_at_1_def perm_ins_homo'.axioms(5) by blast *)
 
-lemma \<phi>perm_functor_MapAt:
-  \<open>\<phi>perm_functor ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_functor f T)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_functor_expns
-            perm_functor_pointwise_eq; rule; clarsimp)
-  using inj_at_1.inj_at_1 perm_functor'.axioms(5) apply fastforce
-  by (metis fun_upd_comp inj_at_1.inj_at_1 perm_functor'.axioms(5) perm_functor_pointwise)
-
-
-lemma \<phi>perm_functor_MapAt_L:
-  \<open>\<phi>perm_functor ((o) f) (k \<^bold>\<rightarrow>\<^sub>@ T) = (k \<^bold>\<rightarrow>\<^sub>@ \<phi>perm_functor ((o) f) T)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_functor_expns
-            perm_functor_pointwise_eq; rule; clarsimp)
-  using homo_one.push_map_homo homo_sep_mult_def perm_functor'.axioms(1) apply blast
-  by (metis homo_one.push_map_homo homo_sep_mult_def perm_functor'.axioms(1) push_map_sep_disj)
+lemma \<phi>perm_ins_homo_MapAt:
+  \<open>\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_ins_homo f T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
+            perm_ins_homo_pointwise_eq; rule; clarsimp)
+  using inj_at_1.inj_at_1 perm_ins_homo'.axioms(5) apply fastforce
+  by (metis fun_upd_comp inj_at_1.inj_at_1 perm_ins_homo'.axioms(5) perm_ins_homo_pointwise)
 
 
-lemma \<phi>perm_functor_Prod_imply:
-  \<open>x \<Ztypecolon> \<phi>perm_functor f (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (\<phi>perm_functor f T) \<^emph> (\<phi>perm_functor f U)\<close>
+lemma \<phi>perm_ins_homo_MapAt_L:
+  \<open>\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow>\<^sub>@ T) = (k \<^bold>\<rightarrow>\<^sub>@ \<phi>perm_ins_homo ((o) f) T)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
+            perm_ins_homo_pointwise_eq; rule; clarsimp)
+  using homo_one.push_map_homo homo_sep_mult_def perm_ins_homo'.axioms(1) apply blast
+  by (metis homo_one.push_map_homo homo_sep_mult_def perm_ins_homo'.axioms(1) push_map_sep_disj)
+
+
+lemma \<phi>perm_ins_homo_Prod_imply:
+  \<open>x \<Ztypecolon> \<phi>perm_ins_homo f (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (\<phi>perm_ins_homo f T) \<^emph> (\<phi>perm_ins_homo f U)\<close>
   unfolding Imply_def
   apply (cases x; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def)
-  using homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_functor'_def by blast
+  using homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_ins_homo'_def by blast
 
-lemma \<phi>perm_functor_Prod:
+lemma \<phi>perm_ins_homo_Prod:
   \<open> \<phi>Sep_Disj T U
-\<Longrightarrow> \<phi>perm_functor f (T \<^emph> U) = (\<phi>perm_functor f T) \<^emph> (\<phi>perm_functor f U)\<close>
+\<Longrightarrow> \<phi>perm_ins_homo f (T \<^emph> U) = (\<phi>perm_ins_homo f T) \<^emph> (\<phi>perm_ins_homo f U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def; rule; clarsimp)
-  using homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_functor'_def apply blast
-  by (metis homo_sep_mult.homo_mult perm_functor'_def sep_disj_commute)
+  using homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_ins_homo'_def apply blast
+  by (metis homo_sep_mult.homo_mult perm_ins_homo'_def sep_disj_commute)
 
 
 subsubsection \<open>Permission Annotation\<close>
@@ -1370,10 +1370,10 @@ definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<
   where \<open>\<phi>Some T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
 
 abbreviation \<phi>Share_Some ("\<fish_eye> _" [91] 90)
-  where \<open>\<phi>Share_Some T \<equiv> \<phi>perm_functor to_share (\<phi>Some T)\<close>
+  where \<open>\<phi>Share_Some T \<equiv> \<phi>perm_ins_homo to_share (\<phi>Some T)\<close>
 
 abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
-  where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> \<phi>perm_functor to_share (\<phi>Some T)\<close>
+  where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> \<phi>perm_ins_homo to_share (\<phi>Some T)\<close>
 
 \<phi>adhoc_overloading \<phi>coercion \<phi>Some \<phi>Share_Some \<phi>Share_Some_L
 
@@ -1537,29 +1537,29 @@ lemma \<phi>Sep_Disj_Identical_Prod[\<phi>reason 1200]:
 
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_functor f T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_functor ((o) f) (k \<^bold>\<rightarrow> T)) \<close>
-  by (subst \<phi>perm_functor_MapAt; rule \<phi>Sep_Disj_Identical_\<phi>MapAt)
+  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo f T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow> T)) \<close>
+  by (subst \<phi>perm_ins_homo_MapAt; rule \<phi>Sep_Disj_Identical_\<phi>MapAt)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_functor ((o) f) T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_functor ((o) f) (k \<^bold>\<rightarrow>\<^sub>@ T)) \<close>
-  by (subst \<phi>perm_functor_MapAt_L; rule \<phi>Sep_Disj_Identical_\<phi>MapAt_L)
+  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo ((o) f) T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow>\<^sub>@ T)) \<close>
+  by (subst \<phi>perm_ins_homo_MapAt_L; rule \<phi>Sep_Disj_Identical_\<phi>MapAt_L)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_functor f T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_functor f U)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_functor f (T \<^emph> U)) \<close>
+  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo f T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo f U)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo f (T \<^emph> U)) \<close>
   unfolding \<phi>Sep_Disj_Identical_def
-  by (smt (verit) Imply_def \<phi>Sep_Disj_Identical_Prod \<phi>Sep_Disj_Identical_def \<phi>perm_functor_Prod_imply)
+  by (smt (verit) Imply_def \<phi>Sep_Disj_Identical_Prod \<phi>Sep_Disj_Identical_def \<phi>perm_ins_homo_Prod_imply)
 
 lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_functor to_share (\<phi>Some T))\<close>
+  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_ins_homo to_share (\<phi>Some T))\<close>
   unfolding \<phi>Sep_Disj_Identical_def
   by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
 lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_functor to_share \<phi>None)\<close>
+  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_ins_homo to_share \<phi>None)\<close>
   unfolding \<phi>Sep_Disj_Identical_def
   by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
