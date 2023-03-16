@@ -331,6 +331,7 @@ locale hierarchical_alg =
 text \<open>As an example, a structure \<open>struct { struct {A a; B b} c; D d; }\<close> may be represented by
 \<open>c :\<^enum> (a :\<^enum> va * b :\<^enum> vb) * d :\<^enum> vd\<close>. \<close>
 
+
 subsection \<open>Permission Algebra\<close>
 
 text \<open>An algebra for objects that can be partially owned, and shared.
@@ -453,19 +454,33 @@ locale homo_sep_disj_semi =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
   assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> (* TODO: improve this to be a \<longleftrightarrow> ! *)
 
-locale homo_sep_mult = homo_one \<psi>
-  for \<psi> :: " 'a::{one,times,sep_disj} \<Rightarrow> 'b::{one,times,sep_disj} "
-+ assumes homo_mult: "x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y"
-
-(*locale homo_sep = homo_sep_mult *)
+locale homo_sep_mult =
+  fixes \<psi> :: " 'a::sep_magma \<Rightarrow> 'b::sep_magma "
+  assumes homo_mult: "x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y"
 
 locale homo_join_sub =
-  fixes \<psi> :: \<open>'a::sep_ab_semigroup \<Rightarrow> 'b::sep_ab_semigroup\<close>
+  fixes \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
   assumes homo_join_sub: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
 
-locale sep_mult_strip_011 =
-  fixes \<psi> :: " 'a::{sep_disj,times} \<Rightarrow> 'b::{sep_disj,times} "
-  assumes sep_mult_strip_011: \<open>a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
+locale homo_sep = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi>
+  for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
+
+(*lemma
+  \<open>homo_sep_pre f \<Longrightarrow> homo_sep_pre g \<Longrightarrow> homo_sep_pre (f o g)\<close>
+  unfolding homo_sep_pre_def homo_sep_mult_def homo_sep_disj_semi_def
+  by simp*)
+
+locale homo_sep_wand = homo_sep \<psi>
+  for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
++ assumes homo_sep_wand: \<open>a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
+begin
+
+sublocale homo_join_sub \<psi>
+  apply standard
+  unfolding join_sub_def
+  by (metis homo_sep_wand sep_disj_homo_semi)
+
+end
 
 locale inj_at_1 =
   fixes \<psi> :: " 'a::one \<Rightarrow> 'b::one"
@@ -473,7 +488,7 @@ locale inj_at_1 =
 
 text \<open>Insertion homomorphism from a separation algebra to a separation permission semimodule.\<close>
 
-locale perm_ins_homo' = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi> + sep_mult_strip_011 \<psi> + homo_join_sub \<psi> + inj_at_1 \<psi>
+locale perm_ins_homo' = homo_sep_wand \<psi> + inj_at_1 \<psi>
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
 + assumes join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
     and   inj_\<psi>[simp]: \<open>inj \<psi>\<close>
@@ -490,6 +505,9 @@ end
 lemma perm_ins_homo'_id[intro!,simp]:
   \<open>perm_ins_homo' F \<Longrightarrow> id perm_ins_homo' F\<close>
   by simp
+
+
+
 
 
 (* class unital_mult = plus + one +
@@ -1574,10 +1592,9 @@ lemma perm_ins_homo_pointwise:
   \<open>perm_ins_homo' \<psi> \<Longrightarrow> perm_ins_homo' ((\<circ>) \<psi>)\<close>
   unfolding comp_def
   subgoal premises prem proof
-    note t1[simp] = prem[unfolded comp_def perm_ins_homo'_axioms_def
-        perm_ins_homo_def homo_one_def homo_mult_def homo_mult_axioms_def mult_strip_011_def
-        homo_sep_disj_semi_def homo_join_sub_def perm_ins_homo'_def homo_sep_mult_def
-        homo_sep_mult_axioms_def sep_mult_strip_011_def inj_at_1_def]
+    note t1[simp] = prem[unfolded comp_def perm_ins_homo'_def homo_sep_def homo_sep_mult_def
+        homo_sep_disj_semi_def homo_sep_wand_def inj_at_1_def perm_ins_homo'_axioms_def inj_def
+        homo_sep_wand_axioms_def]
     have t2[unfolded join_sub_def]:
       \<open>(\<forall>n x y. 0 < n \<and> n \<le> 1 \<longrightarrow> (share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y))\<close>
       using t1 by blast
@@ -1585,7 +1602,6 @@ lemma perm_ins_homo_pointwise:
     fix x y z a b c :: \<open>'c \<Rightarrow> 'a\<close>
     fix a' :: \<open>'c \<Rightarrow> 'b\<close>
     fix n :: rat
-    show \<open>(\<lambda>x. \<psi> (1 x)) = 1\<close> by (simp add: fun_eq_iff)
     show \<open>a ## b \<longrightarrow> (\<lambda>x. \<psi> (a x)) ## (\<lambda>x. \<psi> (b x))\<close>
       by (simp add: fun_eq_iff times_fun sep_disj_fun_def)
     show \<open>x ## y \<Longrightarrow> (\<lambda>xa. \<psi> ((x * y) xa)) = (\<lambda>xa. \<psi> (x xa)) * (\<lambda>x. \<psi> (y x))\<close>
@@ -1594,10 +1610,6 @@ lemma perm_ins_homo_pointwise:
        (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b)\<close>
       by (simp add: fun_eq_iff times_fun sep_disj_fun_def
               all_conj_distrib[symmetric], subst choice_iff[symmetric], rule; clarify)
-    show \<open>((\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-      apply (simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def all_conj_distrib[symmetric],
-        subst choice_iff[symmetric], subst choice_iff[symmetric])
-      by (rule; clarsimp; metis t1)
 
     show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (share n (\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
       apply (simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def share_fun_def
@@ -1619,10 +1631,9 @@ lemma perm_ins_homo_pointwise_eq[iff]:
   apply rule prefer 2 using perm_ins_homo_pointwise apply blast
   unfolding comp_def
   subgoal premises prem proof
-    note t1 = prem[unfolded comp_def perm_ins_homo'_axioms_def
-        perm_ins_homo_def homo_one_def homo_mult_def homo_mult_axioms_def mult_strip_011_def
-        homo_sep_disj_semi_def homo_join_sub_def perm_ins_homo'_def homo_sep_mult_def
-        homo_sep_mult_axioms_def sep_mult_strip_011_def inj_at_1_def]
+    note t1 = prem[unfolded comp_def perm_ins_homo'_def homo_sep_def homo_sep_mult_def
+        homo_sep_disj_semi_def homo_sep_wand_def inj_at_1_def perm_ins_homo'_axioms_def inj_def
+        homo_sep_wand_axioms_def]
     ML_prf \<open>Context.>> (Context.map_proof (Proof_Context.put_thms false ("t2", SOME (
         HOLogic.conj_elims @{context} @{thm t1}
     ))))\<close>
@@ -1631,38 +1642,32 @@ lemma perm_ins_homo_pointwise_eq[iff]:
     fix a' :: 'c
     fix n :: rat
 
-    show \<psi>1[simp]: \<open>\<psi> 1 = 1\<close> using t3 by simp
-
-    have x1[simp]: \<open>\<And>k v x. \<psi> ((1(k := v)) x) = (1(k := \<psi> v)) x\<close> by simp
+    have x1[simp]: \<open>\<And>k v x. \<psi> ((1(k := v)) x) = (1(k := \<psi> v)) x\<close>
+      using t3(4) by auto 
     have x2[simp]: \<open>\<And>k a b. (1(k := a) \<preceq>\<^sub>S\<^sub>L 1(k := b)) \<longleftrightarrow> a \<preceq>\<^sub>S\<^sub>L (b::'x::sep_algebra)\<close>
       unfolding join_sub_def
       by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) fun_upd_same fun_upd_triv)
     have x3[simp]: \<open>\<And>k a b. 1(k := a) = 1(k := b) \<longleftrightarrow> a = b\<close>
       by (metis fun_upd_same)
 
-    show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> by (meson t3(3))
-    show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close> by (meson t3(2))
+    show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> by (meson t3(2))
+    show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close> by (meson t3(1))
     show \<open>a' ## \<psi> b \<Longrightarrow> (a' * \<psi> b = \<psi> c) = (\<exists>a. a' = \<psi> a \<and> a * b = c \<and> a ## b)\<close>
-      unfolding t2(4)[THEN spec[where x=\<open>1(undefined := a')\<close>],
+      unfolding t2(3)[THEN spec[where x=\<open>1(undefined := a')\<close>],
                 THEN spec[where x=\<open>1(undefined := b)\<close>],
                 THEN spec[where x=\<open>1(undefined := c)\<close>],
                 simplified x1 fun_sep_disj_1_fupdt fun_1upd_homo x3]
       apply (rule; clarsimp)
       apply (metis fun_upd_same sep_disj_fun_def times_fun)
       by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(2) x1)
-    show \<open>(\<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-      using t3(5)[THEN spec[where x=\<open>1(undefined := x)\<close>],
-                  THEN spec[where x=\<open>1(undefined := y)\<close>], simplified x1 x2] .
     show \<open>\<forall>x. (\<psi> x = 1) = (x = 1)\<close>
-      by (meson join_sub.bot.extremum_unique t3(6))
+      using t3(4) by auto
     show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-      using t3(7)[THEN spec, of n, THEN mp, THEN spec[where x=\<open>1(undefined := x)\<close>],
+      using t3(5)[THEN spec, of n, THEN mp, THEN spec[where x=\<open>1(undefined := x)\<close>],
                   THEN spec[where x=\<open>1(undefined := y)\<close>], simplified x1 x2 share_1_fupdt] .
-    show \<open>inj \<psi>\<close>
-      apply (insert t3(8); simp add: inj_def fun_eq_iff)
-      by meson
+    show \<open>inj \<psi>\<close> by (meson injI t3(6))
     show \<open>\<psi> x ## \<psi> x\<close>
-      using t3(9)[THEN spec[where x=\<open>\<lambda>_. x\<close>], simplified] .
+      using t3(7)[THEN spec[where x=\<open>\<lambda>_. x\<close>], simplified] .
   qed .
 
 subsubsection \<open>Subsumption\<close>
@@ -1690,136 +1695,6 @@ lemma nonsepable_partial_map_subsumption_L2:
   apply (clarsimp simp add: times_fun)
   by (metis (mono_tags, opaque_lifting) fun_upd_same mult_1_class.mult_1_left one_option_def sep_disj_fun_def sep_disj_partial_map_some_none)
 
-
-(* subsection \<open>Partiality\<close>
-
-
-datatype 'a fine ("_ ?" [100] 101) = Fine (the_fine: 'a) | Undef
-notation the_fine ("!!_" [1000] 1000)
-
-lemma split_fine_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (Fine x)) \<and> P Undef\<close> by (metis fine.exhaust_sel)
-lemma split_fine_ex : \<open>Ex  P \<longleftrightarrow> (\<exists>x. P (Fine x)) \<or> P Undef\<close> by (metis fine.exhaust_sel)
-
-lemma Fine_inject[simp]: \<open>inj Fine\<close>
-  by (meson fine.inject injI)
-
-hide_const pred_fine
-definition "pred_fine P x = (case x of Fine x' \<Rightarrow> P x' | _ \<Rightarrow> False)"
-lemma pred_fine[simp]:
-  "pred_fine P (Fine x') \<longleftrightarrow> P x'"  "\<not> pred_fine P Undef"
-  unfolding pred_fine_def by simp_all
-
-
-instantiation fine :: (type) zero begin
-definition [simp]: "zero_fine = Undef"
-instance ..
-end
-
-instantiation fine :: (one) one begin
-definition "one_fine = Fine 1"
-instance ..
-end
-
-instantiation fine :: ("{sep_disj,times}") times begin
-
-definition "times_fine x y =
-  (case x of Fine a \<Rightarrow> (case y of Fine b \<Rightarrow> if a ## b then Fine (a*b) else Undef
-    | _ \<Rightarrow> Undef) | _ \<Rightarrow> Undef)"
-
-lemma times_fine:
-  "Fine a * Fine b = (if a ## b then Fine (a*b) else Undef)"
-  "Undef * a' = Undef" "a' * Undef = Undef"
-  unfolding times_fine_def by (cases a'; simp_all)+
-
-lemma times_fine':
-  \<open>a ## b \<Longrightarrow> Fine a * Fine b = Fine (a*b)\<close>
-  using times_fine by simp
-
-lemma times_fine''[simp]:
-  \<open>a ## b \<Longrightarrow> !!(Fine a * Fine b) = (a*b)\<close>
-  using times_fine by simp
-
-instance ..
-end
-
-instantiation fine :: (sep_magma_1) mult_1 begin
-instance by (standard; case_tac x; simp add: one_fine_def times_fine_def)
-end
-
-
-instantiation fine :: ("{sep_disj,times}") mult_zero begin
-instance by standard (simp_all add: times_fine)
-end
-
-instantiation fine :: (sep_semigroup) semigroup_mult begin
-instance proof
-  fix a b c :: \<open>'a ?\<close>
-  show \<open>a * b * c = a * (b * c)\<close>
-    apply (cases a; cases b; cases c; clarsimp simp add: sep_disj_commute sep_mult_commute times_fine)
-    by (metis sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
-qed
-end
-
-instantiation fine :: (sep_ab_semigroup) ab_semigroup_mult begin
-instance proof
-  fix a b c :: \<open>'a ?\<close>
-  show \<open>a * b = b * a\<close>
-    by (cases a; cases b; clarsimp simp add: sep_disj_commute sep_mult_commute times_fine)
-qed
-end
-
-instantiation fine :: (sep_monoid) monoid_mult begin
-instance by (standard; simp)
-end
-
-instantiation fine :: (sep_algebra) comm_monoid_mult begin
-instance by standard (case_tac a; simp add: one_fine_def times_fine)
-end
-
-instantiation fine :: (type) total_sep_disj begin
-definition sep_disj_fine :: \<open>'a ? \<Rightarrow> 'a ? \<Rightarrow> bool\<close> where
-  [simp]: \<open>sep_disj_fine x y = True\<close>
-instance by (standard; simp)
-end
-
-instantiation fine :: (sep_magma) sep_magma begin
-instance by (standard; case_tac x; case_tac y; simp add: sep_disj_commute one_fine_def)
-end
-
-instantiation fine :: (sep_monoid) total_sep_monoid begin
-instance proof
-  fix x y z :: \<open>'a fine\<close>
-  show \<open>x \<preceq>\<^sub>\<times> y \<Longrightarrow> y \<preceq>\<^sub>\<times> x \<Longrightarrow> x = y\<close>
-    apply (cases x; cases y; simp add: subsume_def split_fine_ex times_fine)
-    apply clarsimp
-    by (metis fine.sel fine.simps(3) join_positivity join_sub_def)
-qed
-end
-
-instantiation fine :: (sep_algebra) total_sep_algebra begin
-instance ..
-end
-
-instantiation fine :: (sep_disj_intuitive) sep_disj_intuitive begin
-instance by (standard; case_tac a; case_tac b; case_tac c; simp)
-end
-
-
-lemma mult_strip_fine_111:
-  \<open>Fine a * Fine b = Fine c \<longleftrightarrow> (a ## b \<and> a * b = c)\<close>
-  by (simp add: times_fine)
-
-lemma mult_strip_fine_011:
-  \<open>NO_MATCH (Fine a'') a' \<Longrightarrow>
-   a' * Fine b = Fine c \<longleftrightarrow> (\<exists>a. a' = Fine a \<and> a ## b \<and> a * b = c)\<close>
-  by (cases a'; simp add: times_fine)
-
-lemma mult_strip_fine_001:
-  \<open>NO_MATCH (Fine a'') a' \<Longrightarrow> NO_MATCH (Fine b'') b' \<Longrightarrow>
-   a' * b' = Fine c \<longleftrightarrow> (\<exists>a b. a' = Fine a \<and> b' = Fine b \<and> a ## b \<and> a * b = c)\<close>
-  by (cases a'; cases b'; simp add: times_fine)
-
-*)
 
 subsection \<open>Fractional SA\<close>
 
@@ -1923,16 +1798,12 @@ proof
   fix x y z a b c :: \<open>'a option\<close>
   fix a' :: \<open>'a share option\<close>
   fix n :: rat
-  show \<open>to_share 1 = 1\<close> by simp
   show \<open>a ## b \<longrightarrow> to_share a ## to_share b\<close> by (cases a; cases b; simp)
   show \<open>x ## y \<Longrightarrow> to_share (x * y) = to_share x * to_share y\<close> by (cases x; cases y; simp)
   show \<open>a' ## to_share b \<Longrightarrow>
        (a' * to_share b = to_share c) = (\<exists>a. a' = to_share a \<and> a * b = c \<and> a ## b)\<close>
     apply (cases a'; cases b; cases c; simp add: split_option_ex)
     subgoal for a'' by (cases a''; simp) .
-  show \<open>(to_share x \<preceq>\<^sub>S\<^sub>L to_share y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-    apply (cases x; cases y; simp add: join_sub_def split_option_all split_option_ex)
-    by (metis sep_disj_multD1 sep_disj_share share.collapse)
   show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (share n (to_share x) \<preceq>\<^sub>S\<^sub>L to_share y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
     apply (cases a'; cases x; cases y; simp add: join_sub_def split_option_ex share_forall share_exists
           share_All)
@@ -2002,7 +1873,7 @@ lemma to_share_funcomp_map_add:
   unfolding fun_eq_iff map_add_def by (auto split: option.split)
 
 
-lemma to_share_strip_011:
+lemma to_share_wand_homo:
   \<open> a ## (to_share o b)
 \<Longrightarrow> a * (to_share o b) = to_share \<circ> y
 \<longleftrightarrow> (\<exists>a'. a = to_share o a' \<and> a' * b = y \<and> a' ## b)\<close>

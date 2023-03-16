@@ -1093,7 +1093,7 @@ lemma \<phi>perm_ins_homo_\<phi>None:
   \<open> perm_ins_homo' \<psi>
 \<Longrightarrow> \<phi>perm_ins_homo \<psi> \<circle> = \<circle>\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-  by (metis inj_at_1_def perm_ins_homo'.axioms(5))
+  using inj_at_1_def perm_ins_homo'_def by auto
 
 (* lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X \<a>\<n>\<d> ?P @action (?Act::?'a::simplification action)\<close>]:
   \<open>x \<Ztypecolon> \<phi>perm_ins_homo \<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<circle> @action Act\<close>
@@ -1106,30 +1106,30 @@ lemma \<phi>perm_ins_homo_MapAt:
   \<open>\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_ins_homo f T)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
             perm_ins_homo_pointwise_eq; rule; clarsimp)
-  using inj_at_1.inj_at_1 perm_ins_homo'.axioms(5) apply fastforce
-  by (metis fun_upd_comp inj_at_1.inj_at_1 perm_ins_homo'.axioms(5) perm_ins_homo_pointwise)
+  using inj_at_1.inj_at_1 perm_ins_homo'.axioms(2) apply fastforce
+  by (metis fun_upd_comp inj_at_1.inj_at_1 perm_ins_homo'.axioms(2) perm_ins_homo_pointwise)
 
 
 lemma \<phi>perm_ins_homo_MapAt_L:
   \<open>\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow>\<^sub>@ T) = (k \<^bold>\<rightarrow>\<^sub>@ \<phi>perm_ins_homo ((o) f) T)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
             perm_ins_homo_pointwise_eq; rule; clarsimp)
-  using homo_one.push_map_homo homo_sep_mult_def perm_ins_homo'.axioms(1) apply blast
-  by (metis homo_one.push_map_homo homo_sep_mult_def perm_ins_homo'.axioms(1) push_map_sep_disj)
+  apply (metis homo_one.intro homo_one.push_map_homo inj_at_1.inj_at_1 perm_ins_homo'.axioms(2))
+  by (metis homo_one.intro homo_one.push_map_homo inj_at_1.inj_at_1 perm_ins_homo'.axioms(2))
 
 
 lemma \<phi>perm_ins_homo_Prod_imply:
   \<open>x \<Ztypecolon> \<phi>perm_ins_homo f (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (\<phi>perm_ins_homo f T) \<^emph> (\<phi>perm_ins_homo f U)\<close>
   unfolding Imply_def
   apply (cases x; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def)
-  using homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_ins_homo'_def by blast
+  by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def homo_sep_wand_def perm_ins_homo'_def)
 
 lemma \<phi>perm_ins_homo_Prod:
   \<open> \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>perm_ins_homo f (T \<^emph> U) = (\<phi>perm_ins_homo f T) \<^emph> (\<phi>perm_ins_homo f U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def; rule; clarsimp)
-  using homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_ins_homo'_def apply blast
-  by (metis homo_sep_mult.homo_mult perm_ins_homo'_def sep_disj_commute)
+  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def homo_sep_wand_def perm_ins_homo'.axioms(1))
+  by (metis homo_sep_wand.homo_sep_wand perm_ins_homo'.axioms(1) sep_disj_commute)
 
 
 subsubsection \<open>Permission Annotation\<close>

@@ -472,7 +472,7 @@ lemma sep_disj_fiction:
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def set_eq_iff
   apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split'
-            R.mult_strip_inject_011 interp_split'
+            R.inject_wand_homo interp_split'
             sep_disj_get_name_eq[symmetric]
             simp del: sep_disj_get_name_eq)
   using sep_disj_multD2 by force
@@ -484,8 +484,8 @@ lemma expand_subj:
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify, rule)
   apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
-            share.sep_mult_strip_011 \<phi>Res_Spec_def R.\<r>_valid_split'
-            R.mult_strip_inject_011 interp_split' prj.homo_mult)
+            share.homo_sep_wand \<phi>Res_Spec_def R.\<r>_valid_split'
+            R.inject_wand_homo interp_split' prj.homo_mult)
   thm interp_split'
   subgoal for res_r a r'
     apply (rule exI[where x=\<open>res_r * R.mk a\<close>]; rule)
@@ -493,7 +493,7 @@ lemma expand_subj:
     by (metis R.mk_homo_mult R.sep_disj_mk sep_disj_multD1 sep_disj_multI1)
 
   apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns \<phi>Res_Spec_def R.\<r>_valid_split'
-        R.mult_strip_inject_011 interp_split' sep_mult_assoc prj.homo_mult)
+        R.inject_wand_homo interp_split' sep_mult_assoc prj.homo_mult)
   subgoal premises prems for res_r a y proof -
     have t1[simp]: \<open>y ## x\<close>
       using prems(5) prems(7) sep_disj_multD2 by force
@@ -532,7 +532,7 @@ lemma partial_implies_raw:
 \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def
   apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
-            \<phi>Res_Spec_def R.\<r>_valid_split' R.mult_strip_inject_011
+            \<phi>Res_Spec_def R.\<r>_valid_split' R.inject_wand_homo
             R.prj.homo_mult interp_split' prj.homo_mult)
   apply (cases \<open>n \<le> 1\<close>)
   apply (metis join_sub_def join_sub_ext_left sep_disj_get_name share.join_sub_share_join_sub_whole)
@@ -581,7 +581,7 @@ lemma sep_disj_fiction:
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def set_eq_iff
   apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split'
-            R.mult_strip_inject_011 interp_split'
+            R.inject_wand_homo interp_split'
             sep_disj_get_name_eq[symmetric]
             simp del: sep_disj_get_name_eq)
   using sep_disj_multD2 by force
@@ -650,7 +650,7 @@ lemma partial_implies:
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def
   apply (clarsimp simp add: interp_split'
      R.fiction_agree_def R.basic_fiction_\<I> \<phi>expns R.\<r>_valid_split'
-     R.mult_strip_inject_011 R.prj.homo_mult \<F>_optionwise_\<I> image_iff Bex_def
+     R.inject_wand_homo R.prj.homo_mult \<F>_optionwise_\<I> image_iff Bex_def
      \<F>_agree_def prj.homo_mult)
   apply (cases \<open>get r\<close>; simp)
   subgoal for u y a aa
@@ -724,7 +724,7 @@ lemma "__allocation_rule__":
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := u)) res \<i>\<s> R * {mk (1(k := u))}\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
+  apply (clarsimp simp add: \<r>_valid_split' times_set_def inject_wand_homo
           prj.homo_mult times_fun_upd)
   subgoal premises prems for m proof -
     {
@@ -760,7 +760,7 @@ lemma "__updt_rule__":
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k \<mapsto> any))}
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := u)) res \<i>\<s> R * {mk (1(k := u))}\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
+  apply (clarsimp simp add: \<r>_valid_split' times_set_def inject_wand_homo
           prj.homo_mult times_fun_upd )
   apply (clarsimp simp add: sep_disj_partial_map_upd
           nonsepable_semigroup_sepdisj_fun mk_homo_mult)
@@ -791,9 +791,9 @@ abbreviation \<open>share_fiction \<equiv> basic_fiction (\<F>_functional perm_i
   unfolding set_eq_iff
   apply (clarify, rule;
          clarsimp simp add: share_fiction_def basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
-            mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' mult_strip_inject_011)
+            mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' inject_wand_homo)
   subgoal premises prems for res_r y a r
-    apply (insert \<open>a * _ = _\<close>[unfolded to_share_strip_011[where b=\<open>1(k \<mapsto> v)\<close>, simplified, OF \<open>a ## _\<close>]])
+    apply (insert \<open>a * _ = _\<close>[unfolded to_share_wand_homo[where b=\<open>1(k \<mapsto> v)\<close>, simplified, OF \<open>a ## _\<close>]])
     apply (clarsimp simp add: times_fine'[symmetric] mk_homo_mult mult.assoc[symmetric])
     using prems(3) by blast
   subgoal premises prems for res_r a r proof -
@@ -802,7 +802,7 @@ abbreviation \<open>share_fiction \<equiv> basic_fiction (\<F>_functional perm_i
     show ?thesis
     apply (clarsimp simp add: mult.assoc mk_homo_mult[symmetric] times_fine')
       apply (rule exI[where x=res_r], rule exI[where x="mk (Fine (a * 1(k \<mapsto> v)))"], simp add: prems)
-      by (metis (no_types, lifting) map_option_o_map_upd t1 to_share_funcomp_1 to_share_funcomp_sep_disj_I to_share_strip_011)
+      by (metis (no_types, lifting) map_option_o_map_upd t1 to_share_funcomp_1 to_share_funcomp_sep_disj_I to_share_wand_homo)
   qed .
 
 
@@ -810,7 +810,7 @@ lemma share_fiction_partially_implies:
   \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> n \<Znrres> v))))
 \<Longrightarrow> \<exists>objs. get res = Fine objs \<and> objs k = Some v\<close>
   apply (clarsimp simp add: share_fiction_def basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
-            mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' mult_strip_inject_011
+            mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' inject_wand_homo
             proj_homo_mult)
   subgoal premises prems for res_r y a r proof -
     from \<open>a * _ = _\<close>[THEN fun_cong[where x=k], simplified times_fun, simplified]
@@ -832,7 +832,7 @@ lemma raw_unit_assertion_implies[simp]:
   \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * { mk (1(k \<mapsto> v))}
 \<Longrightarrow> get res k = Some v\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
+  apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo
       prj.homo_mult sep_disj_fun_def times_fun)
   by (metis (mono_tags, lifting) sep_disj_option_nonsepable(1) sep_mult_commute times_option(2))
 
@@ -954,7 +954,7 @@ lemma "__updt_rule__":
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
       \<i>\<s> R * {mk (1(k := 1(k2 := u)))} \<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
+  apply (clarsimp simp add: \<r>_valid_split' times_set_def inject_wand_homo
           prj.homo_mult times_fun_upd)
   subgoal premises prems for x aa proof -
     have [simp]: \<open>aa k k2 = None\<close>
@@ -989,7 +989,7 @@ lemma "__dispose_rule__":
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k := any))}
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := 1)) res \<i>\<s> R\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: \<r>_valid_split' times_set_def mult_strip_inject_011
+  apply (clarsimp simp add: \<r>_valid_split' times_set_def inject_wand_homo
           prj.homo_mult times_fun_upd )
   subgoal premises prems for x aa proof -
     have \<open>dom (aa k) = {}\<close>
@@ -1023,10 +1023,10 @@ abbreviation \<open>share_fiction \<equiv> basic_fiction (\<F>_functional perm_i
   unfolding set_eq_iff
   apply (clarify, rule;
          clarsimp simp add: share_fiction_def basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
-            mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' mult_strip_inject_011 times_fun)
+            mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' inject_wand_homo times_fun)
   subgoal premises prems for res_r y a r
     apply (insert \<open>\<forall>x. a x * _ = _\<close>[THEN spec[where x=k], simplified,
-          unfolded to_share_strip_011[where b=f, simplified,
+          unfolded to_share_wand_homo[where b=f, simplified,
                       OF sep_disj_fun[where x=k, OF \<open>a ## _\<close>, simplified]]])
       apply (clarify)
       subgoal premises prems2 for a' proof -
@@ -1055,7 +1055,7 @@ abbreviation \<open>share_fiction \<equiv> basic_fiction (\<F>_functional perm_i
         apply (clarsimp simp add: mult.assoc mk_homo_mult[symmetric] times_fine'[OF t1])
         apply (rule exI[where x=res_r], rule exI[where x="mk (Fine (a * 1(k := f))) "],
                 simp add: prems t2)
-        by (smt (verit, best) fun_split_1 fun_upd_def fun_upd_same map_option_o_map_upd prems(4) sep_disj_fun t1 t2 times_fun to_share_funcomp_1 to_share_strip_011)
+        by (smt (verit, best) fun_split_1 fun_upd_def fun_upd_same map_option_o_map_upd prems(4) sep_disj_fun t1 t2 times_fun to_share_funcomp_1 to_share_wand_homo)
     qed .
 
 lemma share_fiction_expn_full:
@@ -1068,7 +1068,7 @@ lemma share_fiction_partially_implies:
   \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v)))))
 \<Longrightarrow> \<exists>objs. get res = Fine objs \<and> objs k k2 = Some v\<close>
   apply (clarsimp simp add: share_fiction_def basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
-            mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' mult_strip_inject_011
+            mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' inject_wand_homo
             proj_homo_mult)
   subgoal premises prems for res_r y a r proof -
     note t1 = \<open>a ## _\<close>[THEN sep_disj_fun[where x=k], simplified,
@@ -1097,7 +1097,7 @@ lemma raw_unit_assertion_implies[simp]:
   \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * { mk (1(k := 1(k2 \<mapsto> v)))}
 \<Longrightarrow> get res k k2 = Some v\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011
+  apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo
       prj.homo_mult sep_disj_fun_def times_fun)
   by (metis (full_types) fun_upd_same sep_disj_option_nonsepable(1) times_option(3))
 
@@ -1105,7 +1105,7 @@ lemma raw_unit_assertion_implies':
   \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * { mk (1(k := f))}
 \<Longrightarrow> f \<subseteq>\<^sub>m get res k\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: times_set_def \<r>_valid_split' mult_strip_inject_011)
+  apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo)
   subgoal premises prems for x a proof -
     have t1[simp]: \<open>inject a ## inject (1(k := f))\<close>
       using prems(7) sep_disj_inject by blast

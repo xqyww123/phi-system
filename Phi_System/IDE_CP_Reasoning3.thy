@@ -804,7 +804,7 @@ lemma Structural_Extract_\<phi>perm_ins_homo:
                        P\<close>
   unfolding Structural_Extract_def Imply_def \<phi>Sep_Disj_def
   apply (clarsimp simp add: \<phi>expns)
-  by (metis (no_types, opaque_lifting) homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_ins_homo'_def)
+  by (metis (no_types, opaque_lifting) homo_sep_def homo_sep_disj_semi_def homo_sep_mult.homo_mult perm_ins_homo'_def)
 
 declare Structural_Extract_\<phi>perm_ins_homo[THEN SE_clean_waste, \<phi>reason 1200]
 
