@@ -178,7 +178,7 @@ it does not require the physical resource to be separable because any structure 
 (*implementation of the representation: (T\<^sub>a + T\<^sub>b) / (1\<^sub>a = 1\<^sub>b), quotient over 1*)
 
 locale sep_space_entry =
-  inj: homo_sep_mult inject' + prj: homo_sep_mult project' +
+  inj: homo_sep_mult inject' + inj: homo_one inject' + prj: homo_sep_mult project' +
   inj_disj: homo_sep_disj_total inject' + prj_disj: homo_sep_disj_semi project'
   for name'   :: 'NAME
   and inject' :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
@@ -221,6 +221,7 @@ lemma inj_Sep_Closed:
   \<open>Homo_Sep_Closed inject\<close>
   unfolding Sep_Closed_def Homo_Sep_Closed_def
   apply clarsimp
+ 
   using image_iff mult_in_dom by fastforce
 
 lemma sep_disj_mk[simp]:
@@ -257,7 +258,7 @@ lemma inj_homo_one[simp]: \<open>inject x = 1 \<longleftrightarrow> x = 1\<close
 
 lemmas split = fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP]
 
-lemma mult_strip_inject_011: \<open>
+lemma inject_wand_homo: \<open>
   NO_MATCH (inject a'') a'
 \<Longrightarrow> a' ## inject b
 \<Longrightarrow> a' * inject b = inject c \<longleftrightarrow> (\<exists>a. a' = inject a \<and> a * b = c \<and> a ## b)\<close>

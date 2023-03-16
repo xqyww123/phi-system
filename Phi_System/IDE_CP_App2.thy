@@ -90,7 +90,7 @@ lemma [\<phi>reason 2000 for \<open>
       (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (Trueprop ((\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
   unfolding \<phi>Application_def
-  using \<phi>apply_implication Val_transformation implies_left_prod by metis
+  by (meson Val_transformation \<phi>apply_implication implies_left_prod)
 
 
 subsection \<open>Synthesis\<close>
