@@ -435,7 +435,7 @@ proof -
   then show ?thesis unfolding raw_domain by simp
 qed
 
-lemma \<r>_valid_split:
+(*lemma \<r>_valid_split:
   \<open>res \<in> SPACE \<longleftrightarrow>
   clean res \<in> SPACE \<and> (\<exists>m. res name = inject m)\<close>
   by (subst split; simp add: times_fun image_iff SPACE_def; blast)
@@ -443,11 +443,12 @@ lemma \<r>_valid_split:
 lemma \<r>_valid_split': \<open>
   NO_MATCH (clean res') res
 \<Longrightarrow> res \<in> SPACE \<longleftrightarrow> clean res \<in> SPACE \<and> (\<exists>m. res name = inject m)\<close>
-  using \<r>_valid_split .
+  using \<r>_valid_split . *)
 
 lemma inj_prj_in_SPACE[simp]:
   \<open>f \<in> SPACE \<Longrightarrow> inject (project (f name)) = f name\<close>
-  by (metis \<r>_valid_split proj_inj)
+  by (smt (verit, best) fictional_space.SPACE_def in_DOMAIN mem_Collect_eq proj_inj)
+  (* by (metis \<r>_valid_split proj_inj) *)
 
 
 lemma Fic_Space_m[simp]: "mk x \<in> SPACE"
@@ -458,7 +459,7 @@ lemma interp_m[simp]: "\<I> INTERP (mk x) = \<I> I x"
 
 lemma sep_disj_get_name_eq[simp]:
   \<open>r \<in> SPACE \<Longrightarrow> get r ## x \<longleftrightarrow> r ## mk x\<close>
-  by (metis \<r>_valid_split fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo proj_inj)
+  by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo inj_prj_in_SPACE)
 
 lemma interp_split:
   "f \<in> SPACE \<Longrightarrow>

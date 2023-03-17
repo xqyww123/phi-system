@@ -138,9 +138,16 @@ debt_axiomatization sort: \<open>OFCLASS(RES, sep_algebra_class)\<close>
 
 instance RES :: sep_algebra using RES.sort .
 
-interpretation "resource_space" RES.DOMAIN .
+debt_axiomatization ex_RES_not_1: \<open>\<exists>r::RES. r \<noteq> 1\<close>
+
+lemma ex_two_distinct:
+  \<open>\<exists>r1 r2 :: resource. r1 \<noteq> r2\<close>
+  unfolding fun_eq_iff apply simp
+  by (meson RES.ex_RES_not_1)
 
 setup \<open>Sign.parent_path\<close>
+
+interpretation RES: "resource_space" RES.DOMAIN .
 
 ML_file \<open>resource_space_more.ML\<close>
  
@@ -159,7 +166,7 @@ lemma Valid_Resource_mult_homo:
   by (simp add: times_fun sep_disj_fun_def; blast)*)
 
 
-subsection \<open>Abnormality\<close>
+subsection \<open>Abnormal\<close>
 
 virtual_datatype \<phi>empty_abnormal
 
@@ -377,7 +384,7 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
 \<^item> \<open>Success v r\<close> represents a successful returning state with return value \<open>v\<close> and resulted resource
   state \<open>r\<close>.
 
-\<^item> \<open>Abnormality v r\<close> represents the computation throws an exception of value \<open>v\<close>, at the
+\<^item> \<open>Abnormal v r\<close> represents the computation throws an exception of value \<open>v\<close>, at the
   moment when the state of the resources is \<open>r\<close>.
 
 \<^item> \<open>NonTerm\<close> represents the execution does not terminate.
@@ -405,7 +412,7 @@ declare [ [typedef_overloaded] ]
 
 datatype 'ret comp =
       Success \<open>'ret::VALs \<phi>arg\<close> (resource: resource)
-    | Abnormality \<open>ABNM\<close> (resource: resource)
+    | Abnormal \<open>ABNM\<close> (resource: resource)
     | Invalid
     | AssumptionBroken
     | NonTerm
@@ -414,12 +421,12 @@ declare [ [typedef_overloaded = false] ]
 
 
 lemma split_comp_All:
-  \<open>All P \<longleftrightarrow> (\<forall>v r. P (Success v r)) \<and> (\<forall>v r. P (Abnormality v r)) \<and> P Invalid
+  \<open>All P \<longleftrightarrow> (\<forall>v r. P (Success v r)) \<and> (\<forall>v r. P (Abnormal v r)) \<and> P Invalid
                 \<and> P AssumptionBroken \<and> P NonTerm\<close>
   by (metis comp.exhaust)
 
 lemma split_comp_Ex:
-  \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Abnormality v r)) \<or> P Invalid
+  \<open>Ex P \<longleftrightarrow> (\<exists>v r. P (Success v r)) \<or> (\<exists>v r. P (Abnormal v r)) \<or> P Invalid
                 \<or> P AssumptionBroken \<or> P NonTerm\<close>
   by (metis comp.exhaust)
 
@@ -467,7 +474,7 @@ type_synonym ('arg,'ret) proc' = "'arg \<phi>arg \<Rightarrow> 'ret proc"
 
 definition bind :: "'a::VALs proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b::VALs proc"  ("_ \<bind>/ _" [75,76] 75)
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
-                                           | Abnormality v x \<Rightarrow> {Abnormality v x}
+                                           | Abnormal v x \<Rightarrow> {Abnormal v x}
                                            | Invalid \<Rightarrow> {Invalid}
                                            | NonTerm \<Rightarrow> {NonTerm}
                                            | AssumptionBroken \<Rightarrow> {AssumptionBroken}

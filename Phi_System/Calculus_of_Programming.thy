@@ -101,7 +101,7 @@ lemma
 
 (*Hint: because
 \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> U \<t>\<h>\<r>\<o>\<w>\<s> E1 \<longrightarrow>
-  Invalid \<notin> f s \<and> (\<forall>v s'. Abnormality v s' \<in> f s \<longrightarrow> s' \<in> INTERP_SPEC (R \<heavy_comma> E v))*)
+  Invalid \<notin> f s \<and> (\<forall>v s'. Abnormal v s' \<in> f s \<longrightarrow> s' \<in> INTERP_SPEC (R \<heavy_comma> E v))*)
 
 lemma \<phi>assemble_proc:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E1

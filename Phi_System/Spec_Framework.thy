@@ -43,7 +43,7 @@ translations
 ML_file \<open>library/syntax/value.ML\<close>
 
 
-subsubsection \<open>Abnormality\<close>
+subsubsection \<open>Abnormal\<close>
 
 definition AbnormalObj :: \<open>VAL \<phi>arg \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close>
   where \<open>AbnormalObj \<equiv> Val\<close>
@@ -180,7 +180,7 @@ definition StrictStateSpec :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
                           \<Rightarrow> 'ret comp set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
-                              | Abnormality val x \<Rightarrow> x \<in> E val
+                              | Abnormal val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
                               | NonTerm \<Rightarrow> False
                               | AssumptionBroken \<Rightarrow> False
@@ -190,7 +190,7 @@ definition LooseStateSpec  :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
                           \<Rightarrow> 'ret comp set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
-                              | Abnormality val x \<Rightarrow> x \<in> E val
+                              | Abnormal val x \<Rightarrow> x \<in> E val
                               | Invalid \<Rightarrow> False
                               | NonTerm \<Rightarrow> True
                               | AssumptionBroken \<Rightarrow> True
@@ -198,7 +198,7 @@ definition LooseStateSpec  :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
 
 lemma StrictStateSpec_expn[iff]:
         "Success vs x \<in> !\<S> T E \<equiv> x \<in> T vs"
-        "Abnormality v x \<in> !\<S> T E \<equiv> x \<in> E v"
+        "Abnormal v x \<in> !\<S> T E \<equiv> x \<in> E v"
         "\<not> (Invalid \<in> !\<S> T E)"
         "\<not> (NonTerm \<in> !\<S> T E)"
         "\<not> (AssumptionBroken \<in> !\<S> T E)"
@@ -207,7 +207,7 @@ lemma StrictStateSpec_expn[iff]:
         "\<not> {AssumptionBroken} \<subseteq> !\<S> T E"
   and LooseStateSpec_expn[iff]:
         "Success vs x \<in> \<S> T E \<equiv> x \<in> T vs"
-        "Abnormality v x \<in> \<S> T E \<equiv> x \<in> E v"
+        "Abnormal v x \<in> \<S> T E \<equiv> x \<in> E v"
         "\<not> (Invalid \<in> \<S> T E)"
         "(NonTerm \<in> \<S> T E)"
         "(AssumptionBroken \<in> \<S> T E)"
@@ -220,24 +220,24 @@ lemma LooseStateSpec_expn' :
     "x \<in> \<S> T E \<longleftrightarrow> x = NonTerm
                  \<or> x = AssumptionBroken
                  \<or> (\<exists>x' v. x = Success v x' \<and> x' \<in> T v)
-                 \<or> (\<exists>x' v. x = Abnormality v x' \<and> x' \<in> E v)"
+                 \<or> (\<exists>x' v. x = Abnormal v x' \<and> x' \<in> E v)"
   by (cases x) simp_all
 
 lemma StrictStateSpec_elim[elim]:
     "s \<in> !\<S> T E
 \<Longrightarrow> (\<And>x v. s = Success v x \<Longrightarrow> x \<in> T v \<Longrightarrow> C)
-\<Longrightarrow> (\<And>x v. s = Abnormality v x \<Longrightarrow> x \<in> E v \<Longrightarrow> C)
+\<Longrightarrow> (\<And>x v. s = Abnormal v x \<Longrightarrow> x \<in> E v \<Longrightarrow> C)
 \<Longrightarrow> C" by (cases s) auto
 
 lemma StrictStateSpec_intro[intro]:
     " x \<in> T v \<Longrightarrow> Success v x \<in> !\<S> T E"
-    " x \<in> E a \<Longrightarrow> Abnormality a x \<in> !\<S> T E"
+    " x \<in> E a \<Longrightarrow> Abnormal a x \<in> !\<S> T E"
   by simp_all
 
 lemma LooseStateSpec_E[elim]:
     "s \<in> \<S> T E
 \<Longrightarrow> (\<And>x v. s = Success v x \<Longrightarrow> x \<in> T v \<Longrightarrow> C)
-\<Longrightarrow> (\<And>x v. s = Abnormality v x \<Longrightarrow> x \<in> E v \<Longrightarrow> C)
+\<Longrightarrow> (\<And>x v. s = Abnormal v x \<Longrightarrow> x \<in> E v \<Longrightarrow> C)
 \<Longrightarrow> (s = NonTerm \<Longrightarrow> C)
 \<Longrightarrow> (s = AssumptionBroken \<Longrightarrow> C)
 \<Longrightarrow> C"
@@ -245,7 +245,7 @@ lemma LooseStateSpec_E[elim]:
 
 lemma LooseStateSpec_I[intro]:
   "x \<in> T v \<Longrightarrow> Success v x \<in> \<S> T E"
-  "x \<in> E a \<Longrightarrow> Abnormality a x \<in> \<S> T E"
+  "x \<in> E a \<Longrightarrow> Abnormal a x \<in> \<S> T E"
   "NonTerm \<in> \<S> T E"
   "AssumptionBroken \<in> \<S> T E"
   by simp_all

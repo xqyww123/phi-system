@@ -2170,6 +2170,22 @@ lemmas Interp_inverse[simp] = Interp_inverse[simplified]
 lemma Interp_one[simp]: "\<I> I 1 = 1"
   using Interpretation_def \<I> by blast
 
+definition \<I>\<^sub>r\<^sub>e\<^sub>l :: \<open>('a::one,'b::one) interp \<Rightarrow> ('a \<times> 'b) set\<close> 
+  where \<open>\<I>\<^sub>r\<^sub>e\<^sub>l I = {(x,y). y \<in> \<I> I x}\<close>
+
+definition interp_comp :: \<open>('b::one,'c::one) interp \<Rightarrow> ('a::one,'b) interp \<Rightarrow> ('a,'c) interp\<close> (infixl "\<circ>\<^sub>\<I>" 55)
+  where \<open>(I1 \<circ>\<^sub>\<I> I2) = Interp (\<lambda>x. \<Union>(\<I> I1 ` \<I> I2 x))\<close>
+
+notation interp_comp  (infixl "o\<^sub>\<I>" 55)
+
+lemma interp_comp_\<I>:
+  \<open>\<I> (I1 \<circ>\<^sub>\<I> I2) = (\<lambda>x. \<Union>(\<I> I1 ` \<I> I2 x))\<close>
+  unfolding interp_comp_def
+  by (rule Interp_inverse)  (simp add: Interpretation_def one_set_def)
+
+
+
+
 
 subsection \<open>Instances\<close>
 

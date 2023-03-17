@@ -29,7 +29,7 @@ subsection \<open>While Loop\<close>
 inductive SemDoWhile :: "VAL proc \<Rightarrow> resource \<Rightarrow> unit comp \<Rightarrow> bool" where
   "Success (\<phi>arg (V_bool.mk False)) res \<in> f s \<Longrightarrow> SemDoWhile f s (Success (\<phi>arg ()) res)"
 | "Success (\<phi>arg (V_bool.mk True)) res \<in> f s \<Longrightarrow> SemDoWhile f res s'' \<Longrightarrow> SemDoWhile f s s''"
-| "Abnormality v e \<in> f s \<Longrightarrow> SemDoWhile f s (Abnormality v e)"
+| "Abnormal v e \<in> f s \<Longrightarrow> SemDoWhile f s (Abnormal v e)"
 | "NonTerm \<in> f s \<Longrightarrow> SemDoWhile f s NonTerm"
 | "AssumptionBroken \<in> f s \<Longrightarrow> SemDoWhile f s AssumptionBroken"
 | "Invalid \<in> f s \<Longrightarrow> SemDoWhile f s Invalid"
