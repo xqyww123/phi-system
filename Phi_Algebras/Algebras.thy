@@ -13,7 +13,7 @@ subsubsection \<open>Homomorphism-like\<close>
 
 locale homo_one =
   fixes \<phi> :: " 'a::one \<Rightarrow> 'b::one "
-  assumes homo_one[simp]: "\<phi> 1 = 1"
+  assumes homo_one[iff]: "\<phi> 1 = 1"
 
 locale homo_mult = homo_one \<phi>
   for \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
@@ -448,7 +448,14 @@ subsection \<open>Homomorphisms\<close>
 
 locale homo_sep_disj_total =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
-  assumes sep_disj_homo[simp]: \<open>\<psi> a ## \<psi> b \<longleftrightarrow> a ## b\<close>
+  assumes sep_disj_homo[iff]: \<open>\<psi> a ## \<psi> b \<longleftrightarrow> a ## b\<close>
+
+lemma homo_sep_disj_total_comp:
+  \<open> homo_sep_disj_total f
+\<Longrightarrow> homo_sep_disj_total g
+\<Longrightarrow> homo_sep_disj_total (f o g)\<close>
+  unfolding homo_sep_disj_total_def
+  by simp
 
 locale homo_sep_disj_semi =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>

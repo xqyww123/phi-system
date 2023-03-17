@@ -737,7 +737,7 @@ lemma "__allocation_rule__":
         thm fun_split_1_not_dom1[where f=m]
         apply (subst fun_split_1_not_dom1[where k=k]) using A apply this
         apply (simp add: t2 inj.homo_mult split)
-        by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) sep_disj_inject t2 t3)
+        by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) inj.sep_disj_homo_semi t2 t3)
     }
     then show ?thesis
       using prems(2) prems(4) by blast
@@ -1108,7 +1108,7 @@ lemma raw_unit_assertion_implies':
   apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo)
   subgoal premises prems for x a proof -
     have t1[simp]: \<open>inject a ## inject (1(k := f))\<close>
-      using prems(7) sep_disj_inject by blast
+      using prems(7) by blast
     show ?thesis apply (clarsimp simp add: prj.homo_mult[OF t1] sep_disj_fun_def times_fun map_le_def)
       by (metis fun_sep_disj_imply_v fun_upd_triv mult_1_class.mult_1_left one_option_def prems(7) sep_disj_option_nonsepable(1))
   qed .

@@ -174,19 +174,56 @@ it does not require the physical resource to be separable because any structure 
  none resource or no specification.
 \<close>
 
+locale sep_insertion =
+  inj: homo_sep inject + prj: homo_sep project + inj: homo_sep_disj_total inject
+  for inject :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
+  and project:: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
+    \<comment> \<open>the project' cannot be arbitrarily any inverse function of the inject',
+      but must be the one itself is also a separation homomorphism.\<close>
++ assumes proj_inj[simp]: "project (inject x) = x"
+    and   mult_in_dom:    \<open>a ## b \<Longrightarrow>
+              a * b = inject c \<longleftrightarrow> (\<exists>a' b'. a = inject a' \<and> b = inject b' \<and> a' * b' = c)\<close>
+begin
 
-(*implementation of the representation: (T\<^sub>a + T\<^sub>b) / (1\<^sub>a = 1\<^sub>b), quotient over 1*)
+sublocale inj: homo_sep_wand_monoid inject
+  by (standard, metis mult_in_dom prj.sep_disj_homo_semi proj_inj)
+
+lemma inject_inj[iff]:
+  \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
+  by (metis proj_inj)
+
+lemma inject_assoc_homo[simp]:
+  "R ## inject x \<and> R * inject x ## inject y
+\<Longrightarrow> R * inject x * inject y = R * inject (x * y)"
+  by (metis mult_in_dom sep_disj_multD2 sep_mult_assoc)
+
+lemma inj_Sep_Closed:
+  \<open>Homo_Sep_Closed inject\<close>
+  unfolding Sep_Closed_def Homo_Sep_Closed_def
+  apply clarsimp
+ 
+  using image_iff mult_in_dom by fastforce
+
+end
+
+lemma sep_insertion_id: \<open>sep_insertion id id\<close> by (standard; simp)
+
+lemma sep_insertion_comp:
+  \<open> sep_insertion f1 g1
+\<Longrightarrow> sep_insertion f2 g2
+\<Longrightarrow> sep_insertion (f2 o f1) (g1 o g2)\<close>
+  unfolding sep_insertion_def sep_insertion_axioms_def
+  apply (simp add: homo_sep_comp homo_sep_disj_total_comp)
+  using homo_sep_disj_total.sep_disj_homo by blast
+
 
 locale sep_space_entry =
-  inj: homo_sep_mult inject' + inj: homo_one inject' + prj: homo_sep_mult project' +
-  inj_disj: homo_sep_disj_total inject' + prj_disj: homo_sep_disj_semi project'
+  sep_insertion inject' project'
   for name'   :: 'NAME
   and inject' :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
   and project':: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
-+ assumes proj_inj[simp]: "project' (inject' x) = x"
-    and   mult_in_dom:    \<open>a ## b \<Longrightarrow>
-              a * b = inject' c \<longleftrightarrow> (\<exists>a' b'. a = inject' a' \<and> b = inject' b' \<and> a' * b' = c)\<close>
 begin
+
 
 abbreviation "name \<equiv> name'"
 abbreviation "inject \<equiv> inject'"
@@ -208,29 +245,9 @@ abbreviation "mk x \<equiv> 1(name := inject x)"
 
 subsubsection \<open>Lemmas for Automation and Analysis\<close>
 
-lemma inject_inj[simp]:
-  \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
-  by (metis proj_inj)
-
-lemma inject_assoc_homo[simp]:
-  "R ## inject x \<and> R * inject x ## inject y
-\<Longrightarrow> R * inject x * inject y = R * inject (x * y)"
-  by (metis mult_in_dom sep_disj_multD2 sep_mult_assoc)
-
-lemma inj_Sep_Closed:
-  \<open>Homo_Sep_Closed inject\<close>
-  unfolding Sep_Closed_def Homo_Sep_Closed_def
-  apply clarsimp
- 
-  using image_iff mult_in_dom by fastforce
-
-lemma sep_disj_mk[simp]:
+lemma sep_disj_mk[iff]:
   \<open>mk x ## mk y \<longleftrightarrow> x ## y\<close>
   by force
-
-lemma sep_disj_inject[simp]:
-  \<open>inject x ## inject y \<longleftrightarrow> x ## y\<close>
-  using sep_disj_mk by force
 
 lemma sep_disj_mk_name[simp]:
   \<open>r ## mk x \<Longrightarrow> r name ## inject x\<close>
@@ -238,23 +255,20 @@ lemma sep_disj_mk_name[simp]:
 
 lemma sep_disj_get_name:
   \<open>r ## mk x \<longrightarrow> get r ## x\<close>
-  by (metis prj_disj.sep_disj_homo_semi proj_inj sep_disj_mk_name)
+  by (metis prj.sep_disj_homo_semi proj_inj sep_disj_mk_name)
 
 lemma get_homo_mult:
   \<open>a ## b \<Longrightarrow> get (a * b) = get a * get b\<close>
   by (simp add: prj.homo_mult times_fun)
 
-lemma mk_homo_one[simp]: \<open>mk x = 1 \<longleftrightarrow> x = 1\<close>
+lemma mk_homo_one[iff]: \<open>mk x = 1 \<longleftrightarrow> x = 1\<close>
   by (metis fun_1upd1 fun_upd_eqD inj.homo_one proj_inj)
 
 lemma mk_homo_mult: \<open>a ## b \<Longrightarrow> mk (a * b) = mk a * mk b\<close>
   by (simp add: fun_1upd_homo inj.homo_mult)
 
-lemma mk_inj[simp]: \<open>mk a = mk b \<longleftrightarrow> a = b\<close>
+lemma mk_inj[iff]: \<open>mk a = mk b \<longleftrightarrow> a = b\<close>
   unfolding fun_eq_iff by simp
-
-lemma inj_homo_one[simp]: \<open>inject x = 1 \<longleftrightarrow> x = 1\<close>
-  by (metis inj.homo_one proj_inj)
 
 lemmas split = fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP]
 
@@ -275,8 +289,6 @@ lemma sep_disj_clean[simp]:
   by simp
 
 end
-
-lemma sep_inj_proj_id: \<open>sep_space_entry id id\<close> by (standard; simp)
 
 locale "resource_space" =
   fixes DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_closed_set\<close>
@@ -442,11 +454,11 @@ lemma Fic_Space_m[simp]: "mk x \<in> SPACE"
   unfolding SPACE_def by simp
 
 lemma interp_m[simp]: "\<I> INTERP (mk x) = \<I> I x"
-  unfolding INTERP_def by (simp add: sep_disj_commute sep_mult_commute)
+  unfolding INTERP_def by (simp add: sep_disj_commute sep_mult_commute inj.inj_at_1)
 
 lemma sep_disj_get_name_eq[simp]:
   \<open>r \<in> SPACE \<Longrightarrow> get r ## x \<longleftrightarrow> r ## mk x\<close>
-  by (metis \<r>_valid_split fun_sep_disj_1_fupdt(1) fun_upd_triv inj_disj.sep_disj_homo proj_inj)
+  by (metis \<r>_valid_split fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo proj_inj)
 
 lemma interp_split:
   "f \<in> SPACE \<Longrightarrow>
