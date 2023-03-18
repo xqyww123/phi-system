@@ -6,6 +6,11 @@ theory Spec_Framework
     and   "<val>" = "\<v>\<a>\<l>"
 begin
 
+subsubsection \<open>Configuration\<close>
+
+declare [[\<phi>reason_default_pattern \<open>Valid_Proc ?F\<close> \<Rightarrow> \<open>Valid_Proc ?F\<close> (100)]]
+declare Valid_Proc_bind[\<phi>reason 1200]
+
 section \<open>Specification of Value\<close>
 
 type_synonym rassn = \<open>resource set\<close>

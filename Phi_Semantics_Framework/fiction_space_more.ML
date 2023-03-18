@@ -12,7 +12,7 @@ fun prepare_map_rewr field_B field domain (Expression.Positional TMS, rw) =
       (Expression.Named (("Fic", field) :: TMS), rw)
 
 fun field_typ_of tm =
-  case type_of tm of \<^Type>\<open>interp T _\<close> => \<^Type>\<open>Resource_Space.kind \<^Type>\<open>FIC_N\<close> \<^Type>\<open>FIC\<close> T \<^Type>\<open>unit\<close>\<close>
+  case type_of tm of \<^Type>\<open>interp T _\<close> => \<^Type>\<open>Resource_Space.kind \<^Type>\<open>FIC_N\<close> \<^Type>\<open>FIC\<close> T\<close>
                    | TY => raise TYPE ("Internal Bug #qcujm903", [TY], [])
 
 fun space_locale_exp fields =

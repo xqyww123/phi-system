@@ -768,7 +768,7 @@ type env = (string * sort) list
 val prep_additional_data = K pair
 val chk_additional_data = K pair
 
-fun entryT nameT repT T = \<^Type>\<open>kind nameT repT T \<^Type>\<open>sep_closed_set T\<close>\<close>
+fun entryT nameT repT T = \<^Type>\<open>kind nameT repT T\<close>
 fun additional_data_parser (default_sort, default_locale) =
       Scan.optional (\<^keyword>\<open>::\<close> |-- (
         Parse.sort -- Scan.optional (\<^keyword>\<open>,\<close> |-- Parse.name_position) (default_locale, Position.none)
@@ -785,9 +785,9 @@ fun read_arg ctxt _ raw_T env =
   let
     val ctxt' = fold (Variable.declare_typ o TFree) env ctxt;
     val TM0 = Syntax.parse_term ctxt' raw_T
-    val chk = Syntax.check_term ctxt' o Type.constraint \<^Type>\<open>sep_closed_set dummyT\<close>
+    val chk = Syntax.check_term ctxt' o Type.constraint \<^Type>\<open>sep_homo_set dummyT\<close>
     val T = chk TM0
-        handle err => (chk (\<^Const>\<open>sep_closed_set dummyT\<close> $ TM0)
+        handle err => (chk (\<^Const>\<open>sep_homo_set dummyT\<close> $ TM0)
         handle _ => raise err)
     val env' = Term.add_tfrees T env;
   in (T, env') end;
@@ -797,9 +797,9 @@ fun cert_arg ctxt _ raw_TM env =
     val thy = Proof_Context.theory_of ctxt;
     val chk = Sign.certify_term thy
             o Syntax.check_term ctxt
-            o Type.constraint \<^Type>\<open>sep_closed_set dummyT\<close>
+            o Type.constraint \<^Type>\<open>sep_homo_set dummyT\<close>
     val (Tm,Ty,_) = chk raw_TM
-         handle err => (chk (\<^Const>\<open>sep_closed_set dummyT\<close> $ raw_TM)
+         handle err => (chk (\<^Const>\<open>sep_homo_set dummyT\<close> $ raw_TM)
          handle _ => raise err)
     val _ = Type.no_tvars Ty
       handle TYPE (msg, _, _) => error msg;
@@ -807,8 +807,8 @@ fun cert_arg ctxt _ raw_TM env =
     val env' = Term.add_tfrees Tm env;
   in (Tm, env') end;
 
-fun dest_typ (\<^Type>\<open>sep_closed_set T\<close>) = T
-  | dest_typ T = raise TYPE ("shoud be a sep_closed_set", [T], [])
+fun dest_typ (\<^Type>\<open>sep_homo_set T\<close>) = T
+  | dest_typ T = raise TYPE ("shoud be a sep_homo_set", [T], [])
 
 val field_locale = \<^locale>\<open>resource_kind'\<close>
 val space_locale = \<^locale>\<open>resource_space\<close>
@@ -817,7 +817,7 @@ val nameT = TFree (NAME_N, \<^sort>\<open>type\<close>);
 val nameTT = Term.itselfT nameT
 
 fun space_locale_args _ repT =
-  let val domainT = nameT --> \<^Type>\<open>sep_closed_set repT\<close>
+  let val domainT = nameT --> \<^Type>\<open>sep_homo_set repT\<close>
    in [(DOMAIN_N, domainT)]
   end
 

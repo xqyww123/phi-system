@@ -202,7 +202,7 @@ fun prepare_map_rewr field_B field domain (Expression.Positional TMS, rw) =
       (Expression.Named (("Res", field) :: TMS), rw)
 
 fun field_typ_of tm =
-  case type_of tm of \<^Type>\<open>sep_closed_set T\<close> => \<^Type>\<open>Resource_Space.kind \<^Type>\<open>RES_N\<close> \<^Type>\<open>RES\<close> T \<^Type>\<open>sep_closed_set T\<close>\<close>
+  case type_of tm of \<^Type>\<open>sep_homo_set T\<close> => \<^Type>\<open>Resource_Space.kind \<^Type>\<open>RES_N\<close> \<^Type>\<open>RES\<close> T\<close>
                    | TY => raise TYPE ("Internal Bug #qcujm903", [TY], [])
 
 fun space_locale_exp fields =

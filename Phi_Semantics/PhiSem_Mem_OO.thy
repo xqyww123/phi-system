@@ -81,12 +81,11 @@ subsubsection \<open>Resource\<close>
 type_synonym object_heap = \<open>(object_ref \<Rightarrow> field_name \<Rightarrow> VAL nosep option)\<close>
 
 definition \<open>Valid_Objs = {h::object_heap. h Nil = 1} \<inter> {h. finite (dom1 h)}
-       \<inter> {h. (\<forall>cls id. dom (h (object_ref cls id)) = {} \<or>
-                       dom (h (object_ref cls id)) = dom (class.fields_of cls) ) }\<close>
+       \<inter> {h. (\<forall>cls id. dom (h (object_ref cls id)) \<subseteq> dom (class.fields_of cls) ) }\<close>
 
 lemma In_Valid_Objs[simp]:
   \<open>h \<in> Valid_Objs \<longleftrightarrow> h Nil = 1 \<and> finite (dom1 h) \<and>
-     ((\<forall>cls id. dom (h (object_ref cls id)) = {} \<or> dom (h (object_ref cls id)) = dom (class.fields_of cls) ))\<close>
+     ((\<forall>cls id. dom (h (object_ref cls id)) \<subseteq> dom (class.fields_of cls) ))\<close>
   unfolding Valid_Objs_def by simp
 
 resource_space \<phi>OO =
@@ -99,19 +98,18 @@ lemma objref_infinite_cls:
         and f = \<open>\<lambda>n. object_ref cls n\<close>]
   using inj_def by fastforce
 
-lemma Sep_Closed_Valid_Objs[simp]:
-  \<open>Sep_Closed Valid_Objs\<close>
+lemma Sep_Homo_Valid_Objs[simp]:
+  \<open>Sep_Homo Valid_Objs\<close>
   unfolding Valid_Objs_def
-  apply (rule Sep_Closed_inter, rule Sep_Closed_inter)
-  apply (simp add: Sep_Closed_def times_fun)
+  apply (rule Sep_Homo_inter, rule Sep_Homo_inter)
+  apply (simp add: Sep_Homo_def times_fun)
    apply simp
-  apply simp
-  apply (rule Sep_Closed_pointwise[where P=\<open>\<lambda>k v.
-          case k of object_ref cls i \<Rightarrow> dom v = {} \<or> dom v = dom (class.fields_of cls)
+  apply (rule Sep_Homo_pointwise[where P=\<open>\<lambda>k v.
+          case k of object_ref cls i \<Rightarrow> dom v \<subseteq> dom (class.fields_of cls)
                   | _ \<Rightarrow> True\<close>,
       simplified object_ref_all, simplified])
-  apply (clarsimp simp add: dom_mult one_partial_map[symmetric])
-  by (metis dom_1 sup.idem sup_bot.right_neutral sup_commute)
+  by (clarsimp simp add: dom_mult one_partial_map[symmetric])
+  
 
 
 (*
@@ -291,8 +289,8 @@ lemma op_obj_store_field_raw_\<phi>app:
   apply (cases rawref; cases rawu; simp, rule, rule, simp add: Identity_expn Premise_def,
           rule \<phi>M_getV_ref, rule, rule, rule \<phi>M_assert, simp, simp add: Identity_expn)
   apply (rule FIC.OO_share.\<phi>R_set_res[where P="\<lambda>m. field \<in> dom (m ref)"])
-  apply (cases ref; clarsimp simp add: map_fun_at_def dom1_def)
-  apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1))
+   apply (cases ref; clarsimp simp add: map_fun_at_def dom1_def)
+  apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1) subsetD domI)
   using RES.Objs.raw_unit_assertion_implies by blast
 
 
@@ -347,7 +345,7 @@ lemma op_obj_dispose:
   apply (cases ref; simp)
   using RES.Objs.get_res_Valid[simplified Valid_Objs_def, simplified]
     RES.Objs.raw_unit_assertion_implies'[where f=fields]
-  by (smt (z3) domIff map_le_antisym map_le_def)
+  by (metis (no_types, lifting) map_le_implies_dom_le set_eq_subset)
 
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>

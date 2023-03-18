@@ -25,6 +25,24 @@ definition \<phi>M_getV :: \<open>TY \<Rightarrow> (VAL \<Rightarrow> 'v) \<Righ
 definition \<phi>M_caseV :: \<open>(VAL \<phi>arg \<Rightarrow> ('vr,'ret) proc') \<Rightarrow> (VAL \<times> 'vr::FIX_ARITY_VALs,'ret) proc'\<close>
   where \<open>\<phi>M_caseV F = (\<lambda>arg. case arg of \<phi>arg (a1,a2) \<Rightarrow> F (\<phi>arg a1) (\<phi>arg a2))\<close>
 
+
+lemma Valid_Proc_\<phi>M_assert[intro!, \<phi>reason 1200]:
+  \<open>Valid_Proc (\<phi>M_assert P)\<close>
+  unfolding Valid_Proc_def \<phi>M_assert_def Return_def det_lift_def
+  by clarsimp
+
+lemma Valid_Proc_\<phi>M_assume[intro!, \<phi>reason 1200]:
+  \<open>Valid_Proc (\<phi>M_assume P)\<close>
+  unfolding Valid_Proc_def \<phi>M_assume_def Return_def det_lift_def
+  by clarsimp
+
+lemma Valid_Proc_\<phi>M_getV_raw[intro!, \<phi>reason 1200]:
+  \<open> (\<And>v. Valid_Proc (F v))
+\<Longrightarrow> Valid_Proc (\<phi>M_getV_raw VDF v F)\<close>
+  unfolding Valid_Proc_def \<phi>M_getV_raw_def
+  by blast
+
+
 subsection \<open>Reasoning for Elementary Constructions\<close>
 
 declare \<phi>SEQ[intro!]
@@ -242,17 +260,16 @@ begin
 
 lemma get_res_valid_raw:
   \<open> res \<in> RES.SPACE
-\<Longrightarrow> get res \<in>\<^sub>S domain\<close>
+\<Longrightarrow> get res \<in>\<^sub>S\<^sub>H domain\<close>
   unfolding RES.SPACE_def
-  apply simp
-  by (metis in_image_sep_closed inj_Sep_Closed proj_inj raw_domain)
+  by (simp, metis in_DOMAIN proj_inj)
 
 lemma get_res_Valid:
   \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> S
-\<Longrightarrow> get res \<in>\<^sub>S domain\<close>
+\<Longrightarrow> get res \<in>\<^sub>S\<^sub>H domain\<close>
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def by (clarsimp simp add: \<r>_valid_split')
 
-definition \<open>basic_fiction = Interp (\<lambda>x. { 1(Res #= x)})\<close>
+definition \<open>basic_fiction = Interp (\<lambda>x. { 1(Res #= x) })\<close>
 
 lemma basic_fiction_\<I>:
   "\<I> basic_fiction = (\<lambda>x. { 1(Res #= x)})"
@@ -546,14 +563,14 @@ lemma partial_implies_raw:
     have t0: \<open>1 / n * n = 1\<close>
       by (metis nonzero_eq_divide_eq order_less_irrefl prems(2))
     have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close>
-      using prems(12) by force
+      using prems(13) by force
     have t2: \<open>share (1/n) (share n (\<psi> x)) \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
       by (simp add: order_less_imp_le prems(2) share.\<psi>_self_disj share_sub t1)
     then have t3: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
       using share_share_not0
       by (metis prems(2) share_left_one t0 t1)
     then show ?thesis
-      by (metis join_sub_ext_left prems(11) prems(3) prems(9) sep_disj_get_name share.homo_join_sub)
+      by (metis join_sub_ext_left prems(10) prems(3) prems(8) resource_kind_axioms resource_kind_def sep_space_entry.sep_disj_get_name share.homo_join_sub)
   qed .
 
 paragraph \<open>Reasoning Rules\<close>
@@ -725,7 +742,7 @@ for Res :: "('key \<Rightarrow> 'val::sep_algebra) resource_entry"
 begin
 
 lemma "__allocation_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> m(k := u) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> k \<notin> dom1 (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := u)) res \<i>\<s> R * {mk (1(k := u))}\<close>
@@ -761,7 +778,7 @@ for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entr
 begin
 
 lemma "__updt_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k := u) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> P m \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k \<mapsto> any))}
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := u)) res \<i>\<s> R * {mk (1(k := u))}\<close>
@@ -772,15 +789,15 @@ lemma "__updt_rule__":
           nonsepable_semigroup_sepdisj_fun mk_homo_mult)
   subgoal premises prems for x aa proof -
     have t1: \<open>clean x * mk aa = x\<close>
-      by (metis fun_split_1 prems(8))
+      by (metis fun_split_1 prems(7))
     have t2: \<open>clean x ## (mk aa * mk (1(k := u)))\<close>
       by (simp add: fun_1upd_homo)
     show ?thesis
-      by (metis nonsepable_semigroup_sepdisj_fun prems(6) prems(9) sep_disj_mk sep_disj_multI1 sep_mult_assoc' t1 t2)
+      by (metis (no_types, opaque_lifting) fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) inj.sep_disj_homo_semi mult_1_class.mult_1_left nonsepable_semigroup_sepdisj_fun prems(5) prems(8) t1)
   qed .
 
 lemma "__dispose_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k \<mapsto> any))}
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := None)) res \<i>\<s> R\<close>
@@ -954,7 +971,7 @@ for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup o
 begin
 
 lemma "__updt_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k := 1(k2 \<mapsto> any)))}
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
@@ -964,14 +981,14 @@ lemma "__updt_rule__":
           prj.homo_mult times_fun_upd)
   subgoal premises prems for x aa proof -
     have [simp]: \<open>aa k k2 = None\<close>
-      by (metis (mono_tags, opaque_lifting) fun_upd_same prems(9) sep_disj_fun_def sep_disj_fun_nonsepable(2))
+      by (metis fun_upd_same prems(8) sep_disj_fun_def sep_disj_option_nonsepable(1))
     then have [simp]:
         \<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k (aa * 1(k := 1(k2 \<mapsto> any)))
             = aa * 1(k := 1(k2 := u))\<close>
       unfolding map_fun_at_def fun_eq_iff times_fun_def
       by simp
     have t1[simp]: \<open>clean x * mk aa = x\<close>
-      by (metis fun_split_1 prems(8))
+      by (metis fun_split_1 prems(7))
     have t2[simp]: \<open>aa ## 1(k := 1(k2 := u))\<close>
       by (simp add: sep_disj_fun_def)
     have t3[simp]:
@@ -989,7 +1006,7 @@ lemma "__updt_rule__":
 
 
 lemma "__dispose_rule__":
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> dom (get res k) = dom any
 \<Longrightarrow> P (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k := any))}
@@ -1004,7 +1021,7 @@ lemma "__dispose_rule__":
         f1: "\<forall>f. 1 \<noteq> f (kk f) \<or> dom f = {}"
         by (metis dom_eq_empty_conv one_option_def)
       have "aa k ## any"
-        by (metis fun_upd_same prems(10) sep_disj_fun_def)
+        by (metis fun_upd_same prems(9) sep_disj_fun)
       then have "\<forall>ka. 1 = aa k ka \<or> 1 = any ka"
         by (metis one_option_def option.exhaust sep_disj_fun_nonsepable(2))
       then show ?thesis
@@ -1013,9 +1030,9 @@ lemma "__dispose_rule__":
     then have t1[simp]: \<open>(aa * 1(k := any))(k := 1) = aa\<close>
       by (smt (verit, del_insts) Diff_iff dom1_upd dom_1 dom_eq_empty_conv fun_split_1_not_dom1 fun_upd_triv fun_upd_upd insertCI)
     have t2[simp]: \<open>clean x * mk aa = x\<close>
-      by (metis fun_split_1 prems(9))
+      by (metis fun_split_1 prems(8))
     show ?thesis
-      using prems(1) prems(3) prems(5) prems(7) t1 by force
+      using prems(10) prems(6) t1 by force
   qed .
 
 abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
@@ -1114,9 +1131,9 @@ lemma raw_unit_assertion_implies':
   apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo)
   subgoal premises prems for x a proof -
     have t1[simp]: \<open>inject a ## inject (1(k := f))\<close>
-      using prems(7) by blast
+      using prems(6) by fastforce
     show ?thesis apply (clarsimp simp add: prj.homo_mult[OF t1] sep_disj_fun_def times_fun map_le_def)
-      by (metis fun_sep_disj_imply_v fun_upd_triv mult_1_class.mult_1_left one_option_def prems(7) sep_disj_option_nonsepable(1))
+      by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv mult_1_class.mult_1_left one_option_def prems(6) sep_disj_fun_nonsepable(2))
   qed .
 
 lemma raw_unit_assertion_implies''[simp]:
@@ -1429,7 +1446,7 @@ definition (in resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Right
 paragraph \<open>partial_map_resource\<close>
 
 lemma (in partial_map_resource) \<phi>R_set_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k := u) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> P m \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k \<mapsto> any))}
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>_. R * {mk (1(k := u))}) \<t>\<h>\<r>\<o>\<w>\<s> Any\<close>
@@ -1439,7 +1456,7 @@ lemma (in partial_map_resource) \<phi>R_set_res:
 context identity_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_set_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S R.domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. (\<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<rbrace>\<close>
@@ -1458,7 +1475,7 @@ end
 context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_set_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S R.domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
@@ -1478,7 +1495,7 @@ end
 paragraph \<open>partial_map_resource2\<close>
 
 lemma (in partial_map_resource2) \<phi>R_set_res[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> P m \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k := 1(k2 \<mapsto> any)))}
 \<Longrightarrow> \<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
@@ -1486,7 +1503,7 @@ lemma (in partial_map_resource2) \<phi>R_set_res[intro!]:
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__updt_rule__")
 
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res"[THEN \<phi>CONSEQ'E0, intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in>\<^sub>S R.domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k := 1(k2 \<mapsto> v)))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
@@ -1503,7 +1520,7 @@ subsubsection \<open>Dispose\<close>
 paragraph \<open>partial_map_resource\<close>
 
 lemma (in partial_map_resource) \<phi>R_dispose_res[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> P (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k \<mapsto> any))}
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := None)) res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>_. R) \<t>\<h>\<r>\<o>\<w>\<s> Any\<close>
@@ -1512,7 +1529,7 @@ lemma (in partial_map_resource) \<phi>R_dispose_res[intro!]:
 context identity_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_dispose_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S R.domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
@@ -1529,7 +1546,7 @@ end
 context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_dispose_res:
-  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S R.domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
@@ -1545,7 +1562,7 @@ end
 paragraph \<open>partial_map_resource2\<close>
 
 lemma (in partial_map_resource2) \<phi>R_dispose_res[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> P m \<longrightarrow> m(k:=1) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> dom (get res k) = dom any
 \<Longrightarrow> P (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k := any))}
@@ -1553,7 +1570,7 @@ lemma (in partial_map_resource2) \<phi>R_dispose_res[intro!]:
   unfolding \<phi>R_set_res_def by (simp add: \<phi>expns "__dispose_rule__")
 
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res"[THEN \<phi>CONSEQ'E0, intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in>\<^sub>S R.domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k := f))}
       \<Longrightarrow> P (R.get res) \<and> dom f = dom (R.get res k))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := 1))
@@ -1588,7 +1605,7 @@ definition (in mapping_resource)
 )\<close>
 
 lemma (in mapping_resource) \<phi>R_set_res_new[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> m(k := u) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> k \<notin> dom1 (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R
 \<Longrightarrow> \<phi>R_set_res (\<lambda>f. f(k := u)) res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>_. R * {mk (1(k := u))}) \<t>\<h>\<r>\<o>\<w>\<s> Any\<close>
@@ -1596,8 +1613,8 @@ lemma (in mapping_resource) \<phi>R_set_res_new[intro!]:
   by (simp add: \<phi>expns "__allocation_rule__")
 
 lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
-\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S domain \<longrightarrow> m(k := init) \<in>\<^sub>S domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
+\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m(k := init) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> (\<And>k res. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k := init))} \<s>\<u>\<b>\<j> P k
       \<Longrightarrow> F k res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R
@@ -1620,8 +1637,8 @@ lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
   qed .
 
 lemma (in identity_fiction_for_partial_mapping_resource) "\<phi>R_allocate_res_entry"[intro!]:
-  \<open> (\<forall>m. m \<in>\<^sub>S R.domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
-\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S R.domain \<longrightarrow> m(k \<mapsto> init) \<in>\<^sub>S R.domain)
+  \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
+\<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m(k \<mapsto> init) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>new. P new \<Longrightarrow> \<p>\<r>\<o>\<c> F new \<lbrace> X \<heavy_comma> init \<Ztypecolon> \<phi> (new \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry P (Some init) F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_Hybrid_DL)

@@ -128,11 +128,11 @@ unspecified_type RES
 unspecified_type RES_N
 type_synonym resource = \<open>RES_N \<Rightarrow> RES\<close>
 type_synonym rassn = \<open>resource set\<close>
-type_synonym 'T resource_entry = "(RES_N, RES, 'T, 'T sep_closed_set) Resource_Space.kind"
+type_synonym 'T resource_entry = "(RES_N, RES, 'T) Resource_Space.kind"
 
 setup \<open>Sign.mandatory_path "RES"\<close>
 
-consts DOMAIN :: \<open>RES_N \<Rightarrow> RES sep_closed_set\<close>
+consts DOMAIN :: \<open>RES_N \<Rightarrow> RES sep_homo_set\<close>
 
 debt_axiomatization sort: \<open>OFCLASS(RES, sep_algebra_class)\<close>
 
@@ -209,7 +209,7 @@ unspecified_type FIC_N
 
 type_synonym fiction = \<open>FIC_N \<Rightarrow> FIC\<close>
 type_synonym assn = \<open>fiction set\<close>
-type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T, unit) Resource_Space.kind"
+type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T) Resource_Space.kind"
 
 setup \<open>Sign.mandatory_path "FIC"\<close>
 
@@ -518,5 +518,25 @@ lemma proc_bind_assoc[simp]:
   "((A \<bind> B) \<bind> C) = (A \<bind> (\<lambda>x. B x \<bind> C))"
   unfolding bind_def fun_eq_iff det_lift_def set_eq_iff
   by clarsimp
+
+
+definition Valid_Proc :: \<open>'ret::VALs proc \<Rightarrow> bool\<close>
+  where \<open>Valid_Proc f \<longleftrightarrow> (\<forall>v s s'. Success v s' \<in> f s \<and> s \<in> RES.SPACE \<longrightarrow> s' \<in> RES.SPACE)
+                             \<and> (\<forall>e s s'. Abnormal e s' \<in> f s \<and> s \<in> RES.SPACE \<longrightarrow> s' \<in> RES.SPACE)\<close>
+
+lemma Valid_Proc_bind:
+  \<open> Valid_Proc f
+\<Longrightarrow> (\<And>v. Valid_Proc (g v))
+\<Longrightarrow> Valid_Proc (f \<bind> g)\<close>
+  unfolding Valid_Proc_def bind_def
+  subgoal premises prems
+    apply (clarsimp; rule; clarsimp)
+    apply (case_tac x; simp add: Bex_def split_comp_Ex)
+    using prems(1) prems(2) apply blast
+    apply (case_tac x; simp add: Bex_def split_comp_Ex)
+    using prems(1) prems(2) apply blast
+    using prems(1) by blast .
+  
+
 
 end
