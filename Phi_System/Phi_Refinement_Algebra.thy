@@ -18,6 +18,13 @@ locale Identity_Functor =
   fixes F :: \<open>('b::one, 'a::one) \<phi> \<Rightarrow> ('c::one, 'a) \<phi>\<close>
   assumes identity_functor: \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<a>\<n>\<d> P \<Longrightarrow> x \<Ztypecolon> F T \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<a>\<n>\<d> P\<close>
 
+locale Separation_Homo =
+  fixes T :: \<open>('b::sep_magma,'a::sep_magma) \<phi>\<close>
+  assumes sep_\<phi>homo: \<open>(x \<Ztypecolon> T) * (y \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x * y \<Ztypecolon> T \<a>\<n>\<d> x ## y\<close>
+
+locale Separation_Homo_eq = Separation_Homo +
+  assumes sep_\<phi>homo_inv: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> x ## y \<Longrightarrow> (x * y \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> T) * (y \<Ztypecolon> T)\<close>
+
 (* locale Separation_Homo =
   fixes T :: \<open>('b::sep_magma,'a::times)\<close> *)
 

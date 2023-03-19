@@ -20,7 +20,7 @@ subsection \<open>Branch\<close>
 
 definition op_if :: "'ret proc
                   \<Rightarrow> 'ret proc
-                  \<Rightarrow> (VAL,'ret::VALs) proc'"
+                  \<Rightarrow> (VAL,'ret) proc'"
   where "op_if brT brF v =
     \<phi>M_getV bool V_bool.dest v (\<lambda>c. (if c then brT else brF))"
 
@@ -205,7 +205,6 @@ proc while:
     \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close>
   \<medium_right_bracket> .
 
-
 proc (nodef) refine_while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> Transition: f x)\<close>
     and V: "X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> invariant x \<a>\<n>\<d> Any @action ToSA"
@@ -221,11 +220,16 @@ proc (nodef) refine_while:
     \<medium_left_bracket> C \<medium_right_bracket>
     \<medium_left_bracket> B \<medium_right_bracket> certified by (of_tac  \<open>\<lambda>_. i + 1\<close>, insert \<phi>, auto simp add: less_Suc_eq_le,
                         (insert le_neq_implies_less, blast)[1],
-                        metis funpow.simps(2) less_Suc_eq_le nat_less_le o_apply)
-  \<medium_right_bracket> certified using \<phi> apply (auto simp add: While_Combinator.while_def while_option_def)
-            by (metis (mono_tags, lifting) LeastI_ex Least_le le_eq_less_or_eq) .
+                        metis funpow.simps(2) less_Suc_eq_le nat_less_le o_apply) ;;
 
+    have [\<phi>reason]:
+        \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (f ^^ ib) x = While_Combinator.while cond f x
+      \<Longrightarrow> X ((f ^^ ib) x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> X (While_Combinator.while cond f x)\<close>
+      by fastforce
 
+  \<medium_right_bracket> certified using \<phi> by (auto simp add: While_Combinator.while_def while_option_def,
+                meson Least_le,
+                metis (mono_tags, lifting) LeastI_ex Least_le le_eq_less_or_eq) .
 
 
 subsection \<open>Recursion\<close>
@@ -249,7 +253,7 @@ text \<open>Instead, we use a variant of the above rule which in addition annota
   of the values.\<close>
 
 lemma "__op_recursion__":
-  "(\<And>g x' (v':: 'a::VALs \<phi>arg <named> 'names).
+  "(\<And>g x' (v':: 'a \<phi>arg <named> 'names).
           P x'
       \<Longrightarrow> PROP Labelled label (Technical
           (\<And>x'' (v''::'a \<phi>arg <named> 'names).

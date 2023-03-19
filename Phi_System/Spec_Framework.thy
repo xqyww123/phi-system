@@ -181,7 +181,7 @@ lemma [\<phi>reason 1]:
 
 section \<open>Specification of Monadic States\<close>
 
-definition StrictStateSpec :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
+definition StrictStateSpec :: "('ret \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
                           \<Rightarrow> 'ret comp set" ("!\<S>")
   where "!\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
@@ -191,7 +191,7 @@ definition StrictStateSpec :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
                               | AssumptionBroken \<Rightarrow> False
                   }"
 
-definition LooseStateSpec  :: "('ret::VALs \<phi>arg \<Rightarrow> rassn)
+definition LooseStateSpec  :: "('ret \<phi>arg \<Rightarrow> rassn)
                           \<Rightarrow> (ABNM \<Rightarrow> rassn)
                           \<Rightarrow> 'ret comp set" ("\<S>")
   where  "\<S> T E = {s. case s of Success val x \<Rightarrow> x \<in> T val
@@ -310,7 +310,7 @@ abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> 
 
 section \<open>Specification of Computation\<close>
 
-definition \<phi>Procedure :: "'ret::VALs proc
+definition \<phi>Procedure :: "'ret proc
                         \<Rightarrow> assn
                         \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
                         \<Rightarrow> (ABNM \<Rightarrow> assn)
@@ -505,5 +505,6 @@ lemma norm_precond_ex:
 
 
 ML_file \<open>library/syntax/syntax0.ML\<close>
+
 
 end

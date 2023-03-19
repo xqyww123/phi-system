@@ -108,6 +108,7 @@ lemma False_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_const_bool False \<lbrace> Void \<longmapsto> \<v>\<a>\<l> False \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> \<open>False\<close> \<medium_right_bracket>.
 
+
 subsection \<open>Not\<close>
 
 lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:

@@ -24,11 +24,11 @@ proc while:
                            \<lbrace> (R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x')\<heavy_comma> TECHNICAL Brk_Frame lc \<longmapsto> 0 \<rbrace>
                         \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame lc (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x')) \<Longrightarrow>
                     \<p>\<r>\<o>\<c> Body lb lc
-                        \<lbrace> R\<heavy_comma> X x \<heavy_comma> TECHNICAL Brk_Frame lc\<heavy_comma> TECHNICAL Brk_Frame lb
+                        \<lbrace> R\<heavy_comma> X x\<heavy_comma> TECHNICAL Brk_Frame lc\<heavy_comma> TECHNICAL Brk_Frame lb
                       \<longmapsto> R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lc\<heavy_comma> TECHNICAL Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x'
-                         \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lb \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lc \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')
-                                    \<^bold>o\<^bold>r \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lc \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x')
-                                    \<^bold>o\<^bold>r E2 e)"
+                         \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<b>\<r>\<e>\<a>\<k> lb \<w>\<i>\<t>\<h> (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lc \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')
+                                    \<o>\<r> \<b>\<r>\<e>\<a>\<k> lc \<w>\<i>\<t>\<h> (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x')
+                                    \<o>\<r> E2 e)"
   input \<open>U\<close>
   output \<open>R\<heavy_comma> X x \<s>\<u>\<b>\<j> x. invariant x \<and> termination x\<close>
   throws \<open>E1 + E2\<close>

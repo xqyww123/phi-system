@@ -54,7 +54,7 @@ abbreviation View_Shift_CurrentConstruction ("\<v>\<i>\<e>\<w> _ [_]/ \<i>\<s> _
 consts Programming_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>: _" [11] 10)
 consts View_Shift_CurrentConstruction_syntax :: \<open>assn \<Rightarrow> bool\<close> ("\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: _" [11] 10)
 
-definition PendingConstruction :: " 'ret::VALs proc
+definition PendingConstruction :: " 'ret proc
                                   \<Rightarrow> resource
                                   \<Rightarrow> assn
                                   \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn)
@@ -63,7 +63,7 @@ definition PendingConstruction :: " 'ret::VALs proc
     ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> _ \<o>\<n> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,1000,1000,11,11] 10)
     where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> \<S> (\<lambda>ret. INTERP_SPEC (R * S ret)) (\<lambda>ex. INTERP_SPEC (R * E ex))"
 
-consts PendingConstruction_syntax :: \<open>'ret::VALs proc \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn) \<Rightarrow> (ABNM \<Rightarrow> assn) \<Rightarrow> bool\<close>
+consts PendingConstruction_syntax :: \<open>'ret proc \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn) \<Rightarrow> (ABNM \<Rightarrow> assn) \<Rightarrow> bool\<close>
   ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c> _/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,11,11] 10)
 
 translations

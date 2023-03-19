@@ -1,7 +1,7 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
 theory Phi_Types
-  imports IDE_CP_Reasoning2
+  imports IDE_CP_Reasoning2 Phi_Refinement_Algebra
 begin
 
 section \<open>Basics\<close>
@@ -343,6 +343,17 @@ lemma \<phi>Prod_\<phi>None:
   unfolding set_eq_iff
   by (simp_all add: \<phi>expns)
 
+(*
+lemma
+  \<open> Separation_Homo B
+\<Longrightarrow> x \<Ztypecolon> (B \<Zcomp> T) \<^emph> (B \<Zcomp> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> B \<Zcomp> T \<^emph> U\<close>
+  unfolding Separation_Homo_def Imply_def
+  by (cases x; clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn; metis times_set_I)
+
+lemma
+  \<open> (B \<Zcomp> T) \<^emph> (B \<Zcomp> U) = (B \<Zcomp> (T \<^emph> U))\<close>
+  apply (rule \<phi>Type_eqI_imp) *)
+
 (*lemma (in \<phi>empty) SepNu_to_SepSet: "(OBJ (a,b) \<Ztypecolon> A \<^emph> B) = (OBJ a \<Ztypecolon> A) * (OBJ b \<Ztypecolon> B)"
   by (simp add: \<phi>expns set_eq_iff times_list_def) *)
 
@@ -531,6 +542,20 @@ lemma heap_split_by_set: "P (h |` S) (h |` (- S)) \<Longrightarrow> \<exists>h1 
     (auto simp add: map_add_def option.case_eq_if restrict_map_def disjoint_def disjoint_iff domIff)
 lemma heap_split_by_addr_set: "P (h |` (MemAddress ` S)) (h |` (- (MemAddress ` S))) \<Longrightarrow> \<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> P h1 h2"
   using heap_split_by_set .*)
+
+subsubsection \<open>Algebraic Properties\<close>
+(*WIP*)
+
+(*
+locale Separation_Functor_ty =
+  fixes Ft :: \<open>('b::sep_magma,'a1::sep_magma) \<phi> \<Rightarrow> ('b::sep_magma,'c1::sep_magma) \<phi>\<close>
+    and Fu :: \<open>('b::sep_magma,'a2::sep_magma) \<phi> \<Rightarrow> ('b::sep_magma,'c2::sep_magma) \<phi>\<close>
+    and F3 :: \<open>('b::sep_magma, 'a1 \<times> 'a2) \<phi> \<Rightarrow> ('b::sep_magma, 'c1 \<times> 'c2) \<phi>\<close>
+    and T  :: \<open>('b::sep_magma,'a1::sep_magma) \<phi>\<close>
+    and U  :: \<open>('b::sep_magma,'a2::sep_magma) \<phi>\<close>
+  assumes \<open>Ft(T) \<^emph> Fu(U) = F3 (T \<^emph> U)\<close> *)
+
+
 
 
 subsection \<open>List Item \& Empty List\<close>

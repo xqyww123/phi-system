@@ -5,7 +5,4 @@ theory PhiTest_All
           PhiTest_Arithmetic
 begin
 
-
-
-
 end

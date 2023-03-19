@@ -82,6 +82,7 @@ lemma \<phi>Type_eqI:
   \<open>(\<forall>x p. p \<in> (x \<Ztypecolon> a) \<longleftrightarrow> p \<in> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
   unfolding \<phi>Type_def by blast
 
+
 ML_file \<open>library/tools/simp_congruence.ML\<close>
 
 text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
@@ -112,6 +113,12 @@ declare [[\<phi>reason_default_pattern
 text \<open>For antecedent \<^pattern_prop>\<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<a>\<n>\<d> _\<close>, the semantics is slightly different
   where it specifies extracting given \<^term>\<open>Y\<close> from given \<^term>\<open>X\<close> and leaving some \<^schematic_term>\<open>?R\<close>.\<close>
 
+lemma \<phi>Type_eqI_imp:
+  \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> U)
+\<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T)
+\<Longrightarrow> T = U\<close>
+  unfolding \<phi>Type_def Imply_def
+  by auto
 
 subsubsection \<open>Proof \& Reasoning Rules\<close>
 
@@ -184,12 +191,7 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Specialized Additive Conjunction\<close>
 
-definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<s>\<u>\<b>\<j>" 15)
-  where " (T \<s>\<u>\<b>\<j> P) = {p. p \<in> T \<and> P}"
-
-lemma Subjection_expn[\<phi>expns]:
-  "p \<in> (T \<s>\<u>\<b>\<j> P) \<longleftrightarrow> p \<in> T \<and> P"
-  unfolding Subjection_def by simp
+declare Subjection_expn[\<phi>expns]
 
 lemma Subjection_inhabited[elim!,\<phi>inhabitance_rule]:
   \<open>Inhabited (S \<s>\<u>\<b>\<j> P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -241,11 +243,7 @@ lemma Subjection_plus:
 
 subsection \<open>Existential Quantification\<close>
 
-definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 14)
-  where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
-notation ExSet (binder "\<exists>\<^sup>s" 14)
-
-lemma ExSet_expn[\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
+declare ExSet_expn[\<phi>expns]
 
 lemma ExSet_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (ExSet S) \<Longrightarrow> (\<And>x. Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -277,12 +275,18 @@ lemma ExSet_times_left [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (si
 lemma ExSet_times_right[simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
 
 lemma ExSet_simps[simp]:
+  \<open>ExSet 0 = 0\<close>
   \<open>ExSet (\<lambda>_. T) = T\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
+  \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x) = (F y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
+  \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
   \<open>(X b \<s>\<u>\<b>\<j> P b \<s>\<u>\<b>\<j> b. Q b) = (X b \<s>\<u>\<b>\<j> b. P b \<and> Q b)\<close>
   \<open>(X2 a b \<s>\<u>\<b>\<j> a. P2 a b \<s>\<u>\<b>\<j> b. Q b) = (X2 a b \<s>\<u>\<b>\<j> a b. P2 a b \<and> Q b)\<close>
   \<open>ExSet 0 = 0\<close>
+(*  \<open>(\<exists>* x. x = t \<and> P x) = P t\<close>
+"\<And>P. (\<exists>x. x = t \<and> P x) = P t"
+    "\<And>P. (\<exists>x. t = x \<and> P x) = P t"*)
   unfolding set_eq_iff by (simp_all add: \<phi>expns) blast
 
 declare ExSet_simps(1)[\<phi>programming_safe_simps]

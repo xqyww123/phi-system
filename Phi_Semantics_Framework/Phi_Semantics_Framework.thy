@@ -285,7 +285,7 @@ text \<open>Arguments and Returns are wrapped by \<phi>arg type.
   It helps the programming framework and syntax parser to recognize which one is an argument
   or a return, among values that may be used for other purposes of specification.\<close>
 
-datatype ('a::VALs) \<phi>arg = \<phi>arg (dest: 'a)
+datatype 'a \<phi>arg = \<phi>arg (dest: 'a)
 hide_const (open) dest
 
 lemma \<phi>arg_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
@@ -331,6 +331,7 @@ lemma \<phi>V_simps[simp]:
     apply (simp add: fun_eq_iff \<phi>arg_forall)
     apply (simp add: fun_eq_iff \<phi>arg_forall)
     apply (simp add: fun_eq_iff \<phi>arg_forall) .
+
 
 definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
 
@@ -411,7 +412,7 @@ text \<open>\<open>('ret,'ex,'RES_N,'RES) state\<close> represents any potential
 declare [ [typedef_overloaded] ]
 
 datatype 'ret comp =
-      Success \<open>'ret::VALs \<phi>arg\<close> (resource: resource)
+      Success \<open>'ret \<phi>arg\<close> (resource: resource)
     | Abnormal \<open>ABNM\<close> (resource: resource)
     | Invalid
     | AssumptionBroken
@@ -472,7 +473,7 @@ type_synonym 'ret proc = "resource \<Rightarrow> 'ret comp set"
 type_synonym ('arg,'ret) proc' = "'arg \<phi>arg \<Rightarrow> 'ret proc"
 
 
-definition bind :: "'a::VALs proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b::VALs proc"  ("_ \<bind>/ _" [75,76] 75)
+definition bind :: "'a proc \<Rightarrow> ('a,'b) proc' \<Rightarrow> 'b proc"  ("_ \<bind>/ _" [75,76] 75)
   where "bind f g = (\<lambda>res. \<Union>((\<lambda>y. case y of Success v x \<Rightarrow> g v x
                                            | Abnormal v x \<Rightarrow> {Abnormal v x}
                                            | Invalid \<Rightarrow> {Invalid}
@@ -520,7 +521,7 @@ lemma proc_bind_assoc[simp]:
   by clarsimp
 
 
-definition Valid_Proc :: \<open>'ret::VALs proc \<Rightarrow> bool\<close>
+definition Valid_Proc :: \<open>'ret proc \<Rightarrow> bool\<close>
   where \<open>Valid_Proc f \<longleftrightarrow> (\<forall>v s s'. Success v s' \<in> f s \<and> s \<in> RES.SPACE \<longrightarrow> s' \<in> RES.SPACE)
                              \<and> (\<forall>e s s'. Abnormal e s' \<in> f s \<and> s \<in> RES.SPACE \<longrightarrow> s' \<in> RES.SPACE)\<close>
 
