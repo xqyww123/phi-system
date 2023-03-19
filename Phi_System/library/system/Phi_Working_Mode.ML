@@ -282,7 +282,7 @@ fun vcg_before_assembling goal (ctxt,sequent) =
               #4 (Phi_Syntax.dest_CurrentConstruction_c (Thm.cprop_of sequent))
                  |> Thm.term_of
                  |> Procedure_Syntax.package_values "\<r>\<e>\<t>"
-                              (TVar (("ret", Thm.maxidx_of sequent), \<^sort>\<open>VALs\<close>)) true NONE
+                              (TVar (("ret", Thm.maxidx_of sequent), \<^sort>\<open>type\<close>)) true NONE
                  |> apply2 (Thm.cterm_of ctxt)
         val idx_delt = 1 + Int.max (Thm.maxidx_of_cterm ins, Thm.maxidx_of_cterm current_nu)
         val return_rule = @{thm \<phi>return}
@@ -297,9 +297,12 @@ fun vcg_before_assembling goal (ctxt,sequent) =
     val desired_nu = #4 (Phi_Syntax.dest_PendingConstruction_c goal)
     val desired_arg_T = Thm.typ_of_cterm desired_nu |> Term.domain_type
                           |> Phi_Syntax.dest_sem_value_T
+    val idx = Term.maxidx_of_typ desired_arg_T + 1
     val current_phi = #4 (Phi_Syntax.dest_PendingConstruction_c (Thm.cprop_of sequent'))
+    fun incr_idx_T d = Term.map_type_tvar (fn ((N,i),S) => TVar ((N,d+i),S))
     val current_arg_T = Thm.typ_of_cterm current_phi |> Term.domain_type
                           |> Phi_Syntax.dest_sem_value_T
+                          |> incr_idx_T idx
     val sequent'' = if can (Pattern.unify_types (Context.Proof ctxt)
                                                 (current_arg_T, desired_arg_T)) Envir.init
                     then sequent'

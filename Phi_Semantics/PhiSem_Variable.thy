@@ -254,7 +254,7 @@ section \<open>Instructions\<close>
 
 subsection \<open>Variable Operations\<close>
 
-definition \<phi>M_get_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
+definition \<phi>M_get_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
   where "\<phi>M_get_var vname TY F = RES.Var.\<phi>R_get_res_entry vname ((\<lambda>val.
             \<phi>M_assert (val \<in> Some ` Well_Type TY) \<ggreater> F (the val)) o nosep.dest)"
 
@@ -270,7 +270,7 @@ definition op_set_var :: "varname \<Rightarrow> TY \<Rightarrow> (VAL,unit) proc
 definition op_free_var :: "varname \<Rightarrow> unit proc"
   where "op_free_var vname = RES.Var.\<phi>R_set_res (\<lambda>f. f(vname := None))"
 
-definition op_var_scope' :: "TY option \<Rightarrow> (varname \<Rightarrow> 'ret proc) \<Rightarrow> 'ret::VALs proc"
+definition op_var_scope' :: "TY option \<Rightarrow> (varname \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
   where "op_var_scope' TY F =
     RES.Var.\<phi>R_allocate_res_entry (\<lambda>v. varname.type v = TY) (Some (nosep None)) F"
 
@@ -431,7 +431,7 @@ shows \<open>\<p>\<r>\<o>\<c> (g \<bind> (\<lambda>\<v>0. op_set_var var TY \<v>
 
 
 subsubsection \<open>Declare New Variables\<close>
-
+ 
 proc op_var_scope:
   assumes BLK: \<open>\<And>var. varname.type var \<equiv> TY
                   \<Longrightarrow> \<p>\<r>\<o>\<c> F var \<lbrace> X\<heavy_comma> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[var] \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
@@ -441,7 +441,7 @@ proc op_var_scope:
   throws  E
   \<medium_left_bracket> op_var_scope'[where TY=TY]
     try''
-    \<medium_left_bracket> premises [\<phi>reason]
+    \<medium_left_bracket> premises [\<phi>reason]  
       BLK to Identity op_free_var \<medium_right_bracket>
     \<medium_left_bracket> to Identity
       op_free_var
@@ -463,7 +463,7 @@ lemma "__new_var_rule__":
   \<open> (\<And>var. varname.type var \<equiv> TY
               \<Longrightarrow> \<p>\<r>\<o>\<c> g var \<lbrace> R\<heavy_comma> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[var]\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
                              \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any))
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a::VALs) TY g \<lbrace> R\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a) TY g \<lbrace> R\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G
     op_var_scope[where TY=\<open>TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>] G \<medium_right_bracket>
   \<medium_right_bracket> .
@@ -474,7 +474,7 @@ lemma "__set_new_var_rule__":
               \<Longrightarrow> \<p>\<r>\<o>\<c> g var \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[var] U\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
                              \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any ))
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a::VALs) (Some TY) (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a) (Some TY) (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
      \<lbrace> R\<heavy_comma> \<blangle> y \<Ztypecolon> \<v>\<a>\<l>[raw] U\<heavy_comma> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=\<open>Some TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
@@ -487,7 +487,7 @@ lemma "__set_new_var_noty_rule__":
               \<Longrightarrow> \<p>\<r>\<o>\<c> g var \<lbrace> R\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[var] U\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> \<lambda>ret. Z ret \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any
                              \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any))
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a::VALs) None (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a) None (\<lambda>var. op_set_var var TY raw \<ggreater> g var)
      \<lbrace> R\<heavy_comma> \<blangle> y \<Ztypecolon> \<v>\<a>\<l>[raw] U\<heavy_comma> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=None] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]

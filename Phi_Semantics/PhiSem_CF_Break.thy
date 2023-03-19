@@ -52,7 +52,7 @@ abbreviation Brk_Frame' :: \<open>brk_label \<Rightarrow> (VAL list option,'a) \
 definition Brk_Frame :: \<open>RES.brk_label \<Rightarrow> assn\<close>
   where \<open>Brk_Frame label \<equiv> () \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep \<circle>))\<close>
 
-definition Brking_Frame :: \<open>RES.brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close> ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _" [1000,10] 3)
+definition Brking_Frame :: \<open>RES.brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close> ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<w>\<i>\<t>\<h> _" [1000,10] 3)
   where \<open>Brking_Frame label S =
      (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep (\<black_circle> Identity))))\<close>
 
@@ -85,7 +85,7 @@ definition op_brk_scope :: \<open>(RES.brk_label \<Rightarrow> ('a::VALs) proc) 
 )))
 \<close>
 
-definition op_break :: \<open>RES.brk_label \<Rightarrow> ('a::VALs, 'ret::VALs) proc'\<close>
+definition op_break :: \<open>RES.brk_label \<Rightarrow> ('a::VALs, 'ret) proc'\<close>
   where \<open>op_break l = (\<lambda>vs.
      RES.brk_frame.\<phi>R_set_res (\<lambda>f. f(l \<mapsto> nosep (Some (to_vals (\<phi>arg.dest vs)))))
   \<ggreater> throw (ABN_break.mk ())
@@ -96,7 +96,7 @@ lemma op_break_reduce_tail[procedure_simps,simp]:
   unfolding op_break_def by simp
 
 definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
-definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _/ \<^bold>o\<^bold>r _" [1000,10,3] 3)
+definition sift_brking_frame ("\<b>\<r>\<e>\<a>\<k> _/ \<w>\<i>\<t>\<h> _/ \<o>\<r> _" [1000,10,3] 3)
   where \<open>sift_brking_frame = sift_brking_frame'\<close>
 
 declare sift_brking_frame'_def[folded sift_brking_frame_def, assertion_simps_source]
@@ -277,7 +277,7 @@ val _ = Theory.setup (
 
 
 section \<open>Example\<close>
-
+ 
 proc
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   output \<open>y \<Ztypecolon> \<v>\<a>\<l> U\<close>

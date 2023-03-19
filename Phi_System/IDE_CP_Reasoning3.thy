@@ -1630,7 +1630,7 @@ attribute_setup \<phi>synthesis = \<open>
           let val raw1 = map (Syntax.parse_term ctxt') raw
               fun chk tagged [] = Syntax.check_terms ctxt' tagged
                 | chk tagged (X::L) =
-                        (chk (Type.constraint \<^typ>\<open>(_::VALs) \<phi>arg \<Rightarrow> assn\<close> X :: tagged) L
+                        (chk (Type.constraint \<^typ>\<open>_::type \<phi>arg \<Rightarrow> assn\<close> X :: tagged) L
                          handle ERROR err =>
                          chk (Type.constraint \<^typ>\<open>assn\<close> X :: tagged) L
                          handle ERROR _ => raise (ERROR err))

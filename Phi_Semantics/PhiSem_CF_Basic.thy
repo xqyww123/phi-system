@@ -20,7 +20,7 @@ subsection \<open>Branch\<close>
 
 definition op_if :: "'ret proc
                   \<Rightarrow> 'ret proc
-                  \<Rightarrow> (VAL,'ret::VALs) proc'"
+                  \<Rightarrow> (VAL,'ret) proc'"
   where "op_if brT brF v =
     \<phi>M_getV bool V_bool.dest v (\<lambda>c. (if c then brT else brF))"
 
@@ -249,7 +249,7 @@ text \<open>Instead, we use a variant of the above rule which in addition annota
   of the values.\<close>
 
 lemma "__op_recursion__":
-  "(\<And>g x' (v':: 'a::VALs \<phi>arg <named> 'names).
+  "(\<And>g x' (v':: 'a \<phi>arg <named> 'names).
           P x'
       \<Longrightarrow> PROP Labelled label (Technical
           (\<And>x'' (v''::'a \<phi>arg <named> 'names).
