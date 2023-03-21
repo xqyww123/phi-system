@@ -585,10 +585,17 @@ text \<open>Insertion homomorphism from a separation algebra to a separation per
 
 locale perm_ins_homo = homo_sep_wand_monoid \<psi>
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
-+ assumes join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
++ assumes share_sep_wand: \<open>a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b)\<close>
     and   inj_\<psi>[simp]: \<open>inj \<psi>\<close>
     and   \<psi>_self_disj: \<open>\<psi> x ## \<psi> x\<close>
 begin
+
+lemma
+  join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
+  unfolding join_sub_def
+  apply (rule; clarsimp simp add: homo_mult)
+   apply (metis share_sep_wand)
+  by (metis \<psi>_self_disj join_sub_def join_sub_ext_left linorder_linear order_le_less_trans order_less_irrefl sep_disj_homo_semi share_sep_disj_right share_sub)
 
 (* lemma \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> x\<close>
   by (simp add: \<psi>_self_disj share_sub) *)
@@ -1803,15 +1810,11 @@ proof
   show \<open>(\<lambda>xa. \<psi> (x xa)) ## (\<lambda>xa. \<psi> (x xa))\<close>
     by (simp add: sep_disj_fun_def xx.\<psi>_self_disj)
 
-  have t2[unfolded join_sub_def]:
-      \<open>(\<forall>n x y. 0 < n \<and> n \<le> 1 \<longrightarrow> (share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y))\<close>
-    using xx.join_sub_share_join_sub_whole by blast
+  show \<open>a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
+       0 < n \<and> n \<le> 1 \<Longrightarrow> (a' * n :\<Znrres> (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a''. a' = (\<lambda>x. \<psi> (a'' x)) * (1 - n) :\<Znrres> (\<lambda>x. \<psi> (b x)) \<and> a'' * b = c \<and> a'' ## b)\<close>
+  by (clarsimp simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def xx.share_sep_wand
+            share_fun_def all_conj_distrib[symmetric]; rule; metis)
 
-  show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (n :\<Znrres> (\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-    apply (simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def share_fun_def
-        all_conj_distrib[symmetric],
-        subst choice_iff[symmetric], subst choice_iff[symmetric])
-    using t2 by simp
 qed
 
 lemma perm_ins_homo_pointwise_eq[iff]:
@@ -1839,19 +1842,10 @@ proof
     show \<open>\<psi> x ## \<psi> x\<close>
       by (metis fun_sep_disj_imply_v fun_upd_comp xx.\<psi>_self_disj)
 
-    have x1[simp]: \<open>\<And>k v x. \<psi> ((1(k := v)) x) = (1(k := \<psi> v)) x\<close>
-      by (metis comp_apply fun_upd_apply one_fun xx.homo_one)
-    have x2[simp]: \<open>\<And>k a b. (1(k := a) \<preceq>\<^sub>S\<^sub>L 1(k := b)) \<longleftrightarrow> a \<preceq>\<^sub>S\<^sub>L (b::'x::sep_algebra)\<close>
-      unfolding join_sub_def
-      by (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) fun_upd_same fun_upd_triv)
-    have \<open>\<forall>(x::'a \<Rightarrow> 'b) y. 0 < n \<and> n \<le> 1 \<longrightarrow> (n :\<Znrres> (\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-      using xx.join_sub_share_join_sub_whole[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff comp_def, simplified]
-      by fastforce
-    then have \<open>0 < n \<and> n \<le> 1 \<longrightarrow> (\<forall>(x::'a \<Rightarrow> 'b) y. (n :\<Znrres> (\<lambda>xa. \<psi> (x xa)) \<preceq>\<^sub>S\<^sub>L (\<lambda>x. \<psi> (y x))) = (x \<preceq>\<^sub>S\<^sub>L y))\<close>
-      by blast
-    from this[THEN mp, THEN spec[where x=\<open>1(undefined := x)\<close>], THEN spec[where x=\<open>1(undefined := y)\<close>],
-          simplified x1 x2 share_1_fupdt]
-    show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (n :\<Znrres> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close> .
+    show \<open>a2 ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> (a2 * n :\<Znrres> \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' * (1 - n) :\<Znrres> \<psi> b \<and> a' * b = c \<and> a' ## b)\<close>
+      by (insert xx.share_sep_wand[where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>];
+          clarsimp simp add: sep_disj_fun_def share_fun_def fun_eq_iff times_fun; rule; auto)
+
   qed
 next
   show \<open>perm_ins_homo \<psi> \<Longrightarrow> perm_ins_homo ((\<circ>) \<psi>)\<close>
@@ -1986,7 +1980,7 @@ lemma perm_ins_homo_to_share[iff]:
   \<open>perm_ins_homo (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
-  fix a' :: \<open>'a share option\<close>
+  fix a' a2 :: \<open>'a share option\<close>
   fix n :: rat
   show \<open>a ## b \<longrightarrow> to_share a ## to_share b\<close> by (cases a; cases b; simp)
   show \<open>x ## y \<Longrightarrow> to_share (x * y) = to_share x * to_share y\<close> by (cases x; cases y; simp)
@@ -1997,11 +1991,11 @@ proof
   show \<open>inj to_share\<close>
     by (rule, simp, metis option.inj_map_strong share.inject)
   show \<open>to_share x ## to_share x\<close> by (cases x; simp)
-  show \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> (n :\<Znrres> to_share x \<preceq>\<^sub>S\<^sub>L to_share y) = (x \<preceq>\<^sub>S\<^sub>L y)\<close>
-    apply (cases a'; cases x; cases y; simp add: join_sub_def split_option_ex share_forall share_exists
-          share_All)
-    apply (metis add.commute add_le_same_cancel1 diff_add_cancel linorder_not_le nle_le)
-    by (metis Orderings.order_eq_iff diff_add_cancel less_add_same_cancel2 linorder_le_less_linear)
+  show \<open>a2 ## to_share b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> (a2 * n :\<Znrres> to_share b = to_share c) = (\<exists>a'. a2 = to_share a' * (1 - n) :\<Znrres> to_share b \<and> a' * b = c \<and> a' ## b)\<close>
+    apply (cases a2; cases b; cases c; simp add: share_option_def)
+    apply (cases \<open>n < 1\<close>; simp)
+    apply (smt (verit, ccfv_SIG) diff_add_cancel diff_gt_0_iff_gt sep_cancel sep_disj_commuteI sep_disj_multD2 sep_disj_multI2 sep_disj_share sep_mult_commute times_share)
+    by (metis join_strict_positivity less_numeral_extra(1) sep_disj_multD2 sep_disj_share)
 qed
 
 
