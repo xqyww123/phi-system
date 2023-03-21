@@ -277,12 +277,18 @@ lemma ExSet_times_left [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (si
 lemma ExSet_times_right[simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: \<phi>expns set_eq_iff) blast
 
 lemma ExSet_simps[simp]:
+  \<open>ExSet 0 = 0\<close>
   \<open>ExSet (\<lambda>_. T) = T\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
+  \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x) = (F y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
+  \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
   \<open>(X b \<s>\<u>\<b>\<j> P b \<s>\<u>\<b>\<j> b. Q b) = (X b \<s>\<u>\<b>\<j> b. P b \<and> Q b)\<close>
   \<open>(X2 a b \<s>\<u>\<b>\<j> a. P2 a b \<s>\<u>\<b>\<j> b. Q b) = (X2 a b \<s>\<u>\<b>\<j> a b. P2 a b \<and> Q b)\<close>
   \<open>ExSet 0 = 0\<close>
+(*  \<open>(\<exists>* x. x = t \<and> P x) = P t\<close>
+"\<And>P. (\<exists>x. x = t \<and> P x) = P t"
+    "\<And>P. (\<exists>x. t = x \<and> P x) = P t"*)
   unfolding set_eq_iff by (simp_all add: \<phi>expns) blast
 
 declare ExSet_simps(1)[\<phi>programming_safe_simps]

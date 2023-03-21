@@ -1478,6 +1478,8 @@ definition zero_set where "zero_set = {}"
 instance ..
 end
 
+lemma zero_set_iff[simp]: \<open>x \<notin> 0\<close> unfolding zero_set_def by simp
+
 instantiation set :: (one) one begin
 definition "one_set = {1::'a}"
 instance ..

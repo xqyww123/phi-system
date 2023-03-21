@@ -1336,6 +1336,9 @@ paragraph \<open>basic resource\<close>
 definition (in resource) \<phi>R_get_res :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>R_get_res F = (\<lambda>res. F (get res) res)\<close>
 
+definition (in resource) \<phi>R_get_res' :: \<open>'T proc\<close>
+  where \<open>\<phi>R_get_res' = (\<lambda>res. Return (\<phi>arg (get res)) res)\<close>
+
 lemma (in resource) \<phi>R_get_res[intro!]:
   \<open> get res = v
 \<Longrightarrow> F v res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E
@@ -1360,6 +1363,11 @@ definition (in partial_map_resource)
   \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> ('val \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>R_get_res_entry k F =
     \<phi>R_get_res (\<lambda>res. case res k of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
+
+definition (in partial_map_resource)
+  \<phi>R_get_res_entry' :: \<open>'key \<Rightarrow> 'val proc\<close>
+  where \<open>\<phi>R_get_res_entry' k =
+    \<phi>R_get_res' \<bind> (\<lambda>res. case \<phi>arg.dest res k of Some v \<Rightarrow> Return (\<phi>arg v) | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
 lemma (in partial_map_resource) \<phi>R_get_res_entry[intro!]:
   \<open> get res k = Some v
@@ -1410,6 +1418,12 @@ definition (in partial_map_resource2)
     \<phi>R_get_res_entry :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('val \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>R_get_res_entry k k2 F = \<phi>R_get_res (\<lambda>res.
     case res k k2 of Some v \<Rightarrow> F v | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
+
+definition (in partial_map_resource2)
+  \<phi>R_get_res_entry' :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> 'val proc\<close>
+  where \<open>\<phi>R_get_res_entry' k k2 =
+    \<phi>R_get_res' \<bind> (\<lambda>res. case \<phi>arg.dest res k k2 of Some v \<Rightarrow> Return (\<phi>arg v) | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
+
 
 lemma (in partial_map_resource2) \<phi>R_get_res_entry[intro!]:
   \<open> get res k k2 = Some v
