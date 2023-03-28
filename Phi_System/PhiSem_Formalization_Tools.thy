@@ -1463,8 +1463,6 @@ lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry1[in
 
 subsubsection \<open>Setters\<close>
 
-paragraph \<open>fine_resource\<close>
-
 definition (in resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> unit proc\<close>
   where \<open>\<phi>R_set_res F = (\<lambda>res. {Success (\<phi>arg ()) (updt F res)})\<close>
 
