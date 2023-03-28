@@ -184,12 +184,7 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Specialized Additive Conjunction\<close>
 
-definition Subjection :: " 'p set \<Rightarrow> bool \<Rightarrow> 'p set " (infixl "\<s>\<u>\<b>\<j>" 15)
-  where " (T \<s>\<u>\<b>\<j> P) = {p. p \<in> T \<and> P}"
-
-lemma Subjection_expn[\<phi>expns]:
-  "p \<in> (T \<s>\<u>\<b>\<j> P) \<longleftrightarrow> p \<in> T \<and> P"
-  unfolding Subjection_def by simp
+declare Subjection_expn[\<phi>expns]
 
 lemma Subjection_inhabited[elim!,\<phi>inhabitance_rule]:
   \<open>Inhabited (S \<s>\<u>\<b>\<j> P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>

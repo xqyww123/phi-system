@@ -804,8 +804,10 @@ lemma "__dispose_rule__":
   using "__updt_rule__"[where u=None, simplified, simplified,
             simplified, simplified one_set_def[symmetric], simplified] .
 
+(*depreciate*)
 abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
   where \<open>perm_ins_homo \<equiv> (o) to_share\<close>
+(*depreciate*)
 abbreviation \<open>share_fiction \<equiv> basic_fiction o\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
 
 (* lemma share_fiction_expn_full:
@@ -1333,17 +1335,26 @@ subsubsection \<open>Getters\<close>
 
 paragraph \<open>basic resource\<close>
 
-definition (in resource) \<phi>R_get_res :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
+context resource begin
+
+definition \<phi>R_get_res :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>R_get_res F = (\<lambda>res. F (get res) res)\<close>
 
-definition (in resource) \<phi>R_get_res' :: \<open>'T proc\<close>
+definition \<phi>R_get_res' :: \<open>'T proc\<close>
   where \<open>\<phi>R_get_res' = (\<lambda>res. Return (\<phi>arg (get res)) res)\<close>
 
-lemma (in resource) \<phi>R_get_res[intro!]:
+lemma \<phi>R_get_res'_valid:
+  \<open>Valid_Proc \<phi>R_get_res'\<close>
+  unfolding Valid_Proc_def \<phi>R_get_res'_def Return_def det_lift_def
+  by simp
+
+lemma \<phi>R_get_res[intro!]:
   \<open> get res = v
 \<Longrightarrow> F v res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<phi>R_get_res F res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   unfolding \<phi>R_get_res_def subset_iff by simp
+
+end
 
 paragraph \<open>nonsepable_mono_resource\<close>
 
@@ -1606,7 +1617,9 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res"[THE
 
 subsubsection \<open>Allocate\<close>
 
-definition (in mapping_resource)
+context mapping_resource begin
+
+definition
     \<phi>R_allocate_res_entry :: \<open>('key \<Rightarrow> bool)
                            \<Rightarrow> 'val
                            \<Rightarrow> ('key \<Rightarrow> 'ret proc)
@@ -1618,7 +1631,18 @@ definition (in mapping_resource)
         \<ggreater> F k
 )\<close>
 
-lemma (in mapping_resource) \<phi>R_set_res_new[intro!]:
+definition
+    \<phi>R_allocate_res_entry' :: \<open>('key \<Rightarrow> bool)
+                           \<Rightarrow> 'val
+                           \<Rightarrow> 'key proc\<close>
+  where \<open>\<phi>R_allocate_res_entry' P init =
+    \<phi>R_get_res (\<lambda>res.
+    let k = (@k. res k = 1 \<and> P k)
+     in \<phi>R_set_res (\<lambda>f. f(k := init))
+        \<ggreater> Return (\<phi>arg k)
+)\<close>
+
+lemma \<phi>R_set_res_new[intro!]:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> k \<notin> dom1 (get res)
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R
@@ -1626,7 +1650,7 @@ lemma (in mapping_resource) \<phi>R_set_res_new[intro!]:
   unfolding \<phi>R_set_res_def
   by (simp add: \<phi>expns "__allocation_rule__")
 
-lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
+lemma \<phi>R_allocate_res_entry[intro!]:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
 \<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m(k := init) \<in>\<^sub>S\<^sub>H domain)
 \<Longrightarrow> (\<And>k res. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k := init))} \<s>\<u>\<b>\<j> P k
@@ -1649,6 +1673,8 @@ lemma (in mapping_resource) \<phi>R_allocate_res_entry[intro!]:
       using \<open>\<s>\<t>\<a>\<t>\<e> res \<i>\<s> _\<close> apply this
       by (simp add: prems(3))
   qed .
+
+end
 
 lemma (in identity_fiction_for_partial_mapping_resource) "\<phi>R_allocate_res_entry"[intro!]:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
