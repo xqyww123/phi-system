@@ -15,18 +15,18 @@ proc while:
                   \<p>\<r>\<o>\<c> Cond \<lbrace> R\<heavy_comma> X x \<longmapsto> R\<heavy_comma> X x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1"
   and B: "\<And>x lb lc. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<Longrightarrow>
                     \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<Longrightarrow>
-                    break_\<phi>app\<^bold>: HIDDEN_PREM(
+                    break_\<phi>app\<^bold>: TECHNICAL
                         \<p>\<r>\<o>\<c> (op_break lb \<phi>V_none :: unit proc)
-                           \<lbrace> (R\<heavy_comma> X x'\<heavy_comma> Brk_Frame lc \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> Brk_Frame lb \<longmapsto> 0 \<rbrace>
-                        \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame lb (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> Brk_Frame lc \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x'))) \<Longrightarrow>
-                    continue_\<phi>app\<^bold>: HIDDEN_PREM(
+                           \<lbrace> (R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lc \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> TECHNICAL Brk_Frame lb \<longmapsto> 0 \<rbrace>
+                        \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame lb (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lc \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')) \<Longrightarrow>
+                    continue_\<phi>app\<^bold>: TECHNICAL
                         \<p>\<r>\<o>\<c> (op_break lc \<phi>V_none :: unit proc)
-                           \<lbrace> (R\<heavy_comma> X x'\<heavy_comma> Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x')\<heavy_comma> Brk_Frame lc \<longmapsto> 0 \<rbrace>
-                        \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame lc (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x'))) \<Longrightarrow>
+                           \<lbrace> (R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x')\<heavy_comma> TECHNICAL Brk_Frame lc \<longmapsto> 0 \<rbrace>
+                        \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame lc (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x')) \<Longrightarrow>
                     \<p>\<r>\<o>\<c> Body lb lc
-                        \<lbrace> R\<heavy_comma> X x\<heavy_comma> Brk_Frame lc\<heavy_comma> Brk_Frame lb
-                      \<longmapsto> R\<heavy_comma> X x'\<heavy_comma> Brk_Frame lc\<heavy_comma> Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x'
-                         \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lb \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> Brk_Frame lc \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')
+                        \<lbrace> R\<heavy_comma> X x \<heavy_comma> TECHNICAL Brk_Frame lc\<heavy_comma> TECHNICAL Brk_Frame lb
+                      \<longmapsto> R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lc\<heavy_comma> TECHNICAL Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x'
+                         \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lb \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lc \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')
                                     \<^bold>o\<^bold>r \<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k lc \<^bold>w\<^bold>i\<^bold>t\<^bold>h (\<lambda>_::unit \<phi>arg. R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x')
                                     \<^bold>o\<^bold>r E2 e)"
   input \<open>U\<close>
@@ -34,15 +34,15 @@ proc while:
   throws \<open>E1 + E2\<close>
   \<medium_left_bracket> S
     brk_scope \<medium_left_bracket> for lb
-      PhiSem_CF_Basic.while \<open>Brk_Frame lb\<heavy_comma> R\<heavy_comma> X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x\<close>
+      PhiSem_CF_Basic.while \<open>TECHNICAL Brk_Frame lb\<heavy_comma> R\<heavy_comma> X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x\<close>
       \<medium_left_bracket> C \<medium_right_bracket>.
       \<medium_left_bracket> brk_scope \<medium_left_bracket> for lc
           B[where lb1=lb]
-          "_op_break_rule_"[THEN HIDDEN_PREM_I, THEN Labelled_I]
-          "_op_break_rule_"[THEN HIDDEN_PREM_I, THEN Labelled_I]
-      \<medium_right_bracket> for \<open>(R\<heavy_comma> X x'\<heavy_comma> Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x')\<heavy_comma> Brk_Frame lc\<close> .. ;;
+          "_op_break_rule_"[THEN Technical_I, THEN Labelled_I]
+          "_op_break_rule_"[THEN Technical_I, THEN Labelled_I]
+      \<medium_right_bracket> for \<open>(R\<heavy_comma> X x'\<heavy_comma> TECHNICAL Brk_Frame lb \<s>\<u>\<b>\<j> x'. invariant x')\<heavy_comma> TECHNICAL Brk_Frame lc\<close> .. ;;
       \<medium_right_bracket>. ;;
-      \<medium_right_bracket> for \<open>(R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> Brk_Frame lb\<close> .. ;;
+      \<medium_right_bracket> for \<open>(R\<heavy_comma> X x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> termination x')\<heavy_comma> TECHNICAL Brk_Frame lb\<close> .. ;;
   \<medium_right_bracket>. .
 
 hide_const (open) PhiSem_CF_Basic.while

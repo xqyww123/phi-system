@@ -200,6 +200,11 @@ lemma [\<phi>reason 1200]:
   apply (simp add: \<phi>expns)
   using mult_1_class.mult_1_left by blast
 
+lemma [\<phi>reason 1200]:
+  \<open> \<r>Clean X
+\<Longrightarrow> \<r>Clean (TECHNICAL X)\<close>
+  unfolding Technical_def .
+
 
 section \<open>Transformation of State Abstraction (ToSA)\<close>
 
@@ -612,6 +617,11 @@ lemma [\<phi>reason 1050 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> \<blangle> ?
       a fallback here handles it.\<close>
   unfolding FOCUS_TAG_def Action_Tag_def .*)
 
+lemma [\<phi>reason 2030]:
+  " Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 * \<blangle> X \<brangle> \<a>\<n>\<d> P
+\<Longrightarrow> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 * \<blangle> R2 * \<blangle> X \<brangle> \<brangle> \<a>\<n>\<d> P"
+  for X :: \<open>'a::sep_magma_1 set\<close>
+  unfolding mult_1_left FOCUS_TAG_def .
 
 lemma [\<phi>reason 2020
    except \<open> ?Y1 * ?Y2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> ?P\<close>
@@ -774,8 +784,6 @@ lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding Structural
 section \<open>Programming Methods\<close>
 
 subsection \<open>Functional\<close>
-
-term \<open>\<^bold>d\<^bold>o X\<close>
 
 lemma is_functional_imp'':
   \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> is_functional S'

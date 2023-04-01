@@ -160,7 +160,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
                         implies_conv all_conv (implies_conv (
                             Phi_Syntax.labelled_conv (arg_conv (meta_all_body_conv (
                                 expand_aggregated_imps_obj (K (try_conv Phi_Syntax.elim_labelled (*Labelled_def*)
-                                                              then_conv try_conv (rewr_conv @{thm HIDDEN_PREM_def})))
+                                                              then_conv try_conv (rewr_conv @{thm Technical_def})))
                             ) ctxt))
                           ) all_conv)
                         then_conv expand_aggregated_imps_obj (K all_conv) ctxt

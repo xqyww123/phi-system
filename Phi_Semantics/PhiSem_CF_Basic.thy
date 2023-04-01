@@ -229,7 +229,7 @@ text \<open>Instead, we use a variant of the above rule which in addition annota
 lemma "__op_recursion__":
   "(\<And>g x' (v':: 'a::VALs \<phi>arg <named> 'names).
           P x'
-      \<Longrightarrow> PROP Labelled label (HIDDEN_PREM
+      \<Longrightarrow> PROP Labelled label (Technical
           (\<And>x'' (v''::'a \<phi>arg <named> 'names).
               P x'' \<Longrightarrow>
               \<p>\<r>\<o>\<c> g (case_named id v'') \<lbrace> case_named (X x'') v'' \<longmapsto> \<lambda>ret. Y x'' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x''))
@@ -238,7 +238,7 @@ lemma "__op_recursion__":
       P x \<Longrightarrow>
       \<p>\<r>\<o>\<c> op_fix_point F v \<lbrace> X x v \<longmapsto> \<lambda>ret. Y x ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E x
 )"
-  unfolding op_fix_point_def \<phi>Procedure_def atomize_all \<phi>arg_forall \<phi>arg_All HIDDEN_PREM_def
+  unfolding op_fix_point_def \<phi>Procedure_def atomize_all \<phi>arg_forall \<phi>arg_All Technical_def
             Pure.prop_def
   apply (clarsimp simp add: SemRec_deterministic2 del: subsetI)
 

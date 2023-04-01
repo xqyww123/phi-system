@@ -196,29 +196,34 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 
 subsection \<open>General Syntax\<close>
 
-definition HIDDEN_PREM :: \<open>'a::{} \<Rightarrow> 'a\<close> where \<open>HIDDEN_PREM x \<equiv> x\<close>
+definition Technical :: \<open>'a::{} \<Rightarrow> 'a\<close> ("TECHNICAL _" [17] 16) where \<open>Technical x \<equiv> x\<close>
 
-lemma HIDDEN_PREM_I : \<open>P \<Longrightarrow> HIDDEN_PREM P\<close> unfolding HIDDEN_PREM_def .
-lemma HIDDEN_PREM_I': \<open>PROP P \<Longrightarrow> PROP HIDDEN_PREM P\<close> unfolding HIDDEN_PREM_def .
-lemma HIDDEN_PREM_D : \<open>HIDDEN_PREM P \<Longrightarrow> P\<close> unfolding HIDDEN_PREM_def .
-lemma HIDDEN_PREM_D': \<open>PROP HIDDEN_PREM P \<Longrightarrow> PROP P\<close> unfolding HIDDEN_PREM_def .
+lemma Technical_I : \<open>P \<Longrightarrow> Technical P\<close> unfolding Technical_def .
+lemma Technical_I': \<open>PROP P \<Longrightarrow> PROP Technical P\<close> unfolding Technical_def .
+lemma Technical_D : \<open>Technical P \<Longrightarrow> P\<close> unfolding Technical_def .
+lemma Technical_D': \<open>PROP Technical P \<Longrightarrow> PROP P\<close> unfolding Technical_def .
 
 optional_translations (\<phi>hide_techinicals)
-  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (CONST HIDDEN_PREM X)) Y"
-  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (name\<^bold>: CONST HIDDEN_PREM X)) Y"
-  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST HIDDEN_PREM X) Y"
-  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (name\<^bold>: CONST HIDDEN_PREM X) Y"
+  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (CONST Technical X)) Y"
+  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Trueprop (name\<^bold>: CONST Technical X)) Y"
+  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (CONST Technical X) Y"
+  ("aprop") "Y" <= ("aprop") "(CONST Pure.imp) (name\<^bold>: CONST Technical X) Y"
+  "L" <= "CONST Technical X\<heavy_comma> L"
+  "R" <= "R \<heavy_comma> CONST Technical X"
+  "R\<heavy_comma> L" <= "R \<heavy_comma> CONST Technical X\<heavy_comma> L"
+  "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>: XCONST Void" <= "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<s>\<t>\<a>\<t>\<e>: TECHNICAL X"
+  "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: XCONST Void" <= "\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<v>\<i>\<e>\<w>: TECHNICAL X"
   \<open>show hidden internal techinical constructs\<close>
 
 declare [[\<phi>hide_techinicals,
-          \<phi>premise_attribute [THEN HIDDEN_PREM_D ] for \<open>HIDDEN_PREM ?P\<close>,
-          \<phi>premise_attribute [THEN HIDDEN_PREM_D'] for \<open>PROP HIDDEN_PREM ?P\<close>]]
+          \<phi>premise_attribute [THEN Technical_D ] for \<open>Technical ?P\<close>,
+          \<phi>premise_attribute [THEN Technical_D'] for \<open>PROP Technical ?P\<close>]]
 
-definition HIDDEN_PREM_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>HIDDEN_PREM_embed X \<equiv> X\<close>
+definition Technical_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Technical_embed X \<equiv> X\<close>
 
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>HIDDEN_PREM (Trueprop P) \<equiv> Trueprop (HIDDEN_PREM_embed P)\<close>
-  unfolding HIDDEN_PREM_def HIDDEN_PREM_embed_def .
+  \<open>Technical (Trueprop P) \<equiv> Trueprop (Technical_embed P)\<close>
+  unfolding Technical_def Technical_embed_def .
 
 section \<open>Mechanisms\<close>
 

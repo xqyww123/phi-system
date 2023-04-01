@@ -25,7 +25,8 @@ fun enter_scope (ctxt,sequent) =
   in case Phi_Reasoner.reason NONE (ctxt',sequent')
        of SOME (ctxt'',sequent'') =>
           if Scope.get ctxt'' = S
-          then Seq.single (ctxt'',sequent'')
+          then (Phi_Reasoner.info_print ctxt 2 (fn _ => "exiting nested \<phi>-LPR reasoning");
+                Seq.single (ctxt'',sequent''))
           else Phi_Reasoner.error "The stack of nested \<phi>-LPR reasoning is inbalanced.\n\
             \Most likely some reasoner or reasoning rule invoked \<r>Success terminating\
             \the reasoning immediately, which is prohibited in nested \<phi>-LPR reasoning."

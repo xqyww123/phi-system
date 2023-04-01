@@ -92,7 +92,7 @@ lemma op_break_reduce_tail[procedure_simps,simp]:
   \<open>(op_break L v \<ggreater> f) = op_break L v\<close>
   unfolding op_break_def by simp
 
-definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> Brk_Frame l)\<close>
+definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
 definition sift_brking_frame ("\<^bold>b\<^bold>r\<^bold>e\<^bold>a\<^bold>k _/ \<^bold>w\<^bold>i\<^bold>t\<^bold>h _/ \<^bold>o\<^bold>r _" [1000,10,3] 3)
   where \<open>sift_brking_frame = sift_brking_frame'\<close>
 
@@ -113,10 +113,11 @@ private lemma dispose_brk_scope:
   by (rule FIC.brk_frame.\<phi>R_dispose_res[where P=\<open>\<lambda>_. True\<close>]; simp)
 
 lemma brk_scope:
-  \<open> (\<And>l. \<p>\<r>\<o>\<c> f l \<lbrace> X\<heavy_comma> Brk_Frame l \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> Brk_Frame l \<rbrace>
+  \<open> (\<And>l. \<p>\<r>\<o>\<c> f l \<lbrace> X\<heavy_comma> TECHNICAL Brk_Frame l \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> \<blangle> TECHNICAL Brk_Frame l \<brangle> \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>a. sift_brking_frame l Y' (E a)))
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_brk_scope f \<lbrace> X \<longmapsto> \<lambda>ret. Y ret + Y' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   unfolding op_brk_scope_def sift_brking_frame_def sift_brking_frame'_def
+            Technical_def FOCUS_TAG_def
   apply (rule, rule, rule, assumption, rule)
   apply (rule \<phi>CONSEQ'E0, rule dispose_brk_scope[THEN \<phi>frame, simplified], rule)
   apply (rule \<phi>CASE)
@@ -128,9 +129,9 @@ lemma brk_scope:
   by (rule, rule implies_refl)
 
 lemma "_op_break_rule_":
-  \<open>\<p>\<r>\<o>\<c> op_break l vs \<lbrace> S vs\<heavy_comma> Brk_Frame l \<longmapsto> 0 \<rbrace>
+  \<open>\<p>\<r>\<o>\<c> op_break l vs \<lbrace> S vs\<heavy_comma> TECHNICAL Brk_Frame l \<longmapsto> 0 \<rbrace>
    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>_. Brking_Frame l S)\<close>
-  unfolding op_break_def Brking_Frame_eq_identity Brk_Frame_eq_identity
+  unfolding op_break_def Brking_Frame_eq_identity Brk_Frame_eq_identity Technical_def
   by (rule, rule, simp, simp, simp, rule, \<phi>reason)
 
 end
@@ -162,7 +163,7 @@ lemma [\<phi>reason 1000]:
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
             Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
-    X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> Brk_Frame l)\<close> ..
+    X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> TECHNICAL Brk_Frame l)\<close> ..
             \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..
   \<medium_right_bracket>. .
 
@@ -184,7 +185,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> (X1 + X2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
   unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right
   \<medium_left_bracket> premises X1 and X2
-    cases \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> Brk_Frame l) + (E2 \<heavy_comma> Brk_Frame l))\<close> by fast
+    cases \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> TECHNICAL Brk_Frame l) + (E2 \<heavy_comma> TECHNICAL Brk_Frame l))\<close> by fast
           \<medium_left_bracket> X1 \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
@@ -225,9 +226,9 @@ lemma [\<phi>reason 1180]:
   by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> E\<heavy_comma> \<blangle> Brk_Frame l \<brangle> \<a>\<n>\<d> Any
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> E\<heavy_comma> \<blangle> TECHNICAL Brk_Frame l \<brangle> \<a>\<n>\<d> Any
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l 0 E\<close>
-  unfolding sift_brking_frame'_def FOCUS_TAG_def
+  unfolding sift_brking_frame'_def FOCUS_TAG_def Technical_def
   \<medium_left_bracket> premises X
     X
   \<medium_right_bracket>. .
@@ -246,17 +247,17 @@ lemma [\<phi>reason 2200]:
     X[THEN implies_right_prod]
   \<medium_right_bracket>. .
 
+lemma [\<phi>reason 2201]:
+  (*The priority must override Void Padding*)
+  \<open> (\<And>v. S v \<i>\<m>\<p>\<l>\<i>\<e>\<s> R v \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P)
+\<Longrightarrow> TECHNICAL Brking_Frame l S \<i>\<m>\<p>\<l>\<i>\<e>\<s> TECHNICAL Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
+  unfolding Brking_Frame_def FOCUS_TAG_def Technical_def
+  \<medium_left_bracket> premises X
+    X[THEN implies_right_prod]
+  \<medium_right_bracket>. .
+
 
 subsection \<open>Syntax hiding technical separation items\<close>
-
-optional_translations (\<phi>hide_brk_frame)
-  "L" <= "CONST Brk_Frame l\<heavy_comma> L"
-  "R" <= "R \<heavy_comma> CONST Brk_Frame l"
-  "R\<heavy_comma> L" <= "R \<heavy_comma> CONST Brk_Frame l\<heavy_comma> L"
-  "XCONST Void" <= "CONST Brk_Frame l"
-  \<open>Hides technical SL assertions for control flowing breaking\<close>
-
-declare [[\<phi>hide_brk_frame = false]]
 
 (*
 ML \<open>
@@ -279,7 +280,7 @@ proc
   output \<open>y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
-        $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>]
+        $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>]
       \<medium_right_bracket> .. ;;
       assert \<bottom> (*this place is unreachable!*)
     \<medium_right_bracket> ..

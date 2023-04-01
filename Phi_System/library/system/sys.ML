@@ -201,11 +201,11 @@ fun set_param' ctxt term sequent =
           |> Phi_Syntax.intro_param)
       RS sequent
 
-fun set_param term' (ctxt,sequent) =
+fun set_param raw_term (ctxt,sequent) =
   let
     val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
     val (\<^const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>ParamTag\<close>, _) $ X)) = Thm.major_prem_of sequent
-    val term = term' |> Type.constraint (param_type sequent) |> Syntax.check_term ctxt_parse
+    val term = raw_term |> Type.constraint (param_type sequent) |> Syntax.check_term ctxt_parse
     fun has_multiple_ex_quantification X
       = case X of (Const(\<^const_name>\<open>ExSet\<close>, _) $ (Abs (_,_,(Const(\<^const_name>\<open>ExSet\<close>, _) $ _))))
                     => true
