@@ -225,6 +225,10 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Technical (Trueprop P) \<equiv> Trueprop (Technical_embed P)\<close>
   unfolding Technical_def Technical_embed_def .
 
+lemma [\<phi>inhabitance_rule]:
+  \<open>Inhabited (TECHNICAL X) \<Longrightarrow> (Inhabited X \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Technical_def .
+
 section \<open>Mechanisms\<close>
 
 subsection \<open>Programming Modes\<close>

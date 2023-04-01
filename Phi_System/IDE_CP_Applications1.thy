@@ -155,6 +155,26 @@ declare [[\<phi>reason_default_pattern
 
 paragraph \<open>Implication\<close>
 
+lemma [\<phi>reason 1050]:
+  \<open> ERROR TEXT(\<open>There is no item!\<close>)
+\<Longrightarrow> TECHNICAL X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Any \<a>\<n>\<d> P @action \<A>_leading_item' A\<close>
+  \<comment> \<open>Never bind technical items\<close>
+  unfolding Action_Tag_def by blast
+
+lemma [\<phi>reason 1050]:
+  \<open> ERROR TEXT(\<open>There is no item!\<close>)
+\<Longrightarrow> Void \<i>\<m>\<p>\<l>\<i>\<e>\<s> Any \<a>\<n>\<d> P @action \<A>_leading_item' A\<close>
+  \<comment> \<open>Never bind technical items\<close>
+  unfolding Action_Tag_def by blast
+
+
+lemma [\<phi>reason 1020]:
+  \<open> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> P @action \<A>_leading_item' A
+\<Longrightarrow> R * (TECHNICAL X) \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * (TECHNICAL X) \<a>\<n>\<d> P @action \<A>_leading_item' A\<close>
+  \<comment> \<open>Never bind technical items\<close>
+  unfolding Action_Tag_def
+  using implies_right_prod .
+
 lemma [\<phi>reason 1010]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action A
 \<Longrightarrow> R * X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * Y \<a>\<n>\<d> P @action \<A>_leading_item' A\<close>

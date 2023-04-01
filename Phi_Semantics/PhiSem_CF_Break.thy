@@ -56,6 +56,9 @@ definition Brking_Frame :: \<open>RES.brk_label \<Rightarrow> ('v::VALs \<phi>ar
   where \<open>Brking_Frame label S =
      (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep (\<black_circle> Identity))))\<close>
 
+lemma [\<phi>inhabitance_rule]:
+  \<open>Inhabited (Brk_Frame X) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
 lemma Brk_Frame_eq_identity:
   \<open>Brk_Frame l = (nosep None \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff Brk_Frame_def
