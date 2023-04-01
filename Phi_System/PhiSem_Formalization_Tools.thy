@@ -1466,6 +1466,11 @@ subsubsection \<open>Setters\<close>
 definition (in resource) \<phi>R_set_res :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> unit proc\<close>
   where \<open>\<phi>R_set_res F = (\<lambda>res. {Success (\<phi>arg ()) (updt F res)})\<close>
 
+definition (in resource) \<phi>R_set_res' :: \<open>('T \<Rightarrow> 'T) \<Rightarrow> unit proc\<close>
+  where \<open>\<phi>R_set_res' F = (\<lambda>res. if updt F res \<in> SPACE
+                                then {Success (\<phi>arg ()) (updt F res)}
+                                else {Invalid})\<close>
+
 paragraph \<open>partial_map_resource\<close>
 
 lemma (in partial_map_resource) \<phi>R_set_res:
