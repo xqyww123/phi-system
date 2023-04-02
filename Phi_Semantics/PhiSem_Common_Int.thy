@@ -32,11 +32,12 @@ abbreviation LshL (infixl "LSHL" 70) where \<open>x LSHL y \<equiv> x  *  2 ^ Bi
 
 
 \<phi>overloads add and sub and mul and div and less and less_equal and greater and greater_equal
-  and floor and ceiling
+  and floor and ceiling and neg
 
 declare [[
     overloaded_operator_in_synthesis \<open>(+)\<close>,
     overloaded_operator_in_synthesis \<open>(-)\<close>,
+    overloaded_operator_in_synthesis \<open>uminus\<close>,
     overloaded_operator_in_synthesis \<open>(*)\<close>,
     overloaded_operator_in_synthesis \<open>(div)\<close>,
     overloaded_operator_in_synthesis \<open>(sdiv)\<close>,
@@ -51,8 +52,8 @@ definition \<open>MK_CONST x \<equiv> x\<close>
 
 lemma overloaded_synthesis_const:
   \<open>OPTIMAL_SYNTHESIS
-   (\<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. R2 \<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis)
-\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
+   (\<p>\<r>\<o>\<c> H \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis)
+\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
   unfolding Optimal_Synthesis_def Action_Tag_def MK_CONST_def .
 
 lemma make_overloaded_synthesis_rule_for_const:

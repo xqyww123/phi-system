@@ -134,6 +134,11 @@ definition op_asub :: "(VAL \<times> VAL, VAL) proc'"
       Return (\<phi>arg (V_aint.mk (val_b - val_a)))
   )))"
 
+definition op_aneg :: "(VAL, VAL) proc'"
+  where "op_aneg rv =
+      \<phi>M_getV aint V_aint.dest rv (\<lambda>v.
+      Return (\<phi>arg (V_aint.mk (-v))))"
+
 definition op_amul :: "(VAL \<times> VAL, VAL) proc'"
   where "op_amul =
       \<phi>M_caseV (\<lambda>va vb.
@@ -279,6 +284,17 @@ lemma op_sub_anat_\<phi>app[\<phi>overload sub,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_sub_aint \<medium_right_bracket> using nat_minus_as_int the_\<phi> by presburger .
+
+paragraph \<open>Negation\<close>
+
+lemma op_neg_aint_\<phi>app
+  [\<phi>overload neg,
+   \<phi>synthesis for _ (100)
+              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. - x \<Ztypecolon> _\<close> (1200)]:
+  \<open> \<p>\<r>\<o>\<c> op_aneg rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] \<int> \<longmapsto> \<v>\<a>\<l> -x \<Ztypecolon> \<int> \<rbrace> \<close>
+  unfolding op_aneg_def Premise_def
+  by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+
 
 paragraph \<open>Times\<close>
 

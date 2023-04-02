@@ -32,10 +32,23 @@ definition op_Za_to_Ra :: \<open>(VAL, VAL) proc'\<close>
     \<phi>M_getV aint V_aint.dest rv (\<lambda>v.
     Return (\<phi>arg (V_areal.mk (real_of_int v))))\<close>
 
-lemma op_Za_to_Ra_\<phi>app[\<phi>overload to_real]:
+declare [[
+    overloaded_operator_in_synthesis \<open>real_of_int\<close>,
+    overloaded_operator_in_synthesis \<open>real_of_nat\<close>
+ ]]
+
+lemma op_Za_to_Ra_\<phi>app
+  [\<phi>overload to_real, \<phi>synthesis for _ (100)
+                                 and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. real_of_int x \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_Za_to_Ra raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<int> \<longmapsto> real_of_int x \<Ztypecolon> \<v>\<a>\<l> \<real> \<rbrace> \<close>
   unfolding op_Za_to_Ra_def
   by (cases raw; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+
+lemma op_Na_to_Ra_\<phi>app
+  [\<phi>overload to_real, \<phi>synthesis for _ (100)
+                                 and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. real_of_int x \<Ztypecolon> _\<close> (1200)]:
+  \<open> \<p>\<r>\<o>\<c> op_Za_to_Ra raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<nat> \<longmapsto> real_of_nat x \<Ztypecolon> \<v>\<a>\<l> \<real> \<rbrace> \<close>
+  \<medium_left_bracket> op_Za_to_Ra \<medium_right_bracket>. .
 
 
 end

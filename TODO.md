@@ -1,3 +1,4 @@
+- $rB to get the value of variable rB in non-synthesis mode
 - Auto detect form (?R * X) at the begining of casting or ToSA, and convert it to (X remains ?R)
 
 - Eliminational φ-LPR, necessary in Inhabitance rule generation?
