@@ -32,6 +32,7 @@ abbreviation LshL (infixl "LSHL" 70) where \<open>x LSHL y \<equiv> x  *  2 ^ Bi
 
 
 \<phi>overloads add and sub and mul and div and less and less_equal and greater and greater_equal
+  and floor and ceiling
 
 declare [[
     overloaded_operator_in_synthesis \<open>(+)\<close>,

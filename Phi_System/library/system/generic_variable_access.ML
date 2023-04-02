@@ -10,8 +10,9 @@ signature GENERIC_VARIABLE_ACCESS = sig
 
 (** Value Context **)
 val open_value_context : term list (*arguments*) -> Proof.context -> Proof.context
-val assign_local_val : typ option -> Proof.context -> string * Proof.context
-val bind_local_vals  : (string (*external name*) * term) list -> Proof.context -> Proof.context
+val assign_anony_local_val : typ option -> Proof.context -> string * Proof.context
+val bind_local_vals  : (xstring (*external name*) * term) list -> Proof.context -> Proof.context
+val lookup_bindings : Proof.context -> xstring -> term option
 
 (** Parser for Access **)
 type value_parser_key =
@@ -47,11 +48,15 @@ structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
 (*** Value Context ***)
 
 type value_context =
-        ( term list (*values of arguments, of type 'a \<phi>arg.*)
+        ( term list (*argument list, of type 'a \<phi>arg.*)
         * term Symtab.table (*binding table of local values,
                               key: external name of the fixed variable*)
-        * int (*a counter assigning identities to intermediate local values*))
-       (*Free variables in the term must use external names, just as what user inputs directly.*)
+          (*Free variables in the terms must use external names, just as what is parsed and before
+              checked from the user inputs.
+            Use Variable.revert_fixed if it is a fixed free variable!
+
+            P.S. Actually I'm thinking if we can use Syntax.uncheck_term*)
+        * int (*a counter assigning identities to anonymous local values*))
 
 structure Value_Ctxt = Proof_Data (
   type T = value_context option
@@ -71,7 +76,7 @@ fun open_value_context arguments =
   Value_Ctxt.map (fn SOME (_, LV, CNT) => SOME (arguments, LV, CNT)
                    | NONE => SOME (arguments, Symtab.empty, 0))
 
-fun assign_local_val ty ctxt =
+fun assign_anony_local_val ty ctxt =
   let
     val (ARG, LV, CNT) = value_context_of ctxt
     val name = "\<v>" ^ string_of_int CNT
@@ -84,6 +89,7 @@ fun assign_local_val ty ctxt =
 fun bind_local_vals vals =
   map_value_context (fn (A,V,N) => (A, fold Symtab.update vals V ,N))
 
+fun lookup_bindings ctxt = Symtab.lookup (#2 (value_context_of ctxt))
 
 (*** Parser for Access ***)
 

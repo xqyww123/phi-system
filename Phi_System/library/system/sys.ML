@@ -156,7 +156,7 @@ fun accept_proc' (ctxt,sequent) =
             \<^Const_>\<open> Pure.imp for codeblk_term _ \<close>))
         = Phi_Help.leading_antecedent' rule
 
-    val (ret_name, ctxt'1) = Generic_Variable_Access.assign_local_val (SOME ret_ty) ctxt
+    val (ret_name, ctxt'1) = Generic_Variable_Access.assign_anony_local_val (SOME ret_ty) ctxt
     val ([s_name], ctxt') = Proof_Context.add_fixes [(Binding.name "\<s>", NONE, NoSyn)] ctxt'1
     val codeblk_cterm =
           Term.subst_bounds ([Free (ret_name, ret_ty), Free (s_name, \<^typ>\<open>resource\<close>)], codeblk_term)

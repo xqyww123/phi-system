@@ -58,7 +58,7 @@ fun register_assigner (keyword, typ_const, descr, assigner) =
 fun parse_assigner ctxt =
   let
     val (assigner, type_map) = Assigner.get (Proof_Context.theory_of ctxt)
-    fun not_defined name = let open Pretty in
+    fun not_found name = let open Pretty in
         error (string_of (chunks (
           block [Binding.pretty name, str " is not an existing local value or variable."] ::
           str "Use the following syntax:" ::
@@ -68,14 +68,15 @@ fun parse_assigner ctxt =
         )))
       end
     fun find name =
-      case Variable.lookup_fixed ctxt (Binding.name_of name)
-            |> Option.mapPartial (Variable.default_type ctxt)
-        of SOME (Type ("dummy", [])) => not_defined name
-         | SOME (Type (T, _)) =>
-            (case Symtab.lookup type_map T
-               of SOME key => key
-                | NONE => not_defined name)
-         | _ => not_defined name
+      case Generic_Variable_Access.lookup_bindings ctxt (Binding.name_of name)
+        of SOME X => (
+            case Phi_Help.safe_fastype_of X
+              of Type (T, _) =>
+                  (case Symtab.lookup type_map T
+                     of SOME key => key
+                      | NONE => not_found name)
+               | _ => not_found name)
+         | _ => not_found name
     fun parse (NONE, name) = parse (SOME (find name), name)
       | parse (SOME key, name) =
           case Symtab.lookup assigner key

@@ -3,10 +3,13 @@ signature PHI_VARIABLE = sig
   val variable_is_typed : bool Config.T
   val dest_Var : term -> (string * (term * term)) option
 
+  val varname_prefix : string
+
 end
 
 structure Phi_Variable : PHI_VARIABLE = struct
 
+val varname_prefix = "\<v>\<a>\<r>_"
 val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K false)
 
 fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
@@ -40,7 +43,8 @@ fun declare_rule pos rule =
 
 fun variable_assigner' b (ctxt,sequent) =
   let
-  val iname = Variable.intern_fixed ctxt (Binding.name_of b)
+  val vb = Binding.prefix_name varname_prefix b
+  val iname = Variable.intern_fixed ctxt (Binding.name_of vb)
   val existed = find_Var iname (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
                  |> is_some
   in if existed
@@ -52,9 +56,9 @@ fun variable_assigner' b (ctxt,sequent) =
           val rule = if Config.get ctxt variable_is_typed
                      then @{thm "__set_new_var_rule__"}
                      else @{thm "__set_new_var_noty_rule__"}
-          val ([vname],ctxt) = Proof_Context.add_fixes [(b, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
+          val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
           val ctxt = Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free (Binding.name_of b, @{typ varname}))] ctxt
+                        [(Binding.name_of b, Free (Binding.name_of vb, @{typ varname}))] ctxt
           in (rule, ctxt,
               [Thm.cterm_of ctxt (Free (vname, @{typ varname}))],
               [declare_rule (Binding.pos_of b)])
@@ -64,9 +68,10 @@ val variable_assigner : Generic_Variable_Access.assigner = ("var", variable_assi
 
 fun variable_declarer' TY b (ctxt,sequent) =
   let
-    val ([vname],ctxt) = Proof_Context.add_fixes [(b, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
+    val vb = Binding.prefix_name varname_prefix b
+    val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
     val ctxt = Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free (Binding.name_of b, @{typ varname}))] ctxt
+                        [(Binding.name_of b, Free (Binding.name_of vb, @{typ varname}))] ctxt
     val idx = Thm.maxidx_of_cterm TY + 1
     val rule = @{thm "__new_var_rule__"}
           |> Thm.incr_indexes idx

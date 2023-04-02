@@ -54,7 +54,7 @@ proc FIB:
       \<open>$n - 1\<close> FIB \<rightarrow> val a;;
       \<open>$n - 2\<close> FIB \<rightarrow> val b;;
       return (\<open>$a + $b\<close>)
-      affirm by (metis fib.elims less_or_eq_imp_le numeral_1_eq_Suc_0 numerals(1) the_\<phi>(2) zero_less_one_class.zero_le_one)
+      affirm by (metis One_nat_def fib.elims le_Suc_eq le_zero_eq the_\<phi>)
     \<medium_right_bracket>.
   \<medium_right_bracket> by (simp add: le_Suc_eq) .
 
