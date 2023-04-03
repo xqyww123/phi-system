@@ -357,9 +357,9 @@ lemma [\<phi>reason for \<open>(?x,?y) \<Ztypecolon> ?N \<^emph> ?M \<s>\<h>\<i>
 
 (*do not add it to \<phi>-LPR because we have stronger reasoning mechanisms*)
 lemma \<phi>Prod_transformation:
-  " x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> N' \<a>\<n>\<d> P1
-\<Longrightarrow> y \<Ztypecolon> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> M' \<a>\<n>\<d> P2
-\<Longrightarrow> (x,y) \<Ztypecolon> N \<^emph> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x',y') \<Ztypecolon> N' \<^emph> M' \<a>\<n>\<d> P1 \<and> P2"
+  " x \<Ztypecolon> N \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> N' \<a>\<n>\<d> Pa
+\<Longrightarrow> y \<Ztypecolon> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> M' \<a>\<n>\<d> Pb
+\<Longrightarrow> (x,y) \<Ztypecolon> N \<^emph> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x',y') \<Ztypecolon> N' \<^emph> M' \<a>\<n>\<d> Pa \<and> Pb"
   unfolding Imply_def by (simp add: \<phi>expns) blast
 
 lemma [\<phi>reason 1200]:

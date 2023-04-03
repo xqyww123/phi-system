@@ -408,10 +408,10 @@ lemma [\<phi>reason 1200]:
   unfolding \<r>Clean_def Imply_def apply (simp add: \<phi>expns)
   using mk_homo_one by blast
 
-lemma [\<phi>reason 1200 for \<open>If ?P (\<phi> ?T) (\<phi> ?U) = (\<phi> ?Z) @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (\<phi> T) (\<phi> U) = (\<phi> Z) @action branch_convergence\<close>
-  unfolding Action_Tag_def by fastforce
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<phi> _) (_ \<Ztypecolon> \<phi> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> \<phi> T) (y \<Ztypecolon> \<phi> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> \<phi> Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp add: \<phi>_cast)
 
 paragraph \<open>Conversion\<close>
 

@@ -1202,6 +1202,13 @@ text \<open>This merging procedure retains the order of the left side.\<close>
 consts branch_convergence :: \<open>action\<close>
        invoke_branch_convergence :: \<open>action\<close>
 
+declare [[\<phi>reason_default_pattern
+    \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close> \<Rightarrow> \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close> (100)
+and \<open>If ?P ?A ?B = _ @action branch_convergence\<close> \<Rightarrow> \<open>If ?P ?A ?B = _ @action branch_convergence\<close> (100)
+]]
+
+declare [[\<phi>trace_reasoning = 1]]
+
 lemma [\<phi>reason 3000 for \<open>If _ _ _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action invoke_branch_convergence\<close>]:
   " Simplify (assertion_simps undefined) A' A
 \<Longrightarrow> Simplify (assertion_simps undefined) B' B
@@ -1232,12 +1239,12 @@ lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?
 
 subsubsection \<open>Zero\<close>
 
-lemma [\<phi>reason 3000 for \<open>If ?P ?A 0 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
+lemma [\<phi>reason 3000]:
   "If P A 0 \<i>\<m>\<p>\<l>\<i>\<e>\<s> (A \<s>\<u>\<b>\<j> P) @action branch_convergence"
   unfolding Action_Tag_def Imply_def
   by (simp add: \<phi>expns zero_set_def)
 
-lemma [\<phi>reason 3000 for \<open>If ?P 0 ?A \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
+lemma [\<phi>reason 3000]:
   "If P 0 A \<i>\<m>\<p>\<l>\<i>\<e>\<s> (A \<s>\<u>\<b>\<j> \<not> P) @action branch_convergence"
   unfolding Action_Tag_def Imply_def
   by (simp add: \<phi>expns zero_set_def)
@@ -1245,12 +1252,16 @@ lemma [\<phi>reason 3000 for \<open>If ?P 0 ?A \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @
 
 subsubsection \<open>Fallback\<close>
 
-lemma [\<phi>reason 10 for \<open>If ?P ?A ?B = ?X @action branch_convergence\<close>]:
+lemma [\<phi>reason 10]:
   "If P A B = If P A B @action branch_convergence"
   unfolding Action_Tag_def ..
 
-text \<open>There is no fallback for \<^const>\<open>If\<close>. The If is not allowed to be fallback.
-  If the convergence for If fails, the reasoning fails.\<close>
+lemma [\<phi>reason 20]:
+  " If P x y = z @action branch_convergence
+\<Longrightarrow> If P T U = Z @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence"
+  unfolding Action_Tag_def by (cases P; simp)
+
 
 subsubsection \<open>Subjection\<close>
 
@@ -1264,21 +1275,19 @@ lemma [\<phi>reason 1400]:
 \<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence\<close>
   unfolding Subjection_Subjection .
 
-lemma [\<phi>reason 1300 for \<open>If ?P (?L \<s>\<u>\<b>\<j> ?QL) (?R \<s>\<u>\<b>\<j> ?QR) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
+lemma [\<phi>reason 1300]:
   " If P QL QR = Q @action branch_convergence
 \<Longrightarrow> If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence
 \<Longrightarrow> If P (L \<s>\<u>\<b>\<j> QL) (R \<s>\<u>\<b>\<j> QR) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> Q) @action branch_convergence"
   unfolding Action_Tag_def Imply_def by force
 
-lemma [\<phi>reason 1200
-    for \<open>If ?P (?L \<s>\<u>\<b>\<j> ?Q) ?R \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>
-]:
+lemma [\<phi>reason 1200]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
   " If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence
 \<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> P \<longrightarrow> Q) @action branch_convergence"
   unfolding Imply_def Action_Tag_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>If ?P ?L (?R \<s>\<u>\<b>\<j> ?Q) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
+lemma [\<phi>reason 1200]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
   " If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence
 \<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> \<not>P \<longrightarrow> Q) @action branch_convergence"
@@ -1325,13 +1334,15 @@ text \<open>The merging recognizes two existential quantifier are identical if t
 
 subsubsection \<open>Main Procedure\<close>
 
+(*
 lemma [\<phi>reason 2000 for \<open>If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
   " If P x y = z @action branch_convergence
 \<Longrightarrow> If P T U = Z @action branch_convergence
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def by (cases P; simp)
+  unfolding Action_Tag_def Imply_def by (cases P; simp) *)
 
 definition \<open>Branch_Convergence_Type_Pattern type the_type_to_match \<equiv> Trueprop True\<close>
+  \<comment> \<open>Given a \<open>type\<close>, what is the pattern of the correspondence type to be merged from the opposite branch?\<close>
 
 lemma [\<phi>reason 10 for \<open>PROP Branch_Convergence_Type_Pattern ?X ?X'\<close>]:
   \<open>PROP Branch_Convergence_Type_Pattern X X\<close>
@@ -1341,54 +1352,58 @@ lemma [\<phi>reason 1200 for \<open>PROP Branch_Convergence_Type_Pattern (Val ?v
   \<open>PROP Branch_Convergence_Type_Pattern (Val v T) (Val v T')\<close>
   unfolding Branch_Convergence_Type_Pattern_def ..
 
-lemma [\<phi>reason 1200 for \<open>If ?P (?L * (?x \<Ztypecolon> ?T)) ?R \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
+lemma [\<phi>reason 1200]:
   \<open> PROP Branch_Convergence_Type_Pattern T T'
 \<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<a>\<n>\<d> Any
-\<Longrightarrow> If P x y = z @action branch_convergence
-\<Longrightarrow> If P T T' = Z @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T') \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence
 \<Longrightarrow> If P L R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence
-\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X * (z \<Ztypecolon> Z) @action branch_convergence\<close>
+\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X * Z @action branch_convergence\<close>
   unfolding Action_Tag_def FOCUS_TAG_def
-  by (smt (z3) Imply_def implies_right_prod)
+  by (smt (z3) Imply_def set_mult_expn)
+  
 
 
 subsubsection \<open>Convergence of Structural Nodes\<close>
 
-lemma [\<phi>reason 1200 for \<open>If ?P (?n \<Znrres> ?T) (?n' \<Znrres> ?U) = ?Z @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (n \<Znrres> T) (n \<Znrres> U) = n \<Znrres> Z @action branch_convergence\<close>
-  unfolding Action_Tag_def by (cases P; simp)
+lemma [\<phi>reason 1200 for \<open>If ?P (_ \<Ztypecolon> _ \<Znrres> _) (_ \<Ztypecolon> _ \<Znrres> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Z @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> n \<Znrres> T) (y \<Ztypecolon> n \<Znrres> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> n \<Znrres> Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp add: \<phi>Share_transformation)
 
-lemma [\<phi>reason 1200 for \<open>If ?P (?T \<^emph> ?U) (?T' \<^emph> ?U') = ?Z @action branch_convergence\<close>]:
-  \<open> If P T T' = T'' @action branch_convergence
-\<Longrightarrow> If P U U' = U'' @action branch_convergence
-\<Longrightarrow> If P (T \<^emph> U) (T' \<^emph> U') = (T'' \<^emph> U'') @action branch_convergence\<close>
-  unfolding Action_Tag_def by (cases P; simp)
+lemma [\<phi>reason 1200 for \<open>If _ ((_,_) \<Ztypecolon> _ \<^emph> _) ((_,_) \<Ztypecolon> _ \<^emph> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (x' \<Ztypecolon> T') \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x'' \<Ztypecolon> T'') @action branch_convergence
+\<Longrightarrow> If P (y \<Ztypecolon> U) (y' \<Ztypecolon> U') \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y'' \<Ztypecolon> U'') @action branch_convergence
+\<Longrightarrow> If P ((x,y) \<Ztypecolon> T \<^emph> U) ((x',y') \<Ztypecolon> T' \<^emph> U') \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((x'',y'') \<Ztypecolon> T'' \<^emph> U'') @action branch_convergence\<close>
+  unfolding Action_Tag_def apply (cases P; simp add: \<phi>Prod_transformation)
+   apply (rule \<phi>Prod_transformation[where Pa=True and Pb=True, simplified], assumption, assumption)
+  by (rule \<phi>Prod_transformation[where Pa=True and Pb=True, simplified], assumption, assumption)
 
-lemma [\<phi>reason 1200 for \<open>If ?P (?k \<^bold>\<rightarrow>\<^sub>@ ?T) (?k' \<^bold>\<rightarrow>\<^sub>@ ?U) = ?Z @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (k \<^bold>\<rightarrow>\<^sub>@ T) (k \<^bold>\<rightarrow>\<^sub>@ U) = k \<^bold>\<rightarrow>\<^sub>@ Z @action branch_convergence\<close>
-  unfolding Action_Tag_def by (cases P; simp)
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> _ \<^bold>\<rightarrow>\<^sub>@ _) (_ \<Ztypecolon> _ \<^bold>\<rightarrow>\<^sub>@ _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (y \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp add: \<phi>MapAt_L_cast)
 
-lemma [\<phi>reason 1200 for \<open>If ?P (?k \<^bold>\<rightarrow> ?T) (?k' \<^bold>\<rightarrow> ?U) = ?Z @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (k \<^bold>\<rightarrow> T) (k \<^bold>\<rightarrow> U) = k \<^bold>\<rightarrow> Z @action branch_convergence\<close>
-  unfolding Action_Tag_def by (cases P; simp)
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> _ \<^bold>\<rightarrow> _) (_ \<Ztypecolon> _ \<^bold>\<rightarrow> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (y \<Ztypecolon> k \<^bold>\<rightarrow> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> k \<^bold>\<rightarrow> Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp add: \<phi>MapAt_cast)
 
-lemma [\<phi>reason 1200 for \<open>If ?P (Val ?v ?T) (Val ?v' ?U) = ?Z @action branch_convergence\<close>]:
-  \<open>If P (Val v T) (Val v U) = Val v (If P T U) @action branch_convergence\<close>
-  unfolding Action_Tag_def by simp
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Val _ _) (_ \<Ztypecolon> Val _ _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> Val v T) (y \<Ztypecolon> Val v U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Val v Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp add: Val_transformation)
 
-lemma [\<phi>reason 1200 for \<open>If ?P (\<black_circle> ?T) (\<black_circle> ?U) = (\<black_circle> ?Z) @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (\<black_circle> T) (\<black_circle> U) = (\<black_circle> Z) @action branch_convergence\<close>
-  unfolding Action_Tag_def by fastforce
+(*TODO: The rules can be generated from Transformation Functor!*)
 
-lemma [\<phi>reason 1200 for \<open>If ?P (Val ?v ?T) (Val ?v' ?U) = ?Z @action branch_convergence\<close>]:
-  \<open> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (Val v T) (Val v U) = (Val v Z) @action branch_convergence\<close>
-  unfolding Action_Tag_def by fastforce
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<black_circle> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<black_circle> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> \<black_circle> Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp add: \<phi>Some_cast)
 
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Nosep _) (_ \<Ztypecolon> Nosep _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> Nosep T) (y \<Ztypecolon> Nosep U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Nosep Z) @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp add: Nosep_cast)
 
 (* subsubsection \<open>Object\<close>
 
