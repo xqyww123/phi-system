@@ -11,6 +11,8 @@ end
 structure Phi_Sys_Reasoner : PHI_SYS_REASONERS = struct
 
 fun is_deferable (\<^const>\<open>Trueprop\<close> $ X) = is_deferable X
+  | is_deferable (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,X)) = is_deferable X
+  | is_deferable (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_deferable X
   | is_deferable (Const (\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = is_deferable X
   | is_deferable (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) = true
   | is_deferable (Const (\<^const_name>\<open>Argument\<close>, _) $ _) = true

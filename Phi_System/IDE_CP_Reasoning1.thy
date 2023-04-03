@@ -556,7 +556,9 @@ lemma [\<phi>reason 3000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X' \<a>\<n>
   \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action ToSA' mode\<close>
   unfolding Action_Tag_def using implies_refl .
 
+subsection \<open>Convergence of Branch\<close>
 
+consts invoke_branch_convergence :: \<open>action\<close>
 
 subsection \<open>Removing Values\<close>
 

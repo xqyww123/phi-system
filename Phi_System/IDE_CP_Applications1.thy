@@ -392,14 +392,20 @@ lemma [\<phi>reason 5000]:
 subsection \<open>Case Analysis\<close>
 
 consts \<A>_action_case :: \<open>action\<close>
+       \<A>_action_case_on :: \<open>action\<close>
 
 lemma cases_\<phi>app: \<open>PROP Call_Action (\<A>_view_shift_or_imp \<A>_action_case)\<close> ..
+lemma cases_on_\<phi>app: \<open>PROP Call_Action (\<A>_view_shift_or_imp \<A>_action_case_on)\<close> ..
 
 declare [[ \<phi>reason_default_pattern
       \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_action_case\<close> \<Rightarrow>
       \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_action_case\<close>    (100)
   and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<a>\<n>\<d> _ @action \<A>_action_case\<close> \<Rightarrow>
       \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<a>\<n>\<d> _ @action \<A>_action_case\<close>    (100)
+  and \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_action_case_on\<close> \<Rightarrow>
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_action_case_on\<close>    (100)
+  and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<a>\<n>\<d> _ @action \<A>_action_case_on\<close> \<Rightarrow>
+      \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<a>\<n>\<d> _ @action \<A>_action_case_on\<close>    (100)
 ]]
 
 lemma [\<phi>reason 1000]:
@@ -413,6 +419,34 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> PB
 \<Longrightarrow> B + A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> PB \<or> PA @action \<A>_action_case\<close>
   unfolding Argument_def Action_Tag_def using \<phi>CASE_IMP .
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<s>\<h>\<i>\<f>\<t>\<s> Ya \<a>\<n>\<d> PA)
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<s>\<h>\<i>\<f>\<t>\<s> Yb \<a>\<n>\<d> PB)
+\<Longrightarrow> If P Ya Yb \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action invoke_branch_convergence
+\<Longrightarrow> If P A B \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> If P PA PB @action \<A>_action_case\<close>
+  unfolding Argument_def Action_Tag_def Premise_def
+  apply (cases P; simp)
+  using \<phi>view_trans view_shift_by_implication apply fastforce
+  using View_Shift_def view_shift_by_implication by force
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ya \<a>\<n>\<d> PA)
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Yb \<a>\<n>\<d> PB)
+\<Longrightarrow> If P Ya Yb \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action invoke_branch_convergence
+\<Longrightarrow> If P A B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> If P PA PB @action \<A>_action_case\<close>
+  unfolding Argument_def Action_Tag_def Premise_def
+  apply (cases P; simp)
+  using implies_trans apply fastforce
+  using implies_trans by fastforce
+
+
+(*lemma [\<phi>reason 1000]:
+  \<open> \<p>\<a>\<r>\<a>\<m> P
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> PA)
+\<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> PB
+\<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> PB \<or> PA @action \<A>_action_case\<close>
+  unfolding Argument_def Action_Tag_def using \<phi>CASE_VS . *)
 
 
 subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type by Definition\<close>

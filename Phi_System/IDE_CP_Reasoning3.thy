@@ -1200,7 +1200,6 @@ text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the 
 text \<open>This merging procedure retains the order of the left side.\<close>
 
 consts branch_convergence :: \<open>action\<close>
-       invoke_branch_convergence :: \<open>action\<close>
 
 declare [[\<phi>reason_default_pattern
     \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close> \<Rightarrow> \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close> (100)
@@ -1399,6 +1398,17 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ 
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
 \<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<black_circle> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> \<black_circle> Z) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp add: \<phi>Some_cast)
+
+declare [[\<phi>trace_reasoning = 2]]
+
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<black_circle> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> Identity \<a>\<n>\<d> Any
+\<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P (Some x') None \<Ztypecolon> Identity) @action branch_convergence\<close>
+  unfolding Action_Tag_def  
+  \<medium_left_bracket> premises T
+    cases \<medium_left_bracket> \<phi>Some_cast[OF T]
+  thm \<phi>Some_cast[OF T]
+  thm \<phi>
 
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Nosep _) (_ \<Ztypecolon> Nosep _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
