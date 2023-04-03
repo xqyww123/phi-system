@@ -65,17 +65,19 @@ fun delete_val' pred xname ctxt =
 val delete_val = delete_val' (K false)
 
 
-fun valname_of rule =
+fun dest_rule rule =
   case Thm.prop_of rule
     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
           $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _)
                        $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (vname, T)))
-          $ _)
-         => (vname,T)
+          $ Spec)
+         => (vname,T,
+             (case Spec of \<^Const>\<open>\<phi>Type _ _\<close> $ V $ _ => SOME V
+                         | _ => NONE))
      | _ => raise THM ("Bad Rule", 0, [rule])
 
 fun update_val b rule ctxt = 
-  let val (vname,T) = valname_of rule
+  let val (vname,T,V) = dest_rule rule
       val vterm = Free (Variable.revert_fixed ctxt vname, T)
    in ctxt
      |> delete_val' (fn rule' => Thm.eq_thm_prop (rule',rule)) (Binding.name_of b)
@@ -86,6 +88,7 @@ fun update_val b rule ctxt =
                               ([(pattern_of ctxt' (Binding.name_of b) rule, NONE)],[]) NONE
                               [rule]) ctxt')
      |> Generic_Variable_Access.bind_local_vals [(Binding.name_of b, vterm)]
+     |> Proof_Context.maybe_bind_term ((Binding.name_of b,0), V)
   end
 
 

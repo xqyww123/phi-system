@@ -1305,7 +1305,7 @@ lemma [\<phi>reason 1100 for \<open>If ?P (\<exists>* x. ?L x) ?R \<i>\<m>\<p>\<
 \<Longrightarrow> If P (\<exists>* x. L x) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>* x. X x) @action branch_convergence"
   unfolding Action_Tag_def Imply_def by (cases P; simp add: set_eq_iff \<phi>expns; blast)
 
-text \<open>The merging recognize two existential quantifier are identical if their type and variable name
+text \<open>The merging recognizes two existential quantifier are identical if their type and variable name
   are the same. If so it uses Conv_Merge_Ex_both to merge the quantification,
   or else the right side is expanded first.\<close>
 
