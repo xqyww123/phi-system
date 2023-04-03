@@ -322,7 +322,7 @@ proc (nodef) op_get_var:
   assumes [unfolded \<phi>SemType_def subset_iff, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>x \<Ztypecolon> \<v>\<a>\<r>[var] T\<close>
   output \<open>x \<Ztypecolon> \<v>\<a>\<r>[var] T\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  \<medium_left_bracket> to Identity  op_get_var'' \<medium_right_bracket>. .
+  \<medium_left_bracket> to Identity op_get_var'' \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y\<heavy_comma> \<blangle> x \<Ztypecolon> \<v>\<a>\<r>[var] T \<brangle> \<a>\<n>\<d> Any

@@ -382,6 +382,38 @@ lemma [\<phi>reason 2810]:
 \<Longrightarrow> ExSet T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ExSet R * \<blangle> U \<brangle> \<a>\<n>\<d> P"
   unfolding Imply_def by (simp add: \<phi>expns) fastforce
 
+subsection \<open>Let Notation \& Prod Case\<close>
+
+lemma [\<phi>reason 2600]:
+  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> U x \<a>\<n>\<d> P
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Let x U \<a>\<n>\<d> P"
+  unfolding Let_def .
+
+lemma [\<phi>reason 2600]:
+  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> U x \<brangle> \<a>\<n>\<d> P
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Let x U \<brangle> \<a>\<n>\<d> P"
+  unfolding Let_def .
+
+lemma [\<phi>reason 2610]:
+  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x y \<a>\<n>\<d> P
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> case_prod f (x,y) \<a>\<n>\<d> P"
+  by simp
+
+lemma [\<phi>reason 2610]:
+  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> f x y \<brangle> \<a>\<n>\<d> P
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> case_prod f (x,y) \<brangle> \<a>\<n>\<d> P"
+  by simp
+
+lemma [\<phi>reason 2600]:
+  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x y \<s>\<u>\<b>\<j> x y. xy = (x,y) \<a>\<n>\<d> P
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> case_prod f xy \<a>\<n>\<d> P"
+  unfolding Imply_def by (cases xy; simp add: \<phi>expns)
+
+lemma [\<phi>reason 2600]:
+  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> f x y \<s>\<u>\<b>\<j> x y. xy = (x,y) \<brangle> \<a>\<n>\<d> P
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> case_prod f xy \<brangle> \<a>\<n>\<d> P"
+  unfolding Imply_def by (cases xy; simp add: \<phi>expns)
+
 (* subsubsection \<open>Tailling\<close> \<comment> \<open>\<close>
 
 lemma [\<phi>intro 1100]: \<comment> \<open>tail the step\<close>

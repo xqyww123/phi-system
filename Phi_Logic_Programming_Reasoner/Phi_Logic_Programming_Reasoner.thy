@@ -1,6 +1,6 @@
 theory Phi_Logic_Programming_Reasoner
   imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
-  keywords "except" :: quasi_command
+  keywords "except" "@action" :: quasi_command
     and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
     and "print_\<phi>reasoners" :: diag
   abbrevs
@@ -21,6 +21,15 @@ ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
+
+typedecl action
+
+definition Action_Tag :: \<open>prop \<Rightarrow> action \<Rightarrow> prop\<close> ("_ @action _" [3,4] 3)
+  where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
+
+lemma Action_Tag_I:
+  \<open>P \<Longrightarrow> P @action A\<close>
+  unfolding Action_Tag_def .
 
 ML_file_debug \<open>library/reasoner.ML\<close>
 
@@ -395,11 +404,6 @@ text \<open>In the reasoning, antecedents of the same form may have different pu
 The purpose is denoted by \<open>action\<close> type, which is an unspecified type because it serves only for
   syntactic purpose.\<close>
 
-typedecl action
-
-definition Action_Tag :: \<open>prop \<Rightarrow> action \<Rightarrow> prop\<close> ("_ @action _" [3,4] 3)
-  where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
-
 text \<open>
 \<open>\<open>P @action A\<close>\<close> tags antecedent \<^prop>\<open>P\<close> by the specific purpose denoted by \<^term>\<open>A\<close>.
 
@@ -418,10 +422,6 @@ definition Action_Tag_embed :: \<open>bool \<Rightarrow> action \<Rightarrow> bo
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>PROP Action_Tag (Trueprop P) A \<equiv> Trueprop (Action_Tag_embed P A)\<close>
   unfolding Action_Tag_def Action_Tag_embed_def .
-
-lemma Action_Tag_I:
-  \<open>P \<Longrightarrow> P @action A\<close>
-  unfolding Action_Tag_def .
 
 lemma Action_Tag_D:
   \<open>P @action A \<Longrightarrow> P\<close>

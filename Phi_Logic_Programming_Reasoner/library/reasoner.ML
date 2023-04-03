@@ -73,18 +73,14 @@ signature NU_REASONER = sig
   val nested_level : Proof.context -> int (*Starting from 1*)
 
 
-  val add_intro_rule : Position.T -> priority -> (pattern * priority option) list * pattern list
+  val add_intro_rule : Position.T -> priority
+                    -> (pattern * priority option) list * pattern list
                     -> (context_state -> bool) option
                     -> thm list
                     -> Context.generic -> Context.generic
   val add_intro_rules: (thm list * Position.T * priority * (pattern * priority option) list * pattern list
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
-  val attr_add_intro :
-        ( ((Position.T * priority) * thm list)
-        * ((pattern * priority option) list * pattern list))
-        * (context_state -> bool) option
-       -> attribute
 
   val setup_cmd : (((string (*name term*) * Position.T) * priority (*default priority*))
                    * ((bool (*true for matching, false for not matching*)
@@ -660,17 +656,28 @@ fun add_intro_rules rules ctxt =
   else adds (map (fn (rule,pos,priority,pattern,blacklist,guard) =>
               intro_reasoner ctxt pos priority pattern blacklist guard rule) rules) ctxt
 
-fun attr_add_intro ((((pos, priority), additional_rules), (pattern, blacklist)), guard) =
+fun attr_add_intro (((((pos, priority), additional_rules), action), (pattern, blacklist)), guard) =
   Thm.declaration_attribute (fn rule =>
-      add_intro_rule pos priority (pattern,blacklist) guard (rule::additional_rules))
+      let val rules = (rule::additional_rules)
+                   |> is_some action ? map (fn th =>
+                        th RS (Thm.instantiate (TVars.empty,
+                                                Vars.make [((("A",0),\<^typ>\<open>action\<close>), the action)])
+                                  @{thm Action_Tag_I}))
+       in add_intro_rule pos priority (pattern,blacklist) guard rules end)
 
 
 
 val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Args Scan Parse
+  fun read_term_mode mode' ctxt tm = Syntax.read_term (Proof_Context.set_mode mode' ctxt) tm
+  val read_term_pattern = read_term_mode Proof_Context.mode_pattern
+  val term_pattern = Scan.peek (named_term o read_term_pattern o Context.proof_of)
+
   fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
   val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
   val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
+  fun cterm (ctxt,toks) = let val (term,ret) = term_pattern (ctxt,toks)
+                           in (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term, ret) end
   val pos_parser = Phi_Reasoner_Helpers.pos_parser "\<phi>reasoner"
   val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
        let val ctxt = Context.Proof (Context.proof_of ctxt0)
@@ -685,6 +692,7 @@ in
   (lift pos_parser
   -- lift (option add |-- ((\<^keyword>\<open>!\<close> >> K 2000000) || optional Parse.int 100))
   -- Attrib.thms
+  -- option (lift (\<^keyword>\<open>for\<close> |-- Args.$$$ "action") |-- cterm)
   -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
     -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
   -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
@@ -697,7 +705,7 @@ end)
   Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
-               Method.modifier (attr_add_intro ((((pos,100),[]),([],[])),NONE)) \<^here>)
+               Method.modifier (attr_add_intro (((((pos,100),[]),NONE),([],[])),NONE)) \<^here>)
 ] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."

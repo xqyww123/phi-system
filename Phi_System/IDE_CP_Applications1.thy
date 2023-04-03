@@ -433,7 +433,7 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ya \<a>\<n>\<d> PA)
 \<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Yb \<a>\<n>\<d> PB)
-\<Longrightarrow> If P Ya Yb \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action invoke_branch_convergence
+\<Longrightarrow> \<^bold>d\<^bold>o If P Ya Yb \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action invoke_branch_convergence
 \<Longrightarrow> If P A B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> If P PA PB @action \<A>_action_case\<close>
   unfolding Argument_def Action_Tag_def Premise_def
   apply (cases P; simp)

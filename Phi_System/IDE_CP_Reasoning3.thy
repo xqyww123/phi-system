@@ -1249,7 +1249,7 @@ lemma [\<phi>reason 3000]:
   by (simp add: \<phi>expns zero_set_def)
 
 
-subsubsection \<open>Fallback\<close>
+subsubsection \<open>Fallback and Termination\<close>
 
 lemma [\<phi>reason 10]:
   "If P A B = If P A B @action branch_convergence"
@@ -1261,6 +1261,10 @@ lemma [\<phi>reason 20]:
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence"
   unfolding Action_Tag_def by (cases P; simp)
 
+lemma [\<phi>reason 3000 for \<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P x y = z @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> T) @action branch_convergence\<close>
+  unfolding Action_Tag_def by (cases P; simp)
 
 subsubsection \<open>Subjection\<close>
 
@@ -1399,16 +1403,22 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ 
 \<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<black_circle> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> \<black_circle> Z) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp add: \<phi>Some_cast)
 
-declare [[\<phi>trace_reasoning = 2]]
 
-lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<black_circle> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+(* fix me!!!
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> Identity \<a>\<n>\<d> Any
 \<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P (Some x') None \<Ztypecolon> Identity) @action branch_convergence\<close>
-  unfolding Action_Tag_def  
-  \<medium_left_bracket> premises T
-    cases \<medium_left_bracket> \<phi>Some_cast[OF T]
-  thm \<phi>Some_cast[OF T]
-  thm \<phi>
+  unfolding Action_Tag_def     
+  \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Identity\<close>]  
+    cases \<medium_left_bracket> to Identity \<medium_right_bracket>. \<medium_left_bracket> to Identity \<medium_right_bracket>. ;; \<medium_right_bracket>. .
+
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypecolon> \<black_circle> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
+  \<open> y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> Identity \<a>\<n>\<d> Any
+\<Longrightarrow> If P (x \<Ztypecolon> \<circle>) (y \<Ztypecolon> \<black_circle> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P None (Some y') \<Ztypecolon> Identity) @action branch_convergence\<close>
+  unfolding Action_Tag_def     
+  \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Identity\<close>]  
+    cases \<medium_left_bracket> to Identity \<medium_right_bracket>. \<medium_left_bracket> to Identity \<medium_right_bracket>. ;; \<medium_right_bracket>. .
+*)
 
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Nosep _) (_ \<Ztypecolon> Nosep _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence

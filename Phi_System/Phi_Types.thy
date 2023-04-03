@@ -1410,7 +1410,7 @@ lemma [\<phi>reason 2000]:
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<black_circle> U \<a>\<n>\<d> P @action \<A>_structural Act\<close>
   unfolding Action_Tag_def using \<phi>Some_cast .
 
-lemma [\<phi>reason 2000]:
+lemma [\<phi>reason 1070]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<black_circle> U \<a>\<n>\<d> P @action to Z \<close>
   unfolding Action_Tag_def using \<phi>Some_cast .
@@ -1420,10 +1420,11 @@ lemma [\<phi>reason 1100]:
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<black_circle> U \<a>\<n>\<d> P @action to (\<black_circle> Z) \<close>
   unfolding Action_Tag_def using \<phi>Some_cast .
 
+(* TODO:: fix me!!!
 lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> Identity \<a>\<n>\<d> P @action to Identity
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Some x' \<Ztypecolon> Identity \<a>\<n>\<d> P @action to Identity \<close>
-  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns) *)
 
 lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as (z \<Ztypecolon> Z)
