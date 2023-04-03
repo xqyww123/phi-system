@@ -101,6 +101,11 @@ definition op_sub_ar :: "(VAL \<times> VAL, VAL) proc'"
       Return (\<phi>arg (V_areal.mk (val_b - val_a)))
   )))"
 
+definition op_neg_ar :: "(VAL, VAL) proc'"
+  where "op_neg_ar rv =
+      \<phi>M_getV areal V_areal.dest rv (\<lambda>v.
+      Return (\<phi>arg (V_areal.mk (-v))))"
+
 definition op_mul_ar :: "(VAL \<times> VAL, VAL) proc'"
   where "op_mul_ar =
       \<phi>M_caseV (\<lambda>va vb.
@@ -181,6 +186,17 @@ lemma op_sub_areal_\<phi>app
   unfolding op_sub_ar_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+
+paragraph \<open>Negation\<close>
+
+lemma op_neg_areal_\<phi>app
+  [\<phi>overload neg,
+   \<phi>synthesis for _ (100)
+              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. - x \<Ztypecolon> _\<close> (1200)]:
+  \<open> \<p>\<r>\<o>\<c> op_neg_ar rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] \<real> \<longmapsto> \<v>\<a>\<l> -x \<Ztypecolon> \<real> \<rbrace> \<close>
+  unfolding op_neg_ar_def Premise_def
+  by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+
 
 paragraph \<open>Times\<close>
 

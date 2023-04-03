@@ -498,6 +498,25 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> \<phi>_Have_Types R TYs\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
 
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>_Have_Types (exp v) TYs
+\<Longrightarrow> \<phi>_Have_Types (Let v exp) TYs\<close>
+  unfolding Let_def .
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>_Have_Types (\<lambda>ret. (exp ret) (v ret)) TYs
+\<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. Let (v ret) (exp ret)) TYs\<close>
+  unfolding Let_def .
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>_Have_Types (f (fst x) (snd x)) TYs
+\<Longrightarrow> \<phi>_Have_Types (case_prod f x) TYs\<close>
+  by (simp add: case_prod_beta')
+
+lemma [\<phi>reason 1200]:
+  \<open> \<phi>_Have_Types (\<lambda>ret. f ret (fst (x ret)) (snd (x ret))) TYs
+\<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. case_prod (f ret) (x ret)) TYs\<close>
+  by (simp add: case_prod_beta')
 
 
 

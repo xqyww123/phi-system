@@ -1482,15 +1482,16 @@ subsubsection \<open>Syntax\<close>
 nonterminal \<phi>identifier
 
 syntax
-  "_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$\"_" [991] 990)
-  "_get_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$_" [991] 990)
+  "_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$\"_")
+  "_get_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$_")
   "_set_identifier_" :: "\<phi>identifier \<Rightarrow> logic \<Rightarrow> logic" ("$_ := _" [991, 51] 50)
-  "_identifier_id_" :: \<open>id \<Rightarrow> \<phi>identifier\<close> ("_" [992] 991)
-  "_identifier_num_" :: \<open>num_token \<Rightarrow> \<phi>identifier\<close> ("_" [992] 991)
+  "_identifier_id_" :: \<open>id \<Rightarrow> \<phi>identifier\<close> ("_")
+  "_identifier_num_" :: \<open>num_token \<Rightarrow> \<phi>identifier\<close> ("_")
   "_identifier_1_" :: \<open>\<phi>identifier\<close> ("1")
-  "_identifier_logic_" :: \<open>logic \<Rightarrow> \<phi>identifier\<close> ("'(_')" [992] 991)
+  "_identifier_logic_" :: \<open>logic \<Rightarrow> \<phi>identifier\<close> ("'(_')")
 
 consts \<phi>identifier :: "unit \<Rightarrow> unit" \<comment> \<open>used only in syntax parsing\<close>
+
 
 subsubsection \<open>Rule \& Implementation\<close>
 
