@@ -83,12 +83,14 @@ lemma make_overloaded_synthesis_rule'_for_const:
       unfolded split_paired_All_\<phi>arg_unit split_paired_all_\<phi>arg_unit] .
 
 
-lemmas [\<phi>reason 60]
+lemmas [\<phi>reason 160]
   = overloaded_synthesis_const[where const=\<open>0\<close>]
-lemmas [\<phi>reason 60]
+lemmas [\<phi>reason 160]
   = overloaded_synthesis_const[where const=\<open>1\<close>]
-lemmas [\<phi>reason 60]
+lemmas [\<phi>reason 160]
   = overloaded_synthesis_const[where const=\<open>numeral x\<close> for x]
+lemmas [\<phi>reason 160]
+  = overloaded_synthesis_const[where const=\<open>- numeral x\<close> for x]
 
 lemmas [\<phi>reason 2000 for \<open>PROP Gen_Synthesis_Rule (
           Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (?var_x::?'x::numeral) \<Ztypecolon> \<v>\<a>\<l>[ret] ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) _ _ \<close>]

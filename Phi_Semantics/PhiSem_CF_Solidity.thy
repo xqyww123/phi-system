@@ -2,7 +2,7 @@ theory PhiSem_CF_Solidity
   imports PhiSem_CF_Basic
 begin
 
-(*we first declare a quick-and-dirty formalization of the semantics that doesn't use exception mechanism*)
+(*for now we use a quick-and-dirty formalization of the semantics that doesn't use exception mechanism*)
 
 definition op_require :: \<open>(VAL, unit) proc'\<close>
   where \<open>op_require rP =

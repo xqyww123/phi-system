@@ -144,7 +144,7 @@ section \<open>Abstraction of Instructions\<close>
 subsubsection \<open>Constant\<close>
 
 lemma op_const_areal_\<phi>app[\<phi>synthesis 300]:
-  \<open> Check_Literal x
+  \<open> Is_Literal x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_const_areal x \<lbrace> Void \<longmapsto> \<v>\<a>\<l> x \<Ztypecolon> \<real> \<rbrace>\<close>
   unfolding op_const_areal_def Premise_def
   by (rule, simp add: \<phi>expns)

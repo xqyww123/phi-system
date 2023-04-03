@@ -106,7 +106,7 @@ consts End   :: \<open>bool \<Rightarrow> bool\<close> ("End: _" [100] 36)
 
 subsection \<open>Branch-like\<close>
 
-lemma op_sel_\<phi>app:
+lemma sel_\<phi>app:
   \<open> \<phi>SemType (a \<Ztypecolon> A) TY
 \<Longrightarrow> \<phi>SemType (b \<Ztypecolon> B) TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sel TY (\<phi>V_pair rawc (\<phi>V_pair rawb rawa)) \<lbrace>

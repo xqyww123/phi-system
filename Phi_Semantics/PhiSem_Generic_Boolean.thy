@@ -98,7 +98,7 @@ subsection \<open>Constant\<close>
 declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_const_bool[\<phi>synthesis for \<open>\<lambda>v. True \<Ztypecolon> ?T v\<close> (1200) and \<open>\<lambda>v. False \<Ztypecolon> ?T v\<close> (1200)]:
-  \<open> Check_Literal b
+  \<open> Is_Literal b
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_const_bool b \<lbrace> Void \<longmapsto> \<v>\<a>\<l> b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_const_bool_def
   by (rule, simp add: \<phi>Bool_expn)

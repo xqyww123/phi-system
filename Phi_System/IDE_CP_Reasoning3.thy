@@ -2100,32 +2100,37 @@ subsection \<open>Literal Evaluation\<close>
 
 subsubsection \<open>Check\<close>
 
-definition Check_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Check_Literal _ \<longleftrightarrow> True\<close>
+definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Literal _ \<longleftrightarrow> True\<close>
 
 lemma [\<phi>reason 1]:
   \<open> FAIL TEXT(x \<open>should be a literal\<close>)
-\<Longrightarrow> Check_Literal x\<close> unfolding Check_Literal_def ..
+\<Longrightarrow> Is_Literal x\<close> unfolding Is_Literal_def ..
 
 lemma [\<phi>reason 1000]:
-  \<open>Check_Literal True\<close> unfolding Check_Literal_def ..
+  \<open>Is_Literal True\<close> unfolding Is_Literal_def ..
 
 lemma [\<phi>reason 1000]:
-  \<open>Check_Literal False\<close> unfolding Check_Literal_def ..
+  \<open>Is_Literal False\<close> unfolding Is_Literal_def ..
 
 lemma [\<phi>reason 1000]:
-  \<open>Check_Literal 0\<close> unfolding Check_Literal_def ..
+  \<open>Is_Literal 0\<close> unfolding Is_Literal_def ..
 
 lemma [\<phi>reason 1000]:
-  \<open> Check_Literal x
-\<Longrightarrow> Check_Literal (Suc x)\<close> unfolding Check_Literal_def ..
+  \<open> Is_Literal x
+\<Longrightarrow> Is_Literal (Suc x)\<close> unfolding Is_Literal_def ..
 
 lemma [\<phi>reason 1000]:
-  \<open>Check_Literal 1\<close> unfolding Check_Literal_def ..
+  \<open>Is_Literal 1\<close> unfolding Is_Literal_def ..
 
 lemma [\<phi>reason 1000]:
-  \<open>Check_Literal (numeral x)\<close> unfolding Check_Literal_def ..
+  \<open>Is_Literal (numeral x)\<close> unfolding Is_Literal_def ..
 
-declare [[\<phi>premise_attribute? [\<phi>reason add] for \<open>Check_Literal _\<close>]]
+lemma [\<phi>reason 1000]:
+  \<open> Is_Literal x
+\<Longrightarrow> Is_Literal (- x)\<close>
+  unfolding Is_Literal_def ..
+
+declare [[\<phi>premise_attribute? [\<phi>reason add] for \<open>Is_Literal _\<close>]]
 
 
 subsubsection \<open>Evaluation\<close>
@@ -2134,7 +2139,7 @@ consts literal :: mode
 
 lemma Do_Literal_Simplification:
   \<open> PROP Do_Simplificatin A B
-\<Longrightarrow> Check_Literal A
+\<Longrightarrow> Is_Literal A
 \<Longrightarrow> Simplify s A B\<close>
   unfolding Do_Simplificatin_def Simplify_def atomize_eq .
 
