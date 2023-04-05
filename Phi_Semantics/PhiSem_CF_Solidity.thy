@@ -15,4 +15,13 @@ lemma require_\<phi>app:
   by (cases rP; simp, rule, simp add: \<phi>expns WT_bool, blast, rule, simp add: \<phi>expns WT_bool)
 
 
+definition op_require' :: \<open>(VAL, unit) proc'\<close>
+  where \<open>op_require' rP =
+    \<phi>M_getV bool V_bool.dest rP \<phi>M_assume\<close>
+
+lemma op_require'_\<phi>app:
+  \<open>\<p>\<r>\<o>\<c> op_require' rP \<lbrace> P \<Ztypecolon> \<v>\<a>\<l>[rP] \<bool> \<longmapsto> \<lambda>_. Void \<s>\<u>\<b>\<j> P \<rbrace>\<close>
+  unfolding op_require'_def
+  by (cases rP; simp, rule, simp add: \<phi>expns WT_bool, simp add: \<phi>expns WT_bool, rule)
+
 end

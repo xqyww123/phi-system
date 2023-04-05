@@ -154,15 +154,18 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
           fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
             | left_most X = X
           val spec' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) spec
-          val R = case (case Thm.term_of spec'
-                          of Abs (_,_,X) => left_most X |> dest_comb |> fst
-                           | X => left_most X)
-                    of Var (R, _) => R
-                     | _ => error "At least one of the assignment rules is not configured properly."
+          fun err () = error "At least one of the assignment rules is not configured properly."
+          val inst_ty = case Thm.typ_of_cterm inst
+                          of \<^Type>\<open>fun \<^Type>\<open>\<phi>arg _\<close> _\<close> =>
+                                  Thm.dest_ctyp0 (Thm.dest_ctyp0 (Thm.ctyp_of_cterm inst))
+                           | _ => err ()
+          val (R, tv) = case (case Thm.term_of spec'
+                                of Abs (_,_,X) => left_most X |> dest_comb |> fst
+                                 | X => left_most X)
+                          of Var (R, \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<open>TVar tv\<close>\<close> _\<close>) => (R,tv)
+                           | _ => err ()
         in spec'
-        |> Drule.mk_term
-        |> Drule.infer_instantiate ctxt [(R,inst)]
-        |> Drule.dest_term
+        |> Thm.instantiate_cterm (TVars.make [(tv,inst_ty)], Vars.make [((R, Thm.typ_of_cterm inst), inst)])
         end
       val goal_ret' = instantiate_R goal_ret ret_spec
       (*  val goal_E'   = instantiate_R goal_E   E_spec *)

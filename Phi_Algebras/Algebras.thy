@@ -898,6 +898,18 @@ definition inverse_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<c
 instance ..
 end
 
+instantiation prod :: (ord, ord) ord begin
+definition less_eq_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> bool\<close>
+  where \<open>less_eq_prod x y \<longleftrightarrow> (case x of (x1,x2) \<Rightarrow> case y of (y1,y2) \<Rightarrow> x1 \<le> y1 \<and> x2 \<le> y2)\<close>
+definition less_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> bool\<close>
+  where \<open>less_prod x y \<longleftrightarrow> (case x of (x1,x2) \<Rightarrow> case y of (y1,y2) \<Rightarrow> x1 < y1 \<and> x2 < y2)\<close>
+
+lemma [simp]: \<open>(x1,x2) < (y1,y2) \<longleftrightarrow> x1 < y1 \<and> x2 < y2\<close> unfolding less_prod_def by simp
+lemma [simp]: \<open>(x1,x2) \<le> (y1,y2) \<longleftrightarrow> x1 \<le> y1 \<and> x2 \<le> y2\<close> unfolding less_eq_prod_def by simp
+
+instance ..
+end
+
 
 subsection \<open>Coproduct\<close>
 
@@ -1349,6 +1361,8 @@ lemma Inhabited_I:
   \<open>x \<in> S \<Longrightarrow> Inhabited S\<close>
   unfolding Inhabited_def ..
 
+lemma Inhabited_cong[cong]:
+  \<open>X \<equiv> X \<Longrightarrow> Inhabited X \<equiv> Inhabited X\<close> .
 
 
 instantiation set :: (type) zero begin

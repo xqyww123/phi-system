@@ -691,6 +691,10 @@ lemma [\<phi>reason 5000]:
 \<Longrightarrow> Premise mode (Premise any_mode P)"
   unfolding Premise_def .
 
+(*TODO:
+On pattern \<open>Premise ?mode (?x = ?var_x)\<close>, the instantiation in this rule can be aggresive.
+Need some way to control it!
+*)
 lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
                                     \<open>Premise ?mode (?x = ?var_x)\<close>
                                     \<open>Premise ?mode (?var_x = ?x)\<close>]:

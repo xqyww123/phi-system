@@ -137,7 +137,9 @@ fun norm_def ctxt (m,n,instance) def = let
   val insts = ty_vars @ normal_vars @ (map (Thm.cterm_of ctxt) instance)
   in
     fold (fn a => fn b => Thm.combination b a) (map Thm.reflexive insts) def
+      |> Drule.eta_contraction_rule
       |> Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>V_simps[folded atomize_eq]}
+      |> Drule.eta_contraction_rule
   end
 
 fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = concl_of x
@@ -215,7 +217,7 @@ fun gen_define def_const (binding,attrs) sequent01 lthy0 =
 
     (*replace the procedure body in the procedural theorem to the newly defined constant*)
     fun rename ctxt def =
-          rule_proc_F (Conv.rewr_conv (Thm.symmetric def)) ctxt
+          rule_proc_F (fn ctm => Conv.rewr_conv (Thm.symmetric def) ctm) ctxt
 
     val (lthy, sequent'') =
       if Binding.is_empty binding orelse not def_const

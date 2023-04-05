@@ -119,6 +119,8 @@ lemma UNIV_subty [\<phi>reason 1000]:
   \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> UNIV\<close>
   unfolding Imply_def by simp
 
+lemma [\<phi>inhabitance_rule]:
+  \<open>Inhabited UNIV \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 subsection \<open>Stepwise Abstraction\<close>
 

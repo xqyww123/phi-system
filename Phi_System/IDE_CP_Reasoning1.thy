@@ -164,7 +164,7 @@ lemmas [assertion_simps] =
   add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
   zero_fun[where 'a=\<open>'a::sep_magma set\<close>] zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma set\<close>]
   plus_fun[where 'a=\<open>'a::sep_magma set\<close>]
-  Subjection_Zero ExSet_simps distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
+  Subjection_Zero ExSet_simps(1,4,5) distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]
   \<phi>V_simps
 
@@ -471,7 +471,7 @@ lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?R vs\<heavy
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs) TYs
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R (\<phi>V_snd vs)\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T) (TY#TYs)\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
-  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inhabited_rewr)
+  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inhabited_rewr cong del: Inhabited_cong)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
@@ -491,7 +491,7 @@ lemma [\<phi>reason 2000]:
 lemma [\<phi>reason 1020 except \<open>\<phi>_Have_Types (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:
   \<open> \<phi>_Have_Types (\<lambda>vs. Void\<heavy_comma> R vs) TYs
 \<Longrightarrow> \<phi>_Have_Types R TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by (clarsimp cong del: Inhabited_cong)
 
 lemma [\<phi>reason 1000]:
   \<open> FAIL TEXT(\<open>Fail to infer the semantic type of\<close> R)
@@ -499,24 +499,24 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>_Have_Types (exp v) TYs
-\<Longrightarrow> \<phi>_Have_Types (Let v exp) TYs\<close>
-  unfolding Let_def .
-
-lemma [\<phi>reason 1200]:
   \<open> \<phi>_Have_Types (\<lambda>ret. (exp ret) (v ret)) TYs
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. Let (v ret) (exp ret)) TYs\<close>
   unfolding Let_def .
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>_Have_Types (f (fst x) (snd x)) TYs
-\<Longrightarrow> \<phi>_Have_Types (case_prod f x) TYs\<close>
-  by (simp add: case_prod_beta')
-
-lemma [\<phi>reason 1200]:
   \<open> \<phi>_Have_Types (\<lambda>ret. f ret (fst (x ret)) (snd (x ret))) TYs
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. case_prod (f ret) (x ret)) TYs\<close>
   by (simp add: case_prod_beta')
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>x. \<phi>_Have_Types (\<lambda>ret. (S ret) x) TYs)
+\<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. ExSet (S ret)) TYs\<close>
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>x. \<phi>_Have_Types (\<lambda>ret. S ret) TYs)
+\<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. S ret \<s>\<u>\<b>\<j> P ret) TYs\<close>
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
 
 
 

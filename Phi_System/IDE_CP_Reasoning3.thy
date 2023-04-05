@@ -2100,6 +2100,8 @@ subsection \<open>Literal Evaluation\<close>
 
 subsubsection \<open>Check\<close>
 
+(*TODO: should use axiomatization since it is semantic-related*)
+
 definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Literal _ \<longleftrightarrow> True\<close>
 
 lemma [\<phi>reason 1]:

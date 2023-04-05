@@ -123,6 +123,10 @@ in
 
 end\<close>
 
+subsection \<open>Helper Methods\<close>
+
+ML_file \<open>library/tools/where_tac.ML\<close>
+
 subsection \<open>Helper Isar Commands\<close>
 
 ML_file \<open>library/tools/optional_translation.ML\<close>
@@ -135,7 +139,6 @@ ML_file \<open>library/tools/the_friendly_character.ML\<close>
 
 definition Friendly_Help :: \<open>text \<Rightarrow> bool\<close> where [iff]: \<open>Friendly_Help _ \<longleftrightarrow> True\<close>
 
-term \<open>ERROR\<close>
 lemma Friendly_Help_I: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_def ..
 
 \<phi>reasoner_ML Friendly_Help 1000 (\<open>Friendly_Help _\<close>) = \<open>fn (ctxt,sequent) =>
@@ -151,6 +154,8 @@ lemma Friendly_Help_I: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_
 
 
 subsection \<open>Some very Early Reasoning\<close>
+
+thm exI[where x=1]
 
 subsubsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
 

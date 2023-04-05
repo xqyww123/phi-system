@@ -109,7 +109,7 @@ proc
   premises \<open>x < 10\<close>
   output \<open>\<v>\<a>\<l> 10 \<Ztypecolon> \<nat>\<close>
   is [routine]   
-  \<medium_left_bracket> $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*);;
+  \<medium_left_bracket>  $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*);;
     while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
     \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket>. (*guard*)
     \<medium_left_bracket>
