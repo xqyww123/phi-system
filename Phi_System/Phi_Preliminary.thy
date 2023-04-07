@@ -155,32 +155,6 @@ lemma Friendly_Help_I: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_
 
 subsection \<open>Some very Early Reasoning\<close>
 
-thm exI[where x=1]
-
-subsubsection \<open>Convert Generalized Elimination to Plain Conjunction\<close>
-
-definition \<open>CONV_GE \<longleftrightarrow> False\<close>
-definition \<open>CONV_GE_Ex \<equiv> Ex\<close>
-definition \<open>CONV_GE_conj \<equiv> (\<and>)\<close>
-
-lemma CONV_GE_phase_1:
-  \<open>A \<longrightarrow> B \<longrightarrow> CONV_GE \<equiv> CONV_GE_conj A B \<longrightarrow> CONV_GE\<close>
-  \<open>(\<forall>x. P x \<longrightarrow> CONV_GE) \<equiv> (CONV_GE_Ex P \<longrightarrow> CONV_GE)\<close>
-  \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj A (B' x)) \<equiv> CONV_GE_conj A (CONV_GE_Ex B')\<close>
-  \<open>CONV_GE_Ex (\<lambda>x. CONV_GE_conj (A' x) B) \<equiv> CONV_GE_conj (CONV_GE_Ex A') B\<close>
-  \<open>(Q \<longrightarrow> CONV_GE) \<longrightarrow> Q' \<equiv> Q \<or> Q'\<close>
-  \<open>Q \<or> CONV_GE \<equiv> Q\<close>
-  \<open>CONV_GE \<longrightarrow> CONV_GE \<equiv> True\<close>
-  unfolding atomize_eq CONV_GE_Ex_def CONV_GE_def CONV_GE_conj_def by blast+
-
-lemma CONV_GE_phase_2:
-  \<open>Trueprop (CONV_GE_conj A B) \<equiv> (A &&& B)\<close>
-  unfolding CONV_GE_conj_def atomize_conj .
-
-lemma CONV_GE_phase_3:
-  \<open>CONV_GE_conj A B \<equiv> A \<and> B\<close>
-  unfolding CONV_GE_conj_def atomize_conj .
-
 subsubsection \<open>Extract Elimination Rule - Part I\<close>
 
 definition Extract_Elimination_Rule :: \<open>prop \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> prop\<close>

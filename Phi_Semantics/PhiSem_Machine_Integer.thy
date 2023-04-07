@@ -683,7 +683,7 @@ lemma op_div_int_\<phi>app[\<phi>synthesis for _ (100)
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<noteq> - (2 ^ (LENGTH('b) - 1)) \<and> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sdiv TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x sdiv y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket> op_sdiv_word
-    affirm by (metis atLeastLessThan_iff signed_0 sint_of_int_eq the_\<phi>(2) the_\<phi>(3)) \<medium_right_bracket>
+    affirm using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by force \<medium_right_bracket>
     unfolding sdiv_word_def
   proof simp
     have [simp]: \<open>sint (word_of_int x::'b word) = x\<close>
@@ -694,7 +694,7 @@ lemma op_div_int_\<phi>app[\<phi>synthesis for _ (100)
     have t1: \<open>x < 2 ^ (LENGTH('b)-1)\<close>
       using atLeastLessThan_iff the_\<phi>lemmata(2) by blast
     have t2: \<open>- (2 ^ (LENGTH('b)-1)) < x\<close>
-      by (meson Orderings.order_eq_iff atLeastLessThan_iff leI the_\<phi>(3) the_\<phi>lemmata(2))
+      using the_\<phi>(1) the_\<phi>(5) by force
     have t3: \<open>\<bar>x\<bar> < 2 ^ (LENGTH('b)-1)\<close>
       using t1 t2 by linarith
     have t4: \<open>\<bar>x sdiv y\<bar> < 2 ^ (LENGTH('b)-1)\<close>
@@ -753,9 +753,8 @@ lemma op_mod_int_\<phi>app
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_smod TYPE('b) (\<phi>V_pair vy vx)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x smod y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
-  \<medium_left_bracket> op_smod_word
-    affirm by (metis atLeastLessThan_iff signed_0 sint_of_int_eq the_\<phi>(2) the_\<phi>(3)) \<medium_right_bracket>
-  by (metis One_nat_def atLeastLessThan_iff signed_take_bit_int_eq_self_iff sint_sbintrunc' smod_word_def smod_word_max smod_word_min the_\<phi>lemmata(1) the_\<phi>lemmata(2)) .
+  \<medium_left_bracket>  op_smod_word affirm using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by fastforce \<medium_right_bracket>
+  by (metis One_nat_def sint_of_int_eq smod_word_def smod_word_max smod_word_min the_\<phi>(1) the_\<phi>(2) the_\<phi>(3) the_\<phi>(4)) .
 
 lemma op_mod_int_fail[\<phi>synthesis 100]:
   \<open> FAIL TEXT(\<open>About integers, there is no rule available for unsigned modulo\<close> (mod)
@@ -808,7 +807,7 @@ lemma op_lshr_int_\<phi>app
   \<medium_left_bracket>
   ;; $v1
   have t1: \<open>x < 2 ^ (LENGTH('ba) - 1)\<close>
-    using atLeastLessThan_iff the_\<phi>(1) by blast
+    using One_nat_def the_\<phi>(2) by presburger
   have t2: \<open>nat x < 2 ^ (LENGTH('ba) - 1)\<close>
     using t1 by fastforce
 
@@ -967,7 +966,7 @@ lemma op_upcast_nat_\<phi>app:
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>('ba) \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> \<nat>('bb) \<rbrace>\<close>
   \<medium_left_bracket> have [useful]: \<open>x < 2 ^ LENGTH('ba)\<close> using \<phi> by blast
   ;; $v op_cast_nat[where 'bb='bb] \<medium_right_bracket>
-    by (metis le_antisym take_bit_nat_eq_self take_bit_nat_less_eq_self take_bit_tightened_less_eq_nat the_\<phi>(2) the_\<phi>(3)) .
+    by (metis min_def order_antisym_conv take_bit_nat_eq_self_iff take_bit_take_bit the_\<phi>(1) the_\<phi>(2)) .
 
 lemma op_upcast_int_\<phi>app:
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> LENGTH('ba) \<le> LENGTH('bb)

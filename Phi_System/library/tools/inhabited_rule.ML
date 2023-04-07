@@ -11,6 +11,13 @@ signature PHI_INHABITANCE_RULES = sig
 
 end
 
+structure Inhabitance_SS = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = \<^binding>\<open>inhabitance_simp\<close>
+  val comment = "Rules simplifying local facts implied from \<phi>-type specifications"
+)
+
+
 structure Phi_Inhabitance_Rules : PHI_INHABITANCE_RULES = struct
 
 structure Data = Generic_Data
@@ -55,8 +62,13 @@ fun implications_of_inhabitance' erules ctxt sequent =
   let
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
                 "extracting implied pure facts..." ^ Position.here \<^here>)
+    val sctxt = Raw_Simplifier.put_simpset
+                    (Raw_Simplifier.merge_ss (Raw_Simplifier.simpset_of ctxt,
+                                              Inhabitance_SS.get' ctxt))  ctxt
     open Tactical Tactic
   in rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt erules))) sequent
+  |> Simplifier.asm_full_simplify sctxt
+  |> rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt @{thms conjE})))
   |> Phi_Reasoners.conv_GE_to_plain_conjunction ctxt
   end
 

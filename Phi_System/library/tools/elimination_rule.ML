@@ -31,7 +31,9 @@ fun conv_GE_to_plain_conjunction ctxt thm =
                  end 
         end
       val facts = Thm.prems_of thm
-               |> map (Phi_Help.strip_meta_hhf #> (fn (vs,tms,_) => map (wrap_ex (rev vs)) tms))
+               |> map (fn th => th
+                    |> Phi_Help.strip_meta_hhf
+                    |> (fn (vs,tms,_) => map (wrap_ex (rev vs)) (distinct (op aconv) tms)))
       fun list_mk_disj [] = \<^const>\<open>True\<close>
         | list_mk_disj [x] = x
         | list_mk_disj L = foldr1 HOLogic.mk_disj L
