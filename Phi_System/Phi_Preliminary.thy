@@ -28,8 +28,6 @@ subsection \<open>Helper ML\<close>
 ML_file \<open>library/tools/Phi_Help.ML\<close>
 ML_file \<open>library/syntax/helps.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
-ML_file \<open>library/tools/simpset.ML\<close>
-
 
 subsection \<open>Helper Lemmas\<close>
 

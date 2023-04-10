@@ -312,12 +312,13 @@ lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> Word(_) \<i>\<m>\<p>\<l>\<i>
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> Word(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to (Word _)\<close>]:
   \<open> x \<Ztypecolon> Word('b) \<i>\<m>\<p>\<l>\<i>\<e>\<s> sint x \<Ztypecolon> \<int>('b) @action to Word('b) \<close>
   \<medium_left_bracket> \<medium_right_bracket>. .
-
+ 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<int>(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to (\<phi>Nat _)\<close>]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x \<and> x < 2 ^ (LENGTH('b)-1)
 \<Longrightarrow> x \<Ztypecolon> \<int>('b) \<i>\<m>\<p>\<l>\<i>\<e>\<s> nat x \<Ztypecolon> \<nat>('b) @action to \<nat>('b)\<close>
   \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket>
-  by (smt (verit, del_insts) diff_le_self power_increasing_iff the_\<phi>(1) unat_eq_nat_uint word_of_int_inverse) .
+    by (smt (verit, best) \<open>0 \<le> x \<and> x < 2 ^ (LENGTH('b) - 1)\<close> sint_of_int_eq unat_eq_nat_uint word_arith_wis(7) word_of_int_2p_len word_of_int_inverse zero_less_power) .
+  
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<int>(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> \<nat>(_) \<a>\<n>\<d> _\<close>]:
   \<open> Threshold_Cost 6
@@ -328,8 +329,7 @@ lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<int>(_) \<i>\<m>\<p>\<l>\<i
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to \<int>(_)\<close>]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x < 2 ^ (LENGTH('b)-1)
 \<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<i>\<m>\<p>\<l>\<i>\<e>\<s> of_nat x \<Ztypecolon> \<int>('b) @action to \<int>(_) \<close>
-  \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket>
-  by (metis One_nat_def id_apply the_\<phi>(1) negative_zle of_int_eq_id of_nat_less_numeral_power_cancel_iff real_of_nat_eq_numeral_power_cancel_iff signed_of_nat signed_take_bit_int_eq_self_iff) .
+  \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket> by (metis int_eq_sint the_\<phi>(2)) .
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> \<int>(_) \<a>\<n>\<d> _ \<close>]:
   \<open> Threshold_Cost 5
@@ -566,8 +566,8 @@ lemma op_add_int_\<phi>app[\<phi>overload add,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
   \<medium_left_bracket> op_add_word[where 'b='b] \<medium_right_bracket>
-    by (metis atLeastLessThan_iff the_\<phi>(1) of_int_add signed_take_bit_int_eq_self_iff sint_sbintrunc') .
-
+    using sint_of_int_eq that(1) by fastforce .
+ 
 declare op_add_word_\<phi>app[\<phi>overload add]
 
 
@@ -587,7 +587,7 @@ lemma op_sub_nat_\<phi>app[\<phi>overload sub,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> op_sub_word[where 'b='b] \<medium_right_bracket>
-    by (metis diff_le_self le_unat_uoi the_\<phi>(1) the_\<phi>lemmata(2) of_nat_diff of_nat_inverse) .
+    by (metis diff_le_self le_unat_uoi of_nat_diff the_\<phi>(3) the_\<phi>lemmata(2) unat_of_nat_eq) .
 
 lemma op_sub_natR_\<phi>app[\<phi>overload sub,
                        \<phi>synthesis for _ (100)
@@ -603,7 +603,7 @@ lemma op_sub_int_\<phi>app[\<phi>overload sub,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x - y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket> op_sub_word[where 'b='b] \<medium_right_bracket>
-    by (metis atLeastLessThan_iff the_\<phi>(1) signed_take_bit_int_eq_self_iff sint_sbintrunc' wi_hom_sub) .
+    using sint_of_int_eq the_\<phi>(5) by fastforce .
 
 declare op_sub_word_\<phi>app[\<phi>overload sub]
 
@@ -626,7 +626,7 @@ lemma op_mul_nat_\<phi>app[\<phi>overload mul,
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> op_mul_word[where 'b='b] \<medium_right_bracket>
-    using the_\<phi>(1) of_nat_inverse by fastforce .
+    using the_\<phi>(3) unat_of_nat_eq by fastforce .
 
 lemma op_mul_natR_\<phi>app[\<phi>overload mul,
                        \<phi>synthesis for _ (100)
@@ -643,7 +643,7 @@ lemma op_mul_int_\<phi>app[\<phi>overload mul,
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket> op_mul_word[where 'b='b] \<medium_right_bracket>
-    by (metis atLeastLessThan_iff the_\<phi>(1) nle_le of_int_mult signed_take_bit_int_greater_eq_self_iff signed_take_bit_int_less_eq_self_iff sint_sbintrunc') .
+    by (metis atLeastLessThan_iff of_int_mult sint_of_int_eq the_\<phi>(5)) .
 
 declare op_mul_word_\<phi>app[\<phi>overload mul]
 
@@ -687,14 +687,14 @@ lemma op_div_int_\<phi>app[\<phi>synthesis for _ (100)
     unfolding sdiv_word_def
   proof simp
     have [simp]: \<open>sint (word_of_int x::'b word) = x\<close>
-      by (meson atLeastLessThan_iff sint_of_int_eq the_\<phi>lemmata(2))
+      by (simp add: sint_of_int_eq the_\<phi>lemmata(3) the_\<phi>lemmata(4))
     have [simp]: \<open>sint (word_of_int y::'b word) = y\<close>
-      by (meson atLeastLessThan_iff sint_of_int_eq the_\<phi>lemmata(1))
+      by (simp add: sint_of_int_eq the_\<phi>(4) the_\<phi>lemmata(1))
 
     have t1: \<open>x < 2 ^ (LENGTH('b)-1)\<close>
-      using atLeastLessThan_iff the_\<phi>lemmata(2) by blast
+      using One_nat_def the_\<phi>lemmata(4) by presburger
     have t2: \<open>- (2 ^ (LENGTH('b)-1)) < x\<close>
-      using the_\<phi>(1) the_\<phi>(5) by force
+      using the_\<phi>(10) the_\<phi>lemmata(3) by fastforce
     have t3: \<open>\<bar>x\<bar> < 2 ^ (LENGTH('b)-1)\<close>
       using t1 t2 by linarith
     have t4: \<open>\<bar>x sdiv y\<bar> < 2 ^ (LENGTH('b)-1)\<close>
@@ -842,7 +842,7 @@ lemma op_lshl_nat_\<phi>app
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v1] \<nat>('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] \<nat>('bb) \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<nat>('ba) \<rbrace>\<close>
   \<medium_left_bracket> op_lshl_word_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
   unfolding push_bit_nat_def
-  by (metis dual_order.strict_trans less_exp of_nat_inverse of_nat_push_bit push_bit_eq_mult the_\<phi>(1)) .
+  by (metis Abs_fnat_hom_mult le_eq_less_or_eq le_less_trans n_less_equal_power_2 of_nat_inverse the_\<phi>(2) word_eqI_folds(1) word_unat_power) .
 
 lemma op_lshl_natR_\<phi>app
   [\<phi>synthesis for _ (100)
@@ -893,7 +893,7 @@ lemma op_slt_int_\<phi>app
   \<open>\<p>\<r>\<o>\<c> op_slt TYPE('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> op_slt_word[where 'b='b] \<medium_right_bracket>
-    by (metis antisym_conv1 atLeastLessThan_iff linorder_not_le signed_take_bit_int_greater_eq_self_iff signed_take_bit_int_less_eq_self_iff sint_sbintrunc' the_\<phi>lemmata(1) the_\<phi>lemmata(2) word_sless_alt) .
+    by (simp add: sint_of_int_eq the_\<phi>(1) the_\<phi>lemmata(1) the_\<phi>lemmata(2) the_\<phi>lemmata(3) word_sless_alt) .
 
 
 paragraph \<open>Unsigned Less Equal\<close>
@@ -932,7 +932,7 @@ lemma op_le_int_\<phi>app
   \<open>\<p>\<r>\<o>\<c> op_sle TYPE('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> op_sle_word \<medium_right_bracket>
-    by (metis atLeastLessThan_iff signed_take_bit_int_eq_self_iff sint_sbintrunc' the_\<phi>lemmata(1) the_\<phi>lemmata(2) word_sle_eq) .
+    by (simp add: sint_of_int_eq the_\<phi>lemmata(1) the_\<phi>lemmata(2) the_\<phi>lemmata(3) the_\<phi>lemmata(4) word_sle_eq) .
 
 subsubsection \<open>Cast\<close>
 
@@ -977,7 +977,7 @@ lemma op_upcast_int_\<phi>app:
     have t1: \<open>is_up (Word.scast :: 'ba word \<Rightarrow> 'bb word)\<close>
       using is_up that(1) by blast
     show \<open>x = sint (Word.scast (word_of_int x :: 'ba word) :: 'bb word)\<close>
-      by (metis atLeastLessThan_iff sint_of_int_eq sint_up_scast t1 the_\<phi>lemmata)
+      by (simp add: signed_take_bit_int_eq_self sint_sbintrunc' sint_up_scast t1 the_\<phi>lemmata(1) the_\<phi>lemmata(2))
   qed .
 
 

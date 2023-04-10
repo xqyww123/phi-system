@@ -19,6 +19,8 @@ ML_file \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
+ML_file_debug \<open>library/tools/simpset.ML\<close>
+
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
 
@@ -717,8 +719,17 @@ lemma contract_premise_all:
   "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
   unfolding Premise_def atomize_all .
 
-named_theorems useful \<open>theorems to be inserted in the automatic proving,
-       having the same effect of using the @{command using} command.\<close>
+declare [[ML_debugger = true]]
+
+ML \<open>
+structure Useful_Thms = Named_Thms (
+  val name = \<^binding>\<open>useful\<close>
+  val description = "theorems to be inserted in the automatic proving, \
+        \having the same effect of using the @{command using} command."
+)
+\<close>
+
+setup \<open>Useful_Thms.setup\<close>
 
 ML_file \<open>library/PLPR_Syntax.ML\<close>
 ML_file "library/reasoners.ML"

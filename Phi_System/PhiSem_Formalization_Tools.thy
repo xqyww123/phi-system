@@ -1451,7 +1451,7 @@ lemma \<phi>R_set_res:
     by (rule R.\<phi>R_set_res[where k=k and res=res], assumption, simp, assumption) .
 
 declare \<phi>R_set_res[THEN \<phi>CONSEQ'E0, intro!]
-lemmas \<phi>R_set_res_frm[intro!] = \<phi>R_set_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+lemmas \<phi>R_set_res_frm[intro!] = \<phi>R_set_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0[simplified zero_fun_def]]
 end
 
 context share_fiction_for_partial_mapping_resource begin
@@ -1469,7 +1469,7 @@ lemma \<phi>R_set_res:
     by (rule R.\<phi>R_set_res[where k=k and res=res], assumption, simp, assumption) .
 
 declare \<phi>R_set_res[THEN \<phi>CONSEQ'E0, intro!]
-lemmas \<phi>R_set_res_frm[intro!] = \<phi>R_set_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+lemmas \<phi>R_set_res_frm[intro!] = \<phi>R_set_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0[simplified zero_fun_def]]
 
 end
 
@@ -1521,7 +1521,7 @@ lemma \<phi>R_dispose_res:
     by (rule R.\<phi>R_dispose_res, assumption, simp, simp) .
 
 declare \<phi>R_dispose_res[THEN \<phi>CONSEQ'E0, intro!]
-lemmas \<phi>R_dispose_res_frm[intro!] = \<phi>R_dispose_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+lemmas \<phi>R_dispose_res_frm[intro!] = \<phi>R_dispose_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0[simplified zero_fun_def]]
 
 end
 
@@ -1537,7 +1537,7 @@ lemma \<phi>R_dispose_res:
   subgoal for r res by (rule R.\<phi>R_dispose_res, assumption, simp, simp) .
 
 declare \<phi>R_dispose_res[THEN \<phi>CONSEQ'E0, intro!]
-lemmas \<phi>R_dispose_res_frm[intro!] = \<phi>R_dispose_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0]
+lemmas \<phi>R_dispose_res_frm[intro!] = \<phi>R_dispose_res[THEN \<phi>frame, simplified, THEN \<phi>CONSEQ'E0[simplified zero_fun_def]]
 
 end
 

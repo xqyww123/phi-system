@@ -26,6 +26,11 @@ signature PHI_ENVIR = sig
   val put_thesis : cterm -> Proof.context -> Proof.context
   val get_thesis : Proof.context -> cterm
 
+  val simplify_lemmata : bool Config.T
+  val process_lemmata : (Proof.context -> thm list (*additional rules to simplify the lemmata*))
+        -> Proof.context -> thm -> thm list
+  val process_useful_lemmata : bool -> Proof.context -> thm -> thm list
+
   val freeze_dynamic_lemmas : Proof.context -> Proof.context
 
   structure Enter_Programming_Environ : HOOKS
@@ -116,6 +121,10 @@ fun map_state_sequent f s =
                                          |> swap)
     |-> set_state_sequent
 
+fun get_thm_fast ctxt name =
+      case Facts.lookup (Context.Proof ctxt) (Proof_Context.facts_of ctxt) name
+        of SOME thm => #thms thm |> map (Thm.transfer' ctxt)
+         | _ => []
 
 val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>this\<close>,
           fn genric =>
@@ -140,8 +149,7 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>\<
               case genric
               of Context.Theory _ => []
                | Context.Proof ctxt =>
-                   ( Proof_Context.get_thms ctxt "IDE_CP_Core.\<phi>implication"
-                   @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>useful\<close>)
+                   ( get_thm_fast ctxt "IDE_CP_Core.\<phi>implication" @ Useful_Thms.get ctxt)
           )))
 
 fun freeze_dynamic_lemmas ctxt =
@@ -166,9 +174,9 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>_p
               case genric
               of Context.Theory _ => []
                | Context.Proof ctxt =>
-                   ( Proof_Context.get_thms ctxt "\<phi>implication_previous"
-                   @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
-                   @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>useful\<close>)
+                   ( get_thm_fast ctxt "\<phi>implication_previous"
+                   @ Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>lemmata\<close>
+                   @ Useful_Thms.get ctxt)
           )))
 
 
@@ -186,5 +194,52 @@ fun get_thesis ctxt =
       case Thesis.get ctxt
         of SOME x => x
          | NONE => err_bad_env ()
+
+fun process_lemmata rules ctxt thm =
+       Simplifier.asm_full_simplify (ctxt addsimps rules ctxt) thm
+    |> HOLogic.conj_elims ctxt
+
+val simplify_lemmata = Attrib.setup_config_bool \<^binding>\<open>\<phi>simplify_lemmata\<close> (K true)
+
+fun process_useful_lemmata simp_lemmata ctxt thm =
+       (if simp_lemmata andalso Config.get ctxt simplify_lemmata
+        then Simplifier.asm_full_simplify (ctxt addsimps Useful_Thms.get ctxt) thm
+        else thm)
+    |> HOLogic.conj_elims ctxt
+
+
+
+
+(*** The useful attribute ***)
+fun add_useful simplify thm generic_ctxt =
+      fold Useful_Thms.add_thm
+          (process_useful_lemmata simplify (Context.proof_of generic_ctxt) thm)
+          generic_ctxt
+
+fun del_useful simplify thm generic_ctxt =
+      fold Useful_Thms.del_thm
+          (process_useful_lemmata simplify (Context.proof_of generic_ctxt) thm)
+          generic_ctxt
+
+val add_useful_attr = Thm.declaration_attribute o add_useful
+val del_useful_attr = Thm.declaration_attribute o del_useful
+
+fun add_del add del = Scan.lift (Args.add >> K add || Args.del >> K del || Scan.succeed add);
+
+val _ = Theory.setup (
+  Attrib.setup \<^binding>\<open>useful\<close> (
+      add_del add_useful_attr del_useful_attr --
+      Scan.lift (Scan.optional (Args.$$$ "simplified" >> K true) false)
+      >> (fn (opr, flag) => opr flag)
+    )
+  "theorems to be inserted in the automatic proving, \
+  \having the same effect of using the @{command using} command."
+)
+
+
+(*
+val _ = Theory.setup (
+  Attrib.setup \<^binding>\<open>useful\<close> ()
+) *)
 
 end

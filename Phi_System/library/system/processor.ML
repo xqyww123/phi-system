@@ -285,9 +285,8 @@ fun apply_attr (attr:attribute) (ctxt, sequent) =
 
 val simplifier = almost_safe (fn (ctxt, sequent) =>
   Scan.succeed (fn _ => let
-    val simps = Named_Theorems.get ctxt \<^named_theorems>\<open>useful\<close>
     val simps'= Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>programming_simps\<close>
-    val ctxt' = Raw_Simplifier.addsimps (ctxt, simps @ simps')
+    val ctxt' = Raw_Simplifier.addsimps (ctxt, simps')
     val sequent' = Simplifier.full_simplify ctxt' sequent
     in  raise Bypass (SOME (ctxt, sequent'))
     end))

@@ -85,6 +85,8 @@ signature PHI_HELP = sig
   val comp_rule_incr_right : Proof.context -> thm -> thm -> thm
 
   val debug_RS : Proof.context -> thm -> thm -> thm
+
+  
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -323,6 +325,5 @@ fun debug_RS ctxt tha thb =
     ([th], _) => Thm.solve_constraints th
   | ([], _) => raise THM ("RSN: no unifiers", 1, [tha, thb])
   | _ => raise THM ("RSN: multiple unifiers", 1, [tha, thb]));
-
 
 end

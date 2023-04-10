@@ -264,6 +264,8 @@ lemma reason_programming:
 ML_file \<open>library/system/Phi_Working_Mode.ML\<close>
 ML_file \<open>library/system/Phi_Envir.ML\<close>
 
+declare exI[useful del]
+
 subsubsection \<open>Built-in Programming Methods\<close>
 
 lemma [\<phi>reason 1000]:

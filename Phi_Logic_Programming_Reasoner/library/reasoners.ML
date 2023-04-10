@@ -31,7 +31,7 @@ fun wrap tac (ctxt,thm) = tac ctxt thm |> Seq.map (pair ctxt)
 (*fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME (th, Seq.empty))) *)
 
-fun aux_thms ctxt = Named_Theorems.get ctxt \<^named_theorems>\<open>useful\<close>
+val aux_thms = Useful_Thms.get
 
 (** Tactics **)
 

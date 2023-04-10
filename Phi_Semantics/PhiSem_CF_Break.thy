@@ -122,7 +122,7 @@ lemma brk_scope:
   unfolding op_brk_scope_def sift_brking_frame_def sift_brking_frame'_def
             Technical_def FOCUS_TAG_def
   apply (rule, rule, rule, assumption, rule)
-  apply (rule \<phi>CONSEQ'E0, rule dispose_brk_scope[THEN \<phi>frame, simplified], rule)
+  apply (rule \<phi>CONSEQ'E0[unfolded zero_fun_def], rule dispose_brk_scope[THEN \<phi>frame, simplified], rule)
   apply (rule \<phi>CASE)
   apply (simp only: Brking_Frame_eq_identity norm_precond_ex, rule, rule, simp, rule)
   apply (rule FIC.brk_frame.\<phi>R_dispose_res_frm[where P=\<open>\<lambda>_. True\<close>]; simp)

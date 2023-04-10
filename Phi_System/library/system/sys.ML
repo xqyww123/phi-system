@@ -86,9 +86,10 @@ fun move_lemmata' (ctxt, sequent) =
     val ctxt' =
       if null lemmas
       then ctxt
-      else Context.proof_map (fold (fn th =>
-              Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th
-            #>Named_Theorems.add_thm \<^named_theorems>\<open>useful\<close> th
+      else Context.proof_map (fold (fold (fn th =>
+               Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th
+            #> Useful_Thms.add_thm th
+           ) o Phi_Envir.process_useful_lemmata true ctxt
            ) lemmas) ctxt
     val ctxt'' =
       if null morphisms

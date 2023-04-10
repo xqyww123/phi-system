@@ -241,12 +241,14 @@ fun gen_default_process' clean pos (ctxt,sequent) =
                                   $ _)
                  => SOME (Variable.revert_fixed ctxt N, revert_frees V)
              | _ => NONE)
+
     fun setup_lemmata ctxt =
       let val facts = maps (fn rule => (rule COMP @{thm Membership_E_Inhabitance})
                                     |> Phi_Inhabitance_Rules.implications_of_inhabitance ctxt) rules
        in ctxt |> Context.proof_map (
-            fold (fn th => Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th
-                        #> Named_Theorems.add_thm \<^named_theorems>\<open>useful\<close> th) facts)
+            fold (fold (fn th => Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th
+                              #> Useful_Thms.add_thm th)
+                  o Phi_Envir.process_useful_lemmata true ctxt) facts)
       end
   in ctxt
   |> open_value_context args

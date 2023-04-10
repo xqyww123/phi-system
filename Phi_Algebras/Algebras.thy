@@ -5,6 +5,8 @@ theory Algebras
   abbrevs "!!" = "!!"
 begin
 
+setup \<open>Attrib.setup \<^binding>\<open>locale_intro\<close> (Scan.succeed Locale.intro_add) ""\<close> (*TODO: move this*)
+
 section \<open>Algebra Structures\<close>
 
 subsection \<open>Preliminary Structures\<close>
@@ -14,6 +16,10 @@ subsubsection \<open>Homomorphism-like\<close>
 locale homo_one =
   fixes \<phi> :: " 'a::one \<Rightarrow> 'b::one "
   assumes homo_one[iff]: "\<phi> 1 = 1"
+
+locale homo_zero =
+  fixes \<phi> :: \<open> 'a::zero \<Rightarrow> 'b::zero \<close>
+  assumes homo_zero[iff]: \<open>\<phi> 0 = 0\<close>
 
 locale homo_mult = homo_one \<phi>
   for \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
@@ -26,6 +32,16 @@ lemma homo_mult:
 locale mult_strip_011 =
   fixes \<psi> :: " 'a::times \<Rightarrow> 'b::times "
   assumes mult_strip_011: \<open>a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c)\<close>
+
+locale homo_add =
+  fixes \<phi> :: \<open> 'a::plus \<Rightarrow> 'b::plus \<close>
+  assumes homo_add: \<open>\<phi> (x + y) = \<phi> x + \<phi> y\<close>
+
+
+
+
+
+
 
 subsubsection \<open>Group-like\<close>
 
@@ -56,6 +72,15 @@ end
 instantiation nat :: no_inverse begin
 instance by standard simp
 end
+
+thm add_nonneg_nonneg
+
+class add_order_0 = ord + zero + plus +
+  assumes add_nonneg_nonneg: \<open>0 \<le> a \<Longrightarrow> 0 \<le> b \<Longrightarrow> 0 \<le> a + b\<close>
+      and add_pos_pos: \<open>0 < a \<Longrightarrow> 0 < b \<Longrightarrow> 0 < a + b\<close>
+
+subclass (in ordered_comm_monoid_add) add_order_0
+  by (standard; simp add: add_nonneg_nonneg add_pos_pos)
 
 subsection \<open>Separation Algebra\<close>
 
@@ -791,6 +816,12 @@ definition "one_prod = (1,1)"
 instance ..
 end
 
+lemma fst_one [simp]: "fst 1 = 1"
+  unfolding one_prod_def by simp
+
+lemma snd_one [simp]: "snd 1 = 1"
+  unfolding one_prod_def by simp
+
 instantiation prod :: (numeral, numeral) numeral begin
 instance ..
 end
@@ -900,15 +931,26 @@ end
 
 instantiation prod :: (ord, ord) ord begin
 definition less_eq_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> bool\<close>
-  where \<open>less_eq_prod x y \<longleftrightarrow> (case x of (x1,x2) \<Rightarrow> case y of (y1,y2) \<Rightarrow> x1 \<le> y1 \<and> x2 \<le> y2)\<close>
+  where \<open>less_eq_prod x y \<longleftrightarrow> fst x \<le> fst y \<and> snd x \<le> snd y\<close>
 definition less_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> bool\<close>
-  where \<open>less_prod x y \<longleftrightarrow> (case x of (x1,x2) \<Rightarrow> case y of (y1,y2) \<Rightarrow> x1 < y1 \<and> x2 < y2)\<close>
+  where \<open>less_prod x y \<longleftrightarrow> fst x < fst y \<and> snd x < snd y\<close>
 
 lemma [simp]: \<open>(x1,x2) < (y1,y2) \<longleftrightarrow> x1 < y1 \<and> x2 < y2\<close> unfolding less_prod_def by simp
 lemma [simp]: \<open>(x1,x2) \<le> (y1,y2) \<longleftrightarrow> x1 \<le> y1 \<and> x2 \<le> y2\<close> unfolding less_eq_prod_def by simp
 
 instance ..
 end
+
+lemma less_eq_prod:
+  \<open>a \<le> b \<longleftrightarrow> fst a \<le> fst b \<and> snd a \<le> snd b\<close>
+  by (cases a; cases b; simp)
+
+lemma less_prod:
+  \<open>a < b \<longleftrightarrow> fst a < fst b \<and> snd a < snd b\<close>
+  by (cases a; cases b; simp)
+
+instance prod :: (add_order_0, add_order_0) add_order_0
+  by (standard; case_tac a; case_tac b; simp add: zero_prod_def add_nonneg_nonneg add_pos_pos)
 
 
 subsection \<open>Coproduct\<close>
@@ -1013,7 +1055,58 @@ end
 
 lemma one_fun[simp]: "1 x = 1" unfolding one_fun_def by simp
 lemma zero_fun[simp]: "0 x = 0" unfolding zero_fun_def by simp
-lemmas zero_fun_eta[simp] = zero_fun_def[symmetric]
+lemmas zero_fun_eta = zero_fun_def[symmetric]
+
+lemma fun_updt_1_1[simp]:
+  \<open>1(x := 1) = 1\<close>
+  unfolding fun_eq_iff by simp
+
+lemma fun_updt_0_0[simp]:
+  \<open>0(x := 0) = 0\<close>
+  unfolding fun_eq_iff by simp
+
+
+lemma homo_add_funcomp[locale_intro]:
+  assumes hom_f: \<open>homo_add f\<close>
+  shows \<open>homo_add ((o) f)\<close>
+proof -
+  interpret f: homo_add f using hom_f .
+  show ?thesis by (standard; simp add: fun_eq_iff plus_fun f.homo_add)
+qed
+
+lemma homo_zero_funcomp[locale_intro]:
+  assumes hom_f: \<open>homo_zero f\<close>
+  shows \<open>homo_zero ((o) f)\<close>
+proof -
+  interpret f: homo_zero f using hom_f .
+  show ?thesis by (standard; simp add: fun_eq_iff)
+qed
+
+lemma homo_mult_funcomp[locale_intro]:
+  assumes hom_f: \<open>homo_mult f\<close>
+  shows \<open>homo_mult ((o) f)\<close>
+proof -
+  interpret f: homo_mult f using hom_f .
+  show ?thesis by (standard; simp add: fun_eq_iff times_fun f.homo_mult)
+qed
+
+lemma homo_one_funcomp[locale_intro]:
+  assumes hom_f: \<open>homo_one f\<close>
+  shows \<open>homo_one ((o) f)\<close>
+proof -
+  interpret f: homo_one f using hom_f .
+  show ?thesis by (standard; simp add: fun_eq_iff)
+qed
+
+lemma (in homo_zero) fun_updt_single_point[simp]:
+  \<open>\<phi> o 0(i := x) = 0(i := \<phi> x)\<close>
+  unfolding fun_eq_iff by simp
+
+lemma (in homo_one) fun_updt_single_point[simp]:
+  \<open>\<phi> o 1(i := x) = 1(i := \<phi> x)\<close>
+  unfolding fun_eq_iff by simp
+
+
 
 instance "fun" :: (type, no_inverse) no_inverse
   by (standard, simp add: one_fun_def times_fun fun_eq_iff, blast)
@@ -1131,6 +1224,7 @@ instance proof
   show \<open>0 + a = a\<close> unfolding plus_fun_def fun_eq_iff by simp
 qed
 end
+
 
 paragraph \<open>Multiplication with Function Update\<close>
 
