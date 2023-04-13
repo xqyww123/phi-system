@@ -134,7 +134,7 @@ fun introduce_ex_ToA extract rule0 xs (ctxt, sequent) =
     fun generalize x sequent =
       case Phi_Syntax.dest_ToA_Construction (Thm.concl_of sequent) of (_, S)
             => sequent RS Drule.infer_instantiate ctxt
-                              [(("S",0), Thm.cterm_of ctxt (absfree x (extract S)))] rule
+                              [(("S",idx), Thm.cterm_of ctxt (absfree x (extract S)))] rule
   in fold_rev generalize xs sequent |> pair ctxt
   end
 
@@ -146,7 +146,7 @@ fun introduce_existence_cc extract rule0 xs (ctxt,sequent) =
       fun generalize x sequent =
         case Phi_Syntax.dest_PendingConstruction (Thm.concl_of sequent) of (_,_,_,_,E)
               => sequent RS Drule.infer_instantiate ctxt
-                                    [(("S",0), Thm.cterm_of ctxt (absfree x (extract E)))] rule
+                                    [(("S",idx), Thm.cterm_of ctxt (absfree x (extract E)))] rule
       in fold_rev generalize xs sequent |> pair ctxt
       end
   else if can Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequent)
@@ -160,11 +160,11 @@ fun introduce_existence_cc extract rule0 xs (ctxt,sequent) =
       fun generalize_Q x sequent =
         case Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequent) of (_,_,_,Q,_)
           => sequent RS
-               Drule.infer_instantiate ctxt [(("Q",0), Thm.cterm_of ctxt (absfree x Q))] rule_Q
+               Drule.infer_instantiate ctxt [(("Q",idx), Thm.cterm_of ctxt (absfree x Q))] rule_Q
       fun generalize_E x sequent =
         case Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequent) of (_,_,_,_,E)
           => sequent RS
-               Drule.infer_instantiate ctxt [(("E",0), Thm.cterm_of ctxt (absfree x E))] rule_E
+               Drule.infer_instantiate ctxt [(("E",idx), Thm.cterm_of ctxt (absfree x E))] rule_E
       in fold_rev generalize_E bad_E (fold_rev generalize_Q bad_Q sequent) |> pair ctxt
       end
   else bad_sequent sequent

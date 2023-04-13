@@ -17,7 +17,7 @@ datatype ('CONS_NAME,'REP,'ABS) Field =
 
 hide_const (open) name project inject
 
-(* definition lift_Field :: \<open>('ABS \<Rightarrow> 'ABS')
+definition lift_Field :: \<open>('ABS \<Rightarrow> 'ABS')
                        \<Rightarrow> ('ABS' \<Rightarrow> 'ABS)
                        \<Rightarrow> ('CONS_NAME,'REP,'ABS) Field
                        \<Rightarrow> ('CONS_NAME,'REP,'ABS') Field\<close>
@@ -27,7 +27,7 @@ hide_const (open) name project inject
 lemma lift_Field[simp]:
   \<open>lift_Field f g (Field name projector injector) = Field name (f o projector) (injector o g)\<close>
   unfolding lift_Field_def by simp
-*)
+
 
 locale VDT_field =
   fixes field :: "('CONS_NAME,'value,'a) Field"

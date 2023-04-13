@@ -11,8 +11,8 @@ theory IDE_CP_Core
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
     "var" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws"
     "input" "affirm" :: quasi_command
-  and "\<medium_left_bracket>" :: prf_decl % "proof"
-  and ";;" :: prf_decl % "proof"
+  and "\<medium_left_bracket>" :: prf_goal % "proof"
+  and ";;" :: prf_goal % "proof"
   and "\<medium_right_bracket>." :: prf_decl % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"
   and "\<phi>processor" :: thy_decl % "ML"

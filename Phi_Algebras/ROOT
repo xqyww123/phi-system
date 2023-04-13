@@ -5,6 +5,7 @@ session Phi_Algebras = Main +
   sessions
     "Phi_Statespace"
     "Phi_Document"
+    "HOL-Library"
   theories
     Algebras
     Map_of_Tree

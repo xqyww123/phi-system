@@ -282,6 +282,7 @@ lemma ExSet_simps[simp]:
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
   \<open>(X b \<s>\<u>\<b>\<j> P b \<s>\<u>\<b>\<j> b. Q b) = (X b \<s>\<u>\<b>\<j> b. P b \<and> Q b)\<close>
   \<open>(X2 a b \<s>\<u>\<b>\<j> a. P2 a b \<s>\<u>\<b>\<j> b. Q b) = (X2 a b \<s>\<u>\<b>\<j> a b. P2 a b \<and> Q b)\<close>
+  \<open>ExSet 0 = 0\<close>
   unfolding set_eq_iff by (simp_all add: \<phi>expns) blast
 
 (*lemma [\<phi>reason 200]: (*depreciated*)

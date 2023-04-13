@@ -622,7 +622,7 @@ lemma ToSA_cond_target_B':
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> if False then A else B \<brangle> \<a>\<n>\<d> P\<close>
   by simp
 
-declare [[\<phi>reason 2600 ToSA_cond_target_A' ToSA_cond_target_B'
+declare [[\<phi>reason 2600 ToSA_cond_target_B' ToSA_cond_target_A'
             for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> if ?condition then ?A else ?B \<brangle> \<a>\<n>\<d> ?P\<close> ]]
 
 hide_fact ToSA_cond_target_A' ToSA_cond_target_B'

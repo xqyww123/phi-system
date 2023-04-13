@@ -482,7 +482,7 @@ lemma [\<phi>reason 1100 for \<open>?S \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<
   unfolding Action_Tag_def Do_def atomize_conj atomize_Branch
   using implies_trans by fastforce
 
-lemma [\<phi>reason 1200 for \<open>(?S::'a::sep_magma set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_construct\<phi>_ToSA _ _\<close>]:
+lemma [\<phi>reason 1110 for \<open>(?S::'a::sep_magma set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_construct\<phi>_ToSA _ _\<close>]:
   \<open> (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action \<A>_construct\<phi> (x \<Ztypecolon> T)
 &&&  S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (if single then X else X \<r>\<e>\<m>\<a>\<i>\<n>\<s> S') \<a>\<n>\<d> P @action ToSA)
 ||| ERROR TEXT(\<open>Fail to construct\<close> (x \<Ztypecolon> T) \<open>from definition\<close>)
