@@ -289,19 +289,84 @@ lemma [\<phi>reason 2100 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<s>\<u>\
   unfolding Action_Tag_def by simp
 
 
-subsection \<open>Termination\<close>
+subsection \<open>Special Process for Holes\<close>
 
-lemma  ToSA_finish'[\<phi>reason 4000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ?X  \<brangle> \<a>\<n>\<d> ?P\<close>,
-                    \<phi>reason 900  for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ?X' \<brangle> \<a>\<n>\<d> ?P\<close>]:
-    "X \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 * \<blangle> X \<brangle>"
+lemma ToA_ex_intro:
+  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> U c \<a>\<n>\<d> P
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ExSet U \<a>\<n>\<d> P"
+  unfolding Imply_def by (simp add: \<phi>expns, metis)
+
+lemma ToA_ex_intro':
+  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> U c \<brangle> \<a>\<n>\<d> P
+\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> ExSet U \<brangle> \<a>\<n>\<d> P"
+  unfolding Imply_def by (simp add: \<phi>expns, metis)
+
+lemma ToSA_finish': "X \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 * \<blangle> X \<brangle>"
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding mult_1_left FOCUS_TAG_def Action_Tag_def
   using implies_refl by this+
+
+ML \<open>
+(* X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> P *)
+fun ToSA_to_wild_card ctxt thm =
+  let val (vs, _, goal) = Phi_Help.leading_antecedent (Thm.prop_of thm)
+      val N = length vs
+      val (X,Y0,_) = Phi_Syntax.dest_implication goal
+      val Y = case Y0 of Const(\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ x) => x
+                       | _ => Y0
+      val TY = Term.fastype_of Y
+      val (Var V, args) = strip_comb Y
+      val bnos = map (fn Bound i => i) args
+      val N_bnos = length bnos
+      val bads = subtract (op =) bnos (Term.loose_bnos X)
+      val N_bads = length bads
+      val insts' = List.tabulate (N, (fn i' =>
+            let val i = N - 1 - i'
+                val bi = find_index (fn k => k = i) bads
+                val ci = find_index (fn k => k = i) bnos
+             in if bi <> ~1
+                then Bound (N_bads - 1 - bi)
+                else if ci <> ~1
+                then Bound (N_bads + N_bnos - 1 - ci)
+                else Bound ~1
+            end))
+      val Y'1 = subst_bounds (insts', Y)
+      val Y'2 = fold (fn j => fn TM =>
+                  let val (name,T) = List.nth (vs, N-1-j)
+                   in \<^Const>\<open>ExSet \<open>T\<close> \<open>TY\<close>\<close> $ Abs (name, T, TM)
+                  end) bads Y'1
+      val Y'3 = fold (fn j => fn TM =>
+                  let val (name,T) = List.nth (vs, N-1-j)
+                   in Abs (name, T, TM)
+                  end) bnos Y'2
+      val thm' =
+            if null bads then thm
+            else Thm.instantiate (TVars.empty, Vars.make [(V, Thm.cterm_of ctxt Y'3)]) thm
+      val tac = TRY (HEADGOAL (resolve0_tac @{thms Action_Tag_I}))
+                THEN REPEAT_DETERM_N N_bads (HEADGOAL (resolve0_tac @{thms ToA_ex_intro ToA_ex_intro'}))
+                THEN (HEADGOAL (resolve0_tac @{thms implies_refl ToSA_finish'}))
+   in tac thm'
+  end
+\<close>
+
+\<phi>reasoner_ML \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> P @action ToSA\<close> 2015 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?var_Y \<a>\<n>\<d> _ @action ToSA\<close>) = \<open>
+  fn (ctxt,thm) => ToSA_to_wild_card ctxt thm |> Seq.map (pair ctxt)
+\<close>
+
+
+subsection \<open>Termination\<close>
+
+declare ToSA_finish'[\<phi>reason 4000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ?X  \<brangle> \<a>\<n>\<d> ?P\<close>,
+                     \<phi>reason 900  for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ?X' \<brangle> \<a>\<n>\<d> ?P\<close>]
 
 lemma [\<phi>reason 4000]:
   \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X * \<blangle> 1 \<brangle>\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding FOCUS_TAG_def Action_Tag_def by simp
+
+\<phi>reasoner_ML \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> P @action ToSA\<close> 4005 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close>) = \<open>
+  fn (ctxt,thm) => ToSA_to_wild_card ctxt thm |> Seq.map (pair ctxt)
+\<close>
 
 
 subsection \<open>Void Holes\<close> \<comment> \<open>eliminate 1 holes generated during the reasoning \<close>
@@ -362,15 +427,8 @@ lemma [\<phi>reason 3210]:
 
 subsection \<open>Existential\<close>
 
-lemma [\<phi>reason 2600]:
-  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> U c \<a>\<n>\<d> P
-\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ExSet U \<a>\<n>\<d> P"
-  unfolding Imply_def by (simp add: \<phi>expns, metis)
-
-lemma [\<phi>reason 2600]:
-  " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> U c \<brangle> \<a>\<n>\<d> P
-\<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> ExSet U \<brangle> \<a>\<n>\<d> P"
-  unfolding Imply_def by (simp add: \<phi>expns, metis)
+declare ToA_ex_intro [\<phi>reason 2600]
+declare ToA_ex_intro'[\<phi>reason 2600]
 
 lemma [\<phi>reason 2800]:
   "(\<And>x.  T x \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<a>\<n>\<d> P)
