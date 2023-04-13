@@ -2,14 +2,14 @@ Phi-System
 --------------
 
 φ-System is an experimental verification platform and also a certified programming language.
-It aims for reducing the effort of verifying concrete imperative programs (like C & Solidity), and, as a programming language writing certified programs which can be compiled to high-performant languages like C or Solidity or low-level targets like LLVM or EVM.
+It aims for reducing the effort of verifying concrete imperative programs (like C & Solidity), and, as a programming language writing certified programs which can be compiled to high-performant targets like C, Solidity or LLVM.
 
 The verification is based on Isabelle and the language is embedded in Isabelle/Isar, enabling users to write and/or verify programs in Isar, enjoying all proof facilities of Isabelle including the famous automated proof search tool Sledgehammer.
 
 The certification of the generated programs is down to the semantics of the target language (e.g. Solidity or LLVM). The semantics of the languages are formalized on an extensible and modular semantics framework.
 Formalizations of new languages can reuse the existing common semantic modules and add their own specific features.
 
-The verification and the certified programming is lifted by data refinement onto an abstract domain. Therefore even when the certification is down to concrete semantics of low-level languages (like LLVM), the verification and the programming are always stay in abstraction and able to focus on the algorithm itself.
+The verification and the certified programming is lifted by data refinement onto an abstract domain. Therefore even when the certification is down to concrete semantics of low-level languages, the verification and the programming are always stay in abstraction and able to focus on the algorithm itself.
 
 **The development is still in progress and the system is not ready for any use.**
 We release the current development as a preview and look for cooperators and contributors.
@@ -35,12 +35,17 @@ isabelle build Phi_Semantics
 
 For semantics of machine integers, we rely on the Word-Lib given by [seL4](https://github.com/seL4/l4v) project and you need to install it from their repo.
 
-## Small Toy Examples
+## Examples
 
+A medium verification example is the unfinished [Uniswap v3 verification](https://github.com/xqyww123/Uniswap_v).
 
 ## Contributions
 
 Contributions are highly welcomed. Please contact us if you are interested in no matter if you are professional in Isabelle or theorem proving.
 
 Any contributor must agree with releasing their contributions in LGPL-v3.0.
+
+## State of the Development
+
+
 
