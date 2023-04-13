@@ -1,12 +1,14 @@
-\<tribullet>        code: 0x002023  font: Symbola  group: operator
-\<fish_eye>         code: 0x0025C9  font: Symbola  group: punctuation
-\<black_circle>     code: 0x0025CF  font: Symbola  group: punctuation
+\<coercion>         code: 0x01f799  font: STIX  group: punctuation  abbrev: <c>
+\<tribullet>        code: 0x002023  font: STIX  group: operator
+\<fish_eye>         code: 0x0025C9  font: STIX  group: punctuation
+\<black_circle>     code: 0x0025CF  font: STIX  group: punctuation
 
-\<heavy_comma>      code: 0x00275F    font: Symbola    group: punctuation  abbrev: ,,
-\<perpendicular>    code: 0x0027c2    font: Symbola    group: relation     abbrev: _|_
-\<blangle>         code: 0x00276c   font: Symbola  group: punctuation abbrev: <<b
-\<brangle>         code: 0x00276d   font: Symbola  group: punctuation abbrev: >>b
-\<medium_left_bracket>   code: 0x002774  font: Symbola   abbrev: {{
-\<medium_right_bracket>  code: 0x002775  font: Symbola   abbrev: }}
-\<dblcoloneqq>     code: 0x002A74   font: Symbola   group: relation   abbrev: ::=
+\<heavy_comma>      code: 0x00275F    font: STIX    group: punctuation  abbrev: ,,
+\<perpendicular>    code: 0x0027c2    font: STIX    group: relation     abbrev: _|_
+\<blangle>         code: 0x00276c   font: STIX  group: punctuation abbrev: <<b
+\<brangle>         code: 0x00276d   font: STIX  group: punctuation abbrev: >>b
+\<medium_left_bracket>   code: 0x002774  font: STIX   abbrev: {{
+\<medium_right_bracket>  code: 0x002775  font: STIX   abbrev: }}
+\<dblcoloneqq>     code: 0x002A74   font: STIX   group: relation   abbrev: ::=
+
 
