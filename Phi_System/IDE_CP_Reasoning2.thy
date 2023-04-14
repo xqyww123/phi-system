@@ -314,15 +314,14 @@ fun ToSA_to_wild_card ctxt thm =
       val (X,Y0,_) = Phi_Syntax.dest_implication goal
       val Y = case Y0 of Const(\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ x) => x
                        | _ => Y0
-      val TY = Term.fastype_of Y
+      val \<^Type>\<open>set \<open>TY\<close>\<close> = Term.fastype_of Y
       val (Var V, args) = strip_comb Y
       val bnos = map (fn Bound i => i) args
       val N_bnos = length bnos
       val bads = subtract (op =) bnos (Term.loose_bnos X)
       val N_bads = length bads
-      val insts' = List.tabulate (N, (fn i' =>
-            let val i = N - 1 - i'
-                val bi = find_index (fn k => k = i) bads
+      val insts' = List.tabulate (N, (fn i =>
+            let val bi = find_index (fn k => k = i) bads
                 val ci = find_index (fn k => k = i) bnos
              in if bi <> ~1
                 then Bound (N_bads - 1 - bi)
@@ -330,7 +329,7 @@ fun ToSA_to_wild_card ctxt thm =
                 then Bound (N_bads + N_bnos - 1 - ci)
                 else Bound ~1
             end))
-      val Y'1 = subst_bounds (insts', Y)
+      val Y'1 = subst_bounds (insts', X)
       val Y'2 = fold (fn j => fn TM =>
                   let val (name,T) = List.nth (vs, N-1-j)
                    in \<^Const>\<open>ExSet \<open>T\<close> \<open>TY\<close>\<close> $ Abs (name, T, TM)

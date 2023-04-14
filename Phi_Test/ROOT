@@ -1,0 +1,5 @@
+session "Phi_Test" = "Phi_Semantics" +
+  options [document_output="../doc"]
+  theories
+    PhiTest_All
+    PhiTest_Arithmetic

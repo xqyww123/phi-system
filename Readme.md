@@ -37,7 +37,8 @@ For semantics of machine integers, we rely on the Word-Lib given by [seL4](https
 
 ## Examples
 
-A medium verification example is the unfinished [Uniswap v3 verification](https://github.com/xqyww123/Uniswap_v).
+- A small prime-test example is given [here](https://xqyww123.github.io/phi-system/Unsorted/Phi_Test/PhiTest_Arithmetic.html).
+- A medium verification example is the unfinished [Uniswap v3 verification](https://github.com/xqyww123/Uniswap_v).
 
 ## Contributions
 
