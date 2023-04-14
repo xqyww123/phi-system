@@ -37,6 +37,16 @@ For semantics of machine integers, we rely on the Word-Lib given by [seL4](https
 
 ## Examples
 
+Here is a very simple example giving a verified fibonacci function. After the retrun statement and the end of the function body, it generates two proof obligations which are proven by Sledgehammer automatically.
+
+<img src="https://xqyww123.github.io/phi-system/fib.gif" width="500">
+
+The complete verification:
+
+<img src="https://xqyww123.github.io/phi-system/fib.png" width="500">
+
+### More examples
+
 - A small prime-test example is given [here](https://xqyww123.github.io/phi-system/Unsorted/Phi_Test/PhiTest_Arithmetic.html).
 - A medium verification example is the unfinished [Uniswap v3 verification](https://github.com/xqyww123/Uniswap_v).
 
