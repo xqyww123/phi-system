@@ -13,6 +13,7 @@ val open_value_context : term list (*arguments*) -> Proof.context -> Proof.conte
 val assign_anony_local_val : typ option -> Proof.context -> string * Proof.context
 val bind_local_vals  : (xstring (*external name*) * term) list -> Proof.context -> Proof.context
 val lookup_bindings : Proof.context -> xstring -> term option
+val is_under_value_context : Proof.context -> bool
 
 (** Parser for Access **)
 type value_parser_key =
@@ -64,6 +65,8 @@ structure Value_Ctxt = Proof_Data (
 )
 
 fun bad_ctxt () = raise Fail "Value context has not been set. Not under a programming context."
+
+fun is_under_value_context ctxt = is_some (Value_Ctxt.get ctxt)
 
 fun value_context_of ctxt =
   case Value_Ctxt.get ctxt of SOME c => c | _ => bad_ctxt ()

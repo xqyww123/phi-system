@@ -56,11 +56,35 @@ subsection \<open>Variable\<close>
 abbreviation Var :: \<open>varname \<Rightarrow> (VAL option,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
   where \<open>Var vname T \<equiv> (FIC.Var.\<phi> (vname \<^bold>\<rightarrow> \<black_circle> (Nosep T)))\<close>
 
-abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close> ("\<v>\<a>\<r>[_] _" [22,22] 21)
+abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (fiction,'a) \<phi>\<close>
   where \<open>Inited_Var vname T \<equiv> Var vname (\<black_circle> T)\<close>
 
 abbreviation Uninited_Var :: \<open>varname \<Rightarrow> assn\<close> ("\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[_]" [22] 21)
   where \<open>Uninited_Var vname \<equiv> () \<Ztypecolon> Var vname \<circle>\<close>
+
+syntax
+  Inited_Var_ :: \<open>\<phi>identifier \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<v>\<a>\<r>[_] _" [22,22] 21)
+
+parse_translation \<open>let 
+in [
+  (\<^syntax_const>\<open>Inited_Var_\<close>, (fn ctxt => fn [v, T] =>
+    Const (\<^const_abbrev>\<open>Inited_Var\<close>, dummyT)
+        $ (if Generic_Variable_Access.is_under_value_context ctxt
+           then Generic_Variable_Access.translate_value ctxt v
+           else v)
+        $ T))
+] end\<close>
+
+print_translation \<open>let
+in [(\<^const_syntax>\<open>Inited_Var\<close>, (fn ctxt => fn [a,b] =>
+      Const(\<^syntax_const>\<open>Inited_Var_\<close>, dummyT) $ (*TODO!*) a $ b))]
+end
+\<close>
+
+
+
+
+
 
 lemma Var_inhabited[\<phi>inhabitance_rule,elim!]:
   \<open>Inhabited (x \<Ztypecolon> Var vname T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
